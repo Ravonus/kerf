@@ -1,0 +1,1891 @@
+<!doctype html>
+<html lang="en" data-expression="balanced" data-fields="floating" data-density="cozy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>warp flows</title>
+<meta name="description" content="App-flow specimen for warp, weft's default toolkit: sign-in with OTP, onboarding, settings with a danger zone, plans and usage, checkout, and system states, on phone, tablet and desktop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../tokens/warp.css">
+<link rel="stylesheet" href="../tokens/warp-layout.css">
+<link rel="stylesheet" href="../tokens/warp-components.css">
+<link rel="stylesheet" href="../tokens/warp-inputs.css">
+<link rel="stylesheet" href="../tokens/warp-flows.css">
+<style>
+@layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.data, warp.app, warp.flows, warp.marketing, specimen;
+
+/* ===========================================================================
+   This page renders only warp's own parts: buttons, badges, alerts, avatars,
+   kbd, spinner, tabs, tooltip, dialog and sheet parts, toasts (05
+   warp-components.css); fields, switch, checkbox, segmented, OTP (03
+   warp-inputs.css); the app shell (02 warp-layout.css); and the flows (09
+   warp-flows.css). The one thing it adds is FRAME PLACEMENT: a device frame
+   is not a viewport, so a native <dialog>, a fixed toast region or a 100dvh
+   shell would escape to the page. The rules below only place 05's dialog,
+   sheet and toast parts, and 02's shell, inside a scaled frame.
+   ======================================================================== */
+@layer specimen {
+  .ico { inline-size: 16px; block-size: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--warp-icon-stroke, 1.5); stroke-linecap: round; stroke-linejoin: round; }
+  [data-expression="vivid"] .ico { stroke-linecap: square; stroke-linejoin: miter; }
+
+  /* frame placement: 05 dialog / alert dialog / sheet parts in a div, not a top-layer <dialog> */
+  .layer > [data-frame] { position: absolute; inset: 0; z-index: var(--warp-z-modal); display: grid; place-items: center; padding: 16px; pointer-events: auto; }
+  .layer > [data-frame] > [data-part="backdrop"] { position: absolute; inset: 0; background: var(--warp-color-scrim); backdrop-filter: blur(var(--warp-blur-overlay)); -webkit-backdrop-filter: blur(var(--warp-blur-overlay)); animation: warp-fade-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  .layer > [data-frame] > [data-part="positioner"] {
+    position: relative; inline-size: min(100%, var(--_w, 440px)); max-block-size: calc(100% - 32px); box-sizing: border-box;
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; color: var(--warp-color-text);
+    background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
+    border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3);
+    animation: warp-enter var(--warp-duration-slow) var(--warp-ease-out) both;
+  }
+  .layer > [data-frame][data-state="closing"] > [data-part="backdrop"] { animation: warp-fade-out calc(var(--warp-duration-slow) * 0.7) var(--warp-ease-in) both; }
+  .layer > [data-frame][data-state="closing"] > [data-part="positioner"] { animation: warp-exit calc(var(--warp-duration-slow) * 0.7) var(--warp-ease-in) both; }
+  .layer > [data-frame] [data-part="grab"] { display: none; }
+  .layer > [data-frame] [role="alertdialog"] [data-part="footer"], .layer > [data-frame] [data-part="positioner"][role="alertdialog"] > [data-part="footer"] { border: 0; background: transparent; padding-block-start: 0; }
+  .layer > [data-scope="sheet"][data-frame] { place-items: stretch end; padding: 0; }
+  .layer > [data-scope="sheet"][data-frame] > [data-part="positioner"] { inline-size: min(100%, 400px); max-block-size: none; block-size: 100%; border-radius: 0; border-block: 0; border-inline-end: 0; animation-name: warp-drawer-in; }
+  .layer > [data-scope="sheet"][data-frame][data-state="closing"] > [data-part="positioner"] { animation-name: warp-drawer-out; }
+  @keyframes warp-sheet-in { from { opacity: 0; transform: translateY(calc(100% * var(--warp-motion-scale))); } }
+  @keyframes warp-sheet-out { to { opacity: 0; transform: translateY(calc(60% * var(--warp-motion-scale))); } }
+  @keyframes warp-drawer-in { from { opacity: 0; transform: translateX(calc(100% * var(--warp-motion-scale))); } }
+  @keyframes warp-drawer-out { to { opacity: 0; transform: translateX(calc(60% * var(--warp-motion-scale))); } }
+  @container screen (max-width: 599px) {
+    .layer > [data-frame] { place-items: end stretch; padding: 0; }
+    .layer > [data-frame] > [data-part="positioner"] { inline-size: 100%; max-block-size: 88%; block-size: auto; border-radius: var(--warp-radius-surface) var(--warp-radius-surface) 0 0; border-block-end: 0; border-inline: 0; animation-name: warp-sheet-in; }
+    .layer > [data-frame][data-state="closing"] > [data-part="positioner"] { animation-name: warp-sheet-out; }
+    .layer > [data-frame] [data-part="grab"] { display: block; justify-self: center; inline-size: 36px; block-size: 4px; border-radius: 2px; background: var(--warp-color-border-strong); margin: 8px 0 -8px; }
+    .layer > [data-frame] [data-part="footer"] { flex-direction: column-reverse; }
+    .layer > [data-frame] [data-part="footer"] > [data-scope="button"] { inline-size: 100%; block-size: var(--warp-control-lg); }
+  }
+  /* frame placement: 05's toast region is fixed to the window; in a frame it sits in the frame */
+  .layer > [data-scope="toast"][data-part="region"] { position: absolute; inset: auto 16px 16px auto; inline-size: min(360px, calc(100% - 32px)); block-size: 0; z-index: var(--warp-z-toast); }
+  @container screen (max-width: 599px) { .layer > [data-scope="toast"][data-part="region"] { inset: auto 12px 84px 12px; inline-size: auto; } }
+  /* phone: a bottom sheet owns the bottom edge, so while one is open toasts wait under its scrim instead of covering its footer */
+  @container screen (max-width: 599px) { .layer:has(> [data-frame]) > [data-scope="toast"][data-part="region"] { z-index: calc(var(--warp-z-modal) - 1); } }
+  .layer > [data-scope="toast"] [data-part="root"] { translate: 0 calc(var(--_y) * -1); }
+  /* frame placement: 02's shell measures the window (100dvh); in a frame it measures the frame */
+  .viewport { container: frame / size; }
+  .viewport > .app { --warp-viewport-block: 100cqb; --warp-safe-top: 0px; --warp-safe-bottom: 0px; --warp-safe-left: 0px; --warp-safe-right: 0px; }
+  /* the shell's rail tooltip (05 tooltip content): a frame can't host the top layer, so it is placed in the frame layer */
+  .layer > [data-scope="tooltip"][data-part="content"] { position: absolute; z-index: var(--warp-z-tooltip); pointer-events: none; white-space: nowrap; }
+  .layer > [data-scope="tooltip"][data-part="content"][data-open] { opacity: 1; translate: 0 0; transition-duration: var(--warp-duration-fast); }
+
+  /* page content helpers inside the demo apps (cards, page header, lists, tables) */
+  .ph { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; }
+  .ph .crumb { margin: 0 0 6px; font: 500 var(--warp-text-eyebrow-size)/1 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
+  .ph h1 { margin: 0; font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: var(--warp-text-title-size); line-height: 1.1; letter-spacing: var(--warp-text-title-tracking); }
+  .ph h1 em { font-style: normal; color: var(--warp-color-accent-text); }
+  [data-expression="vivid"] .ph h1 em { font-style: italic; }
+  .card { background: var(--warp-color-surface-raised); border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); padding: var(--warp-pad-surface); box-shadow: var(--warp-elevation-1); min-inline-size: 0; }
+  .card :is(h3, h4), .shell-page :is(h3, h4, h5) { margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block-end: 14px; flex-wrap: wrap; }
+  .muted { color: var(--warp-color-text-subtle); }
+  .cap { font-size: var(--warp-text-caption-size); }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .between { justify-content: space-between; }
+  .stack { display: grid; gap: var(--warp-space-group); }
+  .vh { position: absolute !important; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; }
+  .list li { display: flex; align-items: center; gap: 12px; padding-block: 11px; border-block-start: 1px solid var(--warp-color-border); font-size: var(--warp-text-label-size); }
+  .list li:first-child { border-block-start: 0; }
+  .list li > span:first-of-type { flex: 1; min-inline-size: 0; }
+  .tbl { inline-size: 100%; border-collapse: collapse; font-size: var(--warp-text-label-size); }
+  .tbl th { text-align: start; font: 500 var(--warp-text-eyebrow-size)/1 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); padding: 0 8px 10px 0; }
+  .tbl td { padding: 10px 8px 10px 0; border-block-start: 1px solid var(--warp-color-border); font-variant-numeric: tabular-nums; vertical-align: middle; }
+  .tbl td:last-child, .tbl th:last-child { text-align: end; padding-inline-end: 0; }
+  .tbl tbody th { text-align: start; font: 400 var(--warp-text-label-size)/1.4 var(--warp-text-body-font); letter-spacing: 0; text-transform: none; color: var(--warp-color-text); padding: 10px 8px 10px 0; border-block-start: 1px solid var(--warp-color-border); }
+  .tbl-wrap { overflow-x: auto; min-inline-size: 0; scrollbar-width: thin; }
+  .tbl-wrap:focus-visible { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+  @container screen (max-width: 599px) { .tbl .hide-sm, .tbl [data-col] { display: none; } }
+  .shell-page { display: grid; align-content: start; gap: var(--warp-space-group); padding: var(--warp-space-page); }
+  @container warp-shell (min-width: 1000px) { .shell-page { padding: 28px 36px; } }
+  .shell-page[data-flush] { padding: 0; gap: 0; }
+  .tabs-host { display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
+  .tabs-host > [data-scope="tabs"] [data-part="list"] { overflow-x: auto; scrollbar-width: none; }
+  .tabs-panel:focus-visible { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 4px; border-radius: var(--warp-radius-mark); }
+}
+
+/* ===========================================================================
+   Specimen chrome
+   ======================================================================== */
+@layer specimen {
+  * { box-sizing: border-box; }
+  html { scroll-padding-block-start: 72px; }
+  body { margin: 0; overflow-x: clip; background: var(--warp-color-page); color: var(--warp-color-text); }
+  h1, h2, h3, h4, p { margin: 0; }
+  .wrap { inline-size: min(100%, 1360px); margin-inline: auto; padding-inline: var(--warp-space-page); }
+  .eyebrow { font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); font-weight: 500; color: var(--warp-color-text-subtle); }
+  .skip { position: fixed; inset-block-start: 8px; inset-inline-start: 8px; z-index: 300; padding: 8px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); transform: translateY(-160%); }
+  .skip:focus-visible { transform: none; }
+
+  /* settings bar: copied from the reference in foundations.html (01-foundations §13), not restyled. One row at every width:
+     ≥ 1024 the controls sit inline (wrapping to a second row at most); below 1024 they live in a
+     sheet under a single 56px row, opened by the Settings button. */
+  .bar { position: sticky; inset-block-start: 0; z-index: var(--warp-z-sticky);
+    background: color-mix(in oklab, var(--warp-color-page) 88%, transparent);
+    backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    border-block-end: 1px solid var(--warp-color-border); padding-inline: env(safe-area-inset-left) env(safe-area-inset-right); }
+  .bar > .wrap { display: flex; align-items: center; gap: 8px var(--warp-space-group); min-block-size: 56px; }
+  .mark { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+  .mark svg { inline-size: 22px; block-size: 22px; }
+  .mark small { font: 500 var(--warp-text-caption-size) var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+  .bar-toggle { display: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px var(--warp-space-group); margin-inline-start: auto; justify-content: flex-end; padding-block: 8px; min-inline-size: 0; }
+  .controls > hr { display: none; }
+  .ctl { display: grid; gap: 3px; flex: none; }
+  .ctl > span { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--warp-color-text-subtle); padding-inline-start: 2px; }
+  .seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
+  .seg label { position: relative; display: flex; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg i { font-style: normal; display: inline-flex; align-items: center; justify-content: center; block-size: max(26px, var(--warp-hit-min)); padding-inline: 9px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
+  .seg label:hover i { color: var(--warp-color-text); }
+  .seg input:checked + i { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
+  .seg input:focus-visible + i { outline: 2px solid var(--warp-color-focus); outline-offset: 1px; }
+  @media (forced-colors: active) { .seg input:checked + i { outline: 2px solid Highlight; outline-offset: -2px; } }
+  @media (max-width: 1023.98px) {
+    .bar > .wrap { position: relative; }
+    .bar-toggle { display: inline-flex; margin-inline-start: auto; gap: 8px; }
+    .bar-toggle { min-inline-size: 0; flex-shrink: 1; }
+    .bar-toggle small { font: 400 var(--warp-text-caption-size) var(--warp-font-mono); text-transform: none; letter-spacing: 0; color: var(--warp-color-text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+    .controls { display: none; position: absolute; inset-inline: calc(var(--warp-space-page) * -1); inset-block-start: 100%; margin: 0;
+      flex-direction: column; flex-wrap: nowrap; gap: 14px; padding: 16px var(--warp-space-page) calc(20px + env(safe-area-inset-bottom));
+      max-block-size: calc(100dvh - 56px); overflow-y: auto; overscroll-behavior: contain;
+      background: var(--warp-color-surface-overlay); border-block-end: 1px solid var(--warp-color-border); box-shadow: var(--warp-elevation-3); }
+    .bar[data-open] .controls { display: flex; animation: warp-enter var(--warp-duration-base) var(--warp-ease-out); }
+    .controls > hr { display: block; margin: 0; }
+    .mark small { display: none; }
+    @media (min-width: 480px) { .mark small { display: inline; } }
+    .ctl { grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 12px; }
+    .ctl > span { padding: 0; }
+    .seg { inline-size: 100%; }
+    .seg label { flex: 1; }
+    .seg i { flex: 1; }
+  }
+
+  .bar .controls > .ctl:last-child { align-self: end; display: block; }
+
+  .hero { padding-block: clamp(40px, 7vw, 88px) clamp(28px, 4vw, 48px); display: grid; gap: 28px; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: end; }
+  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+  .hero h1 { font-family: var(--warp-text-display-font); font-weight: var(--warp-text-display-weight); font-size: clamp(56px, 9vw, 120px); line-height: 0.95; letter-spacing: var(--warp-text-display-tracking); margin-block: 14px 18px; }
+  .hero h1 i { font-style: normal; color: var(--warp-color-accent-solid); }
+  [data-expression="vivid"] .hero h1 i { font-style: italic; }
+  .hero .lede { max-inline-size: 60ch; font-size: 17px; line-height: 1.6; color: var(--warp-color-text-subtle); }
+  .hero .lede b { color: var(--warp-color-text); font-weight: 500; }
+  .index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 420px) { .index { grid-template-columns: 1fr; } }
+  /* m6: titles in a row share a top line; the meta line sits at the bottom */
+  .index a { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; text-decoration: none; color: inherit; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); --warp-sweep-radius: var(--warp-radius-surface); }
+  .index a > [data-part="sweep-base"] { color: var(--warp-color-border); }
+  .index a b { font-weight: 500; font-size: 14px; }
+  .index a span.n { font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-accent-text); letter-spacing: 0.06em; }
+  .index a small { margin-block-start: auto; font-size: 12px; color: var(--warp-color-text-subtle); }
+  .index a:focus-visible { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+
+  .flowsec { padding-block: 56px 24px; border-block-start: 1px solid var(--warp-color-border); }
+  .sechead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 28px; align-items: end; margin-block-end: 20px; }
+  @media (max-width: 760px) { .sechead { grid-template-columns: 1fr; } }
+  .sechead h2 { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: clamp(28px, 3.4vw, 40px); line-height: 1.08; letter-spacing: var(--warp-text-title-tracking); margin-block: 8px 10px; }
+  .sechead p.d { max-inline-size: 72ch; color: var(--warp-color-text-subtle); line-height: 1.6; }
+  .notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-block-end: 22px; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: hidden; background: var(--warp-color-border); }
+  @media (max-width: 900px) { .notes { grid-template-columns: 1fr; } }
+  .notes > div { background: var(--warp-color-surface); padding: 14px 16px; display: grid; align-content: start; gap: 6px; }
+  .notes h3 { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--warp-color-accent-text); }
+  .notes ul { margin: 0; padding-inline-start: 16px; display: grid; gap: 4px; font-size: 13px; line-height: 1.5; color: var(--warp-color-text-subtle); }
+  .notes code { font-size: 12px; color: var(--warp-color-text); }
+
+  .devices { display: grid; gap: 28px; }
+  .devices .pair { display: grid; grid-template-columns: 834fr 390fr; gap: 28px; align-items: start; }
+  @media (max-width: 760px) { .devices .pair { grid-template-columns: 1fr; } }
+  .devices[data-frames="phone"] { grid-template-columns: minmax(0, 420px); justify-content: center; }
+  .devices[data-frames="tablet"] { grid-template-columns: minmax(0, 860px); justify-content: center; }
+  .device { display: grid; gap: 10px; min-inline-size: 0; }
+  .device > figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 12.5px; }
+  .device > figcaption b { font-weight: 600; }
+  .device > figcaption span { font: 400 11.5px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+  .stage { position: relative; inline-size: 100%; overflow: hidden; border-radius: 14px; border: 1px solid var(--warp-color-border-strong); box-shadow: var(--warp-elevation-2), 0 30px 60px -30px rgb(0 0 0 / 0.25); background: var(--warp-color-surface-sunken); }
+  .device[data-kind="phone"] .stage { border-radius: 34px; padding: 0; }
+  .screen { position: absolute; inset-block-start: 0; inset-inline-start: 0; transform-origin: 0 0; overflow: hidden; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--warp-color-page); color: var(--warp-color-text); container: screen / size; }
+  .chrome { display: flex; align-items: center; gap: 10px; block-size: 36px; padding-inline: 14px; border-block-end: 1px solid var(--warp-color-border); background: var(--warp-color-surface-sunken); font: 400 11.5px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+  .chrome i { inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--warp-color-border-strong); }
+  .chrome .url { flex: 1; max-inline-size: 460px; margin-inline: auto; block-size: 22px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 6px; background: var(--warp-color-surface); border: 1px solid var(--warp-color-border); }
+  .chrome .url .ico { inline-size: 11px; block-size: 11px; }
+  .status { display: flex; align-items: center; justify-content: space-between; block-size: 40px; padding-inline: 28px 24px; font: 600 13px/1 var(--warp-font-sans); }
+  .status span:last-child { display: flex; gap: 5px; align-items: center; }
+  .status i { display: block; inline-size: 16px; block-size: 9px; border-radius: 2px; border: 1px solid currentColor; opacity: 0.85; }
+  .status b { display: block; inline-size: 14px; block-size: 9px; background: linear-gradient(90deg, currentColor 0 22%, transparent 22% 34%, currentColor 34% 56%, transparent 56% 68%, currentColor 68%); clip-path: polygon(0 100%, 100% 0, 100% 100%); }
+  .device[data-kind="tablet"] .status { block-size: 28px; font-size: 11.5px; padding-inline: 22px; }
+  /* its own stacking context, so the shell's sticky z-indexes stay under the frame's overlay layer */
+  .viewport { position: relative; z-index: 0; isolation: isolate; overflow: auto; min-block-size: 0; overscroll-behavior: contain; scrollbar-width: thin; }
+  .layer { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+  .layer > * { pointer-events: auto; }
+  .layer > [data-scope="toast"], .layer > [data-scope="tour"] { pointer-events: none; }
+
+  .foot { padding-block: 48px 64px; border-block-start: 1px solid var(--warp-color-border); color: var(--warp-color-text-subtle); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+  .pagelayer { position: fixed; inset: 0; z-index: 400; pointer-events: none; container: screen / size; }
+  .pagelayer > * { pointer-events: auto; }
+  .seclocal { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .seclocal [data-scope="segmented"] { max-inline-size: 100%; overflow-x: auto; scrollbar-width: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar" id="bar">
+  <div class="wrap">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ico"><path d="M5 3v18M10 3v18M15 3v18M20 3v18"/><path d="M2 9h20M2 15h20" stroke="var(--warp-color-accent-solid)" stroke-width="2"/></svg>
+      warp <small>flows v0.2</small>
+    </div>
+    <button type="button" class="bar-toggle" data-scope="button" data-emphasis="ghost" data-tone="neutral" aria-expanded="false" aria-controls="bar-settings">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings<small id="bar-summary"></small></button>
+    <div class="controls" id="bar-settings" role="group" aria-label="Specimen settings">
+      <div class="ctl"><span id="l-expression">Expression</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-expression" data-ctl="expression">
+          <label><input type="radio" name="expression" value="quiet"><i>Quiet</i></label>
+          <label><input type="radio" name="expression" value="balanced" checked><i>Balanced</i></label>
+          <label><input type="radio" name="expression" value="vivid"><i>Vivid</i></label>
+        </div></div>
+      <div class="ctl" title="warp({ fields }) writes data-fields on :root; one attribute flips every field"><span id="l-fields">Fields</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-fields" data-ctl="fields">
+          <label><input type="radio" name="fields" value="floating" checked><i>Floating</i></label>
+          <label><input type="radio" name="fields" value="classic"><i>Classic</i></label>
+        </div></div>
+      <div class="ctl"><span id="l-theme">Theme</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-theme" data-ctl="theme">
+          <label><input type="radio" name="theme" value="auto" checked><i>Auto</i></label>
+          <label><input type="radio" name="theme" value="light"><i>Light</i></label>
+          <label><input type="radio" name="theme" value="dark"><i>Dark</i></label>
+        </div></div>
+      <div class="ctl"><span id="l-density">Density</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-density" data-ctl="density">
+          <label><input type="radio" name="density" value="compact"><i>Compact</i></label>
+          <label><input type="radio" name="density" value="cozy" checked><i>Cozy</i></label>
+          <label><input type="radio" name="density" value="comfortable"><i>Comfortable</i></label>
+        </div></div>
+      <div class="ctl"><span id="l-motion">Motion</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-motion" data-ctl="motion">
+          <label><input type="radio" name="motion" value="auto" checked><i>Auto</i></label>
+          <label><input type="radio" name="motion" value="full"><i>Full</i></label>
+          <label><input type="radio" name="motion" value="reduce"><i>Reduced</i></label>
+        </div></div>
+      <div class="ctl"><span id="l-flair">Flair</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-flair" data-ctl="flair">
+          <label><input type="radio" name="flair" value="auto" checked><i>Auto</i></label>
+          <label><input type="radio" name="flair" value="sweep"><i>Sweep</i></label>
+          <label><input type="radio" name="flair" value="none"><i>None</i></label>
+        </div></div>
+      <hr>
+      <div class="ctl" title="page extra: which device frames each flow shows"><span id="l-frames">Frames</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-frames" data-ctl="frames">
+          <label><input type="radio" name="frames" value="all" checked><i>All</i></label>
+          <label><input type="radio" name="frames" value="desktop"><i>Desktop</i></label>
+          <label><input type="radio" name="frames" value="tablet"><i>Tablet</i></label>
+          <label><input type="radio" name="frames" value="phone"><i>Phone</i></label>
+        </div></div>
+      <div class="ctl"><span id="kbd-slot"></span></div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="wrap hero">
+    <div>
+      <p class="eyebrow">weft · design language · 09 app flows</p>
+      <h1>Flows<i>.</i></h1>
+      <p class="lede">The screens every product ships before its first real feature: <b>getting in, getting set up, changing settings, paying, and recovering when something breaks</b>. Each flow is one Zod schema bound to one <code>mutation</code>, laid out three ways, and signed with the sweep only where it earns its place: fields, progress the user caused, the one primary action, and the moment something is accepted.</p>
+    </div>
+    <nav class="index" aria-label="Flows in this specimen" id="index"></nav>
+  </section>
+
+  <div id="sections"></div>
+</main>
+
+<footer class="wrap foot">
+  <span>warp · 09 app flows · v0.1 · 2026-10-28</span>
+  <span>Spec <code>09-app-flows.md</code> · CSS <code>tokens/warp-flows.css</code> · press <kbd>?</kbd> for shortcuts</span>
+</footer>
+<div class="pagelayer layer" id="pagelayer"></div>
+
+<script src="warp-sweep.js"></script>
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = document.documentElement;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let uid = 0; const nid = (p = "x") => `${p}-${++uid}`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const money = (n) => "$" + n.toFixed(2);
+
+/* ---------------------------------------------------------------- icons */
+const I = {
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
+  lock: '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 8.5-8.5M16 6l2.5 2.5M14 8l2 2"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  left: '<path d="M19 12H5m6-6-6 6 6 6"/>', right: '<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
+  bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  plug: '<path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0zM12 16.5V21"/>',
+  home: '<path d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5"/>',
+  folder: '<path d="M3.5 6.5A1.5 1.5 0 0 1 5 5h4l2 2.5h8A1.5 1.5 0 0 1 20.5 9v9.5A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+  trash: '<path d="M4 7h16M9.5 7V4.5h5V7M6 7l1 13h10l1-13M10 11v5M14 11v5"/>',
+  alert: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+  wifioff: '<path d="M2 8.5a15 15 0 0 1 4.5-2.7M9.8 5.1A15 15 0 0 1 22 8.5M5 12a10 10 0 0 1 4.2-2.3M15 10a10 10 0 0 1 4 2M8.5 15.5a5 5 0 0 1 7 0M12 19.5v.01M3 3l18 18"/>',
+  wifi: '<path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19.5v.01"/>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>',
+  card: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 9.5h19M6 15h4"/>',
+  truck: '<path d="M2.5 6h11v10h-11zM13.5 9.5h4l3 3.5v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  bag: '<path d="M5 8h14l-1 12.5H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+  shield: '<path d="M12 3 4.5 6v5.5c0 4.5 3.2 8 7.5 9.5 4.3-1.5 7.5-5 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  building: '<path d="M4 20.5v-16h10v16M14 9.5h6v11M2.5 20.5h19M7.5 8h3M7.5 12h3M7.5 16h3"/>',
+  code: '<path d="m8 8-4.5 4L8 16M16 8l4.5 4L16 16M13.5 5l-3 14"/>',
+  g: '<circle cx="12" cy="12" r="8.5"/><path d="M16 9.2A4.6 4.6 0 1 0 16.6 13H12"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  download: '<path d="M12 4v11m-5-5 5 5 5-5M4.5 19.5h15"/>',
+  upload: '<path d="M12 16V5m-5 5 5-5 5 5M4.5 19.5h15"/>',
+  keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M7 14h10"/>',
+  doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+  spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5"/>',
+  arrowup: '<path d="M7 17 17 7M8 7h9v9"/>',
+};
+const ic = (n, extra = "") => `<svg class="ico" data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false" ${extra}>${I[n] || ""}</svg>`;
+const LOGO = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="ico" style="width:20px;height:20px"><path d="M5 3v18M10 3v18M15 3v18M20 3v18" /><path d="M2 9h20M2 15h20" stroke="var(--warp-color-accent-solid)" stroke-width="2"/></svg>`;
+
+/* ------------------------------------------------------- primitive markup
+   Only warp's own parts. Buttons, badges, avatars, kbd, spinner, tabs, tooltip,
+   dialog/sheet/toast parts: 05 (warp-components.css). Field, switch, checkbox,
+   segmented, OTP: 03 (warp-inputs.css). Shell: 02 (warp-layout.css). */
+const SW = '<span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>';
+const FRAME = '<span data-part="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-part="sweep-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-part="sweep-outline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>';   // the one frame (warp.css §1b)
+/* btn: 05 Button. kind = solid (no emphasis) | frame | soft | outline | ghost | link. Frames keep
+   the accent tone, so the corners, the outline and the label copy all visibly sweep (review 01 B1). */
+function btn(label, o = {}) {
+  const { kind = "solid", tone = "", size = "", type = "button", attrs = "", icon = "", after = "", block = false, only = false } = o;
+  const inner = `${icon ? ic(icon) : ""}${only ? `<span data-part="sr-only">${label}</span>` : label}${after ? ic(after) : ""}`;
+  const common = `data-scope="button" ${kind === "solid" ? "" : `data-emphasis="${kind}"`} ${kind === "link" ? 'data-hit="text"' : ""} ${tone ? `data-tone="${tone}"` : ""} ${size ? `data-size="${size}"` : ""} ${block ? "data-full" : ""} ${only ? "data-icon-only" : ""} type="${type}" ${attrs}`;
+  if (kind === "frame") return `<button ${common} data-sweep>${FRAME}<span data-part="sweep-label">${inner}</span><span data-part="sweep-content" aria-hidden="true">${inner}</span></button>`;
+  return `<button ${common}><span data-part="label">${inner}</span></button>`;
+}
+const badge = (text, tone = "", dot = false) => `<span data-scope="badge" ${tone ? `data-tone="${tone}"` : ""}>${dot ? '<span data-scope="status-dot" aria-hidden="true"></span>' : ""}${text}</span>`;
+const kbd = (k) => `<kbd data-scope="kbd">${k}</kbd>`;
+const avatar = (initials, name, size = "sm") => `<span data-scope="avatar" data-size="${size}" role="img" aria-label="${esc(name)}">${initials}</span>`;
+function iconSweep(n) { return `<span data-part="icon" aria-hidden="true"><span data-part="sweep-base">${ic(n)}</span><span data-part="sweep">${ic(n)}</span></span>`; }
+/* field: 03 Field. A real, visible <label for>; no aria-label on the input (review 03 M1).
+   The hint is linked only while it has text (m15). */
+function field(o) {
+  const { label, name, type = "text", value = "", icon = "", hint = "", ph = " ", auto = "", mode = "", attrs = "", variant = "" } = o;
+  const id = nid(name), mid = id + "-m";
+  return `<div data-scope="field" data-name="${name}" ${variant ? `data-variant="${variant}"` : ""}><div data-part="control" data-sweep>${SW}${icon ? iconSweep(icon) : ""}<label data-part="label" for="${id}">${esc(label)}</label><input data-part="input" id="${id}" name="${name}" type="${type}" value="${esc(value)}" placeholder="${esc(ph)}" ${hint ? `aria-describedby="${mid}"` : ""} ${auto ? `autocomplete="${auto}"` : ""} ${mode ? `inputmode="${mode}"` : ""} ${attrs}></div><span data-part="message" id="${mid}" ${hint ? "" : "hidden"}>${hint}</span></div>`;
+}
+function selectField(o) {
+  const { label, name, options, value, attrs = "" } = o; const id = nid(name), mid = id + "-m";
+  return `<div data-scope="field" data-name="${name}"><div data-part="control" data-sweep data-filled>${SW}<label data-part="label" for="${id}">${esc(label)}</label><select data-part="input" id="${id}" name="${name}" ${attrs}>${options.map(([v, t]) => `<option value="${v}" ${v === value ? "selected" : ""}>${t}</option>`).join("")}</select><span data-part="indicator" aria-hidden="true">${ic("chev")}</span></div><span data-part="message" id="${mid}" hidden></span></div>`;
+}
+/* switch: 03 Switch (the rail fill sweeps through it). With a visible label, or named by a row's title. */
+const TRACK = `<span data-part="track" data-sweep><span data-part="rail-fill" aria-hidden="true"><span data-part="rail-hover"></span></span>${SW}<span data-part="thumb" aria-hidden="true"></span></span>`;
+function sw(label, on = false, name = "") {
+  return `<label data-scope="switch" data-size="sm"><input type="checkbox" role="switch" name="${name}" ${on ? "checked" : ""}>${TRACK}<span data-part="label">${label}</span></label>`;
+}
+function swBare(labelId, descId, on = false, name = "") {
+  return `<label data-scope="switch" data-size="sm"><input type="checkbox" role="switch" name="${name}" aria-labelledby="${labelId}" ${descId ? `aria-describedby="${descId}"` : ""} ${on ? "checked" : ""}>${TRACK}</label>`;
+}
+/* checkbox: 03 Checkbox, a native input; named by a visible label elsewhere in the row */
+function checkbox(labelId, on = false, attrs = "") {
+  return `<label data-scope="checkbox"><input type="checkbox" aria-labelledby="${labelId}" ${on ? "checked" : ""} ${attrs}><span data-part="control" data-sweep>${SW}<svg viewBox="0 0 24 24" aria-hidden="true"><path data-part="check" pathLength="1" d="M5 12.5 L9.5 17 L19 7"/><path data-part="dash" pathLength="1" d="M6 12h12"/></svg></span></label>`;
+}
+/* segmented: 03 Segmented. Native radios (arrow keys for free); only an unselected option sweeps (M8). */
+function segmented(label, opts, i = 0, attrs = "") {
+  const name = nid("seg");
+  return `<div data-scope="segmented" data-size="sm" role="radiogroup" aria-label="${label}" ${attrs}><span data-part="indicator" aria-hidden="true" data-instant></span>${opts.map((o, j) => `<label data-sweep><span data-part="sweep" aria-hidden="true"></span><input type="radio" name="${name}" value="${o[0]}" ${j === i ? "checked" : ""}><span data-part="item">${o[1]}</span></label>`).join("")}</div>`;
+}
+function segPlace(s) {
+  const c = $("input:checked", s), ind = $(':scope > [data-part="indicator"]', s); if (!c || !ind) return;
+  const it = c.parentElement; if (!it.offsetWidth) return;
+  ind.style.setProperty("--_x", it.offsetLeft + "px"); ind.style.setProperty("--_w", it.offsetWidth + "px");
+  if (ind.hasAttribute("data-instant")) requestAnimationFrame(() => requestAnimationFrame(() => ind.removeAttribute("data-instant")));
+}
+const segAll = (scope = document) => $$('[data-scope="segmented"]', scope).forEach(segPlace);
+const segValue = (s) => $("input:checked", s)?.value;
+function segSet(s, v) { const r = $(`input[value="${v}"]`, s); if (r) { r.checked = true; segPlace(s); } }
+const rail = (on = false, v = "100%", extra = "") => `<span data-part="rail" ${on ? "data-on" : ""} style="--v:${v}" ${extra}><span data-part="rail-fill"></span></span>`;
+/* tabs: 05 Tabs, with the APG keyboard (← → Home End, automatic activation) */
+function tabs(label, items, sel = 0) {
+  const base = nid("tab");
+  // panels sit beside the tabs root, not inside it: 05's [data-scope="tabs"] [data-part="indicator"] is a
+  // descendant selector and would restyle any segmented / select indicator inside a panel (reported to 05)
+  return `<div class="tabs-host"><div data-scope="tabs" data-part="root"><div data-part="list" role="tablist" aria-label="${label}">${items.map(([k, t], i) => `<button type="button" role="tab" data-part="trigger" id="${base}-${k}" aria-controls="${base}-${k}-p" aria-selected="${i === sel}" tabindex="${i === sel ? 0 : -1}" data-k="${k}">${t}</button>`).join("")}<span data-part="indicator" aria-hidden="true"></span></div></div>
+    ${items.map(([k, , body], i) => `<div role="tabpanel" class="tabs-panel" id="${base}-${k}-p" aria-labelledby="${base}-${k}" tabindex="0" data-k="${k}" ${i === sel ? "" : "hidden"}>${body}</div>`).join("")}</div>`;
+}
+function tabPlace(root) {
+  const t = $('[role="tab"][aria-selected="true"]', root), ind = $('[data-part="indicator"]', root); if (!t || !ind || !t.offsetWidth) return;
+  ind.style.setProperty("--_ix", t.offsetLeft + "px"); ind.style.setProperty("--_iw", t.offsetWidth + "px");
+}
+function tabSelect(t, focus = true) {
+  const root = t.closest('[data-scope="tabs"]'), list = t.closest('[role="tablist"]');
+  $$('[role="tab"]', list).forEach((x) => { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; $("#" + x.getAttribute("aria-controls")).hidden = !on; });
+  if (focus) t.focus({ preventScroll: true }); t.parentElement.scrollTo?.({ left: t.offsetLeft - 24 }); tabPlace(root);
+  const p = $("#" + t.getAttribute("aria-controls")); wire(p); segAll(p);
+  root.dispatchEvent(new CustomEvent("tabchange", { detail: t.dataset.k, bubbles: true }));
+}
+const tabsAll = (scope = document) => $$('[data-scope="tabs"][data-part="root"]', scope).forEach(tabPlace);
+
+/* =================================================================
+   SIGNATURE BEHAVIOUR — what weft's sweep() / floatingLabel() do.
+   The phase machine is the shared one, warp-sweep.js (window.warpSweep).
+   ================================================================= */
+function msOf(el, token) {
+  const t = document.createElement("i"); t.style.cssText = `position:absolute;transition-duration:var(${token})`;
+  el.append(t); const v = parseFloat(getComputedStyle(t).transitionDuration) * 1000; t.remove(); return Math.round(v);
+}
+const sweep = (host) => warpSweep.init(host);
+const docOffset = (el) => { let x = 0, y = 0; for (let n = el; n; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
+const cv = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+const alphaOf = (str) => { cv.clearRect(0, 0, 1, 1); cv.fillStyle = "#000"; cv.fillStyle = str; cv.fillRect(0, 0, 1, 1); return cv.getImageData(0, 0, 1, 1).data[3] / 255; };
+/* floatingLabel(): the <label for> keeps its name as visually-hidden text; the per-character
+   colour spans are display-only (aria-hidden), so the name is never letter-spaced (review 03 B1). */
+function floatingLabel(f) {
+  const label = f.querySelector('[data-part="label"]'), input = f.querySelector('[data-part="input"]');
+  if (!label || !input) return;
+  if (!label._split) {
+    label._split = true; const text = label.textContent;
+    label.innerHTML = `<span data-part="sr-only">${esc(text)}</span><span aria-hidden="true">${[...text].map((c) => `<span data-char>${c === " " ? "&nbsp;" : esc(c)}</span>`).join("")}</span>`;
+    label.addEventListener("transitionend", (e) => { if (e.propertyName === "font-size") delays(f); });
+    if (input.tagName === "INPUT") input.addEventListener("input", () => input.closest('[data-part="control"]').toggleAttribute("data-filled", input.value.length > 0));
+    if (input.value) input.closest('[data-part="control"]').toggleAttribute("data-filled", true);
+  }
+  delays(f); notch(f);
+}
+function delays(f) {
+  const box = f.querySelector('[data-part="control"]'); const w = box.offsetWidth; if (!w) return;
+  const dur = warpSweep.duration(box) || 620;
+  const [bx] = docOffset(box), label = box.querySelector('[data-part="label"]'), [lx] = docOffset(label);
+  for (const c of label.querySelectorAll("[data-char]")) c.style.setProperty("--d", Math.max(0, ((lx - bx + c.offsetLeft) / w) * dur).toFixed(0) + "ms");
+}
+function notch(f) {
+  const label = f.querySelector('[data-part="label"]');
+  let base = "";
+  for (let n = f.parentElement; n; n = n.parentElement) { const c = getComputedStyle(n).backgroundColor; if (c && alphaOf(c) >= 0.99) { base = c; break; } }
+  if (base) label.style.setProperty("--_notch-color", base);
+}
+function wire(scope) {
+  $$("[data-sweep]", scope).forEach(sweep);
+  requestAnimationFrame(() => { $$('[data-scope="field"]', scope).forEach(floatingLabel); segAll(scope); tabsAll(scope); });
+}
+const refreshFields = (scope = document) => { $$('[data-scope="field"]', scope).forEach((f) => f.offsetWidth && floatingLabel(f)); segAll(scope); tabsAll(scope); };
+
+/* field errors: the sweep pins in, painted critical; message slides in and is linked only while shown */
+function describe(inp, id, on) {
+  const d = new Set((inp.getAttribute("aria-describedby") || "").split(" ").filter(Boolean));
+  on ? d.add(id) : d.delete(id); d.size ? inp.setAttribute("aria-describedby", [...d].join(" ")) : inp.removeAttribute("aria-describedby");
+}
+function setError(f, msg) {
+  if (!f) return;
+  const ctl = f.querySelector('[data-part="control"]'), inp = f.querySelector('[data-part="input"]'), m = f.querySelector('[data-part="message"]');
+  if (f._hint === undefined) f._hint = m.hidden ? "" : m.innerHTML;
+  f.toggleAttribute("data-invalid", !!msg); ctl.toggleAttribute("data-invalid", !!msg);
+  msg ? inp.setAttribute("aria-invalid", "true") : inp.removeAttribute("aria-invalid");
+  if (msg && msg.trim()) { if (m.textContent !== msg) { m.textContent = msg; m.hidden = false; m.style.animation = "none"; void m.offsetWidth; m.style.animation = ""; } }
+  else if (!msg) { m.innerHTML = f._hint || ""; m.hidden = !f._hint; }
+  describe(inp, m.id, !m.hidden && !!m.textContent.trim());
+}
+const fieldOf = (scope, name) => $(`[data-scope="field"][data-name="${name}"]`, scope);
+const valOf = (scope, name) => (fieldOf(scope, name)?.querySelector('[data-part="input"]').value || "").trim();
+/* validate a map of {name: (v) => msg|""}; live re-validation once shown */
+function validate(scope, rules) {
+  let first = null;
+  for (const [name, rule] of Object.entries(rules)) {
+    const f = fieldOf(scope, name); if (!f) continue;
+    const msg = rule(valOf(scope, name));
+    setError(f, msg);
+    if (msg && !first) first = f;
+    if (!f._live) { f._live = true; f.querySelector('[data-part="input"]').addEventListener("input", () => { if (f.hasAttribute("data-invalid")) setError(f, rule(valOf(scope, name))); }); }
+  }
+  if (first) first.querySelector('[data-part="input"]').focus();
+  return !first;
+}
+const RX = { email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/ };
+
+/* pending: 05's loading button. Width kept, label stays the accessible name, focus stays put
+   (aria-disabled, never disabled); a capture-phase guard swallows clicks while it loads. */
+function pending(b, on) {
+  if (!b) return;
+  b.toggleAttribute("data-loading", on);
+  if (on) { b.setAttribute("aria-busy", "true"); b.setAttribute("aria-disabled", "true"); }
+  else { b.removeAttribute("aria-busy"); b.removeAttribute("aria-disabled"); }
+  let s = b.querySelector(':scope > [data-part="spinner"]');
+  if (on && !s) { s = document.createElement("span"); s.dataset.scope = "spinner"; s.dataset.part = "spinner"; s.setAttribute("aria-hidden", "true"); b.append(s); }
+  if (!on && s) s.remove();
+}
+document.addEventListener("click", (e) => { if (e.target.closest?.('[data-scope="button"][data-loading]')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+function setLabel(b, html) { $$(':scope > [data-part="label"], :scope > [data-part="sweep-label"], :scope > [data-part="sweep-content"]', b).forEach((c) => (c.innerHTML = html)); }
+
+/* step machine: one attribute per step; exits continue the direction */
+function goStep(flow, name, { dir = "fwd", focus = true } = {}) {
+  const cur = $(':scope > [data-part="step"][data-state="active"]', flow);
+  const next = $(`:scope > [data-part="step"][data-step="${name}"]`, flow);
+  if (!next || cur === next) return;
+  flow.dataset.dir = dir;
+  $$(':scope > [data-part="step"][data-state="leaving"]', flow).forEach((s) => s.removeAttribute("data-state"));
+  if (cur) {
+    cur.dataset.state = "leaving";
+    const done = (e) => { if (e && e.target !== cur) return; if (cur.dataset.state === "leaving") cur.removeAttribute("data-state"); };
+    cur.addEventListener("animationend", done); setTimeout(done, 700);
+  }
+  next.toggleAttribute("data-after-exit", !!cur);
+  next.dataset.state = "active";
+  const clr = (e) => { if (e.target !== next) return; next.removeAttribute("data-after-exit"); next.removeEventListener("animationend", clr); }; next.addEventListener("animationend", clr);
+  const scr = flow.closest(".screen");
+  requestAnimationFrame(() => {
+    refreshFields(next); wire(next);
+    if (focus) $('[data-part="step-title"], [data-part-title]', next)?.focus({ preventScroll: true });
+    const vp = flow.closest(".viewport"); if (vp && vp.scrollTop > 0) vp.scrollTo({ top: 0, behavior: root.dataset.motion === "reduce" ? "auto" : "smooth" });
+  });
+  if (scr) announce(scr, next.dataset.label || "");
+}
+function announce(scr, text, urgent = false) { const lr = $(urgent ? ".live-a" : ".live", scr); if (lr && text) { lr.textContent = ""; setTimeout(() => (lr.textContent = text), 40); } }
+
+/* overlays: 05 dialog / alert dialog / sheet PARTS (header · title · description · close · body ·
+   footer), placed in the frame's layer (frame placement, see the style block) */
+function trap(panel, e) {
+  if (e.key !== "Tab") return;
+  const f = $$('button:not(:disabled), [href], input:not(:disabled), select, textarea, [tabindex]:not([tabindex="-1"])', panel).filter((x) => x.offsetParent !== null);
+  if (!f.length) return; const a = f[0], z = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+  else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+}
+/* o: { title, desc, body, footer, close } → the 05 part tree */
+function overlay(layer, o, { scope = "dialog", w = "", role = "dialog", onClose } = {}) {
+  const ret = document.activeElement;
+  const el = document.createElement("div");
+  el.dataset.scope = scope; el.dataset.frame = "";
+  const tid = nid("t"), did = nid("d");
+  const close = o.close === false ? "" : `<button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only data-size="sm" data-part="close" data-close><span data-part="label">${ic("x")}<span data-part="sr-only">Close</span></span></button>`;
+  el.innerHTML = `<div data-part="backdrop"></div><div data-part="positioner" role="${role}" aria-modal="true" aria-labelledby="${tid}" ${o.desc ? `aria-describedby="${did}"` : ""} ${w ? `style="--_w:${w}"` : ""}>
+    <span data-part="grab" aria-hidden="true"></span>
+    <header data-part="header">${o.mark || ""}<h3 data-part="title" id="${tid}" tabindex="-1">${o.title}</h3>${role === "alertdialog" ? "" : close}${o.desc ? `<p data-part="description" id="${did}">${o.desc}</p>` : ""}</header>
+    <div data-part="body">${o.body || ""}</div>${o.footer ? `<footer data-part="footer">${o.footer}</footer>` : ""}</div>`;
+  layer.append(el);
+  const panel = $('[data-part="positioner"]', el);
+  const shut = (why) => {
+    if (el.dataset.state === "closing") return; el.dataset.state = "closing";
+    let gone = false;
+    const end = (e) => { if (gone || (e && e.target !== panel)) return; gone = true; el.remove(); ret && ret.focus && ret.focus({ preventScroll: true }); onClose && onClose(why); };
+    panel.addEventListener("animationend", end); setTimeout(end, 500);
+  };
+  $('[data-part="backdrop"]', el).addEventListener("click", () => shut("backdrop"));
+  el.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); shut("esc"); } trap(panel, e); });
+  el.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) shut("cancel"); });
+  wire(el);
+  requestAnimationFrame(() => { ($("[data-autofocus]", el) || $('[data-part="title"]', el)).focus({ preventScroll: true }); refreshFields(el); });
+  el._close = shut;
+  return el;
+}
+/* toast: 05 Toast parts (root · icon · title · description · actions), stacked newest-first.
+   Announced through the frame's pre-mounted polite / assertive regions. */
+function toast(scr, { title, body = "", tone = "", action, ms = 5000, icon }) {
+  const region = $('[data-scope="toast"][data-part="region"]', scr);
+  const t = document.createElement("li"); t.dataset.scope = "toast"; t.dataset.part = "root"; t.dataset.tone = tone || "neutral";
+  t.innerHTML = `<span data-part="icon">${ic(icon || (tone === "positive" ? "check" : tone === "critical" ? "alert" : "spark"))}</span><span data-part="title">${title}</span>${body ? `<span data-part="description">${body}</span>` : ""}<span data-part="actions">${action ? btn(action.label, { kind: "ghost", size: "sm", attrs: "data-toast-act" }) : ""}${btn("Dismiss", { kind: "ghost", tone: "neutral", size: "sm", only: true, icon: "x", attrs: "data-toast-x" })}</span>`;
+  region.append(t);
+  while (region.children.length > 3) region.firstElementChild.remove();
+  const stack = () => { let y = 0; [...region.children].reverse().forEach((c) => { if (c.dataset.state === "closed") return; c.style.setProperty("--_y", -y + "px"); y += c.offsetHeight + 8; }); };
+  stack();
+  announce(scr, `${title}. ${body.replace(/<[^>]+>/g, "")}`, tone === "critical");
+  const gone = () => { if (t.dataset.state) return; t.dataset.state = "closed"; stack(); setTimeout(() => { t.remove(); stack(); }, 320); };
+  let timer = setTimeout(gone, ms);
+  const hold = () => clearTimeout(timer), resume = () => { clearTimeout(timer); timer = setTimeout(gone, 2000); };
+  t.addEventListener("pointerenter", hold); t.addEventListener("pointerleave", resume); t.addEventListener("focusin", hold); t.addEventListener("focusout", resume);
+  $("[data-toast-x]", t).addEventListener("click", gone);
+  if (action) $("[data-toast-act]", t).addEventListener("click", () => { action.fn(); gone(); });
+  return t;
+}
+
+/* ========================================================== the shell: 02 Shell
+   Phone: bottom bar · tablet: 80px rail, icon over a visible 12px label (C4, review 03 B2),
+   plus a tooltip with the shortcut, wired by aria-describedby · desktop: sidebar. */
+const NAV = [["home", "Home", "home", "G H"], ["projects", "Projects", "folder", "G P"], ["members", "Members", "users", "G M"], ["integrations", "Integrations", "plug", "G I"], ["settings", "Settings", "gear", "G S"]];
+function shell(content, { current = "home", tour = false, title = "Home", flush = false } = {}) {
+  const n = ++uid;
+  const items = NAV.map(([k, t, i, keys]) => `<li data-tab><a href="#" data-part="nav-item" data-sweep data-nav="${k}" data-tip="${t}" data-keys="${keys}" ${tour ? `data-tour="${k}"` : ""} ${k === current ? 'aria-current="page"' : ""}><span data-part="icon">${ic(i)}${SW}</span><span data-part="nav-label">${t}</span></a></li>`).join("");
+  return `<div data-scope="shell" data-part="root">
+    <div data-part="layout">
+      <header data-part="header">
+        <a href="#" data-part="brand" aria-label="Acme, home">${LOGO}<span data-part="brand-name">Acme</span></a>
+        <p data-part="title">${title}</p>
+        <nav data-part="crumbs" data-scope="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="#">Fieldwork</a></li><li><span aria-current="page">${title}</span></li></ol></nav>
+        <div data-part="actions">
+          <button type="button" data-part="command" data-sweep aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">${SW}${ic("search")}<span data-part="command-label">Search</span><span data-part="command-hint">Jump to, or run…</span><kbd>⌘K</kbd></button>
+          <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only ${tour ? 'data-tour="bell"' : ""}><span data-part="label">${ic("bell")}<span data-part="sr-only">Notifications, 2 unread</span></span></button>
+          ${avatar("IO", "Ines Okafor")}
+        </div>
+      </header>
+      <nav data-part="nav" aria-label="Main" id="nav-${n}"><ul data-part="nav-list">${items}</ul></nav>
+      <div data-part="main" id="main-${n}" tabindex="-1"><div class="shell-page" ${flush ? "data-flush" : ""}>${content}</div></div>
+    </div>
+  </div>`;
+}
+const noNav = (r) => r.addEventListener("click", (e) => { if (e.target.closest("a[href='#']")) e.preventDefault(); });
+/* rail tooltip: shown on hover / keyboard focus while the nav is a rail; the label stays visible */
+function railTips(scr) {
+  const layer = $(".layer", scr);
+  for (const a of $$('[data-scope="shell"] [data-part="nav-item"][data-tip]', scr)) {
+    const tip = document.createElement("span"); tip.dataset.scope = "tooltip"; tip.dataset.part = "content"; tip.setAttribute("role", "tooltip"); tip.id = nid("tip");
+    tip.innerHTML = `Go to ${a.dataset.tip}${a.dataset.keys.split(" ").map((k) => `<kbd>${k}</kbd>`).join("")}`;
+    tip.hidden = true; layer.append(tip); a.setAttribute("aria-describedby", tip.id);
+    const isRail = () => { const sh = a.closest('[data-scope="shell"]'); return sh && sh.offsetWidth >= 600 && sh.offsetWidth < 1000; };
+    const show = () => {
+      if (!isRail()) return;
+      const L = layer.getBoundingClientRect(), k = L.width / layer.offsetWidth || 1, r = a.getBoundingClientRect();
+      tip.hidden = false; tip.style.left = (r.right - L.left) / k + 6 + "px"; tip.style.top = (r.top - L.top) / k + (r.height / k - tip.offsetHeight) / 2 + "px";
+      requestAnimationFrame(() => tip.setAttribute("data-open", ""));
+    };
+    const hide = () => { tip.removeAttribute("data-open"); tip.hidden = true; };
+    a.addEventListener("pointerenter", show); a.addEventListener("pointerleave", hide);
+    a.addEventListener("focus", () => a.matches(":focus-visible") && show()); a.addEventListener("blur", hide);
+    a.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
+  }
+}
+
+/* ================================================================
+   DEMO 1 · Sign-in → OTP → signed in (+ magic link, passkey, SSO)
+   ================================================================ */
+function weaveArt() {
+  let s = "";
+  for (let i = 0; i < 24; i++) s += `<line x1="${12 + i * 26}" y1="0" x2="${12 + i * 26}" y2="800"/>`;
+  [[180, 0.15, 0.75], [300, 0.35, 0.95], [420, 0.05, 0.55], [560, 0.25, 0.85]].forEach(([y, a, b], i) => { s += `<path pathLength="1" style="--i:${i}" d="M${a * 640} ${y} H${b * 640}"/>`; });
+  return `<svg data-part="weave" viewBox="0 0 640 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`;
+}
+function demoAuth(app, scr) {
+  const otpId = nid("otp"), otpMsg = otpId + "-m";
+  const cells = [0, 1, 2].map((n) => `<span data-part="cell" data-sweep aria-hidden="true" style="--n:${n}">${SW}<b data-part="char"></b></span>`).join("") + '<span data-part="sep" aria-hidden="true"></span>' + [3, 4, 5].map((n) => `<span data-part="cell" data-sweep aria-hidden="true" style="--n:${n}">${SW}<b data-part="char"></b></span>`).join("");
+  const back = btn("Back", { kind: "ghost", tone: "neutral", size: "sm", icon: "left", attrs: 'data-act="back"' });
+  app.innerHTML = `<div data-scope="auth"><div data-part="layout">
+    <aside data-part="brand" aria-label="About Acme">
+      <span class="brandmark" style="position:relative;z-index:1;display:inline-flex;gap:8px;align-items:center;font:600 14px/1 var(--warp-text-heading-font)">${LOGO}Acme</span>
+      ${weaveArt()}
+      <blockquote>“We moved forty services in a quarter and nobody had to <em>think</em> about sign-in once.”<cite>Ines Okafor · Head of Platform, Fieldwork</cite></blockquote>
+    </aside>
+    <div data-part="main"><div data-part="panel">
+      <div data-scope="flow">
+        <section data-part="step" data-step="signin" data-state="active" data-label="Sign in">
+          <form class="stack" novalidate data-flow-step="signin">
+            <div><span data-part="logo">${LOGO}Acme</span></div>
+            <div><h3 data-part="title" data-part-title tabindex="-1">Sign in to Acme</h3><p data-part="lede">Welcome back. Use your work email or a passkey.</p></div>
+            <div data-scope="sso">
+              ${btn("Continue with passkey", { kind: "frame", icon: "key", block: true, attrs: 'data-act="passkey"' })}
+              <div class="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                ${btn("Google", { kind: "soft", tone: "neutral", icon: "g", attrs: 'data-act="sso" data-p="Google"' })}
+                ${btn("GitHub", { kind: "soft", tone: "neutral", icon: "code", attrs: 'data-act="sso" data-p="GitHub"' })}
+                ${btn("SAML", { kind: "soft", tone: "neutral", icon: "building", attrs: 'data-act="sso" data-p="your identity provider" aria-label="Single sign-on (SAML)"' })}
+              </div>
+            </div>
+            <div data-part="divider">or with email</div>
+            <div data-part="formerr" hidden></div>
+            ${field({ label: "Work email", name: "email", type: "email", icon: "mail", ph: "you@company.com", auto: "username webauthn", value: "" })}
+            ${field({ label: "Password", name: "password", type: "password", icon: "lock", ph: "8+ characters", auto: "current-password" })}
+            <div data-part="row">${sw("Keep me signed in", true, "remember")}${btn("Forgot password?", { kind: "link", attrs: 'data-act="forgot"' })}</div>
+            ${btn("Continue", { type: "submit", block: true, size: "lg", after: "right" })}
+            <p data-part="fine">${btn("Email me a sign-in link instead", { kind: "link", attrs: 'data-act="magic"' })}</p>
+            <p data-part="fine">New to Acme? ${btn("Create an account", { kind: "link", attrs: 'data-act="signup"' })} · ${btn("Have an invite?", { kind: "link", attrs: 'data-act="invite"' })}</p>
+          </form>
+        </section>
+        <section data-part="step" data-step="otp" data-label="Two-step verification">
+          <form class="stack" novalidate data-flow-step="otp">
+            <div>${back}</div>
+            <span data-part="mark">${ic("shield")}</span>
+            <div><h3 data-part="title" data-part-title tabindex="-1">Enter your code</h3><p data-part="lede">Open your authenticator app and enter the 6-digit code for <b data-slot="email">you@company.com</b>.</p></div>
+            <div class="stack" style="gap:8px">
+              <label for="${otpId}" data-part="code-label">6-digit code</label>
+              <div data-scope="otp"><input id="${otpId}" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" enterkeyhint="done" aria-describedby="${otpMsg}">${cells}</div>
+              <p data-part="otpmsg" id="${otpMsg}" class="cap muted" style="margin:0;min-block-size:1.4em">Demo: any code works except <code>000000</code>. Paste works.</p>
+            </div>
+            ${btn("Verify", { type: "submit", block: true, size: "lg", attrs: "disabled" })}
+            <div data-part="row">${btn("Resend in 0:30", { kind: "link", attrs: 'data-act="resend" disabled' })}${btn("Use a backup code", { kind: "link", attrs: 'data-act="backup"' })}</div>
+          </form>
+        </section>
+        <section data-part="step" data-step="magic" data-label="Check your inbox">
+          <div class="stack">
+            <div>${back}</div>
+            <span data-part="mark">${ic("mail")}</span>
+            <div><h3 data-part="title" data-part-title tabindex="-1">Check your inbox</h3><p data-part="lede" data-slot="inbox">We sent a sign-in link to <b data-slot="email">you@company.com</b>. It works once and expires in 15 minutes.</p></div>
+            ${btn("Open email app", { kind: "frame", block: true, icon: "arrowup" })}
+            <div data-part="row">${btn("Resend link", { kind: "link", attrs: 'data-act="resend-link"' })}${btn("Use a different email", { kind: "link", attrs: 'data-act="back"' })}</div>
+          </div>
+        </section>
+        <section data-part="step" data-step="reset" data-label="Reset your password">
+          <form class="stack" novalidate data-flow-step="reset">
+            <div>${back}</div>
+            <span data-part="mark">${ic("key")}</span>
+            <div><h3 data-part="title" data-part-title tabindex="-1">Reset your password</h3><p data-part="lede">We'll email a link that lets you choose a new one. It expires in 30 minutes.</p></div>
+            ${field({ label: "Work email", name: "remail", type: "email", icon: "mail", ph: "you@company.com", auto: "email" })}
+            ${btn("Send reset link", { type: "submit", block: true, size: "lg" })}
+          </form>
+        </section>
+        <section data-part="step" data-step="invite" data-label="Join Fieldwork">
+          <div class="stack">
+            <div>${back}</div>
+            <div class="row" style="gap:12px">${avatar("NB", "Noor Baptiste", "lg")}<div><p class="cap muted" style="margin:0">Noor Baptiste invited you to</p><b style="font-size:18px">Fieldwork</b> <span style="margin-inline-start:6px">${badge("Editor", "info")}</span></div></div>
+            <div><h3 data-part="title" data-part-title tabindex="-1">Join Fieldwork on Acme</h3><p data-part="lede">You'll join as <b>ada@fieldwork.dev</b>. Editors can deploy and change project settings.</p></div>
+            ${btn("Join Fieldwork", { block: true, size: "lg", attrs: 'data-act="join"' })}
+            <div data-part="row"><span class="cap muted">Not you? ${btn("Sign in with another account", { kind: "link", attrs: 'data-act="back"' })}</span>${btn("Decline", { kind: "ghost", tone: "neutral", size: "sm", attrs: 'data-act="decline"' })}</div>
+          </div>
+        </section>
+        <section data-part="step" data-step="done" data-label="Signed in">
+          <div class="stack">
+            <span data-part="mark" data-tone="positive"><svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <div><h3 data-part="title" data-part-title tabindex="-1">You're in</h3><p data-part="lede" data-slot="how">Signed in with two-step verification. Taking you to Fieldwork…</p></div>
+            <div style="position:relative;block-size:3px">${rail(false, "100%", "data-go")}</div>
+            ${btn("Start over", { kind: "ghost", tone: "neutral", icon: "refresh", attrs: 'data-act="reset"' })}
+          </div>
+        </section>
+      </div>
+    </div></div>
+  </div></div>`;
+  const flow = $('[data-scope="flow"]', app);
+  const f1 = $('[data-flow-step="signin"]', app), f2 = $('[data-flow-step="otp"]', app), f3 = $('[data-flow-step="reset"]', app);
+  let resendTimer, email = "";
+  const setEmail = (v) => { email = v || valOf(f1, "email") || "you@company.com"; $$('[data-slot="email"]', app).forEach((b) => (b.textContent = email)); };
+  const done = (how) => {
+    $('[data-slot="how"]', app).textContent = how;
+    goStep(flow, "done");
+    const r = $("[data-go]", app); r.removeAttribute("data-on"); r.style.setProperty("--v", "100%");
+    requestAnimationFrame(() => requestAnimationFrame(() => r.setAttribute("data-on", "")));
+  };
+  const startResend = () => {
+    const b = $('[data-act="resend"]', app); let n = 30; b.disabled = true; clearInterval(resendTimer);
+    const tick = () => { setLabel(b, n > 0 ? `Resend in 0:${String(n).padStart(2, "0")}` : "Resend code"); b.disabled = n > 0; n--; if (n < -1) clearInterval(resendTimer); };
+    tick(); resendTimer = setInterval(tick, 1000);
+  };
+  f1.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const err = $('[data-part="formerr"]', f1); err.hidden = true;
+    const ok = validate(f1, {
+      email: (v) => (!v ? "Enter your work email." : RX.email.test(v) ? "" : "That doesn't look like an email. Check for a typo."),
+      password: (v) => (!v ? "Enter your password." : v.length < 8 ? "Passwords are at least 8 characters." : ""),
+    });
+    if (!ok) return;
+    const b = $('button[type="submit"]', f1); pending(b, true); await sleep(900); pending(b, false);
+    if (valOf(f1, "password") === "wrongpass") {
+      err.hidden = false;
+      err.innerHTML = `<div data-scope="alert" data-tone="critical" role="alert"><span data-part="icon">${ic("alert")}</span><span data-part="title">That email and password don't match.</span><span data-part="description">Try again, or reset your password. After 5 tries we'll ask for a code.</span></div>`;
+      setError(fieldOf(f1, "password"), " ");
+      fieldOf(f1, "password").querySelector("input").select();
+      return;
+    }
+    setEmail(); goStep(flow, "otp"); startResend();
+    setTimeout(() => otpIn.focus(), 60);
+  });
+  // OTP: 03's one-input model. One real input (one-time-code autofill, paste, screen readers read
+  // one field) painted into six swept cells; the active cell holds its sweep; auto-submits on the 6th.
+  const otp = $('[data-scope="otp"]', app), otpIn = $(":scope > input", otp), otpCells = $$('[data-part="cell"]', otp), vb = $('button[type="submit"]', f2), msg = $('[data-part="otpmsg"]', app);
+  const hint = msg.innerHTML;
+  const paint = () => {
+    otpIn.value = otpIn.value.replace(/\D/g, "").slice(0, 6);
+    const focused = document.activeElement === otpIn, at = Math.min(otpIn.value.length, 5), locked = otp.hasAttribute("data-invalid") || otp.dataset.state === "success";
+    otpCells.forEach((c, i) => { $('[data-part="char"]', c).textContent = otpIn.value[i] || ""; if (!locked) warpSweep.pin(c, focused && i === at); });
+    vb.disabled = otpIn.value.length !== 6;
+  };
+  const clearErr = () => { if (!otp.hasAttribute("data-invalid")) return; otp.removeAttribute("data-invalid"); otpIn.removeAttribute("aria-invalid"); otpCells.forEach((c) => { c.removeAttribute("data-invalid"); warpSweep.pin(c, false); }); msg.innerHTML = hint; msg.style.color = ""; msg.removeAttribute("role"); };
+  otpIn.addEventListener("input", () => { clearErr(); paint(); if (otpIn.value.length === 6) f2.requestSubmit(); });
+  ["focus", "blur", "keyup", "click", "select"].forEach((t) => otpIn.addEventListener(t, paint));
+  f2.addEventListener("submit", async (e) => {
+    e.preventDefault(); if (otpIn.value.length !== 6 || otp.dataset.state) return;
+    otp.dataset.state = "pending"; otpIn.setAttribute("aria-busy", "true"); pending(vb, true); msg.textContent = "Checking…";
+    await sleep(650); pending(vb, false); otp.removeAttribute("data-state"); otpIn.removeAttribute("aria-busy");
+    if (otpIn.value === "000000") {
+      otp.setAttribute("data-invalid", ""); otpIn.setAttribute("aria-invalid", "true");
+      otpCells.forEach((c) => { c.setAttribute("data-invalid", ""); warpSweep.pin(c, true); });
+      msg.textContent = "That code didn't work. Codes change every 30 seconds; use the newest one. 4 tries left.";
+      msg.style.color = "var(--warp-color-critical-text)"; msg.setAttribute("role", "alert");
+      otpIn.value = ""; paint(); otpIn.focus();
+      return;
+    }
+    otp.dataset.state = "success"; msg.textContent = "Code accepted."; msg.style.color = "var(--warp-color-positive-text)";
+    // one-shot confirm: every cell is held in, so the positive sweep cascades L→R (transition-delay by --n) and stays
+    otpCells.forEach((c) => warpSweep.pin(c, true)); otpIn.blur();
+    const wait = msOf(otp, "--warp-sweep-duration") + 6 * msOf(otp, "--warp-flow-cascade") + 200;
+    await sleep(wait); done("Signed in with two-step verification. Taking you to Fieldwork…");
+  });
+  f3.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!validate(f3, { remail: (v) => (!v ? "Enter the email you sign in with." : RX.email.test(v) ? "" : "That doesn't look like an email. Check for a typo.") })) return;
+    const b = $('button[type="submit"]', f3); pending(b, true); await sleep(700); pending(b, false);
+    setEmail(valOf(f3, "remail"));
+    $('[data-step="magic"] [data-part="title"]', app).textContent = "Check your inbox";
+    $('[data-slot="inbox"]', app).innerHTML = `If <b>${esc(email)}</b> has an account, a reset link is on its way. It works once and expires in 30 minutes.`;
+    goStep(flow, "magic");
+  });
+  app.addEventListener("click", async (e) => {
+    const a = e.target.closest("[data-act]"); if (!a || a.disabled) return;
+    const act = a.dataset.act;
+    if (act === "back") { goStep(flow, "signin", { dir: "back" }); clearInterval(resendTimer); }
+    if (act === "magic") {
+      const ok = validate(f1, { email: (v) => (!v ? "Enter your email first; we'll send the link there." : RX.email.test(v) ? "" : "That doesn't look like an email. Check for a typo.") });
+      if (ok) { setEmail(); $('[data-slot="inbox"]', app).innerHTML = `We sent a sign-in link to <b>${esc(email)}</b>. It works once and expires in 15 minutes.`; goStep(flow, "magic"); }
+    }
+    if (act === "forgot") { goStep(flow, "reset"); }
+    if (act === "invite") { goStep(flow, "invite"); }
+    if (act === "join") { pending(a, true); await sleep(900); pending(a, false); done("You joined Fieldwork as an Editor. Taking you there…"); }
+    if (act === "decline") { toast(scr, { title: "Invite declined", body: "Noor will see that you declined. The link stops working." }); goStep(flow, "signin", { dir: "back" }); }
+    if (act === "passkey" || act === "sso") {
+      pending(a, true); await sleep(act === "passkey" ? 1300 : 1000); pending(a, false);
+      done(act === "passkey" ? "Signed in with your passkey. No code needed: a passkey is already two factors." : `Signed in through ${a.dataset.p}. Taking you to Fieldwork…`);
+    }
+    if (act === "resend") { toast(scr, { title: "New code sent", body: "Your old code stops working now.", icon: "mail" }); startResend(); }
+    if (act === "resend-link") toast(scr, { title: "Link sent again", body: `Check ${esc(email)}. Only the newest link works.`, icon: "mail" });
+    if (act === "backup") toast(scr, { title: "Backup codes", body: "Backup codes are 10 characters. The field would switch to one text input here." });
+    if (act === "signup") toast(scr, { title: "Sign-up", body: "Same layout: name, email, password with a rules checklist, then email verification." });
+    if (act === "reset") {
+      f1.reset(); f3.reset(); $$('[data-scope="field"]', app).forEach((f) => { setError(f, ""); f.querySelector('[data-part="control"]').removeAttribute("data-filled"); });
+      $('[data-part="formerr"]', f1).hidden = true; otpIn.value = ""; otp.removeAttribute("data-state"); otpCells.forEach((c) => warpSweep.pin(c, false)); paint();
+      msg.innerHTML = hint; msg.style.color = "";
+      goStep(flow, "signin", { dir: "back" });
+    }
+  });
+  paint();
+}
+
+/* ================================================================
+   DEMO 2 · Onboarding checklist + coachmark tour
+   ================================================================ */
+function demoOnboard(app, scr) {
+  const ITEMS = [
+    { k: "project", t: "Create your first project", d: "Projects hold your services, environments and deploys.", done: true },
+    { k: "invite", t: "Invite your team", d: "Add teammates by email and choose their role.", target: "members", tip: ["Invite your team here", "Members lists everyone in Fieldwork. Invite by email or share a link, and pick each person's role as you go."] },
+    { k: "repo", t: "Connect a repository", d: "Deploy on every push to your main branch.", target: "integrations", tip: ["Connect your code", "Integrations is where repositories, chat and alerting live. Connect one and every push can deploy."] },
+    { k: "notify", t: "Turn on notifications", d: "Hear about failed deploys before your users do.", target: "bell", tip: ["Stay in the loop", "Failed deploys, mentions and approvals arrive here. Choose which ones also reach email or your phone."] },
+  ];
+  const CK = nid("ck-t");
+  app.innerHTML = shell(`
+    <div class="ph"><div><p class="crumb">Fieldwork · Home</p><h3>Good morning, <em>Ines</em></h3></div>${btn("New project", { icon: "plus", size: "sm" })}</div>
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start">
+      <section data-scope="checklist" aria-labelledby="${CK}">
+        <div data-part="head"><div><h4 data-part="title" id="${CK}">Get set up</h4><p class="cap muted" style="margin:4px 0 0">Four steps, about five minutes.</p></div>
+          <div class="row"><span data-part="count" aria-live="polite">1 of 4</span>${btn("Hide checklist", { kind: "ghost", tone: "neutral", size: "sm", only: true, icon: "x", attrs: 'data-act="hide"' })}</div></div>
+        <div data-part="progress">${rail(true, "25%", 'role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow="1"')}</div>
+        <ol>${ITEMS.map((it) => { const id = nid("ck"); return `<li data-part="item" data-k="${it.k}" ${it.done ? 'data-state="done"' : ""}>${checkbox(id, !!it.done, `data-act="toggle"`)}<b id="${id}">${it.t}</b>${it.target ? btn("Show me", { kind: "ghost", size: "sm", attrs: `data-part="action" data-act="show" data-k="${it.k}"` }) : "<span></span>"}<p>${it.d}</p></li>`; }).join("")}</ol>
+        <div data-part="done"><span data-part="mark" data-tone="positive"><svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div><b>You're all set</b><p class="cap muted" style="margin:2px 0 0">Fieldwork is ready. This card will tidy itself away tomorrow.</p></div></div>
+        <div class="row between" style="border-top:1px solid var(--warp-color-border);padding-top:14px">${btn("Take the tour", { kind: "frame", size: "sm", icon: "spark", attrs: 'data-act="tour"' })}<span class="cap muted">Tip: ${kbd("Esc")} ends a tour</span></div>
+      </section>
+      <section class="card"><div class="card-head"><h4>Recent projects</h4>${btn("View all", { kind: "link" })}</div>
+        <ul class="list">${[["fieldwork-prod", "Deployed 4m ago", "positive", "Live"], ["fieldwork-staging", "Deploying…", "info", "Building"], ["docs-site", "Deployed yesterday", "positive", "Live"]].map(([n, d, t, s]) => `<li>${ic("folder")}<span><b style="font-weight:500">${n}</b><br><span class="cap muted">${d}</span></span>${badge(s, t, true)}</li>`).join("")}</ul>
+      </section>
+    </div>`, { current: "home", tour: true, title: "Home" });
+  noNav(app);
+  const ck = $('[data-scope="checklist"]', app), layer = $(".layer", scr);
+  const st = Object.fromEntries(ITEMS.map((i) => [i.k, !!i.done]));
+  const render = () => {
+    const n = Object.values(st).filter(Boolean).length;
+    $('[data-part="count"]', ck).textContent = `${n} of 4`;
+    const r = $('[data-part="progress"] [data-part="rail"]', ck); r.style.setProperty("--v", (n / 4) * 100 + "%"); r.setAttribute("aria-valuenow", n);
+    for (const li of $$('[data-part="item"]', ck)) { const d = st[li.dataset.k]; li.toggleAttribute("data-state", false); if (d) li.dataset.state = "done"; $('input[type="checkbox"]', li).checked = d; }
+    if (n === 4) setTimeout(() => { ck.dataset.state = "complete"; }, 700); else ck.removeAttribute("data-state");
+  };
+  // tour
+  let tourEl = null, steps = [], idx = 0, retFocus = null;
+  const visibleTarget = (k) => $$(`[data-tour="${k}"]`, app).find((el) => el.offsetParent !== null && el.getClientRects().length);
+  function endTour(markDone) {
+    if (!tourEl) return; if (markDone) { steps.forEach((s) => (st[s.k] = true)); render(); }
+    tourEl.remove(); tourEl = null; retFocus && retFocus.focus({ preventScroll: true });
+  }
+  function place() {
+    const s = steps[idx], t = visibleTarget(s.target); if (!t || !tourEl) return;
+    const L = layer.getBoundingClientRect(), k = L.width / layer.offsetWidth || 1, r = t.getBoundingClientRect();
+    const x = (r.left - L.left) / k - 4, y = (r.top - L.top) / k - 4, w = r.width / k + 8, h = r.height / k + 8;
+    const sp = $('[data-part="spotlight"]', tourEl);
+    Object.assign(sp.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px" });
+    sp.dataset.phase = "idle"; void sp.offsetWidth; requestAnimationFrame(() => warpSweep.sync(sp));   // redraw L→R on each step
+    const card = $('[data-part="card"]', tourEl), W = layer.offsetWidth, H = layer.offsetHeight;
+    const cw = card.offsetWidth || 300, chh = card.offsetHeight || 170;
+    const phone = scr.dataset.form === "phone";
+    let cx, cy;
+    if (phone) { cx = 12; card.style.width = W - 24 + "px"; cy = y + h / 2 > H / 2 ? 60 : H - chh - 12; }
+    else if (x + w + cw + 24 < W && x < W * 0.3) { cx = x + w + 14; cy = Math.min(Math.max(12, y + h / 2 - chh / 2), H - chh - 12); }
+    else { cx = Math.min(Math.max(12, x + w - cw), W - cw - 12); cy = y + h + 14; if (cy + chh > H - 12) cy = y - chh - 14; card.style.width = ""; }
+    Object.assign(card.style, { left: cx + "px", top: cy + "px" });
+    $('[data-part="step-count"]', card).textContent = steps.length > 1 ? `Step ${idx + 1} of ${steps.length}` : "Tip";
+    $("h4", card).textContent = s.tip[0]; $("p", card).textContent = s.tip[1];
+    $('[data-part="pips"]', card).innerHTML = steps.length > 1 ? steps.map((_, i) => `<i ${i === idx ? "data-on" : ""}></i>`).join("") : "";
+    $('[data-act="prev"]', card).hidden = idx === 0;
+    setLabel($('[data-act="next"]', card), idx === steps.length - 1 ? "Done" : `Next${ic("right")}`);
+    announce(scr, `${steps.length > 1 ? `Step ${idx + 1} of ${steps.length}. ` : ""}${s.tip[0]}`);
+    requestAnimationFrame(() => $("h4", card).focus({ preventScroll: true }));
+  }
+  function startTour(list) {
+    endTour(false); steps = list; idx = 0; retFocus = document.activeElement;
+    tourEl = document.createElement("div"); tourEl.dataset.scope = "tour";
+    const tid = nid("tour");
+    tourEl.innerHTML = `<div data-part="spotlight" data-sweep data-hold>${SW}</div>
+      <div data-part="card" role="dialog" aria-modal="false" aria-labelledby="${tid}" aria-describedby="${tid}-d"><span data-part="step-count"></span><h4 id="${tid}" tabindex="-1"></h4><p id="${tid}-d"></p>
+      <footer><span data-part="pips" aria-hidden="true"></span>${btn("Skip", { kind: "ghost", tone: "neutral", size: "sm", attrs: 'data-act="skip"' })}${btn("Back", { kind: "ghost", tone: "neutral", size: "sm", attrs: 'data-act="prev"' })}${btn("Next", { size: "sm", attrs: 'data-act="next"' })}</footer></div>`;
+    layer.append(tourEl); wire(tourEl);
+    // the spotlight is held (data-hold): arrival draws it, hover never retracts it
+    tourEl.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-act]"); if (!a) return;
+      if (a.dataset.act === "skip") endTour(false);
+      if (a.dataset.act === "prev") { idx--; place(); }
+      if (a.dataset.act === "next") { st[steps[idx].k] = true; render(); if (idx === steps.length - 1) endTour(true); else { idx++; place(); } }
+    });
+    tourEl.addEventListener("keydown", (e) => { if (e.key === "Escape") endTour(false); if (e.key === "ArrowRight") $('[data-act="next"]', tourEl).click(); if (e.key === "ArrowLeft" && idx > 0) $('[data-act="prev"]', tourEl).click(); });
+    const vp = app.closest(".viewport"); if (vp) vp.scrollTop = 0;
+    requestAnimationFrame(place);
+  }
+  ck.addEventListener("change", (e) => { if (e.target.matches('[data-act="toggle"]')) { const k = e.target.closest("li").dataset.k; st[k] = e.target.checked; render(); } });
+  ck.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-act]"); if (!a || a.matches("input")) return;
+    if (a.dataset.act === "show") startTour([ITEMS.find((i) => i.k === a.dataset.k)]);
+    if (a.dataset.act === "tour") startTour(ITEMS.filter((i) => i.target && !st[i.k]).length ? ITEMS.filter((i) => i.target && !st[i.k]) : ITEMS.filter((i) => i.target));
+    if (a.dataset.act === "hide") {
+      ck.hidden = true;
+      toast(scr, { title: "Checklist hidden", body: "Find it again under Help → Get set up.", action: { label: "Undo", fn: () => (ck.hidden = false) } });
+    }
+  });
+  render();
+}
+
+/* ================================================================
+   DEMO 3 · Settings with a save bar and a danger zone
+   ================================================================ */
+/* re-auth (09 §2.1): a sensitive act asks for the password or a passkey again, then holds a
+   5-minute grant. Shared by settings (MFA, delete) and admin (API keys). */
+const GRANT = { until: 0 };
+function reauth(scr, why) {
+  if (Date.now() < GRANT.until) return Promise.resolve(true);
+  return new Promise((res) => {
+    let ok = false;
+    const d = overlay($(".layer", scr), {
+      title: "Confirm it's you", desc: `${why} You won't be asked again for 5 minutes.`,
+      body: `<form class="stack" novalidate data-flow-step="reauth">${field({ label: "Password", name: "rpw", type: "password", icon: "lock", auto: "current-password", attrs: "data-autofocus" })}<p class="cap muted" style="margin:0">Demo: any 8+ characters.</p></form>`,
+      footer: `${btn("Use a passkey", { kind: "frame", icon: "key", attrs: "data-pk" })}${btn("Confirm", { attrs: "data-go" })}`,
+    }, { w: "420px", onClose: () => res(ok) });
+    const go = async (b) => {
+      const f = $("form", d);
+      if (!b.hasAttribute("data-pk") && !validate(f, { rpw: (v) => (v.length >= 8 ? "" : "Enter your password (8+ characters).") })) return;
+      pending(b, true); await sleep(700); pending(b, false);
+      ok = true; GRANT.until = Date.now() + 5 * 60 * 1000; d._close("done");
+    };
+    $("[data-go]", d).addEventListener("click", (e) => go(e.currentTarget));
+    $("[data-pk]", d).addEventListener("click", (e) => go(e.currentTarget));
+    $("form", d).addEventListener("submit", (e) => { e.preventDefault(); go($("[data-go]", d)); });
+  });
+}
+/* MFA setup (09 §2.3): QR + secret → confirm a TOTP code → backup codes, in one dialog */
+function mfaSetup(scr, onDone) {
+  const codes = ["7KQ2-M9XD", "P4WN-8ZRT", "H2CJ-6VLB", "XN5E-3QYA", "R8TU-K1MF", "B6GD-9WPS", "L3VH-7CNE", "Z9AQ-2JRK"];
+  const qr = (() => { let s = ""; const n = 21; let seed = 7; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { seed = (seed * 9301 + 49297) % 233280; const fin = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13); const on = fin ? (x % 6 === 0 || y % 6 === 0 || (x % 14 > 1 && x % 14 < 5 && y % 14 > 1 && y % 14 < 5)) : seed / 233280 > 0.52; if (on) s += `<rect x="${x}" y="${y}" width="1" height="1"/>`; } return `<svg viewBox="-1 -1 23 23" role="img" aria-label="QR code for your authenticator app" style="inline-size:148px;block-size:148px;fill:currentColor;background:var(--warp-color-surface);padding:6px;border-radius:var(--warp-radius-control);border:1px solid var(--warp-color-border)">${s}</svg>`; })();
+  const d = overlay($(".layer", scr), {
+    title: "Set up an authenticator app", desc: "Step 1 of 3 · Scan the code with 1Password, Authy or Google Authenticator.",
+    body: `<div data-scope="flow" data-part="mfa">
+      <section data-part="step" data-step="scan" data-state="active" data-label="Step 1 of 3, scan"><div class="stack" style="justify-items:start">${qr}<p class="cap muted" style="margin:0">Can't scan? Enter this key: <code data-slot="secret">JBSW Y3DP EHPK 3PXP</code> ${btn("Copy key", { kind: "link", attrs: "data-copy" })}</p></div></section>
+      <section data-part="step" data-step="verify" data-label="Step 2 of 3, confirm"><form class="stack" novalidate>${field({ label: "6-digit code from the app", name: "totp", mode: "numeric", auto: "one-time-code", attrs: 'maxlength="6"' })}<p class="cap muted" style="margin:0">Demo: any 6 digits except 000000.</p></form></section>
+      <section data-part="step" data-step="codes" data-label="Step 3 of 3, backup codes"><div class="stack"><p class="cap" style="margin:0">Each code works once if you lose your phone. Store them somewhere safe; you won't see them again.</p>
+        <ol data-part="codes" aria-label="Backup codes">${codes.map((c) => `<li><code>${c}</code></li>`).join("")}</ol>
+        <div class="row">${btn("Download", { kind: "frame", size: "sm", icon: "download" })}${btn("Copy all", { kind: "ghost", tone: "neutral", size: "sm", attrs: "data-copy" })}</div>
+        <div class="row" style="gap:10px;align-items:center" data-part="ack">${checkbox(nid("ack"), false, "data-ack")}<span>I saved my backup codes</span></div></div></section>
+    </div>`,
+    footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn("Continue", { attrs: "data-next" })}`,
+  }, { w: "460px" });
+  const flow = $('[data-part="mfa"]', d), next = $("[data-next]", d), desc = $('[data-part="description"]', d);
+  const ack = $("[data-ack]", d); const ackLabel = ack.closest("[data-part=ack]").querySelector("span:last-child"); ackLabel.id = ack.getAttribute("aria-labelledby");
+  let step = "scan";
+  next.addEventListener("click", async () => {
+    if (step === "scan") { step = "verify"; goStep(flow, "verify"); desc.textContent = "Step 2 of 3 · Enter the code the app shows now."; setTimeout(() => $("input", flow.querySelector('[data-step="verify"]')).focus(), 80); return; }
+    if (step === "verify") {
+      const f = $('[data-step="verify"] form', d);
+      if (!validate(f, { totp: (v) => (/^\d{6}$/.test(v) ? (v === "000000" ? "That code didn't match. Use the newest one." : "") : "Enter the 6 digits from the app.") })) return;
+      pending(next, true); await sleep(600); pending(next, false);
+      step = "codes"; goStep(flow, "codes"); desc.textContent = "Step 3 of 3 · Save your backup codes."; setLabel(next, "Finish"); next.disabled = true; return;
+    }
+    d._close("done"); onDone && onDone();
+  });
+  $('[data-step="verify"] form', d).addEventListener("submit", (e) => { e.preventDefault(); next.click(); });
+  ack.addEventListener("change", () => (next.disabled = !ack.checked));
+  d.addEventListener("click", (e) => { if (e.target.closest("[data-copy]")) toast(scr, { title: "Copied", body: "Paste it into your password manager." }); });
+}
+/* passkeys (09 §2.1): list, add (the OS prompt is the browser's), remove with undo */
+function passkeys(scr, onChange) {
+  const keys = [["MacBook Pro", "Added Mar 2 · last used today"], ["iPhone 16", "Added Mar 2 · last used yesterday"]];
+  const list = () => keys.map(([n, m], i) => `<li><span class="row" style="flex:1;flex-wrap:nowrap">${ic("key")}<span><b style="font-weight:500">${n}</b><br><span class="cap muted">${m}</span></span></span>${btn(`Remove ${n}`, { kind: "ghost", tone: "critical", size: "sm", only: true, icon: "trash", attrs: `data-rm="${i}"` })}</li>`).join("") || `<li><span class="cap muted">No passkeys yet. Add one to sign in with your fingerprint or face.</span></li>`;
+  const d = overlay($(".layer", scr), { title: "Passkeys", desc: "Sign in with your device instead of a password. Each device has its own passkey.", body: `<ul class="list" data-slot="keys">${list()}</ul>`, footer: `${btn("Done", { kind: "frame", attrs: "data-close" })}${btn("Add passkey", { icon: "plus", attrs: "data-add" })}` }, { scope: "sheet" });
+  const ul = $('[data-slot="keys"]', d), redraw = () => { ul.innerHTML = list(); wire(ul); onChange(keys.length); };
+  d.addEventListener("click", async (e) => {
+    const rm = e.target.closest("[data-rm]");
+    if (rm) { const [gone] = keys.splice(+rm.dataset.rm, 1); redraw(); toast(scr, { title: `${gone[0]} passkey removed`, action: { label: "Undo", fn: () => { keys.push(gone); redraw(); } } }); $("[data-add]", d).focus(); }
+    const add = e.target.closest("[data-add]");
+    if (add) { pending(add, true); await sleep(1100); pending(add, false); keys.push(["This browser", "Added just now"]); redraw(); toast(scr, { title: "Passkey added", body: "Next time, sign in with this device.", tone: "positive" }); }
+  });
+}
+function demoSettings(app, scr) {
+  const PROJ = "fieldwork-prod";
+  const row = (title, desc, control, extra = "") => { const t = nid("row"), dd = t + "-d"; return `<div data-scope="setting-row" ${extra}><div><b id="${t}">${title}</b><p id="${dd}">${desc}</p></div><div data-part="control">${control(t, dd)}</div></div>`; };
+  app.innerHTML = shell(`
+    <div class="ph"><div><p class="crumb">Fieldwork · ${PROJ}</p><h3>Settings</h3></div></div>
+    <div data-scope="settings"><div data-part="layout">
+      <nav data-part="nav" aria-label="Settings sections">
+        <a href="#" data-sec="profile" aria-current="true">${ic("user")}Profile</a>
+        <a href="#" data-sec="notify">${ic("bell")}Notifications</a>
+        <a href="#" data-sec="security">${ic("shield")}Security</a>
+        <a href="#" data-sec="danger" data-tone="critical">${ic("alert")}Danger zone</a>
+      </nav>
+      <form data-part="content" novalidate>
+        <section data-scope="settings-section" data-sec="profile">
+          <header><h4>Profile</h4><p>How you appear to people in Fieldwork.</p></header>
+          <div data-part="group">
+            <div data-scope="setting-row"><div class="row" style="gap:14px;flex-wrap:nowrap">${avatar("IO", "Avatar, Ines Okafor", "lg")}<div><b>Avatar</b><p>PNG or JPG, at least 256 px.</p></div></div>
+              <div data-part="control">${btn("Upload", { kind: "frame", size: "sm", icon: "upload" })}${btn("Remove", { kind: "ghost", tone: "neutral", size: "sm" })}</div></div>
+            <div data-scope="setting-row" data-layout="stack"><div data-part="cols" style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))">
+              ${field({ label: "Display name", name: "name", value: "Ines Okafor", auto: "name" })}
+              ${field({ label: "Email", name: "email", type: "email", value: "ines@fieldwork.dev", icon: "mail", auto: "email", hint: "Verified · used for sign-in and receipts" })}
+              ${selectField({ label: "Time zone", name: "tz", value: "ber", options: [["lon", "London (GMT+0)"], ["ber", "Berlin (GMT+1)"], ["nyc", "New York (GMT−5)"], ["sfo", "San Francisco (GMT−8)"]] })}
+              ${field({ label: "Username", name: "handle", value: "ines", hint: "acme.dev/@ines" })}
+            </div></div>
+          </div>
+        </section>
+        <section data-scope="settings-section" data-sec="notify">
+          <header><h4>Notifications</h4><p>Choose what reaches you outside the app.</p></header>
+          <div data-part="group">
+            ${row("Mentions", "When someone @mentions you in a comment or review.", (t, d) => swBare(t, d, true, "mentions"))}
+            ${row("Failed deploys", "Only for projects you own.", (t, d) => swBare(t, d, true, "fails"))}
+            ${row("Weekly digest", "A Monday summary of last week.", (t, d) => swBare(t, d, false, "digest"))}
+            ${row("Email frequency", "Batch what isn't urgent.", () => segmented("Email frequency", [["now", "Instant"], ["hour", "Hourly"], ["day", "Daily"]], 0))}
+          </div>
+        </section>
+        <section data-scope="settings-section" data-sec="security">
+          <header><h4>Security</h4><p>Sign-in methods for your account.</p></header>
+          <div data-part="group">
+            ${row("Passkeys", '<span data-slot="pk">2 passkeys · MacBook, iPhone. Last used today.</span>', () => btn("Manage passkeys", { kind: "frame", size: "sm", icon: "key", attrs: 'data-act="passkeys"' }))}
+            ${row("Authenticator app", '<span data-slot="mfa">Off. Add a second step when you sign in.</span>', () => `<span data-slot="mfa-badge">${badge("Off", "neutral")}</span>${btn("Set up", { kind: "frame", size: "sm", attrs: 'data-act="mfa"' })}`)}
+          </div>
+        </section>
+        <section data-scope="settings-section" data-sec="danger" data-tone="critical">
+          <header><h4>Danger zone</h4><p>These change who can reach ${PROJ}. Some can't be undone.</p></header>
+          <div data-part="group">
+            ${row("Transfer ownership", `Move ${PROJ} to another workspace. Its URL changes.`, () => btn("Transfer…", { kind: "frame", size: "sm" }))}
+            ${row("Archive project", "Stops deploys and makes it read-only. You can restore it.", () => btn("Archive", { kind: "frame", size: "sm", attrs: 'data-act="archive"' }))}
+            ${row("Delete project", `Deletes ${PROJ}, 3 environments and 214 deploys for good.`, () => btn("Delete project…", { kind: "soft", tone: "critical", size: "sm", icon: "trash", attrs: 'data-act="delete"' }))}
+          </div>
+        </section>
+        <div data-scope="save-bar" role="region" aria-label="Unsaved changes"><p data-part="msg" role="status">You have unsaved changes</p><div data-part="actions">${btn("Discard", { kind: "ghost", tone: "neutral", size: "sm", attrs: 'data-act="discard" style="--_ink:var(--warp-color-on-inverse)"' })}${btn("Save changes", { size: "sm", type: "submit" })}</div></div>
+      </form>
+    </div></div>`, { current: "settings", title: "Settings" });
+  noNav(app);
+  const form = $("form", app), bar = $('[data-scope="save-bar"]', app);
+  const snap = () => JSON.stringify([...new FormData(form)].concat($$('[role="switch"]', form).map((s) => [s.name, s.checked])));
+  let base = snap();
+  const dirty = () => { const d = snap() !== base; bar.toggleAttribute("data-open", d); if (!d) $('[data-part="msg"]', bar).textContent = "You have unsaved changes"; };
+  form.addEventListener("input", dirty); form.addEventListener("change", dirty);
+  const rules = {
+    name: (v) => (!v ? "Add a name people will recognise." : v.length > 40 ? "Keep it under 40 characters." : ""),
+    email: (v) => (!v ? "Email is required for sign-in." : RX.email.test(v) ? "" : "That doesn't look like an email."),
+    handle: (v) => (/^[a-z0-9-]{2,24}$/.test(v) ? "" : "Use 2–24 lowercase letters, numbers or dashes."),
+  };
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!validate(form, rules)) { const n = $$("[data-invalid][data-scope='field']", form).length; $('[data-part="msg"]', bar).textContent = `Fix ${n} field${n > 1 ? "s" : ""} to save`; return; }
+    const b = $('button[type="submit"]', bar); pending(b, true); await sleep(800); pending(b, false);
+    base = snap(); dirty(); toast(scr, { title: "Settings saved", tone: "positive" });
+  });
+  bar.addEventListener("click", (e) => {
+    if (!e.target.closest('[data-act="discard"]')) return;
+    form.reset(); $$('[data-scope="field"]', form).forEach((f) => { setError(f, ""); const i = f.querySelector('[data-part="input"]'); f.querySelector('[data-part="control"]').toggleAttribute("data-filled", !!i.value); });
+    segAll(form); base = snap(); dirty();
+  });
+  $('[data-part="nav"]', app).addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-sec]"); if (!a) return; e.preventDefault();
+    $$('[data-part="nav"] a', app).forEach((x) => (x === a ? x.setAttribute("aria-current", "true") : x.removeAttribute("aria-current")));
+    const sec = $(`[data-scope="settings-section"][data-sec="${a.dataset.sec}"]`, app), vp = app.closest(".viewport");
+    vp.scrollTo({ top: sec.offsetTop - 70, behavior: root.dataset.motion === "reduce" ? "auto" : "smooth" });
+    $("h4", sec).setAttribute("tabindex", "-1"); $("h4", sec).focus({ preventScroll: true });
+  });
+  app.addEventListener("click", async (e) => {
+    const a = e.target.closest("[data-act]"); if (!a) return;
+    if (a.dataset.act === "archive") toast(scr, { title: `${PROJ} archived`, body: "Deploys are paused. Restore it any time.", action: { label: "Undo", fn: () => toast(scr, { title: "Restored", tone: "positive" }) } });
+    if (a.dataset.act === "passkeys") passkeys(scr, (n) => ($('[data-slot="pk"]', app).textContent = n ? `${n} passkey${n > 1 ? "s" : ""}. Last used today.` : "None yet."));
+    if (a.dataset.act === "mfa") {
+      if (!(await reauth(scr, "Changing how you sign in needs your password."))) return;
+      mfaSetup(scr, () => { $('[data-slot="mfa"]', app).textContent = "On since today. 8 of 8 backup codes left."; $('[data-slot="mfa-badge"]', app).innerHTML = badge("On", "positive", true); setLabel(a, "Manage"); toast(scr, { title: "Two-step verification is on", tone: "positive" }); });
+    }
+    if (a.dataset.act !== "delete") return;
+    if (!(await reauth(scr, `Deleting ${PROJ} needs your password.`))) return;
+    const dlg = overlay($(".layer", scr), {
+      mark: `<span data-part="mark" data-tone="critical">${ic("trash")}</span>`,
+      title: `Delete ${PROJ}?`, desc: "This permanently deletes the project and everything in it. Members lose access immediately.",
+      body: `<div data-scope="confirm"><ul><li>3 environments and their secrets</li><li>214 deploys and their logs</li><li>2 custom domains stop resolving</li></ul>${field({ label: `Type ${PROJ} to confirm`, name: "confirm", ph: PROJ, attrs: 'autocomplete="off" spellcheck="false" data-autofocus' })}</div>`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn("Delete project", { tone: "critical", icon: "trash", attrs: 'data-act="confirm-delete" disabled' })}`,
+    }, { role: "alertdialog" });
+    const inp = $('[data-name="confirm"] input', dlg), go = $('[data-act="confirm-delete"]', dlg);
+    inp.addEventListener("input", () => { go.disabled = inp.value.trim() !== PROJ; });
+    inp.addEventListener("keydown", (ev) => { if (ev.key === "Enter" && !go.disabled) { ev.preventDefault(); go.click(); } });
+    go.addEventListener("click", async () => {
+      pending(go, true); await sleep(1000); pending(go, false); dlg._close("done");
+      toast(scr, { title: `${PROJ} is scheduled for deletion`, body: "It's deleted for good in 30 seconds.", tone: "critical", ms: 10000, action: { label: "Undo", fn: () => toast(scr, { title: "Deletion cancelled", tone: "positive" }) } });
+    });
+  });
+}
+
+/* ================================================================
+   DEMO 4 · Plan picker + usage meters + upgrade confirm
+   ================================================================ */
+function demoPlans(app, scr) {
+  const PLANS = [
+    { k: "starter", n: "Starter", m: 0, d: "For side projects.", f: ["3 seats", "10k API requests / mo", "5 GB storage"], lim: { api: 10000, seats: 3, gb: 5 } },
+    { k: "team", n: "Team", m: 24, d: "For product teams.", f: ["10 seats", "50k API requests / mo", "10 GB storage", "Preview environments"], lim: { api: 50000, seats: 10, gb: 10 } },
+    { k: "scale", n: "Scale", m: 64, d: "For many teams.", f: ["50 seats", "250k API requests / mo", "100 GB storage", "SSO, audit log export"], lim: { api: 250000, seats: 50, gb: 100 } },
+  ];
+  const USE = { api: 41200, seats: 9, gb: 11.2 };
+  let current = "team", sel = "team", annual = false; const GRP = nid("plan");
+  app.innerHTML = shell(`
+    <div class="ph"><div><p class="crumb">Fieldwork · Billing</p><h3>Plans and usage</h3></div>${segmented("Billing period", [["m", "Monthly"], ["y", "Annual · save 20%"]], 0, 'data-part="cycle"')}</div>
+    <div data-scope="plans">
+      <div data-part="grid" role="radiogroup" aria-label="Plan">${PLANS.map((p) => `<label data-scope="plan" data-sweep data-k="${p.k}">${SW}<input type="radio" name="${GRP}" value="${p.k}" ${p.k === sel ? "checked" : ""}>
+        <span data-part="name"><span class="row" style="gap:10px"><span data-part="radio" aria-hidden="true"></span>${p.n}</span><span data-slot="cur"></span></span>
+        <span data-part="price"><b data-price>$${p.m}</b><span data-per>${p.m ? "per seat / month" : "free forever"}</span></span>
+        <span class="cap muted">${p.d}</span><ul>${p.f.map((x) => `<li>${x}</li>`).join("")}</ul></label>`).join("")}</div>
+      <div class="card row between" style="gap:12px"><p class="cap" data-slot="pitch" style="margin:0;flex:1 1 260px"></p><span data-slot="cta"></span></div>
+    </div>
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start">
+      <section class="card"><div class="card-head"><h4>Usage this period</h4><span class="cap muted">Resets in 9 days</span></div><div data-scope="usage" data-slot="usage"></div></section>
+      <section class="card"><div class="card-head"><h4 id="${GRP}-inv">Invoices</h4>${btn("Export CSV", { kind: "ghost", tone: "neutral", size: "sm", icon: "download" })}</div>
+        <table class="tbl" aria-labelledby="${GRP}-inv"><thead><tr><th scope="col">Date</th><th scope="col" class="hide-sm">Number</th><th scope="col">Status</th><th scope="col">Amount</th><th scope="col"><span data-part="sr-only">Receipt</span></th></tr></thead><tbody>
+        ${[["Oct 1", "INV-0192", "positive", "Paid", 216], ["Sep 1", "INV-0171", "positive", "Paid", 216], ["Aug 1", "INV-0150", "caution", "Retrying", 192]].map(([d, n, t, s, a]) => `<tr><td>${d}</td><td class="hide-sm">${n}</td><td>${badge(s, t, true)}</td><td>${money(a)}</td><td>${btn(`PDF for ${n}`, { kind: "ghost", tone: "neutral", size: "sm", only: true, icon: "doc" })}</td></tr>`).join("")}</tbody></table>
+      </section>
+      <section class="card"><div class="card-head"><h4>Payment methods</h4>${btn("Add method", { kind: "frame", size: "sm", icon: "plus", attrs: 'data-act="addpm"' })}</div>
+        <ul class="list" data-slot="pms"></ul>
+        <p class="cap muted" style="margin:12px 0 0">Card details live with the payment provider; warp only shows the last four digits.</p>
+      </section>
+    </div>`, { current: "settings", title: "Billing" });
+  noNav(app);
+  const plan = (k) => PLANS.find((p) => p.k === k);
+  const price = (p) => (annual ? Math.round(p.m * 0.8) : p.m);
+  function meters(animate) {
+    const lim = plan(current).lim;
+    const rows = [["api", "API requests", (v) => v.toLocaleString("en-US"), USE.api, lim.api, "Requests over the limit are slowed, never dropped."],
+                  ["seats", "Seats", (v) => v, USE.seats, lim.seats, "Invite one more person before you need more seats."],
+                  ["gb", "Storage", (v) => v + " GB", USE.gb, lim.gb, ""]];
+    $('[data-slot="usage"]', app).innerHTML = rows.map(([k, t, fmt, u, l, note]) => {
+      const p = u / l, tone = p > 1 ? "critical" : p >= 0.8 ? "caution" : "", over = p > 1 ? ((p - 1) / p) * 100 : 0;
+      const msg = p > 1 ? `${(u - l).toFixed(1)} GB over. Overage is billed at $0.10 per GB.` : p >= 0.8 ? `${Math.round(p * 100)}% used. ${note}` : `${Math.round(p * 100)}% used.`;
+      return `<div data-scope="meter" ${tone ? `data-tone="${tone}"` : ""}><div data-part="head"><b style="font-weight:500">${t}</b><span>${fmt(u)} / ${fmt(l)}</span></div>
+        <span data-part="rail" role="meter" aria-label="${t}" aria-valuemin="0" aria-valuemax="${l}" aria-valuenow="${u}" aria-valuetext="${fmt(u)} of ${fmt(l)}" style="--v:${Math.min(100, p * 100 / Math.max(1, p))}%;--over:${over}%;--warn:${80 / Math.max(1, p)}%" ${animate ? "" : "data-on"}><span data-part="rail-fill"></span>${over ? '<span data-part="over"></span>' : ""}<span data-part="tick" aria-hidden="true"></span></span>
+        <p data-part="note">${msg}</p></div>`;
+    }).join("");
+    if (animate) requestAnimationFrame(() => requestAnimationFrame(() => $$('[data-slot="usage"] [data-part="rail"]', app).forEach((r) => r.setAttribute("data-on", ""))));
+  }
+  function render() {
+    for (const c of $$('[data-scope="plan"]', app)) {
+      const p = plan(c.dataset.k);
+      $("[data-price]", c).textContent = "$" + price(p);
+      $("[data-per]", c).textContent = p.m ? (annual ? "per seat / month, billed yearly" : "per seat / month") : "free forever";
+      $('[data-slot="cur"]', c).innerHTML = p.k === current ? badge("Current", "neutral") : "";
+    }
+    const s = plan(sel), c = plan(current), up = s.m > c.m;
+    const pitch = $('[data-slot="pitch"]', app), cta = $('[data-slot="cta"]', app);
+    if (s.k === c.k) { pitch.innerHTML = `You're on <b>${c.n}</b>. ${c.k === "scale" ? "You have every feature." : "Pick a plan to compare."}`; cta.innerHTML = btn("Current plan", { kind: "soft", tone: "neutral", attrs: "disabled" }); }
+    else if (up) { pitch.innerHTML = `<b>${s.n}</b> adds ${s.f.slice(-1)[0].toLowerCase()} and ${(s.lim.api / c.lim.api)}× the API limit. You pay the difference for the rest of this period.`; cta.innerHTML = btn(`Upgrade to ${s.n}`, { after: "right", attrs: 'data-act="change"' }); }
+    else { pitch.innerHTML = `<b>${s.n}</b> has ${s.lim.seats} seats. ${USE.seats - s.lim.seats} people would become read-only.`; cta.innerHTML = btn(`Switch to ${s.n}`, { kind: "frame", attrs: 'data-act="change"' }); }
+    wire(cta);
+  }
+  app.addEventListener("change", (e) => { if (e.target.matches('[data-scope="plan"] input')) { sel = e.target.value; render(); } });
+  const PMS = [["Visa", "4242", "08/28", true], ["Mastercard", "5100", "02/27", false]];
+  const pms = () => { $('[data-slot="pms"]', app).innerHTML = PMS.map(([b, l, x, def], i) => { const id = nid("pm"); return `<li><span class="row" style="flex:1;flex-wrap:nowrap">${ic("card")}<span><b style="font-weight:500" id="${id}">${b} ending ${l}</b><br><span class="cap muted">Expires ${x}</span></span></span>${def ? badge("Default", "neutral") : btn("Make default", { kind: "link", attrs: `data-def="${i}" aria-describedby="${id}"` }) + btn(`Remove ${b} ending ${l}`, { kind: "ghost", tone: "critical", size: "sm", only: true, icon: "trash", attrs: `data-rmpm="${i}"` })}</li>`; }).join(""); wire($('[data-slot="pms"]', app)); };
+  app.addEventListener("change", (e) => { if (e.target.closest('[data-part="cycle"]')) { annual = e.target.value === "y"; render(); } });
+  app.addEventListener("click", (e) => {
+    const df = e.target.closest("[data-def]"); if (df) { PMS.forEach((p, i) => (p[3] = i === +df.dataset.def)); pms(); toast(scr, { title: "Default payment method changed", tone: "positive" }); return; }
+    const rp = e.target.closest("[data-rmpm]"); if (rp) { const [g] = PMS.splice(+rp.dataset.rmpm, 1); pms(); toast(scr, { title: `${g[0]} ending ${g[1]} removed`, action: { label: "Undo", fn: () => { PMS.push(g); pms(); } } }); return; }
+    if (e.target.closest('[data-act="addpm"]')) { toast(scr, { title: "Add a payment method", body: "The provider's hosted card form opens here, as in checkout." }); return; }
+    if (!e.target.closest('[data-act="change"]')) return;
+    const s = plan(sel), c = plan(current), seats = USE.seats, up = s.m > c.m;
+    const now = price(s) * seats, credit = (price(c) * seats * 9) / 30, due = Math.max(0, (now * 9) / 30 - credit);
+    const dlg = overlay($(".layer", scr), { title: `${up ? "Upgrade" : "Switch"} to ${s.n}`, desc: up ? "Your new limits apply as soon as you confirm." : `At the end of this period. ${seats - s.lim.seats > 0 ? `${seats - s.lim.seats} members become read-only; you choose who.` : ""}`,
+      body: `<dl data-scope="lines">
+        <div><dt>${s.n} · ${seats} seats × $${price(s)}${annual ? " (annual)" : ""}</dt><dd>${money(now)}/mo</dd></div>
+        <div><dt>Credit for unused ${c.n} time</dt><dd>−${money(credit)}</dd></div>
+        <div data-part="total"><dt>${up ? "Due today" : "Due next period"}</dt><dd>${money(up ? due : now)}</dd></div>
+      </dl>
+      <p class="cap muted row">${ic("card")}Charged to the default card.</p>`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn(up ? `Confirm upgrade` : `Confirm switch`, { attrs: "data-autofocus data-go" })}` });
+    $("[data-go]", dlg).addEventListener("click", async (ev) => {
+      const b = ev.currentTarget; pending(b, true); await sleep(1000); pending(b, false); dlg._close("done");
+      current = sel; render(); meters(true);
+      toast(scr, { title: `You're on ${s.n}`, body: up ? "New limits are live. A receipt is on its way." : "The change applies at the end of this period.", tone: "positive" });
+    });
+  });
+  render(); meters(true); pms();
+}
+
+/* ================================================================
+   DEMO 5 · Checkout: cart → address → shipping → payment → review → done
+   ================================================================ */
+function productArt(h) { return `<svg viewBox="0 0 52 52" aria-hidden="true"><rect width="52" height="52" fill="oklch(0.9 0.04 ${h})"/><path d="M8 40 26 14l18 26z" fill="oklch(0.62 0.12 ${h})" opacity=".85"/><circle cx="36" cy="16" r="5" fill="oklch(0.75 0.1 ${(h + 60) % 360})"/></svg>`; }
+function demoCheckout(app, scr) {
+  const cart = [{ id: "a", n: "Field notebook, A5 dot grid", v: "Graphite · 3-pack", p: 24, q: 1, h: 152 }, { id: "b", n: "Weft canvas tote", v: "Natural", p: 38, q: 1, h: 80 }, { id: "c", n: "Loom pen, 0.5 mm", v: "Black", p: 6.5, q: 2, h: 252 }];
+  const SHIP = { std: ["Standard", "5–7 business days", 0], exp: ["Express", "2 business days", 12], nd: ["Next day", "Order by 3 pm", 24] };
+  let ship = "std", coupon = 0, step = 0; const SG = nid("ship"), BILL = nid("bill");
+  const STEPS = [["cart", "Cart"], ["address", "Address"], ["shipping", "Shipping"], ["payment", "Payment"], ["review", "Review"]];
+  app.innerHTML = `<div data-scope="shell" data-part="root" data-variant="focus"><div data-part="layout">
+    <header data-part="header"><a href="#" data-part="brand" aria-label="Acme Supply, home">${LOGO}<span data-part="brand-name" style="display:inline">Acme Supply</span></a><span class="cap muted row" style="gap:6px;margin-inline-start:auto">${ic("lock")}Secure checkout</span><button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only data-act="drawer" style="position:relative"><span data-part="label">${ic("bag")}<span data-part="sr-only">Cart, <span data-slot="count-sr">4</span> items</span></span><span data-scope="badge" data-emphasis="solid" data-count data-slot="count" aria-hidden="true" style="position:absolute;inset:-2px -4px auto auto">4</span></button></header>
+    <div data-part="main" tabindex="-1"><div class="shell-page"><div data-scope="checkout"><div data-part="layout">
+      <div class="stack" style="min-inline-size:0">
+        <nav data-scope="steps" aria-label="Checkout steps"><ol>${STEPS.map(([k, t], i) => `<li data-part="item" data-i="${i}"><span data-part="indicator" aria-hidden="true">${ic("check")}</span><button type="button" data-part="title" data-i="${i}">${t}</button></li>`).join("")}</ol>
+          <div data-part="compact"><div class="row between"><b data-part="compact-title" data-slot="st">Cart</b><span class="cap" data-part="compact-count">Step <span data-slot="sn">1</span> of 5</span></div><div data-scope="progress" data-part="root"><div data-part="track"><div data-part="range" style="--_v:.2"></div></div></div></div></nav>
+        <div data-scope="flow">
+          <section data-part="step" data-step="cart" data-state="active" data-label="Step 1 of 5, Cart"><div data-part="step-body"><h3 data-part="step-title" tabindex="-1">Your cart</h3><div data-slot="lines"></div><div data-part="nav">${btn("Continue shopping", { kind: "link" })}${btn("Continue to address", { after: "right", attrs: 'data-next' })}</div></div></section>
+          <section data-part="step" data-step="address" data-label="Step 2 of 5, Address"><form data-part="step-body" novalidate><h3 data-part="step-title" tabindex="-1">Where should it go?</h3>
+            <div data-part="cols">${field({ label: "Full name", name: "name", auto: "name" })}${field({ label: "Email for receipt", name: "email", type: "email", auto: "email" })}</div>
+            ${field({ label: "Street address", name: "line1", auto: "address-line1" })}
+            <div data-part="cols" style="--cols:3">${field({ label: "City", name: "city", auto: "address-level2" })}${field({ label: "Postal code", name: "zip", auto: "postal-code" })}${selectField({ label: "Country", name: "country", value: "US", options: [["US", "United States"], ["GB", "United Kingdom"], ["DE", "Germany"]] })}</div>
+            <div class="row" style="gap:10px">${checkbox(BILL, true)}<span id="${BILL}">Use as billing address</span></div>
+            <div data-part="nav">${btn("Back", { kind: "ghost", tone: "neutral", icon: "left", attrs: "data-prev" })}${btn("Continue to shipping", { type: "submit", after: "right" })}</div></form></section>
+          <section data-part="step" data-step="shipping" data-label="Step 3 of 5, Shipping"><div data-part="step-body"><h3 data-part="step-title" tabindex="-1">How fast?</h3>
+            <fieldset data-scope="choice"><legend class="vh">Shipping speed</legend>${Object.entries(SHIP).map(([k, [n, d, p]]) => `<label data-scope="plan" data-sweep>${SW}<input type="radio" name="${SG}" value="${k}" ${k === ship ? "checked" : ""}><span data-part="radio" aria-hidden="true"></span><span><b style="font-weight:500">${n}</b><small>${d}</small></span><b style="font-variant-numeric:tabular-nums">${p ? money(p) : "Free"}</b></label>`).join("")}</fieldset>
+            <div data-part="nav">${btn("Back", { kind: "ghost", tone: "neutral", icon: "left", attrs: "data-prev" })}${btn("Continue to payment", { after: "right", attrs: "data-next" })}</div></div></section>
+          <section data-part="step" data-step="payment" data-label="Step 4 of 5, Payment"><div data-part="step-body"><h3 data-part="step-title" tabindex="-1">Payment</h3>
+            ${btn("Pay with saved wallet", { kind: "frame", block: true, icon: "card" })}
+            <div data-scope="auth" style="background:none;min-block-size:0"><div data-part="divider">or with a card</div></div>
+            <div data-scope="pay-frame" data-state="loading" aria-busy="true"><div data-part="head"><span class="row" style="gap:6px">${ic("lock")}Card fields are hosted by your payment provider</span>${badge("Test mode", "caution")}</div>
+              <div data-part="slot" role="group" aria-label="Card fields from your payment provider (placeholder)"><i data-loop></i><div><i data-loop></i><i data-loop></i></div></div></div>
+            <p class="cap muted" style="margin:0">warp styles this slot and passes tokens to the provider's appearance API. It never renders card fields itself.</p>
+            <div data-part="nav">${btn("Back", { kind: "ghost", tone: "neutral", icon: "left", attrs: "data-prev" })}${btn("Review order", { after: "right", attrs: "data-next" })}</div></div></section>
+          <section data-part="step" data-step="review" data-label="Step 5 of 5, Review"><div data-part="step-body"><h3 data-part="step-title" tabindex="-1">Review and pay</h3>
+            <div class="card" style="box-shadow:none;padding:0 16px"><ul class="list" data-slot="review"></ul></div>
+            <p class="cap muted" style="margin:0">By paying you agree to the terms of sale. You can cancel within 1 hour.</p>
+            <div data-part="nav">${btn("Back", { kind: "ghost", tone: "neutral", icon: "left", attrs: "data-prev" })}${btn("Pay", { size: "lg", icon: "lock", attrs: 'data-act="pay"' })}</div></div></section>
+          <section data-part="step" data-step="done" data-label="Order confirmed"><div data-scope="confirmation">
+            <span data-part="mark" data-tone="positive"><svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <div><p class="eyebrow" style="margin:0 0 6px">Order AC-20817</p><h3 data-part="step-title" tabindex="-1" style="font:var(--warp-text-title-weight) var(--warp-text-title-size)/1.1 var(--warp-text-title-font);letter-spacing:var(--warp-text-title-tracking)">Thanks, it's on its way</h3><p class="muted" style="margin-top:8px" data-slot="conf"></p></div>
+            <ol data-scope="tracker" aria-label="Order status">${["Placed", "Packed", "Shipped", "Delivered"].map((t, i) => `${i ? `<li aria-hidden="true">${rail(false, "100%", `style="--dl:${i * 300}ms"`)}</li>` : ""}<li><span data-part="stop" style="--dl:${i * 300}ms" ${i === 0 ? 'aria-current="step"' : ""}><i></i>${t}</span></li>`).join("")}</ol>
+            <div class="row">${btn("Track order", { after: "right" })}${btn("Continue shopping", { kind: "frame", attrs: 'data-act="restart"' })}</div></div></section>
+        </div>
+      </div>
+      <details data-part="summary"><summary><span class="row" style="gap:8px">${ic("bag")}Order summary</span><span class="row" style="gap:8px"><b data-slot="sumtotal"></b>${ic("chev")}</span></summary>
+        <div data-slot="mini" style="display:grid"></div>
+        <form class="row" data-part="coupon" novalidate style="align-items:start;flex-wrap:nowrap">${field({ label: "Discount code", name: "code", ph: "WARP10" })}${btn("Apply", { kind: "frame", type: "submit", attrs: 'style="flex:none;block-size:var(--warp-field-height)"' })}</form>
+        <dl data-scope="lines" data-slot="totals"></dl>
+      </details>
+    </div></div></div></div></div></div>`;
+  const flow = $('[data-scope="flow"]', app), sum = $('[data-part="summary"]', app);
+  const totals = () => { const sub = cart.reduce((s, i) => s + i.p * i.q, 0), disc = sub * coupon, sh = SHIP[ship][2], tax = (sub - disc) * 0.08; return { sub, disc, sh, tax, total: sub - disc + sh + tax }; };
+  function renderCart() {
+    const t = totals(), n = cart.reduce((s, i) => s + i.q, 0);
+    $('[data-slot="count"]', app).textContent = n; $('[data-slot="count"]', app).hidden = !n; $('[data-slot="count-sr"]', app).textContent = n;
+    $('[data-slot="lines"]', app).innerHTML = cart.length ? cart.map((i) => `<div data-scope="line-item" data-id="${i.id}"><span data-part="thumb">${productArt(i.h)}</span><span style="min-inline-size:0"><b id="li-${i.id}-${uid}">${i.n}</b><small>${i.v} · ${money(i.p)}</small><br>${btn("Remove", { kind: "link", attrs: `data-rm aria-describedby="li-${i.id}-${uid}"` })}</span><span data-part="price">${money(i.p * i.q)}<span data-scope="qty"><button type="button" data-q="-1" aria-label="Fewer ${esc(i.n)}" ${i.q <= 1 ? "disabled" : ""}>${ic("minus")}</button><output aria-live="polite" aria-label="Quantity">${i.q}</output><button type="button" data-q="1" aria-label="More ${esc(i.n)}">${ic("plus")}</button></span></span></div>`).join("")
+      : `<div style="text-align:center;padding:32px 0;display:grid;gap:10px;justify-items:center"><b>Your cart is empty</b><span class="cap muted">Removed something by mistake?</span>${btn("Restore items", { kind: "frame", size: "sm", attrs: 'data-act="restore"' })}</div>`;
+    $('[data-next]', $('[data-step="cart"]', app)).disabled = !cart.length;
+    $('[data-slot="mini"]', app).innerHTML = cart.map((i) => `<div data-scope="line-item"><span data-part="thumb">${productArt(i.h)}</span><span style="min-inline-size:0"><b>${i.n}</b><small>Qty ${i.q}</small></span><span data-part="price">${money(i.p * i.q)}</span></div>`).join("");
+    $('[data-slot="totals"]', app).innerHTML = `<div><dt>Subtotal</dt><dd>${money(t.sub)}</dd></div>${coupon ? `<div><dt>Discount · WARP10</dt><dd style="color:var(--warp-color-positive-text)">−${money(t.disc)}</dd></div>` : ""}<div><dt>Shipping · ${SHIP[ship][0]}</dt><dd>${t.sh ? money(t.sh) : "Free"}</dd></div><div><dt>Estimated tax</dt><dd>${money(t.tax)}</dd></div><div data-part="total"><dt>Total</dt><dd>${money(t.total)}</dd></div>`;
+    $('[data-slot="sumtotal"]', app).textContent = money(t.total);
+    setLabel($('[data-act="pay"]', app), `${ic("lock")}Pay ${money(t.total)}`);
+    wire(app);
+  }
+  function setStep(i, dir = "fwd") {
+    step = i; const k = STEPS[i] ? STEPS[i][0] : "done";
+    $$('[data-scope="steps"] li[data-part="item"]', app).forEach((li, j) => {
+      li.dataset.state = j < i ? "complete" : j === i ? "current" : "upcoming";
+      const b = $('[data-part="title"]', li); b.toggleAttribute("aria-current", false); if (j === i) b.setAttribute("aria-current", "step");
+      b.tabIndex = j < i ? 0 : -1; j < i ? b.removeAttribute("aria-disabled") : b.setAttribute("aria-disabled", "true");
+      b.setAttribute("aria-label", `${STEPS[j][1]}, ${j < i ? "completed, edit" : j === i ? "current step" : "not yet"}`);
+    });
+    $('[data-slot="sn"]', app).textContent = Math.min(i + 1, 5); $('[data-slot="st"]', app).textContent = STEPS[i] ? STEPS[i][1] : "Done";
+    $('[data-scope="steps"] [data-part="range"]', app).style.setProperty("--_v", Math.min(1, (i + 1) / 5));
+    goStep(flow, k, { dir });
+    if (k === "payment") { const pf = $('[data-scope="pay-frame"]', app); pf.dataset.state = "loading"; setTimeout(() => { pf.removeAttribute("data-state"); pf.removeAttribute("aria-busy"); }, 1100); }
+    if (k === "review") {
+      const a = (n) => valOf(app, n);
+      $('[data-slot="review"]', app).innerHTML = [["Ship to", `${esc(a("name"))}, ${esc(a("line1"))}, ${esc(a("city"))} ${esc(a("zip"))}`, 1], ["Delivery", `${SHIP[ship][0]} · ${SHIP[ship][1]}`, 2], ["Payment", "Card from your provider (test mode)", 3]].map(([t, v, s]) => `<li><span><span class="cap muted" id="rv-${s}-${uid}">${t}</span><br>${v}</span>${btn("Edit", { kind: "link", attrs: `data-edit="${s}" aria-describedby="rv-${s}-${uid}"` })}</li>`).join("");
+    }
+  }
+  app.addEventListener("click", async (e) => {
+    const q = e.target.closest("[data-q]"); if (q) { const it = cart.find((x) => x.id === q.closest("[data-id]").dataset.id); it.q = Math.max(1, it.q + +q.dataset.q); renderCart(); $(`[data-id="${it.id}"] [data-q="${q.dataset.q}"]`, app)?.focus(); return; }
+    const rm = e.target.closest("[data-rm]"); if (rm) { const id = rm.closest("[data-id]").dataset.id, at = cart.findIndex((x) => x.id === id), [gone] = cart.splice(at, 1); renderCart(); toast(scr, { title: "Removed from cart", body: esc(gone.n), action: { label: "Undo", fn: () => { cart.splice(at, 0, gone); renderCart(); } } }); return; }
+    if (e.target.closest('[data-act="restore"]')) { cart.push({ id: "a", n: "Field notebook, A5 dot grid", v: "Graphite · 3-pack", p: 24, q: 1, h: 152 }); renderCart(); }
+    if (e.target.closest("[data-next]")) setStep(step + 1);
+    if (e.target.closest("[data-prev]")) setStep(step - 1, "back");
+    const it = e.target.closest('[data-scope="steps"] [data-state="complete"] [data-part="title"]'); if (it) setStep(+it.dataset.i, "back");
+    const ed = e.target.closest("[data-edit]"); if (ed) setStep(+ed.dataset.edit, "back");
+    if (e.target.closest('[data-act="drawer"]')) openDrawer();
+    if (e.target.closest('[data-act="restart"]')) { $('[data-scope="steps"]', app).hidden = false; setStep(0, "back"); }
+    const pay = e.target.closest('[data-act="pay"]');
+    if (pay) {
+      pending(pay, true); await sleep(1200); pending(pay, false);
+      $('[data-slot="conf"]', app).textContent = `A receipt is on its way to ${valOf(app, "email") || "you"}. ${SHIP[ship][0]} delivery: ${SHIP[ship][1].toLowerCase()}.`;
+      $('[data-scope="steps"]', app).hidden = true; setStep(5);
+      const tr = $('[data-scope="tracker"]', app); setTimeout(() => { $('[data-part="stop"]', tr).setAttribute("data-on", ""); }, 200);
+    }
+  });
+  app.addEventListener("change", (e) => { if (e.target.matches('[data-scope="choice"] input')) { ship = e.target.value; renderCart(); } if (e.target.matches('select[name="country"]')) { const f = fieldOf(app, "zip"); if (f.hasAttribute("data-invalid")) $('[data-step="address"] form', app) && null; } });
+  $('[data-step="address"] form', app).addEventListener("submit", (e) => {
+    e.preventDefault();
+    const c = valOf(app, "country"), Z = { US: [/^\d{5}(-\d{4})?$/, "Use 5 digits, like 94107."], GB: [/^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i, "Use a UK postcode, like SW1A 1AA."], DE: [/^\d{5}$/, "Use 5 digits, like 10115."] }[c];
+    const ok = validate(e.target, {
+      name: (v) => (v ? "" : "Enter the name for delivery."),
+      email: (v) => (!v ? "We send the receipt here." : RX.email.test(v) ? "" : "That doesn't look like an email."),
+      line1: (v) => (v.length > 3 ? "" : "Enter a street address."),
+      city: (v) => (v ? "" : "Enter a city."),
+      zip: (v) => (!v ? "Enter a postal code." : Z[0].test(v) ? "" : Z[1]),
+    });
+    if (ok) setStep(2);
+  });
+  $('[data-part="coupon"]', app).addEventListener("submit", async (e) => {
+    e.preventDefault(); const f = fieldOf(e.target, "code"), v = valOf(e.target, "code").toUpperCase(), b = $("button[type=submit]", e.target);
+    if (!v) return setError(f, "Enter a code first.");
+    pending(b, true); await sleep(500); pending(b, false);
+    if (v === "WARP10") { coupon = 0.1; setError(f, ""); renderCart(); toast(scr, { title: "WARP10 applied", body: "10% off your items.", tone: "positive" }); }
+    else setError(f, "That code isn't valid or has expired.");
+  });
+  function openDrawer() {
+    const t = totals();
+    const d = overlay($(".layer", scr), { title: `Cart · ${cart.reduce((s, i) => s + i.q, 0)} items`,
+      body: cart.map((i) => `<div data-scope="line-item"><span data-part="thumb">${productArt(i.h)}</span><span style="min-inline-size:0"><b>${i.n}</b><small>${i.v} · Qty ${i.q}</small></span><span data-part="price">${money(i.p * i.q)}</span></div>`).join(""),
+      footer: `<div class="stack" style="gap:10px;inline-size:100%"><dl data-scope="lines"><div data-part="total"><dt>Subtotal</dt><dd>${money(t.sub)}</dd></div></dl><p class="cap muted" style="margin:0">Shipping and tax are calculated at checkout.</p>${btn("Checkout", { block: true, size: "lg", after: "right", attrs: "data-go data-autofocus" })}</div>` }, { scope: "sheet" });
+    $("[data-go]", d).addEventListener("click", () => { d._close("go"); if (step === 0) setStep(1); });
+  }
+  const fitSummary = () => { const wide = $('[data-scope="checkout"]', app).offsetWidth >= 860; sum.open = wide; sum.dataset.wide = wide; };
+  sum.addEventListener("toggle", () => wire(sum));
+  renderCart(); setStep(0); requestAnimationFrame(fitSummary);
+  flow.closest(".screen") && new ResizeObserver(fitSummary).observe($('[data-scope="checkout"]', app));
+}
+
+/* ================================================================
+   DEMO 6 · System states: 404, offline, stale deploy, rate limited, 500
+   ================================================================ */
+/* ================================================================
+   DEMO 5 · Admin: members and roles · API keys (SignGate) · audit log
+   05 Tabs (← → Home End) over four panels, all in the 02 shell.
+   ================================================================ */
+const ROLES = [["owner", "Owner"], ["admin", "Admin"], ["member", "Member"], ["viewer", "Viewer"]];
+const CAPS = [["Edit projects and deploy", [1, 1, 1, 0]], ["Invite and remove members", [1, 1, 0, 0]], ["Create API keys", [1, 1, 0, 0]], ["Change billing and plan", [1, 0, 0, 0]], ["Read the audit log", [1, 1, 0, 0]], ["Delete the workspace", [1, 0, 0, 0]]];
+function demoAdmin(app, scr) {
+  const me = "ines@acme.dev";
+  const members = [
+    { n: "Ines Okafor", i: "IO", e: me, r: "owner", a: "Active now" },
+    { n: "Tomás Reyes", i: "TR", e: "tomas@acme.dev", r: "admin", a: "2 h ago" },
+    { n: "Priya Shah", i: "PS", e: "priya@acme.dev", r: "member", a: "Yesterday" },
+    { n: "Jonas Berg", i: "JB", e: "jonas@acme.dev", r: "viewer", a: "Oct 12" },
+  ];
+  const invites = [{ e: "lee@contractors.io", r: "member", s: "Sent 2 days ago" }];
+  const keys = [{ n: "CI deploys", p: "wk_test_8c2f", sc: ["deploy"], c: "Sep 30", u: "3 min ago", recent: true }, { n: "Metrics export", p: "wk_test_41ab", sc: ["read"], c: "Aug 2", u: "Oct 1", recent: false }];
+  const AUDIT = [
+    ["2026-10-28T13:58:00Z", "Ines Okafor", "keys", "created API key", "CI deploys", "84.12.3.9"],
+    ["2026-10-28T12:40:00Z", "Tomás Reyes", "members", "changed role of", "Priya Shah → Member", "10.4.0.22"],
+    ["2026-10-28T09:12:00Z", "Ines Okafor", "billing", "upgraded plan to", "Team (annual)", "84.12.3.9"],
+    ["2026-10-27T17:31:00Z", "Tomás Reyes", "members", "invited", "lee@contractors.io", "10.4.0.22"],
+    ["2026-10-27T08:05:00Z", "Priya Shah", "keys", "revoked API key", "Old staging", "62.1.88.4"],
+    ["2026-10-26T15:20:00Z", "Ines Okafor", "members", "removed", "sam@acme.dev", "84.12.3.9"],
+  ];
+  let gate = "unsigned", sel = new Set(), auditFilter = "all", lastExport = 0;
+  const roleSel = (m, i) => { const id = nid("role"); return `<label class="vh" for="${id}">Role for ${esc(m.n)}</label><div data-scope="field" data-size="sm" data-variant="classic" data-name="role"><div data-part="control" data-filled><select data-part="input" id="${id}" data-role="${i}" ${m.e === me && members.filter((x) => x.r === "owner").length === 1 ? 'aria-describedby="' + id + '-why"' : ""}>${ROLES.map(([v, t]) => `<option value="${v}" ${v === m.r ? "selected" : ""}>${t}</option>`).join("")}</select><span data-part="indicator" aria-hidden="true">${ic("chev")}</span></div></div>${m.e === me && members.filter((x) => x.r === "owner").length === 1 ? `<span class="vh" id="${id}-why">You are the only owner. Make someone else owner first.</span>` : ""}`; };
+  const memberRows = () => members.map((m, i) => { const nm = nid("mn"); return `<tr data-row="${i}"><td>${m.e === me ? "" : checkbox(nm, sel.has(m.e), `data-pick="${esc(m.e)}"`)}</td><td><span class="row" style="flex-wrap:nowrap;gap:10px">${avatar(m.i, m.n)}<span><b id="${nm}" style="font-weight:500">${m.n}</b>${m.e === me ? " " + badge("You") : ""}<br><span class="cap muted">${m.e}</span></span></span></td><td>${roleSel(m, i)}</td><td class="cap muted" data-col="active">${m.a}</td><td>${m.e === me ? "" : btn(`Remove ${m.n}`, { kind: "ghost", tone: "critical", size: "sm", only: true, icon: "trash", attrs: `data-rm="${i}"` })}</td></tr>`; }).join("");
+  const inviteRows = () => invites.length ? invites.map((v, i) => `<li><span class="row" style="flex:1;flex-wrap:nowrap;gap:10px">${avatar(v.e[0].toUpperCase(), v.e)}<span><b style="font-weight:500">${v.e}</b> ${badge(ROLES.find((r) => r[0] === v.r)[1])}<br><span class="cap muted">Invite pending · ${v.s}</span></span></span><span class="row" style="gap:16px">${btn("Resend", { kind: "link", attrs: `data-resend="${i}" aria-label="Resend invite to ${v.e}"` })}${btn("Revoke", { kind: "link", tone: "critical", attrs: `data-revoke="${i}" aria-label="Revoke invite to ${v.e}"` })}</span></li>`).join("") : `<li><span class="cap muted">No pending invites.</span></li>`;
+  const bulk = () => sel.size ? `<div data-scope="bulk-bar" role="region" aria-label="Bulk actions"><b>${sel.size} selected</b>${btn(`Remove ${sel.size} member${sel.size > 1 ? "s" : ""}`, { kind: "soft", tone: "critical", size: "sm", icon: "trash", attrs: "data-bulk-rm" })}${btn("Clear", { kind: "ghost", tone: "neutral", size: "sm", attrs: "data-bulk-clear" })}</div>` : "";
+  const membersPanel = () => `<section class="stack" style="gap:16px">
+    <div class="card-head" style="margin:0"><div><h4>Members</h4><p class="cap muted" style="margin:0" data-slot="seats">${members.length + invites.length} of 10 seats used</p></div>${btn("Invite people", { icon: "plus", attrs: "data-invite" })}</div>
+    ${rail(true, `${(members.length + invites.length) * 10}%`, 'aria-hidden="true" data-slot="seatrail"')}
+    <div data-slot="bulk" aria-live="polite">${bulk()}</div>
+    <div class="tbl-wrap" role="region" aria-label="Members table" tabindex="0"><table class="tbl" data-slot="members"><caption class="vh">Workspace members</caption><thead><tr><th scope="col"><span class="vh">Select</span></th><th scope="col">Name</th><th scope="col">Role</th><th scope="col" data-col="active">Last active</th><th scope="col"><span class="vh">Actions</span></th></tr></thead><tbody>${memberRows()}</tbody></table></div>
+    <h4>Pending invites</h4><ul class="list" data-slot="invites">${inviteRows()}</ul></section>`;
+  const rolesPanel = () => `<section class="stack" style="gap:12px"><div><h4>What each role can do</h4><p class="cap muted" style="margin:0">Read-only on Team. Custom roles come with Scale.</p></div>
+    <div class="tbl-wrap" role="region" aria-label="Roles matrix" tabindex="0"><table class="tbl" data-scope="roles-matrix"><caption class="vh">Permissions by role</caption><thead><tr><th scope="col">Permission</th>${ROLES.map(([, t]) => `<th scope="col">${t}</th>`).join("")}</tr></thead>
+    <tbody>${CAPS.map(([c, v]) => `<tr><th scope="row">${c}</th>${v.map((x) => `<td>${x ? `<span data-part="yes">${ic("check")}<span data-part="sr-only">Yes</span></span>` : `<span data-part="no" aria-hidden="true">–</span><span data-part="sr-only">No</span>`}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>`;
+  const keyRows = () => keys.length ? keys.map((k, i) => `<li data-scope="api-key"><span data-part="info">${ic("key")}<span><b style="font-weight:500">${esc(k.n)}</b> ${k.sc.map((s) => badge(s)).join(" ")}<br><code data-part="prefix">${k.p}…</code> <span class="cap muted">Created ${k.c} · last used ${k.u}</span></span></span>${btn("Revoke", { kind: "soft", tone: "critical", size: "sm", attrs: `data-krev="${i}" aria-label="Revoke ${esc(k.n)}"` })}</li>`).join("") : `<li><span class="cap muted">No keys yet.</span></li>`;
+  const gateBadge = () => { const t = { unsigned: "Agreement not signed", pending: "Signature pending", signed: "Agreement signed" }[gate]; return `<span data-scope="badge" data-tone="${gate === "signed" ? "positive" : "caution"}" data-state="${gate}">${ic(gate === "signed" ? "check" : "doc")}${t}</span>`; };
+  const keysPanel = () => `<section class="stack" style="gap:16px">
+    <div class="card-head" style="margin:0"><div><h4>Test keys</h4><p class="cap muted" style="margin:0">Work against sandbox data only.</p></div>${btn("Create key", { icon: "plus", attrs: 'data-kcreate="test"' })}</div>
+    <ul class="list" data-slot="keys">${keyRows()}</ul>
+    <div class="card-head" style="margin:0"><div><h4>Live keys</h4><p class="cap muted" style="margin:0">Live keys read customer data, so they need a signed data processing agreement.</p></div><span data-slot="gbadge">${gateBadge()}</span></div>
+    <div data-scope="gate" data-state="${gate}" data-slot="gate">
+      <div data-part="content" ${gate === "signed" ? "" : "inert"}><ul class="list"><li><span class="cap muted">No live keys yet.</span>${btn("Create live key", { kind: "frame", icon: "plus", attrs: 'data-kcreate="live"' })}</li></ul></div>
+      ${gate === "signed" ? "" : `<section data-part="blocker" aria-labelledby="gate-h-${uid}"><div class="stack" style="gap:10px;justify-items:center;text-align:center;max-inline-size:36ch"><span data-part="mark" data-tone="caution">${ic("doc")}</span><h5 id="gate-h-${uid}">Sign the data processing agreement</h5><p class="cap muted" style="margin:0">${gate === "pending" ? "Waiting for the signer to finish. This updates by itself." : "Two pages. Your legal contact can sign it instead."}</p>${gate === "pending" ? `<span data-scope="spinner" data-part="spinner" aria-hidden="true"></span>` : btn("Review and sign", { attrs: "data-sign" })}</div></section>`}
+    </div></section>`;
+  const fmt = (iso) => { const d = new Date(iso), m = Math.round((Date.parse("2026-10-28T14:02:00Z") - d) / 60000); return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
+  const auditRows = () => AUDIT.filter((r) => auditFilter === "all" || r[2] === auditFilter).map(([t, a, , v, tg, ip]) => `<tr><td><time datetime="${t}" title="${t.replace("T", " ").replace(":00Z", " UTC")}" tabindex="0">${fmt(t)}</time></td><td>${a}</td><td>${v} <a data-scope="link" href="#">${esc(tg)}</a></td><td class="cap muted" data-col="ip"><code>${ip}</code></td></tr>`).join("") || `<tr><td colspan="4" class="cap muted">Nothing matches this filter.</td></tr>`;
+  const auditPanel = () => `<section class="stack" style="gap:16px">
+    <div class="card-head" style="margin:0"><div><h4>Audit log</h4><p class="cap muted" style="margin:0">Every change by a person or a key, kept for a year.</p></div>${btn("Export CSV", { kind: "frame", icon: "download", attrs: "data-export" })}</div>
+    ${segmented("Filter events", [["all", "All"], ["members", "Members"], ["keys", "Keys"], ["billing", "Billing"]], 0, 'data-slot="afilter" style="justify-self:start;max-inline-size:100%"')}
+    <p class="cap muted" style="margin:0" data-slot="ratemsg" role="status"></p>
+    <div class="tbl-wrap" role="region" aria-label="Audit log table" tabindex="0"><table class="tbl" data-slot="audit"><caption class="vh">Recent events</caption><thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">What</th><th scope="col" data-col="ip">IP</th></tr></thead><tbody>${auditRows()}</tbody></table></div></section>`;
+  /* integrations + webhooks (09 §4.6) */
+  const INTEG = [
+    { k: "github", n: "GitHub", d: "Deploy on push, status checks on PRs.", s: "connected", m: "acme-org · 12 repos" },
+    { k: "slack", n: "Slack", d: "Deploy and incident messages in a channel.", s: "error", m: "Token expired Oct 26" },
+    { k: "linear", n: "Linear", d: "Link deploys to issues.", s: "off", m: "" },
+    { k: "pagerduty", n: "PagerDuty", d: "Page on-call when a deploy fails.", s: "off", m: "" },
+  ];
+  const hooks = [{ u: "https://hooks.acme.dev/deploys", ev: ["deploy.succeeded", "deploy.failed"], last: "200 · 4 min ago", ok: true }];
+  const integStatus = (s) => ({ connected: badge("Connected", "positive", true), error: badge("Needs attention", "critical", true), off: badge("Not connected", "", false), pending: badge("Connecting…", "caution", true) }[s]);
+  const integCards = () => INTEG.map((x, i) => `<li data-scope="integration" data-state="${x.s}"><span data-part="logo" aria-hidden="true">${x.n[0]}</span><span data-part="info"><b id="ig-${uid}-${i}">${x.n}</b> ${integStatus(x.s)}<span class="cap muted">${x.s === "off" ? x.d : x.m}</span></span><span data-part="actions">${x.s === "off" ? btn("Connect", { kind: "frame", size: "sm", attrs: `data-iconn="${i}" aria-describedby="ig-${uid}-${i}"` }) : x.s === "error" ? btn("Reconnect", { size: "sm", tone: "critical", attrs: `data-iconn="${i}" aria-describedby="ig-${uid}-${i}"` }) : btn("Configure", { kind: "ghost", tone: "neutral", size: "sm", attrs: `data-iconf="${i}" aria-describedby="ig-${uid}-${i}"` })}</span></li>`).join("");
+  const hookRows = () => hooks.map((h, i) => `<li><span><code>${esc(h.u)}</code><br><span class="cap muted">${h.ev.join(", ")} · last delivery ${h.last}</span></span>${badge(h.ok ? "Healthy" : "Failing", h.ok ? "positive" : "critical", true)}${btn("Send test", { kind: "link", attrs: `data-htest="${i}" aria-label="Send a test event to ${esc(h.u)}"` })}</li>`).join("") || `<li><span class="cap muted">No webhooks yet.</span></li>`;
+  const integPanel = () => `<section class="stack" style="gap:16px">
+    <div><h4>Integrations</h4><p class="cap muted" style="margin:0">Connecting opens the provider's consent page; you come back here when it's done.</p></div>
+    <ul data-scope="integrations" data-slot="integ">${integCards()}</ul>
+    <div class="card-head" style="margin:0"><div><h4>Webhooks</h4><p class="cap muted" style="margin:0">Signed with your endpoint secret. Retried 5 times over an hour.</p></div>${btn("Add endpoint", { kind: "frame", icon: "plus", attrs: "data-hadd" })}</div>
+    <ul class="list" data-slot="hooks">${hookRows()}</ul></section>`;
+
+  /* CSV import wizard (09 §4.7): upload → map columns → preview + validate → import */
+  const CSV = [["Name", "Email", "Team", "Start"], ["Ada Byron", "ada@acme.dev", "Platform", "2026-11-03"], ["Grace H.", "grace@acme", "Platform", "2026-11-03"], ["Alan T.", "alan@acme.dev", "Research", "11/10/2026"], ["Kat J.", "kat@acme.dev", "Design", "2026-11-17"]];
+  const FIELDS = [["name", "Full name"], ["email", "Email"], ["role", "Role"], ["team", "Team"], ["start", "Start date"], ["skip", "Don't import"]];
+  let imp = { step: "upload", map: { Name: "name", Email: "email", Team: "team", Start: "start" }, file: "" };
+  const impErrs = () => CSV.slice(1).map((r, i) => { const e = []; const col = (f) => r[CSV[0].findIndex((h) => imp.map[h] === f)]; const em = col("email"), st = col("start"); if (em !== undefined && !RX.email.test(em)) e.push([i, "email", "Not a valid email"]); if (st !== undefined && !/^\d{4}-\d\d-\d\d$/.test(st)) e.push([i, "start", "Use YYYY-MM-DD"]); if (!Object.values(imp.map).includes("email")) e.push([i, "email", "No column is mapped to Email"]); return e; }).flat();
+  const importPanel = () => {
+    const steps = [["upload", "Upload"], ["map", "Map"], ["review", "Review"], ["done", "Import"]], at = steps.findIndex((s) => s[0] === imp.step);
+    const stepper = `<nav data-scope="steps" aria-label="Import progress"><ol>${steps.map(([k, t], i) => `<li data-part="item" ${i < at ? 'data-state="complete"' : i === at ? 'data-state="current" aria-current="step"' : ""}><span data-part="indicator" aria-hidden="true">${ic("check")}</span><span data-part="title">${t}</span></li>`).join("")}</ol></nav>`;
+    let body = "";
+    if (imp.step === "upload") body = `<div data-scope="dropzone" data-sweep data-slot="dz">${SW}<input type="file" accept=".csv,text/csv" aria-labelledby="dz-t-${uid}" aria-describedby="dz-h-${uid}"><span data-part="icon" aria-hidden="true">${ic("upload")}</span><span data-part="drop-copy"><span data-part="title" id="dz-t-${uid}">Drop a CSV here or <u>browse</u></span></span><span data-part="hint" id="dz-h-${uid}">Up to 5,000 rows · first row is the header</span></div>
+      <p class="cap muted" style="margin:0">No file handy? ${btn("Use the sample (4 people)", { kind: "link", attrs: "data-sample" })}</p>`;
+    if (imp.step === "map") body = `<p class="cap" style="margin:0"><b>${esc(imp.file)}</b> · ${CSV.length - 1} rows · ${CSV[0].length} columns</p>
+      <div class="tbl-wrap" role="region" aria-label="Column mapping" tabindex="0"><table class="tbl" data-scope="import-map"><caption class="vh">Map each CSV column to a field</caption><thead><tr><th scope="col">CSV column</th><th scope="col">Sample</th><th scope="col">Imports as</th></tr></thead><tbody>${CSV[0].map((h, j) => { const id = nid("map"); return `<tr><th scope="row"><code>${h}</code></th><td class="cap muted">${esc(CSV[1][j])}</td><td><label class="vh" for="${id}">${h} imports as</label><div data-scope="field" data-size="sm" data-variant="classic"><div data-part="control" data-filled><select data-part="input" id="${id}" data-map="${h}">${FIELDS.map(([v, t]) => `<option value="${v}" ${imp.map[h] === v ? "selected" : ""}>${t}</option>`).join("")}</select><span data-part="indicator" aria-hidden="true">${ic("chev")}</span></div></div></td></tr>`; }).join("")}</tbody></table></div>`;
+    if (imp.step === "review") { const errs = impErrs(), bad = new Set(errs.map((e) => e[0]));
+      body = `${errs.length ? `<div data-scope="alert" data-tone="caution" role="status"><span data-part="icon">${ic("alert")}</span><p data-part="title">${bad.size} of ${CSV.length - 1} rows need a fix</p><p data-part="description">Fix them in the file and upload again, or import the ${CSV.length - 1 - bad.size} good rows now and skip the rest.</p></div>` : `<div data-scope="alert" data-tone="positive" role="status"><span data-part="icon">${ic("check")}</span><p data-part="title">All ${CSV.length - 1} rows look good</p></div>`}
+      <div class="tbl-wrap" role="region" aria-label="Import preview" tabindex="0"><table class="tbl" data-scope="import-preview"><caption class="vh">Preview of the first rows</caption><thead><tr>${CSV[0].filter((h) => imp.map[h] !== "skip").map((h) => `<th scope="col">${FIELDS.find((f) => f[0] === imp.map[h])[1]}</th>`).join("")}</tr></thead><tbody>${CSV.slice(1).map((r, i) => `<tr ${bad.has(i) ? 'data-invalid' : ""}>${r.map((c, j) => { const f = imp.map[CSV[0][j]]; if (f === "skip") return ""; const e = errs.find((x) => x[0] === i && x[1] === f); return `<td ${e ? 'data-invalid' : ""}>${esc(c)}${e ? `<span data-part="error">${ic("alert")}${e[2]}</span>` : ""}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>`; }
+    if (imp.step === "done") body = `<div class="stack" style="gap:10px"><div data-scope="progress" data-part="root"><div data-part="label-row"><span>Importing</span><span data-part="value-text" data-slot="ipct" data-numeric>0%</span></div><div data-part="track" role="progressbar" aria-label="Import progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-slot="ibar"><div data-part="range" style="--_v:0"></div></div></div><p class="cap muted" style="margin:0" data-slot="imsg">You can leave this page; we'll email you when it finishes.</p></div>`;
+    const back = imp.step === "map" || imp.step === "review" ? btn("Back", { kind: "ghost", tone: "neutral", attrs: "data-iback" }) : "";
+    const next = { upload: "", map: btn("Preview", { attrs: "data-inext" }), review: btn(impErrs().length ? `Import ${CSV.length - 1 - new Set(impErrs().map((e) => e[0])).size} rows` : `Import ${CSV.length - 1} rows`, { attrs: "data-inext" }), done: "" }[imp.step];
+    return `<section class="stack" style="gap:16px" data-slot="import"><div><h4>Import people</h4><p class="cap muted" style="margin:0">Add many members at once from a spreadsheet.</p></div>${stepper}<div class="stack" style="gap:12px" data-part="step-body">${body}</div>${back || next ? `<div class="row between">${back || "<span></span>"}${next}</div>` : ""}</section>`;
+  };
+  const impGo = (step) => { imp.step = step; redraw("import", importPanel()); const h = $('[data-k="import"] h4', app); h && h.setAttribute("tabindex", "-1"); h && h.focus(); announce(scr, `Import, ${{ upload: "step 1 of 4, upload", map: "step 2 of 4, map columns", review: "step 3 of 4, review", done: "step 4 of 4, importing" }[step]}`); };
+  async function runImport() {
+    impGo("done"); const bar = $('[data-slot="ibar"]', app), pct = $('[data-slot="ipct"]', app), rows = CSV.length - 1 - new Set(impErrs().map((e) => e[0])).size;
+    for (let v = 0; v <= 100; v += 20) { if (!bar.isConnected) return; bar.setAttribute("aria-valuenow", v); $('[data-part="range"]', bar).style.setProperty("--_v", v / 100); pct.textContent = v + "%"; await sleep(260); }
+    $('[data-slot="imsg"]', app).innerHTML = `${rows} people imported. ${btn("Import another file", { kind: "link", attrs: "data-iagain" })}`;
+    toast(scr, { title: `${rows} people imported`, body: "They'll get an invite email.", tone: "positive", icon: "upload" });
+  }
+  function connect(i) {
+    const x = INTEG[i];
+    const d = overlay($(".layer", scr), { title: `Connect ${x.n}`, desc: `${x.n} will be able to read deploy status and post updates. You can disconnect any time.`,
+      body: `<ul class="list"><li><span>${ic("check")} Read deploys and their status</span></li><li><span>${ic("check")} Post to the channel you pick</span></li></ul><p class="cap muted" style="margin:0">Next, ${x.n} asks you to approve this in a new window.</p>`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn(`Continue to ${x.n}`, { after: "arrowup", attrs: "data-go data-autofocus" })}` }, { w: "440px" });
+    $("[data-go]", d).addEventListener("click", async () => { d._close("done"); x.s = "pending"; redraw("integ", integPanel()); await sleep(1400); x.s = "connected"; x.m = "Connected just now"; redraw("integ", integPanel()); toast(scr, { title: `${x.n} connected`, tone: "positive" }); $(`[data-iconf="${i}"]`, app)?.focus(); });
+  }
+  function configure(i) {
+    const x = INTEG[i];
+    const d = overlay($(".layer", scr), { title: x.n, desc: x.m,
+      body: `<div class="stack">${selectField({ label: "Post deploys to", name: "chan", options: [["deploys", "#deploys"], ["eng", "#eng"], ["none", "Nowhere"]], value: "deploys" })}<div class="row" style="gap:10px;flex-wrap:nowrap">${swBare(`cf-${uid}`, "", true)}<span id="cf-${uid}">Comment on pull requests</span></div></div>`,
+      footer: `${btn(`Disconnect ${x.n}`, { kind: "soft", tone: "critical", attrs: "data-disc" })}${btn("Save", { attrs: "data-close" })}` }, { scope: "sheet" });
+    $("[data-disc]", d).addEventListener("click", () => { d._close("done"); const prev = { ...x }; x.s = "off"; redraw("integ", integPanel()); toast(scr, { title: `${x.n} disconnected`, action: { label: "Undo", fn: () => { Object.assign(x, prev); redraw("integ", integPanel()); } } }); });
+  }
+  function addHook() {
+    const d = overlay($(".layer", scr), { title: "Add a webhook endpoint", desc: "We POST JSON to this URL for each event you pick.",
+      body: `<form class="stack" novalidate data-flow-step="hook">${field({ label: "Endpoint URL", name: "hurl", type: "url", ph: "https://", mode: "url", attrs: "data-autofocus", hint: "Must be https." })}
+        <fieldset style="border:0;padding:0;margin:0;display:grid;gap:8px"><legend class="cap" style="padding:0;margin-block-end:6px">Events</legend>${["deploy.succeeded", "deploy.failed", "member.added"].map((v, j) => { const id = nid("ev"); return `<div class="row" style="gap:10px;flex-wrap:nowrap">${checkbox(id, j < 2, `name="ev" value="${v}"`)}<code id="${id}">${v}</code></div>`; }).join("")}</fieldset></form>`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn("Add endpoint", { attrs: "data-hsave" })}` }, { w: "460px" });
+    const f = $("form", d); f.addEventListener("submit", (e) => { e.preventDefault(); $("[data-hsave]", d).click(); });
+    $("[data-hsave]", d).addEventListener("click", async (e) => {
+      if (!validate(f, { hurl: (v) => (!v ? "Enter the URL we should call." : !/^https:\/\/[^\s/]+\.[^\s]+/.test(v) ? "Use a full https:// URL." : "") })) return;
+      const ev = $$('[name="ev"]:checked', d).map((x) => x.value); pending(e.currentTarget, true); await sleep(700);
+      hooks.push({ u: valOf(f, "hurl"), ev, last: "none yet", ok: true }); d._close("done"); redraw("integ", integPanel()); toast(scr, { title: "Endpoint added", body: "Send a test to check it.", tone: "positive" });
+    });
+  }
+  app.innerHTML = shell(`<div class="stack" style="gap:20px"><div><h3 tabindex="-1">Workspace admin</h3><p class="cap muted" style="margin:0">Fieldwork · Team plan</p></div>
+    ${tabs("Admin sections", [["members", "Members", membersPanel()], ["roles", "Roles", rolesPanel()], ["keys", "API keys", keysPanel()], ["audit", "Audit log", auditPanel()], ["integ", "Integrations", integPanel()], ["import", "Import", importPanel()]])}</div>`, { current: "members", title: "Members" });
+  noNav(app);
+  const $p = (k) => $(`[role="tabpanel"][data-k="${k}"]`, app);
+  const redraw = (k, html) => { const p = $p(k); p.innerHTML = html; wire(p); segAll(p); };
+  const seats = () => { const n = members.length + invites.length; $('[data-slot="seats"]', app).textContent = `${n} of 10 seats used`; $('[data-slot="seatrail"]', app).style.setProperty("--v", n * 10 + "%"); };
+  const refreshMembers = () => { $('[data-slot="members"] tbody', app).innerHTML = memberRows(); $('[data-slot="invites"]', app).innerHTML = inviteRows(); $('[data-slot="bulk"]', app).innerHTML = bulk(); wire($p("members")); seats(); };
+
+  function invite() {
+    const tagsId = nid("emails");
+    const d = overlay($(".layer", scr), {
+      title: "Invite people", desc: "They get an email with a link that works for 7 days.",
+      body: `<form class="stack" novalidate data-flow-step="invite">
+        <div data-scope="field" data-name="emails"><div data-part="control" data-wrap data-sweep>${SW}<label data-part="label" for="${tagsId}">Email addresses</label><input data-part="input" id="${tagsId}" name="emails" type="email" multiple autocomplete="off" enterkeyhint="enter" placeholder=" " aria-describedby="${tagsId}-m" data-autofocus></div><span data-part="message" id="${tagsId}-m">Enter or comma adds one. Paste a list to add many.</span><span data-part="sr-only" aria-live="polite" data-slot="tlive"></span></div>
+        ${selectField({ label: "Role", name: "irole", options: ROLES.slice(1), value: "member" })}</form>`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn("Send invites", { attrs: "data-send" })}`,
+    }, { w: "480px" });
+    const ctl = $('[data-name="emails"] [data-part="control"]', d), inp = $("input", ctl), live = $('[data-slot="tlive"]', d), list = [];
+    const draw = () => { $$('[data-scope="tag"]', ctl).forEach((t) => t.remove()); list.forEach((e, i) => inp.insertAdjacentHTML("beforebegin", `<span data-scope="tag" ${RX.email.test(e) ? "" : 'data-tone="critical"'}><span>${esc(e)}</span><button type="button" tabindex="-1" data-untag="${i}" aria-label="Remove ${esc(e)}">${ic("x")}</button></span>`)); ctl.toggleAttribute("data-filled", list.length > 0 || !!inp.value); floatingLabel(ctl.parentElement); };
+    const add = (raw) => { const got = raw.split(/[\s,;]+/).filter(Boolean).filter((e) => !list.includes(e)); if (!got.length) return; list.push(...got); inp.value = ""; draw(); live.textContent = `Added ${got.join(", ")}. ${list.length} in total.`; setError(ctl.parentElement, ""); };
+    inp.addEventListener("keydown", (e) => {
+      if ((e.key === "Enter" || e.key === ",") && inp.value.trim()) { e.preventDefault(); add(inp.value); }
+      else if (e.key === "Enter") { e.preventDefault(); $("[data-send]", d).click(); }
+      if (e.key === "Backspace" && !inp.value && list.length) { const t = $$('[data-scope="tag"]', ctl).pop(); if (t.hasAttribute("data-highlighted")) { const gone = list.pop(); draw(); live.textContent = `Removed ${gone}.`; } else t.setAttribute("data-highlighted", ""); }
+    });
+    inp.addEventListener("paste", (e) => { const t = e.clipboardData.getData("text"); if (/[\s,;]/.test(t.trim())) { e.preventDefault(); add(t); } });
+    inp.addEventListener("blur", () => inp.value.trim() && add(inp.value));
+    ctl.addEventListener("click", (e) => { const x = e.target.closest("[data-untag]"); if (x) { const [gone] = list.splice(+x.dataset.untag, 1); draw(); live.textContent = `Removed ${gone}.`; inp.focus(); } });
+    $("form", d).addEventListener("submit", (e) => e.preventDefault());
+    $("[data-send]", d).addEventListener("click", async (e) => {
+      const b = e.currentTarget; if (inp.value.trim()) add(inp.value);
+      const bad = list.filter((x) => !RX.email.test(x)), f = ctl.parentElement, room = 10 - members.length - invites.length;
+      if (!list.length) return setError(f, "Add at least one email address."), inp.focus();
+      if (bad.length) return setError(f, `${bad.length === 1 ? `“${esc(bad[0])}” isn't` : `${bad.length} addresses aren't`} a valid email. Remove or fix ${bad.length === 1 ? "it" : "them"}.`), inp.focus();
+      if (list.length > room) return setError(f, `You have ${room} seat${room === 1 ? "" : "s"} left. Remove ${list.length - room}, or add seats in Billing.`), inp.focus();
+      pending(b, true); await sleep(800); pending(b, false);
+      const role = $('[name="irole"]', d).value; list.forEach((x) => invites.push({ e: x, r: role, s: "Sent just now" }));
+      d._close("done"); refreshMembers(); toast(scr, { title: `${list.length} invite${list.length > 1 ? "s" : ""} sent`, body: list.join(", "), tone: "positive", icon: "mail" });
+    });
+  }
+  function confirmRemove(list) {
+    const names = list.map((i) => members[i].n), many = list.length > 1;
+    const d = overlay($(".layer", scr), {
+      title: many ? `Remove ${list.length} members?` : `Remove ${names[0]}?`, mark: `<span data-part="mark" data-tone="critical">${ic("users")}</span>`,
+      desc: `${many ? names.join(", ") + " lose" : names[0] + " loses"} access to Fieldwork right away. Their deploys and comments stay.`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close data-autofocus" })}${btn(many ? `Remove ${list.length} members` : "Remove member", { tone: "critical", attrs: "data-yes" })}`,
+    }, { role: "alertdialog", w: "440px" });
+    $("[data-yes]", d).addEventListener("click", async (e) => {
+      pending(e.currentTarget, true); await sleep(600);
+      const gone = list.sort((a, b) => b - a).map((i) => [i, members.splice(i, 1)[0]]);
+      sel.clear(); d._close("done"); refreshMembers();
+      toast(scr, { title: many ? `${gone.length} members removed` : `${names[0]} removed`, ms: 10000, action: { label: "Undo", fn: () => { gone.reverse().forEach(([i, m]) => members.splice(i, 0, m)); refreshMembers(); } } });
+      $("[data-invite]", app).focus();
+    });
+  }
+  async function createKey(kind) {
+    if (!(await reauth(scr, "Creating an API key needs a fresh sign-in."))) return;
+    const d = overlay($(".layer", scr), {
+      title: kind === "live" ? "Create a live key" : "Create a test key", desc: "Give it a name you'll recognise in the audit log.",
+      body: `<form class="stack" novalidate data-flow-step="key">${field({ label: "Key name", name: "kname", ph: "e.g. CI deploys", attrs: "data-autofocus" })}
+        <fieldset data-part="scopes" style="border:0;padding:0;margin:0;display:grid;gap:8px"><legend class="cap" style="padding:0;margin-block-end:6px">Scopes</legend>${[["read", "Read projects and deploys"], ["deploy", "Trigger deploys"], ["admin", "Manage members (admins only)"]].map(([v, t], i) => { const id = nid("sc"); return `<div class="row" style="gap:10px;flex-wrap:nowrap">${checkbox(id, i === 0, `name="scope" value="${v}"`)}<span id="${id}">${t}</span></div>`; }).join("")}</fieldset>
+        ${selectField({ label: "Expires", name: "kexp", options: [["30", "In 30 days"], ["90", "In 90 days"], ["never", "Never"]], value: "90" })}</form>`,
+      footer: `${btn("Cancel", { kind: "frame", attrs: "data-close" })}${btn("Create key", { attrs: "data-make" })}`,
+    }, { w: "460px" });
+    const form = $("form", d);
+    form.addEventListener("submit", (e) => { e.preventDefault(); $("[data-make]", d).click(); });
+    $("[data-make]", d).addEventListener("click", async (e) => {
+      const b = e.currentTarget, sc = $$('[name="scope"]:checked', d).map((x) => x.value);
+      if (!validate(form, { kname: (v) => (v ? (keys.some((k) => k.n.toLowerCase() === v.toLowerCase()) ? "You already have a key with that name." : "") : "Name the key so you can find it later.") })) return;
+      if (!sc.length) { toast(scr, { title: "Pick at least one scope", tone: "critical" }); $('[name="scope"]', d).focus(); return; }
+      pending(b, true); await sleep(700); pending(b, false);
+      const prefix = `wk_${kind}_${Math.random().toString(16).slice(2, 6)}`, secret = `${prefix}${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+      const name = valOf(form, "kname"); keys.unshift({ n: name, p: prefix, sc, c: "Today", u: "never", recent: false });
+      const ackId = nid("ack"), secId = nid("sec");
+      $('[data-part="title"]', d).textContent = "Copy your new key";
+      $('[data-part="description"]', d).textContent = "You won't see it again. Store it in your secrets manager now.";
+      $('[data-part="body"]', d).innerHTML = `<div class="stack"><div data-scope="field" data-name="secret"><div data-part="control" data-filled>${SW}<label data-part="label" for="${secId}">${esc(name)}</label><input data-part="input" id="${secId}" readonly value="${secret}" spellcheck="false" style="font-family:var(--warp-font-mono);font-size:12.5px"></div></div>
+        <div class="row">${btn("Copy key", { kind: "frame", icon: "doc", attrs: "data-copy" })}</div>
+        <div class="row" style="gap:10px;flex-wrap:nowrap">${checkbox(ackId, false, "data-ack")}<span id="${ackId}">I've saved this key somewhere safe</span></div></div>`;
+      $('[data-part="footer"]', d).innerHTML = btn("Done", { attrs: "data-close disabled data-done" });
+      wire(d); refreshFields(d); $("input", d).focus(); $("input", d).select();
+      $("[data-ack]", d).addEventListener("change", (ev) => ($("[data-done]", d).disabled = !ev.target.checked));
+      $("[data-copy]", d).addEventListener("click", () => { navigator.clipboard?.writeText(secret).catch(() => {}); toast(scr, { title: "Key copied", body: "It's on your clipboard. Paste it once, then clear it." }); });
+      redraw("keys", keysPanel());
+    });
+  }
+  function revokeKey(i) {
+    const k = keys[i], typed = k.recent;
+    const tid = nid("rk");
+    const d = overlay($(".layer", scr), {
+      title: `Revoke “${esc(k.n)}”?`, mark: `<span data-part="mark" data-tone="critical">${ic("key")}</span>`,
+      desc: typed ? `This key was used 3 minutes ago. Anything using it stops working right away. Type <b>${esc(k.n)}</b> to confirm.` : "Anything still using it stops working right away.",
+      body: typed ? `<form novalidate data-flow-step="revoke">${field({ label: "Key name", name: "rk", attrs: `data-autofocus autocomplete="off" spellcheck="false" data-tone="critical"` })}</form>` : "",
+      footer: `${btn("Cancel", { kind: "frame", attrs: `data-close ${typed ? "" : "data-autofocus"}` })}${btn("Revoke key", { tone: "critical", attrs: `data-yes ${typed ? "disabled" : ""}` })}`,
+    }, { role: "alertdialog", w: "440px" });
+    const yes = $("[data-yes]", d);
+    if (typed) { const inp = $('[name="rk"]', d); inp.addEventListener("input", () => (yes.disabled = inp.value.trim() !== k.n)); $("form", d).addEventListener("submit", (e) => { e.preventDefault(); if (!yes.disabled) yes.click(); }); }
+    yes.addEventListener("click", async () => { pending(yes, true); await sleep(600); keys.splice(i, 1); d._close("done"); redraw("keys", keysPanel()); toast(scr, { title: `“${k.n}” revoked`, body: "Requests with it now get 401.", tone: "critical", icon: "key" }); $('[data-kcreate="test"]', app)?.focus(); });
+  }
+  function sign() {
+    const d = overlay($(".layer", scr), {
+      title: "Data processing agreement", desc: "Signed through the e-signature provider. warp only frames its window.",
+      body: `<div data-scope="pay-frame" role="group" aria-label="Signer, provided by the e-signature service" style="min-block-size:260px;display:grid;place-items:center;text-align:center"><div class="stack" style="gap:8px;justify-items:center"><span class="cap muted">Provider's signer loads here</span><span class="cap">Page 2 of 2 · Signature</span></div></div>`,
+      footer: `${btn("Not now", { kind: "frame", attrs: "data-close" })}${btn("Sign", { attrs: "data-signed" })}`,
+    }, { scope: "sheet" });
+    $("[data-signed]", d).addEventListener("click", async () => {
+      d._close("done"); gate = "pending"; redraw("keys", keysPanel()); announce(scr, "Signature pending. Checking with the provider.");
+      await sleep(2200); gate = "signed"; redraw("keys", keysPanel());
+      const gb = $('[data-slot="gbadge"] [data-scope="badge"]', app); gb && gb.setAttribute("data-just", "");
+      toast(scr, { title: "Agreement signed", body: "You can create live keys now.", tone: "positive" });
+      $('[data-kcreate="live"]', app)?.focus();
+    });
+  }
+  app.addEventListener("change", (e) => {
+    const r = e.target.closest("[data-role]");
+    if (r) { const m = members[+r.dataset.role], prev = m.r, owners = members.filter((x) => x.r === "owner").length;
+      if (m.e === me && prev === "owner" && owners === 1) { r.value = "owner"; toast(scr, { title: "You're the only owner", body: "Make someone else owner first, then change your role.", tone: "critical" }); return; }
+      m.r = r.value; toast(scr, { title: `${m.n} is now ${ROLES.find((x) => x[0] === m.r)[1]}`, action: { label: "Undo", fn: () => { m.r = prev; refreshMembers(); } } }); }
+    const p = e.target.closest("[data-pick]");
+    if (p) { p.checked ? sel.add(p.dataset.pick) : sel.delete(p.dataset.pick); $('[data-slot="bulk"]', app).innerHTML = bulk(); wire($('[data-slot="bulk"]', app)); }
+    const f = e.target.closest('[data-slot="afilter"]');
+    if (f) { auditFilter = segValue(f); segPlace(f); $('[data-slot="audit"] tbody', app).innerHTML = auditRows(); announce(scr, `${$$('[data-slot="audit"] tbody tr', app).length} events shown`); }
+  });
+  app.addEventListener("click", async (e) => {
+    const t = e.target;
+    if (t.closest("[data-invite]")) invite();
+    const rm = t.closest("[data-rm]"); if (rm) confirmRemove([+rm.dataset.rm]);
+    if (t.closest("[data-bulk-rm]")) confirmRemove(members.map((m, i) => (sel.has(m.e) ? i : -1)).filter((i) => i >= 0));
+    if (t.closest("[data-bulk-clear]")) { sel.clear(); refreshMembers(); $("[data-invite]", app).focus(); }
+    const rs = t.closest("[data-resend]"); if (rs) { const v = invites[+rs.dataset.resend]; v.s = "Sent just now"; refreshMembers(); toast(scr, { title: "Invite resent", body: v.e, icon: "mail" }); }
+    const rv = t.closest("[data-revoke]"); if (rv) { const i = +rv.dataset.revoke, [v] = invites.splice(i, 1); refreshMembers(); toast(scr, { title: "Invite revoked", body: `${v.e} can no longer join.`, action: { label: "Undo", fn: () => { invites.splice(i, 0, v); refreshMembers(); } } }); }
+    const kc = t.closest("[data-kcreate]"); if (kc) createKey(kc.dataset.kcreate);
+    const kr = t.closest("[data-krev]"); if (kr) revokeKey(+kr.dataset.krev);
+    if (t.closest("[data-sign]")) sign();
+    const ex = t.closest("[data-export]");
+    if (ex) { const msg = $('[data-slot="ratemsg"]', app), left = 30 - Math.round((Date.now() - lastExport) / 1000);
+      if (left > 0) { msg.textContent = `You can export once every 30 seconds. Try again in ${left}s.`; ex.setAttribute("aria-describedby", msg.id || (msg.id = nid("rm"))); return; }
+      msg.textContent = ""; pending(ex, true); await sleep(900); pending(ex, false); lastExport = Date.now();
+      toast(scr, { title: "Export ready", body: `audit-${auditFilter}.csv · ${$$('[data-slot="audit"] tbody tr', app).length} rows`, tone: "positive", icon: "download" }); }
+  });
+  app.addEventListener("click", (e) => {
+    const t = e.target;
+    const c = t.closest("[data-iconn]"); if (c) connect(+c.dataset.iconn);
+    const f = t.closest("[data-iconf]"); if (f) configure(+f.dataset.iconf);
+    if (t.closest("[data-hadd]")) addHook();
+    const ht = t.closest("[data-htest]"); if (ht) { pending(ht, true); setTimeout(() => { pending(ht, false); hooks[+ht.dataset.htest].last = "200 · just now"; redraw("integ", integPanel()); toast(scr, { title: "Test delivered", body: "Your endpoint answered 200 in 182 ms.", tone: "positive" }); }, 700); }
+    if (t.closest("[data-sample]")) { imp.file = "people-sample.csv"; impGo("map"); }
+    if (t.closest("[data-iback]")) impGo(imp.step === "review" ? "map" : "upload");
+    if (t.closest("[data-inext]")) imp.step === "map" ? impGo("review") : runImport();
+    if (t.closest("[data-iagain]")) { imp = { ...imp, step: "upload", file: "" }; impGo("upload"); }
+  });
+  app.addEventListener("change", (e) => {
+    const m = e.target.closest("[data-map]"); if (m) imp.map[m.dataset.map] = m.value;
+    const fi = e.target.closest('[data-slot="dz"] input[type="file"]');
+    if (fi && fi.files[0]) { const file = fi.files[0]; if (!/\.csv$/i.test(file.name)) { toast(scr, { title: "That isn't a CSV", body: "Export the sheet as .csv and try again.", tone: "critical" }); return; } imp.file = file.name; impGo("map"); }
+  });
+}
+
+function brokenWeave() {
+  let s = ""; for (let i = 0; i < 7; i++) s += `<line x1="${8 + i * 19.5}" y1="0" x2="${8 + i * 19.5}" y2="84"/>`;
+  s += `<path pathLength="1" style="--i:0" d="M0 22H132"/><path pathLength="1" style="--i:1" d="M0 44H70" data-broken/><path pathLength="1" style="--i:2" d="M86 44H132" opacity=".35"/><path pathLength="1" style="--i:3" d="M0 64H132"/>`;
+  return `<svg data-part="weave" viewBox="0 0 132 84" preserveAspectRatio="none" aria-hidden="true" style="color:var(--warp-color-text)">${s}</svg>`;
+}
+const SYS = { mode: "404" };
+function demoSystem(app, scr) {
+  const mode = SYS.mode;
+  const tasks = [["Rotate staging secrets", true], ["Review deploy budget", false], ["Draft incident write-up", false], ["Archive old previews", true]];
+  const listCard = (sync) => `<section class="card"><div class="card-head"><h4>Today</h4><span class="cap muted">${sync ? "Edits are kept on this device" : "4 tasks"}</span></div><ul class="list">${tasks.map(([t, d], i) => { const id = nid("tk"); return `<li><span class="row" style="flex:1;flex-wrap:nowrap">${checkbox(id, d, `data-task="${i}"`)}<span id="${id}">${t}</span></span>${sync && i < 2 ? `<span data-part="sync">${ic("clock")}Waiting to sync</span>` : ""}</li>`; }).join("")}</ul></section>`;
+  const page = (art, code, h, p, actions, extra = "") => `<div data-scope="system-page"><div data-part="body"><div data-part="art">${art}</div><span data-part="code">${code}</span><h3 data-part="title" tabindex="-1">${h}</h3><p>${p}</p>${extra}<div data-part="actions">${actions}</div></div></div>`;
+  let banner = "", body = "";
+  if (mode === "404") body = page(brokenWeave(), "404 · Not found", "We can't find that page", "The link may be old, or the page has moved. Search for it, or head back to your dashboard.", btn("Go to dashboard", { icon: "home" }) + btn("Report a broken link", { kind: "frame" }), `<form data-part="search" novalidate data-act="search">${field({ label: "Search Fieldwork", name: "q", icon: "search", ph: "Projects, deploys, people" })}</form><span data-part="meta">/projects/fieldwork/deploys/9921 · ref req_8f2a1c</span>`);
+  if (mode === "500") body = page(brokenWeave(), "500 · Server error", "Something broke on our side", "Your work is saved. We've been alerted and are looking at it now.", btn("Try again", { icon: "refresh", attrs: 'data-act="retry500"' }) + btn("Status page", { kind: "frame", after: "arrowup" }), `<span data-part="meta">incident inc_2041 · 14:02 UTC · ${btn("Copy details", { kind: "link", attrs: 'data-act="copy"' })}</span>`);
+  if (mode === "maint") body = page(brokenWeave(), "Scheduled maintenance", "Back at 14:00 UTC", `That is <b data-slot="local">14:00</b> where you are. We're moving your workspace to a faster region. Nothing is lost, and nothing you saved is affected.`, btn("Status page", { kind: "frame", after: "arrowup" }) + btn("Email me when it's back", { kind: "ghost", tone: "neutral", attrs: 'data-act="notify"' }), `<span data-part="meta">Started 13:20 UTC · about 68% done</span><span style="display:flex;inline-size:min(100%,220px)">${rail(true, "68%", 'aria-hidden="true"')}</span>`);
+  if (mode === "offline") { banner = `<div data-scope="conn" data-state="offline" role="status">${ic("wifioff")}<span data-part="msg"><b>You're offline.</b> Changes are saved on this device and sync when you reconnect.</span><span class="cap" data-slot="retry">Retrying in 5s</span>${btn("Retry now", { kind: "ghost", size: "sm", attrs: 'data-act="reconnect" style="--_ink:currentColor"' })}</div>`; body = `<div class="stack">${listCard(true)}</div>`; }
+  if (mode === "stale") { banner = `<div data-scope="conn" data-state="stale" role="status">${ic("spark")}<span data-part="msg"><b>A new version of Acme is ready.</b> Reload to update; your draft is kept.</span>${btn("Later", { kind: "ghost", size: "sm", attrs: 'data-act="later" style="--_ink:currentColor"' })}${btn("Reload", { size: "sm", tone: "info", icon: "refresh", attrs: 'data-act="reload"' })}</div>`; body = `<div class="stack">${listCard(false)}</div>`; }
+  if (mode === "limited") { banner = `<div data-scope="conn" data-state="limited" role="status">${ic("clock")}<span data-part="msg"><b>Export limit reached.</b> You can run 5 exports a minute. Try again in <span data-slot="sec">23</span>s.</span>${rail(true, "100%", 'aria-hidden="true"')}</div>`;
+    body = `<section class="card stack" style="gap:12px"><div class="card-head" style="margin:0"><h4>Export deploy history</h4></div><p class="cap muted" style="margin:0">CSV of every deploy in the selected range, with durations and authors.</p>${segmented("Range", [["7", "7 days"], ["30", "30 days"], ["90", "90 days"]], 1)}<div>${btn("Try again in 23s", { icon: "download", attrs: 'data-act="export" disabled' })}</div></section>`; }
+  const full = mode === "404" || mode === "500" || mode === "maint";
+  const inShell = full ? body : `${banner}<div style="padding:var(--warp-space-page);display:grid;gap:16px">${body}</div>`;
+  app.innerHTML = shell(inShell, { current: full ? "projects" : "home", title: mode === "maint" ? "Maintenance" : full ? "Projects" : "Home", flush: true });
+  if (mode === "maint") { const l = $('[data-slot="local"]', app); if (l) { const d = new Date(); d.setUTCHours(14, 0, 0, 0); l.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZoneName: "short" }); } }
+  noNav(app);
+  let timers = [];
+  const every = (fn, ms) => { const t = setInterval(fn, ms); timers.push(t); return t; };
+  app._stop = () => timers.forEach(clearInterval);
+  if (mode === "offline") {
+    let n = 5, tries = 0;
+    every(() => { const r = $('[data-slot="retry"]', app); if (!r) return; n = n <= 1 ? 5 : n - 1; r.textContent = `Retrying in ${n}s`; }, 1000);
+    const goOnline = async () => {
+      const b = $('[data-scope="conn"]', app); if (!b || b.dataset.state !== "offline") return;
+      b.dataset.state = "reconnecting"; b.innerHTML = `<span data-part="spinner" aria-hidden="true" style="inline-size:14px;block-size:14px"></span><span data-part="msg"><b>Reconnecting…</b> Sending 2 saved changes.</span>`;
+      await sleep(1300);
+      if (++tries === 1 && !navigator.onLine) { b.dataset.state = "offline"; return; }
+      b.dataset.state = "online"; b.style.animation = "none"; void b.offsetWidth; b.style.animation = "";
+      b.innerHTML = `${ic("wifi")}<span data-part="msg"><b>Back online.</b> 2 changes synced.</span>${rail(true, "100%", 'aria-hidden="true"')}`;
+      $$('[data-part="sync"]', app).forEach((s) => { s.dataset.state = "synced"; s.innerHTML = `${ic("check")}Synced`; });
+      const r = $('[data-part="rail"] [data-part="rail-fill"]', b); requestAnimationFrame(() => { r.style.transition = "transform 4s linear"; r.style.setProperty("--p", 0); });
+      setTimeout(() => { b.style.transition = "opacity 240ms"; b.style.opacity = "0"; setTimeout(() => b.remove(), 260); }, 4000);
+    };
+    app.addEventListener("click", (e) => { if (e.target.closest('[data-act="reconnect"]')) { tries = 1; goOnline(); } });
+    app._online = goOnline;
+  }
+  if (mode === "limited") {
+    let s = 23; const b = $('[data-act="export"]', app), fill = $('[data-scope="conn"] [data-part="rail-fill"]', app);
+    every(() => {
+      s--; const sec = $('[data-slot="sec"]', app); if (sec) sec.textContent = Math.max(0, s); fill && fill.style.setProperty("--p", Math.max(0, s / 23));
+      if (s > 0) setLabel(b, `${ic("download")}Try again in ${s}s`);
+      if (s === 0) { b.disabled = false; setLabel(b, `${ic("download")}Export CSV`); const c = $('[data-scope="conn"]', app); c.style.transition = "opacity 240ms"; c.style.opacity = 0; setTimeout(() => c.remove(), 260); }
+    }, 1000);
+    app.addEventListener("click", async (e) => { const x = e.target.closest('[data-act="export"]'); if (x && !x.disabled) { pending(x, true); await sleep(900); pending(x, false); toast(scr, { title: "Export ready", body: "deploys-30d.csv · 412 rows", tone: "positive", icon: "download" }); } });
+  }
+  app.addEventListener("click", async (e) => {
+    const a = e.target.closest("[data-act]"); if (!a) return;
+    if (a.dataset.act === "reload") { pending(a, true); await sleep(900); const c = $('[data-scope="conn"]', app); c.remove(); toast(scr, { title: "Updated", body: "You're on build 2026.10.28-4. Your draft is still here.", tone: "positive" }); }
+    if (a.dataset.act === "later") { a.closest('[data-scope="conn"]').remove(); toast(scr, { title: "We'll remind you", body: "Reload any time from the account menu." }); }
+    if (a.dataset.act === "retry500") { pending(a, true); await sleep(900); pending(a, false); toast(scr, { title: "Still failing", body: "We'll keep retrying in the background.", tone: "critical" }); }
+    if (a.dataset.act === "copy") toast(scr, { title: "Details copied", body: "Paste them into a support ticket." });
+    if (a.dataset.act === "notify") { a.disabled = true; setLabel(a, `${ic("check")}We'll email you`); toast(scr, { title: "We'll email you", body: "One message when Fieldwork is back. Nothing else.", tone: "positive" }); }
+  });
+  app.addEventListener("submit", (e) => { e.preventDefault(); const f = fieldOf(e.target, "q"); if (!valOf(e.target, "q")) setError(f, "Type something to search for."); else toast(scr, { title: "Search", body: `Results for “${esc(valOf(e.target, "q"))}” would open here.`, icon: "search" }); });
+}
+
+/* ================================================================ sections */
+const SECTIONS = [
+  { id: "auth", n: "01", t: "Sign in, then a code", s: "Sign-in · OTP · passkey · magic link · SSO · reset · invite", fn: demoAuth, path: "acme.dev/sign-in",
+    d: "One panel, three layouts: full-bleed on phone, a card on tablet, a split with the weave on desktop. Email and password validate on submit and then live; a second factor is one input over six painted cells that pastes and auto-submits. Forgot password and accepting an invite live in the same panel.",
+    notes: [["The sweep here", ["Every field, and the OTP cell you're on (focus draws it in)", "The primary <code>Continue</code> fills L→R; passkey is the frame button", "Accepted code: the sweep cascades through the six cells in positive"]],
+            ["Across the dial", ["Quiet: thin ink sweep, no fill on buttons, 8 px corners, no italics", "Balanced: accent sweep, filled primary, mono eyebrows", "Vivid: 2 px square cells, serif headline, wider cascade"]],
+            ["Try this", ["Submit empty: errors pin red; fix one and it clears live", "Password <code>wrongpass</code> shows the form-level alert", "Code <code>000000</code> fails; any other code passes. Paste works.", "Forgot password, then the inbox step; or Accept an invite"]]] },
+  { id: "onboard", n: "02", t: "Onboarding checklist and coachmarks", s: "Checklist · product tour · spotlight", fn: demoOnboard, path: "acme.dev/fieldwork",
+    d: "A setup checklist that lives in the product, not in a modal. Each step can show you where to go: the spotlight cuts the scrim around the real control, its ring draws in once, and the tip docks to the free edge on phone.",
+    notes: [["The sweep here", ["The progress rail fills through itself as steps complete", "Checkboxes draw their check; the spotlight ring sweeps in on arrival", "Nothing loops: no pulsing beacons"]],
+            ["Across the dial", ["Quiet: rail 2 px, plain tip card", "Balanced: rail 3 px, accent pips", "Vivid: rail 4 px, square spotlight, mono caps step count"]],
+            ["Try this", ["Show me on any step, or Take the tour", "Arrow keys step through; Esc ends it", "Finish all four: the card settles to “You're all set”"]]] },
+  { id: "settings", n: "03", t: "Settings, security and a danger zone", s: "Rows · save bar · MFA · passkeys · re-auth · type-to-confirm", fn: demoSettings, path: "acme.dev/fieldwork/settings",
+    d: "Sections are a heading and one bordered group of rows, never a card in a card. Edits raise a save bar instead of saving per keystroke. Security sets up an authenticator in three steps and manages passkeys. Deleting asks you to confirm it's you, then to type the project's name.",
+    notes: [["The sweep here", ["Fields and switches (the rail fills through)", "Danger confirm field sweeps in critical", "Only Save is solid; danger actions are soft critical"]],
+            ["Across the dial", ["Quiet: nav underline 1 px, soft shadows", "Balanced: 1.5 px nav marker", "Vivid: 2 px marker; frame buttons sweep their outline"]],
+            ["Try this", ["Edit a field: the save bar slides up; Discard resets", "Security → Set up: scan, enter a code, save backup codes", "Delete project…: re-auth, then type <code>fieldwork-prod</code>"]]] },
+  { id: "plans", n: "04", t: "Plans, usage and payment methods", s: "Plan picker · meters · proration · invoices · cards", fn: demoPlans, path: "acme.dev/fieldwork/billing",
+    d: "Plans are radio cards; selection is a pinned sweep at every stop because a plan card is an input. Meters show the warn line at 80%, turn caution past it, and stripe the overage in critical. Confirming shows exactly what's charged today.",
+    notes: [["The sweep here", ["The selected plan holds its sweep; hover previews it", "Meters fill through the rail on load and after a change", "The billing-period indicator slides and fills"]],
+            ["Across the dial", ["Quiet: no card sweep on hover (selection still pins)", "Balanced: card hover sweeps", "Vivid: serif prices, 2 px corners, 4 px meters"]],
+            ["Try this", ["Annual: prices drop 20% and the copy changes", "Scale → Upgrade: proration, then the meters re-fill", "Make a card default, or remove one and Undo"]]] },
+  { id: "admin", n: "05", t: "Workspace admin", s: "Seats · roles · API keys · SignGate · audit · integrations · CSV import", fn: demoAdmin, path: "acme.dev/fieldwork/admin",
+    d: "Six tabs over one workspace. Invites take a pasted list and check the seats left. Integrations connect through the provider's consent page; webhooks can be tested in place. A CSV import maps columns, previews validation per cell, then imports the good rows. Keys are shown once, after you confirm it's you. Live keys sit behind a signed agreement: the page stays visible but inert under the gate until the provider reports the signature.",
+    notes: [["The sweep here", ["The tab indicator slides under the selected tab", "The seat rail fills through as invites go out", "Only the one primary per tab is solid"]],
+            ["Across the dial", ["Quiet: underline tabs, no gate blur", "Balanced: 2 px indicator, frosted gate", "Vivid: square tags, mono caps prefixes"]],
+            ["Try this", ["Tab to the tabs, then ← → Home End", "Invite: paste <code>a@x.io, b@x.io, nope</code>", "API keys → Review and sign, then Create live key", "Integrations: reconnect Slack, add a webhook, send a test", "Import → Use the sample: two rows fail validation"]]] },
+  { id: "checkout", n: "06", t: "Checkout", s: "Cart drawer · steps · address · pay · confirm", fn: demoCheckout, path: "shop.acme.dev/checkout",
+    d: "Five steps with a stepper whose connectors fill as you finish each one; on phone it becomes “Step 2 of 5” and the order summary folds into a disclosure. Card fields belong to the payment provider; warp only frames the slot.",
+    notes: [["The sweep here", ["Stepper connectors fill through on completion", "Shipping cards pin their sweep like plan cards", "Placed order: tracker fills, check draws"]],
+            ["Across the dial", ["Quiet: round index dots, gentle step slide (4 px × 2)", "Balanced: 16 px slide", "Vivid: square indices, 24 px slide, spring on radios"]],
+            ["Try this", ["Change quantities, remove an item, then Undo", "Postal code follows the country (try UK)", "Code <code>WARP10</code>; the cart icon opens the drawer"]]] },
+  { id: "system", n: "07", t: "System states", s: "404 · 500 · maintenance · offline · stale deploy · rate limit", fn: demoSystem, path: "acme.dev/fieldwork/…", local: true,
+    d: "One anatomy for every result page: a weave fragment with one broken thread, a code, a heading, one sentence, and actions. Connection and deploy states are banners above the content, so the work stays usable underneath.",
+    notes: [["The sweep here", ["Only the search field and the primary action", "Banners never sweep; a thin rail shows time remaining", "The broken thread draws once, in critical"]],
+            ["Across the dial", ["Quiet: no weave animation, sentence-case codes", "Balanced: mono caps codes", "Vivid: serif headings, 2 px threads"]],
+            ["Try this", ["Offline: Retry now; edits flip from waiting to synced", "Maintenance shows the end time in your time zone", "Rate limited: the button counts down and re-enables"]]] },
+];
+const SYS_STATES = [["404", "404"], ["500", "500"], ["maint", "Maintenance"], ["offline", "Offline"], ["stale", "Stale deploy"], ["limited", "Rate limited"]];
+const DEV = {
+  desktop: { w: 1280, h: 820, form: "desktop", pointer: "fine", label: "Desktop", spec: "1280 × 820 · fine pointer" },
+  tablet: { w: 834, h: 1000, form: "tablet", pointer: "coarse", label: "Tablet", spec: "834 × 1000 · touch" },
+  phone: { w: 390, h: 800, form: "phone", pointer: "coarse", label: "Phone", spec: "390 × 800 · touch" },
+};
+function mount(sec, kind) {
+  const d = DEV[kind];
+  const dev = document.createElement("figure"); dev.className = "device"; dev.dataset.kind = kind; dev.style.margin = "0";
+  dev.innerHTML = `<figcaption><b>${d.label}</b><span>${d.spec}</span></figcaption><div class="stage"></div>`;
+  const scr = document.createElement("section"); scr.className = "screen";
+  Object.assign(scr.dataset, { form: d.form, pointer: d.pointer });
+  scr.style.width = d.w + "px"; scr.style.height = d.h + "px";
+  const top = kind === "desktop" ? `<div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span class="url">${ic("lock")}${sec.path}</span><span style="inline-size:40px"></span></div>`
+    : `<div class="status" aria-hidden="true"><span>9:41</span><span><b></b><i></i></span></div>`;
+  scr.innerHTML = `${top}<div class="viewport"><div class="app" style="min-block-size:100%;display:grid"></div></div><div class="layer"><ol data-scope="toast" data-part="region" aria-label="Notifications"></ol></div><div class="live vh" aria-live="polite"></div><div class="live-a vh" aria-live="assertive"></div>`;
+  scr.setAttribute("aria-label", `${sec.t}, ${d.label.toLowerCase()} frame`);
+  $(".stage", dev).append(scr);
+  const app = $(".app", scr);
+  sec.fn(app, scr);
+  wire(scr); railTips(scr);
+  return dev;
+}
+const state = { frames: "all" };
+function renderSection(sec) {
+  const host = $(`#d-${sec.id}`); $$(".app", host).forEach((a) => a._stop && a._stop());
+  host.innerHTML = ""; host.dataset.frames = state.frames;
+  if (state.frames === "all") {
+    host.append(mount(sec, "desktop"));
+    const pair = document.createElement("div"); pair.className = "pair"; pair.append(mount(sec, "tablet"), mount(sec, "phone")); host.append(pair);
+  } else host.append(mount(sec, state.frames));
+  requestAnimationFrame(() => { fit(); refreshFields(host); });
+}
+function fit() {
+  for (const dev of $$(".device")) {
+    const st = $(".stage", dev), scr = $(".screen", st), w = parseFloat(scr.style.width), h = parseFloat(scr.style.height);
+    const k = Math.min(1, dev.clientWidth / (w + 2));
+    scr.style.transform = `scale(${k})`; st.style.width = w * k + 2 + "px"; st.style.height = h * k + 2 + "px";
+  }
+}
+// build page
+$("#index").innerHTML = SECTIONS.map((s) => `<a href="#${s.id}" data-sweep>${SW}<span class="n">${s.n}</span><b>${s.t}</b><small>${s.s}</small></a>`).join("");
+$("#sections").innerHTML = SECTIONS.map((s) => `<section class="flowsec" id="${s.id}" aria-labelledby="h-${s.id}"><div class="wrap">
+  <div class="sechead"><div><p class="eyebrow">${s.n} · ${s.s}</p><h2 id="h-${s.id}">${s.t}</h2><p class="d">${s.d}</p></div>
+  ${s.local ? `<div class="seclocal"><span class="cap muted" id="l-sys">State</span>${segmented("State", SYS_STATES, 0, 'data-ctl="sys" aria-labelledby="l-sys"').replace('aria-label="State" ', "")}</div>` : ""}</div>
+  <div class="notes">${s.notes.map(([h, li]) => `<div><h3>${h}</h3><ul>${li.map((x) => `<li>${x}</li>`).join("")}</ul></div>`).join("")}</div>
+  <div class="devices" id="d-${s.id}"></div></div></section>`).join("");
+$("#kbd-slot").innerHTML = btn(`Shortcuts ${kbd("?")}`, { kind: "frame", size: "sm", icon: "keyboard", attrs: 'data-act="shortcuts" aria-keyshortcuts="Shift+Slash"' });
+wire(document.body);
+SECTIONS.forEach(renderSection);
+new ResizeObserver(() => requestAnimationFrame(() => { fit(); segAll(); tabsAll(); })).observe(document.body);
+addEventListener("load", () => { fit(); refreshFields(); });
+document.fonts && document.fonts.ready.then(() => { fit(); refreshFields(); });
+
+/* page-wide behaviours. Checkbox and segmented are native inputs now, so they need no handlers;
+   tabs get the APG keyboard (← → Home End, automatic activation). */
+document.addEventListener("click", (e) => {
+  const tab = e.target.closest('[data-scope="tabs"] [role="tab"]'); if (tab) tabSelect(tab);
+  if (e.target.closest('[data-act="shortcuts"]')) openShortcuts();
+});
+document.addEventListener("keydown", (e) => {
+  const tab = e.target.closest && e.target.closest('[data-scope="tabs"] [role="tab"]');
+  if (!tab) return;
+  const all = $$('[role="tab"]', tab.closest('[role="tablist"]')), i = all.indexOf(tab);
+  const to = { ArrowRight: (i + 1) % all.length, ArrowLeft: (i - 1 + all.length) % all.length, Home: 0, End: all.length - 1 }[e.key];
+  if (to !== undefined) { e.preventDefault(); tabSelect(all[to]); }
+});
+document.addEventListener("change", (e) => { if (e.target.closest('[data-scope="segmented"]')) segPlace(e.target.closest('[data-scope="segmented"]')); });
+
+/* ---- settings bar: the canonical specimen bar (01-foundations §13). Names, values and URL params as specified. */
+const setAttr = (el, k, v) => (v === "auto" ? delete el.dataset[k] : (el.dataset[k] = v));
+const on = {
+  expression: (v) => (root.dataset.expression = v),
+  fields: (v) => (root.dataset.fields = v),
+  theme: (v) => setAttr(root, "theme", v),
+  density: (v) => (root.dataset.density = v),
+  motion: (v) => setAttr(root, "motion", v),
+  flair: (v) => setAttr(root, "flair", v),
+  frames: (v) => { state.frames = v; SECTIONS.forEach(renderSection); },
+  sys: (v) => { SYS.mode = v; renderSection(SECTIONS.find((s) => s.id === "system")); },
+};
+const BAR = ["expression", "fields", "theme", "density", "motion", "flair", "frames"];
+const summary = () => { const v = (k) => $(`[name="${k}"]:checked`)?.closest("label").textContent.trim(); $("#bar-summary").textContent = `${v("expression")} · ${v("theme")}`; };
+function control(name, v) {
+  const r = $(`[data-ctl="${name}"] input[value="${v}"]`); if (r) r.checked = true;
+  on[name](v);
+  if (BAR.includes(name)) { const q = new URLSearchParams(location.search); q.set(name, v); history.replaceState(null, "", "?" + q + location.hash); summary(); }
+  setTimeout(() => { refreshFields(); fit(); }, 380);
+}
+// deep link: ?expression=vivid&theme=dark&fields=classic&density=compact&motion=reduce&flair=none&frames=phone
+{ const params = new URLSearchParams(location.search);
+  for (const k of BAR) { const r = params.has(k) && $(`[name="${k}"][value="${CSS.escape(params.get(k))}"]`); if (r && !(k === "frames" && r.value === "all")) { r.checked = true; on[k](r.value); } else if (r) r.checked = true; }
+  summary(); }
+document.addEventListener("change", (e) => { const g = e.target.closest("[data-ctl]"); if (g && on[g.dataset.ctl]) control(g.dataset.ctl, e.target.value); });
+const bar = $("#bar"), toggle = $(".bar-toggle", bar);
+const sheet = (open, focus = true) => {
+  bar.toggleAttribute("data-open", open); toggle.setAttribute("aria-expanded", open);
+  if (open && focus) ($("#bar-settings input:checked") || $("#bar-settings input")).focus();
+  else if (!open && focus && bar.contains(document.activeElement)) toggle.focus();
+};
+toggle.addEventListener("click", () => sheet(!bar.hasAttribute("data-open")));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.hasAttribute("data-open")) sheet(false); });
+document.addEventListener("pointerdown", (e) => { if (bar.hasAttribute("data-open") && !bar.contains(e.target)) sheet(false, false); });
+addEventListener("online", () => $$(".app").forEach((a) => a._online && a._online()));
+
+/* ================================================== shortcuts overlay (?) */
+const KEYS = [
+  ["This specimen", [["Quiet · Balanced · Vivid", ["1", "2", "3"]], ["Light or dark", ["T"]], ["Floating or classic fields", ["F"]], ["Cycle density", ["D"]], ["Reduce motion", ["M"]], ["Show shortcuts", ["?"]]]],
+  ["Flows", [["Submit the current step", ["Enter"]], ["Back one step", ["Alt", "←"]], ["Close dialog, sheet or tour", ["Esc"]], ["Next / previous tab or tour step", ["→", "←"]], ["Paste a whole code", ["⌘", "V"]]]],
+  ["Go to", [["Home", ["G", "H"]], ["Members", ["G", "M"]], ["Settings", ["G", "S"]], ["Search", ["⌘", "K"]]]],
+];
+function openShortcuts() {
+  const layer = $("#pagelayer"); if ($('[data-scope="dialog"]', layer)) return;
+  const groups = (q = "") => {
+    const rx = q ? new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig") : null;
+    const html = KEYS.map(([g, rows]) => { const r = rows.filter(([t]) => !q || t.toLowerCase().includes(q.toLowerCase())); return r.length ? `<section><h4>${g}</h4><dl>${r.map(([t, ks]) => `<div><dt>${rx ? esc(t).replace(rx, "<mark>$1</mark>") : esc(t)}</dt><dd>${ks.map(kbd).join(ks.length > 1 && g === "Go to" && ks[0] === "G" ? " then " : "")}</dd></div>`).join("")}</dl></section>` : ""; }).join("");
+    return html || `<p data-part="empty">No shortcut matches “${esc(q)}”.</p>`;
+  };
+  const d = overlay(layer, {
+    title: "Keyboard shortcuts", desc: `Press ${kbd("?")} anywhere outside a text field.`,
+    body: `<div data-scope="shortcuts"><form novalidate role="search">${field({ label: "Filter shortcuts", name: "kq", icon: "search", ph: "e.g. density", attrs: "data-autofocus" })}</form><div data-part="groups" aria-live="polite">${groups()}</div></div>`,
+  }, { w: "720px" });
+  const inp = $("input", d); inp.addEventListener("input", () => ($('[data-part="groups"]', d).innerHTML = groups(inp.value.trim())));
+  $("form", d).addEventListener("submit", (e) => e.preventDefault());
+}
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable], [role=tab]")) return;
+  const k = e.key;
+  if (k === "?") { e.preventDefault(); openShortcuts(); return; }
+  if ($('#pagelayer [data-scope="dialog"]') || $(".layer [data-frame]")) return;
+  if (k === "1" || k === "2" || k === "3") control("expression", ["quiet", "balanced", "vivid"][+k - 1]);
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  if (k === "t" || k === "T") control("theme", dark ? "light" : "dark");
+  if (k === "f" || k === "F") control("fields", root.dataset.fields === "classic" ? "floating" : "classic");
+  if (k === "d" || k === "D") { const L = ["compact", "cozy", "comfortable"]; control("density", L[(L.indexOf(root.dataset.density || "cozy") + 1) % 3]); }
+  if (k === "m" || k === "M") control("motion", root.dataset.motion === "reduce" ? "auto" : "reduce");
+});
+// expose for headless checks
+window.__flows = { control, renderSection, SECTIONS, fit };
+})();
+</script>
+</body>
+</html>

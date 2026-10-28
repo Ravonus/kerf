@@ -1,0 +1,1007 @@
+/* =============================================================================
+   warp · inputs — every core input on the signature field shell  v0.2 · 2026-10-28
+   Spec: ../03-inputs.md · Signature: ../SIGNATURE.md · Tokens + shell: ./warp.css
+
+   warp.css (@layer warp.signature) owns the shell: two stacked borders
+   (`sweep-base` under `sweep`), the phase clip paths, the floating border
+   label with its notch window and per-character tint, the icon sweep, the
+   classic/floating switch (data-fields / data-variant), the rails (§1c) and
+   the message slide-in. This file builds every core input ON that shell:
+   slots inside the control, hint/error/counter, sizes, states, the line
+   appearance, and the choice, range and file controls, all sweeping with the
+   foundations' tokens (--warp-color-sweep, --warp-color-sweep-base,
+   --warp-sweep-duration, --warp-sweep-ease, --warp-sweep-width).
+
+   Contract: zero-specificity `:where()` in `@layer warp.inputs`, declared
+   after warp.signature and warp.components, so it extends the shell without
+   !important. Parts are `[data-scope] [data-part]`; state is ARIA or data-*.
+   Sys tokens only.
+
+   Why §0 restates the sweep: warp-components.css restyles every
+   [data-part="sweep"] in a later layer (its own colour mix, hairline base,
+   -1px inset). Input hosts must read the foundations' sweep tokens, so §0
+   restates the signature rules for the input hosts only (listed in §0);
+   buttons, surfaces and tabs keep the components layer's rules.
+
+   State (written by the component, or by sweep() / floatingLabel()):
+     host[data-phase]       idle | in | out          (sweep host: control, box, track, cell…)
+     host[data-pin]         hold "in" (open popup, dragging, active OTP cell)
+     control[data-filled]   a value is present (select, tags, anything without :placeholder-shown)
+     field[data-variant]    floating | classic       per-field override of data-fields
+     field[data-appearance] box | line               (default box)
+     field[data-size]       sm | md | lg
+     field[data-invalid] [data-valid] [data-loading] [data-disabled] [data-readonly] [data-shake]
+     field[data-lift]       specimens only: force the floated label ("active" = hover tint)
+   ========================================================================== */
+
+@layer warp.tokens, warp.base, warp.signature, warp.components, warp.inputs;
+
+@layer warp.inputs {
+
+:root, [data-expression="balanced"], [data-expression="quiet"] { --warp-field-shake: 0; }
+[data-expression="vivid"] { --warp-field-shake: 1; }
+
+/* ===========================================================================
+   0 · THE SWEEP ON INPUT :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])S (foundations tokens, restated)
+   ======================================================================== */
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) { position: relative; }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"], [data-part="sweep-base"]) {
+  position: absolute; inset: 0; box-sizing: border-box; pointer-events: none; border-radius: inherit;
+  border: 0 solid currentColor;
+  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]:empty) { border-width: var(--warp-sweep-width); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]:empty) { border-width: var(--warp-sweep-base-width); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]) { z-index: 1; color: var(--_base, var(--warp-color-sweep-base)); clip-path: inset(0 round var(--warp-sweep-radius)); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]) { z-index: 2; color: var(--_tint, var(--warp-color-sweep)); opacity: 1; clip-path: inset(0 100% 0 0 round var(--warp-sweep-radius)); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="idle"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { transition: none; }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="in"]) > :where([data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="in"]) > :where([data-part="sweep"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="out"]) > :where([data-part="sweep-base"]) { clip-path: inset(0 round var(--warp-sweep-radius)); transition: none; }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="out"]) > :where([data-part="sweep"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+/* the field icon: two copies of the glyph, the accent copy clips in with the border */
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep"], [data-part="sweep-base"]) {
+  position: absolute; inset: 0; border: 0; border-radius: 0; pointer-events: none;
+  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep-base"]) { color: var(--warp-color-text-subtle); clip-path: inset(0); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep"]) { color: var(--warp-color-sweep); clip-path: inset(0 100% 0 0); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="idle"]) > [data-part="icon"] > [data-part] { transition: none; }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="in"]) > [data-part="icon"] > :where([data-part="sweep"]) { clip-path: inset(0); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="in"]) > [data-part="icon"] > :where([data-part="sweep-base"]) { clip-path: inset(0 0 0 100%); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="out"]) > [data-part="icon"] > :where([data-part="sweep"]) { clip-path: inset(0 0 0 100%); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-phase="out"]) > [data-part="icon"] > :where([data-part="sweep-base"]) { clip-path: inset(0); transition: none; }
+/* keyboard focus is heavier than hover: +1px on the swept line */
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]:is(:focus-visible, :has(:focus-visible), [data-focus])) > :where([data-part="sweep"]:empty),
+:where([data-scope="field"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]:empty) { border-width: calc(var(--warp-sweep-width) + 1px); }
+/* error: the danger sweep is pinned in, at field level or on the host */
+:where([data-scope="field"][data-invalid] > [data-part="control"], :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-invalid]) > :where([data-part="sweep"]) {
+  clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-sweep-critical); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where([data-scope="field"][data-invalid] > [data-part="control"], :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-invalid]) > :where([data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+:where([data-scope="field"][data-invalid] > [data-part="control"]) > [data-part="icon"] > :where([data-part="sweep"]) { clip-path: inset(0); color: var(--warp-color-sweep-critical); }
+:where([data-scope="field"][data-invalid] > [data-part="control"]) > [data-part="icon"] > :where([data-part="sweep-base"]) { clip-path: inset(0 0 0 100%); }
+
+/* ===========================================================================
+   1 · THE FIELD, EXTENDED FOR INPUTS
+   Floating = the signature (default). Classic = label above, no float, no
+   notch; the sweep stays. Both share this markup and a real <label for>.
+   ======================================================================== */
+:where([data-scope="field"]) { min-inline-size: 0; align-content: start; }
+
+/* the control becomes a flex row so slots sit inside the one box */
+:where([data-scope="field"] > [data-part="control"]) {
+  display: flex; align-items: center; gap: var(--warp-space-related);
+  block-size: auto; min-block-size: var(--warp-field-height);
+  padding-inline: var(--_lead) var(--warp-pad-control); cursor: text;
+}
+:where([data-scope="field"][data-size="sm"]) { --warp-field-height: max(calc(var(--warp-control-sm) + 4px), var(--warp-target-min)); }
+:where([data-scope="field"][data-size="lg"]) { --warp-field-height: max(calc(var(--warp-control-lg) + 6px), var(--warp-target-min)); }
+:where([data-scope="field"] [data-part="input"]) {
+  padding-inline: 0; flex: 1; min-inline-size: 0; inline-size: auto; block-size: auto; align-self: stretch;
+  caret-color: var(--warp-color-sweep); font-variant-numeric: var(--_num, normal); text-align: var(--_align, start);
+}
+:where([data-scope="field"] input[data-part="input"], [data-scope="field"] select[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
+:where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
+:where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
+
+/* textarea: grows from 3 lines to 10; label and icon rest on the first line */
+:where([data-scope="field"] > [data-part="control"]:has(> textarea), [data-scope="field"] > [data-part="control"][data-wrap]) { align-items: flex-start; }
+:where([data-scope="field"] textarea[data-part="input"]) {
+  white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
+  padding-block: calc((var(--warp-field-height) - 1.5em) / 2);
+  min-block-size: calc(4.5em + var(--warp-field-height) - 1.5em); max-block-size: calc(15em + var(--warp-field-height) - 1.5em); overflow: auto;
+}
+:where([data-scope="field"] > [data-part="control"]:is(:has(> textarea), [data-wrap]) > [data-part="icon"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
+:where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:has(> textarea), [data-wrap]):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
+
+/* every slot paints above the borders */
+:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-scope="popup"])) { position: relative; z-index: 3; }
+
+/* prefix / suffix: fixed text, not submitted. Floating: shown once the label has lifted. Classic: always. */
+:where([data-scope="field"] :is([data-part="prefix"], [data-part="suffix"])) {
+  flex: none; color: var(--warp-color-text-subtle); font-size: var(--warp-text-control-size); white-space: nowrap; user-select: none;
+  opacity: 0; transition: opacity var(--warp-duration-fast);
+}
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > :is([data-part="prefix"], [data-part="suffix"]),
+       [data-scope="field"]:is([data-lift], [data-variant="classic"]) > [data-part="control"] > :is([data-part="prefix"], [data-part="suffix"]),
+       [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"]) > [data-part="control"] > :is([data-part="prefix"], [data-part="suffix"])) { opacity: 1; }
+:where([data-scope="field"] [data-part="prefix"]) { margin-inline-end: calc(var(--warp-space-related) * -1 + 1px); }
+:where([data-scope="field"] [data-part="suffix"]) { margin-inline-start: calc(var(--warp-space-related) * -1 + 1px); }
+
+/* icon buttons inside the control: 24px visual, ≥ hit-min touch area */
+:where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) {
+  --_s: 24px; flex: none; display: inline-grid; place-items: center;
+  inline-size: var(--_s); block-size: var(--_s); margin-inline: -4px; padding: 0;
+  border: 0; border-radius: var(--warp-radius-mark); background: transparent;
+  color: var(--warp-color-text-subtle); cursor: pointer;
+  transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), opacity var(--warp-duration-fast);
+}
+:where([data-scope="field"] :is([data-part="action"], [data-part="clear"]))::before { content: ""; position: absolute; inset: min(0px, calc((var(--_s) - var(--warp-hit-min)) / 2)); }
+:where([data-scope="field"] :is([data-part="action"], [data-part="clear"]):hover) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent); }
+:where([data-scope="field"] :is([data-part="action"], [data-part="clear"]):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
+:where([data-scope="field"] :is([data-part="action"], [data-part="clear"], [data-part="end"], [data-part="indicator"]) svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+:where([data-scope="field"] [data-part="action"][aria-pressed="true"]) { color: var(--warp-color-sweep); }
+:where([data-scope="field"] > [data-part="control"]:has([data-part="input"]:placeholder-shown) [data-part="clear"]) { visibility: hidden; opacity: 0; }
+:where([data-scope="field"] [data-part="end"]) { flex: none; display: inline-flex; color: var(--warp-color-text-subtle); }
+
+/* async: spinner + the one success tick worth showing */
+:where([data-scope="field"] [data-part="spinner"]) {
+  flex: none; inline-size: 14px; block-size: 14px; border-radius: 50%;
+  border: 1.5px solid var(--warp-color-border-strong); border-block-start-color: var(--warp-color-sweep);
+  animation: warp-field-spin calc(700ms / max(0.4, var(--warp-motion-scale))) linear infinite;
+}
+:where([data-scope="field"]:not([data-loading]) [data-part="spinner"]) { display: none; }
+/* reduced motion (review 03 M11): no rotation, only a slow opacity pulse; the field's aria-busy carries the state */
+:where([data-motion="reduce"]) :where([data-scope="field"] [data-part="spinner"]) { animation: warp-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--warp-color-sweep); }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"])) :where([data-scope="field"] [data-part="spinner"]) { animation: warp-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--warp-color-sweep); } }
+@keyframes warp-field-pulse { from { opacity: 1; } to { opacity: 0.45; } }
+:where([data-scope="field"] [data-part="status"]) { flex: none; display: none; color: var(--warp-color-positive-text); }
+:where([data-scope="field"][data-valid]:not([data-loading]) [data-part="status"]) { display: inline-flex; animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="field"] [data-part="status"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+
+/* message row: hint OR error (error replaces the hint and slides in), counter last */
+:where([data-scope="field"] > [data-part="message"]) {
+  display: flex; align-items: baseline; gap: var(--warp-space-related); min-inline-size: 0; padding-inline: 2px;
+}
+:where([data-scope="field"]:not([data-invalid]) > [data-part="message"]:not(:has([data-part="hint"], [data-part="counter"]))) { display: none; }
+:where([data-scope="field"] [data-part="hint"]) { color: var(--warp-color-text-subtle); }
+:where([data-scope="field"] [data-part="error"]) { display: none; color: var(--warp-color-critical-text); gap: 5px; align-items: flex-start; }
+:where([data-scope="field"] [data-part="error"] svg) { flex: none; inline-size: 13px; block-size: 13px; margin-block-start: 0.05em; }
+:where([data-scope="field"][data-invalid] [data-part="error"]) { display: inline-flex; animation: warp-msg-in var(--warp-message-duration) var(--warp-label-float-ease); }
+:where([data-scope="field"][data-invalid] [data-part="hint"]) { display: none; }
+:where([data-scope="field"] [data-part="counter"]) { margin-inline-start: auto; flex: none; color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="field"] [data-part="counter"][data-level="near"]) { color: var(--warp-color-caution-text); }
+:where([data-scope="field"] [data-part="counter"][data-level="over"]) { color: var(--warp-color-critical-text); font-weight: 500; }
+:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* read-only: dashed resting edge, no fill; focus still sweeps */
+:where([data-scope="field"][data-readonly] > [data-part="control"]) { background: transparent; }
+:where([data-scope="field"][data-readonly] > [data-part="control"]) > :where([data-part="sweep-base"]) { border-style: dashed; } /* dashed ink: read-only reads by the dash, the sweep still clears 3:1 */
+/* shake: vivid only, and 0px under reduced motion */
+:where([data-scope="field"][data-shake] > [data-part="control"], [data-scope="otp"][data-shake]) {
+  --_shk: calc(var(--warp-field-shake) * var(--warp-motion-scale) * 1px);
+  animation: warp-field-shake calc(var(--warp-duration-slow) * 1.1) var(--warp-ease-out);
+}
+:where([data-motion="reduce"]) :where([data-scope="field"][data-shake] > [data-part="control"], [data-scope="otp"][data-shake]) { animation: none; }
+@media (prefers-reduced-motion: reduce) { :where([data-scope="field"][data-shake] > [data-part="control"], [data-scope="otp"][data-shake]) { animation: none; } }
+
+/* specimens only: force the floated label (data-lift) and its hover tint (data-lift="active"), floating fields only */
+:where([data-scope="field"][data-lift]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]) {
+  inset-block-start: var(--warp-label-float-offset); inset-inline-start: calc(var(--warp-pad-control) - 4px);
+  transform: none; padding-inline: 4px;
+  font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
+  letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase;
+  background-color: var(--_notch-color, var(--warp-field-notch, var(--warp-color-surface)));
+  background-image: var(--_notch-image, none); background-size: var(--_notch-size, auto); background-position: var(--_notch-pos, 0 0); background-repeat: no-repeat;
+}
+:where([data-scope="field"][data-lift] [data-char]) { color: var(--warp-color-label-rest); }
+:where([data-scope="field"][data-lift="active"] [data-char]) { color: var(--warp-color-label-active); }
+:where([data-scope="field"][data-lift] [data-part="input"])::placeholder { color: var(--warp-color-text-subtle); }
+:where([data-scope="field"][data-invalid] [data-char]) { color: var(--warp-color-critical-text); }
+
+/* -- appearance: line (FloatingLineInput) ----------------------------------
+   One bottom hairline; the accent line scales in from the left and, with its
+   origin flipped on exit, keeps travelling right. No notch, no fill. */
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) { --_lead: 0px; background: transparent; border-radius: 0; --warp-sweep-radius: 0px; padding-inline-end: 0; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: 26px; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"] > [data-part="icon"]) { inset-inline-start: 0; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep"], [data-part="sweep-base"]) {
+  inset: auto 0 0; block-size: 0; border-width: var(--warp-sweep-base-width) 0 0; border-radius: 0; clip-path: none;
+}
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep-base"]) { color: var(--warp-color-sweep-base); /* ink: sweep-vs-base ≥ 3:1 (review 03 M9) */ }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep"]) {
+  border-top-width: var(--warp-sweep-width); transform: scaleX(0); transform-origin: right center;
+  transition: transform var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"][data-phase="in"], [data-scope="field"][data-appearance="line"][data-invalid] > [data-part="control"]) > :where([data-part="sweep"]) {
+  transform: scaleX(1); transform-origin: left center; clip-path: none;
+}
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"][data-phase="idle"]) > :where([data-part="sweep"]) { transition: none; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]) { border-top-width: calc(var(--warp-sweep-width) + 1px); }
+:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]) { background: none; padding-inline: 0; }
+:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
+  inset-block-start: -4px; inset-inline-start: 0;
+}
+
+/* ===========================================================================
+   2 · TEXT FAMILY EXTRAS
+   ======================================================================== */
+/* password strength: 4 segments + a caps word; segments fill L→R like the sweep */
+:where([data-scope="strength"]) { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 4px; align-items: center; font-size: var(--warp-text-caption-size); padding-inline: 2px; }
+:where([data-scope="strength"] i) { position: relative; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: hidden; }
+:where([data-scope="strength"] i)::after { content: ""; position: absolute; inset: 0; background: var(--_t, var(--warp-color-sweep)); clip-path: inset(0 100% 0 0); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease); }
+:where([data-scope="strength"] b) { font: 600 10px/1 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; min-inline-size: 7ch; text-align: end; color: var(--warp-color-text-subtle); }
+:where([data-scope="strength"][data-score="1"]) { --_t: var(--warp-color-critical-solid); }
+:where([data-scope="strength"][data-score="2"]) { --_t: var(--warp-color-caution-solid); }
+:where([data-scope="strength"]:is([data-score="3"], [data-score="4"])) { --_t: var(--warp-color-positive-solid); }
+:where([data-scope="strength"][data-score="1"] i:nth-child(-n+1), [data-scope="strength"][data-score="2"] i:nth-child(-n+2),
+       [data-scope="strength"][data-score="3"] i:nth-child(-n+3), [data-scope="strength"][data-score="4"] i)::after { clip-path: inset(0); }
+:where([data-scope="strength"][data-score="1"] b) { color: var(--warp-color-critical-text); }
+:where([data-scope="strength"][data-score="2"] b) { color: var(--warp-color-caution-text); }
+:where([data-scope="strength"]:is([data-score="3"], [data-score="4"]) b) { color: var(--warp-color-positive-text); }
+
+/* number stepper: boxed −/+ at the end (the original look); bigger on coarse pointers */
+:where([data-scope="field"] [data-part="stepper"]) { display: flex; gap: 4px; flex: none; margin-inline-end: -6px; }
+:where([data-scope="field"] [data-part="stepper"] button) {
+  position: relative; inline-size: 26px; block-size: 26px; padding: 0; border: var(--warp-border-hairline) solid var(--warp-color-border-control);
+  border-radius: var(--warp-radius-mark); background: transparent; color: var(--warp-color-text); cursor: pointer;
+  display: grid; place-items: center; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast), border-color var(--warp-duration-fast);
+}
+:where([data-scope="field"] [data-part="stepper"] button)::before { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)) -2px; }
+:where([data-scope="field"] [data-part="stepper"] button:hover) { border-color: var(--warp-color-sweep); color: var(--warp-color-sweep); }
+:where([data-scope="field"] [data-part="stepper"] button:active) { background: var(--warp-color-accent-soft); }
+:where([data-scope="field"] [data-part="stepper"] button:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="field"] [data-part="stepper"] svg) { inline-size: 12px; block-size: 12px; }
+/* coarse (review 02 M7): 40px boxes, so each one's expander (−2px) reaches 44 × 44 without covering its neighbour */
+:where([data-pointer="coarse"]) :where([data-scope="field"] [data-part="stepper"] button) { inline-size: 40px; block-size: 40px; }
+@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] [data-part="stepper"] button) { inline-size: 40px; block-size: 40px; } }
+/* in-field icon buttons on coarse: a 40px box with no negative margin, so two side by side (reveal + generate)
+   each keep a full 44px area instead of one expander covering the other */
+:where([data-pointer="coarse"]) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; }
+@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; } }
+:where([data-scope="field"][data-kind="number"]) { --_num: tabular-nums; }
+:where([data-scope="field"] [data-part="scrub"]) { cursor: ew-resize; user-select: none; touch-action: pan-y; }
+:where([data-pointer="coarse"]) :where([data-scope="field"] [data-part="scrub"]) { cursor: default; }
+
+/* masked input: the mask's literal template shows faintly behind the typed value */
+:where([data-scope="field"] [data-part="mask"]) {
+  position: absolute; z-index: 2; inset-inline-start: var(--_lead); inset-block: 0; display: flex; align-items: center; pointer-events: none;
+  font-size: var(--warp-text-control-size); font-variant-numeric: tabular-nums; white-space: pre; color: transparent; opacity: 0; transition: opacity var(--warp-duration-fast);
+}
+:where([data-scope="field"] [data-part="mask"] em) { font-style: normal; color: var(--warp-color-text-subtle); opacity: 0.7; }
+:where([data-scope="field"] > [data-part="control"]:is(:focus-within, [data-filled])) > :where([data-part="mask"]) { opacity: 1; }
+:where([data-scope="field"][data-kind="mask"] [data-part="input"]) { font-variant-numeric: tabular-nums; }
+
+/* quantity: [−] 3 [+] as one swept box */
+:where([data-scope="quantity"]) {
+  display: inline-flex; align-items: stretch; block-size: var(--warp-control-md);
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-field);
+}
+:where([data-scope="quantity"] button) {
+  position: relative; z-index: 3; inline-size: max(var(--warp-control-md), var(--warp-hit-min)); border: 0; padding: 0; background: transparent;
+  color: var(--warp-color-text); display: grid; place-items: center; cursor: pointer; border-radius: inherit;
+  transition: color var(--warp-duration-fast);
+}
+:where([data-scope="quantity"] button:hover) { color: var(--warp-color-sweep); }
+:where([data-scope="quantity"] button:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; color: var(--warp-color-text); }
+:where([data-scope="quantity"] button svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="quantity"] input) {
+  position: relative; z-index: 3; inline-size: 4ch; border: 0; outline: none; background: transparent; text-align: center; color: var(--warp-color-text);
+  font: 500 var(--warp-text-control-size) var(--warp-text-body-font); font-variant-numeric: tabular-nums;
+}
+
+/* OTP / PIN: ONE real input over N painted, swept cells; the active cell holds its sweep */
+:where([data-scope="otp"]) { position: relative; display: flex; min-inline-size: 0; gap: var(--warp-space-related); align-items: center; max-inline-size: 100%; }
+:where([data-scope="otp"] > input) {
+  position: absolute; inset: 0; z-index: 4; opacity: 0.001; border: 0; padding: 0; margin: 0; color: transparent; background: transparent;
+  caret-color: transparent; font-size: 16px; letter-spacing: 2em; outline: none;
+}
+:where([data-scope="otp"] [data-part="cell"]) {
+  max-inline-size: calc(var(--warp-control-lg) - 2px); block-size: calc(var(--warp-field-height) + 6px);
+  display: grid; place-items: center; flex: 1 1 0; min-inline-size: 28px;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-field);
+}
+:where([data-scope="otp"] [data-part="char"]) { position: relative; z-index: 3; font: 500 20px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums; color: var(--warp-color-text); }
+:where([data-scope="otp"] [data-part="char"]:not(:empty)) { animation: warp-field-pop var(--warp-duration-base) var(--warp-ease-pop); }
+:where([data-scope="otp"] [data-part="cell"][data-pin] [data-part="char"]:empty)::after {
+  content: ""; display: block; inline-size: 1.5px; block-size: 22px; background: var(--warp-color-sweep); animation: warp-caret 1s steps(2, jump-none) infinite;
+}
+:where([data-scope="otp"] [data-part="sep"]) { inline-size: 8px; block-size: 1px; background: var(--warp-color-border-strong); flex: none; }
+:where([data-scope="otp"][data-masked] [data-part="char"]:not(:empty)) { font-size: 0; }
+:where([data-scope="otp"][data-masked] [data-part="char"]:not(:empty))::before { content: ""; display: block; inline-size: 9px; block-size: 9px; border-radius: 50%; background: currentColor; }
+
+/* inline edit (InlineEdit): the preview sweeps on hover like a field (no resting edge), then swaps to a field */
+:where([data-scope="editable"]) { display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: var(--warp-field-height); min-inline-size: 0; }
+:where([data-scope="editable"] [data-part="preview"]) {
+  all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 6px; min-block-size: var(--warp-control-md); padding-inline: 8px; margin-inline: -8px;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); --_base: transparent; cursor: text; max-inline-size: 100%;
+}
+:where([data-scope="editable"] [data-part="preview"] > svg) { position: relative; z-index: 3; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); opacity: 0; transition: opacity var(--warp-duration-fast); }
+:where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible) > svg) { opacity: 1; color: var(--warp-color-sweep); }
+:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="editable"] [data-part="editor"]) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
+:where([data-scope="editable"][data-editing] [data-part="preview"], [data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
+:where([data-scope="editable"] [data-part="editor"] > [data-scope="field"]) { flex: 1; }
+
+/* input group (InputGroup): fields, add-ons and buttons joined edge to edge */
+:where([data-scope="input-group"]) { display: flex; align-items: flex-end; min-inline-size: 0; }
+:where([data-scope="input-group"] > *) { min-inline-size: 0; }
+:where([data-scope="input-group"] > [data-scope="field"]) { flex: 1; }
+:where([data-scope="input-group"] > :not(:first-child)) { margin-inline-start: -1px; }
+:where([data-scope="input-group"] > [data-scope="field"]:not(:last-child) > [data-part="control"], [data-scope="input-group"] > :not([data-scope="field"]):not(:last-child)) { border-start-end-radius: 0; border-end-end-radius: 0; --warp-sweep-radius: 0px; }
+:where([data-scope="input-group"] > [data-scope="field"]:not(:first-child) > [data-part="control"], [data-scope="input-group"] > :not([data-scope="field"]):not(:first-child)) { border-start-start-radius: 0; border-end-start-radius: 0; --warp-sweep-radius: 0px; }
+:where([data-scope="input-group"] > [data-scope="button"]) { block-size: var(--warp-field-height); }
+:where([data-scope="input-group"] > [data-part="addon"]) {
+  display: inline-flex; align-items: center; padding-inline: var(--warp-pad-control); block-size: var(--warp-field-height); box-sizing: border-box;
+  border: var(--warp-sweep-base-width) solid var(--warp-color-sweep-base); border-radius: var(--warp-radius-control); color: var(--warp-color-text-subtle);
+  background: var(--warp-color-surface-sunken); font-size: var(--warp-text-control-size); white-space: nowrap;
+}
+:where([data-scope="input-group"]:has([data-scope="field"] > [data-part="message"]:not(:empty))) { align-items: flex-start; }
+
+/* ===========================================================================
+   3 · CHOICE FAMILY
+   ======================================================================== */
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--warp-space-related);
+  align-items: center; min-block-size: var(--warp-hit-min); cursor: pointer; font-size: var(--warp-text-body-size);
+  -webkit-tap-highlight-color: transparent; justify-self: start;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > input {
+  position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; margin: 0; pointer-events: none;
+}
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
+  grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); line-height: var(--warp-text-caption-leading); margin-block-start: -2px;
+}
+:where([data-scope="checkbox"], [data-scope="radio"]):has([data-part="hint"]) { align-items: start; }
+:where([data-scope="checkbox"], [data-scope="radio"]):has([data-part="hint"]) > [data-part="control"] { margin-block-start: 1px; }
+:where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):has(input:disabled) { cursor: not-allowed; opacity: var(--warp-opacity-disabled); }
+
+/* checkbox / radio box: two stacked borders (base = ink, sweep = accent), never filled;
+   the accent check draws itself (stroke 2.6, 420ms); radio: an accent dot grows */
+:where([data-scope="checkbox"], [data-scope="radio"]) > [data-part="control"] {
+  display: grid; place-items: center; inline-size: 20px; block-size: 20px; flex: none;
+  border-radius: var(--warp-radius-mark); --warp-sweep-radius: var(--warp-radius-mark);
+}
+:where([data-scope="radio"]) > [data-part="control"] { border-radius: 50%; --warp-sweep-radius: 50%; }
+:where([data-scope="checkbox"] > [data-part="control"] svg) {
+  position: relative; z-index: 3; inline-size: 70%; block-size: 70%; fill: none; overflow: visible;
+  stroke: var(--warp-color-accent-solid); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+}
+:where([data-expression="vivid"] [data-scope="checkbox"] > [data-part="control"] svg) { stroke-linecap: square; stroke-linejoin: miter; }
+:where([data-scope="checkbox"] > [data-part="control"] path) {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  transition: stroke-dashoffset calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-scope="checkbox"]) > input:checked:not(:indeterminate) + [data-part="control"] [data-part="check"],
+:where([data-scope="checkbox"]) > input:indeterminate + [data-part="control"] [data-part="dash"] { stroke-dashoffset: 0; }
+:where([data-scope="radio"]) > [data-part="control"]::after {
+  content: ""; position: relative; z-index: 3; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--warp-color-accent-solid);
+  transform: scale(0); transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-scope="radio"]) > input:checked + [data-part="control"]::after { transform: scale(1); }
+:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-sweep-critical); }
+
+/* switch (SIGNATURE §1c): the accent fill moves THROUGH the rail as the knob slides.
+   Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
+:where([data-scope="switch"]) > [data-part="track"] {
+  position: relative; flex: none; inline-size: 44px; block-size: 24px; border-radius: var(--warp-radius-round);
+  --warp-sweep-radius: var(--warp-radius-round); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */; background: var(--warp-color-surface-sunken);
+}
+:where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: hidden; }
+:where([data-scope="switch"]) > input:checked + [data-part="track"] { --_base: var(--warp-color-accent-solid); }
+:where([data-scope="switch"] [data-part="thumb"]) {
+  position: absolute; z-index: 3; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 18px; block-size: 18px;
+  border-radius: 50%; background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+:where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
+:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 1px); }
+:where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
+:where([data-scope="switch"][data-size="sm"] [data-part="thumb"]) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(16px); }
+:where([data-scope="switch"][data-placement="end"]) { grid-template-columns: minmax(0, 1fr) auto; justify-self: stretch; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="track"] { grid-column: 2; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="label"] { grid-column: 1; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > [data-part="hint"] { grid-column: 1; }
+
+/* group (fieldset): radio group, checkbox group, chips. The legend follows the field switch:
+   floating = the 10px caps label colour; classic = the plain label above. */
+:where([data-scope="group"]) { border: 0; margin: 0; padding: 0; min-inline-size: 0; display: grid; gap: var(--warp-space-tight); }
+:where([data-scope="group"] > legend) {
+  padding: 0; margin-block-end: var(--warp-space-tight);
+  font-family: var(--warp-label-font); font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
+  letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-rest);
+}
+:where([data-fields="classic"] [data-scope="group"]:not([data-variant="floating"]), [data-scope="group"][data-variant="classic"]) > legend {
+  font-family: var(--warp-text-label-font); font-size: var(--warp-text-label-size); font-weight: var(--warp-text-label-weight); letter-spacing: 0; text-transform: none; color: var(--warp-color-text);
+}
+:where([data-scope="group"] [data-part="items"]) { display: grid; gap: 0; }
+:where([data-scope="group"][data-orientation="horizontal"] [data-part="items"]) { display: flex; flex-wrap: wrap; column-gap: var(--warp-space-group); }
+:where([data-scope="group"] > [data-part="message"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="group"][data-invalid] > [data-part="message"]) { color: var(--warp-color-critical-text); }
+
+/* choice cards (radio/checkbox as a card): swept border; selected pins the sweep */
+:where([data-scope="choice-card"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--warp-space-related);
+  padding: calc(var(--warp-pad-control) + 2px); cursor: pointer;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--warp-color-surface-raised); transition: background-color var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="choice-card"]) > input { position: absolute; opacity: 0; pointer-events: none; }
+:where([data-scope="choice-card"]) > :not([data-part^="sweep"], input) { position: relative; z-index: 3; }
+:where([data-scope="choice-card"] [data-part="label"]) { font-weight: 500; }
+:where([data-scope="choice-card"] [data-part="hint"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="choice-card"] [data-part="meta"]) { grid-row: 1; grid-column: 2; font-variant-numeric: tabular-nums; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="choice-card"]:has(input:checked)) { background: var(--warp-color-accent-soft); }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); border-width: calc(var(--warp-sweep-width) + 0.5px); }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep-base"] { clip-path: inset(0 0 0 100%); }
+:where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]) { color: var(--warp-color-accent-text); }
+
+/* segmented (original Segmented.tsx; review 01 M8): the group rests on the ink control border and
+   does not sweep; hovering or focusing an UNSELECTED option sweeps a ring around that option only.
+   The indicator is a rail (§1c): an accent fill that slides to the selection. */
+:where([data-scope="segmented"]) {
+  position: relative;   /* the indicator's containing block: the group is no longer a [data-sweep] host */
+  display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; padding: 3px;
+  border-radius: calc(var(--warp-radius-control) + 2px);
+  box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base);
+  background: var(--warp-color-field); isolation: isolate; max-inline-size: 100%;
+}
+:where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
+:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--warp-sweep-width); }
+:where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
+:where([data-scope="segmented"] label) { position: relative; z-index: 3; display: flex; }
+:where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+:where([data-scope="segmented"] [data-part="item"]) {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  block-size: calc(var(--warp-control-md) - 8px); padding-inline: var(--warp-pad-control);
+  font-weight: 500; font-size: var(--warp-text-body-size); color: var(--warp-color-text-subtle); white-space: nowrap;
+  border-radius: var(--warp-radius-control); transition: color calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-scope="segmented"] [data-part="item"] svg) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="segmented"] [data-part="count"]) { font: 500 11px var(--warp-font-mono); opacity: 0.8; }
+:where([data-scope="segmented"] label:hover [data-part="item"]) { color: var(--warp-color-text); }
+:where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); }
+:where([data-scope="segmented"] input:focus-visible + [data-part="item"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
+:where([data-scope="segmented"] [data-part="indicator"]) {
+  position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0; inline-size: var(--_w, 0); transform: translateX(var(--_x, 0));
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: hidden;
+  transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease), inline-size calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+}
+:where([data-scope="segmented"] [data-part="indicator"][data-instant]) { transition: none; }
+:where([data-scope="segmented"][data-size="sm"] [data-part="item"]) { block-size: calc(var(--warp-control-sm) - 8px); font-size: var(--warp-text-caption-size); }
+
+/* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */
+:where([data-scope="chip"][data-sweep]) {
+  isolation: isolate; display: inline-flex; align-items: center; gap: 6px;
+  block-size: var(--warp-control-sm); padding-inline: calc(var(--warp-pad-control) - 1px);
+  border: 0; border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--warp-color-surface-raised); color: var(--warp-color-text);
+  font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); cursor: pointer;
+  transition: background-color var(--warp-duration-base) var(--warp-ease-out), color var(--warp-duration-base);
+}
+:where([data-scope="chip"][data-sweep]) > :not([data-part^="sweep"]) { position: relative; z-index: 3; }
+:where([data-scope="chip"][data-sweep]) > svg { inline-size: 13px; block-size: 13px; fill: none; stroke: currentColor; stroke-width: 2; }
+:where([data-scope="chip"][data-sweep]) > svg[data-part="check"] { display: none; margin-inline-start: -2px; }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > svg[data-part="check"] { display: block; }
+:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); }
+:where([data-scope="chip"][data-sweep]:focus-visible) { outline: none; }
+:where([data-scope="chip"][data-sweep]:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="chip"] [data-part="count"]) { opacity: 0.7; font-variant-numeric: tabular-nums; }
+
+/* tag (inside tags input / multi-combobox) */
+:where([data-scope="tag"]) {
+  display: inline-flex; align-items: center; gap: 2px; max-inline-size: 100%;
+  block-size: 24px; padding-inline: 8px 2px; margin-block: 2px;
+  border-radius: max(2px, calc(var(--warp-radius-control) - 2px));
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
+  font-size: var(--warp-text-caption-size); font-weight: 500; white-space: nowrap;
+  animation: warp-field-pop var(--warp-duration-base) var(--warp-ease-pop);
+}
+:where([data-scope="tag"] > span) { overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="tag"] button) {
+  position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: 2px;
+  background: transparent; color: inherit; opacity: 0.75; cursor: pointer;
+}
+:where([data-scope="tag"] button)::before { content: ""; position: absolute; inset: min(0px, calc((18px - var(--warp-hit-min)) / 2)); }
+:where([data-scope="tag"] button:hover) { opacity: 1; background: color-mix(in oklab, currentColor 14%, transparent); }
+:where([data-scope="tag"] svg) { inline-size: 12px; block-size: 12px; }
+:where([data-scope="tag"][data-highlighted]) { box-shadow: inset 0 0 0 1.5px var(--warp-color-sweep); }
+:where([data-scope="field"] > [data-part="control"][data-wrap]) { flex-wrap: wrap; row-gap: 2px; column-gap: 4px; padding-block: 7px; }
+:where([data-scope="field"] > [data-part="control"][data-wrap] [data-part="input"]) { min-inline-size: 8ch; min-block-size: 28px; align-self: center; }
+
+/* select trigger + value + chevron (Select, Combobox, MultiCombobox) */
+:where([data-scope="field"] [data-part="trigger"]) {
+  all: unset; box-sizing: border-box; flex: 1; min-inline-size: 0; align-self: stretch; display: flex; align-items: center; gap: var(--warp-space-related);
+  min-block-size: calc(var(--warp-field-height) - 2px); cursor: pointer; font-size: var(--warp-text-control-size); color: var(--warp-color-text); position: relative; z-index: 3;
+}
+:where([data-scope="field"] > [data-part="control"]:has([data-part="trigger"])) { cursor: pointer; }
+:where([data-scope="field"] [data-part="value"]) { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="field"] [data-part="value"]:empty)::before { content: attr(data-placeholder); color: transparent; transition: color var(--warp-duration-fast); }
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="value"]:empty)::before,
+:where([data-scope="field"]:is([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
+:where([data-scope="field"] [data-part="indicator"]) { flex: none; display: inline-flex; color: var(--warp-color-text-subtle); transition: rotate calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease), color var(--warp-duration-fast); }
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="indicator"]) { color: var(--warp-color-sweep); }
+:where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]) { rotate: 180deg; }
+:where([data-scope="field"] > [data-part="control"][data-wrap] > [data-part="indicator"]) { align-self: center; margin-inline-start: auto; }
+/* native select (phones): the real element fills the control, the chevron is painted */
+:where([data-scope="field"] select[data-part="input"]) {
+  cursor: pointer; padding-inline-end: 24px; margin-inline-end: -24px; appearance: none;
+  /* an appearance:none select top-aligns its text in a tall box: centre it with padding instead of height */
+  align-self: stretch; min-block-size: 0; line-height: 1.5; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
+}
+:where([data-scope="field"] select[data-part="input"] option) { color: initial; }
+
+/* ===========================================================================
+   4 · POPUP + LISTBOX (select, combobox, search suggestions, inline listbox)
+   ======================================================================== */
+:where([data-scope="popup"]) {
+  position: absolute; inset-inline: 0; inset-block-start: calc(100% + 6px); z-index: var(--warp-z-menu);
+  max-block-size: min(320px, 50vh); overflow: auto; overscroll-behavior: contain; padding: 4px;
+  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
+  border-radius: calc(var(--warp-radius-control) + 2px); box-shadow: var(--warp-elevation-2);
+  cursor: default; transform-origin: top center; font-family: var(--warp-text-body-font);
+  animation: warp-enter var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="popup"][hidden]) { display: none; }
+:where([data-scope="listbox"]) {
+  display: grid; gap: 1px; padding: 4px; margin: 0; list-style: none; outline: none;
+  max-block-size: 260px; overflow: auto; overscroll-behavior: contain;
+}
+:where(div[data-scope="listbox"]) {
+  position: relative; border-radius: var(--warp-radius-control); background: var(--warp-color-field);
+  box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border-control);
+}
+:where(div[data-scope="listbox"]:focus-visible) { box-shadow: inset 0 0 0 calc(var(--warp-sweep-width) + 1px) var(--warp-color-sweep); }
+:where([data-scope="popup"] [data-scope="listbox"]) { padding: 0; max-block-size: none; overflow: visible; background: none; box-shadow: none; }
+:where([role="option"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px var(--warp-space-related);
+  min-block-size: max(calc(var(--warp-control-sm) + 4px), var(--warp-hit-min)); padding: 4px var(--warp-space-related);
+  border-radius: max(2px, calc(var(--warp-radius-control) - 2px)); cursor: pointer; color: var(--warp-color-text);
+  font-size: var(--warp-text-body-size); user-select: none; isolation: isolate;
+}
+/* the highlight is a fill that sweeps in L→R (the field's sweep, in miniature) */
+:where([role="option"])::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--warp-color-accent-soft);
+  clip-path: inset(0 100% 0 0); transition: clip-path calc(var(--warp-sweep-duration) * 0.5) var(--warp-sweep-ease);
+}
+:where([role="option"][data-highlighted])::before { clip-path: inset(0); }
+:where([role="option"][data-highlighted])::after { content: ""; position: absolute; inset-block: 6px; inset-inline-start: 0; inline-size: 2px; border-radius: 2px; background: var(--warp-color-sweep); }
+:where([role="option"] [data-part="item-icon"]) { display: inline-flex; color: var(--warp-color-text-subtle); }
+:where([role="option"] [data-part="item-icon"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+:where([role="option"]:not(:has([data-part="item-icon"]))) { grid-template-columns: minmax(0, 1fr) auto; }
+:where([role="option"] [data-part="item-hint"]) { grid-column: -2 / -3; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([role="option"] [data-part="item-check"]) { grid-column: -1; grid-row: 1; color: var(--warp-color-accent-text); visibility: hidden; display: inline-flex; }
+:where([role="option"] [data-part="item-check"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+:where([role="option"][aria-selected="true"] [data-part="item-check"]) { visibility: visible; }
+:where([role="option"][aria-selected="true"]) { font-weight: 500; }
+:where([role="option"][aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
+:where([role="option"] mark) { background: none; color: var(--warp-color-accent-text); font-weight: 600; }
+:where([role="option"][data-kind="create"]) { color: var(--warp-color-accent-text); }
+:where([data-scope="listbox"] [data-part="group-label"], [data-scope="popup"] [data-part="group-label"]) {
+  padding: 8px var(--warp-space-related) 4px; font-family: var(--warp-label-font); font-size: var(--warp-label-float-size);
+  letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-rest); font-weight: var(--warp-label-float-weight);
+}
+:where([data-scope="popup"] [data-part="empty"]) { padding: 10px var(--warp-space-related); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="popup"][data-stale] [data-scope="listbox"]) { opacity: 0.55; transition: opacity var(--warp-duration-fast); }
+:where([data-scope="listbox"][aria-multiselectable="true"] [role="option"] [data-part="item-check"]) {
+  visibility: visible; inline-size: 16px; block-size: 16px; border: 1px solid var(--warp-color-sweep-base); border-radius: var(--warp-radius-mark); color: transparent;
+}
+:where([data-scope="listbox"][aria-multiselectable="true"] [role="option"][aria-selected="true"] [data-part="item-check"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
+:where([data-scope="listbox"][aria-multiselectable="true"] [role="option"] [data-part="item-check"] svg) { inline-size: 12px; block-size: 12px; margin: auto; stroke-width: 2.6; }
+
+/* transfer list */
+:where([data-scope="transfer"]) { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--warp-space-related); align-items: center; }
+:where([data-scope="transfer"] [data-part="pane"]) { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
+:where([data-scope="transfer"] [data-part="pane-head"]) { display: flex; justify-content: space-between; font: 600 10px/1.4 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-rest); }
+:where([data-scope="transfer"] [data-part="moves"]) { display: grid; gap: var(--warp-space-tight); }
+:where([data-scope="transfer"] [data-scope="listbox"]) { block-size: 188px; align-content: start; }
+/* narrow (phone): stack the panes, the move buttons turn to point down and up */
+@media (max-width: 520px) {
+  :where([data-scope="transfer"]) { grid-template-columns: minmax(0, 1fr); }
+  :where([data-scope="transfer"] [data-part="moves"]) { grid-auto-flow: column; justify-content: center; }
+  :where([data-scope="transfer"] [data-part="moves"] svg) { rotate: 90deg; }
+  :where([data-scope="transfer"] [data-scope="listbox"]) { block-size: auto; max-block-size: 188px; }
+}
+
+/* ===========================================================================
+   5 · RANGE FAMILY
+   ======================================================================== */
+/* slider: the filled range is a rail (§1c): hover/focus sweeps accent-hover through it.
+   Thumbs are hollow accent rings (the original look) that fill while dragged. */
+:where([data-scope="slider"]) {
+  --_v0: 0; --_v1: 0.5; --warp-sweep-radius: 9999px;
+  position: relative; display: grid; align-items: center; block-size: max(28px, var(--warp-hit-min)); touch-action: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+:where([data-scope="slider"] [data-part="track"]) {
+  position: relative; block-size: 4px; border-radius: var(--warp-radius-round);
+  background: color-mix(in oklab, var(--warp-color-border-control) 55%, transparent);
+}
+:where([data-scope="slider"] [data-part="range"]) {
+  position: absolute; inset-block: 0; inset-inline-start: calc(var(--_v0) * 100%); inline-size: calc((var(--_v1) - var(--_v0)) * 100%);
+  border-radius: inherit; background: var(--warp-color-accent-solid); overflow: hidden;
+}
+:where([data-scope="slider"] [data-part="thumb"]) {
+  position: absolute; z-index: 3; inset-block-start: 50%; inset-inline-start: calc(var(--_v) * 100%);
+  inline-size: 18px; block-size: 18px; translate: -50% -50%; box-sizing: border-box;
+  border-radius: 50%; background: var(--warp-color-surface-raised);
+  border: 2px solid var(--warp-color-accent-solid); box-shadow: var(--warp-elevation-1);
+  transition: scale var(--warp-duration-fast) var(--warp-ease-pop), background-color var(--warp-duration-base) var(--warp-ease-out);
+  outline: none; touch-action: none;
+}
+:where([data-scope="slider"] [data-part="thumb"])::before { content: ""; position: absolute; inset: min(-6px, calc((18px - var(--warp-hit-min)) / 2)); border-radius: 50%; }
+:where([data-scope="slider"] [data-part="thumb"]:focus-visible) { box-shadow: 0 0 0 3px color-mix(in oklab, var(--warp-color-sweep) 35%, transparent), var(--warp-elevation-1); }
+:where([data-scope="slider"] [data-part="thumb"][data-dragging]) { scale: 1.12; background: var(--warp-color-accent-solid); }
+:where([data-scope="slider"] [data-part="bubble"]) {
+  position: absolute; inset-block-end: calc(100% + 8px); inset-inline-start: 50%; translate: -50% 4px;
+  padding: 3px 7px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse);
+  font: 500 var(--warp-text-caption-size) / 1.2 var(--warp-text-body-font); font-variant-numeric: tabular-nums; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity var(--warp-duration-fast), translate var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="slider"] [data-part="thumb"]:is([data-dragging], :focus-visible) [data-part="bubble"]) { opacity: 1; translate: -50% 0; }
+:where([data-pointer="coarse"]) :where([data-scope="slider"] [data-part="bubble"]) { inset-block-end: calc(100% + 22px); }
+:where([data-scope="slider"] [data-part="ticks"]) { position: absolute; inset-inline: 0; inset-block-start: calc(50% + 10px); display: flex; justify-content: space-between; pointer-events: none; }
+:where([data-scope="slider"] [data-part="ticks"] span) { inline-size: 0; display: grid; justify-items: center; gap: 2px; font-size: 11px; color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="slider"] [data-part="ticks"] span:first-child) { justify-items: start; }
+:where([data-scope="slider"] [data-part="ticks"] span:last-child) { justify-items: end; }
+:where([data-scope="slider"] [data-part="ticks"] span)::before { content: ""; inline-size: 1px; block-size: 4px; background: var(--warp-color-border-strong); }
+:where([data-scope="slider"]:has([data-part="ticks"])) { margin-block-end: 18px; }
+:where([data-scope="slider"][data-disabled]) { opacity: var(--warp-opacity-disabled); pointer-events: none; }
+:where([data-scope="slider"][data-variant="hue"] [data-part="track"]) {
+  block-size: 12px; border-radius: var(--warp-radius-mark); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 12%, transparent);
+  background: linear-gradient(90deg in hsl longer hue, hsl(0 90% 55%), hsl(359.9 90% 55%));
+}
+:where([data-scope="slider"][data-variant="hue"] [data-part="range"]) { display: none; }
+:where([data-scope="slider"][data-variant="hue"] [data-part="thumb"]) { background: var(--_c, #fff); border: 2px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3), var(--warp-elevation-1); }
+/* the head over a slider: label + live value; the label follows the field switch */
+:where([data-scope="range-head"]) { display: flex; justify-content: space-between; align-items: baseline; gap: var(--warp-space-related); }
+:where([data-scope="range-head"] > :first-child) { font: var(--warp-label-float-weight) var(--warp-label-float-size) / 1.4 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-rest); }
+:where([data-scope="range-head"] output) { font: 500 var(--warp-text-caption-size) var(--warp-font-mono); font-variant-numeric: tabular-nums; color: var(--warp-color-text); }
+:where([data-fields="classic"] [data-scope="range-head"] > :first-child) { font: var(--warp-text-label-weight) var(--warp-text-label-size) / 1.4 var(--warp-text-label-font); letter-spacing: 0; text-transform: none; color: var(--warp-color-text); }
+
+/* rating */
+:where([data-scope="rating"]) { display: inline-flex; gap: 2px; border: 0; padding: 0; margin: 0; }
+:where([data-scope="rating"] label) { position: relative; display: grid; place-items: center; inline-size: max(28px, var(--warp-hit-min)); block-size: max(28px, var(--warp-hit-min)); cursor: pointer; color: var(--warp-color-border-control); }
+:where([data-scope="rating"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+:where([data-scope="rating"] svg) { inline-size: 22px; block-size: 22px; fill: transparent; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; transition: fill var(--warp-duration-fast), color var(--warp-duration-fast), scale var(--warp-duration-base) var(--warp-ease-pop); transition-delay: calc(var(--i, 0) * 40ms * var(--warp-motion-scale)); }
+:where([data-expression="vivid"] [data-scope="rating"] svg) { stroke-linejoin: miter; }
+:where([data-scope="rating"] label[data-on] svg) { fill: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
+:where([data-scope="rating"] label[data-preview] svg) { fill: color-mix(in oklab, var(--warp-color-sweep) 40%, transparent); color: var(--warp-color-sweep); }
+:where([data-scope="rating"] label:active svg) { scale: 0.88; }
+:where([data-scope="rating"] input:focus-visible + svg) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 3px; border-radius: 2px; }
+
+/* colour picker */
+:where([data-scope="color"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="color"] [data-part="area"]) {
+  position: relative; block-size: 148px; border-radius: var(--warp-radius-control); touch-action: none; cursor: crosshair;
+  background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(var(--_hue, 152) 100% 50%));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 12%, transparent);
+}
+:where([data-scope="color"] [data-part="area-thumb"]) {
+  position: absolute; inset-inline-start: calc(var(--_s, 0.6) * 100%); inset-block-start: calc((1 - var(--_b, 0.6)) * 100%);
+  inline-size: 16px; block-size: 16px; translate: -50% -50%; border-radius: 50%;
+  border: 2px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 1px 3px rgb(0 0 0 / 0.3); background: var(--_c); outline: none;
+}
+:where([data-scope="color"] [data-part="area-thumb"]:focus-visible) { box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 0 0 4px var(--warp-color-focus); }
+:where([data-scope="color"] [data-part="swatches"]) { display: flex; flex-wrap: wrap; gap: 6px; }
+:where([data-scope="color"] [data-part="swatch"]) {
+  position: relative; inline-size: 24px; block-size: 24px; padding: 0; cursor: pointer; border-radius: var(--warp-radius-mark);
+  border: 0; background: var(--_c); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 15%, transparent);
+  transition: scale var(--warp-duration-fast) var(--warp-ease-pop);
+}
+:where([data-scope="color"] [data-part="swatch"])::before { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); } /* full hit-min; neighbours overlap by the 6px gap, fine in a radio group (review 02 M7) */
+:where([data-scope="color"] [data-part="swatch"][aria-checked="true"]) { box-shadow: 0 0 0 2px var(--warp-color-surface), 0 0 0 3.5px var(--warp-color-sweep); }
+:where([data-scope="color"] [data-part="swatch"]:hover) { scale: 1.08; }
+:where([data-scope="color"] [data-part="swatch"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 3px; }
+/* colour swatches on coarse: 36px chips on a 44px pitch */
+:where([data-pointer="coarse"]) :where([data-scope="color"] [data-part="swatches"]) { gap: 8px; }
+:where([data-pointer="coarse"]) :where([data-scope="color"] [data-part="swatch"]) { inline-size: 36px; block-size: 36px; }
+@media (pointer: coarse) {
+  :where(:root:not([data-pointer])) :where([data-scope="color"] [data-part="swatches"]) { gap: 8px; }
+  :where(:root:not([data-pointer])) :where([data-scope="color"] [data-part="swatch"]) { inline-size: 36px; block-size: 36px; }
+}
+/* the colour field (hex): a swatch in the control, before the input */
+:where([data-scope="field"] [data-part="swatch-dot"]) { flex: none; inline-size: 18px; block-size: 18px; border-radius: var(--warp-radius-mark); background: var(--_c); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 18%, transparent); }
+
+/* ===========================================================================
+   6 · FILE FAMILY
+   ======================================================================== */
+/* drop zone: dashed base, accent sweep on hover/focus; dragging pins the sweep */
+:where([data-scope="dropzone"]) {
+  display: grid; justify-items: center; gap: var(--warp-space-related); text-align: center;
+  padding: calc(var(--warp-pad-surface) * 1.2) var(--warp-pad-surface);
+  border-radius: var(--warp-radius-surface); --warp-sweep-radius: var(--warp-radius-surface); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  background: var(--warp-color-field); color: var(--warp-color-text-subtle); cursor: pointer;
+  transition: background-color var(--warp-duration-base) var(--warp-ease-out), color var(--warp-duration-fast);
+}
+:where([data-scope="dropzone"]) > :where([data-part="sweep-base"]) { border-style: dashed; }
+:where([data-scope="dropzone"]) > input { position: absolute; inset: 0; opacity: 0; cursor: pointer; inline-size: 100%; z-index: 3; }
+:where([data-scope="dropzone"]) > :not([data-part^="sweep"], input) { position: relative; z-index: 4; pointer-events: none; }
+:where([data-scope="dropzone"] [data-part="touch"]) { pointer-events: auto; }
+:where([data-scope="dropzone"] [data-part="icon"]) { display: grid; place-items: center; inline-size: 40px; block-size: 40px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); color: var(--warp-color-sweep); transition: translate var(--warp-duration-base) var(--warp-ease-pop), background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
+:where([data-scope="dropzone"] [data-part="icon"] svg) { inline-size: 18px; block-size: 18px; }
+:where([data-scope="dropzone"] [data-part="title"]) { color: var(--warp-color-text); font-weight: 500; }
+:where([data-scope="dropzone"] [data-part="title"] u) { color: var(--warp-color-accent-text); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+:where([data-scope="dropzone"] [data-part="hint"]) { font-size: var(--warp-text-caption-size); }
+:where([data-scope="dropzone"][data-pin]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([data-scope="dropzone"][data-pin] [data-part="icon"]) { translate: 0 calc(var(--warp-motion-distance) * -0.5); background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+:where([data-scope="dropzone"][data-invalid]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
+:where([data-scope="dropzone"][data-invalid] [data-part="icon"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="dropzone"] [data-part="touch"]) { display: none; gap: var(--warp-space-related); flex-wrap: wrap; justify-content: center; }
+:where([data-pointer="coarse"]) :where([data-scope="dropzone"] [data-part="drop-copy"]) { display: none; }
+:where([data-pointer="coarse"]) :where([data-scope="dropzone"] [data-part="touch"]) { display: flex; }
+@media (pointer: coarse) {
+  :where(:root:not([data-pointer])) :where([data-scope="dropzone"] [data-part="drop-copy"]) { display: none; }
+  :where(:root:not([data-pointer])) :where([data-scope="dropzone"] [data-part="touch"]) { display: flex; }
+}
+
+:where([data-scope="uploads"]) { display: grid; list-style: none; margin: 0; padding: 0; }
+:where([data-scope="uploads"] > li) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px var(--warp-space-related); align-items: center;
+  padding-block: 10px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+  animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both;
+}
+:where([data-scope="uploads"] > li:first-child) { border-block-start: 0; }
+:where([data-scope="uploads"] [data-part="thumb"]) { grid-row: span 2; inline-size: 36px; block-size: 36px; border-radius: var(--warp-radius-control); display: grid; place-items: center; background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); color: var(--warp-color-text-subtle); font: 600 9px var(--warp-font-mono); letter-spacing: 0.04em; text-transform: uppercase; background-size: cover; }
+:where([data-scope="uploads"] [data-part="name"]) { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+:where([data-scope="uploads"] [data-part="meta"]) { grid-column: 2; display: flex; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="uploads"] [data-part="acts"]) { grid-row: span 2; display: flex; gap: 2px; }
+/* progress is a rail: the fill travels through it */
+:where([data-scope="uploads"] [data-part="progress"]) { position: relative; flex: 1; block-size: 3px; border-radius: 2px; background: var(--warp-color-border); overflow: hidden; }
+:where([data-scope="uploads"] [data-part="progress"] i) { position: absolute; inset: 0; background: var(--warp-color-accent-solid); clip-path: inset(0 calc((1 - var(--_p, 0)) * 100%) 0 0); transition: clip-path calc(var(--warp-sweep-duration) * 0.5) var(--warp-sweep-ease); }
+:where([data-scope="uploads"] li:is([data-status="done"], [data-status="error"]) [data-part="progress"]) { display: none; }
+:where([data-scope="uploads"] li[data-status="done"] [data-part="state"]) { color: var(--warp-color-positive-text); }
+:where([data-scope="uploads"] li[data-status="error"] [data-part="state"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="uploads"] li[data-status="error"] [data-part="thumb"]) { border-color: var(--warp-color-critical-border); color: var(--warp-color-critical-text); background: var(--warp-color-critical-soft); }
+
+:where([data-scope="cropper"]) { position: relative; overflow: hidden; border-radius: var(--warp-radius-control); aspect-ratio: 4 / 3; background: var(--warp-color-surface-sunken); touch-action: none; user-select: none; }
+:where([data-scope="cropper"] [data-part="image"]) { position: absolute; inset: 0; background: var(--_img) center / cover; scale: var(--_z, 1); transition: scale var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="cropper"] [data-part="frame"]) {
+  position: absolute; inline-size: 52%; aspect-ratio: 1; inset-inline-start: var(--_fx, 24%); inset-block-start: var(--_fy, 12%);
+  border-radius: 50%; box-shadow: 0 0 0 9999px color-mix(in oklab, black 55%, transparent); outline: 1.5px solid rgb(255 255 255 / 0.9); cursor: grab;
+}
+:where([data-scope="cropper"] [data-part="frame"]:focus-visible) { outline: 2px solid var(--warp-color-sweep); outline-offset: 2px; }
+:where([data-scope="cropper"] [data-part="frame"])::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(transparent 33%, rgb(255 255 255 / 0.35) 33% calc(33% + 1px), transparent 0 66%, rgb(255 255 255 / 0.35) 66% calc(66% + 1px), transparent 0), linear-gradient(90deg, transparent 33%, rgb(255 255 255 / 0.35) 33% calc(33% + 1px), transparent 0 66%, rgb(255 255 255 / 0.35) 66% calc(66% + 1px), transparent 0); opacity: 0; transition: opacity var(--warp-duration-fast); }
+:where([data-scope="cropper"][data-dragging] [data-part="frame"])::after { opacity: 1; }
+:where([data-scope="cropper"][data-dragging] [data-part="frame"]) { cursor: grabbing; }
+
+/* ===========================================================================
+   7 · FORM LAYOUT (FormField, KitForm and DynamicForm render into this)
+   ======================================================================== */
+:where([data-scope="form"]) { container-type: inline-size; display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
+:where([data-scope="form"] [data-part="grid"]) { display: grid; gap: calc(var(--warp-space-group) + 4px) var(--warp-space-group); grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 600px) {
+  :where([data-scope="form"] [data-part="grid"][data-columns="2"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: calc(var(--warp-space-group) * 1.25); }
+  :where([data-scope="form"] [data-span="full"]) { grid-column: 1 / -1; }
+}
+:where([data-scope="form"] [data-part="section"]) {
+  display: grid; gap: calc(var(--warp-space-group) + 4px); padding-block-start: var(--warp-space-group);
+  border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); min-inline-size: 0; margin: 0; padding-inline: 0; padding-block-end: 0;
+}
+:where([data-scope="form"] [data-part="section"]:first-child) { border-block-start: 0; padding-block-start: 0; }
+/* floated so the legend is an ordinary grid item (a rendered legend cannot take a grid column) */
+:where([data-scope="form"] [data-part="section-head"]) { display: grid; gap: 2px; padding: 0; float: inline-start; inline-size: 100%; }
+:where([data-scope="form"] [data-part="section-head"] :is(h3, b)) {
+  margin: 0; font-family: var(--warp-text-heading-font); font-size: calc(var(--warp-text-heading-size) - 3px); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking);
+}
+:where([data-scope="form"] [data-part="section-head"] p) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+@container (min-width: 900px) {
+  :where([data-scope="form"][data-layout="aside"] [data-part="section"]) { grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); column-gap: calc(var(--warp-space-group) * 2); align-items: start; }
+}
+/* submit bar: inline at the end; sticky at the bottom of the scroller on phone */
+:where([data-scope="form"] [data-part="actions"]) {
+  display: flex; gap: var(--warp-space-related); justify-content: flex-end; align-items: center; flex-wrap: wrap;
+  padding-block-start: var(--warp-space-group); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+}
+:where([data-scope="form"] [data-part="actions"] [data-part="status"]) { margin-inline-end: auto; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+@container (max-width: 599.98px) {
+  :where([data-scope="form"] [data-part="actions"][data-sticky]) {
+    position: sticky; inset-block-end: 0; z-index: var(--warp-z-sticky); margin-inline: calc(var(--warp-space-page) * -1);
+    padding: 12px var(--warp-space-page) max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in oklab, var(--warp-color-surface) 92%, transparent);
+    backdrop-filter: blur(var(--warp-blur-overlay)); -webkit-backdrop-filter: blur(var(--warp-blur-overlay));
+  }
+  :where([data-scope="form"] [data-part="actions"][data-sticky] > :is(button, a)) { flex: 1; }
+  :where([data-scope="form"] [data-part="actions"][data-sticky] [data-part="status"]) { flex-basis: 100%; }
+}
+/* error summary */
+:where([data-scope="error-summary"]) {
+  display: grid; gap: 6px; padding: var(--warp-pad-control) calc(var(--warp-pad-control) + 2px);
+  border: var(--warp-border-hairline) solid var(--warp-color-critical-border); border-inline-start: calc(var(--warp-border-emphasis) + 1px) solid var(--warp-color-critical-solid);
+  border-radius: var(--warp-radius-control); background: var(--warp-color-critical-soft); color: var(--warp-color-text);
+  animation: warp-enter var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="error-summary"]:focus) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="error-summary"] b) { font-weight: 600; color: var(--warp-color-critical-text); }
+:where([data-scope="error-summary"] ul) { margin: 0; padding-inline-start: 1.1em; display: grid; gap: 2px; font-size: var(--warp-text-caption-size); }
+:where([data-scope="error-summary"] a) { color: var(--warp-color-text); text-underline-offset: 2px; }
+:where([data-scope="error-summary"][hidden]) { display: none; }
+
+/* settings rows: label + hint on the left, control on the right */
+:where([data-scope="setting"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--warp-space-group); align-items: center;
+  padding-block: var(--warp-space-group); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+}
+:where([data-scope="setting"]:first-child) { border-block-start: 0; }
+:where([data-scope="setting"] > [data-part="label"]) { font-weight: 500; }
+:where([data-scope="setting"] > [data-part="hint"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="setting"] > [data-part="end"]) { grid-row: 1 / span 2; grid-column: 2; }
+
+/* wizard steps: each segment is a rail that fills L→R */
+:where([data-scope="steps"]) { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; counter-reset: step; }
+:where([data-scope="steps"] li) { position: relative; flex: 1; display: grid; gap: 6px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); counter-increment: step; min-inline-size: 0; padding-block-start: 8px; }
+:where([data-scope="steps"] li)::before { content: ""; position: absolute; inset: 0 0 auto; block-size: 2px; border-radius: 2px; background: var(--warp-color-border-strong); }
+:where([data-scope="steps"] li)::after { content: ""; position: absolute; inset: 0 0 auto; block-size: 2px; border-radius: 2px; background: var(--warp-color-accent-solid); clip-path: inset(0 100% 0 0); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease); }
+:where([data-scope="steps"] li:is([data-state="complete"], [aria-current="step"]))::after { clip-path: inset(0); }
+:where([data-scope="steps"] li span)::before { content: counter(step) " · "; font-variant-numeric: tabular-nums; }
+:where([data-scope="steps"] li[aria-current="step"]) { color: var(--warp-color-text); font-weight: 500; }
+:where([data-scope="steps"] li span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+/* =========================================================================
+   8 · MORE PICKERS AND FORM MECHANICS (COVERAGE §2.1 gaps)
+   Every one keeps the shell: a swept host, the floating/classic label, the message line.
+   ====================================================================== */
+
+/* required / optional marks: opt-in per form or field; the mark is visual only (required is on the input) */
+:where([data-mark="required"] [data-scope="field"]:has(:required) > [data-part="control"] > [data-part="label"])::after,
+:where([data-mark="required"] [data-scope="group"]:has(:required) > legend)::after { content: "*" / ""; margin-inline-start: 2px; color: var(--warp-color-critical-text); }
+:where([data-scope="group"] > [data-part="description"]) { margin: -2px 0 2px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+
+/* password rules checklist: each rule ticks as it is met (the meter is advice; the rules are the contract) */
+:where([data-scope="rules"]) { display: grid; gap: 4px; margin: 6px 0 0; padding: 0; list-style: none; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="rules"] li) { display: flex; gap: 6px; align-items: center; }
+:where([data-scope="rules"] li) > svg { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="rules"] li)::before { content: ""; inline-size: 5px; block-size: 5px; margin-inline: 3.5px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+:where([data-scope="rules"] li[data-met]) { color: var(--warp-color-positive-text); }
+:where([data-scope="rules"] li[data-met])::before { display: none; }
+:where([data-scope="rules"] li:not([data-met])) > svg { display: none; }
+:where([data-scope="rules"] li[data-met]) > svg { stroke-dashoffset: 0; }
+
+/* knob / angle slider (and the hue wheel variant): the arc is a rail; the ring sweeps like any box */
+:where([data-scope="knob"]) {
+  --_v: 0; --warp-sweep-radius: 50%; --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  position: relative; inline-size: 64px; block-size: 64px; flex: none; border-radius: 50%; cursor: grab; touch-action: none;
+  background: var(--warp-color-surface-raised);
+}
+:where([data-scope="knob"]) > [data-part="arc"] {
+  position: absolute; inset: 5px; border-radius: 50%;
+  background: conic-gradient(var(--warp-color-accent-solid) calc(var(--_v) * 1turn), var(--warp-color-surface-sunken) 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5.5px));
+  transition: filter var(--warp-duration-fast);
+}
+:where([data-scope="knob"][data-phase="in"]) > [data-part="arc"] { filter: brightness(1.12) saturate(1.1); }
+:where([data-scope="knob"][data-variant="hue"]) > [data-part="arc"] { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); }
+:where([data-scope="knob"]) > [data-part="pointer"] {
+  position: absolute; inset: 5px; rotate: calc(var(--_v) * 1turn); pointer-events: none;
+}
+:where([data-scope="knob"]) > [data-part="pointer"]::before {
+  content: ""; position: absolute; inset-inline-start: 50%; inset-block-start: -2px; inline-size: 12px; block-size: 12px; translate: -50% 0;
+  box-sizing: border-box; border-radius: 50%; background: var(--warp-color-surface-raised); border: 2px solid var(--warp-color-accent-solid); box-shadow: var(--warp-elevation-1);
+}
+:where([data-scope="knob"][data-variant="hue"]) > [data-part="pointer"]::before { background: var(--_c, transparent); border-color: white; outline: 1px solid rgb(0 0 0 / 0.3); }
+:where([data-scope="knob"]) > [data-part="value"] { position: absolute; inset: 0; display: grid; place-items: center; z-index: 3; font: 500 12px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums; }
+:where([data-scope="knob"]:focus-visible) { outline: none; }
+:where([data-scope="knob"][data-dragging]) { cursor: grabbing; }
+:where([data-scope="knob-row"]) { display: flex; gap: var(--warp-space-group); align-items: center; }
+:where([data-scope="knob-row"] [data-part="caption"]) { display: grid; gap: 2px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="knob-row"] [data-part="caption"] b) { font: 600 10px/1.4 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-active); }
+
+/* XY pad: a swept box; one thumb (hollow ring) with two values; crosshair rails */
+:where([data-scope="xy-pad"]) {
+  --_x: 0.5; --_y: 0.5; --warp-sweep-radius: var(--warp-radius-control); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  position: relative; aspect-ratio: 16 / 9; border-radius: var(--warp-radius-control); cursor: crosshair; touch-action: none;
+  background:
+    linear-gradient(var(--warp-color-border) 0 0) center / 1px 100% no-repeat,
+    linear-gradient(var(--warp-color-border) 0 0) center / 100% 1px no-repeat,
+    radial-gradient(circle, var(--warp-color-border) 1px, transparent 1.5px) 0 0 / 12.5% 25%,
+    var(--warp-color-field);
+}
+:where([data-scope="xy-pad"]) > [data-part="cross"] { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+:where([data-scope="xy-pad"]) > [data-part="cross"]::before, :where([data-scope="xy-pad"]) > [data-part="cross"]::after { content: ""; position: absolute; background: var(--warp-color-accent-solid); opacity: 0.35; }
+:where([data-scope="xy-pad"]) > [data-part="cross"]::before { inset-block: 0; inset-inline-start: calc(var(--_x) * 100%); inline-size: 1px; }
+:where([data-scope="xy-pad"]) > [data-part="cross"]::after { inset-inline: 0; inset-block-start: calc((1 - var(--_y)) * 100%); block-size: 1px; }
+:where([data-scope="xy-pad"]) > [data-part="thumb"] {
+  position: absolute; z-index: 3; inset-inline-start: calc(var(--_x) * 100%); inset-block-start: calc((1 - var(--_y)) * 100%);
+  inline-size: 18px; block-size: 18px; translate: -50% -50%; box-sizing: border-box; border-radius: 50%;
+  background: var(--warp-color-surface-raised); border: 2px solid var(--warp-color-accent-solid); box-shadow: var(--warp-elevation-1);
+}
+:where([data-scope="xy-pad"]) > [data-part="thumb"]::after { content: ""; position: absolute; inset: -13px; }
+:where([data-scope="xy-pad"][data-dragging]) > [data-part="thumb"] { background: var(--warp-color-accent-solid); }
+:where([data-scope="xy-pad"]) > [data-part="thumb"]:focus-visible { outline: 2px solid var(--warp-color-focus); outline-offset: 3px; }
+
+/* histogram range slider: bars above the track; bars inside the range take the accent */
+:where([data-scope="histogram"]) { display: flex; align-items: end; gap: 2px; block-size: 48px; margin-block-end: -6px; padding-inline: 1px; }
+:where([data-scope="histogram"] i) { flex: 1; block-size: calc(var(--h) * 100%); min-block-size: 2px; border-radius: 2px 2px 0 0; background: var(--warp-color-border-strong); transition: background-color var(--warp-duration-base); }
+:where([data-scope="histogram"] i[data-in]) { background: color-mix(in oklab, var(--warp-color-accent-solid) 70%, transparent); }
+
+/* cascader and tree select: the select shell, a wider popup */
+:where([data-scope="popup"][data-kind="cascade"]:not([hidden])) { inset-inline-end: auto; min-inline-size: 100%; display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 4px; }
+:where([data-scope="popup"][data-kind="cascade"]) > [data-scope="listbox"] + [data-scope="listbox"] { border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-inline-start: 4px; }
+:where([data-scope="popup"][data-kind="cascade"] [role="option"][aria-haspopup]) > [data-part="item-check"] { display: none; }
+:where([data-scope="popup"][data-kind="cascade"] [role="option"]) > [data-part="chev"] { margin-inline-start: auto; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); }
+:where([data-scope="popup"][data-kind="cascade"] [role="option"][data-trail]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([role="tree"][data-scope="tree"]) { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; outline: none; }
+:where([data-scope="tree"] [role="group"]) { display: grid; gap: 1px; margin: 0; padding: 0 0 0 22px; list-style: none; }
+:where([data-scope="tree"] [role="treeitem"][aria-expanded="false"]) > [role="group"] { display: none; }
+:where([data-scope="tree"] [data-part="row"]) {
+  position: relative; display: flex; gap: 8px; align-items: center; min-block-size: 32px; padding-inline: 6px 8px; border-radius: calc(var(--warp-radius-control) - 2px); cursor: pointer;
+}
+:where([data-scope="tree"] [data-part="row"]:hover, [data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"]) { background: var(--warp-color-accent-soft); }
+:where([data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"])::after { content: ""; position: absolute; inset-block: 6px; inset-inline-start: 0; inline-size: 2px; border-radius: 2px; background: var(--warp-color-accent-solid); }
+:where([data-scope="tree"] [data-part="twisty"]) { inline-size: 14px; block-size: 14px; flex: none; color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="tree"] [role="treeitem"]:not([aria-expanded])) > [data-part="row"] [data-part="twisty"] { visibility: hidden; }
+:where([data-scope="tree"] [role="treeitem"][aria-expanded="true"]) > [data-part="row"] [data-part="twisty"] { rotate: 90deg; }
+:where([data-scope="tree"] [data-part="box"]) {
+  position: relative; inline-size: 16px; block-size: 16px; flex: none; box-sizing: border-box; border: 1.5px solid var(--warp-color-border-control); border-radius: 4px; display: grid; place-items: center;
+}
+:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"], [data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
+:where([data-scope="tree"] [data-part="box"] svg) { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2.6; }
+:where([data-scope="tree"] [data-part="box"] path) { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 420ms var(--warp-sweep-ease); }
+:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"] [data-part="check"], [data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"] [data-part="dash"]) { stroke-dashoffset: 0; }
+
+/* gradient editor: the bar previews the gradient; stops are slider thumbs on it */
+:where([data-scope="gradient"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="gradient"] [data-part="preview"]) { block-size: 72px; border-radius: var(--warp-radius-control); background: var(--_g); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
+:where([data-scope="gradient"] [data-part="bar"]) { position: relative; block-size: 18px; margin-inline: 9px; border-radius: 9px; background: linear-gradient(90deg, var(--_stops)); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1); cursor: copy; }
+:where([data-scope="gradient"] [data-part="stop"]) {
+  position: absolute; inset-block-start: 50%; inset-inline-start: calc(var(--_p) * 100%); inline-size: 18px; block-size: 26px; translate: -50% -50%;
+  box-sizing: border-box; border-radius: 6px; border: 2px solid var(--warp-color-surface-raised); background: var(--_c); box-shadow: 0 0 0 1px var(--warp-color-border-strong), var(--warp-elevation-1); cursor: grab; touch-action: none;
+}
+:where([data-scope="gradient"] [data-part="stop"][aria-current="true"]) { box-shadow: 0 0 0 2px var(--warp-color-accent-solid), var(--warp-elevation-1); }
+:where([data-scope="gradient"] [data-part="stop"]:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 3px; }
+:where([data-scope="gradient"] [data-part="stop"])::after { content: ""; position: absolute; inset: -9px -13px; }
+
+/* icon tile (the floating-border icon) and HoverScope: hovering anywhere in the scope sweeps the tile */
+:where([data-scope="icon-tile"]) {
+  --warp-sweep-radius: var(--warp-radius-control); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  position: relative; display: grid; place-items: center; inline-size: 40px; block-size: 40px; flex: none;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
+}
+:where([data-scope="icon-tile"]) > [data-part="icon"] { position: relative; inline-size: 18px; block-size: 18px; display: grid; }
+:where([data-scope="icon-tile"]) > [data-part="icon"] > * { grid-area: 1 / 1; }
+:where([data-scope="icon-tile"]) > [data-part="icon"] svg { inline-size: 18px; block-size: 18px; }
+:where([data-scope="hover-scope"]) {
+  display: flex; gap: var(--warp-space-group); align-items: center; padding: 10px 12px; border-radius: var(--warp-radius-surface, 10px);
+  color: inherit; text-decoration: none; cursor: pointer; transition: background-color var(--warp-duration-fast);
+}
+:where([data-scope="hover-scope"]:hover, [data-scope="hover-scope"]:focus-visible) { background: var(--warp-color-surface-sunken); }
+:where([data-scope="hover-scope"]:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="hover-scope"] [data-part="text"]) { display: grid; gap: 2px; min-inline-size: 0; }
+:where([data-scope="hover-scope"] [data-part="text"] small) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+
+/* unsaved-changes save bar: appears only while the form is dirty; it never covers the field being edited */
+:where([data-scope="save-bar"]) {
+  position: sticky; inset-block-end: 8px; z-index: 5; display: flex; gap: var(--warp-space-related); align-items: center;
+  padding: 8px 8px 8px 14px; border-radius: calc(var(--warp-radius-control) + 4px);
+  background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); box-shadow: var(--warp-elevation-2);
+  font-size: var(--warp-text-caption-size); clip-path: inset(0 0 0 0 round calc(var(--warp-radius-control) + 4px));
+  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), opacity var(--warp-duration-fast);
+}
+:where([data-scope="save-bar"][hidden]) { display: flex; visibility: hidden; opacity: 0; clip-path: inset(0 100% 0 0 round calc(var(--warp-radius-control) + 4px)); transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), opacity var(--warp-duration-fast), visibility 0s var(--warp-sweep-duration); }
+:where([data-scope="save-bar"]) > [data-part="text"] { margin-inline-end: auto; white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+:where([data-scope="save-bar"]) > [data-part="text"]::before { content: ""; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--warp-color-caution-solid); }
+
+/* autosave status: idle · saving · saved · failed; polite live region; failed offers Retry */
+:where([data-scope="autosave"]) { display: inline-flex; gap: 6px; align-items: center; min-block-size: 24px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="autosave"]) > svg { inline-size: 13px; block-size: 13px; fill: none; stroke: currentColor; stroke-width: 2; display: none; }
+:where([data-scope="autosave"][data-state="saving"]) > [data-part="spin"] { display: block; animation: warp-field-spin 0.8s linear infinite; }
+:where([data-scope="autosave"][data-state="saved"]) { color: var(--warp-color-positive-text); }
+:where([data-scope="autosave"][data-state="saved"]) > [data-part="ok"] { display: block; }
+:where([data-scope="autosave"][data-state="failed"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="autosave"][data-state="failed"]) > [data-part="bad"] { display: block; }
+:where([data-scope="autosave"]:not([data-state="failed"])) > button { display: none; }
+
+/* -- keyframes ---------------------------------------------------------- */
+@keyframes warp-field-spin { to { rotate: 1turn; } }
+@keyframes warp-caret { 50% { opacity: 0; } }
+@keyframes warp-field-pop { from { scale: calc(1 - 0.18 * var(--warp-motion-scale)); opacity: 0.4; } }
+@keyframes warp-field-shake {
+  15% { translate: calc(var(--_shk) * -6) 0; }
+  35% { translate: calc(var(--_shk) * 5) 0; }
+  55% { translate: calc(var(--_shk) * -3) 0; }
+  75% { translate: calc(var(--_shk) * 2) 0; }
+}
+}
