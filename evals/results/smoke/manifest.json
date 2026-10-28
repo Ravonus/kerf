@@ -1,0 +1,102 @@
+{
+  "name": "smoke",
+  "created": "2026-10-28T17:47:30.359Z",
+  "jobs": [
+    {
+      "id": "react__1-price-tag__1",
+      "framework": "react",
+      "task": "1-price-tag",
+      "sample": 1,
+      "component": "PriceTag",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/react__1-price-tag__1"
+    },
+    {
+      "id": "react__2-temperature__1",
+      "framework": "react",
+      "task": "2-temperature",
+      "sample": 1,
+      "component": "TemperatureConverter",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/react__2-temperature__1"
+    },
+    {
+      "id": "react__3-stopwatch__1",
+      "framework": "react",
+      "task": "3-stopwatch",
+      "sample": 1,
+      "component": "Stopwatch",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/react__3-stopwatch__1"
+    },
+    {
+      "id": "react__4-inline-edit__1",
+      "framework": "react",
+      "task": "4-inline-edit",
+      "sample": 1,
+      "component": "InlineEdit",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/react__4-inline-edit__1"
+    },
+    {
+      "id": "react__5-search__1",
+      "framework": "react",
+      "task": "5-search",
+      "sample": 1,
+      "component": "SearchBox",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/react__5-search__1"
+    },
+    {
+      "id": "react__6-task-list__1",
+      "framework": "react",
+      "task": "6-task-list",
+      "sample": 1,
+      "component": "TaskList",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/react__6-task-list__1"
+    },
+    {
+      "id": "solid__1-price-tag__1",
+      "framework": "solid",
+      "task": "1-price-tag",
+      "sample": 1,
+      "component": "PriceTag",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/solid__1-price-tag__1"
+    },
+    {
+      "id": "solid__2-temperature__1",
+      "framework": "solid",
+      "task": "2-temperature",
+      "sample": 1,
+      "component": "TemperatureConverter",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/solid__2-temperature__1"
+    },
+    {
+      "id": "solid__3-stopwatch__1",
+      "framework": "solid",
+      "task": "3-stopwatch",
+      "sample": 1,
+      "component": "Stopwatch",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/solid__3-stopwatch__1"
+    },
+    {
+      "id": "solid__4-inline-edit__1",
+      "framework": "solid",
+      "task": "4-inline-edit",
+      "sample": 1,
+      "component": "InlineEdit",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/solid__4-inline-edit__1"
+    },
+    {
+      "id": "solid__5-search__1",
+      "framework": "solid",
+      "task": "5-search",
+      "sample": 1,
+      "component": "SearchBox",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/solid__5-search__1"
+    },
+    {
+      "id": "solid__6-task-list__1",
+      "framework": "solid",
+      "task": "6-task-list",
+      "sample": 1,
+      "component": "TaskList",
+      "dir": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/smoke/solid__6-task-list__1"
+    }
+  ]
+}

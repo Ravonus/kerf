@@ -1,0 +1,5 @@
+{
+  "app": "shop",
+  "tickets": ["1-stock", "2-live-prices", "3-filters"],
+  "summary": "A small multi-file shop app extended by three sequential tickets in one agent session. Hidden tests are cumulative: ticket N is graded on baseline + tickets 1..N."
+}

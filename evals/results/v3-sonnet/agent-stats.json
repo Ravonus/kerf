@@ -1,0 +1,32 @@
+{
+  "react/t1": {
+    "tokens": 58863,
+    "tools": 3,
+    "ms": 15859
+  },
+  "solid/t1": {
+    "tokens": 60020,
+    "tools": 3,
+    "ms": 22570
+  },
+  "react/t2": {
+    "tokens": 61502,
+    "tools": 4,
+    "ms": 39737
+  },
+  "solid/t2": {
+    "tokens": 63024,
+    "tools": 4,
+    "ms": 45822
+  },
+  "react/t3": {
+    "tokens": 63242,
+    "tools": 5,
+    "ms": 58438
+  },
+  "solid/t3": {
+    "tokens": 65256,
+    "tools": 5,
+    "ms": 69584
+  }
+}

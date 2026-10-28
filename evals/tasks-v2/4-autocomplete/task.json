@@ -1,0 +1,1 @@
+{ "component": "CityPicker", "kind": "fresh", "causes": ["async-race", "effect-as-derivation"], "summary": "Debounced search with out-of-order responses; picking must not trigger a new search." }

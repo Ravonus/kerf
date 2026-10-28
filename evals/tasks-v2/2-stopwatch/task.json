@@ -1,0 +1,1 @@
+{ "component": "Stopwatch", "kind": "edit", "causes": ["stale-closure", "effect-as-derivation"], "summary": "Add speed and a parent-driven pause to an existing interval-based stopwatch." }

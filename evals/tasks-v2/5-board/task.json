@@ -1,0 +1,1 @@
+{ "component": "Board", "kind": "edit", "causes": ["identity", "effect-as-derivation"], "summary": "Filter, counts and per-task notes that survive filtering and moving columns." }

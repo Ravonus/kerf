@@ -1,0 +1,134 @@
+{
+  "react/t1": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 5,
+      "passed": 5
+    }
+  },
+  "react/t2": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 6,
+      "passed": 6
+    }
+  },
+  "react/t3": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      },
+      "t3": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 8,
+      "passed": 8
+    }
+  },
+  "solid/t1": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 6,
+      "passed": 6
+    }
+  },
+  "solid/t2": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 9,
+      "passed": 9
+    }
+  },
+  "solid/t3": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      },
+      "t3": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 12,
+      "passed": 12
+    }
+  }
+}
