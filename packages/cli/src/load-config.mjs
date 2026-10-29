@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { z } from 'zod'
 import { diagnostic, locate } from './diag.mjs'
+import { checkSite } from './site.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs']
@@ -73,6 +74,20 @@ const pluginEntry = z.looseObject({
   provides: z.array(z.union([z.string(), z.strictObject({ slot: z.string(), key: z.string() })])).optional(),
 })
 
+const image = z.strictObject({ url: z.string().min(1), width: z.int().positive().optional(), height: z.int().positive().optional(), alt: z.string().optional() })
+
+const site = z.strictObject({
+  name: z.string().min(1).optional(),
+  url: z.url({ protocol: /^https?$/, error: 'must be an absolute http(s) URL' }).optional(),
+  title: z.string().includes('%s', { error: 'must contain `%s` (the page title)' }).optional(),
+  description: z.string().optional(),
+  locale: z.string().regex(/^[a-z]{2,3}(_[A-Z]{2})?$/, { error: 'must look like `en_US`' }).optional(),
+  image: z.union([z.literal('auto'), z.string().min(1), image]).optional(),
+  twitter: z
+    .strictObject({ card: z.enum(['summary', 'summary_large_image', 'app', 'player']).optional(), site: z.string().optional(), creator: z.string().optional() })
+    .optional(),
+})
+
 export const configSchema = z.strictObject({
   scope: z.strictObject({ write: globs.optional(), read: globs.optional(), forbid: globs.optional() }).optional(),
   tasks: z.record(z.string(), task).optional(),
@@ -87,6 +102,7 @@ export const configSchema = z.strictObject({
   check: z.strictObject({ include: globs.optional(), exclude: globs.optional() }).optional(),
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
+  site: site.optional(),
 })
 
 export function findConfig(root) {
@@ -148,5 +164,6 @@ export async function loadConfig(root) {
   }
   const unique = (config.plugins ?? []).filter((p, i, all) => all.findIndex(q => q.name === p.name) === i)
   const slots = bindSlots({ ...config, plugins: unique }, report)
+  if (config.site) checkSite(config.site, report)
   return { file, config, diagnostics, slots }
 }

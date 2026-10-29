@@ -35,6 +35,22 @@ export interface PluginEntry {
   provides?: readonly (SlotId | { slot: SlotId; key: string })[]
 }
 
+/** Page metadata defaults (research 20 §2). Every page writes these as static tags in the server's first response. */
+export interface SiteConfig {
+  name?: string
+  /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is M001. */
+  url?: string
+  /** Title template containing `%s`, which a page's title fills: `'%s · Acme'`. A page without a title gets `name`. */
+  title?: string
+  /** Missing is M003; over 160 characters is M004. */
+  description?: string
+  /** `en_US` style: og:locale and `<html lang>`. */
+  locale?: string
+  /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
+  image?: 'auto' | string | { url: string; width?: number; height?: number; alt?: string }
+  twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
+}
+
 export interface WeftConfig {
   /** Where agents may write, may read, and may never touch (globs from the project root). */
   scope?: { write?: readonly string[]; read?: readonly string[]; forbid?: readonly string[] }
@@ -45,6 +61,7 @@ export interface WeftConfig {
   /** Files `weft check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .weft and `scope.forbid`. */
   check?: { include?: readonly string[]; exclude?: readonly string[] }
   plugins?: readonly PluginEntry[]
+  site?: SiteConfig
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */
   slots?: { [id: string]: string | Record<string, string> }
 }
