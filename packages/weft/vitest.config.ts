@@ -1,11 +1,17 @@
+import { statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import weft from './vite.mjs'
 
 const src = (f: string) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 
+// Vitest's module cache keys on the lockfile only. Compiled .tsx depends on the native compiler and the back end
+// (WEFT_BACKEND), so key the cache on both, or a rebuilt compiler or the other back end gets served stale output.
+const native = fileURLToPath(new URL(`./native/weft-compiler.${process.platform}-${process.arch}.node`, import.meta.url))
+const cacheKey = `${process.env.WEFT_BACKEND ?? 'solid'}-${Math.round(statSync(native).mtimeMs)}`
+
 export default defineConfig({
   plugins: [weft()],
   resolve: { alias: [{ find: /^weft\/dom$/, replacement: src('dom.ts') }, { find: /^weft\/ssr$/, replacement: src('ssr.ts') }, { find: /^weft\/test$/, replacement: src('test.ts') }, { find: /^weft\/persist$/, replacement: src('persist.ts') }, { find: /^weft\/history$/, replacement: src('history.ts') }, { find: /^weft$/, replacement: src('index.ts') }] },
-  test: { environment: 'jsdom', globals: true, include: ['test/**/*.test.{ts,tsx}'] },
+  test: { fsModuleCachePath: `node_modules/.vitest-cache/${cacheKey}`, environment: 'jsdom', globals: true, include: ['test/**/*.test.{ts,tsx}'] },
 })

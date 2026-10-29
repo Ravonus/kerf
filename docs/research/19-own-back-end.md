@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **step 1 built** (§5.1); steps 2–5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **steps 1–2 built** (§5.1, §5.2); steps 3–5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -126,6 +126,38 @@ the table is a compile error with a W-code. It doesn't silently fall back.
 - **Not yet:** element spreads, namespaced attributes and SVG fail with a weft-back-end diagnostic rather than
   falling back silently. There's no source map and no SSR output. js-framework-benchmark has not been run on this
   back end; that's step 5's gate.
+
+### 5.2 Step 2, done (2026-10-29)
+
+- **Gate met:** the v3 reference app passes 23/23 hidden tests on weft's back end, and the probe shows 1 DOM
+  mutation for add-one and for price-push (`evals/results/v3-next`). All 66 package tests pass on both back ends
+  (`WEFT_BACKEND=weft npx vitest run`), including every v3 work-budget test.
+- **Added:**
+  - conditionals over JSX read their condition through a memo, so a branch rebuilds only when the condition
+    flips;
+  - element spreads go through one `mergeProps` object and the `spread` helper. Later attributes win, sources stay
+    live, and handlers become listeners that are swapped when they change;
+  - `ref={el}` assigns the variable and `ref={fn}` (or an array) calls it;
+  - `<select value>` is applied after its options are inserted;
+  - an SVG element outside an `<svg>` gets its own template mode, and `xlink:`/`xml:` attributes keep their
+    namespace;
+  - `value={x}` writes `x ?? ""`;
+  - walk variables are declared only for nodes that something uses.
+- **Lists** need nothing new. The pre-pass's `<For each by>` lowers as a component. Changing the pre-pass to hand
+  over a `List` hole instead of Solid-shaped JSX moves to step 3, where the IR gets its own type.
+- **A trap found along the way:** Vitest's on-disk module cache (`node_modules/.vitest-cache`) keys on the lockfile
+  only. It served stale output after native rebuilds, and served one back end's output to the other.
+  `packages/weft` and `evals/frameworks/weft` now key it on the back end and the compiler binary's build time.
+- **Size (br):**
+
+  | App | Solid's | weft's |
+  |---|---|---|
+  | hello | 1.17 KB | 1.19 KB |
+  | counter | 1.93 KB | 2.05 KB |
+  | benchmark app | 3.22 KB | 3.37 KB |
+
+  "Runtime (every export)" is 5.73 KB against its 6 KB budget while both helper sets ship. Step 5 removes the
+  Solid-shaped set.
 
 **Corpus oracle (test only).** For every `.tsx` in the repo plus a generated corpus (`scripts/gen-corpus.mjs`),
 render with the old and new back ends in jsdom. Compare the resulting DOM and the DOM after scripted interactions.

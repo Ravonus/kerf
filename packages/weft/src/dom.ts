@@ -4,7 +4,7 @@
 import { DEV, createRoot, devComponent, effect, memo, onCleanup, rt, state, untrack, type EffectOptions, type State } from './index'
 
 export { effect, memo, untrack }
-export { attr, bind, child, cls, component, css, delegate, on, tpl } from './dom-next'
+export { attr, bind, child, cls, component, css, delegate, on, spread, tpl } from './dom-next'
 export { getFirstChild, getNextElement, getNextMarker, getNextMatch, getNextSibling, hydrate, runHydrationEvents, scope } from './hydrate'
 
 type Mountable = Element | DocumentFragment

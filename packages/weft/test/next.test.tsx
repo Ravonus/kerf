@@ -61,8 +61,8 @@ describe('weft back end, step 1', () => {
     const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), { filename: 'Basics.tsx', backend: 'weft' })
     expect(out.diagnostics).toEqual([])
     const imported = /import \{([^}]*)\} from "weft\/dom"/.exec(out.code)![1]
-    const step1 = ['attr', 'bind', 'child', 'cls', 'component', 'css', 'delegate', 'mergeProps', 'on', 'tpl']
-    for (const name of imported.split(',').map(s => s.trim().split(' ')[0])) expect(step1).toContain(name)
+    const helpers = ['attr', 'bind', 'child', 'cls', 'component', 'css', 'delegate', 'memo', 'mergeProps', 'on', 'tpl']
+    for (const name of imported.split(',').map(s => s.trim().split(' ')[0])) expect(helpers).toContain(name)
     expect(out.code).not.toMatch(/insert|createComponent|template\(|delegateEvents/)
   })
 
@@ -109,5 +109,79 @@ describe('weft back end, step 1', () => {
       ])
       expect(root.querySelectorAll('tbody tr').length).toBe(0)
     })
+  })
+})
+
+// @ts-expect-error: query import
+import * as two from './fixtures/next/Step2.tsx?weft-next'
+
+describe('weft back end, step 2', () => {
+  it('conditionals rebuild a branch only when its condition changes', () => {
+    const root = mount(two.Toggle)
+    const b = root.querySelector('b')!
+    ;(root.querySelector('.inc') as HTMLElement).click()
+    flush()
+    expect(root.querySelector('b')).toBe(b) // same node, text updated in place
+    expect(b.textContent).toBe('on 1')
+    ;(root.querySelector('.inc') as HTMLElement).click()
+    flush()
+    expect(root.querySelector('u')?.textContent).toBe('many')
+    ;(root.querySelector('.flip') as HTMLElement).click()
+    flush()
+    expect(html(root)).toBe('<div><button class="inc">+</button><button class="flip">flip</button><i>off</i><u>many</u></div>')
+  })
+
+  it('element spreads: later attributes win, values stay live, handlers are listeners', async () => {
+    const { state } = await import('weft')
+    const tone = state('info')
+    const clicks: string[] = []
+    const rest = state<Record<string, any>>({ id: 'spread', href: '/a', title: 'spread title', class: 'x', onClick: () => clicks.push('a') })
+    const root = mount(() => two.Spread({ get rest() { return rest.value }, get tone() { return tone.value } } as any))
+    const a = root.querySelector('a')!
+    expect(a.id).toBe('spread')
+    expect(a.getAttribute('href')).toBe('/a')
+    expect(a.title).toBe('fixed')
+    expect(a.getAttribute('data-tone')).toBe('info')
+    expect(a.className).toBe('x')
+    expect(a.textContent!.trim()).toBe('link')
+    a.click()
+    rest.value = { href: '/b', onClick: () => clicks.push('b') }
+    tone.value = 'warn'
+    flush()
+    a.click()
+    expect(clicks).toEqual(['a', 'b'])
+    expect(a.getAttribute('href')).toBe('/b')
+    expect(a.id).toBe('first')
+    expect(a.hasAttribute('class')).toBe(false)
+    expect(a.getAttribute('data-tone')).toBe('warn')
+  })
+
+  it('refs: a variable is assigned, a function is called', () => {
+    const seen: Element[] = []
+    const root = mount(() => two.Refs({ seen: el => seen.push(el) }))
+    expect(root.querySelector('output')!.textContent).toBe('box')
+    expect(seen).toEqual([root.querySelector('span')])
+  })
+
+  it('<select value> is set after its options exist', () => {
+    const root = mount(two.Picker)
+    const select = root.querySelector('select')!
+    expect(select.value).toBe('b')
+    select.value = 'c'
+    select.dispatchEvent(new Event('change'))
+    flush()
+    expect(select.value).toBe('c')
+  })
+
+  it('SVG: elements outside an <svg> parse as SVG; namespaced attributes keep their namespace', () => {
+    const root = mount(two.Icon)
+    const circle = root.querySelector('circle')!
+    expect(circle.namespaceURI).toBe('http://www.w3.org/2000/svg')
+    expect(circle.getAttribute('r')).toBe('2')
+    expect(root.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 10 10')
+    expect(root.querySelector('use')!.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('#dot')
+    root.querySelector('svg')!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    flush()
+    expect(circle.getAttribute('r')).toBe('3')
   })
 })

@@ -1,20 +1,25 @@
-//! weft's own back end (research 19), step 1: JSX → DOM code against weft's helper set.
+//! weft's own back end (research 19), steps 1–2: JSX → DOM code against weft's helper set.
 //!
 //! Input is the pre-pass's program, printed and parsed again, so every node's span indexes one text. Each
 //! outermost JSX node is replaced by its lowering; expressions inside JSX are copied from that text, with their own
 //! JSX lowered the same way. One lowering per construct (research 19 §3):
 //!
-//! | JSX                           | output                                                            |
-//! |-------------------------------|-------------------------------------------------------------------|
-//! | element tree                  | module-level `const _tN = _$tpl("<li>…")`, then `_tN()` and a walk |
-//! | static attribute              | inlined in the template                                            |
-//! | dynamic attributes of one el  | one `_$bind(() => [a, b], (v, p) => …)`                            |
-//! | `onX={fn}`                    | `_$on(el, "x", fn, delegated)`                                     |
-//! | `{expr}` child                | `_$child(parent, () => expr, marker?)` (`<!>` marks mixed content) |
-//! | `<Comp a={x} />`              | `_$component(Comp, { get a() { return x; } })`                     |
-//! | `<>…</>`                      | the child, or an array of children                                 |
+//! | JSX                           | output                                                              |
+//! |-------------------------------|---------------------------------------------------------------------|
+//! | element tree                  | module-level `const _tN = _$tpl("<li>…")`, then `_tN()` and a walk   |
+//! | static attribute              | inlined in the template                                              |
+//! | dynamic attributes of one el  | one `_$bind(() => [a, b], (v, p) => …)` (`<select>`: after children) |
+//! | `onX={fn}`                    | `_$on(el, "x", fn, delegated)`                                       |
+//! | `ref={el}` / `ref={fn}`       | assigns the variable / calls the function                            |
+//! | `{...rest}` on an element     | `_$spread(el, _$mergeProps(() => rest, { … }), hasChildren)`         |
+//! | `{expr}` child                | `_$child(parent, () => expr, marker?)` (`<!>` marks mixed content)   |
+//! | `{c ? <A/> : <B/>}`, `&&`     | a `_$child` whose condition is read through `_$memo`                 |
+//! | `<Comp a={x} />`              | `_$component(Comp, { get a() { return x; } })`                       |
+//! | `<>…</>`                      | the child, or an array of children                                   |
+//! | SVG root outside `<svg>`      | `_$tpl(html, true)`                                                  |
 //!
-//! Not yet (steps 2–4): spreads on elements, namespaced attributes, SVG, SSR output, hydration, dev names.
+//! Lists arrive from the pre-pass as `<For each by>{x => …}</For>` and lower as a component.
+//! Not yet (steps 3–4): SSR output, hydration by path key, dev names, source maps.
 
 use std::collections::BTreeSet;
 
@@ -32,6 +37,15 @@ const DELEGATED: &[&str] = &[
 ];
 /// Attributes written as DOM properties, because the attribute is only the initial value.
 const PROPERTIES: &[&str] = &["value", "checked", "selected", "muted", "indeterminate", "textContent", "innerHTML"];
+/// SVG elements that need an <svg> around them to parse as SVG (`a`, `script`, `style` and `title` are left out:
+/// HTML has them too).
+const SVG: &[&str] = &[
+    "animate", "animateMotion", "animateTransform", "circle", "clipPath", "defs", "desc", "ellipse", "feBlend",
+    "feColorMatrix", "feComposite", "feFlood", "feGaussianBlur", "feMerge", "feMergeNode", "feOffset", "filter",
+    "foreignObject", "g", "image", "line", "linearGradient", "marker", "mask", "metadata", "path", "pattern",
+    "polygon", "polyline", "radialGradient", "rect", "stop", "switch", "symbol", "text", "textPath", "tspan", "use",
+    "view",
+];
 const VOID: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"];
 
 #[derive(Clone, Copy)]
@@ -217,7 +231,10 @@ impl<'t> Emitter<'t> {
         let t = format!("_t{}", self.templates.len() + 1);
         let tpl = self.helper("tpl");
         let html = serde_json::to_string(&b.html).unwrap();
-        self.templates.push(format!("const {t} = /* @__PURE__ */ {tpl}({html});"));
+        // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.
+        let svg = matches!(&el.opening_element.name, JSXElementName::Identifier(id) if SVG.contains(&id.name.as_str()));
+        let ns = if svg { ", true" } else { "" };
+        self.templates.push(format!("const {t} = /* @__PURE__ */ {tpl}({html}{ns});"));
         let root = b.vars[0].1.clone();
         if b.decls.is_empty() && b.ops.is_empty() {
             return format!("{t}()");
@@ -235,18 +252,17 @@ impl<'t> Emitter<'t> {
         out
     }
 
-    /// The variable for the node at `path`, declared through `firstChild` / `nextSibling` from the nearest known node.
+    /// The variable for the node at `path`. It's reached from the nearest earlier sibling that has one (or its
+    /// parent's `firstChild`) by `nextSibling` steps; only nodes something uses get a variable.
     fn node(&mut self, b: &mut Build, path: &[usize]) -> String {
         if let Some((_, v)) = b.vars.iter().find(|(p, _)| p == path) {
             return v.clone();
         }
-        let last = *path.last().unwrap();
-        let from = if last == 0 {
-            format!("{}.firstChild", self.node(b, &path[..path.len() - 1]))
-        } else {
-            let mut prev = path.to_vec();
-            *prev.last_mut().unwrap() -= 1;
-            format!("{}.nextSibling", self.node(b, &prev))
+        let (parent, last) = (&path[..path.len() - 1], *path.last().unwrap());
+        let sibling = b.vars.iter().filter(|(p, _)| p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last).max_by_key(|(p, _)| p[p.len() - 1]).map(|(p, v)| (p[p.len() - 1], v.clone()));
+        let from = match sibling {
+            Some((at, v)) => format!("{v}{}", ".nextSibling".repeat(last - at)),
+            None => format!("{}.firstChild{}", self.node(b, parent), ".nextSibling".repeat(last)),
         };
         let v = self.var();
         b.decls.push(format!("const {v} = {from};"));
@@ -257,13 +273,31 @@ impl<'t> Emitter<'t> {
     fn walk(&mut self, el: &JSXElement<'_>, b: &mut Build, path: Vec<usize>) {
         let tag = match &el.opening_element.name {
             JSXElementName::Identifier(id) => id.name.to_string(),
+            JSXElementName::NamespacedName(n) => format!("{}:{}", n.namespace.name, n.name.name),
             other => {
-                self.fail("weft back end: namespaced and member element names come in step 2", other.span());
+                self.fail("weft back end: this element name isn't supported", other.span());
                 return;
             }
         };
         b.html.push('<');
         b.html.push_str(&tag);
+        let has_kids = !children(&el.children, self.text).is_empty();
+
+        // `<div {...rest} a={x}>`: every attribute goes through one merged props object (later wins, as for
+        // components), applied by `spread`. JSX children stay in the template; a spread's `children` applies only
+        // when the element has none.
+        if el.opening_element.attributes.iter().any(|a| matches!(a, JSXAttributeItem::SpreadAttribute(_))) {
+            let props = self.props(&el.opening_element.attributes, Vec::new());
+            let el_var = self.node(b, &path);
+            let spread = self.helper("spread");
+            b.ops.push(format!("{spread}({el_var}, {props}, {has_kids});"));
+            b.html.push('>');
+            if !VOID.contains(&tag.as_str()) {
+                self.kids(el, b, &path);
+                b.html.push_str(&format!("</{tag}>"));
+            }
+            return;
+        }
 
         // (kind, name, expression) for the element's one binding
         let mut dynamic: Vec<(&'static str, String, String)> = Vec::new();
@@ -277,10 +311,8 @@ impl<'t> Emitter<'t> {
             };
             let name = match &attr.name {
                 JSXAttributeName::Identifier(id) => id.name.to_string(),
-                JSXAttributeName::NamespacedName(ns) => {
-                    self.fail("weft back end: namespaced attributes come in step 2", ns.span);
-                    continue;
-                }
+                // `xlink:href`, `xml:lang`: written with their namespace (`attr` looks the prefix up).
+                JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
             };
             if name == "key" {
                 continue;
@@ -304,10 +336,20 @@ impl<'t> Emitter<'t> {
                 continue;
             }
             if name == "ref" {
+                // `ref={fn}` or `ref={[a, b]}` calls them with the element; `ref={el}` on a variable assigns it.
                 let Some(expr) = attr_expression(attr) else { continue };
                 let el_var = self.node(b, &path);
                 let r = self.expr(expr);
-                b.ops.push(format!("{{ const _r = {r}; typeof _r === \"function\" && _r({el_var}); }}"));
+                let call = self.helper("ref");
+                let assignable = matches!(
+                    expr.get_inner_expression(),
+                    Expression::Identifier(_) | Expression::StaticMemberExpression(_) | Expression::ComputedMemberExpression(_)
+                );
+                b.ops.push(if assignable {
+                    format!("{{ const _r = {r}; typeof _r === \"function\" || Array.isArray(_r) ? {call}(() => _r, {el_var}) : ({r} = {el_var}); }}")
+                } else {
+                    format!("{call}(() => {r}, {el_var});")
+                });
                 continue;
             }
             match &attr.value {
@@ -346,7 +388,9 @@ impl<'t> Emitter<'t> {
                 Some(other) => self.fail("weft back end: a JSX element as an attribute value needs `{…}`", other.span()),
             }
         }
-        if !dynamic.is_empty() {
+        // A <select>'s value is set after its children, so the matching <option> exists by then.
+        let late = tag == "select" && !dynamic.is_empty();
+        if !dynamic.is_empty() && !late {
             let el_var = self.node(b, &path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
@@ -354,7 +398,17 @@ impl<'t> Emitter<'t> {
         if VOID.contains(&tag.as_str()) {
             return;
         }
+        self.kids(el, b, &path);
+        if late {
+            let el_var = self.node(b, &path);
+            b.ops.push(self.bind(&el_var, &dynamic));
+        }
+        b.html.push_str(&format!("</{tag}>"));
+    }
 
+    /// An element's children: static ones into the template, holes as `child` calls.
+    fn kids(&mut self, el: &JSXElement<'_>, b: &mut Build, path: &[usize]) {
+        let path = path.to_vec();
         let kids = children(&el.children, self.text);
         let only_dynamic = match kids.as_slice() {
             [Kid::Text(_)] => false,
@@ -402,7 +456,6 @@ impl<'t> Emitter<'t> {
                 }
             }
         }
-        b.html.push_str(&format!("</{tag}>"));
     }
 
     fn bind(&mut self, el: &str, dynamic: &[(&'static str, String, String)]) -> String {
@@ -411,6 +464,7 @@ impl<'t> Emitter<'t> {
             match kind {
                 "class" => format!("{}({el}, {v}, {p})", s.helper("cls")),
                 "style" => format!("{}({el}, {v}, {p})", s.helper("css")),
+                "prop" if name == "value" => format!("({el}.value = {v} ?? \"\")"),
                 "prop" => format!("({el}.{name} = {v})"),
                 _ => format!("{}({el}, {name:?}, {v})", s.helper("attr")),
             }
@@ -440,9 +494,46 @@ impl<'t> Emitter<'t> {
                 Expression::JSXElement(el) => self.element(el),
                 Expression::JSXFragment(f) => self.fragment(f),
                 inner if static_value(inner).is_some() => self.expr(inner),
+                inner if has_jsx_branch(inner) => {
+                    // `c ? <A/> : <B/>`, `c && <A/>`: the hole tracks the condition through a memo, so a change
+                    // that leaves it the same doesn't rebuild the branch (research 19 §3).
+                    let (test, rest) = self.condition(inner);
+                    let memo = self.helper("memo");
+                    format!("(() => {{ const _c = {memo}(() => {test}); return () => {}; }})()", rest("_c()"))
+                }
                 _ => format!("() => ({})", self.expr(e)),
             },
         }
+    }
+
+    /// A conditional's test and a function from the test's reader to the whole expression. Nested conditionals with
+    /// JSX branches read their tests through memos of their own.
+    fn condition(&mut self, e: &Expression<'_>) -> (String, Rest) {
+        match e {
+            Expression::ConditionalExpression(c) => {
+                let test = self.expr(&c.test);
+                let yes = self.branch(&c.consequent);
+                let no = self.branch(&c.alternate);
+                (test, Box::new(move |t| format!("{t} ? {yes} : {no}")))
+            }
+            Expression::LogicalExpression(l) => {
+                let test = self.expr(&l.left);
+                let right = self.branch(&l.right);
+                let op = l.operator.as_str();
+                (test, Box::new(move |t| format!("{t} {op} {right}")))
+            }
+            _ => unreachable!("has_jsx_branch only accepts conditionals"),
+        }
+    }
+
+    fn branch(&mut self, e: &Expression<'_>) -> String {
+        let inner = e.get_inner_expression();
+        if has_jsx_branch(inner) {
+            let (test, rest) = self.condition(inner);
+            let memo = self.helper("memo");
+            return format!("({})", rest(&format!("{memo}(() => {test})()")));
+        }
+        self.expr(e)
     }
 
     fn fragment(&mut self, f: &JSXFragment<'_>) -> String {
@@ -461,16 +552,44 @@ impl<'t> Emitter<'t> {
         if name == "For" {
             self.uses_for = true;
         }
+        let mut fields = Vec::new();
+        let kids = children(&el.children, self.text);
+        match kids.as_slice() {
+            [] => {}
+            [Kid::Text(t)] => fields.push(format!("children: {}", serde_json::to_string(&decode_entities(t)).unwrap())),
+            [Kid::Expr(e)] if passes_as_value(e) => {
+                let v = self.expr(e);
+                fields.push(format!("children: {v}"));
+            }
+            [k] => {
+                let v = self.kid_value(k);
+                fields.push(format!("get children() {{ return {v}; }}"));
+            }
+            many => {
+                let vs: Vec<String> = many.iter().map(|k| self.kid_value(k)).collect();
+                fields.push(format!("get children() {{ return [{}]; }}", vs.join(", ")));
+            }
+        }
+        let props = self.props(&el.opening_element.attributes, fields);
+        let component = self.helper("component");
+        format!("{component}({name}, {props})")
+    }
+
+    /// Props from JSX attributes, in order: literals and plain values as fields, the rest as getters, spreads as
+    /// `mergeProps` sources (later wins). `extra` fields go last.
+    fn props(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>, extra: Vec<String>) -> String {
         let mut sources: Vec<String> = Vec::new();
         let mut fields: Vec<String> = Vec::new();
-        for item in &el.opening_element.attributes {
+        for item in attrs {
             match item {
                 JSXAttributeItem::SpreadAttribute(s) => {
                     if !fields.is_empty() {
                         sources.push(format!("{{ {} }}", fields.join(", ")));
                         fields.clear();
                     }
-                    sources.push(self.expr(&s.argument));
+                    // `{...props.rest}` is read live: anything but a plain name is passed as a function.
+                    let e = self.expr(&s.argument);
+                    sources.push(if matches!(s.argument.get_inner_expression(), Expression::Identifier(_)) { e } else { format!("() => ({e})") });
                 }
                 JSXAttributeItem::Attribute(a) => {
                     let key = match &a.name {
@@ -496,33 +615,32 @@ impl<'t> Emitter<'t> {
                 }
             }
         }
-        let kids = children(&el.children, self.text);
-        match kids.as_slice() {
-            [] => {}
-            [Kid::Text(t)] => fields.push(format!("children: {}", serde_json::to_string(&decode_entities(t)).unwrap())),
-            [Kid::Expr(e)] if passes_as_value(e) => {
-                let v = self.expr(e);
-                fields.push(format!("children: {v}"));
-            }
-            [k] => {
-                let v = self.kid_value(k);
-                fields.push(format!("get children() {{ return {v}; }}"));
-            }
-            many => {
-                let vs: Vec<String> = many.iter().map(|k| self.kid_value(k)).collect();
-                fields.push(format!("get children() {{ return [{}]; }}", vs.join(", ")));
-            }
-        }
-        let props = if sources.is_empty() {
+        fields.extend(extra);
+        if sources.is_empty() {
             if fields.is_empty() { "{}".to_string() } else { format!("{{ {} }}", fields.join(", ")) }
         } else {
             if !fields.is_empty() {
                 sources.push(format!("{{ {} }}", fields.join(", ")));
             }
             format!("{}({})", self.helper("mergeProps"), sources.join(", "))
-        };
-        let component = self.helper("component");
-        format!("{component}({name}, {props})")
+        }
+    }
+}
+
+/// Builds a conditional around its test's reader (`_c()`, or an inline memo).
+type Rest = Box<dyn Fn(&str) -> String>;
+
+/// `c ? a : b` or `c && a` / `c || a` / `c ?? a` where a branch holds JSX.
+fn has_jsx_branch(e: &Expression<'_>) -> bool {
+    let jsx = |e: &Expression<'_>| {
+        let mut v = Outermost::default();
+        v.visit_expression(e);
+        !v.found.is_empty()
+    };
+    match e {
+        Expression::ConditionalExpression(c) => jsx(&c.consequent) || jsx(&c.alternate),
+        Expression::LogicalExpression(l) => jsx(&l.right),
+        _ => false,
     }
 }
 

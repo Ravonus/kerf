@@ -27,9 +27,10 @@ const MODE = /\?weft-(ssr|hydrate|next)$/
  * `hydratable`: DOM output that adopts server HTML (`hydrate`), and SSR output with hydration keys. Vite's SSR
  * transforms get SSR output (imports from weft/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
- * `?weft-next` (or `backend: 'weft'`) compiles with weft's own back end (research 19), DOM output only for now.
+ * `?weft-next` (or `backend: 'weft'`, or `WEFT_BACKEND=weft` in the environment) compiles with weft's own back end
+ * (research 19). It covers plain DOM modules only for now: SSR and hydration stay on Solid's until step 3.
  */
-export default function weft({ dev, hydratable = false, backend = 'solid' } = {}) {
+export default function weft({ dev, hydratable = false, backend = process.env.WEFT_BACKEND ?? 'solid' } = {}) {
   let isDev = false
   const main = {
     name: 'weft',
@@ -48,8 +49,8 @@ export default function weft({ dev, hydratable = false, backend = 'solid' } = {}
       filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate|next))?$/ },
       handler(code, id, options) {
         const mode = MODE.exec(id)?.[1]
-        const next = mode === 'next' || backend === 'weft'
         const ssr = mode && mode !== 'next' ? mode === 'ssr' : !!options?.ssr
+        const next = mode === 'next' || (backend === 'weft' && !mode && !ssr && !hydratable)
         const out = next
           ? transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, backend: 'weft', generate: ssr ? 'ssr' : 'dom' })
           : transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydratable || !!mode, sourceNames: isDev })
