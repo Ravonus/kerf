@@ -714,6 +714,14 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
   - T007: unapproved snapshot
   - T008: conditional `expect`
   - T009: `.only` or `.skip`
+  - **Status (2026-10-29):** T001–T009 are in `weft check` (`packages/cli/src/tests.mjs`, TypeScript parser, syntax
+    only), on the test files named by `test.include` (default `**/*.{test,spec}.*`). The rules are weft's own, not
+    re-emitted ESLint rules, so the CLI needs no ESLint. T005 is a warning, the rest are errors. T009 autofixes
+    `.only` (safe) and `.skip` (suggested); T004 suggests `flush()` for a zero-delay sleep. `weft/test` also fails a
+    test that ends with no assertion (runtime T001), and ships `screen` (role/label/text only), `user` (each action
+    ends in `flush()`) and `clock`. A test that needs a finding on purpose keeps it with
+    `// weft-allow T00x: <reason>`; the framework's own DOM-level tests do. Not built yet: `test.prop`, opt-in aria
+    snapshots.
 - **The gate** (`weft test --gate`, run by `weft check` on a diff). This is what stops junk tests: a test has to
   prove it tests something.
   1. **Fail-before:** every new or changed test must fail against the old code (T010).

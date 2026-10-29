@@ -1,4 +1,5 @@
 // defineState (PLAN §4.5, research 14 §2) and keyed reads of object boxes.
+// weft-allow T004: persistence writes land on a macrotask; `tick` waits for that, not for an update
 import { screen } from '@testing-library/dom'
 import { z } from 'zod'
 import { defineState, derived, flush as flushGraph, state, StateError } from 'weft'

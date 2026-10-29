@@ -26,6 +26,16 @@
     "bench": "node scripts/bench.mjs",
     "size": "node scripts/size.mjs"
   },
+  "peerDependencies": {
+    "@testing-library/dom": ">=10",
+    "@testing-library/user-event": ">=14",
+    "vitest": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "@testing-library/dom": { "optional": true },
+    "@testing-library/user-event": { "optional": true },
+    "vitest": { "optional": true }
+  },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",
     "@testing-library/user-event": "14.6.8",

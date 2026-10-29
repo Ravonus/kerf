@@ -1,4 +1,4 @@
-// `weft check`: compile every project file in check mode, add the project view and the config P-codes.
+// `weft check`: compile every project file in check mode, add the project view, the test T-codes and the config P-codes.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
@@ -6,6 +6,7 @@ import { diagnostic, locate, positions, sortDiagnostics, summarize } from './dia
 import { discover } from './files.mjs'
 import { loadConfig } from './load-config.mjs'
 import { projectView } from './project.mjs'
+import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 
 const posix = p => p.split('\\').join('/')
@@ -22,9 +23,11 @@ export async function check(root, options = {}) {
   const loaded = await loadConfig(root)
   const { config } = loaded
 
-  const rels = options.files?.length
-    ? options.files.map(f => posix(relative(root, isAbsolute(f) ? f : join(root, f))))
-    : discover(root, { include: config.check?.include, exclude: [...(config.check?.exclude ?? []), ...(config.scope?.forbid ?? [])] })
+  const exclude = [...(config.check?.exclude ?? []), ...(config.scope?.forbid ?? [])]
+  const given = options.files?.map(f => posix(relative(root, isAbsolute(f) ? f : join(root, f))))
+  const include = config.check?.include ?? ['**/*.{tsx,jsx}']
+  const rels = given?.length ? given.filter(f => /\.[jt]sx$/.test(f) || !isTestFile(f)) : discover(root, { include, exclude })
+  const testRels = given?.length ? given.filter(isTestFile) : discover(root, { include: config.test?.include ?? testGlobs, exclude })
 
   const files = []
   const posByAbs = new Map()
@@ -53,9 +56,9 @@ export async function check(root, options = {}) {
 
   projectView(files, file => posByAbs.get(file.abs))
 
-  const diagnostics = [...loaded.diagnostics, ...files.flatMap(f => f.diagnostics), ...hygiene(root)]
+  const diagnostics = [...loaded.diagnostics, ...files.flatMap(f => f.diagnostics), ...checkTests(root, testRels), ...hygiene(root)]
   sortDiagnostics(diagnostics)
-  const summary = { files: files.length, ...summarize(diagnostics) }
+  const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }
   return {
     version: 1,
     ok: summary.errors === 0,
@@ -66,6 +69,7 @@ export async function check(root, options = {}) {
     diagnostics,
     slots: loaded.slots,
     files: rels,
+    tests: testRels,
     ms: Math.round(performance.now() - started),
   }
 }

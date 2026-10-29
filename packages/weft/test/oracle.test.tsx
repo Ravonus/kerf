@@ -3,6 +3,7 @@
 // writing to the DOM. After mounting and after every scripted interaction (click each button, type in each input)
 // both DOMs must match each other and what Solid's back end built for the same script, recorded before step 5
 // deleted it (oracle.golden.json). Comments, attribute order and class order are left out of the comparison.
+// weft-allow T005, T008: differential oracle; it compares raw DOM, and cases without a recorded trace skip that check
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
