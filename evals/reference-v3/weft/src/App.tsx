@@ -40,9 +40,9 @@ export function App({ api }: { api: Api }) {
       {!products.value ? (
         <p>Loading…</p>
       ) : tab.value === 'products' ? (
-        <ProductList products={products.value} cart={cart.value} filters={filters.value} onFilters={f => (filters.value = f)} onAdd={id => change(id, 1)} />
+        <ProductList products={products.value} cart={cart} filters={filters.value} onFilters={f => (filters.value = f)} onAdd={id => change(id, 1)} />
       ) : (
-        <CartView products={products.value} cart={cart.value} onChange={change} />
+        <CartView products={products.value} cart={cart} onChange={change} />
       )}
     </div>
   )

@@ -1,0 +1,32 @@
+{
+  "solid/t1": {
+    "tools": 5,
+    "ms": 37533,
+    "tokens": 63169
+  },
+  "solid/t2": {
+    "tools": 8,
+    "ms": 64547,
+    "tokens": 66426
+  },
+  "solid/t3": {
+    "tools": 9,
+    "ms": 88290,
+    "tokens": 70120
+  },
+  "solid/t4": {
+    "tools": 10,
+    "ms": 119703,
+    "tokens": 74909
+  },
+  "solid/t5": {
+    "tools": 12,
+    "ms": 143741,
+    "tokens": 78758
+  },
+  "solid/t6": {
+    "tools": 16,
+    "ms": 192413,
+    "tokens": 87552
+  }
+}

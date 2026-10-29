@@ -42,6 +42,8 @@ let owner: Owner | null = null
 let nextId = 0
 let queue: Computation[] = []
 let scheduled = false
+/** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
+let mounts: (() => void)[] = []
 
 /** SSR and hydration switches: `server` skips effects (weft/ssr); `data` is the page's server data (weft/dom hydrate). */
 export const rt: {
@@ -93,7 +95,7 @@ function write(node: Source, value: any) {
 }
 
 function schedule() {
-  if (!scheduled && queue.length) {
+  if (!scheduled && (queue.length || mounts.length)) {
     scheduled = true
     queueMicrotask(flush)
   }
@@ -155,7 +157,7 @@ function update(node: Computation) {
   if (node.state === CHECK) {
     for (const s of node.s) {
       if ('fn' in s) update(s as Computation)
-      if (node.state === DIRTY) break
+      if ((node.state as number) === DIRTY) break
     }
   }
   if (node.state === DIRTY && !node.dead) {
@@ -185,10 +187,22 @@ function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation[
 /** Apply pending effects and DOM updates now. */
 export function flush() {
   scheduled = false
-  while (queue.length) {
-    const batch = queue.sort((a, b) => a.id - b.id)
-    queue = []
-    for (const node of batch) if (!node.dead) update(node)
+  do {
+    while (queue.length) {
+      const batch = queue.sort((a, b) => a.id - b.id)
+      queue = []
+      for (const node of batch) if (!node.dead) update(node)
+    }
+    runMounts() // the DOM is placed now; a callback's writes queue more work, applied in this same flush
+  } while (queue.length)
+}
+
+/** Run pending `onMount` callbacks (in creation order). weft/dom calls it once `render`/`hydrate` placed the app. */
+export function runMounts() {
+  while (mounts.length) {
+    const batch = mounts
+    mounts = []
+    for (const f of batch) f()
   }
 }
 
@@ -291,14 +305,16 @@ export function state<T>(init: T, options?: StateOptions<T>): State<T> {
 /** A writable box that resets whenever `source` changes (a local copy of a prop). */
 state.linked = <T>(source: () => T): State<T> => {
   const src = derived(source)
-  const local = new Box<{ v: T; from: T } | undefined>(undefined)
+  // A fresh object per source change, so a write belongs to one source value even if the source later returns to it.
+  const from = derived(() => ({ v: src.value }))
+  const local = new Box<{ v: T; from: { v: T } } | undefined>(undefined)
   return {
     get value() {
-      const from = src.value
+      const f = from.value
       const l = local.value
-      return l && Object.is(l.from, from) ? l.v : from
+      return l && l.from === f ? l.v : f.v
     },
-    set value(v: T) { local.value = { v, from: src.value } },
+    set value(v: T) { local.value = { v, from: from.value } },
     set(update) { const d: any = this.value; update(d); this.value = d },
     get(key) { return (this.value as any)?.[key] },
   }
@@ -362,8 +378,18 @@ export function onCleanup(fn: () => void) {
   if (owner) owner.cleanups = add(owner.cleanups ?? NONE, fn)
 }
 
+/**
+ * `fn` runs once the component's nodes are in place (refs assigned, the DOM inserted): after `render` returns its
+ * first pass, or at the end of the `flush` that created the component. Skipped if the owner is disposed first.
+ * Its owner is the component's, so `onCleanup` inside it works.
+ */
 export function onMount(fn: () => void) {
-  effect(() => {}, () => untrack(fn))
+  if (rt.server) return
+  const at = owner
+  let live = true
+  onCleanup(() => { live = false })
+  mounts.push(() => { if (live) within(at!, fn) })
+  schedule()
 }
 
 export function untrack<T>(fn: () => T): T {

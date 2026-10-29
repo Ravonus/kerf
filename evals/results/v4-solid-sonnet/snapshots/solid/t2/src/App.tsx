@@ -1,0 +1,113 @@
+import { batch, createMemo, createResource, createSignal, onCleanup, Show, type Accessor } from 'solid-js'
+import type { Api, Holding, Stock } from './api'
+import { Header } from './components/Header'
+import { StockList } from './components/StockList'
+
+export type Live = { price: Accessor<number>; history: Accessor<number[]> }
+type Entry = Live & { push: (p: number) => void }
+
+function makeEntry(initial: number): Entry {
+  const [price, setPrice] = createSignal(initial)
+  const [history, setHistory] = createSignal([initial])
+  return {
+    price,
+    history,
+    push(p) {
+      batch(() => {
+        setPrice(p)
+        setHistory(h => [...h.slice(-19), p])
+      })
+    },
+  }
+}
+
+export function App(props: { api: Api }) {
+  const entries = new Map<string, Entry>()
+  let early: { id: string; price: number }[] | null = []
+  const apply = (q: { id: string; price: number }) => entries.get(q.id)?.push(q.price)
+
+  const unsubscribe = props.api.subscribeQuotes(q => (early ? early.push(q) : apply(q)))
+  onCleanup(unsubscribe)
+
+  const [text, setText] = createSignal('')
+  const [matched, setMatched] = createSignal<Set<string> | null>(null)
+  const [pending, setPending] = createSignal(false)
+  const [failed, setFailed] = createSignal(false)
+  let ctrl: AbortController | null = null
+  let lastQuery = ''
+  onCleanup(() => ctrl?.abort())
+
+  function onSearch(value: string) {
+    setText(value)
+    const q = value.trim()
+    if (q === lastQuery) return
+    lastQuery = q
+    ctrl?.abort()
+    ctrl = null
+    if (!q) {
+      batch(() => {
+        setMatched(null)
+        setPending(false)
+        setFailed(false)
+      })
+      return
+    }
+    const mine = (ctrl = new AbortController())
+    setPending(true)
+    props.api.search(q, mine.signal).then(
+      ids =>
+        ctrl === mine &&
+        batch(() => {
+          setMatched(new Set(ids))
+          setPending(false)
+          setFailed(false)
+        }),
+      () =>
+        ctrl === mine &&
+        batch(() => {
+          setPending(false)
+          setFailed(true)
+        }),
+    )
+  }
+
+  const [data] = createResource(() =>
+    Promise.all([props.api.listStocks(), props.api.listHoldings()]).then(([list, holdings]) => {
+      for (const s of list) entries.set(s.id, makeEntry(s.price))
+      const queued = early!
+      early = null
+      batch(() => queued.forEach(apply))
+      return { stocks: list, holdings }
+    }),
+  )
+
+  return (
+    <Show when={data()} fallback={<p>Loading…</p>}>
+      {loaded => {
+        const portfolio = createMemo(() =>
+          loaded().holdings.reduce((sum: number, h: Holding) => sum + h.qty * (entries.get(h.id)?.price() ?? 0), 0),
+        )
+        const visible = createMemo(() => {
+          const ids = matched()
+          return ids ? loaded().stocks.filter(s => ids.has(s.id)) : loaded().stocks
+        })
+        return (
+          <div>
+            <Header count={visible().length} portfolio={portfolio()} />
+            <label>
+              Search
+              <input type="text" value={text()} onInput={e => onSearch(e.currentTarget.value)} />
+            </label>
+            <Show when={pending()}>
+              <p role="status">Searching…</p>
+            </Show>
+            <Show when={failed()}>
+              <p role="alert">Search failed</p>
+            </Show>
+            <StockList stocks={visible()} live={id => entries.get(id)!} />
+          </div>
+        )
+      }}
+    </Show>
+  )
+}

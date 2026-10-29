@@ -1,0 +1,41 @@
+{
+  "react": {
+    "probe": {
+      "quote": {
+        "domMutations": 3,
+        "formatCalls": 3,
+        "commits": 1,
+        "wallMs": 1.84
+      },
+      "star": {
+        "domMutations": 2,
+        "formatCalls": 0,
+        "commits": 1,
+        "wallMs": 12.8
+      },
+      "search-narrow": {
+        "domMutations": 184,
+        "formatCalls": 1,
+        "commits": 1,
+        "wallMs": 5.51
+      },
+      "type-notes-5": {
+        "domMutations": 5,
+        "formatCalls": 0,
+        "commits": 5,
+        "wallMs": 16.2
+      },
+      "quote-open": {
+        "domMutations": 4,
+        "formatCalls": 4,
+        "commits": 1,
+        "wallMs": 0.88
+      }
+    },
+    "bundleGzBytes": 71729,
+    "srcFiles": 9,
+    "srcLines": 593,
+    "effects": 4,
+    "memos": 13
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "weft/t1": {
+    "tokens": 62504,
+    "tools": 3,
+    "ms": 14947
+  },
+  "weft/t2": {
+    "tokens": 65594,
+    "tools": 6,
+    "ms": 41884
+  },
+  "weft/t3": {
+    "tokens": 67597,
+    "tools": 7,
+    "ms": 58685
+  }
+}

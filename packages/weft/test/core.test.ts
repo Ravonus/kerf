@@ -108,6 +108,16 @@ test('state.linked follows its source until written, then resets when the source
   expect(local.value).toBe('b')
 })
 
+test('state.linked resets when the source changes back to the value it was written against', () => {
+  const prop = state('')
+  const local = state.linked(() => prop.value)
+  local.value = 'draft'
+  prop.value = 'saved'
+  expect(local.value).toBe('saved')
+  prop.value = '' // e.g. an undo: the source changed, so the old draft must not come back
+  expect(local.value).toBe('')
+})
+
 test('context.provide: the provided subtree is disposed with its parent', () => {
   const ctx = context(0)
   let cleaned = 0

@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "weft": "file:../../../packages/weft"
+    "weft": "file:../../../packages/weft",
+    "@weft/cli": "file:../../../packages/cli"
   },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",

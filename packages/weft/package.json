@@ -11,6 +11,7 @@
   ],
   "exports": {
     ".": "./src/index.ts",
+    "./jsx-runtime": "./src/jsx-runtime.ts",
     "./dom": "./src/dom.ts",
     "./ssr": "./src/ssr.ts",
     "./head": "./src/head-client.ts",

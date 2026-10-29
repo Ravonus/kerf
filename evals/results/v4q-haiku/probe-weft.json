@@ -1,0 +1,32 @@
+{
+  "quote": {
+    "domMutations": 3,
+    "formatCalls": 3,
+    "commits": 4,
+    "wallMs": 0.49
+  },
+  "star": {
+    "domMutations": 2,
+    "formatCalls": 0,
+    "commits": 3,
+    "wallMs": 8.6
+  },
+  "search-narrow": {
+    "domMutations": 182,
+    "formatCalls": 0,
+    "commits": 8,
+    "wallMs": 2.72
+  },
+  "type-notes-5": {
+    "domMutations": 0,
+    "formatCalls": 0,
+    "commits": 5,
+    "wallMs": 13.08
+  },
+  "quote-open": {
+    "domMutations": 4,
+    "formatCalls": 4,
+    "commits": 6,
+    "wallMs": 0.26
+  }
+}

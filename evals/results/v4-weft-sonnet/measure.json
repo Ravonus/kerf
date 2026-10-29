@@ -1,0 +1,41 @@
+{
+  "weft": {
+    "probe": {
+      "quote": {
+        "domMutations": 3,
+        "formatCalls": 3,
+        "commits": 3,
+        "wallMs": 0.72
+      },
+      "star": {
+        "domMutations": 2,
+        "formatCalls": 0,
+        "commits": 3,
+        "wallMs": 8.22
+      },
+      "search-narrow": {
+        "domMutations": 182,
+        "formatCalls": 0,
+        "commits": 10,
+        "wallMs": 2.68
+      },
+      "type-notes-5": {
+        "domMutations": 0,
+        "formatCalls": 0,
+        "commits": 5,
+        "wallMs": 13.22
+      },
+      "quote-open": {
+        "domMutations": 4,
+        "formatCalls": 4,
+        "commits": 4,
+        "wallMs": 0.32
+      }
+    },
+    "bundleGzBytes": 7069,
+    "srcFiles": 10,
+    "srcLines": 524,
+    "effects": 6,
+    "memos": 10
+  }
+}

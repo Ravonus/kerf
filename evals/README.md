@@ -68,9 +68,40 @@ node run-app.mjs grade --name v3-sonnet && node run-app.mjs measure --name v3-so
 node run-app.mjs reference --name v3-ref --frameworks react,solid,weft   # grade/measure the reference apps instead
 ```
 
-`weft` is a framework too (`frameworks/weft`, `reference-v3/weft`), from the Phase 1 compiler spike
-([research 16](../docs/research/16-compiler-spike.md)). It has an adapter and starter config but no starter `src/`
-yet, so it can be graded and measured but not yet given to agents.
+`weft` is a framework too (`frameworks/weft`, `reference-v3/weft`, `tasks-v3/shop/starter/weft`). `prepare` writes
+a generated `AGENTS.md` into the weft workspace, and ticket 1's intro adds a weft-only setup note (read AGENTS.md,
+use `npx weft check --json`). The tickets themselves are identical across frameworks. For weft, the probe's
+"renders" column counts reactive re-runs. Phase 1 exit-check run: `results/v3-weft-FINDINGS.md`.
+
+### v4 (`tasks-v4/watchlist`, `run-app.mjs --suite tasks-v4`)
+
+A stock watchlist: about 8 files, a fake API, 50 rows (200 in budget tests). Six tickets in one session:
+- live quotes with sparklines;
+- server search with abort;
+- favorites with optimistic rollback and persistence;
+- a details panel with focus, undo and a late-response guard;
+- synchronous quote bursts and live sort;
+- sector tabs with per-tab background searches.
+
+The 47 hidden tests are cumulative. Seven of them are `budget:` tests, counting effective DOM mutations and calls to
+the instrumented formatters in `src/lib/format.ts`. Grading puts back the instrumented copy of that file. `grade`
+prints budget results separately.
+
+There are two ticket sets with the same hidden tests. `tickets/` states each budget. `tickets-quiet/`
+(`--tickets quiet`, recorded by `prepare`) gives only a "keep it fast" note.
+
+`buggy-v4/<fw>/<bug>` holds planted-bug overlays. `node run-app.mjs bug --suite tasks-v4 --name v4-bug-<fw>-<bug>
+--frameworks <fw> --bug <bug>` snapshots the reference with the overlay applied.
+
+```bash
+node run-app.mjs prepare --suite tasks-v4 [--tickets quiet] --name v4q-sonnet --frameworks react,solid,weft
+node run-app.mjs prompt  --suite tasks-v4 --name v4q-sonnet --framework weft --ticket 1
+node run-app.mjs grade   --suite tasks-v4 --name v4q-sonnet --frameworks react,solid,weft
+```
+
+In zsh, keep `--suite tasks-v4` literal: a variable holding it isn't word-split, and the command silently runs v3.
+
+Results: `results/v4-FINDINGS.md`.
 
 ## Results so far
 
@@ -82,3 +113,8 @@ yet, so it can be graded and measured but not yet given to agents.
 Correctness no longer separates the frameworks. Efficiency does: a constant ~7× bundle gap, React re-rendering the
 whole list per price tick, and one silent identity mistake (React-style object spreads in Solid) that rebuilt 150
 rows per tick. See `results/v2-FINDINGS.md` and `results/v3-FINDINGS.md`.
+
+v4 (12 sessions: 2 ticket sets × Haiku/Sonnet × React/Solid/weft, n=1; `results/v4-FINDINGS.md`):
+- 11 of 12 sessions end at 47/47.
+- The one miss is Solid Haiku on the quiet tickets, which didn't batch quote bursts (46/47).
+- Bundle sizes: weft 6.8–6.9 KB gz, Solid 10.4–11.8, React about 70.

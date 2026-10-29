@@ -9,7 +9,9 @@
 //   node run-app.mjs measure  --name v3-sonnet                                   # perf probe + bundle size, last snapshot
 //   node run-app.mjs summary  --name v3-sonnet
 //   node run-app.mjs reference --name v3-ref [--frameworks react,solid,weft]    # snapshot reference-v3/<fw> as t3
-import { execFile } from 'node:child_process'
+//   node run-app.mjs bug --suite tasks-v4 --name v4-bug-x --frameworks react --bug no-memo  # reference + buggy-v4 overlay
+//   node run-app.mjs prepare --suite tasks-v4 --tickets quiet --name v4q-sonnet ...         # tickets-quiet/: no stated budgets
+import { execFile, execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
@@ -22,8 +24,10 @@ const exec = promisify(execFile)
 const [cmd, ...rest] = process.argv.slice(2)
 const opt = Object.fromEntries(rest.reduce((acc, a, i, xs) => (a.startsWith('--') ? [...acc, [a.slice(2), xs[i + 1]]] : acc), []))
 const name = opt.name ?? 'v3'
-const app = opt.app ?? 'shop'
-const appDir = join(root, 'tasks-v3', app)
+const suite = opt.suite ?? 'tasks-v3'
+const app = opt.app ?? (suite === 'tasks-v3' ? 'shop' : readdirSync(join(root, suite))[0])
+const appDir = join(root, suite, app)
+const refDir = join(root, suite.replace(/^tasks/, 'reference'))
 const resultsDir = join(root, 'results', name)
 const workRoot = join(tmpdir(), 'weft-evals', name)
 const task = JSON.parse(readFileSync(join(appDir, 'task.json'), 'utf8'))
@@ -31,11 +35,20 @@ const frameworks = () => (opt.frameworks ?? 'react,solid').split(',')
 const ws = fw => join(workRoot, fw)
 const readJson = (p, fallback) => (existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : fallback)
 const writeJson = (p, v) => { mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, JSON.stringify(v, null, 2)) }
+// --tickets quiet reads tickets-quiet/ (same app and hidden tests, different ticket text); prepare records it.
+const variant = opt.tickets ?? readJson(join(resultsDir, 'manifest.json'), {}).tickets
+const ticketsDir = join(appDir, variant ? `tickets-${variant}` : 'tickets')
 
 const FRAMEWORK = {
   react: 'React 19 + TypeScript (function components and hooks)',
   solid: 'SolidJS 1.9 + TypeScript (`solid-js`)',
-  weft: 'weft (Phase 1 spike) + TypeScript',
+  weft: 'weft + TypeScript (`weft`)',
+}
+// Framework-specific setup notes appended to ticket 1's intro; the tickets themselves are identical across frameworks.
+const SETUP = {
+  weft: ' weft is not React: read AGENTS.md in the project first. `npx weft check --json` reports weft diagnostics ' +
+    '(code, location, why, fix); run it after your changes and fix what it reports (the P002 warnings about ' +
+    'package.json scripts are expected here, ignore them).',
 }
 
 function prepare() {
@@ -44,20 +57,23 @@ function prepare() {
     rmSync(dir, { recursive: true, force: true })
     cpSync(join(appDir, 'starter', fw), dir, { recursive: true })
     symlinkSync(join(root, 'frameworks', fw, 'node_modules'), join(dir, 'node_modules'))
+    // weft's AGENTS.md is generated from the installed weft, so it always matches the compiler the agent runs.
+    if (fw === 'weft') execFileSync(join(dir, 'node_modules', '.bin', 'weft'), ['agents-md', '--root', dir], { stdio: 'inherit' })
   }
-  writeJson(join(resultsDir, 'manifest.json'), { name, app, created: new Date().toISOString(), frameworks: frameworks(), workRoot })
+  writeJson(join(resultsDir, 'manifest.json'), { name, suite, app, tickets: variant, created: new Date().toISOString(), frameworks: frameworks(), workRoot })
   console.log(`prepared ${frameworks().join(', ')} in ${workRoot}`)
 }
 
 function prompt() {
   const n = Number(opt.ticket)
-  const ticket = readFileSync(join(appDir, 'tickets', `${task.tickets[n - 1]}.md`), 'utf8')
+  const ticket = readFileSync(join(ticketsDir, `${task.tickets[n - 1]}.md`), 'utf8')
   const intro = n === 1
-    ? `You're working on a small shop app written in ${FRAMEWORK[opt.framework]}. The project is in ${ws(opt.framework)} ` +
+    ? `You're working on ${task.intro ?? 'a small shop app'} written in ${FRAMEWORK[opt.framework]}. The project is in ${ws(opt.framework)} ` +
       `(work only inside that directory and don't read files outside it; dependencies are installed, don't add any). Useful commands there: ` +
       '`npm test` (vitest), `npm run typecheck`, `npm run build`. Hidden acceptance tests will drive the app through ' +
       'its UI with Testing Library, so keep existing labels, roles and test ids working. You may add or change tests. ' +
-      'More tickets will follow in this same session. When this ticket is done, reply with one line.'
+      'More tickets will follow in this same session. When this ticket is done, reply with one line.' +
+      (SETUP[opt.framework] ?? '')
     : 'Next ticket for the same project. Previous tickets must keep working. When done, reply with one line.'
   console.log(`${intro}\n\n${ticket}`)
 }
@@ -85,6 +101,8 @@ async function runHidden(fw, src, files, env = {}) {
   const dir = join(fwDir, '.grade', id)
   cpSync(src, join(dir, 'src'), { recursive: true, filter: f => !/\.test\.tsx?$/.test(f) })
   cpSync(join(appDir, 'hidden', 'helpers.ts'), join(dir, 'helpers.ts'))
+  // Files the app must not change (e.g. v4's instrumented formatters) are restored from hidden/src.
+  if (existsSync(join(appDir, 'hidden', 'src'))) cpSync(join(appDir, 'hidden', 'src'), join(dir, 'src'), { recursive: true })
   for (const f of files) cpSync(join(appDir, 'hidden', f), join(dir, f))
   const report = join(dir, 'report.json')
   try {
@@ -128,15 +146,18 @@ async function grade() {
     for (let n = 1; n <= task.tickets.length; n++) {
       const snap = join(resultsDir, 'snapshots', fw, `t${n}`)
       if (!existsSync(snap)) continue
-      const files = ['baseline.test.tsx', ...Array.from({ length: n }, (_, i) => `t${i + 1}.test.tsx`)]
+      const files = ['baseline.test.tsx', ...Array.from({ length: n }, (_, i) => `t${i + 1}.test.tsx`)].filter(f => existsSync(join(appDir, 'hidden', f)))
       const { tests, error } = await runHidden(fw, join(snap, 'src'), files)
       const byFile = Object.fromEntries(files.map(f => {
         const ts = tests.filter(t => t.file === f)
         return [f.replace('.test.tsx', ''), { passed: ts.filter(t => t.ok).length, total: ts.length }]
       }))
+      // v4 names its work-budget tests `budget: …`, so output and budgets can be scored apart.
+      const b = tests.filter(t => t.name.startsWith('budget:'))
+      const budget = { passed: b.filter(t => t.ok).length, total: b.length }
       const visible = await visibleTests(fw, snap)
-      grades[`${fw}/t${n}`] = { byFile, failures: tests.filter(t => !t.ok), error, visible }
-      console.log(`${fw} t${n}: ${Object.entries(byFile).map(([k, v]) => `${k} ${v.passed}/${v.total}`).join(' · ')} · agent tests ${visible.passed}/${visible.tests}`)
+      grades[`${fw}/t${n}`] = { byFile, budget, failures: tests.filter(t => !t.ok), error, visible }
+      console.log(`${fw} t${n}: ${Object.entries(byFile).map(([k, v]) => `${k} ${v.passed}/${v.total}`).join(' · ')}${b.length ? ` (budgets ${budget.passed}/${budget.total})` : ''} · agent tests ${visible.passed}/${visible.tests}`)
     }
   }
   writeJson(join(resultsDir, 'grades.json'), grades)
@@ -149,7 +170,7 @@ async function measure() {
     const snap = join(resultsDir, 'snapshots', fw, `t${last}`)
     if (!existsSync(snap)) continue
     const probeOut = join(resultsDir, `probe-${fw}.json`)
-    await runHidden(fw, join(snap, 'src'), ['probe.test.tsx'], { PROBE_OUT: probeOut })
+    if (existsSync(join(appDir, 'hidden', 'probe.test.tsx'))) await runHidden(fw, join(snap, 'src'), ['probe.test.tsx'], { PROBE_OUT: probeOut })
     const probe = readJson(probeOut, null)
     // Production bundle size of the agent's final app.
     const dir = join(workRoot, `.build-${fw}`)
@@ -173,8 +194,8 @@ async function measure() {
       bundleGzBytes: gz,
       srcFiles: appSrc.length,
       srcLines: code.split('\n').length,
-      effects: (code.match(/\buse(Layout)?Effect\(|\bcreate(Effect|Computed|RenderEffect)\(/g) ?? []).length,
-      memos: (code.match(/\buse(Memo|Callback)\(|\bcreateMemo\(/g) ?? []).length,
+      effects: (code.match(/\buse(Layout)?Effect\(|\bcreate(Effect|Computed|RenderEffect)\(|\bwatch\(/g) ?? []).length,
+      memos: (code.match(/\buse(Memo|Callback)\(|\bcreateMemo\(|\bderived\(/g) ?? []).length,
     }
     rmSync(dir, { recursive: true, force: true })
     console.log(fw, JSON.stringify(out[fw]))
@@ -186,17 +207,19 @@ function summary() {
   const grades = readJson(join(resultsDir, 'grades.json'), {})
   const stats = readJson(join(resultsDir, 'agent-stats.json'), {})
   const m = readJson(join(resultsDir, 'measure.json'), {})
-  const L = [`# ${name}`, '', '## Hidden tests per ticket (cumulative)', '', '| | ticket | baseline | t1 | t2 | t3 | agent tests | tokens | tools | min |', '|---|---|---|---|---|---|---|---|---|---|']
+  const ts = task.tickets.map((_, i) => `t${i + 1}`)
+  const L = [`# ${name}`, '', '## Hidden tests per ticket (cumulative)', '', `| | ticket | baseline | ${ts.join(' | ')} | budgets | agent tests | tokens | tools | min |`, `|---|---|---|${ts.map(() => '---|').join('')}---|---|---|---|---|`]
   for (const [k, g] of Object.entries(grades)) {
     const [fw, t] = k.split('/')
     const cell = f => (g.byFile[f] ? `${g.byFile[f].passed}/${g.byFile[f].total}` : '')
     const s = stats[k] ?? {}
-    L.push(`| ${fw} | ${t} | ${cell('baseline')} | ${cell('t1')} | ${cell('t2')} | ${cell('t3')} | ${g.visible.passed}/${g.visible.tests} | ${s.tokens ?? ''} | ${s.tools ?? ''} | ${s.ms ? (s.ms / 60000).toFixed(1) : ''} |`)
+    L.push(`| ${fw} | ${t} | ${cell('baseline')} | ${ts.map(cell).join(' | ')} | ${g.budget?.total ? `${g.budget.passed}/${g.budget.total}` : ''} | ${g.visible.passed}/${g.visible.tests} | ${s.tokens ?? ''} | ${s.tools ?? ''} | ${s.ms ? (s.ms / 60000).toFixed(1) : ''} |`)
   }
-  L.push('', '## Final app', '', '| | bundle gz | src files | lines | effects | memos | add-one | price-push | type-3-chars |', '|---|---|---|---|---|---|---|---|---|')
-  const p = x => (x ? `${x.domMutations} DOM · ${x.commits ?? '–'} renders · ${x.wallMs} ms` : '–')
+  const labels = [...new Set(Object.values(m).flatMap(v => Object.keys(v.probe ?? {})))]
+  L.push('', '## Final app', '', `| | bundle gz | src files | lines | effects | memos | ${labels.join(' | ')} |`, `|---|---|---|---|---|---|${labels.map(() => '---|').join('')}`)
+  const p = x => (x ? `${x.domMutations} DOM · ${x.formatCalls !== undefined ? `${x.formatCalls} fmt · ` : ''}${x.commits ?? '–'} renders · ${x.wallMs} ms` : '–')
   for (const [fw, v] of Object.entries(m))
-    L.push(`| ${fw} | ${typeof v.bundleGzBytes === 'number' ? (v.bundleGzBytes / 1024).toFixed(1) + ' KB' : v.bundleGzBytes} | ${v.srcFiles} | ${v.srcLines} | ${v.effects} | ${v.memos} | ${p(v.probe?.['add-one'])} | ${p(v.probe?.['price-push'])} | ${p(v.probe?.['type-3-chars'])} |`)
+    L.push(`| ${fw} | ${typeof v.bundleGzBytes === 'number' ? (v.bundleGzBytes / 1024).toFixed(1) + ' KB' : v.bundleGzBytes} | ${v.srcFiles} | ${v.srcLines} | ${v.effects} | ${v.memos} | ${labels.map(l => p(v.probe?.[l])).join(' | ')} |`)
   L.push('', '## Failures', '')
   for (const [k, g] of Object.entries(grades)) for (const f of g.failures) L.push(`- **${k}** ${f.file} › ${f.name}: \`${(f.message ?? '').slice(0, 160)}\``)
   writeFileSync(join(resultsDir, 'summary.md'), L.join('\n') + '\n')
@@ -208,11 +231,23 @@ function reference() {
   for (const fw of frameworks()) {
     const dest = join(resultsDir, 'snapshots', fw, `t${task.tickets.length}`)
     rmSync(dest, { recursive: true, force: true })
-    cpSync(join(root, 'reference-v3', fw, 'src'), join(dest, 'src'), { recursive: true })
+    cpSync(join(refDir, fw, 'src'), join(dest, 'src'), { recursive: true })
     console.log(`reference ${fw} → t${task.tickets.length}`)
   }
 }
 
-const commands = { prepare, prompt, snapshot, stat, grade, measure, summary, reference }
+// A planted-bug variant: the reference app with buggy-v4/<fw>/<bug>/ overlaid, as the final snapshot.
+function bug() {
+  const bugDir = join(root, suite.replace(/^tasks/, 'buggy'))
+  for (const fw of frameworks()) {
+    const dest = join(resultsDir, 'snapshots', fw, `t${task.tickets.length}`)
+    rmSync(dest, { recursive: true, force: true })
+    cpSync(join(refDir, fw, 'src'), join(dest, 'src'), { recursive: true })
+    cpSync(join(bugDir, fw, opt.bug), join(dest, 'src'), { recursive: true, filter: f => !f.endsWith('BUG.md') })
+    console.log(`bug ${fw}/${opt.bug} → t${task.tickets.length}`)
+  }
+}
+
+const commands = { bug, prepare, prompt, snapshot, stat, grade, measure, summary, reference }
 if (!commands[cmd]) console.log(`usage: node run-app.mjs ${Object.keys(commands).join('|')} --name <run> ...`)
 else await commands[cmd]()
