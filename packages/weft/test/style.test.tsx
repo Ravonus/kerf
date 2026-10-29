@@ -43,7 +43,8 @@ describe('compiler: call sites lower to attributes', () => {
   test('literal axes are static template attributes; reactive ones bind; parts are static', () => {
     const out = transform(SRC, { filename: '/app/card.tsx' })
     expect(out.diagnostics).toEqual([])
-    expect(out.code).toContain('<article data-g=\\"order-card\\"><h3 data-g=\\"order-card\\" data-part=\\"title\\">')
+    expect(out.code).toContain('<article data-g=\\"order-card\\"><h3 data-part=\\"title\\">')
+    expect(transform(SRC, { filename: '/app/card.tsx', taggedParts: true }).code).toContain('<h3 data-g=\\"order-card\\" data-part=\\"title\\">')
     expect(out.code).toContain('<article data-g=\\"order-card\\" data-status=\\"late\\">')
     expect(out.code).toMatch(/_\$attr\(_e1, "data-status", v\[0\]\)/)
     expect(out.code).toMatch(/_\$bind\(\(\) => \[props.status, props.selected \? "true" : "false"\]/)
@@ -87,22 +88,24 @@ describe('compiler: call sites lower to attributes', () => {
 describe('CSS: only what call sites can produce', () => {
   const groups = (): GroupSource[] => transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups.map(g => ({ ...g, file: 'card.tsx' }))
 
-  test('a literal emits its one value, in @layer app.groups behind :where(), scoped, with a dev comment', () => {
+  test('a literal emits its one value, in @layer app.groups, scoped, with a dev comment', () => {
     const css = emitGroups(groups(), [{ group: 'order-card', axes: { status: ['late'] }, states: [], part: null, dynamic: false }], { dev: true })
     expect(css).toContain('@layer app.groups {')
     expect(css).toContain('/* order-card · card.tsx:2 */')
-    expect(css).toContain('@scope ([data-g="order-card"]:not([data-part])) to ([data-g]:not([data-part]))')
-    expect(css).toContain(':where(:scope[data-status="late"])')
+    expect(css).toContain('@scope ([data-g="order-card"]) to ([data-g])')
+    // the tone is folded: the late rule reads the critical token directly
+    expect(css).toContain(':scope[data-status="late"] {\n      color: var(--warp-color-critical-text);')
+    expect(css).not.toContain('--_text')
     expect(css).not.toContain('"open"')
     expect(css).not.toContain('aria-selected') // no site sets `selected`
     expect(css).not.toContain('data-part="title"') // nor renders the part
   })
 
-  test('a reactive axis emits every value; flat mode has no @scope', () => {
-    const css = emitGroups(groups(), [{ group: 'order-card', axes: { status: null }, states: ['selected'], part: null, dynamic: false }, { group: 'order-card', axes: {}, states: [], part: 'title', dynamic: false }], { scope: false })
+  test('a reactive axis emits every value; tagged parts can be flat, with no @scope', () => {
+    const css = emitGroups(groups(), [{ group: 'order-card', axes: { status: null }, states: ['selected'], part: null, dynamic: false }, { group: 'order-card', axes: {}, states: [], part: 'title', dynamic: false }], { scope: false, taggedParts: true })
     for (const v of ['open', 'shipped', 'late']) expect(css).toContain(`[data-status="${v}"]`)
     expect(css).toContain('[aria-selected="true"]')
-    expect(css).toContain(':where([data-g="order-card"][data-part="title"])')
+    expect(css).toContain('[data-g="order-card"][data-part="title"] {')
     expect(css).not.toContain('@scope')
   })
 

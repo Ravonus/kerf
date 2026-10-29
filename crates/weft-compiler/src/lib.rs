@@ -47,6 +47,9 @@ pub struct Options {
     pub hmr: bool,
     /// Style groups defined in other modules, keyed `"<absolute path without extension>#<export>"` (style.rs).
     pub groups: std::collections::HashMap<String, style::Imported>,
+    /// Group parts carry `data-g` as well as `data-part` (warp's `data-scope` + `data-part` shape). Off: parts carry
+    /// only `data-part`, and the group's `@scope` tells them apart.
+    pub tagged_parts: bool,
 }
 
 impl Default for Options {
@@ -62,6 +65,7 @@ impl Default for Options {
             explain: false,
             hmr: false,
             groups: Default::default(),
+            tagged_parts: false,
         }
     }
 }
@@ -102,7 +106,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let ssr = if options.generate == "ssr" || options.hydratable { Some(true) } else if options.check_only { None } else { Some(false) };
     diagnostics.extend(browser::check(&program, &scoping, source, ssr));
     // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
-    let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, &options.filename, &options.groups, &mut diagnostics);
+    let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, &options.filename, &options.groups, options.tagged_parts, &mut diagnostics);
     diagnostics.sort_by_key(|d| d.start);
     let mut facts = plan.facts.clone();
     facts.groups = groups;

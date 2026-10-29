@@ -10,3 +10,6 @@ The v3 shop styled two ways, for [research 23](../../docs/research/23-style-grou
 and DOM work per interaction. It also writes sample output to `out/` (`groups.dev.css`, `groups.flat.css`,
 `atomic.css`). `--css` prints only the emitter's size matrix. Needs the native compiler (`npm run build:native` in
 `packages/weft`).
+
+`node spikes/style-groups/scale.mjs` is §6.5: synthetic apps of 10 to 300 groups, groups CSS against the same rules
+as BEM classes. It reads `out/` for the shop's calibration row, so run `run.mjs` first.

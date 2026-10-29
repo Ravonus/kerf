@@ -36,7 +36,7 @@ const IMPORTS = /import\s+\{([^}]*)\}\s+from\s+['"](\.[^'"]+)['"]/g
  * every module that defines a group imports. A build scans the project first, so the CSS is complete when loaded;
  * dev and tests fill the registry as files compile and reload the CSS when it changes.
  */
-function styleGroups() {
+function styleGroups({ taggedParts = false } = {}) {
   const defs = new Map() // file → [{ name, binding, exported, def, line }]
   const uses = new Map() // file → [GroupUse]
   const scanned = new Map() // file → mtime of the defs above, for files read off disk
@@ -96,7 +96,7 @@ function styleGroups() {
   const css = () => {
     const all = [...defs].flatMap(([file, gs]) => gs.map(g => ({ ...g, file: relative(root, file) })))
     const used = [...uses].flatMap(([file, us]) => us.map(u => ({ ...u, file: relative(root, file) })))
-    return emitGroups(all, used, { dev: isDev })
+    return emitGroups(all, used, { dev: isDev, taggedParts })
   }
   let last = ''
 
@@ -140,7 +140,7 @@ function styleGroups() {
         for (const file of files.filter(f => /\.[jt]sx$/.test(f))) {
           const code = readFileSync(file, 'utf8')
           if (!code.includes('{...')) continue
-          const out = transform(code, { filename: file, checkOnly: true, groups: await importedGroups(this, code, file) })
+          const out = transform(code, { filename: file, checkOnly: true, taggedParts, groups: await importedGroups(this, code, file) })
           uses.set(file, out.facts.groupUses)
         }
       },
@@ -160,13 +160,16 @@ function styleGroups() {
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
  */
 /*
+ * `style.taggedParts`: group parts carry `data-g` as well as `data-part` (style groups, below).
+ */
+/*
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
  * their own updates (research 21). Never for SSR or hydratable output.
  */
-export default function weft({ dev, hydratable = false, hmr } = {}) {
+export default function weft({ dev, hydratable = false, hmr, style: styleOptions } = {}) {
   let isDev = false
   let isHot = false
-  const style = styleGroups()
+  const style = styleGroups(styleOptions)
   const main = {
     name: 'weft',
     enforce: 'pre',
@@ -188,7 +191,7 @@ export default function weft({ dev, hydratable = false, hmr } = {}) {
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
         const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
-        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups })
+        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups, taggedParts: !!styleOptions?.taggedParts })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }

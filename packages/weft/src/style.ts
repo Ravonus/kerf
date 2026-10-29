@@ -2,7 +2,7 @@
 // typed here and evaluated at build by the compiler, which also lowers every call site to plain attributes:
 //
 //   <li {...productRow({ stock: s })}>      →  <li data-g="product-row" data-stock={s}>   (one attribute binding)
-//   <span {...productRow.price}>            →  <span data-g="product-row" data-part="price">
+//   <span {...productRow.price}>            →  <span data-part="price">
 //
 // The Vite plugin turns definitions plus call sites into readable CSS in `@layer app.groups` (./style/css.ts). The
 // function below only runs where a call site wasn't lowered (an argument that isn't an object literal).
@@ -41,7 +41,7 @@ type Pseudo = 'hover' | 'focus' | 'active' | 'disabled'
 
 /** Attributes a group writes: spread them on the element (`{...card(…)}`). */
 export type GroupAttrs = { 'data-g': string } & Record<`data-${string}` | `aria-${string}`, string | boolean | undefined>
-export type PartAttrs = { readonly 'data-g': string; readonly 'data-part': string }
+export type PartAttrs = { readonly 'data-part': string }
 
 export type Group<N extends string, A, P, S> = {
   (axes?: AxisArgs<A> & { [K in Exclude<keyof S, Pseudo>]?: boolean }): GroupAttrs
@@ -65,7 +65,8 @@ export function group<const N extends string, const A extends Record<string, Val
     return out
   }
   Object.defineProperty(call, 'group', { value: name })
-  // Parts are properties of the function; defineProperty also covers parts called `name` or `length`.
-  for (const part of Object.keys(def.parts ?? {})) Object.defineProperty(call, part, { value: Object.freeze({ 'data-g': name, 'data-part': part }), enumerable: true })
+  // Parts are properties of the function; defineProperty also covers parts called `name` or `length`. A part is only
+  // `data-part`: the group's @scope finds it under the root.
+  for (const part of Object.keys(def.parts ?? {})) Object.defineProperty(call, part, { value: Object.freeze({ 'data-part': part }), enumerable: true })
   return call as unknown as Group<N, A, P, S>
 }

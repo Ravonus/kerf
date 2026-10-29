@@ -98,7 +98,8 @@ export const VOCAB = {
     display: text('display'),
     title: text('title'),
     heading: text('heading'),
-    body: text('body'),
+    // Body leaves its weight (400) to inheritance, as hand-written CSS does.
+    body: text('body', false),
     label: text('label'),
     caption: text('caption', false),
     code: { ...text('code', false), 'font-family': 'var(--warp-font-mono)' },

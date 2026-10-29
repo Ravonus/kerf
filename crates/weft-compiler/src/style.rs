@@ -8,7 +8,7 @@
 //! | `{...orderCard({ status: s, selected })}` | `data-g="order-card" data-status={s} aria-selected={selected ? "true" : "false"}` |
 //! | `{...orderCard({ status: 'late' })}`      | `data-g="order-card" data-status="late"` (static) |
 //! | `{...orderCard()}`                        | `data-g="order-card"` plus each axis default, static |
-//! | `{...orderCard.title}`                    | `data-g="order-card" data-part="title"` |
+//! | `{...orderCard.title}`                    | `data-part="title"` (`tagged_parts`: `data-g="order-card" data-part="title"`) |
 //!
 //! Each lowered site goes to `facts.groupUses` with the axis values it can produce (a literal, the literal leaves of
 //! a conditional, or any), and the Vite plugin emits CSS for exactly those. Unknown axes, values, states and parts are
@@ -108,6 +108,7 @@ pub fn apply<'a>(
     source: &str,
     filename: &str,
     imported: &HashMap<String, Imported>,
+    tagged_parts: bool,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> (Vec<GroupDef>, Vec<GroupUse>) {
     let mut group_fn = None;
@@ -178,7 +179,7 @@ pub fn apply<'a>(
         }
     }
 
-    let mut lower = Lower { allocator, ast: AstBuilder::new(allocator), scoping, source, metas, group_fn, handled, diagnostics, uses: Vec::new() };
+    let mut lower = Lower { allocator, ast: AstBuilder::new(allocator), scoping, source, metas, group_fn, handled, tagged_parts, diagnostics, uses: Vec::new() };
     lower.visit_program(program);
     (defs, lower.uses)
 }
@@ -294,6 +295,7 @@ struct Lower<'a, 'p> {
     group_fn: Option<SymbolId>,
     /// `group()` calls that are definitions (any other `group()` call is W060).
     handled: HashSet<u32>,
+    tagged_parts: bool,
     diagnostics: &'p mut Vec<Diagnostic>,
     uses: Vec<GroupUse>,
 }
@@ -335,7 +337,8 @@ impl<'a> Lower<'a, '_> {
                 return None;
             }
             self.uses.push(GroupUse { group: name.clone(), axes: BTreeMap::new(), states: Vec::new(), part: Some(part.clone()), dynamic: false, line });
-            return Some(vec![self.text("data-g", &name), self.text("data-part", &part)]);
+            let part_attr = self.text("data-part", &part);
+            return Some(if self.tagged_parts { vec![self.text("data-g", &name), part_attr] } else { vec![part_attr] });
         }
         let Expression::CallExpression(call) = arg else { return None };
         let meta = self.meta_of(&call.callee)?;

@@ -109,21 +109,54 @@ function perElement(html, count) {
 }
 
 const results = {}
-if (process.argv.includes('--css')) {
+/**
+ * Prod-only short names, for measuring what readable names cost: `[data-g="product-row"]` → `[data-g=a]`, or
+ * `.a` (a class), and with `parts`, `[data-part="price"]` → `[data-p=b]`. Markup would follow the same map.
+ */
+function shorten(css, { group = 'attr', parts = false } = {}) {
+  const ids = new Map()
+  const id = k => ids.get(k) ?? ids.set(k, ids.size.toString(36).replace(/^\d/, d => 'abcdefghij'[d])).get(k)
+  css = css.replace(/\[data-g="([\w-]+)"\]/g, (_, n) => (group === 'class' ? `.${id('g:' + n)}` : `[data-g=${id('g:' + n)}]`))
+  if (group === 'class') css = css.replace(/\[data-g\]/g, '[class]')
+  if (parts) css = css.replace(/\[data-part="([\w-]+)"\]/g, (_, n) => `[data-p=${id('p:' + n)}]`)
+  return css
+}
+
+function matrix() {
   const facts = groupFacts('shop-groups')
   const hand = sizes(readFileSync(join(here, 'shop-css/src/shop.css'), 'utf8'))
-  console.log('hand', JSON.stringify(hand))
-  for (const scope of [true, false]) for (const where of [true, false]) for (const share of [true, false]) {
-    const s = sizes(emitGroups(facts.groups, facts.uses, { scope, where, share }))
-    console.log(JSON.stringify({ scope, where, share }), JSON.stringify(s), `br ${((s.br / hand.br - 1) * 100).toFixed(1)}%`)
-  }
-  for (const where of [true, false]) {
-    const s = sizes(emitGroups(facts.groups, facts.uses, { bareParts: true, where }))
-    console.log(JSON.stringify({ bareParts: true, where }), JSON.stringify(s), `br ${((s.br / hand.br - 1) * 100).toFixed(1)}%`)
-  }
-  console.log('atomic', JSON.stringify(sizes(emitAtomic(facts.groups, facts.uses).css())))
+  const rows = [['hand CSS', hand]]
+  const emit = o => emitGroups(facts.groups, facts.uses, o)
+  const add = (label, css) => rows.push([label, sizes(css)])
+  add('default: bare parts, @scope, local tones, similar order', emit({}))
+  add('  with :where()', emit({ where: true }))
+  add('  shared blocks (one @scope over the owners)', emit({ share: true }))
+  add('  shared blocks, groups in file order', emitGroups([...facts.groups], facts.uses, { share: true, order: 'given' }))
+  add('  shared blocks, groups by name', emit({ share: true, order: 'name' }))
+  add('  tones not folded', emit({ fold: false }))
+  add('  tagged parts (data-g on parts), @scope', emit({ taggedParts: true }))
+  add('  tagged parts, flat', emit({ taggedParts: true, scope: false }))
+  add('  tagged parts, flat, shared blocks', emit({ taggedParts: true, scope: false, share: true }))
+  add('  tagged parts, @scope, shared blocks', emit({ taggedParts: true, share: true }))
+  add('  prod short group names (attr)', shorten(emit({})))
+  add('  prod short group names (class)', shorten(emit({}), { group: 'class' }))
+  add('  prod short group + part names', shorten(emit({}), { parts: true }))
+  const by = f => [...facts.groups].sort((a, b) => f(a).localeCompare(f(b)))
+  add('  groups by name', emit({ order: 'name' }))
+  add('  groups in file order', emitGroups(by(g => `${g.file}:${String(g.line).padStart(5, '0')}`), facts.uses, { order: 'given' }))
+  add('  groups in reverse file order', emitGroups(by(g => `${g.file}:${String(g.line).padStart(5, '0')}`).reverse(), facts.uses, { order: 'given' }))
+  add('  similar order, from reversed input', emitGroups([...facts.groups].reverse(), facts.uses, {}))
+  add('atomic', emitAtomic(facts.groups, facts.uses).css())
+  return rows.map(([label, s]) => ({ label, ...s, vsHand: +((s.br / hand.br - 1) * 100).toFixed(1) }))
+}
+
+if (process.argv.includes('--css')) {
+  for (const r of matrix()) console.log(r.label.padEnd(52), String(r.min).padStart(5), String(r.gz).padStart(5), String(r.br).padStart(5), `${r.vsHand}%`)
   mkdirSync(join(here, 'out'), { recursive: true })
-  writeFileSync(join(here, 'out/groups.bare.css'), emitGroups(facts.groups, facts.uses, { bareParts: true, dev: true }))
+  if (process.env.NEST_CSS) {
+    const facts = groupFacts('shop-groups')
+    writeFileSync(process.env.NEST_CSS, emitGroups(facts.groups, facts.uses, { dev: true }))
+  }
   process.exit(0)
 }
 for (const app of ['shop-css', 'shop-groups']) {
@@ -134,17 +167,18 @@ for (const app of ['shop-css', 'shop-groups']) {
 
 const facts = groupFacts('shop-groups')
 const dev = emitGroups(facts.groups, facts.uses, { dev: true })
-const flat = emitGroups(facts.groups, facts.uses, { scope: false })
+const flat = emitGroups(facts.groups, facts.uses, { scope: false, taggedParts: true })
 const atomic = emitAtomic(facts.groups, facts.uses)
 writeFileSync(join(here, 'out/groups.dev.css'), dev)
-writeFileSync(join(here, 'out/groups.flat.css'), emitGroups(facts.groups, facts.uses, { dev: true, scope: false }))
+writeFileSync(join(here, 'out/groups.flat.css'), emitGroups(facts.groups, facts.uses, { dev: true, scope: false, taggedParts: true }))
 writeFileSync(join(here, 'out/atomic.css'), atomic.css())
 const handCss = readFileSync(join(here, 'shop-css/src/shop.css'), 'utf8')
+results.matrix = matrix()
 results.css = {
   'hand (shop-css build)': results['shop-css'].css,
   'groups, @scope (shop-groups build)': results['shop-groups'].css,
   'groups, @scope (emitter, prod)': sizes(emitGroups(facts.groups, facts.uses)),
-  'groups, flat :where (emitter, prod)': sizes(flat),
+  'groups, tagged parts, flat (emitter, prod)': sizes(flat),
   'atomic (emitter)': sizes(atomic.css()),
   'groups, all values (no call-site pruning)': sizes(emitGroups(facts.groups, facts.groups.map(g => ({ group: g.name, axes: {}, states: [], part: null, dynamic: true })).concat(facts.uses.filter(u => u.part)))),
 }
@@ -153,7 +187,7 @@ results.groupCount = facts.groups.length
 results.useCount = facts.uses.length
 
 const groupAttrs = el => {
-  const g = el.getAttribute('data-g')
+  const g = el.getAttribute('data-g') ?? (el.hasAttribute('data-part') ? el.parentElement?.closest('[data-g]')?.getAttribute('data-g') : null)
   if (!g) return 0
   const def = facts.groups.find(x => x.name === g)?.def ?? {}
   const axes = Object.keys(def.axes ?? {})
@@ -161,7 +195,7 @@ const groupAttrs = el => {
   return [...el.attributes].filter(a => a.name === 'data-g' || a.name === 'data-part' || axes.some(x => a.name === `data-${x}`) || states.some(s => a.name === `aria-${s}` || a.name === `data-${s}`)).length
 }
 const classes = el => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean).length
-const atoms = el => (el.getAttribute('data-g') ? atomic.atoms(el).size : 0)
+const atoms = el => (el.hasAttribute('data-g') || el.hasAttribute('data-part') ? atomic.atoms(el).size : 0)
 results.perElement = {}
 for (const view of ['catalog', 'cart']) {
   results.perElement[view] = {
