@@ -401,6 +401,17 @@ Once Solid's crate is gone, weft can update Oxc on its own schedule instead of f
 - **The `weft/dom` helpers added to match Solid's output** go at the switch. `spread` is weft's only implementation
   of `<div {...rest}>` on a native element, so `Spread` moves into step 2 of §5, not step 4.
 
+**Merged (2026-10-29).** PR #2 landed on `main`, and `main` was merged into this branch after step 5:
+- `analyze.rs`, `project.rs`, `transform.rs` and `compiler-items.test.tsx` came over unchanged and pass on weft's back
+  end. The pre-pass still hands over JSX, not the §3 IR; that rework is still open.
+- `helper_contract.rs` now compiles the repo's own components in four modes: DOM, DOM dev, hydratable DOM and SSR. It
+  checks every helper they import from `weft`, `weft/dom` or `weft/ssr` against the runtime's exports, ignoring type
+  imports.
+- Five helpers PR #2 added to `weft/dom` were only needed by Solid's output, and are dropped: `claimElement`,
+  `applyRef`, `setAttributeNS`, `setStyleProperty`, and a Solid-shaped `spread`. Its `ref` fix (untracked, nested
+  arrays flattened) is kept.
+- W016's test now checks that the two reads differ, not which comes first: weft reads attributes before text.
+
 ## 7. Open questions
 
 - Keyed rows in path keys use the user's `key`. A `key` the server and the client compute differently (dates,

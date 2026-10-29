@@ -145,10 +145,11 @@ export function style(node: HTMLElement, value: any, prev?: any) {
   for (const k in value) if (value[k] !== p[k]) node.style.setProperty(k, value[k])
 }
 
+/** `ref={fn}` or `ref={[fn, …]}` (nested arrays flatten): each is called with the element, untracked. */
 export function ref(get: () => any, el: Element) {
-  const r = get()
+  const r = untrack(get)
   if (typeof r === 'function') r(el)
-  else if (Array.isArray(r)) for (const f of r) f(el)
+  else if (Array.isArray(r)) for (const f of r.flat(Infinity)) f && f(el)
 }
 
 export function mergeProps(...sources: any[]) {

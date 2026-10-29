@@ -8,7 +8,7 @@
 mod analyze;
 mod diag;
 mod emit;
-mod snippet;
+pub mod project;
 mod srcmap;
 mod transform;
 
@@ -16,6 +16,7 @@ mod transform;
 mod node;
 
 pub use diag::{Diagnostic, Edit, Fix, Severity};
+pub use project::Facts;
 
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
@@ -63,6 +64,8 @@ pub struct Output {
     /// JSON source map back to the authored file, when `source_map` is set.
     pub map: Option<String>,
     pub diagnostics: Vec<Diagnostic>,
+    /// Per-file facts for `weft check`'s project view (`project::link_w014`).
+    pub facts: Facts,
     /// Each JSX node's lowering, by authored line (`explain`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub explain: Option<Vec<emit::Explained>>,
@@ -78,7 +81,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
             .iter()
             .map(|d| Diagnostic::syntax(source, d.to_string(), d.labels.first().map(|l| l.offset() as usize)))
             .collect();
-        return Output { code: None, map: None, diagnostics, explain: None };
+        return Output { code: None, map: None, diagnostics, facts: Facts::default(), explain: None };
     }
     let mut program = parsed.program;
 
@@ -86,11 +89,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let plan = analyze::analyze(&program, semantic.scoping(), source);
     let scoping = semantic.into_scoping();
     let mut diagnostics = plan.diagnostics.clone();
+    let facts = plan.facts.clone();
     if options.check_only {
-        return Output { code: None, map: None, diagnostics, explain: None };
+        return Output { code: None, map: None, diagnostics, facts, explain: None };
     }
 
-    transform::apply(&allocator, &mut program, &scoping, &plan, source);
+    transform::apply(&allocator, &mut program, &scoping, &plan);
 
     let ssr = options.generate == "ssr";
     // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
@@ -110,10 +114,10 @@ pub fn compile(source: &str, options: &Options) -> Output {
         map: points.as_ref().map(|p| (p, source)),
     };
     match emit::emit(&printed, o) {
-        Ok(out) => Output { code: Some(out.code), map: out.map, diagnostics, explain: options.explain.then_some(out.explain) },
+        Ok(out) => Output { code: Some(out.code), map: out.map, diagnostics, facts, explain: options.explain.then_some(out.explain) },
         Err(e) => {
             diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
-            Output { code: None, map: None, diagnostics, explain: None }
+            Output { code: None, map: None, diagnostics, facts, explain: None }
         }
     }
 }

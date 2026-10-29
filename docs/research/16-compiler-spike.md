@@ -289,3 +289,75 @@ node run-app.mjs summary --name v3-ref
 
 The upstream fixture run: clone `solidjs/solid` at `02b52b5c29fb3a08b605f524b09d90455895ac67`, then `pnpm install`,
 `pnpm --filter @solidjs/babel-plugin build`, and in `packages/compiler` run `napi build --release && vitest run`.
+
+---
+
+## 9. Changelog: §6 compiler items 1–6 (2026-10-29)
+
+All on `crates/weft-compiler` unless noted. Solid's crate is still the pinned rev (`02b52b5`), unmodified, with
+`default-features = false`. No item needed a back-end change, so there is no fork. Tests: `cargo test` 30 → **44**
+(43 compile tests, plus the helper contract); `npx vitest run` in `packages/weft` 19 → **25**. v3 eval with
+`--frameworks weft`: **23/23**, **4,318 B gz** (4.2 KB), price push **1 DOM**, add one **1 DOM**. 1k-corpus compile:
+**188 ms** median, down from 193 ms **(measured)**.
+
+1. **Depend, don't fork.** Unchanged. Nothing below touched the back end.
+2. **Lockstep with Oxc.** Unchanged (0.144). This Oxc builds nodes through methods on the AST types
+   (`Expression::new_call_expression(…, &builder)`), not through the old `AstBuilder` methods. Item 5 uses that API,
+   so the next Solid bump will show any churn in `transform.rs` at compile time.
+3. **Helper-contract test** (`tests/helper_contract.rs`).
+   - It finds the pinned checkout through `cargo metadata`. It compiles every non-hydratable `__dom*` fixture in
+     babel-plugin's corpus (34 files) through `weft_compiler::compile`, in dev and prod, with weft's own options.
+     Then it checks every name imported from `weft` or `weft/dom` against the exports of `packages/weft/src`, both
+     parsed with Oxc.
+   - Its first run found **6 missing helpers**: `spread`, `addEvent`, `applyRef`, `claimElement`, `getOwner`,
+     `setAttributeNS`. `spread` was a live bug: `<div {...rest}>`, which §3.3 promises stays live, compiled to an
+     import that `weft/dom` didn't have.
+   - All six are now in `packages/weft/src/dom.ts`, tree-shaken when unused: the v3 bundle didn't grow.
+   - `spread` uses one effect for attributes, properties, class, style, events and `ref`, and a separate `insert`
+     for children.
+   - `claimElement` is the identity, because weft has no claim consumers yet.
+   - Hydratable fixtures are left out until `weft/ssr` exists. One fixture (`namespaceElements`) fails weft's Oxc
+     parse, so it can't reach the back end; the test allows at most 2 such fixtures. It also checks that the corpus
+     still imports `template`, `insert`, `effect` and dev-only `setStatefulProperty`, so a moved corpus can't pass
+     vacuously.
+4. **§3.3 leftovers.**
+   - **`children` is memoised.** In a component that reads `children` (destructured, or `props.children`), the
+     compiler adds `const _children = memo(() => props.children)` at the top of the body and turns each read into
+     `_children()`. An expression-bodied arrow gets a block body for this. Nothing is added when `children` is
+     never read. Runtime test: a child read in both branches of a toggling conditional is built once and keeps
+     its node.
+   - **Call-valued props get a diagnostic, not hoisting: new W016 (warning).** It fires on
+     `<App api={createFakeApi()} />` when the call reads nothing the compiler can see as reactive (props, list
+     items, boxes, `.value`). It doesn't fire on native attributes or on `new X()`, which the back end already
+     passes once as a static value. The evidence, all in `test/compiler-items.test.tsx`:
+     - The trap is real: `App` reading `api.id` twice got two different `api` objects.
+     - Hoisting can break code silently: `text={t('hi')}`, where `t` reads a locale box *inside the callee*,
+       must re-run, and nothing at the call site tells it apart from `createFakeApi()`.
+     - Hoisting would also run calls that the child never reads.
+     - So W016 warns with help text and no autofix. v3's `main.tsx` now follows it (`const api = createFakeApi()`).
+5. **Nodes are built directly.** `snippet.rs` is gone.
+   - Prop defaults are moved out of the destructuring pattern and rewritten by the same visitor, in declaration
+     order. Each read then gets a clone. So `({ a, b = a, c = b + 1 })` compiles to
+     `props.b === undefined ? props.a : props.b`; before, it left an unbound `a`.
+   - Reads in defaults no longer raise W001, because defaults apply on every read.
+   - The `For` element, `by` arrow, `omit`/`memo` import and props parameter are built nodes.
+   - A list item accessor keeps its original identifier as the callee, so its span is kept.
+6. **Unfinished pieces.**
+   - **Keys on fragment and conditional rows.** The compiler now finds `key` on every root a row can start with: the
+     element, both branches of `?:`, the right side of `&&`, and a fragment's top-level child elements. The first
+     key's expression becomes `by`, and all the key attributes are removed.
+   - Branches keyed by different expressions raise **W010** ("keyed differently"). A fragment row with no key raises
+     the usual W010.
+   - Runtime tests: a fragment row moves on reorder (`dt` keeps its node), and conditional rows keep theirs.
+   - **W014 is still per-file, with a hook for the project view** (`src/project.rs`). `Output.facts` now carries:
+     - `spreadProps`: a W014 warning's box passed as `<Component prop={box…}>`, with the component's *imported* name
+       and module specifier;
+     - `keyedProps`: component props this file renders as a keyed list, in both the `({ items })` and
+       `props.items` forms.
+   - `project::link_w014(files, resolve)` joins those facts across files and upgrades the matching warnings to
+     errors. It works for a same-file component too, so `weft check` only has to supply module resolution. Tested
+     with a two-file App/List pair (aliased import) and same-file positive and negative cases.
+   - W001's fix is still a suggestion (unchanged).
+
+Not done here: PLAN §3.5 needs a W016 row ("call-valued component prop re-runs on every read; create it once").
+That edit is left to whoever next edits PLAN, to avoid conflicts with parallel sessions.
