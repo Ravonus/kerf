@@ -62,13 +62,15 @@ export async function agentsMd(root) {
     tcodes.length ? `Test checks (\`weft check\` on \`*.test.*\` files): ${tcodes.join(', ')}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
     `Project checks: ${pcodes.join(', ')}. In the catalog but not reported yet: ${notYet.join(', ')}. \`weft docs <code>\` explains any code.`,
     '',
+    'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` from your own browser: roles, names and the live reactive graph) and run `weft test --gate`: each new test must fail on the old code (T010) and kill a mutant of the changed lines (T011); weakening a test is T020. More: `weft docs verify`.',
+    '',
     '## Commands',
     '',
     commandsPage(list),
     '',
     '## More',
     '',
-    '`weft docs <topic>` or the `docs` tool of `weft mcp`: `rules`, `props`, `lists`, `async`, `testing`, `browser`, `config`, `diagnostics`, `commands`.',
+    '`weft docs <topic>` or the `docs` tool of `weft mcp`: `rules`, `props`, `lists`, `async`, `testing`, `browser`, `verify`, `config`, `diagnostics`, `commands`.',
     '',
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))

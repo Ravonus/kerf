@@ -750,10 +750,20 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
 
   The eval harness already uses fail-before ("reference passes, buggy variant fails"). The gate makes that the rule
   for every test.
+  - **Status (2026-10-29):** built ([22](research/22-verify-loop.md)): `weft test --gate [--base <ref>]` and the MCP
+    `test_gate` tool. Tests run in scratch copies under `.weft/gate/`; the working tree is never touched. Mutation is
+    weft's own source-level mutator (Stryker's operator set) rather than StrykerJS, so every mutant goes through the
+    weft compiler like an edit. Tests-only diffs skip fail-before and mutate what the tests import. T005 blocks in
+    the gate. `evals/gate.mjs` is the exit check.
 
-**`weft browser` (CLI) = `weft mcp` browser tools: full programmatic control of the running app.**
+**`weft browser` (CLI) = `weft mcp` browser tools = `__weft__.agent` in the page: full programmatic control of the
+running app, from whatever browser the agent already has.**
 
-- Built on Playwright (as a library), as a daemon attached to `weft dev`, with named sessions.
+- **Changed (2026-10-29), no automation library:** the control surface lives in the page (weft/agent, loaded by the
+  weft() Vite plugin in dev), on the same Testing Library queries and user-event as `weft/test`. An agent whose
+  browser runs JS (Claude's browser pane, Claude in Chrome, Codex's browser) calls it directly; the CLI and MCP tools
+  reach the open tab through the dev server, which relays over Vite's own socket. With no browser at all,
+  `weft browser launch` starts a plain headless Chrome as the host page. Details: [22](research/22-verify-loop.md).
 - Commands:
   - `open <route>`
   - `act <role> <name> click|fill|press|select`
@@ -766,6 +776,10 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
   42.5 ← Cart.subtotal ← props.items`). This is the part no generic agent browser can do. Large payloads go to a file.
 - `record` turns an exploration session into a role-query test, which then has to pass the gate.
 - Every command supports `--json`. Chrome DevTools MCP stays the recommendation for performance traces.
+- **Status (2026-10-29):** built: snapshot (roles, names, refs, deltas, the named graph), act, assert, graph/set,
+  time, net (offline, latency, socket drop), record → `weft/test`, logs, overlay (Alt+Shift+G), launch/screenshot.
+  Dev builds name component and module `state`/`derived` (`Cart.total`); `defineState` boxes keep their scope names.
+  Not yet: `console`/`network` request logs beyond errors, source-mapped stacks, e2e-file recording.
 
 **One manifest, one CLI.**
 
@@ -788,7 +802,8 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
 
 **Build vs reuse.**
 
-- **Reuse:** Vitest (both lanes), Playwright, StrykerJS, fast-check, existing lint rules (re-emitted as T-codes), Zod.
+- **Reuse:** Vitest (both lanes), Testing Library + user-event (tests and the page bridge), fast-check, existing lint
+  rules (re-emitted as T-codes), Zod. Playwright and StrykerJS were dropped in Phase 1b ([22](research/22-verify-loop.md)).
 - **Build:** `render`/`flush`/`clock`, the gate, T002/T003/T006, the browser daemon with the graph overlay and
   recorder, the manifest, `weft tasks`/`run`, the P-codes, and AGENTS.md generation.
 
@@ -839,6 +854,11 @@ evals/        agent eval harness
 | **6b. warp native + device** | Tier-1 resolution table, `idiom`, `weft/device` core, generated projects, `weft device`, N-codes, split tooling. | An agent takes a shared web app to TestFlight and the Play internal track with ≤ 3 variant files. |
 | **6c. Payments** | `weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
+
+**1b status (2026-10-29):** name-keyed HMR and the 1k-component gates landed earlier (research 21, §3.7). The
+verify loop is built: the in-page agent bridge with the graph overlay, recorder, clock and network control; the
+dev-server relay, `weft browser` and the MCP browser tools; and the test gate (T010, T011, T020). The exit check is
+`node evals/gate.mjs` ([22](research/22-verify-loop.md)).
 
 Performance is gated from Phase 1 (§3.7). The v3 eval showed that efficiency, not correctness, is where frameworks
 differ.
@@ -1004,3 +1024,8 @@ Also out of v0:
   SSIMULACRA2 target, sized from layout, and always gets dimensions and a placeholder. The save-compatible swap is an
   opt-in encoder mode, because it costs bytes and one behaviour (`contextmenu` save) is still unverified
   ([15](research/15-assets.md)).
+- **Agents drive the app from their own browser** (2026-10-29). `weft browser` is not a Playwright daemon: the
+  control surface is in the page (weft/agent), built on `weft/test`'s queries and user-event, and the dev server
+  relays CLI and MCP commands to whatever tab is open. Every agent already has a browser tool; weft adds what none
+  of them can see (the named reactive graph) and the controls tests need (clock, network, recording), without a
+  second browser or an automation dependency ([22](research/22-verify-loop.md)).

@@ -109,6 +109,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let footer = (options.hmr && options.dev && !ssr && !options.hydratable)
         .then(|| hmr::apply(&allocator, &mut program, source, &options.filename))
         .flatten();
+    // Dev DOM output names its boxes and derived values for the graph (`weft browser`, the overlay).
+    let names = (options.dev && !ssr).then(|| hmr::names(&allocator, &mut program, &options.filename)).flatten();
+    let footer = match (footer, names) {
+        (Some(a), Some(b)) => Some(a + &b),
+        (a, b) => a.or(b),
+    };
     // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
     // goes through the emitter to the authored file. Each JSX node's authored line goes along by order
     // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.

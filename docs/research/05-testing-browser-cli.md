@@ -1,5 +1,8 @@
 # 05 — Testing, agent browser, project CLI
 
+**Update (2026-10-29):** §2 and §5.2 chose a Playwright daemon and §5.1 StrykerJS. Phase 1b built an in-page bridge
+any agent's browser can drive, and its own mutator, instead. See [22](22-verify-loop.md).
+
 Research date: 2026-10-28. Question: what should `weft` ship so a coding agent can (1) write component tests that
 mean something, (2) drive and inspect the running app, (3) be stopped from writing junk tests and junk scripts, and
 (4) find the project's exact commands and scope without guessing. Sources at the end of each section. Numbers from

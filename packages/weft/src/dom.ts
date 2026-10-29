@@ -12,12 +12,15 @@ export { hydrate } from './hydrate'
 
 type Mountable = Element | DocumentFragment
 
+let instances = 0
+
 /** `name`/`loc` (dev builds): the component's name and `file:line`; bindings created inside carry them. */
 export function createComponent<P>(Comp: (props: P) => any, props: P, name?: string, loc?: string) {
   if (!DEV || !name) return untrack(() => Comp(props))
-  const prev = devComponent.label
+  const prev = devComponent.label, prevId = devComponent.id
   devComponent.label = `<${name}> (${loc})`
-  try { return untrack(() => Comp(props)) } finally { devComponent.label = prev }
+  devComponent.id = ++instances // tells instances apart in the dev graph (weft/devtools)
+  try { return untrack(() => Comp(props)) } finally { devComponent.label = prev; devComponent.id = prevId }
 }
 
 export function render(code: () => any, container: Element): () => void {

@@ -8,17 +8,26 @@ import { formatHuman } from './diag.mjs'
 import { docs } from './docs.mjs'
 import { serve } from './mcp.mjs'
 import { tasks } from './tasks.mjs'
+import { formatGate, gate } from './gate.mjs'
+import { browserCommand, browserUsage } from './browser/cli.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
   check [files…]      compile in check mode; W- and P-diagnostics with fixes
+  test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
+                      [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
+  browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
   tasks               commands and project tasks
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   mcp                 MCP server on stdio: docs, check, tasks`
 
+/** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
+const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout'])
+const booleans = new Set(['gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload'])
+
 export function parse(argv) {
-  const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false }
+  const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--json') out.json = true
@@ -26,8 +35,12 @@ export function parse(argv) {
     else if (a === '--stdout') out.stdout = true
     else if (a === '--root') out.root = resolve(argv[++i] ?? '.')
     else if (a.startsWith('--root=')) out.root = resolve(a.slice(7))
-    else if (a.startsWith('--')) throw Object.assign(new Error(`unknown flag ${a}`), { code: 'E_USAGE' })
-    else out.positional.push(a)
+    else if (a.startsWith('--')) {
+      const [name, inline] = a.slice(2).split(/=(.*)/s)
+      if (valued.has(name)) out.flags[name] = inline ?? argv[++i]
+      else if (booleans.has(name) && inline === undefined) out.flags[name] = true
+      else throw Object.assign(new Error(`unknown flag ${a}`), { code: 'E_USAGE' })
+    } else out.positional.push(a)
   }
   return out
 }
@@ -46,6 +59,21 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         say(`weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
         return result.ok ? 0 : 1
       }
+      case 'test': {
+        if (!args.flags.gate) throw Object.assign(new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'), { code: 'E_USAGE' })
+        const num = name => (args.flags[name] === undefined ? undefined : Number(args.flags[name]))
+        const result = await gate(args.root, {
+          base: args.flags.base, budgetSec: num('budget'), maxMutants: num('max-mutants'), concurrency: num('concurrency'),
+          refactor: !!args.flags.refactor, mutation: !args.flags['no-mutation'], log: line => say(line),
+        })
+        if (args.json) print(result)
+        say(formatHuman(result.diagnostics))
+        say(formatGate(result))
+        say(`weft test --gate: ${result.ok ? 'pass' : 'fail'}, ${result.summary.changedTests} changed tests, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
+        return result.ok ? 0 : 1
+      }
+      case 'browser':
+        return await browserCommand(args, { print, say, io })
       case 'tasks': {
         const result = await tasks(args.root)
         if (args.json) print(result)

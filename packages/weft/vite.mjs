@@ -1,5 +1,7 @@
 // weft() for Vite 8: one filtered transform hook, so only .tsx/.jsx files cross into JS (§3.6).
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { join } from 'node:path'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
@@ -66,5 +68,79 @@ export default function weft({ dev, hydratable = false, hmr } = {}) {
       },
     },
   }
-  return [main, features]
+  return [main, features, agent()]
+}
+
+/**
+ * Dev serving only: load weft/agent (or just weft/devtools when Testing Library isn't installed) into every page, and
+ * relay `weft browser` / MCP commands to an open tab over Vite's own socket (research 22). `POST /__weft/agent`
+ * `{ cmd, args, tab? }` → the tab's result; `GET /__weft/agent` lists the tabs. The URL goes to `.weft/dev.json`.
+ */
+const ENTRY = '/@weft-agent.js'
+
+function agent() {
+  const req = createRequire(import.meta.url)
+  const can = ['@testing-library/dom', '@testing-library/user-event', 'dom-accessibility-api'].every(m => { try { req.resolve(m); return true } catch { return false } })
+  const entry = can ? 'weft/agent' : 'weft/devtools'
+  /** tab id → { client, url, title, visible, focused, seen } */
+  const tabs = new Map()
+  const pending = new Map()
+  let seq = 0
+  const pick = id => {
+    if (id) return tabs.get(id)
+    const all = [...tabs.values()]
+    return all.find(t => t.focused) ?? all.sort((a, b) => b.seen - a.seen)[0]
+  }
+  return {
+    name: 'weft:agent',
+    apply: (_, env) => env.command === 'serve' && env.mode !== 'test', // not vitest's own server
+    config: () => ({
+      // One copy of weft in the page: the app's graph and the bridge's must be the same module instance.
+      optimizeDeps: { exclude: ['weft'], include: can ? ['weft > @testing-library/dom', 'weft > @testing-library/user-event', 'weft > dom-accessibility-api'] : [] },
+    }),
+    // A virtual entry, so Vite resolves and transforms the import like any app module.
+    resolveId: id => (id === ENTRY ? ENTRY : null),
+    load: id => (id === ENTRY ? `import '${entry}'` : null),
+    transformIndexHtml: () => [{ tag: 'script', attrs: { type: 'module', src: ENTRY }, injectTo: 'head-prepend' }],
+    configureServer(server) {
+      const root = server.config.root
+      server.httpServer?.once('listening', () => {
+        const url = server.resolvedUrls?.local?.[0]
+        if (!url) return
+        try {
+          mkdirSync(join(root, '.weft'), { recursive: true })
+          writeFileSync(join(root, '.weft', 'dev.json'), `${JSON.stringify({ url, pid: process.pid, agent: can }, null, 2)}\n`)
+        } catch {}
+      })
+      server.ws.on('weft:hello', (data, client) => {
+        if (data.focused) for (const t of tabs.values()) t.focused = false
+        tabs.set(data.tab, { ...data, client, seen: Date.now() })
+      })
+      server.ws.on('weft:reply', data => {
+        const p = pending.get(data.id)
+        if (p) { pending.delete(data.id); p(data) }
+      })
+      server.ws.on('vite:ws:disconnect', (_, client) => { for (const [id, t] of tabs) if (t.client === client) tabs.delete(id) })
+      server.middlewares.use('/__weft/agent', (req, res) => {
+        const send = (status, body) => { res.statusCode = status; res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(body)) }
+        // Only the CLI and MCP (a custom header, so a web page can't send it cross-site without a preflight we refuse).
+        if (req.headers['x-weft-agent'] !== '1' || (req.headers.origin && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(req.headers.origin)))
+          return send(403, { ok: false, error: 'weft agent requests need the x-weft-agent header' })
+        const list = () => [...tabs.entries()].map(([tab, t]) => ({ tab, url: t.url, title: t.title, visible: t.visible, focused: t.focused }))
+        if (req.method === 'GET') return send(200, { ok: true, agent: can, tabs: list() })
+        let body = ''
+        req.on('data', d => { body += d })
+        req.on('end', () => {
+          let msg
+          try { msg = JSON.parse(body || '{}') } catch { return send(400, { ok: false, error: 'bad JSON' }) }
+          const tab = pick(msg.tab)
+          if (!tab) return send(200, { ok: false, code: 'E_NO_TAB', error: `no page is open on this dev server: open ${server.resolvedUrls?.local?.[0] ?? 'the app'} in your browser (or \`weft browser launch\`)`, tabs: list() })
+          const id = `${++seq}`
+          const timer = setTimeout(() => { pending.delete(id); send(200, { ok: false, code: 'E_TIMEOUT', error: `tab ${tab.tab} did not answer \`${msg.cmd}\` in time` }) }, msg.timeout ?? 30_000)
+          pending.set(id, data => { clearTimeout(timer); send(200, data) })
+          tab.client.send('weft:cmd', { id, tab: tab.tab, cmd: msg.cmd, args: msg.args ?? {} })
+        })
+      })
+    },
+  }
 }
