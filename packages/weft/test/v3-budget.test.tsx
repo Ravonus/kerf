@@ -46,6 +46,7 @@ test('identity-breaking spread (v3 Sonnet habit): still 1 DOM mutation, but ever
 // The same app with the cart in a defineState scope whose rows read one entry each (`lines.get(id)`).
 import { App as ScopeApp } from './fixtures/v3-scope/App'
 
+// The reference reads entries with `cart.get(p.id)` since W017; before, its `cart[p.id]` rows re-ran 452 times.
 test('add one, cart in a scope with keyed reads: 1 DOM mutation per changed row, no 150-row re-run', async () => {
   const ref = await start(App)
   const before = await touches(() => ref.user.click(screen.getByRole('button', { name: 'Add Item 007' })))
@@ -54,7 +55,7 @@ test('add one, cart in a scope with keyed reads: 1 DOM mutation per changed row,
   const after = await touches(() => user.click(screen.getByRole('button', { name: 'Add Item 007' })))
   console.log(`add one: reference ${before.mutations} DOM · ${before.runs} re-runs; scope + get() ${after.mutations} DOM · ${after.runs} re-runs`)
   expect(screen.getByRole('button', { name: 'Cart (1)' })).toBeTruthy()
-  expect(before.runs).toBeGreaterThan(150)
+  expect(before.runs).toBeLessThanOrEqual(12)
   await expect(() => user.click(screen.getByRole('button', { name: 'Add Item 008' }))).toTouchAtMost(3, { runs: 12 })
 })
 

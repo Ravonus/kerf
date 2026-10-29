@@ -11,6 +11,7 @@
   ],
   "exports": {
     ".": "./src/index.ts",
+    "./jsx-runtime": "./src/jsx-runtime.ts",
     "./dom": "./src/dom.ts",
     "./ssr": "./src/ssr.ts",
     "./head": "./src/head-client.ts",
@@ -20,6 +21,8 @@
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
     "./hmr": "./src/hmr.ts",
+    "./devtools": "./src/devtools.ts",
+    "./agent": "./src/agent.ts",
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"
   },
@@ -35,9 +38,15 @@
     "vitest": ">=4"
   },
   "peerDependenciesMeta": {
-    "@testing-library/dom": { "optional": true },
-    "@testing-library/user-event": { "optional": true },
-    "vitest": { "optional": true }
+    "@testing-library/dom": {
+      "optional": true
+    },
+    "@testing-library/user-event": {
+      "optional": true
+    },
+    "vitest": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",
@@ -47,5 +56,8 @@
     "vite": "8.3.5",
     "vitest": "5.0.5",
     "zod": "4.6.7"
+  },
+  "dependencies": {
+    "dom-accessibility-api": "0.5.16"
   }
 }

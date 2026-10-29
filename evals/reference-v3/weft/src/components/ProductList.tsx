@@ -1,11 +1,11 @@
-import { derived } from 'weft'
+import { derived, type State } from 'weft'
 import type { Category, Product } from '../api'
 import type { Cart } from '../App'
 import { ProductRow } from './ProductRow'
 
 export type Filters = { search: string; category: 'all' | Category; sort: 'name' | 'price-asc' | 'price-desc' }
 
-type Props = { products: Product[]; cart: Cart; filters: Filters; onFilters: (f: Filters) => void; onAdd: (id: string) => void }
+type Props = { products: Product[]; cart: State<Cart>; filters: Filters; onFilters: (f: Filters) => void; onAdd: (id: string) => void }
 
 export function ProductList({ products, cart, filters, onFilters, onAdd }: Props) {
   const shown = derived(() => {
@@ -26,7 +26,7 @@ export function ProductList({ products, cart, filters, onFilters, onAdd }: Props
       </select></label>
       <p data-testid="product-count">{shown.value.length === 1 ? '1 product' : `${shown.value.length} products`}</p>
       <ul aria-label="Products">
-        {shown.value.map(p => <ProductRow key={p.id} product={p} left={p.stock - (cart[p.id]?.qty ?? 0)} onAdd={onAdd} />)}
+        {shown.value.map(p => <ProductRow key={p.id} product={p} left={p.stock - (cart.get(p.id)?.qty ?? 0)} onAdd={onAdd} />)}
       </ul>
     </section>
   )

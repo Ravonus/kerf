@@ -252,8 +252,8 @@ expect.extend({
 })
 
 declare module 'vitest' {
-  interface Assertion<T = any> {
-    toTouchAtMost(mutations: number, budget?: { runs?: number }): Promise<T>
+  interface Assertion<R, T> {
+    toTouchAtMost(mutations: number, budget?: { runs?: number }): Promise<void>
   }
   interface AsymmetricMatchersContaining {
     toTouchAtMost(mutations: number, budget?: { runs?: number }): void

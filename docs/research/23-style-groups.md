@@ -372,7 +372,8 @@ marks the row, while the group axis names the row's state on the row.
 **Same look.** In a real browser (Chromium, warp.css loaded), the two builds compute the same value for 34 properties
 on every element in the catalogue, with a field focused, after adding items, and in the cart with the price trend both
 down and up. This was re-run after every fix in 6.4. The one difference is the pressed tab, where the hand CSS is the
-broken one: weft's client writes `aria-pressed=""` for `true`, so `.tab[aria-pressed="true"]` never matches (6.7).
+broken one: weft's client wrote `aria-pressed=""` for `true` when this was measured, so `.tab[aria-pressed="true"]`
+never matched (6.7, since fixed).
 `:hover` and `:focus-visible` don't fire under automation, so those two rules were compared by their declarations.
 
 **Tests.** Both shops pass the hidden suite, **23/23**. `packages/weft/test/style.test.tsx` (14 tests) covers the
@@ -507,10 +508,11 @@ Things to carry into step 2:
 
 ### 6.7 Found along the way
 
-- **weft writes boolean `true` as an empty attribute** (`aria-pressed=""` on the client; a bare `aria-pressed` from
-  SSR). `aria-pressed=""` isn't valid ARIA, and `[aria-pressed="true"]` never matches it. Groups sidestep this by
-  lowering ARIA states to `"true"`/`"false"` strings on both sides. The general fix (serialize `aria-*` booleans) is
-  for the runtime and the SSR back end, not this spike.
+- **weft wrote boolean `true` as an empty attribute** (`aria-pressed=""` on the client; a bare `aria-pressed` from
+  SSR). `aria-pressed=""` isn't valid ARIA, and `[aria-pressed="true"]` never matches it, which is the hand shop's one
+  computed-style difference in 6.2. The v4 eval branch (PR #17) fixed it in weft/dom and the SSR back end: `aria-*`
+  booleans are now the words. Groups still lower an ARIA state to `"true"`/`"false"`, since a state's value may be any
+  truthy expression and a static one becomes plain template text.
 - **With tagged parts, `@scope` needs `:not([data-part])` in its prelude and its bound**, or a part becomes its own
   scope root and stops its own group's rules. Bare parts (the default) don't have this problem.
 - **brotli rewards repetition, not deduplication.** Every attempt to share blocks across groups made the minified CSS

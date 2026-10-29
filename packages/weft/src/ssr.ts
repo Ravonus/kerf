@@ -139,9 +139,13 @@ export function escape(s: string, attr?: boolean): string {
 
 const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for' }
 
-/** ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. */
+/**
+ * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. ARIA
+ * attributes write booleans as the words (`aria-pressed="false"`), as weft/dom does.
+ */
 export function attr(name: string, value: any): string {
   name = NAMES[name] ?? name
+  if (typeof value === 'boolean' && name.startsWith('aria-')) value = String(value)
   if (name === 'class') value = classes(value)
   else if (name === 'style') value = styles(value)
   if (value == null || value === false || value === '' && (name === 'class' || name === 'style')) return ''

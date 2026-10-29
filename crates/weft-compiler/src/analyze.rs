@@ -1,5 +1,5 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014, W015, W016; the weft/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
+//! W010, W013, W014, W015, W016, W017, W018; the weft/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
 //! facts `weft check`'s project view joins across files (`project`).
 
 use std::collections::{HashMap, HashSet};
@@ -257,6 +257,35 @@ struct CompCtx {
     /// The body-level `const x = …` being visited, for W001's suggested fix.
     body_decl: Option<Span>,
     reported_decls: HashSet<SpanKey>,
+    /// W017 in the component's own reactive positions (JSX holes and attributes, `derived`), by read span.
+    entries: Vec<EntryHit>,
+    /// W018: body-level `const x = untrack(() => …)` snapshots of reactive values.
+    snapshots: Vec<Snapshot>,
+}
+
+/// `box.value[k]` read in a component's reactive position, `k` reading one of its props.
+struct EntryHit {
+    read: Span,
+    /// `box.value`
+    whole: Span,
+    /// `box` (an identifier, or `props.box`)
+    boxed: Span,
+    /// A box declared in this file (the `.get` autofix is safe), not one that arrived as a prop.
+    local: bool,
+    index: Span,
+}
+
+/// `const name = untrack(() => …)` in a component body, and where `name` is read afterwards.
+struct Snapshot {
+    sym: SymbolId,
+    name: String,
+    /// The `untrack` callee, for the suggested fix.
+    callee: Span,
+    call: Span,
+    /// Reads in the component's JSX (outside handlers).
+    jsx: Vec<Span>,
+    /// Read anywhere else (a handler, `watch`, another declaration): then it may be a deliberate snapshot.
+    other: bool,
 }
 
 struct Analyzer<'s> {
@@ -311,6 +340,8 @@ impl<'s> Analyzer<'s> {
             state_arg: None,
             body_decl: None,
             reported_decls: HashSet::new(),
+            entries: Vec::new(),
+            snapshots: Vec::new(),
         };
         let text = self.text(span);
         let props_name = if text.contains("props") { "$props" } else { "props" }.to_string();
@@ -329,7 +360,93 @@ impl<'s> Analyzer<'s> {
         }
         self.comps.push(ctx);
         f(self);
-        self.comps.pop();
+        let ctx = self.comps.pop().unwrap();
+        self.component_entry_diagnostics(&ctx);
+        self.snapshot_diagnostics(&ctx);
+    }
+
+    /// W017 outside a list: a component's JSX or `derived` reads `box.value[k]` where `k` comes from its props
+    /// (`live.value[stock.id]` in a row component). Each instance depends on the whole box, so one write re-runs
+    /// every instance. One diagnostic per box per component; the autofix rewrites every such read to `box.get(k)`.
+    fn scan_component_entries(&mut self, e: &Expression<'_>, depth: i32) {
+        let Some(ctx) = self.comps.last() else { return };
+        let mut scan = ComponentEntryReads { a: self, ctx, depth, found: Vec::new() };
+        scan.visit_expression(e);
+        let found = scan.found;
+        let ctx = self.comps.last_mut().unwrap();
+        for hit in found {
+            if !ctx.entries.iter().any(|h| h.read == hit.read) {
+                ctx.entries.push(hit);
+            }
+        }
+    }
+
+    fn component_entry_diagnostics(&mut self, ctx: &CompCtx) {
+        let comp = ctx.name.clone().unwrap_or_else(|| "this component".into());
+        let mut seen: Vec<&str> = Vec::new();
+        for hit in &ctx.entries {
+            let whole = self.text(hit.whole);
+            if seen.contains(&whole) {
+                continue;
+            }
+            seen.push(whole);
+            let (read, name, index) = (self.text(hit.read), self.text(hit.boxed), self.text(hit.index));
+            let help = if hit.local {
+                format!("Read `{name}.get({index})`: it re-runs only when this entry changes (`Object.is`).")
+            } else {
+                format!(
+                    "Read `{name}.get({index})` (the `{name}` prop is the box, typed `State<…>`): it re-runs only when \
+                     this entry changes (`Object.is`)."
+                )
+            };
+            let edits = ctx
+                .entries
+                .iter()
+                .filter(|h| self.text(h.whole) == whole)
+                .map(|h| Edit { start: h.read.start, end: h.read.end, text: format!("{}.get({})", self.text(h.boxed), self.text(h.index)) })
+                .collect();
+            let d = Diagnostic::new(
+                self.source,
+                "W017",
+                Severity::Warning,
+                (hit.read.start, hit.read.end),
+                format!(
+                    "`{read}` reads one entry of the whole `{whole}`, so any change to `{name}` re-runs it in every \
+                     `{comp}` (every row, in a list), not just the one whose entry changed."
+                ),
+                help,
+            )
+            .with_fix(Fix { description: format!("Read the entry with `{name}.get(…)`"), safe: hit.local, edits });
+            self.plan.diagnostics.push(d);
+        }
+    }
+
+    /// W018: `const quote = untrack(() => live.get(id))` in a component body, read only by its JSX: the page shows
+    /// the setup-time value and never updates. Reads anywhere else (a handler, a `watch`) suggest a deliberate
+    /// snapshot and keep it quiet.
+    fn snapshot_diagnostics(&mut self, ctx: &CompCtx) {
+        for s in ctx.snapshots.iter().filter(|s| !s.jsx.is_empty() && !s.other) {
+            let name = &s.name;
+            let call = self.text(s.call);
+            let mut edits = vec![Edit { start: s.callee.start, end: s.callee.end, text: "derived".into() }];
+            edits.extend(s.jsx.iter().map(|r| Edit { start: r.end, end: r.end, text: ".value".into() }));
+            let d = Diagnostic::new(
+                self.source,
+                "W018",
+                Severity::Warning,
+                (s.call.start, s.call.end),
+                format!(
+                    "`{name}` is an untracked snapshot (`{call}`) that only the JSX reads: it shows the value from \
+                     setup and never updates."
+                ),
+                format!(
+                    "To follow changes, make it `derived(() => …)` and render `{name}.value`. Keep `untrack` only \
+                     for a value that must stay fixed."
+                ),
+            )
+            .with_fix(Fix { description: format!("Make `{name}` derived (then read it with `.value`)"), safe: false, edits });
+            self.plan.diagnostics.push(d);
+        }
     }
 
     fn destructure_props(&mut self, obj: &ObjectPattern<'_>, props: &str, path: &[String], ctx: &mut CompCtx) {
@@ -611,6 +728,7 @@ impl<'s> Analyzer<'s> {
                 self.plan.diagnostics.push(d);
             }
         }
+        self.entry_reads(cb, &plan.item_syms);
         if let Expression::StaticMemberExpression(m) = &call.callee
             && let Some((root, member)) = chain_root_member(&m.object)
             && let Some(sym) = symbol_of(self.scoping, root)
@@ -619,6 +737,66 @@ impl<'s> Analyzer<'s> {
             self.keyed_prop(sym, member, call.span);
         }
         self.plan.lists.insert(key(call.span), plan);
+    }
+
+    /// W017: `cart[p.id]` or `cart.value[p.id]` in a row reads one entry of a whole object, so every write to it
+    /// re-runs every row. `box.get(key)` re-runs only the row whose entry changed (`Object.is`). A box read gets the
+    /// safe autofix; a prop needs the parent to pass the box, which the compiler can't do from here.
+    fn entry_reads(&mut self, cb: &Expression<'_>, items: &[SymbolId]) {
+        let mut reads = EntryReads { a: self, items, depth: 0, child: None, found: Vec::new() };
+        reads.visit_expression(cb);
+        let found = reads.found;
+        let mut seen: Vec<String> = Vec::new();
+        for hit in &found {
+            let whole = self.text(hit.whole).to_string();
+            if seen.contains(&whole) {
+                continue;
+            }
+            seen.push(whole.clone());
+            let read = self.text(hit.read);
+            let index_text = self.text(hit.index);
+            let name = hit.boxed.map(|b| self.text(b)).unwrap_or_else(|| whole.rsplit('.').next().unwrap_or(&whole));
+            // Passed straight to a child component (`<Row live={live.value[s.id]} />`): the child's reads of that
+            // prop are what re-run, so say where the entry should be read.
+            let child = found.iter().filter(|h| self.text(h.whole) == whole).find_map(|h| h.child.as_ref());
+            let fix = match (hit.boxed, child) {
+                (Some(_), Some((comp, prop))) => format!(
+                    "Pass the entry with `{prop}={{{name}.get({index_text})}}`, or pass the box (`{name}={{{name}}}`, \
+                     typed `State<…>`) and read `{name}.get(…)` in `<{comp}>`: a row then re-runs only when its own \
+                     entry changes."
+                ),
+                (Some(_), None) => format!("Read `{name}.get({index_text})`."),
+                (None, Some((comp, _))) => format!(
+                    "Pass the box instead of its value (`{name}={{{name}}}`, typed `State<…>`) and read \
+                     `{name}.get({index_text})` in `<{comp}>`: a row then re-runs only when its own entry changes."
+                ),
+                (None, None) => format!(
+                    "Pass the box instead of its value (`{name}={{{name}}}`, typed `State<…>`) and read \
+                     `{name}.get({index_text})`: a row then re-runs only when its own entry changes."
+                ),
+            };
+            let mut d = Diagnostic::new(
+                self.source,
+                "W017",
+                Severity::Warning,
+                (hit.read.start, hit.read.end),
+                format!(
+                    "`{read}` reads one entry of the whole `{whole}` in every row, so any change to `{whole}` re-runs \
+                     every row, not just the row whose entry changed."
+                ),
+                fix,
+            );
+            if hit.boxed.is_some() {
+                let edits = found
+                    .iter()
+                    .filter(|h| self.text(h.whole) == whole)
+                    .map(|h| Edit { start: h.read.start, end: h.read.end, text: format!("{name}.get({})", self.text(h.index)) })
+                    .collect();
+                // A box that arrived as a prop is only probably a box (`.value` on a prop), so the edit is a suggestion.
+                d = d.with_fix(Fix { description: format!("Read entries with `{name}.get(…)`"), safe: hit.local, edits });
+            }
+            self.plan.diagnostics.push(d);
+        }
     }
 
     /// Facts for the project view: a list keyed over a prop of an enclosing component (`items.map` or
@@ -650,7 +828,7 @@ impl<'s> Analyzer<'s> {
         }
         for (span, ctx) in std::mem::take(&mut self.spreads) {
             let listed = ctx.and_then(|s| self.list_sources.iter().find(|(sym, _)| *sym == s));
-            let help = "Keep items stable and read the changing field live in the row (`prices.value[p.id]`), \
+            let help = "Keep items stable and read the changing field live in the row (`prices.get(p.id)`), \
                         or replace only the item that changed (`p.id === id ? { ...p, price } : p`).";
             let d = match (listed, ctx) {
                 (Some((sym, list)), _) => {
@@ -711,6 +889,18 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
         }
         let derives = matches!(init, Some(Expression::CallExpression(c)) if callee_name(c) == Some("derived"));
         let body_level = self.body_level().is_some();
+        if body_level
+            && let (Some((n, Some(sym))), Some(Expression::CallExpression(call))) = (&name, init)
+            && callee_name(call) == Some("untrack")
+            && let Some(arg) = call.arguments.first().and_then(|a| a.as_expression())
+        {
+            let mut reactive = Reactive { a: self, found: false };
+            reactive.visit_expression(arg);
+            if reactive.found {
+                let snap = Snapshot { sym: *sym, name: n.clone(), callee: call.callee.span(), call: call.span, jsx: Vec::new(), other: false };
+                self.comps.last_mut().unwrap().snapshots.push(snap);
+            }
+        }
         let prev_decl = self.comps.last().and_then(|c| c.body_decl);
         if body_level && let (Some(c), Some(init)) = (self.comps.last_mut(), &it.init) {
             c.body_decl = Some(init.span());
@@ -778,6 +968,15 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
         self.jsx_depth -= 1;
     }
 
+    fn visit_jsx_expression_container(&mut self, it: &JSXExpressionContainer<'a>) {
+        if self.comps.last().is_some_and(|c| c.fn_depth == 0)
+            && let Some(e) = it.expression.as_expression()
+        {
+            self.scan_component_entries(e, 0);
+        }
+        walk::walk_jsx_expression_container(self, it);
+    }
+
     fn visit_jsx_child(&mut self, it: &JSXChild<'a>) {
         if let JSXChild::ExpressionContainer(c) = it
             && let Some(Expression::Identifier(id)) = c.expression.as_expression()
@@ -826,6 +1025,15 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         let Some(sym) = symbol_of(self.scoping, it) else { return };
         self.ref_spans.entry(sym).or_default().push(it.span);
+        if let Some(c) = self.comps.last_mut()
+            && let Some(snap) = c.snapshots.iter_mut().find(|s| s.sym == sym)
+        {
+            if c.jsx_depth > 0 && c.fn_depth == 0 {
+                snap.jsx.push(it.span);
+            } else {
+                snap.other = true;
+            }
+        }
         if self.body_level().is_some_and(|c| c.prop_syms.contains(&sym)) {
             self.report_body_read(it.span, it.name.as_str());
         }
@@ -899,6 +1107,13 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
                 self.spreads.push((it.span, self.spread_ctx.last().copied().flatten()));
             }
         }
+        if callee_name(it) == Some("derived")
+            && self.body_level().is_some()
+            && let Some(arg) = it.arguments.first().and_then(|a| a.as_expression())
+        {
+            // The callback's own body is the reactive position: depth -1 so entering it lands on 0.
+            self.scan_component_entries(arg, -1);
+        }
         let state_call = callee_name(it) == Some("state") && self.body_level().is_some();
         if state_call && let Some(c) = self.comps.last_mut() {
             c.state_arg = Some(it.span);
@@ -944,6 +1159,175 @@ impl<'a, 'x, 's> Visit<'a> for Reactive<'x, 's> {
             self.found = true;
         }
         walk::walk_static_member_expression(self, it);
+    }
+}
+
+/// W017 candidates in a row callback (not in its handlers or other nested functions): `whole[…item…]` where `whole`
+/// is a prop (`cart`, `props.cart`), `box.value`, or `prop.value` (a box that arrived as a prop).
+struct EntryReads<'x, 's> {
+    a: &'x Analyzer<'s>,
+    items: &'x [SymbolId],
+    depth: u32,
+    /// The child component and prop whose value is being visited (`<Row live={…} />`).
+    child: Option<(String, String)>,
+    found: Vec<RowEntry>,
+}
+
+struct RowEntry {
+    read: Span,
+    /// `whole` in `whole[…]`
+    whole: Span,
+    /// The box identifier, for the `.get` form.
+    boxed: Option<Span>,
+    /// The box is declared in this file (the autofix is safe).
+    local: bool,
+    index: Span,
+    child: Option<(String, String)>,
+}
+
+impl<'x, 's> EntryReads<'x, 's> {
+    fn is_prop(&self, id: &IdentifierReference<'_>) -> bool {
+        symbol_of(self.a.scoping, id).is_some_and(|s| self.a.comps.iter().any(|c| c.prop_syms.contains(&s)))
+    }
+    fn reads_item(&self, e: &Expression<'_>) -> bool {
+        reads_any(self.a.scoping, e, |s| self.items.contains(&s))
+    }
+}
+
+/// Whether `e` reads an identifier whose symbol passes `hit`.
+fn reads_any(scoping: &Scoping, e: &Expression<'_>, hit: impl Fn(SymbolId) -> bool) -> bool {
+    struct Uses<'z, F> {
+        scoping: &'z Scoping,
+        hit: F,
+        found: bool,
+    }
+    impl<'a, 'z, F: Fn(SymbolId) -> bool> Visit<'a> for Uses<'z, F> {
+        fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
+            self.found |= symbol_of(self.scoping, it).is_some_and(&self.hit);
+        }
+    }
+    let mut u = Uses { scoping, hit, found: false };
+    u.visit_expression(e);
+    u.found
+}
+
+impl<'a, 'x, 's> Visit<'a> for EntryReads<'x, 's> {
+    fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
+        if self.depth == 1 && self.reads_item(&it.expression) {
+            let whole = match it.object.without_parentheses() {
+                Expression::Identifier(id) if self.is_prop(id) => Some((id.span, None, false)),
+                Expression::StaticMemberExpression(m) => match &m.object {
+                    Expression::Identifier(id)
+                        if m.property.name == "value"
+                            && symbol_of(self.a.scoping, id).is_some_and(|s| self.a.boxes.contains(&s)) =>
+                    {
+                        Some((m.span, Some(id.span), true))
+                    }
+                    Expression::Identifier(id) if m.property.name == "value" && self.is_prop(id) => {
+                        Some((m.span, Some(id.span), false))
+                    }
+                    Expression::Identifier(id)
+                        if symbol_of(self.a.scoping, id).is_some_and(|s| self.a.comps.iter().any(|c| c.props_param == Some(s))) =>
+                    {
+                        Some((m.span, None, false))
+                    }
+                    _ => None,
+                },
+                _ => None,
+            };
+            if let Some((whole, boxed, local)) = whole {
+                let child = self.child.clone();
+                self.found.push(RowEntry { read: it.span, whole, boxed, local, index: it.expression.span(), child });
+            }
+        }
+        walk::walk_computed_member_expression(self, it);
+    }
+    fn visit_jsx_opening_element(&mut self, it: &JSXOpeningElement<'a>) {
+        let intrinsic = matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
+        if intrinsic {
+            return walk::walk_jsx_opening_element(self, it);
+        }
+        self.visit_jsx_element_name(&it.name);
+        let component = jsx_name(&it.name);
+        for attr in &it.attributes {
+            let prev = self.child.take();
+            if let JSXAttributeItem::Attribute(a) = attr
+                && let JSXAttributeName::Identifier(n) = &a.name
+            {
+                self.child = Some((component.clone(), n.name.to_string()));
+            }
+            self.visit_jsx_attribute_item(attr);
+            self.child = prev;
+        }
+    }
+    fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
+        self.depth += 1;
+        walk::walk_function(self, it, flags);
+        self.depth -= 1;
+    }
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        self.depth += 1;
+        walk::walk_arrow_function_expression(self, it);
+        self.depth -= 1;
+    }
+}
+
+/// W017 in a component's own reactive positions (a JSX hole or attribute, a `derived` body), outside nested
+/// functions: `box.value[k]` or `prop.value[k]` (also `props.box.value[k]`) where `k` reads another of its props.
+/// Box-keyed reads (`views.value[tab.value]`) and reads in callbacks (`.map`, `.filter`, handlers) are left alone:
+/// they run once per component, not once per instance.
+struct ComponentEntryReads<'x, 's> {
+    a: &'x Analyzer<'s>,
+    ctx: &'x CompCtx,
+    depth: i32,
+    found: Vec<EntryHit>,
+}
+
+impl<'a, 'x, 's> Visit<'a> for ComponentEntryReads<'x, 's> {
+    fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
+        if self.depth == 0
+            && let Expression::StaticMemberExpression(m) = it.object.without_parentheses()
+            && m.property.name == "value"
+        {
+            let scoping = self.a.scoping;
+            let is_prop = |id: &IdentifierReference<'_>| symbol_of(scoping, id).is_some_and(|s| self.ctx.prop_syms.contains(&s));
+            // (box span, box symbol, declared in this file)
+            let boxed = match &m.object {
+                Expression::Identifier(id) => {
+                    let sym = symbol_of(scoping, id);
+                    if sym.is_some_and(|s| self.a.boxes.contains(&s)) {
+                        Some((id.span, sym, true))
+                    } else if is_prop(id) && sym != self.ctx.props_param {
+                        Some((id.span, sym, false))
+                    } else {
+                        None
+                    }
+                }
+                Expression::StaticMemberExpression(inner) => match &inner.object {
+                    Expression::Identifier(p) if symbol_of(scoping, p).is_some() && symbol_of(scoping, p) == self.ctx.props_param => {
+                        Some((inner.span, None, false))
+                    }
+                    _ => None,
+                },
+                _ => None,
+            };
+            if let Some((span, sym, local)) = boxed
+                && reads_any(scoping, &it.expression, |s| self.ctx.prop_syms.contains(&s) && Some(s) != sym)
+            {
+                self.found.push(EntryHit { read: it.span, whole: m.span, boxed: span, local, index: it.expression.span() });
+            }
+        }
+        walk::walk_computed_member_expression(self, it);
+    }
+    fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
+        self.depth += 1;
+        walk::walk_function(self, it, flags);
+        self.depth -= 1;
+    }
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        self.depth += 1;
+        walk::walk_arrow_function_expression(self, it);
+        self.depth -= 1;
     }
 }
 

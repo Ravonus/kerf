@@ -51,7 +51,7 @@
           "aria-pressed",
           "aria-pressed"
         ],
-        "pressed": ""
+        "pressed": "true"
       }
     },
     "css": {
@@ -60,7 +60,7 @@
       "gz": 923,
       "br": 762
     },
-    "jsGz": 5388
+    "jsGz": 5471
   },
   "shop-groups": {
     "hidden": {
@@ -127,7 +127,7 @@
       "gz": 979,
       "br": 829
     },
-    "jsGz": 5287
+    "jsGz": 5373
   },
   "matrix": [
     {

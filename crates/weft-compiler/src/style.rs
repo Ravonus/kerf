@@ -374,7 +374,8 @@ impl<'a> Lower<'a, '_> {
                 });
                 use_.axes.insert(key, produced);
             } else if states.contains(&key) && !PSEUDO.contains(&key.as_str()) {
-                // ARIA states are "true"/"false" on the server and the client alike; other states are present or not.
+                // ARIA states are the words "true"/"false" for any truthy value, written as text when static; other states are
+                // present or not.
                 let aria = ARIA.contains(&key.as_str());
                 let attr = state_attr(&key);
                 match &p.value {

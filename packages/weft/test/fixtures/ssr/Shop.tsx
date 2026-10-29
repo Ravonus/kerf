@@ -22,8 +22,8 @@ export function Shop(props: { products: Product[]; cart: Cart; filters: Filters 
   return (
     <main>
       <Header tab={tab.value} count={count.value} onTab={t => (tab.value = t)} />
-      <ProductList products={props.products} cart={cart.value} filters={filters.value} onFilters={f => (filters.value = f)} onAdd={id => change(id, 1)} />
-      <CartView products={props.products} cart={cart.value} onChange={change} />
+      <ProductList products={props.products} cart={cart} filters={filters.value} onFilters={f => (filters.value = f)} onAdd={id => change(id, 1)} />
+      <CartView products={props.products} cart={cart} onChange={change} />
     </main>
   )
 }

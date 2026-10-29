@@ -1,0 +1,68 @@
+{
+  "weft/t1": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 7,
+      "passed": 7
+    }
+  },
+  "weft/t2": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 10,
+      "passed": 10
+    }
+  },
+  "weft/t3": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      },
+      "t3": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 1,
+      "tests": 14,
+      "passed": 14
+    }
+  }
+}
