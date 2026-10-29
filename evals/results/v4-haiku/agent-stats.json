@@ -1,0 +1,32 @@
+{
+  "react/t1": {
+    "tools": 7,
+    "ms": 66394,
+    "tokens": 73963
+  },
+  "react/t2": {
+    "tools": 10,
+    "ms": 116926,
+    "tokens": 85441
+  },
+  "react/t3": {
+    "tools": 14,
+    "ms": 201509,
+    "tokens": 105567
+  },
+  "react/t4": {
+    "tools": 20,
+    "ms": 320769,
+    "tokens": 125988
+  },
+  "react/t5": {
+    "tools": 22,
+    "ms": 387894,
+    "tokens": 140648
+  },
+  "react/t6": {
+    "tools": 27,
+    "ms": 514128,
+    "tokens": 164328
+  }
+}

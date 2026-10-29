@@ -65,6 +65,18 @@ export const catalog = [
     example: "import { state } from 'weft'\nexport function A() { const n = state(0); return <p>{n}</p> }",
   },
   {
+    code: 'W017', severity: 'warning', by: 'compiler',
+    catches: 'One entry of a whole object read per row: `cart[p.id]` / `cart.value[p.id]` in a keyed-list row (or passed to its child as a prop), or `box.value[prop]` in a component\'s JSX or `derived` (a row component). Every change re-runs every row',
+    fix: 'Read the entry from the box: `cart.get(p.id)`; for a prop, pass the box (`cart={cart}`, `State<Cart>`) and read `.get(id)` in the child',
+    example: "export function A({ xs, cart }: any) { return <ul>{xs.map((x: any) => <li key={x.id}>{cart[x.id]}</li>)}</ul> }",
+  },
+  {
+    code: 'W018', severity: 'warning', by: 'compiler',
+    catches: '`const x = untrack(() => …reactive…)` in a component body that only the JSX reads: it renders the setup-time value and never updates',
+    fix: '`derived(() => …)` and render `x.value`; keep `untrack` only for a value that must stay fixed',
+    example: "import { untrack, type State } from 'weft'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
+  },
+  {
     code: 'W020', severity: 'error', by: 'compiler', catches: 'React-isms (W020–W029): `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, custom `useX()` hooks, dependency arrays',
     fix: '`state`, `watch`, `derived`, `ref={el}`, plain functions',
     example: "import { useState } from 'react'\nexport function A() { const [n] = useState(0); return <p>{n}</p> }",

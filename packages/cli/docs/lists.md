@@ -15,3 +15,9 @@
   ```
 
   The compiler sees this inside one file; `weft check` follows the box through props into other files.
+- **One entry per row (W017).** A row that reads `cart[p.id]` (a prop) or `cart.value[p.id]` depends on the whole
+  `cart`, so adding one item re-runs all 150 rows. Read the entry from the box: `cart.get(p.id)` re-runs only the row
+  whose entry changed (`Object.is`). For a prop, pass the box (`cart={cart}`, typed `State<Cart>`); the box form
+  has an autofix. The same holds one step further: passing `live={live.value[s.id]}` to a row component, or a row
+  component reading `live.value[stock.id]` (in JSX or `derived`), re-runs every row. Pass the box and read
+  `live.get(stock.id)` in the row.

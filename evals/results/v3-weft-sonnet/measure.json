@@ -1,0 +1,29 @@
+{
+  "weft": {
+    "probe": {
+      "add-one": {
+        "domMutations": 1,
+        "commits": 452,
+        "renderMs": 0,
+        "wallMs": 45.19
+      },
+      "price-push": {
+        "domMutations": 1,
+        "commits": 9,
+        "renderMs": 0,
+        "wallMs": 0.31
+      },
+      "type-3-chars": {
+        "domMutations": 152,
+        "commits": 15,
+        "renderMs": 0,
+        "wallMs": 14.63
+      }
+    },
+    "bundleGzBytes": 5136,
+    "srcFiles": 8,
+    "srcLines": 235,
+    "effects": 2,
+    "memos": 4
+  }
+}

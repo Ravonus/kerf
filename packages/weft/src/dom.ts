@@ -2,7 +2,7 @@
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
-import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, untrack, within, type Owner } from './index'
+import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, runMounts, untrack, within, type Owner } from './index'
 import { keys, step, under } from './keys'
 
 export { memo }
@@ -26,6 +26,7 @@ export function render(code: () => any, container: Element): () => void {
     dispose = d
     insert(container, code())
   }, null)
+  runMounts()
   return () => {
     dispose()
     container.textContent = ''
@@ -118,7 +119,9 @@ export function insert(parent: Mountable, value: any, marker?: Node | null) {
 
 // ---- attributes and properties ---------------------------------------------------------------------------------
 
+/** `null`/`false` remove the attribute and `true` writes it empty, except ARIA's, whose states are the words `true`/`false`. */
 export function setAttribute(node: Element, name: string, value: any) {
+  if (typeof value === 'boolean' && name.startsWith('aria-')) value = String(value)
   if (value == null || value === false) node.removeAttribute(name)
   else node.setAttribute(name, value === true ? '' : value)
 }

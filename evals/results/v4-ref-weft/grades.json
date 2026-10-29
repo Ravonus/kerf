@@ -1,0 +1,44 @@
+{
+  "weft/t6": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 6,
+        "total": 6
+      },
+      "t2": {
+        "passed": 8,
+        "total": 8
+      },
+      "t3": {
+        "passed": 8,
+        "total": 8
+      },
+      "t4": {
+        "passed": 8,
+        "total": 8
+      },
+      "t5": {
+        "passed": 6,
+        "total": 6
+      },
+      "t6": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "budget": {
+      "passed": 7,
+      "total": 7
+    },
+    "failures": [],
+    "visible": {
+      "files": 0,
+      "tests": 0,
+      "passed": 0
+    }
+  }
+}

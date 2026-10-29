@@ -1,0 +1,10 @@
+{
+  "name": "v4-weft-haiku",
+  "suite": "tasks-v4",
+  "app": "watchlist",
+  "created": "2026-10-29T22:13:28.744Z",
+  "frameworks": [
+    "weft"
+  ],
+  "workRoot": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/v4-weft-haiku"
+}
