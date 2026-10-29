@@ -79,6 +79,7 @@ export const configSchema = z.strictObject({
   environments: z.record(z.string(), z.looseObject({ url: z.string().optional() })).optional(),
   test: z
     .strictObject({
+      include: globs.optional(),
       lanes: z.array(z.enum(['fast', 'browser', 'e2e'])).optional(),
       gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional() }).optional(),
     })

@@ -181,7 +181,10 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
   is held ≥ 400 ms; refetches never flash; errors during render and failed resources reach `error(e, retry)`, errors
   in later updates don't yet ([18](research/18-ssr-and-boundaries.md)).
 - **Types:** a `JSX` namespace for weft (intrinsics, `key`, typed `currentTarget` on events, box/value assignability).
-- **HMR:** state preserved across edits by the compiler-assigned names (the solid-refresh approach).
+- **HMR:** state preserved across edits by the compiler-assigned names (the solid-refresh approach). Built
+  2026-10-29 ([21](research/21-hmr.md)): dev output registers each top-level component under `file#Name` and keys
+  body-level `state()` by name + initializer hash; a new module version re-renders only the edited components, and
+  children keep their state by position. Dev only, 0 bytes in production. Hydratable dev builds reload instead.
 - **Testing:** `weft/test` gives `render()`, `flush()`, and DOM queries for vitest.
 - **Vite plugin:** one `weft()` plugin, filtered to `.[jt]sx` so Rolldown never calls into JS for other files.
   It runs the compiler and, when present, the server-function and token transforms. Vite 8 is used everywhere;
@@ -204,10 +207,10 @@ it costs and take it, as long as it stays inside those numbers.
 | Runtime (benchmark app) | ≤ 10 KB brotli (gate), aiming for ≤ 6 KB; hello world ≤ 3 KB |
 | v3 shop app, total JS | ≤ 10 KB brotli |
 | DOM work | every eval scenario has a `toTouchAtMost(n, { runs })`; v3 price-push ≤ 1 mutation and ≤ 10 re-runs, add-one ≤ 3 |
-| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass; memory 1.5×, open ([19 §5.5](research/19-own-back-end.md)) |
+| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass ([19 §5.5](research/19-own-back-end.md)); after the memory pass 1.08× (two runs), pass; memory 1.02× (1k rows) and 1.03× (after clear), pass ([19 §5.8](research/19-own-back-end.md)) |
 | Compiler | ≤ 0.5 s per 1k files, single-threaded, diagnostics included |
 | `weft check`, 1k files | ≤ 3 s cold, ≤ 0.5 s warm (weft's own diagnostics pass) |
-| HMR, 1k components | ≤ 50 ms p95, from file write to DOM updated |
+| HMR, 1k components | ≤ 50 ms p95, from Vite's change event to DOM updated (the watcher's latency before that event is the OS's and Vite's, not weft's; reported, not gated). 2026-10-29, Vite 8 + Chromium on macOS: **13.3 ms p95, pass** (6.9 ms on a second run); file write → DOM 106 ms, ~90 ms of it the watcher ([21 §3](research/21-hmr.md)) |
 | Prod build, 1k components | ≤ 5 s (client + SSR) |
 | Prod output | no dev names in the bundle; identical bytes with dev naming on or off |
 
@@ -723,6 +726,14 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
   - T007: unapproved snapshot
   - T008: conditional `expect`
   - T009: `.only` or `.skip`
+  - **Status (2026-10-29):** T001–T009 are in `weft check` (`packages/cli/src/tests.mjs`, TypeScript parser, syntax
+    only), on the test files named by `test.include` (default `**/*.{test,spec}.*`). The rules are weft's own, not
+    re-emitted ESLint rules, so the CLI needs no ESLint. T005 is a warning, the rest are errors. T009 autofixes
+    `.only` (safe) and `.skip` (suggested); T004 suggests `flush()` for a zero-delay sleep. `weft/test` also fails a
+    test that ends with no assertion (runtime T001), and ships `screen` (role/label/text only), `user` (each action
+    ends in `flush()`) and `clock`. A test that needs a finding on purpose keeps it with
+    `// weft-allow T00x: <reason>`; the framework's own DOM-level tests do. Not built yet: `test.prop`, opt-in aria
+    snapshots.
 - **The gate** (`weft test --gate`, run by `weft check` on a diff). This is what stops junk tests: a test has to
   prove it tests something.
   1. **Fail-before:** every new or changed test must fail against the old code (T010).

@@ -86,10 +86,10 @@ it('visible follows visibilitychange', async () => {
 it('lifecycle: active, passive, hidden, frozen, terminated', async () => {
   function Life() {
     const p = lifecycle()
-    return <p data-testid="p">{p.value}</p>
+    return <p role="status">{p.value}</p>
   }
   render(Life)
-  const text = () => screen.getByTestId('p').textContent
+  const text = () => screen.getByRole('status').textContent
   expect(text()).toBe('active')
   await page.blur()
   expect(text()).toBe('passive')
@@ -112,10 +112,10 @@ it('media follows its query; queries are independent', async () => {
   function Theme() {
     const dark = media('(prefers-color-scheme: dark)', { ssr: false })
     const wide = media('(min-width: 800px)', { ssr: false })
-    return <p data-testid="t">{dark.value ? 'dark' : 'light'} {wide.value ? 'wide' : 'narrow'}</p>
+    return <p role="status">{dark.value ? 'dark' : 'light'} {wide.value ? 'wide' : 'narrow'}</p>
   }
   render(Theme)
-  const text = () => screen.getByTestId('t').textContent
+  const text = () => screen.getByRole('status').textContent
   expect(text()).toBe('light narrow')
   await page.media('(prefers-color-scheme: dark)', true)
   expect(text()).toBe('dark narrow')

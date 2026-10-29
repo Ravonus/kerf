@@ -1,5 +1,6 @@
 // Runtime checks for the compiler items in research 16 §9: children memoisation, defaults that read other props,
 // `{...rest}` on a native element (the `spread` helper), keyed fragment and conditional rows, and the W016 trap.
+// weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the compiler writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
 import { state } from 'weft'

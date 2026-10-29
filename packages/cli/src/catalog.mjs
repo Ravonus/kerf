@@ -1,8 +1,9 @@
-// The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (P001–P006),
-// research 13 §4.4 (P100–P120), plus the codes proposed in research 17 (marked `proposed`).
+// The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
+// P001–P006), research 13 §4.4 (P100–P120), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
-// compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports.
+// compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
+// come from `weft check`'s test pass (tests.mjs); their examples are test files, checked the same way.
 
 /** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'reserved', example?: string, proposed?: boolean }} Entry */
 
@@ -103,6 +104,46 @@ export const catalog = [
     code: 'W056', severity: 'warning', by: 'compiler', catches: '`watch` that copies a live value (a weft/browser value, `.live()`) into `state`',
     fix: 'Read `live.value` directly, or `derived(() => live.value)`',
     example: "import { state, watch } from 'weft'\nimport { online } from 'weft/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
+  },
+
+  {
+    code: 'T001', severity: 'error', by: 'cli', catches: 'A test with no assertion (or an `expect(x)` with no matcher): it passes as long as nothing throws. `weft/test` also fails such a test at runtime',
+    fix: 'Assert what the user sees: `expect(screen.getByRole(…)).toHaveTextContent(…)`',
+    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\ntest('renders', () => { render(Cart) })",
+  },
+  {
+    code: 'T002', severity: 'error', by: 'cli', catches: 'Tautology: `expect` on a literal, or a value compared with itself', fix: 'Assert on the output of the code under test',
+    example: "test('works', () => { expect(true).toBe(true) })",
+  },
+  {
+    code: 'T003', severity: 'error', by: 'cli', catches: 'Asserting a value the test just set (`n.value = 5; expect(n.value).toBe(5)`) without going through the UI or the graph',
+    fix: 'Act through the UI (`await user.click(…)`) or assert on what depends on the value',
+    example: "import { state } from 'weft'\ntest('count', () => { const n = state(0); n.value = 5; expect(n.value).toBe(5) })",
+  },
+  {
+    code: 'T004', severity: 'error', by: 'cli', catches: 'Sleeps, real timers or `waitFor` polling in a test', fix: '`await flush()`; for time, `clock.install()` and `await clock.advance(ms)` from weft/test',
+    example: "test('later', async () => { await new Promise(r => setTimeout(r, 100)); expect(1 + 1).toBe(2) })",
+  },
+  {
+    code: 'T005', severity: 'warning', by: 'cli', catches: 'Implementation query: `container`, CSS selectors, classes, `innerHTML`, test ids, or app state read directly in a component test',
+    fix: 'Query by role, label or text (`screen.getByRole`, `getByLabelText`, `getByText`)',
+    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\ntest('total', () => { const { container } = render(Cart); expect(container.querySelector('.total')!.textContent).toBe('$0') })",
+  },
+  {
+    code: 'T006', severity: 'error', by: 'cli', catches: 'Mocking weft (`vi.mock(\'weft\')`) or the unit under test, so the test checks the mock', fix: 'Fake the edges (network, storage) and render the real component',
+    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\nvi.mock('./Cart')\ntest('cart', () => { render(Cart); expect(document.body.textContent).toBe('') })",
+  },
+  {
+    code: 'T007', severity: 'error', by: 'cli', catches: 'Snapshot without approval: it records today\'s output and passes against it', fix: 'Assert the behavior with role/label/text queries, or approve it with `// weft-allow T007: <reason>`',
+    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\ntest('cart', () => { render(Cart); expect(document.body.innerHTML).toMatchSnapshot() })",
+  },
+  {
+    code: 'T008', severity: 'error', by: 'cli', catches: 'Conditional `expect` (`if`, `?:`, `&&`, `catch`), or a test whose only `expect`s are in a loop', fix: 'Make the condition its own assertion, then assert unconditionally; `expect(fn).toThrow()` for errors',
+    example: "test('maybe', () => { const xs = [1, 2]; if (xs.length > 5) expect(xs[0]).toBe(1) })",
+  },
+  {
+    code: 'T009', severity: 'error', by: 'cli', catches: '`.only` or `.skip` committed (also `fit`, `xit`, `xdescribe`)', fix: 'Remove `.only`; fix or delete a skipped test (`test.fails` for one meant to fail)',
+    example: "test.only('focused', () => { expect(Math.max(1, 2)).toBe(2) })",
   },
   {
     code: 'T012', severity: 'error', by: 'test', catches: 'A test ends with weft/browser listeners, intervals or subscribed values still open (checked by weft/test after each test)',

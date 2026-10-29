@@ -1,4 +1,4 @@
-import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context } from 'weft'
+import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context, getOwner } from 'weft'
 
 test('reads are consistent straight after a write', () => {
   const a = state(1)
@@ -116,4 +116,19 @@ test('context.provide: the provided subtree is disposed with its parent', () => 
     dispose()
   })
   expect(cleaned).toBe(1)
+})
+
+test('graph memory: per-key sources go with their last reader; effects that read nothing are not kept', () => {
+  const selected = state<Record<string, boolean>>({})
+  let owner: any
+  const dispose = createRoot(d => {
+    owner = getOwner()
+    for (const k of ['a', 'b']) effect(() => selected.get(k), () => {})
+    effect(() => 1, () => {}) // reads nothing: can never re-run
+    return d
+  })
+  expect((selected as any).k.size).toBe(2)
+  expect(owner.owned).toHaveLength(2)
+  dispose()
+  expect((selected as any).k.size).toBe(0)
 })
