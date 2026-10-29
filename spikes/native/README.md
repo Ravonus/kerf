@@ -11,6 +11,7 @@ js/src/runtime.ts       state/derived on alien-signals; bindings → ops; keyed 
 js/src/ops.ts           op encoder (no TextEncoder: bare engines lack it) + reference decoder
 js/src/recording-host.ts  fast-lane host: decodes ops, lays out with weft-layout as wasm, role/label queries
 ios/Sources/            Swift host: JavaScriptCore on its own queue, UIKit views, weft-layout static lib
+android/app/src/main/   Kotlin host: QuickJS-ng on a HandlerThread (C JNI bridge), framework views, weft-layout via JNI
 crates/weft-layout      Taffy flexbox behind a C ABI; the same exports build to wasm for Node
 ```
 
@@ -20,26 +21,32 @@ crates/weft-layout      Taffy flexbox behind a C ABI; the same exports build to 
 cd spikes/native/js && pnpm install && npx vitest run      # fast lane, no simulator
 cd crates/weft-layout && cargo test                         # layout crate
 spikes/native/scripts/ios.sh "iPhone 17 Pro"               # build + launch on a simulator
+spikes/native/scripts/android.sh                            # build + launch on a running arm64 emulator
 ```
 
-Compare the phone's layout with Node's: the app writes `Documents/frames.json` 2 s after launch.
+Compare the phone's layout with Node's: the app writes `frames.json` 2 s after launch (iOS: the app container's
+`Documents/`; Android: `adb shell run-as dev.weft.spike cat files/frames.json`).
 
 ```bash
 cd spikes/native/js && npx tsx ../scripts/compare-layout.mts <path to frames.json>
 ```
 
-## Results (2026-10-28, iPhone 17 Pro simulator, iOS 26.2, Debug build)
+## Results (2026-10-28, Debug builds)
 
-| Exit check (09 §12) | Result |
-|---|---|
-| v3 list screen runs on iOS | ✅ 150 products, filters, sort, search, cart, live prices on real `UIButton` / `UITextField` / `UIScrollView` |
-| Price push ≤ 1 host op | ✅ **1 op, 24 bytes**, 0.6–1.9 ms on the main thread including a full re-layout of 769 nodes. Same in the fast lane (test asserts it), with the `{...p}` update habit that cost Solid 300 DOM writes in v3 |
-| Node layout matches device within 1pt | ✅ **0 pt** max difference over all 769 nodes, when Node uses the device's leaf measurements. With its own rough text metrics Node is approximate, as designed |
-| Android | ⏳ not started (toolchain present: SDK 35–37, NDK 28, Rust Android targets) |
-| 60 Hz on a mid-range Android | ⏳ needs the Android host |
+Devices: iPhone 17 Pro simulator (iOS 26.2) and an arm64 Android 16 emulator (API 36, 1080×2400 @ 420 dpi).
 
-Other numbers: first mount is 3,369 ops / 63 KB in one batch, 57 ms on the main thread (Debug, no incremental
-layout yet). The device bundle is 4.8 KB brotli minified (runtime + app + alien-signals).
+| Exit check (09 §12) | iOS | Android |
+|---|---|---|
+| v3 list screen runs | ✅ `UIButton` / `UITextField` / `UIScrollView` | ✅ framework `Button` / `EditText` / `ScrollView` |
+| Price push ≤ 1 host op | ✅ **1 op, 24 bytes**, 0.6–1.9 ms main thread | ✅ **1 op, 24 bytes**, 1.4–2.7 ms main thread |
+| Node layout matches device within 1pt | ✅ **0 pt** over 769 nodes | ✅ **0 pt** over 769 nodes |
+| Fast typing keeps every key | ✅ (after the fix below) | ✅ `adb input text` burst |
+| 60 Hz on a mid-range Android | — | ⏳ needs a real device and a frame-timing probe |
+
+Both phones get the same op stream from the same 28 KB bundle (4.8 KB brotli minified). The engines differ
+(JavaScriptCore on iOS, QuickJS-ng on Android) and the app doesn't notice. First mount is one batch of 3,369 ops /
+63 KB: 57 ms on iOS, 328 ms on Android, where every text leaf goes through `View.measure` (no caching or
+incremental layout yet). The Android APK is 5.2 MB; 2.6 MB of it is QuickJS + weft-layout in one `.so`.
 
 ## What the spike found
 
@@ -53,13 +60,16 @@ layout yet). The device bundle is 4.8 KB brotli minified (runtime + app + alien-
    first; the device/Node comparison then caught a stale iOS build of the lib.
 3. **Bare engines are not browsers.** JavaScriptCore without WebKit has no `TextEncoder`, `structuredClone`, timers
    or `console`. The host provides timers; the runtime must not assume web APIs.
-4. **Taffy 0.15's root sizing:** a flex root with an auto size shrinks to its content, so `compute()` pins the root to
+4. **Android needed nothing new in JS.** The same bundle, op stream and echo rule worked on a different engine and
+   view system; the host was ~400 lines of Kotlin plus ~250 of C. The only host bug was load order (`Renderer` used
+   the JNI library before `JsRuntime` loaded it).
+5. **Taffy 0.15's root sizing:** a flex root with an auto size shrinks to its content, so `compute()` pins the root to
    the screen.
 
 ## Not done / next
 
-- Android host (Kotlin + JNI to weft-layout + a JS engine; Hermes or QuickJS).
-- Hermes instead of JavaScriptCore on iOS (open question in 09 §13); bytecode precompile.
+- One engine on both platforms (Hermes, or QuickJS everywhere) and bytecode precompile (09 §13).
+- Android first-mount cost: cache text measurements and lay out only dirty subtrees.
 - Incremental layout: only re-lay out dirty subtrees, and skip frame writes for unchanged views.
 - `<List>` virtualization (all 150 rows are real views today).
 - Dev socket for `weft device snapshot/act` instead of the frames file.

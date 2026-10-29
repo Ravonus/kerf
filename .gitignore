@@ -6,3 +6,9 @@ coverage/
 target/
 spikes/native/ios/build/
 spikes/native/ios/*.xcodeproj/
+spikes/native/android/third_party/
+spikes/native/android/local.properties
+spikes/native/android/.gradle/
+spikes/native/android/build/
+spikes/native/android/app/build/
+spikes/native/android/app/.cxx/

@@ -52,7 +52,29 @@ ${Object.entries(p.align).map(([k, v]) => `    pub const ${k.toUpperCase()}: u32
 }
 `
 
+const snake = k => (/^[A-Z_]+$/.test(k) ? k : k.replace(/(?<=[a-z])[A-Z]/g, c => '_' + c).toUpperCase())
+const ktObj = (name, obj) =>
+  `object ${name} {\n${Object.entries(obj).map(([k, v]) => `    const val ${snake(k)} = ${v}`).join('\n')}\n}\n`
+const kotlin = `// ${banner}
+package dev.weft.spike
+
+const val PROTOCOL_VERSION = ${p.version}
+${ktObj('Op', ops)}
+${ktObj('NodeType', p.types)}
+${ktObj('Prop', p.props)}
+${ktObj('EventKind', p.events)}
+${ktObj('LayoutKey', p.layoutKeys)}
+val propNames = mapOf(${Object.entries(p.props).map(([k, v]) => `${v} to "${k}"`).join(', ')})
+val spaceTokens = mapOf(${Object.entries(p.space).map(([k, v]) => `"${k}" to ${v}f`).join(', ')})
+val alignTokens = mapOf(${Object.entries(p.align).map(([k, v]) => `"${k}" to ${v}f`).join(', ')})
+data class TextRoleSpec(val size: Float, val weight: Int)
+val textRoles = mapOf(${Object.entries(p.text).map(([k, v]) => `"${k}" to TextRoleSpec(${v.size}f, ${v.weight})`).join(', ')})
+const val CONTROL_MIN_HEIGHT = ${p.controls.minHeight}f
+const val BUTTON_PAD_X = ${p.controls.buttonPadX}f
+`
+
+writeFileSync(join(root, 'android/app/src/main/kotlin/dev/weft/spike/Protocol.gen.kt'), kotlin)
 writeFileSync(join(root, 'js/src/protocol.gen.ts'), ts)
 writeFileSync(join(root, 'ios/Sources/Protocol.gen.swift'), swift)
 writeFileSync(join(repo, 'crates/weft-layout/src/protocol.rs'), rust)
-console.log('wrote protocol.gen.ts, Protocol.gen.swift, weft-layout/src/protocol.rs')
+console.log('wrote protocol.gen.ts, Protocol.gen.swift, Protocol.gen.kt, weft-layout/src/protocol.rs')
