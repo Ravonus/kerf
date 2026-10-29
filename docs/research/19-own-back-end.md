@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **built** (§5.1–§5.5). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **built** (§5.1–§5.6). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -373,6 +373,33 @@ item. Every number is still inside its budget.
 - A spread's `children`, and `textContent`/`innerHTML` props, aren't rendered on the server (the client writes them).
 - Source maps for lowered JSX are per line, not per expression inside a hole.
 - HMR.
+
+### 5.6 Hydration claims split out of client builds (2026-10-29)
+
+Client-only apps grew 0.2–0.7 KB with the switch (§5.5) because `tpl` and `child` carried the claim path in every
+build. Now the claiming halves live in `src/claim.ts`:
+- `htpl`: `tpl`, plus key lookup, claiming the server element, and dev mismatch warnings;
+- `hchild`: `child`, plus the hole's key scope and adopting the server's nodes;
+- `first`/`next`: stepping over server ranges.
+
+Only hydratable output imports them; client-only output imports the lean `tpl(html, svg?)` and `child`, which is
+just `insert`. The dev `file:line` place goes only to `htpl`. Client-only dev output keeps the comment above each
+template but doesn't pass the place on.
+
+| Bundle (br) | §5.5 | Now |
+|---|---|---|
+| hello world | 1.16 KB | 1.01 KB (Solid's back end: 0.99 KB) |
+| counter | 2.38 KB | 1.86 KB |
+| v3 shop app | 4.49 KB | 4.00 KB |
+| v3 shop app (defineState) | 5.17 KB | 4.68 KB |
+| benchmark app | 3.79 KB | 3.30 KB |
+| Boundary + resource | 3.71 KB | 3.23 KB |
+| v3 shop app (hydrate) | 4.70 KB | 4.71 KB |
+| runtime, every export | 5.77 KB | 5.81 KB |
+
+A test checks that client-only output imports none of `htpl`, `hchild` or `first`, and that hydratable output does.
+The helper contract checks that both sets are exported. `bind`, `spread` and `For` still read the small `keys`
+object while hydrating. The benchmark wasn't re-run: the change removes branches from `tpl` and `child` and adds none.
 
 ## 6. What PR #2 (compiler hardening) brings
 

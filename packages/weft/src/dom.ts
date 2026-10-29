@@ -6,7 +6,8 @@ import { DEV, createRoot, devComponent, effect, memo, onCleanup, state, untrack,
 import { keys, step, under } from './keys'
 
 export { memo }
-export { attr, bind, child, cls, component, css, delegate, first, next, on, spread, tpl } from './dom-next'
+export { attr, bind, child, cls, component, css, delegate, on, spread, tpl } from './dom-next'
+export { first, hchild, htpl, next } from './claim'
 export { hydrate } from './hydrate'
 
 type Mountable = Element | DocumentFragment

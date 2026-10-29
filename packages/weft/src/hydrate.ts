@@ -8,7 +8,7 @@
 // synchronous pass over the whole container.
 
 import { DEV, createRoot, rt } from './index'
-import { child } from './dom-next'
+import { hchild } from './claim'
 import { keys } from './keys'
 
 export const hydration = { misses: 0, registry: new Map<string, Element>() }
@@ -26,7 +26,7 @@ export function hydrate(code: () => any, container: Element): () => void {
   try {
     createRoot(d => {
       dispose = d
-      child(container, code, script ?? undefined, undefined, undefined, 1) // the app's nodes are those before the data script
+      hchild(container, code, script ?? undefined, undefined, undefined, 1) // the app's nodes are those before the data script
     }, null)
   } finally {
     Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
