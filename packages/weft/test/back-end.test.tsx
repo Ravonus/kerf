@@ -152,6 +152,17 @@ describe('weft back end, step 2', () => {
     expect(a.getAttribute('data-tone')).toBe('warn')
   })
 
+  it('a spread\'s children fill an element that has none, and stay live', async () => {
+    const { state } = await import('weft')
+    const rest = state<Record<string, any>>({ title: 't', children: 'first' })
+    const root = mount(() => two.Content({ get rest() { return rest.value } } as any))
+    const kids = root.querySelector('.kids')!
+    expect([kids.textContent, kids.getAttribute('title')]).toEqual(['first', 't'])
+    rest.value = { children: 'second' }
+    flush()
+    expect([kids.textContent, kids.hasAttribute('title')]).toEqual(['second', false])
+  })
+
   it('refs: a variable is assigned, a function is called', () => {
     const seen: Element[] = []
     const root = mount(() => two.Refs({ seen: el => seen.push(el) }))

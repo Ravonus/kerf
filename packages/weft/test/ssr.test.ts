@@ -184,6 +184,21 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
     r.dispose()
   })
 
+  test('textContent and innerHTML render on the server; a spread\'s children are a hole', async () => {
+    const props = () => ({ rest: { title: 'kids', children: ['one ', 'two'] } })
+    const r = roundTrip(() => twoS.Content(props()), () => twoC.Content(props()))
+    clean(r)
+    expect(r.html).toContain('<p class="text">a &lt;b> &amp; 1</p>')
+    expect(r.html).toContain('<div class="html"><i>1</i></div>')
+    expect(r.html).toMatch(/<div class="kids" title="kids">one <!--,-->two<\/div>/)
+    click('button')
+    await flush()
+    expect(document.querySelector('.text')!.textContent).toBe('a <b> & 2')
+    expect(document.querySelector('.html')!.innerHTML).toBe('<i>2</i>')
+    expect(document.querySelector('.kids')!.textContent).toBe('one two')
+    r.dispose()
+  })
+
   test('refs, <select value> over a list, SVG', async () => {
     const seen: Element[] = []
     const refs = roundTrip(() => twoS.Refs({ seen: () => {} }), () => twoC.Refs({ seen: (el: Element) => seen.push(el) }))

@@ -58,3 +58,16 @@ export function Icon() {
     </svg>
   )
 }
+
+/** Content properties and a spread's `children` (no JSX children): rendered on the server, adopted on hydration. */
+export function Content(props: { rest: Record<string, any> }) {
+  const n = state(1)
+  return (
+    <section>
+      <p class="text" textContent={`a <b> & ${n.value}`} />
+      <div class="html" innerHTML={`<i>${n.value}</i>`} />
+      <div class="kids" {...props.rest} />
+      <button onClick={() => n.value++}>+</button>
+    </section>
+  )
+}
