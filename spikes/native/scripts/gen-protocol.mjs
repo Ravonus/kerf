@@ -39,7 +39,7 @@ ${swiftEnum('LayoutKey', p.layoutKeys)}
 let spaceTokens: [String: Float] = [${Object.entries(p.space).map(([k, v]) => `"${k}": ${v}`).join(', ')}]
 let alignTokens: [String: Float] = [${Object.entries(p.align).map(([k, v]) => `"${k}": ${v}`).join(', ')}]
 let textRoles: [String: (size: Double, weight: Double)] = [${Object.entries(p.text).map(([k, v]) => `"${k}": (${v.size}, ${v.weight})`).join(', ')}]
-let controlMinHeight: Float = ${p.controls.minHeight}
+let controlMinHeight: Float = ${p.controls.minHeight.ios}
 let buttonPadX: Float = ${p.controls.buttonPadX}
 `
 
@@ -69,7 +69,7 @@ val spaceTokens = mapOf(${Object.entries(p.space).map(([k, v]) => `"${k}" to ${v
 val alignTokens = mapOf(${Object.entries(p.align).map(([k, v]) => `"${k}" to ${v}f`).join(', ')})
 data class TextRoleSpec(val size: Float, val weight: Int)
 val textRoles = mapOf(${Object.entries(p.text).map(([k, v]) => `"${k}" to TextRoleSpec(${v.size}f, ${v.weight})`).join(', ')})
-const val CONTROL_MIN_HEIGHT = ${p.controls.minHeight}f
+const val CONTROL_MIN_HEIGHT = ${p.controls.minHeight.android}f
 const val BUTTON_PAD_X = ${p.controls.buttonPadX}f
 `
 

@@ -37,19 +37,19 @@ export function App({ api }: { api: Api }) {
     cart.value = qty <= 0 ? rest : { ...rest, [id]: qty }
   }
 
+  const ready = (fn: () => number) => () => el('Stack', { grow: 1 },
+    match(() => (products.value ? 'ready' : 'loading'), { loading: () => el('Text', { text: 'Loading…' }), ready: fn }))
+
   return AppTabs({
     title: 'Shop',
     tabs: [
-      { value: 'products', text: () => 'Products', label: 'Products tab' },
-      { value: 'cart', text: () => `Cart (${count.value})`, label: 'Cart tab' },
+      { value: 'products', text: () => 'Products', label: 'Products tab',
+        body: ready(() => ProductList({ products: () => products.value!, cart: () => cart.value, filters, onAdd: id => change(id, 1) })) },
+      { value: 'cart', text: () => `Cart (${count.value})`, label: 'Cart tab',
+        body: ready(() => CartView({ products: () => products.value!, cart: () => cart.value, onChange: change })) },
     ],
     current: () => tab.value,
     onTab: v => { tab.value = v as 'products' | 'cart' },
-    body: match(() => (!products.value ? 'loading' : tab.value), {
-      loading: () => el('Text', { text: 'Loading…' }),
-      products: () => ProductList({ products: () => products.value!, cart: () => cart.value, filters, onAdd: id => change(id, 1) }),
-      cart: () => CartView({ products: () => products.value!, cart: () => cart.value, onChange: change }),
-    }),
   })
 }
 

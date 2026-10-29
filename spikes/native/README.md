@@ -13,7 +13,8 @@ js/src/recording-host.ts  fast-lane host: decodes ops, lays out with weft-layout
 ios/Sources/            Swift host: JavaScriptCore on its own queue, UIKit views, weft-layout static lib
 android/app/src/main/   Kotlin host: QuickJS-ng on a HandlerThread (C JNI bridge), framework views, weft-layout via JNI
 crates/weft-layout      Taffy flexbox behind a C ABI; the same exports build to wasm for Node
-protocol/idioms.json    which platform form each intent component takes, per OS × idiom, with the reason
+protocol/idioms.json    which platform form each intent component takes, per OS × idiom × window class, with the reason
+protocol/devices.json   25 real windows (phones, iPads, foldables, Duo, tablets, web) every test renders in
 js/src/platform.ts      resolve() / explain() over that table; platform.os is a build-time constant per bundle
 js/src/intents.ts       Choice and AppTabs: the app says what it means, the table picks the form
 ```
@@ -25,6 +26,7 @@ cd spikes/native/js && pnpm install && npx vitest run      # fast lane, no simul
 cd crates/weft-layout && cargo test                         # layout crate
 spikes/native/scripts/ios.sh "iPhone 17 Pro"               # build + launch on a simulator
 spikes/native/scripts/android.sh                            # build + launch on a running arm64 emulator
+spikes/native/scripts/fold.sh create && spikes/native/scripts/fold.sh boot   # a foldable to test postures on
 ```
 
 Compare the phone's layout with Node's: the app writes `frames.json` 2 s after launch (iOS: the app container's
@@ -96,12 +98,67 @@ app's sections") and [`protocol/idioms.json`](protocol/idioms.json) decides the 
 Verified on both devices: the category and sort choices filter (bakery → 45 products), and adding to the cart and
 switching tabs works (Bagel 10 × 1, Total $0.45, Cart (1)).
 
-Layout always runs inside the safe area. On iOS a bar that touches the bottom edge draws its background on under the
-home indicator, as `UITabBar` does; on Android the activity paints the gesture-bar inset in the bar's colour
-(edge-to-edge). Frames, and Node parity, don't change on either.
+Layout always runs inside the safe area (and on Android the system bars and display cutout). A surface touching an
+edge of it carries its background on to the screen edge there: under the home indicator, beside the Dynamic Island
+in landscape, under the status bar for a sidebar or rail. Frames, and Node parity, don't change.
 
-Gap: esbuild doesn't fold the table per OS, so each bundle carries every platform's rows. The compiler should fold
-`platform.os` and drop dead branches.
+## Every window: phones, iPads, foldables, dual screens
+
+The OS is fixed per bundle; the **window is live**. Hosts report it as `dispatch(0, 'viewport', {w, h, hinge?})` on
+start and on every change (rotation, unfolding, split screen, Stage Manager), and the app mounts on the first report,
+so a wide window never flashes the phone form. `platform.ts` turns it into a window class, with the same thresholds
+as Material's window size classes (pt and dp are close enough to share them):
+
+| class | when | iOS | Android | web |
+|---|---|---|---|---|
+| compact | width < 600 | tab bar | navigation bar | header tabs |
+| medium | 600–839 | tab bar | navigation rail | header tabs |
+| expanded | ≥ 840 | sidebar | navigation rail | header tabs |
+| dual | a fold or hinge separates the window | two panes | two panes | two panes |
+
+The same class maps to different forms per OS: an iPhone in landscape keeps its tab bar, as iOS does, while an
+Android phone in landscape (864dp) gets a rail. `dual` wins over width, under every idiom including `brand`, because
+a hinge is hardware, not style. The first two sections sit side by side, one per pane, split exactly at the hinge
+(explicit widths in weft-layout are exact, so content can't be pushed under it), and the tab control goes away. A
+vertical hinge (book posture, Surface Duo) splits into columns; a horizontal one (tabletop) into rows. App state lives
+outside the sections, so changing form keeps filters, cart and the current tab.
+
+Hinges come from Jetpack WindowManager (`FoldingFeature`, separating only). A flat fold isn't separating, so an open
+foldable is one medium or expanded pane. iOS has no hinges. The minimum touch target is per platform as well: 44pt
+on iOS, 48dp on Android.
+
+**[`protocol/devices.json`](protocol/devices.json)** lists 25 windows, each with the form it must get and where its
+numbers came from (`measured` on a simulator or emulator, `spec`, or `approx`): iPhone SE to 17 Pro Max in both
+orientations, iPad mini to iPad Pro 13 (including Split View), small 3-button-nav Android phones, Pixel 8,
+foldables folded, flat, in book and tabletop posture, Surface Duo, Android tablets, and web. `test/devices.test.ts`
+renders the app in every one and checks the form, that nothing is off screen or under a hinge, touch targets, and
+that filtering, adding and totals work. Live changes are tested too: a foldable going folded → open → book →
+tabletop → folded with state kept, rotation, and a Surface Duo split at its 33.6dp hinge. `compare-layout` also
+flags any button narrower than its label using the device's real text metrics, which caught a wrapped rail label that
+Node's approximate metrics couldn't.
+
+Verified on devices:
+- iPhone 17 Pro in portrait and landscape (the tab bar spans the full width past the Dynamic Island).
+- iPad Pro 13-inch in landscape: a sidebar, with selection moving on tap.
+- Pixel 8 emulator: rotating switches the navigation bar to a rail live, keeping state.
+- A foldable emulator (`scripts/fold.sh`) on the real WindowManager stack:
+  - open flat (851.7dp) gives the rail;
+  - half open, WindowManager reports `HALF_OPENED` at x=425.8dp and the app splits there, with products on one
+    half and the cart on the other, updating live;
+  - opening flat again returns to the rail with the cart kept.
+- Layout parity is 0pt in every form checked: phone, landscape rail and book posture.
+
+Gaps:
+- The Surface Duo is covered by the fast lane only. Stock emulator images have no Duo overlay and Microsoft's Duo
+  emulator is gone, so a dual-screen AVD reports no hinge.
+- Tabletop posture is tested in Node only.
+- A hand-made foldable AVD reports its fold as always FLAT until the Pixel 9 Pro Fold overlay is enabled
+  (`scripts/fold.sh setup`).
+- iOS doesn't rewrite `frames.json` on rotation yet, so landscape and iPad parity weren't measured.
+- androidx.window pulls in androidx.core, and the debug APK went from 5.2 to 11.9 MB. R8 in a release build should
+  strip most of it.
+- esbuild doesn't fold the idiom table per OS, so each bundle carries every platform's rows. The compiler should fold
+  `platform.os` and drop dead branches.
 
 ## Not done / next
 

@@ -43,6 +43,10 @@ fn space(a: AvailableSpace) -> f32 {
     }
 }
 
+fn bound(v: f32) -> LengthPercentageAuto {
+    if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) }
+}
+
 fn dim(v: f32) -> Dimension {
     if v.is_nan() { Dimension::auto() } else { Dimension::length(v) }
 }
@@ -129,8 +133,18 @@ impl Tree {
             }
             key::ALIGN => s.align_items = align_items(v as u32),
             key::JUSTIFY => s.justify_content = justify(v as u32),
-            key::WIDTH => s.size.width = dim(v),
-            key::HEIGHT => s.size.height = dim(v),
+            // An explicit size is exact: it neither shrinks nor grows to fit content. Panes either side of a hinge rely
+            // on this to stay out from under it.
+            key::WIDTH => {
+                s.size.width = dim(v);
+                s.min_size.width = bound(v);
+                s.max_size.width = bound(v);
+            }
+            key::HEIGHT => {
+                s.size.height = dim(v);
+                s.min_size.height = bound(v);
+                s.max_size.height = bound(v);
+            }
             key::MIN_HEIGHT => s.min_size.height = if v.is_nan() { LengthPercentageAuto::auto() } else { LengthPercentageAuto::length(v) },
             key::SCROLL => {
                 s.overflow = if v != 0.0 { Point { x: Overflow::Visible, y: Overflow::Scroll } } else { Point { x: Overflow::Visible, y: Overflow::Visible } };
@@ -410,5 +424,22 @@ mod tests {
         assert!(t.frame(103).is_none());
         t.compute(1, 100.0, 100.0);
         assert_eq!(t.frame(1).unwrap().content_h, 100.0);
+    }
+
+    #[test]
+    fn explicit_widths_are_exact_so_panes_stay_clear_of_a_hinge() {
+        let mut t = tree();
+        t.node(1, false);
+        t.set(1, key::DIRECTION, 1.0);
+        for (id, w) in [(2, 150.0), (3, 20.0), (4, 230.0)] {
+            t.node(id, false);
+            t.set(id, key::WIDTH, w);
+            t.insert(1, id, 0);
+        }
+        t.node(150, true); // wants 500 wide: must not widen pane 2 or push the hinge
+        t.insert(2, 150, 0);
+        t.compute(1, 400.0, 300.0);
+        let xw = |id| { let f = t.frame(id).unwrap(); (f.x, f.w) };
+        assert_eq!([xw(2), xw(3), xw(4)], [(0.0, 150.0), (150.0, 20.0), (170.0, 230.0)]);
     }
 }

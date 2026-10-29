@@ -25,3 +25,7 @@ targets:
         OTHER_LDFLAGS[sdk=iphoneos*]: $(SRCROOT)/../../../crates/weft-layout/target/aarch64-apple-ios/release/libweft_layout.a
         EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
         CODE_SIGNING_ALLOWED: NO
+        # iPhone and iPad, every orientation, so the app meets every window class (and iPad multitasking).
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight

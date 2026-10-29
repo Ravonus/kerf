@@ -37,6 +37,8 @@ enum Prop: UInt32 {
   case options = 13
   case selected = 14
   case surface = 15
+  case width = 16
+  case height = 17
 }
 
 enum EventKind: UInt32 {

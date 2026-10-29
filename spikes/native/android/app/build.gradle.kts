@@ -1,4 +1,5 @@
-// The Android host. Kotlin compiles through AGP 9's built-in Kotlin support; there are no library dependencies.
+// The Android host. Kotlin compiles through AGP 9's built-in Kotlin support. The one library is Jetpack WindowManager,
+// the platform's API for folds and hinges (foldables, Surface Duo).
 // Before building: scripts/fetch-quickjs.sh, cargo build of weft-layout for aarch64-linux-android, and the JS
 // bundle in js/dist (scripts/android.sh does all three).
 plugins {
@@ -27,4 +28,10 @@ android {
     sourceSets {
         getByName("main") { assets.directories.add("../../js/dist/android") }
     }
+}
+
+dependencies {
+    implementation("androidx.window:window:1.4.0")
+    implementation("androidx.window:window-java:1.4.0")
+    implementation("androidx.core:core:1.13.1") // the adapter's listener type, androidx.core.util.Consumer
 }

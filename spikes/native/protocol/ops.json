@@ -88,7 +88,9 @@
     "tone": 12,
     "options": 13,
     "selected": 14,
-    "surface": 15
+    "surface": 15,
+    "width": 16,
+    "height": 17
   },
   "events": {
     "tap": 1,
@@ -136,7 +138,12 @@
     }
   },
   "controls": {
-    "minHeight": 44,
-    "buttonPadX": 16
+    "minHeight": {
+      "web": 44,
+      "ios": 44,
+      "android": 48
+    },
+    "buttonPadX": 16,
+    "$minHeight": "Smallest touch target per platform: Apple's HIG says 44pt, Material says 48dp; warp uses 44 on web."
   }
 }

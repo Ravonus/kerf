@@ -14,6 +14,7 @@ async function render(os: OS, idiom: Idiom = 'blend') {
   const seed = seedProducts(150)
   const api: Api = { listProducts: () => Promise.resolve(structuredClone(seed)), subscribePrices: fn => { push = fn; return () => {} } }
   const host = new RecordingHost(os === 'android' ? 411 : 402, os === 'android' ? 840 : 812)
+  host.resize(host.width, host.height)
   unmount = mount(host, () => App({ api }))
   await settle()
   return host
@@ -43,7 +44,9 @@ describe('the idiom table', () => {
 
   it('explain prints every platform with its reason', () => {
     const out = explain('AppTabs')
-    expect(out).toContain('ios      system: tab-bar  ·  blend: tab-bar  ·  brand: header')
+    expect(out).toContain('  ios\n    system  compact tab-bar · medium tab-bar · expanded sidebar · dual spanned')
+    expect(out).toContain('    brand   compact header · medium header · expanded header · dual spanned')
+    expect(explain('Choice')).toContain('ios      system: segmented  ·  blend: segmented  ·  brand: warp')
     expect(out).toContain('navigation-bar: Android puts top-level sections')
   })
 })

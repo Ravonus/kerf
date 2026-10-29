@@ -55,6 +55,8 @@ final class HostController: UIViewController {
     if content.frame != frame {
       content.frame = frame
       renderer.layout()
+      // The app picks its form from this (size class, panes); it mounts on the first one. iOS has no hinges.
+      js.dispatch(0, "viewport", "{\"w\":\(frame.width),\"h\":\(frame.height)}")
     }
   }
 

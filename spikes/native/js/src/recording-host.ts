@@ -3,6 +3,7 @@
 // simulator. Text is measured with a rough metrics table, so text-dependent sizes are approximate by design.
 import { readFileSync } from 'node:fs'
 import { decode } from './ops'
+import { platform, setViewport, type Rect } from './platform'
 import { dispatch, type Host } from './runtime'
 import { Align, Controls, LayoutKey, Space, TextRole, type NodeTypeName, type PropName } from './protocol.gen'
 
@@ -36,8 +37,8 @@ export function measureLeaf(n: HNode, availW: number): [number, number] {
     const seg = Math.max(...opts.map(o => o.length)) * TextRole.body.size * 0.52 + 24
     return [Math.ceil(seg * opts.length), 32]
   }
-  if (n.type === 'Input') return [Number.isFinite(availW) && availW > 0 ? availW : 200, Controls.minHeight]
-  if (n.type === 'Button') return [Math.ceil(natural + Controls.buttonPadX * 2), Math.max(Controls.minHeight, line)]
+  if (n.type === 'Input') return [Number.isFinite(availW) && availW > 0 ? availW : 200, Controls.minHeight[platform.os]]
+  if (n.type === 'Button') return [Math.ceil(natural + Controls.buttonPadX * 2), Math.max(Controls.minHeight[platform.os], line)]
   if (!text) return [0, 0]
   if (Number.isFinite(availW) && availW > 0 && natural > availW) return [availW, line * Math.ceil(natural / availW)]
   return [Math.ceil(natural), line]
@@ -157,8 +158,18 @@ export class RecordingHost implements Host {
       case 'grow': w.wl_set(t, n.id, LayoutKey.grow, Number(v)); break
       case 'align': w.wl_set(t, n.id, LayoutKey.align, Align[v as keyof typeof Align]); break
       case 'justify': w.wl_set(t, n.id, LayoutKey.justify, Align[v as keyof typeof Align]); break
+      case 'width': w.wl_set(t, n.id, LayoutKey.width, Number(v)); break
+      case 'height': w.wl_set(t, n.id, LayoutKey.height, Number(v)); break
       case 'text': case 'role': case 'value': case 'placeholder': w.wl_dirty(t, n.id); break
     }
+  }
+
+  /** The window changed (rotation, unfold, posture): tell the app, as a host does, and lay out at the new size. */
+  resize(width: number, height: number, hinge?: Rect) {
+    this.width = width
+    this.height = height
+    setViewport({ w: width, h: height, hinge })
+    if (this.root) this.w.wl_compute(this.t, this.root, width, height)
   }
 
   /** Frame relative to the screen (scroll offsets are 0 in the fast lane). */

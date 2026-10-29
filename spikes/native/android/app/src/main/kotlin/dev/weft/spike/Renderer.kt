@@ -71,8 +71,8 @@ class Renderer(private val context: Context, val container: FrameGroup) {
     private var settingText = false
     var onEvent: ((Int, String, String) -> Unit)? = null
     var log: ((String) -> Unit)? = null
-    /** Colour of a bar sitting on the bottom edge (or null), so the activity can paint the inset below it. */
-    var onBottomBar: ((Int?) -> Unit)? = null
+    /** Surfaces (bar, rail) with their colour and absolute frame in dp, so the activity can carry them into the insets they touch. */
+    var onSurfaces: ((List<Pair<Frame, Int>>) -> Unit)? = null
 
     // ---- ops ----
 
@@ -218,7 +218,9 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             Prop.LABEL -> v.contentDescription = value as String
             Prop.DISABLED -> { v.isEnabled = value != true; v.alpha = if (value == true) 0.4f else 1f }
             Prop.TONE -> { (v as? Button)?.let { tone(it, value as String) }; lDirty(handle, id) }
-            Prop.SURFACE -> if (value == "bar") v.setBackgroundColor(BAR_COLOR)
+            Prop.SURFACE -> SURFACES[value]?.let(v::setBackgroundColor)
+            Prop.WIDTH -> lSet(handle, id, LayoutKey.WIDTH, (value as Double).toFloat())
+            Prop.HEIGHT -> lSet(handle, id, LayoutKey.HEIGHT, (value as Double).toFloat())
             Prop.OPTIONS, Prop.SELECTED -> log?.invoke("Choice ${n.id}: no native segmented control on Android; the idiom table never sends one")
             Prop.GAP -> lSet(handle, id, LayoutKey.GAP, spaceTokens[value] ?: 0f)
             Prop.PAD -> lSet(handle, id, LayoutKey.PAD, spaceTokens[value] ?: 0f)
@@ -247,8 +249,8 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             "accent" -> Triple(shape(Color.rgb(0, 122, 255), 10f), Color.WHITE, 400)
             "chip" -> Triple(shape(Color.WHITE, 8f, Color.rgb(0x79, 0x74, 0x7E), insetY = 6f), Color.rgb(0x49, 0x45, 0x4F), 500)
             "chip-on" -> Triple(shape(Color.rgb(0xE8, 0xDE, 0xF8), 8f, insetY = 6f), Color.rgb(0x1D, 0x19, 0x2B), 500)
-            "nav" -> Triple(null, Color.rgb(0x49, 0x45, 0x4F), 500)
-            "nav-on" -> Triple(shape(Color.rgb(0xE8, 0xDE, 0xF8), 16f, insetX = 12f, insetY = 6f), Color.rgb(0x1D, 0x19, 0x2B), 700)
+            "nav", "rail" -> Triple(null, Color.rgb(0x49, 0x45, 0x4F), 500)
+            "nav-on", "rail-on" -> Triple(shape(Color.rgb(0xE8, 0xDE, 0xF8), 16f, insetX = 12f, insetY = 6f), Color.rgb(0x1D, 0x19, 0x2B), 700)
             else -> Triple(shape(Color.rgb(233, 233, 235), 10f), Color.BLACK, 400)
         }
         // An InsetDrawable reports its insets as padding, which would replace the button's; keep the button's.
@@ -292,12 +294,12 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             n.frame.apply { x = out[0]; y = out[1]; w = out[2]; h = out[3]; contentW = out[4]; contentH = out[5] }
         }
         container.requestLayout()
-        // Layout runs inside the system-bar insets. A bar on the bottom edge carries its colour on under the gesture
-        // bar (edge-to-edge, like Material's NavigationBar) without changing any frame.
-        val rootH = nodes[root]?.frame?.h ?: 0f
-        onBottomBar?.invoke(nodes.values.firstOrNull { n ->
-            n.props[Prop.SURFACE] == "bar" && kotlin.math.abs(absoluteBottom(n) - rootH) < 0.5f
-        }?.let { BAR_COLOR })
+        // Layout runs inside the system-bar insets. A navigation bar or rail on an edge carries its colour on into the
+        // inset there (edge-to-edge, as Material's NavigationBar and NavigationRail do) without changing any frame.
+        onSurfaces?.invoke(nodes.values.mapNotNull { n ->
+            val color = SURFACES[n.props[Prop.SURFACE]] ?: return@mapNotNull null
+            absoluteFrame(n) to color
+        })
         fun relayout(id: Int) {
             val n = nodes[id] ?: return
             (n.content ?: n.view as? FrameGroup)?.requestLayout()
@@ -306,11 +308,11 @@ class Renderer(private val context: Context, val container: FrameGroup) {
         relayout(root)
     }
 
-    private fun absoluteBottom(n: Node): Float {
-        var y = n.frame.y + n.frame.h
+    private fun absoluteFrame(n: Node): Frame {
+        var x = n.frame.x; var y = n.frame.y
         var p = nodes[n.parent]
-        while (p != null) { y += p.frame.y - (if (p.content != null) (p.view.scrollY / density) else 0f); p = nodes[p.parent] }
-        return y
+        while (p != null) { x += p.frame.x; y += p.frame.y - (if (p.content != null) (p.view.scrollY / density) else 0f); p = nodes[p.parent] }
+        return Frame().also { it.x = x; it.y = y; it.w = n.frame.w; it.h = n.frame.h }
     }
 
     /** Frames, types, labels and natural leaf sizes as JSON (dp), for comparing against the Node layout. */
@@ -349,6 +351,7 @@ class Renderer(private val context: Context, val container: FrameGroup) {
 
     companion object {
         init { System.loadLibrary("weft") }
-        val BAR_COLOR = Color.rgb(0xF3, 0xED, 0xF7) // M3 surface container
+        /** Material 3 baseline: the navigation bar sits on surface container, the rail on surface. */
+        val SURFACES = mapOf("bar" to Color.rgb(0xF3, 0xED, 0xF7), "rail" to Color.rgb(0xFE, 0xF7, 0xFF))
     }
 }

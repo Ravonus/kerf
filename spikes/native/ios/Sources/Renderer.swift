@@ -169,11 +169,20 @@ final class Renderer {
           c.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { a in
             var a = a; a.font = UIFont.systemFont(ofSize: 15, weight: tone == "tab-on" ? .semibold : .medium); return a
           }
+        case "side", "side-on":
+          // Sidebar row (UICollectionView's sidebar list look): leading text, the selected row on a rounded fill.
+          c = .plain()
+          c.baseForegroundColor = .label
+          if tone == "side-on" { c.background.backgroundColor = .tertiarySystemFill }
+          c.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { a in
+            var a = a; a.font = UIFont.systemFont(ofSize: 17, weight: tone == "side-on" ? .semibold : .regular); return a
+          }
         default: c = .gray()
         }
         c.cornerStyle = .medium
         c.title = b.configuration?.title
         b.configuration = c
+        b.contentHorizontalAlignment = tone.hasPrefix("side") ? .leading : .center
       }
     case .options:
       if let seg = v as? UISegmentedControl {
@@ -187,22 +196,24 @@ final class Renderer {
       }
     case .selected: (v as? UISegmentedControl)?.selectedSegmentIndex = Int(value as? Double ?? -1)
     case .surface:
-      if (value as? String) == "bar" {
-        v.backgroundColor = .secondarySystemBackground
-        let line = UIView(frame: CGRect(x: 0, y: 0, width: v.bounds.width, height: 1 / UIScreen.main.scale))
-        line.backgroundColor = .separator
-        line.autoresizingMask = [.flexibleWidth]
-        v.addSubview(line)
-        let skirt = UIView() // fills the unsafe area below a bottom bar; sized in layout()
-        skirt.backgroundColor = v.backgroundColor
-        skirt.tag = Renderer.skirtTag
-        v.addSubview(skirt)
-      }
+      let surface = value as? String ?? ""
+      guard surface == "bar" || surface == "sidebar" else { break }
+      v.backgroundColor = .secondarySystemBackground
+      let skirt = UIView() // the surface's background carried into the unsafe area it borders; sized in layout()
+      skirt.backgroundColor = v.backgroundColor
+      skirt.tag = Renderer.skirtTag
+      v.insertSubview(skirt, at: 0)
+      let line = UIView() // hairline on the edge facing the content; placed in layout()
+      line.backgroundColor = .separator
+      line.tag = Renderer.skirtTag + 1
+      v.addSubview(line)
     case .gap: wl_set(tree, id, LayoutKey.gap.rawValue, spaceTokens[value as? String ?? ""] ?? 0)
     case .pad: wl_set(tree, id, LayoutKey.pad.rawValue, spaceTokens[value as? String ?? ""] ?? 0)
     case .grow: wl_set(tree, id, LayoutKey.grow.rawValue, Float(value as? Double ?? 0))
     case .align: wl_set(tree, id, LayoutKey.align.rawValue, alignTokens[value as? String ?? ""] ?? 3)
     case .justify: wl_set(tree, id, LayoutKey.justify.rawValue, alignTokens[value as? String ?? ""] ?? 0)
+    case .width: wl_set(tree, id, LayoutKey.width.rawValue, Float(value as? Double ?? .nan))
+    case .height: wl_set(tree, id, LayoutKey.height.rawValue, Float(value as? Double ?? .nan))
     }
   }
 
@@ -250,14 +261,26 @@ final class Renderer {
 
   private static let skirtTag = 0x5eed
 
-  /// Layout runs inside the safe area. A bar whose bottom edge is the container's bottom edge draws its background
-  /// on down to the screen edge, under the home indicator, the way a UITabBar does. Frames don't change.
+  /// Layout runs inside the safe area. A surface (bottom bar, sidebar) that touches an edge of it draws its background
+  /// on to the screen edge on that side: under the home indicator, beside the Dynamic Island in landscape, under the
+  /// status bar for a sidebar. That's what UITabBar and the sidebar do. Frames don't change.
   private func extendBars() {
-    let below = container.superview.map { $0.bounds.height - container.frame.maxY } ?? 0
+    guard let sup = container.superview else { return }
+    let c = container.frame, b = container.bounds
+    let out = UIEdgeInsets(top: c.minY, left: c.minX, bottom: sup.bounds.height - c.maxY, right: sup.bounds.width - c.maxX)
     for n in nodes.values {
       guard let skirt = n.view.subviews.first(where: { $0.tag == Renderer.skirtTag }) else { continue } // not viewWithTag: it searches descendants
-      let touches = abs(n.view.convert(n.view.bounds, to: container).maxY - container.bounds.height) < 0.5
-      skirt.frame = touches ? CGRect(x: 0, y: n.view.bounds.height, width: n.view.bounds.width, height: below) : .zero
+      let f = n.view.convert(n.view.bounds, to: container)
+      let near = { (a: CGFloat, b: CGFloat) in abs(a - b) < 0.5 }
+      let grow = UIEdgeInsets(top: near(f.minY, 0) ? out.top : 0, left: near(f.minX, 0) ? out.left : 0,
+                              bottom: near(f.maxY, b.height) ? out.bottom : 0, right: near(f.maxX, b.width) ? out.right : 0)
+      skirt.frame = n.view.bounds.inset(by: UIEdgeInsets(top: -grow.top, left: -grow.left, bottom: -grow.bottom, right: -grow.right))
+      if let line = n.view.subviews.first(where: { $0.tag == Renderer.skirtTag + 1 }) {
+        let px = 1 / UIScreen.main.scale
+        line.frame = (n.props[.surface] as? String) == "bar"
+          ? CGRect(x: skirt.frame.minX, y: 0, width: skirt.frame.width, height: px)
+          : CGRect(x: n.view.bounds.width - px, y: skirt.frame.minY, width: px, height: skirt.frame.height)
+      }
     }
   }
 

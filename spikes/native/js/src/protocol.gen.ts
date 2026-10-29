@@ -2,13 +2,13 @@
 export const PROTOCOL_VERSION = 1
 export const Op = {"CREATE":1,"REMOVE":2,"INSERT":3,"SET_STR":4,"SET_NUM":5,"SET_BOOL":6,"LISTEN":7,"ROOT":8} as const
 export const NodeType = {"Stack":1,"Row":2,"Text":3,"Button":4,"Input":5,"Scroll":6,"Choice":7} as const
-export const Prop = {"text":1,"gap":2,"pad":3,"align":4,"justify":5,"grow":6,"label":7,"disabled":8,"value":9,"placeholder":10,"role":11,"tone":12,"options":13,"selected":14,"surface":15} as const
+export const Prop = {"text":1,"gap":2,"pad":3,"align":4,"justify":5,"grow":6,"label":7,"disabled":8,"value":9,"placeholder":10,"role":11,"tone":12,"options":13,"selected":14,"surface":15,"width":16,"height":17} as const
 export const Event = {"tap":1,"input":2,"select":3} as const
 export const LayoutKey = {"direction":1,"gap":2,"pad":3,"grow":4,"align":5,"justify":6,"width":7,"height":8,"minHeight":9,"scroll":10} as const
 export const Align = {"start":0,"center":1,"end":2,"stretch":3,"between":4} as const
 export const Space = {"none":0,"tight":4,"related":8,"group":16,"section":32} as const
 export const TextRole = {"title":{"size":22,"weight":600},"body":{"size":17,"weight":400},"caption":{"size":13,"weight":500}} as const
-export const Controls = {"minHeight":44,"buttonPadX":16} as const
+export const Controls = {"minHeight":{"web":44,"ios":44,"android":48},"buttonPadX":16,"$minHeight":"Smallest touch target per platform: Apple's HIG says 44pt, Material says 48dp; warp uses 44 on web."} as const
 export type NodeTypeName = keyof typeof NodeType
 export type PropName = keyof typeof Prop
 export type EventName = keyof typeof Event

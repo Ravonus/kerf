@@ -222,6 +222,31 @@ The app sets `idiom` once (`weft.config.ts` or `<App idiom>`). Any component can
   `weft design explain Select --platform ios` prints that chain. MCP `catalog.resolve(component, platform)` returns
   it as JSON, so an agent can predict the result before building.
 
+### 4.3 The window: size classes, folds and hinges
+
+The platform is fixed per build; the window is not. Hosts report the window inside the safe area and system bars,
+plus any fold or hinge that separates it, on start and on every change: rotation, unfolding, split screen and Stage
+Manager. On Android that comes from Jetpack WindowManager's `FoldingFeature`, on the web from the Viewport Segments
+API; iOS has no hinges. Components that adapt to the window add a step 3b to the order above, the **window class**:
+
+| class | rule | example |
+|---|---|---|
+| compact | width < 600 | every phone in portrait |
+| medium | 600–839 | Android phone in landscape, iPad mini portrait, open foldable |
+| expanded | ≥ 840 | iPad landscape, tablets, desktop |
+| dual | a separating fold or hinge | foldable half open, Surface Duo spanned |
+
+The thresholds are Material's window size classes, shared because pt and dp are close. The table maps each class
+per OS, so the same class can mean different things: compact and medium keep the tab bar on iOS, while Android
+moves to a navigation rail at medium. `dual` overrides width and every idiom, because a hinge is a physical
+constraint. Nothing is ever laid out under it, and content splits into panes exactly at its edges. Re-resolution
+is live and keeps app state, since state lives outside the forms. Touch-target minimums are per platform too:
+44pt on iOS, 48dp on Android.
+
+The spike ([spikes/native](../../spikes/native/README.md)) checks this across a 25-window matrix
+(`protocol/devices.json`, each entry marked measured, spec or approx) and on the real WindowManager stack of a
+foldable emulator.
+
 ## 5. Splitting and keeping it organised
 
 Each rung is cheaper to maintain than the next. Agents are told (AGENTS.md) to use the lowest rung that works.
