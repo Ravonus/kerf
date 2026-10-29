@@ -529,6 +529,11 @@ agent can't drift outside of.
 - **Interop:** a Tailwind v4 adapter (`@theme inline` pointing at weft variables). Any other CSS works as-is.
 - **Checks:** design rules join `weft check --json` as `D0xx` (arbitrary values, off-scale spacing, missing labels,
   contrast).
+- **Style groups** ([23](research/23-style-groups.md), design): app styles as named groups with typed axes, parts and
+  accents (`orderCard({ status: 'late' })` → `data-g="order-card" data-status="late"`), on warp's data-attribute
+  contract. Values are intent tokens; Tailwind can feed the theme and utilities. The compiler emits readable CSS for
+  the combinations actually used, and a reactive axis is one attribute write. Agents get `.weft/styles.json` (every
+  group, axis, part, resolved CSS and use site) and D020–D025.
 
 ### 6.1 warp: the default toolkit
 
@@ -886,6 +891,7 @@ Also out of v0:
 - **Event replay before hydration:** a capture script like Solid's `_$HY`, or nothing?
 - **Partial hydration** (`<NoHydration>`, islands): needed before Phase 3's routing?
 - **Hydrated resources:** trust the server's value (today), or revalidate in the background?
+- **Style groups:** spread (`{...orderCard()}`) or a `g=` prop, and CSS-file groups as a second input format? The [23 §4](research/23-style-groups.md) spike decides.
 - **OG renderer:** Takumi (Rust, HTML in, native + wasm) or Satori + resvg? The [20 §7](research/20-metadata-and-og.md) spike decides.
 - **Keyed reads of record boxes: settled, `box.get(key)`** ([14 §11](research/14-app-state.md)). One method on
   every box, no new primitive, no proxies: v3 add-one goes from 452 re-runs to 5. A compiler hint that suggests it
