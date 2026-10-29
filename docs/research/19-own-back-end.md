@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **design, not built.** Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **step 1 built** (§5.1); steps 2–5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -98,6 +98,34 @@ the table is a compile error with a W-code. It doesn't silently fall back.
 | 3 | SSR emitter, path keys, hydration | `ssr.test.ts` and `async.test.tsx` pass: 0 misses, 0 DOM writes |
 | 4 | Dev comments, `weft explain` | the corpus oracle (below) passes |
 | 5 | Switch the default, delete `solidjs-compiler`, update PLAN §3.6 / research 16 | every gate in §3.7, js-framework-benchmark ≤ 1.10× Solid in the same run |
+
+### 5.1 Step 1, done (2026-10-29)
+
+- **Compiler:** `crates/weft-compiler/src/emit.rs`, about 700 lines. Select it with `backend: "weft"` (napi
+  options), `weftc --backend weft`, `weft({ backend: 'weft' })`, or a `?weft-next` import. After the pre-pass, the
+  program is printed with `oxc_codegen` and parsed again. Each outermost JSX node is then replaced by its lowering,
+  and JSX inside expressions is lowered the same way. There's no IR type yet: this step emits straight from the
+  JSX. The IR gets its own type in step 3, when the SSR emitter needs to share it.
+- **Runtime:** `src/dom-next.ts` has `tpl bind attr cls css on delegate child component`. For now they're thin
+  wrappers over the dom.ts machinery (`insert`, `addEvent`); they get their own bodies when hydration by path key
+  lands (step 3).
+- **Tests:** `test/next.test.tsx` renders hello, counter, a construct panel (attributes, class and style objects,
+  properties, events, text with entities, components with getters and children, fragments, a ternary over JSX) and
+  the js-framework-benchmark app. It renders each with both back ends, runs the same interactions, and checks that
+  the DOM matches after every step (comments, attribute order and class order excluded). 61/61 package tests pass.
+- **Size (br), Solid's back end → weft's:**
+
+  | App | Solid's | weft's |
+  |---|---|---|
+  | hello | 1.17 KB | 1.17 KB |
+  | counter | 1.93 KB | 2.03 KB |
+  | benchmark app | 3.22 KB | 3.27 KB |
+
+  The extra comes from the per-template IIFE and from walk variables that are declared and never used. Step 2
+  trims both.
+- **Not yet:** element spreads, namespaced attributes and SVG fail with a weft-back-end diagnostic rather than
+  falling back silently. There's no source map and no SSR output. js-framework-benchmark has not been run on this
+  back end; that's step 5's gate.
 
 **Corpus oracle (test only).** For every `.tsx` in the repo plus a generated corpus (`scripts/gen-corpus.mjs`),
 render with the old and new back ends in jsdom. Compare the resulting DOM and the DOM after scripted interactions.

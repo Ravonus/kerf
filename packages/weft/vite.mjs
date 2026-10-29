@@ -21,14 +21,15 @@ const features = {
   },
 }
 
-const MODE = /\?weft-(ssr|hydrate)$/
+const MODE = /\?weft-(ssr|hydrate|next)$/
 
 /**
  * `hydratable`: DOM output that adopts server HTML (`hydrate`), and SSR output with hydration keys. Vite's SSR
  * transforms get SSR output (imports from weft/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
+ * `?weft-next` (or `backend: 'weft'`) compiles with weft's own back end (research 19), DOM output only for now.
  */
-export default function weft({ dev, hydratable = false } = {}) {
+export default function weft({ dev, hydratable = false, backend = 'solid' } = {}) {
   let isDev = false
   const main = {
     name: 'weft',
@@ -44,11 +45,14 @@ export default function weft({ dev, hydratable = false } = {}) {
       return r && /\.[jt]sx$/.test(r.id) ? r.id + mode[0] : r
     },
     transform: {
-      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate))?$/ },
+      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate|next))?$/ },
       handler(code, id, options) {
         const mode = MODE.exec(id)?.[1]
-        const ssr = mode ? mode === 'ssr' : !!options?.ssr
-        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydratable || !!mode, sourceNames: isDev })
+        const next = mode === 'next' || backend === 'weft'
+        const ssr = mode && mode !== 'next' ? mode === 'ssr' : !!options?.ssr
+        const out = next
+          ? transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, backend: 'weft', generate: ssr ? 'ssr' : 'dom' })
+          : transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydratable || !!mode, sourceNames: isDev })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }

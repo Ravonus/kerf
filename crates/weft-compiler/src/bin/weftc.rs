@@ -4,6 +4,7 @@
 //!   weftc --json file.tsx [...]     one JSON result per file
 //!   weftc --bench N dir             compile every .tsx in dir N times on one thread; print ms per pass
 //!   weftc --check ...               diagnostics only (no codegen)
+//!   weftc --backend weft ...        weft's own back end (research 19) instead of Solid's
 
 use std::{fs, path::PathBuf, time::Instant};
 
@@ -12,11 +13,13 @@ use weft_compiler::{Options, compile};
 fn main() {
     let mut args = std::env::args().skip(1).peekable();
     let (mut json, mut check, mut bench) = (false, false, None);
+    let mut backend = "solid".to_string();
     let mut paths = Vec::new();
     while let Some(a) = args.next() {
         match a.as_str() {
             "--json" => json = true,
             "--check" => check = true,
+            "--backend" => backend = args.next().unwrap_or_default(),
             "--bench" => bench = args.next().and_then(|n| n.parse::<usize>().ok()),
             _ => paths.push(PathBuf::from(a)),
         }
@@ -40,7 +43,7 @@ fn main() {
         for _ in 0..n {
             let t = Instant::now();
             for (filename, source) in &sources {
-                let out = compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
+                let out = compile(source, &Options { filename: filename.clone(), check_only: check, backend: backend.clone(), ..Default::default() });
                 diagnostics += out.diagnostics.len();
                 std::hint::black_box(out);
             }
@@ -63,7 +66,7 @@ fn main() {
 
     let mut failed = false;
     for (filename, source) in &sources {
-        let out = compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
+        let out = compile(source, &Options { filename: filename.clone(), check_only: check, backend: backend.clone(), ..Default::default() });
         if json {
             println!("{}", serde_json::to_string(&out).unwrap());
             continue;

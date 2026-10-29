@@ -7,6 +7,7 @@
 
 mod analyze;
 mod diag;
+mod emit;
 mod snippet;
 mod transform;
 
@@ -37,6 +38,8 @@ pub struct Options {
     pub hydratable: bool,
     /// Dev names from the back end: component labels, binding labels and source locations (dev builds only).
     pub source_names: bool,
+    /// `"solid"` (default) or `"weft"`: weft's own back end (research 19, step 1: DOM output only).
+    pub backend: String,
 }
 
 impl Default for Options {
@@ -50,6 +53,7 @@ impl Default for Options {
             generate: "dom".into(),
             hydratable: false,
             source_names: false,
+            backend: "solid".into(),
         }
     }
 }
@@ -88,6 +92,21 @@ pub fn compile(source: &str, options: &Options) -> Output {
     transform::apply(&allocator, &mut program, &scoping, &plan, source);
 
     let ssr = options.generate == "ssr";
+    if options.backend == "weft" {
+        if ssr || options.hydratable {
+            diagnostics.push(Diagnostic::syntax(source, "weft back end: SSR and hydration come in step 3 (research 19 §5)".into(), None));
+            return Output { code: None, map: None, diagnostics };
+        }
+        // Print the pre-pass's AST and lower its JSX from that text (spans index it). No source map yet.
+        let printed = oxc_codegen::Codegen::new().build(&program).code;
+        return match emit::dom(&printed, &options.filename, &options.module_name) {
+            Ok(code) => Output { code: Some(code), map: None, diagnostics },
+            Err(e) => {
+                diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
+                Output { code: None, map: None, diagnostics }
+            }
+        };
+    }
     let solid = solidjs_compiler::CompileOptions {
         filename: Some(options.filename.clone()),
         // SSR output has its own runtime; a caller-set module name (tests, fixtures) wins.
