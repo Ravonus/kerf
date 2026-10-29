@@ -1,6 +1,6 @@
 # 23 — Style groups: named, grouped styles instead of class storms (design)
 
-Research date: 2026-10-29. Status: **design, nothing built**. Builds on [03](03-design-language.md) (tokens, intent
+Research date: 2026-10-29. Status: **design; step 1 (the spike) done, results in §6**. Builds on [03](03-design-language.md) (tokens, intent
 props, adapters) and warp's CSS contract (`docs/design/warp/`, PLAN §6.1). Number 22 is taken by the verify-loop
 branch. Statements about other tools are from their docs as fetched today and marked **(unverified)** where a version
 or detail matters.
@@ -253,11 +253,184 @@ warp's contrast gate keeps its own code (D010, in the warp branch).
 ## 5. Open questions
 
 - **Spread syntax or a prop?** `{...orderCard(...)}` (above) works on any element and composes with other props.
-  A `g={orderCard(...)}` prop reads shorter but needs compiler support on every element. Decide in the spike.
+  A `g={orderCard(...)}` prop reads shorter but needs compiler support on every element. **Answered in §6.3:
+  spread.**
 - **Groups in `.css` files too?** Some people will want to write groups as CSS (`@group order-card { … }`),
   compiled the same way. That could be the input format that maps most directly to the future native `@mixin`.
 - **Cross-file accents:** should an accent be allowed at all, or should every variation be an axis value? Start
   allowed with D022, and tighten if the eval shows agents overuse them.
+
+## 6. Spike results
+
+Step 1 of §4, run 2026-10-29. Code: `weft/style` (`packages/weft/src/style.ts`, `src/style/vocab.ts`,
+`src/style/css.ts`), the compiler's `crates/weft-compiler/src/style.rs`, and the `weft:style` part of `vite.mjs`.
+The measurements are in `spikes/style-groups/` (`run.mjs`, `results.json`, sample output in `out/`).
+
+### 6.1 What was built
+
+- **`group(name, { base, axes, parts, states, compounds, defaults })`**, fully typed. Every key is an intent from a
+  closed table, and every value is one of that intent's token names. `pad: '13px'`, `padding: …`, `tone: 'danger'`, a
+  default that isn't a value of its axis, a compound on a missing part, `card({ status: 'lost' })` and `card.footer`
+  are all type errors (`test/style-types.tsx`, 10 negative cases). `css: { … }` is the escape. A part may be called
+  `name`, which shadows `Function.name`.
+- **Token table: warp's names.** `vocab.ts` maps research 03's intent keys (`surface`, `pad`, `gap`, `radius`, `tone`,
+  `emphasis`, `text`, `ink`, `layout`, `align`, `justify`, `ring`, …) to `--warp-*` variables from
+  `docs/design/warp/tokens/warp.css`. A test checks that every variable it names is defined there. Tones set warp's
+  own channels (`--_solid`, `--_soft`, `--_text`, …), so a group tone and a warp component tone read alike. Using
+  warp's names means a page with warp loaded needs no second theme.
+- **Static evaluation at build.** The compiler evaluates each `group()` call as literal data. A value that isn't a
+  literal is W060, which names it and its path: `` `px` at g.axes.size.big.pad isn't a literal ``. The Vite plugin
+  resolves every intent against the table, and a bad token is a build error naming the group, its file and line, and
+  the valid values. The codes are placeholders until the D-codes in step 2.
+- **Call sites lower to plain attributes** before the back end runs, so they get its existing template and binding
+  paths:
+
+  | Authored | Compiled (DOM) |
+  |---|---|
+  | `<li {...productRow({ stock: left <= 0 ? 'out' : left <= 3 ? 'low' : 'in' })}>` | `data-g="product-row"` in the template, then `_$attr(el, "data-stock", v)` in one `bind` |
+  | `<span {...productRow.price}>` | `data-g="product-row" data-part="price"`, static |
+  | `<button {...action()}>` | `data-g="action" data-emphasis="solid"` (the default), static |
+  | `{...tabButton({ pressed: tab === 'cart' })}` | `aria-pressed={tab === 'cart' ? "true" : "false"}` |
+
+  Unknown axes, values, states and parts at a call site are W061 errors. A site whose argument isn't an object
+  literal stays a runtime spread of `group()`'s return value and is reported as dynamic. The call is marked
+  `/* @__PURE__ */`, so a definition whose sites were all lowered drops out of the bundle: the groups shop's JS is
+  5.32 KB gz against 5.39 KB for the class version.
+- **CSS only for what sites can produce.** Literals emit their value. A conditional whose leaves are all literals
+  emits those leaves. Anything else emits the whole axis. Parts, states and compounds are emitted only when they can
+  be reached, and a group with no call site emits nothing. Output is `@layer app.groups`, one `@scope (group) to
+  (nested group)` block per group with `:where()` selectors and a `/* name · file:line */` comment in dev (sample
+  below). Tone channels that nothing reads are dropped. SSR writes the same attributes.
+
+```css
+  /* product-row · spikes/style-groups/shop-groups/src/components/ProductRow.tsx:7 */
+  @scope ([data-g="product-row"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related); … }
+    :where([data-part="note"]) { … border-radius: var(--warp-radius-round); background-color: var(--_soft); color: var(--_text); }
+    :where(:scope[data-stock="out"]) { color: var(--warp-color-text-subtle); }
+    :where(:scope[data-stock="low"] [data-part="note"]) { --_soft: var(--warp-color-caution-soft); --_text: var(--warp-color-caution-text); }
+  }
+```
+
+Not built, as planned: the matrix file, the CLI, D020–D025, Tailwind input, accents (§2.2 level 3), `inherit` axes
+beyond typing, and per-module CSS splitting (§2.5 step 7). The spike serves one `virtual:weft/groups.css`, which each
+defining module imports.
+
+### 6.2 The shop, three ways
+
+The v3 reference shop ships no CSS at all, so "today's shop CSS" had to be written first. `shop-css/` is the same
+design as BEM classes plus one hand-written stylesheet on the same warp tokens, written the way a careful person
+would: rules shared across components with selector lists (`.product-row, .cart-line { … }`). `shop-groups/` is that
+design as 10 groups (33 call sites). Both are copies; the reference is untouched. Atomic output comes from the same
+definitions and call sites: one class per declaration and condition, as StyleX and Panda emit.
+
+In a real browser (Chromium, warp.css loaded), the two builds compute the same value for 28 properties on every
+element, in the catalogue, after adding items and in the cart. The one difference is the pressed tab. There the hand
+CSS is the broken one: weft's client writes `aria-pressed=""` for `true`, so `.tab[aria-pressed="true"]` never
+matches (see 6.5).
+
+**CSS bytes** (lightningcss-minified; the gz and br columns compress the minified CSS):
+
+| | min | gz | br | br vs hand |
+|---|---|---|---|---|
+| Hand CSS (`shop-css` build) | 4,342 | 923 | **762** | — |
+| **Groups, default: `@scope`, `:where`** (`shop-groups` build) | 7,038 | 1,092 | **914** | **+19.9%** |
+| Groups, flat selectors, no `@scope` | 7,218 | 1,088 | 917 | +20.3% |
+| Groups, no `:where` | 6,742 | 1,061 | 903 | +18.5% |
+| Groups, identical blocks shared across groups | 6,282 | 1,129 | 958 | +25.7% |
+| Groups, parts carry only `data-part`, no `:where` | 6,402 | 1,051 | 886 | +16.3% |
+| Atomic | 4,078 | 1,027 | 845 | +10.9% |
+
+Call-site pruning removed nothing here. Every axis in the shop is reactive over all of its values, so "all values"
+gives the same bytes: 906 B from the emitter, 914 B after Vite's own pass. (Unit tests show a literal emitting one
+rule.) The groups build costs 7,038 B minified against
+the hand CSS's 4,342 B (+62%), but the gap is mostly repetition, which brotli absorbs. The groups CSS has 163
+declarations against the hand CSS's 115. The 48 extra are (a) blocks the hand author shares across components (row
+layout, lists, name parts, notes: about 30), (b) tone channels plus the `var(--_x)` reads of them (13 set, 7 reads),
+and (c) `font-weight` for the body role, which the hand author leaves to the default (5). Selectors make up the rest:
+`[data-g="product-row"]…` against `.product-row__price`. Sharing blocks across groups (row 5) shrinks the minified
+bytes but grows the brotli bytes, so it's off by default. Per-group channel pruning is on.
+
+**Styling tokens per styled element** (54 elements across the catalogue and cart views):
+
+| | catalogue: mean / max | cart: mean / max |
+|---|---|---|
+| Hand CSS: classes | 1.09 / 2 | 1.24 / 2 |
+| Groups: attributes (`data-g`, `data-part`, axis, state) | 1.73 / 2 | 1.86 / 2 |
+| Atomic: classes | 8.64 / 23 | 9.67 / 24 |
+
+A groups element carries a name and at most one variation, such as `data-g="product-row" data-stock="low"` or
+`data-g="product-row" data-part="note"`. Atomic is the class storm research 23 set out to avoid: up to 24 classes on
+one button.
+
+**DOM work per interaction** (`touches()`, in the eval's weft framework):
+
+| Interaction | Hand CSS | Groups | Attribute writes (groups) |
+|---|---|---|---|
+| Price push in the catalogue | 1 (text) | 1 (text) | none |
+| Add one, stock in → low | 2 | 3 | `data-stock` ×1 |
+| Price push in the cart, trend same → up | 3 | 4 | `data-trend` ×1 |
+| Tab switch | 4 | 4 | `aria-pressed` ×2 |
+
+Each axis change is exactly one attribute write, with no class string rebuilt and no re-render. The one extra
+mutation against the class version is that write. The hand version styles "low" from the note element alone and never
+marks the row, while the group axis names the row's state on the row.
+
+**Tests.** Both shops pass the hidden suite, **23/23**. `packages/weft/test/style.test.tsx` (14 tests) covers the
+lowering, the diagnostics, the emitter and the round trip. SSR of the groups shop writes `data-stock="low"`,
+`data-trend="up"` and `aria-pressed="true"`. Hydration then claims everything with **0 misses and 0 DOM writes**, and
+the next axis change is one write. The full weft suite (201 tests) and the compiler's Rust tests still pass.
+
+### 6.3 Spread or a `g=` prop (§5)
+
+| | `<li {...productRow({ stock })}>` | `<li g={productRow({ stock })}>` |
+|---|---|---|
+| Compiler | Done (style.rs lowers the spread) | The same lowering, keyed on an attribute name `g` that would then be reserved on every element and component |
+| Without the compiler (tests in plain TS, other JSX runtimes, a dynamic argument) | Works: `group()` returns the attributes | Needs a `g` handler in the runtime's attribute setter, and in every other runtime |
+| Types | Ordinary JSX spread | `g?: GroupAttrs` added to every intrinsic element, and a clash with any component prop called `g` |
+| Two groups on one element | Possible, and the last `data-g` wins silently (step 2 should flag it) | Ruled out by syntax |
+| Length | 3 characters longer | Shorter |
+| Agents | Standard JSX they already write | weft-only vocabulary to learn |
+
+**Decision: spread.** It's already compiled, it works uncompiled, and it needs nothing new in the runtime, the types
+or the agent's vocabulary. The one thing the prop gives, at most one group per element, should be a diagnostic in
+step 2 ("two group roots on one element").
+
+### 6.4 Go/no-go
+
+| Pass bar (§4) | Result | |
+|---|---|---|
+| CSS ≤ today's shop CSS + 10% | 914 B br against 762 B: **+19.9%** (best variant +16.3%) | **missed** |
+| One attribute mutation per axis change | `data-stock` ×1, `data-trend` ×1 | met |
+| 0 hydration writes | 0 writes, 0 misses | met |
+
+**Recommendation: go to step 2, with the CSS bar restated and two cheap wins taken.** The markup, reactivity and
+hydration bars pass cleanly. The CSS bar is missed by about 150 B br on a baseline a human tuned by hand for exactly
+this design, and the cost has known parts, each with a fix to measure at step 2:
+
+1. **Tone channel folding.** When a group sets a tone and reads its channels on the same element, emit the token
+   directly (`background-color: var(--warp-color-caution-soft)`) and keep a channel only when a group with no tone
+   of its own reads it. This targets the 20 channel declarations and reads.
+2. **Parts carrying only `data-part`** (row 6: −1.6 to −2.2 points). This trades away warp's `data-scope`/`data-part`
+   symmetry and leans on `@scope` alone, so decide it together with warp's contract, not here.
+3. **Measure at app scale.** The shop has 10 groups and about 4 KB of CSS, so per-group fixed costs (scope preludes,
+   attribute selectors) dominate. Re-measure on warp's specimens or the v4 eval app before treating +20% as the cost
+   of groups. Atomic is only 11% under semantic here, well inside §2.5's "semantic unless it costs > 20%" rule, so
+   no atomic mode.
+
+If +10% is a hard requirement, the honest answer is no-go for semantic output at this scale. Even atomic misses it
+(+10.9%).
+
+### 6.5 Found along the way
+
+- **weft writes boolean `true` as an empty attribute** (`aria-pressed=""` on the client; a bare `aria-pressed` from
+  SSR). `aria-pressed=""` isn't valid ARIA, and `[aria-pressed="true"]` never matches it. Groups sidestep this by
+  lowering ARIA states to `"true"`/`"false"` strings on both sides. The general fix (serialize `aria-*` booleans) is
+  for the runtime and the SSR back end, not this spike.
+- **`@scope` needs `:not([data-part])` in its prelude and its bound** while parts carry `data-g`, or a part becomes its
+  own scope root and stops its own group's rules.
+- **`:where()` costs 1.7%.** Inside `@layer app.groups`, unlayered user CSS wins whatever its specificity, so
+  `:where()` only settles fights within the layer. It stays, since it's cheap.
 
 ## Sources
 

@@ -18,6 +18,7 @@
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
     "./browser": "./src/browser.ts",
+    "./style": "./src/style.ts",
     "./hmr": "./src/hmr.ts",
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"

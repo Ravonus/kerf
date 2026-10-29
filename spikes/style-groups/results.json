@@ -1,0 +1,220 @@
+{
+  "shop-css": {
+    "hidden": {
+      "passed": 23,
+      "total": 23
+    },
+    "spike": [
+      "pass markup snapshots for counting (catalogue, then cart with a moved price)",
+      "pass stock change (in → low): the axis is one attribute write",
+      "pass price push in the catalogue: 1 DOM mutation (text)",
+      "pass price push in the cart (trend same → up): the axis is one attribute write",
+      "pass tab switch: one aria-pressed write per tab, plus the view swap"
+    ],
+    "failures": [],
+    "measured": {
+      "stockChange": {
+        "mutations": 2,
+        "added": 1,
+        "removed": 0,
+        "text": 1,
+        "attributes": 0,
+        "runs": 20,
+        "attrs": []
+      },
+      "pricePush": {
+        "mutations": 1,
+        "added": 0,
+        "removed": 0,
+        "text": 1,
+        "attributes": 0,
+        "runs": 10,
+        "attrs": []
+      },
+      "trendChange": {
+        "mutations": 3,
+        "added": 1,
+        "removed": 0,
+        "text": 2,
+        "attributes": 0,
+        "runs": 13,
+        "attrs": []
+      },
+      "tabSwitch": {
+        "mutations": 4,
+        "added": 1,
+        "removed": 1,
+        "text": 0,
+        "attributes": 2,
+        "runs": 7,
+        "attrs": [
+          "aria-pressed",
+          "aria-pressed"
+        ],
+        "pressed": ""
+      }
+    },
+    "css": {
+      "raw": 4343,
+      "min": 4342,
+      "gz": 923,
+      "br": 762
+    },
+    "jsGz": 5388
+  },
+  "shop-groups": {
+    "hidden": {
+      "passed": 23,
+      "total": 23
+    },
+    "spike": [
+      "pass markup snapshots for counting (catalogue, then cart with a moved price)",
+      "pass stock change (in → low): the axis is one attribute write",
+      "pass price push in the catalogue: 1 DOM mutation (text)",
+      "pass price push in the cart (trend same → up): the axis is one attribute write",
+      "pass tab switch: one aria-pressed write per tab, plus the view swap"
+    ],
+    "failures": [],
+    "measured": {
+      "stockChange": {
+        "mutations": 3,
+        "added": 1,
+        "removed": 0,
+        "text": 1,
+        "attributes": 1,
+        "runs": 20,
+        "attrs": [
+          "data-stock"
+        ]
+      },
+      "pricePush": {
+        "mutations": 1,
+        "added": 0,
+        "removed": 0,
+        "text": 1,
+        "attributes": 0,
+        "runs": 10,
+        "attrs": []
+      },
+      "trendChange": {
+        "mutations": 4,
+        "added": 1,
+        "removed": 0,
+        "text": 2,
+        "attributes": 1,
+        "runs": 14,
+        "attrs": [
+          "data-trend"
+        ]
+      },
+      "tabSwitch": {
+        "mutations": 4,
+        "added": 1,
+        "removed": 1,
+        "text": 0,
+        "attributes": 2,
+        "runs": 7,
+        "attrs": [
+          "aria-pressed",
+          "aria-pressed"
+        ],
+        "pressed": "true"
+      }
+    },
+    "css": {
+      "raw": 7039,
+      "min": 7038,
+      "gz": 1092,
+      "br": 914
+    },
+    "jsGz": 5317
+  },
+  "css": {
+    "hand (shop-css build)": {
+      "raw": 4343,
+      "min": 4342,
+      "gz": 923,
+      "br": 762
+    },
+    "groups, @scope (shop-groups build)": {
+      "raw": 7039,
+      "min": 7038,
+      "gz": 1092,
+      "br": 914
+    },
+    "groups, @scope (emitter, prod)": {
+      "raw": 8959,
+      "min": 7038,
+      "gz": 1078,
+      "br": 906
+    },
+    "groups, flat :where (emitter, prod)": {
+      "raw": 8647,
+      "min": 7218,
+      "gz": 1088,
+      "br": 917
+    },
+    "atomic (emitter)": {
+      "raw": 4091,
+      "min": 4078,
+      "gz": 1027,
+      "br": 845
+    },
+    "groups, all values (no call-site pruning)": {
+      "raw": 8959,
+      "min": 7038,
+      "gz": 1078,
+      "br": 906
+    }
+  },
+  "handCssSource": {
+    "raw": 5113,
+    "min": 4342,
+    "gz": 923,
+    "br": 762
+  },
+  "groupCount": 10,
+  "useCount": 33,
+  "perElement": {
+    "catalog": {
+      "hand CSS: classes": {
+        "elements": 33,
+        "mean": 1.09,
+        "max": 2,
+        "total": 36
+      },
+      "groups: attributes": {
+        "elements": 33,
+        "mean": 1.73,
+        "max": 2,
+        "total": 57
+      },
+      "atomic: classes": {
+        "elements": 33,
+        "mean": 8.64,
+        "max": 23,
+        "total": 285
+      }
+    },
+    "cart": {
+      "hand CSS: classes": {
+        "elements": 21,
+        "mean": 1.24,
+        "max": 2,
+        "total": 26
+      },
+      "groups: attributes": {
+        "elements": 21,
+        "mean": 1.86,
+        "max": 2,
+        "total": 39
+      },
+      "atomic: classes": {
+        "elements": 21,
+        "mean": 9.67,
+        "max": 24,
+        "total": 203
+      }
+    }
+  }
+}

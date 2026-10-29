@@ -12,6 +12,7 @@ mod emit;
 mod hmr;
 pub mod project;
 mod srcmap;
+pub mod style;
 mod transform;
 
 #[cfg(feature = "node")]
@@ -44,6 +45,8 @@ pub struct Options {
     pub explain: bool,
     /// Dev DOM output only, not hydratable: register components for hot updates and keep their state (weft/hmr).
     pub hmr: bool,
+    /// Style groups defined in other modules, keyed `"<absolute path without extension>#<export>"` (style.rs).
+    pub groups: std::collections::HashMap<String, style::Imported>,
 }
 
 impl Default for Options {
@@ -58,6 +61,7 @@ impl Default for Options {
             hydratable: false,
             explain: false,
             hmr: false,
+            groups: Default::default(),
         }
     }
 }
@@ -97,8 +101,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     // weft/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
     let ssr = if options.generate == "ssr" || options.hydratable { Some(true) } else if options.check_only { None } else { Some(false) };
     diagnostics.extend(browser::check(&program, &scoping, source, ssr));
+    // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
+    let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, &options.filename, &options.groups, &mut diagnostics);
     diagnostics.sort_by_key(|d| d.start);
-    let facts = plan.facts.clone();
+    let mut facts = plan.facts.clone();
+    facts.groups = groups;
+    facts.group_uses = group_uses;
     if options.check_only {
         return Output { code: None, map: None, diagnostics, facts, explain: None };
     }

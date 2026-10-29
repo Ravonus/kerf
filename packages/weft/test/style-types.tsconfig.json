@@ -1,0 +1,1 @@
+{ "compilerOptions": { "strict": true, "noEmit": true, "target": "es2022", "module": "esnext", "moduleResolution": "bundler", "jsx": "preserve", "allowImportingTsExtensions": true, "skipLibCheck": true }, "files": ["style-types.tsx"] }

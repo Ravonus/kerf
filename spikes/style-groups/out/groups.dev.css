@@ -1,0 +1,269 @@
+@layer app.groups {
+  /* shop · spikes/style-groups/shop-groups/src/App.tsx:9 */
+  @scope ([data-g="shop"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-direction: column;
+      gap: var(--warp-space-section);
+      padding: var(--warp-space-page);
+      background-color: var(--warp-color-page);
+      font-family: var(--warp-font-sans);
+      color: var(--warp-color-text);
+    }
+    :where([data-part="notice"]) {
+      font-size: var(--warp-text-body-size);
+      line-height: var(--warp-text-body-leading);
+      font-weight: var(--warp-text-body-weight);
+      color: var(--warp-color-text-subtle);
+    }
+  }
+  /* cart · spikes/style-groups/shop-groups/src/components/CartView.tsx:9 */
+  @scope ([data-g="cart"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-direction: column;
+      gap: var(--warp-space-group);
+    }
+    :where([data-part="list"]) {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    :where([data-part="total"]) {
+      font-size: var(--warp-text-title-size);
+      line-height: var(--warp-text-title-leading);
+      font-weight: var(--warp-text-title-weight);
+      font-variant-numeric: tabular-nums;
+    }
+    :where([data-part="empty"]) {
+      font-size: var(--warp-text-body-size);
+      line-height: var(--warp-text-body-leading);
+      font-weight: var(--warp-text-body-weight);
+      color: var(--warp-color-text-subtle);
+    }
+  }
+  /* cart-line · spikes/style-groups/shop-groups/src/components/CartView.tsx:19 */
+  @scope ([data-g="cart-line"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--warp-space-related);
+      padding-block: var(--warp-space-related);
+      border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+    }
+    :where([data-part="name"]) {
+      font-size: var(--warp-text-body-size);
+      line-height: var(--warp-text-body-leading);
+      font-weight: var(--warp-text-body-weight);
+      flex: 1;
+    }
+    :where([data-part="qty"]) {
+      font-size: var(--warp-text-label-size);
+      line-height: var(--warp-text-label-leading);
+      font-weight: var(--warp-text-label-weight);
+      font-variant-numeric: tabular-nums;
+      min-inline-size: 2ch;
+      text-align: center;
+    }
+    :where([data-part="line"]) {
+      font-size: var(--warp-text-label-size);
+      line-height: var(--warp-text-label-leading);
+      font-weight: var(--warp-text-label-weight);
+      font-variant-numeric: tabular-nums;
+    }
+    :where([data-part="change"]) {
+      font-size: var(--warp-text-caption-size);
+      line-height: var(--warp-text-caption-leading);
+      padding-inline: var(--warp-space-related);
+      border-radius: var(--warp-radius-round);
+      background-color: var(--_soft);
+      color: var(--_text);
+    }
+    :where(:scope[data-trend="up"] [data-part="change"]) {
+      --_soft: var(--warp-color-critical-soft);
+      --_text: var(--warp-color-critical-text);
+    }
+    :where(:scope[data-trend="down"] [data-part="change"]) {
+      --_soft: var(--warp-color-positive-soft);
+      --_text: var(--warp-color-positive-text);
+    }
+  }
+  /* top-bar · spikes/style-groups/shop-groups/src/components/Header.tsx:4 */
+  @scope ([data-g="top-bar"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding-block: var(--warp-space-related);
+      border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+    }
+    :where([data-part="tabs"]) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--warp-space-tight);
+    }
+  }
+  /* tab · spikes/style-groups/shop-groups/src/components/Header.tsx:10 */
+  @scope ([data-g="tab"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      min-block-size: var(--warp-control-sm);
+      padding-inline: var(--warp-pad-control);
+      border-radius: var(--warp-radius-control);
+      font-size: var(--warp-text-button-size);
+      line-height: var(--warp-text-button-leading);
+      font-weight: var(--warp-text-button-weight);
+      border: 0;
+      background-color: transparent;
+      color: var(--_text, var(--warp-color-text));
+      cursor: pointer;
+    }
+    :where(:scope[aria-pressed="true"]) {
+      background-color: var(--warp-color-surface-sunken);
+      color: var(--warp-color-text);
+    }
+    :where(:scope:hover) {
+      background-color: var(--warp-color-surface-sunken);
+    }
+  }
+  /* catalog · spikes/style-groups/shop-groups/src/components/ProductList.tsx:9 */
+  @scope ([data-g="catalog"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-direction: column;
+      gap: var(--warp-space-group);
+    }
+    :where([data-part="filters"]) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--warp-space-group);
+    }
+    :where([data-part="count"]) {
+      font-size: var(--warp-text-caption-size);
+      line-height: var(--warp-text-caption-leading);
+      color: var(--warp-color-text-subtle);
+    }
+    :where([data-part="list"]) {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+  /* product-row · spikes/style-groups/shop-groups/src/components/ProductRow.tsx:7 */
+  @scope ([data-g="product-row"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--warp-space-related);
+      padding-block: var(--warp-space-related);
+      border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+    }
+    :where([data-part="name"]) {
+      font-size: var(--warp-text-body-size);
+      line-height: var(--warp-text-body-leading);
+      font-weight: var(--warp-text-body-weight);
+      flex: 1;
+    }
+    :where([data-part="price"]) {
+      font-size: var(--warp-text-label-size);
+      line-height: var(--warp-text-label-leading);
+      font-weight: var(--warp-text-label-weight);
+      font-variant-numeric: tabular-nums;
+    }
+    :where([data-part="note"]) {
+      font-size: var(--warp-text-caption-size);
+      line-height: var(--warp-text-caption-leading);
+      padding-inline: var(--warp-space-related);
+      border-radius: var(--warp-radius-round);
+      background-color: var(--_soft);
+      color: var(--_text);
+    }
+    :where(:scope[data-stock="out"]) {
+      color: var(--warp-color-text-subtle);
+    }
+    :where(:scope[data-stock="low"] [data-part="note"]) {
+      --_soft: var(--warp-color-caution-soft);
+      --_text: var(--warp-color-caution-text);
+    }
+    :where(:scope[data-stock="out"] [data-part="note"]) {
+      --_soft: var(--warp-color-neutral-soft);
+      --_text: var(--warp-color-neutral-text);
+    }
+  }
+  /* action · spikes/style-groups/shop-groups/src/ui.tsx:4 */
+  @scope ([data-g="action"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-block-size: var(--warp-control-sm);
+      padding-inline: var(--warp-pad-control);
+      border-radius: var(--warp-radius-control);
+      font-size: var(--warp-text-button-size);
+      line-height: var(--warp-text-button-leading);
+      font-weight: var(--warp-text-button-weight);
+      --_solid: var(--warp-color-accent-solid);
+      --_solid-hover: var(--warp-color-accent-solid-hover);
+      --_ink-on: var(--warp-color-accent-on-solid);
+      --_text: var(--warp-color-accent-text);
+      --_border: var(--warp-color-accent-border);
+      cursor: pointer;
+      border: 0;
+    }
+    :where(:scope[data-emphasis="solid"]) {
+      background-color: var(--_solid);
+      color: var(--_ink-on);
+    }
+    :where(:scope[data-emphasis="ghost"]) {
+      background-color: transparent;
+      color: var(--_text, var(--warp-color-text));
+      border: var(--warp-border-hairline) solid var(--_border, var(--warp-color-border));
+    }
+    :where(:scope:hover) {
+      background-color: var(--_solid-hover);
+      color: var(--_ink-on);
+    }
+    :where(:scope:disabled) {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+  /* field · spikes/style-groups/shop-groups/src/ui.tsx:12 */
+  @scope ([data-g="field"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      display: flex;
+      flex-direction: column;
+      gap: var(--warp-space-hair);
+      font-size: var(--warp-text-label-size);
+      line-height: var(--warp-text-label-leading);
+      font-weight: var(--warp-text-label-weight);
+      color: var(--warp-color-text-subtle);
+    }
+  }
+  /* input · spikes/style-groups/shop-groups/src/ui.tsx:17 */
+  @scope ([data-g="input"]:not([data-part])) to ([data-g]:not([data-part])) {
+    :where(:scope) {
+      min-block-size: var(--warp-control-md);
+      padding-inline: var(--warp-pad-control);
+      border-radius: var(--warp-radius-control);
+      border: var(--warp-border-hairline) solid var(--warp-color-border-control);
+      background-color: var(--warp-color-surface);
+      font-size: var(--warp-text-body-size);
+      line-height: var(--warp-text-body-leading);
+      font-weight: var(--warp-text-body-weight);
+      color: var(--warp-color-text);
+    }
+    :where(:scope:focus-visible) {
+      outline: var(--warp-focus-width) solid var(--warp-color-focus);
+      outline-offset: var(--warp-focus-offset);
+    }
+  }
+}
