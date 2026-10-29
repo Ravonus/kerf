@@ -12,10 +12,10 @@ node bin/weft.mjs check --json --root ../../evals/reference-v3/weft
 
 | Command | Does | Output |
 |---|---|---|
-| `weft check [files…]` | Compile every `.tsx`/`.jsx` in check mode, add the project view (cross-file W014), config P-codes, P002, P120 and the `slots` block | `--json`: the check result. Exit 1 on errors |
+| `weft check [files…]` | Compile every `.tsx`/`.jsx` in check mode, add the project view (cross-file W014), T-codes on `*.test.*`/`*.spec.*` files, config P-codes, P002, P120 and the `slots` block | `--json`: the check result. Exit 1 on errors |
 | `weft tasks` | Built-in commands plus the project's `tasks`, with args (JSON Schema), side effects, environments and scope | `--json`: the task list |
-| `weft docs [topic\|code]` | `rules`, `props`, `lists`, `async`, `testing`, `config`, `diagnostics`, `commands`, `agents`, or a code (`W014`) | Markdown (`--json`: `{ topic, text }`) |
-| `weft agents-md` | Write AGENTS.md from the installed weft. `--check` exits 1 when stale, `--stdout` prints it | Under 8 KB (it is ~4.6 KB) |
+| `weft docs [topic\|code]` | `rules`, `props`, `lists`, `async`, `testing`, `config`, `diagnostics`, `commands`, `agents`, or a code (`W014`, `T003`) | Markdown (`--json`: `{ topic, text }`) |
+| `weft agents-md` | Write AGENTS.md from the installed weft. `--check` exits 1 when stale, `--stdout` prints it | Under 8 KB (it is ~5.4 KB) |
 | `weft mcp` | MCP server on stdio with the tools `docs`, `check`, `tasks` | JSON-RPC 2.0, one message per line |
 
 Every command takes `--root <dir>` (default: the working directory). JSON goes to stdout, human text to stderr. Exit
@@ -64,6 +64,12 @@ long-lived `weft mcp` sees edits to the config file itself. Files the config imp
 Codes reported from the config: P003, P004, P007 (schema, with the Zod path), P008, P009, P100, P116. The full list
 is `weft docs config` / `weft docs diagnostics`.
 
+Test files (`test.include` in weft.config.ts, default `**/*.{test,spec}.*`) get T001–T009 (PLAN §7b). A test that
+needs one on purpose says why: `// weft-allow T004, T005: <reason>` in the file's header comments covers the file;
+anywhere else it covers its own line and the next. An allow without a reason doesn't count. Autofixes: T009 removes
+`.only` (safe) or `.skip` (suggested); T004 replaces a zero-delay sleep with `flush()` (suggested). `weft/test` adds
+a runtime T001: a test that finishes without an assertion fails.
+
 ## Layout
 
 | File | |
@@ -72,7 +78,8 @@ is `weft docs config` / `weft docs diagnostics`.
 | `src/load-config.mjs`, `src/config.{mjs,d.ts}` | Loader, Zod schema, task and plugin checks; `defineConfig` and its types |
 | `src/slots.mjs` | Slot table and binding rules (research 13 §2.2) |
 | `src/check.mjs`, `src/project.mjs` | `weft check`; the project view (cross-file W014, TypeScript parser, syntax only) |
-| `src/catalog.mjs` | W- and P-codes, each W-code with an example that `probe()` runs through the installed compiler |
+| `src/tests.mjs` | T001–T009 over test files (TypeScript parser, syntax only; follows imported helpers one level for T001) and `// weft-allow Txxx: <reason>` |
+| `src/catalog.mjs` | W-, T- and P-codes; each W- and T-code has an example that `probe()`/`probeTests()` checks really reports it |
 | `src/docs.mjs`, `docs/*.md`, `src/agents-md.mjs` | Docs topics and AGENTS.md, generated from the installed weft (version, exports, codes it reports) |
 | `src/tasks.mjs`, `src/mcp.mjs` | `weft tasks`; the MCP server |
 

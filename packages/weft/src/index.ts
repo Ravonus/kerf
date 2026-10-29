@@ -8,7 +8,7 @@ const CLEAN = 0, CHECK = 1, DIRTY = 2
 /** Dev build: diagnostic text, dev names and dev-only checks. Vite folds it to `false` in production builds. */
 export const DEV: boolean = (import.meta as any).env?.DEV !== false
 
-type Source = { v: any; o: Computation[] }
+type Source = { v: any; o: Computation[]; /** a `get(key)` source: its box and key */ b?: Box<any>; key?: PropertyKey }
 
 export interface Owner {
   owned: Computation[] | null
@@ -21,8 +21,10 @@ interface Computation extends Source, Owner {
   fn: (prev: any) => any
   s: Source[]
   state: number
-  /** 0: derived (lazy), 1: effect (queued) */
-  effect: 0 | 1
+  /** 0: derived (lazy), 1: effect (queued), 2: effect whose value is unwrapped (a child hole: functions are called) */
+  effect: 0 | 1 | 2
+  /** Effects: writes the computed value, untracked (`apply(value, prev)`). */
+  a: ((value: any, prev: any) => void) | undefined
   id: number
   dead?: true
   /** Dev name: the binding (`li.children`), its source location and the component it was created in. */
@@ -56,10 +58,23 @@ export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Recor
 /** Reactive work counter, read by `weft/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
 
+/** The empty list every graph list starts as (never written: `add` replaces it). */
+const NONE: any[] = []
+
+/**
+ * `list` with `x` appended. Graph lists are mostly 1–3 long, and V8's first `push` reserves 17 slots, so short
+ * lists are copied at their exact size (memory: research 19 §5.8).
+ */
+function add<T>(list: T[], x: T): T[] {
+  if (list.length < 8) return list.concat([x])
+  list.push(x)
+  return list
+}
+
 function read(node: Source) {
   if (listener) {
-    listener.s.push(node)
-    node.o.push(listener)
+    listener.s = add(listener.s, node)
+    node.o = add(node.o, listener)
   }
 }
 
@@ -88,11 +103,13 @@ function unlink(node: Computation) {
   for (const s of node.s) {
     const i = s.o.indexOf(node)
     if (i >= 0) s.o.splice(i, 1)
+    if (s.b && !s.o.length) s.b.k!.delete(s.key!) // its last reader went
   }
-  node.s = []
+  node.s = NONE
 }
 
-function clean(node: Owner) {
+/** Dispose everything `node` owns and run its cleanups (a root's `dispose`). */
+export function clean(node: Owner) {
   if (node.owned) {
     for (const c of node.owned) dispose(c)
     node.owned = null
@@ -115,8 +132,12 @@ function run(node: Computation) {
   const prevListener = listener, prevOwner = owner
   listener = owner = node
   try {
-    const v = node.fn(node.v)
-    if (!Object.is(v, node.v)) {
+    const v = node.effect === 2 ? unwrap(node.fn) : node.fn(node.v) // a hole's value takes no arguments
+    if (node.a) {
+      listener = null
+      node.a(v, node.v)
+      node.v = v
+    } else if (!Object.is(v, node.v)) {
       node.v = v
       for (const o of node.o) o.state = DIRTY
     }
@@ -144,13 +165,20 @@ function update(node: Computation) {
   node.state = CLEAN
 }
 
-function computation(fn: (prev: any) => any, effect: 0 | 1, init?: any): Computation {
+/** A child hole's value: functions are called (tracked), arrays unwrapped one level. */
+function unwrap(v: any) {
+  while (typeof v === 'function') v = v()
+  if (Array.isArray(v)) v = v.map(x => { while (typeof x === 'function') x = x(); return x })
+  return v
+}
+
+function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {
   const node: Computation = {
-    fn, v: init, o: [], s: [], state: DIRTY, effect, id: nextId++,
+    fn, v: undefined, o: NONE, s: NONE, state: DIRTY, effect, a, id: nextId++,
     owned: null, cleanups: null, owner, context: owner?.context,
   }
   if (DEV && devComponent.label) node.n = devComponent.label
-  if (owner) (owner.owned ??= []).push(node)
+  if (owner) owner.owned = add(owner.owned ?? NONE, node)
   return node
 }
 
@@ -210,15 +238,18 @@ export function collect<T>(fn: () => T): [T, Box<any>[]] {
 
 export class Box<T> implements State<T> {
   v: T
-  o: Computation[] = []
+  o: Computation[] = NONE
+  // Rarely set, so not own fields of every box (memory).
   /** Per-entry sources for `get(key)`. */
-  k?: Map<PropertyKey, Source>
+  declare k?: Map<PropertyKey, Source>
   /** Write hook: a scope's history, persistence and transactions. */
-  h?: (box: Box<T>, prev: T) => void
+  declare h?: (box: Box<T>, prev: T) => void
   /** Dev name (`cart.note`). */
-  n?: string
-  constructor(v: T, public opts?: StateOptions<T>) {
+  declare n?: string
+  declare opts?: StateOptions<T>
+  constructor(v: T, opts?: StateOptions<T>) {
     this.v = v
+    if (opts) this.opts = opts
     if (collecting) collecting.push(this)
   }
   get value() { read(this); return this.v }
@@ -233,7 +264,7 @@ export class Box<T> implements State<T> {
     if (listener) {
       const k = (this.k ??= new Map())
       let s = k.get(key)
-      if (!s) k.set(key, (s = { v: undefined, o: [] }))
+      if (!s) k.set(key, (s = { v: undefined, o: NONE, b: this, key }))
       read(s)
     }
     return (this.v as any)?.[key]
@@ -310,18 +341,25 @@ export function watch<T>(source: () => T, run: (value: T, prev: T | undefined) =
 /** Compiled binding: `compute` is tracked, `apply(value, prev)` writes the DOM. Runs once now; never on the server. */
 export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | undefined) => void, options?: EffectOptions) {
   if (rt.server) return
-  let prev: T | undefined
-  const node = computation(() => {
-    const v = compute(prev)
-    untrack(() => apply(v, prev))
-    prev = v
-  }, 1)
+  const node = computation(compute, 1, apply)
   if (DEV && options?.name) node.n = `${options.name} (${options.loc})${node.n ? ` in ${node.n}` : ''}`
+  settle(node)
+}
+
+/** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
+function settle(node: Computation) {
   run(node)
+  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.at(-1) === node) owner.owned.pop()
+}
+
+/** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
+export function hole(value: () => unknown, apply: (value: any) => void) {
+  if (rt.server) return
+  settle(computation(value, 2, apply))
 }
 
 export function onCleanup(fn: () => void) {
-  if (owner) (owner.cleanups ??= []).push(fn)
+  if (owner) owner.cleanups = add(owner.cleanups ?? NONE, fn)
 }
 
 export function onMount(fn: () => void) {
@@ -348,11 +386,16 @@ export function getOwner() {
 
 export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner): T {
   const root: Owner = { owned: null, cleanups: null, owner: parent, context: parent?.context }
+  return within(root, () => fn(() => clean(root)))
+}
+
+/** Run `fn` untracked with `root` as its owner: a root the caller made (For's rows are their own roots). */
+export function within<T>(root: Owner, fn: () => T): T {
   const prevOwner = owner, prevListener = listener
   owner = root
   listener = null
   try {
-    return fn(() => clean(root))
+    return fn()
   } finally {
     owner = prevOwner
     listener = prevListener

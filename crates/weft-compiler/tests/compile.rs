@@ -204,6 +204,24 @@ fn map_becomes_keyed_list_with_live_item() {
 }
 
 #[test]
+fn a_rows_key_is_written_once() {
+    // The key can't change while the row lives (a new item under the same key has the same key), so a hole or
+    // attribute that is exactly the key gets no effect. Anything else about the item stays live.
+    let src = "export function L({ xs }) { return <ul>{xs.map(x => <li key={x.id} data-id={x.id} title={x.name}>{x.id}: {x.name}</li>)}</ul> }";
+    let (code, d) = run(src);
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("\"data-id\", x().id);") && !code.contains("() => (x().id)"), "{code}");
+    assert!(code.contains("() => (x().name)") && code.contains("_$bind("), "{code}");
+    // Hydrating, the attribute stays a binding (it skips the server's value; a write would be a mutation).
+    let o = Options { filename: "App.tsx".into(), hydratable: true, ..Default::default() };
+    let hydratable = compile(src, &o).code.unwrap();
+    assert!(hydratable.contains("_$bind(() => [x().id, x().name]"), "{hydratable}");
+    // Other key shapes, and expressions that only contain the key, stay live.
+    let (code, _) = run("export function L({ xs }) { return <ul>{xs.map(x => <li key={x.id}>{x.id + 1}</li>)}</ul> }");
+    assert!(code.contains("() => (x().id + 1)"), "{code}");
+}
+
+#[test]
 fn list_index_is_live() {
     let (code, _) = run("export function L({ xs }) { return <ol>{xs.map((x, i) => <li key={x}>{i + 1}. {x}</li>)}</ol> }");
     assert!(code.contains("i() + 1"), "{code}");
@@ -508,4 +526,56 @@ fn content_properties_render_on_the_server_and_refuse_children() {
     assert!(code.contains("\">\" + String((p.h) ?? \"\") + \"</div>\""), "{code}");
     let out = compile("export const A = (p: any) => <p textContent={p.s}>x</p>", &Options { filename: "App.tsx".into(), ..Default::default() });
     assert!(out.code.is_none() && out.diagnostics[0].message.contains("can't also have children"), "{:?}", out.diagnostics);
+}
+
+// ---- HMR (research 21) -----------------------------------------------------------------------------------------
+
+fn hot(source: &str) -> String {
+    let o = Options { filename: "/app/Card.tsx".into(), dev: true, hmr: true, ..Default::default() };
+    compile(source, &o).code.unwrap_or_default()
+}
+
+#[test]
+fn hmr_registers_components_and_keeps_body_state() {
+    let code = hot("import { state } from 'weft'\nexport function Card() { const open = state(false); return <p>{open.value}</p> }\nconst Row = () => <li />");
+    assert!(code.contains(r#"_$keep(state(false), "Card", "open:"#), "{code}");
+    assert!(code.contains(r#"import { hot as _$hot, keep as _$keep } from "weft/hmr";"#), "{code}");
+    assert!(code.contains(r#"_$hot("/app/Card.tsx", { Card: [Card, ""#) && code.contains("Row: [Row, "), "{code}");
+    assert!(code.contains("import.meta.hot.accept();"), "{code}");
+}
+
+#[test]
+fn hmr_key_follows_the_initializer() {
+    let key = |src: &str| {
+        let code = hot(src);
+        let at = code.find("\"n:").expect("key");
+        code[at..at + 20].to_string()
+    };
+    let a = key("export function C() { const n = state(0); return <i>{n.value}</i> }");
+    let b = key("export function C() { const n = state(0); return <b>{n.value}!</b> }");
+    let c = key("export function C() { const n = state(1); return <i>{n.value}</i> }");
+    assert_eq!(a, b, "a markup edit keeps the key");
+    assert_ne!(a, c, "a new initializer resets");
+}
+
+#[test]
+fn hmr_accepts_only_component_modules() {
+    assert!(!hot("export const total = 1\nexport function C() { return <i /> }").contains("accept()"));
+    assert!(!hot("import { render } from 'weft/dom'\nfunction App() { return <i /> }\nrender(() => <App />, document.body)").contains("accept()"));
+    assert!(hot("function App() { return <i /> }\nexport default App\nexport type P = { a: 1 }").contains("accept()"));
+}
+
+#[test]
+fn hmr_is_dev_dom_only() {
+    let src = "export function C() { const n = state(0); return <i>{n.value}</i> }";
+    for o in [
+        Options { dev: false, hmr: true, ..Default::default() },
+        Options { dev: true, hmr: false, ..Default::default() },
+        Options { dev: true, hmr: true, generate: "ssr".into(), ..Default::default() },
+        Options { dev: true, hmr: true, hydratable: true, ..Default::default() },
+    ] {
+        let code = compile(src, &o).code.unwrap();
+        assert!(!code.contains("weft/hmr") && !code.contains("_$keep"), "{code}");
+    }
+    assert!(!hot("const x = 1").contains("weft/hmr"), "no components, no registration");
 }

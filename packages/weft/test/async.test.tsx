@@ -1,4 +1,5 @@
 // resource and <Boundary>: §6.2 timing (150 ms, then held 400 ms), errors and retry, and the SSR round trips.
+// weft-allow T004, T005: framework test of hydration and resource timing; it reads the server DOM and lets real timers fire
 import { screen } from '@testing-library/dom'
 import { renderToString, renderToStringAsync } from 'weft/ssr'
 import { hydrate } from 'weft/dom'
