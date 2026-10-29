@@ -1,15 +1,16 @@
 // weft/dom: the helpers compiled templates call (the import surface of Solid 2's DOM back end), plus `render`
 // and the keyed list. Compiled code only; app code imports `render` and nothing else from here.
 
-import { createRoot, effect, memo, onCleanup, state, untrack, type State } from './index'
+import { DEV, createRoot, devComponent, effect, memo, onCleanup, rt, state, untrack, type EffectOptions, type State } from './index'
 
 export { effect, memo, untrack }
+export { getFirstChild, getNextElement, getNextMarker, getNextMatch, getNextSibling, hydrate, runHydrationEvents, scope } from './hydrate'
 
 type Mountable = Element | DocumentFragment
 
 export function template(html: string): () => Node {
   let node: Node | undefined
-  return () => {
+  const make = () => {
     if (!node) {
       const t = document.createElement('template')
       t.innerHTML = html
@@ -17,10 +18,16 @@ export function template(html: string): () => Node {
     }
     return node.cloneNode(true)
   }
+  make.html = html // the hydration tag check
+  return make
 }
 
-export function createComponent<P>(Comp: (props: P) => any, props: P) {
-  return untrack(() => Comp(props))
+/** `name`/`loc`: dev names from the back end's `sourceNames`; bindings created inside carry them. */
+export function createComponent<P>(Comp: (props: P) => any, props: P, name?: string, loc?: string) {
+  if (!DEV || !name) return untrack(() => Comp(props))
+  const prev = devComponent.label
+  devComponent.label = `<${name}> (${loc})`
+  try { return untrack(() => Comp(props)) } finally { devComponent.label = prev }
 }
 
 export function render(code: () => any, container: Element): () => void {
@@ -100,8 +107,9 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
  * `marker` undefined: the value is the parent's only dynamic content, appended at the end.
  * `marker` null: append at the end after static children. A node: insert before it.
  */
-export function insert(parent: Mountable, value: any, marker?: Node | null, _initial?: unknown) {
-  let current: Node[] = []
+export function insert(parent: Mountable, value: any, marker?: Node | null, initial?: Node[], options?: EffectOptions) {
+  // Hydrating: start from the server's nodes (between the markers, or the parent's only content) and keep them.
+  let current: Node[] = rt.ids ? (marker === undefined ? [...parent.childNodes] : initial ?? []) : []
   const at = marker ?? null
   if (typeof value !== 'function') {
     place(parent, value, current, at)
@@ -115,6 +123,7 @@ export function insert(parent: Mountable, value: any, marker?: Node | null, _ini
       return v
     },
     v => { current = place(parent, v, current, at) },
+    value.$s ? { ...options, scope: true } : options,
   )
 }
 
@@ -122,7 +131,7 @@ export function insert(parent: Mountable, value: any, marker?: Node | null, _ini
 
 export function setAttribute(node: Element, name: string, value: any) {
   if (value == null || value === false) node.removeAttribute(name)
-  else node.setAttribute(name, value === true ? '' : value)
+  else if (!rt.ids || node.getAttribute(name) !== String(value === true ? '' : value)) node.setAttribute(name, value === true ? '' : value) // hydrating: the server wrote it
 }
 
 export function setProperty(node: any, name: string, value: any) {
@@ -214,6 +223,16 @@ export function delegateEvents(names: string[]) {
 export function addEventListener(node: Element, name: string, handler: any) {
   if (Array.isArray(handler)) node.addEventListener(name, e => handler[0](handler[1], e))
   else node.addEventListener(name, handler)
+}
+
+/** A handler that isn't an inline function (`onClick={onAdd}`): read once, delegated when the event is. */
+export function addEvent(node: any, name: string, handler: any, delegate?: boolean) {
+  if (!delegate) return addEventListener(node, name, handler)
+  const key = `_$$${name}`
+  if (Array.isArray(handler)) {
+    node[key] = handler[0]
+    node[`${key}Data`] = handler[1]
+  } else node[key] = handler
 }
 
 // ---- keyed list (§3.4) ----------------------------------------------------------------------------------------

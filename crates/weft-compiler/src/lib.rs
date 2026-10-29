@@ -31,11 +31,26 @@ pub struct Options {
     pub check_only: bool,
     pub dev: bool,
     pub source_map: bool,
+    /// `"dom"` (default) or `"ssr"`: the back end's output mode. SSR output imports from `weft/ssr`.
+    pub generate: String,
+    /// DOM output that adopts server-rendered nodes (`hydrate`), and SSR output that marks them.
+    pub hydratable: bool,
+    /// Dev names from the back end: component labels, binding labels and source locations (dev builds only).
+    pub source_names: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Self { filename: "input.tsx".into(), module_name: "weft/dom".into(), check_only: false, dev: false, source_map: false }
+        Self {
+            filename: "input.tsx".into(),
+            module_name: "weft/dom".into(),
+            check_only: false,
+            dev: false,
+            source_map: false,
+            generate: "dom".into(),
+            hydratable: false,
+            source_names: false,
+        }
     }
 }
 
@@ -72,9 +87,14 @@ pub fn compile(source: &str, options: &Options) -> Output {
 
     transform::apply(&allocator, &mut program, &scoping, &plan, source);
 
+    let ssr = options.generate == "ssr";
     let solid = solidjs_compiler::CompileOptions {
         filename: Some(options.filename.clone()),
-        module_name: options.module_name.clone(),
+        // SSR output has its own runtime; a caller-set module name (tests, fixtures) wins.
+        module_name: if ssr && options.module_name == "weft/dom" { "weft/ssr".into() } else { options.module_name.clone() },
+        generate: if ssr { solidjs_compiler::Generate::Ssr } else { solidjs_compiler::Generate::Dom },
+        hydratable: options.hydratable,
+        source_names: solidjs_compiler::SourceNames::all(options.source_names && options.dev),
         dev: options.dev,
         source_map: options.source_map,
         // weft has one list primitive. `For` is emitted only by the pre-pass and auto-imported from weft/dom.

@@ -1,4 +1,4 @@
-import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot } from 'weft'
+import { derived, effect, flush, onCleanup, state, untrack, watch, createRoot, context } from 'weft'
 
 test('reads are consistent straight after a write', () => {
   const a = state(1)
@@ -106,4 +106,14 @@ test('state.linked follows its source until written, then resets when the source
   expect(local.value).toBe('edited')
   prop.value = 'b'
   expect(local.value).toBe('b')
+})
+
+test('context.provide: the provided subtree is disposed with its parent', () => {
+  const ctx = context(0)
+  let cleaned = 0
+  createRoot(dispose => {
+    ctx.provide(1, () => onCleanup(() => cleaned++))
+    dispose()
+  })
+  expect(cleaned).toBe(1)
 })

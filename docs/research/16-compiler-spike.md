@@ -5,6 +5,10 @@ Research date: 2026-10-28. Numbers marked **(measured)** were run for this doc o
 Numbers marked **(upstream CI)** come from GitHub Actions runs of `solidjs/solid`. Numbers marked **(derived)** are my
 arithmetic on a measured figure. Statements marked **(unverified)** were not checked.
 
+> **Superseded in part (2026-10-29):** weft now owns its code generator. This spike's back end (Solid 2's crate) stays
+> in the build only until weft's own passes the same checks, then it is removed (PLAN §3.6, §12). The measurements
+> and the pre-pass design below still stand.
+
 **The question** (PLAN §3.6, §11 "Compiler spike outcome"): is a Rust/Oxc compiler built on Solid 2's native crate the
 product path, or does weft fall back to forking `@solidjs/babel-plugin`? And does the spike say anything about the
 other §11 question, "`.value` in JSX: required everywhere or auto-read"?

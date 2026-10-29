@@ -13,8 +13,12 @@ const fixtures = {
   counter: join(pkg, 'bench/fixtures/counter.tsx'),
   'runtime (every export)': join(pkg, 'bench/fixtures/runtime-all.ts'),
   'v3 shop app': join(pkg, '../../evals/reference-v3/weft/src/main.tsx'),
+  'v3 shop app (defineState)': join(pkg, 'test/fixtures/v3-scope/main.tsx'),
+  'v3 shop app (hydrate)': join(pkg, 'bench/fixtures/hydrate-shop.tsx'),
+  'Boundary + resource': join(pkg, 'bench/fixtures/async.tsx'),
 }
-const budgets = { 'hello world': 3072, 'runtime (every export)': 6144, 'v3 shop app': 10240 }
+const hydratable = new Set(['v3 shop app (hydrate)'])
+const budgets = { 'hello world': 3072, 'runtime (every export)': 6144, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
 
 const rows = {}
 for (const [name, entry] of Object.entries(fixtures)) {
@@ -22,8 +26,8 @@ for (const [name, entry] of Object.entries(fixtures)) {
     root: dirname(entry),
     configFile: false,
     logLevel: 'silent',
-    plugins: [weft()],
-    resolve: { alias: [{ find: /^weft\/dom$/, replacement: join(pkg, 'src/dom.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
+    plugins: [weft({ hydratable: hydratable.has(name) })],
+    resolve: { alias: [{ find: /^weft\/(dom|persist|history)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
   const code = [out].flat().flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')
@@ -32,6 +36,6 @@ for (const [name, entry] of Object.entries(fixtures)) {
 }
 const kb = n => (n / 1024).toFixed(2) + ' KB'
 for (const [name, r] of Object.entries(rows))
-  console.log(`${name.padEnd(24)} min ${kb(r.minBytes).padStart(9)}  gz ${kb(r.gzBytes).padStart(8)}  br ${kb(r.brBytes).padStart(8)}${r.budgetBr ? `  budget ${kb(r.budgetBr)} ${r.brBytes <= r.budgetBr ? 'ok' : 'OVER'}` : ''}`)
+  console.log(`${name.padEnd(26)} min ${kb(r.minBytes).padStart(9)}  gz ${kb(r.gzBytes).padStart(8)}  br ${kb(r.brBytes).padStart(8)}${r.budgetBr ? `  budget ${kb(r.budgetBr)} ${r.brBytes <= r.budgetBr ? 'ok' : 'OVER'}` : ''}`)
 const i = process.argv.indexOf('--json')
 if (i > 0) writeFileSync(process.argv[i + 1], JSON.stringify(rows, null, 2))

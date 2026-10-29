@@ -1,0 +1,128 @@
+// Server render → hydrate round trips of the v3 reference app (evals/reference-v3/weft). The same sources load
+// twice: `?weft-ssr` compiles them for weft/ssr, `?weft-hydrate` for hydratable weft/dom (vite.mjs).
+import { screen } from '@testing-library/dom'
+import userEvent from '@testing-library/user-event'
+import { renderToString } from 'weft/ssr'
+import { hydrate } from 'weft/dom'
+import { flush } from 'weft/test'
+import { hydration } from '../src/hydrate'
+// @ts-expect-error: query imports (vite.mjs)
+import { App as ServerApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-ssr'
+// @ts-expect-error
+import { App as ClientApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-hydrate'
+// @ts-expect-error
+import { Shop as ServerShop } from './fixtures/ssr/Shop.tsx?weft-ssr'
+// @ts-expect-error
+import { Shop as ClientShop } from './fixtures/ssr/Shop.tsx?weft-hydrate'
+import type { Product } from '../../../evals/reference-v3/weft/src/api'
+
+const products: Product[] = [
+  { id: 'apple', name: 'Apple', category: 'fruit', price: 0.5, stock: 20 },
+  { id: 'banana', name: 'Banana & co', category: 'fruit', price: 0.25, stock: 3 },
+  { id: 'bagel', name: 'Bagel <b>', category: 'bakery', price: 1.2, stock: 6 },
+  { id: 'yogurt', name: 'Yogurt "plain"', category: 'dairy', price: 0.9, stock: 0 },
+]
+const data = () => ({
+  products,
+  cart: { apple: { qty: 2, addedPrice: 0.4 }, bagel: { qty: 1, addedPrice: 1.2 } },
+  filters: { search: '', category: 'all' as const, sort: 'price-asc' as const },
+})
+
+/** Render on the "server", put the HTML in the page, hydrate it, and report what hydration changed. */
+function roundTrip(server: () => unknown, client: () => unknown) {
+  const html = renderToString(server)
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = html
+  const before = [...container.querySelectorAll('*')]
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const mutations: MutationRecord[] = []
+  const observer = new MutationObserver(r => mutations.push(...r))
+  observer.observe(container, { subtree: true, childList: true, attributes: true, characterData: true })
+  const dispose = hydrate(client, container)
+  mutations.push(...observer.takeRecords())
+  observer.disconnect()
+  const warnings = warn.mock.calls.map(c => String(c[0]))
+  warn.mockRestore()
+  return { html, container, before, dispose, mutations, warnings }
+}
+
+afterEach(() => { document.body.innerHTML = '' })
+
+/** The DOM's own serialization of `html` (jsdom quotes every attribute value). */
+const parsed = (html: string) => Object.assign(document.createElement('div'), { innerHTML: html }).innerHTML
+
+test('loaded shop: zero mismatches, every server node kept, no DOM writes', () => {
+  const r = roundTrip(() => ServerShop(data()), () => ClientShop(data()))
+  expect(r.warnings).toEqual([])
+  expect(hydration.misses).toBe(0)
+  expect(r.before.every(el => el.isConnected)).toBe(true)
+  expect(r.container.innerHTML).toBe(parsed(r.html))
+  expect(r.mutations).toHaveLength(0)
+  // the server output is what the user would see before any script runs
+  expect(r.html).toContain('Bagel &lt;b>')
+  expect(r.html).toContain('aria-label="Add Yogurt &quot;plain&quot;" disabled')
+  expect(r.html).toMatch(/<option value="price-asc" selected>/)
+  expect(r.before.length).toBeGreaterThan(40)
+})
+
+test('loaded shop: hydrated handlers and bindings work', async () => {
+  const r = roundTrip(() => ServerShop(data()), () => ClientShop(data()))
+  const user = userEvent.setup()
+  const appleRow = screen.getByRole('button', { name: 'Increase Apple' }).closest('li')!
+  await user.click(screen.getByRole('button', { name: 'Increase Apple' }))
+  await flush()
+  expect(appleRow.isConnected).toBe(true) // updated in place, not re-rendered
+  expect(appleRow.querySelector('[data-testid=qty]')!.textContent).toBe('3')
+  expect(screen.getByRole('button', { name: 'Cart (4)' })).toBeTruthy()
+  await user.click(screen.getByRole('button', { name: 'Add Banana & co' }))
+  await flush()
+  expect(screen.getByRole('button', { name: 'Increase Banana & co' })).toBeTruthy()
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Category' }), 'bakery')
+  await flush()
+  expect(screen.getByTestId('product-count').textContent).toBe('1 product')
+  r.dispose()
+})
+
+test('reference App (loading state): round trip, then the client fetch takes over', async () => {
+  const api = { listProducts: () => Promise.resolve(products), subscribePrices: () => () => {} }
+  const r = roundTrip(() => ServerApp({ api }), () => ClientApp({ api }))
+  expect(r.warnings).toEqual([])
+  expect(hydration.misses).toBe(0)
+  expect(r.html).toContain('Loading&#8230;')
+  expect(r.container.innerHTML).toBe(parsed(r.html))
+  const header = r.container.querySelector('header')!
+  await screen.findByRole('list', { name: 'Products' })
+  expect(header.isConnected).toBe(true)
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Add Apple' }))
+  await flush()
+  expect(screen.getByRole('button', { name: 'Cart (1)' })).toBe(header.querySelectorAll('button')[1])
+  r.dispose()
+})
+
+test('a key miss is counted, warned and rendered fresh', () => {
+  const html = renderToString(() => ServerShop(data()))
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = html.replace(/ _hk=[^ >]+(?=[^]*<\/main>$)/, '') // drop the last key
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  hydrate(() => ClientShop(data()), container)
+  expect(hydration.misses).toBe(1)
+  expect(warn.mock.calls.some(c => String(c[0]).includes('hydration key miss'))).toBe(true)
+  warn.mockRestore()
+})
+
+test('renderToString without hydration: no keys, same markup', () => {
+  const plain = renderToString(() => ServerShop(data()), { hydratable: false })
+  expect(plain).not.toContain('_hk=')
+  expect(plain).toBe(renderToString(() => ServerShop(data())).replace(/ _hk=[^ >]+/g, ''))
+})
+
+// @ts-expect-error
+import { App as ServerScopeApp } from './fixtures/v3-scope/App.tsx?weft-ssr'
+
+test('defineState on the server: one app per render, seeded per request, never shared', () => {
+  const api = { listProducts: () => new Promise<never>(() => {}), subscribePrices: () => () => {} }
+  const seeded = renderToString(() => ServerScopeApp({ api }), { app: { state: { cart: { lines: { apple: { qty: 3, addedPrice: 0.5 } } } } } })
+  const fresh = renderToString(() => ServerScopeApp({ api }))
+  expect(seeded).toContain('Cart (<!--$-->3<!--/-->)')
+  expect(fresh).toContain('Cart (<!--$-->0<!--/-->)')
+})

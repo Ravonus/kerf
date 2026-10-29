@@ -6,6 +6,10 @@
 import { afterEach, expect } from 'vitest'
 import { flush as flushGraph, stats } from './index'
 import { createComponent, render as mount } from './dom'
+import { createApp, useApp, withApp, type AppOptions } from './scope'
+
+export { scope } from './scope'
+export { memoryStorage } from './memory'
 
 export async function flush() {
   for (let i = 0; i < 3; i++) {
@@ -16,10 +20,16 @@ export async function flush() {
 
 const mounted = new Set<() => void>()
 
-/** Mount a component into a fresh container. Unmounted automatically after each test. */
-export function render<P extends object>(Comp: (props: P) => any, props: P = {} as P) {
+/**
+ * Mount a component into a fresh container, with a fresh app: every `defineState` scope starts from its setup.
+ * `options.state` seeds scopes (`{ cart: { note: 'hi' } }`); pass one `storage` to several renders to test reloads.
+ * Unmounted automatically after each test.
+ */
+export function render<P extends object>(Comp: (props: P) => any, props: P = {} as P, options: AppOptions = {}) {
+  const app = createApp(options)
+  useApp(app)
   const container = document.body.appendChild(document.createElement('div'))
-  const dispose = mount(() => createComponent(Comp, props), container)
+  const dispose = mount(() => withApp(app, () => createComponent(Comp, props)), container)
   const unmount = () => {
     if (!mounted.delete(unmount)) return
     dispose()
