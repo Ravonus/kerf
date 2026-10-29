@@ -1,0 +1,30 @@
+{
+  "name": "weft",
+  "version": "0.0.0",
+  "private": true,
+  "description": "weft runtime, compiler binding, Vite plugin and test utilities (Phase 1 compiler spike)",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./dom": "./src/dom.ts",
+    "./test": "./src/test.ts",
+    "./vite": "./vite.mjs",
+    "./compiler": "./compiler.cjs"
+  },
+  "scripts": {
+    "build:native": "node scripts/build-native.mjs",
+    "test": "vitest run",
+    "bench": "node scripts/bench.mjs",
+    "size": "node scripts/size.mjs"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.8",
+    "jsdom": "30.1.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

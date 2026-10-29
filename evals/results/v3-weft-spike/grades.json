@@ -1,0 +1,80 @@
+{
+  "react/t3": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      },
+      "t3": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 0,
+      "tests": 0,
+      "passed": 0
+    }
+  },
+  "solid/t3": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      },
+      "t3": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 0,
+      "tests": 0,
+      "passed": 0
+    }
+  },
+  "weft/t3": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 5,
+        "total": 5
+      },
+      "t2": {
+        "passed": 7,
+        "total": 7
+      },
+      "t3": {
+        "passed": 7,
+        "total": 7
+      }
+    },
+    "failures": [],
+    "visible": {
+      "files": 0,
+      "tests": 0,
+      "passed": 0
+    }
+  }
+}

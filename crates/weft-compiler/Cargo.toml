@@ -1,0 +1,39 @@
+[package]
+name = "weft-compiler"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+publish = false
+description = "weft's TSX compiler (Phase 1 spike): a weft pre-pass and diagnostics on Oxc, feeding Solid 2's DOM back end"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+# Node-API binding (`transform(source, optionsJson) -> resultJson`). Off for the CLI and tests.
+node = ["dep:napi", "dep:napi-derive"]
+
+[dependencies]
+oxc_allocator = "0.144"
+oxc_ast = "0.144"
+oxc_ast_visit = "0.144"
+oxc_parser = "0.144"
+oxc_semantic = "0.144"
+oxc_span = "0.144"
+oxc_syntax = "0.144"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Solid 2's native compiler, pinned. Used unmodified through its `compile_program` seam (see docs/research/16).
+solidjs-compiler = { git = "https://github.com/solidjs/solid", rev = "02b52b5c29fb3a08b605f524b09d90455895ac67", default-features = false }
+napi = { version = "3.12", default-features = false, features = ["napi4"], optional = true }
+napi-derive = { version = "3.6", optional = true }
+
+[build-dependencies]
+napi-build = "2.4"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "symbols"

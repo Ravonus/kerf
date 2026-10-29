@@ -8,6 +8,7 @@
 //   node run-app.mjs grade    --name v3-sonnet                                   # every snapshot, cumulative tests
 //   node run-app.mjs measure  --name v3-sonnet                                   # perf probe + bundle size, last snapshot
 //   node run-app.mjs summary  --name v3-sonnet
+//   node run-app.mjs reference --name v3-ref [--frameworks react,solid,weft]    # snapshot reference-v3/<fw> as t3
 import { execFile } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -34,6 +35,7 @@ const writeJson = (p, v) => { mkdirSync(dirname(p), { recursive: true }); writeF
 const FRAMEWORK = {
   react: 'React 19 + TypeScript (function components and hooks)',
   solid: 'SolidJS 1.9 + TypeScript (`solid-js`)',
+  weft: 'weft (Phase 1 spike) + TypeScript',
 }
 
 function prepare() {
@@ -201,6 +203,16 @@ function summary() {
   console.log(L.join('\n'))
 }
 
-const commands = { prepare, prompt, snapshot, stat, grade, measure, summary }
+// Treat each framework's reference app as its final (t3) snapshot, so grade/measure/summary run on it.
+function reference() {
+  for (const fw of frameworks()) {
+    const dest = join(resultsDir, 'snapshots', fw, `t${task.tickets.length}`)
+    rmSync(dest, { recursive: true, force: true })
+    cpSync(join(root, 'reference-v3', fw, 'src'), join(dest, 'src'), { recursive: true })
+    console.log(`reference ${fw} → t${task.tickets.length}`)
+  }
+}
+
+const commands = { prepare, prompt, snapshot, stat, grade, measure, summary, reference }
 if (!commands[cmd]) console.log(`usage: node run-app.mjs ${Object.keys(commands).join('|')} --name <run> ...`)
 else await commands[cmd]()

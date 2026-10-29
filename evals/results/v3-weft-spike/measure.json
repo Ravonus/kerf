@@ -1,0 +1,83 @@
+{
+  "react": {
+    "probe": {
+      "add-one": {
+        "domMutations": 3,
+        "commits": 1,
+        "renderMs": 4.57,
+        "wallMs": 54.27
+      },
+      "price-push": {
+        "domMutations": 3,
+        "commits": 1,
+        "renderMs": 4.48,
+        "wallMs": 6.1
+      },
+      "type-3-chars": {
+        "domMutations": 167,
+        "commits": 3,
+        "renderMs": 4.12,
+        "wallMs": 22.76
+      }
+    },
+    "bundleGzBytes": 69330,
+    "srcFiles": 8,
+    "srcLines": 183,
+    "effects": 1,
+    "memos": 0
+  },
+  "solid": {
+    "probe": {
+      "add-one": {
+        "domMutations": 1,
+        "commits": null,
+        "renderMs": null,
+        "wallMs": 47.32
+      },
+      "price-push": {
+        "domMutations": 1,
+        "commits": null,
+        "renderMs": null,
+        "wallMs": 0.17
+      },
+      "type-3-chars": {
+        "domMutations": 152,
+        "commits": null,
+        "renderMs": null,
+        "wallMs": 15.27
+      }
+    },
+    "bundleGzBytes": 10137,
+    "srcFiles": 8,
+    "srcLines": 196,
+    "effects": 0,
+    "memos": 0
+  },
+  "weft": {
+    "probe": {
+      "add-one": {
+        "domMutations": 1,
+        "commits": null,
+        "renderMs": null,
+        "wallMs": 47.23
+      },
+      "price-push": {
+        "domMutations": 1,
+        "commits": null,
+        "renderMs": null,
+        "wallMs": 0.35
+      },
+      "type-3-chars": {
+        "domMutations": 152,
+        "commits": null,
+        "renderMs": null,
+        "wallMs": 14.71
+      }
+    },
+    "bundleGzBytes": 4313,
+    "srcFiles": 8,
+    "srcLines": 189,
+    "effects": 0,
+    "memos": 0
+  }
+}
