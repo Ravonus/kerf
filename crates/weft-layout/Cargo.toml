@@ -1,0 +1,18 @@
+[package]
+name = "weft-layout"
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+description = "Shared layout for weft's native hosts and Node tests (Taffy flexbox behind a C ABI)"
+
+[lib]
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+taffy = { version = "0.15", default-features = false, features = ["std", "flexbox", "content_size", "taffy_tree"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+panic = "abort"
+codegen-units = 1

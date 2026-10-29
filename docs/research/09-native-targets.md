@@ -111,9 +111,11 @@ The UI thread must never block on app logic, and some interactions can't take a 
   frames. No worklets in v0.
 - **Scroll-linked effects** (collapsing headers, sticky parts) are declared as bindings to scroll position and run in
   the host.
-- **Text input:** the native field owns its text and selection. `onInput` reports to JS. A JS write is applied only
-  when it differs from the last value the host reported, which avoids the controlled-input cursor jump and lag that
-  React Native has had to work around.
+- **Text input:** the native field owns its text and selection. `onInput` reports to JS. The host keeps the texts
+  it reported that JS hasn't echoed back yet: a JS value matching one of them is a late echo and is dropped, and any
+  other value is a real JS write and wins. This avoids the controlled-input cursor jump and lost keystrokes that
+  React Native has had to work around. The spike lost characters with a simpler rule ([spike](../../spikes/native/README.md));
+  the real protocol should tag input events with a sequence number instead of matching strings.
 
 ### 2.3 Layout: one Rust crate everywhere
 

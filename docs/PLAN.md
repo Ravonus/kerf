@@ -421,6 +421,8 @@ codebase and one pipeline produce three outputs.
   hand-edited (P010).
 - **Agents:** `weft device` = `weft browser` for the simulator and emulator. Its snapshot carries the accessibility
   tree, laid-out frames, the resolution each component took, and the reactive graph.
+- **Spike status (2026-10-28):** the iOS half of 6a runs ([`spikes/native/`](../spikes/native/README.md)). A price
+  push is 1 host op on the phone, and Node's layout matches the phone's to 0pt over 769 nodes. Android is next.
 
 ## 6. Design language: `weft/ds`
 

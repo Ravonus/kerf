@@ -3,3 +3,6 @@ dist/
 coverage/
 .DS_Store
 *.log
+target/
+spikes/native/ios/build/
+spikes/native/ios/*.xcodeproj/

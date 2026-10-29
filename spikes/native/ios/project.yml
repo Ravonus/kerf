@@ -1,0 +1,27 @@
+# XcodeGen spec. The generated WeftSpike.xcodeproj is git-ignored (the plan's "generated native projects" idea).
+name: WeftSpike
+options:
+  bundleIdPrefix: dev.weft
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  WeftSpike:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: ../js/dist/app.js
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.weft.spike
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        SWIFT_VERSION: "5.0"
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/weft_layout.h
+        # Link the static archive by path: with -l the linker would pick the cdylib next to it.
+        OTHER_LDFLAGS[sdk=iphonesimulator*]: $(SRCROOT)/../../../crates/weft-layout/target/aarch64-apple-ios-sim/release/libweft_layout.a
+        OTHER_LDFLAGS[sdk=iphoneos*]: $(SRCROOT)/../../../crates/weft-layout/target/aarch64-apple-ios/release/libweft_layout.a
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+        CODE_SIGNING_ALLOWED: NO
