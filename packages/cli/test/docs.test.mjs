@@ -12,10 +12,13 @@ const status = probe(loadCompiler(resolveWeft(fixture)))
 describe('catalog probe', () => {
   it('finds the codes the Phase 1 compiler reports, with their autofixes', () => {
     const reported = Object.entries(status).filter(([, s]) => s.implemented).map(([c]) => c)
-    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015'])
+    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015', 'W050', 'W051', 'W054', 'W056'])
     expect(status.W006.autofix).toBe(true)
     expect(status.W015.autofix).toBe(true)
     expect(status.W001).toMatchObject({ autofix: false, suggestion: true })
+    expect(status.W050).toMatchObject({ autofix: false, suggestion: true }) // → on(…) / interval(…)
+    expect(status.W054).toMatchObject({ autofix: false, suggestion: true }) // → { ssr: false }
+    expect(status.W051).toMatchObject({ autofix: false, suggestion: false })
   })
 
   it('has one entry per code, and every P100–P120 code is reserved', () => {
@@ -37,6 +40,8 @@ describe('docs', () => {
     expect((await docs(fixture, 'w014')).text).toMatch(/^# W014 \(error\)[\s\S]*Status in weft@0\.0\.0:\*\* reported\./)
     expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
     expect((await docs(fixture, 'P004')).text).toContain('reported by weft check')
+    expect((await docs(fixture, 'W054')).text).toMatch(/Status in weft@0\.0\.0:\*\* reported, suggested edit\./)
+    expect((await docs(fixture, 'diagnostics')).text).toMatch(/^\| T012 \| error \| .* \| reported by weft\/test after each test \|$/m)
   })
 
   it('rejects unknown topics with the list', async () => {
@@ -60,6 +65,8 @@ describe('AGENTS.md', () => {
     expect(text).not.toContain('Not in this version yet')
     expect(text).not.toContain('`setAttribute`')
     expect(text).toContain('| `weft check --json` |')
+    expect(text).toContain('- `weft/browser`: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`. Create them in setup (W051)')
+    expect(text).toMatch(/^- `weft\/test`: .*`net`.*`page`/m)
   })
 
   it('lists resource, Boundary, hydrate and weft/ssr when the installed weft exports them', async () => {

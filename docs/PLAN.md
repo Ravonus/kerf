@@ -144,6 +144,10 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W042 | `onChange` on text inputs (React fires per keystroke, DOM on blur) | `onInput` (autofix) |
 | W014 | Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list (error in-file, warning when the list leaves the file) | Keep items stable and read the changing field live, or replace only the changed item |
 | W015 | A box rendered without `.value` in JSX (a child, or a native element's attribute) | `.value` (autofix) |
+| W050 | Raw `addEventListener` / `setInterval` / `new WebSocket` / `new EventSource` in a component with no cleanup (§4.2) | `on` / `interval` from `weft/browser` (suggested edit), or clean up in `onCleanup` |
+| W051 | A `weft/browser` value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await` | Create it in setup, or inside `createRoot` |
+| W054 | `media(q)` without `ssr` in a server-rendered file (error; a warning when `weft check` can't tell, off in client-only builds) | `media(q, { ssr: false })` (suggested edit) |
+| W056 | `watch` that copies a live value (a `weft/browser` value, `.live()`) into `state` | Read `.value` directly, or `derived` |
 
 `class`/`className`, `for`/`htmlFor`, and `style` as object or string are all accepted.
 
@@ -337,6 +341,14 @@ const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', sche
 - T012: a test that leaves subscriptions open.
 - T013: a real socket in the fast test lane.
 - P007: `ws`, `socket.io-client` and the like as dependencies.
+
+**Phase 1 status (2026-10-29):** `weft/browser` ships `online`, `visible`, `lifecycle`, `media`, `on` and `interval`
+(≈1 KB br with every export, paid only where imported), with W050, W051, W054, W056 and T012. Each value subscribes on
+first read, shares one listener per (target, type), goes with its owner, and throws W051 in dev outside one. Server
+values: `online`/`visible` `true`, `lifecycle` `'active'`; `media` has none, so W054 covers only `media`. `tabs` is
+Phase 3b (`tabs.channel`), and research 07's `storage` is `state(…, { persist })` in `defineState` (§4.5). `weft/test`
+fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, true)` …) and runs T012 after each test.
+`interval` uses the platform timer (vi fake timers in tests) until the test clock owns it.
 
 ### 4.3 Rust, opt-in and as far as you want
 

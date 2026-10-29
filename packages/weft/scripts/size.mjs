@@ -11,6 +11,7 @@ const pkg = join(here, '..')
 const fixtures = {
   'hello world': join(pkg, 'bench/fixtures/hello.tsx'),
   counter: join(pkg, 'bench/fixtures/counter.tsx'),
+  'counter + weft/browser': join(pkg, 'bench/fixtures/browser.tsx'),
   'runtime (every export)': join(pkg, 'bench/fixtures/runtime-all.ts'),
   'v3 shop app': join(pkg, '../../evals/reference-v3/weft/src/main.tsx'),
   'v3 shop app (defineState)': join(pkg, 'test/fixtures/v3-scope/main.tsx'),
@@ -29,7 +30,7 @@ for (const [name, entry] of Object.entries(fixtures)) {
     configFile: false,
     logLevel: 'silent',
     plugins: [weft({ hydratable: hydratable.has(name) })],
-    resolve: { alias: [{ find: /^weft\/(dom|persist|history)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
+    resolve: { alias: [{ find: /^weft\/(dom|persist|history|browser)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
   const code = [out].flat().flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')

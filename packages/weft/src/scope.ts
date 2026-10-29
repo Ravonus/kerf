@@ -66,6 +66,12 @@ export function withApp<T>(app: App, fn: () => T): T {
   return appContext.provide(app, fn)
 }
 
+/** End an app: dispose every scope instance's owner (weft/test, when a render unmounts). */
+export function disposeApp(app: App) {
+  for (const inst of app.instances.values()) inst.dispose()
+  app.instances.clear()
+}
+
 // ---- features: weft/history and weft/persist register here -------------------------------------------------------
 
 export interface Timeline {
@@ -138,6 +144,8 @@ export class Instance {
   inits = new Map<Box<any>, unknown>()
   history?: Timeline
   name: string
+  /** Disposes the setup's owner: its watchers and the browser values it reads (`disposeApp`). */
+  dispose!: () => void
 
   constructor(public app: App, def: ScopeDef) {
     this.name = def.name
@@ -146,7 +154,7 @@ export class Instance {
         throw new StateError('S009', `\`${def.name}\` sets \`history\`, but weft/history isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/history'`")
       this.history = features.history!.create(this, def.options.history.limit)
     }
-    const [shape, boxes] = collect(() => createRoot(() => def.setup(), null))
+    const [shape, boxes] = collect(() => createRoot(d => ((this.dispose = d), def.setup()), null))
     this.boxes = boxes
 
     const named = new Map<Box<any>, string>()

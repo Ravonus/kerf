@@ -1,4 +1,5 @@
 // HMR (PLAN §3.6, research 21): a module update swaps components in place and keeps their state.
+// weft-allow T005: framework test of HMR; which DOM nodes survive a swap is the subject
 //
 // Each "module" is source text compiled by the real compiler (dev, `hmr`) and evaluated with a fake `import.meta.hot`,
 // the way Vite re-executes an accepted module: same file name, a new module instance, importers left as they were.
