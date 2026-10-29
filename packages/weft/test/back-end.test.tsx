@@ -1,5 +1,6 @@
 // weft's back end (research 19): what its output does, construct by construct. The corpus oracle
 // (oracle.test.tsx) checks whole components against Solid's recorded output and the server render.
+// weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the back end writes
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flush } from 'weft'
 import { render } from 'weft/dom'

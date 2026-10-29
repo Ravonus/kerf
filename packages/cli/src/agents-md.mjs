@@ -22,7 +22,8 @@ export async function agentsMd(root) {
 
   const reported = catalog.filter(e => e.by === 'compiler' && info.status[e.code]?.implemented && e.code !== 'W000')
   const notYet = catalog.filter(e => e.by === 'compiler' && !info.status[e.code]?.implemented).map(e => e.code)
-  const pcodes = catalog.filter(e => e.by === 'cli').map(e => e.code)
+  const pcodes = catalog.filter(e => e.by === 'cli' && e.code.startsWith('P')).map(e => e.code)
+  const tcodes = catalog.filter(e => e.code.startsWith('T') && info.status[e.code]?.implemented).map(e => e.code)
 
   const text = [
     `# AGENTS.md`,
@@ -48,7 +49,7 @@ export async function agentsMd(root) {
       const names = entryPoints[mod].filter(n => info.exports[mod]?.includes(n))
       return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}. Its other exports are helpers compiled code calls; never import them.` : ''
     }).filter(Boolean),
-    info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`` : '',
+    info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
     missing.length ? `- Not in this version yet: ${missing.map(n => `\`${n}\``).join(', ')}. Don't import them.` : '',
     '',
     '## Diagnostics this weft reports',
@@ -57,6 +58,7 @@ export async function agentsMd(root) {
     '|---|---|---|',
     ...reported.map(e => `| ${e.code} | ${e.catches} | ${e.fix}${info.status[e.code].autofix ? ' (autofix)' : info.status[e.code].suggestion ? ' (suggested edit)' : ''} |`),
     '',
+    tcodes.length ? `Test checks (\`weft check\` on \`*.test.*\` files): ${tcodes.join(', ')}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
     `Project checks: ${pcodes.join(', ')}. In the catalog but not reported yet: ${notYet.join(', ')}. \`weft docs <code>\` explains any code.`,
     '',
     '## Commands',
