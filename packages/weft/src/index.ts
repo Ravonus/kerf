@@ -17,7 +17,7 @@ export interface Owner {
   context?: Record<symbol, unknown>
 }
 
-interface Computation extends Source, Owner {
+export interface Computation extends Source, Owner {
   fn: (prev: any) => any
   s: Source[]
   state: number
@@ -35,7 +35,7 @@ interface Computation extends Source, Owner {
 export interface EffectOptions { name?: string; loc?: string }
 
 /** Dev only: the component being created (`createComponent(Comp, props, name, loc)`), for binding names. */
-export const devComponent: { label?: string } = {}
+export const devComponent: { label?: string; id?: number } = {}
 
 let listener: Computation | null = null
 let owner: Owner | null = null
@@ -305,12 +305,31 @@ state.linked = <T>(source: () => T): State<T> => {
 }
 
 export class Memo<T> implements Derived<T> {
-  constructor(private node: Computation) {}
+  constructor(public node: Computation) {}
   get value(): T {
     update(this.node)
     read(this.node)
     return this.node.v
   }
+}
+
+/** Dev only: named boxes and derived values that are alive now, for the graph (weft/devtools). */
+export const named = new Set<Box<any> | Computation>()
+
+/**
+ * Dev builds: the compiler wraps component `state`/`derived` as `name(state(0), "Cart.count")`. The graph
+ * (`weft browser snapshot`, the overlay) shows the value under that name; the entry goes when its owner does.
+ */
+export function name<T>(value: T, label: string): T {
+  if (!DEV) return value
+  const node = value instanceof Box ? value : value instanceof Memo ? value.node : null
+  if (!node) return value
+  if (!(node instanceof Box) || !node.n) node.n = label
+  ;(node as any).c = devComponent.label
+  ;(node as any).i = devComponent.id
+  named.add(node)
+  onCleanup(() => named.delete(node))
+  return value
 }
 
 export function derived<T>(fn: () => T): Derived<T> {

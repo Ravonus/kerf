@@ -96,7 +96,7 @@ export const configSchema = z.strictObject({
     .strictObject({
       include: globs.optional(),
       lanes: z.array(z.enum(['fast', 'browser', 'e2e'])).optional(),
-      gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional() }).optional(),
+      gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional(), maxMutants: z.number().int().positive().optional() }).optional(),
     })
     .optional(),
   check: z.strictObject({ include: globs.optional(), exclude: globs.optional() }).optional(),

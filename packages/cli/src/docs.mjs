@@ -19,6 +19,7 @@ export const topics = {
   async: 'resource, <Boundary pending error>, weft/ssr and hydrate; W012',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
+  verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   diagnostics: 'Every W-, T- and P-code, and which ones the installed weft reports',
   commands: "This project's commands and tasks (from `weft tasks`)",
@@ -39,6 +40,7 @@ function status(code, info) {
   const st = info.status[e.code]
   if (e.by === 'compiler') return st?.implemented ? `reported${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
   if (e.by === 'test') return 'reported by weft/test after each test'
+  if (e.by === 'gate') return 'reported by `weft test --gate` on a diff'
   if (/^T/.test(e.code)) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
   return 'reserved'
