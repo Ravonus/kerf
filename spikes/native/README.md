@@ -13,6 +13,9 @@ js/src/recording-host.ts  fast-lane host: decodes ops, lays out with weft-layout
 ios/Sources/            Swift host: JavaScriptCore on its own queue, UIKit views, weft-layout static lib
 android/app/src/main/   Kotlin host: QuickJS-ng on a HandlerThread (C JNI bridge), framework views, weft-layout via JNI
 crates/weft-layout      Taffy flexbox behind a C ABI; the same exports build to wasm for Node
+protocol/idioms.json    which platform form each intent component takes, per OS × idiom, with the reason
+js/src/platform.ts      resolve() / explain() over that table; platform.os is a build-time constant per bundle
+js/src/intents.ts       Choice and AppTabs: the app says what it means, the table picks the form
 ```
 
 ## Run
@@ -28,7 +31,7 @@ Compare the phone's layout with Node's: the app writes `frames.json` 2 s after l
 `Documents/`; Android: `adb shell run-as dev.weft.spike cat files/frames.json`).
 
 ```bash
-cd spikes/native/js && npx tsx ../scripts/compare-layout.mts <path to frames.json>
+cd spikes/native/js && npx tsx ../scripts/compare-layout.mts <path to frames.json> <ios|android>
 ```
 
 ## Results (2026-10-28, Debug builds)
@@ -39,11 +42,13 @@ Devices: iPhone 17 Pro simulator (iOS 26.2) and an arm64 Android 16 emulator (AP
 |---|---|---|
 | v3 list screen runs | ✅ `UIButton` / `UITextField` / `UIScrollView` | ✅ framework `Button` / `EditText` / `ScrollView` |
 | Price push ≤ 1 host op | ✅ **1 op, 24 bytes**, 0.6–1.9 ms main thread | ✅ **1 op, 24 bytes**, 1.4–2.7 ms main thread |
-| Node layout matches device within 1pt | ✅ **0 pt** over 769 nodes | ✅ **0 pt** over 769 nodes |
+| Node layout matches device within 1pt | ✅ **0 pt** over 763 nodes (idiom build) | ✅ **0 pt** over 770 nodes (idiom build) |
 | Fast typing keeps every key | ✅ (after the fix below) | ✅ `adb input text` burst |
 | 60 Hz on a mid-range Android | — | ⏳ needs a real device and a frame-timing probe |
 
-Both phones get the same op stream from the same 28 KB bundle (4.8 KB brotli minified). The engines differ
+Before the idiom slice both phones got the same op stream from one 28 KB bundle (4.8 KB brotli minified). Now each OS
+gets its own bundle (33 KB, 6 KB brotli minified) and a slightly different tree, because structure is decided per
+platform at build time. The engines differ
 (JavaScriptCore on iOS, QuickJS-ng on Android) and the app doesn't notice. First mount is one batch of 3,369 ops /
 63 KB: 57 ms on iOS, 328 ms on Android, where every text leaf goes through `View.measure` (no caching or
 incremental layout yet). The Android APK is 5.2 MB; 2.6 MB of it is QuickJS + weft-layout in one `.so`.
@@ -65,6 +70,36 @@ incremental layout yet). The Android APK is 5.2 MB; 2.6 MB of it is QuickJS + we
    the JNI library before `JsRuntime` loaded it).
 5. **Taffy 0.15's root sizing:** a flex root with an auto size shrinks to its content, so `compute()` pins the root to
    the screen.
+
+## Platform idioms: one app, each platform's form
+
+The app never names a platform. It uses intent components (`Choice`: "pick one of these"; `AppTabs`: "these are the
+app's sections") and [`protocol/idioms.json`](protocol/idioms.json) decides the form for each OS × idiom:
+
+| | web | iOS | Android |
+|---|---|---|---|
+| `Choice` (control) | warp buttons | `UISegmentedControl` | Material choice chips |
+| `AppTabs` (chrome) | tabs in the header | bottom tab bar | bottom navigation bar |
+
+- **The dial.** `system` uses each platform's own controls everywhere. `blend` (the default) uses them for controls
+  and chrome but keeps the brand's colour, type and spacing. `brand` makes iOS and Android look like web.
+  A component's own `idiom` prop beats the app idiom.
+- **Two levels.** Structure (where the tabs go) is resolved in JS when the bundle is built, so each OS gets a
+  different tree. Rendering (which control draws a choice) reaches the host as a node type or a `tone`, and the
+  host draws it natively.
+- **What links them.** Behaviour is shared. The same state, the same `onSelect` and the same tests drive a segmented
+  control on iOS and chips on Android, and a price push is still 1 op on each.
+- **For agents.** `resolve()` returns a decision chain, and `explain('Choice')` prints the whole table with its
+  reasons, so an agent can predict the result before it builds. `resolve()` throws if the table picks a form that
+  host can't draw.
+
+Verified on both devices: the category and sort choices filter (bakery → 45 products), and adding to the cart and
+switching tabs works (Bagel 10 × 1, Total $0.45, Cart (1)).
+
+Gaps:
+- On iOS the bar's background stops at the safe area instead of running under the home indicator.
+- esbuild doesn't fold the table per OS, so each bundle carries every platform's rows. The compiler should fold
+  `platform.os` and drop dead branches.
 
 ## Not done / next
 

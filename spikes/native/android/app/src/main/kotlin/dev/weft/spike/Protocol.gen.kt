@@ -20,6 +20,7 @@ object NodeType {
     const val BUTTON = 4
     const val INPUT = 5
     const val SCROLL = 6
+    const val CHOICE = 7
 }
 
 object Prop {
@@ -35,11 +36,15 @@ object Prop {
     const val PLACEHOLDER = 10
     const val ROLE = 11
     const val TONE = 12
+    const val OPTIONS = 13
+    const val SELECTED = 14
+    const val SURFACE = 15
 }
 
 object EventKind {
     const val TAP = 1
     const val INPUT = 2
+    const val SELECT = 3
 }
 
 object LayoutKey {
@@ -55,7 +60,7 @@ object LayoutKey {
     const val SCROLL = 10
 }
 
-val propNames = mapOf(1 to "text", 2 to "gap", 3 to "pad", 4 to "align", 5 to "justify", 6 to "grow", 7 to "label", 8 to "disabled", 9 to "value", 10 to "placeholder", 11 to "role", 12 to "tone")
+val propNames = mapOf(1 to "text", 2 to "gap", 3 to "pad", 4 to "align", 5 to "justify", 6 to "grow", 7 to "label", 8 to "disabled", 9 to "value", 10 to "placeholder", 11 to "role", 12 to "tone", 13 to "options", 14 to "selected", 15 to "surface")
 val spaceTokens = mapOf("none" to 0f, "tight" to 4f, "related" to 8f, "group" to 16f, "section" to 32f)
 val alignTokens = mapOf("start" to 0f, "center" to 1f, "end" to 2f, "stretch" to 3f, "between" to 4f)
 data class TextRoleSpec(val size: Float, val weight: Int)

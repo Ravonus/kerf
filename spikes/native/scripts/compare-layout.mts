@@ -1,13 +1,15 @@
 // Exit check for phase 6a: lays the app out in Node (weft-layout as wasm) with the device's own leaf sizes and
-// compares every frame against the iOS dump. Usage: npx tsx ../scripts/compare-layout.mts <frames.json>
+// compares every frame against a device dump. Usage: npx tsx ../scripts/compare-layout.mts <frames.json> <ios|android>
 import { readFileSync } from 'node:fs'
 import { App, seedProducts, type Api } from '../js/src/app'
+import { configure, type OS } from '../js/src/platform'
 import { RecordingHost } from '../js/src/recording-host'
 import { flush, mount } from '../js/src/runtime'
 
 type Dumped = { id: number; type: string; label: string; x: number; y: number; w: number; h: number; natW?: number; natH?: number }
 const dump = JSON.parse(readFileSync(process.argv[2], 'utf8')) as { width: number; height: number; nodes: Dumped[] }
 
+configure({ os: (process.argv[3] ?? 'ios') as OS })
 const host = new RecordingHost(dump.width, dump.height)
 host.natural = new Map(dump.nodes.filter(n => n.natW !== undefined).map(n => [n.id, [n.natW!, n.natH!]]))
 const seed = seedProducts(150)

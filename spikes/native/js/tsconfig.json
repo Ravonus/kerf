@@ -6,9 +6,21 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node"],
-    "lib": ["ES2023", "DOM"]
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "ES2023",
+      "DOM"
+    ],
+    "resolveJsonModule": true
   },
-  "include": ["src", "test"],
-  "exclude": ["src/app.source.tsx"]
+  "include": [
+    "src",
+    "test",
+    "../protocol/idioms.json"
+  ],
+  "exclude": [
+    "src/app.source.tsx"
+  ]
 }

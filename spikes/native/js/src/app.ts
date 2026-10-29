@@ -1,5 +1,6 @@
 // The v3 shop app (evals/reference-v3) lowered by hand into what the `native` backend would emit.
 // app.source.tsx is the TSX an agent writes; every `() =>` below is a live JSX expression from that file.
+import { AppTabs, Choice } from './intents'
 import { derived, el, list, match, state, type State } from './runtime'
 
 export type Category = 'fruit' | 'bakery' | 'dairy'
@@ -36,20 +37,20 @@ export function App({ api }: { api: Api }) {
     cart.value = qty <= 0 ? rest : { ...rest, [id]: qty }
   }
 
-  return el('Stack', { gap: 'group', pad: 'group' },
-    el('Row', { gap: 'related', align: 'center' },
-      el('Text', { role: 'title', text: 'Shop', grow: 1 }),
-      el('Button', { text: 'Products', label: 'Products tab', tone: () => (tab.value === 'products' ? 'accent' : 'plain'), onTap: () => { tab.value = 'products' } }),
-      el('Button', { text: () => `Cart (${count.value})`, label: 'Cart tab', tone: () => (tab.value === 'cart' ? 'accent' : 'plain'), onTap: () => { tab.value = 'cart' } }),
-    ),
-    el('Stack', { grow: 1 },
-      match(() => (!products.value ? 'loading' : tab.value), {
-        loading: () => el('Text', { text: 'Loading…' }),
-        products: () => ProductList({ products: () => products.value!, cart: () => cart.value, filters, onAdd: id => change(id, 1) }),
-        cart: () => CartView({ products: () => products.value!, cart: () => cart.value, onChange: change }),
-      }),
-    ),
-  )
+  return AppTabs({
+    title: 'Shop',
+    tabs: [
+      { value: 'products', text: () => 'Products', label: 'Products tab' },
+      { value: 'cart', text: () => `Cart (${count.value})`, label: 'Cart tab' },
+    ],
+    current: () => tab.value,
+    onTab: v => { tab.value = v as 'products' | 'cart' },
+    body: match(() => (!products.value ? 'loading' : tab.value), {
+      loading: () => el('Text', { text: 'Loading…' }),
+      products: () => ProductList({ products: () => products.value!, cart: () => cart.value, filters, onAdd: id => change(id, 1) }),
+      cart: () => CartView({ products: () => products.value!, cart: () => cart.value, onChange: change }),
+    }),
+  })
 }
 
 function ProductList(props: { products: () => Product[]; cart: () => Cart; filters: State<Filters>; onAdd: (id: string) => void }) {
@@ -62,19 +63,21 @@ function ProductList(props: { products: () => Product[]; cart: () => Cart; filte
       .sort((a, b) => (sort === 'name' ? a.name.localeCompare(b.name) : sort === 'price-asc' ? a.price - b.price : b.price - a.price))
   })
   const set = (patch: Partial<Filters>) => { f.value = { ...f.value, ...patch } }
-  const chip = (text: string, on: () => boolean, tap: () => void) =>
-    el('Button', { text, label: text, tone: () => (on() ? 'accent' : 'plain'), onTap: tap })
 
   return el('Stack', { gap: 'related', grow: 1 },
     el('Input', { label: 'Search', placeholder: 'Search', value: () => f.value.search, onInput: search => set({ search }) }),
-    el('Row', { gap: 'related' },
-      ...(['all', 'fruit', 'bakery', 'dairy'] as const).map(c => chip(c, () => f.value.category === c, () => set({ category: c }))),
-    ),
-    el('Row', { gap: 'related' },
-      chip('Name', () => f.value.sort === 'name', () => set({ sort: 'name' })),
-      chip('Price ↑', () => f.value.sort === 'price-asc', () => set({ sort: 'price-asc' })),
-      chip('Price ↓', () => f.value.sort === 'price-desc', () => set({ sort: 'price-desc' })),
-    ),
+    Choice({
+      label: 'Category',
+      options: (['all', 'fruit', 'bakery', 'dairy'] as const).map(c => ({ value: c, text: c })),
+      selected: () => f.value.category,
+      onSelect: c => set({ category: c as Filters['category'] }),
+    }),
+    Choice({
+      label: 'Sort',
+      options: [{ value: 'name', text: 'Name' }, { value: 'price-asc', text: 'Price ↑' }, { value: 'price-desc', text: 'Price ↓' }],
+      selected: () => f.value.sort,
+      onSelect: s => set({ sort: s as Filters['sort'] }),
+    }),
     el('Text', { role: 'caption', label: 'product-count', text: () => (shown.value.length === 1 ? '1 product' : `${shown.value.length} products`) }),
     el('Scroll', { gap: 'related', grow: 1, label: 'Products' },
       list(() => shown.value, p => p.id, item =>

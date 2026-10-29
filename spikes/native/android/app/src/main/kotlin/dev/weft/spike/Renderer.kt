@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
 import android.os.SystemClock
 import android.text.Editable
 import android.text.InputType
@@ -193,7 +194,10 @@ class Renderer(private val context: Context, val container: FrameGroup) {
         n.props[prop] = value
         val v = n.view
         when (prop) {
-            Prop.TEXT -> { (v as? TextView)?.text = value as String; lDirty(handle, id) }
+            Prop.TEXT -> {
+                (v as? TextView)?.text = value as String
+                lDirty(handle, id)
+            }
             Prop.ROLE -> { (v as? TextView)?.let { applyRole(it, value as String) }; lDirty(handle, id) }
             Prop.VALUE -> {
                 // The field owns its text. A value matching a report JS hasn't caught up with is a late echo and is
@@ -211,7 +215,9 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             Prop.PLACEHOLDER -> (v as? EditText)?.hint = value as String
             Prop.LABEL -> v.contentDescription = value as String
             Prop.DISABLED -> { v.isEnabled = value != true; v.alpha = if (value == true) 0.4f else 1f }
-            Prop.TONE -> (v as? Button)?.let { tone(it, value as String) }
+            Prop.TONE -> { (v as? Button)?.let { tone(it, value as String) }; lDirty(handle, id) }
+            Prop.SURFACE -> if (value == "bar") v.setBackgroundColor(Color.rgb(0xF3, 0xED, 0xF7)) // M3 surface container
+            Prop.OPTIONS, Prop.SELECTED -> log?.invoke("Choice ${n.id}: no native segmented control on Android; the idiom table never sends one")
             Prop.GAP -> lSet(handle, id, LayoutKey.GAP, spaceTokens[value] ?: 0f)
             Prop.PAD -> lSet(handle, id, LayoutKey.PAD, spaceTokens[value] ?: 0f)
             Prop.GROW -> lSet(handle, id, LayoutKey.GROW, (value as Double).toFloat())
@@ -227,12 +233,28 @@ class Renderer(private val context: Context, val container: FrameGroup) {
     }
 
     private fun tone(b: Button, tone: String) {
-        val accent = tone == "accent"
-        b.background = GradientDrawable().apply {
-            cornerRadius = 10 * density
-            color = ColorStateList.valueOf(if (accent) Color.rgb(0, 122, 255) else Color.rgb(233, 233, 235))
+        // Material 3 values from its baseline scheme: chips are 32dp tall with an 8dp radius, the navigation bar's
+        // active indicator is a 64×32dp pill. The touch target stays 44dp; the drawing is inset inside it.
+        fun shape(fill: Int, radius: Float, stroke: Int? = null, insetX: Float = 0f, insetY: Float = 0f) =
+            InsetDrawable(GradientDrawable().apply {
+                cornerRadius = radius * density
+                color = ColorStateList.valueOf(fill)
+                stroke?.let { setStroke(density.toInt(), it) }
+            }, (insetX * density).toInt(), (insetY * density).toInt(), (insetX * density).toInt(), (insetY * density).toInt())
+        val (bg, fg, weight) = when (tone) {
+            "accent" -> Triple(shape(Color.rgb(0, 122, 255), 10f), Color.WHITE, 400)
+            "chip" -> Triple(shape(Color.WHITE, 8f, Color.rgb(0x79, 0x74, 0x7E), insetY = 6f), Color.rgb(0x49, 0x45, 0x4F), 500)
+            "chip-on" -> Triple(shape(Color.rgb(0xE8, 0xDE, 0xF8), 8f, insetY = 6f), Color.rgb(0x1D, 0x19, 0x2B), 500)
+            "nav" -> Triple(null, Color.rgb(0x49, 0x45, 0x4F), 500)
+            "nav-on" -> Triple(shape(Color.rgb(0xE8, 0xDE, 0xF8), 16f, insetX = 12f, insetY = 6f), Color.rgb(0x1D, 0x19, 0x2B), 700)
+            else -> Triple(shape(Color.rgb(233, 233, 235), 10f), Color.BLACK, 400)
         }
-        b.setTextColor(if (accent) Color.WHITE else Color.BLACK)
+        // An InsetDrawable reports its insets as padding, which would replace the button's; keep the button's.
+        val (l, t, r, btm) = listOf(b.paddingLeft, b.paddingTop, b.paddingRight, b.paddingBottom)
+        b.background = bg
+        b.setPadding(l, t, r, btm)
+        b.setTextColor(fg)
+        b.typeface = Typeface.create(Typeface.DEFAULT, weight, false)
     }
 
     // ---- layout ----

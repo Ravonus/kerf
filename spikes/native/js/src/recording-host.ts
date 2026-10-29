@@ -30,6 +30,12 @@ export function measureLeaf(n: HNode, availW: number): [number, number] {
   const line = Math.ceil(role.size * 1.3)
   const text = String(n.props.text ?? n.props.value ?? n.props.placeholder ?? '')
   const natural = text.length * role.size * 0.52
+  if (n.type === 'Choice') {
+    // segmented control: equal segments wide enough for the longest option, 32pt tall
+    const opts = String(n.props.options ?? '').split('\u001f')
+    const seg = Math.max(...opts.map(o => o.length)) * TextRole.body.size * 0.52 + 24
+    return [Math.ceil(seg * opts.length), 32]
+  }
   if (n.type === 'Input') return [Number.isFinite(availW) && availW > 0 ? availW : 200, Controls.minHeight]
   if (n.type === 'Button') return [Math.ceil(natural + Controls.buttonPadX * 2), Math.max(Controls.minHeight, line)]
   if (!text) return [0, 0]
@@ -91,7 +97,7 @@ export class RecordingHost implements Host {
       switch (op.op) {
         case 'CREATE': {
           this.nodes.set(op.id, { id: op.id, type: op.type, props: {}, children: [], parent: 0 })
-          const measured = op.type === 'Text' || op.type === 'Button' || op.type === 'Input'
+          const measured = op.type === 'Text' || op.type === 'Button' || op.type === 'Input' || op.type === 'Choice'
           w.wl_node(t, op.id, measured ? 1 : 0)
           if (op.type === 'Row') w.wl_set(t, op.id, LayoutKey.direction, 1)
           if (op.type === 'Scroll') w.wl_set(t, op.id, LayoutKey.scroll, 1)
@@ -184,6 +190,8 @@ export class RecordingHost implements Host {
   private reported = new Map<number, string[]>()
 
   tap(n: HNode) { if (n.props.disabled !== true) dispatch(n.id, 'tap') }
+  /** Picks segment `index` of a `Choice` node. */
+  select(n: HNode, index: number) { dispatch(n.id, 'select', String(index)) }
   type(n: HNode, text: string) { this.report(n, text) }
 
   /** Types one key at a time without letting JS answer in between, like a fast typist on a busy JS thread. */

@@ -11,7 +11,7 @@ node "$here/scripts/gen-protocol.mjs"
 "$here/scripts/fetch-quickjs.sh"
 (cd "$repo/crates/weft-layout" && CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$ndk/aarch64-linux-android26-clang" \
   AR="$ndk/llvm-ar" cargo build -q --release --target aarch64-linux-android --target wasm32-unknown-unknown)
-(cd "$here/js" && pnpm install --silent && npx esbuild src/entry.ts --bundle --format=iife --target=es2022 --outfile=dist/app.js)
+(cd "$here/js" && pnpm install --silent && node bundle.mjs)
 [ -f "$here/android/local.properties" ] || printf 'sdk.dir=%s\n' "$sdk" > "$here/android/local.properties"
 (cd "$here/android" && ./gradlew :app:assembleDebug -q --console=plain)
 

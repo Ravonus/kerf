@@ -1,0 +1,43 @@
+{
+  "$comment": "The one place that decides how an intent looks on each platform. Structure (where things go) is resolved in JS at build time; rendering (which control draws it) is carried to the host as node types and tones. `weft design explain` reads this file.",
+  "idioms": {
+    "system": "Use each platform's own control and placement wherever one exists.",
+    "blend": "Default. Chrome and controls follow the platform; content stays warp.",
+    "brand": "warp everywhere, identical on web, iOS and Android."
+  },
+  "hosts": {
+    "web": ["warp", "header"],
+    "ios": ["warp", "header", "segmented", "tab-bar"],
+    "android": ["warp", "header", "chips", "navigation-bar"]
+  },
+  "components": {
+    "Choice": {
+      "class": "control",
+      "intent": "Pick one of 2–5 short options shown together.",
+      "render": {
+        "web": { "system": "warp", "blend": "warp", "brand": "warp" },
+        "ios": { "system": "segmented", "blend": "segmented", "brand": "warp" },
+        "android": { "system": "chips", "blend": "chips", "brand": "warp" }
+      },
+      "why": {
+        "warp": "warp segmented buttons: the web has no system control for this, and brand asks for warp.",
+        "segmented": "iOS uses a segmented control (UISegmentedControl) for mutually exclusive options within one view.",
+        "chips": "Android has no segmented control in the framework; Material 3 uses choice chips for this."
+      }
+    },
+    "AppTabs": {
+      "class": "chrome",
+      "intent": "Switch between the app's top-level sections.",
+      "render": {
+        "web": { "system": "header", "blend": "header", "brand": "header" },
+        "ios": { "system": "tab-bar", "blend": "tab-bar", "brand": "header" },
+        "android": { "system": "navigation-bar", "blend": "navigation-bar", "brand": "header" }
+      },
+      "why": {
+        "header": "Section tabs in the header next to the title: the web convention, and the warp layout under brand.",
+        "tab-bar": "iOS puts top-level sections in a tab bar at the bottom of the screen, within thumb reach.",
+        "navigation-bar": "Android puts top-level sections in a Material 3 navigation bar at the bottom, selected item on a pill indicator."
+      }
+    }
+  }
+}

@@ -89,6 +89,7 @@ type Val<T> = T | (() => T)
 export type Props = Partial<Record<PropName, Val<string | number | boolean>>> & {
   onTap?: () => void
   onInput?: (text: string) => void
+  onSelect?: (index: string) => void
 }
 export type Child = number | Region | null | false
 
@@ -103,7 +104,7 @@ export function el(type: NodeTypeName, props: Props = {}, ...children: Child[]):
   const id = nextId++
   out.create(id, type)
   for (const [k, v] of Object.entries(props)) {
-    if (k === 'onTap' || k === 'onInput') continue
+    if (k === 'onTap' || k === 'onInput' || k === 'onSelect') continue
     const prop = k as PropName
     if (typeof v === 'function') {
       let last: unknown = undefined
@@ -113,10 +114,11 @@ export function el(type: NodeTypeName, props: Props = {}, ...children: Child[]):
       })
     } else if (v !== undefined) setProp(id, prop, v as string | number | boolean)
   }
-  if (props.onTap || props.onInput) {
-    handlers.set(id, { tap: props.onTap, input: props.onInput })
+  if (props.onTap || props.onInput || props.onSelect) {
+    handlers.set(id, { tap: props.onTap, input: props.onInput, select: props.onSelect })
     if (props.onTap) out.listen(id, 'tap')
     if (props.onInput) out.listen(id, 'input')
+    if (props.onSelect) out.listen(id, 'select')
   }
   owner?.cleanups.push(() => handlers.delete(id))
   for (const c of children) {

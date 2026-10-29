@@ -72,12 +72,16 @@ final class Renderer {
       f.font = font("body")
       f.clearButtonMode = .whileEditing
       view = f
+    case .Choice: view = UISegmentedControl()
     }
     nodes[id] = Node(type: type, view: view)
-    wl_node(tree, id, type == .Text || type == .Button || type == .Input ? 1 : 0)
+    wl_node(tree, id, Renderer.measured(type) ? 1 : 0)
     if type == .Row { wl_set(tree, id, LayoutKey.direction.rawValue, 1) }
     if type == .Scroll { wl_set(tree, id, LayoutKey.scroll.rawValue, 1) }
   }
+
+  /// Leaves whose size comes from the platform.
+  static func measured(_ t: NodeType) -> Bool { t == .Text || t == .Button || t == .Input || t == .Choice }
 
   private func remove(_ id: UInt32) {
     guard let n = nodes[id] else { return }
@@ -120,6 +124,9 @@ final class Renderer {
         self?.reported[id, default: []].append(text)
         self?.onEvent?(id, "input", text)
       }, for: .editingChanged)
+    case .select:
+      let seg = view as? UISegmentedControl
+      seg?.addAction(UIAction { [weak self] _ in self?.onEvent?(id, "select", "\(seg?.selectedSegmentIndex ?? -1)") }, for: .valueChanged)
     }
   }
 
@@ -151,10 +158,41 @@ final class Renderer {
     case .disabled: (v as? UIControl)?.isEnabled = !(value as? Bool ?? false)
     case .tone:
       if let b = v as? UIButton {
-        var c: UIButton.Configuration = (value as? String) == "accent" ? .filled() : .gray()
+        let tone = value as? String ?? "plain"
+        var c: UIButton.Configuration
+        switch tone {
+        case "accent": c = .filled()
+        case "tab", "tab-on":
+          // Tab bar item: no chrome, the selected one tinted (UITabBar's look, as a plain button for the spike).
+          c = .plain()
+          c.baseForegroundColor = tone == "tab-on" ? .tintColor : .secondaryLabel
+          c.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { a in
+            var a = a; a.font = UIFont.systemFont(ofSize: 15, weight: tone == "tab-on" ? .semibold : .medium); return a
+          }
+        default: c = .gray()
+        }
         c.cornerStyle = .medium
         c.title = b.configuration?.title
         b.configuration = c
+      }
+    case .options:
+      if let seg = v as? UISegmentedControl {
+        let selected = n.props[.selected] as? Double
+        seg.removeAllSegments()
+        for (i, t) in (value as? String ?? "").split(separator: "\u{1F}", omittingEmptySubsequences: false).enumerated() {
+          seg.insertSegment(withTitle: String(t), at: i, animated: false)
+        }
+        if let selected { seg.selectedSegmentIndex = Int(selected) }
+        wl_dirty(tree, id)
+      }
+    case .selected: (v as? UISegmentedControl)?.selectedSegmentIndex = Int(value as? Double ?? -1)
+    case .surface:
+      if (value as? String) == "bar" {
+        v.backgroundColor = .secondarySystemBackground
+        let line = UIView(frame: CGRect(x: 0, y: 0, width: v.bounds.width, height: 1 / UIScreen.main.scale))
+        line.backgroundColor = .separator
+        line.autoresizingMask = [.flexibleWidth]
+        v.addSubview(line)
       }
     case .gap: wl_set(tree, id, LayoutKey.gap.rawValue, spaceTokens[value as? String ?? ""] ?? 0)
     case .pad: wl_set(tree, id, LayoutKey.pad.rawValue, spaceTokens[value as? String ?? ""] ?? 0)
@@ -178,6 +216,9 @@ final class Renderer {
     let w = availW.isFinite && availW > 0 ? CGFloat(availW) : .greatestFiniteMagnitude
     switch n.type {
     case .Input: return (availW.isFinite && availW > 0 ? availW : 200, controlMinHeight)
+    case .Choice:
+      let s = n.view.sizeThatFits(CGSize(width: w, height: .greatestFiniteMagnitude))
+      return (Float(ceil(min(s.width, w))), Float(ceil(s.height)))
     case .Button:
       let s = n.view.sizeThatFits(CGSize(width: w, height: .greatestFiniteMagnitude))
       return (Float(ceil(s.width)), max(controlMinHeight, Float(ceil(s.height))))
@@ -210,7 +251,7 @@ final class Renderer {
       guard let n = nodes[id], wl_frame(tree, id, &f) == 1 else { return }
       var row: [String: Any] = ["id": id, "type": "\(n.type)", "label": n.props[.label] as? String ?? "", "text": n.props[.text] as? String ?? "",
                                 "x": f[0], "y": f[1], "w": f[2], "h": f[3], "contentH": f[5]]
-      if n.type == .Text || n.type == .Button || n.type == .Input {
+      if Renderer.measured(n.type) {
         let s = measure(id, availW: .infinity) // natural size, so Node can lay out with the device's text metrics
         row["natW"] = s.width
         row["natH"] = s.height

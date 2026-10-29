@@ -8,7 +8,7 @@ device="${1:-iPhone 17 Pro}"
 
 node "$here/scripts/gen-protocol.mjs"
 (cd "$repo/crates/weft-layout" && cargo build -q --release --target aarch64-apple-ios-sim --target wasm32-unknown-unknown)
-(cd "$here/js" && pnpm install --silent && npx esbuild src/entry.ts --bundle --format=iife --target=es2022 --outfile=dist/app.js)
+(cd "$here/js" && pnpm install --silent && node bundle.mjs)
 (cd "$here/ios" && xcodegen generate -q && xcodebuild -project WeftSpike.xcodeproj -scheme WeftSpike -configuration Debug \
   -derivedDataPath build -destination "platform=iOS Simulator,name=$device" build -quiet)
 

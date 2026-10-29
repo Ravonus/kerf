@@ -10,7 +10,7 @@ targets:
     platform: iOS
     sources:
       - path: Sources
-      - path: ../js/dist/app.js
+      - path: ../js/dist/ios/app.js
         buildPhase: resources
     settings:
       base:

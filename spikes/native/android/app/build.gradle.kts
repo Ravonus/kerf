@@ -25,6 +25,6 @@ android {
     }
 
     sourceSets {
-        getByName("main") { assets.directories.add("../../js/dist") }
+        getByName("main") { assets.directories.add("../../js/dist/android") }
     }
 }

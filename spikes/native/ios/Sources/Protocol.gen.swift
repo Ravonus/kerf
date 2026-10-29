@@ -18,6 +18,7 @@ enum NodeType: UInt32 {
   case Button = 4
   case Input = 5
   case Scroll = 6
+  case Choice = 7
 }
 
 enum Prop: UInt32 {
@@ -33,11 +34,15 @@ enum Prop: UInt32 {
   case placeholder = 10
   case role = 11
   case tone = 12
+  case options = 13
+  case selected = 14
+  case surface = 15
 }
 
 enum EventKind: UInt32 {
   case tap = 1
   case input = 2
+  case select = 3
 }
 
 enum LayoutKey: UInt32 {
