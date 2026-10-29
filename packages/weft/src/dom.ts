@@ -104,6 +104,11 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
 export function insert(parent: Mountable, value: any, marker?: Node | null) {
   let current: Node[] = []
   const at = marker ?? null
+  // Dev: hot-swappable components (weft/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
+  if (DEV && Array.isArray(value) && value.some(v => typeof v === 'function')) {
+    const list = value
+    value = () => list
+  }
   if (typeof value !== 'function') {
     place(parent, value, current, at)
     return

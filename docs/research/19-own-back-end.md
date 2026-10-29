@@ -335,7 +335,7 @@ A change to a fixture or to the script needs a reviewed edit of the golden file;
 | `weft check`, 1k files | ≤ 3 s cold | 20 ms native, 23 ms napi | 20 ms |
 | Prod build, 1k components | ≤ 5 s | 0.8 s (client 0.46–0.52 s + SSR 0.34 s) | not measured |
 | Prod output | no dev names | none (`tsx:` and markers absent from the benchmark bundle) | — |
-| HMR, 1k components | ≤ 50 ms p95 | not built | not built |
+| HMR, 1k components | ≤ 50 ms p95 (from Vite's change event) | built later: 13.3 ms p95 (6.9 ms on a rerun) ([21](21-hmr.md)) | not built |
 | js-framework-benchmark | ≤ 1.10× Solid | **1.063×** CPU geomean (below) | 1.067× (research 18) |
 
 **js-framework-benchmark (measured).** `krausest/js-framework-benchmark` at `ca8715d`, Chrome headless, default
@@ -372,7 +372,7 @@ item. Every number is still inside its budget.
 **Still open.**
 - ~~A spread's `children`, and `textContent`/`innerHTML` props, aren't rendered on the server.~~ Fixed in §5.7.
 - Source maps for lowered JSX are per line, not per expression inside a hole.
-- HMR.
+- ~~HMR.~~ Built in [21](21-hmr.md).
 
 ### 5.6 Hydration claims split out of client builds (2026-10-29)
 

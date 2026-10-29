@@ -177,7 +177,10 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
   is held ≥ 400 ms; refetches never flash; errors during render and failed resources reach `error(e, retry)`, errors
   in later updates don't yet ([18](research/18-ssr-and-boundaries.md)).
 - **Types:** a `JSX` namespace for weft (intrinsics, `key`, typed `currentTarget` on events, box/value assignability).
-- **HMR:** state preserved across edits by the compiler-assigned names (the solid-refresh approach).
+- **HMR:** state preserved across edits by the compiler-assigned names (the solid-refresh approach). Built
+  2026-10-29 ([21](research/21-hmr.md)): dev output registers each top-level component under `file#Name` and keys
+  body-level `state()` by name + initializer hash; a new module version re-renders only the edited components, and
+  children keep their state by position. Dev only, 0 bytes in production. Hydratable dev builds reload instead.
 - **Testing:** `weft/test` gives `render()`, `flush()`, and DOM queries for vitest.
 - **Vite plugin:** one `weft()` plugin, filtered to `.[jt]sx` so Rolldown never calls into JS for other files.
   It runs the compiler and, when present, the server-function and token transforms. Vite 8 is used everywhere;
@@ -203,7 +206,7 @@ it costs and take it, as long as it stays inside those numbers.
 | js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass ([19 §5.5](research/19-own-back-end.md)); after the memory pass 1.08× (two runs), pass; memory 1.02× (1k rows) and 1.03× (after clear), pass ([19 §5.8](research/19-own-back-end.md)) |
 | Compiler | ≤ 0.5 s per 1k files, single-threaded, diagnostics included |
 | `weft check`, 1k files | ≤ 3 s cold, ≤ 0.5 s warm (weft's own diagnostics pass) |
-| HMR, 1k components | ≤ 50 ms p95, from file write to DOM updated |
+| HMR, 1k components | ≤ 50 ms p95, from Vite's change event to DOM updated (the watcher's latency before that event is the OS's and Vite's, not weft's; reported, not gated). 2026-10-29, Vite 8 + Chromium on macOS: **13.3 ms p95, pass** (6.9 ms on a second run); file write → DOM 106 ms, ~90 ms of it the watcher ([21 §3](research/21-hmr.md)) |
 | Prod build, 1k components | ≤ 5 s (client + SSR) |
 | Prod output | no dev names in the bundle; identical bytes with dev naming on or off |
 

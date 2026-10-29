@@ -2,7 +2,7 @@
 // claiming versions of `tpl` and `child` from claim.ts (`htpl`, `hchild`), so client-only apps don't ship them.
 // Bindings here skip their first write while hydrating (the server wrote it).
 
-import { effect, untrack } from './index'
+import { DEV, effect, untrack } from './index'
 import { addEvent, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
 import { keys } from './keys'
 
@@ -55,9 +55,13 @@ export function on(el: Element, name: string, handler: (e: Event) => void, deleg
 
 export const delegate = delegateEvents
 
-/** `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. */
+/**
+ * `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. A component weft/hmr
+ * registered (`$$h`) mounts through it, so a new module version can swap it in place.
+ */
 export function component<P>(Comp: (props: P) => unknown, props: P, name?: string, loc?: string) {
-  return createComponent(Comp as any, props, name, loc)
+  const hot = DEV && (Comp as any).$$h
+  return hot ? hot(props, name, loc) : createComponent(Comp as any, props, name, loc)
 }
 
 const PROPERTIES = new Set(['value', 'checked', 'selected', 'muted', 'indeterminate', 'textContent', 'innerHTML'])
