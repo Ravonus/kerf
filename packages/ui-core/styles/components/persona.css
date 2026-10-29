@@ -1,0 +1,12 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Persona: avatar + name + secondary + presence ring */
+:where([data-scope="persona"]) { display: inline-flex; align-items: center; gap: 10px; min-inline-size: 0; }
+:where([data-scope="persona"] [data-part="name"]) { font-weight: 500; display: block; }
+:where([data-scope="persona"] [data-part="secondary"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: block; }
+:where([data-scope="avatar"][data-presence]) { box-shadow: 0 0 0 2px var(--warp-color-surface), 0 0 0 calc(2px + var(--warp-border-emphasis)) var(--_ring); }
+:where([data-scope="avatar"][data-presence="online"]) { --_ring: var(--warp-color-positive-solid); }
+:where([data-scope="avatar"][data-presence="away"]) { --_ring: var(--warp-color-caution-solid); }
+:where([data-scope="avatar"][data-presence="busy"]) { --_ring: var(--warp-color-critical-solid); }
+:where([data-scope="avatar"][data-presence="offline"]) { --_ring: var(--warp-color-border-strong); }
+}

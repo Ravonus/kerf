@@ -1,0 +1,33 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Alert (inline), Banner (page), Callout (prose) ----------------------------- */
+:where([data-scope="alert"]) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px var(--warp-space-related); align-items: start;
+  padding: var(--warp-space-group); padding-inline-end: var(--warp-space-related);
+  background: var(--_soft); color: var(--warp-color-text);
+  border: var(--warp-border-hairline) solid var(--_border); border-radius: var(--warp-radius-surface);
+}
+:where([data-scope="alert"] [data-part="icon"]) { color: var(--_text); margin-block-start: 1px; }
+:where([data-scope="alert"] [data-part="title"]) { font-weight: 600; line-height: 1.35; }
+:where([data-scope="alert"] [data-part="description"]) { grid-column: 2; color: var(--warp-color-text); line-height: var(--warp-text-body-leading); }
+:where([data-scope="alert"] [data-part="actions"]) { grid-column: 2; display: flex; flex-wrap: wrap; gap: var(--warp-space-related); margin-block-start: var(--warp-space-related); }
+:where([data-scope="alert"] > [data-part="close"]) { grid-column: 3; grid-row: 1; margin-block: -6px; }
+:where([data-scope="alert"]) :where([data-scope="button"][data-emphasis="ghost"]) { --_ink: var(--warp-color-text); }
+:where([data-scope="banner"]) {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--warp-space-related) var(--warp-space-group);
+  min-block-size: 44px; padding: 6px var(--warp-space-page); background: var(--_soft); color: var(--warp-color-text);
+  border-block-end: var(--warp-border-hairline) solid var(--_border); font-size: var(--warp-text-body-size); text-align: center;
+}
+:where([data-scope="banner"] svg[data-icon]) { color: var(--_text); }
+:where([data-scope="banner"][data-emphasis="solid"]) { background: var(--_solid); color: var(--_ink-on); border-color: transparent; }
+:where([data-scope="banner"][data-emphasis="solid"] svg[data-icon]) { color: inherit; }
+:where([data-scope="callout"]) {
+  display: grid; gap: var(--warp-space-tight); padding: var(--warp-space-related) var(--warp-space-group);
+  border-inline-start: var(--warp-border-emphasis) solid var(--_text); background: var(--warp-color-surface);
+  border-radius: 0 var(--warp-radius-control) var(--warp-radius-control) 0;
+}
+:where([data-scope="callout"] [data-part="title"]) {
+  font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--_text);
+}
+}

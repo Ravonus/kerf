@@ -1,0 +1,13 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Theme panel (preferences): rows of label + control */
+:where([data-scope="prefs"]) { display: grid; gap: 0; }
+:where([data-scope="prefs"] > div) { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 10px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="prefs"] > div:first-child) { border: 0; }
+:where([data-scope="prefs"] [data-part="label"]) { font-weight: 500; }
+:where([data-scope="prefs"] [data-part="hint"]) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); font-weight: 400; }
+:where([data-scope="swatches"]) { display: flex; gap: 6px; }
+:where([data-scope="swatches"] > button) { inline-size: 26px; block-size: 26px; border-radius: var(--warp-radius-round); border: 0; background: var(--_c); cursor: pointer; position: relative; }
+:where([data-scope="swatches"] > button[aria-checked="true"]) { box-shadow: 0 0 0 2px var(--warp-color-surface), 0 0 0 calc(2px + var(--warp-border-emphasis)) var(--_c); }
+:where([data-scope="swatches"] > button)::after { content: ""; position: absolute; inset: -9px; }
+}

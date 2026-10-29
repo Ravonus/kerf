@@ -1,0 +1,10 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Theme toggle: a toggle button (aria-pressed = dark); the glyph crossfades with a quarter turn */
+:where([data-theme-toggle] [data-part="indicator"]) { display: grid; }
+:where([data-theme-toggle] [data-part="indicator"] > svg) {
+  grid-area: 1 / 1; transition: opacity var(--warp-duration-base) var(--warp-ease-out), rotate var(--warp-duration-base) var(--warp-ease-pop);
+}
+:where([data-theme-toggle][aria-pressed="true"] [data-part="indicator"] > svg:first-child),
+:where([data-theme-toggle]:not([aria-pressed="true"]) [data-part="indicator"] > svg:last-child) { opacity: 0; rotate: calc(-90deg * var(--warp-motion-scale)); }
+}

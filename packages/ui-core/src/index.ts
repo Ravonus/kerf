@@ -1,0 +1,12 @@
+// @weft/ui-core: warp without a framework. The spec CSS (styles/, split per component) and the behaviour as plain TS
+// over the DOM: actions shaped (el, opts) => { update, destroy }, small stores for stateful widgets, and the pure
+// helpers a binding needs to render the specimen markup. Nothing here imports a framework (test/agnostic.test.mjs).
+export { store, uid, resetIds, type Store, type Action } from './store'
+export { installSweep, sweep, type SweepMachine } from './sweep'
+export { field, floatingLabel, labelChars } from './floating-label'
+export { DIALS, getDial, setDial, dialsFromUrl, type Dial, type DialValue } from './dial'
+export { nextIndex, roving, anchor, type Orientation, type Placement } from './focus'
+export { pushLayer, place, justEscaped, type Layer, type Side, type Align } from './layers'
+export { dialog, popover, tooltip, type DialogOptions, type PopoverOptions } from './overlays'
+export { indicator, overflow, type IndicatorOptions } from './indicator'
+export { toastStore, toaster, announce, lifeOf, type Toast, type ToastInput, type ToastStore, type Tone } from './toast'

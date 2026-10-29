@@ -1,0 +1,37 @@
+{
+  "name": "@weft/warp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "warp for weft: the spec components as weft TSX over @weft/ui-core (the CSS split per component, and the behaviour)",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./src/styles.ts",
+    "./src/fields.ts"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "size": "node scripts/size.mjs"
+  },
+  "dependencies": {
+    "@weft/ui-core": "file:../ui-core"
+  },
+  "peerDependencies": {
+    "weft": "*"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.8",
+    "axe-core": "^4.14.0",
+    "jsdom": "30.1.3",
+    "playwright-core": "^1.64.1",
+    "vite": "8.3.5",
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  }
+}

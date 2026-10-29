@@ -1,0 +1,18 @@
+{
+  "name": "weft-evals-warp",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "weft": "file:../../../packages/weft",
+    "@weft/ui-core": "file:../../../packages/ui-core",
+    "@weft/warp": "file:../../../packages/warp"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.8",
+    "jsdom": "30.1.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

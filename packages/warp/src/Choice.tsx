@@ -1,0 +1,74 @@
+import { indicator, installSweep, uid } from '@weft/ui-core'
+import { onMount, untrack } from 'weft'
+import { Icon, type IconName } from './Icon'
+import { use } from './use'
+import './fields'
+import '@weft/ui-core/styles/inputs/choice.css'
+
+const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
+
+/**
+ * A native checkbox with role="switch" (03 §4; SIGNATURE §1c): the rail fills through the sweep as the thumb slides.
+ * The whole label is the hover target. Applies at once: never inside a form with Save (03 §8).
+ */
+export function Switch({ children, hint, size, placement = 'end', ...rest }: { checked?: boolean; hint?: any; size?: 'sm' | 'md'; placement?: 'start' | 'end'; children?: any; [attr: string]: any }) {
+  onMount(() => installSweep())
+  return (
+    <label data-scope="switch" data-placement={placement} data-size={size === 'sm' ? 'sm' : undefined}>
+      <input type="checkbox" role="switch" {...rest} />
+      <span data-part="track" data-sweep="" data-phase="idle">
+        <span data-part="rail-fill" aria-hidden="true"><span data-part="rail-hover"></span></span>
+        {sweepParts()}
+        <span data-part="thumb" aria-hidden="true"></span>
+      </span>
+      <span data-part="label">{children}</span>
+      {hint !== undefined && <span data-part="hint">{hint}</span>}
+    </label>
+  )
+}
+
+/** A native checkbox (03 §4): the box never fills, the check draws in; `indeterminate` is the real property. */
+export function Checkbox({ children, hint, error, indeterminate, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: any; error?: any; children?: any; [attr: string]: any }) {
+  onMount(() => installSweep())
+  let input: HTMLInputElement | undefined
+  use((el: HTMLInputElement, on: boolean | undefined) => {
+    el.indeterminate = !!on
+    return { update: v => void (el.indeterminate = !!v), destroy() {} }
+  }, () => input, () => indeterminate)
+  return (
+    <label data-scope="checkbox" data-invalid={error ? '' : undefined}>
+      <input ref={(n: any) => (input = n)} type="checkbox" aria-invalid={error ? 'true' : undefined} {...rest} />
+      <span data-part="control" data-sweep="" data-phase="idle">
+        {sweepParts()}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path data-part="check" pathLength="1" d="M5 12.5 L9.5 17 L19 7" /><path data-part="dash" pathLength="1" d="M6 12h12" /></svg>
+      </span>
+      <span data-part="label">{children}</span>
+      {(error ?? hint) !== undefined && <span data-part="hint">{error ?? hint}</span>}
+    </label>
+  )
+}
+
+export type SegmentedOption<V extends string> = { value: V; label: any; icon?: IconName; count?: any; disabled?: boolean }
+
+/**
+ * Segmented (03 §4, review 01 M8): native radios in a group that rests on its ink border; hovering or focusing an
+ * unselected option sweeps a ring round that option only; the selected face slides to it on the sweep curve.
+ */
+export function Segmented<V extends string>({ label, value, onChange, options, size, name }: { label: string; value: V; onChange: (v: V) => void; options: SegmentedOption<V>[]; size?: 'sm' | 'md'; name?: string }) {
+  const group = untrack(() => name) ?? uid('seg')
+  let root: HTMLDivElement | undefined
+  onMount(() => installSweep())
+  use(indicator, () => root, () => ({ selected: ':scope > label:has(input:checked)', x: '--_x', w: '--_w', at: value }))
+  return (
+    <div ref={(n: any) => (root = n)} data-scope="segmented" role="radiogroup" aria-label={label} data-size={size === 'sm' ? 'sm' : undefined}>
+      <span data-part="indicator" aria-hidden="true" data-instant=""></span>
+      {options.map(o => (
+        <label key={o.value} data-sweep="" data-phase="idle">
+          <span data-part="sweep" aria-hidden="true"></span>
+          <input type="radio" name={group} value={o.value} checked={o.value === value} disabled={o.disabled} onChange={() => onChange(o.value)} />
+          <span data-part="item">{o.icon && <Icon name={o.icon} />}{o.label}{o.count !== undefined && <span data-part="count">{o.count}</span>}</span>
+        </label>
+      ))}
+    </div>
+  )
+}

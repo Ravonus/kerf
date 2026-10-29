@@ -165,11 +165,13 @@ function update(node: Computation) {
   node.state = CLEAN
 }
 
-/** A child hole's value: functions are called (tracked), arrays unwrapped one level. */
-function unwrap(v: any) {
+/**
+ * A child hole's value: functions are called (tracked), through nested arrays too: a fragment's parts can hold a
+ * component's `children`, itself an array with live parts (`<>{icon}{children}</>` with children `Added {n}`).
+ */
+function unwrap(v: any): any {
   while (typeof v === 'function') v = v()
-  if (Array.isArray(v)) v = v.map(x => { while (typeof x === 'function') x = x(); return x })
-  return v
+  return Array.isArray(v) ? v.map(unwrap) : v
 }
 
 function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {

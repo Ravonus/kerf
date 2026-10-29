@@ -34,16 +34,29 @@ export function render(code: () => any, container: Element): () => void {
 
 // ---- inserting dynamic children -------------------------------------------------------------------------------
 
-function resolve(value: any, out: Node[]): Node[] {
+// Text nodes a hole made for primitives in a list: when the list is placed again they are reused in order, so
+// `Cart ({n})` costs one text write, not three new nodes. Nobody else holds them, so reuse can't take a node away.
+const made = new WeakSet<Node>()
+
+function resolve(value: any, out: Node[], reuse?: { texts: Text[]; at: number }): Node[] {
   while (typeof value === 'function') value = value()
   if (value == null || value === true || value === false) return out
   if (Array.isArray(value)) {
-    for (const v of value) resolve(v, out)
+    for (const v of value) resolve(v, out, reuse)
   } else if (value instanceof Node) {
     if (value.nodeType === 11) out.push(...(value.childNodes as any))
     else out.push(value)
   } else {
-    out.push(document.createTextNode(String(value)))
+    const text = String(value)
+    const t = reuse && reuse.texts[reuse.at++]
+    if (t) {
+      if (t.data !== text) t.data = text
+      out.push(t)
+    } else {
+      const n = document.createTextNode(text)
+      made.add(n)
+      out.push(n)
+    }
   }
   return out
 }
@@ -59,7 +72,7 @@ export function place(parent: Node, value: any, current: Node[], marker: Node | 
     }
     if (!current.length) return [parent.insertBefore(document.createTextNode(value as string), marker)] // the DOM converts a number
   }
-  const next = resolve(value, [])
+  const next = resolve(value, [], { texts: current.filter(n => made.has(n)) as Text[], at: 0 })
   if (next.length === current.length && next.every((n, i) => n === current[i])) return current
   const keep = new Set(next)
   for (const n of current) if (!keep.has(n) && n.parentNode === parent) parent.removeChild(n)
@@ -155,15 +168,17 @@ export function ref(get: () => any, el: Element) {
 }
 
 export function mergeProps(...sources: any[]) {
+  // a source is an object or a getter for one (a spread of a prop), which may be undefined (`{...rest.attrs}`)
+  const at = (s: any) => Object(typeof s === 'function' ? s() : s)
   return new Proxy({} as any, {
     get(_, k) {
       for (let i = sources.length - 1; i >= 0; i--) {
-        const s = typeof sources[i] === 'function' ? sources[i]() : sources[i]
-        if (s && k in s) return s[k]
+        const s = at(sources[i])
+        if (k in s) return s[k]
       }
     },
-    has: (_, k) => sources.some(s => s && k in (typeof s === 'function' ? s() : s)),
-    ownKeys: () => [...new Set(sources.flatMap(s => (s ? Reflect.ownKeys(typeof s === 'function' ? s() : s) : [])))],
+    has: (_, k) => sources.some(s => k in at(s)),
+    ownKeys: () => [...new Set(sources.flatMap(s => Reflect.ownKeys(at(s))))],
     getOwnPropertyDescriptor: () => ({ configurable: true, enumerable: true }),
   })
 }

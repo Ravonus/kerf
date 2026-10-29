@@ -20,7 +20,7 @@ export const builtins = [
   { name: 'browser', description: 'Drive the running app by role/label/text, with the reactive graph', sideEffects: ['network'], available: false },
   { name: 'run', description: 'Run a project task by name', sideEffects: ['task'], available: false },
   { name: 'create', description: 'Scaffold a weft app', sideEffects: ['fs'], available: false },
-  { name: 'plugins', description: 'List and explain plugins and slot bindings', sideEffects: [], available: false },
+  { name: 'plugins', description: 'List and explain plugins and slot bindings; `sync` regenerates .weft/slots and plugin tokens', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['list', 'explain', 'sync'] }, slot: { type: 'string' } } }, sideEffects: ['fs:.weft/**'], available: true },
 ]
 
 function jsonSchema(args) {

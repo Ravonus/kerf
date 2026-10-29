@@ -36,6 +36,7 @@ const FRAMEWORK = {
   react: 'React 19 + TypeScript (function components and hooks)',
   solid: 'SolidJS 1.9 + TypeScript (`solid-js`)',
   weft: 'weft (Phase 1 spike) + TypeScript',
+  warp: 'weft + warp (@weft/warp UI kit) + TypeScript',
 }
 
 function prepare() {

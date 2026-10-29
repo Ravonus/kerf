@@ -1,0 +1,12 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Quote ----------------------------------------------------------------------- */
+:where([data-scope="quote"]) { margin: 0; padding-inline-start: 16px; border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); }
+:where([data-scope="quote"] > blockquote) { margin: 0; font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading); text-wrap: pretty; }
+:where([data-expression="vivid"] [data-scope="quote"] > blockquote) { font-family: var(--warp-font-display); font-size: calc(var(--warp-text-prose-size) * 1.3); line-height: 1.35; }
+/* the block stays upright at every stop (00-direction §4): only an em inside it takes the emphasis style, which is a
+   real italic at vivid and upright accent elsewhere; nothing is ever slanted by the browser */
+:where([data-scope="quote"] > blockquote) { font-style: normal; font-synthesis-style: none; }
+:where([data-scope="quote"] > blockquote em) { font-style: var(--warp-text-emphasis-style); color: var(--warp-text-emphasis-color, inherit); }
+:where([data-scope="quote"] > figcaption) { margin-block-start: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+}

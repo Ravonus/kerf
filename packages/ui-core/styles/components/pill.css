@@ -1,0 +1,23 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Pill (and PillLink): rounded, selectable; sweeps while hovered or active -- */
+:where([data-scope="pill"]) {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 6px; block-size: 30px; padding-inline: 12px;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round);
+  background: var(--warp-color-surface-raised); color: var(--warp-color-text-subtle); font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font);
+  text-decoration: none; cursor: pointer;
+  transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), border-color var(--warp-duration-fast);
+}
+:where([data-scope="pill"]:hover) { color: var(--warp-color-text); }
+:where([data-scope="pill"][aria-current], [data-scope="pill"][aria-selected="true"], [data-scope="pill"][aria-pressed="true"]) {
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
+}
+:where([data-scope="pill"] [data-part="count"]) { font: 500 11px/1 var(--warp-font-mono); }   /* full ink: 0.75 opacity fell to 3.6:1 (review 03 m12) */
+
+
+
+/* pills and menubar items sit in a row with room above and below: block axis only */
+:where([data-scope="pill"], [data-scope="menubar"] > [role="menuitem"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+}
+}

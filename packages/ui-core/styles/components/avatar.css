@@ -1,0 +1,30 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Avatar + avatar group --------------------------------------------------- */
+:where([data-scope="avatar"]) {
+  --_size: 36px; position: relative; display: inline-grid; place-items: center; flex: none;
+  inline-size: var(--_size); block-size: var(--_size); border-radius: var(--warp-radius-round);
+  background: var(--_bg, var(--warp-color-accent-soft)); color: var(--_fg, var(--warp-color-accent-text));
+  font: 600 max(11px, calc(var(--_size) * 0.36))/1 var(--warp-text-body-font); letter-spacing: -0.01em; user-select: none;
+}
+:where([data-scope="avatar"][data-size="sm"]) { --_size: 24px; }
+:where([data-scope="avatar"][data-size="lg"]) { --_size: 48px; }
+:where([data-scope="avatar"][data-shape="square"]) { border-radius: var(--warp-radius-control); }
+:where([data-scope="avatar"] > img) { grid-area: 1 / 1; inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: inherit; }
+:where([data-scope="avatar"] > [data-scope="status-dot"]) {
+  position: absolute; inset-block-end: 0; inset-inline-end: 0; box-shadow: 0 0 0 2px var(--warp-color-surface);
+}
+:where([data-scope="avatar-group"]) { display: inline-flex; align-items: center; }
+:where([data-scope="avatar-group"] > [data-scope="avatar"]) { box-shadow: 0 0 0 2px var(--warp-color-surface); transition: translate var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="avatar-group"] > [data-scope="avatar"] + [data-scope="avatar"]) { margin-inline-start: calc(var(--_size) * -0.3); }
+:where([data-scope="avatar-group"] > [data-scope="avatar"]:hover) { translate: 0 calc(-2px * var(--warp-motion-scale)); z-index: 1; }
+:where([data-scope="avatar-group"] > [data-part="more"]) { --_bg: var(--warp-color-surface-sunken); --_fg: var(--warp-color-text-subtle); }
+
+
+
+/* an avatar stack overlaps by design (30% of the size): each face takes the block axis only. Its exposed
+   width (≈ 25px at md) is the pitch, so stacked avatars stay at the 24px floor + spacing (WCAG 2.5.8) */
+:where([data-scope="avatar-group"] > [data-scope="avatar"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+}
+}

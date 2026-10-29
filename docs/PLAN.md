@@ -551,11 +551,33 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
 - **Three ways to use it** (agorix 04 §3). Every skin sits on three public contracts: CSS variables, `data-state`
   attributes and `data-part` names. Styles live in `@layer warp.*` behind `:where()`, so any app CSS wins without
   `!important`.
-  - **Default:** `@weft/warp` (skin) on `@weft/ui-core` (headless behaviour).
+  - **Default:** `@weft/warp` (the weft binding) on `@weft/ui-core` (the spec CSS and the behaviour, framework-agnostic).
   - **Other kit or styling:** `ui-core` getters with your markup, or `weft add <name> --style plain|tailwind`, which
     copies the skin only and upgrades with `--diff`.
   - **Fully custom:** install nothing above `weft`. Data and real-time still work.
   - `create-weft --ui warp|headless|none`.
+- **Layering: one core, thin bindings.** Most of warp is framework-agnostic, so a React (or other) binding can be
+  added later without rewriting it.
+  1. **`@weft/ui-core`, the core.** It holds most of the code and imports no framework (no weft, React or JSX; a test
+     enforces it).
+     - **Styles:** the spec CSS verbatim. `styles/warp.css` holds tokens, base and signature. The component and input
+       files from `docs/design/warp/tokens` are split per component into `styles/{components,inputs}/<name>.css` by
+       `scripts/split-css.mjs`; a test checks every rule ships unchanged and in spec order.
+     - **Behaviour:** plain TS over the DOM. Actions are shaped `(el, opts) => { update, destroy }`: the sweep phase
+       machine, floatingLabel, the dials, motion and focus handling.
+     - **Stateful widgets** (tabs, select, popover, dialog, toast) get small transition functions and stores that take
+       events and emit state. Zag is used only where §6 calls for it.
+     - **Contracts:** typed anatomy (part names, data attributes, ARIA wiring).
+  2. **`@weft/warp`, the weft binding (thin).** TSX components that render the specimen markup exactly, with weft's
+     compiled templates.
+     - They wire core state into boxes and fine-grained bindings, so one prop change touches only what it affects.
+       There is no re-render and no wrapper component without a reason.
+     - Actions are destroyed in `onCleanup`.
+     - Every component has a `toTouchAtMost` budget test, an SSR + hydrate round trip (0 misses, 0 writes) and its
+       own brotli size (`scripts/size.mjs`).
+     - Importing one component pays for that component, its CSS files and the shared runtime only.
+  3. **Portability proof.** A test drives core widgets with plain DOM and no framework. A React binding would be a
+     sibling of `@weft/warp` over the same core.
 - **Server pieces:** Agorix's data and real-time breadth merges into `weft/start` on weft's protocol (§4.2;
   agorix 03 §7). warp components bind to `query`/`.live`/`channel` boxes and never own transport.
 

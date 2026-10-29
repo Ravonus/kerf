@@ -22,6 +22,11 @@ const html = (el: Element) => {
 }
 
 let disposers: (() => void)[] = []
+function SpreadPicker(props: { rest: Record<string, any> }) {
+  const options = ['a', 'b', 'c']
+  return <select value="b" {...props.rest}>{options.map(o => <option key={o} value={o}>{o}</option>)}</select>
+}
+
 const mount = (Comp: () => any) => {
   const root = document.createElement('div')
   document.body.append(root)
@@ -179,6 +184,12 @@ describe('weft back end, step 2', () => {
     select.dispatchEvent(new Event('change'))
     flush()
     expect(select.value).toBe('c')
+  })
+
+  it('<select value> through a spread is set after its options exist', async () => {
+    const root = mount(() => SpreadPicker({ rest: { 'aria-label': 'Pick' } }))
+    await Promise.resolve()
+    expect(root.querySelector('select')!.value).toBe('b')
   })
 
   it('SVG: elements outside an <svg> parse as SVG; namespaced attributes keep their namespace', () => {

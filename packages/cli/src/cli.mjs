@@ -7,6 +7,8 @@ import { check } from './check.mjs'
 import { formatHuman } from './diag.mjs'
 import { docs } from './docs.mjs'
 import { serve } from './mcp.mjs'
+import { explain, list, sync } from './plugins.mjs'
+import { loadConfig } from './load-config.mjs'
 import { tasks } from './tasks.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
@@ -15,6 +17,9 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   tasks               commands and project tasks
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
+  plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
+  plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
+  plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
   mcp                 MCP server on stdio: docs, check, tasks`
 
 export function parse(argv) {
@@ -65,6 +70,32 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         if (args.json) print({ path: out.path, bytes: out.bytes, limit: 8192, overLimit: out.overLimit, current: out.current, written: out.written })
         say(`AGENTS.md: ${out.bytes} bytes${out.overLimit ? ' (over the 8 KB limit)' : ''}, ${out.written ? 'written' : out.current ? 'current' : 'stale'}`)
         return (args.check && !out.current) || out.overLimit ? 1 : 0
+      }
+      case 'plugins': {
+        const sub = args.positional[0] ?? 'list'
+        if (sub === 'list') {
+          const result = await list(args.root)
+          if (args.json) print(result)
+          else say(result.plugins.map(p => `${p.name}@${p.version ?? '?'}  ${p.provides.map(s => `${s.slot}${s.key ? `[${s.key}]` : ''}${s.bound ? '' : ' (not bound)'}`).join(', ') || 'no slots'}${p.tokens ? `  tokens --${p.tokens}-*` : ''}`).join('\n') || 'no plugins')
+          say(formatHuman(result.diagnostics))
+          return result.ok ? 0 : 1
+        }
+        if (sub === 'explain') {
+          const result = await explain(args.root, args.positional[1])
+          if (args.json) print(result)
+          else say(JSON.stringify(result.binding, null, 2))
+          return 0
+        }
+        if (sub === 'sync') {
+          const loaded = await loadConfig(args.root)
+          const errors = loaded.diagnostics.filter(d => d.severity === 'error')
+          const written = loaded.diagnostics.some(d => d.code === 'P007') ? [] : sync(args.root, loaded)
+          if (args.json) print({ ok: errors.length === 0, written, diagnostics: loaded.diagnostics })
+          say(formatHuman(loaded.diagnostics))
+          say(`weft plugins sync: ${written.length} files written`)
+          return errors.length ? 1 : 0
+        }
+        throw Object.assign(new Error(`unknown plugins subcommand ${sub}`), { code: 'E_USAGE' })
       }
       case 'mcp':
         await serve(args.root)

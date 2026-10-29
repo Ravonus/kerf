@@ -5,6 +5,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { catalog } from './catalog.mjs'
 import { commandsPage, installed, readDoc } from './docs.mjs'
+import { loadConfig } from './load-config.mjs'
+import { agentsSection } from './plugins.mjs'
 import { tasks } from './tasks.mjs'
 
 export const limit = 8 * 1024
@@ -17,6 +19,7 @@ export async function agentsMd(root) {
   root = resolve(root)
   const info = installed(root)
   const list = await tasks(root)
+  const sections = (await loadConfig(root)).contributions.filter(c => c.manifest.agents).map(c => agentsSection(c.manifest.agents))
   const core = info.exports.weft ?? []
   const missing = planned.filter(n => !core.includes(n))
 
@@ -66,6 +69,7 @@ export async function agentsMd(root) {
     '',
     commandsPage(list),
     '',
+    ...(sections.length ? ['## Plugins', '', ...sections] : []),
     '## More',
     '',
     '`weft docs <topic>` or the `docs` tool of `weft mcp`: `rules`, `props`, `lists`, `async`, `testing`, `browser`, `config`, `diagnostics`, `commands`.',

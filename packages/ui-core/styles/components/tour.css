@@ -1,0 +1,8 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Tour step: an anchored popover with a step count and a spotlight ring on the target */
+:where([data-scope="tour"][data-part="content"]) { inline-size: 300px; }
+:where([data-scope="tour"] [data-part="footer"]) { display: flex; align-items: center; gap: 8px; margin-block-start: 14px; }
+:where([data-scope="tour"] [data-part="count"]) { margin-inline-end: auto; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+:where([data-tour-target]) { outline: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); outline-offset: 4px; border-radius: var(--warp-radius-control); box-shadow: 0 0 0 9999px color-mix(in oklab, var(--warp-color-scrim) 40%, transparent); position: relative; z-index: 1; }
+}
