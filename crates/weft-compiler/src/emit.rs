@@ -11,7 +11,7 @@
 //! | dynamic attributes of one el  | one `_$bind(() => [a, b], (v, p) => …)` (`<select>`: after children) |
 //! | `onX={fn}`                    | `_$on(el, "x", fn, delegated)`                                       |
 //! | `ref={el}` / `ref={fn}`       | assigns the variable / calls the function                            |
-//! | `{...rest}` on an element     | `_$spread(el, _$mergeProps(() => rest, { … }), hasChildren)`         |
+//! | `{...rest}` on an element     | `_$spread(el, _$mergeProps(() => rest, { … }))`; no JSX children: a hole for its `children` |
 //! | `{expr}` child                | `_$child(parent, () => expr, marker?)` (`<!>` marks mixed content)   |
 //! | `{c ? <A/> : <B/>}`, `&&`     | a `_$child` whose condition is read through `_$memo`                 |
 //! | `<Comp a={x} />`              | `_$component(Comp, { get a() { return x; } })`                       |
@@ -457,27 +457,44 @@ impl<'t> Emitter<'t> {
         let has_kids = !children(&el.children, self.text).is_empty();
 
         // `<div {...rest} a={x}>`: every attribute goes through one merged props object (later wins, as for
-        // components), applied by `spread`. JSX children stay in the template; a spread's `children` applies only
-        // when the element has none (client only, for now).
+        // components), applied by `spread`. JSX children stay in the template. Without them, the props' `children`
+        // is the element's one hole, so the server renders it and hydration adopts it like any other.
         if el.opening_element.attributes.iter().any(|a| matches!(a, JSXAttributeItem::SpreadAttribute(_))) {
             let props = self.props(&el.opening_element.attributes, Vec::new());
             let spread = self.helper("spread");
+            let void = VOID.contains(&tag.as_str());
             if self.ssr {
                 Self::server(b, Piece::Code(format!("{spread}({props})")));
             } else {
                 let el_var = self.node(b, &path);
-                b.ops.push(format!("{spread}({el_var}, {props}, {has_kids});"));
+                self.n += 1;
+                let p = format!("_p{}", self.n);
+                b.ops.push(format!("const {p} = {props}; {spread}({el_var}, {p});"));
+                if !has_kids && !void {
+                    Self::put(b, ">");
+                    self.hole_code(b, &path, format!("() => {p}.children"), false, None);
+                    Self::put(b, &format!("</{tag}>"));
+                    return;
+                }
             }
             Self::put(b, ">");
-            if !VOID.contains(&tag.as_str()) {
-                self.kids(el, b, &path);
-                Self::put(b, &format!("</{tag}>"));
+            if void {
+                return;
             }
+            if has_kids {
+                self.kids(el, b, &path);
+            } else {
+                // The server reads the merged props again; a merged object reads its sources on every access anyway.
+                self.hole_code(b, &path, format!("() => {props}.children"), false, None);
+            }
+            Self::put(b, &format!("</{tag}>"));
             return;
         }
 
         // (kind, name, expression) for the element's one binding
         let mut dynamic: Vec<(&'static str, String, String)> = Vec::new();
+        // Server: what `textContent` or `innerHTML` puts inside the element.
+        let mut content: Option<String> = None;
         for item in &el.opening_element.attributes {
             let JSXAttributeItem::Attribute(attr) = item else { continue };
             let name = match &attr.name {
@@ -552,9 +569,17 @@ impl<'t> Emitter<'t> {
                                 "attr"
                             };
                             let e = self.expr(expr);
+                            if (name == "textContent" || name == "innerHTML") && has_kids {
+                                self.fail(format!("weft back end: an element with `{name}` can't also have children (it replaces them)"), attr.span);
+                                continue;
+                            }
                             if self.ssr {
-                                // Content properties aren't attributes; the client writes them.
-                                if name != "textContent" && name != "innerHTML" {
+                                // Content properties aren't attributes: the server writes them as the content.
+                                if name == "textContent" {
+                                    content = Some(format!("{}(String(({e}) ?? \"\"))", self.helper("escape")));
+                                } else if name == "innerHTML" {
+                                    content = Some(format!("String(({e}) ?? \"\")"));
+                                } else {
                                     let call = if tag == "select" && name == "value" {
                                         format!("{}({e})", self.helper("select"))
                                     } else {
@@ -580,6 +605,9 @@ impl<'t> Emitter<'t> {
         Self::put(b, ">");
         if VOID.contains(&tag.as_str()) {
             return;
+        }
+        if let Some(c) = content {
+            Self::server(b, Piece::Code(c));
         }
         self.kids(el, b, &path);
         if late {
@@ -638,9 +666,14 @@ impl<'t> Emitter<'t> {
 
     /// One child hole: the next slot of the template, its value, and (mixed content) the marker at `marker`.
     fn hole(&mut self, b: &mut Build, parent: &[usize], k: &Kid<'_>, marker: Option<Vec<usize>>) {
+        let (v, once) = self.hole_value(k);
+        self.hole_code(b, parent, v, once, marker);
+    }
+
+    /// A hole whose value is the code `v` (`once`: static structure, built once).
+    fn hole_code(&mut self, b: &mut Build, parent: &[usize], v: String, once: bool, marker: Option<Vec<usize>>) {
         let slot = b.slots;
         b.slots += 1;
-        let (v, once) = self.hole_value(k);
         if self.ssr {
             let hole = self.helper("hole");
             if marker.is_some() {

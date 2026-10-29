@@ -498,3 +498,14 @@ fn only_hydratable_output_imports_the_claiming_helpers() {
     assert!(hydratable.contains("htpl as _$htpl") && hydratable.contains("hchild as _$hchild"), "{hydratable}");
     assert!(!hydratable.contains("tpl as _$tpl,") && !hydratable.contains(" child as _$child"), "{hydratable}");
 }
+
+#[test]
+fn content_properties_render_on_the_server_and_refuse_children() {
+    let ssr = |src: &str| compile(src, &Options { filename: "App.tsx".into(), generate: "ssr".into(), ..Default::default() });
+    let code = ssr("export const A = (p: any) => <p textContent={p.s} />").code.unwrap();
+    assert!(code.contains("\">\" + _$escape(String((p.s) ?? \"\")) + \"</p>\""), "{code}");
+    let code = ssr("export const A = (p: any) => <div innerHTML={p.h} />").code.unwrap();
+    assert!(code.contains("\">\" + String((p.h) ?? \"\") + \"</div>\""), "{code}");
+    let out = compile("export const A = (p: any) => <p textContent={p.s}>x</p>", &Options { filename: "App.tsx".into(), ..Default::default() });
+    assert!(out.code.is_none() && out.diagnostics[0].message.contains("can't also have children"), "{:?}", out.diagnostics);
+}

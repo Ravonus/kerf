@@ -64,10 +64,10 @@ const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for' }
 
 /**
  * `<div {...rest} a={x}>`: `props` is the merged object (later wins). One binding reads every key and writes what
- * changed; `onX` handlers are listeners (swapped when the value changes), `ref` runs once, `children` applies only
- * when the element has no JSX children (`hasChildren`). Hydrating, the first run attaches handlers and refs only.
+ * changed; `onX` handlers are listeners (swapped when the value changes), `ref` runs once. `children` isn't
+ * applied here: the compiler gives it its own hole. Hydrating, the first run attaches handlers and refs only.
  */
-export function spread(el: Element, props: Record<string, any>, hasChildren: boolean) {
+export function spread(el: Element, props: Record<string, any>) {
   const listeners: Record<string, EventListener> = {}
   let refDone = false
   let hydrating = keys.hydrating
@@ -83,7 +83,6 @@ export function spread(el: Element, props: Record<string, any>, hasChildren: boo
       hydrating = false
     },
   )
-  if (!hasChildren && 'children' in props) insert(el, () => props.children)
 
   function write(key: string, value: any, prev: any) {
     if (key === 'ref') {

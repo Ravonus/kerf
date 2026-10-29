@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **built** (§5.1–§5.6). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **built** (§5.1–§5.7). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -370,7 +370,7 @@ build. Splitting it out (a hydratable build imports claiming helpers; a client-o
 item. Every number is still inside its budget.
 
 **Still open.**
-- A spread's `children`, and `textContent`/`innerHTML` props, aren't rendered on the server (the client writes them).
+- ~~A spread's `children`, and `textContent`/`innerHTML` props, aren't rendered on the server.~~ Fixed in §5.7.
 - Source maps for lowered JSX are per line, not per expression inside a hole.
 - HMR.
 
@@ -400,6 +400,24 @@ template but doesn't pass the place on.
 A test checks that client-only output imports none of `htpl`, `hchild` or `first`, and that hydratable output does.
 The helper contract checks that both sets are exported. `bind`, `spread` and `For` still read the small `keys`
 object while hydrating. The benchmark wasn't re-run: the change removes branches from `tpl` and `child` and adds none.
+
+### 5.7 Content properties and spread children on the server (2026-10-29)
+
+Both were bugs once hydrating, not just gaps. Hydration skips a binding's first write, because the server wrote it.
+The server wrote nothing for `textContent`/`innerHTML`, so a hydrated `<p textContent={x}>` stayed empty until `x`
+changed. A spread's `children` were inserted fresh on top of the server's nodes.
+
+- **`textContent={x}`** renders `escape(String(x ?? ""))` inside the element on the server, and **`innerHTML={x}`**
+  renders `String(x ?? "")`, unescaped as on the client. An element with either one and JSX children is a compile
+  error ("can't also have children"), since the property replaces them.
+- **`<div {...rest} />` with no JSX children:** `children` is the element's one hole.
+  - Client: `const _p = mergeProps(…); spread(el, _p); child(el, () => _p.children)` (`hchild` when hydratable).
+  - Server: `hole(_k, 0, () => mergeProps(…).children)`.
+  - `spread` itself no longer touches `children`.
+- **Tests:**
+  - a round trip of `Step2.Content` (0 misses, 0 DOM writes, then live updates of all three);
+  - a client-only test that spread children render and update;
+  - a Rust test for the server output and the error.
 
 ## 6. What PR #2 (compiler hardening) brings
 
