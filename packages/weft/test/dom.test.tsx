@@ -82,6 +82,27 @@ test('a keyed row with an index reads it live; its key is written once', async (
   expect(text()).toEqual(['b 0:b:3', 'a 1:a:1'])
 })
 
+test('a fragment holding children with live parts updates them; a spread of an undefined prop is empty', async () => {
+  const n = state(0)
+  function Wrap({ children, attrs }: { children?: any; attrs?: Record<string, any> }) {
+    return <b {...attrs}><>{false && <i />}{children}</></b>
+  }
+  const { container } = render(() => <Wrap>Added {n.value}</Wrap>)
+  n.value++
+  await flush()
+  expect(container.textContent).toBe('Added 1')
+})
+
+test('children with a live part: one text write when the part changes (the list reuses its text nodes)', async () => {
+  const n = state(0)
+  function Label({ children }: { children?: any }) {
+    return <b>{children}</b>
+  }
+  const { container } = render(() => <Label>Cart ({n.value})</Label>)
+  await expect(async () => { n.value++; await flush() }).toTouchAtMost(1)
+  expect(container.textContent).toBe('Cart (1)')
+})
+
 test('ARIA booleans are written as true/false; other booleans add or remove the attribute', async () => {
   const on = state(false)
   render(() => <button aria-pressed={on.value} aria-expanded={false} disabled={on.value}>x</button>)

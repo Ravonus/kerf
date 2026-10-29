@@ -1,0 +1,13 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Toolbar: one tab stop, arrows move; items that don't fit go into an overflow menu */
+:where([data-scope="toolbar"]) {
+  display: flex; align-items: center; gap: 2px; min-inline-size: 0; padding: 3px;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 3px);
+  background: var(--warp-color-surface-raised);
+}
+:where([data-scope="toolbar"] > [data-part="separator"]) { inline-size: 1px; align-self: stretch; margin-block: 4px; margin-inline: 4px; background: var(--warp-color-border); }
+:where([data-scope="toolbar"] > [data-overflowed]) { display: none; }
+:where([data-scope="toolbar"] > [data-part="overflow"]) { margin-inline-start: auto; }
+:where([data-scope="toolbar"] > [data-part="overflow"][hidden]) { display: none; }
+}

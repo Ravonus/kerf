@@ -1,0 +1,51 @@
+import { toaster, toastStore, type Toast, type ToastInput } from '@weft/ui-core'
+import { onCleanup, state } from 'weft'
+import { Button } from './Button'
+import { Icon, toneIcon } from './Icon'
+import { use } from './use'
+import './styles'
+import '@weft/ui-core/styles/components/toast.css'
+
+let store: ReturnType<typeof toastStore> | undefined
+const toasts = () => (store ??= toastStore())
+
+/**
+ * Show a toast from anywhere (05 §5): `toast.show({ title, description, tone, action })`. Needs one <Toaster />.
+ * Life is 5s + 60ms a word, 10s with an action; a critical toast with an action stays until dismissed.
+ */
+export const toast = {
+  show: (t: ToastInput) => toasts().show(t),
+  dismiss: (id: string) => toasts().dismiss(id),
+}
+
+/**
+ * The toast region and the two pre-mounted live regions (05 §5; components.html:1115-1117). Mount once, near the
+ * root. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
+ * Dismiss removes one; F8 focuses the newest.
+ */
+export function Toaster() {
+  const list = state<Toast[]>(toasts().get())
+  onCleanup(toasts().subscribe(v => (list.value = v)))
+  let region: HTMLElement | undefined
+  use(toaster, () => region, () => toasts())
+  return (
+    <>
+      <section ref={(n: any) => (region = n)} data-scope="toast" data-part="region" aria-label="Notifications (F8)" tabindex="-1">
+        {list.value.map(t => (
+          <div key={t.id} data-scope="toast" data-part="root" data-id={t.id} data-tone={t.tone ?? 'neutral'} data-state={t.state} role="group" aria-label={t.title}>
+            <Icon name={toneIcon[t.tone ?? 'neutral']} data-part="icon" />
+            <div data-part="title">{t.title}</div>
+            {t.description && <div data-part="description">{t.description}</div>}
+            <div data-part="actions">
+              {t.action && <Button emphasis="ghost" size="sm" data-act="" onClick={() => { t.action!.onClick(); toast.dismiss(t.id) }}>{t.action.label}</Button>}
+              <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label="Dismiss" data-x="" onClick={() => toast.dismiss(t.id)} />
+            </div>
+            {t.life > 0 && <span data-part="progress" aria-hidden="true"></span>}
+          </div>
+        ))}
+      </section>
+      <div data-scope="announcer" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div data-scope="announcer" role="alert" aria-live="assertive" aria-atomic="true"></div>
+    </>
+  )
+}

@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Hamburger ([data-hamburger] on a ghost icon button): three bars become an X. The middle bar sweeps out to the right (never reverses). */
+:where([data-hamburger]) { --_bar: 16px; --_gap: 5px; }
+:where([data-hamburger] [data-part="bars"]) { position: relative; inline-size: var(--_bar); block-size: calc(var(--_gap) * 2 + 1.5px); display: block; }
+:where([data-hamburger] [data-part="bars"] > i) {
+  position: absolute; inset-inline: 0; block-size: 1.5px; border-radius: 2px; background: currentColor;
+  transition: translate var(--warp-duration-base) var(--warp-ease-in-out), rotate var(--warp-duration-base) var(--warp-ease-in-out),
+              clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where([data-hamburger] [data-part="bars"] > i:nth-child(1)) { inset-block-start: 0; }
+:where([data-hamburger] [data-part="bars"] > i:nth-child(2)) { inset-block-start: var(--_gap); clip-path: inset(0); }
+:where([data-hamburger] [data-part="bars"] > i:nth-child(3)) { inset-block-start: calc(var(--_gap) * 2); }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(1)) { translate: 0 var(--_gap); rotate: 45deg; }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(2)) { clip-path: inset(0 0 0 100%); }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(3)) { translate: 0 calc(var(--_gap) * -1); rotate: -45deg; }
+}

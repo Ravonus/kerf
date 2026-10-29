@@ -1,0 +1,437 @@
+{
+ "accordion": [
+  "components/base.css",
+  "components/accordion.css"
+ ],
+ "ai-label": [
+  "components/link.css",
+  "components/logo.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "alert": [
+  "components/alert.css"
+ ],
+ "anchor-heading": [
+  "components/link.css",
+  "components/logo.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "announcer": [
+  "components/base.css"
+ ],
+ "autosave": [
+  "inputs/pickers.css"
+ ],
+ "avatar": [
+  "components/avatar.css",
+  "components/persona.css"
+ ],
+ "avatar-group": [
+  "components/avatar.css"
+ ],
+ "backdrop": [
+  "components/dialog.css"
+ ],
+ "badge": [
+  "components/tabs.css",
+  "components/badge.css"
+ ],
+ "banner": [
+  "components/alert.css"
+ ],
+ "breadcrumbs": [
+  "components/breadcrumbs.css"
+ ],
+ "button": [
+  "components/base.css",
+  "components/button.css",
+  "components/button-group.css",
+  "components/dialog.css",
+  "components/alert.css",
+  "inputs/text.css"
+ ],
+ "button-group": [
+  "components/button-group.css"
+ ],
+ "callout": [
+  "components/alert.css"
+ ],
+ "checkbox": [
+  "inputs/field.css",
+  "inputs/choice.css"
+ ],
+ "chip": [
+  "components/base.css",
+  "components/toggle-button.css",
+  "components/chip.css",
+  "inputs/field.css",
+  "inputs/choice.css"
+ ],
+ "choice-card": [
+  "inputs/field.css",
+  "inputs/choice.css"
+ ],
+ "color": [
+  "inputs/range.css"
+ ],
+ "context-menu": [
+  "components/menu.css"
+ ],
+ "copy": [
+  "components/copy.css"
+ ],
+ "countdown": [
+  "components/number.css",
+  "components/countdown.css"
+ ],
+ "cropper": [
+  "inputs/file.css"
+ ],
+ "dialog": [
+  "components/dialog.css",
+  "components/sheet.css"
+ ],
+ "disclosure": [
+  "components/accordion.css"
+ ],
+ "dropzone": [
+  "inputs/field.css",
+  "inputs/file.css"
+ ],
+ "editable": [
+  "inputs/field.css",
+  "inputs/text.css"
+ ],
+ "empty-state": [
+  "components/empty-state.css"
+ ],
+ "error-summary": [
+  "inputs/form.css"
+ ],
+ "fab": [
+  "components/fab.css",
+  "components/speed-dial.css"
+ ],
+ "field": [
+  "components/dialog.css",
+  "inputs/field.css",
+  "inputs/text.css",
+  "inputs/choice.css",
+  "inputs/range.css",
+  "inputs/pickers.css"
+ ],
+ "form": [
+  "inputs/form.css"
+ ],
+ "gradient": [
+  "inputs/pickers.css"
+ ],
+ "group": [
+  "inputs/choice.css",
+  "inputs/pickers.css"
+ ],
+ "hamburger": [
+  "components/hamburger.css"
+ ],
+ "histogram": [
+  "inputs/pickers.css"
+ ],
+ "hover-card": [
+  "components/base.css",
+  "components/popover.css"
+ ],
+ "hover-scope": [
+  "inputs/pickers.css"
+ ],
+ "icon-grid": [
+  "components/icon.css"
+ ],
+ "icon-tile": [
+  "inputs/field.css",
+  "inputs/pickers.css"
+ ],
+ "image": [
+  "components/image.css"
+ ],
+ "input-group": [
+  "inputs/text.css"
+ ],
+ "item": [
+  "components/item-row.css"
+ ],
+ "item-list": [
+  "components/item-row.css"
+ ],
+ "kbd": [
+  "components/base.css"
+ ],
+ "knob": [
+  "inputs/field.css",
+  "inputs/pickers.css"
+ ],
+ "knob-row": [
+  "inputs/pickers.css"
+ ],
+ "link": [
+  "components/link.css",
+  "components/logo.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "listbox": [
+  "inputs/listbox.css",
+  "inputs/pickers.css"
+ ],
+ "live-status": [
+  "components/live-status.css"
+ ],
+ "logo": [
+  "components/link.css",
+  "components/logo.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "mark": [
+  "components/highlight.css"
+ ],
+ "menu": [
+  "components/base.css",
+  "components/dialog.css",
+  "components/menu.css"
+ ],
+ "menubar": [
+  "components/link.css",
+  "components/logo.css",
+  "components/pill.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "meta-list": [
+  "components/meta-list.css"
+ ],
+ "meter": [
+  "components/meter.css"
+ ],
+ "number": [
+  "components/number.css"
+ ],
+ "otp": [
+  "inputs/field.css",
+  "inputs/text.css"
+ ],
+ "pagination": [
+  "components/pagination.css"
+ ],
+ "palette": [
+  "components/dialog.css",
+  "components/menu.css",
+  "components/command-palette.css",
+  "components/highlight.css"
+ ],
+ "persona": [
+  "components/persona.css"
+ ],
+ "pill": [
+  "components/base.css",
+  "components/pill.css",
+  "components/menubar.css"
+ ],
+ "popconfirm": [
+  "components/popconfirm.css"
+ ],
+ "popover": [
+  "components/base.css",
+  "components/popover.css"
+ ],
+ "popup": [
+  "inputs/field.css",
+  "inputs/listbox.css",
+  "inputs/pickers.css"
+ ],
+ "prefs": [
+  "components/theme-panel.css"
+ ],
+ "progress": [
+  "components/progress.css"
+ ],
+ "qr": [
+  "components/qr-code.css"
+ ],
+ "quantity": [
+  "inputs/field.css",
+  "inputs/text.css"
+ ],
+ "quote": [
+  "components/quote.css"
+ ],
+ "radio": [
+  "inputs/field.css",
+  "inputs/choice.css"
+ ],
+ "range-head": [
+  "inputs/range.css"
+ ],
+ "rating": [
+  "inputs/range.css"
+ ],
+ "relative-time": [
+  "components/link.css",
+  "components/logo.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "rules": [
+  "inputs/pickers.css"
+ ],
+ "save-bar": [
+  "inputs/pickers.css"
+ ],
+ "section-message": [
+  "components/section-message.css"
+ ],
+ "segmented": [
+  "inputs/field.css",
+  "inputs/choice.css"
+ ],
+ "select": [
+  "components/base.css",
+  "components/dialog.css",
+  "components/menu.css",
+  "components/listbox.css"
+ ],
+ "selection-toolbar": [
+  "components/selection-toolbar.css"
+ ],
+ "separator": [
+  "components/separator.css"
+ ],
+ "setting": [
+  "inputs/form.css"
+ ],
+ "share": [
+  "components/share.css"
+ ],
+ "sheet": [
+  "components/dialog.css",
+  "components/sheet.css"
+ ],
+ "skeleton": [
+  "components/skeleton.css"
+ ],
+ "skeleton-scope": [
+  "components/skeleton.css"
+ ],
+ "slider": [
+  "inputs/range.css"
+ ],
+ "speed-dial": [
+  "components/speed-dial.css"
+ ],
+ "spinner": [
+  "components/spinner.css",
+  "components/live-status.css"
+ ],
+ "status-dot": [
+  "components/badge.css",
+  "components/avatar.css",
+  "components/countdown.css"
+ ],
+ "status-light": [
+  "components/status-light.css"
+ ],
+ "steps": [
+  "components/steps.css",
+  "inputs/form.css"
+ ],
+ "stopwatch": [
+  "components/countdown.css"
+ ],
+ "strength": [
+  "inputs/text.css"
+ ],
+ "surface": [
+  "components/base.css",
+  "components/surface.css"
+ ],
+ "swatches": [
+  "components/theme-panel.css"
+ ],
+ "switch": [
+  "inputs/field.css",
+  "inputs/choice.css"
+ ],
+ "tabs": [
+  "components/tabs.css"
+ ],
+ "tag": [
+  "components/tag.css",
+  "inputs/choice.css"
+ ],
+ "toast": [
+  "components/toast.css"
+ ],
+ "toggle": [
+  "components/toggle-button.css",
+  "components/chip.css"
+ ],
+ "toggle-group": [
+  "components/toggle-button.css"
+ ],
+ "toggletip": [
+  "components/toggletip.css"
+ ],
+ "toolbar": [
+  "components/toolbar.css"
+ ],
+ "tooltip": [
+  "components/tooltip.css"
+ ],
+ "tour": [
+  "components/tour.css"
+ ],
+ "transfer": [
+  "inputs/listbox.css"
+ ],
+ "tree": [
+  "inputs/pickers.css"
+ ],
+ "truncate": [
+  "components/link.css",
+  "components/logo.css",
+  "components/anchor.css",
+  "components/truncate.css",
+  "components/number.css",
+  "components/menubar.css",
+  "components/ai-label.css"
+ ],
+ "uploads": [
+  "inputs/file.css"
+ ],
+ "watermark": [
+  "components/watermark.css"
+ ],
+ "xy-pad": [
+  "inputs/field.css",
+  "inputs/pickers.css"
+ ]
+}

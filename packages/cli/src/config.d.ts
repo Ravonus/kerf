@@ -23,16 +23,18 @@ export type SlotId =
   | 'db.adapter'
   | 'pay.rail'
   | `device.${string}`
+  | (string & {})
 
 /**
- * Phase 1 reserves the key; there is no `definePlugin` yet and nothing in `plugins` is executed.
- * `weft check` validates entries as data (P116, P100, P009).
+ * A `plugins` entry: what a `weft/plugin` factory returns (`warp()`), or plain data `{ name, provides }`.
+ * `weft check` runs a factory's pure `contribute()` and validates the rest as data (P100, P111–P117, P009).
  */
 export interface PluginEntry {
   name: string
   version?: string
-  /** Slots this entry provides. Data only in Phase 1 (research 17 §2). */
+  /** Slots this entry provides (a factory fills this from its `contribute()`). */
   provides?: readonly (SlotId | { slot: SlotId; key: string })[]
+  options?: unknown
 }
 
 /** Page metadata defaults (research 20 §2). Every page writes these as static tags in the server's first response. */

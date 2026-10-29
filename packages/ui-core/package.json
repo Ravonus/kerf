@@ -1,0 +1,25 @@
+{
+  "name": "@weft/ui-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "warp, framework-agnostic: the spec CSS split per component, and behaviour as plain TS over the DOM (the sweep, the floating label, the dials, motion, and small machines for stateful widgets). Bindings such as @weft/warp sit on it.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./motion": "./src/motion.ts",
+    "./styles/*": "./styles/*"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "lightningcss": "1.33.0",
+    "vitest": "5.0.5"
+  },
+  "scripts": {
+    "build:css": "node scripts/split-css.mjs",
+    "test": "node scripts/split-css.mjs --check && vitest run"
+  }
+}

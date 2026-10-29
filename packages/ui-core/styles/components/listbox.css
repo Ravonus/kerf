@@ -1,0 +1,20 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Select-like listbox ----------------------------------------------------- */
+:where([data-scope="select"][data-part="trigger"]) {
+  position: relative; display: inline-flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related);
+  block-size: var(--warp-control-md); min-inline-size: 180px; padding-inline: var(--warp-pad-control) var(--warp-space-related);
+  border: var(--warp-border-hairline) solid var(--warp-color-border-control); border-radius: var(--warp-radius-control);
+  background: var(--warp-color-surface-raised); color: var(--warp-color-text);
+  font: 400 var(--warp-text-control-size)/1 var(--warp-text-body-font); text-align: start; cursor: pointer;
+  transition: border-color var(--warp-duration-fast) var(--warp-ease-out), box-shadow var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="select"][data-part="trigger"]:hover) { border-color: var(--warp-color-text-subtle); }
+:where([data-scope="select"][data-part="trigger"][aria-expanded="true"]) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
+:where([data-scope="select"][data-part="trigger"] > svg[data-icon]) { color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="select"][data-part="trigger"][aria-expanded="true"] > svg[data-icon]) { rotate: 180deg; }
+:where([data-scope="select"] [data-part="value"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="select"] [data-part="item"][aria-selected="true"]) { font-weight: 500; }
+:where([data-scope="select"] [data-part="item"] > [data-part="indicator"]) { margin-inline-start: auto; color: var(--warp-color-accent-text); visibility: hidden; }
+:where([data-scope="select"] [data-part="item"][aria-selected="true"] > [data-part="indicator"]) { visibility: visible; }
+}

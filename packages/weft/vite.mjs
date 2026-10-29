@@ -1,5 +1,5 @@
 // weft() for Vite 8: one filtered transform hook, so only .tsx/.jsx files cross into JS (§3.6).
-import { globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './src/style/css.ts'
@@ -22,6 +22,52 @@ const features = {
       return add.length ? { code: `${add.join('')}${code}`, map: null } : undefined
     },
   },
+}
+
+/** `weft:slot/<id>` → the generated `<root>/.weft/slots/<id>.ts` (research 13 §2.6; `weft plugins sync` writes it). */
+function slots() {
+  let root = process.cwd()
+  return {
+    name: 'weft:slots',
+    configResolved(config) {
+      root = config.root
+    },
+    resolveId: {
+      filter: { id: /^weft:slot\// },
+      handler(source) {
+        const id = source.slice('weft:slot/'.length)
+        const file = join(root, '.weft', 'slots', `${id}.ts`)
+        if (!existsSync(file)) this.error(`P101 ${source}: ${file} does not exist. Run \`weft plugins sync\`, or add a plugin that provides \`${id}\` to weft.config.ts.`)
+        return file
+      },
+    },
+  }
+}
+
+/**
+ * `weft:tokens/<namespace>` → the generated `<root>/.weft/tokens/<namespace>.css` (a plugin's `tokens.css`), or an
+ * empty module when the plugin left the defaults. A kit imports it once, so a seed in weft.config.ts needs no app wiring.
+ */
+function tokens() {
+  let root = process.cwd()
+  const EMPTY = '\0weft:tokens-empty'
+  return {
+    name: 'weft:tokens',
+    configResolved(config) {
+      root = config.root
+    },
+    resolveId: {
+      filter: { id: /^weft:tokens\// },
+      handler(source) {
+        const file = join(root, '.weft', 'tokens', `${source.slice('weft:tokens/'.length)}.css`)
+        return existsSync(file) ? file : EMPTY
+      },
+    },
+    load: {
+      filter: { id: /^\0weft:tokens-empty$/ },
+      handler: () => '',
+    },
+  }
 }
 
 const MODE = /\?weft-(ssr|hydrate)$/
@@ -203,7 +249,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
       },
     },
   }
-  return [main, features, style.plugin, agent()]
+  return [main, features, style.plugin, agent(), slots(), tokens()]
 }
 
 /**

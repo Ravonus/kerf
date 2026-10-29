@@ -1,0 +1,33 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Copy action: any [data-copy] control (CopyButton). Copy glyph at rest, check on success ---- */
+:where([data-copy] [data-part="indicator"]) { display: grid; }
+:where([data-copy] [data-part="indicator"] > svg) {
+  grid-area: 1 / 1;
+  transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-pop);
+}
+:where([data-copy] [data-part="indicator"] > svg:last-child) { opacity: 0; scale: 0.6; }
+:where([data-copy][data-state="copied"] [data-part="indicator"] > svg:first-child) { opacity: 0; scale: 0.6; }
+:where([data-copy][data-state="copied"] [data-part="indicator"] > svg:last-child) { opacity: 1; scale: 1; color: var(--warp-color-positive-text); }
+:where([data-copy][data-state="copied"]:not([data-emphasis])) { --_ink: var(--_ink-on); }
+:where([data-copy][data-state="copied"]:not([data-emphasis]) [data-part="indicator"] > svg:last-child) { color: inherit; }
+
+/* ---------------------------------------------------------------------------
+   2 · OVERLAYS
+   ------------------------------------------------------------------------ */
+
+/* scroll lock for modal layers only; the gutter is reserved so nothing jumps */
+:where(html) { scrollbar-gutter: stable; }
+:where(html:has(dialog[open]:modal)) { overflow: hidden; }
+
+
+
+
+/* ---------------------------------------------------------------- forced colours (01-foundations §12)
+   Every state this file draws with a background opts out of the UA repaint and is redrawn with system
+   colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
+@media (forced-colors: active) {
+:where([data-copy] [data-part="indicator"]) { color: inherit; }
+  :where([data-copy][data-state="copied"] [data-part="indicator"] > svg:last-child) { color: inherit; }
+}
+}

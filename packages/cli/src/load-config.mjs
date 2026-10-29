@@ -1,4 +1,4 @@
-// Find, load and validate weft.config.ts. Loading never runs plugins: `plugins` and `slots` are read as data.
+// Find, load and validate weft.config.ts. Plugins run only their pure `contribute()` (plugins.mjs); `slots` is data.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire, registerHooks } from 'node:module'
@@ -8,6 +8,7 @@ import ts from 'typescript'
 import { z } from 'zod'
 import { diagnostic, locate } from './diag.mjs'
 import { checkSite } from './site.mjs'
+import { contributions } from './plugins.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs']
@@ -114,7 +115,7 @@ let generation = 0
 
 /**
  * @param {string} root project root
- * @returns {Promise<{ file: string | null, config: import('./config').WeftConfig, diagnostics: object[], slots: object }>}
+ * @returns {Promise<{ file: string | null, config: import('./config').WeftConfig, diagnostics: object[], slots: object, contributions: ReturnType<typeof contributions> }>}
  */
 export async function loadConfig(root) {
   const file = findConfig(root)
@@ -130,8 +131,10 @@ export async function loadConfig(root) {
       const mod = nativeRequire(`${file}.weft-load-${generation++}`)
       config = mod.default ?? {}
     } catch (error) {
-      report('P007', `weft.config could not be loaded: ${error.message.split('\n')[0]}`, null)
-      return { file, config: {}, diagnostics, slots: bindSlots({}, () => {}) }
+      // A plugin factory rejecting its options throws while the config module evaluates (weft/plugin).
+      if (error?.code === 'P115') report('P115', error.message.split('\n')[0], error.message.match(/^`([^`]+)`/)?.[1] ?? null)
+      else report('P007', `weft.config could not be loaded: ${error.message.split('\n')[0]}`, null)
+      return { file, config: {}, diagnostics, slots: bindSlots({}, () => {}), contributions: [] }
     }
     const parsed = configSchema.safeParse(config)
     if (!parsed.success) {
@@ -139,7 +142,7 @@ export async function loadConfig(root) {
         const path = issue.path.join('.')
         report('P007', `\`${path || '(root)'}\`: ${issue.message}`, String(issue.path.at(-1) ?? ''), { help: 'Fix the key at the path shown (see `weft docs config`).' })
       }
-      return { file, config, diagnostics, slots: bindSlots({}, () => {}) }
+      return { file, config, diagnostics, slots: bindSlots({}, () => {}), contributions: [] }
     }
   }
 
@@ -163,7 +166,8 @@ export async function loadConfig(root) {
     seen.add(p.name)
   }
   const unique = (config.plugins ?? []).filter((p, i, all) => all.findIndex(q => q.name === p.name) === i)
+  const contributed = contributions(unique, report, { root })
   const slots = bindSlots({ ...config, plugins: unique }, report)
   if (config.site) checkSite(config.site, report)
-  return { file, config, diagnostics, slots }
+  return { file, config, diagnostics, slots, contributions: contributed }
 }

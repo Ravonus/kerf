@@ -21,6 +21,7 @@
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
     "./hmr": "./src/hmr.ts",
+    "./plugin": { "types": "./src/plugin.d.ts", "default": "./src/plugin.mjs" },
     "./devtools": "./src/devtools.ts",
     "./agent": "./src/agent.ts",
     "./vite": "./vite.mjs",

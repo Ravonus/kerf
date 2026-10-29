@@ -1,0 +1,11 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Popover --------------------------------------------------------------- */
+:where([data-scope="popover"][data-part="content"]:focus) { outline: none; }   /* focus lands on a text-only toggletip itself */
+:where([data-scope="popover"][data-part="content"]) { inline-size: max-content; max-inline-size: min(340px, calc(100vw - 16px)); padding: var(--warp-space-group); }
+:where([data-scope="popover"] [data-part="title"]) { margin: 0 0 var(--warp-space-tight); font-weight: 600; font-size: var(--warp-text-body-size); }
+:where([data-scope="popover"] [data-part="description"]) { margin: 0 0 var(--warp-space-group); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); line-height: var(--warp-text-caption-leading); }
+
+/* -- Hover card --------------------------------------------------------------- */
+:where([data-scope="hover-card"][data-part="content"]) { inline-size: 300px; padding: var(--warp-space-group); display: grid; gap: var(--warp-space-related); }
+}

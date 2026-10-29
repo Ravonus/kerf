@@ -43,6 +43,7 @@ const FRAMEWORK = {
   react: 'React 19 + TypeScript (function components and hooks)',
   solid: 'SolidJS 1.9 + TypeScript (`solid-js`)',
   weft: 'weft + TypeScript (`weft`)',
+  warp: 'weft + warp (@weft/warp UI kit) + TypeScript',
 }
 // Framework-specific setup notes appended to ticket 1's intro; the tickets themselves are identical across frameworks.
 const SETUP = {

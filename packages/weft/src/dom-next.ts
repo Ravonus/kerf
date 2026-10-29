@@ -75,6 +75,7 @@ const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for' }
 export function spread(el: Element, props: Record<string, any>) {
   const listeners: Record<string, EventListener> = {}
   let refDone = false
+  let latest: unknown
   let hydrating = keys.hydrating
   effect(
     () => {
@@ -100,7 +101,15 @@ export function spread(el: Element, props: Record<string, any>) {
       else delete listeners[name]
     } else if (key === 'class' || key === 'className') className(el, value, prev)
     else if (key === 'style') style(el as HTMLElement, value, prev)
-    else if (PROPERTIES.has(key)) (el as any)[key] = key === 'value' ? value ?? '' : value
-    else attr(el, NAMES[key] ?? key, value)
+    else if (PROPERTIES.has(key)) {
+      const v = key === 'value' ? value ?? '' : value
+      ;(el as any)[key] = v
+      // A spread runs before the children are inserted, and a <select> can only pick an option that exists: set the
+      // value again once they are (the latest one wins).
+      if (key === 'value' && el.tagName === 'SELECT' && (el as HTMLSelectElement).value !== v) {
+        latest = v
+        queueMicrotask(() => latest === v && ((el as HTMLSelectElement).value = v))
+      }
+    } else attr(el, NAMES[key] ?? key, value)
   }
 }
