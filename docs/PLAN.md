@@ -154,7 +154,7 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
     per file. Oxc is the parser toolkit; no framework's compiler is in the build.
   - The back end is designed for agents: a small helper set that weft defines and versions, one lowering per
     construct, output an agent can read and `weft explain` can map back to source, and hydration keys derived from
-    source position so a mismatch names the component and line.
+    source position so a mismatch names the component and line. Design: [19](research/19-own-back-end.md).
   - **Transition:** the Phase 1 spike ran weft's pre-pass on Solid 2's `solidjs-compiler` crate
     ([16](research/16-compiler-spike.md)). That crate stays in the build only until weft's back end passes the same
     checks (the v3 hidden tests, every runtime test, the SSR round trip, §3.7 size and speed gates), then it is
