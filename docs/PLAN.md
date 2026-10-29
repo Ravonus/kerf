@@ -200,7 +200,7 @@ it costs and take it, as long as it stays inside those numbers.
 | Runtime (benchmark app) | ≤ 10 KB brotli (gate), aiming for ≤ 6 KB; hello world ≤ 3 KB |
 | v3 shop app, total JS | ≤ 10 KB brotli |
 | DOM work | every eval scenario has a `toTouchAtMost(n, { runs })`; v3 price-push ≤ 1 mutation and ≤ 10 re-runs, add-one ≤ 3 |
-| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass; memory 1.5×, open ([19 §5.5](research/19-own-back-end.md)) |
+| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass ([19 §5.5](research/19-own-back-end.md)); after the memory pass 1.08× (two runs), pass; memory 1.02× (1k rows) and 1.03× (after clear), pass ([19 §5.8](research/19-own-back-end.md)) |
 | Compiler | ≤ 0.5 s per 1k files, single-threaded, diagnostics included |
 | `weft check`, 1k files | ≤ 3 s cold, ≤ 0.5 s warm (weft's own diagnostics pass) |
 | HMR, 1k components | ≤ 50 ms p95, from file write to DOM updated |

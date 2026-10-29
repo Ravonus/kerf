@@ -2,7 +2,7 @@
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
-import { DEV, createRoot, devComponent, effect, memo, onCleanup, state, untrack, type State } from './index'
+import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, untrack, within, type Owner } from './index'
 import { keys, step, under } from './keys'
 
 export { memo }
@@ -49,11 +49,15 @@ function resolve(value: any, out: Node[]): Node[] {
 }
 
 export function place(parent: Node, value: any, current: Node[], marker: Node | null): Node[] {
-  // Fast path: one text node in, one primitive out → update in place (one characterData write at most).
-  if ((typeof value === 'string' || typeof value === 'number') && current.length === 1 && current[0].nodeType === 3) {
-    const text = String(value)
-    if ((current[0] as Text).data !== text) (current[0] as Text).data = text
-    return current
+  if (typeof value === 'string' || typeof value === 'number') {
+    // Fast paths: one text node in, one primitive out → update in place (one characterData write at most); none in
+    // → one new text node, in an exact-size list.
+    if (current.length === 1 && current[0].nodeType === 3) {
+      const text = String(value)
+      if ((current[0] as Text).data !== text) (current[0] as Text).data = text
+      return current
+    }
+    if (!current.length) return [parent.insertBefore(document.createTextNode(value as string), marker)] // the DOM converts a number
   }
   const next = resolve(value, [])
   if (next.length === current.length && next.every((n, i) => n === current[i])) return current
@@ -104,15 +108,7 @@ export function insert(parent: Mountable, value: any, marker?: Node | null) {
     place(parent, value, current, at)
     return
   }
-  effect(
-    () => {
-      let v = value()
-      while (typeof v === 'function') v = v()
-      if (Array.isArray(v)) v = v.map(x => { while (typeof x === 'function') x = x(); return x })
-      return v
-    },
-    v => { current = place(parent, v, current, at) },
-  )
+  hole(value, v => { current = place(parent, v, current, at) })
 }
 
 // ---- attributes and properties ---------------------------------------------------------------------------------
@@ -206,7 +202,10 @@ export function addEvent(node: any, name: string, handler: any, delegate?: boole
 
 // ---- keyed list (§3.4) ----------------------------------------------------------------------------------------
 
-type Row = { item: State<any>; index: State<number>; nodes: any; dispose: () => void }
+/** A row is its own root (no closure to dispose it). `index` exists only when `children` takes one. */
+interface Row extends Owner { item: Box<any>; index: Box<number> | undefined; nodes: any }
+
+const reader = (box: Box<any>) => () => box.value
 
 /**
  * Compiled from `xs.map(x => <Row key={x.id} … />)`. Rows are keyed by `by(item)` (or the item itself): a new
@@ -218,11 +217,14 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
   let order: Row[] = []
   let out: any[] = []
   onCleanup(() => {
-    for (const r of rows.values()) r.dispose()
+    for (const r of rows.values()) clean(r)
     rows.clear()
   })
   return memo(() => {
     const list = props.each || []
+    const parent = getOwner()
+    // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
+    const indexed = props.children.length !== 1
     return untrack(() => {
       const next = new Map<unknown, Row>()
       const nextOrder: Row[] = []
@@ -234,18 +236,19 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
         if (row) {
           rows.delete(key)
           row.item.value = item
-          row.index.value = i
+          if (row.index) row.index.value = i
         } else {
-          row = createRoot(dispose => {
-            const it = state(item), ix = state(i)
-            const make = () => props.children(() => it.value, () => ix.value)
-            return { item: it, index: ix, nodes: keys.on ? under(base + step(key) + '/', make) : make(), dispose }
+          const r: Row = (row = {
+            owned: null, cleanups: null, owner: parent, context: parent?.context,
+            item: new Box(item), index: indexed ? new Box(i) : undefined, nodes: undefined,
           })
+          const make = () => props.children(reader(r.item), r.index ? reader(r.index) : () => 0)
+          r.nodes = within(r, keys.on ? () => under(base + step(key) + '/', make) : make)
         }
         next.set(key, row)
         nextOrder.push(row)
       }
-      for (const r of rows.values()) r.dispose()
+      for (const r of rows.values()) clean(r)
       rows = next
       if (nextOrder.length !== order.length || nextOrder.some((r, i) => r !== order[i])) {
         order = nextOrder

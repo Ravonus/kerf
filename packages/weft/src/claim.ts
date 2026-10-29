@@ -3,7 +3,7 @@
 // key instead of cloning, `first`/`next` step over the server's marked hole ranges, and `hchild` adopts the nodes in
 // its range. Client-only output imports `tpl` and `child` (dom-next.ts) instead, so none of this ships there.
 
-import { DEV, effect, untrack } from './index'
+import { DEV, hole, untrack } from './index'
 import { insert, place } from './dom'
 import { keys, nextKey, under } from './keys'
 import { hydration } from './hydrate'
@@ -123,7 +123,7 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  * component, an element) and runs once, untracked; otherwise a function value is read reactively.
  */
 export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: any, slot?: number, once?: 1) {
-  const hole = () => {
+  const claim = () => {
     let v = once ? untrack(value as () => unknown) : value
     if (!keys.hydrating) return insert(parent, v, marker)
     // Claim the server's nodes on the first run; later runs place values as usual.
@@ -131,20 +131,12 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     const at = marker ?? null
     if (typeof v !== 'function') return void place(parent, adopt(v, current, { i: 0 }, []), current, at)
     let claimed = false
-    effect(
-      () => {
-        let x = (v as () => unknown)()
-        while (typeof x === 'function') x = x()
-        if (Array.isArray(x)) x = x.map(y => { while (typeof y === 'function') y = y(); return y })
-        return x
-      },
-      x => {
-        current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
-        claimed = true
-      },
-    )
+    hole(v as () => unknown, x => {
+      current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
+      claimed = true
+    })
   }
-  if (keys.on && root?.$k !== undefined) under(`${root.$k}.${slot}/`, hole)
-  else hole()
+  if (keys.on && root?.$k !== undefined) under(`${root.$k}.${slot}/`, claim)
+  else claim()
 }
 
