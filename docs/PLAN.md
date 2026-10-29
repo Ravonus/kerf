@@ -37,7 +37,8 @@ Nobody owns "the framework built for agents" yet, and no one has measured agent 
    (e.g. assigning to a `Derived`) are mapped into the same codes.
 6. **Inspectable as JSON** in dev: the reactive graph with real variable names, routes, server functions, tokens,
    surfaces. Agents *ask* the app what's true. (Names are dev-only and stripped in prod builds.)
-7. **Small.** Target ≤ 6 KB gz runtime, Solid/Marko-class speed. A goal, not a v0 gate.
+7. **Small.** Target ≤ 6 KB gz runtime, Solid/Marko-class speed. A goal, not a v0 gate. Being bigger than Solid
+   is fine when it buys weft's design: aim for about 10 KB br per app, with 50 KB br as the ceiling (§3.7).
 
 ## 3. The language: TSX with weft semantics
 
@@ -187,6 +188,11 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 ### 3.7 Performance budgets (gates from Phase 1)
 
 Measured on a quiet runner and gated on ratios, not on wall-clock from a busy laptop.
+
+**Size stance (2026-10-29).** weft doesn't have to match Solid's bytes. About 10 KB br for a whole app is the goal,
+and 50 KB br is the ceiling. The size budgets below are within the goal and stay as gates. When a design choice
+costs bytes but makes weft clearer for agents, say what it costs and take it, as long as it stays inside those
+numbers.
 
 | Metric | Budget |
 |---|---|
