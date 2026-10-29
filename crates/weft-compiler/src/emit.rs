@@ -85,8 +85,8 @@ pub struct Error {
     pub offset: u32,
 }
 
-/// Compile the pre-pass's printed program to DOM code importing from `module`.
-pub fn dom(code: &str, filename: &str, module: &str) -> Result<String, Error> {
+/// Compile the pre-pass's printed program to DOM code (or server code, `ssr`) importing from `module`.
+pub fn emit(code: &str, filename: &str, module: &str, ssr: bool, hydratable: bool) -> Result<String, Error> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(filename).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, code, source_type).parse();
@@ -94,7 +94,7 @@ pub fn dom(code: &str, filename: &str, module: &str) -> Result<String, Error> {
         return Err(Error { message: format!("weft back end: the printed pre-pass output didn't parse: {d}"), offset: 0 });
     }
     let program = parsed.program;
-    let mut e = Emitter { text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None };
+    let mut e = Emitter { text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None, ssr, hydratable: hydratable && !ssr };
     let mut top = Outermost::default();
     top.visit_program(&program);
     let body = e.splice(Span::new(0, code.len() as u32), &top.found);
@@ -152,15 +152,28 @@ struct Emitter<'t> {
     uses_for: bool,
     n: usize,
     error: Option<Error>,
+    /// Server output (`ssr`, `key`, `hole`, `attr`) instead of DOM code.
+    ssr: bool,
+    /// DOM output that can hydrate: hole scopes and `first`/`next` walks.
+    hydratable: bool,
 }
 
 /// One template being built: its HTML, the node references it needs, and the operations after cloning.
 struct Build {
     html: String,
+    /// The server output: static HTML and code, in document order.
+    ssr: Vec<Piece>,
+    /// Holes so far (each takes the next slot).
+    slots: usize,
     /// (path of child indices from the root, variable name)
     vars: Vec<(Vec<usize>, String)>,
     decls: Vec<String>,
     ops: Vec<String>,
+}
+
+enum Piece {
+    Static(String),
+    Code(String),
 }
 
 /// A JSX child after whitespace rules: text, or a node.
@@ -226,8 +239,20 @@ impl<'t> Emitter<'t> {
     // ---- intrinsic elements: templates ---------------------------------------------------------------------
 
     fn template(&mut self, el: &JSXElement<'_>) -> String {
-        let mut b = Build { html: String::new(), vars: vec![(vec![], self.var())], decls: Vec::new(), ops: Vec::new() };
+        let mut b = Build { html: String::new(), ssr: Vec::new(), vars: vec![(vec![], self.var())], decls: Vec::new(), ops: Vec::new(), slots: 0 };
         self.walk(el, &mut b, vec![]);
+        if self.ssr {
+            // `ssr(_k => "<li" + key(_k) + … )`: static parts and holes, in document order.
+            let mut parts: Vec<String> = Vec::new();
+            for p in &b.ssr {
+                parts.push(match p {
+                    Piece::Static(s) => serde_json::to_string(s).unwrap(),
+                    Piece::Code(c) => c.clone(),
+                });
+            }
+            let ssr = self.helper("ssr");
+            return format!("{ssr}((_k) => {})", parts.join(" + "));
+        }
         let t = format!("_t{}", self.templates.len() + 1);
         let tpl = self.helper("tpl");
         let html = serde_json::to_string(&b.html).unwrap();
@@ -252,18 +277,42 @@ impl<'t> Emitter<'t> {
         out
     }
 
+    /// HTML both the template and the server output contain.
+    fn put(b: &mut Build, s: &str) {
+        b.html.push_str(s);
+        match b.ssr.last_mut() {
+            Some(Piece::Static(t)) => t.push_str(s),
+            _ => b.ssr.push(Piece::Static(s.to_string())),
+        }
+    }
+
+    /// Server-only output: static (`Piece::Static`) or code.
+    fn server(b: &mut Build, p: Piece) {
+        match (b.ssr.last_mut(), p) {
+            (Some(Piece::Static(t)), Piece::Static(s)) => t.push_str(&s),
+            (_, p) => b.ssr.push(p),
+        }
+    }
+
     /// The variable for the node at `path`. It's reached from the nearest earlier sibling that has one (or its
-    /// parent's `firstChild`) by `nextSibling` steps; only nodes something uses get a variable.
+    /// parent's first child) by sibling steps; only nodes something uses get a variable. Hydratable output steps
+    /// with `first`/`next`, which pass over the server's hole ranges.
     fn node(&mut self, b: &mut Build, path: &[usize]) -> String {
         if let Some((_, v)) = b.vars.iter().find(|(p, _)| p == path) {
             return v.clone();
         }
         let (parent, last) = (&path[..path.len() - 1], *path.last().unwrap());
         let sibling = b.vars.iter().filter(|(p, _)| p.len() == path.len() && &p[..p.len() - 1] == parent && p[p.len() - 1] < last).max_by_key(|(p, _)| p[p.len() - 1]).map(|(p, v)| (p[p.len() - 1], v.clone()));
-        let from = match sibling {
-            Some((at, v)) => format!("{v}{}", ".nextSibling".repeat(last - at)),
-            None => format!("{}.firstChild{}", self.node(b, parent), ".nextSibling".repeat(last)),
+        let (mut from, steps) = match sibling {
+            Some((at, v)) => (v, last - at),
+            None => {
+                let p = self.node(b, parent);
+                (if self.hydratable { format!("{}({p})", self.helper("first")) } else { format!("{p}.firstChild") }, last)
+            }
         };
+        for _ in 0..steps {
+            from = if self.hydratable { format!("{}({from})", self.helper("next")) } else { format!("{from}.nextSibling") };
+        }
         let v = self.var();
         b.decls.push(format!("const {v} = {from};"));
         b.vars.push((path.to_vec(), v.clone()));
@@ -279,22 +328,29 @@ impl<'t> Emitter<'t> {
                 return;
             }
         };
-        b.html.push('<');
-        b.html.push_str(&tag);
+        Self::put(b, &format!("<{tag}"));
+        if path.is_empty() && self.ssr {
+            let key = self.helper("key");
+            Self::server(b, Piece::Code(format!("{key}(_k)")));
+        }
         let has_kids = !children(&el.children, self.text).is_empty();
 
         // `<div {...rest} a={x}>`: every attribute goes through one merged props object (later wins, as for
         // components), applied by `spread`. JSX children stay in the template; a spread's `children` applies only
-        // when the element has none.
+        // when the element has none (client only, for now).
         if el.opening_element.attributes.iter().any(|a| matches!(a, JSXAttributeItem::SpreadAttribute(_))) {
             let props = self.props(&el.opening_element.attributes, Vec::new());
-            let el_var = self.node(b, &path);
             let spread = self.helper("spread");
-            b.ops.push(format!("{spread}({el_var}, {props}, {has_kids});"));
-            b.html.push('>');
+            if self.ssr {
+                Self::server(b, Piece::Code(format!("{spread}({props})")));
+            } else {
+                let el_var = self.node(b, &path);
+                b.ops.push(format!("{spread}({el_var}, {props}, {has_kids});"));
+            }
+            Self::put(b, ">");
             if !VOID.contains(&tag.as_str()) {
                 self.kids(el, b, &path);
-                b.html.push_str(&format!("</{tag}>"));
+                Self::put(b, &format!("</{tag}>"));
             }
             return;
         }
@@ -302,13 +358,7 @@ impl<'t> Emitter<'t> {
         // (kind, name, expression) for the element's one binding
         let mut dynamic: Vec<(&'static str, String, String)> = Vec::new();
         for item in &el.opening_element.attributes {
-            let attr = match item {
-                JSXAttributeItem::Attribute(a) => a,
-                JSXAttributeItem::SpreadAttribute(s) => {
-                    self.fail("weft back end: `{...spread}` on an element comes in step 2 (research 19 §5)", s.span);
-                    continue;
-                }
-            };
+            let JSXAttributeItem::Attribute(attr) = item else { continue };
             let name = match &attr.name {
                 JSXAttributeName::Identifier(id) => id.name.to_string(),
                 // `xlink:href`, `xml:lang`: written with their namespace (`attr` looks the prefix up).
@@ -324,6 +374,9 @@ impl<'t> Emitter<'t> {
             };
             if let Some(event) = event_name(&name) {
                 let Some(expr) = attr_expression(attr) else { continue };
+                if self.ssr {
+                    continue;
+                }
                 let el_var = self.node(b, &path);
                 let h = self.expr(expr);
                 let delegated = DELEGATED.contains(&event.as_str());
@@ -338,6 +391,9 @@ impl<'t> Emitter<'t> {
             if name == "ref" {
                 // `ref={fn}` or `ref={[a, b]}` calls them with the element; `ref={el}` on a variable assigns it.
                 let Some(expr) = attr_expression(attr) else { continue };
+                if self.ssr {
+                    continue;
+                }
                 let el_var = self.node(b, &path);
                 let r = self.expr(expr);
                 let call = self.helper("ref");
@@ -353,22 +409,16 @@ impl<'t> Emitter<'t> {
                 continue;
             }
             match &attr.value {
-                None => {
-                    b.html.push(' ');
-                    b.html.push_str(&name);
-                }
+                None => Self::put(b, &format!(" {name}")),
                 Some(JSXAttributeValue::StringLiteral(s)) => {
                     let raw = &self.text[s.span.start as usize + 1..s.span.end as usize - 1];
-                    b.html.push_str(&format!(" {name}=\"{}\"", raw.replace('"', "&quot;")));
+                    Self::put(b, &format!(" {name}=\"{}\"", raw.replace('"', "&quot;")));
                 }
                 Some(JSXAttributeValue::ExpressionContainer(c)) => {
                     let Some(expr) = c.expression.as_expression() else { continue };
                     match static_value(expr) {
-                        Some(Static::Text(t)) => b.html.push_str(&format!(" {name}=\"{}\"", escape_attr(&t))),
-                        Some(Static::True) => {
-                            b.html.push(' ');
-                            b.html.push_str(&name);
-                        }
+                        Some(Static::Text(t)) => Self::put(b, &format!(" {name}=\"{}\"", escape_attr(&t))),
+                        Some(Static::True) => Self::put(b, &format!(" {name}")),
                         Some(Static::Absent) => {}
                         None => {
                             let kind = if name == "class" {
@@ -381,7 +431,19 @@ impl<'t> Emitter<'t> {
                                 "attr"
                             };
                             let e = self.expr(expr);
-                            dynamic.push((kind, name, e));
+                            if self.ssr {
+                                // Content properties aren't attributes; the client writes them.
+                                if name != "textContent" && name != "innerHTML" {
+                                    let call = if tag == "select" && name == "value" {
+                                        format!("{}({e})", self.helper("select"))
+                                    } else {
+                                        format!("{}({name:?}, {e})", self.helper("attr"))
+                                    };
+                                    Self::server(b, Piece::Code(call));
+                                }
+                            } else {
+                                dynamic.push((kind, name, e));
+                            }
                         }
                     }
                 }
@@ -394,7 +456,7 @@ impl<'t> Emitter<'t> {
             let el_var = self.node(b, &path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
-        b.html.push('>');
+        Self::put(b, ">");
         if VOID.contains(&tag.as_str()) {
             return;
         }
@@ -403,10 +465,11 @@ impl<'t> Emitter<'t> {
             let el_var = self.node(b, &path);
             b.ops.push(self.bind(&el_var, &dynamic));
         }
-        b.html.push_str(&format!("</{tag}>"));
+        Self::put(b, &format!("</{tag}>"));
     }
 
-    /// An element's children: static ones into the template, holes as `child` calls.
+    /// An element's children: static ones into the template, holes as `child` calls (server: `hole`). Each hole
+    /// takes the template's next slot, the same on both sides.
     fn kids(&mut self, el: &JSXElement<'_>, b: &mut Build, path: &[usize]) {
         let path = path.to_vec();
         let kids = children(&el.children, self.text);
@@ -417,44 +480,88 @@ impl<'t> Emitter<'t> {
             _ => false,
         };
         if only_dynamic {
-            let parent = self.node(b, &path);
-            let v = self.kid_value(&kids[0]);
-            let child = self.helper("child");
-            b.ops.push(format!("{child}({parent}, {v});"));
-        } else {
-            let mut index = 0usize;
-            let mut in_text = false;
-            for k in &kids {
-                match k {
-                    Kid::Text(t) => {
-                        b.html.push_str(&escape_text(t));
-                        if !in_text {
-                            index += 1;
-                            in_text = true;
-                        }
-                    }
-                    Kid::El(e) if !is_component(e, self.text) => {
-                        let mut p = path.clone();
-                        p.push(index);
-                        self.walk(e, b, p);
+            self.hole(b, &path, &kids[0], None);
+            return;
+        }
+        let mut index = 0usize;
+        let mut in_text = false;
+        for k in &kids {
+            match k {
+                Kid::Text(t) => {
+                    Self::put(b, &escape_text(t));
+                    if !in_text {
                         index += 1;
-                        in_text = false;
-                    }
-                    _ => {
-                        // Mixed content: a `<!>` marker holds the place; the child goes before it.
-                        b.html.push_str("<!>");
-                        let mut p = path.clone();
-                        p.push(index);
-                        let marker = self.node(b, &p);
-                        let parent = self.node(b, &path);
-                        let v = self.kid_value(k);
-                        let child = self.helper("child");
-                        b.ops.push(format!("{child}({parent}, {v}, {marker});"));
-                        index += 1;
-                        in_text = false;
+                        in_text = true;
                     }
                 }
+                Kid::El(e) if !is_component(e, self.text) => {
+                    let mut p = path.clone();
+                    p.push(index);
+                    self.walk(e, b, p);
+                    index += 1;
+                    in_text = false;
+                }
+                _ => {
+                    // Mixed content: the template's `<!>` holds the place (the child goes before it); the server
+                    // marks the hole's range with `<!--[-->` … `<!--]-->`.
+                    b.html.push_str("<!>");
+                    let mut p = path.clone();
+                    p.push(index);
+                    self.hole(b, &path, k, Some(p));
+                    index += 1;
+                    in_text = false;
+                }
             }
+        }
+    }
+
+    /// One child hole: the next slot of the template, its value, and (mixed content) the marker at `marker`.
+    fn hole(&mut self, b: &mut Build, parent: &[usize], k: &Kid<'_>, marker: Option<Vec<usize>>) {
+        let slot = b.slots;
+        b.slots += 1;
+        let (v, once) = self.hole_value(k);
+        if self.ssr {
+            let hole = self.helper("hole");
+            if marker.is_some() {
+                Self::server(b, Piece::Static("<!--[-->".into()));
+            }
+            Self::server(b, Piece::Code(format!("{hole}(_k, {slot}, {v})")));
+            if marker.is_some() {
+                Self::server(b, Piece::Static("<!--]-->".into()));
+            }
+            return;
+        }
+        let marker = marker.map(|p| self.node(b, &p));
+        let parent = self.node(b, parent);
+        let child = self.helper("child");
+        let mut args = vec![parent, v];
+        if self.hydratable {
+            // The hole's scope is named by its template's key (`root.$k`) and its slot.
+            args.push(marker.unwrap_or_else(|| "null".into()));
+            args.push(b.vars[0].1.clone());
+            args.push(slot.to_string());
+            if once {
+                args.push("1".into());
+            }
+        } else if let Some(m) = marker {
+            args.push(m);
+        }
+        b.ops.push(format!("{child}({});", args.join(", ")));
+    }
+
+    /// A hole's value, and whether it's static structure built once (`once`). Where keys matter (hydratable and
+    /// server output) structure is deferred, `() => …`, so it's built inside the hole's scope.
+    fn hole_value(&mut self, k: &Kid<'_>) -> (String, bool) {
+        let v = self.kid_value(k);
+        let structure = match k {
+            Kid::El(_) | Kid::Frag(_) => true,
+            Kid::Expr(e) => matches!(e.get_inner_expression(), Expression::JSXElement(_) | Expression::JSXFragment(_)),
+            Kid::Text(_) => false,
+        };
+        if structure && (self.hydratable || self.ssr) {
+            (format!("() => {v}"), true)
+        } else {
+            (v, false)
         }
     }
 

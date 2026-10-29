@@ -10,7 +10,7 @@ and what Phase 1 proper should change: [docs/research/16-compiler-spike.md](../.
 | `weft/dom` | `render`, `hydrate`, plus the helpers compiled templates call and the keyed `For` |
 | `weft/ssr` | `renderToString`, `renderToStringAsync` (resources awaited), plus the helpers SSR output calls |
 | `weft/test` | `render` (a fresh app per call: `{ state, storage }` seed scopes and share storage), `scope()`, `memoryStorage()`, `flush`, `touches()`, and `expect(fn).toTouchAtMost(n, { runs })` |
-| `weft/vite` | `weft({ hydratable })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms, `?weft-ssr`/`?weft-hydrate` imports for round-trip tests), and one adding the `persist`/`history` imports |
+| `weft/vite` | `weft({ hydratable, backend })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms; `?weft-ssr`/`?weft-hydrate`/`?weft-next` imports for tests; `WEFT_BACKEND=weft` selects weft's back end for plain DOM modules), and one adding the `persist`/`history` imports |
 | `weft/compiler` | `transform(source, options)` → `{ code, map, diagnostics }` |
 
 ```bash
@@ -21,11 +21,13 @@ node scripts/size.mjs       # brotli sizes against the §3.7 budgets
 node scripts/gen-corpus.mjs 1000 && node scripts/bench.mjs
 ```
 
-The compiler's back end is still Solid 2's crate from the spike; weft is replacing it with its own (PLAN §3.6, §12),
-so the helper names in `weft/dom` and `weft/ssr` will change. SSR, hydration, `resource` and `<Boundary>`:
+weft is replacing the spike's compiler back end (Solid 2's crate) with its own (PLAN §3.6, §12;
+[research 19](../../docs/research/19-own-back-end.md)). SSR and hydratable output already come from weft's: keys are
+source paths (` wk="0.1/0"`), hole ranges are `<!--[-->…<!--]-->`. Plain DOM output still uses Solid's crate until the
+switch, and `weft/dom` exports both helper sets until then. `resource` and `<Boundary>`:
 [research 18](../../docs/research/18-ssr-and-boundaries.md).
 
 `defineState` (Phase 1): [research 14 §11](../../docs/research/14-app-state.md) has what's built, the sizes and the
 differences from the design.
 
-Not yet: SSR and hydration, `<Boundary>`, `resource`, compiler dev names, HMR, and the JSX type namespace.
+Not yet: streaming SSR, compiler dev names on weft's back end, HMR, and the JSX type namespace.

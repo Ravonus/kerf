@@ -1,5 +1,11 @@
 # 18 — Phase 1: weft/ssr, hydration, Boundary and resource
 
+> **Partly superseded (2026-10-29).** §2 (the SSR helpers), §3 (hydration keys from the owner tree) and §5 (the
+> helper contract with Solid's SSR output) describe the first version, built on Solid 2's back end. Since research 19
+> step 3, SSR and hydratable output come from weft's own back end, with keys from source paths:
+> [19 §5.3](19-own-back-end.md). `resource`, `<Boundary>`, the timing, the page data and the measurements in §6 are
+> unchanged in behaviour.
+
 Research date: 2026-10-29. Numbers marked **(measured)** were run for this doc on an M4 Max (1-minute load average
 5–6, other agent sessions running) with Node 22.22.1, Vite 8.3.5, Vitest 5.0.5, jsdom 30.1.3 and Chrome 156 (headless).
 Statements marked **(unverified)** were not checked.

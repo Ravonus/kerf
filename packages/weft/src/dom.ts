@@ -1,11 +1,12 @@
 // weft/dom: the helpers compiled templates call (the import surface of Solid 2's DOM back end), plus `render`
 // and the keyed list. Compiled code only; app code imports `render` and nothing else from here.
 
-import { DEV, createRoot, devComponent, effect, memo, onCleanup, rt, state, untrack, type EffectOptions, type State } from './index'
+import { DEV, createRoot, devComponent, effect, memo, onCleanup, state, untrack, type EffectOptions, type State } from './index'
+import { keys, step, under } from './keys'
 
 export { effect, memo, untrack }
-export { attr, bind, child, cls, component, css, delegate, on, spread, tpl } from './dom-next'
-export { getFirstChild, getNextElement, getNextMarker, getNextMatch, getNextSibling, hydrate, runHydrationEvents, scope } from './hydrate'
+export { attr, bind, child, cls, component, css, delegate, first, next, on, spread, tpl } from './dom-next'
+export { hydrate } from './hydrate'
 
 type Mountable = Element | DocumentFragment
 
@@ -59,7 +60,7 @@ function resolve(value: any, out: Node[]): Node[] {
   return out
 }
 
-function place(parent: Node, value: any, current: Node[], marker: Node | null): Node[] {
+export function place(parent: Node, value: any, current: Node[], marker: Node | null): Node[] {
   // Fast path: one text node in, one primitive out → update in place (one characterData write at most).
   if ((typeof value === 'string' || typeof value === 'number') && current.length === 1 && current[0].nodeType === 3) {
     const text = String(value)
@@ -108,9 +109,8 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
  * `marker` undefined: the value is the parent's only dynamic content, appended at the end.
  * `marker` null: append at the end after static children. A node: insert before it.
  */
-export function insert(parent: Mountable, value: any, marker?: Node | null, initial?: Node[], options?: EffectOptions) {
-  // Hydrating: start from the server's nodes (between the markers, or the parent's only content) and keep them.
-  let current: Node[] = rt.ids ? (marker === undefined ? [...parent.childNodes] : initial ?? []) : []
+export function insert(parent: Mountable, value: any, marker?: Node | null, options?: EffectOptions) {
+  let current: Node[] = []
   const at = marker ?? null
   if (typeof value !== 'function') {
     place(parent, value, current, at)
@@ -124,7 +124,7 @@ export function insert(parent: Mountable, value: any, marker?: Node | null, init
       return v
     },
     v => { current = place(parent, v, current, at) },
-    value.$s ? { ...options, scope: true } : options,
+    options,
   )
 }
 
@@ -132,7 +132,7 @@ export function insert(parent: Mountable, value: any, marker?: Node | null, init
 
 export function setAttribute(node: Element, name: string, value: any) {
   if (value == null || value === false) node.removeAttribute(name)
-  else if (!rt.ids || node.getAttribute(name) !== String(value === true ? '' : value)) node.setAttribute(name, value === true ? '' : value) // hydrating: the server wrote it
+  else node.setAttribute(name, value === true ? '' : value)
 }
 
 export function setProperty(node: any, name: string, value: any) {
@@ -245,6 +245,7 @@ type Row = { item: State<any>; index: State<number>; nodes: any; dispose: () => 
  * object under the same key updates the row in place through its live `item` accessor; it never rebuilds it.
  */
 export function For<T>(props: { each: readonly T[] | null | undefined; by?: (item: T) => unknown; children: (item: () => T, index: () => number) => any }) {
+  const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
   let rows = new Map<unknown, Row>()
   let order: Row[] = []
   let out: any[] = []
@@ -269,7 +270,8 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
         } else {
           row = createRoot(dispose => {
             const it = state(item), ix = state(i)
-            return { item: it, index: ix, nodes: props.children(() => it.value, () => ix.value), dispose }
+            const make = () => props.children(() => it.value, () => ix.value)
+            return { item: it, index: ix, nodes: keys.on ? under(base + step(key) + '/', make) : make(), dispose }
           })
         }
         next.set(key, row)

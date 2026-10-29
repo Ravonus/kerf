@@ -7,9 +7,11 @@
 // SSR: the server renders the content if its resources resolved (`renderToStringAsync` waits for them) and the
 // fallback if not, and writes resolved values and each boundary's state to the page's data. Hydration reads them
 // back: a resolved resource starts with the server's value instead of fetching, and a boundary claims whichever
-// side the server rendered. Both sides reserve the same ids (content, fallback) so the keys line up either way.
+// side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
+// fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-import { DEV, childKey, context, createRoot, derived, effect, getOwner, memo, onCleanup, rt, state, untrack, watch, type State } from './index'
+import { DEV, context, createRoot, derived, effect, getOwner, memo, onCleanup, rt, state, untrack, watch, type State } from './index'
+import { keys, nextKey, under } from './keys'
 
 export const timing = { showAfter: 150, hold: 400 }
 
@@ -34,7 +36,7 @@ const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
  */
 export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, options: { initial?: T } = {}): Resource<T> {
   const data = rt.data
-  const key = rt.ids ? childKey(getOwner()) : rt.server && data ? `n${(data.n = (data.n ?? 0) + 1)}` : undefined
+  const key = keys.on ? nextKey() : undefined
   const value = state<T | undefined>(options.initial)
   const pending = state(false)
   const error = state<unknown>(undefined)
@@ -129,22 +131,22 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
     for (const r of list) if (r.err.value !== undefined) return r.err.value
   })
 
-  // Reserved in this order on both sides: content, then fallback.
-  const contentKey = rt.ids ? childKey(parent) : undefined
-  const sideKey = rt.ids ? childKey(parent) : undefined
+  const key = keys.on ? nextKey() : undefined
   const data = rt.data
-  const was = contentKey !== undefined && !rt.server ? data?.b[contentKey] : undefined
-  if (was === 'e') thrown.value = new Error(data!.r[contentKey!]?.e ?? 'server render failed')
+  const was = key !== undefined && !rt.server ? data?.b[key] : undefined
+  if (was === 'e') thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed')
+  /** Run `fn` in the content (`c`) or fallback (`f`) scope while keys are on; fresh otherwise. */
+  const scoped = <T,>(side: 'c' | 'f', fn: () => T): T => (keys.on && key !== undefined ? under(key + side + '/', fn) : fn())
 
   let content: any
   let disposeContent: (() => void) | undefined
   const build = () => {
     disposeContent?.()
     list.length = 0
-    const ids = rt.ids
-    if (ids && was !== undefined && was !== 'c') rt.ids = false // the server rendered a fallback: build the content fresh
+    const { on, hydrating } = keys
+    if (hydrating && was !== undefined && was !== 'c') Object.assign(keys, { on: false, hydrating: false }) // the server rendered a fallback: build the content fresh
     try {
-      content = createRoot(dispose => {
+      content = createRoot(dispose => scoped('c', () => {
         disposeContent = dispose
         return boundaries.provide(track, () => {
           try {
@@ -156,9 +158,9 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
             return null
           }
         })
-      }, parent, rt.ids ? contentKey : undefined)
+      }), parent)
     } finally {
-      rt.ids = ids
+      Object.assign(keys, { on, hydrating })
     }
   }
   build()
@@ -166,9 +168,9 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
   const show = state<'wait' | 'fallback' | 'content'>('content')
   if (rt.server) {
     const status = untrack(() => (failure.value !== undefined ? 'e' : loading.value ? 'p' : 'c'))
-    if (contentKey !== undefined && data) {
-      data.b[contentKey] = status
-      if (status === 'e') data.r[contentKey] = { e: message(untrack(() => failure.value)) }
+    if (key !== undefined && data) {
+      data.b[key] = status
+      if (status === 'e') data.r[key] = { e: message(untrack(() => failure.value)) }
     }
     if (status === 'p') show.value = 'fallback'
   } else {
@@ -207,7 +209,7 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
     if (side?.kind === kind && kind === 'p') return side.node
     side?.dispose()
     const s: { kind: 'p' | 'e'; node: any; dispose: () => void } = { kind, node: null, dispose: () => {} }
-    s.node = createRoot(d => ((s.dispose = d), untrack(make)), parent, rt.ids ? sideKey : undefined)
+    s.node = createRoot(d => ((s.dispose = d), scoped('f', () => untrack(make))), parent)
     side = s
     return s.node
   }

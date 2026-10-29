@@ -15,10 +15,6 @@ export interface Owner {
   cleanups: (() => void)[] | null
   owner: Owner | null
   context?: Record<symbol, unknown>
-  /** Hydration id and child counter (SSR and hydration only, `rt.ids`); `t`: transparent, children count on the parent. */
-  hk?: string
-  hc?: number
-  t?: boolean
 }
 
 interface Computation extends Source, Owner {
@@ -33,8 +29,8 @@ interface Computation extends Source, Owner {
   n?: string
 }
 
-/** The options compiled bindings pass (`scope` from `scope()` holes; `name`/`loc` from the back end's `sourceNames`). */
-export interface EffectOptions { scope?: boolean; name?: string; loc?: string }
+/** Dev names compiled bindings pass (`name`/`loc`). */
+export interface EffectOptions { name?: string; loc?: string }
 
 /** Dev only: the component being created (`createComponent(Comp, props, name, loc)`), for binding names. */
 export const devComponent: { label?: string } = {}
@@ -45,27 +41,17 @@ let nextId = 0
 let queue: Computation[] = []
 let scheduled = false
 
-/** SSR and hydration switches: `ids` gives owners hydration ids, `server` skips effects (weft/ssr, weft/dom hydrate). */
+/** SSR and hydration switches: `server` skips effects (weft/ssr); `data` is the page's server data (weft/dom hydrate). */
 export const rt: {
-  ids: boolean
   server: boolean
   /** The render's data: resolved resources and boundary states by key, written by the server, read by hydrate. */
   data?: SsrData
   /** Server only: fetches the current render started, and a hole resolver (weft/ssr). */
   wait?: Promise<unknown>[]
   resolve?: (v: unknown) => string
-} = { ids: false, server: false }
+} = { server: false }
 
-export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; n?: number }
-
-/** The next hydration id under `o` (its nearest non-transparent ancestor): Solid 2's scheme, so keys match its output. */
-export function childKey(o: Owner | null): string | undefined {
-  while (o && o.t) o = o.owner
-  if (!o || o.hk === undefined) return undefined
-  const n = (o.hc = (o.hc ?? 0) + 1) - 1
-  const num = n.toString(36)
-  return o.hk + (num.length > 1 ? String.fromCharCode(63 + num.length) : '') + num
-}
+export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'> }
 
 /** Reactive work counter, read by `weft/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
@@ -126,7 +112,6 @@ function dispose(node: Computation) {
 function run(node: Computation) {
   clean(node)
   unlink(node)
-  if (node.hk !== undefined) node.hc = 0
   const prevListener = listener, prevOwner = owner
   listener = owner = node
   try {
@@ -159,13 +144,11 @@ function update(node: Computation) {
   node.state = CLEAN
 }
 
-function computation(fn: (prev: any) => any, effect: 0 | 1, init?: any, transparent?: boolean): Computation {
+function computation(fn: (prev: any) => any, effect: 0 | 1, init?: any): Computation {
   const node: Computation = {
     fn, v: init, o: [], s: [], state: DIRTY, effect, id: nextId++,
     owned: null, cleanups: null, owner, context: owner?.context,
   }
-  if (transparent) node.t = true
-  else if (rt.ids) node.hk = childKey(owner)
   if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) (owner.owned ??= []).push(node)
   return node
@@ -324,10 +307,7 @@ export function watch<T>(source: () => T, run: (value: T, prev: T | undefined) =
   onCleanup(() => cleanup && cleanup())
 }
 
-/**
- * Compiled binding: `compute` is tracked, `apply(value, prev)` writes the DOM. Runs once now; never on the server.
- * `options.scope` (a `scope()` hole): the effect takes a hydration id of its own instead of counting on its owner's.
- */
+/** Compiled binding: `compute` is tracked, `apply(value, prev)` writes the DOM. Runs once now; never on the server. */
 export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | undefined) => void, options?: EffectOptions) {
   if (rt.server) return
   let prev: T | undefined
@@ -335,7 +315,7 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
     const v = compute(prev)
     untrack(() => apply(v, prev))
     prev = v
-  }, 1, undefined, !options?.scope)
+  }, 1)
   if (DEV && options?.name) node.n = `${options.name} (${options.loc})${node.n ? ` in ${node.n}` : ''}`
   run(node)
 }
@@ -366,28 +346,13 @@ export function getOwner() {
   return owner
 }
 
-/** `key`: the root's hydration id (`''` for a render root); otherwise it takes the next one under `parent`. */
-export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner, key?: string): T {
+export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner): T {
   const root: Owner = { owned: null, cleanups: null, owner: parent, context: parent?.context }
-  if (key !== undefined || rt.ids) root.hk = key ?? childKey(parent)
   const prevOwner = owner, prevListener = listener
   owner = root
   listener = null
   try {
     return fn(() => clean(root))
-  } finally {
-    owner = prevOwner
-    listener = prevListener
-  }
-}
-
-/** Run `fn` under `o` with no listener (weft/ssr's hole scopes). */
-export function runWith<T>(o: Owner | null, fn: () => T): T {
-  const prevOwner = owner, prevListener = listener
-  owner = o
-  listener = null
-  try {
-    return fn()
   } finally {
     owner = prevOwner
     listener = prevListener

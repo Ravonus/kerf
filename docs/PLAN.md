@@ -170,8 +170,9 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 
     If any fails, fork `@solidjs/babel-plugin` 2.x instead. Never ship two compilers.
 - **Runtime:** signals core, DOM bindings, keyed reconciler, SSR string renderer on the same reactive core (effects
-  off), hydration by owner-tree keys, `renderToStringAsync` (render, await resources, re-render), page data in
-  `<script data-weft>`; streaming in Phase 3 ([18](research/18-ssr-and-boundaries.md)).
+  off), hydration by source-path keys (` wk="0.1/0"`, from weft's own back end, [19 §5.3](research/19-own-back-end.md)),
+  `renderToStringAsync` (render, await resources, re-render), page data in `<script data-weft>`; streaming in
+  Phase 3 ([18](research/18-ssr-and-boundaries.md)).
 - **Async/errors in markup:** `<Boundary pending={…} error={(e, retry) => …}>`. The fallback shows after 150 ms and
   is held ≥ 400 ms; refetches never flash; errors during render and failed resources reach `error(e, retry)`, errors
   in later updates don't yet ([18](research/18-ssr-and-boundaries.md)).

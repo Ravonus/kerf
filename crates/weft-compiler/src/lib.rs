@@ -92,14 +92,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     transform::apply(&allocator, &mut program, &scoping, &plan, source);
 
     let ssr = options.generate == "ssr";
-    if options.backend == "weft" {
-        if ssr || options.hydratable {
-            diagnostics.push(Diagnostic::syntax(source, "weft back end: SSR and hydration come in step 3 (research 19 §5)".into(), None));
-            return Output { code: None, map: None, diagnostics };
-        }
+    // SSR and hydration exist only on weft's back end (research 19 step 3); the runtime has no other key scheme.
+    if options.backend == "weft" || ssr || options.hydratable {
         // Print the pre-pass's AST and lower its JSX from that text (spans index it). No source map yet.
         let printed = oxc_codegen::Codegen::new().build(&program).code;
-        return match emit::dom(&printed, &options.filename, &options.module_name) {
+        let module = if ssr && options.module_name == "weft/dom" { "weft/ssr" } else { &options.module_name };
+        return match emit::emit(&printed, &options.filename, module, ssr, options.hydratable) {
             Ok(code) => Output { code: Some(code), map: None, diagnostics },
             Err(e) => {
                 diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));

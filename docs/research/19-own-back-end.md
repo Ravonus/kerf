@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **steps 1–2 built** (§5.1, §5.2); steps 3–5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **steps 1–3 built** (§5.1–§5.3); steps 4–5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -158,6 +158,67 @@ the table is a compile error with a W-code. It doesn't silently fall back.
 
   "Runtime (every export)" is 5.73 KB against its 6 KB budget while both helper sets ship. Step 5 removes the
   Solid-shaped set.
+
+### 5.3 Step 3, done (2026-10-29)
+
+SSR and hydratable output now come only from weft's back end. Solid's crate is left only for plain DOM output, until
+step 5.
+
+**Keys (`src/keys.ts`).** A template instance's key is its place in the source tree:
+
+| Key | What it names |
+|---|---|
+| `<scope><n>` | the n-th template, Boundary or resource created directly in a scope |
+| `<key>.<slot>/` | the scope of hole `slot` (a compile-time index) of the template keyed `key` |
+| `<scope><row>/` | the scope of a `For` row, by its own key (escaped) |
+| `<key>c/`, `<key>f/` | a Boundary's content and fallback |
+
+For example, `0.1/0.1/apple/0` is the first template of row `apple`, in hole 1 of the template in hole 1 of the
+root. Keys are computed only during a server render and during `hydrate()`'s synchronous pass. Memos, effects and
+owners take no part. A test (`client-only watchers and extra memos shift no key`) adds a watcher and memos on the
+client only and still hydrates with 0 misses.
+
+**Server output.** A template renders as `ssr((_k) => "<li" + key(_k) + … + hole(_k, 2, () => …) + "</li>")`. The
+root gets ` wk="<key>"` when the output is hydratable. A hole that shares its parent with other content is wrapped
+in `<!--[-->…<!--]-->`; a hole that is its element's only content has no markers. Adjacent texts in one hole get a
+`<!--,-->` between them, so the client finds one text node per value. `<select value>` keeps research 18's
+post-pass, which marks the matching `<option selected>`.
+
+**Client (hydratable output).**
+- `tpl()` claims the server element with the next key (checking its tag). A miss is counted, warned about in dev,
+  and rendered fresh.
+- The walk uses `first`/`next`, which step over a server range as if it were the template's single `<!>`.
+- `child` takes the nodes in its range. It reuses claimed elements and server text nodes, and keeps separators.
+- `bind` and `spread` skip their first write, because the server wrote it; handlers and refs are still attached.
+- Structure in a hole (elements, components) is passed as `() => …`, built once inside the hole's scope.
+
+**Removed from the core:** `rt.ids`, `childKey`, `hk`/`hc`, the transparent flag, `createRoot`'s key, `scope()`,
+`runWith`, the `getNext*` helpers, Solid's SSR helper set and `ssr-contract.test.ts`.
+
+**Tests.**
+- `ssr.test.ts` and `async.test.tsx` pass with 0 misses and 0 DOM writes. Only their format-specific assertions
+  changed (`wk="…"` for `_hk=…`, `<!--[-->` for `<!--$-->`).
+- New round trips cover the step 1–2 constructs: adjacent texts, fragments, class and style objects, conditionals,
+  element spreads, refs, `<select value>` over a list, and SVG.
+- 69/69 package tests pass on both back ends, and v3 passes 23/23 hidden tests on both.
+
+**Size (br).**
+
+| Bundle | Size |
+|---|---|
+| v3 shop app (hydrate) | 4.71 KB (was 4.30 KB on Solid's back end) |
+| hello, Solid's back end | 0.99 KB (the old hydration code left dom.ts) |
+| counter, weft's back end | 2.39 KB |
+| benchmark app, weft's back end | 3.80 KB |
+
+weft's back-end bundles gained about 0.4 KB: `child`'s claim path ships in client-only builds too. It could be
+split out to tree-shake. "Runtime (every export)" is 5.90 KB against 6 KB while both helper sets ship; step 5
+removes Solid's.
+
+**Not yet:**
+- a spread's `children` on the server;
+- `textContent`/`innerHTML` props on the server (the client writes them);
+- mismatch messages that name the source line. Step 4 adds dev comments and a key → file:line table.
 
 **Corpus oracle (test only).** For every `.tsx` in the repo plus a generated corpus (`scripts/gen-corpus.mjs`),
 render with the old and new back ends in jsdom. Compare the resulting DOM and the DOM after scripted interactions.

@@ -117,7 +117,7 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
   vi.useRealTimers()
   const server = api(0)
   const html = await renderToStringAsync(() => ServerUsers({ load: server.load }))
-  expect(html).toMatch(/<p _hk=\w+ class="profile">Ada<\/p>/)
+  expect(html).toMatch(/<p wk="[^"]+" class="profile">Ada<\/p>/)
   expect(html).toContain('Ada')
   expect(html).not.toContain('skeleton')
   expect(html).toMatch(/<script type="application\/json" data-weft>.*"Ada".*<\/script>$/)
@@ -139,7 +139,7 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
 
 test('SSR, data not awaited: the fallback hydrates, then the content swaps in after the hold', async () => {
   const html = renderToString(() => ServerUsers({ load: api(0).load }))
-  expect(html).toMatch(/<p _hk=\w+ class="skeleton">/)
+  expect(html).toMatch(/<p wk="[^"]+" class="skeleton">/)
   const container = document.body.appendChild(document.createElement('div'))
   container.innerHTML = html
   const skeleton = container.querySelector('.skeleton')!

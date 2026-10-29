@@ -27,8 +27,8 @@ const MODE = /\?weft-(ssr|hydrate|next)$/
  * `hydratable`: DOM output that adopts server HTML (`hydrate`), and SSR output with hydration keys. Vite's SSR
  * transforms get SSR output (imports from weft/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
- * `?weft-next` (or `backend: 'weft'`, or `WEFT_BACKEND=weft` in the environment) compiles with weft's own back end
- * (research 19). It covers plain DOM modules only for now: SSR and hydration stay on Solid's until step 3.
+ * SSR and hydratable output always come from weft's own back end (research 19). Plain DOM modules use Solid's until
+ * the switch (step 5), unless `?weft-next`, `backend: 'weft'` or `WEFT_BACKEND=weft` selects weft's.
  */
 export default function weft({ dev, hydratable = false, backend = process.env.WEFT_BACKEND ?? 'solid' } = {}) {
   let isDev = false
@@ -50,10 +50,11 @@ export default function weft({ dev, hydratable = false, backend = process.env.WE
       handler(code, id, options) {
         const mode = MODE.exec(id)?.[1]
         const ssr = mode && mode !== 'next' ? mode === 'ssr' : !!options?.ssr
-        const next = mode === 'next' || (backend === 'weft' && !mode && !ssr && !hydratable)
-        const out = next
-          ? transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, backend: 'weft', generate: ssr ? 'ssr' : 'dom' })
-          : transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydratable || !!mode, sourceNames: isDev })
+        const hydrating = hydratable || mode === 'hydrate' || mode === 'ssr'
+        const weftBackEnd = ssr || hydrating || mode === 'next' || backend === 'weft'
+        const out = weftBackEnd
+          ? transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, backend: 'weft', generate: ssr ? 'ssr' : 'dom', hydratable: hydrating })
+          : transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: 'dom', sourceNames: isDev })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }

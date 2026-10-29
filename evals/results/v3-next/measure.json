@@ -5,22 +5,22 @@
         "domMutations": 1,
         "commits": null,
         "renderMs": null,
-        "wallMs": 84.2
+        "wallMs": 43.16
       },
       "price-push": {
         "domMutations": 1,
         "commits": null,
         "renderMs": null,
-        "wallMs": 0.48
+        "wallMs": 0.27
       },
       "type-3-chars": {
         "domMutations": 152,
         "commits": null,
         "renderMs": null,
-        "wallMs": 20.35
+        "wallMs": 12.56
       }
     },
-    "bundleGzBytes": 4935,
+    "bundleGzBytes": 5387,
     "srcFiles": 8,
     "srcLines": 189,
     "effects": 0,
