@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **built** (§5.1–§5.7). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **built** (§5.1–§5.8). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -361,7 +361,7 @@ official keyed entry, `solid-js` 1.9.3. Both ran in one run, and both passed the
 | first paint (ms) | 26.8 | 32.4 | 0.827 |
 
 This is the same as research 18 (1.067×) within noise: the benchmark app was already on weft's back end then.
-Clear and append are still the slowest (1.16–1.19×), and memory is still 1.5× Solid's. Both are runtime work (row
+Clear and append are still the slowest (1.16–1.19×), and memory is still 1.5× Solid's (1.02–1.03× after §5.8). Both are runtime work (row
 creation, `place()`), not compiler work. One run on a shared machine (load 7–9), so treat differences under ~5% as
 noise.
 
@@ -418,6 +418,103 @@ changed. A spread's `children` were inserted fresh on top of the server's nodes.
   - a round trip of `Step2.Content` (0 misses, 0 DOM writes, then live updates of all three);
   - a client-only test that spread children render and update;
   - a Rust test for the server output and the error.
+
+### 5.8 Benchmark memory (2026-10-29)
+
+§5.5 left memory at 1.5× Solid's: 4.02 MB with 1k rows (Solid 2.68), 1.14 MB after clearing them (Solid 0.77). A
+heap snapshot after "create 1k rows", JS objects only, showed where the extra 1.3 KB per row went:
+
+| | weft before | Solid |
+|---|---|---|
+| array backing stores | 707 KB (9,022) | 96 KB (6,032) |
+| closures | 451 KB (16,111) | 170 KB (6,065) |
+| plain objects | 268 KB (7,125) | 159 KB (5,106) |
+
+Most of it was V8's array growth. The first `push` onto an empty array reserves 17 slots (76 bytes) to hold one
+item, and each row had about nine graph lists holding one to three items each: sources, observers, owned nodes, a
+hole's nodes.
+
+**Changes, in the order measured** (run memory, 1k rows, from 4.01 MB):
+
+- **Runtime, about 1 MB in total (to 2.99 MB):**
+  - **Exact-size graph lists.** Lists start as one shared empty array, and an append copies the list at its exact
+    size (`concat`) until it reaches 8 items, then `push`es.
+  - **Effects hold `apply` themselves.** `effect` no longer wraps compute and apply in a closure; `bind` adds its
+    skip-the-server's-write wrapper only while hydrating. Child holes are a third node kind that unwraps its value
+    while tracked, so `insert` and `hchild` don't wrap either.
+  - **A first text node in an exact-size list.**
+  - **Leaner rows and boxes.** A keyed list's row is its own owner root (no `createRoot` closure and no separate row
+    object). It gets an index box only when the row callback takes an index (`(row) =>` doesn't). A `Box` keeps its
+    rarely-set fields (`k`, `h`, `n`, `opts`) off the instance.
+  - **`get(key)` sources go with their last reader**, so clearing the rows leaves no per-key entries behind.
+- **Compiler: a row's key is written once (to 2.78 MB).** Inside `<For by={(row) => row.id}>`, a hole or attribute
+  that is exactly `row().id` can't change while the row lives, because a new item under the same key has the same
+  key. So it's written once, with no effect. Solid's entry gets the same thing by treating `row.id` as static.
+  Hydratable output keeps attributes as bindings (they skip the server's value, and a write would be a DOM
+  mutation). Holes are claimed as before. Any other expression, such as `row().id + 1`, stays live.
+- **An effect or hole that read nothing reactive on its first run can never re-run, so its owner drops it.**
+- **Numbers go to `createTextNode` unconverted (to 2.72 MB; run+clear 0.85 → 0.79).** After a clear, the biggest
+  survivor was V8's number-to-string cache (65 KB), filled by `String(id)` for every row id. The DOM converts a
+  number itself without filling that cache, which is what Solid's `textContent = id` does too.
+
+**js-framework-benchmark, same setup as §5.5** (`ca8715d`, Chrome headless, weft and Solid in one run, keyed check
+passed). Load was 5–7.
+
+| Benchmark | weft (ms) | Solid (ms) | ratio | §5.5 ratio |
+|---|---|---|---|---|
+| 01 create 1k rows | 23.62 | 22.83 | 1.035 | 1.098 |
+| 02 replace 1k | 26.27 | 24.97 | 1.052 | 1.086 |
+| 03 update every 10th ×16 | 14.63 | 14.14 | 1.034 | 1.032 |
+| 04 select row | 6.40 | 5.82 | 1.098 | 0.832 |
+| 05 swap rows | 18.51 | 16.31 | 1.135 | 1.099 |
+| 06 remove row | 13.33 | 12.29 | 1.084 | 1.056 |
+| 07 create 10k rows | 252.03 | 243.09 | 1.037 | 1.053 |
+| 08 append 1k to 1k ×2 | 28.61 | 26.29 | 1.088 | 1.161 |
+| 09 clear 1k ×8 | 15.14 | 12.85 | 1.179 | 1.189 |
+| **CPU geomean (01–09)** | | | **1.081** | 1.063 |
+| ready memory (MB) | 0.62 | 0.60 | 1.034 | |
+| **run memory, 1k rows (MB)** | **2.72** | 2.68 | **1.017** | 1.501 |
+| **run + clear memory (MB)** | **0.80** | 0.77 | **1.027** | 1.469 |
+
+The geomean moved from 1.063 to 1.081 (still within the ≤ 1.10 gate). That comes from the noisiest cases, not from
+creation, which got faster. Select, swap and remove are a few milliseconds each, and select moved the most (0.83 →
+1.10). A back-to-back A/B of weft's entry built from main and from this branch (same Chrome, same load) has the
+branch level or ahead:
+
+| ms | main | branch |
+|---|---|---|
+| 01 create 1k | 24.59 | 23.38 |
+| 04 select | 5.24 | 5.41 |
+| 05 swap | 18.99 | 18.49 |
+| 08 append | 29.74 | 28.67 |
+| 09 clear | 15.45 | 15.35 |
+
+A second full run gave **1.080**: select 1.011, swap 1.180, clear 1.249, everything else within 0.01–0.03 of the
+first run. Memory was the same (2.72 MB, 1.016×; 0.79 MB, 1.032×). So the geomean is about 1.08 in today's runs,
+with the branch no slower than main in the A/B. The move from §5.5's 1.063 is mostly Solid measuring faster on swap
+and clear today. Both are inside the gate.
+
+**Size.**
+
+| Bundle (br) | Before | After |
+|---|---|---|
+| runtime, every export | 5.81 KB | 6.00 KB |
+| hello world | 1.01 KB | 1.11 KB |
+| v3 shop | 4.00 KB | 4.20 KB |
+| benchmark app | 3.30 KB | 3.48 KB |
+
+The runtime is at its 6 KB aim, and every bundle is inside its budget.
+
+**Tests:**
+- 128 JS tests, two of them new:
+  - a `get(key)` source goes when its last reader is disposed, and an effect that reads nothing isn't kept;
+  - a keyed row with an index reads it live, and its key is written once.
+- 49 Rust tests, including `a_rows_key_is_written_once`.
+- v3 23/23, with add-one and price-push still 1 DOM mutation each.
+- The oracle (the benchmark app through every interaction, hydrated with 0 misses and 0 writes) is unchanged.
+
+**Still open.** Clear (1.18×) and swap (1.10–1.14×) are the slowest. Clear is `place()` removing nodes one at a time
+where Solid empties the parent with `textContent = ""`; the next CPU item.
 
 ## 6. What PR #2 (compiler hardening) brings
 

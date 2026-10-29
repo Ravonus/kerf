@@ -26,7 +26,8 @@ export const child: (parent: Element, value: unknown, marker?: Node | null) => v
 
 /** One element's dynamic attributes: `compute` reads them (a value, or an array of them), `apply` writes changes. */
 export function bind<T>(compute: () => T, apply: (value: T, prev: T | undefined) => void) {
-  let skip = keys.hydrating // the server wrote these
+  if (!keys.hydrating) return effect(compute, apply)
+  let skip = true // the server wrote these
   effect(compute, (v, p) => {
     if (skip) skip = false
     else apply(v, p)
