@@ -94,9 +94,9 @@ the table is a compile error with a W-code. It doesn't silently fall back.
 | Step | What | Done when |
 |---|---|---|
 | 1 | IR and DOM emitter for templates, attributes, events, text and components | hello, counter and the bench entry run on it; `?weft-next` imports select it in tests |
-| 2 | Lists, conditionals, refs, select, SVG | the v3 app passes 23/23 hidden tests and every work-budget test on the new back end |
+| 2 | Lists, conditionals, spreads, refs, select, SVG; the pre-pass emits IR holes instead of Solid-shaped JSX | the v3 app passes 23/23 hidden tests and every work-budget test on the new back end |
 | 3 | SSR emitter, path keys, hydration | `ssr.test.ts` and `async.test.tsx` pass: 0 misses, 0 DOM writes |
-| 4 | Spreads, dev comments, `weft explain` | the corpus oracle (below) passes |
+| 4 | Dev comments, `weft explain` | the corpus oracle (below) passes |
 | 5 | Switch the default, delete `solidjs-compiler`, update PLAN §3.6 / research 16 | every gate in §3.7, js-framework-benchmark ≤ 1.10× Solid in the same run |
 
 **Corpus oracle (test only).** For every `.tsx` in the repo plus a generated corpus (`scripts/gen-corpus.mjs`),
@@ -106,7 +106,34 @@ Solid's crate stays a dev-dependency only for this test, and leaves with step 5.
 **Estimate (unverified):** 3–5k lines of Rust for the IR and both emitters, since they cover weft's constructs only.
 Two to three weeks of focused work.
 
-## 6. Open questions
+## 6. What PR #2 (compiler hardening) brings
+
+The inventory comes from the compiler-hardening session (branch `claude/blissful-khorana-d4aaf1` at `60a5543`).
+
+**Carries over unchanged:**
+- `analyze.rs` (the Plan, and W001/W005/W006/W010/W013–W016, row roots, children memo planning);
+- `project.rs` (cross-file facts, W014);
+- the Oxc node construction in `transform.rs`;
+- the behaviour tests in `test/compiler-items.test.tsx`. These check what happens at runtime, not the text of the
+  output, so they become specs for the new back end.
+
+Once Solid's crate is gone, weft can update Oxc on its own schedule instead of following Solid's pinned version.
+
+**Shaped for Solid, to replace:**
+- **The pre-pass emits Solid-shaped JSX:** `<For each by>{x => …}</For>`, `x()` accessors, `_$omit`, and a
+  children memo statement. It relies on Solid compiling props to getters and children to `insert()`. With weft's own
+  back end, the pre-pass should hand over the IR (§3) directly: a `List` hole and `Prop` getters, rather than JSX that
+  another compiler re-reads.
+- **Tests that match Solid's output text** (`_$createComponent(_$For`, `get each()`) are rewritten against the new
+  output.
+- **W016's rationale** (props compile to getters, `new X()` passed as a static value) is restated as a rule of
+  weft's own lowering.
+- **`tests/helper_contract.rs`** stops compiling Solid's fixtures. Its import-versus-export check stays, pointed at
+  weft's own output.
+- **The `weft/dom` helpers added to match Solid's output** go at the switch. `spread` is weft's only implementation
+  of `<div {...rest}>` on a native element, so `Spread` moves into step 2 of §5, not step 4.
+
+## 7. Open questions
 
 - Keyed rows in path keys use the user's `key`. A `key` the server and the client compute differently (dates,
   random ids) would be a mismatch with a clear message rather than a silent shift. Is that enough, or should W-codes
