@@ -28,13 +28,19 @@ const MODE = /\?weft-(ssr|hydrate)$/
  * transforms get SSR output (imports from weft/ssr). `import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`)
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
  */
-export default function weft({ dev, hydratable = false } = {}) {
+/*
+ * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
+ * their own updates (research 21). Never for SSR or hydratable output.
+ */
+export default function weft({ dev, hydratable = false, hmr } = {}) {
   let isDev = false
+  let isHot = false
   const main = {
     name: 'weft',
     enforce: 'pre',
     config(_, env) {
       isDev = dev ?? env.command === 'serve'
+      isHot = hmr ?? (env.command === 'serve' && !process.env.VITEST)
       return { oxc: { jsx: 'preserve' }, optimizeDeps: { rolldownOptions: { transform: { jsx: 'preserve' } } } }
     },
     async resolveId(source, importer) {
@@ -49,7 +55,7 @@ export default function weft({ dev, hydratable = false } = {}) {
         const mode = MODE.exec(id)?.[1]
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
-        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating })
+        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }

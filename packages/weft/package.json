@@ -16,6 +16,7 @@
     "./test": "./src/test.ts",
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
+    "./hmr": "./src/hmr.ts",
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"
   },
@@ -24,6 +25,16 @@
     "test": "vitest run",
     "bench": "node scripts/bench.mjs",
     "size": "node scripts/size.mjs"
+  },
+  "peerDependencies": {
+    "@testing-library/dom": ">=10",
+    "@testing-library/user-event": ">=14",
+    "vitest": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "@testing-library/dom": { "optional": true },
+    "@testing-library/user-event": { "optional": true },
+    "vitest": { "optional": true }
   },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",

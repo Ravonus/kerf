@@ -157,7 +157,7 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     };
     let mut e = Emitter {
         text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None,
-        ssr: o.ssr, hydratable: o.hydratable && !o.ssr, dev: o.dev, display: o.display.to_string(), origin, explained: Vec::new(),
+        ssr: o.ssr, hydratable: o.hydratable && !o.ssr, dev: o.dev, display: o.display.to_string(), origin, explained: Vec::new(), keys: Vec::new(),
     };
     let mut top = Outermost::default();
     top.visit_program(&program);
@@ -241,6 +241,9 @@ struct Emitter<'t> {
     /// Printed span start → (line, column) in the authored file.
     origin: HashMap<u32, (u32, u32)>,
     explained: Vec<Explained>,
+    /// The keys of the keyed lists being emitted (`row().id` for `by={(row) => row.id}`), innermost last. A row's
+    /// key can't change while the row lives, so a hole or attribute that is exactly its key is written once.
+    keys: Vec<String>,
 }
 
 /// One template being built: its HTML, the node references it needs, and the operations after cloning.
@@ -587,6 +590,11 @@ impl<'t> Emitter<'t> {
                                     };
                                     Self::server(b, Piece::Code(call));
                                 }
+                            } else if !self.hydratable && self.is_key(&e) {
+                                // Hydrating, the server wrote it and a write would be a mutation: bind skips it.
+                                let el_var = self.node(b, &path);
+                                let w = self.write(&el_var, kind, &name, &e, "undefined");
+                                b.ops.push(format!("{w};"));
                             } else {
                                 dynamic.push((kind, name, e));
                             }
@@ -719,25 +727,37 @@ impl<'t> Emitter<'t> {
         }
     }
 
+    /// Code that writes one attribute of `el` (`kind`: class, style, prop or attr): value `v`, previous `p`.
+    fn write(&mut self, el: &str, kind: &str, name: &str, v: &str, p: &str) -> String {
+        match kind {
+            "class" => format!("{}({el}, {v}, {p})", self.helper("cls")),
+            "style" => format!("{}({el}, {v}, {p})", self.helper("css")),
+            "prop" if name == "value" => format!("({el}.value = {v} ?? \"\")"),
+            "prop" => format!("({el}.{name} = {v})"),
+            _ => format!("{}({el}, {name:?}, {v})", self.helper("attr")),
+        }
+    }
+
+    /// `code` (an expression's text) is exactly the key of a keyed list it's inside.
+    fn is_key(&self, code: &str) -> bool {
+        if self.keys.is_empty() {
+            return false;
+        }
+        let code: String = srcmap::strip(code).chars().filter(|c| !c.is_whitespace()).collect();
+        let code = code.trim_start_matches('(').trim_end_matches(')');
+        self.keys.iter().any(|k| k == code)
+    }
+
     fn bind(&mut self, el: &str, dynamic: &[(&'static str, String, String)]) -> String {
         let bind = self.helper("bind");
-        let apply = |s: &mut Self, kind: &str, name: &str, v: &str, p: &str| -> String {
-            match kind {
-                "class" => format!("{}({el}, {v}, {p})", s.helper("cls")),
-                "style" => format!("{}({el}, {v}, {p})", s.helper("css")),
-                "prop" if name == "value" => format!("({el}.value = {v} ?? \"\")"),
-                "prop" => format!("({el}.{name} = {v})"),
-                _ => format!("{}({el}, {name:?}, {v})", s.helper("attr")),
-            }
-        };
         if let [(kind, name, e)] = dynamic {
-            let a = apply(self, kind, name, "v", "p");
+            let a = self.write(el, kind, name, "v", "p");
             return format!("{bind}(() => ({e}), (v, p) => {{ v !== p && {a}; }});");
         }
         let values: Vec<&str> = dynamic.iter().map(|(_, _, e)| e.as_str()).collect();
         let mut body = String::new();
         for (i, (kind, name, _)) in dynamic.iter().enumerate() {
-            let a = apply(self, kind, name, &format!("v[{i}]"), &format!("p[{i}]"));
+            let a = self.write(el, kind, name, &format!("v[{i}]"), &format!("p[{i}]"));
             body.push_str(&format!(" v[{i}] !== p[{i}] && {a};"));
         }
         format!("{bind}(() => [{}], (v, p = []) => {{{body} }});", values.join(", "))
@@ -762,7 +782,10 @@ impl<'t> Emitter<'t> {
                     let memo = self.helper("memo");
                     format!("(() => {{ const _c = {memo}(() => {test}); return () => {}; }})()", rest("_c()"))
                 }
-                _ => format!("() => ({})", self.expr(e)),
+                _ => {
+                    let code = self.expr(e);
+                    if self.is_key(&code) { code } else { format!("() => ({code})") }
+                }
             },
         }
     }
@@ -816,9 +839,14 @@ impl<'t> Emitter<'t> {
     }
 
     fn component(&mut self, el: &JSXElement<'_>, name: String) -> String {
-        if name == "For" {
+        let key = if name == "For" {
             self.uses_for = true;
-        }
+            list_key(el)
+        } else {
+            None
+        };
+        let keyed = key.is_some();
+        self.keys.extend(key);
         let mut fields = Vec::new();
         let kids = children(&el.children, self.text);
         match kids.as_slice() {
@@ -836,6 +864,9 @@ impl<'t> Emitter<'t> {
                 let vs: Vec<String> = many.iter().map(|k| self.kid_value(k)).collect();
                 fields.push(format!("get children() {{ return [{}]; }}", vs.join(", ")));
             }
+        }
+        if keyed {
+            self.keys.pop();
         }
         let props = self.props(&el.opening_element.attributes, fields);
         let component = self.helper("component");
@@ -940,6 +971,31 @@ fn component_name(name: &JSXElementName<'_>, text: &str) -> Option<String> {
         JSXElementName::MemberExpression(m) => Some(text[m.span.start as usize..m.span.end as usize].to_string()),
         _ => None,
     }
+}
+
+/// A keyed list's key as its rows read it: `by={(row) => row.a.b}` → `row().a.b` (rows get their item as an
+/// accessor). Other `by` shapes give none.
+fn list_key(el: &JSXElement<'_>) -> Option<String> {
+    let by = el.opening_element.attributes.iter().find_map(|a| match a {
+        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == "by") => attr_expression(a),
+        _ => None,
+    })?;
+    let Expression::ArrowFunctionExpression(f) = by.get_inner_expression() else { return None };
+    let [param] = f.params.items.as_slice() else { return None };
+    let BindingPattern::BindingIdentifier(p) = &param.pattern else { return None };
+    let body = f.get_expression()?;
+    let mut path = Vec::new();
+    let mut e = body.get_inner_expression();
+    while let Expression::StaticMemberExpression(m) = e {
+        path.push(m.property.name.as_str());
+        e = m.object.get_inner_expression();
+    }
+    let Expression::Identifier(id) = e else { return None };
+    if id.name != p.name || path.is_empty() {
+        return None;
+    }
+    path.reverse();
+    Some(format!("{}().{}", p.name, path.join(".")))
 }
 
 fn is_component(el: &JSXElement<'_>, text: &str) -> bool {

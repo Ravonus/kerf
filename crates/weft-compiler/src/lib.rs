@@ -8,6 +8,7 @@
 mod analyze;
 mod diag;
 mod emit;
+mod hmr;
 pub mod project;
 mod srcmap;
 mod transform;
@@ -40,6 +41,8 @@ pub struct Options {
     pub hydratable: bool,
     /// Also return what each JSX node became (`Output::explain`).
     pub explain: bool,
+    /// Dev DOM output only, not hydratable: register components for hot updates and keep their state (weft/hmr).
+    pub hmr: bool,
 }
 
 impl Default for Options {
@@ -53,6 +56,7 @@ impl Default for Options {
             generate: "dom".into(),
             hydratable: false,
             explain: false,
+            hmr: false,
         }
     }
 }
@@ -97,6 +101,9 @@ pub fn compile(source: &str, options: &Options) -> Output {
     transform::apply(&allocator, &mut program, &scoping, &plan);
 
     let ssr = options.generate == "ssr";
+    let footer = (options.hmr && options.dev && !ssr && !options.hydratable)
+        .then(|| hmr::apply(&allocator, &mut program, source, &options.filename))
+        .flatten();
     // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
     // goes through the emitter to the authored file. Each JSX node's authored line goes along by order
     // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.
@@ -114,7 +121,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
         map: points.as_ref().map(|p| (p, source)),
     };
     match emit::emit(&printed, o) {
-        Ok(out) => Output { code: Some(out.code), map: out.map, diagnostics, facts, explain: options.explain.then_some(out.explain) },
+        Ok(out) => Output { code: Some(out.code + footer.as_deref().unwrap_or("")), map: out.map, diagnostics, facts, explain: options.explain.then_some(out.explain) },
         Err(e) => {
             diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
             Output { code: None, map: None, diagnostics, facts, explain: None }

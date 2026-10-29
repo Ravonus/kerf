@@ -1,9 +1,16 @@
-// weft/test: render, flush, and the work-budget assertion (§7b, §10b).
+// weft/test: render, user-level queries and actions, flush, a deterministic clock, and the work-budget assertion
+// (§7b, §10b).
 //
+//   render(Counter)
+//   await user.click(screen.getByRole('button', { name: 'Add' }))             // ends in flush()
 //   await expect(() => fake.push('p100', 99)).toTouchAtMost(1)               // DOM mutations
 //   await expect(() => fake.push('p100', 99)).toTouchAtMost(1, { runs: 10 })  // and reactive re-runs
+//
+// `weft check` reports junk tests statically (T001–T009); a test here that never asserts also fails at runtime (T001).
 
-import { afterEach, expect } from 'vitest'
+import { screen as dom } from '@testing-library/dom'
+import userEvent from '@testing-library/user-event'
+import { afterEach, expect, vi } from 'vitest'
 import { flush as flushGraph, stats } from './index'
 import { createComponent, render as mount } from './dom'
 import { createApp, useApp, withApp, type AppOptions } from './scope'
@@ -43,7 +50,73 @@ export function cleanup() {
   for (const unmount of [...mounted]) unmount()
 }
 
-afterEach(cleanup)
+/**
+ * Queries by what the user sees: role, label and text (`getBy*` throws, `queryBy*` returns null, `findBy*` waits).
+ * There is no container, selector or test-id query (T005).
+ */
+export const screen = {
+  getByRole: dom.getByRole, getAllByRole: dom.getAllByRole, queryByRole: dom.queryByRole, queryAllByRole: dom.queryAllByRole, findByRole: dom.findByRole, findAllByRole: dom.findAllByRole,
+  getByLabelText: dom.getByLabelText, getAllByLabelText: dom.getAllByLabelText, queryByLabelText: dom.queryByLabelText, queryAllByLabelText: dom.queryAllByLabelText, findByLabelText: dom.findByLabelText, findAllByLabelText: dom.findAllByLabelText,
+  getByText: dom.getByText, getAllByText: dom.getAllByText, queryByText: dom.queryByText, queryAllByText: dom.queryAllByText, findByText: dom.findByText, findAllByText: dom.findAllByText,
+}
+
+type UserEvent = ReturnType<typeof userEvent.setup>
+type Actions = Pick<UserEvent, 'click' | 'dblClick' | 'type' | 'clear' | 'keyboard' | 'hover' | 'unhover' | 'tab' | 'selectOptions' | 'deselectOptions' | 'upload' | 'paste'>
+
+let session: UserEvent | undefined
+const act = <K extends keyof Actions>(name: K) =>
+  (async (...args: any[]) => {
+    session ??= userEvent.setup({ advanceTimers: ms => (clock.installed ? vi.advanceTimersByTimeAsync(ms).then(() => {}) : undefined) })
+    await (session[name] as (...a: any[]) => Promise<void>)(...args)
+    await flush()
+  }) as Actions[K]
+
+/** User actions (`@testing-library/user-event`); each one ends in `flush()`, so there is nothing to wait for (T004). */
+export const user: Actions = {
+  click: act('click'), dblClick: act('dblClick'), type: act('type'), clear: act('clear'), keyboard: act('keyboard'), hover: act('hover'),
+  unhover: act('unhover'), tab: act('tab'), selectOptions: act('selectOptions'), deselectOptions: act('deselectOptions'), upload: act('upload'), paste: act('paste'),
+}
+
+const faked = ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'setImmediate', 'clearImmediate', 'requestAnimationFrame', 'cancelAnimationFrame', 'Date', 'performance'] as const
+
+/**
+ * A deterministic clock for timers, `resource` fetches that wait on them, and rAF. `install()` before anything
+ * schedules; every `advance` ends in `flush()`. Uninstalled after each test. Use it instead of sleeping (T004).
+ */
+export const clock = {
+  installed: false,
+  install(now: number | Date = 0) {
+    vi.useFakeTimers({ toFake: [...faked], now })
+    clock.installed = true
+  },
+  async advance(ms: number) {
+    if (!clock.installed) throw new Error('T004: clock.advance() needs clock.install() first, before the code under test schedules its timers')
+    await vi.advanceTimersByTimeAsync(ms)
+    await flush()
+  },
+  /** Run every pending timer (and the ones they schedule), then flush. */
+  async runAll() {
+    if (!clock.installed) throw new Error('T004: clock.runAll() needs clock.install() first')
+    await vi.runAllTimersAsync()
+    await flush()
+  },
+  now: () => Date.now(),
+  uninstall() {
+    if (!clock.installed) return
+    vi.useRealTimers()
+    clock.installed = false
+  },
+}
+
+afterEach(context => {
+  cleanup()
+  clock.uninstall()
+  session = undefined
+  // T001 at runtime: catches what the static check can't see (assertions hidden in helpers it couldn't read, or none).
+  const failed = context.task.result?.state === 'fail' || (context.task.result?.errors?.length ?? 0) > 0
+  if (!failed && !context.task.fails && expect.getState().assertionCalls === 0)
+    throw new Error(`T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: weft docs T001`)
+})
 
 export type Touches = {
   mutations: number

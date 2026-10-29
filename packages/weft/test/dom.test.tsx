@@ -70,3 +70,13 @@ test('toTouchAtMost fails with a breakdown when the budget is exceeded', async (
   render(() => <ul>{items.value.map(x => <li>{x}</li>)}</ul>)
   await expect(expect(() => { items.value = [4, 5, 6] }).toTouchAtMost(1)).rejects.toThrow(/expected ≤ 1 DOM mutations, got 6 mutations \(3 added, 3 removed/)
 })
+
+test('a keyed row with an index reads it live; its key is written once', async () => {
+  const items = state([{ id: 'a', n: 1 }, { id: 'b', n: 2 }])
+  const { container } = render(() => <ul>{items.value.map((x, i) => <li key={x.id} data-id={x.id}>{i}:{x.id}:{x.n}</li>)}</ul>)
+  const text = () => [...container.querySelectorAll('li')].map(li => `${li.dataset.id} ${li.textContent}`)
+  expect(text()).toEqual(['a 0:a:1', 'b 1:b:2'])
+  items.value = [{ id: 'b', n: 3 }, items.value[0]]
+  await flush()
+  expect(text()).toEqual(['b 0:b:3', 'a 1:a:1'])
+})

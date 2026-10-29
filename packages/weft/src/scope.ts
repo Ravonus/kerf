@@ -121,7 +121,12 @@ interface ScopeDef {
   name: string
   setup: () => ScopeShape
   options: { history?: { limit: number } }
+  /** Dev: the handle, returned again when a hot update re-runs the defining module. */
+  h?: unknown
 }
+
+/** Set by weft/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
+export const hmr = { on: false }
 
 const defs = new Map<string, ScopeDef>()
 export const owners = new WeakMap<Box<any>, Instance>()
@@ -220,16 +225,23 @@ export function defineState<N extends string, T extends ScopeShape>(
   setup: () => T,
   options: { history?: { limit: number } } = {},
 ): ScopeHandle<N, T> {
-  if (DEV && defs.has(name)) throw new StateError('S009', `two scopes are named '${name}'`, 'scope names are unique per app; rename one')
+  const had = DEV && defs.get(name)
+  if (had) {
+    if (!hmr.on) throw new StateError('S009', `two scopes are named '${name}'`, 'scope names are unique per app; rename one')
+    // A hot update re-ran the module: keep the scope and its live state; new apps (and the next reload) get the edit.
+    had.setup = setup
+    had.options = options
+    return had.h as ScopeHandle<N, T>
+  }
   const def: ScopeDef = { name, setup, options }
-  if (DEV) defs.set(name, def) // duplicates (S009) and scope(); both dev-only
+  if (DEV) defs.set(name, def) // duplicates (S009), hot updates and scope(); all dev-only
   const meta: Record<string, unknown> = {
     $name: name,
     $reset: () => instance(def).reset(),
     $snapshot: () => instance(def).snapshot(),
   }
   const api = () => instance(def).api
-  return new Proxy({} as ScopeHandle<N, T>, {
+  const handle = new Proxy({} as ScopeHandle<N, T>, {
     get(_, key) {
       if (typeof key !== 'string') return undefined
       if (key in meta) return meta[key]
@@ -242,6 +254,8 @@ export function defineState<N extends string, T extends ScopeShape>(
     },
     has: (_, key) => key in meta || key in api(),
   })
+  if (DEV) def.h = handle
+  return handle
 }
 
 /** Instantiate one scope in its own app, with no UI (unit tests). */
