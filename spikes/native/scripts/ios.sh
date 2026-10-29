@@ -10,7 +10,8 @@ node "$here/scripts/gen-protocol.mjs"
 (cd "$repo/crates/weft-layout" && cargo build -q --release --target aarch64-apple-ios-sim --target wasm32-unknown-unknown)
 (cd "$here/js" && pnpm install --silent && node bundle.mjs)
 (cd "$here/ios" && xcodegen generate -q && xcodebuild -project WeftSpike.xcodeproj -scheme WeftSpike -configuration Debug \
-  -derivedDataPath build -destination "platform=iOS Simulator,name=$device" build -quiet)
+  -derivedDataPath build -sdk iphonesimulator -destination "generic/platform=iOS Simulator" build -quiet)
+# (A generic destination: matching by device name broke once a second iOS runtime was installed; install picks the device.)
 
 xcrun simctl boot "$device" 2>/dev/null || true
 xcrun simctl install "$device" "$here/ios/build/Build/Products/Debug-iphonesimulator/WeftSpike.app"

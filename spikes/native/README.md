@@ -96,10 +96,11 @@ app's sections") and [`protocol/idioms.json`](protocol/idioms.json) decides the 
 Verified on both devices: the category and sort choices filter (bakery → 45 products), and adding to the cart and
 switching tabs works (Bagel 10 × 1, Total $0.45, Cart (1)).
 
-Gaps:
-- On iOS the bar's background stops at the safe area instead of running under the home indicator.
-- esbuild doesn't fold the table per OS, so each bundle carries every platform's rows. The compiler should fold
-  `platform.os` and drop dead branches.
+Layout always runs inside the safe area. On iOS a bar that touches the bottom edge draws its background on under the
+home indicator, as `UITabBar` does, so frames (and Node parity) don't change.
+
+Gap: esbuild doesn't fold the table per OS, so each bundle carries every platform's rows. The compiler should fold
+`platform.os` and drop dead branches.
 
 ## Not done / next
 

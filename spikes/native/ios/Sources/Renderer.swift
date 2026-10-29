@@ -193,6 +193,10 @@ final class Renderer {
         line.backgroundColor = .separator
         line.autoresizingMask = [.flexibleWidth]
         v.addSubview(line)
+        let skirt = UIView() // fills the unsafe area below a bottom bar; sized in layout()
+        skirt.backgroundColor = v.backgroundColor
+        skirt.tag = Renderer.skirtTag
+        v.addSubview(skirt)
       }
     case .gap: wl_set(tree, id, LayoutKey.gap.rawValue, spaceTokens[value as? String ?? ""] ?? 0)
     case .pad: wl_set(tree, id, LayoutKey.pad.rawValue, spaceTokens[value as? String ?? ""] ?? 0)
@@ -241,6 +245,20 @@ final class Renderer {
       n.children.forEach(place)
     }
     place(root)
+    extendBars()
+  }
+
+  private static let skirtTag = 0x5eed
+
+  /// Layout runs inside the safe area. A bar whose bottom edge is the container's bottom edge draws its background
+  /// on down to the screen edge, under the home indicator, the way a UITabBar does. Frames don't change.
+  private func extendBars() {
+    let below = container.superview.map { $0.bounds.height - container.frame.maxY } ?? 0
+    for n in nodes.values {
+      guard let skirt = n.view.subviews.first(where: { $0.tag == Renderer.skirtTag }) else { continue } // not viewWithTag: it searches descendants
+      let touches = abs(n.view.convert(n.view.bounds, to: container).maxY - container.bounds.height) < 0.5
+      skirt.frame = touches ? CGRect(x: 0, y: n.view.bounds.height, width: n.view.bounds.width, height: below) : .zero
+    }
   }
 
   /// Frames, types, labels and measured leaf sizes as JSON, for comparing against the Node layout.
