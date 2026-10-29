@@ -26,7 +26,6 @@ export interface ButtonProps {
 }
 
 const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
-const quad = () => <><i></i><i></i><i></i><i></i></>
 
 /**
  * A native button (05 §2), the specimen markup exactly: solid, ghost and link draw their sweep in CSS (the ::before
@@ -66,9 +65,9 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       {kind === 'frame' ? (
         <>
           {fill && <span data-part="sweep-fill" aria-hidden="true"></span>}
-          <span data-part="frame-corners" aria-hidden="true">{quad()}</span>
-          <span data-part="sweep-corners" aria-hidden="true">{quad()}</span>
-          <span data-part="sweep-outline" aria-hidden="true">{quad()}<i></i><i></i></span>
+          <span data-part="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span data-part="sweep-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span data-part="sweep-outline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
           <span data-part="sweep-label">{content()}</span>
           <span data-part="sweep-content" aria-hidden="true">{content()}</span>
         </>

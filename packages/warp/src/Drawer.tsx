@@ -1,8 +1,8 @@
 import { dialog, uid } from '@weft/ui-core'
 import { derived, type State, untrack } from 'weft'
-import { Button } from './Button'
 import { use } from './use'
 import './styles'
+import '@weft/ui-core/styles/components/button.css' // the close button's markup
 import '@weft/ui-core/styles/components/sheet.css'
 import '@weft/ui-core/styles/components/dialog.css' // the backdrop and the parts a sheet shares with the dialog
 
@@ -28,7 +28,7 @@ export function Drawer({ open, title, description, footer, side = 'auto', childr
       <div data-part="header">
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>
         {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
-        <Button emphasis="ghost" tone="neutral" icon="x" label="Close" data-part="close" data-close="" />
+        <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></button>
       </div>
       <div data-part="body">{children}</div>
       {foot.value !== undefined && <div data-part="footer">{foot.value}</div>}

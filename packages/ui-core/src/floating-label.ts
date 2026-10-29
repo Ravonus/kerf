@@ -49,15 +49,12 @@ function delays(field: Element) {
   for (const c of label.querySelectorAll<HTMLElement>('[data-char]')) c.style.setProperty('--d', `${Math.max(0, ((label.offsetLeft + c.offsetLeft) / w) * dur).toFixed(0)}ms`)
 }
 
-let canvas: CanvasRenderingContext2D | null | undefined
+// a computed colour's alpha: browsers serialize it as rgba(r, g, b, a) for sRGB (transparent is rgba(0, 0, 0, 0)) and
+// as "… / a)" for every other space (color(), oklch(), color-mix() results); anything else is opaque. Rounded to 8
+// bits, as the canvas read it once was (so 0.99 still counts as see-through)
 function alpha(c: string) {
-  canvas ??= document.createElement('canvas').getContext?.('2d', { willReadFrequently: true }) ?? null
-  if (!canvas) return /^rgba?\(.*,\s*0\)$|transparent/.test(c) ? 0 : 1
-  canvas.clearRect(0, 0, 1, 1)
-  canvas.fillStyle = 'rgba(0,0,0,0)'
-  canvas.fillStyle = c
-  canvas.fillRect(0, 0, 1, 1)
-  return canvas.getImageData(0, 0, 1, 1).data[3] / 255
+  const m = /^rgba\(.*,\s*([\d.]+)\)$|\/\s*([\d.]+)(%?)\s*\)$/.exec(c)
+  return m ? Math.round((+(m[1] ?? m[2]) / (m[3] ? 100 : 1)) * 255) / 255 : 1
 }
 const docOffset = (el: HTMLElement) => {
   let x = 0, y = 0
