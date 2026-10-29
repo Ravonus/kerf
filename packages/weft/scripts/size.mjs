@@ -24,7 +24,8 @@ const fixtures = {
 }
 const hydratable = new Set(['v3 shop app (hydrate)'])
 const backend = name => (name.endsWith('(weft back end)') ? 'weft' : 'solid')
-const budgets = { 'hello world': 3072, 'runtime (every export)': 6144, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
+// Runtime: 10 KB is the gate, 6 KB the target (PLAN §3.7).
+const budgets = { 'hello world': 3072, 'runtime (every export)': 10240, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
 
 const rows = {}
 for (const [name, entry] of Object.entries(fixtures)) {

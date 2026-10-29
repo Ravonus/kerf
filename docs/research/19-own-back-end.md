@@ -156,7 +156,7 @@ the table is a compile error with a W-code. It doesn't silently fall back.
   | counter | 1.93 KB | 2.05 KB |
   | benchmark app | 3.22 KB | 3.37 KB |
 
-  "Runtime (every export)" is 5.73 KB against its 6 KB budget while both helper sets ship. Step 5 removes the
+  "Runtime (every export)" is 5.73 KB against its 6 KB target (the gate is 10 KB) while both helper sets ship. Step 5 removes the
   Solid-shaped set.
 
 ### 5.3 Step 3, done (2026-10-29)
@@ -212,7 +212,7 @@ post-pass, which marks the matching `<option selected>`.
 | benchmark app, weft's back end | 3.80 KB |
 
 weft's back-end bundles gained about 0.4 KB: `child`'s claim path ships in client-only builds too. It could be
-split out to tree-shake. "Runtime (every export)" is 5.90 KB against 6 KB while both helper sets ship; step 5
+split out to tree-shake. "Runtime (every export)" is 5.90 KB against the 6 KB target (10 KB gate) while both helper sets ship; step 5
 removes Solid's.
 
 **Not yet:**

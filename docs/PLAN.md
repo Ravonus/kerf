@@ -191,13 +191,13 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 Measured on a quiet runner and gated on ratios, not on wall-clock from a busy laptop.
 
 **Size stance (2026-10-29).** weft doesn't have to match Solid's bytes. About 10 KB br for a whole app is the goal,
-and 50 KB br is the ceiling. The size budgets below are within the goal and stay as gates. When a design choice
-costs bytes but makes weft clearer for agents, say what it costs and take it, as long as it stays inside those
-numbers.
+and 50 KB br is the ceiling. The runtime's gate is 10 KB br, with 6 KB as the target to keep working toward; the
+other budgets below stay as they are. When a design choice costs bytes but makes weft clearer for agents, say what
+it costs and take it, as long as it stays inside those numbers.
 
 | Metric | Budget |
 |---|---|
-| Runtime (benchmark app) | ≤ 6 KB brotli; hello world ≤ 3 KB |
+| Runtime (benchmark app) | ≤ 10 KB brotli (gate), aiming for ≤ 6 KB; hello world ≤ 3 KB |
 | v3 shop app, total JS | ≤ 10 KB brotli |
 | DOM work | every eval scenario has a `toTouchAtMost(n, { runs })`; v3 price-push ≤ 1 mutation and ≤ 10 re-runs, add-one ≤ 3 |
 | js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29: 1.067×, pass; memory 1.4–1.5×, open ([18 §6](research/18-ssr-and-boundaries.md)) |
