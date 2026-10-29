@@ -6,7 +6,7 @@
 // A scope is a named setup function over ordinary boxes. It runs once per app instance, lazily, on first access.
 // Functions it returns are actions: each call is one transaction (one undo step), and nested calls join the outer.
 
-import { Box, DEV, Memo, collect, context, createRoot, untrack, type Derived, type State } from './index'
+import { Box, DEV, Memo, collect, context, createRoot, named as graph, untrack, type Derived, type State } from './index'
 
 // ---- diagnostics ------------------------------------------------------------------------------------------------
 
@@ -183,6 +183,14 @@ export class Instance {
       }
       if (name && name in seed) box.v = seed[name] // before setup returns: nothing has read it yet
       box.h = onWrite
+    }
+    if (DEV) {
+      // The dev graph (weft/devtools): the scope's boxes and returned derived values, until the app ends.
+      const nodes: (Box<any> | Memo<any>['node'])[] = [...boxes]
+      for (const [key, v] of Object.entries(this.api)) if (v instanceof Memo) { v.node.n = `${def.name}.${key}`; nodes.push(v.node) }
+      for (const n of nodes) graph.add(n)
+      const dispose = this.dispose
+      this.dispose = () => { for (const n of nodes) graph.delete(n); dispose() }
     }
   }
 

@@ -1,0 +1,13 @@
+{
+  "app": "watchlist",
+  "intro": "a stock watchlist app",
+  "tickets": [
+    "1-live-quotes",
+    "2-search",
+    "3-favorites",
+    "4-details",
+    "5-bursts-and-sort",
+    "6-sector-tabs"
+  ],
+  "summary": "A multi-file watchlist app (200 rows) extended by six sequential tickets in one agent session. Hidden tests are cumulative and assert work budgets (effective DOM mutations, calls to the instrumented formatters) next to output. Tickets 5-6 were added after the pilot (every React/Solid session passed 1-4)."
+}

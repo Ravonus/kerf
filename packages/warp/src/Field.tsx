@@ -40,7 +40,7 @@ type Control = (p: { id: string; describedby?: string; readonly invalid: boolean
  */
 export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any> }) {
   const id = untrack(() => given) ?? uid('field')
-  const glyph = untrack(() => icon)
+  const glyph = derived(() => icon)
   const message = untrack(() => hint !== undefined || error !== undefined || counter !== undefined)
   const msg = message ? `${id}-msg` : undefined
   // keyed by position: a label repeats letters
@@ -61,9 +61,9 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       data-readonly={rest.readonly ? '' : undefined}
       {...attrs}
     >
-      <div data-part="control" data-icon={glyph} data-sweep="" data-phase="idle" data-filled={filled ?? rest.value ? '' : undefined}>
+      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? rest.value ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
-        {glyph && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph} /></span><span data-part="sweep"><Icon name={glyph} /></span></span>}
+        {glyph.value && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph.value} /></span><span data-part="sweep"><Icon name={glyph.value} /></span></span>}
         <label data-part="label" for={id}>
           <span data-part="label-text">{label}</span>
           <span data-part="label-chars" aria-hidden="true">{chars.value.map(x => <span key={x.at} data-char data-c={x.c}></span>)}</span>

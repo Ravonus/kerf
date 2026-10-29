@@ -206,3 +206,59 @@ impl Fnv {
         }
     }
 }
+
+/// Dev names for the reactive graph (`weft browser snapshot`, the dev overlay; research 22). Body-level
+/// `const x = state(…)`, `derived(…)` and `state.linked(…)` in a component become `_$name(…, "Card.x")`; top-level ones
+/// in any module `_$name(…, "<file stem>.x")`. Returns the import to append, if anything was named.
+pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str) -> Option<String> {
+    let ast = AstBuilder::new(allocator);
+    let stem = std::path::Path::new(file).file_stem().and_then(|s| s.to_str()).unwrap_or("module").to_string();
+    let mut any = false;
+    for stmt in program.body.iter_mut() {
+        if let Statement::VariableDeclaration(v) = &mut *stmt {
+            any |= name_decls(&ast, allocator, v, &stem);
+        } else if let Statement::ExportDeclaration(e) = &mut *stmt
+            && let Declaration::VariableDeclaration(v) = &mut e.declaration
+        {
+            any |= name_decls(&ast, allocator, v, &stem);
+        }
+        for (comp, body) in components(stmt) {
+            let Some(body) = body else { continue };
+            for s in body.statements.iter_mut() {
+                if let Statement::VariableDeclaration(v) = s {
+                    any |= name_decls(&ast, allocator, v, &comp);
+                }
+            }
+        }
+    }
+    any.then(|| "\nimport { name as _$name } from \"weft\";\n".to_string())
+}
+
+fn name_decls<'a>(ast: &AstBuilder<'a>, allocator: &'a Allocator, v: &mut VariableDeclaration<'a>, owner: &str) -> bool {
+    let mut any = false;
+    for d in v.declarations.iter_mut() {
+        let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
+        let Some(init) = &mut d.init else { continue };
+        if !reactive_init(init) {
+            continue;
+        }
+        let label = format!("{owner}.{}", id.name);
+        let inner = init.take_in(ast);
+        let str = Expression::new_string_literal(SPAN, allocator.alloc_str(&label), None, ast);
+        let args = ArenaVec::from_iter_in([inner, str].into_iter().map(Argument::from), ast);
+        *init = Expression::new_call_expression(SPAN, Expression::new_identifier(SPAN, "_$name", ast), None, args, false, ast);
+        any = true;
+    }
+    any
+}
+
+/// `state(…)`, `derived(…)`, `state.linked(…)`, or one already wrapped by `_$keep` (HMR).
+fn reactive_init(e: &Expression) -> bool {
+    let Expression::CallExpression(call) = e else { return false };
+    match &call.callee {
+        Expression::Identifier(c) if c.name == "state" || c.name == "derived" => true,
+        Expression::Identifier(c) if c.name == "_$keep" => true,
+        Expression::StaticMemberExpression(m) => matches!(&m.object, Expression::Identifier(o) if o.name == "state") && m.property.name == "linked",
+        _ => false,
+    }
+}

@@ -31,9 +31,9 @@ const timerCalls = new Set(['setTimeout', 'setInterval', 'requestAnimationFrame'
 const exts = ['', '.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs', '/index.ts', '/index.tsx', '/index.js']
 
 const kindOf = file => (/\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.jsx$/.test(file) ? ts.ScriptKind.JSX : /\.[mc]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS)
-const parse = (text, file) => ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kindOf(file))
+export const parse = (text, file) => ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kindOf(file))
 const isFn = n => n && (ts.isArrowFunction(n) || ts.isFunctionExpression(n) || ts.isFunctionDeclaration(n))
-const norm = n => n.getText().replace(/\s+/g, ' ').replace(/;$/, '')
+export const norm = n => n.getText().replace(/\s+/g, ' ').replace(/;$/, '')
 const unwrap = n => {
   while (n && (ts.isParenthesizedExpression(n) || ts.isAsExpression(n) || ts.isNonNullExpression(n) || ts.isAwaitExpression(n))) n = n.expression
   return n
@@ -83,7 +83,7 @@ function isLiteral(n) {
 const hasCall = n => contains(n, x => ts.isCallExpression(x) || ts.isNewExpression(x) || ts.isAwaitExpression(x) || ts.isTaggedTemplateExpression(x))
 
 /** `expect(x)`, `expect.soft(x)`, `t.expect(x)`: the call that takes the subject. */
-function isSubject(call) {
+export function isSubject(call) {
   const c = call.expression
   if (ts.isIdentifier(c)) return c.text === 'expect'
   if (!ts.isPropertyAccessExpression(c)) return false
@@ -92,7 +92,7 @@ function isSubject(call) {
 }
 
 /** For a subject call, the matcher it ends in: `expect(x).not.toBe(1)` → { name: 'toBe', call, not: true }. */
-function matcherOf(subject) {
+export function matcherOf(subject) {
   let cur = subject
   let not = false
   const mods = []
@@ -109,7 +109,7 @@ function matcherOf(subject) {
 }
 
 /** Test and suite calls, with their modifiers: `test.only.each(table)('x', fn)`. */
-function testCall(call) {
+export function testCall(call) {
   // The outer call of a curried form (`test.each(t)(…)`) is the test; skip the inner one.
   if (call.parent && ts.isCallExpression(call.parent) && call.parent.expression === call) return null
   const mods = []
@@ -161,7 +161,7 @@ function asserts(node, asserting) {
   })
 }
 
-function resolveImport(fromAbs, spec) {
+export function resolveImport(fromAbs, spec) {
   if (!spec.startsWith('.')) return null
   for (const e of exts) {
     const p = join(dirname(fromAbs), spec + e)
@@ -173,7 +173,7 @@ function resolveImport(fromAbs, spec) {
 const moduleKey = abs => abs.replace(/(\/index)?\.[cm]?[jt]sx?$/, '')
 
 /** Comment directives: `// weft-allow T004, T005: reason`. */
-function allowances(text, sf) {
+export function allowances(text, sf) {
   const firstCode = sf.statements[0]?.getStart(sf) ?? text.length
   const file = new Set()
   const lines = new Map()

@@ -5,7 +5,7 @@
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
 // come from `weft check`'s test pass (tests.mjs); their examples are test files, checked the same way.
 
-/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'reserved', example?: string, proposed?: boolean }} Entry */
+/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'reserved', example?: string, proposed?: boolean }} Entry */
 
 /** @type {Entry[]} */
 export const catalog = [
@@ -63,6 +63,18 @@ export const catalog = [
   {
     code: 'W015', severity: 'error', by: 'compiler', catches: 'A box rendered without `.value` in JSX (a child, or a native attribute)', fix: 'Add `.value`',
     example: "import { state } from 'weft'\nexport function A() { const n = state(0); return <p>{n}</p> }",
+  },
+  {
+    code: 'W017', severity: 'warning', by: 'compiler',
+    catches: 'One entry of a whole object read per row: `cart[p.id]` / `cart.value[p.id]` in a keyed-list row (or passed to its child as a prop), or `box.value[prop]` in a component\'s JSX or `derived` (a row component). Every change re-runs every row',
+    fix: 'Read the entry from the box: `cart.get(p.id)`; for a prop, pass the box (`cart={cart}`, `State<Cart>`) and read `.get(id)` in the child',
+    example: "export function A({ xs, cart }: any) { return <ul>{xs.map((x: any) => <li key={x.id}>{cart[x.id]}</li>)}</ul> }",
+  },
+  {
+    code: 'W018', severity: 'warning', by: 'compiler',
+    catches: '`const x = untrack(() => …reactive…)` in a component body that only the JSX reads: it renders the setup-time value and never updates',
+    fix: '`derived(() => …)` and render `x.value`; keep `untrack` only for a value that must stay fixed',
+    example: "import { untrack, type State } from 'weft'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
   },
   {
     code: 'W020', severity: 'error', by: 'compiler', catches: 'React-isms (W020–W029): `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, custom `useX()` hooks, dependency arrays',
@@ -146,8 +158,21 @@ export const catalog = [
     example: "test.only('focused', () => { expect(Math.max(1, 2)).toBe(2) })",
   },
   {
+    code: 'T010', severity: 'error', by: 'gate', catches: 'A new or changed test passes on the code before the change (fail-before), so it does not test the change',
+    fix: 'Assert what the change makes different; a test for existing behavior goes in its own change with no source edits',
+  },
+  {
+    code: 'T011', severity: 'error', by: 'gate', catches: 'A new test kills none of the mutants of the changed lines: it would still pass if that code were wrong (a warning when the mutants were sampled)',
+    fix: "Assert what the changed code computes; the gate's surviving mutants say what to check",
+  },
+  {
     code: 'T012', severity: 'error', by: 'test', catches: 'A test ends with weft/browser listeners, intervals or subscribed values still open (checked by weft/test after each test)',
     fix: 'Unmount what the test created (dispose any `createRoot`), or fix the leak',
+  },
+
+  {
+    code: 'T020', severity: 'error', by: 'gate', catches: 'An existing test deleted, skipped, marked `.fails`, or with an assertion removed or loosened (`toBe(3)` → `toBeTruthy()`)',
+    fix: 'Restore it, or keep the change with `// weft-allow T020: <reason>` on that test',
   },
 
   { code: 'P001', severity: 'warning', by: 'reserved', catches: 'Stray top-level script file outside a declared task', fix: 'Declare it in `tasks`, or delete it' },

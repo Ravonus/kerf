@@ -1,5 +1,5 @@
 import { installSweep } from '@weft/ui-core'
-import { onMount, untrack } from 'weft'
+import { derived, onMount, untrack } from 'weft'
 import { Icon, type IconName } from './Icon'
 import './styles'
 import '@weft/ui-core/styles/components/button.css'
@@ -34,8 +34,8 @@ const quad = () => <><i></i><i></i><i></i><i></i></>
  */
 export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, children, ...rest }: ButtonProps) {
   const kind = untrack(() => emphasis)
-  const canLoad = untrack(() => loading !== undefined)
-  const glyph = untrack(() => icon)
+  const canLoad = derived(() => loading !== undefined)
+  const glyph = derived(() => icon)
   if (swept(kind)) onMount(() => installSweep())
   // a loading or aria-disabled button swallows presses (components.html guard())
   const press = (e: MouseEvent) => {
@@ -43,7 +43,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
     if (el.hasAttribute('data-loading') || el.getAttribute('aria-disabled') === 'true') return e.preventDefault()
     onClick?.(e)
   }
-  const content = () => <>{glyph && <Icon name={glyph} />}{children}</>
+  const content = () => <>{glyph.value && <Icon name={glyph.value} />}{children}</>
   return (
     <button
       type={type}
@@ -53,7 +53,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       data-size={size === 'md' ? undefined : size}
       data-fill={kind === 'frame' && fill ? '' : undefined}
       data-full={full ? '' : undefined}
-      data-icon-only={glyph && !children ? '' : undefined}
+      data-icon-only={glyph.value && !children ? '' : undefined}
       aria-label={label}
       data-sweep={swept(kind) ? '' : undefined}
       data-phase={swept(kind) ? 'idle' : undefined}
@@ -72,7 +72,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
           <span data-part="sweep-label">{content()}</span>
           <span data-part="sweep-content" aria-hidden="true">{content()}</span>
         </>
-      ) : canLoad ? (
+      ) : canLoad.value ? (
         <span data-part="label">{content()}</span>
       ) : (
         content()

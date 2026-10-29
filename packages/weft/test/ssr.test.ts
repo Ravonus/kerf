@@ -4,7 +4,7 @@
 // weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { renderToString } from 'weft/ssr'
+import { attr, renderToString } from 'weft/ssr'
 import { hydrate } from 'weft/dom'
 import { flush } from 'weft/test'
 import { hydration } from '../src/hydrate'
@@ -52,6 +52,10 @@ afterEach(() => { document.body.innerHTML = '' })
 
 /** The DOM's own serialization of `html` (jsdom quotes every attribute value). */
 const parsed = (html: string) => Object.assign(document.createElement('div'), { innerHTML: html }).innerHTML
+
+test('server attributes: ARIA booleans are the words true/false, other booleans add or drop the attribute', () => {
+  expect([attr('aria-pressed', false), attr('aria-expanded', true), attr('disabled', false), attr('hidden', true)]).toEqual([' aria-pressed="false"', ' aria-expanded="true"', '', ' hidden'])
+})
 
 test('loaded shop: zero mismatches, every server node kept, no DOM writes', () => {
   const r = roundTrip(() => ServerShop(data()), () => ClientShop(data()))

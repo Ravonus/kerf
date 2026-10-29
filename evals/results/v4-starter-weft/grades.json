@@ -1,0 +1,303 @@
+{
+  "weft/t6": {
+    "byFile": {
+      "baseline": {
+        "passed": 4,
+        "total": 4
+      },
+      "t1": {
+        "passed": 0,
+        "total": 6
+      },
+      "t2": {
+        "passed": 0,
+        "total": 8
+      },
+      "t3": {
+        "passed": 0,
+        "total": 8
+      },
+      "t4": {
+        "passed": 0,
+        "total": 8
+      },
+      "t5": {
+        "passed": 0,
+        "total": 6
+      },
+      "t6": {
+        "passed": 0,
+        "total": 7
+      }
+    },
+    "budget": {
+      "passed": 0,
+      "total": 7
+    },
+    "failures": [
+      {
+        "file": "t1.test.tsx",
+        "name": "a quote updates the row price and change",
+        "ok": false,
+        "message": "AssertionError: expected '$132.34' to be '$99.50' // Object.is equality"
+      },
+      {
+        "file": "t1.test.tsx",
+        "name": "the sparkline starts at the loaded price, appends every quote and keeps the last 20",
+        "ok": false,
+        "message": "AssertionError: expected undefined to be 'M0.0,16.0' // Object.is equality"
+      },
+      {
+        "file": "t1.test.tsx",
+        "name": "the portfolio value follows quotes for held stocks",
+        "ok": false,
+        "message": "AssertionError: expected 'Portfolio: $2005.65' to be 'Portfolio: $1047.50' // Object.is equality"
+      },
+      {
+        "file": "t1.test.tsx",
+        "name": "one subscription for the app, closed on unmount",
+        "ok": false,
+        "message": "AssertionError: expected +0 to be 1 // Object.is equality"
+      },
+      {
+        "file": "t1.test.tsx",
+        "name": "every shown price, change and sparkline comes from the formatters",
+        "ok": false,
+        "message": "AssertionError: expected 401 to be greater than or equal to 600"
+      },
+      {
+        "file": "t1.test.tsx",
+        "name": "budget: a quote in a 200-row list formats only that row and the portfolio",
+        "ok": false,
+        "message": "AssertionError: expected '$180.88' to be '$12.00' // Object.is equality"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "typing searches and shows only the results",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "only the latest query is ever shown, whatever order responses arrive in",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "a superseded request is aborted",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "Searching… shows while the latest request is pending",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "a failed search shows an alert and keeps the previous results",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "clearing the search shows every stock with no request, and late responses are ignored",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "quotes keep updating the rows that are shown",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t2.test.tsx",
+        "name": "budget: a result that only removes rows does not format the rows that stay",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "stars show the loaded favorites",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Favorite ACM0\""
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "clicking changes the star at once and saves it",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Favorite BOL0\""
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "a failed save puts the star back and says so",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Favorite ACM0\""
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "a failure puts back only its own star, not ones still saving",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Favorite BOL0\""
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "a failure after another click on the same star keeps the newer click",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Favorite EMB0\""
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "Favorites only shows favorites and combines with the search",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Favorites only"
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "the search text and Favorites only survive a reload, and the search runs again",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Search"
+      },
+      {
+        "file": "t3.test.tsx",
+        "name": "budget: toggling one star formats at most its row and touches only its DOM",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Favorite BOL10\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "the panel shows the heading, the live price and the loaded description",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details CED0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "the panel price stays live",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details CED0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "a failed load shows an alert, and Retry loads again",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details FLU0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "a late description for a stock that is no longer open is never shown",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details BOL0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "focus moves to Notes when the panel opens, and Escape closes it and returns focus",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details EMB0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "notes are saved per stock and shown when that stock opens",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details ACM0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "Undo undoes saves one at a time, across stocks",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details ACM0\""
+      },
+      {
+        "file": "t4.test.tsx",
+        "name": "budget: typing in Notes formats no row, and a quote for the open stock stays small",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Details ACM6\""
+      },
+      {
+        "file": "t5.test.tsx",
+        "name": "a burst updates every quoted row, the sparklines and the portfolio",
+        "ok": false,
+        "message": "AssertionError: expected '$132.34' to be '$12.00' // Object.is equality"
+      },
+      {
+        "file": "t5.test.tsx",
+        "name": "budget: a burst formats each changed row once and the portfolio at most once",
+        "ok": false,
+        "message": "AssertionError: expected '$396.79' to be '$59.00' // Object.is equality"
+      },
+      {
+        "file": "t5.test.tsx",
+        "name": "Sort by Change orders by biggest gain, ties in list order",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Sort"
+      },
+      {
+        "file": "t5.test.tsx",
+        "name": "with Change selected, the order follows quotes",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Sort"
+      },
+      {
+        "file": "t5.test.tsx",
+        "name": "Sort combines with search and Favorites only, and survives a reload",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Sort"
+      },
+      {
+        "file": "t5.test.tsx",
+        "name": "budget: changing the sort only moves rows",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find a label with the text of: Sort"
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "tabs show their sector, All by default",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"All\""
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "each tab keeps its own search, Favorites only and Sort",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"tech\""
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "a tab's search keeps going in the background and shows when you come back",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"finance\""
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "only a newer query in the same tab aborts, and failures stay with their tab",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"tech\""
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "favorites are shared by every tab",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"energy\""
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "the tab and every tab’s settings survive a reload; a restored search runs when its tab is first shown",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"tech\""
+      },
+      {
+        "file": "t6.test.tsx",
+        "name": "budget: switching to a tab whose rows were on screen does not format them",
+        "ok": false,
+        "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"tech\""
+      }
+    ],
+    "visible": {
+      "files": 1,
+      "tests": 2,
+      "passed": 2
+    }
+  }
+}

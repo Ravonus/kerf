@@ -1,7 +1,7 @@
 // weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { state } from 'weft'
+import { createRoot, onMount, state } from 'weft'
 import { flush, render, touches } from 'weft/test'
 
 function Counter({ step = 1 }: { step?: number }) {
@@ -101,4 +101,44 @@ test('children with a live part: one text write when the part changes (the list 
   const { container } = render(() => <Label>Cart ({n.value})</Label>)
   await expect(async () => { n.value++; await flush() }).toTouchAtMost(1)
   expect(container.textContent).toBe('Cart (1)')
+})
+
+test('ARIA booleans are written as true/false; other booleans add or remove the attribute', async () => {
+  const on = state(false)
+  render(() => <button aria-pressed={on.value} aria-expanded={false} disabled={on.value}>x</button>)
+  const button = screen.getByRole('button')
+  expect([button.getAttribute('aria-pressed'), button.getAttribute('aria-expanded'), button.hasAttribute('disabled')]).toEqual(['false', 'false', false])
+  on.value = true
+  await flush()
+  expect([button.getAttribute('aria-pressed'), button.hasAttribute('disabled')]).toEqual(['true', true])
+})
+
+test('onMount runs once the nodes are placed: refs assigned, the element in the document', async () => {
+  const seen: string[] = []
+  function Field({ name }: { name: string }) {
+    let input!: HTMLInputElement
+    onMount(() => {
+      seen.push(`${name}:${input?.isConnected}`)
+      input.focus()
+    })
+    return <input aria-label={name} ref={input} />
+  }
+  const open = state(false)
+  render(() => <div><Field name="first" />{open.value && <Field name="later" />}</div>)
+  expect(seen).toEqual(['first:true'])
+  expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'first' }))
+  open.value = true
+  await flush()
+  expect(seen).toEqual(['first:true', 'later:true'])
+  expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'later' }))
+})
+
+test('onMount is skipped when its owner is disposed before it mounts', async () => {
+  const seen: string[] = []
+  createRoot(dispose => {
+    onMount(() => seen.push('mounted'))
+    dispose()
+  })
+  await flush()
+  expect(seen).toEqual([])
 })

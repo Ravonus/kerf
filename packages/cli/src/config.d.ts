@@ -59,7 +59,7 @@ export interface WeftConfig {
   tasks?: Record<string, TaskDef>
   environments?: Record<string, { url?: string; [key: string]: unknown }>
   /** `include`: test files for the T-codes (default `**/*.{test,spec}.*`). */
-  test?: { include?: readonly string[]; lanes?: readonly ('fast' | 'browser' | 'e2e')[]; gate?: { mutationBudgetSec?: number } }
+  test?: { include?: readonly string[]; lanes?: readonly ('fast' | 'browser' | 'e2e')[]; gate?: { mutationBudgetSec?: number; maxMutants?: number } }
   /** Files `weft check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .weft and `scope.forbid`. */
   check?: { include?: readonly string[]; exclude?: readonly string[] }
   plugins?: readonly PluginEntry[]

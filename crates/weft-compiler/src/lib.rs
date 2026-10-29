@@ -12,6 +12,7 @@ mod emit;
 mod hmr;
 pub mod project;
 mod srcmap;
+pub mod style;
 mod transform;
 
 #[cfg(feature = "node")]
@@ -44,6 +45,11 @@ pub struct Options {
     pub explain: bool,
     /// Dev DOM output only, not hydratable: register components for hot updates and keep their state (weft/hmr).
     pub hmr: bool,
+    /// Style groups defined in other modules, keyed `"<absolute path without extension>#<export>"` (style.rs).
+    pub groups: std::collections::HashMap<String, style::Imported>,
+    /// Group parts carry `data-g` as well as `data-part` (warp's `data-scope` + `data-part` shape). Off: parts carry
+    /// only `data-part`, and the group's `@scope` tells them apart.
+    pub tagged_parts: bool,
 }
 
 impl Default for Options {
@@ -58,6 +64,8 @@ impl Default for Options {
             hydratable: false,
             explain: false,
             hmr: false,
+            groups: Default::default(),
+            tagged_parts: false,
         }
     }
 }
@@ -97,8 +105,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     // weft/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
     let ssr = if options.generate == "ssr" || options.hydratable { Some(true) } else if options.check_only { None } else { Some(false) };
     diagnostics.extend(browser::check(&program, &scoping, source, ssr));
+    // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
+    let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, &options.filename, &options.groups, options.tagged_parts, &mut diagnostics);
     diagnostics.sort_by_key(|d| d.start);
-    let facts = plan.facts.clone();
+    let mut facts = plan.facts.clone();
+    facts.groups = groups;
+    facts.group_uses = group_uses;
     if options.check_only {
         return Output { code: None, map: None, diagnostics, facts, explain: None };
     }
@@ -109,6 +121,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let footer = (options.hmr && options.dev && !ssr && !options.hydratable)
         .then(|| hmr::apply(&allocator, &mut program, source, &options.filename))
         .flatten();
+    // Dev DOM output names its boxes and derived values for the graph (`weft browser`, the overlay).
+    let names = (options.dev && !ssr).then(|| hmr::names(&allocator, &mut program, &options.filename)).flatten();
+    let footer = match (footer, names) {
+        (Some(a), Some(b)) => Some(a + &b),
+        (a, b) => a.or(b),
+    };
     // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
     // goes through the emitter to the authored file. Each JSX node's authored line goes along by order
     // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.

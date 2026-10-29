@@ -35,7 +35,7 @@ describe('weft mcp (stdio)', () => {
     c.notify('notifications/initialized')
 
     const list = await c.request('tools/list')
-    expect(list.result.tools.map(t => t.name)).toEqual(['docs', 'check', 'tasks'])
+    expect(list.result.tools.map(t => t.name)).toEqual(['docs', 'check', 'tasks', 'test_gate', 'browser_tabs', 'browser_launch', 'browser_open', 'browser_snapshot', 'browser_act', 'browser_assert', 'browser_state', 'browser_time', 'browser_net', 'browser_record', 'browser_logs', 'browser_screenshot'])
     for (const t of list.result.tools) expect(t.inputSchema.type).toBe('object')
 
     const rules = await c.request('tools/call', { name: 'docs', arguments: { topic: 'rules' } })

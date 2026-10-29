@@ -144,6 +144,153 @@ fn w016_not_for_live_calls_constructors_or_native_attributes() {
     assert!(d.is_empty(), "{d:?}");
 }
 
+// ---- W017: a row reads one entry of a whole object (v3 eval: add-one re-ran 150 rows) --------------------------
+
+#[test]
+fn w017_prop_indexed_by_the_row_item() {
+    let (_, d) = run("export function L({ products, cart }) { return <ul>{products.map(p => <Row key={p.id} n={cart[p.id] ?? 0} />)}</ul> }");
+    assert_eq!(codes(&d), ["W017"]);
+    assert_eq!(d[0].severity, Severity::Warning);
+    assert!(d[0].message.contains("`cart[p.id]` reads one entry of the whole `cart` in every row"), "{}", d[0].message);
+    assert!(d[0].help.contains("`cart={cart}`") && d[0].help.contains("`cart.get(p.id)`"), "{}", d[0].help);
+    assert!(d[0].fix.is_none(), "the parent has to pass the box");
+}
+
+#[test]
+fn w017_box_value_indexed_by_the_row_item_autofixes_to_get() {
+    let src = "import { state } from 'weft'
+export function L({ products }) {
+  const cart = state({})
+  return <ul>{products.map(p => <li key={p.id}>{cart.value[p.id]} / {cart.value[p.id] * p.price}</li>)}</ul>
+}";
+    let (_, d) = run(src);
+    assert_eq!(codes(&d), ["W017"], "one per object and list: {d:?}");
+    let fix = d[0].fix.as_ref().unwrap();
+    assert!(fix.safe);
+    let fixed = apply_fix(src, &d[0]);
+    assert!(fixed.contains("{cart.get(p.id)} / {cart.get(p.id) * p.price}"), "{fixed}");
+    assert!(run(&fixed).1.is_empty());
+}
+
+#[test]
+fn w017_not_for_handlers_constant_keys_or_setup() {
+    let (_, d) = run(
+        "export function L({ products, cart, labels, onAdd }) {
+           return <ul>{products.map(p => <li key={p.id} title={labels['x']} onClick={() => onAdd(cart[p.id])}>{p.name}</li>)}</ul>
+         }",
+    );
+    assert!(d.is_empty(), "{d:?}");
+}
+
+#[test]
+fn w017_row_component_reads_an_entry_of_a_box_prop() {
+    // v4 eval: a row read `live.value[stock.id]`, so every quote re-ran all 200 rows' formatters.
+    let src = "import { derived, type State } from 'weft'
+export function Row({ stock, live }: { stock: { id: string }; live: State<Record<string, { price: number }>> }) {
+  const quote = derived(() => live.value[stock.id])
+  return <li title={String(live.value[stock.id].price)}>{live.value[stock.id].price} {quote.value.price}</li>
+}";
+    let (_, d) = run(src);
+    assert_eq!(codes(&d), ["W017"], "one per box and component: {d:?}");
+    assert!(d[0].message.contains("`live.value[stock.id]` reads one entry of the whole `live.value`"), "{}", d[0].message);
+    assert!(d[0].message.contains("every `Row`"), "{}", d[0].message);
+    assert!(d[0].help.contains("`live.get(stock.id)`") && d[0].help.contains("`State<…>`"), "{}", d[0].help);
+    let fix = d[0].fix.as_ref().unwrap();
+    assert!(!fix.safe, "a prop is only probably a box");
+    let fixed = apply_fix(src, &d[0]);
+    assert!(fixed.contains("derived(() => live.get(stock.id))") && fixed.contains("{live.get(stock.id).price}"), "{fixed}");
+    assert!(run(&fixed).1.is_empty());
+}
+
+#[test]
+fn w017_local_box_indexed_by_a_prop_autofixes_safely() {
+    let src = "import { state } from 'weft'
+export function Badge({ id }: { id: string }) {
+  const counts = state<Record<string, number>>({})
+  return <b>{counts.value[id] ?? 0}</b>
+}";
+    let (_, d) = run(src);
+    assert_eq!(codes(&d), ["W017"]);
+    assert!(d[0].fix.as_ref().unwrap().safe);
+    assert!(apply_fix(src, &d[0]).contains("{counts.get(id) ?? 0}"));
+}
+
+#[test]
+fn w017_row_passes_an_entry_of_a_box_prop_to_a_child() {
+    // v4 eval: `<StockRow live={live.value[s.id]} />`, the React/Solid shape, re-ran every row on every quote.
+    let src = "import type { State } from 'weft'
+export function List({ stocks, live }: { stocks: { id: string }[]; live: State<Record<string, number>> }) {
+  return <ul>{stocks.map(s => <StockRow key={s.id} stock={s} live={live.value[s.id]} />)}</ul>
+}";
+    let (_, d) = run(src);
+    assert_eq!(codes(&d), ["W017"]);
+    assert!(d[0].message.contains("`live.value[s.id]` reads one entry of the whole `live.value` in every row"), "{}", d[0].message);
+    assert!(d[0].help.contains("`live={live.get(s.id)}`") && d[0].help.contains("in `<StockRow>`"), "{}", d[0].help);
+    assert!(!d[0].fix.as_ref().unwrap().safe);
+    let fixed = apply_fix(src, &d[0]);
+    assert!(fixed.contains("live={live.get(s.id)}"), "{fixed}");
+    assert!(run(&fixed).1.is_empty());
+    // A plain prop passed down names the child too.
+    let (_, d) = run("export function L({ xs, cart }) { return <ul>{xs.map(x => <Row key={x.id} n={cart[x.id]} />)}</ul> }");
+    assert_eq!(codes(&d), ["W017"]);
+    assert!(d[0].help.contains("`cart={cart}`") && d[0].help.contains("in `<Row>`"), "{}", d[0].help);
+}
+
+#[test]
+fn w017_not_for_box_keys_callbacks_handlers_setup_or_constant_keys() {
+    // The v4 reference App: whole-record reads that run once per component, not once per row.
+    let (_, d) = run(
+        "import { derived, state, untrack, type State } from 'weft'
+export function App({ stock, live, onPick }: { stock: { id: string }; live: State<Record<string, number>>; onPick: (n: number) => void }) {
+  const tab = state('a')
+  const views = state<Record<string, string>>({})
+  const favorites = state<Record<string, boolean>>({})
+  const view = derived(() => views.value[tab.value])
+  const shown = derived(() => [stock].filter(s => favorites.value[s.id]).map(s => live.value[s.id]))
+  const first = untrack(() => live.value[stock.id])
+  const toggle = () => { favorites.value = { ...favorites.value, [stock.id]: !favorites.value[stock.id] } }
+  return <p title={live.value['x'] + ''} onClick={() => onPick(live.value[stock.id] + first)}>{view.value}{shown.value.length}<button onClick={toggle} /></p>
+}",
+    );
+    assert!(d.is_empty(), "{d:?}");
+}
+
+// ---- W018: an untracked snapshot only the JSX reads -------------------------------------------------------
+
+#[test]
+fn w018_untracked_snapshot_rendered_in_jsx() {
+    // v4 eval: the W001 fix text offers `untrack()`; a row that took it rendered prices that never moved.
+    let src = "import { untrack, type State } from 'weft'
+export function Row({ stock, live }: { stock: { id: string }; live: State<Record<string, { price: number }>> }) {
+  const quote = untrack(() => live.get(stock.id))
+  return <li data-price={quote.price}>{quote.price}</li>
+}";
+    let (_, d) = run(src);
+    assert_eq!(codes(&d), ["W018"]);
+    assert_eq!(d[0].severity, Severity::Warning);
+    assert!(d[0].message.contains("`quote` is an untracked snapshot"), "{}", d[0].message);
+    assert!(d[0].help.contains("`derived(() => …)`") && d[0].help.contains("`quote.value`"), "{}", d[0].help);
+    let fix = d[0].fix.as_ref().unwrap();
+    assert!(!fix.safe);
+    let fixed = apply_fix(src, &d[0]);
+    assert!(fixed.contains("const quote = derived(() => live.get(stock.id))") && fixed.contains("{quote.value.price}"), "{fixed}");
+    assert!(run(&fixed.replace("import { untrack,", "import { derived,")).1.is_empty());
+}
+
+#[test]
+fn w018_not_for_snapshots_read_elsewhere_or_of_constants() {
+    let (_, d) = run(
+        "import { state, untrack } from 'weft'
+export function Form({ initial }: { initial: string }) {
+  const text = state('')
+  const start = untrack(() => initial)
+  const fixed = untrack(() => 42)
+  return <p onClick={() => (text.value = start)}>{start} {fixed}</p>
+}",
+    );
+    assert!(d.is_empty(), "{d:?}");
+}
+
 // ---- W001 / W005 ---------------------------------------------------------------------------------------------
 
 #[test]
@@ -469,6 +616,13 @@ fn explain_maps_each_jsx_node_to_its_authored_line() {
     let ul = explain.iter().find(|x| x.line == 3).expect("an entry on line 3");
     assert_eq!((ul.column, ul.node.as_str()), (5, "<ul>"));
     assert!(ul.code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")") && ul.code.contains("_$child("), "{}", ul.code);
+}
+
+#[test]
+fn static_aria_booleans_are_written_as_words() {
+    // `aria-pressed={false}` means "not pressed", not "not a toggle": ARIA states are the strings true/false.
+    let (code, _) = run("export const A = () => <button aria-pressed={false} aria-hidden={true} disabled={false} hidden={true}>x</button>");
+    assert!(code.contains(r#"<button aria-pressed=\"false\" aria-hidden=\"true\" hidden>"#), "{code}");
 }
 
 #[test]

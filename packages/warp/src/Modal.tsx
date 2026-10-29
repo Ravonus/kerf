@@ -1,5 +1,5 @@
 import { dialog, uid } from '@weft/ui-core'
-import { untrack, type State } from 'weft'
+import { derived, type State } from 'weft'
 import { Button, type Tone } from './Button'
 import { use } from './use'
 import './styles'
@@ -13,19 +13,19 @@ import '@weft/ui-core/styles/components/dialog.css'
  */
 export function Modal({ open, title, description, footer, size, alert, tone, children }: { open: State<boolean>; title: any; description?: any; footer?: any; size?: 'sm' | 'md' | 'lg'; alert?: boolean; tone?: Tone; children?: any }) {
   const id = uid('dlg')
-  const hasDescription = untrack(() => description !== undefined)
-  const foot = untrack(() => footer) // made once: reading a JSX prop twice would build it twice
+  const hasDescription = derived(() => description !== undefined)
+  const foot = derived(() => footer) // one build of the footer, however often it is read
   let el: HTMLDialogElement | undefined
   use(dialog, () => el, () => ({ open: open.value, onClose: () => (open.value = false) }))
   return (
-    <dialog ref={(n: any) => (el = n)} data-scope="dialog" role={alert ? 'alertdialog' : undefined} data-size={size === 'md' ? undefined : size} data-tone={tone} aria-labelledby={`${id}-t`} aria-describedby={hasDescription ? `${id}-d` : undefined}>
+    <dialog ref={(n: any) => (el = n)} data-scope="dialog" role={alert ? 'alertdialog' : undefined} data-size={size === 'md' ? undefined : size} data-tone={tone} aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined}>
       <div data-part="header">
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>
-        {hasDescription && <p data-part="description" id={`${id}-d`}>{description}</p>}
+        {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
         <Button emphasis="ghost" tone="neutral" icon="x" label="Close" data-part="close" data-close="" />
       </div>
       <div data-part="body">{children}</div>
-      {foot !== undefined && <div data-part="footer">{foot}</div>}
+      {foot.value !== undefined && <div data-part="footer">{foot.value}</div>}
     </dialog>
   )
 }

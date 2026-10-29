@@ -1,5 +1,5 @@
 import { dialog, uid } from '@weft/ui-core'
-import { untrack, type State } from 'weft'
+import { derived, type State, untrack } from 'weft'
 import { Button } from './Button'
 import { use } from './use'
 import './styles'
@@ -13,8 +13,8 @@ import '@weft/ui-core/styles/components/dialog.css' // the backdrop and the part
  */
 export function Drawer({ open, title, description, footer, side = 'auto', children }: { open: State<boolean>; title: any; description?: any; footer?: any; side?: 'auto' | 'right' | 'left' | 'bottom'; children?: any }) {
   const id = uid('sheet')
-  const hasDescription = untrack(() => description !== undefined)
-  const foot = untrack(() => footer) // made once: reading a JSX prop twice would build it twice
+  const hasDescription = derived(() => description !== undefined)
+  const foot = derived(() => footer) // one build of the footer, however often it is read
   let el: HTMLDialogElement | undefined
   const placed = () => (side === 'auto' ? (typeof innerWidth === 'number' && innerWidth < 600 ? 'bottom' : 'right') : side)
   use(dialog, () => el, () => {
@@ -23,15 +23,15 @@ export function Drawer({ open, title, description, footer, side = 'auto', childr
     return { open: on, onClose: () => (open.value = false) }
   })
   return (
-    <dialog ref={(n: any) => (el = n)} data-scope="sheet" aria-labelledby={`${id}-t`} aria-describedby={hasDescription ? `${id}-d` : undefined} data-side={untrack(() => (side === 'auto' ? 'right' : side))}>
+    <dialog ref={(n: any) => (el = n)} data-scope="sheet" aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined} data-side={untrack(() => (side === 'auto' ? 'right' : side))}>
       <button type="button" data-part="handle" aria-label="Sheet height: tall. Press to shrink."></button>
       <div data-part="header">
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>
-        {hasDescription && <p data-part="description" id={`${id}-d`}>{description}</p>}
+        {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
         <Button emphasis="ghost" tone="neutral" icon="x" label="Close" data-part="close" data-close="" />
       </div>
       <div data-part="body">{children}</div>
-      {foot !== undefined && <div data-part="footer">{foot}</div>}
+      {foot.value !== undefined && <div data-part="footer">{foot.value}</div>}
     </dialog>
   )
 }

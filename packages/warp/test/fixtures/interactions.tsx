@@ -1,6 +1,7 @@
 // The one interaction each component case is checked with (fixtures/Cases.tsx), what the user then sees, and its
 // work budget: the DOM writes and reactive re-runs it may cost. Budgets are the measured counts; raising one needs a
-// reason here.
+// reason here. Loading 4 and Toast 13 re-runs: Button's icon and loading wrapper are live (derived, W018), one more
+// node each.
 import { fireEvent } from '@testing-library/dom'
 import * as C from './Cases'
 
@@ -15,7 +16,7 @@ const type = (root: HTMLElement, text: string) => {
 
 export const cases: Record<keyof typeof C, Case> = {
   ButtonCase: { act: r => q(r, 'button').click(), see: r => expect(r.textContent).toBe('Added 1'), budget: 1, runs: 3 },
-  LoadingCase: { act: drive, see: r => expect(q(r, '[data-scope="button"]').getAttribute('aria-busy')).toBe('true'), budget: 4, runs: 3 },
+  LoadingCase: { act: drive, see: r => expect(q(r, '[data-scope="button"]').getAttribute('aria-busy')).toBe('true'), budget: 4, runs: 4 },
   ToggleCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-pressed')).toBe('true'), budget: 2, runs: 1 },
   InputCase: { act: r => type(r, 'a'), see: r => expect(q(r, '[data-part="control"]').hasAttribute('data-filled')).toBe(true), budget: 2, runs: 3 },
   SearchCase: { act: r => type(r, 'a'), see: r => expect(q(r, '[data-part="control"]').hasAttribute('data-filled')).toBe(true), budget: 2, runs: 3 },
@@ -47,5 +48,5 @@ export const cases: Record<keyof typeof C, Case> = {
   PopoverCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-expanded')).toBe('true'), budget: 7, runs: 2 },
   ModalCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 2, runs: 1 },
   DrawerCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 3, runs: 1 },
-  ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 11 },
+  ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 13 },
 }

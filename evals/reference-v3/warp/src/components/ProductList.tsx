@@ -1,4 +1,4 @@
-import { derived } from 'weft'
+import { derived, type State } from 'weft'
 import { Card, Search, Select } from '@weft/warp'
 import type { Category, Product } from '../api'
 import type { Cart } from '../App'
@@ -6,7 +6,7 @@ import { ProductRow } from './ProductRow'
 
 export type Filters = { search: string; category: 'all' | Category; sort: 'name' | 'price-asc' | 'price-desc' }
 
-type Props = { products: Product[]; cart: Cart; filters: Filters; onFilters: (f: Filters) => void; onAdd: (id: string) => void }
+type Props = { products: Product[]; cart: State<Cart>; filters: Filters; onFilters: (f: Filters) => void; onAdd: (id: string) => void }
 
 const categories = [{ value: 'all', label: 'All' }, { value: 'fruit', label: 'fruit' }, { value: 'bakery', label: 'bakery' }, { value: 'dairy', label: 'dairy' }]
 const sorts = [{ value: 'name', label: 'Name' }, { value: 'price-asc', label: 'Price: low to high' }, { value: 'price-desc', label: 'Price: high to low' }]
@@ -29,7 +29,7 @@ export function ProductList({ products, cart, filters, onFilters, onAdd }: Props
       </div>
       <p data-testid="product-count" class="meta">{shown.value.length === 1 ? '1 product' : `${shown.value.length} products`}</p>
       <ul aria-label="Products" class="rows">
-        {shown.value.map(p => <ProductRow key={p.id} product={p} left={p.stock - (cart[p.id]?.qty ?? 0)} onAdd={onAdd} />)}
+        {shown.value.map(p => <ProductRow key={p.id} product={p} left={p.stock - (cart.get(p.id)?.qty ?? 0)} onAdd={onAdd} />)}
       </ul>
     </Card>
   )

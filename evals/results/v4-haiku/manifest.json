@@ -1,0 +1,10 @@
+{
+  "name": "v4-haiku",
+  "suite": "tasks-v4",
+  "app": "watchlist",
+  "created": "2026-10-29T21:58:17.012Z",
+  "frameworks": [
+    "react"
+  ],
+  "workRoot": "/var/folders/zk/40xbztxx7tb90tl4nnryd2780000gn/T/weft-evals/v4-haiku"
+}

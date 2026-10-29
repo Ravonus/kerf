@@ -7,7 +7,7 @@
 // Phase 1: events fired before hydration finishes are dropped (no capture script yet), and hydration is one
 // synchronous pass over the whole container.
 
-import { DEV, createRoot, rt } from './index'
+import { DEV, createRoot, rt, runMounts } from './index'
 import { hchild } from './claim'
 import { keys } from './keys'
 
@@ -34,6 +34,7 @@ export function hydrate(code: () => any, container: Element): () => void {
     if (DEV && registry.size) console.warn(`weft: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`)
     registry.clear()
   }
+  runMounts()
   return () => {
     dispose()
     container.textContent = ''

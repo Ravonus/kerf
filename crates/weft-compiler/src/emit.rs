@@ -557,7 +557,12 @@ impl<'t> Emitter<'t> {
                 }
                 Some(JSXAttributeValue::ExpressionContainer(c)) => {
                     let Some(expr) = c.expression.as_expression() else { continue };
-                    match static_value(expr) {
+                    // ARIA states are the words `true`/`false` (`aria-pressed={false}` is not a missing attribute).
+                    let known = match expr.get_inner_expression() {
+                        Expression::BooleanLiteral(v) if name.starts_with("aria-") => Some(Static::Text(v.value.to_string())),
+                        _ => static_value(expr),
+                    };
+                    match known {
                         Some(Static::Text(t)) => Self::put(b, &format!(" {name}=\"{}\"", escape_attr(&t))),
                         Some(Static::True) => Self::put(b, &format!(" {name}")),
                         Some(Static::Absent) => {}

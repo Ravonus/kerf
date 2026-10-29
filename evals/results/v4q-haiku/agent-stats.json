@@ -1,0 +1,92 @@
+{
+  "react/t1": {
+    "tools": 10,
+    "ms": 76279,
+    "tokens": 77010
+  },
+  "react/t2": {
+    "tools": 13,
+    "ms": 110693,
+    "tokens": 84709
+  },
+  "react/t3": {
+    "tools": 17,
+    "ms": 185900,
+    "tokens": 102301
+  },
+  "react/t4": {
+    "tools": 21,
+    "ms": 258572,
+    "tokens": 119353
+  },
+  "react/t5": {
+    "tools": 25,
+    "ms": 314327,
+    "tokens": 131391
+  },
+  "react/t6": {
+    "tools": 28,
+    "ms": 409321,
+    "tokens": 148208
+  },
+  "solid/t1": {
+    "tools": 7,
+    "ms": 67462,
+    "tokens": 74749
+  },
+  "solid/t2": {
+    "tools": 13,
+    "ms": 119270,
+    "tokens": 86967
+  },
+  "solid/t3": {
+    "tools": 15,
+    "ms": 174981,
+    "tokens": 98886
+  },
+  "solid/t4": {
+    "tools": 17,
+    "ms": 230550,
+    "tokens": 112937
+  },
+  "solid/t5": {
+    "tools": 18,
+    "ms": 263321,
+    "tokens": 120055
+  },
+  "solid/t6": {
+    "tools": 22,
+    "ms": 360371,
+    "tokens": 139844
+  },
+  "weft/t1": {
+    "tools": 22,
+    "ms": 119772,
+    "tokens": 98893
+  },
+  "weft/t2": {
+    "tools": 28,
+    "ms": 192110,
+    "tokens": 115488
+  },
+  "weft/t3": {
+    "tools": 32,
+    "ms": 255884,
+    "tokens": 129856
+  },
+  "weft/t4": {
+    "tools": 37,
+    "ms": 337387,
+    "tokens": 148297
+  },
+  "weft/t5": {
+    "tools": 42,
+    "ms": 396232,
+    "tokens": 158522
+  },
+  "weft/t6": {
+    "tools": 45,
+    "ms": 481505,
+    "tokens": 177834
+  }
+}
