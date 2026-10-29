@@ -180,8 +180,9 @@ export function on(el: Element, name: string, handler: (e: Event) => void, deleg
 
 export const delegate = delegateEvents
 
-export function component<P>(Comp: (props: P) => unknown, props: P) {
-  return createComponent(Comp as any, props)
+/** `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. */
+export function component<P>(Comp: (props: P) => unknown, props: P, name?: string, loc?: string) {
+  return createComponent(Comp as any, props, name, loc)
 }
 
 const PROPERTIES = new Set(['value', 'checked', 'selected', 'muted', 'indeterminate', 'textContent', 'innerHTML'])

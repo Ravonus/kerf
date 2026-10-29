@@ -156,10 +156,10 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
   - The back end is designed for agents: a small helper set that weft defines and versions, one lowering per
     construct, output an agent can read and `weft explain` can map back to source, and hydration keys derived from
     source position so a mismatch names the component and line. Design: [19](research/19-own-back-end.md).
-  - **Transition:** the Phase 1 spike ran weft's pre-pass on Solid 2's `solidjs-compiler` crate
-    ([16](research/16-compiler-spike.md)). That crate stays in the build only until weft's back end passes the same
-    checks (the v3 hidden tests, every runtime test, the SSR round trip, §3.7 size and speed gates), then it is
-    removed. Solid remains a benchmark comparison and, where useful, a test oracle, never a dependency.
+  - **Transition (done 2026-10-29):** the Phase 1 spike ran weft's pre-pass on Solid 2's `solidjs-compiler` crate
+    ([16](research/16-compiler-spike.md)). weft's back end passed the same checks and replaced it
+    ([19 §5.5](research/19-own-back-end.md)); the crate is gone from the build. Solid remains a benchmark comparison,
+    and its recorded output is the corpus oracle's reference, never a dependency.
   - Shipped through napi-rs as prebuilt binaries plus a WASI fallback. Text goes in; code, map and diagnostics come
     out. ASTs never cross JS↔Rust.
   - **Decision rule:** a 2-week spike must pass all four checks:
@@ -200,7 +200,7 @@ it costs and take it, as long as it stays inside those numbers.
 | Runtime (benchmark app) | ≤ 10 KB brotli (gate), aiming for ≤ 6 KB; hello world ≤ 3 KB |
 | v3 shop app, total JS | ≤ 10 KB brotli |
 | DOM work | every eval scenario has a `toTouchAtMost(n, { runs })`; v3 price-push ≤ 1 mutation and ≤ 10 re-runs, add-one ≤ 3 |
-| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29: 1.067×, pass; memory 1.4–1.5×, open ([18 §6](research/18-ssr-and-boundaries.md)) |
+| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass; memory 1.5×, open ([19 §5.5](research/19-own-back-end.md)) |
 | Compiler | ≤ 0.5 s per 1k files, single-threaded, diagnostics included |
 | `weft check`, 1k files | ≤ 3 s cold, ≤ 0.5 s warm (weft's own diagnostics pass) |
 | HMR, 1k components | ≤ 50 ms p95, from file write to DOM updated |

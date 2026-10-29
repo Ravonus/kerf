@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **steps 1–4 built** (§5.1–§5.4); step 5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **built** (§5.1–§5.5). weft's back end is the only one; `solidjs-compiler` is gone from the build. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -279,11 +279,100 @@ only.
 **Size.** No runtime change beyond the warning text, which dev builds only. Runtime is 5.90 KB br (gate 10 KB, target
 6 KB). v3 hydrate is 4.71 KB and hello is 0.99 KB.
 
-**Corpus oracle (test only).** Built in step 4 (§5.4). Solid's crate stays a dev-dependency only for this test,
-and leaves with step 5.
+**Corpus oracle (test only).** Built in step 4 (§5.4). Since step 5 it checks against Solid's recorded output
+(§5.5).
 
 **Estimate (unverified):** 3–5k lines of Rust for the IR and both emitters, since they cover weft's constructs only.
 Two to three weeks of focused work.
+
+### 5.5 Step 5, done (2026-10-29): the switch
+
+**What changed.**
+- `solidjs-compiler` is removed from `Cargo.toml` and the lockfile. `compile()` has one path: pre-pass → print →
+  `emit`. The `backend` option, `weftc --backend`, `weft({ backend })`, `WEFT_BACKEND` and `?weft-next` imports are
+  gone.
+- `Options::source_names` is gone. Dev builds pass each component's name and `file:line` to `component()`, which is
+  what `<Boundary>`'s "caught an error in <Comp> (file:line)" reads.
+- `weft/dom` no longer exports Solid's helper set (`template`, `setProperty`, `setStatefulProperty`, `readShallow`,
+  `setStyleProperty`, `addEventListener`, and the `effect`/`untrack` re-exports). `insert` lost its dev-names option.
+- `test/next.test.tsx` became `test/back-end.test.tsx`. Its side-by-side comparisons with Solid became direct
+  assertions; for example, the benchmark test now checks each operation's effect (1,000 rows, the selected row, every
+  10th label, the swapped rows, the removed row, the appended rows, an empty table).
+
+**Source maps.** Solid's crate wrote the source maps, so weft's back end needed its own. `emit` builds its output from
+slices of the printed program. `splice`, the only function that copies printed text, wraps each slice in
+private-use markers that record where it came from:
+- a verbatim copy maps every position through oxc_codegen's printed → authored map;
+- a lowered JSX node maps each of its generated lines to the node.
+
+One pass (`src/srcmap.rs`) strips the markers and writes the composed map. A Rust test checks five positions
+(a module-level binding, a setup call, a handler body, a text hole and the lowered element) against their authored
+lines.
+
+**The oracle without Solid.** Before deleting the crate, I recorded Solid's normalized DOM for every oracle case after
+mount and after each scripted step: 47 cases, 147 snapshots, with long ones stored as SHA-256 hashes. The file is
+`test/oracle.golden.json` (100 KB). The oracle now checks four things for each case:
+- weft's DOM output matches that recording, step for step;
+- the hydrated server render matches weft's DOM output;
+- hydration has 0 misses;
+- hydration makes 0 DOM writes.
+
+A change to a fixture or to the script needs a reviewed edit of the golden file; Solid can't re-record it.
+
+**Gates (PLAN §3.7), measured 2026-10-29** on this Mac (1-minute load 7–9):
+
+| Gate | Budget | Now | Before (Solid's back end) |
+|---|---|---|---|
+| Runtime, every export | ≤ 10 KB br, aim 6 KB | 5.77 KB | 5.90 KB (both helper sets) |
+| hello world | ≤ 3 KB br | 1.16 KB | 0.99 KB |
+| v3 shop app | ≤ 10 KB br | 4.49 KB | 3.80 KB |
+| v3 shop app (defineState) | ≤ 10 KB br | 5.17 KB | 4.53 KB |
+| v3 shop app (hydrate) | ≤ 10 KB br | 4.70 KB | 4.71 KB |
+| benchmark app | — | 3.79 KB | 3.80 KB (already weft's) |
+| v3 hidden tests | 23/23 | 23/23 | 23/23 |
+| v3 price-push / add-one | ≤ 1 mutation / ≤ 3 | 1 / 1 | 1 / 1 |
+| Compiler, 1k files | ≤ 0.5 s | 158 ms native, 178 ms napi | 193 ms, 236 ms (research 16) |
+| `weft check`, 1k files | ≤ 3 s cold | 20 ms native, 23 ms napi | 20 ms |
+| Prod build, 1k components | ≤ 5 s | 0.8 s (client 0.46–0.52 s + SSR 0.34 s) | not measured |
+| Prod output | no dev names | none (`tsx:` and markers absent from the benchmark bundle) | — |
+| HMR, 1k components | ≤ 50 ms p95 | not built | not built |
+| js-framework-benchmark | ≤ 1.10× Solid | **1.063×** CPU geomean (below) | 1.067× (research 18) |
+
+**js-framework-benchmark (measured).** `krausest/js-framework-benchmark` at `ca8715d`, Chrome headless, default
+iteration counts. weft's entry is `frameworks/keyed/weft`, a production build of this branch; Solid's is the
+official keyed entry, `solid-js` 1.9.3. Both ran in one run, and both passed the keyed check. Ratio is weft's mean
+÷ Solid's; below 1 means weft is faster.
+
+| Benchmark | weft (ms) | Solid (ms) | ratio |
+|---|---|---|---|
+| 01 create 1k rows | 24.40 | 22.21 | 1.098 |
+| 02 replace 1k | 27.55 | 25.36 | 1.086 |
+| 03 update every 10th ×16 | 16.19 | 15.69 | 1.032 |
+| 04 select row | 5.44 | 6.54 | 0.832 |
+| 05 swap rows | 18.38 | 16.73 | 1.099 |
+| 06 remove row | 13.29 | 12.59 | 1.056 |
+| 07 create 10k rows | 249.46 | 236.95 | 1.053 |
+| 08 append 1k to 1k ×2 | 29.61 | 25.50 | 1.161 |
+| 09 clear 1k ×8 | 15.07 | 12.68 | 1.189 |
+| **CPU geomean (01–09)** | | | **1.063** |
+| run memory, 1k rows (MB) | 4.02 | 2.68 | 1.501 |
+| run + clear memory (MB) | 1.14 | 0.77 | 1.469 |
+| bundle, compressed (KB) | 4.0 | 4.5 | 0.889 |
+| first paint (ms) | 26.8 | 32.4 | 0.827 |
+
+This is the same as research 18 (1.067×) within noise: the benchmark app was already on weft's back end then.
+Clear and append are still the slowest (1.16–1.19×), and memory is still 1.5× Solid's. Both are runtime work (row
+creation, `place()`), not compiler work. One run on a shared machine (load 7–9), so treat differences under ~5% as
+noise.
+
+Client-only apps grew 0.2–0.7 KB, mostly because weft's `tpl`/`child` carry the hydration claim path in every
+build. Splitting it out (a hydratable build imports claiming helpers; a client-only build doesn't) is the next size
+item. Every number is still inside its budget.
+
+**Still open.**
+- A spread's `children`, and `textContent`/`innerHTML` props, aren't rendered on the server (the client writes them).
+- Source maps for lowered JSX are per line, not per expression inside a hole.
+- HMR.
 
 ## 6. What PR #2 (compiler hardening) brings
 

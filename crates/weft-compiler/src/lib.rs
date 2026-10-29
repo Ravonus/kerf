@@ -2,13 +2,14 @@
 //!
 //! One Oxc parse per file. `analyze` reads the program with scopes and symbols and produces a plan plus
 //! diagnostics; `transform` applies the plan to the same AST (§3.3 props → live reads, §3.4 `.map` → keyed
-//! list); then Solid 2's DOM back end (`solidjs_compiler::compile_program`, pinned and unmodified) does
-//! template cloning and fine-grained bindings against weft's runtime (`weft/dom`).
+//! list); then weft's back end (`emit`, research 19) lowers the JSX to template clones and fine-grained bindings
+//! against weft's runtime (`weft/dom`), or to server code (`weft/ssr`).
 
 mod analyze;
 mod diag;
 mod emit;
 mod snippet;
+mod srcmap;
 mod transform;
 
 #[cfg(feature = "node")]
@@ -36,11 +37,7 @@ pub struct Options {
     pub generate: String,
     /// DOM output that adopts server-rendered nodes (`hydrate`), and SSR output that marks them.
     pub hydratable: bool,
-    /// Dev names from the back end: component labels, binding labels and source locations (dev builds only).
-    pub source_names: bool,
-    /// `"solid"` (default) or `"weft"`: weft's own back end (research 19). SSR and hydratable output always use weft's.
-    pub backend: String,
-    /// Also return what each JSX node became (`Output::explain`, weft's back end only).
+    /// Also return what each JSX node became (`Output::explain`).
     pub explain: bool,
 }
 
@@ -54,8 +51,6 @@ impl Default for Options {
             source_map: false,
             generate: "dom".into(),
             hydratable: false,
-            source_names: false,
-            backend: "solid".into(),
             explain: false,
         }
     }
@@ -98,42 +93,26 @@ pub fn compile(source: &str, options: &Options) -> Output {
     transform::apply(&allocator, &mut program, &scoping, &plan, source);
 
     let ssr = options.generate == "ssr";
-    // SSR and hydration exist only on weft's back end (research 19 step 3); the runtime has no other key scheme.
-    if options.backend == "weft" || ssr || options.hydratable {
-        // Print the pre-pass's AST and lower its JSX from that text (spans index it). No source map yet; each JSX
-        // node's authored line goes along by order (`JsxOrder`). Nodes the pre-pass made have no span.
-        let mut order = emit::JsxOrder::default();
-        oxc_ast_visit::Visit::visit_program(&mut order, &program);
-        let origins = order.spans.iter().map(|s| (s.end > 0).then(|| diag::line_col(source, s.start))).collect();
-        let printed = oxc_codegen::Codegen::new().build(&program).code;
-        let module = if ssr && options.module_name == "weft/dom" { "weft/ssr" } else { &options.module_name };
-        let display = display_path(&options.filename);
-        let o = emit::EmitOptions { filename: &options.filename, display: &display, module, ssr, hydratable: options.hydratable, dev: options.dev, origins };
-        return match emit::emit(&printed, o) {
-            Ok(out) => Output { code: Some(out.code), map: None, diagnostics, explain: options.explain.then_some(out.explain) },
-            Err(e) => {
-                diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
-                Output { code: None, map: None, diagnostics, explain: None }
-            }
-        };
-    }
-    let solid = solidjs_compiler::CompileOptions {
-        filename: Some(options.filename.clone()),
-        // SSR output has its own runtime; a caller-set module name (tests, fixtures) wins.
-        module_name: if ssr && options.module_name == "weft/dom" { "weft/ssr".into() } else { options.module_name.clone() },
-        generate: if ssr { solidjs_compiler::Generate::Ssr } else { solidjs_compiler::Generate::Dom },
-        hydratable: options.hydratable,
-        source_names: solidjs_compiler::SourceNames::all(options.source_names && options.dev),
-        dev: options.dev,
-        source_map: options.source_map,
-        // weft has one list primitive. `For` is emitted only by the pre-pass and auto-imported from weft/dom.
-        built_ins: vec!["For".into()],
-        ..Default::default()
+    // Print the pre-pass's AST and lower its JSX from that text (spans index it). Codegen's map of the printed text
+    // goes through the emitter to the authored file. Each JSX node's authored line goes along by order
+    // (`JsxOrder`), for dev comments and `explain`. Nodes the pre-pass made have no span.
+    let mut order = emit::JsxOrder::default();
+    oxc_ast_visit::Visit::visit_program(&mut order, &program);
+    let origins = order.spans.iter().map(|s| (s.end > 0).then(|| diag::line_col(source, s.start))).collect();
+    let opts = oxc_codegen::CodegenOptions { source_map_path: options.source_map.then(|| options.filename.clone().into()), ..Default::default() };
+    let built = oxc_codegen::Codegen::new().with_options(opts).build(&program);
+    let printed = built.code;
+    let points = built.map.as_ref().map(|m| srcmap::points(&printed, m));
+    let module = if ssr && options.module_name == "weft/dom" { "weft/ssr" } else { &options.module_name };
+    let display = display_path(&options.filename);
+    let o = emit::EmitOptions {
+        filename: &options.filename, display: &display, module, ssr, hydratable: options.hydratable, dev: options.dev, origins,
+        map: points.as_ref().map(|p| (p, source)),
     };
-    match solidjs_compiler::compile_program(&allocator, program, source, &solid) {
-        Ok(out) => Output { code: Some(out.code), map: out.source_map, diagnostics, explain: None },
-        Err(error) => {
-            diagnostics.push(Diagnostic::syntax(source, error.to_string(), None));
+    match emit::emit(&printed, o) {
+        Ok(out) => Output { code: Some(out.code), map: out.map, diagnostics, explain: options.explain.then_some(out.explain) },
+        Err(e) => {
+            diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
             Output { code: None, map: None, diagnostics, explain: None }
         }
     }

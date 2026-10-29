@@ -4,9 +4,8 @@
 //!   weftc --json file.tsx [...]     one JSON result per file
 //!   weftc --bench N dir             compile every .tsx in dir N times on one thread; print ms per pass
 //!   weftc --check ...               diagnostics only (no codegen)
-//!   weftc --backend weft ...        weft's own back end (research 19) instead of Solid's
-//!   weftc --dev ...                 dev output (weft's back end: a `// file:line <tag>` comment per template)
-//!   weftc --explain file.tsx:LINE   what each JSX node starting on LINE becomes (weft's back end)
+//!   weftc --dev ...                 dev output (a `// file:line <tag>` comment per template)
+//!   weftc --explain file.tsx:LINE   what each JSX node starting on LINE becomes
 
 use std::{fs, path::PathBuf, time::Instant};
 
@@ -15,20 +14,17 @@ use weft_compiler::{Options, compile};
 fn main() {
     let mut args = std::env::args().skip(1).peekable();
     let (mut json, mut check, mut bench) = (false, false, None);
-    let mut backend = "solid".to_string();
     let (mut dev, mut explain) = (false, None::<u32>);
     let mut paths = Vec::new();
     while let Some(a) = args.next() {
         match a.as_str() {
             "--json" => json = true,
             "--check" => check = true,
-            "--backend" => backend = args.next().unwrap_or_default(),
             "--dev" => dev = true,
             "--explain" => {
                 let at = args.next().unwrap_or_default();
                 let (file, line) = at.rsplit_once(':').expect("--explain file.tsx:LINE");
                 explain = Some(line.parse().expect("--explain file.tsx:LINE"));
-                backend = "weft".into();
                 paths.push(PathBuf::from(file));
             }
             "--bench" => bench = args.next().and_then(|n| n.parse::<usize>().ok()),
@@ -56,7 +52,7 @@ fn main() {
         for _ in 0..n {
             let t = Instant::now();
             for (filename, source) in &sources {
-                let out = compile(source, &Options { filename: filename.clone(), check_only: check, backend: backend.clone(), ..Default::default() });
+                let out = compile(source, &Options { filename: filename.clone(), check_only: check, ..Default::default() });
                 diagnostics += out.diagnostics.len();
                 std::hint::black_box(out);
             }
@@ -79,7 +75,7 @@ fn main() {
 
     let mut failed = false;
     for (filename, source) in &sources {
-        let out = compile(source, &Options { filename: filename.clone(), check_only: check, backend: backend.clone(), dev, explain: explain.is_some(), ..Default::default() });
+        let out = compile(source, &Options { filename: filename.clone(), check_only: check, dev, explain: explain.is_some(), ..Default::default() });
         if let Some(line) = explain {
             let found: Vec<_> = out.explain.iter().flatten().filter(|x| x.line == line).collect();
             if json {

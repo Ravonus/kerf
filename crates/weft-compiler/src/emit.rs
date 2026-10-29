@@ -29,6 +29,8 @@ use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
+use crate::srcmap;
+
 /// Bubbling events the runtime delegates to one document listener.
 const DELEGATED: &[&str] = &[
     "beforeinput", "click", "contextmenu", "dblclick", "focusin", "focusout", "input", "keydown", "keyup",
@@ -114,6 +116,8 @@ pub struct EmitOptions<'a> {
     pub dev: bool,
     /// Each JSX node's (line, column) in the authored file, in `JsxOrder` (`None`: made by the pre-pass).
     pub origins: Vec<Option<(u32, u32)>>,
+    /// Write a source map to the authored file through codegen's map of the printed program (`srcmap::points`).
+    pub map: Option<(&'a srcmap::Points, &'a str)>,
 }
 
 /// What one JSX node became (`weft explain file:line`).
@@ -128,6 +132,8 @@ pub struct Explained {
 
 pub struct Emitted {
     pub code: String,
+    /// The source map (JSON), when `EmitOptions::map` is set.
+    pub map: Option<String>,
     pub explain: Vec<Explained>,
 }
 
@@ -155,7 +161,10 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     };
     let mut top = Outermost::default();
     top.visit_program(&program);
-    let body = e.splice(Span::new(0, code.len() as u32), &top.found);
+    // Imports hold no JSX: they're copied as they are, and the templates go after them.
+    let split = imports_end(&program);
+    let imports = srcmap::copy(code, 0, split);
+    let body = e.splice(Span::new(split as u32, code.len() as u32), &top.found);
     if let Some(err) = e.error {
         return Err(err);
     }
@@ -169,23 +178,35 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
         head.push_str(&format!("import {{ For }} from {module:?};\n"));
     }
     // Templates go after the module's imports, so a reader meets the imports first.
-    // (Imports hold no JSX, so the body's text up to their end is the printed code's.)
-    let split = imports_end(&program);
-    let mut out = head + &body[..split];
-    if split > 0 && !out.ends_with('\n') {
+    let mut out = head + &imports;
+    if split > 0 && !code[..split].ends_with('\n') {
         out.push('\n');
     }
     for t in &e.templates {
         out.push_str(t);
         out.push('\n');
     }
-    out.push_str(body[split..].trim_start_matches('\n'));
+    out.push_str(&trim_marked_newlines(&body));
     if !e.delegated.is_empty() {
         let names: Vec<String> = e.delegated.iter().map(|n| format!("{n:?}")).collect();
         out.push_str(&format!("\n_$delegate([{}]);\n", names.join(", ")));
     }
     e.explained.sort_by_key(|x| (x.line, x.column));
-    Ok(Emitted { code: out, explain: e.explained })
+    let (out, map) = srcmap::decode(&out, o.map.map(|(points, source)| srcmap::Mapping { points, file: o.filename, source }));
+    Ok(Emitted { code: out, map, explain: e.explained })
+}
+
+/// `body` without its leading newlines (they follow the imports), keeping its first marker in place.
+fn trim_marked_newlines(body: &str) -> String {
+    let marker_end = if body.starts_with('\u{E000}') { body.find('\u{E003}').map_or(0, |i| i + '\u{E003}'.len_utf8()) } else { 0 };
+    let (marker, rest) = body.split_at(marker_end);
+    let trimmed = rest.trim_start_matches('\n');
+    if marker.is_empty() || trimmed.len() == rest.len() {
+        return format!("{marker}{trimmed}");
+    }
+    // The copy now starts later in the printed text: renumber its marker.
+    let at: usize = marker.trim_matches(|c| c == '\u{E000}' || c == '\u{E003}').parse().unwrap_or(0);
+    format!("\u{E000}{}\u{E003}{trimmed}", at + rest.len() - trimmed.len())
 }
 
 /// Byte offset just past the last top-level import (0 if none).
@@ -271,11 +292,12 @@ impl<'t> Emitter<'t> {
         let mut at = span.start as usize;
         for n in nodes {
             let s = n.span();
-            out.push_str(&self.text[at..s.start as usize]);
-            out.push_str(&self.lower(*n));
+            out.push_str(&srcmap::copy(self.text, at, s.start as usize));
+            let code = self.lower(*n);
+            out.push_str(&srcmap::lowered(s.start, &code));
             at = s.end as usize;
         }
-        out.push_str(&self.text[at..span.end as usize]);
+        out.push_str(&srcmap::copy(self.text, at, span.end as usize));
         out
     }
 
@@ -314,7 +336,7 @@ impl<'t> Emitter<'t> {
 
     fn explain(&mut self, span: Span, node: String, code: &str) {
         if let Some(&(line, column)) = self.origin.get(&span.start) {
-            self.explained.push(Explained { line, column, node, code: code.to_string() });
+            self.explained.push(Explained { line, column, node, code: srcmap::strip(code) });
         }
     }
 
@@ -783,7 +805,13 @@ impl<'t> Emitter<'t> {
         }
         let props = self.props(&el.opening_element.attributes, fields);
         let component = self.helper("component");
-        format!("{component}({name}, {props})")
+        // Dev builds name the component, so a <Boundary> can say where an error was thrown.
+        match self.origin.get(&el.span.start) {
+            Some(&(line, _)) if self.dev && !self.ssr && name != "For" => {
+                format!("{component}({name}, {props}, {name:?}, {:?})", format!("{}:{line}", self.display))
+            }
+            _ => format!("{component}({name}, {props})"),
+        }
     }
 
     /// Props from JSX attributes, in order: literals and plain values as fields, the rest as getters, spreads as

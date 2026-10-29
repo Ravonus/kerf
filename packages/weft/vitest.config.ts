@@ -5,10 +5,10 @@ import weft from './vite.mjs'
 
 const src = (f: string) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 
-// Vitest's module cache keys on the lockfile only. Compiled .tsx depends on the native compiler and the back end
-// (WEFT_BACKEND), so key the cache on both, or a rebuilt compiler or the other back end gets served stale output.
+// Vitest's module cache keys on the lockfile only. Compiled .tsx also depends on the native compiler, so key the
+// cache on it, or a rebuilt compiler gets served stale output.
 const native = fileURLToPath(new URL(`./native/weft-compiler.${process.platform}-${process.arch}.node`, import.meta.url))
-const cacheKey = `${process.env.WEFT_BACKEND ?? 'solid'}-${Math.round(statSync(native).mtimeMs)}`
+const cacheKey = `${Math.round(statSync(native).mtimeMs)}`
 
 export default defineConfig({
   plugins: [weft()],

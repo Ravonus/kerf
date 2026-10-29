@@ -17,13 +17,8 @@ const fixtures = {
   'v3 shop app (hydrate)': join(pkg, 'bench/fixtures/hydrate-shop.tsx'),
   'Boundary + resource': join(pkg, 'bench/fixtures/async.tsx'),
   'js-framework-benchmark': join(pkg, 'bench/fixtures/jfb.tsx'),
-  // weft's own back end (research 19), step 1: the same entries compiled without Solid's.
-  'hello world (weft back end)': join(pkg, 'bench/fixtures/hello.tsx'),
-  'counter (weft back end)': join(pkg, 'bench/fixtures/counter.tsx'),
-  'js-framework-benchmark (weft back end)': join(pkg, 'bench/fixtures/jfb.tsx'),
 }
 const hydratable = new Set(['v3 shop app (hydrate)'])
-const backend = name => (name.endsWith('(weft back end)') ? 'weft' : 'solid')
 // Runtime: 10 KB is the gate, 6 KB the target (PLAN §3.7).
 const budgets = { 'hello world': 3072, 'runtime (every export)': 10240, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
 
@@ -33,7 +28,7 @@ for (const [name, entry] of Object.entries(fixtures)) {
     root: dirname(entry),
     configFile: false,
     logLevel: 'silent',
-    plugins: [weft({ hydratable: hydratable.has(name), backend: backend(name) })],
+    plugins: [weft({ hydratable: hydratable.has(name) })],
     resolve: { alias: [{ find: /^weft\/(dom|persist|history)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })

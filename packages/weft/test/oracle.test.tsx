@@ -1,8 +1,12 @@
-// The corpus oracle (research 19 §5): every component in the repo plus a generated corpus, rendered three ways:
-// Solid's DOM output (plain imports), weft's DOM output (`?weft-next`), and weft's server render hydrated
-// (`?weft-ssr` + `?weft-hydrate`). After mounting and after every scripted interaction (click each button, type in
-// each input) the three DOMs must match, comments, attribute order and class order aside. Hydration must claim
-// everything (0 misses) without writing to the DOM. Solid's back end leaves with step 5, and this test with it.
+// The corpus oracle (research 19 §5.4): repo components plus a generated corpus, rendered by weft's DOM output and
+// by its server render hydrated (`?weft-ssr` + `?weft-hydrate`). Hydration must claim everything (0 misses) without
+// writing to the DOM. After mounting and after every scripted interaction (click each button, type in each input)
+// both DOMs must match each other and what Solid's back end built for the same script, recorded before step 5
+// deleted it (oracle.golden.json). Comments, attribute order and class order are left out of the comparison.
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { renderToString } from 'weft/ssr'
 import { hydrate } from 'weft/dom'
 import { flush, render } from 'weft/test'
@@ -12,13 +16,12 @@ type Comp = (props: any) => any
 type Case = {
   name: string
   props: () => any
-  solid: Comp
-  next: Comp
+  dom: Comp
   server: Comp
   client: Comp
   /** Buttons the script leaves alone (`selector`). */
   skip?: string
-  /** Solid's output is wrong here: compare weft's two renders only. */
+  /** Solid's output was wrong here (none recorded): compare weft's two renders only. */
   solidWrong?: string
 }
 
@@ -27,8 +30,7 @@ const pick = (mods: Record<string, any>, query: string) =>
 
 // Generated corpus (test/oracle.setup.ts writes it).
 const corpus = {
-  solid: pick(import.meta.glob('./corpus-gen/C*.tsx', { eager: true }), ''),
-  next: pick(import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?weft-next' }), '?weft-next'),
+  dom: pick(import.meta.glob('./corpus-gen/C*.tsx', { eager: true }), ''),
   server: pick(import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?weft-ssr' }), '?weft-ssr'),
   client: pick(import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?weft-hydrate' }), '?weft-hydrate'),
 }
@@ -38,37 +40,29 @@ const items = () => [
   { id: 'b', ...fields, title: 'Beta', price: 0, score: 7, label: '' },
   { id: 'c', ...fields, title: 'Gamma <g>', owner: 'grace & co', count: 0 },
 ]
-const cases: Case[] = Object.keys(corpus.solid).map(file => {
-  const name = Object.keys(corpus.solid[file])[0]
+const cases: Case[] = Object.keys(corpus.dom).map(file => {
+  const name = Object.keys(corpus.dom[file])[0]
   const of = (k: keyof typeof corpus) => corpus[k][file][name]
-  return { name: `corpus ${name}`, props: () => ({ items: items(), title: name }), solid: of('solid'), next: of('next'), server: of('server'), client: of('client') }
+  return { name: `corpus ${name}`, props: () => ({ items: items(), title: name }), dom: of('dom'), server: of('server'), client: of('client') }
 })
 
 // Repo components, with the props they need.
 import * as basics from './fixtures/next/Basics'
 // @ts-expect-error: query imports (vite.mjs)
-import * as basicsNext from './fixtures/next/Basics.tsx?weft-next'
-// @ts-expect-error
 import * as basicsServer from './fixtures/next/Basics.tsx?weft-ssr'
 // @ts-expect-error
 import * as basicsClient from './fixtures/next/Basics.tsx?weft-hydrate'
 import * as two from './fixtures/next/Step2'
-// @ts-expect-error
-import * as twoNext from './fixtures/next/Step2.tsx?weft-next'
 // @ts-expect-error
 import * as twoServer from './fixtures/next/Step2.tsx?weft-ssr'
 // @ts-expect-error
 import * as twoClient from './fixtures/next/Step2.tsx?weft-hydrate'
 import * as bench from './fixtures/next/Bench'
 // @ts-expect-error
-import * as benchNext from './fixtures/next/Bench.tsx?weft-next'
-// @ts-expect-error
 import * as benchServer from './fixtures/next/Bench.tsx?weft-ssr'
 // @ts-expect-error
 import * as benchClient from './fixtures/next/Bench.tsx?weft-hydrate'
 import * as shop from './fixtures/ssr/Shop'
-// @ts-expect-error
-import * as shopNext from './fixtures/ssr/Shop.tsx?weft-next'
 // @ts-expect-error
 import * as shopServer from './fixtures/ssr/Shop.tsx?weft-ssr'
 // @ts-expect-error
@@ -80,21 +74,21 @@ const products = [
   { id: 'yogurt', name: 'Yogurt "plain"', category: 'dairy', price: 0.9, stock: 0 },
 ]
 const repo = (name: string, key: string, mods: any[], props: () => any = () => ({}), extra: Partial<Case> = {}): Case => {
-  const [solid, next, server, client] = mods.map(m => m[key])
-  return { name, props, solid, next, server, client, ...extra }
+  const [dom, server, client] = mods.map(m => m[key])
+  return { name, props, dom, server, client, ...extra }
 }
-const basicsMods = [basics, basicsNext, basicsServer, basicsClient]
-const twoMods = [two, twoNext, twoServer, twoClient]
+const basicsMods = [basics, basicsServer, basicsClient]
+const twoMods = [two, twoServer, twoClient]
 cases.unshift(
   repo('Basics Hello', 'Hello', basicsMods),
   repo('Basics Counter', 'Counter', basicsMods),
   repo('Basics Panel', 'Panel', basicsMods),
   repo('Step2 Toggle', 'Toggle', twoMods),
   repo('Step2 Picker', 'Picker', twoMods),
-  // A component returning <circle> outside <svg>: Solid's template parses `<circle>` as HTML and nests it oddly.
+  // A component returning <circle> outside <svg>: Solid's DOM output nested it as `<svg r="2"><circle>`.
   repo('Step2 Icon', 'Icon', twoMods, undefined, { solidWrong: 'an SVG root outside <svg>' }),
-  repo('benchmark app', 'Main', [bench, benchNext, benchServer, benchClient], undefined, { skip: '#runlots' }), // 10,000 rows ×3 is slow
-  repo('v3 shop (loaded)', 'Shop', [shop, shopNext, shopServer, shopClient], () => ({
+  repo('benchmark app', 'Main', [bench, benchServer, benchClient], undefined, { skip: '#runlots' }), // 10,000 rows is slow
+  repo('v3 shop (loaded)', 'Shop', [shop, shopServer, shopClient], () => ({
     products,
     cart: { apple: { qty: 2, addedPrice: 0.4 } },
     filters: { search: '', category: 'all', sort: 'price-asc' },
@@ -152,9 +146,13 @@ const steps = (root: Element, skip?: string) => {
   return out
 }
 
-test.each(cases.map(c => [c.name, c]))('%s: Solid DOM = weft DOM = weft SSR + hydrate, through every interaction', async (_, c) => {
-  const b = render(c.next, c.props()).container
-  const a = c.solidWrong ? b : render(c.solid, c.props()).container
+// Solid's DOM after mount and after each step, per case (long ones as hashes). Recorded with Solid's back end and
+// this same script before step 5 deleted it. A component or script change needs a reviewed edit here.
+const golden: Record<string, string[]> = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'oracle.golden.json'), 'utf8'))
+const digest = (html: string) => (html.length <= 1500 ? html : `sha256:${createHash('sha256').update(html).digest('hex')}`)
+
+test.each(cases.map(c => [c.name, c]))('%s: weft DOM = weft SSR + hydrate = Solid (recorded), through every interaction', async (_, c) => {
+  const a = render(c.dom, c.props()).container
   const server = renderToString(() => c.server(c.props()))
   const h = document.body.appendChild(document.createElement('div'))
   h.innerHTML = server
@@ -171,18 +169,19 @@ test.each(cases.map(c => [c.name, c]))('%s: Solid DOM = weft DOM = weft SSR + hy
   expect(mutations).toHaveLength(0)
   h.querySelector('script[data-weft]')?.remove()
 
-  const want = html(a)
-  expect(html(b)).toBe(want)
-  expect(html(h)).toBe(want)
+  const want = c.solidWrong ? undefined : golden[c.name]
+  if (!c.solidWrong) expect(want, 'a recorded trace').toBeDefined()
+  const trace = [digest(html(a))]
+  expect(html(h)).toBe(html(a))
   for (const step of steps(a, c.skip)) {
-    for (const root of new Set([a, b, h])) {
+    for (const root of [a, h]) {
       seed() // the same "random" rows in each (the benchmark app)
       step(root)
     }
     await flush()
-    const now = html(a)
-    expect(html(b)).toBe(now)
-    expect(html(h)).toBe(now)
+    trace.push(digest(html(a)))
+    expect(html(h)).toBe(html(a))
   }
+  if (want) expect(trace).toEqual(want)
   dispose()
 })

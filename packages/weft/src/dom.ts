@@ -1,30 +1,17 @@
-// weft/dom: the helpers compiled templates call (the import surface of Solid 2's DOM back end), plus `render`
-// and the keyed list. Compiled code only; app code imports `render` and nothing else from here.
+// weft/dom: `render`, `hydrate`, the keyed list, and the helpers weft's back end emits (most live in dom-next.ts;
+// these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
+// code imports `render` (or `hydrate`) and nothing else from here.
 
-import { DEV, createRoot, devComponent, effect, memo, onCleanup, state, untrack, type EffectOptions, type State } from './index'
+import { DEV, createRoot, devComponent, effect, memo, onCleanup, state, untrack, type State } from './index'
 import { keys, step, under } from './keys'
 
-export { effect, memo, untrack }
+export { memo }
 export { attr, bind, child, cls, component, css, delegate, first, next, on, spread, tpl } from './dom-next'
 export { hydrate } from './hydrate'
 
 type Mountable = Element | DocumentFragment
 
-export function template(html: string): () => Node {
-  let node: Node | undefined
-  const make = () => {
-    if (!node) {
-      const t = document.createElement('template')
-      t.innerHTML = html
-      node = t.content.firstChild!
-    }
-    return node.cloneNode(true)
-  }
-  make.html = html // the hydration tag check
-  return make
-}
-
-/** `name`/`loc`: dev names from the back end's `sourceNames`; bindings created inside carry them. */
+/** `name`/`loc` (dev builds): the component's name and `file:line`; bindings created inside carry them. */
 export function createComponent<P>(Comp: (props: P) => any, props: P, name?: string, loc?: string) {
   if (!DEV || !name) return untrack(() => Comp(props))
   const prev = devComponent.label
@@ -109,7 +96,7 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
  * `marker` undefined: the value is the parent's only dynamic content, appended at the end.
  * `marker` null: append at the end after static children. A node: insert before it.
  */
-export function insert(parent: Mountable, value: any, marker?: Node | null, options?: EffectOptions) {
+export function insert(parent: Mountable, value: any, marker?: Node | null) {
   let current: Node[] = []
   const at = marker ?? null
   if (typeof value !== 'function') {
@@ -124,7 +111,6 @@ export function insert(parent: Mountable, value: any, marker?: Node | null, opti
       return v
     },
     v => { current = place(parent, v, current, at) },
-    options,
   )
 }
 
@@ -134,13 +120,6 @@ export function setAttribute(node: Element, name: string, value: any) {
   if (value == null || value === false) node.removeAttribute(name)
   else node.setAttribute(name, value === true ? '' : value)
 }
-
-export function setProperty(node: any, name: string, value: any) {
-  node[name] = value
-}
-
-/** Dev builds route stateful DOM properties (`input.value`) here; same write, kept separate for dev checks. */
-export const setStatefulProperty = setProperty
 
 export function className(node: Element, value: any, prev?: any) {
   if (value == null || value === false) {
@@ -156,10 +135,6 @@ export function className(node: Element, value: any, prev?: any) {
   for (const k in value) if (value[k] && !p[k]) node.classList.add(k)
 }
 
-export function readShallow<T>(value: T): T {
-  return Array.isArray(value) ? (value.slice() as T) : value
-}
-
 export function style(node: HTMLElement, value: any, prev?: any) {
   if (typeof value === 'string' || value == null) {
     node.style.cssText = value ?? ''
@@ -168,10 +143,6 @@ export function style(node: HTMLElement, value: any, prev?: any) {
   const p = prev && typeof prev === 'object' ? prev : {}
   for (const k in p) if (value[k] == null) node.style.removeProperty(k)
   for (const k in value) if (value[k] !== p[k]) node.style.setProperty(k, value[k])
-}
-
-export function setStyleProperty(node: HTMLElement, name: string, value: any) {
-  value == null ? node.style.removeProperty(name) : node.style.setProperty(name, value)
 }
 
 export function ref(get: () => any, el: Element) {
@@ -221,14 +192,9 @@ export function delegateEvents(names: string[]) {
   }
 }
 
-export function addEventListener(node: Element, name: string, handler: any) {
-  if (Array.isArray(handler)) node.addEventListener(name, e => handler[0](handler[1], e))
-  else node.addEventListener(name, handler)
-}
-
-/** A handler that isn't an inline function (`onClick={onAdd}`): read once, delegated when the event is. */
+/** `onX={handler}`, read once: delegated when the event is. `[fn, data]` calls `fn(data, event)`. */
 export function addEvent(node: any, name: string, handler: any, delegate?: boolean) {
-  if (!delegate) return addEventListener(node, name, handler)
+  if (!delegate) return node.addEventListener(name, Array.isArray(handler) ? (e: Event) => handler[0](handler[1], e) : handler)
   const key = `_$$${name}`
   if (Array.isArray(handler)) {
     node[key] = handler[0]
