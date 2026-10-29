@@ -1,10 +1,10 @@
-// The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §7b (P001–P006), research 13 §4.4 (P100–P120),
-// plus the codes proposed in research 17 (marked `proposed`).
+// The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (P001–P006),
+// research 13 §4.4 (P100–P120), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports.
 
-/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'reserved', example?: string, proposed?: boolean }} Entry */
+/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'reserved', example?: string, proposed?: boolean }} Entry */
 
 /** @type {Entry[]} */
 export const catalog = [
@@ -80,6 +80,33 @@ export const catalog = [
   {
     code: 'W042', severity: 'warning', by: 'compiler', catches: '`onChange` on a text input (the DOM fires it on blur, not per keystroke)', fix: '`onInput`',
     example: 'export function A() { return <input onChange={() => {}} /> }',
+  },
+  {
+    code: 'W050', severity: 'error', by: 'compiler',
+    catches: 'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
+    fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser (edit offered), or clean it up in `onCleanup`',
+    example: "export function A() { window.addEventListener('keydown', () => {}); return <p /> }",
+  },
+  {
+    code: 'W051', severity: 'error', by: 'compiler',
+    catches: 'A weft/browser value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await`',
+    fix: "Create it in a component's (or `defineState`'s) setup, or inside `createRoot(dispose => …)`",
+    example: "import { online } from 'weft/browser'\nexport const up = online()",
+  },
+  {
+    code: 'W054', severity: 'error', by: 'compiler',
+    catches: '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `weft check` cannot tell',
+    fix: "Pass the server value: `media(query, { ssr: false })`",
+    example: "import { media } from 'weft/browser'\nexport function A() { const dark = media('(prefers-color-scheme: dark)'); return <p>{dark.value ? 'dark' : 'light'}</p> }",
+  },
+  {
+    code: 'W056', severity: 'warning', by: 'compiler', catches: '`watch` that copies a live value (a weft/browser value, `.live()`) into `state`',
+    fix: 'Read `live.value` directly, or `derived(() => live.value)`',
+    example: "import { state, watch } from 'weft'\nimport { online } from 'weft/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
+  },
+  {
+    code: 'T012', severity: 'error', by: 'test', catches: 'A test ends with weft/browser listeners, intervals or subscribed values still open (checked by weft/test after each test)',
+    fix: 'Unmount what the test created (dispose any `createRoot`), or fix the leak',
   },
 
   { code: 'P001', severity: 'warning', by: 'reserved', catches: 'Stray top-level script file outside a declared task', fix: 'Declare it in `tasks`, or delete it' },

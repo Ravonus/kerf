@@ -1,4 +1,5 @@
-// weft/test: render, flush, and the work-budget assertion (§7b, §10b).
+// weft/test: render, flush, the work-budget assertion (§7b, §10b), the page fakes for weft/browser (`net`, `page`)
+// and the leak check (T012).
 //
 //   await expect(() => fake.push('p100', 99)).toTouchAtMost(1)               // DOM mutations
 //   await expect(() => fake.push('p100', 99)).toTouchAtMost(1, { runs: 10 })  // and reactive re-runs
@@ -6,7 +7,8 @@
 import { afterEach, expect } from 'vitest'
 import { flush as flushGraph, stats } from './index'
 import { createComponent, render as mount } from './dom'
-import { createApp, useApp, withApp, type AppOptions } from './scope'
+import { createApp, disposeApp, useApp, withApp, type AppOptions } from './scope'
+import { open } from './browser'
 
 export { scope } from './scope'
 export { memoryStorage } from './memory'
@@ -33,6 +35,7 @@ export function render<P extends object>(Comp: (props: P) => any, props: P = {} 
   const unmount = () => {
     if (!mounted.delete(unmount)) return
     dispose()
+    disposeApp(app)
     container.remove()
   }
   mounted.add(unmount)
@@ -43,7 +46,92 @@ export function cleanup() {
   for (const unmount of [...mounted]) unmount()
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  try { assertNoLeaks() } finally { resetPage() }
+})
+
+// ---- weft/browser: the leak check (T012) and the page fakes -----------------------------------------------------
+
+/** What weft/browser has open right now: listeners, intervals and subscribed values, with where they were made. */
+export const leaks = (): string[] => [...open.values()].map(([what]) => what)
+
+/**
+ * T012: fail when subscriptions, listeners or intervals are still open (run after each test, once its renders are
+ * unmounted). Closes them, so one leak doesn't fail the next test too.
+ */
+export function assertNoLeaks() {
+  if (!open.size) return
+  const list = leaks()
+  for (const [, close] of [...open.values()]) close()
+  throw new Error(
+    `T012: the test ended with ${list.length} open subscription${list.length > 1 ? 's' : ''}, listener${list.length > 1 ? 's' : ''} or interval${list.length > 1 ? 's' : ''}:\n${list.map(w => `  - ${w}`).join('\n')}\n` +
+      '  fix: unmount what the test created (`render` unmounts itself; call the `dispose` of any `createRoot`), or fix the leak: create them in setup, where their owner removes them',
+  )
+}
+
+const fake = { online: true, visibility: 'visible' as DocumentVisibilityState, focus: true, media: new Map<string, boolean>() }
+const lists = new Map<string, EventTarget & { media: string; matches: boolean }>()
+
+function installPage() {
+  if (typeof document == 'undefined') return
+  const define = (o: object, key: string, get: () => unknown) => Object.defineProperty(o, key, { configurable: true, get })
+  define(navigator, 'onLine', () => fake.online)
+  define(document, 'visibilityState', () => fake.visibility)
+  define(document, 'hidden', () => fake.visibility == 'hidden')
+  Object.defineProperty(document, 'hasFocus', { configurable: true, value: () => fake.focus })
+  // jsdom has no matchMedia: one MediaQueryList per query, matching what `page.media` set (default false).
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (media: string) => {
+      let list = lists.get(media)
+      if (!list) lists.set(media, (list = Object.defineProperty(Object.assign(new EventTarget(), { media }), 'matches', { get: () => fake.media.get(media) ?? false }) as any))
+      return list
+    },
+  })
+}
+
+function resetPage() {
+  Object.assign(fake, { online: true, visibility: 'visible', focus: true })
+  fake.media.clear()
+  lists.clear()
+}
+
+installPage()
+
+const fire = (target: EventTarget, type: string, init?: object) => target.dispatchEvent(Object.assign(new Event(type), init))
+
+/** The network as weft/browser's `online()` sees it. Phase 3 adds the fake transport (`net.drop`, `net.latency`). */
+export const net = {
+  offline() { fake.online = false; fire(window, 'offline'); return flush() },
+  online() { fake.online = true; fire(window, 'online'); return flush() },
+}
+
+const visibility = (to: DocumentVisibilityState) => { fake.visibility = to; fire(document, 'visibilitychange') }
+
+/**
+ * The page as `visible()`, `lifecycle()` and `media()` see it. The page starts visible, focused and online, with
+ * every media query false; each test starts from that again. Each call fires the real events, then flushes.
+ */
+export const page = {
+  hide() { visibility('hidden'); return flush() },
+  show() { visibility('visible'); return flush() },
+  blur() { fake.focus = false; fire(window, 'blur'); return flush() },
+  focus() { fake.focus = true; fire(window, 'focus'); return flush() },
+  freeze() { fire(document, 'freeze'); return flush() },
+  resume() { fire(document, 'resume'); return flush() },
+  /** Leave the page: hidden, then `pagehide`. `persisted`: kept in the back/forward cache (frozen), else terminated. */
+  leave({ persisted = false } = {}) { visibility('hidden'); fire(window, 'pagehide', { persisted }); return flush() },
+  /** Come back from the back/forward cache. */
+  restore() { fire(window, 'pageshow', { persisted: true }); visibility('visible'); return flush() },
+  /** Make `query` match (or not) and fire its `change`. */
+  media(query: string, matches: boolean) {
+    fake.media.set(query, matches)
+    const list = lists.get(query)
+    if (list) fire(list, 'change', { matches, media: query })
+    return flush()
+  },
+}
 
 export type Touches = {
   mutations: number

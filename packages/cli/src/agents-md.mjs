@@ -11,7 +11,7 @@ export const limit = 8 * 1024
 /** PLAN §3.1 primitives an agent may reach for; listed as missing when the installed weft doesn't export them. */
 const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount', 'onCleanup', 'context', 'defineState', 'flush', 'untrack', 'batch']
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
-const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'] }
+const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'], 'weft/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
 
 export async function agentsMd(root) {
   root = resolve(root)
@@ -48,6 +48,7 @@ export async function agentsMd(root) {
       const names = entryPoints[mod].filter(n => info.exports[mod]?.includes(n))
       return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}. Its other exports are helpers compiled code calls; never import them.` : ''
     }).filter(Boolean),
+    info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`.` : '',
     info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`` : '',
     missing.length ? `- Not in this version yet: ${missing.map(n => `\`${n}\``).join(', ')}. Don't import them.` : '',
     '',
@@ -65,7 +66,7 @@ export async function agentsMd(root) {
     '',
     '## More',
     '',
-    '`weft docs <topic>` or the `docs` tool of `weft mcp`: `rules`, `props`, `lists`, `async`, `testing`, `config`, `diagnostics`, `commands`.',
+    '`weft docs <topic>` or the `docs` tool of `weft mcp`: `rules`, `props`, `lists`, `async`, `testing`, `browser`, `config`, `diagnostics`, `commands`.',
     '',
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))

@@ -17,6 +17,7 @@ export const topics = {
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
   async: 'resource, <Boundary pending error>, weft/ssr and hydrate; W012',
   testing: 'weft/test: render, flush, touches and toTouchAtMost(n, { runs })',
+  browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   diagnostics: 'Every W- and P-code, and which ones the installed weft reports',
   commands: "This project's commands and tasks (from `weft tasks`)",
@@ -36,6 +37,7 @@ function status(code, info) {
   const e = entry(code)
   const st = info.status[e.code]
   if (e.by === 'compiler') return st?.implemented ? `reported${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
+  if (e.by === 'test') return 'reported by weft/test after each test'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
   return 'reserved'
 }

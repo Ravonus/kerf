@@ -16,6 +16,7 @@
     "./test": "./src/test.ts",
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
+    "./browser": "./src/browser.ts",
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"
   },
