@@ -71,6 +71,8 @@ class Renderer(private val context: Context, val container: FrameGroup) {
     private var settingText = false
     var onEvent: ((Int, String, String) -> Unit)? = null
     var log: ((String) -> Unit)? = null
+    /** Colour of a bar sitting on the bottom edge (or null), so the activity can paint the inset below it. */
+    var onBottomBar: ((Int?) -> Unit)? = null
 
     // ---- ops ----
 
@@ -216,7 +218,7 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             Prop.LABEL -> v.contentDescription = value as String
             Prop.DISABLED -> { v.isEnabled = value != true; v.alpha = if (value == true) 0.4f else 1f }
             Prop.TONE -> { (v as? Button)?.let { tone(it, value as String) }; lDirty(handle, id) }
-            Prop.SURFACE -> if (value == "bar") v.setBackgroundColor(Color.rgb(0xF3, 0xED, 0xF7)) // M3 surface container
+            Prop.SURFACE -> if (value == "bar") v.setBackgroundColor(BAR_COLOR)
             Prop.OPTIONS, Prop.SELECTED -> log?.invoke("Choice ${n.id}: no native segmented control on Android; the idiom table never sends one")
             Prop.GAP -> lSet(handle, id, LayoutKey.GAP, spaceTokens[value] ?: 0f)
             Prop.PAD -> lSet(handle, id, LayoutKey.PAD, spaceTokens[value] ?: 0f)
@@ -290,12 +292,25 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             n.frame.apply { x = out[0]; y = out[1]; w = out[2]; h = out[3]; contentW = out[4]; contentH = out[5] }
         }
         container.requestLayout()
+        // Layout runs inside the system-bar insets. A bar on the bottom edge carries its colour on under the gesture
+        // bar (edge-to-edge, like Material's NavigationBar) without changing any frame.
+        val rootH = nodes[root]?.frame?.h ?: 0f
+        onBottomBar?.invoke(nodes.values.firstOrNull { n ->
+            n.props[Prop.SURFACE] == "bar" && kotlin.math.abs(absoluteBottom(n) - rootH) < 0.5f
+        }?.let { BAR_COLOR })
         fun relayout(id: Int) {
             val n = nodes[id] ?: return
             (n.content ?: n.view as? FrameGroup)?.requestLayout()
             n.children.forEach(::relayout)
         }
         relayout(root)
+    }
+
+    private fun absoluteBottom(n: Node): Float {
+        var y = n.frame.y + n.frame.h
+        var p = nodes[n.parent]
+        while (p != null) { y += p.frame.y - (if (p.content != null) (p.view.scrollY / density) else 0f); p = nodes[p.parent] }
+        return y
     }
 
     /** Frames, types, labels and natural leaf sizes as JSON (dp), for comparing against the Node layout. */
@@ -332,5 +347,8 @@ class Renderer(private val context: Context, val container: FrameGroup) {
     private external fun lCompute(h: Long, root: Int, w: Float, hh: Float)
     private external fun lFrame(h: Long, id: Int, out: FloatArray): Boolean
 
-    companion object { init { System.loadLibrary("weft") } }
+    companion object {
+        init { System.loadLibrary("weft") }
+        val BAR_COLOR = Color.rgb(0xF3, 0xED, 0xF7) // M3 surface container
+    }
 }

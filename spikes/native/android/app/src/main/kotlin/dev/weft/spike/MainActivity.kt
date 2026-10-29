@@ -26,6 +26,12 @@ class MainActivity : Activity() {
             override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) { if (w != ow || h != oh) post { renderer.layout() } }
         }
         val container = object : ViewGroup(this) {
+            var bottomBar: Int? = null
+            private val paint = android.graphics.Paint()
+            override fun dispatchDraw(canvas: android.graphics.Canvas) {
+                bottomBar?.let { paint.color = it; canvas.drawRect(0f, (height - paddingBottom).toFloat(), width.toFloat(), height.toFloat(), paint) }
+                super.dispatchDraw(canvas)
+            }
             override fun onMeasure(w: Int, h: Int) = setMeasuredDimension(MeasureSpec.getSize(w), MeasureSpec.getSize(h))
             override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
                 val w = r - l - paddingLeft - paddingRight; val h = b - t - paddingTop - paddingBottom
@@ -46,6 +52,7 @@ class MainActivity : Activity() {
 
         renderer = Renderer(this, content)
         renderer.log = ::log
+        renderer.onBottomBar = { c -> if (container.bottomBar != c) { container.bottomBar = c; container.invalidate() } }
         js = JsRuntime(onBatch = { bytes, ops -> main.post { renderer.apply(bytes, ops) } }, log = { line -> main.post { log(line) } })
         renderer.onEvent = { id, event, payload -> js.dispatch(id, event, payload) }
         js.start(assets.open("app.js").bufferedReader().readText())

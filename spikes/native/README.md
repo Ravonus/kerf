@@ -97,7 +97,8 @@ Verified on both devices: the category and sort choices filter (bakery → 45 pr
 switching tabs works (Bagel 10 × 1, Total $0.45, Cart (1)).
 
 Layout always runs inside the safe area. On iOS a bar that touches the bottom edge draws its background on under the
-home indicator, as `UITabBar` does, so frames (and Node parity) don't change.
+home indicator, as `UITabBar` does; on Android the activity paints the gesture-bar inset in the bar's colour
+(edge-to-edge). Frames, and Node parity, don't change on either.
 
 Gap: esbuild doesn't fold the table per OS, so each bundle carries every platform's rows. The compiler should fold
 `platform.os` and drop dead branches.
