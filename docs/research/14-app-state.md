@@ -602,7 +602,7 @@ export const meeting = defineState('meeting', () => {
 
 ```md
 ## App state
-1. Shared client state: `app/state/<feature>.ts` → `export const cart = defineState('cart', () => { …; return { boxes, actions } })`. Inside, plain `state`/`derived`. Use it anywhere as `cart.count.value`, `cart.add(id)`. No provider, no selectors.
+1. Shared client state: `app/state/<feature>.ts` → `export const cart = defineState('cart', () => { …; return { boxes, actions } })`. Inside, plain `state`/`derived`. Use it anywhere as `cart.count.value`, `cart.add(id)`. No provider, no selectors; a list row reads one entry with `lines.get(id)`.
 2. Server data is never state. Read the query (`getCart.live()`), derive from it, change it with a `mutation` (`optimistic:` on its declaration for instant UI). State holds only what the server doesn't know: UI, drafts, filters, ids.
 3. Persist: `state(init, { persist: { in: 'local' | 'session' | 'cookie' | 'idb', schema, version } })`. Changed the schema? `weft fix S003` bumps the version and adds the migration.
 4. If a scope has actions that write a box, change that box only through them (binding it to an input is fine).
@@ -1187,6 +1187,93 @@ from one helper and options on `state`. The "much smarter" part is the line betw
 by S001, the query cache and overlays, which no store library draws for you.
 
 ---
+
+## 11. Phase 1 implementation (2026-10-29)
+
+Built in `packages/weft` on branch `phase1-define-state`: `src/scope.ts` (`defineState`, app instances, `$reset`,
+`$snapshot`), `src/history.ts` (`weft/history`), `src/persist.ts` (`weft/persist`), `src/memory.ts`, keyed reads and
+state options in `src/index.ts`, and per-render apps in `weft/test`. Tests: `test/state.test.tsx` (21),
+`test/features.test.ts` (2), two new v3 budget tests, one `context` regression test. **(measured)** below means run for
+this section on an M4 Max.
+
+### 11.1 Keyed reads: `box.get(key)`
+
+The open question from [16 §4](16-compiler-spike.md) (`cart[p.id]` re-runs every row) is settled with one method on
+every box. `box.get(key)` reads one entry of an object box, and its reader re-runs only when `Object.is` says that
+entry changed. Writes diff the entries that have readers, so the cost is O(watched entries) per write, and an
+entry's source is dropped once nothing reads it.
+
+| v3 app, 150 rows **(measured)** | add one | price push | hidden tests |
+|---|---|---|---|
+| reference (`cart[p.id]` from props) | 1 DOM · 452 re-runs | 1 DOM · ≤ 10 re-runs | 23/23 |
+| cart in a scope, rows read `cart.line(id)` → `lines.get(id)` (`test/fixtures/v3-scope`) | **1 DOM · 5 re-runs** | 1 DOM · ≤ 10 re-runs | **23/23** |
+
+Rejected: a box per key (two ways to hold a record), `select(box, key)` (a new noun that is `get` with an extra
+argument), and deep tracking (proxies change identity, which breaks `===` and keyed lists). The agent rule is one
+clause in AGENTS.md rule 1 (§4.1). A compiler hint that suggests `get` when a keyed list's row reads
+`box.value[expr]` is proposed for the compiler track; it needs no types, since the list and the read are in one file.
+
+### 11.2 Size, against §9.4's budgets
+
+Measured **(measured)** as the brotli difference on top of a small rendered app (`render`, a `context`, one box),
+production build:
+
+| Piece | Budget (§9.4, guessed) | Measured |
+|---|---|---|
+| `defineState` + `$reset`/`$snapshot` + per-app instances | ≤ 0.5 KB | **0.77 KB** |
+| `history` (with action transactions) | ≤ 0.4 KB | **+0.47 KB** |
+| `persist` (local, session, memory; envelope, migrations, schema) | ≤ 0.6 KB | **+0.67 KB** |
+| unused | 0 KB | 0 KB |
+| Diagnostic text, dev names, S004/S009/S010 checks | 0 KB in prod | 0 KB in prod |
+
+- **How 0 KB unused works:** `persist` and `history` are separate modules that register with the core. The `weft()`
+  Vite plugin adds `import 'weft/persist'` / `import 'weft/history'` to app files that use the option, with a
+  filtered transform hook on id and code (`persist:`, `history: {`). The package marks only those two modules as
+  side-effectful. Without the plugin, using the option throws S008/S009 in dev with the one-line import as its fix.
+- **Dev-only text:** every message is behind `DEV` (`import.meta.env?.DEV !== false`), which Vite folds to `false`, so
+  production throws and reports carry no strings and `StateError` is dropped.
+- The overshoot is 0.07–0.27 KB per piece. The v3 shop app with a `defineState` cart is 4.38 KB br in total against
+  the 10 KB budget (`scripts/size.mjs`), so I'd raise §9.4's lines to the measured numbers rather than spend more on
+  them now.
+
+### 11.3 Where the implementation differs from §2
+
+- **Scopes resolve through the owner's app.** A handle read inside a binding uses the app its owner was rendered in
+  (a `context` set by `weft/test`'s `render()`); outside any owner it uses the current app. Two apps rendered in one
+  test therefore stay separate, but an event handler (which runs with no owner) uses the most recent app. On the
+  client there is one app per tab, so this only matters in tests.
+- **History stores each changed box's before and after values**, not patches. `.set(draft)` copies shallowly, so the
+  values share structure and memory stays O(changed boxes) per step. Patches come with `sync: 'tabs'` (Phase 3b).
+- **Async actions:** the transaction is the synchronous part. Writes after an `await` aren't named `cart.checkout#2`
+  yet: they group per microtask as `<scope>.write`, like any write outside an action. Naming the later segments
+  needs the compiler's async boundaries.
+- **Actions are plain functions unless `weft/history` is loaded.** The transaction wrapper only matters for undo
+  steps, so it lives in that module.
+- **Private persisted boxes need `name`** (`state(0, { persist: 'local', name: 'draft' })`) until the compiler hands
+  the runtime dev names. Returned boxes are named by their key.
+- **`weft/test`'s `render(Comp, props, { state, storage, name })`** takes the component and props separately (the
+  spike's signature), not JSX as §2.11 and §4.1 write it.
+- **Not in Phase 1:** `cookie`/`idb` persistence and the S013/S002 server paths (with SSR, Phase 3); `sync: 'tabs'`
+  (3b); `keep: '5m'`; the dev action log and `weft browser state`.
+
+### 11.4 Diagnostics: what the runtime covers
+
+| Code | Phase 1 runtime | Left for the compiler or `weft check` |
+|---|---|---|
+| S003 | stored payload fails its migrations or schema → `init`, payload kept at `<key>:corrupt`, reported; migrations without `version` throw | the lockfile (`.weft/state.lock.json`) and the autofix |
+| S004 | > 12 writable boxes or > 15 actions, reported at instance creation | cluster analysis and `weft fix S004` |
+| S005, S006, S007 | — | all static |
+| S008 | object/array without a schema, a private persisted box with no `name`, an unknown backend, storage write failures | `persist` outside a scope (static), cookie budget, `secret()` |
+| S009 | duplicate names, setup cycles, `$`-keys, `$history` without the option | — |
+| S010 | a value JSON would change (Date, Map, class instance, function, NaN) is reported and not written | autofix (add the codec) |
+
+### 11.5 Other fixes made on the way
+
+- `weft/dom` gained `addEvent`, which Solid's back end emits for a handler that isn't an inline function
+  (`onClick={onAdd}`). The spike's app never used that form, so this is the first case of the helper-contract gap
+  [16 §6](16-compiler-spike.md) item 3 predicted.
+- `context().provide()` now disposes its subtree with its parent. Before, a provided subtree outlived an unmount, so
+  its `watch` cleanups never ran (the v3 hidden test "none after unmount" caught it).
 
 ## Sources
 

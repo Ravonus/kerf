@@ -55,7 +55,9 @@ describe('AGENTS.md', () => {
       if (s.implemented) expect(text).toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
       else expect(text).not.toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
     }
-    expect(text).toContain('Not in this version yet: `resource`, `Boundary`, `defineState`')
+    // The installed weft has every planned export now, so the async rule is in and nothing is listed as missing.
+    expect(text).toContain('**Async data is `resource(signal => fetch(…))`**')
+    expect(text).not.toContain('Not in this version yet')
     expect(text).not.toContain('`setAttribute`')
     expect(text).toContain('| `weft check --json` |')
   })

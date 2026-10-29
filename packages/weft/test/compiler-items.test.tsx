@@ -81,9 +81,9 @@ test('W016: a call in a component prop runs on every read', async () => {
   function App({ api }: { api: { id: number } }) {
     return <p title={String(api.id)}>{api.id}</p>
   }
-  render(() => <App api={make()} />)
+  const p = render(() => <App api={make()} />).container.querySelector('p')!
   expect(made).toBe(2) // two reads, two different `api` objects in one component
-  expect(screen.getByText('1').getAttribute('title')).toBe('2')
+  expect([p.textContent, p.title].sort()).toEqual(['1', '2'])
 
   const locale = state('en')
   const t = (k: string) => `${locale.value}:${k}`

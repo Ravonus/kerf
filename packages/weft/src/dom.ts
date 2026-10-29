@@ -1,26 +1,22 @@
-// weft/dom: the helpers compiled templates call (the import surface of Solid 2's DOM back end), plus `render`
-// and the keyed list. Compiled code only; app code imports `render` and nothing else from here.
+// weft/dom: `render`, `hydrate`, the keyed list, and the helpers weft's back end emits (most live in dom-next.ts;
+// these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
+// code imports `render` (or `hydrate`) and nothing else from here.
 
-import { createRoot, effect, getOwner, memo, onCleanup, state, untrack, type State } from './index'
+import { DEV, createRoot, devComponent, effect, memo, onCleanup, state, untrack, type State } from './index'
+import { keys, step, under } from './keys'
 
-export { effect, getOwner, memo, untrack }
+export { memo }
+export { attr, bind, child, cls, component, css, delegate, first, next, on, spread, tpl } from './dom-next'
+export { hydrate } from './hydrate'
 
 type Mountable = Element | DocumentFragment
 
-export function template(html: string): () => Node {
-  let node: Node | undefined
-  return () => {
-    if (!node) {
-      const t = document.createElement('template')
-      t.innerHTML = html
-      node = t.content.firstChild!
-    }
-    return node.cloneNode(true)
-  }
-}
-
-export function createComponent<P>(Comp: (props: P) => any, props: P) {
-  return untrack(() => Comp(props))
+/** `name`/`loc` (dev builds): the component's name and `file:line`; bindings created inside carry them. */
+export function createComponent<P>(Comp: (props: P) => any, props: P, name?: string, loc?: string) {
+  if (!DEV || !name) return untrack(() => Comp(props))
+  const prev = devComponent.label
+  devComponent.label = `<${name}> (${loc})`
+  try { return untrack(() => Comp(props)) } finally { devComponent.label = prev }
 }
 
 export function render(code: () => any, container: Element): () => void {
@@ -51,7 +47,7 @@ function resolve(value: any, out: Node[]): Node[] {
   return out
 }
 
-function place(parent: Node, value: any, current: Node[], marker: Node | null): Node[] {
+export function place(parent: Node, value: any, current: Node[], marker: Node | null): Node[] {
   // Fast path: one text node in, one primitive out → update in place (one characterData write at most).
   if ((typeof value === 'string' || typeof value === 'number') && current.length === 1 && current[0].nodeType === 3) {
     const text = String(value)
@@ -100,7 +96,7 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
  * `marker` undefined: the value is the parent's only dynamic content, appended at the end.
  * `marker` null: append at the end after static children. A node: insert before it.
  */
-export function insert(parent: Mountable, value: any, marker?: Node | null, _initial?: unknown) {
+export function insert(parent: Mountable, value: any, marker?: Node | null) {
   let current: Node[] = []
   const at = marker ?? null
   if (typeof value !== 'function') {
@@ -125,13 +121,6 @@ export function setAttribute(node: Element, name: string, value: any) {
   else node.setAttribute(name, value === true ? '' : value)
 }
 
-export function setProperty(node: any, name: string, value: any) {
-  node[name] = value
-}
-
-/** Dev builds route stateful DOM properties (`input.value`) here; same write, kept separate for dev checks. */
-export const setStatefulProperty = setProperty
-
 export function className(node: Element, value: any, prev?: any) {
   if (value == null || value === false) {
     if (prev != null) node.removeAttribute('class')
@@ -146,10 +135,6 @@ export function className(node: Element, value: any, prev?: any) {
   for (const k in value) if (value[k] && !p[k]) node.classList.add(k)
 }
 
-export function readShallow<T>(value: T): T {
-  return Array.isArray(value) ? (value.slice() as T) : value
-}
-
 export function style(node: HTMLElement, value: any, prev?: any) {
   if (typeof value === 'string' || value == null) {
     node.style.cssText = value ?? ''
@@ -160,27 +145,11 @@ export function style(node: HTMLElement, value: any, prev?: any) {
   for (const k in value) if (value[k] !== p[k]) node.style.setProperty(k, value[k])
 }
 
-export function setStyleProperty(node: HTMLElement, name: string, value: any) {
-  value == null ? node.style.removeProperty(name) : node.style.setProperty(name, value)
-}
-
-export function setAttributeNS(node: Element, ns: string, name: string, value: any) {
-  if (value == null || value === false) node.removeAttributeNS(ns, name.split(':').pop()!)
-  else node.setAttributeNS(ns, name, value === true ? '' : value)
-}
-
-export function applyRef(r: any, el: Element) {
-  Array.isArray(r) ? r.flat(Infinity).forEach(f => f && f(el)) : r(el)
-}
-
+/** `ref={fn}` or `ref={[fn, …]}` (nested arrays flatten): each is called with the element, untracked. */
 export function ref(get: () => any, el: Element) {
   const r = untrack(get)
-  if (typeof r === 'function' || Array.isArray(r)) applyRef(r, el)
-}
-
-/** Hydration claims; weft has no claim consumers yet, so this is the identity. */
-export function claimElement<T extends Element>(node: T, _owner?: unknown): T {
-  return node
+  if (typeof r === 'function') r(el)
+  else if (Array.isArray(r)) for (const f of r.flat(Infinity)) f && f(el)
 }
 
 export function mergeProps(...sources: any[]) {
@@ -195,52 +164,6 @@ export function mergeProps(...sources: any[]) {
     ownKeys: () => [...new Set(sources.flatMap(s => (s ? Reflect.ownKeys(typeof s === 'function' ? s() : s) : [])))],
     getOwnPropertyDescriptor: () => ({ configurable: true, enumerable: true }),
   })
-}
-
-/**
- * `<div {...rest} a={x}>`: `sources` is one source or an array of them (objects with getters, or accessors);
- * later sources win per key. One effect applies attributes, properties, class, style, events and `ref`; children
- * get their own `insert` so an attribute change never rebuilds them.
- */
-export function spread(node: any, sources: any, skipChildren?: boolean) {
-  const list = Array.isArray(sources) ? sources : [sources]
-  const read = (k: string) => {
-    for (let i = list.length - 1; i >= 0; i--) {
-      const s = typeof list[i] === 'function' ? list[i]() : list[i]
-      if (s != null && k in s) return s[k]
-    }
-  }
-  const svg = node instanceof SVGElement
-  let prev: Record<string, any> = {}
-  effect(
-    () => {
-      const next: Record<string, any> = {}
-      for (const s of list) {
-        const v = typeof s === 'function' ? s() : s
-        if (v != null) for (const k of Object.keys(v)) if (k !== 'children') next[k] = undefined
-      }
-      for (const k in next) next[k] = read(k)
-      return next
-    },
-    next => {
-      for (const k in prev) if (!(k in next)) assignProp(node, k, undefined, prev[k], svg)
-      for (const k in next) if (next[k] !== prev[k]) assignProp(node, k, next[k], prev[k], svg)
-      prev = next
-    },
-  )
-  if (!skipChildren) insert(node, () => read('children'))
-}
-
-function assignProp(node: any, k: string, v: any, p: any, svg: boolean) {
-  if (k === 'ref') v && applyRef(v, node)
-  else if (k === 'class' || k === 'className') className(node, v, p)
-  else if (k === 'style') style(node, v, p)
-  else if (k.startsWith('on') && k.length > 2) {
-    const name = k.slice(2).toLowerCase()
-    if (p) node.removeEventListener(name, p)
-    if (v) node.addEventListener(name, v)
-  } else if (!svg && k in node && !k.includes('-')) node[k] = v
-  else setAttribute(node, k, v)
 }
 
 // ---- events ---------------------------------------------------------------------------------------------------
@@ -270,16 +193,14 @@ export function delegateEvents(names: string[]) {
   }
 }
 
+/** `onX={handler}`, read once: delegated when the event is. `[fn, data]` calls `fn(data, event)`. */
 export function addEvent(node: any, name: string, handler: any, delegate?: boolean) {
-  if (!delegate) return addEventListener(node, name, handler)
+  if (!delegate) return node.addEventListener(name, Array.isArray(handler) ? (e: Event) => handler[0](handler[1], e) : handler)
   const key = `_$$${name}`
-  node[key] = Array.isArray(handler) ? handler[0] : handler
-  node[`${key}Data`] = Array.isArray(handler) ? handler[1] : undefined
-}
-
-export function addEventListener(node: Element, name: string, handler: any) {
-  if (Array.isArray(handler)) node.addEventListener(name, e => handler[0](handler[1], e))
-  else node.addEventListener(name, handler)
+  if (Array.isArray(handler)) {
+    node[key] = handler[0]
+    node[`${key}Data`] = handler[1]
+  } else node[key] = handler
 }
 
 // ---- keyed list (§3.4) ----------------------------------------------------------------------------------------
@@ -291,6 +212,7 @@ type Row = { item: State<any>; index: State<number>; nodes: any; dispose: () => 
  * object under the same key updates the row in place through its live `item` accessor; it never rebuilds it.
  */
 export function For<T>(props: { each: readonly T[] | null | undefined; by?: (item: T) => unknown; children: (item: () => T, index: () => number) => any }) {
+  const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
   let rows = new Map<unknown, Row>()
   let order: Row[] = []
   let out: any[] = []
@@ -315,7 +237,8 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
         } else {
           row = createRoot(dispose => {
             const it = state(item), ix = state(i)
-            return { item: it, index: ix, nodes: props.children(() => it.value, () => ix.value), dispose }
+            const make = () => props.children(() => it.value, () => ix.value)
+            return { item: it, index: ix, nodes: keys.on ? under(base + step(key) + '/', make) : make(), dispose }
           })
         }
         next.set(key, row)

@@ -197,7 +197,7 @@ fn w005_state_of_prop() {
 fn map_becomes_keyed_list_with_live_item() {
     let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(x => <li key={x.id}>{x.name}</li>)}</ul> }");
     assert!(d.is_empty(), "{d:?}");
-    assert!(code.contains("_$createComponent(_$For"), "{code}");
+    assert!(code.contains("_$component(For, "), "{code}");
     assert!(code.contains("by: (x) => x.id"), "key stays raw in `by`: {code}");
     assert!(code.contains("x().name"), "row reads the live item: {code}");
     assert!(!code.contains("key"), "key attribute removed: {code}");
@@ -230,13 +230,13 @@ fn destructured_row_item() {
 fn primitive_lists_need_no_key() {
     let (code, d) = run("export function L({ tags }) { return <ul>{tags.map(t => <li>{t}</li>)}</ul> }");
     assert!(d.is_empty(), "{d:?}");
-    assert!(code.contains("_$For") && !code.contains("by:"), "{code}");
+    assert!(code.contains("_$component(For, ") && !code.contains("by:"), "{code}");
 }
 
 #[test]
 fn list_inside_conditional() {
     let (code, _) = run("export function L({ xs, on }) { return <div>{on ? xs.map(x => <p key={x.id}>{x.n}</p>) : null}</div> }");
-    assert!(code.contains("_$For"), "{code}");
+    assert!(code.contains("_$component(For, "), "{code}");
 }
 
 #[test]
@@ -438,4 +438,46 @@ fn source_maps_point_at_authored_lines() {
     let out = compile(src, &Options { source_map: true, ..Default::default() });
     let map = out.map.expect("map");
     assert!(map.contains("\"mappings\""), "{map}");
+}
+
+// ---- research 19 step 4: dev comments, explain ---------------------------------------------------------------
+
+const TWO_LINES: &str = "export function A(props: { n: number }) {\n  return (\n    <ul>\n      <li title=\"x\">{props.n}</li>\n    </ul>\n  )\n}";
+
+#[test]
+fn explain_maps_each_jsx_node_to_its_authored_line() {
+    let out = compile(TWO_LINES, &Options { filename: "App.tsx".into(), explain: true, ..Default::default() });
+    let explain = out.explain.expect("explain");
+    let ul = explain.iter().find(|x| x.line == 3).expect("an entry on line 3");
+    assert_eq!((ul.column, ul.node.as_str()), (5, "<ul>"));
+    assert!(ul.code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")") && ul.code.contains("_$child("), "{}", ul.code);
+}
+
+#[test]
+fn dev_templates_name_their_source_line() {
+    let out = compile(TWO_LINES, &Options { filename: "App.tsx".into(), dev: true, ..Default::default() });
+    let code = out.code.unwrap();
+    assert!(code.contains("// App.tsx:3 <ul>\n"), "{code}");
+    assert!(code.contains(", false, \"App.tsx:3 <ul>\")"), "{code}");
+    let prod = compile(TWO_LINES, &Options { filename: "App.tsx".into(), ..Default::default() }).code.unwrap();
+    assert!(!prod.contains("App.tsx:3"), "{prod}");
+}
+
+#[test]
+fn weft_back_end_source_maps_point_at_the_authored_lines() {
+    let source = "import { state } from 'weft'\n\nconst helper = () => 1\n\nexport function A() {\n  const count = state(helper())\n  return (\n    <section>\n      <button onClick={() => count.value++}>\n        {count.value * 2}\n      </button>\n    </section>\n  )\n}\n";
+    let out = compile(source, &Options { filename: "App.tsx".into(), source_map: true, ..Default::default() });
+    let code = out.code.unwrap();
+    assert!(!code.contains(['\u{E000}', '\u{E001}', '\u{E002}', '\u{E003}']), "{code}");
+    let json = out.map.expect("a map");
+    let map = oxc_sourcemap::SourceMap::from_json_string(&json).unwrap();
+    let table = map.generate_lookup_table();
+    // (text in the output, its authored line, 1-based)
+    for (needle, line) in [("helper = ", 3), ("state(helper())", 6), ("count.value++", 9), ("count.value * 2", 10), ("_$on(", 8)] {
+        let at = code.find(needle).unwrap_or_else(|| panic!("{needle} in {code}"));
+        let out_line = code[..at].matches('\n').count() as u32;
+        let out_col = code[..at].rsplit('\n').next().unwrap().encode_utf16().count() as u32;
+        let t = map.lookup_token(&table, out_line, out_col).unwrap_or_else(|| panic!("no token for {needle}"));
+        assert_eq!(t.get_src_line() + 1, line, "{needle}\n{code}");
+    }
 }

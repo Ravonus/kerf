@@ -37,7 +37,8 @@ Nobody owns "the framework built for agents" yet, and no one has measured agent 
    (e.g. assigning to a `Derived`) are mapped into the same codes.
 6. **Inspectable as JSON** in dev: the reactive graph with real variable names, routes, server functions, tokens,
    surfaces. Agents *ask* the app what's true. (Names are dev-only and stripped in prod builds.)
-7. **Small.** Target ≤ 6 KB gz runtime, Solid/Marko-class speed. A goal, not a v0 gate.
+7. **Small.** Target ≤ 6 KB gz runtime, Solid/Marko-class speed. A goal, not a v0 gate. Being bigger than Solid
+   is fine when it buys weft's design: aim for about 10 KB br per app, with 50 KB br as the ceiling (§3.7).
 
 ## 3. The language: TSX with weft semantics
 
@@ -48,7 +49,7 @@ Nobody owns "the framework built for agents" yet, and no one has measured agent 
 | `state(init)` → `State<T>` | Writable box. Read/write `.value`. Deep updates: `.set(draft => { draft.push(x) })`. |
 | `state.linked(() => expr)` | Writable, but resets whenever `expr` changes. For "local copy of a prop" (editable form defaults, optimistic values). |
 | `derived(() => expr)` → `Derived<T>` | B = f(A). Pure, lazy, cached, read-only. **The default tool.** Async functions are rejected; use `resource`. |
-| `resource(async (signal) => …)` → `Resource<T>` | Async derived: `.value .pending .error .refresh()`, cancels via AbortSignal. Server queries return these. |
+| `resource(async (signal) => …)` → `Resource<T>` | Async derived: `.value .pending .error .refresh()`, cancels via AbortSignal. Server queries return these. A superseded fetch is aborted and ignored; a refetch keeps the value; hydrated, it starts with the server's value. |
 | `watch(() => source, (value, prev) => cleanup?)` | Side effects only (DOM APIs, logging, imperative libraries). Source phase tracked, callback not. |
 | `onMount(fn)` / `onCleanup(fn)` | Element access and teardown. |
 | `context<T>()` | Typed dependency injection. |
@@ -148,15 +149,17 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 
 ### 3.6 Compiler, runtime, tooling
 
-- **Compiler: Rust/Oxc from day one** ([08](research/08-builder-and-compiler.md)).
-  - Build on Solid 2's native `solidjs-compiler` crate (MIT) at a pinned git revision, called through
-    `compile_program` on weft's own Oxc AST. Fork into `crates/` only for a back-end change upstream won't take. Keep
-    NOTICE and track upstream; weft's Oxc version follows the pinned rev ([16](research/16-compiler-spike.md)).
-  - It already does template cloning, bindings, SSR/hydration keys, dev names, server-function extraction and the
-    HMR transform. It is 23× faster than Babel on Solid's own test set.
-  - weft adds one crate, `weft-compiler`: `pre` (§3.3 props, §3.4 lists, naming) → `diag` (W-codes with spans and
-    autofix) → the pinned back end. One Oxc parse and one source map per file. A helper-contract
-    conformance test checks that every helper the back end can import exists in `weft/dom`.
+- **Compiler: Rust/Oxc, and weft owns all of it** ([08](research/08-builder-and-compiler.md), decided 2026-10-29).
+  - One crate, `weft-compiler`: `pre` (§3.3 props, §3.4 lists, naming) → `diag` (W-codes with spans and autofix) →
+    weft's own back end (templates, bindings, SSR output, hydration keys, dev names). One Oxc parse and one source map
+    per file. Oxc is the parser toolkit; no framework's compiler is in the build.
+  - The back end is designed for agents: a small helper set that weft defines and versions, one lowering per
+    construct, output an agent can read and `weft explain` can map back to source, and hydration keys derived from
+    source position so a mismatch names the component and line. Design: [19](research/19-own-back-end.md).
+  - **Transition (done 2026-10-29):** the Phase 1 spike ran weft's pre-pass on Solid 2's `solidjs-compiler` crate
+    ([16](research/16-compiler-spike.md)). weft's back end passed the same checks and replaced it
+    ([19 §5.5](research/19-own-back-end.md)); the crate is gone from the build. Solid remains a benchmark comparison,
+    and its recorded output is the corpus oracle's reference, never a dependency.
   - Shipped through napi-rs as prebuilt binaries plus a WASI fallback. Text goes in; code, map and diagnostics come
     out. ASTs never cross JS↔Rust.
   - **Decision rule:** a 2-week spike must pass all four checks:
@@ -166,8 +169,13 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
     4. 1k components compiled in ≤ 0.5 s.
 
     If any fails, fork `@solidjs/babel-plugin` 2.x instead. Never ship two compilers.
-- **Runtime:** signals core, DOM bindings, keyed reconciler, SSR string renderer, hydration (dom-expressions keys).
-- **Async/errors in markup:** `<Boundary pending={…} error={(e, retry) => …}>`.
+- **Runtime:** signals core, DOM bindings, keyed reconciler, SSR string renderer on the same reactive core (effects
+  off), hydration by source-path keys (` wk="0.1/0"`, from weft's own back end, [19 §5.3](research/19-own-back-end.md)),
+  `renderToStringAsync` (render, await resources, re-render), page data in `<script data-weft>`; streaming in
+  Phase 3 ([18](research/18-ssr-and-boundaries.md)).
+- **Async/errors in markup:** `<Boundary pending={…} error={(e, retry) => …}>`. The fallback shows after 150 ms and
+  is held ≥ 400 ms; refetches never flash; errors during render and failed resources reach `error(e, retry)`, errors
+  in later updates don't yet ([18](research/18-ssr-and-boundaries.md)).
 - **Types:** a `JSX` namespace for weft (intrinsics, `key`, typed `currentTarget` on events, box/value assignability).
 - **HMR:** state preserved across edits by the compiler-assigned names (the solid-refresh approach).
 - **Testing:** `weft/test` gives `render()`, `flush()`, and DOM queries for vitest.
@@ -182,12 +190,17 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 
 Measured on a quiet runner and gated on ratios, not on wall-clock from a busy laptop.
 
+**Size stance (2026-10-29).** weft doesn't have to match Solid's bytes. About 10 KB br for a whole app is the goal,
+and 50 KB br is the ceiling. The runtime's gate is 10 KB br, with 6 KB as the target to keep working toward; the
+other budgets below stay as they are. When a design choice costs bytes but makes weft clearer for agents, say what
+it costs and take it, as long as it stays inside those numbers.
+
 | Metric | Budget |
 |---|---|
-| Runtime (benchmark app) | ≤ 6 KB brotli; hello world ≤ 3 KB |
+| Runtime (benchmark app) | ≤ 10 KB brotli (gate), aiming for ≤ 6 KB; hello world ≤ 3 KB |
 | v3 shop app, total JS | ≤ 10 KB brotli |
 | DOM work | every eval scenario has a `toTouchAtMost(n, { runs })`; v3 price-push ≤ 1 mutation and ≤ 10 re-runs, add-one ≤ 3 |
-| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run |
+| js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run. 2026-10-29, weft's own back end: 1.063×, pass; memory 1.5×, open ([19 §5.5](research/19-own-back-end.md)) |
 | Compiler | ≤ 0.5 s per 1k files, single-threaded, diagnostics included |
 | `weft check`, 1k files | ≤ 3 s cold, ≤ 0.5 s warm (weft's own diagnostics pass) |
 | HMR, 1k components | ≤ 50 ms p95, from file write to DOM updated |
@@ -402,10 +415,15 @@ export const cart = defineState('cart', () => {
   - `sync: 'tabs'`, `history` (undo/redo, one step per action call), devtools names (`cart.count` in
     `weft browser state` and the recorder), `$reset` and `$snapshot`, and a fresh instance per test.
 - **Fine-grained updates mean no selectors.** Typing in the cart note re-runs nothing in the 150 product rows.
+  - **Keyed reads:** `box.get(key)` reads one entry of an object box, and its reader re-runs only when that entry
+    changes. On the v3 app with the cart in a scope, add-one went from 452 re-runs to 5, still 1 DOM write
+    (research 14 §11).
 - **One instance per request on the server.** Reaching a scope with no owner on the server throws S002, so state
   can't leak between users.
 - **Size:** the same cart is 24 lines and 7 concepts, against 91 lines and 23 concepts in zustand + TanStack Query.
-  About 1.5 KB br when every feature is used, 0 KB when unused (estimated).
+  Measured in Phase 1 on top of a rendered app (brotli): `defineState` 0.77 KB, `persist` +0.67 KB, `history`
+  +0.47 KB, 0 KB when unused. `persist` and `history` are their own modules, which the `weft()` plugin imports only
+  into files that use the option (research 14 §11).
 - **Diagnostics S001–S013,** seven with autofixes. The AGENTS.md block is 7 lines.
 - **Plugins:** `state.persist@1` (opfs, native device storage). `cache.sync@1` is reserved for sync engines, which
   feed the query cache, never state.
@@ -746,7 +764,7 @@ packages/
   start       routing, server functions, cache, Nitro integration, real-time   (weft/server, weft/db, weft/realtime)
   rust        weft/rust (native, remote) + the `weft` crate (codegen, Ctx, axum router), opt-in
 crates/
-  weft-compiler   pre + diag on Solid 2's back end (pinned crate); napi + WASI builds
+  weft-compiler   pre + diag + weft's own back end (Solid's crate until it's replaced); napi + WASI builds
   ds          tokens, layout primitives, components, Tailwind adapter
   ui-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
@@ -770,11 +788,11 @@ evals/        agent eval harness
 | Phase | Ships | Exit check |
 |---|---|---|
 | **0. Eval** | 6 tasks, one per root cause (stale snapshot, effect-as-derivation, invisible tracking, context-dependent magic, scheduling, silent failure). PROMPT.md + hidden vitest. Baselines in React 19 and Solid, 5 samples each. | Baseline pass@1 and failures tagged by cause. |
-| **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler. Client-only runtime, `weft/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `weft/test` + T001–T009, HMR, `defineState` (client instance, `persist` local/session, `history`, names, `$reset`) + S003–S010, `weft.config.ts` (with reserved `plugins`/`slots` keys and P100–P120) + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft beats both baselines. Every eval failure maps to a W-code, or becomes a new one. |
+| **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler with weft's own back end (replacing the spike's Solid crate). Client-only runtime, `weft/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `weft/test` + T001–T009, HMR, `defineState` (client instance, `persist` local/session, `history`, names, `$reset`) + S003–S010, `weft.config.ts` (with reserved `plugins`/`slots` keys and P100–P120) + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft beats both baselines. Every eval failure maps to a W-code, or becomes a new one. |
 | **1b. Verify loop** | Name-keyed state-preserving HMR (flagged), 1k-component perf gates, `weft browser` daemon + graph overlay + recorder + network/time control for reconnects, test gate (fail-before, diff-scoped mutation, T020). | The gate accepts every eval reference test and catches planted junk tests (tautologies, implementation-detail, no-fail-before). |
-| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft/plugin-text`'s `font.build` as the first provider. `<Media>` for stills and `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, `<Boundary pending>` timing, X005–X008, X020–X031. | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
+| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft/plugin-text`'s `font.build` as the first provider. `<Media>` for stills and `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, skeleton shapes for `<Boundary pending>` (the timing landed in Phase 1), X005–X008, X020–X031. | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
 | **2. Surfaces** | `defineSurface`, canvas2d, webgl2, Keel port. the `text.measure` slot (slim engine and pretext) with conformance, `s.text()` with the DOM mirror, X001–X012, X040/X041. | A Keel demo ported; an agent adds a surface to a page from a one-line request. |
-| **3. Start** | SSR + hydration, routing, `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). Per-request `defineState` instances + SSR state payload, `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
+| **3. Start** | Streaming SSR (the string renderer and hydration landed in Phase 1), routing, `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). The `defineState` SSR state payload (per-request instances landed in Phase 1), `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
 | **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
 | **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'background'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
 | **4. Design** | `weft/ds` tokens, primitives, Tailwind adapter, D-checks. | weft/ds vs raw Tailwind on consistency and a11y. |
@@ -833,10 +851,14 @@ Also out of v0:
 - **`.value` in JSX: settled, required everywhere** ([16 §5](research/16-compiler-spike.md)). Auto-read only works
   for boxes declared in the same file, so it would be a partial rule. W015 catches bare boxes; the agent eval only
   confirms the error rate.
-- **Compiler spike outcome: settled.** Rust/Oxc on Solid 2's crate as a pinned dependency (§3.6, §12).
-- **Keyed reads of record boxes.** A row reading `cart[p.id]` from one `cart` box re-runs in every row on any cart
-  change (v3 add-one: 452 re-runs for 1 DOM write). Box per key, a `select(box, key)` primitive, or deep tracking in
-  `.set(draft)`?
+- **Compiler spike outcome: settled, then superseded.** The spike passed on Solid 2's crate; weft now owns its back
+  end and removes the crate once its own passes the same checks (§3.6, §12).
+- **Event replay before hydration:** a capture script like Solid's `_$HY`, or nothing?
+- **Partial hydration** (`<NoHydration>`, islands): needed before Phase 3's routing?
+- **Hydrated resources:** trust the server's value (today), or revalidate in the background?
+- **Keyed reads of record boxes: settled, `box.get(key)`** ([14 §11](research/14-app-state.md)). One method on
+  every box, no new primitive, no proxies: v3 add-one goes from 452 re-runs to 5. A compiler hint that suggests it
+  when a keyed list's row reads `box.value[expr]` is a proposed follow-up.
 - **Native addons on Bun and Deno.** napi-rs doesn't test addons on Deno, and Bun support is best-effort. Native
   addons also can't be unloaded in dev, so dev reload means restarting the server worker. Spike before Phase 5b.
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
@@ -861,6 +883,10 @@ Also out of v0:
   spike is the fallback gate.
 - **Compiler spike passed** (2026-10-28). weft is a pre-pass on Solid 2's crate, used unmodified; 193 ms per 1k
   components; v3 app 3.5 KB br with 1 DOM write per price push ([16](research/16-compiler-spike.md)).
+- **weft owns its code generator** (2026-10-29). The spike proved the design on Solid 2's crate, but keeping it
+  would let another framework decide weft's helper set, markers and hydration keys, the opposite of a system built
+  for agents. weft writes its own back end; the crate leaves the build once that passes the same gates. Forking was
+  ruled out for the same reason. Solid stays as a benchmark comparison only.
 - **Performance gates start in Phase 1** (2026-10-28). The v3 eval showed efficiency is the differentiator.
 - **Real-time is poke + refetch over tags, owned by the client cache** (2026-10-28). It reuses auth and the tagged
   cache. Subscriptions outlive the components that read them, which fixes the v3 bug class by design.

@@ -5,10 +5,12 @@ and what Phase 1 proper should change: [docs/research/16-compiler-spike.md](../.
 
 | Import | What |
 |---|---|
-| `weft` | `state`, `state.linked`, `derived`, `watch`, `onCleanup`, `onMount`, `untrack`, `flush`, `context` |
-| `weft/dom` | `render`, plus the helpers compiled templates call (Solid 2's DOM back-end surface) and the keyed `For` |
-| `weft/test` | `render`, `flush`, `touches()`, and `expect(fn).toTouchAtMost(n, { runs })` |
-| `weft/vite` | `weft()`: one filtered transform hook calling the native compiler |
+| `weft` | `state` (with `.get(key)` keyed reads), `state.linked`, `derived`, `watch`, `onCleanup`, `onMount`, `untrack`, `flush`, `context`, `defineState`, `resource`, `<Boundary>` |
+| `weft/persist`, `weft/history` | `defineState`'s `persist` and `history` options; the Vite plugin imports each where it's used |
+| `weft/dom` | `render`, `hydrate`, plus the helpers compiled templates call and the keyed `For` |
+| `weft/ssr` | `renderToString`, `renderToStringAsync` (resources awaited), plus the helpers SSR output calls |
+| `weft/test` | `render` (a fresh app per call: `{ state, storage }` seed scopes and share storage), `scope()`, `memoryStorage()`, `flush`, `touches()`, and `expect(fn).toTouchAtMost(n, { runs })` |
+| `weft/vite` | `weft({ hydratable })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms; `?weft-ssr`/`?weft-hydrate` imports for tests), and one adding the `persist`/`history` imports |
 | `weft/compiler` | `transform(source, options)` → `{ code, map, diagnostics }` |
 
 ```bash
@@ -19,4 +21,12 @@ node scripts/size.mjs       # brotli sizes against the §3.7 budgets
 node scripts/gen-corpus.mjs 1000 && node scripts/bench.mjs
 ```
 
-Not in the spike: SSR and hydration, `<Boundary>`, `resource`, dev names, HMR, `defineState`, and the JSX type namespace.
+The compiler's back end is weft's own (PLAN §3.6, §12; [research 19](../../docs/research/19-own-back-end.md)). No other
+framework's compiler is in the build. Hydration keys are source paths (` wk="0.1/0"`), and hole ranges are
+`<!--[-->…<!--]-->`. `weftc --explain file.tsx:LINE` shows what a line compiles to. `resource` and `<Boundary>`:
+[research 18](../../docs/research/18-ssr-and-boundaries.md).
+
+`defineState` (Phase 1): [research 14 §11](../../docs/research/14-app-state.md) has what's built, the sizes and the
+differences from the design.
+
+Not yet: streaming SSR, compiler dev names on weft's back end, HMR, and the JSX type namespace.

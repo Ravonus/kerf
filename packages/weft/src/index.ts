@@ -5,6 +5,9 @@
 
 const CLEAN = 0, CHECK = 1, DIRTY = 2
 
+/** Dev build: diagnostic text, dev names and dev-only checks. Vite folds it to `false` in production builds. */
+export const DEV: boolean = (import.meta as any).env?.DEV !== false
+
 type Source = { v: any; o: Computation[] }
 
 export interface Owner {
@@ -22,13 +25,33 @@ interface Computation extends Source, Owner {
   effect: 0 | 1
   id: number
   dead?: true
+  /** Dev name: the binding (`li.children`), its source location and the component it was created in. */
+  n?: string
 }
+
+/** Dev names compiled bindings pass (`name`/`loc`). */
+export interface EffectOptions { name?: string; loc?: string }
+
+/** Dev only: the component being created (`createComponent(Comp, props, name, loc)`), for binding names. */
+export const devComponent: { label?: string } = {}
 
 let listener: Computation | null = null
 let owner: Owner | null = null
 let nextId = 0
 let queue: Computation[] = []
 let scheduled = false
+
+/** SSR and hydration switches: `server` skips effects (weft/ssr); `data` is the page's server data (weft/dom hydrate). */
+export const rt: {
+  server: boolean
+  /** The render's data: resolved resources and boundary states by key, written by the server, read by hydrate. */
+  data?: SsrData
+  /** Server only: fetches the current render started, and a hole resolver (weft/ssr). */
+  wait?: Promise<unknown>[]
+  resolve?: (v: unknown) => string
+} = { server: false }
+
+export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'> }
 
 /** Reactive work counter, read by `weft/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
@@ -97,6 +120,9 @@ function run(node: Computation) {
       node.v = v
       for (const o of node.o) o.state = DIRTY
     }
+  } catch (e) {
+    if (DEV && node.n && e && typeof e === 'object' && !(e as any).weft) (e as any).weft = node.n // where it threw
+    throw e
   } finally {
     listener = prevListener
     owner = prevOwner
@@ -123,6 +149,7 @@ function computation(fn: (prev: any) => any, effect: 0 | 1, init?: any): Computa
     fn, v: init, o: [], s: [], state: DIRTY, effect, id: nextId++,
     owned: null, cleanups: null, owner, context: owner?.context,
   }
+  if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) (owner.owned ??= []).push(node)
   return node
 }
@@ -141,28 +168,93 @@ export interface State<T> {
   value: T
   /** Deep update: mutate a copy (arrays/objects are shallow-copied first). */
   set(update: (draft: T) => void): void
+  /**
+   * Read one entry of an object box. The reader re-runs only when that entry changes (`Object.is`), not on every
+   * write to the box: `cart.get(p.id)?.qty` in 150 rows re-runs 1 row on add-one, `cart.value[p.id]` re-runs 150.
+   */
+  get<K extends keyof T>(key: K): T[K]
+}
+
+export interface StateOptions<T> {
+  /** Persist through reloads (§4.5). Only inside `defineState`. The short form takes primitive `init` only. */
+  persist?: 'local' | 'session' | 'memory' | {
+    in: 'local' | 'session' | 'memory'
+    /** Required for object and array values: a Standard Schema (Zod, Valibot, ArkType). */
+    schema?: StandardSchema<T>
+    version?: number
+    migrate?: Record<number, (old: any) => unknown>
+  }
+  /** Leave this box out of its scope's undo history. */
+  history?: false
+  /** Name inside its scope (`cart.<name>`). Returned boxes are named by their key; a private persisted box needs one. */
+  name?: string
+}
+
+/** The validation half of the Standard Schema spec (standardschema.dev). */
+export interface StandardSchema<T = unknown> {
+  readonly '~standard': {
+    validate(value: unknown): { value: T; issues?: undefined } | { issues: readonly { message: string }[] } | Promise<unknown>
+  }
 }
 
 export interface Derived<T> {
   readonly value: T
 }
 
-class Box<T> implements State<T> {
+/** Set by `defineState` while a setup runs, to collect the boxes it creates. */
+export let collecting: Box<any>[] | null = null
+export function collect<T>(fn: () => T): [T, Box<any>[]] {
+  const prev = collecting, boxes: Box<any>[] = (collecting = [])
+  try { return [fn(), boxes] } finally { collecting = prev }
+}
+
+export class Box<T> implements State<T> {
   v: T
   o: Computation[] = []
-  constructor(v: T) { this.v = v }
+  /** Per-entry sources for `get(key)`. */
+  k?: Map<PropertyKey, Source>
+  /** Write hook: a scope's history, persistence and transactions. */
+  h?: (box: Box<T>, prev: T) => void
+  /** Dev name (`cart.note`). */
+  n?: string
+  constructor(v: T, public opts?: StateOptions<T>) {
+    this.v = v
+    if (collecting) collecting.push(this)
+  }
   get value() { read(this); return this.v }
-  set value(v: T) { write(this, v) }
+  set value(v: T) { this.w(v) }
   set(update: (draft: T) => void) {
     const v: any = this.v
     const draft = Array.isArray(v) ? v.slice() : v && typeof v === 'object' ? { ...v } : v
     update(draft)
-    write(this, draft)
+    this.w(draft)
+  }
+  get<K extends keyof T>(key: K): T[K] {
+    if (listener) {
+      const k = (this.k ??= new Map())
+      let s = k.get(key)
+      if (!s) k.set(key, (s = { v: undefined, o: [] }))
+      read(s)
+    }
+    return (this.v as any)?.[key]
+  }
+  w(v: T) {
+    const prev: any = this.v
+    if (Object.is(prev, v)) return
+    if (this.k) {
+      // Entry readers only: they re-run when their entry changed; whole-value readers are marked by write() below.
+      for (const [key, s] of this.k) {
+        if (!s.o.length) { this.k.delete(key); continue }
+        if (!Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
+      }
+    }
+    write(this, v)
+    if (this.h) this.h(this, prev)
   }
 }
 
-export function state<T>(init: T): State<T> {
-  return new Box(init)
+export function state<T>(init: T, options?: StateOptions<T>): State<T> {
+  return new Box(init, options)
 }
 
 /** A writable box that resets whenever `source` changes (a local copy of a prop). */
@@ -177,18 +269,21 @@ state.linked = <T>(source: () => T): State<T> => {
     },
     set value(v: T) { local.value = { v, from: src.value } },
     set(update) { const d: any = this.value; update(d); this.value = d },
+    get(key) { return (this.value as any)?.[key] },
+  }
+}
+
+export class Memo<T> implements Derived<T> {
+  constructor(private node: Computation) {}
+  get value(): T {
+    update(this.node)
+    read(this.node)
+    return this.node.v
   }
 }
 
 export function derived<T>(fn: () => T): Derived<T> {
-  const node = computation(fn, 0)
-  return {
-    get value() {
-      update(node)
-      read(node)
-      return node.v
-    },
-  }
+  return new Memo(computation(fn, 0))
 }
 
 /** Accessor form used by compiled code (`memo`). */
@@ -212,14 +307,16 @@ export function watch<T>(source: () => T, run: (value: T, prev: T | undefined) =
   onCleanup(() => cleanup && cleanup())
 }
 
-/** Compiled binding: `compute` is tracked, `apply(value, prev)` writes the DOM. Runs once now. */
-export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | undefined) => void) {
+/** Compiled binding: `compute` is tracked, `apply(value, prev)` writes the DOM. Runs once now; never on the server. */
+export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | undefined) => void, options?: EffectOptions) {
+  if (rt.server) return
   let prev: T | undefined
   const node = computation(() => {
     const v = compute(prev)
     untrack(() => apply(v, prev))
     prev = v
   }, 1)
+  if (DEV && options?.name) node.n = `${options.name} (${options.loc})${node.n ? ` in ${node.n}` : ''}`
   run(node)
 }
 
@@ -266,7 +363,9 @@ export function context<T>(fallback?: T) {
   const id = Symbol()
   return {
     provide<R>(value: T, fn: () => R): R {
-      return createRoot(() => {
+      const parent = owner
+      return createRoot(dispose => {
+        if (parent) (parent.cleanups ??= []).push(dispose) // the subtree goes when its parent does
         owner!.context = { ...owner!.context, [id]: value }
         return fn()
       })
@@ -288,3 +387,6 @@ export function omit<T extends object>(props: T, keys: string[]): any {
       keys.includes(k as string) ? undefined : { configurable: true, enumerable: true, get: () => (t as any)[k] },
   })
 }
+
+export { Boundary, resource, type Resource } from './async'
+export { defineState, StateError, type ScopeHandle, type History, type HistoryEntry } from './scope'

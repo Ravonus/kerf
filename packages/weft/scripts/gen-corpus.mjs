@@ -68,4 +68,6 @@ export function ${N}({ items, title, limit = 20, onPick, tone = 'quiet' }: Props
 }
 
 for (let i = 0; i < n; i++) writeFileSync(join(dir, `C${String(i).padStart(4, '0')}.tsx`), component(i))
+// What the components import, so the corpus also runs (test/oracle.test.tsx), not only compiles.
+writeFileSync(join(dir, 'format.ts'), `export const format = (v: unknown) => (typeof v === 'number' ? v.toFixed(2) : String(v ?? ''))\n`)
 console.log(`wrote ${n} components to ${dir}`)

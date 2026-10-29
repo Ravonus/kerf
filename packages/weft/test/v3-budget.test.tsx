@@ -42,3 +42,25 @@ test('identity-breaking spread (v3 Sonnet habit): still 1 DOM mutation, but ever
   expect(reference.runs).toBeGreaterThan(150)
   await expect(expect(() => push('p100', 98)).toTouchAtMost(1, { runs: 10 })).rejects.toThrow(/re-runs/)
 })
+
+// The same app with the cart in a defineState scope whose rows read one entry each (`lines.get(id)`).
+import { App as ScopeApp } from './fixtures/v3-scope/App'
+
+test('add one, cart in a scope with keyed reads: 1 DOM mutation per changed row, no 150-row re-run', async () => {
+  const ref = await start(App)
+  const before = await touches(() => ref.user.click(screen.getByRole('button', { name: 'Add Item 007' })))
+  document.body.innerHTML = ''
+  const { user } = await start(ScopeApp)
+  const after = await touches(() => user.click(screen.getByRole('button', { name: 'Add Item 007' })))
+  console.log(`add one: reference ${before.mutations} DOM · ${before.runs} re-runs; scope + get() ${after.mutations} DOM · ${after.runs} re-runs`)
+  expect(screen.getByRole('button', { name: 'Cart (1)' })).toBeTruthy()
+  expect(before.runs).toBeGreaterThan(150)
+  await expect(() => user.click(screen.getByRole('button', { name: 'Add Item 008' }))).toTouchAtMost(3, { runs: 12 })
+})
+
+test('price push and typing are unchanged by the scope', async () => {
+  const { push, user } = await start(ScopeApp)
+  await expect(() => push('p100', 99)).toTouchAtMost(1, { runs: 10 })
+  const t = await touches(() => user.type(screen.getByRole('textbox'), 'ite'))
+  console.log(`scope app, type 3 chars: ${t.mutations} DOM · ${t.runs} re-runs`)
+})

@@ -5,11 +5,17 @@
   "description": "weft runtime, compiler binding, Vite plugin and test utilities (Phase 1 compiler spike)",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/persist.ts",
+    "./src/history.ts"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./dom": "./src/dom.ts",
+    "./ssr": "./src/ssr.ts",
     "./test": "./src/test.ts",
+    "./persist": "./src/persist.ts",
+    "./history": "./src/history.ts",
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"
   },
@@ -25,6 +31,7 @@
     "jsdom": "30.1.3",
     "typescript": "5.9.3",
     "vite": "8.3.5",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
   }
 }
