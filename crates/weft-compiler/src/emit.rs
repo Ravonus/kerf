@@ -367,13 +367,14 @@ impl<'t> Emitter<'t> {
             return format!("{note}{ssr}((_k) => {})", parts.join(" + "));
         }
         let t = format!("_t{}", self.templates.len() + 1);
-        let tpl = self.helper("tpl");
+        // Hydratable output claims the server's elements (`htpl`, weft/dom's claim.ts); client-only output doesn't ship that.
+        let tpl = self.helper(if self.hydratable { "htpl" } else { "tpl" });
         let html = serde_json::to_string(&b.html).unwrap();
         // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.
         let svg = matches!(&el.opening_element.name, JSXElementName::Identifier(id) if SVG.contains(&id.name.as_str()));
         let place = if self.dev { self.place(el.span, &tag_name(&el.opening_element.name)) } else { None };
-        // Dev: `// App.tsx:12 <li>` above the template, and the same place passed to `tpl` for hydration warnings.
-        let args = match (&place, svg) {
+        // Dev: `// App.tsx:12 <li>` above the template; hydratable output also passes it to `htpl` for its warnings.
+        let args = match (place.as_ref().filter(|_| self.hydratable), svg) {
             (Some(p), _) => format!(", {}, {p:?}", if svg { "true" } else { "false" }),
             (None, true) => ", true".into(),
             (None, false) => String::new(),
@@ -653,7 +654,7 @@ impl<'t> Emitter<'t> {
         }
         let marker = marker.map(|p| self.node(b, &p));
         let parent = self.node(b, parent);
-        let child = self.helper("child");
+        let child = self.helper(if self.hydratable { "hchild" } else { "child" });
         let mut args = vec![parent, v];
         if self.hydratable {
             // The hole's scope is named by its template's key (`root.$k`) and its slot.

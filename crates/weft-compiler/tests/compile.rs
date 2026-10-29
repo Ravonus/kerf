@@ -458,7 +458,10 @@ fn dev_templates_name_their_source_line() {
     let out = compile(TWO_LINES, &Options { filename: "App.tsx".into(), dev: true, ..Default::default() });
     let code = out.code.unwrap();
     assert!(code.contains("// App.tsx:3 <ul>\n"), "{code}");
-    assert!(code.contains(", false, \"App.tsx:3 <ul>\")"), "{code}");
+    // Only hydratable output passes the place on, to `htpl`'s mismatch warnings.
+    assert!(code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")"), "{code}");
+    let hydratable = compile(TWO_LINES, &Options { filename: "App.tsx".into(), dev: true, hydratable: true, ..Default::default() });
+    assert!(hydratable.code.unwrap().contains(", false, \"App.tsx:3 <ul>\")"));
     let prod = compile(TWO_LINES, &Options { filename: "App.tsx".into(), ..Default::default() }).code.unwrap();
     assert!(!prod.contains("App.tsx:3"), "{prod}");
 }
@@ -480,4 +483,18 @@ fn weft_back_end_source_maps_point_at_the_authored_lines() {
         let t = map.lookup_token(&table, out_line, out_col).unwrap_or_else(|| panic!("no token for {needle}"));
         assert_eq!(t.get_src_line() + 1, line, "{needle}\n{code}");
     }
+}
+
+#[test]
+fn only_hydratable_output_imports_the_claiming_helpers() {
+    let imports = |hydratable| {
+        let code = compile(TWO_LINES, &Options { filename: "App.tsx".into(), hydratable, ..Default::default() }).code.unwrap();
+        code.lines().next().unwrap().to_string()
+    };
+    let client = imports(false);
+    assert!(client.contains("tpl as _$tpl") && client.contains("child as _$child"), "{client}");
+    assert!(!client.contains("htpl") && !client.contains("hchild") && !client.contains("first"), "{client}");
+    let hydratable = imports(true);
+    assert!(hydratable.contains("htpl as _$htpl") && hydratable.contains("hchild as _$hchild"), "{hydratable}");
+    assert!(!hydratable.contains("tpl as _$tpl,") && !hydratable.contains(" child as _$child"), "{hydratable}");
 }
