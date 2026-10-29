@@ -1,16 +1,18 @@
 <!doctype html>
-<html lang="en" data-expression="balanced" data-theme="light" data-density="cozy">
+<html lang="en" data-expression="balanced" data-density="cozy">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>warp layout</title>
 <meta name="description" content="Layout specimen for warp: eight primitives, three shells and eight page templates on phone, tablet and desktop, at every stop of the expression dial.">
 <style>@layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components;</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400..600&family=Space+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../tokens/warp.css">
 <link rel="stylesheet" href="../tokens/warp-layout.css">
+<link rel="stylesheet" href="warp-bar.css">
 <style>
 /* Everything this page adds lives in warp.layout. The stand-in controls
    (.btn, .badge, .sw …) only exist to dress the templates; the components
@@ -18,7 +20,7 @@
 @layer warp.layout {
   * { box-sizing: border-box; }
   body { margin: 0; overflow-x: clip; }
-  html { scroll-padding-block-start: 104px; }   /* section links land below the sticky bar */
+  html { scroll-padding-block-start: 80px; }   /* section links land below the sticky bar */
   h1, h2, h3, h4, p, figure, dl, dd, ol, ul { margin: 0; }
   ol, ul { padding: 0; list-style: none; }
   button { font: inherit; color: inherit; }
@@ -29,7 +31,7 @@
   .eyebrow { font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); font-weight: 500; color: var(--warp-color-text-subtle); }
   .muted { color: var(--warp-color-text-subtle); }
   .mono { font-family: var(--warp-font-mono); font-size: var(--warp-text-code-size); }
-  .t-display { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); }
+  .t-display { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); font-variation-settings: var(--warp-text-display-variation); text-box: var(--warp-text-display-trim); }
   .t-display em, .t-title em { font-style: italic; color: var(--warp-color-accent-text); }
   .t-title { font-family: var(--warp-text-title-font); font-size: var(--warp-text-title-size); line-height: var(--warp-text-title-leading); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); }
   .t-heading { font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size); line-height: var(--warp-text-heading-leading); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); }
@@ -55,6 +57,12 @@
   .btn.lg { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.6); }
   .btn.block { inline-size: 100%; }
   .btn .ico { inline-size: 15px; block-size: 15px; }
+  /* touch: the stand-ins keep their boxes and take hit-min from centred expanders (01 §2 "Touch floor") */
+  .btn::after, .ibtn::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  .mark { position: relative; }
+  .mark::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  .card[tabindex] { position: relative; isolation: isolate; }
+  .card[tabindex]::after { content: ""; position: absolute; z-index: -1; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
   :where(.ibtn:not([data-part="back"], [data-part="menu-button"])) { display: inline-grid; }
   .ibtn { position: relative; place-items: center; inline-size: var(--warp-control-md); block-size: var(--warp-control-md); flex: none;
     border: 0; border-radius: var(--warp-radius-control); background: transparent; color: var(--warp-color-text-subtle); cursor: pointer; }
@@ -86,8 +94,6 @@
   .card, .auth-card { --warp-field-notch: var(--warp-color-surface-raised); }
   [data-scope="field"].is-focus > [data-part="control"] [data-part="label"] { inset-block-start: var(--warp-label-float-offset); inset-inline-start: calc(var(--warp-pad-control) - 4px); transform: none; padding-inline: 4px; font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; background-color: var(--warp-field-notch, var(--warp-color-surface)); }
   [data-scope="field"].is-focus [data-char] { color: var(--warp-color-label-active); }
-  [data-scope="field"] [data-part="label"] [data-char]::before { content: attr(data-c); }
-  [data-scope="field"] [data-part="label"] .vh { text-transform: none; letter-spacing: normal; }
   .chev { position: absolute; z-index: 4; inset-inline-end: 12px; inset-block-start: 50%; translate: 0 -50%; color: var(--warp-color-text-subtle); pointer-events: none; }
   .sw { position: relative; flex: none; inline-size: 34px; block-size: 20px; border-radius: var(--warp-radius-round); background: var(--warp-color-surface-sunken); border: 1px solid var(--warp-color-border-control); cursor: pointer; }
   .sw::after { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 14px; block-size: 14px; border-radius: var(--warp-radius-round); background: var(--warp-color-text-subtle); transition: transform var(--warp-duration-base) var(--warp-ease-pop); }
@@ -100,31 +106,11 @@
 
   /* ----------------------------------------------------------- specimen chrome */
   .wrap { inline-size: min(100%, 1400px); margin-inline: auto; padding-inline: var(--warp-space-page); }
-  .bar { position: sticky; inset-block-start: 0; z-index: var(--warp-z-sticky); background: color-mix(in oklab, var(--warp-color-page) 86%, transparent);
-    backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); border-block-end: 1px solid var(--warp-color-border); }
-  .bar .wrap { display: flex; align-items: center; gap: var(--warp-space-group); min-block-size: 56px; }
+  /* the settings bar is the shared one: warp-bar.css / warp-bar.js (01-foundations §13); .mark, .ctl and .seg below
+     dress the template picker and the in-frame brands */
   .mark { display: flex; align-items: center; gap: 10px; font-weight: 600; white-space: nowrap; text-decoration: none; }
   .mark svg { inline-size: 22px; block-size: 22px; }
   .mark small { font: 500 var(--warp-text-caption-size) var(--warp-font-mono); color: var(--warp-color-text-subtle); }
-  /* section nav: priority+. Links never wrap; the ones that don't fit move, in order, into a
-     "More" disclosure at the end (review 02 M5). With none left it reads "Sections". */
-  .toc { position: relative; flex: 1 1 0%; min-inline-size: 0; display: flex; align-items: center; margin-inline-start: 4px; }
-  .toc-list { display: flex; gap: 2px; min-inline-size: 0; }
-  .toc-list > li[hidden] { display: none; }
-  .toc a, .toc-btn { display: inline-flex; align-items: center; gap: 4px; block-size: 32px; padding-inline: 10px; border: 0; border-radius: var(--warp-radius-control); background: none;
-    color: var(--warp-color-text-subtle); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; }
-  .toc a:hover, .toc-btn:hover, .toc-btn[aria-expanded="true"] { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
-  .toc-btn .ico { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
-  .toc-btn[aria-expanded="true"] .ico { rotate: 180deg; }
-  .toc-more { position: relative; flex: none; }
-  .toc-more[hidden] { display: none; }
-  .toc-pop { position: absolute; inset-block-start: calc(100% + 6px); inset-inline-start: 0; z-index: var(--warp-z-menu); display: grid; min-inline-size: 200px; padding: var(--warp-space-tight);
-    background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-2);
-    animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both; }
-  .toc-pop[data-align="end"] { inset-inline-start: auto; inset-inline-end: 0; }
-  .toc-pop[hidden] { display: none; }
-  .toc-pop a { block-size: auto; min-block-size: max(var(--warp-control-md), var(--warp-hit-min)); color: var(--warp-color-text); }
-  .controls { display: flex; flex: none; gap: var(--warp-space-group); margin-inline-start: auto; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
   .ctl { display: grid; gap: 3px; flex: none; }
   .ctl > span { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warp-color-text-subtle); padding-inline-start: 2px; }
   .seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
@@ -134,13 +120,6 @@
   .seg label:hover i { color: var(--warp-color-text); }
   .seg input:checked + i { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
   .seg input:focus-visible + i { outline: 2px solid var(--warp-color-focus); outline-offset: 1px; }
-  /* under 1100 the controls take a second row that scrolls sideways with an edge fade */
-  @media (max-width: 1099px) {
-    .bar .wrap { flex-wrap: wrap; column-gap: var(--warp-space-related); row-gap: 0; min-block-size: 0; padding-block-start: 6px; }
-    .controls { inline-size: 100%; margin: 0; padding-block: 0 8px; mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
-    .controls::after { content: ""; flex: 0 0 12px; }
-  }
-  @media (max-width: 599px) { .mark small { display: none; } }
 
   .hero { padding-block: clamp(40px, 6vw, 88px) var(--warp-space-section); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
   .hero h1 { font-family: var(--warp-text-display-font); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); font-size: clamp(60px, 9.5vw, 136px); line-height: 0.88; }
@@ -171,6 +150,7 @@
 
   section.s { padding-block: var(--warp-space-section); border-block-start: 1px solid var(--warp-color-border); }
   .s-head { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--warp-space-group) clamp(16px, 3vw, 48px); margin-block-end: calc(var(--warp-space-section) * 0.66); }
+  .s-head { container-type: inline-size; }   /* the fluid title role resolves against the section head (01 §2 Type) */
   .s-head .no { font: 500 12px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); letter-spacing: 0.06em; }
   .s-head .no b { display: block; color: var(--warp-color-accent-text); font-weight: 500; }
   .s-head h2 { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: var(--warp-text-title-size); letter-spacing: var(--warp-text-title-tracking); line-height: var(--warp-text-title-leading); }
@@ -551,46 +531,11 @@
 </svg>
 
 <!-- ================================================================ toolbar -->
-<header class="bar">
-  <div class="wrap">
-    <a class="mark" href="#top"><svg class="ico" aria-hidden="true"><use href="#i-mark"/></svg>warp <small>layout v0.2</small></a>
-    <nav class="toc" aria-label="Sections">
-      <ul class="toc-list">
-        <li><a href="#shells">Shells</a></li><li><a href="#primitives">Primitives</a></li><li><a href="#nav">Navigation</a></li><li><a href="#parts">Page parts</a></li><li><a href="#workbench">Workbench</a></li><li><a href="#rules">Responsive</a></li><li><a href="#motion">Motion</a></li><li><a href="#focus">Input &amp; focus</a></li>
-      </ul>
-      <div class="toc-more" hidden><button type="button" class="toc-btn" aria-expanded="false" aria-controls="toc-pop"><span data-l>More</span><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg></button><ul class="toc-pop" id="toc-pop" hidden></ul></div>
-    </nav>
-    <div class="controls" role="group" aria-label="Specimen settings">
-      <div class="ctl"><span id="l-dial">Dial</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-dial" data-ctl="dial">
-          <label><input type="radio" name="dial" value="quiet"><i>Quiet</i></label>
-          <label><input type="radio" name="dial" value="balanced" checked><i>Balanced</i></label>
-          <label><input type="radio" name="dial" value="vivid"><i>Vivid</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-theme">Theme</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-theme" data-ctl="theme">
-          <label><input type="radio" name="theme" value="light" checked><i>Light</i></label>
-          <label><input type="radio" name="theme" value="dark"><i>Dark</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-density">Density</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-density" data-ctl="density">
-          <label><input type="radio" name="density" value="compact"><i>Compact</i></label>
-          <label><input type="radio" name="density" value="cozy" checked><i>Cozy</i></label>
-          <label><input type="radio" name="density" value="comfortable"><i>Comfortable</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-dir">Direction</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-dir" data-ctl="dir">
-          <label><input type="radio" name="dir" value="ltr" checked><i>LTR</i></label>
-          <label><input type="radio" name="dir" value="rtl"><i>RTL</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-motion">Motion</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-motion" data-ctl="motion">
-          <label><input type="radio" name="motion" value="full" checked><i>Full</i></label>
-          <label><input type="radio" name="motion" value="reduce"><i>Reduced</i></label>
-        </div></div>
-    </div>
-  </div>
+<header data-specimen-bar data-label="layout v0.2" data-aliases="x:expression th:theme d:density f:fields m:motion">
+  <div data-extra="dir" data-label="Direction" data-options="ltr:LTR, rtl:RTL" title="page extra: the frames' writing direction"></div>
+  <div class="wb-ctl"><span id="wb-l-sections"><span class="wb-vh">Sections</span><span aria-hidden="true">Sections</span></span><nav class="wb-links" aria-labelledby="wb-l-sections"><a href="#shells">Shells</a><a href="#primitives">Primitives</a><a href="#nav">Navigation</a><a href="#parts">Page parts</a><a href="#workbench">Workbench</a><a href="#rules">Responsive</a><a href="#motion">Motion</a><a href="#focus">Input &amp; focus</a></nav></div>
 </header>
+<script src="warp-bar.js"></script>
 
 <main id="top">
 <div class="wrap hero">
@@ -635,11 +580,6 @@
   </div>
   <div class="picker">
     <nav data-scope="tabnav" aria-label="Template" id="tpl-nav"><ul data-scope="scroll-area" data-axis="x" data-fade></ul></nav>
-    <div class="ctl"><span id="l-fields">Fields</span>
-      <div class="seg" role="radiogroup" aria-labelledby="l-fields" data-ctl="fields">
-        <label><input type="radio" name="fields" value="floating" checked><i>Floating</i></label>
-        <label><input type="radio" name="fields" value="classic"><i>Classic</i></label>
-      </div></div>
     <div class="ctl"><span id="l-orient">Tablet</span>
       <div class="seg" role="radiogroup" aria-labelledby="l-orient" data-ctl="orient">
         <label><input type="radio" name="orient" value="portrait" checked><i>Portrait</i></label>
@@ -1217,12 +1157,9 @@
   /* per-character label tint: --d = x / sweep speed (one layout read) */
   function charify(scope = document) {
     $$('[data-scope="field"] [data-part="label"]:not([data-chars])', scope).forEach((l) => {
-      // the <label for> keeps its own text as the name and as its textContent: one visually hidden
-      // copy (no text-transform, no tracking), and display-only character spans whose glyph is CSS
-      // generated content (review 03 B1/M1: never aria-label; the chars never become the name)
-      const t = l.textContent; l.setAttribute("data-chars", "");
-      const esc = (c) => (c === " " ? "\u00a0" : c.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"));
-      l.innerHTML = `<span class="vh">${t}</span><span aria-hidden="true">${[...t].map((c) => `<span data-char data-c="${esc(c)}"></span>`).join("")}</span>`;
+      // the shared label anatomy (01 §2, warp-sweep.js): hidden label-text is the name, the letters are
+      // aria-hidden generated content (review 03 B1/M1: never aria-label; the chars never become the name)
+      l.setAttribute("data-chars", ""); warpSweep.label(l);
       const ctl = l.closest('[data-part="control"]'); const W = ctl.getBoundingClientRect().width || 300;
       const dur = warpSweep.duration(ctl) || 620;   // review 01 minor 5: the real 480 · 620 · 700
       const x0 = ctl.getBoundingClientRect().left;
@@ -1231,7 +1168,7 @@
   }
 
   /* -------------------------------------------------------------- shell behaviour */
-  const reduced = () => root.dataset.motion === "reduce";
+  const reduced = () => root.dataset.motion === "reduce" || (!root.dataset.motion && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
   /* modal: aria-modal is only honest if the rest of the page is gone (review 03 B4). While a modal
@@ -1681,72 +1618,37 @@
 
   /* -------------------------------------------------------------- controls */
   /* FaviconSwitcher: the tab icon follows the resolved scheme */
-  const fav = document.createElement("link"); fav.rel = "icon"; document.head.append(fav);
+  const fav = document.querySelector('link[rel="icon"]') || document.head.appendChild(Object.assign(document.createElement("link"), { rel: "icon" }));
   const setFav = () => { const dark = root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
     fav.href = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="${dark ? "#101010" : "#f4f2ee"}"/><path d="M9 7v18M14 7v18M19 7v18M24 7v18M6 12h20M6 20h20" stroke="${dark ? "#6fd39a" : "#1d7a4a"}" stroke-width="2"/></svg>`); };
-  setFav(); new MutationObserver(setFav).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+  setFav(); new MutationObserver(setFav).observe(root, { attributes: true, attributeFilter: ["data-theme"] }); matchMedia("(prefers-color-scheme: dark)").addEventListener("change", setFav);   // Theme on Auto follows the OS
+  /* the shared settings bar (warp-bar.js, 01-foundations §13) writes the dials on <html>, plus the Direction extra;
+     the template picker (orient, kb) stays on the page. Both re-fit the frames. */
   const on = {
-    dial: (v) => (root.dataset.expression = v),
-    theme: (v) => (root.dataset.theme = v),
-    density: (v) => (root.dataset.density = v),
-    motion: (v) => (root.dataset.motion = v),
-    fields: (v) => { if (v === "classic") root.dataset.fields = "classic"; else delete root.dataset.fields; },
     dir: (v) => { state.dir = v; $$(".screen, #gal, #parts-gal, #wb-gal, #prims").forEach((e) => (e.dir = v)); },
     orient: (v) => { state.orient = v; const d = $("#tab-dev"); const l = v === "landscape"; d.dataset.w = l ? 1194 : 834; d.dataset.h = l ? 834 : 1112; $("#pair").classList.toggle("land", l); $("#tab-label").textContent = `Tablet · ${d.dataset.w} × ${d.dataset.h}`; $("#tab-meta").textContent = l ? "coarse · crosses 1000 → sidebar" : "coarse · rail 80 · header 56"; render(); },
     kb: (v) => { state.kb = v === "on"; if (state.kb && !["wizard", "auth", "settings", "list"].includes(state.tpl)) state.tpl = "wizard"; render(); },
   };
+  const refit = () => requestAnimationFrame(() => { fit(); readMotion(); });
+  document.addEventListener("warp-bar:change", (e) => { on[e.detail.name]?.(e.detail.value); refit(); });
   document.addEventListener("change", (e) => {
     const g = e.target.closest("[data-ctl]");
-    if (g && on[g.dataset.ctl]) { on[g.dataset.ctl](e.target.value); requestAnimationFrame(() => { fit(); readMotion(); tocFit(); }); }
+    if (g && !g.closest("[data-specimen-bar]") && on[g.dataset.ctl]) { on[g.dataset.ctl](e.target.value); refit(); }
   });
-
-  /* section nav, priority+: measure every link once, then show as many as fit (in order) and move
-     the rest into the "More" disclosure. Re-run on resize and when fonts or density change. */
-  const toc = $(".toc"), tocList = $(".toc-list", toc), tocMore = $(".toc-more", toc), tocBtn = $(".toc-btn", toc), tocPop = $("#toc-pop");
-  function tocFit() {
-    const items = $$(":scope > li", tocList);
-    items.forEach((li) => (li.hidden = false)); tocMore.hidden = false;
-    const gap = parseFloat(getComputedStyle(tocList).columnGap) || 0, widths = items.map((li) => li.getBoundingClientRect().width);
-    const moreW = tocMore.getBoundingClientRect().width + gap, avail = toc.getBoundingClientRect().width;
-    const total = widths.reduce((a, w) => a + w + gap, -gap);
-    let n = items.length;
-    if (total > avail) { let used = 0; n = 0; while (n < items.length && used + widths[n] + gap + moreW <= avail) { used += widths[n] + gap; n++; } }
-    items.forEach((li, i) => (li.hidden = i >= n));
-    tocMore.hidden = n === items.length;
-    $("[data-l]", tocBtn).textContent = n ? "More" : "Sections";
-    tocBtn.setAttribute("aria-label", n ? `More sections, ${items.length - n}` : "Sections");
-    tocPop.innerHTML = items.slice(n).map((li) => li.innerHTML).map((a) => `<li>${a}</li>`).join("");
-  }
-  const tocClose = (restore) => { if (tocPop.hidden) return; tocPop.hidden = true; tocBtn.setAttribute("aria-expanded", "false"); if (restore) tocBtn.focus(); };
-  tocBtn.addEventListener("click", () => { const o = tocPop.hidden; if (!o) return tocClose(false);
-    tocPop.hidden = false; tocBtn.setAttribute("aria-expanded", "true"); tocPop.removeAttribute("data-align");
-    if (tocPop.getBoundingClientRect().right > innerWidth - 8) tocPop.dataset.align = "end"; });
-  tocPop.addEventListener("click", (e) => { if (e.target.closest("a")) tocClose(false); });
-  toc.addEventListener("keydown", (e) => { if (e.key === "Escape" && !tocPop.hidden) { e.stopPropagation(); tocClose(true); }
-    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && (e.target === tocBtn || tocPop.contains(e.target))) { e.preventDefault();   // optional arrows inside the disclosure
-      if (tocPop.hidden) tocBtn.click(); const a = $$("a", tocPop), i = a.indexOf(document.activeElement); a[(i + (e.key === "ArrowDown" ? 1 : -1) + a.length) % a.length]?.focus(); } });
-  document.addEventListener("pointerdown", (e) => { if (!toc.contains(e.target)) tocClose(false); });
-  toc.addEventListener("focusout", (e) => { if (!toc.contains(e.relatedTarget)) tocClose(false); });
-  new ResizeObserver(() => requestAnimationFrame(tocFit)).observe($(".bar .wrap"));
-  tocFit();
 
   /* every <label> wrapping its control also names it with for= (one label pattern on the page) */
   $$("label").forEach((l) => { const c = $("input, button, select, textarea", l); if (!c || l.htmlFor) return; if (!c.id) c.id = `lb-${++uid}`; l.htmlFor = c.id; });
 
-  /* deep-link state for screenshots: ?t=list&x=vivid&th=dark&d=compact&m=reduce&o=landscape&kb=1&f=classic */
+  /* deep-link state for screenshots: ?t=list&o=landscape&kb=1&open=desktop:nav, plus the bar's own params
+     (?expression=vivid&theme=dark…; the v0.1 short forms x, th, d, f, m are read by the bar as aliases) */
   const q = new URLSearchParams(location.search);
   const set = (name, v) => { const i = $(`[name=${name}][value="${v}"]`); if (i) { i.checked = true; on[name] && on[name](v); } };
   if (q.get("t") && T[q.get("t")]) state.tpl = q.get("t");
-  if (q.get("x")) set("dial", q.get("x"));
-  if (q.get("th")) set("theme", q.get("th")); else if (matchMedia("(prefers-color-scheme: dark)").matches) set("theme", "dark");
-  if (q.get("d")) set("density", q.get("d"));
-  if (q.get("f")) set("fields", q.get("f"));
-  if (q.get("m")) set("motion", q.get("m")); else if (matchMedia("(prefers-reduced-motion: reduce)").matches) set("motion", "reduce");
   if (q.get("kb")) { state.kb = true; $("[name=kb][value=on]").checked = true; }
   if (q.get("o")) set("orient", q.get("o")); else render();
   if (q.get("open")) setTimeout(() => { const [form, part] = q.get("open").split(":"); const sh = $(`.frame[data-form="${form}"] [data-scope="shell"]`); if (!sh) return;
     if (part === "nav") { $('[data-part="nav-toggle"]', sh).click(); } else if (part === "push") { const r = $("[data-row]", sh); r && push(sh, "forward", r); } else if (part === "collapse") { sh.setAttribute("data-collapsed", ""); } else open(sh, part, $(`[data-open="${part}"]`, sh)); }, 50);
-  document.fonts.ready.then(() => { fit(); readMotion(); charify(); tocFit(); });
+  document.fonts.ready.then(() => { fit(); readMotion(); charify(); });
   addEventListener("load", () => { fit(); readMotion(); });
   fit();
 })();

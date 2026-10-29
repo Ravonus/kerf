@@ -195,6 +195,7 @@
   font-family: var(--warp-text-display-font); font-weight: var(--warp-text-display-weight);
   font-size: min(calc(var(--warp-text-display-size) * var(--warp-mk-hero-k) * var(--_ek, 1)), var(--_cap, 11cqi));
   line-height: 1.02; letter-spacing: var(--warp-text-display-tracking);
+  font-variation-settings: var(--warp-text-display-variation); text-box: var(--warp-text-display-trim);   /* vivid: opsz max, trimmed (01 §2 Type) */
 }
 :where([data-expression="vivid"] [data-scope="hero"] [data-part="title"]) { line-height: 0.92; --_cap: 15cqi; }
 :where([data-expression="vivid"] [data-scope="hero"][data-layout="editorial"] [data-part="title"]) { --_cap: 15cqi; }
@@ -554,7 +555,7 @@
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1);
 }
 :where([data-scope="quote"] blockquote) { margin: 0; font-size: calc(var(--warp-text-prose-size) + 1px); line-height: 1.55; text-wrap: pretty; }
-:where([data-expression="vivid"] [data-scope="quote"] blockquote) { font-style: normal; font-family: var(--warp-font-display); font-size: calc(var(--warp-text-heading-size) * 1.35); line-height: 1.2; }
+:where([data-expression="vivid"] [data-scope="quote"] blockquote) { font-family: var(--warp-font-display); font-size: calc(var(--warp-text-heading-size) * 1.35); line-height: 1.2; }
 :where([data-scope="quote"] figcaption) { display: flex; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); }
 :where([data-scope="quote"] figcaption b) { display: block; font-weight: 500; font-size: var(--warp-text-body-size); }
 :where([data-scope="quote"] figcaption span) { color: var(--warp-color-text-subtle); }

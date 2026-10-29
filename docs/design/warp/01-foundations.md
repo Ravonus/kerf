@@ -63,21 +63,85 @@ become a `hit-min`-tall inline-flex row. It is a *min*-size: on a mouse `hit-min
 a coarse pointer an sm button grows to 44. Controls that must keep a smaller visual box (chips, checkbox, slider rail,
 swatches) draw a `hit-min` hit area with `::after` instead. Anything bespoke and tappable: add `data-hit`.
 
+**Hit areas that don't move the visual box.** `data-hit="area"` keeps the box and adds a centred expander,
+`::after { inset: min(0px, calc((100% - hit-min) / 2)) }` (0 on a mouse or when the box is already big enough).
+Components use the same formula; the rules for writing one:
+
+- Expand only the axes that have room. A part with target neighbours on one axis expands the other
+  (pills, menubar items, view toggles, kanban cards: block axis only), or each end of a row reaches outward
+  (toggle groups, pagination, layer toggles: the first and last items reach away from their neighbours).
+- A container target (a card, a node, a handle bar) that has its own buttons inside puts the expander under its
+  content: `isolation: isolate` on the host and `z-index: -1` on the `::after` (a transformed host is already a
+  stacking context). Otherwise the expander wins the hit test over its own children.
+- `%` in an expander resolves against the padding box; `overflow: hidden` (or `clip`, or `clip-path`) on the host
+  clips the expander and its hit area, so a target that needs one can't clip.
+- Native `select` / `input` can't hold a pseudo-element: the **band** makes a transparent `border-block` band of
+  `(hit-min - control.sm) / 2`, a matching negative `margin-block`, `background-clip: padding-box` and the
+  visible edge as an inset ring (`box-shadow: inset 0 0 0 1px`), with an elliptical radius `R / (R + band)`.
+- SVG targets put a transparent hit shape in the target's `<g>` (the chart brush grips).
+- When the expander would meet a neighbour's target, stop at **24px plus spacing** (WCAG 2.5.8) and say so in
+  a comment. Current cases: inner toggles of a toggle group and middle pagination pages (a 38–40px pitch), the
+  stacked avatars, the quantity input (42 × 44 between its steppers), flow ports and the brush grips (24px, on
+  their node's or window's edge, which are targets too), stacked query-builder rows (≥ 42px). Chart marks fall
+  under the equivalent-view exception (the table view is the target-size path); a link inside running text is
+  the inline exception.
+- Measure with hit-testing (`elementFromPoint` across the expander), not bounding boxes.
+
 ### Type (role tokens: `text.{role}.{font,size,leading,weight,tracking,case}`)
 
 | Role | Size d / t / p | Leading | quiet | balanced | vivid |
 |---|---|---|---|---|---|
-| display | 52 / 42 / 34 (vivid × 1.18) | 1.04 | Inter 600, −0.035em | Space Grotesk 500, −0.03em | Instrument Serif 400, −0.015em |
-| title | 30 / 26 / 24 (vivid × 1.14) | 1.15 | Inter 600 | Space Grotesk 500 | Instrument Serif 400 |
+| display | fluid: 34 → 52 (quiet 34 → 44, vivid 40 → 61) | 1.04 | Inter 600, −0.035em | Space Grotesk 500, −0.03em | Instrument Serif 400, −0.015em |
+| title | fluid: 24 → 30 (vivid 27.5 → 34.3) | 1.15 | Inter 600 | Space Grotesk 500 | Instrument Serif 400 |
 | heading | 20 / 19 / 18 | 1.3 | sans 600, −0.01em | sans 600 | sans 500 |
 | body · prose | 14·16 / 15·17 / 16·17 | 1.55 · 1.65 | Inter 400 | Inter 400 | Space Grotesk 400 |
 | label (field) | 13 | 1.25 | Inter 500 | Inter 500 | Plex Mono 500 caps 11, +0.1em |
-| eyebrow, badge | 12 / 11 caps | 1.25 | Inter 500 | Plex Mono caps, +0.08em | Plex Mono caps, +0.14em |
+| eyebrow, badge | 12 / 11 caps | 1.25 (code 1.55, control 1.25, button 1) | Inter 500 | Plex Mono caps, +0.08em | Plex Mono caps, +0.14em |
 | caption | 12 / 12 / 13 | 1.45 | sans 400 | sans 400 | sans 400 |
 | code | 13 / 13 / 14 | 1.55 | IBM Plex Mono | IBM Plex Mono | IBM Plex Mono |
 | button | body size (vivid −2, caps) | 1 | Inter 500 | Inter 500 | Plex Mono 600 caps, +0.1em |
 
 Title tracking = display tracking × 0.6. Controls use `text.control.size` = max(body, 16px on coarse pointers).
+Every role has an explicit unitless leading (shorthands included: a `font:` without `/leading` resets it to
+`normal`, which is font-dependent and shifts on the font swap). Sizes are in the user's rem (below), not px.
+
+#### How type sizes, fits and loads (research: [11 — text and type](../../research/11-text-and-type.md))
+
+- **Fluid display and title** (§8.3 of research 11). `size = clamp(min·rem, b·rem + m·fu, max·rem)`, where `fu`
+  (`--warp-ref-fluid-unit`) is `1cqi` and falls back to `1vw` (iOS 15: `@supports (width: 1cqi)` swaps the unit,
+  because a var() fallback can't be chosen by declaration order). max/min ≤ 2.5 at every stop (balanced 1.53,
+  quiet 1.3, vivid 1.53), so 200% zoom still scales the text (WCAG 1.4.4). `cqi` resolves against the nearest
+  inline-size container, or the small viewport if there is none: **put `container-type: inline-size` on the
+  text-only wrapper that holds a display or title** (a hero, a section head), never on a wrapper whose
+  descendants run unnamed `@container` queries (an unnamed query is captured by the nearest container). The
+  specimens do this on `.s-head`, `.type`, `.sp-hero`. A forced `data-form` sets the unit to the frame's width.
+- **Body, prose, label, caption, code are fixed per form factor** (`calc(N * var(--warp-rem))`), never fluid.
+  `--warp-rem` is the user's rem: the root's font-size is the desktop body size (`--warp-ref-root-size`,
+  0.875rem), so `--warp-rem = 1rem × k` (k = 1.142857 / 1.066667 / 1) maps back to 16px at default settings and
+  follows a user's larger default. Controls keep the 16px coarse floor.
+- **Line length.** `--warp-measure` = 72 / 66 / 60 `ch` (quiet / balanced / vivid), in the *brand face's* ch:
+  `--warp-ch` (Inter 0.613em, Space Grotesk 0.641em) so a measure doesn't jump when the fallback's narrower "0"
+  swaps for the web font. Use `calc(N * var(--warp-ch))`, not `Nch`, for any text width. `[data-prose]` applies
+  the measure, prose size and leading.
+- **Wrapping.** `text-wrap-style: balance` on headings, `pretty` on p, li, dd, blockquote, figcaption (quiet:
+  `auto`), vivid `stable` on editable text. The longhand, so `white-space: nowrap` still wins.
+- **Optical sizing.** `font-optical-sizing: auto` at the root (Inter loads with its `opsz` axis, 14..32).
+  Vivid pins its display to `"opsz" 144` through `--warp-text-display-variation`.
+- **Trim.** `text-box: trim-both cap alphabetic` on buttons, badges, chips, pills, tags and eyebrows (on the
+  block holding the text: a flex container isn't a block container, so the rule also targets its direct text
+  `span`), and on headings via `--warp-text-heading-trim` (quiet `normal`, balanced and vivid trim; display
+  trims at vivid only). Browsers without `text-box` get a Capsize-style fallback behind `@supports not`
+  (negative margins from the face's cap height and leading). Fixed-height controls centre the same way either
+  way: sweep borders, the label notch, frame corners and control heights are pixel-identical to v0.2.
+- **Canvas strings.** `--warp-text-{role}-canvas` is a ready `ctx.font` string with a px size
+  (`"600 52px Space Grotesk, …"`): the `-px` sizes are registered `<length>` properties, so they compute to
+  px. Read them with `getComputedStyle(el)`; inside a `[data-text-canvas]` element the fluid sizes resolve
+  against that element.
+- **Font loading.** Each brand face has a metric-matched fallback face declared in `warp.css` (`Inter Fallback`,
+  `Space Grotesk Fallback`, `Instrument Serif Fallback`, `IBM Plex Mono Fallback`: `local()` Arial, Times New
+  Roman, Courier New with `size-adjust` and ascent / descent / line-gap overrides), placed right after the brand
+  face in every stack, and `font-display: swap`. With the explicit leadings this keeps the swap to ~0.001 CLS for
+  untrimmed text; the cap trim still moves trimmed headings a little (§11).
 
 | Token | quiet · balanced · vivid | Rule |
 |---|---|---|
@@ -182,8 +246,9 @@ while the label is floated in caps. The label is `display: block` and the spans 
 inline-block spans spell names out letter by letter (review 03 B1). The older single-layer form (inline
 `<span data-char>` with the letter as text, real spaces) still renders and still names correctly, but Chrome then
 reports a floated name in caps; use the two-part form. Hints and errors get an id and join the input's
-`aria-describedby`; invalid inputs also set `aria-invalid="true"`. Pattern from the layout area
-(`specimens/layout.html`), now shared.
+`aria-describedby`; invalid inputs also set `aria-invalid="true"`. Every specimen builds the split with the one
+shared function, `warpSweep.label(labelEl)` in `specimens/warp-sweep.js` (idempotent, returns the letter spans for
+the page's per-character delays); weft's `floatingLabel()` does the same.
 
 **Caps are visual.** `text-transform: uppercase` (eyebrows, the floated label, vivid buttons) is a rendering choice.
 Chrome applies it in `innerText` and in name computation, so a test or an accessibility-tree dump shows
@@ -287,7 +352,8 @@ same pairs live in the browser.
 
 | | phone `< 600` | tablet `600–1023` | desktop `≥ 1024` |
 |---|---|---|---|
-| Type | display 34 · body 16 | display 42 · body 15 | display 52 · body 14 |
+| Type | body 16 · heading 18 · caption 13 | body 15 · heading 19 · caption 12 | body 14 · heading 20 · caption 12 |
+| Display · title | fluid with the container (§2 Type): 34 → 52 · 24 → 30 at balanced | | |
 | Section · gutter | 32 · 16 | 40 · 24 | 48 · 32 |
 
 - Set by viewport media queries on `:root`, or forced with `data-form="phone|tablet|desktop"` on any element
@@ -384,6 +450,10 @@ wrapped in `:where()` (specificity 0). Rules of the road:
   picked colour. Every component must render correctly with `data-expression` changed on an ancestor.
 - **All:** run `node docs/design/warp/scripts/contrast-check.mjs` after touching a colour; add pairs there for any
   new fill/ink combination you introduce.
+- **Open (type):** the cap trim is measured in the face that is loaded, so a trimmed heading shifts by the
+  cap-height difference when the web font swaps in (Space Grotesk 0.70 em vs its Arial fallback's adjusted cap).
+  The next step is to trim block text (headings) with the brand face's metrics as margins (Capsize), and keep
+  `text-box` for fixed-height parts, where the swap can't move anything.
 
 ## 12. Forced colours (Windows High Contrast)
 
@@ -410,15 +480,15 @@ Components that add their own background-drawn state (a selected pill or an indi
 `HighlightText`, `GrayText`, `ButtonText`, `ButtonFace`). Verify with CDP `Emulation.setEmulatedMedia` (`forced-colors:
 active`) in light and dark.
 
-## 13. The specimen settings bar (canonical, every page)
+## 13. The specimen settings bar (shared, every page)
 
-Every specimen uses one settings bar. It is the frame around "one system", so it is one component. The reference
-implementation is `specimens/foundations.html` (`header[data-specimen-bar]`); the drop-in (markup, CSS, JS) is the
-same code verbatim.
+Every specimen uses one settings bar. It is the frame around "one system", so it is one component, and it is **one
+file pair**: `specimens/warp-bar.css` and `specimens/warp-bar.js`. No page carries a copy.
 
 **One name per dial.** The visible label is the name; the radio value **is** the attribute value written on `<html>`,
-and the same value is the deep-link parameter. `Auto` removes the attribute: the OS decides (theme, motion) or the
-stop decides (flair). Order: Expression · Fields · Theme · Density · Motion · Flair, then a divider, then page extras.
+and the same value is the deep-link parameter. `Auto` removes the attribute (even one the page's `<html>` ships):
+the OS decides (theme, motion) or the stop decides (flair). Order: Expression · Fields · Theme · Density · Motion ·
+Flair, then page extras.
 
 | Label | Attribute | Options (label → value) | Default | URL |
 |---|---|---|---|---|
@@ -429,32 +499,62 @@ stop decides (flair). Order: Expression · Fields · Theme · Density · Motion 
 | Motion | `data-motion` | Auto (removed) · Full `full` · Reduced `reduce` | **Auto**: never write `full` unless the user picks it | `?motion=` |
 | Flair | `data-flair` | Auto (removed) · Sweep `sweep` · None `none` | Auto | `?flair=` |
 
-Never "Dial", "Stop", "Page stop", "Sweep reach", "Comfy" or "Roomy". Page extras (foundations' Matrix, a frame's
-expression) come after the divider and use the same `name = value` scheme. Group labels are 11px mono caps (the type
-floor); each group is a `role="radiogroup"` with `aria-labelledby` on its label; options are visually hidden native
-radios inside `<label>`s; changes update the URL with `history.replaceState`.
+Never "Dial", "Stop", "Page stop", "Sweep reach", "Surface sweep", "Comfy" or "Roomy". Group labels are 11px mono caps
+(the type floor); each group is a `role="radiogroup"` with `aria-labelledby` on its label (`wb-l-<name>`); options
+are visually hidden native radios inside `<label>`s, named by their visible text (a swatch extra names its dot with
+visually hidden text, never `aria-label`). A user change updates the URL with `history.replaceState`, and drops
+the parameter when the value is the default, so a shared link never pins `motion=full` or `theme=light`.
+
+**Legacy links.** `?stop=` and `?dial=` are always read as `?expression=` and rewritten. A page lists its own v0.1
+short forms in `data-aliases` (layout: `x th d f m`; marketing: `x`).
+
+**Page extras** use the same `name = value` scheme (radio name = `data-ctl` = URL parameter) and come after the six
+dials: foundations Matrix; components and inputs Pointer; inputs-rich Frame and Locale; flows Frames and the
+shortcuts button; layout Direction and the section index (a links extra); marketing Accent, Hero and View. The
+template picker, tablet orientation and phone keyboard on the layout page are frame controls inside the page, not bar
+extras.
 
 **Layout.**
-- **≥ 1024px:** brand left, controls inline on the right. They wrap to a second row at most; the bar stays sticky.
-- **< 1024px (tablet and phone):** **one 56px row**: brand and a `Settings` button (`aria-expanded`,
-  `aria-controls`) with a summary of the current expression and theme. The button opens the controls as a sheet under
-  the bar: full width, `surface-overlay`, `elevation-3`, `max-block-size: calc(100dvh - 56px)` with its own scroll,
-  one row per group (label column 96px, segments fill the rest). Opening moves focus to the checked option of the first
-  group; Esc and an outside tap close it, and Esc returns focus to the button.
+- **≥ 1024px:** one row: brand, the six dials inline on the right, then **More** (only when the page has extras), a
+  disclosure (`aria-expanded`, `aria-controls="wb-extras"`) whose popover holds the extras, one row each (label
+  column 84px). Opening moves focus to the first extra's checked option; Esc, an outside tap and focus leaving close
+  it, and Esc returns focus to More. **At 1280 and up it is one 59px row with every control**; segments pad 7px and
+  the version tag and the extras summary on More appear from 1560px. From 1024 to 1279 the dials may wrap to a
+  second row.
+- **< 1024px (tablet and phone):** **one 56px row** (57 with the border): brand and a `Settings` button
+  (`aria-expanded`, `aria-controls`) with a summary of the current expression and theme. The button opens the controls
+  as a sheet under the bar: full width, `surface-overlay`, `elevation-3`, `max-block-size: calc(100dvh - 56px)` with
+  its own scroll, one row per group (label column 96px, segments fill the rest), then a divider and the extras as
+  ordinary rows (More is not shown). Opening moves focus to the checked option of the first group; Esc and an outside
+  tap close it, and Esc returns focus to the button. A link in a links extra closes the sheet or popover.
 - Segments are `hit-min` tall (44 on coarse). The bar pads by `env(safe-area-inset-*)`, and the page ships
-  `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`.
+  `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`. The bar writes its
+  height to `--wb-h` on `<html>` for anything that docks under it (marketing's sticky nav).
 
-**Drop-in contract.**
-- Markup: `<header data-specimen-bar data-flair-target="…">` › `.wb-row` (`.wb-mark` brand link, `.wb-toggle`
-  button with `<small data-wb-summary>`) › `.wb-sheet#wb-sheet` holding the six groups (`data-ctl="expression"` …),
-  an `<hr>`, then page extras.
+**Contract.**
+- Markup, the whole of it:
+  ```html
+  <link rel="stylesheet" href="warp-bar.css">                     <!-- after the token sheets -->
+  …
+  <header data-specimen-bar data-label="inputs v0.2"             text after the "warp" mark
+          data-flair-target=".screen"                             optional: these elements also get data-flair
+          data-aliases="x:expression">                            optional: legacy URL parameters
+    <div data-extra="pointer" data-label="Pointer" data-options="auto:Auto, fine:Fine, coarse:Touch"
+         title="page extra: …"></div>                             declarative extra; first option is the default
+    <div class="wb-ctl">…</div>                                   or a hand-written extra (wb-ctl › span + wb-seg)
+  </header>
+  <script src="warp-bar.js"></script>                             right after </header>, not deferred
+  ```
 - CSS: unlayered, every selector under `[data-specimen-bar]`, so it never collides with page styles.
-- JS: one IIFE placed **right after `</header>`** (not deferred): it applies URL params to `<html>` before first
-  paint. It writes the six standard attributes itself. `data-flair-target` (a selector list) also receives
-  `data-flair` for pages whose surfaces read it locally.
-- Every change, including the initial values once the DOM is ready, dispatches `warp-bar:change` on `document` with
-  `detail: { name, value }`. Page extras listen for their own `name`. Set a value from code with
-  `window.warpBar.set(name, value)`.
+- JS: builds the bar, then applies URL parameters to `<html>` before first paint. It writes the six standard
+  attributes itself; `data-flair-target` (a selector list) also receives `data-flair` for islands whose surfaces
+  read it locally.
+- Every change, plus the deep-linked and non-Auto standard values once at `DOMContentLoaded`, dispatches
+  `warp-bar:change` on `document` with `detail: { name, value }`. Page extras listen for their own `name`.
+- `window.warpBar = { set(name, value, { url, animate }), get(name), transition }`. `set` is for keyboard shortcuts
+  and embeds (`url: false` leaves the address alone, `animate: false` skips the transition). `transition` is an
+  optional `(name, value, write) => …` hook that wraps user changes, for a View Transition crossfade (data) or the
+  governed theme wipe (marketing); it must call `write()` once, which writes the attribute and then emits.
 
 ## 14. v0.2 changes other areas must know
 
@@ -474,5 +574,15 @@ radios inside `<label>`s; changes update the URL with `history.replaceState`.
 | Touch floor in `warp.base` | components (toggle group), rich (sm icon buttons), flows (`.link`), layout (status bar, close) | nothing for listed scopes; add `data-hit` / `data-hit="text"` to bespoke targets |
 | Loading button keeps its name | components | hide the label with `opacity: 0`, not `visibility: hidden` (the base rule now forces it visible) |
 | Forced-colours layer (§12) | everyone with background-drawn state | follow §12 for your own parts |
-| Settings bar (§13) | every specimen | paste the drop-in; move page extras after the `<hr>` and listen for `warp-bar:change` |
+| Settings bar (§13) | every specimen | load `warp-bar.css` / `warp-bar.js`; declare extras inside the header and listen for `warp-bar:change` |
+| Label anatomy is one function: `warpSweep.label(labelEl)` (in `warp-sweep.js`) | every page with fields | call it instead of building label spans; delays and the notch stay per page |
+| Fluid display and title (`cqi`, vw fallback); per-form `display-size` refs and `--warp-ref-display-scale` removed | marketing, app, layout, anyone with a hero | put `container-type: inline-size` on the text-only wrapper of a display or title; read `--warp-text-display-size` |
+| Type sizes are in `--warp-rem` (the user's rem); root font-size is a token | anyone using `rem` for text | multiply by `var(--warp-rem)`, or read the role token |
+| `--warp-measure` (72 / 66 / 60) and `--warp-ch` | layout (`--warp-layout-measure` now reads it), prose pages | use `calc(N * var(--warp-ch))` for text widths, not `Nch` |
+| Cap trim on buttons, badges, chips, pills, tags, eyebrows, headings | components with text in a flex host | wrap bare text in a `span` if it needs to centre on caps; never compensate with padding |
+| Explicit leading on every role, and in every `font:` shorthand | everyone | write `font: 500 11px/1.25 …`, never `font: 500 11px …` |
+| Fallback faces (`Inter Fallback` …) in the stacks | anyone writing their own `font-family` | append the fallback face after the brand face |
+| `--warp-text-{role}-canvas` strings | data (charts), canvas code | use them for `ctx.font`; measure with the same string |
+| Touch expanders and the band (§2, "Hit areas") | data, layout, app, inputs | follow the rules; button `::after` now expands both axes |
+
 

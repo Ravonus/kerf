@@ -1,16 +1,18 @@
 <!doctype html>
-<html lang="en" data-expression="balanced" data-theme="light">
+<html lang="en" data-expression="balanced">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>warp data</title>
 <meta name="description" content="Data display and data visualisation specimen for warp: tables, live cells, collections, KPI tiles and charts across the expression dial.">
 <style>@layer warp.tokens, warp.base, warp.signature, warp.components, warp.data, specimen;</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400..600&family=Space+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../tokens/warp.css">
 <link rel="stylesheet" href="../tokens/warp-data.css">
+<link rel="stylesheet" href="warp-bar.css">
 <style>
 /* ===========================================================================
    Specimen-only: chrome, plus minimal stand-ins for button and badge (owned by
@@ -38,7 +40,8 @@
   [data-scope="button"][data-tone="inverse"] { color: var(--warp-color-on-inverse); }
   [data-scope="button"] svg { inline-size: 15px; block-size: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; }
   [data-scope="button"]:disabled { opacity: var(--warp-opacity-disabled); cursor: default; }
-  [data-scope="button"]::after { content: ""; position: absolute; inset: min(0px, calc((var(--warp-control-sm) - var(--warp-hit-min)) / 2)); }
+  [data-scope="button"]::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  [data-scope="query"] [data-rm]::after { inset-inline-end: min(0px, calc(100% - var(--warp-hit-min))); }   /* as warp-data.css: reach the group's free end */
   [data-scope="badge"] { display: inline-flex; align-items: center; gap: 5px; block-size: 20px; padding-inline: 7px; border-radius: var(--warp-radius-round);
     background: var(--_soft); color: var(--_text); font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
     letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); white-space: nowrap; }
@@ -53,29 +56,18 @@
      colour here used to override it on every [data-scope] host, so panels and stat tiles swept at every dial */
   [data-scope="list"] [data-part="actions"] button { color: var(--_ink); }
 
-  /* toolbar (page controls) */
-  .bar { position: sticky; inset-block-start: 0; z-index: var(--warp-z-sticky);
-    background: color-mix(in oklab, var(--warp-color-page) 86%, transparent);
-    backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    border-block-end: 1px solid var(--warp-color-border); }
-  .bar .wrap { display: flex; align-items: center; gap: var(--warp-space-group); min-block-size: 60px; }
-  .mark { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
-  .mark svg { inline-size: 22px; block-size: 22px; fill: none; stroke: var(--warp-color-text); stroke-width: 1.5; }
-  .mark small { font: 500 var(--warp-text-caption-size) var(--warp-font-mono); color: var(--warp-color-text-subtle); }
-  .controls { display: flex; gap: var(--warp-space-group); margin-inline-start: auto; overflow-x: auto; padding-block: 10px; scrollbar-width: none; }
-  .ctl { display: grid; gap: 3px; flex: none; }
-  .ctl > span { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warp-color-text-subtle); padding-inline-start: 2px; }
+  /* the settings bar is the shared one: warp-bar.css / warp-bar.js (01-foundations §13) */
+  /* a label that names one control without taking part in layout (never aria-label on an input) */
+  .lc { display: contents; }
+  /* in-page segmented radios (chart, table and pivot state): the bar's look, scoped to the page */
   .seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
   .seg label { position: relative; display: flex; }
   .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .seg i { font-style: normal; display: inline-flex; align-items: center; block-size: 26px; padding-inline: 10px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
+  .seg i { font-style: normal; display: inline-flex; align-items: center; block-size: max(26px, var(--warp-hit-min)); padding-inline: 10px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
   .seg label:hover i { color: var(--warp-color-text); }
   .seg input:checked + i { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
   .seg input:focus-visible + i { outline: 2px solid var(--warp-color-focus); outline-offset: 1px; }
-  @media (max-width: 860px) { .bar .wrap { flex-wrap: wrap; gap: 0; } .controls { inline-size: 100%; margin: 0; padding-block: 0 10px;
-    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); } }
-  /* phone: the bar scrolls away with the page and its controls wrap, so no label is ever clipped */
-  @media (max-width: 600px) { .bar { position: static; } .controls { flex-wrap: wrap; overflow: visible; mask-image: none; -webkit-mask-image: none; gap: 10px 14px; } }
+  @media (forced-colors: active) { .seg input:checked + i { outline: 2px solid Highlight; outline-offset: -2px; } }
 
   /* hero */
   .hero { padding-block: clamp(36px, 6vw, 84px) var(--warp-space-section); display: grid; gap: clamp(28px, 4vw, 48px); }
@@ -91,6 +83,7 @@
   /* sections */
   section.s { padding-block: var(--warp-space-section); border-block-start: 1px solid var(--warp-color-border); }
   .s-head { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--warp-space-group) clamp(16px, 3vw, 48px); margin-block-end: calc(var(--warp-space-section) * 0.6); }
+  .s-head { container-type: inline-size; }   /* the fluid title role resolves against the section head (01 §2 Type) */
   .s-head .num { font: 500 12px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); letter-spacing: 0.06em; }
   .s-head .num b { display: block; color: var(--warp-color-accent-text); font-weight: 500; }
   .s-head h2 { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: var(--warp-text-title-size); letter-spacing: var(--warp-text-title-tracking); line-height: var(--warp-text-title-leading); }
@@ -136,6 +129,19 @@
   select.sel { appearance: none; -webkit-appearance: none; block-size: var(--warp-control-sm); padding: 0 26px 0 10px; border-radius: var(--warp-radius-control); border: 1px solid var(--warp-color-border-control);
     background: var(--warp-color-surface-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") right 8px center / 12px no-repeat;
     color: var(--warp-color-text); font: 500 12px var(--warp-text-body-font); font-size: max(12px, var(--warp-input-font-min)); }
+  input.jump { inline-size: 56px; background: var(--warp-color-surface-raised); }
+  /* sm native controls on touch: 36px visual, 44px hit area (01 §2 touch floor). A select or input can't host
+     ::after, so a transparent block band (the border) makes the area, negative margins give it back to the
+     layout, and the visible edge becomes an inset ring. The band is 0 on fine pointers. */
+  select.sel, input.jump {
+    --_band: max(0px, calc((var(--warp-hit-min) - var(--warp-control-sm)) / 2));
+    block-size: calc(var(--warp-control-sm) + 2 * var(--_band)); margin-block: calc(-1 * var(--_band));
+    border: 0 solid transparent; border-block-width: var(--_band); background-clip: padding-box;
+    box-shadow: inset 0 0 0 1px var(--warp-color-border-control);
+    border-radius: var(--warp-radius-control) / calc(var(--warp-radius-control) + var(--_band));
+  }
+  select.sel { padding-inline: 11px 27px; }
+  input.jump { padding-inline: 9px; }
 
   /* device frames (same method as foundations: real-width containers, scaled) */
   .devices { display: grid; gap: 28px; }
@@ -159,48 +165,8 @@
 </head>
 <body>
 
-<header class="bar">
-  <div class="wrap">
-    <div class="mark">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M10 3v18M15 3v18M20 3v18"/><path d="M2 9h20M2 15h20" stroke="var(--warp-color-accent-solid)" stroke-width="2"/></svg>
-      warp <small>data v0.2</small>
-    </div>
-    <div class="controls" role="group" aria-label="Specimen settings">
-      <div class="ctl"><span id="l-stop">Dial</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-stop" data-ctl="stop">
-          <label><input type="radio" name="stop" value="quiet"><i>Quiet</i></label>
-          <label><input type="radio" name="stop" value="balanced" checked><i>Balanced</i></label>
-          <label><input type="radio" name="stop" value="vivid"><i>Vivid</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-theme">Theme</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-theme" data-ctl="theme">
-          <label><input type="radio" name="theme" value="light" checked><i>Light</i></label>
-          <label><input type="radio" name="theme" value="dark"><i>Dark</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-density">Density</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-density" data-ctl="density">
-          <label><input type="radio" name="density" value="compact"><i>Compact</i></label>
-          <label><input type="radio" name="density" value="cozy" checked><i>Cozy</i></label>
-          <label><input type="radio" name="density" value="comfortable"><i>Comfortable</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-motion">Motion</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-motion" data-ctl="motion">
-          <label><input type="radio" name="motion" value="full" checked><i>Full</i></label>
-          <label><input type="radio" name="motion" value="reduce"><i>Reduced</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-fields">Fields</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-fields" data-ctl="fields">
-          <label><input type="radio" name="fields" value="floating" checked><i>Floating</i></label>
-          <label><input type="radio" name="fields" value="classic"><i>Classic</i></label>
-        </div></div>
-      <div class="ctl"><span id="l-flair">Surface sweep</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-flair" data-ctl="flair">
-          <label><input type="radio" name="flair" value="auto" checked><i>Dial default</i></label>
-          <label><input type="radio" name="flair" value="sweep"><i>On</i></label>
-        </div></div>
-    </div>
-  </div>
-</header>
+<header data-specimen-bar data-label="data v0.2"></header>
+<script src="warp-bar.js"></script>
 
 <main>
 <!-- ================================================================== hero -->
@@ -557,10 +523,8 @@ const sweepMs = (box) => sweepMsCache || (sweepMsCache = warpSweep.duration(box)
 function floatingLabel(field) {
   const label = $('[data-part="label"]', field), box = $('[data-part="control"]', field), input = $('[data-part="input"]', field);
   if (!label._split) {
-    // the <label for> keeps its accessible name in one visually-hidden text node; the per-character
-    // tint copy is display-only (SIGNATURE §2.4), so AT never reads "F i l t e r".
-    label._split = true; const text = label.textContent;
-    label.innerHTML = `<span class="vh">${esc(text)}</span><span aria-hidden="true">${[...text].map((c) => `<span data-char>${c === " " ? "&nbsp;" : esc(c)}</span>`).join("")}</span>`;
+    // the shared label anatomy (01 §2, warp-sweep.js): hidden label-text names it, the letters only tint
+    label._split = true; warpSweep.label(label);
     input.addEventListener("input", () => box.toggleAttribute("data-filled", input.value.length > 0));
   }
   const dur = sweepMs(box), w = box.offsetWidth;
@@ -1274,7 +1238,7 @@ function projectTable(host, opts = {}) {
   const edit = (td) => {
     if (td.querySelector("input")) return;
     const r = rows.find((x) => x.id === td.closest("tr").dataset.id), old = td.textContent;
-    td.innerHTML = `<input data-part="editor" inputmode="numeric" aria-label="Budget for ${esc(r.name)}" value="${r.budget}">`;
+    td.innerHTML = `<label class="lc"><span class="vh">Budget for ${esc(r.name)}</span><input data-part="editor" inputmode="numeric" value="${r.budget}"></label>`;
     const inp = $("input", td); inp.focus(); inp.select();
     const done = (save) => { if (save) { const n = Math.round(+inp.value.replace(/[^\d.]/g, "")); if (n > 0) r.budget = n; } td.textContent = save ? fmt.money(r.budget) : old; td.focus(); };
     inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); done(true); } if (e.key === "Escape") { e.preventDefault(); done(false); } });
@@ -1618,37 +1582,16 @@ setInterval(() => { if (livePaused) return; const el = $('#kpis [data-kpi="1"] [
 $("#replay").addEventListener("click", replay);
 $("#push").addEventListener("click", () => mainLine.tween(mainLine.cfg.series.map((s) => s.values.map((v, i) => i > 8 ? v * (0.9 + rnd() * 0.22) : v))));
 
-// page controls
-const on = {
-  stop: (v) => (root.dataset.expression = v),
-  theme: (v) => (root.dataset.theme = v),
-  density: (v) => (root.dataset.density = v),
-  motion: (v) => (root.dataset.motion = v),
-  fields: (v) => (root.dataset.fields = v),
-  flair: (v) => (v === "auto" ? delete root.dataset.flair : (root.dataset.flair = v)),
-  cstate: chartState,
-};
-/* a page setting: flip one attribute (inside a View Transition crossfade where supported and motion
-   is on), then redraw only what is in view; everything else is redrawn lazily (redrawAll). Colour-only
-   changes (theme) need no redraw: every mark paints with var(--warp-color-*). */
-const LAYOUT = new Set(["stop", "density", "fields"]);
-document.addEventListener("change", (e) => {
-  const g = e.target.closest("[data-ctl]"); if (!g || !on[g.dataset.ctl]) return;
-  const k = g.dataset.ctl, v = e.target.value;
-  if (k === "cstate") { on[k](v); return; }
-  const apply = () => on[k](v);
-  const after = () => { if (LAYOUT.has(k)) redrawAll(); $$('[data-scope="field"]').forEach(floatingLabel); fit(); };
-  if ((k === "stop" || k === "theme") && document.startViewTransition && !reduced()) document.startViewTransition(apply).updateCallbackDone.then(() => requestAnimationFrame(after));
-  else { apply(); requestAnimationFrame(after); }
-});
-if (matchMedia("(prefers-color-scheme: dark)").matches) { $('[name="theme"][value="dark"]').checked = true; on.theme("dark"); }
-if (matchMedia("(prefers-reduced-motion: reduce)").matches) { $('[name="motion"][value="reduce"]').checked = true; on.motion("reduce"); }
+// page controls: the shared settings bar (warp-bar.js, 01-foundations §13) writes the attributes on <html>
+// (?stop= and ?dial= are read as ?expression=). A dial or theme change runs inside a View Transition crossfade
+// where supported and motion is on; then only what is in view is redrawn (everything else lazily, redrawAll).
+// Colour-only changes (theme) need no redraw: every mark paints with var(--warp-color-*).
+const LAYOUT = new Set(["expression", "density", "fields"]);
+warpBar.transition = (k, v, write) => ((k === "expression" || k === "theme") && document.startViewTransition && !reduced() ? document.startViewTransition(write) : write());
+document.addEventListener("warp-bar:change", (e) => requestAnimationFrame(() => { if (LAYOUT.has(e.detail.name)) redrawAll(); $$('[data-scope="field"]').forEach(floatingLabel); fit(); }));
+document.addEventListener("change", (e) => { if (e.target.closest('[data-ctl="cstate"]')) chartState(e.target.value); });
 sweepAll();
 document.fonts.ready.then(() => { redrawAll(); $$('[data-scope="field"]').forEach(floatingLabel); });
-// test hook for headless renders: ?stop=vivid&theme=dark&density=compact&fields=classic (?dial= is an alias of ?stop=)
-const qs = new URLSearchParams(location.search);
-if (qs.get("dial") && !qs.get("stop")) qs.set("stop", qs.get("dial"));
-for (const k of ["stop", "theme", "density", "motion", "flair", "fields"]) if (qs.get(k)) { const r = $(`[name="${k}"][value="${qs.get(k)}"]`); if (r) { r.checked = true; on[k](qs.get(k)); } }
 // hand the shared helpers to the coverage-pack script below (same engine, more forms)
 window.__warp = { $, $$, esc, clamp, rnd, nid, fmt, fmtDate, shell, interact, register, legendHTML, tableHTML, niceTicks, lin, monotone, labelWindow, barPath, pxOf, COLORS,
   btn, checkbox, filterField, floatingLabel, sweepAll, sweep, PROJECTS, STATUS, ICON, spark, msOf, reduced, MONTHS, heatChart, lineChart, tweenNumber };
@@ -1737,7 +1680,7 @@ function opsGrid(host) {
   };
   function head() {
     thead.innerHTML = `<tr>${st.order.map((k, i) => `<th role="columnheader" scope="col" data-col="${k}" ${COLS[k].num ? "data-numeric" : ""} draggable="true" ${st.sort[0] === k ? `aria-sort="${st.sort[1] > 0 ? "ascending" : "descending"}"` : ""}><button type="button" data-part="sort" data-key="${k}" aria-describedby="${gid}-reorder">${COLS[k].label}${ICON.sort}</button></th>`).join("")}</tr>
-      ${showFilters ? `<tr data-part="filters">${st.order.map((k) => { const c = COLS[k], v = st.filters[k] ?? ""; return `<th>${c.filter === "text" ? `<input data-f="${k}" value="${esc(v)}" aria-label="Filter ${c.label}" placeholder="Contains…">` : c.filter === "select" ? `<select data-f="${k}" aria-label="Filter ${c.label}"><option value="">Any</option>${c.opts.map((o) => `<option ${o === v ? "selected" : ""}>${o}</option>`).join("")}</select>` : c.filter === "min" ? `<input data-f="${k}" inputmode="numeric" value="${esc(v)}" aria-label="${c.label} at least" placeholder="≥">` : ""}</th>`; }).join("")}</tr>` : ""}`;
+      ${showFilters ? `<tr data-part="filters">${st.order.map((k) => { const c = COLS[k], v = st.filters[k] ?? ""; return `<th>${c.filter === "text" ? `<label class="lc"><span class="vh">Filter ${c.label}</span><input data-f="${k}" value="${esc(v)}" placeholder="Contains…"></label>` : c.filter === "select" ? `<label class="lc"><span class="vh">Filter ${c.label}</span><select data-f="${k}"><option value="">Any</option>${c.opts.map((o) => `<option ${o === v ? "selected" : ""}>${o}</option>`).join("")}</select></label>` : c.filter === "min" ? `<label class="lc"><span class="vh">${c.label} at least</span><input data-f="${k}" inputmode="numeric" value="${esc(v)}" placeholder="≥"></label>` : ""}</th>`; }).join("")}</tr>` : ""}`;
     if (!$(`#${gid}-reorder`)) T.insertAdjacentHTML("beforeend", `<span class="vh" id="${gid}-reorder">Alt plus left or right arrow moves this column.</span>`);
   }
   function render() {
@@ -1796,7 +1739,7 @@ function opsGrid(host) {
   T.addEventListener("change", (e) => { if (e.target.matches("[data-view]")) { st = structuredClone(VIEWS[e.target.value]); collapsed.clear(); render(); } else if (e.target.matches("select[data-f]")) { st.filters[e.target.dataset.f] = e.target.value; render(); } });
   function edit(td) {
     const r = rows.find((x) => x.id === td.closest("tr").dataset.id);
-    td.innerHTML = `<input data-part="editor" inputmode="numeric" aria-label="Budget for ${esc(r.name)}" aria-describedby="${gid}-err" value="${r.budget}"><span class="vh" id="${gid}-err"></span>`;
+    td.innerHTML = `<label class="lc"><span class="vh">Budget for ${esc(r.name)}</span><input data-part="editor" inputmode="numeric" aria-describedby="${gid}-err" value="${r.budget}"></label><span class="vh" id="${gid}-err"></span>`;
     const inp = $("input", td); inp.focus(); inp.select();
     const done = (save) => {
       if (save) { const n = +inp.value.replace(/[$,\s]/g, ""); if (!(n > 0) || n > 5e6) { td.setAttribute("data-invalid", ""); inp.setAttribute("aria-invalid", "true"); $(`#${gid}-err`).textContent = "Enter an amount between 1 and 5,000,000"; $("[data-status]", T).textContent = "Budget must be between $1 and $5,000,000"; return false; } r.budget = n; }
@@ -1950,7 +1893,7 @@ function paginationBar(host, { total = 2481 } = {}) {
         ${pages(page, n).map((p) => p === "…" ? `<li data-part="gap" aria-hidden="true">…</li>` : `<li><button type="button" data-part="page" data-go="${p}" ${p === page ? 'aria-current="page"' : ""} aria-label="Page ${p}">${p}</button></li>`).join("")}
         <li><button type="button" data-part="page" data-edge data-go="${page + 1}" ${page === n ? "disabled" : ""} aria-label="Next page">›</button></li>
       </ol>
-      <label class="row" style="gap:6px">Go to <input data-jump inputmode="numeric" aria-label="Go to page" style="inline-size:56px;block-size:var(--warp-control-sm);padding-inline:8px;border:1px solid var(--warp-color-border-control);border-radius:var(--warp-radius-control);background:var(--warp-color-surface-raised);color:var(--warp-color-text);font:inherit;font-size:max(12px,var(--warp-input-font-min))" placeholder="${n}"></label>
+      <label class="row" style="gap:6px">Go to<span class="vh"> page</span> <input data-jump class="jump" inputmode="numeric" style="color:var(--warp-color-text);font:inherit;font-size:max(12px,var(--warp-input-font-min))" placeholder="${n}"></label>
     </nav><p class="muted" style="font-size:var(--warp-text-caption-size);margin-top:12px">Current page ${page} of ${n}. Under 520px only ‹ current › remain; the range text says the rest. A cursor list has no page count, so it gets the variant on the right.</p>`;
     if (focusSel) $(focusSel, host)?.focus();
   };
@@ -2048,7 +1991,7 @@ function comparison(host) {
   const ic = (v) => v === true ? `<span data-part="yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4 4 10-10"/></svg><span class="vh">Included</span></span>` : v === false ? `<span data-part="no"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12h10"/></svg><span class="vh">Not included</span></span>` : esc(v);
   let shown = ["team", "biz"];
   host.innerHTML = `<div data-scope="comparison" style="--_sticky-top:61px">
-    <div data-part="picker" style="gap:8px;align-items:center;font-size:var(--warp-text-caption-size)"><span class="muted">Compare</span>${[0, 1].map((i) => `<select class="sel" data-pick="${i}" aria-label="Plan ${i + 1}">${plans.map((p) => `<option value="${p.id}" ${shown[i] === p.id ? "selected" : ""}>${p.name}</option>`).join("")}</select>`).join('<span class="muted">vs</span>')}</div>
+    <div data-part="picker" style="gap:8px;align-items:center;font-size:var(--warp-text-caption-size)"><span class="muted">Compare</span>${[0, 1].map((i) => `<label class="lc"><span class="vh">Plan ${i + 1}</span><select class="sel" data-pick="${i}">${plans.map((p) => `<option value="${p.id}" ${shown[i] === p.id ? "selected" : ""}>${p.name}</option>`).join("")}</select></label>`).join('<span class="muted">vs</span>')}</div>
     <table><caption class="vh">Plan comparison</caption><thead><tr><td style="background:var(--warp-color-page);border-block-end:1px solid var(--warp-color-border-strong);position:sticky;top:var(--_sticky-top)"></td>${plans.map((p) => `<th scope="col" data-plan="${p.id}" ${p.featured ? "data-featured" : ""}>${p.featured ? `<span data-scope="badge" style="margin-bottom:8px">Most teams</span>` : ""}<b>${p.name}</b><small>${p.sub}</small>${btn(p.id === "ent" ? "Contact<span class='vh'> sales</span>" : `Choose<span class="vh"> ${p.name}</span>`, "", p.featured ? "solid" : "outline")}</th>`).join("")}</tr></thead>
     <tbody>${rows.map(([l, vs, hint]) => !vs ? `<tr data-part="section"><th colspan="5" scope="colgroup">${l}</th></tr>` : `<tr><th scope="row">${l}${hint ? `<small>${hint}</small>` : ""}</th>${vs.map((v, i) => `<td data-plan="${plans[i].id}" ${plans[i].featured ? "data-featured" : ""}>${ic(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   const C = $('[data-scope="comparison"]', host); sweepAll(C);
@@ -2065,10 +2008,11 @@ function queryBuilder(host) {
   const test = (g, p) => { const r = g.rules.map((x) => x.rules ? test(x, p) : one(x, p)); return g.join === "and" ? r.every(Boolean) : r.some(Boolean); };
   const one = ({ f, op, v }, p) => { const a = p[f]; if (v === "") return true; switch (op) { case "is": return a === v; case "is not": return a !== v; case "contains": return String(a).toLowerCase().includes(v.toLowerCase()); case "starts with": return String(a).toLowerCase().startsWith(v.toLowerCase()); case "≥": return a >= +v; case "≤": return a <= +v; case "=": return a === +v; } };
   const text = (g) => "(" + g.rules.map((x) => x.rules ? text(x) : `${x.f} ${x.op} ${F[x.f].type === "num" ? x.v : `"${x.v}"`}`).join(` ${g.join.toUpperCase()} `) + ")";
+  const qid = (p) => "qb-" + (String(p).replace(/\W/g, "-") || "root");
   const ruleHTML = (r, path, first, join) => `<div data-part="rule" data-path="${path}"><span data-part="join">${first ? "where" : join}</span>
-    <select class="sel" data-k="f" aria-label="Field">${Object.entries(F).map(([k, f]) => `<option value="${k}" ${k === r.f ? "selected" : ""}>${f.label}</option>`).join("")}</select>
-    <select class="sel" data-k="op" aria-label="Operator">${OPS[F[r.f].type].map(([o]) => `<option ${o === r.op ? "selected" : ""}>${o}</option>`).join("")}</select>
-    ${F[r.f].type === "enum" ? `<select class="sel" data-k="v" aria-label="Value">${F[r.f].opts.map((o) => `<option ${o === r.v ? "selected" : ""}>${o}</option>`).join("")}</select>` : `<input data-k="v" aria-label="Value" value="${esc(r.v)}" ${F[r.f].type === "num" ? 'inputmode="numeric"' : ""}>`}
+    <label class="vh" for="${qid(path)}-f">Field</label><select class="sel" id="${qid(path)}-f" data-k="f">${Object.entries(F).map(([k, f]) => `<option value="${k}" ${k === r.f ? "selected" : ""}>${f.label}</option>`).join("")}</select>
+    <label class="vh" for="${qid(path)}-op">Operator</label><select class="sel" id="${qid(path)}-op" data-k="op">${OPS[F[r.f].type].map(([o]) => `<option ${o === r.op ? "selected" : ""}>${o}</option>`).join("")}</select>
+    ${F[r.f].type === "enum" ? `<label class="vh" for="${qid(path)}-v">Value</label><select class="sel" id="${qid(path)}-v" data-k="v">${F[r.f].opts.map((o) => `<option ${o === r.v ? "selected" : ""}>${o}</option>`).join("")}</select>` : `<label class="vh" for="${qid(path)}-v">Value</label><input id="${qid(path)}-v" data-k="v" value="${esc(r.v)}" ${F[r.f].type === "num" ? 'inputmode="numeric"' : ""}>`}
     <button type="button" data-scope="button" data-emphasis="ghost" data-rm aria-label="Remove rule" style="padding-inline:8px">✕</button></div>`;
   const groupHTML = (g, path) => `<div data-part="group" role="group" aria-label="${path ? "Nested group" : "Query"}" data-path="${path}">
     <div class="row" style="justify-content:space-between"><div class="seg" role="radiogroup" aria-label="Match"><label><input type="radio" name="j${path || "root"}" value="and" ${g.join === "and" ? "checked" : ""} data-join><i>All (AND)</i></label><label><input type="radio" name="j${path || "root"}" value="or" ${g.join === "or" ? "checked" : ""} data-join><i>Any (OR)</i></label></div>
@@ -2232,7 +2176,7 @@ gallery("g-gauge", { kind: "gauge", title: "Error budget used", desc: "Bands at 
       <g class="axis" aria-hidden="true">${seg.map((p, k) => show.has(k) ? `<text x="${p[0]}" y="${top + 14}" text-anchor="${k === 0 ? "start" : k === seg.length - 1 ? "end" : "middle"}">${day(b0 + k)}</text>` : "").join("")}</g>
       <g aria-hidden="true" style="--_dc:${COLORS(0)}"><path d="${monotone(d.map((v, i) => [xo(i), yo(v)]))}" fill="none" stroke="var(--warp-color-text-subtle)" stroke-width="1"/></g>
       <rect class="brush" data-brush x="${xo(b0)}" y="${ov[0] - 2}" width="${xo(b1) - xo(b0)}" height="${ov[1] - ov[0] + 4}" rx="3"/>
-      ${[["b0", b0], ["b1", b1]].map(([k, v]) => `<rect class="brush-h" data-h="${k}" tabindex="0" role="slider" aria-label="${k === "b0" ? "Window start" : "Window end"}" aria-valuemin="0" aria-valuemax="${N - 1}" aria-valuenow="${v}" aria-valuetext="${day(v)}" x="${xo(v) - 4}" y="${ov[0] + 6}" width="8" height="${ov[1] - ov[0] - 12}" rx="2"/>`).join("")}`,
+      ${[["b0", b0], ["b1", b1]].map(([k, v]) => `<g class="brush-hg" data-h="${k}" tabindex="0" role="slider" aria-label="${k === "b0" ? "Window start" : "Window end"}" aria-valuemin="0" aria-valuemax="${N - 1}" aria-valuenow="${v}" aria-valuetext="${day(v)}"><rect class="brush-hit" x="${xo(v) - 12}" y="${ov[0] - 2}" width="24" height="${ov[1] - ov[0] + 4}"/><rect class="brush-h" x="${xo(v) - 4}" y="${ov[0] + 6}" width="8" height="${ov[1] - ov[0] - 12}" rx="2"/></g>`).join("")}`,
       tip: (m) => `<div data-part="tip-title">${m.getAttribute("aria-label")}</div>`,
       pick: (x, y, svg) => { if (y > top) return null; const k = clamp(Math.round((x - ml) / ((Wd - ml - mr) / (b1 - b0))), 0, b1 - b0); return $(`[data-mark][data-xi="${k}"]`, svg); },
       after: (svg) => {
@@ -2436,7 +2380,7 @@ function flow(host) {
   const CW = 880, CH = 340; // the graph's own canvas; scaled down (never reflowed) on narrow screens
   host.innerHTML = `<div data-part="canvas" style="position:absolute;inset-block-start:0;inset-inline-start:0;inline-size:${CW}px;block-size:${CH}px;transform-origin:0 0"><svg aria-hidden="true"></svg>` + N.map((n) => `<div data-part="node" data-id="${n.id}" data-sweep tabindex="0" role="button" aria-roledescription="node" aria-label="${n.t}: ${n.d}. Arrow keys move it." style="transform:translate(${n.x}px,${n.y}px);--_dc:var(--warp-color-data-${n.c})"><span data-part="sweep-base"></span><span data-part="sweep"></span><b><i></i>${n.t}</b><span class="muted">${n.d}</span><span data-part="handle" data-side="in"></span><button type="button" data-part="handle" data-side="out" aria-label="Connect from ${n.t}" style="all:unset;position:absolute;inset-inline-end:-7px;inset-block-start:50%;translate:0 -50%;inline-size:12px;block-size:12px;border-radius:50%;background:var(--warp-color-surface-raised);border:2px solid var(--warp-color-accent-solid);cursor:crosshair"></button></div>`).join("") + `</div>`;
   const canvas = $("[data-part=canvas]", host); let k = 1;
-  const fitCanvas = () => { k = Math.min(1, host.clientWidth / CW); canvas.style.transform = `scale(${k})`; host.style.blockSize = CH * k + "px"; };
+  const fitCanvas = () => { k = Math.min(1, host.clientWidth / CW); canvas.style.transform = `scale(${k})`; canvas.style.setProperty("--_k", k); host.style.blockSize = CH * k + "px"; };
   const svg = $("svg", host), el = (id) => $(`[data-id="${id}"]`, host), node = (id) => N.find((n) => n.id === id);
   const edges = () => {
     svg.innerHTML = E.map(([a, b, l]) => { const A = node(a), B = node(b), ea = el(a), eb = el(b), x0 = A.x + ea.offsetWidth, y0 = A.y + ea.offsetHeight / 2, x1 = B.x, y1 = B.y + eb.offsetHeight / 2, d = Math.max(40, (x1 - x0) / 2); return `<path class="edge" ${l ? "data-live" : ""} d="M${x0},${y0} C${x0 + d},${y0} ${x1 - d},${y1} ${x1},${y1}"/>`; }).join("");

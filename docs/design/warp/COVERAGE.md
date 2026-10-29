@@ -50,7 +50,7 @@ kits in §2.
 | pickers | Select, Combobox, MultiCombobox, ColorPicker | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](specimens/inputs.html#choice) |
 | pickers / dates | DatePicker, DateRangePicker, DateTimePicker, TimePicker, MonthPicker | rich | ✓ [04 §2](04-inputs-rich.md#2-temporal-inputs) · [inputs-rich#date-demo](specimens/inputs-rich.html#date-demo) |
 | realtime and multiplayer UI | live cursors, presence avatars, synced state indicators, `.live` status | app | ✓ [07 §6.1](07-app-patterns.md#61-parts) · [07 §4.4](07-app-patterns.md#44-live-connection-status) · [app#collab](specimens/app.html#collab) · [app#notify](specimens/app.html#notify) |
-| theme *(added)* | ThemeProvider (light, dark, system), ThemeToggle, Logo (theme-aware mark), FaviconSwitcher (favicon follows scheme) | comp (ThemeToggle, Logo); layout (ThemeProvider wiring, FaviconSwitcher). `defineTheme` / `ThemeStyle` stay with foundations (`01`) | ◐ [05 §2](05-components.md#2-actions) · [02 §9](02-layout.md#9-responsive-rules) · [components#actions](specimens/components.html#actions) · missing: FaviconSwitcher demo |
+| theme *(added)* | ThemeProvider (light, dark, system), ThemeToggle, Logo (theme-aware mark), FaviconSwitcher (favicon follows scheme) | comp (ThemeToggle, Logo); layout (ThemeProvider wiring, FaviconSwitcher). `defineTheme` / `ThemeStyle` stay with foundations (`01`) | ✓ [05 §2](05-components.md#2-actions) · [02 §9](02-layout.md#9-responsive-rules) · [components#actions](specimens/components.html#actions) · FaviconSwitcher: [layout](specimens/layout.html) (the page's own tab icon follows the Theme dial and the OS scheme) |
 | icons *(added)* | the icon set in `icons/index.tsx` | comp, drawn to `00` §6 | ✓ [05 §6](05-components.md#6-display-atoms) · [components#icons](specimens/components.html#icons) |
 | motion *(added)* | Motion preset registry as a user-facing feature: 32 presets in 8 families (enter, modal, sheet, toast, tooltip, dropdown, palette, and `fancy`: crt-on, crt-off, flicker, glitch, spotlight, iris), `MotionConfigProvider` with per-component override, `useMotionDisabled` | comp (registry and per-component override); market (the `fancy` family) | ◐ [05 §8](05-components.md#8-motion-presets-registry) · [08 §6](08-marketing-and-expressive.md#6-expressive-catalogue-beyond-13) · [components#feedback](specimens/components.html#feedback) · missing: `fancy` family demo (crt, glitch, iris) |
 | motion components *(added)* | ScrollReveal, AnimatedGrid / AnimatedGridItem (staggered grid), MotionCard, ModalBackdrop | market (ScrollReveal, AnimatedGrid, MotionCard); comp (ModalBackdrop) | ◐ [08 §1.3](08-marketing-and-expressive.md#13-registry-the-shipped-effects) · [marketing#top](specimens/marketing.html#top) · [marketing#listings](specimens/marketing.html#listings) · missing: MotionCard demo |
@@ -504,7 +504,6 @@ billing and admin, `07g` system states).
 Every §1 row and every P0 / P1 row not yet ✓, from the audit of 2026-10-28. None is ✗; each is partial.
 
 **layout**
-- §1 theme: FaviconSwitcher has no demo.
 - §1 primitives: Spacer has no demo.
 - P0 direction and locale provider: RTL is done; no spec defines a locale provider.
 

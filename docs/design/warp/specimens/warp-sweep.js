@@ -15,7 +15,8 @@
    Hosts are [data-sweep]. data-static hosts are frozen demo states: never touched.
    The trigger (the area that counts as hover/focus) is the host, or the nearest
    [data-sweep-trigger] / checkbox, radio or switch <label> around it.
-   window.warpSweep = { init(scope), sync(el), pin(el, on), confirm(el), duration(el) }
+   window.warpSweep = { init(scope), sync(el), pin(el, on), confirm(el), duration(el), label(labelEl) }
+   label(labelEl) splits a field label into the shared two-part anatomy (01 §2) and returns its letter spans.
    duration(el) is cached per (expression, motion, OS reduced motion, host kind): no style recalc per call. */
 (() => {
   "use strict";
@@ -167,7 +168,26 @@
     todo.forEach(step);
   }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ATTRS });
 
-  window.warpSweep = { init, sync, pin, confirm, duration };
+  // floatingLabel()'s label anatomy (01-foundations §2, "Label anatomy"), one implementation for every page:
+  //   <label data-part="label" for="…"><span data-part="label-text">Email address</span>
+  //     <span data-part="label-chars" aria-hidden="true"><span data-char data-c="E"></span>…</span></label>
+  // The visually hidden label-text (no text-transform, no tracking) is the accessible name, innerText, copy and
+  // find; the letters are generated content (warp.css), so the per-character tint travels without ever spelling
+  // the name out or reading it in caps. Idempotent; an older split (letters as text) is re-split from its text.
+  // Returns the letter spans, for the page's per-character delays.
+  const ESC = { "&": "&amp;", '"': "&quot;", "<": "&lt;", ">": "&gt;" };
+  const esc = (c) => c.replace(/[&"<>]/g, (m) => ESC[m]);
+  function label(el) {
+    if (!el) return [];
+    if (!el.querySelector(':scope > [data-part="label-chars"]')) {
+      const named = el.querySelector(':scope > [data-part="label-text"]');
+      const text = (named ? named.textContent : el.textContent).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+      el.innerHTML = `<span data-part="label-text">${esc(text)}</span><span data-part="label-chars" aria-hidden="true">${[...text].map((c) => `<span data-char data-c="${esc(c)}"></span>`).join("")}</span>`;
+    }
+    return el.querySelectorAll('[data-part="label-chars"] > [data-char]');
+  }
+
+  window.warpSweep = { init, sync, pin, confirm, duration, label };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => init());
   else init();
 })();

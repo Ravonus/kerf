@@ -1,0 +1,302 @@
+{
+ "browser": "chrome",
+ "version": "156.0.8078.48",
+ "fork": "blink",
+ "rows": [
+  {
+   "corpus": "latin",
+   "lib": "upstream",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 17,
+   "prepareWarm": 18,
+   "layout": 0.4,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "latin",
+   "lib": "fork",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 16.3,
+   "prepareWarm": 15.3,
+   "layout": 0.5,
+   "pulls": {
+    "base": 1000
+   },
+   "tiers": {
+    "lite": 127,
+    "escalated": 649,
+    "exact": 224
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "latin-hard",
+   "lib": "upstream",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 26.4,
+   "prepareWarm": 23.1,
+   "layout": 0.5,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "latin-hard",
+   "lib": "fork",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 29,
+   "prepareWarm": 27.3,
+   "layout": 0.6,
+   "pulls": {
+    "base": 1000
+   },
+   "tiers": {
+    "lite": 65,
+    "escalated": 440,
+    "exact": 495
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "emoji",
+   "lib": "upstream",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 22,
+   "prepareWarm": 20.8,
+   "layout": 0.5,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "emoji",
+   "lib": "fork",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 19,
+   "prepareWarm": 18.3,
+   "layout": 0.4,
+   "pulls": {
+    "base": 1000
+   },
+   "tiers": {
+    "lite": 155,
+    "escalated": 616,
+    "exact": 229
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "arabic",
+   "lib": "upstream",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 22.5,
+   "prepareWarm": 21.1,
+   "layout": 0.5,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "arabic",
+   "lib": "fork",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 24.1,
+   "prepareWarm": 23.2,
+   "layout": 0.6,
+   "pulls": {
+    "scripts": 930,
+    "base": 70
+   },
+   "tiers": {
+    "lite": 24,
+    "escalated": 31,
+    "exact": 945
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "cjk",
+   "lib": "upstream",
+   "domMismatch": 4,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 26.9,
+   "prepareWarm": 25.2,
+   "layout": 0.6,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "cjk",
+   "lib": "fork",
+   "domMismatch": 4,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 28.6,
+   "prepareWarm": 26.3,
+   "layout": 0.6,
+   "pulls": {
+    "scripts": 930,
+    "base": 70
+   },
+   "tiers": {
+    "lite": 24,
+    "escalated": 31,
+    "exact": 945
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "thai",
+   "lib": "upstream",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 37.6,
+   "prepareWarm": 34.7,
+   "layout": 0.5,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "thai",
+   "lib": "fork",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 33.4,
+   "prepareWarm": 29.8,
+   "layout": 0.4,
+   "pulls": {
+    "scripts": 930,
+    "base": 70
+   },
+   "tiers": {
+    "lite": 24,
+    "escalated": 31,
+    "exact": 945
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "mixed",
+   "lib": "upstream",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 17.2,
+   "prepareWarm": 15.9,
+   "layout": 0.4,
+   "pulls": null,
+   "tiers": null,
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "mixed",
+   "lib": "fork",
+   "domMismatch": 0,
+   "diffVsUpstream": 0,
+   "diffParas": 0,
+   "prepareCold": 20.4,
+   "prepareWarm": 19,
+   "layout": 0.5,
+   "pulls": {
+    "base": 328,
+    "scripts": 672
+   },
+   "tiers": {
+    "lite": 63,
+    "escalated": 188,
+    "exact": 749
+   },
+   "estimates": 0,
+   "complexHandles": 0
+  },
+  {
+   "corpus": "latin",
+   "lib": "fork",
+   "linesChecked": 7653,
+   "linesMismatched": 0
+  },
+  {
+   "corpus": "latin-hard",
+   "lib": "fork",
+   "linesChecked": 4431,
+   "linesMismatched": 0
+  },
+  {
+   "corpus": "emoji",
+   "lib": "fork",
+   "linesChecked": 7649,
+   "linesMismatched": 0
+  },
+  {
+   "corpus": "arabic",
+   "lib": "fork",
+   "linesChecked": 569,
+   "linesMismatched": 0
+  },
+  {
+   "corpus": "cjk",
+   "lib": "fork",
+   "linesChecked": 569,
+   "linesMismatched": 0
+  },
+  {
+   "corpus": "thai",
+   "lib": "fork",
+   "linesChecked": 569,
+   "linesMismatched": 0
+  },
+  {
+   "corpus": "mixed",
+   "lib": "fork",
+   "linesChecked": 2418,
+   "linesMismatched": 0
+  }
+ ],
+ "chunksFetched": [
+  "/blink/engine.js",
+  "/blink/chunk-L7ZEIXFQ.js",
+  "/blink/chunk-5VL2QQ4N.js",
+  "/blink/exact-LUGLZGMC.js",
+  "/blink/chunk-CQQWX2XE.js",
+  "/blink/chunk-RBMQI27M.js",
+  "/blink/chunk-RYG5AJIS.js",
+  "/blink/pack-scripts-JYGQVSEI.js",
+  "/blink/pack-rare-WXOKJOKM.js"
+ ]
+}

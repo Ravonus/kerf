@@ -8,8 +8,9 @@
 <meta name="description" content="Foundations specimen for warp, the default UI toolkit of weft: one expression dial from quiet to vivid.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400..600&family=Space+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../tokens/warp.css">
+<link rel="stylesheet" href="warp-bar.css">
 <style>
 /* Layer order: warp first, then this page — exactly what an app does. */
 @layer warp.tokens, warp.base, warp.components, specimen;
@@ -239,7 +240,7 @@
   .hero-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(24px, 4vw, 64px); align-items: end; }
   .hero h1 { font-family: var(--warp-text-display-font); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); font-size: clamp(64px, 11vw, 148px); line-height: 0.86; }
   .hero h1 em { font-style: var(--warp-text-emphasis-style); color: var(--warp-text-emphasis-color); }   /* real italic at vivid only */
-  .hero .lede { font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading); max-inline-size: 46ch; color: var(--warp-color-text-subtle); margin-block-start: var(--warp-space-group); }
+  .hero .lede { font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading); max-inline-size: calc(46 * var(--warp-ch)); color: var(--warp-color-text-subtle); margin-block-start: var(--warp-space-group); }
   .hero .lede b { color: var(--warp-color-text); font-weight: 500; }
   .weave { inline-size: 100%; block-size: auto; display: block; overflow: visible; }
   .weave .w { stroke: var(--warp-color-border-strong); stroke-width: 1; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: top; animation: weave-drop var(--warp-duration-slow) var(--warp-ease-out) both; animation-delay: calc(var(--i) * var(--warp-stagger) * 0.5); }
@@ -251,10 +252,11 @@
   /* sections */
   section.s { padding-block: var(--warp-space-section); border-block-start: 1px solid var(--warp-color-border); }
   .s-head { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--warp-space-group) clamp(16px, 3vw, 48px); margin-block-end: calc(var(--warp-space-section) * 0.66); }
+  .s-head { container-type: inline-size; }   /* the fluid title role resolves against the section head (01 §2 Type) */
   .s-head .num { font: 500 12px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); letter-spacing: 0.06em; }
   .s-head .num b { display: block; color: var(--warp-color-accent-text); font-weight: 500; }
   .s-head h2 { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: var(--warp-text-title-size); letter-spacing: var(--warp-text-title-tracking); line-height: var(--warp-text-title-leading); }
-  .s-head p { margin-block-start: var(--warp-space-related); max-inline-size: 70ch; color: var(--warp-color-text-subtle); }
+  .s-head p { margin-block-start: var(--warp-space-related); max-inline-size: calc(70 * var(--warp-ch)); color: var(--warp-color-text-subtle); }
   .s-head .actions { display: flex; gap: var(--warp-space-related); margin-block-start: var(--warp-space-group); flex-wrap: wrap; }
   @media (max-width: 700px) { .s-head { grid-template-columns: 1fr; } }
 
@@ -292,9 +294,9 @@
   .stop:hover .curve circle { offset-distance: 100%; }
 
   /* type */
-  .type { display: grid; gap: 14px; }
+  .type { display: grid; gap: 14px; container-type: inline-size; }   /* display + title specimens are fluid: their container is the column */
   .type > div { display: grid; gap: 4px; }
-  .t-display { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); }
+  .t-display { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); font-variation-settings: var(--warp-text-display-variation); text-box: var(--warp-text-display-trim); }
   .t-display em { font-style: var(--warp-text-emphasis-style); color: var(--warp-text-emphasis-color); }
   .t-title { font-family: var(--warp-text-title-font); font-size: var(--warp-text-title-size); line-height: var(--warp-text-title-leading); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); }
   .t-heading { font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size); line-height: var(--warp-text-heading-leading); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); }
@@ -427,138 +429,14 @@
   [data-expression="vivid"] .ico { stroke-linecap: square; stroke-linejoin: miter; }
 }
 </style>
-<style>
-/* warp specimen settings bar (01-foundations §13). Drop-in: unlayered, every selector under [data-specimen-bar]. */
-[data-specimen-bar] { position: sticky; inset-block-start: 0; z-index: var(--warp-z-sticky, 100);
-  background: color-mix(in oklab, var(--warp-color-page) 88%, transparent);
-  backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  border-block-end: 1px solid var(--warp-color-border); padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
-  font-family: var(--warp-text-body-font); color: var(--warp-color-text); }
-[data-specimen-bar] .wb-row { position: relative; display: flex; align-items: center; gap: 8px var(--warp-space-group);
-  min-block-size: 56px; max-inline-size: 1360px; margin-inline: auto; padding-inline: var(--warp-space-page); box-sizing: border-box; }
-[data-specimen-bar] .wb-mark { display: flex; align-items: center; gap: 10px; min-block-size: var(--warp-hit-min); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; color: inherit; text-decoration: none; }
-[data-specimen-bar] .wb-mark svg { inline-size: 22px; block-size: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
-[data-specimen-bar] .wb-mark small { font: 500 var(--warp-text-caption-size) var(--warp-font-mono); color: var(--warp-color-text-subtle); }
-[data-specimen-bar] .wb-toggle { display: none; align-items: center; gap: 8px; margin-inline-start: auto; min-inline-size: 0;
-  min-block-size: var(--warp-hit-min); padding-inline: 12px; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-control);
-  background: var(--warp-color-surface-raised); color: var(--warp-color-text); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); cursor: pointer; }
-[data-specimen-bar] .wb-toggle svg { inline-size: 16px; block-size: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
-[data-specimen-bar] .wb-toggle small { font: 400 var(--warp-text-caption-size) var(--warp-font-mono); color: var(--warp-color-text-subtle);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
-[data-specimen-bar] .wb-sheet { display: flex; flex-wrap: wrap; gap: 8px var(--warp-space-group); margin-inline-start: auto; justify-content: flex-end; padding-block: 8px; min-inline-size: 0; }
-[data-specimen-bar] .wb-sheet > hr { display: none; }
-[data-specimen-bar] .wb-ctl { display: grid; gap: 3px; flex: none; }
-[data-specimen-bar] .wb-ctl > span { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--warp-color-text-subtle); padding-inline-start: 2px; }
-[data-specimen-bar] .wb-seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
-[data-specimen-bar] .wb-seg label { position: relative; display: flex; }
-[data-specimen-bar] .wb-seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-[data-specimen-bar] .wb-seg i { font-style: normal; display: inline-flex; align-items: center; justify-content: center; block-size: max(26px, var(--warp-hit-min));
-  padding-inline: 9px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap;
-  transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
-[data-specimen-bar] .wb-seg label:hover i { color: var(--warp-color-text); }
-[data-specimen-bar] .wb-seg input:checked + i { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
-[data-specimen-bar] .wb-seg input:focus-visible + i { outline: 2px solid var(--warp-color-focus); outline-offset: 1px; }
-@media (forced-colors: active) { [data-specimen-bar] .wb-seg input:checked + i { outline: 2px solid Highlight; outline-offset: -2px; } }
-/* below 1024px: one 56px row; the controls are a sheet under it */
-@media (max-width: 1023.98px) {
-  [data-specimen-bar] .wb-toggle { display: inline-flex; }
-  [data-specimen-bar] .wb-sheet { display: none; position: absolute; inset-inline: 0; inset-block-start: 100%; margin: 0;
-    flex-direction: column; flex-wrap: nowrap; gap: 14px; padding: 16px var(--warp-space-page) calc(20px + env(safe-area-inset-bottom));
-    max-block-size: calc(100dvh - 56px); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box;
-    background: var(--warp-color-surface-overlay); border-block-end: 1px solid var(--warp-color-border); box-shadow: var(--warp-elevation-3); }
-  [data-specimen-bar][data-open] .wb-sheet { display: flex; animation: warp-enter var(--warp-duration-base) var(--warp-ease-out); }
-  [data-specimen-bar] .wb-sheet > hr { display: block; inline-size: 100%; margin: 0; border: 0; border-block-start: 1px solid var(--warp-color-border); }
-  [data-specimen-bar] .wb-ctl { grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 12px; }
-  [data-specimen-bar] .wb-ctl > span { padding: 0; }
-  [data-specimen-bar] .wb-seg { inline-size: 100%; box-sizing: border-box; }
-  [data-specimen-bar] .wb-seg label, [data-specimen-bar] .wb-seg i { flex: 1; }
-  [data-specimen-bar] .wb-mark small { display: none; }
-}
-@media (min-width: 480px) and (max-width: 1023.98px) { [data-specimen-bar] .wb-mark small { display: inline; } }
-</style>
 </head>
 <body data-scheme="both">
 
 <!-- ================================================================ toolbar -->
-<header data-specimen-bar data-flair-target=".cell, .stop, .screen">
-  <div class="wb-row">
-    <a class="wb-mark" href="#top"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 3v18M10 3v18M15 3v18M20 3v18"/><path d="M2 9h20M2 15h20" stroke="var(--warp-color-accent-solid)" stroke-width="2"/></svg>warp <small>foundations v0.2</small></a>
-    <button type="button" class="wb-toggle" aria-expanded="false" aria-controls="wb-sheet"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings<small data-wb-summary></small></button>
-    <div class="wb-sheet" id="wb-sheet" role="group" aria-label="Specimen settings">
-      <div class="wb-ctl"><span id="wb-l-expression">Expression</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-expression" data-ctl="expression">
-        <label><input type="radio" name="expression" value="quiet"><i>Quiet</i></label><label><input type="radio" name="expression" value="balanced" checked><i>Balanced</i></label><label><input type="radio" name="expression" value="vivid"><i>Vivid</i></label></div></div>
-      <div class="wb-ctl"><span id="wb-l-fields">Fields</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-fields" data-ctl="fields">
-        <label><input type="radio" name="fields" value="floating" checked><i>Floating</i></label><label><input type="radio" name="fields" value="classic"><i>Classic</i></label></div></div>
-      <div class="wb-ctl"><span id="wb-l-theme">Theme</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-theme" data-ctl="theme">
-        <label><input type="radio" name="theme" value="auto" checked><i>Auto</i></label><label><input type="radio" name="theme" value="light"><i>Light</i></label><label><input type="radio" name="theme" value="dark"><i>Dark</i></label></div></div>
-      <div class="wb-ctl"><span id="wb-l-density">Density</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-density" data-ctl="density">
-        <label><input type="radio" name="density" value="compact"><i>Compact</i></label><label><input type="radio" name="density" value="cozy" checked><i>Cozy</i></label><label><input type="radio" name="density" value="comfortable"><i>Comfortable</i></label></div></div>
-      <div class="wb-ctl"><span id="wb-l-motion">Motion</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-motion" data-ctl="motion">
-        <label><input type="radio" name="motion" value="auto" checked><i>Auto</i></label><label><input type="radio" name="motion" value="full"><i>Full</i></label><label><input type="radio" name="motion" value="reduce"><i>Reduced</i></label></div></div>
-      <div class="wb-ctl"><span id="wb-l-flair">Flair</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-flair" data-ctl="flair">
-        <label><input type="radio" name="flair" value="auto" checked><i>Auto</i></label><label><input type="radio" name="flair" value="sweep"><i>Sweep</i></label><label><input type="radio" name="flair" value="none"><i>None</i></label></div></div>
-      <hr>
-      <div class="wb-ctl" title="page extra: which theme rows the matrices show"><span id="wb-l-matrix">Matrix</span><div class="wb-seg" role="radiogroup" aria-labelledby="wb-l-matrix" data-ctl="matrix">
-        <label><input type="radio" name="matrix" value="both" checked><i>Both</i></label><label><input type="radio" name="matrix" value="light"><i>Light</i></label><label><input type="radio" name="matrix" value="dark"><i>Dark</i></label></div></div>
-    </div>
-  </div>
+<header data-specimen-bar data-label="foundations v0.2" data-flair-target=".cell, .stop, .screen">
+  <div data-extra="matrix" data-label="Matrix" data-options="both:Both, light:Light, dark:Dark" title="page extra: which theme rows the matrices show"></div>
 </header>
-<script>
-/* warp specimen settings bar (01-foundations §13). Drop-in, no dependencies.
-   Standard dials write <html data-*>; "auto" removes the attribute (OS / stop decides). Deep link with
-   ?expression=&fields=&theme=&density=&motion=&flair= (and any page extra by its name).
-   Page hooks: document "warp-bar:change" event, detail { name, value }. Attributes are written synchronously;
-   the load-time events (defaults and deep-linked values) fire at DOMContentLoaded, after the page's scripts.
-   data-flair-target="<selector>" on the bar also writes data-flair on those elements (islands with their own
-   data-expression re-derive the sweep reach, so they need it set on themselves). */
-(() => {
-  const bar = document.querySelector("[data-specimen-bar]"); if (!bar) return;
-  const root = document.documentElement;
-  const STD = { expression: "expression", fields: "fields", theme: "theme", density: "density", motion: "motion", flair: "flair" };
-  const AUTO_REMOVES = new Set(["theme", "motion", "flair"]);
-  const set = (el, k, v) => (AUTO_REMOVES.has(k) && v === "auto" ? delete el.dataset[k] : (el.dataset[k] = v));
-  const initial = [];
-  const emit = (name, value) => {
-    // flair targets are written at emit time, so islands the page renders after this script still get it
-    if (name === "flair" && bar.dataset.flairTarget) document.querySelectorAll(bar.dataset.flairTarget).forEach((el) => set(el, "flair", value));
-    document.dispatchEvent(new CustomEvent("warp-bar:change", { detail: { name, value } }));
-  };
-  const apply = (name, value, fromUser, later) => {
-    if (STD[name]) set(root, name, value);
-    if (fromUser) { const q = new URLSearchParams(location.search); q.set(name, value); history.replaceState(null, "", "?" + q + location.hash); }
-    summary();
-    if (later) initial.push([name, value]); else emit(name, value);
-  };
-  const checked = (n) => bar.querySelector(`input[name="${n}"]:checked`);
-  const summary = () => { const s = bar.querySelector("[data-wb-summary]"); if (s) s.textContent = [checked("expression"), checked("theme")].filter(Boolean).map((i) => i.closest("label").textContent.trim()).join(" · "); };
-  // initial: deep link wins; otherwise the checked default (Auto never writes an attribute)
-  const params = new URLSearchParams(location.search);
-  for (const g of bar.querySelectorAll("[data-ctl]")) {
-    const name = g.dataset.ctl, v = params.get(name);
-    const r = v && g.querySelector(`input[value="${CSS.escape(v)}"]`);
-    if (r) r.checked = true;
-    const cur = g.querySelector("input:checked");
-    if (cur && (r || (STD[name] && !(AUTO_REMOVES.has(name) && cur.value === "auto")))) apply(name, cur.value, false, true);
-  }
-  summary();
-  // attributes are written now (no flash); the events wait until the page's own scripts are listening
-  const flush = () => initial.splice(0).forEach(([n, v]) => emit(n, v));
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", flush); else setTimeout(flush);
-  bar.addEventListener("change", (e) => { const g = e.target.closest("[data-ctl]"); if (g) apply(g.dataset.ctl, e.target.value, true); });
-  // the sheet (below 1024px)
-  const toggle = bar.querySelector(".wb-toggle");
-  const open = (on, focus = true) => {
-    bar.toggleAttribute("data-open", on); toggle.setAttribute("aria-expanded", on);
-    if (on && focus) (bar.querySelector(".wb-sheet input:checked") || bar.querySelector(".wb-sheet input"))?.focus();
-    else if (!on && focus && bar.contains(document.activeElement)) toggle.focus();
-  };
-  toggle?.addEventListener("click", () => open(!bar.hasAttribute("data-open")));
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.hasAttribute("data-open")) open(false); });
-  document.addEventListener("pointerdown", (e) => { if (bar.hasAttribute("data-open") && !bar.contains(e.target)) open(false, false); });
-  matchMedia("(min-width: 1024px)").addEventListener("change", (m) => m.matches && open(false, false));
-  window.warpBar = { set: (name, value) => { const r = bar.querySelector(`input[name="${name}"][value="${CSS.escape(value)}"]`); if (r) { r.checked = true; apply(name, value, true); } } };
-})();
-</script>
+<script src="warp-bar.js"></script>
 
 <main>
 <!-- =================================================================== hero -->
@@ -1039,8 +917,7 @@
       // the label stays the input's real <label for>. Its name comes from a visually hidden copy with no
       // text-transform; the tinted letters are generated content in an aria-hidden span (warp.css)
       label._split = true;
-      const t = label.textContent, esc = (c) => c.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-      label.innerHTML = `<span data-part="label-text">${esc(t)}</span><span data-part="label-chars" aria-hidden="true">${[...t].map((c) => `<span data-char data-c="${esc(c)}"></span>`).join("")}</span>`;
+      warpSweep.label(label);   // shared with every page: warp-sweep.js
       label.addEventListener("transitionend", (e) => { if (e.propertyName === "font-size") delays(field); });
       field.querySelector('[data-part="input"]').addEventListener("input", (e) => {
         e.target.closest('[data-part="control"]').toggleAttribute("data-filled", e.target.value.length > 0);

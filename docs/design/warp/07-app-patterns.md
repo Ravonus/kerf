@@ -630,10 +630,10 @@ page theme.
 
 ## 10. Handoffs
 
-- **components (05):** `[data-scope="button"]` sets `overflow: visible`, so a solid button's `sweep-fill` paints outside
-  it. `warp-app.css` §9 clips `:has(> [data-part="sweep-fill"])` buttons locally; the fix belongs in 05.
-- **foundations (01):** at 1280 the canonical bar wraps to two rows (117px). That is within §13 ("a second row at
-  most") but costs 13% of a 900px viewport; consider a compact desktop layout.
+- **components (05), resolved:** 05 now wipes a solid button's `sweep-fill` with `clip-path` inside the box, so the
+  local `overflow: hidden` clip in `warp-app.css` §9 is gone and the 44px `::after` hit area is whole again.
+- **foundations (01), resolved:** the settings bar is shared (`specimens/warp-bar.css` / `warp-bar.js`) and is one
+  59px row at 1280 and up, with page extras behind More (01 §13).
 - **data (06):** the "3px status-bar buttons" in review 02 are the data tracker, not app.
 - **flows (09):** the role/permission matrix and SignGate stay in 09 (see the scope note at the top).
 - **Signature:** Kanban cards and comment threads still sweep at every stop; gate them with

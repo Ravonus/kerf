@@ -1046,6 +1046,9 @@
 :where([data-scope="kanban"] [data-part="column"] header) { display: flex; justify-content: space-between; font: 500 11px/1.6 var(--warp-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--warp-color-text-subtle); padding: 2px 4px; }
 :where([data-scope="kanban"] [data-part="column"][data-over-limit] header em) { color: var(--warp-color-caution-text); font-style: normal; }
 :where([data-scope="kanban"] [data-part="card"]) { position: relative; padding: 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border); font-size: 13px; cursor: grab; }
+/* touch: cards are ~40px tall, 6px apart: a block-axis expander (under the card's content) makes them hit-min */
+:where([data-scope="kanban"] [data-part="card"]) { isolation: isolate; }
+:where([data-scope="kanban"] [data-part="card"])::after { content: ""; position: absolute; z-index: -1; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 
 /* ---------------------------------------------------------------------------
    8 · Navigator grids (review 03 M7): mini month, month view, room timeline.
@@ -1079,10 +1082,8 @@
 :where([data-scope="suggestions"][data-variant="chips"] button) { display: inline-flex; align-items: center; }
 :where([data-scope="inbox"] [role="tab"]) { min-inline-size: var(--warp-hit-min); justify-content: center; }
 :where([data-scope="inbox"] [data-part="footer"] a) { display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min); }
-/* solid sweep buttons (sweep-fill) must clip their fill, which waits at -101% off the left edge. Clipping also
-   clips the ::after hit area, so on touch these buttons are simply hit-min tall themselves. (warp-components'
-   button has overflow: visible; see the handoff in 07 §10.) */
-:where([data-scope="button"]:has(> [data-part="sweep-fill"])) { overflow: hidden; min-block-size: var(--warp-hit-min); }
+/* solid sweep buttons (sweep-fill): warp-components wipes the fill with clip-path inside the box, so nothing here
+   clips the button; its ::after hit area (hit-min, 44px on coarse) and focus ring stay whole. */
 /* small visuals keep their size; an invisible ::after reaches the hit area (neighbours may overlap) */
 :where([data-scope="reactions"] button, [data-scope="cite"]) { position: relative; }
 :where([data-scope="reactions"] button, [data-scope="cite"])::after {

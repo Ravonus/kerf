@@ -1,16 +1,18 @@
 <!doctype html>
-<html lang="en" data-expression="balanced" data-theme="light">
+<html lang="en" data-expression="balanced">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>warp marketing</title>
 <meta name="description" content="Marketing, commerce, media and governed expressive effects for warp, weft's default toolkit. One landing page, three dial stops, same markup.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400..600&family=Space+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../tokens/warp.css">
 <link rel="stylesheet" href="../tokens/warp-components.css">
 <link rel="stylesheet" href="../tokens/warp-marketing.css">
+<link rel="stylesheet" href="warp-bar.css">
 <style>
 @layer warp.tokens, warp.base, warp.signature, warp.components, warp.marketing, specimen;
 
@@ -25,56 +27,10 @@
   svg[data-icon] { inline-size: 16px; block-size: 16px; }
   .ico-lg { inline-size: 18px !important; block-size: 18px !important; }
 
-  /* settings bar: the canonical specimen settings bar (01-foundations §13; reference foundations.html #bar).
-     ≥ 1024 the controls sit inline (wrapping to a second row at most); below 1024 they live in a sheet
-     under a single 56px row, opened by the Settings button. Page extras (Accent, Hero, View) follow the hr. */
+  /* the settings bar is the shared one: warp-bar.css / warp-bar.js (01-foundations §13) */
   .vh { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .bar { position: sticky; inset-block-start: 0; z-index: calc(var(--warp-z-sticky) + 10);
-    background: color-mix(in oklab, var(--warp-color-page) 88%, transparent);
-    backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    border-block-end: 1px solid var(--warp-color-border); padding-inline: max(var(--warp-space-page), env(safe-area-inset-left)) max(var(--warp-space-page), env(safe-area-inset-right)); }
-  .bar > .wrap { display: flex; align-items: center; gap: 8px var(--warp-space-group); min-block-size: 56px; }
-  .mark { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
-  .mark svg { inline-size: 22px; block-size: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
-  .mark small { font: 500 var(--warp-text-caption-size) var(--warp-font-mono); color: var(--warp-color-text-subtle); }
-  .bar-toggle { display: none; }
-  .controls { display: flex; flex-wrap: wrap; gap: 8px var(--warp-space-group); margin-inline-start: auto; justify-content: flex-end; padding-block: 8px; min-inline-size: 0; }
-  .controls > hr { align-self: stretch; inline-size: 1px; block-size: auto; margin: 0; border: 0; background: var(--warp-color-border); }
-  .ctl { display: grid; gap: 3px; flex: none; }
-  .ctl > span { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--warp-color-text-subtle); padding-inline-start: 2px; }
-  .seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
-  .seg label { position: relative; display: flex; }
-  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .seg i { font-style: normal; display: inline-flex; align-items: center; justify-content: center; block-size: max(26px, var(--warp-hit-min)); padding-inline: 9px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
-  .seg label:hover i { color: var(--warp-color-text); }
-  .seg input:checked + i { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
-  .seg input:focus-visible + i { outline: 2px solid var(--warp-color-focus); outline-offset: 1px; }
-  /* page extra: accent swatches are radios too, a dot inside a hit-min target */
-  .seg.swatches i { padding-inline: 0; inline-size: max(26px, var(--warp-hit-min)); }
-  .seg.swatches i::before { content: ""; inline-size: 14px; block-size: 14px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.15); }
-  @media (forced-colors: active) { .seg input:checked + i { outline: 2px solid Highlight; outline-offset: -2px; } .seg.swatches i::before { forced-color-adjust: none; } }
-  @media (max-width: 1023.98px) {
-    .bar > .wrap { position: relative; }
-    .bar-toggle { display: inline-flex; margin-inline-start: auto; gap: 8px; }
-    .bar-toggle { min-inline-size: 0; flex-shrink: 1; }
-    .bar-toggle small { font: 400 var(--warp-text-caption-size) var(--warp-font-mono); text-transform: none; letter-spacing: 0; color: var(--warp-color-text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
-    .controls { display: none; position: absolute; inset-inline: calc(var(--warp-space-page) * -1); inset-block-start: 100%; margin: 0;
-      flex-direction: column; flex-wrap: nowrap; gap: 14px; padding: 16px var(--warp-space-page) calc(20px + env(safe-area-inset-bottom));
-      max-block-size: calc(100dvh - 56px); overflow-y: auto; overscroll-behavior: contain;
-      background: var(--warp-color-surface-overlay); border-block-end: 1px solid var(--warp-color-border); box-shadow: var(--warp-elevation-3); }
-    .bar[data-open] .controls { display: flex; animation: warp-enter var(--warp-duration-base) var(--warp-ease-out); }
-    .controls > hr { display: block; inline-size: auto; block-size: 1px; }
-    .mark small { display: none; }
-    @media (min-width: 480px) { .mark small { display: inline; } }
-    .ctl { grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 12px; }
-    .ctl > span { padding: 0; }
-    .seg { inline-size: 100%; box-sizing: border-box; }
-    .seg label { flex: 1; }
-    .seg i { flex: 1; }
-    .seg.swatches label, .seg.swatches i { flex: 0 0 auto; }
-  }
-  /* the landing's own sticky nav sits under the bar */
-  :root:not([data-embed]) [data-scope="topbar"] { inset-block-start: var(--bar-h, 57px); }
+  /* the landing's own sticky nav docks under the bar (warp-bar.js writes --wb-h) */
+  :root:not([data-embed]) [data-scope="topbar"] { inset-block-start: var(--wb-h, 57px); }
 
   /* devices view */
   .devices { display: none; padding: 32px 24px 120px; background: var(--warp-color-surface-sunken); min-block-size: 100vh; box-sizing: border-box; }
@@ -206,37 +162,12 @@
 </svg>
 
 <!-- ============================ specimen settings bar (01-foundations §13) ============================ -->
-<header class="bar" id="bar" data-spec>
-  <div class="wrap">
-    <div class="mark">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 3v18M10 3v18M15 3v18M20 3v18"/><path d="M2 9h20M2 15h20" stroke="var(--warp-color-accent-solid)" stroke-width="2"/></svg>
-      warp <small>marketing v0.2</small>
-    </div>
-    <button type="button" class="bar-toggle" data-scope="button" data-emphasis="ghost" data-tone="neutral" aria-expanded="false" aria-controls="settings">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="inline-size:16px;block-size:16px;fill:none;stroke:currentColor;stroke-width:1.5"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings<small id="bar-summary"></small></button>
-    <div class="controls" id="settings" role="group" aria-label="Specimen settings">
-      <div class="ctl"><span id="l-expression">Expression</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-expression" data-ctl="expression"><label><input type="radio" name="expression" value="quiet"><i>Quiet</i></label><label><input type="radio" name="expression" value="balanced" checked><i>Balanced</i></label><label><input type="radio" name="expression" value="vivid"><i>Vivid</i></label></div></div>
-      <div class="ctl" title="warp({ fields }) writes data-fields on :root; one attribute flips every field"><span id="l-fields">Fields</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-fields" data-ctl="fields"><label><input type="radio" name="fields" value="floating" checked><i>Floating</i></label><label><input type="radio" name="fields" value="classic"><i>Classic</i></label></div></div>
-      <div class="ctl"><span id="l-theme">Theme</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-theme" data-ctl="theme"><label><input type="radio" name="theme" value="auto" checked><i>Auto</i></label><label><input type="radio" name="theme" value="light"><i>Light</i></label><label><input type="radio" name="theme" value="dark"><i>Dark</i></label></div></div>
-      <div class="ctl"><span id="l-density">Density</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-density" data-ctl="density"><label><input type="radio" name="density" value="compact"><i>Compact</i></label><label><input type="radio" name="density" value="cozy" checked><i>Cozy</i></label><label><input type="radio" name="density" value="comfortable"><i>Comfortable</i></label></div></div>
-      <div class="ctl"><span id="l-motion">Motion</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-motion" data-ctl="motion"><label><input type="radio" name="motion" value="auto" checked><i>Auto</i></label><label><input type="radio" name="motion" value="full"><i>Full</i></label><label><input type="radio" name="motion" value="reduce"><i>Reduced</i></label></div></div>
-      <div class="ctl"><span id="l-flair">Flair</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-flair" data-ctl="flair"><label><input type="radio" name="flair" value="auto" checked><i>Auto</i></label><label><input type="radio" name="flair" value="sweep"><i>Sweep</i></label><label><input type="radio" name="flair" value="none"><i>None</i></label></div></div>
-      <hr>
-      <div class="ctl" title="page extra: the accent seed (hue · chroma)"><span id="l-accent">Accent</span>
-        <div class="seg swatches" role="radiogroup" aria-labelledby="l-accent" data-ctl="accent"><label><input type="radio" name="accent" value="152-0.115" checked aria-label="Green"><i style="--c: oklch(0.6 0.13 152)"></i></label><label><input type="radio" name="accent" value="258-0.14" aria-label="Blue"><i style="--c: oklch(0.58 0.15 258)"></i></label><label><input type="radio" name="accent" value="300-0.14" aria-label="Violet"><i style="--c: oklch(0.56 0.16 300)"></i></label><label><input type="radio" name="accent" value="45-0.14" aria-label="Orange"><i style="--c: oklch(0.64 0.15 45)"></i></label><label><input type="radio" name="accent" value="260-0.015" aria-label="Ink, near-neutral"><i style="--c: oklch(0.35 0.015 260)"></i></label></div></div>
-      <div class="ctl" title="page extra: the hero layout"><span id="l-hero">Hero</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-hero" data-ctl="hero"><label><input type="radio" name="hero" value="split" checked><i>Split</i></label><label><input type="radio" name="hero" value="centered"><i>Center</i></label><label><input type="radio" name="hero" value="stacked"><i>Stack</i></label><label><input type="radio" name="hero" value="editorial"><i>Editorial</i></label></div></div>
-      <div class="ctl" title="page extra: this page, or the same page in phone, tablet and desktop frames"><span id="l-view">View</span>
-        <div class="seg" role="radiogroup" aria-labelledby="l-view" data-ctl="view"><label><input type="radio" name="view" value="page" checked><i>Page</i></label><label><input type="radio" name="view" value="devices"><i>Devices</i></label></div></div>
-    </div>
-  </div>
+<header data-specimen-bar data-spec data-label="marketing v0.2" data-aliases="x:expression">
+  <div class="wb-ctl" title="page extra: the accent seed (hue · chroma)"><span id="wb-l-accent"><span class="wb-vh">Accent</span><span aria-hidden="true">Accent</span></span><div class="wb-seg wb-swatches" role="radiogroup" aria-labelledby="wb-l-accent" data-ctl="accent"><label><input type="radio" name="accent" value="152-0.115" checked><i style="--c: oklch(0.6 0.13 152)"><span class="wb-vh">Green</span></i></label><label><input type="radio" name="accent" value="258-0.14"><i style="--c: oklch(0.58 0.15 258)"><span class="wb-vh">Blue</span></i></label><label><input type="radio" name="accent" value="300-0.14"><i style="--c: oklch(0.56 0.16 300)"><span class="wb-vh">Violet</span></i></label><label><input type="radio" name="accent" value="45-0.14"><i style="--c: oklch(0.64 0.15 45)"><span class="wb-vh">Orange</span></i></label><label><input type="radio" name="accent" value="260-0.015"><i style="--c: oklch(0.35 0.015 260)"><span class="wb-vh">Ink, near-neutral</span></i></label></div></div>
+  <div data-extra="hero" data-label="Hero" data-options="split:Split, centered:Center, stacked:Stack, editorial:Editorial" title="page extra: the hero layout"></div>
+  <div data-extra="view" data-label="View" data-options="page:Page, devices:Devices" title="page extra: this page, or the same page in phone, tablet and desktop frames"></div>
 </header>
+<script src="warp-bar.js"></script>
 
 <!-- ============================ THE LANDING (same markup at every stop) ============================ -->
 <div id="landing" data-scope="landing">
@@ -547,7 +478,7 @@
             <img data-part="after" alt="After: alert volume is flat and low" data-art="after">
             <span data-part="tag" style="inset-inline-start:10px">Before</span><span data-part="tag" style="inset-inline-end:10px">After</span>
             <span data-part="handle" aria-hidden="true"></span>
-            <input type="range" min="0" max="100" value="50" aria-label="Reveal: drag to compare before and after" aria-valuetext="50% after">
+            <label class="vh" for="compare-range">Reveal: drag to compare before and after</label><input id="compare-range" type="range" min="0" max="100" value="50" aria-valuetext="50% after">
           </div>
         </div>
         <div class="stack">
@@ -997,9 +928,8 @@ warpSweep.init();
 function floatingLabel(field) {
   const label = $('[data-part="label"]', field), input = $('[data-part="input"]', field), box = $('[data-part="control"]', field);
   if (!label || label._split) return; label._split = true;
-  // the <label for> keeps its name: the real text in a visually hidden span, the per-letter copy aria-hidden
-  const text = label.textContent;
-  label.innerHTML = `<span data-part="sr">${text}</span><span aria-hidden="true">${[...text].map((c) => `<span data-char>${c === " " ? "&nbsp;" : c}</span>`).join("")}</span>`;
+  // the shared label anatomy (01 §2, warp-sweep.js): hidden label-text names it, the aria-hidden letters tint
+  warpSweep.label(label);
   if (input.tagName !== "SELECT") input.addEventListener("input", () => box.toggleAttribute("data-filled", input.value.length > 0));
   const delays = () => { const w = box.offsetWidth; if (!w) return; const lx = label.offsetLeft; $$("[data-char]", label).forEach((c) => c.style.setProperty("--d", Math.round(((lx + c.offsetLeft) / w) * (warpSweep.duration(box) || 620)) + "ms")); };
   requestAnimationFrame(delays); label.addEventListener("transitionend", (e) => e.propertyName === "font-size" && delays());
@@ -1668,62 +1598,39 @@ function radioGroup(g, onPick) {
   opts.forEach((o) => { o.tabIndex = o.getAttribute("aria-checked") === "true" ? 0 : -1; o.addEventListener("click", () => pick(o)); });
   g.addEventListener("keydown", (e) => { const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; const i = opts.indexOf(document.activeElement); if (!k || i < 0) return; e.preventDefault(); pick(opts[(i + k + opts.length) % opts.length], true); });
 }
-// The canonical bar (01-foundations §13): one name per dial; the radio value IS the attribute value on
-// <html> and the deep-link parameter; "auto" removes the attribute (the OS decides theme and motion).
+// The shared bar (warp-bar.js, 01-foundations §13) owns the six dials, the extras' radios and the URL (it keeps only
+// what differs from the default, so a shared link never pins motion=full or theme=light by accident). This page
+// applies its extras (accent seed, hero layout, view), runs a dial change as a quiet crossfade (View Transitions,
+// never a flash) and the theme as the governed wipe, and mirrors the state into the device frames.
 const BAR = ["expression", "fields", "theme", "density", "motion", "flair", "accent", "hero", "view"];
-const DEFAULTS = Object.freeze({ expression: "balanced", fields: "floating", theme: "auto", density: "cozy", motion: "auto", flair: "auto", accent: "152-0.115", hero: "split", view: "page" });
-const S = { expression: "balanced", fields: "floating", theme: "auto", density: "cozy", motion: "auto", flair: "auto", accent: "152-0.115", hero: "split", view: "page" };
-if (Q.get("x")) S.expression = Q.get("x");                                   // v0.1 links
-if (Q.get("h") && Q.get("c")) S.accent = `${Q.get("h")}-${Q.get("c")}`;
-for (const k of BAR) if (Q.has(k)) S[k] = Q.get(k);
-const setAttr = (k, v) => (v === "auto" ? delete root.dataset[k] : (root.dataset[k] = v));
+const S = Object.fromEntries(BAR.map((k) => [k, warpBar.get(k)]));
+if (Q.get("h") && Q.get("c")) warpBar.set("accent", `${Q.get("h")}-${Q.get("c")}`, { url: !EMBED, animate: false });   // v0.1 links
 const resolvedTheme = () => root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-function paint(s) {
-  root.dataset.expression = s.expression; root.dataset.fields = s.fields; root.dataset.density = s.density; root.dataset.view = s.view;
-  setAttr("theme", s.theme); setAttr("motion", s.motion); setAttr("flair", s.flair);
-  const [h, c] = s.accent.split("-"); root.style.setProperty("--warp-seed-accent-h", h); root.style.setProperty("--warp-seed-accent-c", c);
-  $('[data-scope="hero"]').dataset.layout = s.hero;
-  for (const k of BAR) { const r = $(`#settings [name="${k}"][value="${CSS.escape(s[k])}"]`); if (r) r.checked = true; }
-  const v = (k) => $(`#settings [name="${k}"]:checked`)?.closest("label").textContent.trim();
-  $("#bar-summary").textContent = `${v("expression")} · ${v("theme")}`;
+function paint() {
+  root.dataset.view = S.view;
+  const [h, c] = S.accent.split("-"); root.style.setProperty("--warp-seed-accent-h", h); root.style.setProperty("--warp-seed-accent-c", c);
+  $('[data-scope="hero"]').dataset.layout = S.hero;
   const dark = resolvedTheme() === "dark";
   $$("[data-theme-toggle]").forEach((b) => { b.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme"); const l = $('[data-part="theme-label"]', b); if (l) l.textContent = dark ? "Light theme" : "Dark theme"; });
   govern();
 }
-function apply(s, how) {
-  const run = () => paint(s);
-  // the dial change is a quiet crossfade (View Transitions), never a flash; the theme runs the governed wipe
-  if (how === "theme") themeTransition(run);
-  else if (how && document.startViewTransition && !reduced()) document.startViewTransition(run); else run();
-  $$("iframe[data-frame]").forEach((f) => f.contentWindow?.postMessage({ warp: { ...s, view: "page" } }, "*"));
-  // the URL keeps only what differs from the default, so a shared link never pins motion=full or theme=light by accident
-  if (!EMBED) { const q = new URLSearchParams(Object.entries(s).filter(([k, v]) => v !== DEFAULTS[k])); history.replaceState(null, "", (q.size ? "?" + q : location.pathname) + location.hash); }
-}
-$("#settings").addEventListener("change", (e) => {
-  const g = e.target.closest("[data-ctl]"); if (!g) return;
-  const k = g.dataset.ctl; S[k] = e.target.value;
-  apply(S, k === "theme" ? "theme" : k !== "view" && k !== "motion");
-  if (k === "view") frames();
+warpBar.transition = (k, v, write) => {
+  if (k === "theme") return themeTransition(write);
+  if (k !== "view" && k !== "motion" && document.startViewTransition && !reduced()) return document.startViewTransition(write);
+  write();
+};
+document.addEventListener("warp-bar:change", (e) => {
+  const { name, value } = e.detail; if (!BAR.includes(name)) return;
+  S[name] = value; paint();
+  $$("iframe[data-frame]").forEach((f) => f.contentWindow?.postMessage({ warp: { ...S, view: "page" } }, "*"));
+  if (name === "view") frames();
 });
 // the landing's own theme button flips the resolved theme (and so leaves Auto)
-$$("[data-theme-toggle]").forEach((b) => b.addEventListener("click", () => { S.theme = resolvedTheme() === "dark" ? "light" : "dark"; apply(S, "theme"); }));
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => S.theme === "auto" && paint(S));
-addEventListener("keydown", (e) => { if (e.target.closest("input, textarea, select, [contenteditable], dialog") || e.metaKey || e.ctrlKey || e.altKey) return; const m = { 1: "quiet", 2: "balanced", 3: "vivid" }[e.key]; if (m && !EMBED) { S.expression = m; apply(S, true); } });
-addEventListener("message", (e) => { if (e.data?.warp) { Object.assign(S, e.data.warp); apply(S, false); } });
-// below 1024px the controls are a sheet under one 56px row (same behaviour as foundations.html)
-(() => {
-  const bar = $("#bar"), toggle = $(".bar-toggle");
-  // the bar may wrap to a second row ≥ 1024px: the landing's sticky nav docks under whatever height it has
-  new ResizeObserver(() => root.style.setProperty("--bar-h", bar.offsetHeight + "px")).observe(bar);
-  const sheet = (open, focus = true) => {
-    bar.toggleAttribute("data-open", open); toggle.setAttribute("aria-expanded", open);
-    if (open && focus) ($("#settings input:checked") || $("#settings input")).focus();
-    else if (!open && focus && bar.contains(document.activeElement)) toggle.focus();
-  };
-  toggle.addEventListener("click", () => sheet(!bar.hasAttribute("data-open")));
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.hasAttribute("data-open")) sheet(false); });
-  document.addEventListener("pointerdown", (e) => { if (bar.hasAttribute("data-open") && !bar.contains(e.target)) sheet(false, false); });
-})();
+$$("[data-theme-toggle]").forEach((b) => b.addEventListener("click", () => warpBar.set("theme", resolvedTheme() === "dark" ? "light" : "dark", { url: !EMBED })));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => S.theme === "auto" && paint());
+addEventListener("keydown", (e) => { if (e.target.closest("input, textarea, select, [contenteditable], dialog") || e.metaKey || e.ctrlKey || e.altKey) return; const m = { 1: "quiet", 2: "balanced", 3: "vivid" }[e.key]; if (m && !EMBED) warpBar.set("expression", m); });
+// a device frame follows its parent: every value arrives as a message, without touching the frame's URL
+addEventListener("message", (e) => { if (e.data?.warp) for (const [k, v] of Object.entries(e.data.warp)) if (BAR.includes(k) && warpBar.get(k) !== v) warpBar.set(k, v, { url: false, animate: false }); });
 function frames() {
   if (S.view !== "devices") return;
   $$("iframe[data-frame]").forEach((f) => {
@@ -1735,7 +1642,7 @@ function frames() {
 }
 if (Q.get("pointer")) root.dataset.pointer = Q.get("pointer");
 for (const m of ["(prefers-reduced-motion: reduce)", "(pointer: fine)"]) matchMedia(m).addEventListener("change", govern);
-apply(S, false); frames();
+paint(); frames();
 })();
 </script>
 </body>

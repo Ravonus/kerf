@@ -53,7 +53,7 @@
     --warp-layout-sidebar: 248px;
     --warp-layout-list: 340px;                                        /* master pane (300 below 1000) */
     --warp-layout-aside: 300px;                                       /* split side, inspector */
-    --warp-layout-measure: 68ch;                                      /* prose */
+    --warp-layout-measure: var(--warp-measure);                       /* prose: the dial's measure, 72 · 66 · 60ch (01 §2 Type) */
     --warp-layout-narrow: 440px;                                      /* auth, single forms */
     --warp-layout-content: 1160px;                                    /* page content max */
     --warp-layout-wide: 1440px;                                       /* marketing bands */
@@ -387,21 +387,23 @@
 :where([data-scope="shell"][data-keyboard] [data-part="nav"]) { display: none; }
 
 /* -- main ----------------------------------------------------------------- */
-:where([data-scope="shell"] [data-part="main"]) {
+/* the shell's own main only (root > layout > main): a data-part="main" inside a page (a calendar's grid, an auth
+   card) is not the shell's and must not pick up its grid area, container or viewport height */
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"]) {
   grid-area: main; container: warp-main warp-page / inline-size; min-inline-size: 0; outline: none;
   /* fill the viewport under the header so a short page still puts its dock at the bottom edge */
   display: flex; flex-direction: column;
   min-block-size: calc(var(--warp-viewport-block) - var(--warp-layout-bar) - var(--warp-safe-top) - var(--_dock, 0px));
 }
-:where([data-scope="shell"] [data-part="main"] > [data-part="page"]) { flex: 1 0 auto; }
-:where([data-scope="shell"] [data-part="main"] > [data-part="page"]) {
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"] > [data-part="page"]) { flex: 1 0 auto; }
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"] > [data-part="page"]) {
   padding: var(--warp-space-section) max(var(--warp-space-page), var(--warp-safe-right)) var(--warp-space-section) max(var(--warp-space-page), var(--warp-safe-left));
   display: flex; flex-direction: column; gap: var(--warp-space-section);
   inline-size: 100%; max-inline-size: calc(var(--warp-layout-content) + 2 * var(--warp-space-page)); margin-inline: auto;
   box-sizing: border-box;
 }
 @container warp-shell (max-width: 599.98px) {
-  :where([data-scope="shell"] [data-part="main"] > [data-part="page"]) { padding-block-start: var(--warp-space-group); gap: var(--warp-space-group); }
+  :where([data-scope="shell"] > [data-part="layout"] > [data-part="main"] > [data-part="page"]) { padding-block-start: var(--warp-space-group); gap: var(--warp-space-group); }
 }
 
 /* -- tablet: rail ------------------------------------------------------- */
@@ -872,7 +874,7 @@
 }
 :where([data-scope="navlist"] [data-part="item"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); flex: none; }
 :where([data-scope="navlist"] [data-part="item"][aria-current] svg) { color: var(--warp-color-accent-text); }
-:where([data-scope="navlist"] [data-part="trailing"]) { margin-inline-start: auto; font: 500 11px var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="navlist"] [data-part="trailing"]) { margin-inline-start: auto; font: 500 11px/1.25 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="navlist"] [data-part="item"][aria-expanded] [data-part="chevron"]) { margin-inline-start: auto; transition: transform var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="navlist"] [data-part="item"][aria-expanded="true"] [data-part="chevron"]) { transform: rotate(90deg); }
 :where([data-scope="navlist"] [data-part="item"][aria-expanded="false"] + ul) { display: none; }
@@ -1020,6 +1022,10 @@
   background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); font-size: var(--warp-text-caption-size); text-align: center;
 }
 :where([data-scope="announcement"] a) { color: inherit; font-weight: 600; text-underline-offset: 3px; white-space: nowrap; }
+/* touch: the link is a line of text in a ≥40px bar; a block-axis expander gives it hit-min (the dismiss
+   button beside it is inline, so the axes don't meet) */
+:where([data-scope="announcement"] a) { position: relative; }
+:where([data-scope="announcement"] a)::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 :where([data-scope="announcement"] [data-part="text"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
 :where([data-scope="announcement"] [data-part="dismiss"]) {
   position: absolute; inset-inline-end: 4px; inset-block-end: 0; display: grid; place-items: center;
@@ -1184,6 +1190,10 @@
   display: flex; align-items: center; gap: 8px; min-block-size: 40px; padding-inline: var(--warp-space-group) var(--warp-space-tight);
   font-weight: 600; font-size: var(--warp-text-caption-size); cursor: grab; touch-action: none; border-radius: inherit;
 }
+/* touch: the handle bar is 40px; a block-axis expander (2px into the gap above, 2px over the body's top
+   edge) makes it hit-min without moving the body */
+:where([data-scope="board"] [data-part="handle"]) { position: relative; }
+:where([data-scope="board"] [data-part="handle"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 :where([data-scope="board"] [data-part="handle"])::before {
   content: ""; inline-size: 8px; block-size: 14px; flex: none; opacity: 0.6; background: radial-gradient(circle, var(--warp-color-text-subtle) 1.1px, transparent 1.5px) 0 0 / 4px 4px;
 }
@@ -1254,7 +1264,7 @@
 :where([data-part="version"]) {
   display: inline-flex; align-items: center; gap: 4px; min-block-size: 28px; padding-inline: 8px 6px; border-radius: 999px;
   border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface); color: var(--warp-color-text-subtle);
-  font: 500 11px var(--warp-font-mono); cursor: pointer;
+  font: 500 11px/1.25 var(--warp-font-mono); cursor: pointer;
 }
 
 /* Bleed and inset — break out of the page gutter / pad a region inside it */

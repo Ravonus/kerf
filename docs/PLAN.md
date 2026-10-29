@@ -52,10 +52,11 @@ Nobody owns "the framework built for agents" yet, and no one has measured agent 
 | `watch(() => source, (value, prev) => cleanup?)` | Side effects only (DOM APIs, logging, imperative libraries). Source phase tracked, callback not. |
 | `onMount(fn)` / `onCleanup(fn)` | Element access and teardown. |
 | `context<T>()` | Typed dependency injection. |
+| `defineState(name, setup)` | Shared app state. A named setup scope returning ordinary boxes and actions, one instance per tab, per server request and per test. Adds names, `persist`, tab `sync`, `history` and `$reset`; never a second container (§4.5). |
 | `flush()` | Apply pending DOM updates now (`open.value = true; flush(); input.focus()`). Also used by tests. |
 | `untrack`, `batch` | Rare escape hatches. |
 
-There's no separate `store`. One box type holds everything, including arrays and objects; lists are fine-grained
+There's no separate `store`, and `defineState` is not one: it only gives boxes a name and a lifetime. One box type holds everything, including arrays and objects; lists are fine-grained
 because the keyed list tracks each item by key (§3.4).
 
 Reads are consistent: `.value` straight after a write returns the new value. Effects and DOM writes are batched to a
@@ -273,8 +274,8 @@ export const room = channel({
 const chat = room.connect({ roomId: props.roomId }); const messages = chat.collect('said', { max: 200 })
 
 // browser values: one shared listener per document, removed with the owner, explicit SSR value
-import { online, visible, lifecycle, media, storage, tabs, on, interval } from 'weft/browser'
-const prefs = storage('prefs', z.object({ density: z.enum(['compact', 'cozy']).default('cozy') }))
+import { online, visible, lifecycle, media, tabs, on, interval } from 'weft/browser'
+const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', schema: z.enum(['compact', 'cozy']), version: 1 } })   // §4.5
 ```
 
 **How it works:**
@@ -360,6 +361,50 @@ Products are declared once, `checkout()` is called once, and entitlements are re
 - **PAY-codes:** Stripe for digital goods in a store build, client-side grants, secret keys in the client graph,
   hardcoded store prices, missing Restore Purchases, float money.
 - **Testing:** `fakePay` in `weft/test` plays renewals, failures, refunds and revocations on the deterministic clock.
+
+### 4.5 App state: `defineState` (zustand ergonomics, no second container)
+
+Details: [14](research/14-app-state.md).
+
+```ts
+// app/state/cart.ts
+export const cart = defineState('cart', () => {
+  const open = state(false, { history: false })                 // UI only
+  const note = state('', { persist: 'session' })                // draft, survives reloads
+  const server = getCart.live()                                 // server state: referenced, never copied
+  const lines = derived(() => server.value?.lines ?? [])
+  const count = derived(() => lines.value.reduce((n, l) => n + l.qty, 0))
+  const qtyOf = (id: string) => lines.value.find(l => l.productId === id)?.qty ?? 0
+  return {
+    open, note, lines, count, saving: setLine.pending,
+    add(id: string) { return setLine({ productId: id, qty: qtyOf(id) + 1 }) },  // optimistic on the mutation
+    toggle() { open.value = !open.value },
+  }
+})
+// anywhere: cart.count.value · cart.add(id) · no provider, no selectors
+```
+
+- **Server data never becomes state.** It stays in the query cache, and copying it into a box is S001 (autofix:
+  reference the query and derive from it).
+  - Every v3 eval session did this, and it caused the one measured defect: 300 DOM writes per price push instead of
+    1.
+  - **Optimistic updates** are declared on the `mutation` (`optimistic: (args, cache) => cache.update(…)`). Each
+    call adds its own overlay, re-applied on top of every fresh server value until it settles. A failure rolls back
+    only its own change, so concurrent rollbacks don't clobber each other.
+- **What zustand's middleware does, built in as options:**
+  - `persist` (`local | session | cookie | idb`), with a required Zod schema, versions and migrations (S003 autofix
+    adds the migration). The `cookie` backend lets SSR render persisted values.
+  - `sync: 'tabs'`, `history` (undo/redo, one step per action call), devtools names (`cart.count` in
+    `weft browser state` and the recorder), `$reset` and `$snapshot`, and a fresh instance per test.
+- **Fine-grained updates mean no selectors.** Typing in the cart note re-runs nothing in the 150 product rows.
+- **One instance per request on the server.** Reaching a scope with no owner on the server throws S002, so state
+  can't leak between users.
+- **Size:** the same cart is 24 lines and 7 concepts, against 91 lines and 23 concepts in zustand + TanStack Query.
+  About 1.5 KB br when every feature is used, 0 KB when unused (estimated).
+- **Diagnostics S001–S013,** seven with autofixes. The AGENTS.md block is 7 lines.
+- **Plugins:** `state.persist@1` (opfs, native device storage). `cache.sync@1` is reserved for sync engines, which
+  feed the query cache, never state.
+- **Evals:** `v4-cart-persist`, `v4-optimistic` and `v4-ssr-isolation`.
 
 ## 5. Surfaces: canvas and WebGL as first-class layout children
 
@@ -469,11 +514,146 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
 - **Server pieces:** Agorix's data and real-time breadth merges into `weft/start` on weft's protocol (§4.2;
   agorix 03 §7). warp components bind to `query`/`.live`/`channel` boxes and never own transport.
 
+### 6.2 Text, type and smart skeletons: `weft/text`, `weft/skeleton`
+
+Details: [11](research/11-text-and-type.md) (measured in Chrome and WebKit).
+
+- **Type is CSS first and costs 0 KB.**
+  - Display and title sizes are fluid on container units: `clamp(rem, rem + cqi, rem)`, with a max/min ratio of at
+    most 2.5 so 200% zoom still works. Body text stays in `rem`.
+  - `text-wrap: balance` for headings and `pretty` for prose, plus `text-box` trims and a `--warp-measure` of 45–75ch.
+  - The dial picks optical sizing and axes.
+- **Fonts are a build step,** provided by `@weft/plugin-text` (§7c) through the `font.build` slot. It subsets each
+  face by `unicode-range` and generates a metric-matched fallback face (`size-adjust`) and preloads. Fonts are declared
+  once, in `text({ fonts })`; without the plugin they are plain `@font-face`.
+  - Every role has an explicit unitless `line-height`, so the font swap has CLS 0 even in Safari, which lacks
+    `ascent-override`.
+- **`weft/text`** reads the `text.measure` slot. `@weft/plugin-text` fills it with a slim Pretext fork
+  (`packages/text-engine`, [12](research/12-text-engine-slim.md)) or pinned upstream Pretext (33.9 KB br), always as a
+  **lazy chunk**.
+  - **The slim engine is tiered.** A base "lite" chunk handles Latin, symbols and emoji with the browser's own line
+    breaking: 8.2 KB br on Chrome and 9.3 KB br on Safari. An exact tier (8.9–10.5 KB) and per-script packs load
+    lazily for other text.
+  - **Measured accuracy:** it gives the same line count as upstream Pretext on 7 corpora × 1k paragraphs × 11 widths
+    in Chrome and WebKit.
+  - **Open items:** Firefox has no lite tier yet (15.3 KB base). On Chrome, Arial's space kerning keeps only 65–78% of
+    plain Latin in the lite tier, so most pages load about 18–19 KB in total.
+  - **Upstream:** the fork tracks a pinned version, merges only when the corpus diff is zero, and offers upstream
+    three PRs that would let it shrink. Only routes that
+  measure text load it.
+  - **API:** `measure()`, `lines()` and `fit()` return `derived` boxes over text, role and width. `<Text reserve>`
+    knows its height before layout; `<Text stream>` grows downward only, for agent output.
+  - **Speed:** layout is 0.1–0.3 ms per 1k paragraphs on resize, against ~3 ms for DOM re-reads. Measurement uses the
+    fallback face first and re-measures once when the real font loads.
+- **Canvas text in Surfaces** uses `s.text()`: Pretext line breaks plus `fillText`, with an always-on **DOM mirror**.
+  - The canvas reads its text from the mirror, so selection, find, translation, screen readers, forced colours and
+    print all work.
+  - Each change costs one DOM write.
+  - Raw `fillText` is X010. Flutter Web's opt-in semantics is the anti-pattern.
+- **Smart skeletons are never hand-written.**
+  - The compiler emits a *shape* variant of each component. Text becomes measured line bars, media keeps its aspect
+    ratio and lists keep their count.
+  - **Size sources,** in order: the last-seen payload's per-key heights from the client cache; shape from the
+    query's Zod output; server hints; estimates.
+  - **Behaviour:** the skeleton swaps for the content (it doesn't morph into it) and fills the viewport. Show nothing
+    for 150 ms, then hold it at least 400 ms.
+  - `.live` refetches never flash a skeleton.
+  - **Measured CLS:** 0 for last-seen and shape skeletons, against 0.47–0.85 for naive bars. Undimensioned media is
+    the remaining source (X030).
+- **Diagnostics `X001`–`X041`:** measure/render drift, zoom-breaking clamps, canvas text without a mirror,
+  undimensioned media, skeleton size drift, lists with no count hint, skeleton flash on refetch, and streamed text
+  without `<Text stream>`.
+
+### 6.3 Media: `<Media>` and `@weft/plugin-media`
+
+Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real KEEL assets).
+
+- **One source, everything automatic.** You write `<Media src={hero} alt="…" />` or `import hero from './hero.gif?media'`.
+- **Build optimizer (always on).**
+  - **Format search:** every format is searched for the smallest file at a target SSIMULACRA2 score (80 by default),
+    never a fixed quality.
+  - **Stills:** AVIF plus a fallback in the source's own format. AVIF won every lossy case, 49–77% smaller than JPEG.
+    WebP is a fallback only, and JPEG XL is opt-in.
+  - **GIFs:** become a muted looping `<video>` with a poster and pause control (VP9 was −94% on a UI spinner), or
+    stay GIFs when nothing is at least 15% smaller (noisy content was 70–180% larger as video).
+  - **Video:** already web-encoded video is kept as is. Ladders apply "mean at target, worst frame within 5", and VMAF
+    is not used for flat UI (it misjudges it).
+  - **Audio sync:** `timeline()` exposes `currentTime`/`playing` as boxes, with cue callbacks driven by
+    `requestVideoFrameCallback`, and audio can be muxed into converted GIFs.
+- **Layout-driven variants.**
+  - **Widths and `sizes`:** solved from each element's warp primitive chain through `weft-layout`. `sizes="auto"` is
+    the fallback, and a dev sampler catches drift.
+  - **Every asset gets:** a focus/saliency `object-position`, dimensions (so X030 can't fire), the dominant colour and
+    a 16 px WebP placeholder (about 120 characters, 0 B decoder, sharper than BlurHash/ThumbHash).
+  - **ThumbHash** is kept for native, Surfaces and skeleton shape records.
+- **Smart encoder: `media({ encoder: 'off' | 'background' | 'server' })`, off by default because it adds bytes.**
+  - **Delivery:** each viewer gets the efficient file their client decodes (`Accept`, `MediaCapabilities`), sized to
+    the view.
+  - **Compatible copy for saving:** a compatible copy (the original JPEG/PNG/GIF, or an H.264 MP4) swaps in so
+    right-click "Save as" gives a file that opens anywhere. It swaps on right-click, long-press or drag, or on idle if
+    the copy is at most 1.5× the size.
+  - **Images:** decode, then swap in the same frame. Measured 0 blank frames and CLS 0.
+  - **Video:** a second muted `<video>` starts at a matched frame and flips within one frame. Measured 0 blank
+    frames, against 3/6 for a naive `src` swap.
+  - **Live video:** a server remux of the H.264 rung as the download.
+  - **Runtime:** 454 B br.
+  - **Where encoding happens:** at build by default; a content-hashed server route (plus the Rust sidecar) for
+    uploads; the client only as an escape hatch.
+- **Plugin slots:** `media.analyze@1`, `media.encode@1` (keyed by codec), `media.quality@1` and `media.cdn@1`.
+  sharp, SVGO and SSIMULACRA2 are bundled. ffmpeg is an opt-in provider (`@weft/plugin-media-ffmpeg`), with licence
+  and patent notes for LGPL/GPL, x264/x265 and the H.264/HEVC/AAC pools.
+- **Diagnostics M001–M016 with autofixes,** plus a 7-line AGENTS block.
+- **Unverified:** whether every browser's "Save as" honours a URL swapped inside `contextmenu` (a headful test gates
+  `background` in 3c), and Firefox.
+
 ## 7. Agent layer (ships with the core, not after)
 
 - **AGENTS.md** docs index under 8 KB, always present. Vercel measured passive docs beating skills (100% vs 79%).
 - **`weft check --json`:** every W/D diagnostic plus mapped TS errors, with code, location, why, fix.
 - **MCP server** (`weft mcp`): `docs`, `check`/`fix`, `catalog`. Later: `inspect` (live dev graph), `scaffold`.
+
+## 7c. Plugins: typed slots, not hooks
+
+Details: [13](research/13-plugins.md).
+
+- **Model.** Core defines typed, versioned **slots**: `text.measure@1`, `font.build@1`, `surface.renderer`,
+  `realtime.bus`, `db.adapter`, `pay.rail`, `device.*`. A plugin *provides* an implementation, and core, warp and app
+  code *consume* the slot.
+  - Consumers import a generated file you can open, `.weft/slots/<id>.ts`. Installing `text()` makes every measured
+    text use go through it, with nothing hidden and no per-call-site changes.
+- **Configuration** goes in `weft.config.ts`: `plugins: [text({ fonts }), warp()]`, with an optional `slots: {}` to
+  pick a winner.
+  - **No provider:** the slot's declared default is used. `text.measure` has none, so text stays CSS-only. Using
+    something that needs a missing provider is P101, reported at your own line with an autofix.
+  - **Two providers:** P100. It is never settled by array order, and output is byte-identical for any order of
+    `plugins: []`.
+- **What a plugin can touch:**
+  - **Compiler:** the Rust compiler stays closed. Plugins switch on built-in passes and feed them data; they never run
+    code inside them.
+  - **Vite:** third-party hooks must be filtered (P107). They are timed per plugin, with each plugin getting at most
+    5 ms of the 50 ms HMR budget (P108).
+  - **Runtime:** provider code is reached only through a lazy `load()`, so an installed but unused plugin costs 0 KB
+    (P114).
+  - **Server:** server code enters only through server-side slots (P118). No plugin can add request middleware or
+    routes behind the app's back.
+- **Agent surface:**
+  - `weft plugins list|explain|add|verify|audit|approve --json`, plus a `slots` block in `weft check --json`.
+  - Each plugin adds at most 1 KB to AGENTS.md.
+  - Each plugin's diagnostics live in its own namespace.
+- **Trust:** each plugin declares the permissions it needs, and `.weft/plugins.lock.json` records them. This makes any
+  change visible; it is not a sandbox.
+- **Testing:** every slot ships a conformance suite in `weft/test/plugins`, and any provider must pass it. For
+  example, every `text.measure` engine must pass the accuracy corpus.
+- **Which packages become plugins:**
+  - **Plugins:** realtime buses, db adapters, pay rails, surface kinds, device modules and the Tailwind adapter.
+  - **Partly:** warp, for its config, tokens, catalog and AGENTS section only. Its components stay normal imports.
+  - **Not plugins:** `weft/start`, `native()`/`remote()` and multiplayer.
+- **What "every font uses it" means:**
+  - **Global:** font loading, fallbacks, preloads and role strings.
+  - **Automatic** wherever a height is needed before render: virtual lists, shape skeletons, `s.text()`,
+    `<Text stream>` and `fit()`.
+  - **Opt-in:** `<Text reserve>`.
+  - **Never:** plain flow text. CSS already lays it out.
 
 ## 7b. Testing, browser control, and one project CLI
 
@@ -564,6 +744,13 @@ crates/
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
   multiplayer presence, cursors, interaction relay (from Agorix)
   surface     defineSurface, canvas2d, webgl2; keel subpath
+  text        weft/text + weft/skeleton consumer APIs (measure, lines, fit, <Text>, s.text() + mirror); no engine
+  text-engine slim Pretext fork (MIT, credited), no weft dependency
+  media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
+  plugin-*    @weft/plugin-text (text.measure + font.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
+              (weft itself adds weft/plugin, weft/slots, weft/test/plugins and the `weft plugins` CLI)
+crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
+crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
   pay         weft/pay: catalog, resolver + policy table, Stripe/StoreKit/Play adapters, entitlements (+ @weft/db-pay)
 crates/weft-layout  Taffy-based layout shared by the iOS host, the Android host and Node
@@ -575,13 +762,13 @@ evals/        agent eval harness
 | Phase | Ships | Exit check |
 |---|---|---|
 | **0. Eval** | 6 tasks, one per root cause (stale snapshot, effect-as-derivation, invisible tracking, context-dependent magic, scheduling, silent failure). PROMPT.md + hidden vitest. Baselines in React 19 and Solid, 5 samples each. | Baseline pass@1 and failures tagged by cause. |
-| **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler. Client-only runtime, `weft/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `weft/test` + T001–T009, HMR, `weft.config.ts` + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft beats both baselines. Every eval failure maps to a W-code, or becomes a new one. |
+| **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler. Client-only runtime, `weft/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `weft/test` + T001–T009, HMR, `defineState` (client instance, `persist` local/session, `history`, names, `$reset`) + S003–S010, `weft.config.ts` (with reserved `plugins`/`slots` keys and P100–P120) + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft beats both baselines. Every eval failure maps to a W-code, or becomes a new one. |
 | **1b. Verify loop** | Name-keyed state-preserving HMR (flagged), 1k-component perf gates, `weft browser` daemon + graph overlay + recorder + network/time control for reconnects, test gate (fail-before, diff-scoped mutation, T020). | The gate accepts every eval reference test and catches planted junk tests (tautologies, implementation-detail, no-fail-before). |
-| **2. UI (warp tier 1)** | `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`. | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
-| **2. Surfaces** | `defineSurface`, canvas2d, webgl2, Keel port. | A Keel demo ported; an agent adds a surface to a page from a one-line request. |
-| **3. Start** | SSR + hydration, routing, `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
-| **3b. Channels** | `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
-| **3c. warp tier 2 + Agorix packs** | Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
+| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft/plugin-text`'s `font.build` as the first provider. `<Media>` for stills and `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, `<Boundary pending>` timing, X005–X008, X020–X031. | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
+| **2. Surfaces** | `defineSurface`, canvas2d, webgl2, Keel port. the `text.measure` slot (slim engine and pretext) with conformance, `s.text()` with the DOM mirror, X001–X012, X040/X041. | A Keel demo ported; an agent adds a surface to a page from a one-line request. |
+| **3. Start** | SSR + hydration, routing, `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). Per-request `defineState` instances + SSR state payload, `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
+| **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
+| **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'background'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
 | **4. Design** | `weft/ds` tokens, primitives, Tailwind adapter, D-checks. | weft/ds vs raw Tailwind on consistency and a11y. |
 | **5a. Rust: remote** | `remote()`, the `weft` crate (typify codegen, `Ctx`, envelope, `touch`, tracing, `weft::router()`), sidecar supervisor + dev reload, R101–R103. | A search sidecar replaces a TS `query` with no client change. |
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
@@ -670,3 +857,20 @@ Also out of v0:
   backend cheap, and Taffy gives identical, headless-testable layout ([09](research/09-native-targets.md)).
 - **Payments pick the rail; app code never does** (2026-10-28). Store rules are dated data with opt-ins, because
   they are being decided in court right now ([10](research/10-payments.md)).
+- **Text measurement is a lazy Pretext chunk, and type stays CSS first** (2026-10-28). Pretext's win is re-layout
+  (10–30× cheaper than DOM re-reads), not first measurement, and it is 34.5 KB, so only routes that measure pay for it.
+  Canvas text always has a DOM mirror. Skeletons come from the last-seen payload and the output schema, never by hand
+  ([11](research/11-text-and-type.md)).
+- **Plugins fill typed slots; they don't hook into everything** (2026-10-28). Installing a plugin changes behaviour
+  only through a slot whose generated module you can open. The compiler stays closed to plugin code. Plugins have
+  budgets, cost 0 KB at runtime until used, and must pass conformance tests. The text engine is the first
+  plugin ([13](research/13-plugins.md)).
+- **No `store`, and `defineState` is not one** (2026-10-28). Shared client state is `defineState(name, setup)`: a
+  named setup scope that returns ordinary `state`/`derived` boxes and functions. It adds a lifetime (per tab, per
+  request, per test) and a name (devtools, persistence keys, undo), never a second way to hold a value. Server data
+  stays in the query cache, where copying it into state is S001, and optimistic updates are overlay layers declared
+  on the `mutation` ([14](research/14-app-state.md)).
+- **Media is optimised by measured quality, not by format fashion** (2026-10-28). Every asset is searched to a
+  SSIMULACRA2 target, sized from layout, and always gets dimensions and a placeholder. The save-compatible swap is an
+  opt-in encoder mode, because it costs bytes and one behaviour (`contextmenu` save) is still unverified
+  ([15](research/15-assets.md)).

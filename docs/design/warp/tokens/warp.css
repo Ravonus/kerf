@@ -16,7 +16,11 @@
 
    Contracts read by warp.base (01-foundations §2):
      data-loop        an idle loop: stopped under reduced motion (spinners pulse instead)
-     data-hit         a bespoke tap target: hit-min (44px coarse) floor; ="text" for a standalone text link
+     data-hit         a bespoke tap target: hit-min (44px coarse) floor; ="text" for a standalone text link;
+                      ="area" keeps the visual box and adds a centred hit-min expander (::after)
+     data-prose       reading text: prose size + leading, the dial's measure, text-wrap: pretty
+     data-text-canvas a canvas host: re-resolves the px role strings (--warp-text-*-canvas) against
+                      its own container, for weft/text and Surfaces (01-foundations §2, Type)
      data-numeric     figures on a face with tnum at every stop (vivid's serif has none)
    Forced colours: @layer warp.signature §5 redraws every signature part in system colours (01 §12).
 
@@ -33,6 +37,43 @@
    ========================================================================== */
 
 @layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.data, warp.app, warp.flows, warp.marketing;
+
+/* -- metric-matched fallback faces (01 §2 "Font loading"; research 11 §8.2) ------------------
+   Each brand face gets a local system face scaled to the same advance widths and vertical metrics
+   (Capsize metrics, computed by `weft tokens build`). The stacks list "<Family> Fallback" right after the
+   brand face, so the page lays out on it and the font-display: swap of the real file shifts nothing.
+   Safari has size-adjust (17+) but not the *-override descriptors; every role sets an explicit unitless
+   line-height, so line boxes never depend on ascent/descent there either. Regular and bold system
+   faces are both declared so weights 600+ match bold widths instead of a synthesised bold. */
+@font-face { font-family: "Inter Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 100 549;
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Inter Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 550 900;
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 100 549;
+  size-adjust: 109.69%; ascent-override: 89.71%; descent-override: 26.62%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 550 900;
+  size-adjust: 109.69%; ascent-override: 89.71%; descent-override: 26.62%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Instrument Serif Fallback"; src: local("Times New Roman"), local("TimesNewRomanPSMT"); font-style: normal;
+  size-adjust: 83.94%; ascent-override: 117.94%; descent-override: 36.93%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Instrument Serif Fallback"; src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"); font-style: italic;
+  size-adjust: 83.94%; ascent-override: 117.94%; descent-override: 36.93%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono Fallback"; src: local("Courier New"), local("CourierNewPSMT"); font-weight: 100 549;
+  size-adjust: 99.98%; ascent-override: 102.52%; descent-override: 27.5%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono Fallback"; src: local("Courier New Bold"), local("CourierNewPS-BoldMT"); font-weight: 550 900;
+  size-adjust: 99.98%; ascent-override: 102.52%; descent-override: 27.5%; line-gap-override: 0%; font-display: swap; }
+
+/* px-resolved role sizes (registered, so they compute to absolute px) feed the canvas role strings */
+@property --warp-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-body-px    { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-prose-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-label-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-eyebrow-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-caption-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-code-px    { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-button-px  { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-control-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
 
 /* frame outline head/tail (§1b): registered so they interpolate */
 @property --warp-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
@@ -66,11 +107,22 @@
   --warp-ref-neutral-h: 80;  --warp-ref-neutral-c: 0.005;   /* graphite, a hint warm */
   --warp-ref-accent-k: 1;    --warp-ref-tone-k: 1;
   --warp-ref-depth: 0.7;
-  --warp-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --warp-font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --warp-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --warp-font-display: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
   --warp-ref-title-font: var(--warp-font-display);
-  --warp-ref-display-scale: 1;   --warp-ref-display-weight: 500;
+  --warp-ref-display-weight: 500;
+  /* fluid display + title (research 11 §8.3): clamp(min, b + m·cqi, max), 34 → 52px from 375 to 1280 */
+  --warp-ref-display-min: 2.125; --warp-ref-display-b: 1.659; --warp-ref-display-m: 1.989; --warp-ref-display-max: 3.25;
+  --warp-ref-title-min: 1.5;     --warp-ref-title-b: 1.345;   --warp-ref-title-m: 0.663;   --warp-ref-title-max: 1.875;
+  --warp-ref-measure: 66;        /* prose line length, in --warp-ch */
+  --warp-ref-ch: 0.613em;        /* Inter's "0" advance: 1ch of the brand face, steady across the font swap */
+  --warp-ref-trim-heading: trim-both cap alphabetic; --warp-ref-trim-display: normal;
+  --warp-ref-prose-wrap: pretty; --warp-ref-editable-wrap: auto;
+  --warp-ref-display-variation: normal;
+  /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
+  --warp-ref-hm-k1: 1.21; --warp-ref-hm-k2: 0.2415; --warp-ref-hm-k3: 0.241;   /* Inter */
+  --warp-ref-em-k1: 1.3;  --warp-ref-em-k2: 0.327;  --warp-ref-em-k3: 0.275;   /* IBM Plex Mono */
   --warp-ref-display-tracking: -0.03em; --warp-ref-title-weight: 500;
   --warp-ref-heading-weight: 600;
   --warp-ref-label-font: var(--warp-font-sans);
@@ -93,7 +145,7 @@
   /* fields rest neutral at every stop; the accent tint arrives with the sweep (hover, focus) */
   --warp-ref-field-fill: var(--warp-color-surface-raised);
   --warp-ref-field-fill-active: var(--warp-color-accent-soft);
-  --warp-ref-float-font: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
   --warp-ref-numeric-font: var(--warp-font-display);   /* Space Grotesk has tnum */
   --warp-ref-emphasis-style: normal;                   /* no italic face: upright + accent */
 }
@@ -102,11 +154,22 @@
   --warp-ref-neutral-h: 255; --warp-ref-neutral-c: 0.011;   /* slate */
   --warp-ref-accent-k: 0.8;  --warp-ref-tone-k: 0.85;
   --warp-ref-depth: 1;
-  --warp-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --warp-font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --warp-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --warp-font-display: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
   --warp-ref-title-font: var(--warp-font-display);
-  --warp-ref-display-scale: 1;   --warp-ref-display-weight: 600;
+  --warp-ref-display-weight: 600;
+  /* fluid display, calmer range (research 11 §3.4: max/min 1.3): 34 → 44px from 375 to 1280 */
+  --warp-ref-display-min: 2.125; --warp-ref-display-b: 1.861; --warp-ref-display-m: 1.127; --warp-ref-display-max: 2.7625;
+  --warp-ref-title-min: 1.5;     --warp-ref-title-b: 1.345;   --warp-ref-title-m: 0.663;   --warp-ref-title-max: 1.875;
+  --warp-ref-measure: 72;
+  --warp-ref-ch: 0.613em;        /* Inter */
+  --warp-ref-trim-heading: normal; --warp-ref-trim-display: normal;   /* quiet trims controls only */
+  --warp-ref-prose-wrap: auto;   --warp-ref-editable-wrap: auto;      /* headings balance; prose wraps as usual */
+  --warp-ref-display-variation: normal;
+  /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
+  --warp-ref-hm-k1: 1.21; --warp-ref-hm-k2: 0.2415; --warp-ref-hm-k3: 0.241;   /* Inter */
+  --warp-ref-em-k1: 1.21; --warp-ref-em-k2: 0.2415; --warp-ref-em-k3: 0.241;   /* Inter (quiet eyebrows are sans) */
   --warp-ref-display-tracking: -0.035em; --warp-ref-title-weight: 600;
   --warp-ref-heading-weight: 600;
   --warp-ref-label-font: var(--warp-font-sans);
@@ -128,7 +191,7 @@
   --warp-ref-sweep-base: var(--warp-color-text);
   --warp-ref-field-fill: var(--warp-color-surface-raised);
   --warp-ref-field-fill-active: var(--warp-color-surface-raised);
-  --warp-ref-float-font: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-ref-float-font: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
   --warp-ref-numeric-font: var(--warp-font-display);   /* Inter has tnum */
   --warp-ref-emphasis-style: normal;                   /* quiet never italicises */
 }
@@ -137,11 +200,23 @@
   --warp-ref-neutral-h: 85;  --warp-ref-neutral-c: 0.012;   /* warm paper / ink */
   --warp-ref-accent-k: 1.2;  --warp-ref-tone-k: 1.1;
   --warp-ref-depth: 0.35;
-  --warp-font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --warp-font-display: "Instrument Serif", "Fraunces", Georgia, serif;
-  --warp-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-font-sans: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-font-display: "Instrument Serif", "Instrument Serif Fallback", "Fraunces", Georgia, serif;
+  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
   --warp-ref-title-font: var(--warp-font-display);
-  --warp-ref-display-scale: 1.18; --warp-ref-display-weight: 400;
+  --warp-ref-display-weight: 400;
+  /* fluid display + title × 1.18 / × 1.144 (research 11 §8.3): 40 → 61px display, 27 → 34px title */
+  --warp-ref-display-min: 2.507; --warp-ref-display-b: 1.958; --warp-ref-display-m: 2.347; --warp-ref-display-max: 3.835;
+  --warp-ref-title-min: 1.716;   --warp-ref-title-b: 1.539;   --warp-ref-title-m: 0.7585;  --warp-ref-title-max: 2.145;
+  --warp-ref-measure: 60;        /* larger, more expressive type: a shorter line */
+  --warp-ref-ch: 0.641em;        /* Space Grotesk */
+  --warp-ref-trim-heading: trim-both cap alphabetic; --warp-ref-trim-display: trim-both cap alphabetic;
+  --warp-ref-prose-wrap: pretty; --warp-ref-editable-wrap: stable;
+  /* display pinned to its optical-size maximum (values clamp to each face's axis: Inter 32, Fraunces 144;
+     Instrument Serif is static, so this only matters for the fallbacks) */
+  --warp-ref-display-variation: "opsz" 144;
+  --warp-ref-hm-k1: 1.276; --warp-ref-hm-k2: 0.284; --warp-ref-hm-k3: 0.292;  /* Space Grotesk */
+  --warp-ref-em-k1: 1.3;   --warp-ref-em-k2: 0.327; --warp-ref-em-k3: 0.275;  /* IBM Plex Mono */
   --warp-ref-display-tracking: -0.015em; --warp-ref-title-weight: 400;
   --warp-ref-heading-weight: 500;
   --warp-ref-label-font: var(--warp-font-mono);
@@ -166,7 +241,7 @@
   /* a hint of the accent at rest, not a slab; full accent-soft arrives with the sweep */
   --warp-ref-field-fill: color-mix(in oklab, var(--warp-color-accent-soft) 35%, var(--warp-color-surface-raised));
   --warp-ref-field-fill-active: var(--warp-color-accent-soft);
-  --warp-ref-float-font: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
   /* Instrument Serif has no tnum: figures that update or align use the sans */
   --warp-ref-numeric-font: var(--warp-font-sans);
   --warp-ref-emphasis-style: italic;                   /* Instrument Serif ships a real italic */
@@ -189,37 +264,63 @@
   --warp-ref-control-sm: 32px; --warp-ref-control-md: 40px; --warp-ref-control-lg: 48px;
 }
 
-/* -- form factor: type steps + page rhythm (desktop ≥1024 / tablet / phone <600) */
+/* -- form factor: fixed reading sizes + page rhythm (desktop ≥1024 / tablet / phone <600) ------
+   Reading roles (heading, body, prose, label, caption, code) are fixed per form factor, in the user's
+   rem (--warp-rem), so they follow the browser's default font size. Display and title are fluid
+   (§2 SYS TOKENS); under an explicit data-form they resolve at that form's reference width.
+   --warp-rem: the root's font-size is the body size (14/15/16px), so plain `rem` is not the user's
+   default inside the page. --warp-ref-rem-k (16 / root body px) converts back; the root alone reads
+   --warp-ref-root-size (in real rem: on the root element, rem is the initial 16px × user setting). */
+:root {
+  --warp-rem: calc(1rem * var(--warp-ref-rem-k));
+  --warp-ref-rem-k: 1.142857; --warp-ref-root-size: 0.875rem;          /* desktop root: body 14 */
+  --warp-ref-fluid-unit: 1vw;                                          /* iOS 15: no container units */
+}
+@supports (width: 1cqi) { :root { --warp-ref-fluid-unit: 1cqi; } }   /* the nearest inline-size container */
+@media (max-width: 1023.98px) { :root:not([data-form]) { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; } }
+@media (max-width: 599.98px)  { :root:not([data-form]) { --warp-ref-rem-k: 1; --warp-ref-root-size: 1rem; } }
+:root[data-form="tablet"] { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; }
+:root[data-form="phone"]  { --warp-ref-rem-k: 1; --warp-ref-root-size: 1rem; }
+/* a forced form factor pins the fluid roles at its reference width (375 / 834 / 1280) */
+[data-form="phone"] { --warp-ref-fluid-unit: 3.75px; }
+[data-form="tablet"] { --warp-ref-fluid-unit: 8.34px; }
+[data-form="desktop"] { --warp-ref-fluid-unit: 12.8px; }
+
 :root, [data-form="desktop"] {
-  --warp-ref-type-display: 52px; --warp-ref-type-title: 30px; --warp-ref-type-heading: 20px;
-  --warp-ref-type-body: 14px; --warp-ref-type-prose: 16px; --warp-ref-type-label: 12px;
-  --warp-ref-type-caption: 12px; --warp-ref-type-code: 13px;
+  --warp-ref-type-heading: calc(1.25 * var(--warp-rem));
+  --warp-ref-type-body: calc(0.875 * var(--warp-rem)); --warp-ref-type-prose: calc(1 * var(--warp-rem));
+  --warp-ref-type-label: calc(0.75 * var(--warp-rem)); --warp-ref-type-caption: calc(0.75 * var(--warp-rem));
+  --warp-ref-type-code: calc(0.8125 * var(--warp-rem));
   --warp-ref-section: 48px; --warp-ref-gutter: 32px;
 }
 @media (max-width: 1023.98px) {
   :root:not([data-form]) {
-    --warp-ref-type-display: 42px; --warp-ref-type-title: 26px; --warp-ref-type-heading: 19px;
-    --warp-ref-type-body: 15px; --warp-ref-type-prose: 17px; --warp-ref-type-caption: 12px;
-    --warp-ref-type-code: 13px; --warp-ref-section: 40px; --warp-ref-gutter: 24px;
+    --warp-ref-type-heading: calc(1.1875 * var(--warp-rem));
+    --warp-ref-type-body: calc(0.9375 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+    --warp-ref-type-caption: calc(0.75 * var(--warp-rem)); --warp-ref-type-code: calc(0.8125 * var(--warp-rem));
+    --warp-ref-section: 40px; --warp-ref-gutter: 24px;
   }
 }
 @media (max-width: 599.98px) {
   :root:not([data-form]) {
-    --warp-ref-type-display: 34px; --warp-ref-type-title: 24px; --warp-ref-type-heading: 18px;
-    --warp-ref-type-body: 16px; --warp-ref-type-prose: 17px; --warp-ref-type-caption: 13px;
-    --warp-ref-type-code: 14px; --warp-ref-section: 32px; --warp-ref-gutter: 16px;
+    --warp-ref-type-heading: calc(1.125 * var(--warp-rem));
+    --warp-ref-type-body: calc(1 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+    --warp-ref-type-caption: calc(0.8125 * var(--warp-rem)); --warp-ref-type-code: calc(0.875 * var(--warp-rem));
+    --warp-ref-section: 32px; --warp-ref-gutter: 16px;
   }
 }
 [data-form="tablet"] {
-  --warp-ref-type-display: 42px; --warp-ref-type-title: 26px; --warp-ref-type-heading: 19px;
-  --warp-ref-type-body: 15px; --warp-ref-type-prose: 17px; --warp-ref-type-label: 12px;
-  --warp-ref-type-caption: 12px; --warp-ref-type-code: 13px;
+  --warp-ref-type-heading: calc(1.1875 * var(--warp-rem));
+  --warp-ref-type-body: calc(0.9375 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+  --warp-ref-type-label: calc(0.75 * var(--warp-rem)); --warp-ref-type-caption: calc(0.75 * var(--warp-rem));
+  --warp-ref-type-code: calc(0.8125 * var(--warp-rem));
   --warp-ref-section: 40px; --warp-ref-gutter: 24px;
 }
 [data-form="phone"] {
-  --warp-ref-type-display: 34px; --warp-ref-type-title: 24px; --warp-ref-type-heading: 18px;
-  --warp-ref-type-body: 16px; --warp-ref-type-prose: 17px; --warp-ref-type-label: 12px;
-  --warp-ref-type-caption: 13px; --warp-ref-type-code: 14px;
+  --warp-ref-type-heading: calc(1.125 * var(--warp-rem));
+  --warp-ref-type-body: calc(1 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+  --warp-ref-type-label: calc(0.75 * var(--warp-rem)); --warp-ref-type-caption: calc(0.8125 * var(--warp-rem));
+  --warp-ref-type-code: calc(0.875 * var(--warp-rem));
   --warp-ref-section: 32px; --warp-ref-gutter: 16px;
 }
 
@@ -380,14 +481,25 @@
   --warp-icon-sm: 14px; --warp-icon-md: 16px; --warp-icon-lg: 20px;
   --warp-icon-stroke: 1.5;                       /* on a 24 grid → 1px at 16px */
 
-  /* -- type (role tokens) ---------------------------------------------- */
+  /* -- type (role tokens) ----------------------------------------------
+     Every role has an explicit unitless leading (zero CLS on the font swap, Safari included).
+     display + title are fluid: clamp(rem floor, rem + container units, rem ceiling), the container
+     being the nearest inline-size query container (none: the small viewport; iOS 15: vw). max/min
+     ≤ 2.5 so 200% zoom still doubles them (WCAG 1.4.4): 1.53 · 1.3 (quiet) · 1.25 (title). */
+  --_fu: var(--warp-ref-fluid-unit);
   --warp-text-display-font: var(--warp-font-display);
-  --warp-text-display-size: calc(var(--warp-ref-type-display) * var(--warp-ref-display-scale));
+  --warp-text-display-size: clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
+    calc(var(--warp-ref-display-b) * var(--warp-rem) + var(--warp-ref-display-m) * var(--_fu)),
+    calc(var(--warp-ref-display-max) * var(--warp-rem)));
   --warp-text-display-leading: 1.04;
   --warp-text-display-weight: var(--warp-ref-display-weight);
   --warp-text-display-tracking: var(--warp-ref-display-tracking);
+  --warp-text-display-variation: var(--warp-ref-display-variation);   /* vivid: "opsz" pinned to max */
+  --warp-text-display-trim: var(--warp-ref-trim-display);
   --warp-text-title-font: var(--warp-ref-title-font);
-  --warp-text-title-size: calc(var(--warp-ref-type-title) * (1 + (var(--warp-ref-display-scale) - 1) * 0.8));
+  --warp-text-title-size: clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
+    calc(var(--warp-ref-title-b) * var(--warp-rem) + var(--warp-ref-title-m) * var(--_fu)),
+    calc(var(--warp-ref-title-max) * var(--warp-rem)));
   --warp-text-title-leading: 1.15;
   --warp-text-title-weight: var(--warp-ref-title-weight);
   --warp-text-title-tracking: calc(var(--warp-ref-display-tracking) * 0.6);
@@ -396,11 +508,21 @@
   --warp-text-heading-leading: 1.3;
   --warp-text-heading-weight: var(--warp-ref-heading-weight);
   --warp-text-heading-tracking: -0.01em;
+  --warp-text-heading-trim: var(--warp-ref-trim-heading);              /* quiet: normal */
+  --warp-text-heading-wrap: balance;
   --warp-text-body-font: var(--warp-font-sans);
   --warp-text-body-size: var(--warp-ref-type-body);
   --warp-text-body-leading: 1.55;
+  --warp-text-body-weight: 400;
   --warp-text-prose-size: var(--warp-ref-type-prose);
   --warp-text-prose-leading: 1.65;
+  --warp-text-prose-wrap: var(--warp-ref-prose-wrap);                  /* quiet: wrap; else pretty */
+  --warp-text-editable-wrap: var(--warp-ref-editable-wrap);            /* vivid: stable */
+  /* measure: 72 · 66 · 60ch of the brand face. Plain `ch` follows whichever face is rendering, so a
+     ch width moves when the fallback swaps for the brand font (Arial's "0" is 3% narrower than
+     Inter's at the matched size); --warp-ch is the brand face's ch as em, which doesn't */
+  --warp-ch: var(--warp-ref-ch);
+  --warp-measure: calc(var(--warp-ref-measure) * var(--warp-ch));
   --warp-text-label-font: var(--warp-ref-label-font);
   --warp-text-label-size: calc(var(--warp-ref-type-label) + var(--warp-ref-label-adjust));
   --warp-text-label-leading: 1.25;
@@ -409,6 +531,7 @@
   --warp-text-label-case: var(--warp-ref-label-case);
   --warp-text-eyebrow-font: var(--warp-ref-eyebrow-font);
   --warp-text-eyebrow-size: calc(var(--warp-ref-type-label) + var(--warp-ref-eyebrow-adjust));
+  --warp-text-eyebrow-leading: 1.25;
   --warp-text-eyebrow-weight: 500;
   --warp-text-eyebrow-tracking: var(--warp-ref-eyebrow-tracking);
   --warp-text-eyebrow-case: var(--warp-ref-eyebrow-case);
@@ -416,18 +539,52 @@
   --warp-text-caption-leading: 1.45;
   --warp-text-code-font: var(--warp-font-mono);
   --warp-text-code-size: var(--warp-ref-type-code);
+  --warp-text-code-leading: 1.55;
   --warp-text-control-size: max(var(--warp-ref-type-body), var(--warp-input-font-min));
+  --warp-text-control-leading: 1.25;
   --warp-text-button-font: var(--warp-ref-button-font);
   --warp-text-button-size: calc(var(--warp-ref-type-body) + var(--warp-ref-button-adjust));
+  --warp-text-button-leading: 1;
   --warp-text-button-weight: var(--warp-ref-button-weight);
   --warp-text-button-tracking: var(--warp-ref-button-tracking);
   --warp-text-button-case: var(--warp-ref-button-case);
+  /* trimmed text boxes: controls, badges, chips, eyebrows at every stop; headings from balanced;
+     display at vivid (research 11 §3.4). The fallback (no text-box) is in warp.base */
+  --warp-text-box-trim: trim-both cap alphabetic;
   /* figures: tabular at every stop. numeric-font is a face that HAS tnum (vivid's serif doesn't) */
   --warp-text-numeric-font: var(--warp-ref-numeric-font);
   --warp-text-numeric-variant: tabular-nums lining-nums;
   /* <em> inside display / title / headings: a real italic or none (font-synthesis-style: none) */
   --warp-text-emphasis-style: var(--warp-ref-emphasis-style);
   --warp-text-emphasis-color: var(--warp-color-accent-text);
+
+  /* -- type · canvas role strings (weft/text, Surfaces) ------------------
+     A canvas `font` can't read var() or calc(): these resolve to "weight Npx family-stack" (read them
+     with getComputedStyle(host).getPropertyValue). Line height, tracking and case aren't part of a canvas
+     font: read the matching -leading / -tracking / -case tokens. The fluid roles resolve here, at the scope
+     root; a [data-text-canvas] host re-resolves them against its own container (warp.base). */
+  --warp-text-display-px: var(--warp-text-display-size);
+  --warp-text-title-px:   var(--warp-text-title-size);
+  --warp-text-heading-px: var(--warp-text-heading-size);
+  --warp-text-body-px:    var(--warp-text-body-size);
+  --warp-text-prose-px:   var(--warp-text-prose-size);
+  --warp-text-label-px:   var(--warp-text-label-size);
+  --warp-text-eyebrow-px: var(--warp-text-eyebrow-size);
+  --warp-text-caption-px: var(--warp-text-caption-size);
+  --warp-text-code-px:    var(--warp-text-code-size);
+  --warp-text-button-px:  var(--warp-text-button-size);
+  --warp-text-control-px: var(--warp-text-control-size);
+  --warp-text-display-canvas: var(--warp-text-display-weight) var(--warp-text-display-px) var(--warp-text-display-font);
+  --warp-text-title-canvas:   var(--warp-text-title-weight) var(--warp-text-title-px) var(--warp-text-title-font);
+  --warp-text-heading-canvas: var(--warp-text-heading-weight) var(--warp-text-heading-px) var(--warp-text-heading-font);
+  --warp-text-body-canvas:    var(--warp-text-body-weight) var(--warp-text-body-px) var(--warp-text-body-font);
+  --warp-text-prose-canvas:   var(--warp-text-body-weight) var(--warp-text-prose-px) var(--warp-text-body-font);
+  --warp-text-label-canvas:   var(--warp-text-label-weight) var(--warp-text-label-px) var(--warp-text-label-font);
+  --warp-text-eyebrow-canvas: var(--warp-text-eyebrow-weight) var(--warp-text-eyebrow-px) var(--warp-text-eyebrow-font);
+  --warp-text-caption-canvas: var(--warp-text-body-weight) var(--warp-text-caption-px) var(--warp-text-body-font);
+  --warp-text-code-canvas:    var(--warp-text-body-weight) var(--warp-text-code-px) var(--warp-text-code-font);
+  --warp-text-button-canvas:  var(--warp-text-button-weight) var(--warp-text-button-px) var(--warp-text-button-font);
+  --warp-text-control-canvas: var(--warp-text-body-weight) var(--warp-text-control-px) var(--warp-text-body-font);
 
   /* -- motion ---------------------------------------------------------- */
   --_mk: calc(var(--warp-ref-motion-k) * (0.6 + 0.4 * var(--warp-motion-scale)));
@@ -505,8 +662,10 @@
     background: var(--warp-color-page);
     color: var(--warp-color-text);
     font-family: var(--warp-text-body-font);
-    font-size: var(--warp-text-body-size);
+    font-size: var(--warp-ref-root-size);          /* the body size, in real rem (user default font size) */
     line-height: var(--warp-text-body-leading);
+    font-optical-sizing: auto;                     /* Inter's opsz axis follows the size (14–32) */
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -528,6 +687,46 @@
     color: var(--warp-color-text);
   }
   :where(code, kbd, samp, pre) { font-family: var(--warp-text-code-font); font-size: var(--warp-text-code-size); }
+  :where(pre) { line-height: var(--warp-text-code-leading); }
+
+  /* -- type roles (01 §2 Type; research 11 §3) ------------------------------------------
+     wrap: headings balance at every stop; prose is pretty from balanced; vivid keeps editable text stable
+     (text-wrap-style only, so a component's white-space: nowrap still wins). */
+  :where(h1, h2, h3, h4, h5, h6) { text-wrap-style: var(--warp-text-heading-wrap); }
+  :where(p, li, dd, blockquote, figcaption) { text-wrap-style: var(--warp-text-prose-wrap); }
+  :where(textarea, [contenteditable]:not([contenteditable="false"])) { text-wrap-style: var(--warp-text-editable-wrap); }
+  /* prose: reading size, leading and the dial's measure (72 · 66 · 60ch) */
+  :where([data-prose]) {
+    font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading);
+    max-inline-size: var(--warp-measure); text-wrap-style: var(--warp-text-prose-wrap); overflow-wrap: break-word;
+  }
+  /* trimmed text boxes: the box is cap height to baseline, so spacing and centring are optical.
+     Controls (button, badge, chip, pill, tag) and eyebrows at every stop; headings from balanced.
+     A flex host's own text-box doesn't reach its text (it isn't a block container), so its direct
+     label spans are trimmed too; heights stay fixed (block-size), only the glyphs centre on the cap. */
+  @supports (text-box: trim-both cap alphabetic) {
+    :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"], [data-part="eyebrow"]),
+    :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"]) > :where(span:not([data-part])) {
+      text-box: var(--warp-text-box-trim);
+    }
+    :where(h1, h2, h3, h4, h5, h6) { text-box: var(--warp-text-heading-trim); }
+  }
+  /* fallback (iOS < 18.2, Firefox < 154): Capsize-style negative margins from the face's metrics,
+     using the line's own height (lh). Without lh (iOS 15) the declarations are dropped: untrimmed, harmless. */
+  @supports not (text-box: trim-both cap alphabetic) {
+    :where(h1, h2, h3, h4, h5, h6)::before, :where(h1, h2, h3, h4, h5, h6)::after,
+    :where([data-part="eyebrow"])::before, :where([data-part="eyebrow"])::after { content: ""; display: table; }
+    :where(h1, h2, h3, h4, h5, h6) { --_t: 1; }
+    :where([data-expression="quiet"] :is(h1, h2, h3, h4, h5, h6), [data-expression="quiet"]:is(h1, h2, h3, h4, h5, h6)) { --_t: 0; }
+    :where(h1, h2, h3, h4, h5, h6)::before { margin-block-end: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k2) * 1em)); }
+    :where(h1, h2, h3, h4, h5, h6)::after { margin-block-start: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k3) * 1em)); }
+    :where([data-part="eyebrow"])::before { margin-block-end: calc(-1 * ((1lh - var(--warp-ref-em-k1) * 1em) / 2 + var(--warp-ref-em-k2) * 1em)); }
+    :where([data-part="eyebrow"])::after { margin-block-start: calc(-1 * ((1lh - var(--warp-ref-em-k1) * 1em) / 2 + var(--warp-ref-em-k3) * 1em)); }
+  }
+  /* a canvas host re-resolves the px role strings against its own container (fluid display / title) */
+  :where([data-text-canvas]) {
+    --warp-text-display-px: var(--warp-text-display-size); --warp-text-title-px: var(--warp-text-title-size);
+  }
 
   /* no faux italics in headlines: Space Grotesk and Inter-as-display ship no italic, so the browser
      would slant the roman. Emphasis there is upright + accent; vivid's serif uses its real italic. */
@@ -540,8 +739,14 @@
   /* touch: every target reaches hit-min (24px fine, 44px coarse) from tokens alone (00 §1.5).
      The floor is a min-size, so a component's own block-size still sets the visual size on a mouse. */
   :where([data-scope="button"]:not([data-emphasis="link"]), [data-scope="toggle"], [data-part="close"],
-         [data-scope="status-bar"] > button, [role="tab"], [data-hit]) { min-block-size: var(--warp-hit-min); }
-  :where([data-scope="button"][data-icon-only], [data-part="close"], [data-scope="toggle"], [data-hit]) { min-inline-size: var(--warp-hit-min); }
+         [data-scope="status-bar"] > button, [role="tab"], [data-hit]:not([data-hit="area"])) { min-block-size: var(--warp-hit-min); }
+  :where([data-scope="button"][data-icon-only], [data-part="close"], [data-scope="toggle"], [data-hit]:not([data-hit="area"])) { min-inline-size: var(--warp-hit-min); }
+  /* expander: a target that must keep a smaller visual box (a chart toggle, a pin, a drag handle) gets a
+     centred hit-min area from ::after; it never shrinks the box. Components use the same formula on their
+     own parts; where two expanders would overlap, the part takes its share of the gap instead (24px
+     floor + spacing, WCAG 2.5.8) and says so in its file. */
+  :where([data-hit="area"]) { position: relative; }
+  :where([data-hit="area"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
   /* a standalone text link (not inside running text) gets the same row height */
   :where([data-scope="button"][data-emphasis="link"]:not(:is(p, li, dd, td, figcaption, blockquote, label) *), [data-hit="text"]) {
     display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min);
@@ -840,11 +1045,14 @@
      The letters are generated content (::before from data-c), so the accessible name AND textContent are
      the plain "Alt text": not spelled out, and not the floated uppercase "ALT TEXT" (Chrome applies
      text-transform to names). The older form (bare inline <span data-char>A</span>) still works. */
-  :where([data-scope="field"] [data-part="label"] [data-part="label-text"]) {
+  :where([data-scope="field"] [data-part="label"] [data-part="label-text"], [data-part="label-text"]:has(+ [data-part="label-chars"])) {
     position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
     white-space: nowrap; text-transform: none; letter-spacing: normal;
   }
-  :where([data-scope="field"] [data-part="label"] [data-char][data-c])::before { content: attr(data-c); }
+  :where([data-scope="field"] [data-part="label"] [data-char][data-c], [data-part="label-chars"] > [data-char][data-c])::before { content: attr(data-c); }
+  /* the same anatomy names any caps-styled name source outside a field (a range head, a pane head, a knob caption):
+     warpSweep.label(el) on it keeps the visible caps and gives AT the sentence-case words. No tint outside fields. */
+  :where([data-part="label-chars"] > [data-char]) { white-space: pre; }
   /* per-character tint that travels with the sweep: --d = x / sweep speed.
      The spans are INLINE: an inline-block per letter makes Chrome compute the label's accessible name
      (and innerText, copy, find) as "F I R S T  N A M E". Colour transitions need no box. */

@@ -208,8 +208,8 @@
 /* touch: a tap holds the phase "in" for 620ms (data-touch-effect, set by sweep()), then exits through the right */
 /* touch: the hit area reaches hit-min even when the visual is smaller */
 :where([data-scope="button"])::after {
-  content: ""; position: absolute; inset-inline: 0; pointer-events: auto;
-  inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+  content: ""; position: absolute; pointer-events: auto;
+  inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
 :where([data-scope="button"]:active) { transform: translateY(1px); }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
@@ -611,7 +611,7 @@
 @starting-style {
   :where([data-scope="tooltip"][data-part="content"]:popover-open) { opacity: 0; translate: calc(var(--_side-x) * var(--warp-motion-distance) * 0.5) calc(var(--_side-y) * var(--warp-motion-distance) * 0.5); }
 }
-:where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px var(--warp-font-mono); opacity: 0.75; }
+:where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px/1.25 var(--warp-font-mono); opacity: 0.75; }
 
 /* -- Hover card --------------------------------------------------------------- */
 :where([data-scope="hover-card"][data-part="content"]) { inline-size: 300px; padding: var(--warp-space-group); display: grid; gap: var(--warp-space-related); }
@@ -737,62 +737,62 @@
 
 /* -- Tabs: line (default) · pill · enclosed --------------------------------- */
 :where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
-:where([data-scope="tabs"] [data-part="list"]) {
+:where([data-scope="tabs"] > [data-part="list"]) {
   position: relative; display: flex; gap: var(--warp-space-tight); min-inline-size: 0;
   overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity;
   box-shadow: inset 0 calc(var(--warp-border-hairline) * -1) 0 var(--warp-color-border);
   --_fs: 0px; --_fe: 0px;
   mask-image: linear-gradient(to right, transparent, #000 var(--_fs), #000 calc(100% - var(--_fe)), transparent);
 }
-:where([data-scope="tabs"] [data-part="list"])::-webkit-scrollbar { display: none; }
-:where([data-scope="tabs"] [data-part="list"][data-overflow~="start"]) { --_fs: 32px; }
-:where([data-scope="tabs"] [data-part="list"][data-overflow~="end"]) { --_fe: 32px; }
-:where([data-scope="tabs"] [data-part="trigger"]) {
+:where([data-scope="tabs"] > [data-part="list"])::-webkit-scrollbar { display: none; }
+:where([data-scope="tabs"] > [data-part="list"][data-overflow~="start"]) { --_fs: 32px; }
+:where([data-scope="tabs"] > [data-part="list"][data-overflow~="end"]) { --_fe: 32px; }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]) {
   position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; scroll-snap-align: start;
   block-size: var(--warp-control-md); padding-inline: var(--warp-space-related); margin: 0; border: 0; background: transparent;
   color: var(--warp-color-text-subtle); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); white-space: nowrap;
   cursor: pointer; border-radius: var(--warp-radius-control) var(--warp-radius-control) 0 0; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-duration-fast) var(--warp-ease-out);
 }
-:where([data-scope="tabs"] [data-part="trigger"]:hover) { color: var(--warp-color-text); }
-:where([data-scope="tabs"] [data-part="trigger"][aria-selected="true"]) { color: var(--warp-color-text); }
-:where([data-scope="tabs"] [data-part="trigger"]:focus-visible) { outline-offset: -2px; }
-:where([data-scope="tabs"] [data-part="trigger"] [data-scope="badge"]) { block-size: 18px; padding-inline: 6px; }
-:where([data-scope="tabs"] [data-part="indicator"]) {
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:hover) { color: var(--warp-color-text); }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { color: var(--warp-color-text); }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:focus-visible) { outline-offset: -2px; }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"] [data-scope="badge"]) { block-size: 18px; padding-inline: 6px; }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
   position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--warp-border-emphasis);
   inline-size: var(--_iw, 0px); translate: var(--_ix, 0px) 0; background: var(--warp-color-accent-solid);
   pointer-events: none;
   /* rail sweep: the indicator travels through the rail on the sweep curve */
   transition: translate var(--warp-sweep-duration) var(--warp-sweep-ease), inline-size var(--warp-sweep-duration) var(--warp-sweep-ease);
 }
-:where([data-scope="tabs"] [data-part="indicator"][data-instant]) { transition: none; }
-:where([data-scope="tabs"] [data-part="content"]) { min-inline-size: 0; }
-:where([data-scope="tabs"] [data-part="content"]:focus-visible) { outline-offset: 4px; border-radius: var(--warp-radius-control); }
-:where([data-scope="tabs"] [data-part="content"][hidden]) { display: none; }
-:where([data-scope="tabs"] [data-part="content"]:not([hidden])) { animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"][data-instant]) { transition: none; }
+:where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }
+:where([data-scope="tabs"] > [data-part="content"]:focus-visible) { outline-offset: 4px; border-radius: var(--warp-radius-control); }
+:where([data-scope="tabs"] > [data-part="content"][hidden]) { display: none; }
+:where([data-scope="tabs"] > [data-part="content"]:not([hidden])) { animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out); }
 /* pill */
-:where([data-scope="tabs"][data-variant="pill"] [data-part="list"]) {
+:where([data-scope="tabs"][data-variant="pill"] > [data-part="list"]) {
   inline-size: fit-content; max-inline-size: 100%; gap: 2px; padding: 2px; box-shadow: none;
   background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border);
   border-radius: calc(var(--warp-radius-control) + 3px);
 }
-:where([data-scope="tabs"][data-variant="pill"] [data-part="trigger"]) { z-index: 1; block-size: calc(var(--warp-control-md) - 6px); padding-inline: var(--warp-pad-control); border-radius: var(--warp-radius-control); }
-:where([data-scope="tabs"][data-variant="pill"] [data-part="indicator"]) {
+:where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"]) { z-index: 1; block-size: calc(var(--warp-control-md) - 6px); padding-inline: var(--warp-pad-control); border-radius: var(--warp-radius-control); }
+:where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="indicator"]) {
   inset-block: 2px; block-size: auto; background: var(--warp-color-surface-raised); border-radius: var(--warp-radius-control);
   box-shadow: 0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1);
 }
 /* enclosed */
-:where([data-scope="tabs"][data-variant="enclosed"] [data-part="list"]) { gap: 0; }
-:where([data-scope="tabs"][data-variant="enclosed"] [data-part="trigger"]) {
+:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"]) { gap: 0; }
+:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"]) {
   padding-inline: var(--warp-pad-control); border: var(--warp-border-hairline) solid transparent; border-block-end: 0;
 }
-:where([data-scope="tabs"][data-variant="enclosed"] [data-part="trigger"][aria-selected="true"]) {
+:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) {
   background: var(--warp-color-surface-raised); border-color: var(--warp-color-border);
   box-shadow: 0 var(--warp-border-hairline) 0 var(--warp-color-surface-raised);
 }
-:where([data-scope="tabs"][data-variant="enclosed"] [data-part="indicator"]) { inset-block: 0 auto; }
+:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="indicator"]) { inset-block: 0 auto; }
 :where([data-scope="tabs"][data-variant="enclosed"][data-part="root"]) { gap: 0; }
-:where([data-scope="tabs"][data-variant="enclosed"] [data-part="content"]) {
+:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="content"]) {
   padding: var(--warp-pad-surface); background: var(--warp-color-surface-raised);
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-block-start: 0;
   border-radius: 0 0 var(--warp-radius-surface) var(--warp-radius-surface);
@@ -1565,10 +1565,10 @@
   :where([data-scope="toggle-group"]:has(> [data-part="indicator"]) [data-scope="toggle"][aria-checked="true"]) { background: transparent; border-color: transparent; }
   :where([data-scope="toggle-group"] > [data-part="indicator"]) { background: Highlight; box-shadow: none; }
   /* tabs: line and enclosed keep CanvasText ink over a Highlight bar; pill fills like the segmented control */
-  :where([data-scope="tabs"] [data-part="trigger"][aria-selected="true"]) { forced-color-adjust: none; color: CanvasText; }
-  :where([data-scope="tabs"] [data-part="indicator"]) { background: Highlight; box-shadow: none; }
-  :where([data-scope="tabs"][data-variant="pill"] [data-part="trigger"][aria-selected="true"]) { color: HighlightText; }
-  :where([data-scope="tabs"][data-variant="enclosed"] [data-part="trigger"][aria-selected="true"]) { background: Canvas; border-color: CanvasText; box-shadow: none; }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { forced-color-adjust: none; color: CanvasText; }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) { background: Highlight; box-shadow: none; }
+  :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { color: HighlightText; }
+  :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { background: Canvas; border-color: CanvasText; box-shadow: none; }
   /* list items: the active option or item reads as the system selection */
   :where([data-scope="menu"] [data-part="item"]:is(:focus, [data-state="open"]), [data-scope="select"] [data-part="item"][data-highlighted],
          [data-scope="palette"] [data-part="item"][aria-selected="true"], [role="listbox"] [role="option"][data-highlighted]) {
@@ -1584,5 +1584,37 @@
   /* the QR plate is a scannable image: keep its ink on paper */
   :where([data-scope="qr"] [data-part="plate"]) { forced-color-adjust: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS (00 §1.5; 01 §2 "Touch floor"). Every target reaches hit-min (44px on a coarse
+   pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
+   never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
+   ------------------------------------------------------------------------ */
+:where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
+       [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="menubar"] > [role="menuitem"],
+       [data-scope="ai-label"]) { position: relative; }
+/* links (standalone and in running text: the expander reaches into the lines above and below, with no
+   layout change), the logo, the heading anchor, relative time (a tooltip trigger), Show more, the AI label */
+@media screen {
+  :where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
+         [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="ai-label"])::after {
+    content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+  }
+}
+/* pills and menubar items sit in a row with room above and below: block axis only */
+:where([data-scope="pill"], [data-scope="menubar"] > [role="menuitem"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+}
+/* an avatar stack overlaps by design (30% of the size): each face takes the block axis only. Its exposed
+   width (≈ 25px at md) is the pitch, so stacked avatars stay at the 24px floor + spacing (WCAG 2.5.8) */
+:where([data-scope="avatar-group"] > [data-scope="avatar"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+}
+/* toggle group: faces are md − 6 wide with a 2px gap, so neighbours can't each take 44. The end faces
+   reach outward (past the rail, into the row's own gap) to hit-min; inner faces take half the gap each
+   (a 40px pitch: the 24px floor + spacing case). */
+:where([data-scope="toggle-group"] [data-scope="toggle"])::after { inset-inline: max(-1px, min(0px, calc((100% - var(--warp-hit-min)) / 2))); }
+:where([data-scope="toggle-group"] > [data-scope="toggle"]:first-of-type)::after { inset-inline-start: min(0px, calc(100% + 1px - var(--warp-hit-min))); }
+:where([data-scope="toggle-group"] > [data-scope="toggle"]:last-of-type)::after { inset-inline-end: min(0px, calc(100% + 1px - var(--warp-hit-min))); }
 
 } /* @layer warp.components */
