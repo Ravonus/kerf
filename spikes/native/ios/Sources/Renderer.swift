@@ -9,6 +9,8 @@ final class Renderer {
   /// Texts each input reported to JS that JS hasn't echoed back yet (see `.value`).
   private var reported: [UInt32: [String]] = [:]
   private var tree: OpaquePointer!
+  /// Dev-socket actions waiting for the app's answer to land (see `devAct`).
+  private var afterApply: [() -> Void] = []
   let container: UIView
   var onEvent: ((UInt32, String, String) -> Void)?
   var log: ((String) -> Void)?
@@ -54,6 +56,9 @@ final class Renderer {
     }
     layout()
     log?(String(format: "apply ops=%d bytes=%d main=%.2fms", ops, data.count, (CACurrentMediaTime() - start) * 1000))
+    let waiting = afterApply
+    afterApply = []
+    waiting.forEach { $0() }
   }
 
   private func create(_ id: UInt32, _ type: NodeType) {
@@ -236,7 +241,7 @@ final class Renderer {
       return (Float(ceil(min(s.width, w))), Float(ceil(s.height)))
     case .Button:
       let s = n.view.sizeThatFits(CGSize(width: w, height: .greatestFiniteMagnitude))
-      return (Float(ceil(s.width)), max(controlMinHeight, Float(ceil(s.height))))
+      return (max(controlMinHeight, Float(ceil(s.width))), max(controlMinHeight, Float(ceil(s.height)))) // a touch target is at least square
     default:
       if (n.props[.text] as? String ?? "").isEmpty { return (0, 0) }
       let s = n.view.sizeThatFits(CGSize(width: w, height: .greatestFiniteMagnitude))
@@ -285,7 +290,9 @@ final class Renderer {
   }
 
   /// Frames, types, labels and measured leaf sizes as JSON, for comparing against the Node layout.
-  func dumpFrames() -> Data {
+  func dumpFrames() -> Data { try! JSONSerialization.data(withJSONObject: frames(), options: [.prettyPrinted]) }
+
+  func frames() -> [String: Any] {
     var f = [Float](repeating: 0, count: 6)
     var out: [[String: Any]] = []
     func walk(_ id: UInt32) {
@@ -301,6 +308,63 @@ final class Renderer {
       n.children.forEach(walk)
     }
     walk(root)
-    return try! JSONSerialization.data(withJSONObject: ["width": container.bounds.width, "height": container.bounds.height, "nodes": out], options: [.prettyPrinted])
+    return ["width": container.bounds.width, "height": container.bounds.height, "nodes": out]
+  }
+}
+
+// MARK: dev socket (weft device)
+
+extension Renderer {
+  /// The host's own view tree as the app's semantics: what an agent or test needs to find and check things,
+  /// with frames in the content area's coordinates (after scrolling) and whether each is on screen.
+  func devSnapshot() -> [String: Any] {
+    func walk(_ id: UInt32) -> [String: Any]? {
+      guard let n = nodes[id] else { return nil }
+      let f = n.view.convert(n.view.bounds, to: container)
+      var o: [String: Any] = ["id": id, "type": "\(n.type)", "frame": [f.minX, f.minY, f.width, f.height].map { Double($0) },
+                              "visible": !n.view.isHidden && f.intersects(container.bounds)]
+      for (k, p) in [("label", Prop.label), ("text", .text), ("tone", .tone), ("role", .role), ("surface", .surface)] {
+        if let v = n.props[p] as? String, !v.isEmpty { o[k] = v }
+      }
+      if let f = n.view as? UITextField { o["value"] = f.text ?? "" }
+      if let seg = n.view as? UISegmentedControl { o["selected"] = seg.selectedSegmentIndex; o["options"] = (n.props[.options] as? String ?? "").components(separatedBy: "\u{1F}") }
+      if let c = n.view as? UIControl, !c.isEnabled { o["disabled"] = true }
+      let kids = n.children.compactMap(walk)
+      if !kids.isEmpty { o["children"] = kids }
+      return o
+    }
+    return walk(root) ?? [:]
+  }
+
+  /// tap / type / select through the real control (`sendActions`), the same path a finger takes. Replies once the
+  /// app's answer has been applied (or after 500 ms, for actions that change nothing).
+  func devAct(_ req: [String: Any], done: @escaping ([String: Any]) -> Void) {
+    let cmd = req["cmd"] as? String ?? ""
+    let matches: [UInt32]
+    if let id = (req["id"] as? NSNumber)?.uint32Value { matches = nodes[id] != nil ? [id] : [] }
+    else if let label = req["label"] as? String { matches = nodes.filter { ($0.value.props[.label] as? String) == label }.map(\.key).sorted() }
+    else { return done(["ok": false, "error": "\(cmd) needs a label or an id"]) }
+    guard matches.count == 1, let n = nodes[matches[0]] else {
+      let what = (req["label"] as? String).map { "labelled \"\($0)\"" } ?? "with id \(req["id"] ?? "")"
+      return done(["ok": false, "error": matches.isEmpty ? "no node \(what)" : "\(matches.count) nodes \(what): ids \(matches); pass an id"])
+    }
+    var settled = false
+    let finish = { [weak self] in
+      guard !settled, let self else { return }
+      settled = true
+      done(["ok": true, "id": matches[0], "visible": n.view.convert(n.view.bounds, to: self.container).intersects(self.container.bounds)])
+    }
+    switch (cmd, n.view) {
+    case ("tap", let b as UIButton):
+      guard b.isEnabled else { return done(["ok": false, "error": "\(matches[0]) is disabled"]) }
+      afterApply.append(finish); b.sendActions(for: .touchUpInside)
+    case ("type", let f as UITextField):
+      afterApply.append(finish); f.text = req["text"] as? String ?? ""; f.sendActions(for: .editingChanged)
+    case ("select", let seg as UISegmentedControl):
+      guard let i = (req["index"] as? NSNumber)?.intValue, i >= 0, i < seg.numberOfSegments else { return done(["ok": false, "error": "select needs an index below \(seg.numberOfSegments)"]) }
+      afterApply.append(finish); seg.selectedSegmentIndex = i; seg.sendActions(for: .valueChanged)
+    default: return done(["ok": false, "error": "can't \(cmd) a \(n.type)"])
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: finish)
   }
 }

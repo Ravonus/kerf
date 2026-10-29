@@ -35,6 +35,7 @@ class MainActivity : Activity() {
     private var fold: FoldingFeature? = null
     private var haveLayoutInfo = false // the first report waits for WindowManager, so a half-open fold never mounts as one pane
     private var lastViewport = ""
+    private var dev: DevServer? = null
     private val tracker by lazy { WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(this)) }
     private val onLayoutInfo = Consumer<WindowLayoutInfo> { info ->
         log("window layout ${info.displayFeatures}")
@@ -97,6 +98,28 @@ class MainActivity : Activity() {
         js = JsRuntime(onBatch = { bytes, ops -> main.post { renderer.apply(bytes, ops) } }, log = { line -> main.post { log(line) } })
         renderer.onEvent = { id, event, payload -> js.dispatch(id, event, payload) }
         js.start(assets.open("app.js").bufferedReader().readText())
+
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            val dev = DevServer(::log) { req, reply ->
+                val viewport = runCatching { org.json.JSONObject(lastViewport) }.getOrDefault(org.json.JSONObject())
+                when (req.optString("cmd")) {
+                    "hello" -> reply(org.json.JSONObject().put("ok", true).put("os", "android").put("device", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}").put("port", dev?.port))
+                    "viewport" -> reply(org.json.JSONObject().put("ok", true).put("viewport", viewport))
+                    "snapshot" -> reply(org.json.JSONObject().put("ok", true).put("viewport", viewport).put("root", renderer.devSnapshot()))
+                    "frames" -> reply(org.json.JSONObject().put("ok", true).put("frames", renderer.dumpFrames().put("viewport", viewport)))
+                    "tap", "type", "select" -> renderer.devAct(req, reply)
+                    else -> reply(org.json.JSONObject().put("ok", false).put("error", "unknown cmd; try hello, viewport, snapshot, frames, tap, type, select"))
+                }
+            }
+            this.dev = dev.also { it.start() }
+        }
+    }
+
+    // A recreated activity (a config change it doesn't handle, a relaunch) must give up its port, or the CLI keeps
+    // talking to the old one: detached views, frames at 0,0, a viewport that never changes.
+    override fun onDestroy() {
+        dev?.stop()
+        super.onDestroy()
     }
 
     override fun onStart() {
@@ -136,7 +159,7 @@ class MainActivity : Activity() {
     }
 
     private val dumpFrames = Runnable {
-        val dump = org.json.JSONObject(renderer.dumpFrames()).put("viewport", org.json.JSONObject(lastViewport))
+        val dump = renderer.dumpFrames().put("viewport", org.json.JSONObject(lastViewport))
         File(filesDir, "frames.json").writeText(dump.toString())
         log("frames written")
     }

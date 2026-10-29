@@ -125,9 +125,9 @@ outside the sections, so changing form keeps filters, cart and the current tab.
 
 Hinges come from Jetpack WindowManager (`FoldingFeature`, separating only). A flat fold isn't separating, so an open
 foldable is one medium or expanded pane. iOS has no hinges. The minimum touch target is per platform as well: 44pt
-on iOS, 48dp on Android.
+on iOS, 48dp on Android, and targets are at least square, so a one-character button ("−") is 44 or 48 wide too.
 
-**[`protocol/devices.json`](protocol/devices.json)** lists 25 windows, each with the form it must get and where its
+**[`protocol/devices.json`](protocol/devices.json)** lists 26 windows, each with the form it must get and where its
 numbers came from (`measured` on a simulator or emulator, `spec`, or `approx`): iPhone SE to 17 Pro Max in both
 orientations, iPad mini to iPad Pro 13 (including Split View), small 3-button-nav Android phones, Pixel 8,
 foldables folded, flat, in book and tabletop posture, Surface Duo, Android tablets, and web. `test/devices.test.ts`
@@ -139,26 +139,59 @@ Node's approximate metrics couldn't.
 
 Verified on devices:
 - iPhone 17 Pro in portrait and landscape (the tab bar spans the full width past the Dynamic Island).
-- iPad Pro 13-inch in landscape: a sidebar, with selection moving on tap.
+- iPhone 17 Pro in landscape (750×382) keeps the tab bar.
+- iPad Pro 13-inch in portrait (1032×1324) and landscape (1376×980): a sidebar, with selection moving on tap.
 - Pixel 8 emulator: rotating switches the navigation bar to a rail live, keeping state.
 - A foldable emulator (`scripts/fold.sh`) on the real WindowManager stack:
   - open flat (851.7dp) gives the rail;
   - half open, WindowManager reports `HALF_OPENED` at x=425.8dp and the app splits there, with products on one
     half and the cart on the other, updating live;
-  - opening flat again returns to the rail with the cart kept.
-- Layout parity is 0pt in every form checked: phone, landscape rail and book posture.
+  - opening flat again returns to the rail with the cart kept;
+  - rotated to landscape and half open (tabletop), the fold is horizontal at y=370dp: Shop above it, the cart below,
+    driven end to end through `weft device`.
+- Layout parity is 0pt in every form checked: phone, landscape rail, book posture and tabletop on Android; iPhone
+  landscape and iPad portrait and landscape on iOS.
 
 Gaps:
 - The Surface Duo is covered by the fast lane only. Stock emulator images have no Duo overlay and Microsoft's Duo
   emulator is gone, so a dual-screen AVD reports no hinge.
-- Tabletop posture is tested in Node only.
 - A hand-made foldable AVD reports its fold as always FLAT until the Pixel 9 Pro Fold overlay is enabled
   (`scripts/fold.sh setup`).
-- iOS doesn't rewrite `frames.json` on rotation yet, so landscape and iPad parity weren't measured.
 - androidx.window pulls in androidx.core, and the debug APK went from 5.2 to 11.9 MB. R8 in a release build should
   strip most of it.
 - esbuild doesn't fold the idiom table per OS, so each bundle carries every platform's rows. The compiler should fold
   `platform.os` and drop dead branches.
+
+## Driving the app: `weft device`
+
+Debug builds of both hosts open a dev socket: line-delimited JSON on 127.0.0.1, on the first free port from 9301
+(several simulators can run at once). A simulator shares the Mac's loopback; for Android the CLI runs
+`adb forward`. Release builds have no socket and no INTERNET permission (it's in the debug manifest only). The Node
+recording host answers the same requests, so the same commands drive the fast lane.
+
+```bash
+cd js && npx tsx ../scripts/device.mts list
+```
+
+```bash
+npx tsx ../scripts/device.mts android tap bakery -- tap "Add Bagel 10" -- find Total
+```
+
+- Targets: `ios[:port]`, `android[:serial]`, `node:<id>` (a window from `devices.json`).
+- Commands: `hello`, `viewport`, `snapshot [--all] [--json]`, `find <text>`, `frames <out.json>`,
+  `tap|type|select <label|#id> …`.
+- `snapshot` is the host's own view tree as semantics: type, id, label, text, tone, value, selection, disabled, and
+  the on-screen frame. Offscreen children collapse to "… N offscreen", so a 150-row list costs a line.
+- Actions go through the real controls (`sendActions`, `performClick`, `setText`), and the reply waits for the app's
+  next apply, so the next snapshot already shows the result.
+- Errors say what to change: `no node labelled "X"`, `3 nodes labelled "Add": ids [...]; pass an id`,
+  `42 is disabled`, `can't type a Button`.
+- Commands mean the same thing whatever the platform drew: a Choice is a segment on iOS and chips on Android, so
+  `tap bakery` becomes a segment select on iOS, and `select Category 2` taps the third chip on Android.
+- `frames` writes the same dump `compare-layout` reads, from whatever state the app is in. For parity, take it right
+  after launch: the Node host replays a fresh mount.
+
+`test/device.test.ts` pins the protocol on the Node host.
 
 ## Not done / next
 
@@ -166,4 +199,5 @@ Gaps:
 - Android first-mount cost: cache text measurements and lay out only dirty subtrees.
 - Incremental layout: only re-lay out dirty subtrees, and skip frame writes for unchanged views.
 - `<List>` virtualization (all 150 rows are real views today).
-- Dev socket for `weft device snapshot/act` instead of the frames file.
+- `weft device`: screenshot, rotate, fold posture and appearance as commands (today they're `simctl`, `adb` and
+  `scripts/fold.sh`), scroll, and the reactive graph in `snapshot`.

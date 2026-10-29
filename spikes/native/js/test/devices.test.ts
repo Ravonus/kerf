@@ -58,6 +58,7 @@ describe.each(all.map(d => [d.id, d] as const))('%s', (_id, d) => {
       if (!insideScroll(host, n)) expect(f.y + f.h, `${n.type} "${n.props.text}" bottom`).toBeLessThanOrEqual(d.h + 0.5)
       if (d.hinge && !insideScroll(host, n)) expect(overlaps(f, d.hinge), `${n.type} "${n.props.text ?? n.props.label}" under the hinge`).toBe(false)
       if (n.type === 'Button' || n.type === 'Input' || n.type === 'Choice') expect(f.h).toBeGreaterThanOrEqual(n.type === 'Choice' ? 32 : min)
+      if (n.type === 'Button') expect(f.w, `"${n.props.text}" button width`).toBeGreaterThanOrEqual(min)
       // A button label never wraps: it gets at least its natural width (the rail's "Produ / cts" bug).
       if (n.type === 'Button') expect(f.w, `"${n.props.text}" button width`).toBeGreaterThanOrEqual(measureLeaf(n, Infinity)[0] - 0.5)
     }

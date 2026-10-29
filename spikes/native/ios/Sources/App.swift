@@ -25,6 +25,8 @@ final class HostController: UIViewController {
   private let content = UIView()
   private var renderer: Renderer!
   private var js: JSRuntime!
+  private var dev: DevServer?
+  private var viewport: [String: Any] = [:]
   private let logURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("weft.log")
 
   override func viewDidLoad() {
@@ -41,6 +43,21 @@ final class HostController: UIViewController {
     let bundle = try! String(contentsOf: Bundle.main.url(forResource: "app", withExtension: "js")!, encoding: .utf8)
     js.start(bundle: bundle)
 
+    #if DEBUG
+    dev = DevServer(log: { [weak self] in self?.log($0) }) { [weak self] req, reply in
+      guard let self else { return }
+      switch req["cmd"] as? String {
+      case "hello": reply(["ok": true, "os": "ios", "device": UIDevice.current.name, "port": Int(self.dev?.port ?? 0)])
+      case "viewport": reply(["ok": true, "viewport": self.viewport])
+      case "snapshot": reply(["ok": true, "viewport": self.viewport, "root": self.renderer.devSnapshot()])
+      case "frames": var f = self.renderer.frames(); f["viewport"] = self.viewport; reply(["ok": true, "frames": f])
+      case "tap", "type", "select": self.renderer.devAct(req, done: reply)
+      default: reply(["ok": false, "error": "unknown cmd; try hello, viewport, snapshot, frames, tap, type, select"])
+      }
+    }
+    dev?.start()
+    #endif
+
     // Spike hook: dump the laid-out tree for the Node comparison (scripts/compare-layout.mjs).
     DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [self] in
       let url = logURL.deletingLastPathComponent().appendingPathComponent("frames.json")
@@ -56,6 +73,7 @@ final class HostController: UIViewController {
       content.frame = frame
       renderer.layout()
       // The app picks its form from this (size class, panes); it mounts on the first one. iOS has no hinges.
+      viewport = ["w": Double(frame.width), "h": Double(frame.height)]
       js.dispatch(0, "viewport", "{\"w\":\(frame.width),\"h\":\(frame.height)}")
     }
   }

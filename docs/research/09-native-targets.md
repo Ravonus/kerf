@@ -381,6 +381,11 @@ Android foreground services.
     component took (§4.2), and the reactive graph (`Cart.total = 42.5 ← …`).
   - `screenshot` (via `simctl` / `adb`, to a file), `logs` (source-mapped to component names), `time`, `set`.
   - `device rotate|appearance|text-size|locale` to check the cases that break native layouts.
+  - The spike has the core of this: a debug-only socket in both hosts and in the Node recording host, with
+    `snapshot`, `frames`, `tap`, `type` and `select` by label or id through the real controls. Replies wait for the
+    app's next apply, and commands translate between platform forms (a segment on iOS, chips on Android). It drove
+    a tabletop foldable end to end. One lesson: a recreated Android activity has to release the port, or the CLI
+    keeps talking to the dead instance.
 - **Tests, three lanes, same files:**
   - fast lane: a recording host plus `weft-layout` in Node, so layout and op budgets are asserted with no device;
   - `--native ios|android`: the real host on a simulator or emulator;

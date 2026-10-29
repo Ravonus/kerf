@@ -63,6 +63,8 @@ class Renderer(private val context: Context, val container: FrameGroup) {
 
     private val nodes = HashMap<Int, Node>()
     private var root = 0
+    /** Dev-socket actions waiting for the app's answer to land (see `devAct`). */
+    private val afterApply = ArrayList<() -> Unit>()
     private val handle = lNew()
     private val density = context.resources.displayMetrics.density
     private val out = FloatArray(6)
@@ -99,6 +101,9 @@ class Renderer(private val context: Context, val container: FrameGroup) {
         }
         layout()
         log?.invoke("apply ops=$ops bytes=${bytes.size} main=%.2fms".format((SystemClock.elapsedRealtimeNanos() - start) / 1e6))
+        val waiting = afterApply.toList()
+        afterApply.clear()
+        waiting.forEach { it() }
     }
 
     private fun create(id: Int, type: Int) {
@@ -283,7 +288,8 @@ class Renderer(private val context: Context, val container: FrameGroup) {
         n.view.measure(spec, View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
         val w = Math.ceil((n.view.measuredWidth / density).toDouble()).toFloat()
         val h = Math.ceil((n.view.measuredHeight / density).toDouble()).toFloat()
-        return w to if (n.type == NodeType.BUTTON) maxOf(CONTROL_MIN_HEIGHT, h) else h
+        // A touch target is at least square: 48dp each way (a "−" button is narrower than that on its own).
+        return if (n.type == NodeType.BUTTON) maxOf(CONTROL_MIN_HEIGHT, w) to maxOf(CONTROL_MIN_HEIGHT, h) else w to h
     }
 
     fun layout() {
@@ -316,7 +322,7 @@ class Renderer(private val context: Context, val container: FrameGroup) {
     }
 
     /** Frames, types, labels and natural leaf sizes as JSON (dp), for comparing against the Node layout. */
-    fun dumpFrames(): String {
+    fun dumpFrames(): JSONObject {
         val list = JSONArray()
         fun walk(id: Int) {
             val n = nodes[id] ?: return
@@ -332,7 +338,63 @@ class Renderer(private val context: Context, val container: FrameGroup) {
             n.children.forEach(::walk)
         }
         walk(root)
-        return JSONObject().put("width", container.width / density).put("height", container.height / density).put("nodes", list).toString(2)
+        return JSONObject().put("width", container.width / density).put("height", container.height / density).put("nodes", list)
+    }
+
+    // ---- dev socket (weft device) ----
+
+    /** On-screen frame in the content area's dp, after scrolling. */
+    private fun screenFrame(v: View): FloatArray {
+        val at = IntArray(2).also(v::getLocationInWindow); val c = IntArray(2).also(container::getLocationInWindow)
+        return floatArrayOf((at[0] - c[0]) / density, (at[1] - c[1]) / density, v.width / density, v.height / density)
+    }
+    private fun onScreen(f: FloatArray) = f[0] < container.width / density && f[0] + f[2] > 0 && f[1] < container.height / density && f[1] + f[3] > 0
+
+    /** The host's own view tree as the app's semantics, the same shape the iOS host and the Node host return. */
+    fun devSnapshot(): JSONObject {
+        fun walk(id: Int): JSONObject? {
+            val n = nodes[id] ?: return null
+            val f = screenFrame(n.view)
+            val o = JSONObject().put("id", id).put("type", typeName(n.type)).put("frame", JSONArray(f.map(Float::toDouble)))
+                .put("visible", n.view.visibility == View.VISIBLE && onScreen(f))
+            for ((k, p) in listOf("label" to Prop.LABEL, "text" to Prop.TEXT, "tone" to Prop.TONE, "role" to Prop.ROLE, "surface" to Prop.SURFACE))
+                (n.props[p] as? String)?.takeIf { it.isNotEmpty() }?.let { o.put(k, it) }
+            (n.view as? EditText)?.let { o.put("value", it.text.toString()) }
+            if (!n.view.isEnabled) o.put("disabled", true)
+            val kids = JSONArray(n.children.mapNotNull(::walk))
+            if (kids.length() > 0) o.put("children", kids)
+            return o
+        }
+        return walk(root) ?: JSONObject()
+    }
+
+    /** tap / type through the real view (`performClick`, `setText`), the path a finger or keyboard takes. Replies once
+     *  the app's answer has been applied, or after 500 ms for actions that change nothing. */
+    fun devAct(req: JSONObject, done: (JSONObject) -> Unit) {
+        val cmd = req.optString("cmd")
+        val matches = when {
+            req.has("id") -> listOf(req.getInt("id")).filter(nodes::containsKey)
+            req.has("label") -> nodes.filterValues { it.props[Prop.LABEL] == req.getString("label") }.keys.sorted()
+            else -> return done(JSONObject().put("ok", false).put("error", "$cmd needs a label or an id"))
+        }
+        val what = if (req.has("label")) "labelled \"${req.getString("label")}\"" else "with id ${req.opt("id")}"
+        if (matches.size != 1) return done(JSONObject().put("ok", false).put("error",
+            if (matches.isEmpty()) "no node $what" else "${matches.size} nodes $what: ids $matches; pass an id"))
+        val n = nodes[matches[0]]!!
+        var settled = false
+        val finish = {
+            if (!settled) { settled = true; done(JSONObject().put("ok", true).put("id", n.id).put("visible", onScreen(screenFrame(n.view)))) }
+        }
+        when {
+            cmd == "tap" && n.type == NodeType.BUTTON -> {
+                if (!n.view.isEnabled) return done(JSONObject().put("ok", false).put("error", "${n.id} is disabled"))
+                afterApply += finish; n.view.performClick()
+            }
+            cmd == "type" && n.view is EditText -> { afterApply += finish; (n.view as EditText).setText(req.optString("text")) }
+            else -> return done(JSONObject().put("ok", false).put("error", "can't $cmd a ${typeName(n.type)}" +
+                if (cmd == "select") " (Android draws choices as chips: tap the chip's label)" else ""))
+        }
+        container.postDelayed(finish, 500)
     }
 
     private fun typeName(t: Int) = when (t) {

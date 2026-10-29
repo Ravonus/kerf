@@ -3,8 +3,9 @@
 // simulator. Text is measured with a rough metrics table, so text-dependent sizes are approximate by design.
 import { readFileSync } from 'node:fs'
 import { decode } from './ops'
-import { platform, setViewport, type Rect } from './platform'
-import { dispatch, type Host } from './runtime'
+import type { Reply, Request, SnapNode } from './device'
+import { platform, setViewport, viewport, type Rect } from './platform'
+import { dispatch, flush, type Host } from './runtime'
 import { Align, Controls, LayoutKey, Space, TextRole, type NodeTypeName, type PropName } from './protocol.gen'
 
 export type HNode = { id: number; type: NodeTypeName; props: Partial<Record<PropName, string | number | boolean>>; children: number[]; parent: number }
@@ -38,7 +39,7 @@ export function measureLeaf(n: HNode, availW: number): [number, number] {
     return [Math.ceil(seg * opts.length), 32]
   }
   if (n.type === 'Input') return [Number.isFinite(availW) && availW > 0 ? availW : 200, Controls.minHeight[platform.os]]
-  if (n.type === 'Button') return [Math.ceil(natural + Controls.buttonPadX * 2), Math.max(Controls.minHeight[platform.os], line)]
+  if (n.type === 'Button') { const min = Controls.minHeight[platform.os]; return [Math.max(min, Math.ceil(natural + Controls.buttonPadX * 2)), Math.max(min, line)] } // at least square
   if (!text) return [0, 0]
   if (Number.isFinite(availW) && availW > 0 && natural > availW) return [availW, line * Math.ceil(natural / availW)]
   return [Math.ceil(natural), line]
@@ -216,6 +217,43 @@ export class RecordingHost implements Host {
     pending.push(text)
     this.reported.set(n.id, pending.slice(-32))
     dispatch(n.id, 'input', text)
+  }
+
+  // ---- the `weft device` protocol, same answers as the phones (src/device.ts) ----
+
+  devSnapshot(id = this.root): SnapNode {
+    const n = this.nodes.get(id)!, f = this.frame(id), p = n.props
+    const o: SnapNode = { id, type: n.type, frame: [f.x, f.y, f.w, f.h], visible: f.x < this.width && f.x + f.w > 0 && f.y < this.height && f.y + f.h > 0 }
+    for (const k of ['label', 'text', 'tone', 'role', 'surface'] as const) if (typeof p[k] === 'string' && p[k] !== '') o[k] = p[k] as string
+    if (n.type === 'Input') o.value = String(p.value ?? '')
+    if (n.type === 'Choice') { o.selected = Number(p.selected); o.options = String(p.options ?? '').split('\u001f') }
+    if (p.disabled === true) o.disabled = true
+    if (n.children.length) o.children = n.children.map(c => this.devSnapshot(c))
+    return o
+  }
+
+  async dev(req: Request): Promise<Reply> {
+    const settle = async () => { for (let i = 0; i < 4; i++) await Promise.resolve(); flush() }
+    switch (req.cmd) {
+      case 'hello': return { ok: true, os: platform.os, device: `node ${this.width}×${this.height}`, port: 0 }
+      case 'viewport': return { ok: true, viewport: viewport.value }
+      case 'snapshot': return { ok: true, viewport: viewport.value, root: this.devSnapshot() }
+      case 'frames': return { ok: true, frames: { width: this.width, height: this.height, viewport: viewport.value, nodes: [] } }
+    }
+    const found = req.id !== undefined ? this.all(n => n.id === req.id) : req.label !== undefined ? this.all(n => n.props.label === req.label) : null
+    if (!found) return { ok: false, error: `${req.cmd} needs a label or an id` }
+    const what = req.label !== undefined ? `labelled "${req.label}"` : `with id ${req.id}`
+    if (found.length !== 1) return { ok: false, error: found.length ? `${found.length} nodes ${what}: ids [${found.map(n => n.id).join(', ')}]; pass an id` : `no node ${what}` }
+    const n = found[0]
+    if (req.cmd === 'tap' && n.type === 'Button') {
+      if (n.props.disabled === true) return { ok: false, error: `${n.id} is disabled` }
+      this.tap(n)
+    } else if (req.cmd === 'type' && n.type === 'Input') this.type(n, req.text)
+    else if (req.cmd === 'select' && n.type === 'Choice') this.select(n, req.index)
+    else return { ok: false, error: `can't ${req.cmd} a ${n.type}` }
+    await settle()
+    const f = this.frame(n.id)
+    return { ok: true, id: n.id, visible: f.y < this.height && f.y + f.h > 0 }
   }
 
   /** Compact tree for agents: type, label/text, and frame. */
