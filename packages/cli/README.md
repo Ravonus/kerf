@@ -6,7 +6,7 @@ What this build changes or adds to PLAN: [docs/research/17-agent-layer.md](../..
 
 ```bash
 npm install                      # needs ../weft built: (cd ../weft && npm install && npm run build:native)
-npx vitest run                   # 38 tests, on evals/reference-v3/weft and planted copies of it
+npx vitest run                   # 39 tests, on evals/reference-v3/weft and planted copies of it
 node bin/weft.mjs check --json --root ../../evals/reference-v3/weft
 ```
 
@@ -14,7 +14,7 @@ node bin/weft.mjs check --json --root ../../evals/reference-v3/weft
 |---|---|---|
 | `weft check [files…]` | Compile every `.tsx`/`.jsx` in check mode, add the project view (cross-file W014), config P-codes, P002, P120 and the `slots` block | `--json`: the check result. Exit 1 on errors |
 | `weft tasks` | Built-in commands plus the project's `tasks`, with args (JSON Schema), side effects, environments and scope | `--json`: the task list |
-| `weft docs [topic\|code]` | `rules`, `props`, `lists`, `testing`, `config`, `diagnostics`, `commands`, `agents`, or a code (`W014`) | Markdown (`--json`: `{ topic, text }`) |
+| `weft docs [topic\|code]` | `rules`, `props`, `lists`, `async`, `testing`, `config`, `diagnostics`, `commands`, `agents`, or a code (`W014`) | Markdown (`--json`: `{ topic, text }`) |
 | `weft agents-md` | Write AGENTS.md from the installed weft. `--check` exits 1 when stale, `--stdout` prints it | Under 8 KB (it is ~4.6 KB) |
 | `weft mcp` | MCP server on stdio with the tools `docs`, `check`, `tasks` | JSON-RPC 2.0, one message per line |
 

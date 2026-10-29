@@ -13,7 +13,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
 
   check [files…]      compile in check mode; W- and P-diagnostics with fixes
   tasks               commands and project tasks
-  docs [topic|code]   docs for agents (rules, props, lists, testing, config, diagnostics, commands, W014…)
+  docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   mcp                 MCP server on stdio: docs, check, tasks`
 
