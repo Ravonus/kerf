@@ -7,13 +7,14 @@
 
 mod analyze;
 mod diag;
-mod snippet;
+pub mod project;
 mod transform;
 
 #[cfg(feature = "node")]
 mod node;
 
 pub use diag::{Diagnostic, Edit, Fix, Severity};
+pub use project::Facts;
 
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
@@ -46,6 +47,8 @@ pub struct Output {
     /// JSON source map back to the authored file, when `source_map` is set.
     pub map: Option<String>,
     pub diagnostics: Vec<Diagnostic>,
+    /// Per-file facts for `weft check`'s project view (`project::link_w014`).
+    pub facts: Facts,
 }
 
 pub fn compile(source: &str, options: &Options) -> Output {
@@ -58,7 +61,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
             .iter()
             .map(|d| Diagnostic::syntax(source, d.to_string(), d.labels.first().map(|l| l.offset() as usize)))
             .collect();
-        return Output { code: None, map: None, diagnostics };
+        return Output { code: None, map: None, diagnostics, facts: Facts::default() };
     }
     let mut program = parsed.program;
 
@@ -66,11 +69,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let plan = analyze::analyze(&program, semantic.scoping(), source);
     let scoping = semantic.into_scoping();
     let mut diagnostics = plan.diagnostics.clone();
+    let facts = plan.facts.clone();
     if options.check_only {
-        return Output { code: None, map: None, diagnostics };
+        return Output { code: None, map: None, diagnostics, facts };
     }
 
-    transform::apply(&allocator, &mut program, &scoping, &plan, source);
+    transform::apply(&allocator, &mut program, &scoping, &plan);
 
     let solid = solidjs_compiler::CompileOptions {
         filename: Some(options.filename.clone()),
@@ -82,10 +86,10 @@ pub fn compile(source: &str, options: &Options) -> Output {
         ..Default::default()
     };
     match solidjs_compiler::compile_program(&allocator, program, source, &solid) {
-        Ok(out) => Output { code: Some(out.code), map: out.source_map, diagnostics },
+        Ok(out) => Output { code: Some(out.code), map: out.source_map, diagnostics, facts },
         Err(error) => {
             diagnostics.push(Diagnostic::syntax(source, error.to_string(), None));
-            Output { code: None, map: None, diagnostics }
+            Output { code: None, map: None, diagnostics, facts }
         }
     }
 }

@@ -2,4 +2,5 @@ import { render } from 'weft/dom'
 import { createFakeApi } from './api'
 import { App } from './App'
 
-render(() => <App api={createFakeApi()} />, document.getElementById('root')!)
+const api = createFakeApi()
+render(() => <App api={api} />, document.getElementById('root')!)
