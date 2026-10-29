@@ -17,6 +17,7 @@
     "./test": "./src/test.ts",
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
+    "./browser": "./src/browser.ts",
     "./hmr": "./src/hmr.ts",
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"

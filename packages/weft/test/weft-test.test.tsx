@@ -2,6 +2,7 @@
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { resource, state } from 'weft'
+import { interval } from 'weft/browser'
 import { clock, render, screen, user } from 'weft/test'
 
 function Counter() {
@@ -54,7 +55,7 @@ test('clock drives intervals with user actions in between', async () => {
   function Ticker() {
     const n = state(0)
     const on = state(false)
-    setInterval(() => on.value && (n.value += 1), 100)
+    interval(100, () => on.value && (n.value += 1))
     return <button onClick={() => (on.value = !on.value)}>{n.value}</button>
   }
   render(Ticker)

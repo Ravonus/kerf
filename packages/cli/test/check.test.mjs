@@ -133,4 +133,28 @@ describe('diagnostic shape', () => {
     const r = await check(dir)
     expect(r.files).toEqual(['src/App.tsx', 'src/main.tsx'])
   })
+
+  it('reports the weft/browser codes with their edits (W050, W051, W054)', async () => {
+    const clock = `import { state } from 'weft'
+import { media, online } from 'weft/browser'
+export const up = online()
+export function Clock() {
+  const now = state(0)
+  const dark = media('(prefers-color-scheme: dark)')
+  setInterval(() => { now.value++ }, 1000)
+  return <p>{now.value} {dark.value ? 'dark' : 'light'}</p>
+}
+`
+    const dir = project({ 'src/Clock.tsx': clock })
+    const r = await check(dir)
+    expect(r.diagnostics.map(d => [d.code, d.severity, d.span[0]])).toEqual([['W051', 'error', 3], ['W054', 'warning', 6], ['W050', 'error', 7]])
+    const apply = d => d.fix.edits.toSorted((a, b) => b.offset[0] - a.offset[0]).reduce((t, e) => t.slice(0, e.offset[0]) + e.text + t.slice(e.offset[1]), clock)
+    const [w051, w054, w050] = r.diagnostics
+    expect(w051.fix.edits).toBeUndefined()
+    expect(apply(w054)).toContain("media('(prefers-color-scheme: dark)', { ssr: false })")
+    const fixed = apply(w050)
+    expect(fixed).toContain("import { media, online, interval } from 'weft/browser'")
+    expect(fixed).toContain('interval(1000, () => { now.value++ })')
+    expect(w050.docs).toBe('weft docs W050')
+  })
 })

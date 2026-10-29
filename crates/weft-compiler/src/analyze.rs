@@ -1,5 +1,5 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014, W015, W016). Produces a `Plan` that `transform` applies to the same AST, and the per-file
+//! W010, W013, W014, W015, W016; the weft/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
 //! facts `weft check`'s project view joins across files (`project`).
 
 use std::collections::{HashMap, HashSet};
@@ -69,7 +69,7 @@ pub struct ChildrenPlan {
 }
 
 pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
-    let mut boxes = Boxes { scoping, set: HashSet::new() };
+    let mut boxes = Boxes { scoping, set: HashSet::new(), browser: crate::browser::value_imports(program) };
     boxes.visit_program(program);
     let mut a = Analyzer {
         scoping,
@@ -947,10 +947,13 @@ impl<'a, 'x, 's> Visit<'a> for Reactive<'x, 's> {
     }
 }
 
-/// Symbols initialized with a reactive box: `state(…)`, `state.linked(…)`, `derived(…)`, `resource(…)`.
+/// Symbols initialized with a reactive box: `state(…)`, `state.linked(…)`, `derived(…)`, `resource(…)`, and the
+/// weft/browser values (`online()`, `media(q)` …).
 struct Boxes<'s> {
     scoping: &'s Scoping,
     set: HashSet<SymbolId>,
+    /// weft/browser value imports.
+    browser: HashSet<SymbolId>,
 }
 
 impl<'a, 's> Visit<'a> for Boxes<'s> {
@@ -959,7 +962,10 @@ impl<'a, 's> Visit<'a> for Boxes<'s> {
             (&it.id, it.init.as_ref().map(|e| e.without_parentheses()))
         {
             let boxed = match &call.callee {
-                Expression::Identifier(c) => matches!(c.name.as_str(), "state" | "derived" | "resource"),
+                Expression::Identifier(c) => {
+                    matches!(c.name.as_str(), "state" | "derived" | "resource")
+                        || symbol_of(self.scoping, c).is_some_and(|s| self.browser.contains(&s))
+                }
                 Expression::StaticMemberExpression(m) => {
                     matches!(&m.object, Expression::Identifier(o) if o.name == "state") && m.property.name == "linked"
                 }
@@ -969,7 +975,6 @@ impl<'a, 's> Visit<'a> for Boxes<'s> {
                 self.set.insert(sym);
             }
         }
-        let _ = self.scoping;
         walk::walk_variable_declarator(self, it);
     }
 }

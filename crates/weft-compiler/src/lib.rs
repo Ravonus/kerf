@@ -6,6 +6,7 @@
 //! against weft's runtime (`weft/dom`), or to server code (`weft/ssr`).
 
 mod analyze;
+mod browser;
 mod diag;
 mod emit;
 mod hmr;
@@ -93,6 +94,10 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let plan = analyze::analyze(&program, semantic.scoping(), source);
     let scoping = semantic.into_scoping();
     let mut diagnostics = plan.diagnostics.clone();
+    // weft/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
+    let ssr = if options.generate == "ssr" || options.hydratable { Some(true) } else if options.check_only { None } else { Some(false) };
+    diagnostics.extend(browser::check(&program, &scoping, source, ssr));
+    diagnostics.sort_by_key(|d| d.start);
     let facts = plan.facts.clone();
     if options.check_only {
         return Output { code: None, map: None, diagnostics, facts, explain: None };

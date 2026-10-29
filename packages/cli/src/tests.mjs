@@ -555,7 +555,7 @@ export const isTestFile = rel => /\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)
 export function probeTests(catalog) {
   const out = {}
   for (const e of catalog) {
-    if (!/^T\d{3}$/.test(e.code)) continue
+    if (!/^T\d{3}$/.test(e.code) || e.by !== 'cli') continue // T012 is weft/test's runtime check
     const hit = e.example && checkTestFile(e.example, 'probe.test.tsx').find(d => d.code === e.code)
     out[e.code] = { implemented: Boolean(hit), autofix: hit?.fix?.safe === true, suggestion: Boolean(hit?.fix?.edits) && hit.fix.safe !== true }
   }

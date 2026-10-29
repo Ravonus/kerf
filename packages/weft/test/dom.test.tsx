@@ -1,3 +1,4 @@
+// weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
 import { state } from 'weft'
