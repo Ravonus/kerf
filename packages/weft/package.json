@@ -13,6 +13,7 @@
     ".": "./src/index.ts",
     "./dom": "./src/dom.ts",
     "./ssr": "./src/ssr.ts",
+    "./head": "./src/head-client.ts",
     "./test": "./src/test.ts",
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",

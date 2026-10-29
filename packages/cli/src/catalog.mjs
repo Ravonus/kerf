@@ -92,6 +92,14 @@ export const catalog = [
   { code: 'P008', severity: 'error', by: 'cli', proposed: true, catches: '`slots` names a slot id weft does not define', fix: 'Use an id from `weft check --json` `slots`' },
   { code: 'P009', severity: 'error', by: 'cli', proposed: true, catches: '`slots` picks a winner that is not in `plugins` (or does not provide that slot)', fix: 'Add the plugin, or pick one that provides the slot' },
 
+  { code: 'M001', severity: 'error', by: 'cli', proposed: true, catches: 'Relative `og:image` (a relative `site.image`, or `auto`) and no `site.url`: crawlers need absolute URLs', fix: 'Set `site.url` to the absolute origin' },
+  { code: 'M002', severity: 'error', by: 'reserved', catches: 'Param route with an `auto` image on a static-only preset and no `prerender`', fix: 'Export `prerender`, or set `og.image`' },
+  { code: 'M003', severity: 'warning', by: 'cli', proposed: true, catches: 'No description after merging (config-level until routing: `site.description`)', fix: 'Set `site.description` (or the route\'s `meta.description`)' },
+  { code: 'M004', severity: 'warning', by: 'cli', proposed: true, catches: 'Title over 60 characters or description over 160 (search results and cards cut them)', fix: 'Shorten it' },
+  { code: 'M005', severity: 'error', by: 'reserved', catches: '`.og.tsx` uses a style or element the card renderer does not support', fix: 'Use flexbox, text, images, borders, radius, gradients, shadows' },
+  { code: 'M006', severity: 'error', by: 'reserved', catches: '`meta` reads a box or calls a hook (metadata is plain data)', fix: 'Compute it from `params` and `data`' },
+  { code: 'M007', severity: 'error', by: 'reserved', catches: '`meta` reads a deferred (streamed) field of the loader\'s data', fix: 'Await the field in `load`, or leave it out of `meta`' },
+
   { code: 'P100', severity: 'error', by: 'cli', catches: 'Two providers for a `one` slot (or the same key in a `keyed` slot)', fix: 'Remove one, or name the winner in `slots: {}`' },
   { code: 'P101', severity: 'error', by: 'reserved', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },
   { code: 'P102', severity: 'error', by: 'reserved', catches: 'Provider implements no slot interface version this weft supports (P102w: bound through an adapter)', fix: 'Upgrade the plugin or weft' },

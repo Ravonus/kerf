@@ -1,6 +1,6 @@
 # 20 — Page metadata and OG images (design)
 
-Research date: 2026-10-29. Status: **design, nothing built**. Depends on Phase 3 routing (PLAN §4, §9); §2's
+Research date: 2026-10-29. Status: **design; §7.1 built** (see the note under §7). Depends on Phase 3 routing (PLAN §4, §9); §2's
 defaults and the `<head>` writer can land before it. Statements about other frameworks are from their docs as I
 know them and marked **(unverified)** where a version or detail matters.
 
@@ -237,6 +237,21 @@ so `/_weft/og/users/<anything>.png` can't be used to render arbitrary text, and 
 1. **Now (no router needed):** `site` config, the merge and tag writer as a pure function
    (`metaTags(merged) → string`), and `renderToString` options to put it in `<head>`. Tests: snapshot of the tags,
    and an HTML-only fetch (no JS) of a rendered page that sees every tag.
+   **Built (2026-10-29).** `site` in weft.config.ts (`packages/cli/src/config.d.ts`, Zod schema in `load-config.mjs`:
+   absolute http(s) `url`, `title` must contain `%s`, `en_US`-style `locale`; P007 otherwise). `packages/weft/src/head.ts`,
+   exported from `weft/ssr`: `mergeMeta(site, ...metas)` (later wins, `og`/`twitter` by key, undefined keys don't erase,
+   `title: { absolute }`, no title → `site.name`), `headTags(merged, path)` (the §2 set as data) and `metaTags` (HTML,
+   every tag `data-wm`, values escaped). Canonical and `og:url` are written only with `site.url`; `image: 'auto'`
+   writes no image until §4 lands; an image's width/height are written when given (`{ url, width, height, alt }`);
+   `twitter:title/description` only when they differ from og. `renderToString`/`renderToStringAsync` take
+   `head: { site, meta, path }`: tags go at the top of the app's `<head>` (after a leading `<meta charset>`), or the
+   output is wrapped in a minimal document when the app renders no `<head>`. `weft/head` exports `setHead(merged, path)`
+   for the router: 0.64 KB br on its own (`size.mjs` row "setHead"), nothing calls it, existing bundle sizes unchanged.
+   `weft check` reports M001 (relative or `auto` image, no `site.url`), M003 (no `site.description`) and M004 (default
+   title over 60, template's fixed part over 40, description over 160) from `site` alone; M002/M005–M007 are in the
+   catalog as reserved. Tests: `packages/weft/test/head.test.ts` (snapshot, escaping, merge order, an HTTP fetch of a
+   rendered page read as plain text) and `packages/cli/test/config.test.mjs`. Not covered: hydrating a TSX-rendered
+   `<head>` with the inserted tags in it (Phase 3 renders the shell).
 2. **With Phase 3 routing:** route `meta`, layout merge, loader data, 404/error metadata, client navigation updates.
 3. **OG spike:** Takumi (native and wasm) against Satori + resvg, in all three modes on Node, Vercel and Netlify.
    Measure cold start, function size and render time for the default card and a card with an avatar. Pass: under

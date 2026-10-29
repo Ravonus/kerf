@@ -12,10 +12,13 @@
 import { createRoot, memo, rt, type SsrData } from './index'
 import { keys, nextKey, under } from './keys'
 import { createApp, useApp, type AppOptions } from './scope'
+import { withHead, type HeadOptions } from './head'
 
 export { memo }
 export { For, mergeProps } from './dom'
 export { component } from './dom-next'
+export { mergeMeta, metaTags, headTags } from './head'
+export type { HeadOptions, Merged, Meta, Og, Site, Tag, Twitter, Extra, Image } from './head'
 
 type Node = { t: string }
 
@@ -27,11 +30,17 @@ export interface RenderOptions {
   hydratable?: boolean
   /** The request's app: each render gets its own defineState instances (seeded from `state`), never a shared one. */
   app?: AppOptions
+  /**
+   * Page metadata (research 20): merged and written as `data-wm` tags at the top of the app's `<head>`, or, when the
+   * app renders no `<head>`, the output is wrapped in a minimal document that has them.
+   */
+  head?: HeadOptions
 }
 
 /** Render `code` (usually `() => <App />`) to HTML now. Effects and watchers don't run on the server. */
 export function renderToString(code: () => unknown, options: RenderOptions = {}): string {
-  return pass(code, options, {}, [])
+  const html = pass(code, options, {}, [])
+  return options.head ? withHead(html, options.head) : html
 }
 
 /** Render, wait for the resources it started, and render again until none is pending (at most `passes`). */
@@ -40,7 +49,7 @@ export async function renderToStringAsync(code: () => unknown, options: RenderOp
   for (let n = 1; ; n++) {
     const wait: Promise<unknown>[] = []
     const html = pass(code, options, cache, wait)
-    if (!wait.length || n >= (options.passes ?? 10)) return html
+    if (!wait.length || n >= (options.passes ?? 10)) return options.head ? withHead(html, options.head) : html
     await Promise.all(wait)
   }
 }
