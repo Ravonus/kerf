@@ -1,7 +1,6 @@
 // The one interaction each component case is checked with (fixtures/Cases.tsx), what the user then sees, and its
 // work budget: the DOM writes and reactive re-runs it may cost. Budgets are the measured counts; raising one needs a
-// reason here. Loading 4 and Toast 13 re-runs: Button's icon and loading wrapper are live (derived, W018), one more
-// node each.
+// reason here. Loading 4 re-runs: Button's icon and loading wrapper are live (derived, W018), one more node each.
 import { fireEvent } from '@testing-library/dom'
 import * as C from './Cases'
 
@@ -48,5 +47,5 @@ export const cases: Record<keyof typeof C, Case> = {
   PopoverCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-expanded')).toBe('true'), budget: 7, runs: 2 },
   ModalCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 2, runs: 1 },
   DrawerCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 3, runs: 1 },
-  ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 13 },
+  ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 5 },
 }

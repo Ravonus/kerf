@@ -1,9 +1,9 @@
 import { toaster, toastStore, type Toast, type ToastInput } from '@weft/ui-core'
 import { onCleanup, state } from 'weft'
-import { Button } from './Button'
 import { Icon, toneIcon } from './Icon'
 import { use } from './use'
 import './styles'
+import '@weft/ui-core/styles/components/button.css' // the action and dismiss buttons' markup
 import '@weft/ui-core/styles/components/toast.css'
 
 let store: ReturnType<typeof toastStore> | undefined
@@ -37,8 +37,9 @@ export function Toaster() {
             <div data-part="title">{t.title}</div>
             {t.description && <div data-part="description">{t.description}</div>}
             <div data-part="actions">
-              {t.action && <Button emphasis="ghost" size="sm" data-act="" onClick={() => { t.action!.onClick(); toast.dismiss(t.id) }}>{t.action.label}</Button>}
-              <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label="Dismiss" data-x="" onClick={() => toast.dismiss(t.id)} />
+              {/* ghost <Button>s as their markup: they need no JS */}
+              {t.action && <button type="button" data-scope="button" data-emphasis="ghost" data-size="sm" data-act="" onClick={() => { t.action!.onClick(); toast.dismiss(t.id) }}>{t.action.label}</button>}
+              <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-x="" onClick={() => toast.dismiss(t.id)}><svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></button>
             </div>
             {t.life > 0 && <span data-part="progress" aria-hidden="true"></span>}
           </div>

@@ -45,9 +45,11 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
   const msg = message ? `${id}-msg` : undefined
   // keyed by position: a label repeats letters
   const chars = derived(() => labelChars(String(label ?? '')).map((c, at) => ({ c, at })))
+  // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
+  const live = untrack(() => rest)
   let root: HTMLDivElement | undefined
   onMount(() => installSweep())
-  use(field, () => root, () => [rest.value, label] as const)
+  use(field, () => root, () => [live.value, label] as const)
   return (
     <div
       ref={(n: any) => (root = n)}
@@ -57,11 +59,11 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       data-size={size === 'md' ? undefined : size}
       data-counter={counter}
       data-invalid={error ? '' : undefined}
-      data-disabled={rest.disabled ? '' : undefined}
-      data-readonly={rest.readonly ? '' : undefined}
+      data-disabled={live.disabled ? '' : undefined}
+      data-readonly={live.readonly ? '' : undefined}
       {...attrs}
     >
-      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? rest.value ? '' : undefined}>
+      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? live.value ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         {glyph.value && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph.value} /></span><span data-part="sweep"><Icon name={glyph.value} /></span></span>}
         <label data-part="label" for={id}>
@@ -69,7 +71,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
           <span data-part="label-chars" aria-hidden="true">{chars.value.map(x => <span key={x.at} data-char data-c={x.c}></span>)}</span>
         </label>
         {prefix !== undefined && <span data-part="prefix">{prefix}</span>}
-        {untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest }))}
+        {untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}
         {suffix !== undefined && <span data-part="suffix">{suffix}</span>}
         {clearable && <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${label}`}><Icon name="x" /></button>}
         {end}

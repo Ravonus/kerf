@@ -583,6 +583,14 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
      - Every component has a `toTouchAtMost` budget test, an SSR + hydrate round trip (0 misses, 0 writes) and its
        own brotli size (`scripts/size.mjs`).
      - Importing one component pays for that component, its CSS files and the shared runtime only.
+     - **Sizes (2026-10-29, [24](research/24-warp-sizes.md)):** own JS br over the 1.78 KB runtime.
+       - Simple controls: Badge 1.2 KB, Button 3.6, Toggle 3.2, Card 3.0.
+       - Inputs: 5.9–6.1 KB.
+       - Overlays: Modal 1.6 KB, Drawer 1.7, Popover 4.9, Toaster 4.1.
+       - The sweep machine (1.65 KB), weft's attribute pass-through (~1.1 KB) and Icon (0.36 KB) are paid once per
+         page, so ten Buttons cost what one does. All 24 components on one page: 14.1 KB.
+       - The shop is 11.0 KB, 1 KB over its 10 KB target. Getting there means shrinking weft's pass-through or cutting
+         sweep or field behaviour.
   3. **Portability proof.** A test drives core widgets with plain DOM and no framework. A React binding would be a
      sibling of `@weft/warp` over the same core.
 - **Server pieces:** Agorix's data and real-time breadth merges into `weft/start` on weft's protocol (§4.2;
