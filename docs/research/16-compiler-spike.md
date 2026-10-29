@@ -240,7 +240,7 @@ column in v3), and W015 plus W008 (type-level, box/value at props) should catch 
 
 ---
 
-## 7. Proposed PLAN.md edits (not applied)
+## 7. PLAN.md edits (applied in the commit after this doc)
 
 - **§3.6 Compiler**, first sub-bullet. Replace "Fork Solid 2's native `solidjs-compiler` crate (MIT) at a pinned
   revision" with: "Build on Solid 2's native `solidjs-compiler` crate (MIT) at a pinned git revision, called through
