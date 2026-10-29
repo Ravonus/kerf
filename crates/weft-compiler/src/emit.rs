@@ -21,11 +21,11 @@
 //! Lists arrive from the pre-pass as `<For each by>{x => …}</For>` and lower as a component.
 //! Not yet (steps 3–4): SSR output, hydration by path key, dev names, source maps.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
-use oxc_ast_visit::Visit;
+use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
@@ -85,16 +85,74 @@ pub struct Error {
     pub offset: u32,
 }
 
+/// Every JSX element and fragment, in source order (pre-order). The pre-pass's program and its printed copy list
+/// the same nodes in the same order, which is how a lowered node finds its line in the authored file.
+#[derive(Default)]
+pub struct JsxOrder {
+    pub spans: Vec<Span>,
+}
+
+impl<'a> Visit<'a> for JsxOrder {
+    fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
+        self.spans.push(it.span);
+        walk::walk_jsx_element(self, it);
+    }
+    fn visit_jsx_fragment(&mut self, it: &JSXFragment<'a>) {
+        self.spans.push(it.span);
+        walk::walk_jsx_fragment(self, it);
+    }
+}
+
+pub struct EmitOptions<'a> {
+    pub filename: &'a str,
+    /// The file as dev comments and `weft explain` name it (relative to the working directory).
+    pub display: &'a str,
+    pub module: &'a str,
+    pub ssr: bool,
+    pub hydratable: bool,
+    /// Dev output: a `// file:line <tag>` comment per template, and the location passed to `tpl` for warnings.
+    pub dev: bool,
+    /// Each JSX node's (line, column) in the authored file, in `JsxOrder` (`None`: made by the pre-pass).
+    pub origins: Vec<Option<(u32, u32)>>,
+}
+
+/// What one JSX node became (`weft explain file:line`).
+#[derive(Debug, serde::Serialize)]
+pub struct Explained {
+    pub line: u32,
+    pub column: u32,
+    /// `<li>`, `<ProductRow>`, `<>`
+    pub node: String,
+    pub code: String,
+}
+
+pub struct Emitted {
+    pub code: String,
+    pub explain: Vec<Explained>,
+}
+
 /// Compile the pre-pass's printed program to DOM code (or server code, `ssr`) importing from `module`.
-pub fn emit(code: &str, filename: &str, module: &str, ssr: bool, hydratable: bool) -> Result<String, Error> {
+pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(filename).unwrap_or_else(|_| SourceType::tsx());
+    let source_type = SourceType::from_path(o.filename).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, code, source_type).parse();
     if let Some(d) = parsed.diagnostics.first() {
         return Err(Error { message: format!("weft back end: the printed pre-pass output didn't parse: {d}"), offset: 0 });
     }
     let program = parsed.program;
-    let mut e = Emitter { text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None, ssr, hydratable: hydratable && !ssr };
+    let module = o.module;
+    let mut order = JsxOrder::default();
+    order.visit_program(&program);
+    // If the counts differ the mapping can't be trusted: no lines rather than wrong ones.
+    let origin = if order.spans.len() == o.origins.len() {
+        order.spans.iter().zip(&o.origins).filter_map(|(s, l)| l.map(|l| (s.start, l))).collect()
+    } else {
+        HashMap::new()
+    };
+    let mut e = Emitter {
+        text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None,
+        ssr: o.ssr, hydratable: o.hydratable && !o.ssr, dev: o.dev, display: o.display.to_string(), origin, explained: Vec::new(),
+    };
     let mut top = Outermost::default();
     top.visit_program(&program);
     let body = e.splice(Span::new(0, code.len() as u32), &top.found);
@@ -126,7 +184,8 @@ pub fn emit(code: &str, filename: &str, module: &str, ssr: bool, hydratable: boo
         let names: Vec<String> = e.delegated.iter().map(|n| format!("{n:?}")).collect();
         out.push_str(&format!("\n_$delegate([{}]);\n", names.join(", ")));
     }
-    Ok(out)
+    e.explained.sort_by_key(|x| (x.line, x.column));
+    Ok(Emitted { code: out, explain: e.explained })
 }
 
 /// Byte offset just past the last top-level import (0 if none).
@@ -156,6 +215,11 @@ struct Emitter<'t> {
     ssr: bool,
     /// DOM output that can hydrate: hole scopes and `first`/`next` walks.
     hydratable: bool,
+    dev: bool,
+    display: String,
+    /// Printed span start → (line, column) in the authored file.
+    origin: HashMap<u32, (u32, u32)>,
+    explained: Vec<Explained>,
 }
 
 /// One template being built: its HTML, the node references it needs, and the operations after cloning.
@@ -230,10 +294,33 @@ impl<'t> Emitter<'t> {
     }
 
     fn element(&mut self, el: &JSXElement<'_>) -> String {
-        match component_name(&el.opening_element.name, self.text) {
-            Some(name) => self.component(el, name),
-            None => self.template(el),
+        let (label, code) = match component_name(&el.opening_element.name, self.text) {
+            Some(name) => (format!("<{name}>"), self.component(el, name)),
+            None => {
+                let before = self.templates.len();
+                let code = self.template(el);
+                // The template it clones, then the code.
+                let shown = match self.templates.get(before) {
+                    Some(t) if self.templates.len() > before => format!("{}\n  {code}", t.lines().last().unwrap_or(t)),
+                    _ => code.clone(),
+                };
+                self.explain(el.span, format!("<{}>", tag_name(&el.opening_element.name)), &shown);
+                return code;
+            }
+        };
+        self.explain(el.span, label, &code);
+        code
+    }
+
+    fn explain(&mut self, span: Span, node: String, code: &str) {
+        if let Some(&(line, column)) = self.origin.get(&span.start) {
+            self.explained.push(Explained { line, column, node, code: code.to_string() });
         }
+    }
+
+    /// `file:line <tag>` for dev comments and warnings, when the node came from the authored file.
+    fn place(&self, span: Span, tag: &str) -> Option<String> {
+        self.origin.get(&span.start).map(|(line, _)| format!("{}:{line} <{tag}>", self.display))
     }
 
     // ---- intrinsic elements: templates ---------------------------------------------------------------------
@@ -251,15 +338,26 @@ impl<'t> Emitter<'t> {
                 });
             }
             let ssr = self.helper("ssr");
-            return format!("{ssr}((_k) => {})", parts.join(" + "));
+            let note = match self.place(el.span, &tag_name(&el.opening_element.name)) {
+                Some(p) if self.dev => format!("/* {p} */ "),
+                _ => String::new(),
+            };
+            return format!("{note}{ssr}((_k) => {})", parts.join(" + "));
         }
         let t = format!("_t{}", self.templates.len() + 1);
         let tpl = self.helper("tpl");
         let html = serde_json::to_string(&b.html).unwrap();
         // An SVG element outside an <svg> (a component returning <path/>) is parsed inside one, then lifted out.
         let svg = matches!(&el.opening_element.name, JSXElementName::Identifier(id) if SVG.contains(&id.name.as_str()));
-        let ns = if svg { ", true" } else { "" };
-        self.templates.push(format!("const {t} = /* @__PURE__ */ {tpl}({html}{ns});"));
+        let place = if self.dev { self.place(el.span, &tag_name(&el.opening_element.name)) } else { None };
+        // Dev: `// App.tsx:12 <li>` above the template, and the same place passed to `tpl` for hydration warnings.
+        let args = match (&place, svg) {
+            (Some(p), _) => format!(", {}, {p:?}", if svg { "true" } else { "false" }),
+            (None, true) => ", true".into(),
+            (None, false) => String::new(),
+        };
+        let note = place.map(|p| format!("// {p}\n")).unwrap_or_default();
+        self.templates.push(format!("{note}const {t} = /* @__PURE__ */ {tpl}({html}{args});"));
         let root = b.vars[0].1.clone();
         if b.decls.is_empty() && b.ops.is_empty() {
             return format!("{t}()");
@@ -644,6 +742,12 @@ impl<'t> Emitter<'t> {
     }
 
     fn fragment(&mut self, f: &JSXFragment<'_>) -> String {
+        let code = self.fragment_value(f);
+        self.explain(f.span, "<>".into(), &code);
+        code
+    }
+
+    fn fragment_value(&mut self, f: &JSXFragment<'_>) -> String {
         let kids = children(&f.children, self.text);
         match kids.len() {
             0 => "null".into(),
@@ -752,6 +856,16 @@ fn has_jsx_branch(e: &Expression<'_>) -> bool {
 }
 
 // ---- helpers --------------------------------------------------------------------------------------------------
+
+fn tag_name(name: &JSXElementName<'_>) -> String {
+    match name {
+        JSXElementName::Identifier(id) => id.name.to_string(),
+        JSXElementName::IdentifierReference(r) => r.name.to_string(),
+        JSXElementName::NamespacedName(n) => format!("{}:{}", n.namespace.name, n.name.name),
+        JSXElementName::MemberExpression(m) => format!("….{}", m.property.name),
+        JSXElementName::ThisExpression(_) => "this".into(),
+    }
+}
 
 /// `Some(name)` for a component tag (capitalised identifier or member expression), `None` for an element.
 fn component_name(name: &JSXElementName<'_>, text: &str) -> Option<String> {

@@ -13,5 +13,5 @@ const cacheKey = `${process.env.WEFT_BACKEND ?? 'solid'}-${Math.round(statSync(n
 export default defineConfig({
   plugins: [weft()],
   resolve: { alias: [{ find: /^weft\/dom$/, replacement: src('dom.ts') }, { find: /^weft\/ssr$/, replacement: src('ssr.ts') }, { find: /^weft\/test$/, replacement: src('test.ts') }, { find: /^weft\/persist$/, replacement: src('persist.ts') }, { find: /^weft\/history$/, replacement: src('history.ts') }, { find: /^weft$/, replacement: src('index.ts') }] },
-  test: { fsModuleCachePath: `node_modules/.vitest-cache/${cacheKey}`, environment: 'jsdom', globals: true, include: ['test/**/*.test.{ts,tsx}'] },
+  test: { globalSetup: ['test/oracle.setup.ts'], fsModuleCachePath: `node_modules/.vitest-cache/${cacheKey}`, environment: 'jsdom', globals: true, include: ['test/**/*.test.{ts,tsx}'] },
 })

@@ -1,6 +1,6 @@
 # 19 — weft's own compiler back end (design)
 
-Research date: 2026-10-29. Status: **steps 1–3 built** (§5.1–§5.3); steps 4–5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
+Research date: 2026-10-29. Status: **steps 1–4 built** (§5.1–§5.4); step 5 not started. Decision: PLAN §3.6 and §12 ("weft owns its code
 generator"). Numbers marked **(measured)** were run for this doc.
 
 **The task.** Replace Solid 2's `solidjs-compiler` crate, which turns the pre-pass's AST into DOM and SSR code, with
@@ -218,11 +218,69 @@ removes Solid's.
 **Not yet:**
 - a spread's `children` on the server;
 - `textContent`/`innerHTML` props on the server (the client writes them);
-- mismatch messages that name the source line. Step 4 adds dev comments and a key → file:line table.
+- mismatch messages that name the source line (done in step 4, §5.4).
 
-**Corpus oracle (test only).** For every `.tsx` in the repo plus a generated corpus (`scripts/gen-corpus.mjs`),
-render with the old and new back ends in jsdom. Compare the resulting DOM and the DOM after scripted interactions.
-Solid's crate stays a dev-dependency only for this test, and leaves with step 5.
+### 5.4 Step 4, done (2026-10-29)
+
+**Source lines.** The pre-pass reprints the program, so printed spans no longer point at the author's file. Before
+printing, the compiler records each JSX node's authored line and column in pre-order. After re-parsing it pairs them
+with the printed nodes in the same order, and uses them only when the counts match; otherwise nothing is mapped.
+Paths are shown relative to the working directory.
+
+**Dev output** (`dev: true`; Vite's dev server turns it on).
+- Each template gets a comment, and `tpl` gets its place:
+  ```js
+  // test/fixtures/next/Basics.tsx:12 <button>
+  const _t2 = _$tpl("<button><!> × 2 = <!></button>", false, "test/fixtures/next/Basics.tsx:12 <button>")
+  ```
+- Server output prefixes each template with `/* file:line <tag> */`.
+- Production output has neither.
+
+**Hydration warnings** name that place:
+> weft: hydration mismatch at test/fixtures/next/Basics.tsx:12 \<button> (wk=0): the client renders \<button>, the
+> server rendered \<p>; rendering it fresh
+
+A key with no server element gets a "key miss" warning in the same form. Server elements nobody claimed are counted
+in one warning at the end.
+
+**`weftc --explain file.tsx:LINE`** prints what each JSX node starting on that line becomes, template included:
+```
+test/fixtures/next/Basics.tsx:12:10 <button> becomes:
+  const _t2 = _$tpl("<button><!> × 2 = <!></button>");
+  (() => { const _e2 = _t2(); … _$on(_e2, "click", () => count.value++, true); _$child(_e2, () => (count.value), _e3); … })()
+```
+`--json` gives the same entries as `{ line, column, node, code }`, and `Options::explain` returns them from the
+library. This is for agents asking "what does this line cost": one template clone, one listener and two text holes
+here.
+
+**Corpus oracle** (`test/oracle.test.tsx`). Each case is rendered three ways:
+1. Solid's DOM back end;
+2. weft's DOM back end (`?weft-next`);
+3. weft's server render, hydrated (`?weft-ssr` + `?weft-hydrate`).
+
+Hydration must give 0 misses, 0 DOM writes and no warnings. The three DOMs must then match after mounting, and again
+after each scripted step (click each button, type into each input, flush). The comparison ignores comments, `wk`,
+attribute order, class order and style whitespace, and reads form values as properties.
+
+The cases are:
+- the repo's fixtures (Basics, Step2, the benchmark app, the v3 shop with a cart);
+- 40 generated components (`scripts/gen-corpus.mjs`, run by `test/oracle.setup.ts` into a git-ignored folder).
+
+48/48 pass on both back ends. The benchmark app's `Math.random` is seeded per root, and its "10,000 rows" button is
+skipped for time.
+
+**One case where Solid is wrong.** A component that returns `<circle>` outside `<svg>` (Step2 `Icon`): Solid's DOM
+output nests it as `<svg r="2"><circle>`. weft's is correct (`tpl(html, true)`). That case compares weft's two renders
+only.
+
+**Tests.** 118 package tests pass on both back ends, and the compiler's 32 integration tests pass. New tests cover
+`explain`, dev comments (and their absence in production) and the source-line warning.
+
+**Size.** No runtime change beyond the warning text, which dev builds only. Runtime is 5.90 KB br (gate 10 KB, target
+6 KB). v3 hydrate is 4.71 KB and hello is 0.99 KB.
+
+**Corpus oracle (test only).** Built in step 4 (§5.4). Solid's crate stays a dev-dependency only for this test,
+and leaves with step 5.
 
 **Estimate (unverified):** 3–5k lines of Rust for the IR and both emitters, since they cover weft's constructs only.
 Two to three weeks of focused work.

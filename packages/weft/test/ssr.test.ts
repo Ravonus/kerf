@@ -223,3 +223,16 @@ test('client-only watchers and extra memos shift no key', () => {
   expect(r.mutations).toHaveLength(0)
   r.dispose()
 })
+
+test('dev hydration warnings name the source line of the template that missed', () => {
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = renderToString(() => basicsS.Hello({}))
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  hydrate(() => basicsC.Counter({}), container)
+  expect(hydration.misses).toBe(1)
+  expect(warn.mock.calls[0][0]).toBe(
+    'weft: hydration mismatch at test/fixtures/next/Basics.tsx:12 <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh',
+  )
+  warn.mockRestore()
+  container.remove()
+})

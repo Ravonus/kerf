@@ -14,3 +14,4 @@ spikes/native/android/app/build/
 spikes/native/android/app/.cxx/
 packages/weft/native/
 packages/weft/bench/corpus/
+packages/weft/test/corpus-gen/

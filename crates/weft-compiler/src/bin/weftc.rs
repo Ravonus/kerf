@@ -5,6 +5,8 @@
 //!   weftc --bench N dir             compile every .tsx in dir N times on one thread; print ms per pass
 //!   weftc --check ...               diagnostics only (no codegen)
 //!   weftc --backend weft ...        weft's own back end (research 19) instead of Solid's
+//!   weftc --dev ...                 dev output (weft's back end: a `// file:line <tag>` comment per template)
+//!   weftc --explain file.tsx:LINE   what each JSX node starting on LINE becomes (weft's back end)
 
 use std::{fs, path::PathBuf, time::Instant};
 
@@ -14,16 +16,27 @@ fn main() {
     let mut args = std::env::args().skip(1).peekable();
     let (mut json, mut check, mut bench) = (false, false, None);
     let mut backend = "solid".to_string();
+    let (mut dev, mut explain) = (false, None::<u32>);
     let mut paths = Vec::new();
     while let Some(a) = args.next() {
         match a.as_str() {
             "--json" => json = true,
             "--check" => check = true,
             "--backend" => backend = args.next().unwrap_or_default(),
+            "--dev" => dev = true,
+            "--explain" => {
+                let at = args.next().unwrap_or_default();
+                let (file, line) = at.rsplit_once(':').expect("--explain file.tsx:LINE");
+                explain = Some(line.parse().expect("--explain file.tsx:LINE"));
+                backend = "weft".into();
+                paths.push(PathBuf::from(file));
+            }
             "--bench" => bench = args.next().and_then(|n| n.parse::<usize>().ok()),
             _ => paths.push(PathBuf::from(a)),
         }
     }
+    let mut seen = std::collections::HashSet::new();
+    paths.retain(|p| seen.insert(p.clone())); // `weftc a.tsx --explain a.tsx:3` names a.tsx once
     let mut files = Vec::new();
     for p in paths {
         if p.is_dir() {
@@ -66,7 +79,20 @@ fn main() {
 
     let mut failed = false;
     for (filename, source) in &sources {
-        let out = compile(source, &Options { filename: filename.clone(), check_only: check, backend: backend.clone(), ..Default::default() });
+        let out = compile(source, &Options { filename: filename.clone(), check_only: check, backend: backend.clone(), dev, explain: explain.is_some(), ..Default::default() });
+        if let Some(line) = explain {
+            let found: Vec<_> = out.explain.iter().flatten().filter(|x| x.line == line).collect();
+            if json {
+                println!("{}", serde_json::to_string(&found).unwrap());
+            } else if found.is_empty() {
+                eprintln!("{filename}:{line}: no JSX starts on this line");
+                failed = true;
+            }
+            for x in found.iter().filter(|_| !json) {
+                println!("{filename}:{}:{} {} becomes:\n  {}\n", x.line, x.column, x.node, x.code);
+            }
+            continue;
+        }
         if json {
             println!("{}", serde_json::to_string(&out).unwrap());
             continue;

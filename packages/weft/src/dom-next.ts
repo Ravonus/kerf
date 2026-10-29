@@ -9,10 +9,11 @@ import { keys, nextKey, under } from './keys'
 import { hydration } from './hydrate'
 
 /**
- * A module-level template: `tpl(html)()` clones it. `svg`: the root is an SVG element outside an <svg>. While keys
- * are on, each instance takes the next key; while hydrating, the server's element with that key is claimed.
+ * A module-level template: `tpl(html)()` clones it. `svg`: the root is an SVG element outside an <svg>. `place`
+ * (dev builds): `file:line <tag>`, for warnings. While keys are on, each instance takes the next key; while
+ * hydrating, the server's element with that key is claimed.
  */
-export function tpl(html: string, svg?: boolean): () => Node {
+export function tpl(html: string, svg?: boolean, place?: string): () => Node {
   let node: Node | undefined
   const tag = /^<([\w:-]+)/.exec(html)![1]
   const clone = () => {
@@ -34,7 +35,10 @@ export function tpl(html: string, svg?: boolean): () => Node {
         return el
       }
       hydration.misses++
-      if (DEV) console.warn(el ? `weft: hydration mismatch at wk=${key}: expected <${tag}>, found <${el.localName}>; rendering it fresh` : `weft: hydration key miss at wk=${key} (${html.slice(0, 60)}); rendering it fresh`)
+      if (DEV) {
+        const at = place ?? html.slice(0, 60)
+        console.warn(el ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh` : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`)
+      }
     }
     const fresh = clone() as any
     fresh.$k = key

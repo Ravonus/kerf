@@ -288,3 +288,26 @@ fn source_maps_point_at_authored_lines() {
     let map = out.map.expect("map");
     assert!(map.contains("\"mappings\""), "{map}");
 }
+
+// ---- research 19 step 4: dev comments, explain ---------------------------------------------------------------
+
+const TWO_LINES: &str = "export function A(props: { n: number }) {\n  return (\n    <ul>\n      <li title=\"x\">{props.n}</li>\n    </ul>\n  )\n}";
+
+#[test]
+fn explain_maps_each_jsx_node_to_its_authored_line() {
+    let out = compile(TWO_LINES, &Options { filename: "App.tsx".into(), backend: "weft".into(), explain: true, ..Default::default() });
+    let explain = out.explain.expect("explain");
+    let ul = explain.iter().find(|x| x.line == 3).expect("an entry on line 3");
+    assert_eq!((ul.column, ul.node.as_str()), (5, "<ul>"));
+    assert!(ul.code.contains("_$tpl(\"<ul><li title=\\\"x\\\"></li></ul>\")") && ul.code.contains("_$child("), "{}", ul.code);
+}
+
+#[test]
+fn dev_templates_name_their_source_line() {
+    let out = compile(TWO_LINES, &Options { filename: "App.tsx".into(), backend: "weft".into(), dev: true, ..Default::default() });
+    let code = out.code.unwrap();
+    assert!(code.contains("// App.tsx:3 <ul>\n"), "{code}");
+    assert!(code.contains(", false, \"App.tsx:3 <ul>\")"), "{code}");
+    let prod = compile(TWO_LINES, &Options { filename: "App.tsx".into(), backend: "weft".into(), ..Default::default() }).code.unwrap();
+    assert!(!prod.contains("App.tsx:3"), "{prod}");
+}

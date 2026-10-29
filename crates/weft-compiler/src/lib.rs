@@ -38,8 +38,10 @@ pub struct Options {
     pub hydratable: bool,
     /// Dev names from the back end: component labels, binding labels and source locations (dev builds only).
     pub source_names: bool,
-    /// `"solid"` (default) or `"weft"`: weft's own back end (research 19, step 1: DOM output only).
+    /// `"solid"` (default) or `"weft"`: weft's own back end (research 19). SSR and hydratable output always use weft's.
     pub backend: String,
+    /// Also return what each JSX node became (`Output::explain`, weft's back end only).
+    pub explain: bool,
 }
 
 impl Default for Options {
@@ -54,6 +56,7 @@ impl Default for Options {
             hydratable: false,
             source_names: false,
             backend: "solid".into(),
+            explain: false,
         }
     }
 }
@@ -65,6 +68,9 @@ pub struct Output {
     /// JSON source map back to the authored file, when `source_map` is set.
     pub map: Option<String>,
     pub diagnostics: Vec<Diagnostic>,
+    /// Each JSX node's lowering, by authored line (`explain`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub explain: Option<Vec<emit::Explained>>,
 }
 
 pub fn compile(source: &str, options: &Options) -> Output {
@@ -77,7 +83,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
             .iter()
             .map(|d| Diagnostic::syntax(source, d.to_string(), d.labels.first().map(|l| l.offset() as usize)))
             .collect();
-        return Output { code: None, map: None, diagnostics };
+        return Output { code: None, map: None, diagnostics, explain: None };
     }
     let mut program = parsed.program;
 
@@ -86,7 +92,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let scoping = semantic.into_scoping();
     let mut diagnostics = plan.diagnostics.clone();
     if options.check_only {
-        return Output { code: None, map: None, diagnostics };
+        return Output { code: None, map: None, diagnostics, explain: None };
     }
 
     transform::apply(&allocator, &mut program, &scoping, &plan, source);
@@ -94,14 +100,20 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let ssr = options.generate == "ssr";
     // SSR and hydration exist only on weft's back end (research 19 step 3); the runtime has no other key scheme.
     if options.backend == "weft" || ssr || options.hydratable {
-        // Print the pre-pass's AST and lower its JSX from that text (spans index it). No source map yet.
+        // Print the pre-pass's AST and lower its JSX from that text (spans index it). No source map yet; each JSX
+        // node's authored line goes along by order (`JsxOrder`). Nodes the pre-pass made have no span.
+        let mut order = emit::JsxOrder::default();
+        oxc_ast_visit::Visit::visit_program(&mut order, &program);
+        let origins = order.spans.iter().map(|s| (s.end > 0).then(|| diag::line_col(source, s.start))).collect();
         let printed = oxc_codegen::Codegen::new().build(&program).code;
         let module = if ssr && options.module_name == "weft/dom" { "weft/ssr" } else { &options.module_name };
-        return match emit::emit(&printed, &options.filename, module, ssr, options.hydratable) {
-            Ok(code) => Output { code: Some(code), map: None, diagnostics },
+        let display = display_path(&options.filename);
+        let o = emit::EmitOptions { filename: &options.filename, display: &display, module, ssr, hydratable: options.hydratable, dev: options.dev, origins };
+        return match emit::emit(&printed, o) {
+            Ok(out) => Output { code: Some(out.code), map: None, diagnostics, explain: options.explain.then_some(out.explain) },
             Err(e) => {
                 diagnostics.push(Diagnostic::syntax(&printed, e.message, Some(e.offset as usize)));
-                Output { code: None, map: None, diagnostics }
+                Output { code: None, map: None, diagnostics, explain: None }
             }
         };
     }
@@ -119,10 +131,16 @@ pub fn compile(source: &str, options: &Options) -> Output {
         ..Default::default()
     };
     match solidjs_compiler::compile_program(&allocator, program, source, &solid) {
-        Ok(out) => Output { code: Some(out.code), map: out.source_map, diagnostics },
+        Ok(out) => Output { code: Some(out.code), map: out.source_map, diagnostics, explain: None },
         Err(error) => {
             diagnostics.push(Diagnostic::syntax(source, error.to_string(), None));
-            Output { code: None, map: None, diagnostics }
+            Output { code: None, map: None, diagnostics, explain: None }
         }
     }
+}
+
+/// `filename` relative to the working directory when it's inside it (dev comments, `weft explain`).
+fn display_path(filename: &str) -> String {
+    let path = std::path::Path::new(filename);
+    std::env::current_dir().ok().and_then(|cwd| path.strip_prefix(cwd).ok().map(|p| p.display().to_string())).unwrap_or_else(|| filename.to_string())
 }
