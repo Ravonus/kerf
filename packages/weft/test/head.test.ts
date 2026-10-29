@@ -1,5 +1,6 @@
 // Page metadata (research 20 §7.1): the merge, the §2 tag set, escaping, the renderToString `head` option, and a
 // page fetched as plain HTML (what a link-preview crawler sees: no JS runs) carrying every tag.
+// weft-allow T005, T007: the output is head tags, not UI; the snapshot is research 20 §2's tag set, reviewed
 import { createServer, get } from 'node:http'
 import { headTags, key, mergeMeta, metaTags, renderToString, renderToStringAsync, ssr, type Site } from 'weft/ssr'
 import { setHead } from 'weft/head'
