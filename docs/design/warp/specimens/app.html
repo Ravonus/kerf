@@ -55,7 +55,7 @@
      Below 1000px it is a short band above the eyebrow, never under a word. */
   .sp-hero { position: relative; isolation: isolate; display: grid; gap: 20px; padding-block: clamp(40px, 7vw, 88px) 32px; }
   .sp-hero, .sp-head > div:first-child { container-type: inline-size; }   /* fluid display + title resolve here (01 §2 Type) */
-  .sp-hero h1 { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading);
+  .sp-hero h1 { --warp-trim-k: var(--warp-text-display-trim-k); font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading);
     font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); max-inline-size: 15ch; font-variation-settings: var(--warp-text-display-variation); text-box: var(--warp-text-display-trim); }
   /* 01 §14: emphasis reads the token (upright at quiet/balanced, the serif's real italic at vivid); never faux italic */
   .sp-hero h1 em { font-style: var(--warp-text-emphasis-style); color: var(--warp-text-emphasis-color); }
@@ -147,7 +147,7 @@
 <div id="announce-assertive" class="vh" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
 <!-- the shared specimen settings bar (01-foundations §13): warp-bar.js builds it -->
-<header data-specimen-bar data-label="app patterns v0.2"></header>
+<header data-specimen-bar data-label="app patterns v0.3"></header>
 <script src="warp-bar.js"></script>
 
 <main id="main">
@@ -157,7 +157,7 @@
       <g class="w"><path d="M120 0v300M160 0v300M200 0v300M240 0v300M280 0v300M320 0v300M360 0v300M400 0v300M440 0v300M480 0v300M520 0v300"/></g>
       <path class="f" pathLength="1" d="M100 96H560" fill="none"/><path class="f" pathLength="1" d="M180 150H560" fill="none"/><path class="f" pathLength="1" d="M60 204H500" fill="none"/>
     </svg>
-    <span class="eyebrow" style="font:500 12px/1 var(--warp-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--warp-color-accent-text)">warp · app patterns · v0.2</span>
+    <span class="eyebrow" style="font:500 12px/1 var(--warp-font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--warp-color-accent-text)">warp · app patterns · v0.3</span>
     <h1 id="hero-t">The parts of an app that <em>move on their own.</em></h1>
     <p>Calendars people drag, rooms people talk in, inboxes that fill while you watch, threads, and cursors that aren't yours. Agents are the flagship: they stream, reason, call tools and ask before they act. One grammar for anything that arrives: it enters from above, the sweep draws its edge once, and a live region says it out loud.</p>
     <nav class="sp-facts" aria-label="Sections"><a href="#ai"><b>01</b> AI &amp; agents</a><a href="#calendar"><b>02</b> Calendar &amp; booking</a><a href="#notify"><b>03</b> Notifications &amp; .live</a><a href="#chat"><b>04</b> Chat</a><a href="#meet"><b>05</b> Meetings</a><a href="#collab"><b>06</b> Collaboration &amp; comments</a><a href="#motion"><b>07</b> Motion</a></nav>
@@ -196,6 +196,7 @@
       <li>Drag across an empty slot to create; drag an event to move; pull its bottom edge to resize.</li>
       <li>Tab to an event, then <kbd>Enter</kbd> for details, <kbd>M</kbd> to move with arrows, <kbd>Shift</kbd>+<kbd>↓</kbd> to resize, <kbd>Enter</kbd> to drop.</li>
       <li>On the phone: swipe the day, or hold an event to move it.</li>
+      <li>Open <b>Year</b>: arrows walk the days, <kbd>PgDn</kbd> a month, <kbd>M</kbd> opens the month, <kbd>Enter</kbd> the day.</li>
     </ul>
   </div>
   <div class="frames">
@@ -226,7 +227,7 @@
   <div class="sp-head">
     <div><span class="eyebrow">03 · Notifications &amp; connection</span><h2 id="nt-t">Things arrive. Nothing shouts.</h2>
       <p>The inbox is the record; toasts are a courtesy for what you'd otherwise miss. New items enter from above with one sweep across their top edge, the badge bumps once, and a polite live region reads a summary. The <code>.live</code> status stays small until the connection is in trouble.</p></div>
-    <ul class="sp-try"><li>Press <b>New arrival</b> or <b>Burst</b> and watch the inbox, badge and toasts.</li><li>Switch the connection: <b>Reconnecting</b> and <b>Offline</b> surface a banner; returning to <b>Live</b> replays what queued as one summary.</li><li>Close the inbox: arrivals become toasts instead.</li></ul>
+    <ul class="sp-try"><li>Press <b>New arrival</b> or <b>Burst</b> and watch the inbox, badge and toasts.</li><li>Switch the connection: <b>Reconnecting</b> and <b>Offline</b> surface a banner; returning to <b>Live</b> replays what queued as one summary.</li><li>Close the inbox: arrivals become toasts instead.</li><li>Below: arrow through the preferences grid, flip a group toggle, pick a digest. In the transport picker, block WebSockets or go lossy.</li></ul>
   </div>
   <div class="frames">
     <figure class="device" style="margin:0"><figcaption><b>Desktop</b> 1240 × 680 · inbox popover, toasts, push ask, activity</figcaption>
@@ -255,6 +256,7 @@
       </div>
     </div>
   </div>
+  <div class="tiles" id="nt-parts" style="margin-block-start:28px"></div>
 </div></section>
 
 <!-- 04 · CHAT ---------------------------------------------------------------->
@@ -262,10 +264,10 @@
   <div class="sp-head">
     <div><span class="eyebrow">04 · Messaging</span><h2 id="ch-t">A thread that tells you where every message is.</h2>
       <p>Sending, sent, read, failed with retry. Grouped by author, a hairline marks what's new, reactions are toggle buttons, and the composer is the signature field: its border sweeps when you focus it, and it never hides behind the keyboard.</p></div>
-    <ul class="sp-try"><li>Type <kbd>@</kbd> in the composer for mentions; <kbd>Enter</kbd> sends, <kbd>Shift</kbd>+<kbd>Enter</kbd> breaks a line.</li><li>Retry the failed message. Toggle a reaction.</li><li>On the phone, open the keyboard: the composer rides on top of it.</li></ul>
+    <ul class="sp-try"><li>Type <kbd>@</kbd> in the composer for mentions; <kbd>Enter</kbd> sends, <kbd>Shift</kbd>+<kbd>Enter</kbd> breaks a line.</li><li>Retry the failed message. Toggle a reaction.</li><li>Hover a message (or focus it and press <kbd>Q</kbd>) to quote it; select a few words first to quote only those. <b>Jump to original</b> finds the source.</li><li>On the phone, open the keyboard: the composer rides on top of it.</li></ul>
   </div>
   <div class="frames two">
-    <figure class="device" style="margin:0"><figcaption><b>Tablet</b> 820 × 720 · channel</figcaption>
+    <figure class="device" id="chat-quote" style="margin:0"><figcaption><b>Tablet</b> 820 × 720 · channel, quote reply</figcaption>
       <div class="bezel" data-kind="tablet" style="--w:820;--h:720"><div class="screen" data-form="tablet" data-pointer="coarse"><div id="chat-tab" style="block-size:100%"></div></div></div>
     </figure>
     <figure class="device" style="margin:0"><figcaption><b>Phone</b> 390 × 760 · keyboard open</figcaption>
@@ -308,7 +310,7 @@
   <div class="sp-head">
     <div><span class="eyebrow">06 · Collaboration, comments &amp; sharing</span><h2 id="co-t">Other people, without the noise.</h2>
       <p>Presence avatars carry a colour ring that matches their cursor, selection and edit lock. Cursors glide on remote updates and fade when idle. A field someone holds says so and who; a conflict shows both versions side by side. Comments anchor to a text range and live in a margin rail; Share sets a role per person.</p></div>
-    <ul class="sp-try"><li>Watch two cursors on the brief; press <b>Follow</b> on an avatar to ride their viewport.</li><li>Reply to or resolve a comment. Open <b>Share</b>.</li><li>Try the locked field. Resolve the conflict.</li></ul>
+    <ul class="sp-try"><li>Watch two cursors on the brief; press <b>Follow</b> on an avatar to ride their viewport.</li><li>Reply to or resolve a comment. Open <b>Share</b>.</li><li>Try the locked field. Resolve the conflict.</li><li>In the 403, request access, then press <b>Owner approves</b>; or switch account.</li></ul>
   </div>
   <div id="collab-demo"></div>
   <div class="tiles" id="co-parts" style="margin-block-start:20px"></div>
@@ -389,6 +391,7 @@ const P = {
   flag: "M5 21V4h11l-2 4 2 4H5", eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", share: "M16 6l-4-3-4 3M12 3v12M5 12v8h14v-8",
   history: "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2", comment: "M4 5h16v11h-7l-5 4v-4H4z", cmd: "M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z",
   doc: "M6 3h12v18H6zM9 8h6M9 12h6M9 16h4", undo: "M4 9h11a5 5 0 0 1 0 10H8M4 9l4-4M4 9l4 4",
+  quote: "M5 7h5v5c0 3-1.6 5-4.5 5.5M14 7h5v5c0 3-1.6 5-4.5 5.5", server: "M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01", bolt: "M13 3L5 14h6l-1 7 8-11h-6z",
 };
 const ic = (n, extra = "") => `<svg data-icon viewBox="0 0 24 24" aria-hidden="true" ${extra}><path d="${P[n] || P.more}"/></svg>`;
 const btn = (label, { e = "", tone = "", size = "", icon = "", only = false, attrs = "", sweep = false } = {}) =>
@@ -805,6 +808,141 @@ function layoutDay(list) {
   return out;
 }
 
+/* -- YearView (07 §2.7): 12 mini months, density dots, one roving stop ------
+   weft: query.live(eventCounts, { from, to, by: 'day' }) → Map<isoDay, n>; the grid
+   never loads events, only counts; the detail line asks for the one day you land on. */
+const YMON = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const WEEK0 = new Date(2026, 9, 26), TODAY_D = new Date(2026, 9, 28);
+const sameD = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const longD = (d) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const YPOOL = [["Standup", 1], ["Design crit", 2], ["Interview", 3], ["Roadmap review", 4], ["Gym", 5], ["Customer call", 6], ["Focus block", 7], ["Release sync", 8], ["1:1", 3], ["Planning", 4]];
+function weekEvents(d) {                         // the demo's real week: the same EVENTS the week view drags
+  const i = Math.round((d - WEEK0) / 864e5); if (i < 0 || i > 6) return null;
+  return [...ALLDAY.filter((a) => i >= a.day && i < a.day + a.span).map((a) => ({ title: a.title, cal: a.cal, when: "All day" })),
+    ...EVENTS.filter((x) => x.day === i).sort((a, b) => a.s - b.s).map((x) => ({ title: x.title, cal: x.cal, when: fmt(x.s) }))];
+}
+function dayCount(d) {
+  const w = weekEvents(d); if (w) return w.length;
+  let x = Math.imul(d.getFullYear() * 400 + d.getMonth() * 32 + d.getDate(), 2654435761) >>> 0; x = (x ^ (x >>> 15)) >>> 0; x = Math.imul(x, 2246822519) >>> 0; x = (x ^ (x >>> 13)) >>> 0;
+  const wd = (d.getDay() + 6) % 7, quiet = d.getMonth() === 7 || (d.getMonth() === 11 && d.getDate() > 20);
+  const base = wd > 4 ? x % 3 === 0 ? 1 : 0 : x % 6;            // weekdays 0–5, weekends mostly empty
+  return quiet ? Math.floor(base / 3) : base;
+}
+const yLevel = (n) => n === 0 ? 0 : n <= 2 ? 1 : n <= 4 ? 2 : 3;
+class YearView {
+  constructor(root, { id, state, openDay, openMonth, direct = true }) {
+    Object.assign(this, { root, id, openDay, openMonth, direct });
+    this.st = state; this.st.year ??= 2026; this.st.focus ??= new Date(TODAY_D); this.st.sel ??= null;
+    root.innerHTML = `<section data-scope="year" aria-labelledby="${id}-t">
+      <div data-part="toolbar">
+        ${btn("Previous year", { e: "ghost", tone: "neutral", icon: "left", only: true, size: "sm", attrs: 'data-ystep="-1"' })}
+        <h3 data-part="title" id="${id}-t" aria-live="polite"></h3>
+        ${btn("Next year", { e: "ghost", tone: "neutral", icon: "right", only: true, size: "sm", attrs: 'data-ystep="1"' })}
+        ${btn("Today", { e: "outline", tone: "neutral", size: "sm", attrs: "data-ytoday" })}
+        <span data-part="legend" aria-hidden="true"><span><i data-part="dots" data-zero></i>none</span><span><i data-part="dots" style="--_n:1"></i>1–2</span><span><i data-part="dots" style="--_n:2"></i>3–4</span><span><i data-part="dots" style="--_n:3"></i>5+</span></span>
+      </div>
+      <div data-part="months" role="group" aria-labelledby="${id}-t" aria-describedby="${id}-h"></div>
+      <span class="vh" id="${id}-h">One stop for the whole year. Arrow keys move by day and week, Home and End to the week's ends, Page Up and Page Down by month, with Shift by year. Enter opens the day, M opens its month, T goes to today.</span>
+      <div data-part="detail" role="status" aria-live="polite"></div>
+    </section>`;
+    this.months = $("[data-part='months']", root); this.detail = $("[data-part='detail']", root); this.title = $("[data-part='title']", root);
+    root.addEventListener("click", (e) => {
+      const st = e.target.closest("[data-ystep]"); if (st) { this.go(new Date(this.st.year + +st.dataset.ystep, this.st.focus.getMonth(), Math.min(this.st.focus.getDate(), 28)), false); return; }
+      if (e.target.closest("[data-ytoday]")) { this.go(new Date(TODAY_D), true); return; }
+      const mt = e.target.closest("[data-part='month-title']"); if (mt) { this.month(+mt.dataset.m); return; }
+      const c = e.target.closest("[role='gridcell'][data-day]"); if (c) { this.day(this.parse(c.dataset.day)); return; }
+      const od = e.target.closest("[data-yopen]"); if (od) { const d = this.st.sel || this.st.focus; od.dataset.yopen === "month" ? this.openMonth(d.getMonth(), d.getFullYear()) : this.openDay(d); }
+    });
+    this.months.addEventListener("keydown", (e) => this.key(e));
+    this.months.addEventListener("focusin", (e) => { const c = e.target.closest("[data-day]"); if (c) this.st.focus = this.parse(c.dataset.day); });
+    this.render();
+  }
+  parse(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+  render() {
+    const y = this.st.year, f = this.st.focus; this.title.textContent = y;
+    let html = "";
+    for (let m = 0; m < 12; m++) {
+      const first = new Date(y, m, 1), lead = (first.getDay() + 6) % 7, len = new Date(y, m + 1, 0).getDate();
+      let total = 0, cells = "";
+      for (let k = 0; k < 42; k++) {
+        if (k % 7 === 0) { if (k >= lead + len) break; cells += `${k ? "</div>" : ""}<div role="row">`; }
+        const dn = k - lead + 1;
+        if (dn < 1 || dn > len) { cells += `<span role="gridcell" data-outside aria-hidden="true"></span>`; continue; }
+        const d = new Date(y, m, dn), n = dayCount(d), lv = yLevel(n); total += n;
+        const today = sameD(d, TODAY_D);
+        cells += `<span role="gridcell" data-day="${isoDay(d)}" tabindex="${sameD(d, f) ? 0 : -1}" aria-selected="${!!sameD(d, this.st.sel)}" ${today ? 'aria-current="date"' : ""} ${k % 7 > 4 ? "data-weekend" : ""} aria-label="${longD(d)}, ${n ? `${n} event${n > 1 ? "s" : ""}` : "no events"}${today ? ", today" : ""}"><span data-part="num" aria-hidden="true">${dn}</span><i data-part="dots" style="--_n:${lv}" aria-hidden="true"></i></span>`;
+      }
+      cells += "</div>";
+      html += `<div data-part="year-month" ${y === 2026 && m === 9 ? "data-current" : ""}>
+        <button type="button" data-part="month-title" id="${this.id}-m${m}" data-m="${m}" tabindex="-1">${YMON[m]} <small>${total}<span class="vh"> events</span></small></button>
+        <div role="grid" aria-labelledby="${this.id}-m${m}"><div role="row">${DAYS.map((d, i) => `<span role="columnheader"><abbr title="${DAYL[i]}">${d[0]}</abbr></span>`).join("")}</div>${cells}</div></div>`;
+    }
+    this.months.innerHTML = html; this.showDetail();
+  }
+  focusCell() { const c = $(`[data-day='${isoDay(this.st.focus)}']`, this.months); if (c) { $$("[data-day][tabindex='0']", this.months).forEach((x) => x.tabIndex = -1); c.tabIndex = 0; c.focus(); } }
+  go(d, focus = true) {
+    const swap = d.getFullYear() !== this.st.year; this.st.focus = d;
+    if (swap) {
+      this.st.year = d.getFullYear();
+      const done = () => { this.render(); delete this.months.dataset.swapping; if (focus) this.focusCell(); let t = 0; for (let k = 0; k < 366; k++) { const x = new Date(this.st.year, 0, 1 + k); if (x.getFullYear() === this.st.year) t += dayCount(x); } announce(`${this.st.year}, ${t.toLocaleString("en-US")} events`); };
+      if (reduced()) done(); else { this.months.dataset.swapping = ""; setTimeout(done, 140); }
+    } else if (focus) this.focusCell();
+  }
+  select(d, kind = "day") {
+    this.st.kind = kind; this.st.sel = d; this.st.focus = d;
+    $$("[data-day][aria-selected='true']", this.months).forEach((x) => x.setAttribute("aria-selected", "false"));
+    const c = $(`[data-day='${isoDay(d)}']`, this.months); if (c) { c.setAttribute("aria-selected", "true"); $$("[data-day][tabindex='0']", this.months).forEach((x) => x.tabIndex = -1); c.tabIndex = 0; }
+    this.showDetail();
+  }
+  showDetail() {
+    const d = this.st.sel;
+    if (!d || d.getFullYear() !== this.st.year) { this.detail.innerHTML = `<span class="muted">Pick a day to see what's on it. More dots, busier day: one for 1–2 events, two for 3–4, three for 5 or more.</span>`; return; }
+    const inMonth = d.getFullYear() === 2026 && d.getMonth() === 9;
+    if (this.st.kind === "month") {
+      const len = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); let tot = 0, best = null, bn = -1;
+      for (let k = 1; k <= len; k++) { const x = new Date(d.getFullYear(), d.getMonth(), k), n = dayCount(x); tot += n; if (n > bn) { bn = n; best = x; } }
+      this.detail.innerHTML = `<div class="row" style="justify-content:space-between"><b>${YMON[d.getMonth()]} ${d.getFullYear()} · ${tot} events</b>${this.openMonth && inMonth ? btn("Open in Month view", { e: "outline", tone: "neutral", size: "sm", attrs: 'data-yopen="month"' }) : ""}</div>
+        <span class="muted" style="font-size:12.5px">Busiest day: ${longD(best)}, ${bn} events.${inMonth || !this.openMonth ? "" : " This demo's month view shows October 2026."}</span>`;
+      return;
+    }
+    const n = dayCount(d), real = weekEvents(d);
+    const list = real || Array.from({ length: n }, (_, i) => { const p = YPOOL[(d.getDate() * 7 + d.getMonth() * 3 + i * 5) % YPOOL.length]; return { title: p[0], cal: p[1], when: fmt(540 + ((d.getDate() + i * 3) % 9) * 60) }; });
+    const inWeek = !!real;
+    this.detail.innerHTML = `<div class="row" style="justify-content:space-between"><b>${longD(d)} · ${n ? `${n} event${n > 1 ? "s" : ""}` : "nothing booked"}</b><span class="row" style="gap:6px">
+        ${this.openDay ? inWeek ? btn("Open in Day view", { e: "outline", tone: "neutral", size: "sm", attrs: 'data-yopen="day"' }) : "" : ""}
+        ${this.openMonth ? inMonth ? btn("Open in Month view", { e: "ghost", tone: "neutral", size: "sm", attrs: 'data-yopen="month"' }) : "" : ""}</span></div>
+      ${list.length ? `<ul>${list.slice(0, 4).map((x) => `<li><i style="--_c:var(--warp-color-data-${x.cal})"></i><span class="mono">${x.when}</span>${esc(x.title)}</li>`).join("")}${list.length > 4 ? `<li>+${list.length - 4} more</li>` : ""}</ul>` : ""}
+      ${(this.openDay || this.openMonth) && !inWeek ? `<span class="muted" style="font-size:12.5px">${inMonth ? "This demo's day view holds Oct 26 to Nov 1; Month view shows October." : "This demo's other views hold Oct 26 to Nov 1 only."}</span>` : ""}`;
+  }
+  /* direct (inside the calendar): a day or month in the loaded range opens there; otherwise (and always in the
+     standalone card) it's picked and the detail offers the jump */
+  day(d) {
+    if (this.direct && this.openDay && this.openDay(d)) { announce(`Day view, ${longD(d)}`); return; }
+    this.select(d); const n = dayCount(d); announce(`${longD(d)}, ${n ? `${n} event${n > 1 ? "s" : ""}` : "no events"}`);
+  }
+  month(m) {
+    const y = this.st.year;
+    if (this.direct && this.openMonth && this.openMonth(m, y)) { announce(`Month view, ${YMON[m]} ${y}`); return; }
+    const d = new Date(y, m, 1); this.select(d, "month"); this.focusCell();
+    announce(this.detail.textContent.replace(/\s+/g, " ").trim());
+  }
+  key(e) {
+    const c = e.target.closest("[data-day]"); if (!c) return;
+    const d = this.parse(c.dataset.day), y = d.getFullYear(), m = d.getMonth(), wd = (d.getDay() + 6) % 7;
+    const addM = (k) => { const t = new Date(y, m + k, 1); return new Date(t.getFullYear(), t.getMonth(), Math.min(d.getDate(), new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate())); };
+    const rtl = getComputedStyle(this.root).direction === "rtl";
+    const map = { ArrowRight: () => new Date(y, m, d.getDate() + (rtl ? -1 : 1)), ArrowLeft: () => new Date(y, m, d.getDate() + (rtl ? 1 : -1)),
+      ArrowDown: () => new Date(y, m, d.getDate() + 7), ArrowUp: () => new Date(y, m, d.getDate() - 7),
+      Home: () => new Date(y, m, d.getDate() - wd), End: () => new Date(y, m, d.getDate() + 6 - wd),
+      PageDown: () => e.shiftKey ? addM(12) : addM(1), PageUp: () => e.shiftKey ? addM(-12) : addM(-1) };
+    if (map[e.key]) { e.preventDefault(); this.go(map[e.key]()); return; }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.day(d); return; }
+    const k = e.key.toLowerCase();
+    if (k === "m" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); this.month(m); return; }
+    if (k === "t" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); this.go(new Date(TODAY_D)); }
+  }
+}
+
 class Calendar {
   constructor(root) { this.root = root; this.view = "week"; this.sel = null; this.build(); }
   build() {
@@ -817,7 +955,7 @@ class Calendar {
         <span data-scope="live-status" data-state="live" role="status" aria-label="Calendar sync: live"><span data-scope="status-dot" data-tone="positive"></span>Synced</span>
         <span data-part="tz" title="Times shown in America/New_York">${ic("globe", 'style="inline-size:12px;block-size:12px"')}New York · EDT</span>
         <div data-scope="tabs" data-variant="pill" data-part="root"><div data-part="list" role="tablist" aria-label="Calendar view">
-          ${["month", "week", "day", "agenda", "timeline"].map((v) => `<button data-part="trigger" role="tab" id="cal-tab-${v}" aria-controls="cal-main" aria-selected="${v === this.view}" tabindex="${v === this.view ? 0 : -1}" data-view="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join("")}
+          ${["month", "week", "day", "agenda", "timeline", "year"].map((v) => `<button data-part="trigger" role="tab" id="cal-tab-${v}" aria-controls="cal-main" aria-selected="${v === this.view}" tabindex="${v === this.view ? 0 : -1}" data-view="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join("")}
           <span data-part="indicator"></span></div></div>
         ${btn("New event", { icon: "plus", size: "sm", attrs: 'data-new', sweep: true })}
       </div>
@@ -892,7 +1030,7 @@ class Calendar {
     requestAnimationFrame(() => this.ind());
     const v = this.view; const keep = this.scroller ? this.scroller.scrollTop : null;
     if (v === "week" || v === "day") this.renderGrid(v === "day" ? [this.dayView ?? TODAY] : [0, 1, 2, 3, 4, 5, 6], keep);
-    else if (v === "month") this.renderMonth(); else if (v === "agenda") this.renderAgenda(); else this.renderTimeline();
+    else if (v === "month") this.renderMonth(); else if (v === "agenda") this.renderAgenda(); else if (v === "year") this.renderYear(); else this.renderTimeline();
   }
   hourPx() { return parseFloat(getComputedStyle(this.main).getPropertyValue("--warp-cal-hour")) || 48; }
   renderGrid(days, keep) {
@@ -1040,6 +1178,14 @@ class Calendar {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDay(all[i]); return; }
       if (n === undefined || !all[n]) return; e.preventDefault(); all.forEach((c) => c.tabIndex = -1); all[n].tabIndex = 0; all[n].focus(); };
     grid.onclick = (e) => { const c = e.target.closest("[role='gridcell']"); if (c && !c.hasAttribute("data-outside")) openDay(c); };
+  }
+  /* Year (07 §2.7): the shared YearView; picking a day in the shown week opens Day view, October opens Month */
+  renderYear() {
+    this.main.innerHTML = `<div data-part="year-wrap"></div>`;
+    this.yvState ||= {};
+    this.yv = new YearView($("[data-part='year-wrap']", this.main), { id: "cal-yv", state: this.yvState,
+      openDay: (d) => { const i = Math.round((d - new Date(2026, 9, 26)) / 864e5); if (i < 0 || i > 6) return false; this.setView("day", i); return true; },
+      openMonth: (m, y) => { if (y !== 2026 || m !== 9) return false; this.setView("month"); return true; } });
   }
   renderAgenda() {
     this.main.innerHTML = `<div style="overflow:auto;padding:8px 32px 32px"><div data-scope="agenda" style="display:block">${[0, 1, 2, 3, 4, 5].map((d) => `<div data-part="day-title" style="border-block-start:1px solid var(--warp-color-border);margin-block-start:12px;padding-block-start:14px"><h4>${DAYL[d]} <span class="muted" style="font-size:.7em">${MON(d)} ${DATES[d]}</span></h4>${d === TODAY ? '<span data-scope="badge">Today</span>' : ""}</div>${agendaRows(d)}`).join("")}</div></div>`;
@@ -1396,15 +1542,25 @@ const MSGS = [
   { who: "mei", t: "09:48", text: "Overlap layout is in. Third column spans when the right side is free, like you asked {at}.", react: [["👍", 3, true], ["🎉", 2, false]] },
   { mine: true, t: "09:51", text: "Nice. Does the now line still sweep in on load?", state: "read" },
   { who: "mei", t: "09:52", text: "Once, on mount. Reduced motion just shows it." },
+  { who: "ana", t: "09:53", quote: { ref: "m5", text: "Third column spans when the right side is free" }, text: "Does it span left too, when the left side is free? Pairing would look better." },
   { mine: true, t: "09:55", text: "Sending the screenshot from my phone", state: "failed" },
 ];
+/* quote reply (07 §5.5): every message has an id; a quote stores { ref, text } and reads the author live */
+MSGS.forEach((m, i) => { if (!m.day) m.id ||= "m" + i; });
+const MSGMAP = new Map(MSGS.filter((m) => m.id).map((m) => [m.id, m]));
+const author = (m) => m.mine ? "You" : PEOPLE[m.who].n;
+let SENT = 0;
 function msgEl(m, prev) {
   if (m.day) return `<div data-part="divider" ${m.unread ? 'data-unread role="separator" aria-label="New messages"' : 'role="separator"'}>${m.unread ? "New · " : ""}${m.day}</div>`;
   const cont = m.cont || (prev && prev.who && prev.who === m.who && !m.mine);
   const text = esc(m.text).replace("{at}", `<span data-part="mention">@you</span>`);
-  return `<div data-scope="message" ${m.mine ? "data-mine" : ""} ${cont ? "data-continued" : ""} ${m.state ? `data-state="${m.state}"` : ""} ${m.arrive ? "data-arrive" : ""}>
+  const src = m.quote && MSGMAP.get(m.quote.ref);
+  const quote = m.quote ? `<blockquote data-part="quote"><span data-part="quote-by"><span class="vh">Quoting </span>${src ? `${esc(author(src))} · ${src.t}` : "Original message deleted"}</span><span data-part="quote-text">${esc(m.quote.text)}</span></blockquote>` : "";
+  return `<div data-scope="message" role="article" tabindex="-1" data-mid="${m.id}" aria-label="${esc(author(m))}, ${m.t}${src ? `, quoting ${esc(author(src))}` : ""}" ${m.mine ? "data-mine" : ""} ${cont ? "data-continued" : ""} ${m.state ? `data-state="${m.state}"` : ""} ${m.arrive ? "data-arrive" : ""}>
     ${m.mine ? "" : av(m.who)}<div data-part="body">${cont || m.mine ? "" : `<div data-part="by"><b>${PEOPLE[m.who].n}</b><time>${m.t}</time></div>`}
-    <div data-part="bubble" data-sweep>${SW}${text}</div>
+    <div data-part="actions" role="toolbar" aria-label="Message actions">${btn("Quote reply", { e: "ghost", tone: "neutral", size: "sm", icon: "quote", only: true, attrs: 'data-quote tabindex="-1" aria-keyshortcuts="Q"' })}${btn("Copy text", { e: "ghost", tone: "neutral", size: "sm", icon: "copy", only: true, attrs: 'data-copytext tabindex="-1"' })}</div>
+    <div data-part="bubble" data-sweep>${SW}${quote}<span data-part="text">${text}</span></div>
+    ${src ? btn("Jump to original", { e: "link", tone: "neutral", attrs: `data-part="quote-jump" data-jump="${m.quote.ref}"` }) : ""}
     ${m.file ? `<div data-part="attachment"><i>${m.file[0]}</i><b style="font-weight:500;font-size:13px">${m.file[1]}</b><small>${m.file[2]}</small></div>` : ""}
     ${m.react ? `<div data-scope="reactions">${m.react.map(([e, n, on]) => `<button type="button" aria-pressed="${on}" aria-label="${e} ${n}, ${on ? "including you" : "react"}">${e} <span>${n}</span></button>`).join("")}<button type="button" aria-label="Add reaction">${ic("smile", 'style="inline-size:14px;block-size:14px"')}</button></div>` : ""}
     ${m.replies ? `<button data-scope="thread-replies" type="button"><span data-scope="avatar-stack">${m.replies.map((r) => av(r)).join("")}</span>${m.replies.length} replies · last 17:40</button>` : ""}
@@ -1419,7 +1575,7 @@ function threadHTML(id, compact) {
     <div>
       <div data-scope="typing" aria-live="polite" data-typing>&nbsp;</div>
       <div data-scope="composer" data-sweep>${SW}
-        <div data-part="files" data-files></div>
+        <div data-part="files" data-files></div><div data-quote-slot style="display:contents"></div>
         <label class="vh" for="cmp-${id}">Message #calendar-engine</label>
         <textarea id="cmp-${id}" rows="1" placeholder="Message #calendar-engine" data-input aria-describedby="cmp-h-${id}"></textarea>
         <div data-part="row">${btn("Attach", { e: "ghost", tone: "neutral", size: "sm", icon: "clip", only: true, attrs: "data-att" })}${btn("Emoji", { e: "ghost", tone: "neutral", size: "sm", icon: "smile", only: true })}${btn("Mention someone", { e: "ghost", tone: "neutral", size: "sm", icon: "at", only: true, attrs: "data-at" })}
@@ -1429,31 +1585,68 @@ function threadHTML(id, compact) {
 }
 function mountThread(host, id, compact) {
   host.insertAdjacentHTML("beforeend", threadHTML(id, compact)); const root = $(`[data-thread='${id}']`, host);
-  const log = $("[data-log]", root), input = $("[data-input]", root);
+  const log = $("[data-log]", root), input = $("[data-input]", root), hint = $("[data-part='hint']", root), hint0 = hint.textContent;
   log.scrollTop = log.scrollHeight;
+  /* quote reply (07 §5.5): messages are one roving stop (↑/↓, Home/End); the focused one's toolbar joins the tab order */
+  let draft = null, selText = "";
+  const msgs = () => $$("[data-scope='message']", log);
+  const roveMsg = (m) => { msgs().forEach((x) => { x.tabIndex = x === m ? 0 : -1; $$("[data-part='actions'] button", x).forEach((b) => b.tabIndex = x === m ? 0 : -1); }); };
+  roveMsg(msgs().at(-1));
+  log.addEventListener("focusin", (e) => { const m = e.target.closest("[data-scope='message']"); if (m) roveMsg(m); });
+  const setDraft = (d) => {
+    draft = d; const slot = $("[data-quote-slot]", root); slot.innerHTML = "";
+    hint.textContent = hint0; delete hint.dataset.state;
+    if (!d) return;
+    const src = MSGMAP.get(d.ref);
+    slot.append(h(`<div data-part="quote-draft" role="group" aria-label="Quoting ${esc(author(src))}" data-arrive><span data-part="quote-by">${esc(author(src))} · ${src.t}</span><span data-part="quote-text">${esc(d.text)}</span>${btn("Remove quote", { e: "ghost", tone: "neutral", size: "sm", icon: "x", only: true, attrs: "data-unquote" })}</div>`));
+    $("[data-unquote]", slot).onclick = () => { setDraft(null); input.focus(); announce("Quote removed"); };
+  };
+  const quote = (m) => {
+    const src = MSGMAP.get(m.dataset.mid); if (!src) return;
+    const bubble = $("[data-part='bubble'] [data-part='text']", m), sel = getSelection();
+    let t = selText || (sel && !sel.isCollapsed && bubble.contains(sel.anchorNode) ? sel.toString() : "") || src.text.replace("{at}", "@you") + (src.file ? ` (${src.file[1]})` : "");
+    t = t.replace(/\s+/g, " ").trim(); if (t.length > 280) t = t.slice(0, 279) + "…"; selText = "";
+    setDraft({ ref: src.id, text: t }); input.focus();
+    announce(`Quoting ${author(src)}. Escape removes the quote.`);
+  };
+  log.addEventListener("pointerdown", (e) => { if (e.target.closest("[data-quote]")) { const s = getSelection(); selText = s && !s.isCollapsed ? s.toString() : ""; } });
+  log.addEventListener("keydown", (e) => {
+    const m = e.target.closest("[data-scope='message']"); if (!m || e.target !== m) return;
+    const all = msgs(), i = all.indexOf(m), n = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: all.length - 1 }[e.key];
+    if (n !== undefined && all[n]) { e.preventDefault(); all[n].focus(); return; }
+    if (e.key.toLowerCase() === "q" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); quote(m); }
+  });
+  /* touch: a tap on a message shows its toolbar (a tap elsewhere closes it) */
+  log.addEventListener("pointerup", (e) => { if (e.pointerType !== "touch" || e.target.closest("button")) return; const m = e.target.closest("[data-scope='message']"); msgs().forEach((x) => x !== m && x.removeAttribute("data-actions")); m && m.toggleAttribute("data-actions"); });
   const send = async (text) => {
-    const m = { mine: true, t: "09:58", text, state: "sending", arrive: true }; const el = h(msgEl(m)); log.append(el); log.scrollTop = log.scrollHeight;
+    if (!text && draft) { hint.textContent = "Add a reply to the quote"; hint.dataset.state = "error"; announce("Add a reply to the quote", true); input.focus(); return; }
+    const m = { id: `s${++SENT}`, mine: true, t: "09:58", text, state: "sending", arrive: true, quote: draft || undefined }; MSGMAP.set(m.id, m); setDraft(null);
+    const el = h(msgEl(m)); log.append(el); roveMsg(el); log.scrollTop = log.scrollHeight;
     await sleep(pace(700)); el.dataset.state = "sent"; $("[data-msg-status]", el).innerHTML = `${ic("check")} Sent`; confirmSweep($("[data-part='bubble']", el));
     await sleep(pace(900)); $("[data-typing]", root).innerHTML = `<span data-part="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Mei is typing…</span>`;
     $("[data-msg-status]", el).innerHTML = `${ic("checks", 'style="color:var(--warp-color-accent-text)"')} Read`;
     await sleep(pace(1800)); $("[data-typing]", root).innerHTML = "&nbsp;";
-    log.append(h(msgEl({ who: "mei", t: "09:59", text: "Yes! Looks great on the phone frame too.", arrive: true }))); log.scrollTop = log.scrollHeight;
+    const rp = { id: `s${++SENT}`, who: "mei", t: "09:59", text: "Yes! Looks great on the phone frame too.", arrive: true }; MSGMAP.set(rp.id, rp); log.append(h(msgEl(rp))); log.scrollTop = log.scrollHeight;
   };
   input.addEventListener("keydown", (e) => {
     const sug = $("[data-scope='suggest']", root);
     if (sug && ["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(e.key)) { e.preventDefault(); const os = $$("[role='option']", sug), i = os.findIndex((o) => o.getAttribute("aria-selected") === "true");
       if (e.key === "Escape") { sug.remove(); return; } if (e.key === "Enter") { pickMention(os[i]); return; }
       const n = (i + (e.key === "ArrowDown" ? 1 : os.length - 1)) % os.length; os.forEach((o, k) => o.setAttribute("aria-selected", k === n)); input.setAttribute("aria-activedescendant", os[n].id); return; }
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const v = input.value.trim(); if (v) { input.value = ""; send(v); } }
+    if (e.key === "Escape" && draft) { e.preventDefault(); setDraft(null); announce("Quote removed"); return; }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const v = input.value.trim(); if (v || draft) { input.value = ""; send(v); } }
   });
   const pickMention = (o) => { input.value = input.value.replace(/@\w*$/, "@" + o.dataset.name + " "); $("[data-scope='suggest']", root)?.remove(); input.removeAttribute("aria-activedescendant"); input.focus(); };
   const openMentions = () => { $("[data-scope='suggest']", root)?.remove(); const box = h(`<div data-scope="suggest" role="listbox" id="men-${id}" aria-label="Mention">${["mei", "ana", "kofi", "raj"].map((k, i) => `<div role="option" id="men-${id}-${i}" data-name="${PEOPLE[k].n.split(" ")[0]}" aria-selected="${i === 0}">${av(k, "sm")}<span>${PEOPLE[k].n}</span><small>${i < 3 ? "here" : "away"}</small></div>`).join("")}</div>`);
     $("[data-scope='composer']", root).append(box); input.setAttribute("aria-controls", box.id); input.setAttribute("aria-activedescendant", `men-${id}-0`); $$("[role='option']", box).forEach((o) => o.onmousedown = (e) => { e.preventDefault(); pickMention(o); }); };
   input.addEventListener("input", () => { if (/(^|\s)@\w*$/.test(input.value)) openMentions(); else $("[data-scope='suggest']", root)?.remove(); });
   $("[data-at]", root).onclick = () => { input.value += (input.value && !input.value.endsWith(" ") ? " " : "") + "@"; input.focus(); openMentions(); };
-  $("[data-send]", root).onclick = () => { const v = input.value.trim(); if (v) { input.value = ""; send(v); } };
+  $("[data-send]", root).onclick = () => { const v = input.value.trim(); if (v || draft) { input.value = ""; send(v); } };
   $("[data-att]", root).onclick = () => { $("[data-files]", root).append(h(`<span data-part="file" data-arrive>${ic("file")}<span>screenshot.png</span>${btn("Remove", { e: "ghost", tone: "neutral", size: "sm", icon: "x", only: true })}</span>`)); };
   root.addEventListener("click", async (e) => {
+    const q = e.target.closest("[data-quote]"); if (q) { quote(q.closest("[data-scope='message']")); return; }
+    const cp = e.target.closest("[data-copytext]"); if (cp) { const m = cp.closest("[data-scope='message']"); try { navigator.clipboard?.writeText($("[data-part='text']", m).textContent).catch(() => {}); } catch {} confirmSweep($("[data-part='bubble']", m)); announce("Message copied"); return; }
+    const j = e.target.closest("[data-jump]"); if (j) { const t = $(`[data-mid='${j.dataset.jump}']`, log); if (!t) { announce("Original message deleted"); return; } t.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" }); t.focus({ preventScroll: true }); confirmSweep($("[data-part='bubble']", t)); announce(`Original message from ${t.getAttribute("aria-label")}`); return; }
     const r = e.target.closest("[data-scope='reactions'] button[aria-pressed]"); if (r) { const on = r.getAttribute("aria-pressed") !== "true"; r.setAttribute("aria-pressed", on); const n = $("span", r); n.textContent = +n.textContent + (on ? 1 : -1); return; }
     const rt = e.target.closest("[data-retry]"); if (rt) { const m = rt.closest("[data-scope='message']"); m.dataset.state = "sending"; $("[data-msg-status]", m).innerHTML = `${ic("clock")} Sending…`; await sleep(pace(800)); m.dataset.state = "sent"; $("[data-msg-status]", m).innerHTML = `${ic("check")} Sent`; confirmSweep($("[data-part='bubble']", m)); announce("Message sent"); }
   });
@@ -1869,6 +2062,334 @@ const switchEl = (id, label, on, attrs = "") =>
   $("[data-at-on]", at).onchange = (e) => { state = e.target.checked ? "following" : "off"; show(); if (state === "following") goTo(); };
   const io2 = new IntersectionObserver((es) => es.forEach((e) => { clearInterval(at._t); if (e.isIntersecting) at._t = setInterval(() => { pi++; if (state === "following") goTo(); show(); }, 4200); }));
   io2.observe(at); show();
+})();
+
+/* ============================================================================
+   v0.3 GAP FILLS (07 §2.7, §4.6, §4.7, §6.5; quote reply §5.5 lives in the chat code)
+   Same parts, same sweep machine, same live regions.
+   ========================================================================== */
+const cbx = (inner, attrs = "") => `<label data-scope="checkbox"><input type="checkbox" ${attrs}><span data-part="control" data-sweep>${SW}<svg viewBox="0 0 24 24" aria-hidden="true"><path data-part="check" pathLength="1" d="M5 12.5 L9.5 17 L19 7"/><path data-part="dash" pathLength="1" d="M6 12h12"/></svg></span>${inner}</label>`;
+
+/* -- YearView, standalone (07 §2.7): the same component at card width; jumps go to the calendar above -- */
+(function yearCard() {
+  const card = h(`<div class="card wide" id="cal-year"><header><h3>Year view</h3><p>Twelve mini months with event density as dots (1–2, 3–4, 5+), so a busy week reads at a glance and colour never carries it alone. One tab stop for the year; <kbd>M</kbd> jumps to the month, <kbd>T</kbd> to today. The columns follow this card's width: 1, 2, 3, then 4.</p></header><div data-cy></div></div>`);
+  $("#cal-parts").prepend(card);
+  const toDesk = () => $("#cal-desk").closest(".device").scrollIntoView({ block: "start", behavior: reduced() ? "auto" : "smooth" });
+  new YearView($("[data-cy]", card), { id: "cy", state: {}, direct: false,
+    openDay: (d) => { const i = Math.round((d - WEEK0) / 864e5); if (i < 0 || i > 6) return false; cal.setView("day", i); toDesk(); return true; },
+    openMonth: (m, y) => { if (y !== 2026 || m !== 9) return false; cal.setView("month"); toDesk(); return true; } });
+})();
+
+/* -- NotificationPreferences (07 §4.6): event × channel, tri-state groups, digest, APG grid ----------- */
+const PCH = [["inapp", "In-app"], ["email", "Email"], ["push", "Push"], ["sms", "SMS"]];
+const PGROUPS = [
+  { id: "collab", n: "Collaboration", rows: [
+    { id: "mention", n: "Mentions", hint: "Someone @-mentions you", v: { inapp: 1, email: 1, push: 1, sms: 0 } },
+    { id: "reply", n: "Replies", hint: "In threads you're part of", v: { inapp: 1, email: 0, push: 1, sms: null } },
+    { id: "assign", n: "Assignments", hint: "A task or review is assigned to you", v: { inapp: 1, email: 1, push: 0, sms: null } }] },
+  { id: "cal", n: "Calendar", rows: [
+    { id: "invite", n: "Invitations", hint: "New events and RSVPs", v: { inapp: 1, email: 1, push: 1, sms: 0 } },
+    { id: "change", n: "Event changes", hint: "Moved, renamed or cancelled", v: { inapp: 1, email: 0, push: 1, sms: 0 } },
+    { id: "remind", n: "Reminders", hint: "Before an event starts", v: { inapp: 1, email: null, push: 1, sms: 1 } }] },
+  { id: "acct", n: "Account", rows: [
+    { id: "security", n: "Security alerts", hint: "New sign-in, password or key change", v: { inapp: 1, email: "lock", push: 1, sms: 1 }, instant: true },
+    { id: "billing", n: "Billing", hint: "Receipts and failed payments", v: { inapp: 0, email: 1, push: null, sms: null } }] },
+];
+const PDIGEST = [["instant", "Instantly"], ["hourly", "Hourly digest"], ["daily", "Daily digest at 9:00"], ["weekly", "Weekly digest, Mondays"]];
+const PREFS = { v: {}, digest: "instant", subs: [], failNext: false };
+const prefsReset = () => { PGROUPS.forEach((g) => g.rows.forEach((r) => PREFS.v[r.id] = Object.fromEntries(PCH.map(([c]) => [c, r.v[c] === "lock" ? true : r.v[c] === null ? null : !!r.v[c]])))); PREFS.digest = "instant"; };
+prefsReset();
+const prefRows = () => PGROUPS.flatMap((g) => g.rows);
+const offered = (r, c) => r.v[c] !== null && r.v[c] !== "lock";       // can the user change it?
+function triState(rows, c) { const xs = rows.filter((r) => offered(r, c)).map((r) => PREFS.v[r.id][c]); if (!xs.length) return null; const on = xs.filter(Boolean).length; return on === 0 ? "off" : on === xs.length ? "on" : "mixed"; }
+function prefsMatrix(host, id) {
+  const lc = (n) => n === "In-app" ? "in-app" : n === "SMS" ? "SMS" : n.toLowerCase();
+  const cell = (kind, key, c, cn, name, vis) => `<div role="gridcell">${cbx(`<span class="vh">${esc(name)}</span><span data-part="ch-name" aria-hidden="true">${vis || cn}</span>`, `data-${kind}="${key}" data-ch="${c}"`)}</div>`;
+  const head = `<div role="row" data-part="head"><div role="columnheader" data-part="corner">Event</div>${PCH.map(([c, cn]) => `<div role="columnheader"><span data-part="ch-head" aria-hidden="true">${cn}</span>${cbx(`<span class="vh">${cn}, all events</span><span data-part="ch-name" aria-hidden="true">All ${lc(cn)}</span>`, `data-all="${c}" data-ch="${c}"`)}</div>`).join("")}</div>`;
+  const body = PGROUPS.map((g) => `<div role="row" data-part="group"><div role="rowheader">${g.n}</div>${PCH.map(([c, cn]) => triState(g.rows, c) === null ? `<div role="gridcell"><span data-part="na" tabindex="-1"><span aria-hidden="true">—</span><span class="vh">${g.n}, ${lc(cn)}, not offered</span></span></div>` : cell("grp", g.id, c, cn, `${g.n}, all ${lc(cn)}`)).join("")}</div>
+    ${g.rows.map((r) => `<div role="row" data-row="${r.id}"><div role="rowheader"><b>${r.n}</b><small>${r.hint}</small>${r.instant ? `<span data-scope="badge" data-tone="info" data-instant hidden>Always instant</span>` : ""}</div>${PCH.map(([c, cn]) =>
+      r.v[c] === null ? `<div role="gridcell"><span data-part="na" tabindex="-1"><span aria-hidden="true">—</span><span class="vh">${r.n}, ${lc(cn)}, not offered</span><span data-part="ch-name" aria-hidden="true">${cn}</span></span></div>`
+      : r.v[c] === "lock" ? `<div role="gridcell">${cbx(`<span class="vh">${r.n}, ${lc(cn)}</span><span data-part="ch-name" aria-hidden="true">${cn}</span>`, `checked aria-disabled="true" aria-describedby="${id}-lock" data-locked data-ch="${c}"`).replace('</svg></span>', `</svg><svg data-part="lock" viewBox="0 0 24 24" aria-hidden="true"><path d="${P.lock}" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>`)}</div>`
+      : cell("ev", r.id, c, cn, `${r.n}, ${lc(cn)}`)).join("")}</div>`).join("")}`).join("");
+  host.innerHTML = `<div data-scope="prefs-matrix" data-prefs="${id}">
+    <div role="grid" data-part="grid" aria-labelledby="${id}-t" aria-describedby="${id}-k">${head}${body}</div>
+    <span class="vh" id="${id}-k">Arrow keys move between cells, Home and End to the row's ends, Control Home and End to the grid's corners, Space toggles.</span>
+    <span class="vh" id="${id}-lock">Required: security alerts always go to your account email.</span>
+    <div data-part="footer">
+      <div data-scope="field"><div data-part="control" data-sweep data-filled>${SW}<select data-part="input" id="${id}-dg" aria-describedby="${id}-dgh" data-digest>${PDIGEST.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select><label data-part="label" for="${id}-dg">Email delivery</label><span data-part="indicator" aria-hidden="true">${ic("down")}</span></div><div data-part="message"><span data-part="hint" id="${id}-dgh"></span></div></div>
+      <span data-part="status" role="status" data-pstatus>All changes saved</span>
+      ${btn("Reset to defaults", { e: "ghost", tone: "neutral", size: "sm", attrs: "data-preset" })}
+    </div></div>`;
+  const root = $("[data-prefs]", host), grid = $("[role='grid']", root), status = $("[data-pstatus]", root), dg = $("[data-digest]", root), dgh = $(`#${id}-dgh`, root);
+  const targets = () => $$("[role='row']", grid).map((row) => $$(":scope > [role='gridcell'], :scope > [role='columnheader']:not([data-part='corner'])", row).map((c) => $("input, [data-part='na']", c)));
+  const sync = () => {
+    $$("[data-ev]", root).forEach((i) => { i.checked = PREFS.v[i.dataset.ev][i.dataset.ch]; });
+    $$("[data-grp]", root).forEach((i) => { const s = triState(PGROUPS.find((g) => g.id === i.dataset.grp).rows, i.dataset.ch); i.checked = s === "on"; i.indeterminate = s === "mixed"; });
+    $$("[data-all]", root).forEach((i) => { const s = triState(prefRows(), i.dataset.all); i.checked = s === "on"; i.indeterminate = s === "mixed"; });
+    const emailOn = prefRows().some((r) => offered(r, "email") && PREFS.v[r.id].email);
+    dg.value = PREFS.digest; dg.disabled = !emailOn;
+    dgh.textContent = !emailOn ? "Turn on an email event to choose a digest" : PREFS.digest === "instant" ? "Each email is sent as it happens" : "Batches email; security alerts skip the digest";
+    $$("[data-instant]", root).forEach((b) => b.hidden = PREFS.digest === "instant" || !emailOn);
+  };
+  const init = () => { const t = targets().flat(); t.forEach((x) => x.tabIndex = -1); t[0].tabIndex = 0; };
+  root._sync = sync; PREFS.subs.push(root); sync(); init();
+  root.addEventListener("click", (e) => {
+    const lk = e.target.closest("label[data-scope='checkbox']"); const inp = lk && $("input", lk);
+    if (inp && inp.hasAttribute("data-locked")) { e.preventDefault(); inp.focus(); announce("Security alerts by email are required and can't be turned off."); }
+  });
+  root.addEventListener("change", (e) => {
+    const i = e.target; if (i === dg) { prefsSave(() => { PREFS.digest = dg.value; }, `Email delivery: ${dg.selectedOptions[0].textContent}`); return; }
+    if (!i.matches("input[type='checkbox']")) return;
+    const c = i.dataset.ch, on = i.checked, cn = PCH.find((x) => x[0] === c)[1];
+    if (i.dataset.ev) { const r = prefRows().find((x) => x.id === i.dataset.ev); prefsSave(() => { PREFS.v[r.id][c] = on; }, `${r.n}, ${cn} ${on ? "on" : "off"}`, true); return; }
+    const rows = (i.dataset.grp ? PGROUPS.find((g) => g.id === i.dataset.grp).rows : prefRows()).filter((r) => offered(r, c));
+    prefsSave(() => rows.forEach((r) => { PREFS.v[r.id][c] = on; }), `${cn} ${on ? "on" : "off"} for ${rows.length} event${rows.length > 1 ? "s" : ""}${i.dataset.grp ? ` in ${PGROUPS.find((g) => g.id === i.dataset.grp).n}` : ""}`, true);
+  });
+  $("[data-preset]", root).onclick = () => prefsSave(prefsReset, "Notification settings reset to defaults", false);
+  grid.addEventListener("keydown", (e) => {
+    const T = targets(); let r = T.findIndex((row) => row.includes(e.target)); if (r < 0) return; let c = T[r].indexOf(e.target);
+    const rtl = getComputedStyle(grid).direction === "rtl", last = T.length - 1;
+    if (e.key === "ArrowRight") c += rtl ? -1 : 1; else if (e.key === "ArrowLeft") c += rtl ? 1 : -1;
+    else if (e.key === "ArrowDown") r++; else if (e.key === "ArrowUp") r--;
+    else if (e.key === "Home") { c = 0; if (e.ctrlKey || e.metaKey) r = 0; } else if (e.key === "End") { c = 3; if (e.ctrlKey || e.metaKey) r = last; }
+    else if (e.key === " " && e.target.matches("[data-part='na']")) { e.preventDefault(); announce("Not offered for this event"); return; }
+    else return;
+    e.preventDefault(); r = Math.max(0, Math.min(last, r)); c = Math.max(0, Math.min(3, c));
+    const t = T[r][c]; T.flat().forEach((x) => x.tabIndex = -1); t.tabIndex = 0; t.focus();
+  });
+  grid.addEventListener("focusin", (e) => { const t = targets().flat(); if (t.includes(e.target)) { t.forEach((x) => x.tabIndex = -1); e.target.tabIndex = 0; } });
+  return root;
+}
+async function prefsSave(apply, msg, bulkOrCell) {
+  const snap = JSON.stringify([PREFS.v, PREFS.digest]), fail = PREFS.failNext; PREFS.failNext = false;
+  apply(); PREFS.subs.forEach((r) => { r._sync(); const s = $("[data-pstatus]", r); s.dataset.state = "saving"; delete s.dataset.stateError; s.textContent = "Saving…"; });
+  await sleep(pace(fail ? 900 : 520));
+  if (fail) { [PREFS.v, PREFS.digest] = JSON.parse(snap); PREFS.subs.forEach((r) => { r._sync(); const s = $("[data-pstatus]", r); s.dataset.state = "error"; s.textContent = "Couldn't save. Your last change was undone."; }); announce(`Couldn't save: ${msg}. Change undone.`, true); return; }
+  PREFS.subs.forEach((r) => { const s = $("[data-pstatus]", r); s.dataset.state = "saved"; s.textContent = "Saved"; });
+  announce(`${msg}. Saved.`);
+}
+(function prefsDemo() {
+  const parts = $("#nt-parts");
+  const card = h(`<div class="card wide" id="nt-prefs"><header><h3 id="np-t">Notification preferences</h3><p>Every event × every channel, one grid. Group and channel toggles are tri-state; a required channel is locked and says why; a channel an event can't use is "—". Changes save on their own. The phone frame edits the same model: below 560px of container the rows restack, so nothing scrolls sideways.</p></header>
+    <div class="frames two" style="align-items:start"><figure class="device" id="nt-prefs-phone" style="margin:0"><figcaption><b>Phone</b> 390 × 760 · same model, restacked</figcaption>
+      <div class="bezel" data-kind="phone" style="--w:390;--h:760"><div class="screen" data-form="phone" data-pointer="coarse">
+        <div class="status"><span>9:41</span></div><div style="min-block-size:0;overflow:auto;padding:12px 14px 20px;display:grid;gap:12px;align-content:start"><b id="npp-t" style="font:var(--warp-text-heading-weight) 18px/1.2 var(--warp-text-heading-font)">Notifications</b><div data-npp></div></div><div class="home"></div>
+      </div></div></figure>
+      <div class="stack" style="gap:12px;min-inline-size:0"><div data-np></div>
+        <div class="rig"><span class="lbl">Demo</span>${btn("Fail the next save", { e: "outline", tone: "neutral", size: "sm", attrs: "data-pfail" })}</div></div></div></div>`);
+  parts.append(card);
+  prefsMatrix($("[data-np]", card), "np"); prefsMatrix($("[data-npp]", card), "npp");
+  splitLabels(card);
+  $("[data-pfail]", card).onclick = () => { PREFS.failNext = true; announce("The next change will fail to save"); };
+})();
+
+/* -- TransportPicker (07 §4.7): a dev sandbox over weft's real wires ------------------------------- */
+(function transport() {
+  const WIRES = [["default", "weft default", "SSE + WebSocket", "One SSE (.live, stream) and one WebSocket (channel) per tab"], ["tabs", "Tabs only", "BroadcastChannel", "tabs.channel: this browser's tabs, no server"], ["fake", "Fake", "weft/test", "In-memory pair with a network model"]];
+  const BUSES = [["memory", "memory", "+0 ms", "One process. The default"], ["postgres", "postgres", "+4 ms", "LISTEN / NOTIFY"], ["redis", "redis", "+2 ms", "Pub/sub"], ["nats", "nats", "+1 ms", "Subjects"], ["durable-object", "durable-object", "+8 ms", "Cloudflare preset only"]];
+  const BUSMS = { memory: 0, postgres: 4, redis: 2, nats: 1, "durable-object": 8 };
+  const PRESETS = [["single", "Single instance"], ["multi", "Multi-instance"], ["cf", "Cloudflare"]];
+  const NETS = [["good", "Good"], ["slow", "Slow (×6)"], ["lossy", "Lossy (spikes, drops)"], ["wsblock", "WebSocket blocked"], ["offline", "Offline"]];
+  const LANES = [["live", ".live", "sse"], ["stream", "stream", "sse"], ["channel", "channel", "ws"]];
+  const S = { wire: "default", bus: "postgres", preset: "multi", net: "good", t0: performance.now() };
+  const conns = { sse: { state: "connecting", attempt: 0, retryAt: 0, epoch: 7, seq: 138, behind: false }, ws: { state: "connecting", attempt: 0, retryAt: 0, epoch: 7, seq: 52, behind: false } };
+  const lanes = Object.fromEntries(LANES.map(([k]) => [k, { samples: [], note: "" }]));
+  const card = h(`<div class="card wide" id="rt-transport"><header><h3>Transport picker <span data-scope="badge" data-tone="neutral">dev sandbox</span></h3><p>What weft really lets you choose: the server bus, and in a sandbox the wire under test. <code>.live</code> and <code>stream</code> always share one SSE connection per tab and <code>channel</code> one WebSocket; there is no polling fallback in v0. Production apps show only the connection pill.</p></header>
+    <div data-scope="transport">
+      <div data-part="head"><h4 id="rt-t">Realtime sandbox</h4><span data-scope="live-status" data-state="connecting" data-rt-pill role="status"></span>${btn("Reset", { e: "ghost", tone: "neutral", size: "sm", icon: "refresh", attrs: "data-rt-reset" })}</div>
+      <div data-part="config">
+        <fieldset data-scope="group"><legend>Wire under test</legend><div data-part="choices" role="radiogroup" aria-label="Wire under test">${WIRES.map(([v, n, m, hnt]) => `<label data-scope="choice-card" data-sweep>${SW}<input type="radio" name="rt-wire" value="${v}" ${v === S.wire ? "checked" : ""}><span data-part="label">${n}</span><span data-part="meta">${m}</span><span data-part="hint">${hnt}</span></label>`).join("")}</div></fieldset>
+        <fieldset data-scope="group" data-rt-busg><legend>Server bus <code style="font:500 11px/1 var(--warp-font-mono)">realtime.bus</code></legend>
+          <div data-part="choices" role="radiogroup" aria-label="Server bus">${BUSES.map(([v, n, m, hnt]) => `<label data-scope="choice-card" data-sweep>${SW}<input type="radio" name="rt-bus" value="${v}" ${v === S.bus ? "checked" : ""} aria-describedby="rt-bh-${v}"><span data-part="label"><code>${n}</code></span><span data-part="meta">${m}</span><span data-part="hint" id="rt-bh-${v}">${hnt}</span></label>`).join("")}</div>
+          <div data-part="row">${selField("rt-preset", "Deploy preset", PRESETS, S.preset, "data-rt-preset")}</div>
+          <span data-part="message" data-rt-busmsg></span></fieldset>
+      </div>
+      <div data-scope="alert" data-tone="critical" data-part="build-error" role="alert" hidden data-rt-err><span data-part="icon">${ic("alert")}</span><span data-part="title"></span><span data-part="description"></span></div>
+      <div data-part="row">${selField("rt-net", "Network", NETS, S.net, "data-rt-net")}
+        <span class="row" style="gap:8px">${btn("Ping", { e: "outline", tone: "neutral", size: "sm", icon: "bolt", attrs: "data-rt-ping" })}${btn("Drop connection", { e: "outline", tone: "neutral", size: "sm", attrs: "data-rt-drop" })}${btn("Fall behind", { e: "outline", tone: "neutral", size: "sm", attrs: "data-rt-behind" })}</span></div>
+      <ul data-part="lanes" aria-label="Lanes">${LANES.map(([k, n]) => `<li data-part="lane" data-lane="${k}" data-state="connecting">
+        <div data-part="lane-name"><b>${n}</b><small data-wire></small></div>
+        <span data-scope="live-status" data-state="connecting" data-lpill></span>
+        <dl data-part="figures"><div><dt>p50</dt><dd data-p50 data-numeric>—</dd></div><div><dt>p95</dt><dd data-p95 data-numeric>—</dd></div><div><dt>cursor</dt><dd data-cur data-numeric>—</dd></div></dl>
+        <div data-part="bars" aria-hidden="true">${"<i></i>".repeat(20)}</div>
+        <span data-part="note" data-note></span></li>`).join("")}</ul>
+      <ol data-part="log" role="log" aria-live="off" aria-label="Event log" tabindex="0" data-rt-log></ol>
+    </div></div>`);
+  $("#nt-parts").append(card);
+  const R = $("[data-scope='transport']", card), log = $("[data-rt-log]", R), err = $("[data-rt-err]", R);
+  const T = () => `+${((performance.now() - S.t0) / 1000).toFixed(1)}s`;
+  const addLog = (who, msg) => { log.append(h(`<li><span>${T()}</span><b>${who}</b><span>${esc(msg)}</span></li>`)); while (log.children.length > 40) log.firstElementChild.remove(); log.scrollTop = log.scrollHeight; };
+  const invalid = () => S.wire === "default" && S.bus === "memory" && S.preset === "multi" ? ["R002 · memory bus on a multi-instance preset", "Each instance would only see its own events. Use postgres, redis or nats."] : null;
+  const wireOf = (conn) => S.wire === "tabs" ? "BroadcastChannel" : S.wire === "fake" ? "weft/test fake pair" : conn === "sse" ? "SSE · POST /_weft/rt" : "WebSocket · crossws";
+  const sampleMs = (conn) => {
+    if (S.wire === "tabs") return 0.6 + Math.random() * 0.8;
+    let base = S.wire === "fake" ? Math.random() * 2 : 20 + Math.random() * 40 + BUSMS[S.bus];
+    if (S.net === "slow") base *= 6;
+    if (S.net === "lossy" && Math.random() < 0.3) base += Math.random() * 400 + (Math.random() < 0.12 ? 700 : 0);
+    return base;
+  };
+  const netBlocks = (conn) => S.wire !== "tabs" && (S.net === "offline" || (S.net === "wsblock" && conn === "ws" && S.wire === "default"));
+  const pct = (xs, p) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
+  const msTxt = (x) => x === null ? "—" : x < 10 ? `${x.toFixed(1)} ms` : `${Math.round(x)} ms`;
+  const tone = (x) => x === null ? "" : x >= 1000 ? "critical" : x >= 250 ? "caution" : "";
+  const pill = (el, st, label) => { el.dataset.state = st; el.innerHTML = `${st === "connecting" || st === "reconnecting" ? '<span data-scope="spinner"></span>' : `<span data-scope="status-dot" data-tone="${st === "live" ? "positive" : "critical"}"></span>`}${label || st[0].toUpperCase() + st.slice(1) + (st.endsWith("ing") ? "…" : "")}`; };
+  let lastWorst = "", annT = 0;
+  function paint() {
+    const now = performance.now();
+    LANES.forEach(([k, n, cid]) => {
+      const c = conns[cid], L = lanes[k], li = $(`[data-lane='${k}']`, R);
+      li.dataset.state = c.state; $("[data-wire]", li).textContent = wireOf(cid) + (cid === "sse" && S.wire === "default" ? k === "live" ? " · poke + refetch" : " · shared" : "");
+      pill($("[data-lpill]", li), c.state);
+      const p50 = pct(L.samples, 0.5), p95 = pct(L.samples, 0.95);
+      const d50 = $("[data-p50]", li), d95 = $("[data-p95]", li); d50.textContent = msTxt(p50); d95.textContent = msTxt(p95);
+      d50.dataset.tone = tone(p50); d95.dataset.tone = tone(p95);
+      $("[data-cur]", li).textContent = S.wire === "default" ? `${c.epoch}:${c.seq + (k === "stream" ? 3 : 0)}` : "n/a";
+      const bars = $$("[data-part='bars'] i", li), xs = L.samples.slice(-20);
+      bars.forEach((b, i) => { const x = xs[i - (20 - xs.length)]; b.style.setProperty("--h", x === undefined ? 0 : Math.min(1, Math.sqrt(x / 1000)).toFixed(3)); b.dataset.tone = x === undefined ? "" : tone(x); });
+      let note = L.note;
+      if (c.state === "reconnecting" && c.retryAt) note = `Retry ${c.attempt} in ${Math.max(0, (c.retryAt - now) / 1000).toFixed(1)} s`;
+      $("[data-note]", li).textContent = note;
+    });
+    const order = ["offline", "reconnecting", "connecting", "live"], worst = order.find((s) => Object.values(conns).some((c) => c.state === s));
+    pill($("[data-rt-pill]", R), worst, worst === "live" ? "All lanes live" : undefined);
+    if (worst !== lastWorst) { lastWorst = worst; clearTimeout(annT); annT = setTimeout(() => announce(`Realtime sandbox: ${worst === "live" ? "all lanes live" : LANES.filter(([, , cid]) => conns[cid].state !== "live").map(([, n, cid]) => `${n} ${conns[cid].state}`).join(", ")}`, worst === "offline"), 600); }
+  }
+  function setNote(cid, txt) { LANES.forEach(([k, , c]) => { if (c === cid) lanes[k].note = txt; }); }
+  function connect(cid, why) {
+    const c = conns[cid]; const bad = invalid();
+    if (bad) { c.state = "offline"; c.retryAt = 0; setNote(cid, "Build failed · fix the bus to start"); return; }
+    if (netBlocks(cid)) {
+      if (S.net === "wsblock") { c.state = "offline"; c.retryAt = 0; setNote(cid, "WebSocket upgrade blocked · no fallback in v0"); addLog(cid === "ws" ? "channel" : ".live", "upgrade blocked (426), no long-poll fallback"); return; }
+      c.state = "offline"; c.retryAt = 0; setNote(cid, "Browser offline · retries the moment it's back"); return;
+    }
+    c.state = "connecting"; c.retryAt = 0; setNote(cid, why || "");
+    setTimeout(() => {
+      if (c.state !== "connecting") return;
+      if (netBlocks(cid) || invalid()) return connect(cid);
+      const replay = Math.floor(Math.random() * 5);
+      if (c.behind) { c.behind = false; c.epoch++; c.seq = 0; setNote(cid, "Too far behind · reset, refetched"); addLog(cid === "ws" ? "channel" : "sse", `reset: outside the 256-event / 60 s window, epoch → ${c.epoch}`); }
+      else if (c.attempt) { setNote(cid, `Resumed from ${c.epoch}:${c.seq} · ${replay} replayed`); addLog(cid === "ws" ? "channel" : "sse", `resumed from ${c.epoch}:${c.seq}, ${replay} replayed`); c.seq += replay; }
+      else addLog(cid === "ws" ? "channel" : "sse", `open over ${wireOf(cid)}`);
+      c.state = "live"; c.attempt = 0; paint();
+    }, pace(S.wire === "tabs" ? 120 : 350 + Math.random() * 400));
+  }
+  function drop(cid, reason) {
+    const c = conns[cid]; if (c.state === "offline" && !c.retryAt) return;
+    c.attempt++; const cap = Math.min(30, 0.5 * 2 ** c.attempt), wait = Math.random() * cap;     // full jitter
+    c.state = "reconnecting"; c.retryAt = performance.now() + wait * 1000;
+    addLog(cid === "ws" ? "channel" : "sse", `${reason}; retry ${c.attempt} in ${wait.toFixed(1)} s (cap ${cap} s)`);
+    clearTimeout(c._t); c._t = setTimeout(() => { if (c.state === "reconnecting") connect(cid); }, pace(wait * 1000));
+  }
+  function restart(why) { Object.entries(conns).forEach(([cid, c]) => { clearTimeout(c._t); c.attempt = 0; connect(cid, why); }); LANES.forEach(([k]) => lanes[k].samples = []); validate(); paint(); }
+  function validate() {
+    const bad = invalid(), busg = $("[data-rt-busg]", R), noServer = S.wire !== "default";
+    err.hidden = !bad; if (bad) { $("[data-part='title']", err).textContent = bad[0]; $("[data-part='description']", err).textContent = bad[1]; }
+    busg.disabled = noServer;
+    $("[data-rt-busmsg]", R).textContent = noServer ? (S.wire === "tabs" ? "No server: tabs only stays in this browser." : "No server: the fake pair runs in memory.") : "";
+    const doIn = $("input[value='durable-object']", R); doIn.disabled = S.preset !== "cf";
+    $("#rt-bh-durable-object").textContent = S.preset === "cf" ? "One object per channel" : "Cloudflare preset only";
+  }
+  R.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.name === "rt-wire") { S.wire = t.value; addLog("config", `wire → ${t.value}`); restart(); }
+    else if (t.name === "rt-bus") { S.bus = t.value; addLog("config", `realtime.bus → ${t.value}`); restart(); }
+    else if (t.matches("[data-rt-preset]")) { S.preset = t.value; if (S.bus === "durable-object" && S.preset !== "cf") { S.bus = "postgres"; $("input[value='postgres']", R).checked = true; addLog("config", "durable-object needs Cloudflare; bus → postgres"); } addLog("config", `preset → ${t.value}`); restart(); }
+    else if (t.matches("[data-rt-net]")) { const was = S.net; S.net = t.value; addLog("network", NETS.find((x) => x[0] === t.value)[1]);
+      Object.entries(conns).forEach(([cid, c]) => { const blocked = netBlocks(cid); if (c.state === "live" && !blocked) return; clearTimeout(c._t);
+        if (!blocked && c.state === "offline" && !invalid()) c.attempt = Math.max(1, c.attempt); connect(cid); });
+      paint(); }
+  });
+  $("[data-rt-ping]", R).onclick = () => { LANES.forEach(([k, n, cid]) => { if (conns[cid].state !== "live") { addLog(n, `ping skipped: ${conns[cid].state}`); return; } const x = sampleMs(cid); lanes[k].samples.push(x); lanes[k].samples = lanes[k].samples.slice(-20); addLog(n, `ping ${msTxt(x)}`); }); paint(); };
+  $("[data-rt-drop]", R).onclick = () => { if (S.wire === "tabs") { addLog("tabs", "nothing to drop: no server connection"); announce("Tabs only has no server connection to drop"); return; } Object.keys(conns).forEach((cid) => conns[cid].state === "live" && drop(cid, "connection dropped")); paint(); };
+  $("[data-rt-behind]", R).onclick = () => { if (S.wire !== "default") { addLog("config", "cursors only exist on weft's default wires"); return; } Object.values(conns).forEach((c) => c.behind = true); addLog("sim", "missed > 256 events while away"); Object.keys(conns).forEach((cid) => conns[cid].state === "live" && drop(cid, "connection dropped after a long sleep")); paint(); };
+  $("[data-rt-reset]", R).onclick = () => { Object.assign(S, { wire: "default", bus: "postgres", preset: "multi", net: "good" }); $$("input[type='radio']", R).forEach((i) => i.checked = (i.name === "rt-wire" && i.value === "default") || (i.name === "rt-bus" && i.value === "postgres")); $("[data-rt-preset]", R).value = "multi"; $("[data-rt-net]", R).value = "good"; log.innerHTML = ""; addLog("config", "reset"); restart(); announce("Realtime sandbox reset"); };
+  /* the 2 s heartbeat of the demo: latency samples, cursors, lossy drops; paused off screen and in hidden tabs */
+  let seen = false, tick = 0, cd = 0;
+  const step = () => {
+    if (!seen || document.hidden) return;
+    LANES.forEach(([k, n, cid]) => { const c = conns[cid]; if (c.state !== "live") return; lanes[k].samples.push(sampleMs(cid)); lanes[k].samples = lanes[k].samples.slice(-20); });
+    Object.entries(conns).forEach(([cid, c]) => { if (c.state !== "live") return; c.seq += Math.floor(Math.random() * 3); if (S.net === "lossy" && S.wire !== "tabs" && Math.random() < 0.1) drop(cid, "dropped (lossy network)"); });
+    paint();
+  };
+  new IntersectionObserver((es) => es.forEach((e) => { seen = e.isIntersecting; clearInterval(tick); clearInterval(cd); if (seen) { tick = setInterval(step, 2000); cd = setInterval(() => Object.values(conns).some((c) => c.state === "reconnecting") && paint(), 250); step(); } })).observe(card);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) Object.entries(conns).forEach(([cid, c]) => { if (c.state === "reconnecting") { clearTimeout(c._t); connect(cid); } }); });
+  validate(); restart(); splitLabels(card);
+})();
+
+/* -- Access denied, 403 (07 §6.5): 09's system page, its sharing state ------------------------------ */
+(function denied() {
+  const ACC = [["jo", "jo@loom.app", "Loom · this workspace", false], ["jo-p", "jo.doe@gmail.com", "Personal", false], ["jo-a", "jo@acme.co", "Acme · has access", true]];
+  const card = h(`<div class="card wide" id="sys-403"><header><h3>Access denied (403)</h3><p>The result page from flows (09 §5.1) in its sharing state. The way in is a request the owner answers from their inbox; someone outside the workspace gets the 404 instead, so the page never confirms the file exists.</p></header>
+    <div style="border-radius:var(--warp-radius-surface);box-shadow:inset 0 0 0 1px var(--warp-color-border);overflow:hidden;background:var(--warp-color-page)">
+      <div class="row" style="padding:10px 14px;border-block-end:1px solid var(--warp-color-border);background:var(--warp-color-surface);gap:10px"><b style="font:var(--warp-text-heading-weight) 14px/1 var(--warp-text-heading-font)">Loom</b><span class="muted mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-inline-size:0;flex:1">loom.app/docs/q4-brief</span>${av("you", "sm")}</div>
+      <div data-403 style="position:relative"></div>
+    </div>
+    <div class="rig"><span class="lbl">Workspace</span><div class="seg" role="group" aria-label="Workspace policy">${[["yes", "Takes requests"], ["no", "No requests"]].map(([v, l], i) => `<button type="button" aria-pressed="${i === 0}" data-pol="${v}">${l}</button>`).join("")}</div>
+      ${btn("Owner approves", { e: "outline", tone: "neutral", size: "sm", attrs: "data-approve disabled" })}${btn("Reset", { e: "ghost", tone: "neutral", size: "sm", icon: "refresh", attrs: "data-r403" })}</div></div>`);
+  $("#co-parts").append(card);
+  const host = $("[data-403]", card), RID = "req_7Q2K-91XF";
+  let st = "request", allow = true, note = "", drawn = false;
+  const art = `<span data-part="art" aria-hidden="true"><svg data-part="weave" viewBox="0 0 132 84" preserveAspectRatio="xMidYMid meet">
+      ${[16, 36, 56, 76, 96, 116].map((x) => `<line x1="${x}" y1="4" x2="${x}" y2="80"/>`).join("")}
+      <path pathLength="1" style="--i:0" d="M4 22 C 30 18, 40 26, 66 22 S 102 18, 128 22"/>
+      <path pathLength="1" style="--i:1" d="M4 62 C 30 58, 40 66, 66 62 S 102 58, 128 62"/>
+      <path pathLength="1" style="--i:2" d="M4 42 C 20 40, 34 44, 52 42"/>
+      <path data-part="shackle" d="M58 40 v-7 a8 8 0 0 1 16 0 v7"/>
+      <rect data-part="lock" x="54" y="39" width="24" height="19" rx="4"/>
+      <path data-part="keyhole" d="M66 46 v5"/>
+    </svg></span>`;
+  const meta = `<span data-part="meta">Request ID <code>${RID}</code>${btn("Copy request ID", { e: "ghost", tone: "neutral", size: "sm", icon: "copy", only: true, attrs: "data-copyid" })}</span>`;
+  function render(focus = true) {
+    $$("[data-pol]", card).forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.pol === "yes") === allow)));
+    $("[data-approve]", card).disabled = st !== "pending";
+    if (st === "granted") {
+      host.innerHTML = `<div style="padding:24px clamp(16px,4vw,40px);display:grid;gap:12px;min-block-size:360px;align-content:start" data-arrive>
+        <span data-part="eyebrow" class="muted mono">Docs · shared by Kofi Mensah</span><h3 tabindex="-1" data-focus style="font:var(--warp-text-title-weight) 22px/1.15 var(--warp-text-title-font)">Q4 brief</h3>
+        <p class="muted" style="max-inline-size:60ch">Goals for the quarter, the calendar engine milestones and the open questions for design crit. You can edit this document.</p>
+        <ol data-scope="toast" data-part="region" data-contained aria-label="Notifications (toasts)" style="position:static;inline-size:min(100%,380px)"><li data-scope="toast" data-part="root" data-tone="positive" role="status"><span data-part="icon">${ic("check")}</span><span data-part="title">Kofi gave you edit access</span><span data-part="description">Q4 brief opened in place.</span></li></ol></div>`;
+      if (focus) $("[data-focus]", host).focus({ preventScroll: true }); announce("Kofi gave you edit access. Q4 brief is open."); return;
+    }
+    const sw = btn("Switch account", { e: "ghost", tone: "neutral", attrs: 'data-switch aria-haspopup="menu" aria-expanded="false" aria-controls="s403-menu"' });
+    const body = {
+      request: [`You don't have access to Q4 brief`, `You're signed in as jo@loom.app. Ask the owner for access, or switch to an account that has it.`, `${btn("Request access", { attrs: "data-ask", sweep: true })}${sw}`],
+      compose: [`You don't have access to Q4 brief`, `Kofi Mensah and Ana Ruiz can share it. Add a note if it helps them decide.`, ""],
+      pending: [`Request sent`, ``, `${btn("Withdraw request", { e: "outline", tone: "neutral", attrs: "data-withdraw" })}${sw}`],
+      norequest: [`You don't have access to Q4 brief`, `This workspace doesn't take access requests. Ask Kofi Mensah, the owner, to share it with jo@loom.app.`, `${btn("Copy link for the owner", { attrs: "data-copylink", sweep: true })}${sw}`],
+    }[st];
+    const artH = drawn ? art.replaceAll('pathLength="1" style="', 'pathLength="1" style="animation:none;stroke-dashoffset:0;') : art; drawn = true;   // the weave draws once, on mount
+    host.innerHTML = `<div data-scope="system-page"><div data-part="body">${artH}<span data-part="code">403 · No access</span><h3 tabindex="-1" data-focus>${body[0]}</h3>${body[1] ? `<p>${body[1]}</p>` : ""}
+      ${st === "pending" ? `<span data-part="pending" role="status">${ic("clock", 'style="inline-size:16px;block-size:16px"')} Request sent to Kofi and Ana · we'll email you when they answer</span>` : ""}
+      ${st === "compose" ? `<div data-part="request"><div data-scope="field" data-counter="280"><div data-part="control" data-sweep>${SW}<textarea data-part="input" id="s403-note" rows="3" maxlength="280" placeholder=" " aria-describedby="s403-c">${esc(note)}</textarea><label data-part="label" for="s403-note">Note (optional)</label></div><div data-part="message"><span data-part="hint">They'll see it with your request</span><span data-part="counter" id="s403-c" aria-live="polite">${note.length} / 280</span></div></div>
+        <div data-part="actions">${btn("Cancel", { e: "ghost", tone: "neutral", attrs: "data-cancel" })}${btn("Send request", { attrs: "data-send-req", sweep: true })}</div></div>` : `<div data-part="actions">${body[2]}</div>`}
+      <ul data-part="accounts" role="menu" id="s403-menu" aria-label="Switch account" hidden>${ACC.map(([k, e, d, has]) => `<li role="none"><button type="button" role="menuitem" tabindex="-1" data-acc="${k}">${av("you", "sm")}<span>${e}<small>${d}</small></span>${has ? `<span data-scope="badge" data-tone="positive">Has access</span>` : k === "jo" ? `<span class="muted" style="font-size:12px">Current</span>` : ""}</button></li>`).join("")}<li role="none"><button type="button" role="menuitem" tabindex="-1" data-acc="other">${ic("plus")}<span>Use another account</span><span></span></button></li></ul>
+      ${meta}</div></div>`;
+    splitLabels(host);
+    if (focus) $(st === "compose" ? "#s403-note" : "[data-focus]", host).focus({ preventScroll: true });
+  }
+  const menu = () => $("#s403-menu", host), items = () => $$("[role='menuitem']", menu());
+  const openMenu = (open, toFirst = true) => { const m = menu(), b = $("[data-switch]", host); if (!m || !b) return; m.hidden = !open; b.setAttribute("aria-expanded", String(open)); if (open && toFirst) items()[0].focus(); if (!open) b.focus(); };
+  host.addEventListener("click", async (e) => {
+    const t = e.target.closest("button"); if (!t) return;
+    if (t.matches("[data-ask]")) { st = "compose"; render(); }
+    else if (t.matches("[data-cancel]")) { st = "request"; render(); }
+    else if (t.matches("[data-send-req]")) { note = $("#s403-note", host).value; confirmSweep(t); await sleep(pace(420)); st = "pending"; render(); announce("Request sent to Kofi and Ana. We'll email you when they answer."); }
+    else if (t.matches("[data-withdraw]")) { st = "request"; note = ""; render(); announce("Request withdrawn"); }
+    else if (t.matches("[data-copylink]")) { try { navigator.clipboard?.writeText("https://loom.app/docs/q4-brief").catch(() => {}); } catch {} confirmSweep(t); announce("Link copied. Send it to Kofi Mensah."); }
+    else if (t.matches("[data-copyid]")) { try { navigator.clipboard?.writeText(RID).catch(() => {}); } catch {} announce("Copied"); }
+    else if (t.matches("[data-switch]")) openMenu(menu().hidden);
+    else if (t.matches("[data-acc]")) { const k = t.dataset.acc; openMenu(false); if (k === "jo-a") { st = "granted"; render(); announce("Switched to jo@acme.co. Q4 brief is open."); } else if (k === "jo") announce("Already signed in as jo@loom.app"); else announce(k === "other" ? "Opens the sign-in page" : "jo.doe@gmail.com doesn't have access either"); }
+  });
+  host.addEventListener("keydown", (e) => {
+    const m = menu(); if (!m || m.hidden) return; const its = items(), i = its.indexOf(document.activeElement); if (i < 0 && e.key !== "Escape") return;
+    const n = { ArrowDown: (i + 1) % its.length, ArrowUp: (i - 1 + its.length) % its.length, Home: 0, End: its.length - 1 }[e.key];
+    if (n !== undefined) { e.preventDefault(); its[n].focus(); } else if (e.key === "Escape" || e.key === "Tab") { if (e.key === "Escape") e.preventDefault(); openMenu(false); }
+  });
+  host.addEventListener("input", (e) => { if (e.target.id === "s403-note") { note = e.target.value; const c = $("#s403-c", host); c.textContent = `${note.length} / 280`; c.dataset.level = note.length >= 280 ? "over" : note.length > 240 ? "near" : ""; e.target.closest("[data-part='control']").toggleAttribute("data-filled", !!note); } });
+  document.addEventListener("pointerdown", (e) => { const m = menu(); if (m && !m.hidden && !e.target.closest("#s403-menu, [data-switch]")) { m.hidden = true; $("[data-switch]", host)?.setAttribute("aria-expanded", "false"); } });
+  $$("[data-pol]", card).forEach((b) => b.onclick = () => { allow = b.dataset.pol === "yes"; st = allow ? "request" : "norequest"; render(); announce(allow ? "Workspace takes access requests" : "Workspace doesn't take access requests"); });
+  $("[data-approve]", card).onclick = () => { st = "granted"; render(); };
+  $("[data-r403]", card).onclick = () => { allow = true; st = "request"; note = ""; render(); announce("403 demo reset"); };
+  render(false);
 })();
 
 /* ============================================================================

@@ -1,6 +1,6 @@
 # warp 02 — Layout, navigation and responsive behaviour
 
-Status: v0.2, 2026-10-28 (review fixes: see §14). CSS: [tokens/warp-layout.css](tokens/warp-layout.css), in `@layer warp.layout`. Specimen:
+Status: v0.3, 2026-10-28 (v0.2 review fixes: §14; v0.3 adds the Spacer demo and the locale provider: §15). CSS: [tokens/warp-layout.css](tokens/warp-layout.css), in `@layer warp.layout`. Specimen:
 [specimens/layout.html](specimens/layout.html) (nine templates × phone 390 / tablet 834 (portrait or landscape) /
 desktop 1280, plus galleries of every part; the picker also flips `fields: floating | classic` page-wide). It builds on [01-foundations.md](01-foundations.md) and
 [SIGNATURE.md](SIGNATURE.md).
@@ -77,6 +77,12 @@ bleed?: true | "start" | "end"                            // any element: out to
 - **ScrollArea** contains overscroll, uses a thin bar, and `fade` masks its edges with a scroll timeline (this is
   FadeMask). Give it `role="region"`, a name and `tabindex=0` when it has no focusable child.
 - **Frame** crops its children; it has no chrome of its own (wrap it in a Surface for chrome).
+- **Spacer** takes the free space inside a Row or Stack (`flex: 1 1 0`), so what follows it sits at the far end: the
+  actions after a toolbar's filter field, the footer of a fixed-height card. It is an empty box with no role and no size
+  of its own, and it does nothing in a Grid or a block parent. Its basis is 0, so it never forces a wrap. In a
+  wrapping Row it stays on the line of the item before it, and items that wrap start their own line at the start. If the
+  end group must stay at the end, use `wrap={false}` or `reflow`. Prefer `justify="between"` when there are exactly
+  two groups; use Spacer when only some items go to the end. Demo: `layout.html#spacer-demo`.
 
 ## 4. Page parts (coverage rows)
 
@@ -293,8 +299,96 @@ RouteProgress(p: { state: "idle" | "loading" | "done" })
 | Landscape tablet | 1194 wide gives the desktop sidebar; 834 high keeps a 56px header (coarse) |
 | Foldables | `@media (horizontal-viewport-segments: 2)` puts master and detail on separate screens, with the hinge as the gap (`env(viewport-segment-*)`) |
 | Print | Nav, header, dock, overlays, consent and announcement are hidden; main is full width; Split stacks; links print their URL |
-| RTL | Only logical properties are used, so `dir="rtl"` mirrors everything (try the specimen's Direction toggle). Push and drawer motion flip. Device chrome stays LTR |
+| RTL | Only logical properties are used, so `dir="rtl"` mirrors everything (try the specimen's Direction toggle). Push and drawer motion flip. Device chrome stays LTR. `dir` comes from the locale provider (below) |
 | Theme | ThemeProvider writes `data-theme` / `data-expression` / `data-density` on the root (or on an island). FaviconSwitcher swaps the icon on `data-theme` and on `prefers-color-scheme` |
+
+### Locale provider
+
+`Locale` is the one place an app says which language it's in, which way that language runs and how its numbers, money
+and dates are written. It renders `[data-scope="locale"]` with `lang` and `dir` on its root (the root provider writes them
+on `<html>`). Every component inside reads the same context.
+
+```ts
+Locale(p: {
+  locale: string;                        // BCP 47: "en-US", "de-DE", "ar-EG"
+  dir?: "auto" | "ltr" | "rtl";          // default "auto": from the locale's script
+  currency?: string;                     // ISO 4217: the default for values that carry none (a market's price list)
+  timeZone?: string;                     // IANA; default: the user's resolved zone
+  numberingSystem?: string;              // "latn", "arab", …; default: the locale's own
+  calendar?: string; hourCycle?: "h12" | "h23"; weekStart?: 1 | 2 | 3 | 4 | 5 | 6 | 7;   // defaults from the locale
+  as?: string;                           // render a real box (data-box); default: display: contents
+})
+locale(): LocaleContext                  // the nearest provider
+
+type LocaleContext = {
+  locale: string; dir: "ltr" | "rtl"; currency?: string; timeZone: string; weekStart: number;
+  decimal: string; group: string; digits: string[];                    // what the parser accepts
+  number(n, o?): string; money(n, currency?): string; percent(n): string; unit(n, unit): string; compact(n): string;
+  date(d, o?): string; range(a, b, o?): string; relative(n, unit): string; list(xs, type?): string;
+  plural(n): Intl.LDMLPluralRule; collator(o?): Intl.Collator; name(code, type?): string;   // DisplayNames
+  parse(text): number | null;                                          // typed input → number
+}
+```
+
+**How direction resolves.** An explicit `dir` wins. Otherwise the locale's own text direction is used
+(`Intl.Locale#getTextInfo()`, falling back to its maximized script: Arab, Hebr, Thaa, Syrc, Nkoo, Adlm, Rohg are RTL).
+A provider **always writes `dir`** and never inherits it, so a `de-DE` island inside an Arabic page stays LTR and an
+outer direction can't leak in. That's also why the specimen's Direction setting (a test harness that forces `dir` on
+the frames) doesn't reach the locale demo. Device chrome stays LTR.
+
+**How it meets the RTL work.** Nothing in §1–§8 changes: layout is logical properties, so a `dir` write mirrors it with
+no JS. The few physical things key off the provider's `dir`:
+- Horizontal keyframes multiply by `--_dir`. `warp-layout.css` now writes both `[dir="rtl"] { --_dir: -1 }` and
+  `[dir="ltr"] { --_dir: 1 }`, so a nested LTR island resets it instead of inheriting −1.
+- Route progress grows from `:dir(rtl)`, not `[dir="rtl"] …`, which a nested LTR island would also have matched.
+- Icons that point (back, next, send, undo, a list chevron) carry `data-flip` and mirror under `:dir(rtl)`. Icons that
+  depict things (search, a clock, a check, media play) never mirror.
+- The sweep keeps travelling left to right in every direction (SIGNATURE §1.2–§1.4 are physical). Per-character label
+  delays are measured from the left edge, so they stay in step with it.
+
+**How components read it.**
+- **weft components** call `locale()`. Each formatted value is derived from `(value, locale)`, so switching the
+  locale rewrites text nodes and two attributes and re-mounts nothing. Formatters are cached by
+  `(tag, options)`, because constructing an `Intl` object costs far more than calling it.
+- **Plain DOM code** reads the closest `[lang]` and `getComputedStyle(el).direction`. The inputs' "nearest
+  `<Surface lang>` → document lang" (03 §2, 04 §1) is the same lookup, because the provider is what writes that `lang`.
+- **CSS** uses logical properties first, then `:dir()` for physical exceptions and `:lang()` for script typography.
+- **SSR** resolves the locale once per request (route segment, then the account setting, then `Accept-Language`) and
+  serialises it into the root provider, so hydration formats with the same locale and time zone and the text matches.
+  The LanguageSwitcher (05 §7) writes the choice, persists it and updates `<html lang>`, which also switches the screen
+  reader's voice.
+
+**Formatting rules.**
+- **Money keeps its own currency.** A value carries its ISO code. Switching locale changes how it's written
+  (`$1,284.50`, `1.284,50 $`, `‏١٬٢٨٤٫٥٠ US$`), never the amount. The provider's `currency` is only the default for
+  values that have none, such as a market's price list.
+- **Digits are the locale's.** `ar-EG` writes Arabic-Indic digits. `numberingSystem: "latn"` switches them (common
+  in Gulf and Maghreb apps). Tables and stats use `tabular-nums` with either set.
+- **Isolate every formatted value.** `[data-format]` gets `unicode-bidi: isolate`, so a number, date or price never
+  reorders against the words around it. Identifiers (order ids, SKUs, codes, e-mail, phone, URLs) use
+  `data-format="id"` and stay LTR. User content (names, notes, comments) uses `dir="auto"`, or `<bdi>` inline.
+- **Plurals come from `Intl.PluralRules`**, never `n === 1`. Arabic has six categories (zero, one, two, few, many,
+  other), and the message table supplies each one.
+- **Parse what people type.** NumberInput and CurrencyInput (03 §3) parse through `parse()`: the locale's digits *and*
+  Latin digits, its group and decimal marks, and a typed minus. Values are stored as numbers and re-formatted on blur.
+- **Sort and search with `collator()`**, so de-DE sorts "Ä" with "A". Table text sort and filter fields use it with
+  `sensitivity: "base"`.
+- **Dates use the provider's `timeZone`.** Calendars start the week on `weekStart` (04 §1.4 reads the same value).
+
+**Script typography.** For scripts that join (Arabic, Syriac, N'Ko, Adlam, Hanifi Rohingya, Mongolian) or have no
+case (Hebrew, Thai, Devanagari, CJK), `warp-layout.css` sets the eyebrow, label, floated-label and button tracking to
+0 and their case to `none` under `:lang()`. Tracking pulls joined letters apart. `:lang()` matches every descendant, so
+the reset survives nested scope roots that re-declare the sys tokens. The floating label's per-character tint is
+segmented by the provider: grapheme clusters (`Intl.Segmenter`) by default, and **words** for joining scripts, because
+a letter alone in its own span loses its joined form.
+
+**Accessibility.** `lang` is on every island whose language differs from its parent's, down to a single quoted phrase
+(WCAG 3.1.2). The direction change is a visual property, so nothing is announced. Focus order follows the DOM, which
+doesn't move.
+
+Demo: `layout.html#locale` (`#locale-demo`). Switch en-US, de-DE and ar-EG to change the number, money, date, range,
+relative time, unit, percent, compact, list and plural formats, the direction and the digits. Override the direction
+or the digits, type an amount in the locale's own format, and read the resolved context in the table.
 
 ## 10. Input modality
 
@@ -335,6 +429,7 @@ sidebar animates a grid-track variable, and the rail overlay reveals with `clip-
 | PageHeader | PageHeader | | AnnouncementBar | AnnouncementBar |
 | DraggablePanel | FloatPanel | | CookieBanner | ConsentBanner |
 | ThemeProvider wiring | §9 Theme | | FaviconSwitcher | §9 Theme |
+| DirectionProvider, LocaleProvider | Locale (§9) | | | |
 
 §3 gap rows owned by layout: navigation rail (§6), route tabs (TabNav), route progress, inspector, workspace tabs
 (DocTabs), dockable panels (nested SplitPane), status bar, infinite canvas, dashboard grid (Board), affix and
@@ -378,3 +473,11 @@ back-to-top (StickyBar, BackToTop), wrap/cluster (Row), bleed/inset, skip link, 
 | 03 m3 · ten `<main>`s | One; shell islands use a named region |
 | 03 m4 · h1 → h4 | Demo headings step (PageHeader takes `level`) |
 | 03 m13 · switcher on a 1.31:1 hairline | Ink base |
+
+## 15. Changes in v0.3 (coverage gaps)
+
+| Gap (COVERAGE §4) | Fix |
+|---|---|
+| §1 primitives · Spacer had no demo | §3 Spacer rules; `layout.html#spacer-demo` (toolbar Row, fixed-height Stack footer, resizable box) |
+| P0 direction and locale provider · no locale spec | §9 [Locale provider](#locale-provider): API, direction resolution, how components read it, formatting rules, script typography; `layout.html#locale` (`#locale-demo`, `#locale-island`, `#locale-context`) |
+| (found while specifying it) nested LTR inherited `--_dir: -1`; route progress matched `[dir="rtl"] …` through an LTR island | `[dir="ltr"] { --_dir: 1 }`; route progress uses `:dir(rtl)` |

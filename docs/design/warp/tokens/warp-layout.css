@@ -1,5 +1,5 @@
 /* =============================================================================
-   warp · layout — primitives, shells, navigation, route motion    v0.1 · 2026-10-28
+   warp · layout — primitives, shells, navigation, route motion    v0.3 · 2026-10-28
    Spec: ../02-layout.md         Depends on: ./warp.css (sys tokens)
 
    Load after warp.css. Declare the full order once, before either file:
@@ -728,8 +728,10 @@
    Banner, AnnouncementBar, ConsentBanner (cookie).
    ======================================================================== */
 
-/* Spacer — pushes siblings apart inside Row / Stack */
-:where([data-scope="spacer"]) { flex: 1 1 0; min-inline-size: 0; min-block-size: 0; }
+/* Spacer — takes the free space inside a Row or Stack, so what follows it sits at the far end.
+   No box of its own and no role; flex-basis 0 means it never forces a wrap. In a Grid or a block
+   parent it does nothing (it is a flex item only). */
+:where([data-scope="spacer"]) { flex: 1 1 0; min-inline-size: 0; min-block-size: 0; align-self: stretch; }
 
 /* Section — vertical rhythm with an optional header; band = full-bleed surface */
 :where([data-scope="section"]) {
@@ -1281,8 +1283,37 @@
   transition: transform var(--warp-duration-slow) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-duration-base);
 }
 :where([data-scope="route-progress"][data-state="done"]) { --_v: 1; opacity: 0; }
-:where([dir="rtl"] [data-scope="route-progress"]) { transform-origin: 100% 50%; }
-:where([dir="rtl"]) { --_dir: -1; }   /* horizontal keyframes multiply by --_dir */
+:where([data-scope="route-progress"]:dir(rtl)) { transform-origin: 100% 50%; }
+/* horizontal keyframes multiply by --_dir. Both directions are written, so an LTR island inside an RTL page
+   (a <Locale dir="ltr">, 02 §9 "Locale provider") gets 1 back instead of inheriting -1 */
+:where([dir="rtl"]) { --_dir: -1; }
+:where([dir="ltr"]) { --_dir: 1; }
+
+/* ===========================================================================
+   9b · LOCALE PROVIDER (02 §9 "Locale provider"). <Locale> renders
+   [data-scope="locale"] with lang and dir on its root (the root provider writes
+   them on <html>). Direction is CSS's own: logical properties mirror, :dir()
+   picks the few physical things (icons that point, keyframes via --_dir).
+   Script typography is keyed on :lang(), which matches every descendant, so it
+   survives nested scope roots that re-declare the sys tokens.
+   ======================================================================== */
+:where([data-scope="locale"]) { display: contents; }
+:where([data-scope="locale"][data-box]) { display: block; }       /* `as` given: a real box (a card, a pane) */
+/* formatted values are isolated, so "−1.284,50 €" or "١٬٢٨٤٫٥٠ US$" never reorders against the words around it */
+:where([data-format]) { unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+/* identifiers keep their own order in every direction: order ids, SKUs, codes, e-mail, phone, URLs */
+:where([data-format="id"], [data-format="code"]) { direction: ltr; unicode-bidi: isolate; }
+/* icons that point (back, next, send, undo, a list's chevron) mirror; icons that depict things never do */
+:where([data-flip]:dir(rtl)) { scale: -1 1; }
+/* scripts that join (Arabic, Syriac, N'Ko, Adlam, Hanifi Rohingya, Mongolian) or have no case:
+   no tracking and no case transform, or the letters break apart. These are the tokens the dials set. */
+:is(:lang(ar), :lang(fa), :lang(ur), :lang(ps), :lang(sd), :lang(ug), :lang(ckb), :lang(syr), :lang(nqo), :lang(ff-Adlm), :lang(rhg), :lang(mn-Mong),
+    :lang(he), :lang(yi), :lang(th), :lang(hi), :lang(bn), :lang(ja), :lang(zh), :lang(ko)) {
+  --warp-text-eyebrow-tracking: 0em; --warp-text-eyebrow-case: none;
+  --warp-text-label-tracking: 0em; --warp-text-label-case: none;
+  --warp-text-button-tracking: 0em; --warp-text-button-case: none;
+  --warp-label-float-tracking: 0em;
+}
 
 /* ===========================================================================
    5 · NAVIGATION MOTION. Every travel is × motion-scale, so reduced motion

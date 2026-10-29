@@ -31,7 +31,7 @@
   .eyebrow { font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); font-weight: 500; color: var(--warp-color-text-subtle); }
   .muted { color: var(--warp-color-text-subtle); }
   .mono { font-family: var(--warp-font-mono); font-size: var(--warp-text-code-size); }
-  .t-display { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); font-variation-settings: var(--warp-text-display-variation); text-box: var(--warp-text-display-trim); }
+  .t-display { --warp-trim-k: var(--warp-text-display-trim-k); font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); font-variation-settings: var(--warp-text-display-variation); text-box: var(--warp-text-display-trim); }
   .t-display em, .t-title em { font-style: italic; color: var(--warp-color-accent-text); }
   .t-title { font-family: var(--warp-text-title-font); font-size: var(--warp-text-title-size); line-height: var(--warp-text-title-leading); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); }
   .t-heading { font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size); line-height: var(--warp-text-heading-leading); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); }
@@ -116,6 +116,9 @@
   .seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
   .seg label { position: relative; display: flex; }
   .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  /* hit-min tall on coarse pointers, from the label (a native radio won't stretch in WebKit); neighbours sit
+     inline, so block axis only */
+  .seg label::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)) 0; }
   .seg i { font-style: normal; display: inline-flex; align-items: center; block-size: 26px; padding-inline: 9px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
   .seg label:hover i { color: var(--warp-color-text); }
   .seg input:checked + i { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
@@ -486,6 +489,37 @@
   .modal-t td:first-child { color: var(--warp-color-text); }
 
   footer.f { padding-block: var(--warp-space-section); border-block-start: 1px solid var(--warp-color-border); color: var(--warp-color-text-subtle); font-size: 13px; }
+
+  /* ------------------------------------------------------------ Spacer (02 §3) */
+  /* demo only: the free space a Spacer takes is hatched so it can be seen; the real one paints nothing */
+  .spc-vis { min-block-size: 18px; border-radius: var(--warp-radius-mark); position: relative;
+    background: repeating-linear-gradient(135deg, var(--warp-color-accent-border) 0 1px, transparent 1px 7px); }
+  .spc-vis::after { content: "spacer" / ""; position: absolute; inset: 0; display: grid; place-items: center; font: 500 10px var(--warp-font-mono); letter-spacing: 0.06em; color: var(--warp-color-accent-text); overflow: hidden; }
+  .spc-col { block-size: 210px; padding: 10px; border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised); --warp-field-notch: var(--warp-color-surface-raised); }
+  .spc-row { --warp-field-notch: var(--warp-color-page); }
+  .spc-row [data-scope="field"] { flex: 0 1 240px; min-inline-size: 150px; }
+  @media (forced-colors: active) { .spc-vis { background: repeating-linear-gradient(135deg, GrayText 0 1px, transparent 1px 7px); forced-color-adjust: none; } .spc-vis::after { color: CanvasText; } }
+
+  /* ------------------------------------------------------------ Locale provider (02 §9) */
+  .loc { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--warp-space-group); align-items: start; }
+  @media (max-width: 960px) { .loc { grid-template-columns: 1fr; } }
+  .loc-ctl { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--warp-space-related) var(--warp-space-group); align-items: end; }
+  .loc-ctl .seg { flex-wrap: wrap; }
+  .loc-card { display: grid; gap: var(--warp-space-group); }
+  .loc-card.loc-swap { animation: warp-route-in var(--warp-duration-route) var(--warp-ease-out) both; }
+  .loc-h { display: flex; align-items: start; justify-content: space-between; gap: var(--warp-space-related); }
+  .loc-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 168px), 1fr)); gap: var(--warp-space-group) var(--warp-space-group); }
+  .loc-facts dt { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+  .loc-facts dd { font-weight: 500; overflow-wrap: anywhere; }
+  .loc-facts small { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+  .loc-qty { display: flex; align-items: center; gap: var(--warp-space-related); }
+  .loc-qty .ibtn { border: 1px solid var(--warp-color-border-control); color: var(--warp-color-text); }
+  .loc-qty output { min-inline-size: 12ch; text-align: center; font-weight: 500; }
+  .loc-note { display: grid; gap: 2px; padding: var(--warp-space-related) var(--warp-pad-control); border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-accent-border); background: var(--warp-color-surface-sunken); border-radius: var(--warp-radius-mark); }
+  .loc-read { display: grid; gap: var(--warp-space-related); min-inline-size: 0; }
+  .loc-read .dial-t { margin: 0; }
+  .loc-read .dial-t td:last-child { overflow-wrap: anywhere; }
+  .loc-read p { font-size: 13px; color: var(--warp-color-text-subtle); }
 }
 </style>
 </head>
@@ -531,9 +565,9 @@
 </svg>
 
 <!-- ================================================================ toolbar -->
-<header data-specimen-bar data-label="layout v0.2" data-aliases="x:expression th:theme d:density f:fields m:motion">
+<header data-specimen-bar data-label="layout v0.3" data-aliases="x:expression th:theme d:density f:fields m:motion">
   <div data-extra="dir" data-label="Direction" data-options="ltr:LTR, rtl:RTL" title="page extra: the frames' writing direction"></div>
-  <div class="wb-ctl"><span id="wb-l-sections"><span class="wb-vh">Sections</span><span aria-hidden="true">Sections</span></span><nav class="wb-links" aria-labelledby="wb-l-sections"><a href="#shells">Shells</a><a href="#primitives">Primitives</a><a href="#nav">Navigation</a><a href="#parts">Page parts</a><a href="#workbench">Workbench</a><a href="#rules">Responsive</a><a href="#motion">Motion</a><a href="#focus">Input &amp; focus</a></nav></div>
+  <div class="wb-ctl"><span id="wb-l-sections"><span class="wb-vh">Sections</span><span aria-hidden="true">Sections</span></span><nav class="wb-links" aria-labelledby="wb-l-sections"><a href="#shells">Shells</a><a href="#primitives">Primitives</a><a href="#nav">Navigation</a><a href="#parts">Page parts</a><a href="#workbench">Workbench</a><a href="#rules">Responsive</a><a href="#motion">Motion</a><a href="#focus">Input &amp; focus</a><a href="#locale">Locale</a></nav></div>
 </header>
 <script src="warp-bar.js"></script>
 
@@ -545,7 +579,7 @@
     <p class="lede">One element tree, three presentations. A <b>sidebar and header</b> on desktop, a <b>rail</b> on tablet,
       a <b>bottom bar and top bar</b> on phone, chosen by the container, not the window. Eight primitives do the rest,
       with spacing that only speaks in relationships. Every nav item, card and the command field carries the sweep.</p>
-    <div class="facts"><span><b>8</b>primitives</span><span><b>3</b>shell forms</span><span><b>8</b>templates</span><span><b>2</b>container steps · 600 · 1000</span></div>
+    <div class="facts"><span><b>9</b>primitives</span><span><b>3</b>shell forms</span><span><b>8</b>templates</span><span><b>2</b>container steps · 600 · 1000</span></div>
   </div>
   <div>
     <div class="tri" aria-hidden="true">
@@ -614,7 +648,7 @@
 <section class="s" id="primitives"><div class="wrap">
   <div class="s-head">
     <div class="no"><b>02</b>Primitives</div>
-    <div><h2>Eight boxes that only speak in relationships</h2>
+    <div><h2>Nine boxes that only speak in relationships</h2>
       <p>No pixel props: gaps are <span class="mono">hair · tight · related · group · section</span>, widths are named
         (<span class="mono">rail · list · aside · measure · narrow · content · wide</span>). Drag the corner of any dashed box:
         each one is a container, so you are testing exactly what a pane, a card or a phone sees.</p></div>
@@ -737,8 +771,52 @@
     </tbody>
   </table></div>
 </div></section>
+
+<!-- ============================================================ 07 locale provider -->
+<section class="s" id="locale"><div class="wrap">
+  <div class="s-head">
+    <div class="no"><b>07</b>Locale &amp; direction</div>
+    <div><h2>One provider for language, direction and every format</h2>
+      <p><span class="mono">&lt;Locale&gt;</span> writes <span class="mono">lang</span> and <span class="mono">dir</span> on its root and gives
+        every component inside one set of formatters: number, money, percent, unit, compact, date, range, relative time,
+        list and plural, plus the parser for what people type. Direction follows the locale's script unless you override
+        it, and the layout mirrors through logical properties. Switching the locale re-mounts nothing. Only the formatted
+        text and two attributes change. This card is its own provider, so the page's Direction setting (which flips the
+        frames above) doesn't reach it.</p></div>
+  </div>
+  <div class="loc" id="locale-demo">
+    <div class="loc-ctl">
+      <div class="ctl"><span id="l-loc">Locale</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-loc" data-lctl="loc">
+          <label><input type="radio" name="loc" value="en-US" checked><i>en-US</i></label>
+          <label><input type="radio" name="loc" value="de-DE"><i>de-DE</i></label>
+          <label><input type="radio" name="loc" value="ar-EG"><i>ar-EG</i></label>
+        </div></div>
+      <div class="ctl"><span id="l-ldir">Direction</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-ldir" data-lctl="dir">
+          <label><input type="radio" name="ldir" value="auto" checked><i>From locale</i></label>
+          <label><input type="radio" name="ldir" value="ltr"><i>LTR</i></label>
+          <label><input type="radio" name="ldir" value="rtl"><i>RTL</i></label>
+        </div></div>
+      <div class="ctl"><span id="l-ldig">Digits</span>
+        <div class="seg" role="radiogroup" aria-labelledby="l-ldig" data-lctl="nu">
+          <label><input type="radio" name="ldig" value="" checked><i>Locale's own</i></label>
+          <label><input type="radio" name="ldig" value="latn"><i>Latin (nu=latn)</i></label>
+        </div></div>
+    </div>
+    <article class="card loc-card" data-scope="locale" data-box id="locale-island" lang="en-US" dir="ltr" aria-labelledby="loc-title"></article>
+    <div class="loc-read">
+      <div class="mx-wrap"><table class="dial-t" id="locale-context"><caption class="vh">What the provider resolved</caption>
+        <thead><tr><th scope="col">Context</th><th scope="col">Resolved</th></tr></thead><tbody></tbody></table></div>
+      <p>The order total keeps the order's currency (USD) in every locale: switching locale never converts money. Shipping uses the provider's
+        <span class="mono">currency</span>, the shop's price list for that market. The order id and the customer's note keep their own
+        direction (<span class="mono">data-format="id"</span>, <span class="mono">dir="auto"</span>). In Arabic, tracking and caps switch off and the
+        field label tints word by word, so the letters still join.</p>
+    </div>
+  </div>
+</div></section>
 </main>
-<footer class="f"><div class="wrap">warp layout v0.1 · 2026-10-28 · spec <span class="mono">docs/design/warp/02-layout.md</span> · CSS <span class="mono">tokens/warp-layout.css</span> (primitives, shells, nav, motion) · everything on this page reads sys tokens only.</div></footer>
+<footer class="f"><div class="wrap">warp layout v0.3 · 2026-10-28 · spec <span class="mono">docs/design/warp/02-layout.md</span> · CSS <span class="mono">tokens/warp-layout.css</span> (primitives, shells, nav, motion) · everything on this page reads sys tokens only.</div></footer>
 
 <script src="warp-sweep.js"></script>
 <script>
@@ -1343,6 +1421,9 @@
     ["ScrollArea", '<ScrollArea axis="x" snap fade label="Filters">', "Contained scroll with a thin bar, overscroll containment, snap, and an edge fade driven by a scroll timeline. Focusable with a name when it has no focusable children.",
       `<div data-scope="stack" data-gap="related"><div data-scope="scroll-area" data-axis="x" data-snap data-fade tabindex="0" role="region" aria-label="Filters demo"><div class="chips">${["All orders", "Unpaid", "To ship", "Partially shipped", "Returns", "Archived", "Flagged", "Gift cards", "Wholesale"].map((c) => `<span class="chip">${c}</span>`).join("")}</div></div>
        <div data-scope="scroll-area" data-fade tabindex="0" role="region" aria-label="Activity demo" style="max-block-size:120px"><div data-scope="stack" data-gap="tight">${PEOPLE.map((p) => `<div class="blk n" style="justify-items:start">${p[3]} · ${p[0]}</div>`).join("")}</div></div></div>`],
+    ["Spacer", '<Row><Field/><Spacer/><Button/></Row>', "Takes the space that's left in a Row or Stack, so whatever follows it sits at the far end. It's an empty box with no size and no role (the hatching is only for this demo). Drag the box narrower: the field gives way first, then the actions wrap onto their own line, and the Spacer stays behind on the first one.",
+      `<div data-scope="stack" data-gap="group" id="spacer-demo"><div data-scope="row" data-gap="related" class="spc-row">${field({ label: "Filter orders", id: "spc-q", icon: "search" })}<div data-scope="spacer" class="spc-vis"></div><button type="button" class="btn outline sm">Export</button><button type="button" class="btn sm">${ic("plus")}New order</button></div>
+       <div data-scope="stack" data-gap="related" class="spc-col"><div data-scope="row" data-gap="related"><b class="t-heading" style="font-size:15px">Shipping label</b><div data-scope="spacer"></div><span class="badge pos">Ready</span></div><p class="t-caption">Stack + Spacer: the footer stays at the bottom however short the body is.</p><div data-scope="spacer" class="spc-vis"></div><div data-scope="row" data-gap="related"><button type="button" class="btn ghost sm">Cancel</button><div data-scope="spacer" class="spc-vis"></div><button type="button" class="btn sm">Print</button></div></div></div>`],
   ];
   $("#prims").innerHTML = P.map(([n, sig, d, demo]) => `<article class="prim"><header><h3>${n}</h3><code class="mono">${sig.replace(/</g, "&lt;")}</code></header><p>${d}</p><div class="rz">${demo}<span class="rz-w"></span></div></article>`).join("");
   const step = (w) => (w < 600 ? "phone" : w < 1000 ? "tablet" : "desktop");
@@ -1615,6 +1696,124 @@
       if (document.startViewTransition && !reduced()) document.startViewTransition(swap); else { swap(); const n = box.lastElementChild; n.style.animation = "warp-route-in var(--warp-duration-route) var(--warp-ease-out) both"; }
     }
   });
+
+  /* -------------------------------------------------------------- locale provider (02 §9 "Locale provider")
+     What weft's <Locale> and locale() do, in miniature: resolve the direction from the locale's script, cache
+     every Intl formatter by (tag, options), format and parse through them. A change writes lang and dir on the
+     provider's root and re-writes the formatted text; nothing is re-mounted. */
+  const LOC = (() => {
+    const RTL_SCRIPTS = new Set(["Arab", "Hebr", "Thaa", "Syrc", "Nkoo", "Adlm", "Rohg", "Mand", "Samr"]);
+    const JOINING = new Set(["Arab", "Syrc", "Nkoo", "Adlm", "Rohg", "Mong", "Mand"]);
+    const info = (tag) => { const l = new Intl.Locale(tag), m = l.maximize(); const ti = l.getTextInfo?.() ?? l.textInfo; const wi = l.getWeekInfo?.() ?? l.weekInfo;
+      return { script: m.script, dir: ti?.direction ?? (RTL_SCRIPTS.has(m.script) ? "rtl" : "ltr"), firstDay: wi?.firstDay ?? 1, joining: JOINING.has(m.script) }; };
+    const pool = new Map();
+    const cached = (C, tag, o = {}) => { const k = `${C.name}|${tag}|${JSON.stringify(o)}`; let f = pool.get(k); if (!f) pool.set(k, (f = new C(tag, o))); return f; };
+    return function make({ locale, dir = "auto", currency, timeZone, numberingSystem }) {
+      const tag = numberingSystem ? `${locale}-u-nu-${numberingSystem}` : locale, i = info(locale);
+      const nf = (o) => cached(Intl.NumberFormat, tag, o), dtf = (o) => cached(Intl.DateTimeFormat, tag, { timeZone, ...o });
+      const parts = nf().formatToParts(12345.6), group = parts.find((p) => p.type === "group")?.value ?? ",", decimal = parts.find((p) => p.type === "decimal")?.value ?? ".";
+      const digits = [...Array(10).keys()].map((d) => nf({ useGrouping: false }).format(d));
+      return {
+        locale, tag, dir: dir === "auto" ? i.dir : dir, dirFrom: dir === "auto" ? `script ${i.script}` : "dir prop", script: i.script, joining: i.joining, firstDay: i.firstDay,
+        currency, timeZone, group, decimal, digits,
+        number: (n, o) => nf(o).format(n),
+        money: (n, cur = currency) => nf({ style: "currency", currency: cur }).format(n),
+        percent: (n) => nf({ style: "percent" }).format(n),
+        unit: (n, unit) => nf({ style: "unit", unit, maximumFractionDigits: 1 }).format(n),
+        compact: (n) => nf({ notation: "compact" }).format(n),
+        date: (d, o = { dateStyle: "medium", timeStyle: "short" }) => dtf(o).format(d),
+        range: (a, b) => dtf({ month: "short", day: "numeric" }).formatRange(a, b),
+        relative: (n, u) => cached(Intl.RelativeTimeFormat, tag, { numeric: "auto" }).format(n, u),
+        list: (xs) => cached(Intl.ListFormat, tag, { type: "conjunction" }).format(xs),
+        plural: (n) => cached(Intl.PluralRules, tag).select(n),
+        name: (code, type = "language") => cached(Intl.DisplayNames, locale, { type }).of(code),
+        // what people type: the locale's digits or Latin ones, its group and decimal marks, a typed minus
+        parse(str) {
+          let t = String(str).replace(/[−‒–]/g, "-");
+          digits.forEach((g, d) => (t = t.split(g).join(String(d))));
+          t = t.split(group).join("").replace(/[\s  ٬]/g, "");
+          if (decimal !== ".") t = t.split(decimal).join(".").replace(/٫/g, ".");
+          t = t.replace(/[^\d.-]/g, ""); const n = parseFloat(t); return Number.isFinite(n) ? n : null;
+        },
+        resolved: () => ({ n: nf().resolvedOptions(), d: dtf({ dateStyle: "full", timeStyle: "short" }).resolvedOptions() }),
+      };
+    };
+  })();
+  const LOCALES = {
+    "en-US": { tz: "America/New_York", cur: "USD", m: { order: "Order", status: "Paid", total: "Total", ship: "Shipping (shop currency)", items: "Items", placed: "Placed", window: "Delivery window", weight: "Weight", discount: "Discount", followers: "Store followers", progress: "Progress", steps: ["paid", "packed", "shipped"], note: "Note from the customer", amount: "Refund amount", stored: "Stored as", back: "Back", next: "Next", fewer: "Fewer items", more: "More items", n: { one: "# item", other: "# items" } } },
+    "de-DE": { tz: "Europe/Berlin", cur: "EUR", m: { order: "Bestellung", status: "Bezahlt", total: "Gesamt", ship: "Versand (Shop-Währung)", items: "Artikel", placed: "Bestellt", window: "Lieferfenster", weight: "Gewicht", discount: "Rabatt", followers: "Shop-Follower", progress: "Fortschritt", steps: ["bezahlt", "verpackt", "versandt"], note: "Notiz der Kundin", amount: "Erstattungsbetrag", stored: "Gespeichert als", back: "Zurück", next: "Weiter", fewer: "Weniger Artikel", more: "Mehr Artikel", n: { one: "# Artikel", other: "# Artikel" } } },
+    "ar-EG": { tz: "Africa/Cairo", cur: "EGP", m: { order: "الطلب", status: "مدفوع", total: "الإجمالي", ship: "الشحن (عملة المتجر)", items: "العناصر", placed: "تاريخ الطلب", window: "موعد التسليم", weight: "الوزن", discount: "الخصم", followers: "متابعو المتجر", progress: "الحالة", steps: ["مدفوع", "مُغلَّف", "مشحون"], note: "ملاحظة من العميلة", amount: "مبلغ الاسترداد", stored: "يُخزَّن كـ", back: "السابق", next: "التالي", fewer: "عناصر أقل", more: "عناصر أكثر", n: { zero: "لا عناصر", one: "عنصر واحد", two: "عنصران", few: "# عناصر", many: "# عنصرًا", other: "# عنصر" } } },
+  };
+  const SALE = { total: 1284.5, ship: { "USD": 9.9, "EUR": 8.9, "EGP": 150 }, placed: new Date("2026-10-26T14:30:00Z"), from: new Date("2026-10-30T12:00:00Z"), to: new Date("2026-11-02T12:00:00Z"), kg: 2.4, off: 0.15, fans: 12400 };
+  const lstate = { loc: "en-US", dir: "auto", nu: "", qty: 3, amount: 184.5 };
+  const xesc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  /* the shared label anatomy (01 §2), segmented by the provider: grapheme clusters, or words for a script whose
+     letters join (a letter alone in its own span would lose its joined form) */
+  const labelHTML = (text, ctx) => {
+    const seg = new Intl.Segmenter(ctx.locale, { granularity: ctx.joining ? "word" : "grapheme" });
+    return `<span data-part="label-text">${xesc(text)}</span><span data-part="label-chars" aria-hidden="true">${[...seg.segment(text)].map((x) => `<span data-char data-c="${xesc(x.segment)}"></span>`).join("")}</span>`;
+  };
+  function renderLocale(swap) {
+    const L = LOCALES[lstate.loc], m = L.m;
+    const ctx = LOC({ locale: lstate.loc, dir: lstate.dir, currency: L.cur, timeZone: L.tz, numberingSystem: lstate.nu || undefined });
+    const isl = $("#locale-island"), focusId = isl.contains(document.activeElement) ? document.activeElement.id : null;
+    isl.lang = ctx.locale; isl.dir = ctx.dir;
+    const qty = (n) => m.n[ctx.plural(n)] ?? m.n.other;
+    const F = (v, kind = "number") => `<span data-format="${kind}">${xesc(v)}</span>`;
+    isl.innerHTML = `
+      <header class="loc-h"><div><p class="eyebrow">${xesc(m.order)} <span data-format="id">#1042</span></p><h3 class="t-heading" id="loc-title"><bdi lang="en">Ruth Achebe</bdi></h3></div><span class="badge pos">${xesc(m.status)}</span></header>
+      <dl class="loc-facts">
+        <div><dt>${xesc(m.total)}</dt><dd>${F(ctx.money(SALE.total, "USD"), "money")}</dd><small>USD</small></div>
+        <div><dt>${xesc(m.ship)}</dt><dd>${F(ctx.money(SALE.ship[ctx.currency]), "money")}</dd><small>${ctx.currency}</small></div>
+        <div><dt>${xesc(m.placed)}</dt><dd>${F(ctx.date(SALE.placed), "date")}</dd><small>${F(ctx.relative(-2, "day"), "date")}</small></div>
+        <div><dt>${xesc(m.window)}</dt><dd>${F(ctx.range(SALE.from, SALE.to), "date")}</dd></div>
+        <div><dt>${xesc(m.weight)}</dt><dd>${F(ctx.unit(SALE.kg, "kilogram"))}</dd></div>
+        <div><dt>${xesc(m.discount)}</dt><dd>${F(ctx.percent(SALE.off))}</dd></div>
+        <div><dt>${xesc(m.followers)}</dt><dd>${F(ctx.compact(SALE.fans))}</dd></div>
+        <div><dt>${xesc(m.progress)}</dt><dd>${xesc(ctx.list(m.steps))}</dd></div>
+      </dl>
+      <div class="loc-qty" role="group" aria-labelledby="loc-qty-l"><span class="t-caption" id="loc-qty-l">${xesc(m.items)}</span>
+        <button type="button" class="ibtn" id="loc-dec" data-q="-1"><span class="vh">${xesc(m.fewer)}</span><span aria-hidden="true">−</span></button>
+        <output id="loc-qty-v" aria-live="polite">${xesc(qty(lstate.qty).replace("#", ctx.number(lstate.qty)))}</output>
+        <button type="button" class="ibtn" id="loc-inc" data-q="1"><span class="vh">${xesc(m.more)}</span>${ic("plus")}</button>
+        <span class="t-caption mono">${xesc(ctx.plural(lstate.qty))}</span></div>
+      ${field({ id: "loc-amt", label: labelHTML(m.amount, ctx), value: xesc(ctx.number(lstate.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })), attrs: ' inputmode="decimal" autocomplete="off" aria-describedby="loc-amt-m"' })}
+      <p class="t-caption" id="loc-amt-m" aria-live="polite">${xesc(m.stored)} <span data-format="code">${lstate.amount}</span></p>
+      <div class="loc-note"><span class="t-caption">${xesc(m.note)}</span><q lang="en" dir="auto">Please leave it with the neighbour at no. 12.</q></div>
+      <div data-scope="row" data-gap="related"><button type="button" class="btn outline sm" id="loc-back"><svg class="ico" data-flip aria-hidden="true"><use href="#i-left"/></svg>${xesc(m.back)}</button><div data-scope="spacer"></div><button type="button" class="btn sm" id="loc-next">${xesc(m.next)}<svg class="ico" data-flip aria-hidden="true"><use href="#i-right"/></svg></button></div>`;
+    // the readout: what every component inside reads from locale()
+    const r = ctx.resolved(), wd = ctx.date(new Date(Date.UTC(2026, 10, 1 + ctx.firstDay)), { weekday: "long", timeZone: "UTC" });   // 1 Nov 2026 is a Sunday; firstDay 1 = Monday … 7 = Sunday
+    $("#locale-context tbody").innerHTML = [
+      ["lang", `${ctx.locale} · ${ctx.name(ctx.locale.split("-")[0])}`],
+      ["dir", `${ctx.dir} · from ${ctx.dirFrom}`],
+      ["numberingSystem", `${r.n.numberingSystem} · ${ctx.digits.join("")}`],
+      ["decimal · group", `“${ctx.decimal}” · “${ctx.group}”`],
+      ["calendar · hourCycle", `${r.d.calendar} · ${r.d.hourCycle ?? "—"}`],
+      ["timeZone", r.d.timeZone],
+      ["weekStart", `${ctx.firstDay} · ${wd}`],
+      ["currency (shop)", ctx.currency],
+      ["label segments", ctx.joining ? "word (joining script)" : "grapheme"],
+    ].map(([k, v]) => `<tr><td>${k}</td><td>${xesc(v)}</td></tr>`).join("");
+    charify(isl);
+    if (focusId) $("#" + focusId)?.focus({ preventScroll: true });
+    if (swap && !reduced()) { isl.classList.remove("loc-swap"); void isl.offsetWidth; isl.classList.add("loc-swap"); }
+  }
+  $("#locale-demo").addEventListener("change", (e) => {
+    const g = e.target.closest("[data-lctl]"); if (!g) return;
+    lstate[g.dataset.lctl] = e.target.value; renderLocale(true);
+  });
+  $("#locale-island").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-q]"); if (!b) return;
+    lstate.qty = Math.max(0, Math.min(120, lstate.qty + +b.dataset.q * (lstate.qty >= 10 && e.shiftKey ? 10 : 1)));
+    const L = LOCALES[lstate.loc], ctx = LOC({ locale: lstate.loc, currency: L.cur, timeZone: L.tz, numberingSystem: lstate.nu || undefined });
+    $("#loc-qty-v").textContent = (L.m.n[ctx.plural(lstate.qty)] ?? L.m.n.other).replace("#", ctx.number(lstate.qty));
+    $("#loc-qty-v").nextElementSibling.nextElementSibling.textContent = ctx.plural(lstate.qty);
+  });
+  // typed input parses in the provider's locale; blur re-formats it
+  const amtCtx = () => { const L = LOCALES[lstate.loc]; return LOC({ locale: lstate.loc, currency: L.cur, timeZone: L.tz, numberingSystem: lstate.nu || undefined }); };
+  $("#locale-island").addEventListener("input", (e) => { if (e.target.id !== "loc-amt") return; const v = amtCtx().parse(e.target.value); if (v != null) { lstate.amount = v; $('#loc-amt-m [data-format="code"]').textContent = v; } });
+  $("#locale-island").addEventListener("focusout", (e) => { if (e.target.id === "loc-amt") e.target.value = amtCtx().number(lstate.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); });
+  renderLocale(false);
 
   /* -------------------------------------------------------------- controls */
   /* FaviconSwitcher: the tab icon follows the resolved scheme */

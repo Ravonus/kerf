@@ -1,5 +1,8 @@
 # warp 07: App patterns (AI and agents, calendar, meetings, notifications, chat, collaboration)
 
+Status: v0.3, 2026-10-28 (gap fills from COVERAGE §4: year view §2.7, notification preferences matrix §4.6, realtime
+transport picker §4.7, quote reply §5.5, access denied 403 §6.5; checks in §8).
+
 Owner: app. Specimen: `specimens/app.html`. Styles: `tokens/warp-app.css` (`@layer warp.app`, after
 `warp.components`; every selector is `:where()`). Coverage: every `app` row of `COVERAGE.md` §1, §2.7–2.10 in this
 scope is mapped in §9.
@@ -184,14 +187,14 @@ only, so replay, reconnect and SSR hydration use the same path. `keep: 'all'` le
 
 ## 2. Calendar, booking and planner
 
-Demo: `#cal-desk` (week, 1240×760), `#cal-phone` (agenda, 390×800), `#planner` (MeetingPlanner, tablet 820×800),
-`#ev-pop`, `#ev-sheet`, `#move-sheet`.
+Demo: `#cal-desk` (week, 1240×760; the Year tab is `#cal-tab-year`), `#cal-phone` (agenda, 390×800), `#planner`
+(MeetingPlanner, tablet 820×800), `#cal-year` (year view, fluid 1–4 columns), `#ev-pop`, `#ev-sheet`, `#move-sheet`.
 
 ### 2.1 Anatomy
 
 ```
 Calendar (container: calendar)
-├─ Toolbar   ‹ › Today · title · LiveStatus · TimeZone chip · ViewTabs (Month Week Day Agenda Timeline) · New event
+├─ Toolbar   ‹ › Today · title · LiveStatus · TimeZone chip · ViewTabs (Month Week Day Agenda Timeline Year) · New event
 ├─ Rail (≥ 1000)   MiniMonth (CalendarGrid picker from 04) · My calendars (checkbox per source, data-cal 1–8) · Time zones
 └─ Grid      Head (day, date; today is accent) · AllDay row · Scroller > Gutter + Columns
     Column   Slots (15-min) · Event* · NowLine (today) · Ghost (while dragging) · Draft (create) · Readout
@@ -218,8 +221,8 @@ Agenda (phone)  Strip (7 days + dots) · Pages (prev, current, next day; swipe) 
   wall-clock time with a dotted underline and a tooltip.
 - **Recurring** (P1): edits ask "This event / This and following / All" (RadioGroup in a Dialog); recurrence is
   RecurrenceField (04). Recurring events carry a repeat glyph.
-- **Views**: Month (chips, "+3 more" Popover), Week, Day, Agenda (P1), Year (P1: 12 MiniMonths with density dots),
-  Timeline (P1: resource rows of people or rooms over hours, same drag rules on the x axis).
+- **Views**: Month (chips, "+3 more" Popover), Week, Day, Agenda (P1), Year (P1: 12 mini months with density dots,
+  §2.7), Timeline (P1: resource rows of people or rooms over hours, same drag rules on the x axis).
 - **Booking** (BookingCalendar, SlotPickerCard): a date list plus slot buttons (`aria-pressed`), a confirm step with
   ManualTimeCard as the fallback field path, and the arrival sweep on the confirmation card.
 - **MeetingPlanner**: Attendees (Combobox add, zone per person), Details (title, link, tags), Availability (rows per
@@ -275,6 +278,39 @@ const events = query.live(listEvents, { tags: [`cal:${userId}`], input: range })
 
 `move` is a `mutation` with `optimistic: (cache) => shift(cache, id, to)`; on reject the event returns to its origin
 with the ghost path animated back and an assertive "Couldn't move Design crit: room is booked".
+
+### 2.7 Year view
+
+Demo: the Year tab of `#cal-desk` and the standalone `#cal-year` card (same component, fluid width).
+
+```
+YearView[data-scope="year"] (container: year)
+├─ Toolbar   ‹ 2026 › · legend (0, 1–2, 3–4, 5+ events) · "Today"
+├─ Months    12 × Month (data-part="year-month"): heading button ("October", count) · 7-column day grid (role=grid)
+│   Day      date · 0–3 density dots · today (accent disc) · selected (ring) · weekend (subtle ink)
+└─ Detail    the picked day or month: count, the busiest day, up to 4 events, "Open in Day / Month view"
+```
+
+- **Columns follow the container, never the window:** 1 column below 480px, 2 from 480, 3 from 720, 4 from 960.
+  Nothing scrolls sideways; a month never shrinks below 7 × 28px cells (on a coarse pointer cells are `hit-min` tall).
+- **Density is dots, not colour alone:** 1 dot for 1–2 events, 2 for 3–4, 3 for 5 or more, in the accent; the count
+  is in the cell's name ("Wednesday, October 28, 2026, 7 events, today"). Busy weeks read at a glance; exact numbers
+  are one step away (the detail).
+- **Data:** counts only. `query.live(eventCounts, { tags: [`cal:${userId}`], input: { year } })` returns
+  `{ [isoDay]: n }`, so a year costs one small payload; the detail fetches a day's events when it is picked.
+- **Jump to a day:** click or Enter/Space on a day opens it in Day view when the main calendar holds that range,
+  otherwise the detail lists it with "Open in Day view" (the demo only holds Oct 26 – Nov 1). **Jump to a month:** the
+  month heading (pointer), or `M` on any of its days (keyboard), opens Month view; outside the loaded range the detail
+  summarises the month.
+- **Keyboard (one tab stop for the whole year):** the twelve month grids share one roving stop. ←/→ day, ↑/↓ week
+  (crossing month and grid boundaries), Home/End week start/end, PageUp/PageDown month (day clamped), Shift+PageUp/
+  PageDown year, Enter/Space opens the day, `M` its month, `T` today. The month heading buttons are `tabindex="-1"`
+  (the `M` key is their keyboard path) so the year costs one Tab, not thirteen.
+- **Accessibility:** a `group` labelled by the year holds twelve APG grids, each `aria-labelledby` its heading, with
+  `row` wrappers in `display: contents`, `columnheader`s with `abbr`, `aria-current="date"` on today and
+  `aria-selected` on the picked day. The detail is a polite `role="status"`. Year steps announce ("2027, 1,204 events").
+- **Motion:** stepping the year crossfades the months (`duration.fast`); reduced motion cuts. The selected ring and
+  focus ring never animate.
 
 ## 3. Video meetings
 
@@ -332,7 +368,8 @@ Audio levels arrive at 10 Hz on `delivery: 'latest'`; the level bars read `--lev
 ## 4. Notifications and `.live`
 
 Demo: `#nt-desk` (bell, inbox popover, toasts, activity, push ask), `#nt-rig` (New arrival, Burst, connection
-states), `#nt-phone` (inbox as a page), `#live-row` (LiveStatus states).
+states), `#nt-phone` (inbox as a page), `#live-row` (LiveStatus states), `#nt-prefs` (preferences matrix, fluid) and
+`#nt-prefs-phone` (the same matrix in a 390px phone frame), `#rt-transport` (transport picker, sandbox).
 
 ### 4.1 Anatomy
 
@@ -344,7 +381,7 @@ Inbox (Popover 400px desktop · full page on phone)
 ├─ Group    "Today", "Yesterday" (sticky)
 │   Notification  avatar + kind badge · text (actor verb object) · quote · time · source · actions · unread dot
 └─ Footer   "Up to date" / "n new" pill · View all
-ToastRegion (05) · Activity feed · PushSoftAsk (P2) · NotificationPreferences (P1, page lives in 09 settings)
+ToastRegion (05) · Activity feed · PushSoftAsk (P2) · NotificationPreferences (P1, §4.6; the settings page frame is 09's)
 ```
 
 ### 4.2 Rules
@@ -358,8 +395,8 @@ ToastRegion (05) · Activity feed · PushSoftAsk (P2) · NotificationPreferences
 - Actionable rows (approve, accept) have inline Buttons; the row itself is a link to the object.
 - **Activity feed** (P0): actor · verb · object · time, grouped per day, a vertical hairline; it is the same component
   as the inbox row in a quieter variant, with a "Live" check in the header when `.live === 'live'`.
-- **Preferences matrix** (P1): event types × channels (in-app, email, push) as a grid of checkboxes with a row header
-  per event and a "mute all" per channel; APG grid navigation.
+- **Preferences matrix** (P1): event types × channels (in-app, email, push, SMS) as a grid of checkboxes with a row
+  header per event, group and channel toggles, and the email digest frequency; APG grid navigation (§4.6).
 - **Push soft-ask** (P2): an in-app card first (why, what, "Turn on" / "Not now"); the browser prompt only after
   "Turn on"; never on first visit.
 
@@ -397,9 +434,110 @@ const inbox = query.live(listNotifications, { tags: ['inbox:me'] })
 <LiveStatus state={inbox.live} />          // also accepts stream().status and channel.status, mapped to 4 states
 ```
 
+### 4.6 Notification preferences
+
+Demo: `#nt-prefs` (fluid card) and `#nt-prefs-phone` (390px phone frame); both edit one model.
+
+```
+NotificationPreferences[data-scope="prefs-matrix"] (container: prefs)
+├─ Grid (role=grid, aria-labelledby the title)
+│   Head row      "Event" · per channel: name + channel toggle (tri-state, "Email, all events")
+│   Group row     group name ("Collaboration") · per channel: group toggle (tri-state, "Collaboration, all email")
+│   Event row     rowheader (name + one-line hint) · per channel: Checkbox | Locked (checked, lock) | "Not offered"
+├─ Delivery       Email delivery Select: Instantly · Hourly digest · Daily digest at 9:00 · Weekly digest, Mondays
+└─ Footer         role=status "Saved" line · Reset to defaults
+```
+
+- **Cells:** each is the 03 checkbox (the sweep box), named "Mentions, email". A channel an event can't use is a
+  plain cell, "—" with "not offered" in its name, focusable so columns stay aligned for the arrow keys. A required
+  channel (security alerts by email) is checked with a lock glyph, `aria-disabled="true"` and the reason in its
+  description; it is still focusable and never changes.
+- **Group and channel toggles are tri-state:** checked when every offered, unlocked cell below is on, unchecked when
+  none is, `indeterminate` (mixed) otherwise. Toggling one sets all its offered, unlocked cells; mixed goes to all on
+  (the native behaviour). Locked cells never move. The parent recomputes after every child change.
+- **Digest frequency** applies to the email column only. Anything other than "Instantly" batches email; events that
+  can't wait (security) carry an "Always instant" badge and skip the digest. When the email column is all off, the
+  Select is disabled with the reason ("Turn on an email event to choose a digest").
+- **Saving:** every change saves on its own (`mutation({ optimistic })`): the status line reads "Saving…" then
+  "Saved"; a rejected save flips the cell back and says why, assertively. Bulk toggles announce one summary
+  ("Email on for 6 events"), never one line per cell. No Save button (switch-style settings, 09 §4.1).
+- **Keyboard (APG grid, one tab stop):** ←/→ across channels, ↑/↓ across rows (event and group rows alike),
+  Home/End the row's first and last cell, Ctrl+Home/End the grid's first and last cell, Space toggles. Focus is on
+  the checkbox itself, so a screen reader hears "Mentions, email, checkbox, checked".
+- **Phone (container below 560px) never scrolls sideways:** the same DOM restacks. Each row is a block: the event
+  name on its own line, then the four cells in a 4-column sub-grid with the channel name visible under each box
+  (2 × 2 below 340px). The head row becomes a row of "All in-app / All email / …" toggles. Arrow keys keep the same
+  logical model (left/right channel, up/down row).
+- **Motion:** the check draws (03, 420ms × motion scale); the dash draws for mixed; reduced motion shows the end state.
+  Under forced colours the boxes are the 03 checkbox repaint; locked cells add a `GrayText` lock.
+
+```ts
+const prefs = query(getNotificationPrefs)            // { events: { [id]: { [channel]: boolean } }, digest }
+const save = mutation(setNotificationPref, { optimistic: (c, { event, channel, on }) => setCell(c, event, channel, on) })
+<NotificationPreferences value={prefs} channels={['inapp', 'email', 'push', 'sms']} groups={GROUPS}
+  locked={{ security: ['email'] }} offered={OFFERED} onChange={save.run} digest={prefs.value?.digest} onDigest />
+```
+
+### 4.7 Transport picker (realtime sandbox)
+
+Demo: `#rt-transport`. A dev and sandbox surface (the original's TransportPicker recipe), never end-user UI:
+production apps show only LiveStatus (§4.4).
+
+**What is really chosen.** weft has no transport knob in app code (research 07 §9.5): `.live` and `stream` always
+ride one multiplexed, fetch-based SSE connection per tab (`POST /_weft/rt`), and `channel` rides one multiplexed
+WebSocket per tab (crossws). A developer chooses the server **bus** (`realtime.bus`: `memory`, `postgres`
+LISTEN/NOTIFY, `redis`, `nats`, `durable-object`) and, in a sandbox or test, the **wire under test**: weft's default
+wires, tabs only (BroadcastChannel, `tabs.channel`, no server) or the fake in-memory pair from `weft/test`.
+
+```
+TransportPicker[data-scope="transport"] (container: transport)
+├─ Header    title · LiveStatus (worst lane) · Reset
+├─ Wire      radiogroup (choice cards): weft default (SSE + WebSocket) · Tabs only · Fake (weft/test)
+├─ Bus       radiogroup (choice cards): memory · postgres · redis · nats · durable-object · Preset Select
+│            (Single instance · Multi-instance · Cloudflare); an invalid pair shows the build error inline
+├─ Network   Select: Good · Slow · Lossy · WebSocket blocked · Offline (a Select, not a segmented: five
+│            options would not fit a phone row)
+├─ Lanes     one row per primitive: .live (SSE) · stream (SSE) · channel (WebSocket)
+│   Lane     name + wire · LiveStatus · latency p50 / p95 + 20-sample bars · cursor <epoch>:<seq> · next retry
+└─ Actions   Ping · Drop connection · Fall behind · event log (role=log)
+```
+
+- **States are the four of §4.4.** Each lane maps its native status: `channel.status` `open` → live, `connecting`,
+  `reconnecting`, `closed` → offline, `unauthorized` → offline with "Not authorized"; `stream().status` and `.live`
+  map the same way. The header pill shows the worst lane.
+- **Latency:** a ping every 2 s while a lane is live and the card is on screen (paused when `!visible()`); p50 and
+  p95 over the last 20 samples, `data-numeric`; caution at p95 ≥ 250ms, critical at ≥ 1000ms. The bars are
+  `aria-hidden`; the numbers are the readout. Ping sends one round trip on demand and logs it.
+- **Reconnect** uses weft's defaults: full-jitter backoff from 0.5 s to 30 s (attempt n waits a random time up to
+  min(30 s, 0.5 s × 2ⁿ)), immediate on `online` and on becoming visible. The lane shows "Retry 3 in 2.1 s". On
+  reconnect it resumes from its cursor ("Resumed from 7:142 · 3 replayed"); outside the 256-event / 60 s window it
+  gets `reset` ("Too far behind · reset, refetched"). Fall behind simulates that.
+- **No polling fallback.** weft v0 has no long-poll (research 07 §9.5). "WebSocket blocked" shows it honestly: the
+  channel lane goes offline with "WebSocket upgrade blocked · no fallback in v0" while `.live` and `stream` stay live
+  over SSE. Apps that must work behind such proxies keep channel features optional.
+- **Bus and preset are validated like the build:** `memory` on Multi-instance shows R002 ("memory bus on a
+  multi-instance preset: use postgres, redis or nats") and the lanes stay offline until it is fixed; `durable-object`
+  is only offered on the Cloudflare preset (disabled otherwise, with the reason in its hint). Changing either restarts
+  the lanes (connecting → live). Tabs only and Fake disable the bus group with the reason (no server).
+- **Expected latency per wire** (simulated): default wires on Good 20–60ms (bus adds postgres +4, redis +2, nats +1,
+  durable-object +8), Slow ×6, Lossy adds 0–400ms spikes and drops; tabs only ~1ms; fake 0ms.
+- **Announce:** a lane's state change is polite and once; offline is assertive once; the event log is a `role="log"`
+  with `aria-live="off"` (it is a dev readout, read on demand).
+- **Phone (container below 560px):** choice cards and lanes stack in one column; the lane's figures wrap under its
+  name. Nothing scrolls sideways.
+
+```ts
+// weft.config.ts: the only production knob
+export default defineConfig({ realtime: { bus: 'postgres', origins: ['https://app.example'] } })
+// sandbox / tests: the fake pair from weft/test, with a network model (proposed)
+const net = server.network({ latency: [40, 120], loss: 0.02, blockUpgrade: false })
+<TransportPicker lanes={{ live: todos.live, stream: board.status, channel: chat.status }} bus="postgres" />
+```
+
 ## 5. Messaging and chat
 
-Demo: `#chat-tab` (tablet: conversations + thread), `#chat-phone` (390×760, keyboard toggle).
+Demo: `#chat-tab` (tablet: conversations + thread), `#chat-phone` (390×760, keyboard toggle), `#chat-quote` (the
+tablet frame: a seeded quote reply plus Quote on every message).
 
 ### 5.1 Anatomy
 
@@ -408,10 +546,10 @@ ConversationList   item: avatar (presence) · name · last message · time · un
 Thread (role=log)
 ├─ Header   channel · members · avatar stack · call · search
 ├─ Day divider · Unread divider ("New · Today", accent hairline)
-├─ Message  avatar · author · time · Bubble · attachments · Reactions · ThreadReplies · Receipt
+├─ Message  avatar · author · time · Bubble (Quote?) · attachments · Reactions · ThreadReplies · Receipt · Actions (Quote, Copy)
 │           grouped: a continued message hides avatar and author within 5 min
 ├─ Typing indicator ("Mei is typing", three dots)
-└─ Composer[data-sweep]  Textarea (field-sizing) · attach · emoji (EmojiPicker, 04) · @mention · Send
+└─ Composer[data-sweep]  QuoteDraft? · Textarea (field-sizing) · attach · emoji (EmojiPicker, 04) · @mention · Send
 ```
 
 ### 5.2 Rules
@@ -424,7 +562,7 @@ Thread (role=log)
   soft chip; `@you` gets a highlight tint on the whole message.
 - **Reactions** (P1): toggle buttons with count; the name lists who ("Thumbs up, 3: you, Ana, Kofi"); `+` opens
   EmojiPicker. **Thread replies** (P1): "2 replies · last 17:40" link opens a side panel (desktop) or a pushed page
-  (phone). **Quote reply** puts a quote block in the composer. **Typing / receipts** (P1) as above; typing dots stop
+  (phone). **Quote reply** puts a quote block in the composer (§5.5). **Typing / receipts** (P1) as above; typing dots stop
   under reduced motion.
 - **Voice message** (P2): hold-to-record button, waveform bars, play/pause with scrubber; transcript under it.
 - **GIF picker** (P2): a Popover grid with search, same keyboard model as EmojiPicker.
@@ -446,10 +584,37 @@ const messages = query.live(listMessages, { tags: [`chat:${id}`] })
 <Thread messages={messages} me={me} onSend={send.run} onRetry onReact onReply typing={ch.collect('typing')} />
 ```
 
+### 5.5 Quote reply
+
+Demo: `#chat-quote` (tablet) and `#chat-phone`. Reply in thread (a side panel) and quote reply (stays in the channel)
+are different tools: a quote answers one line in place, a thread moves a discussion aside.
+
+- **Entry:** every message has an Actions toolbar (Quote, Copy) that shows on hover and focus at a fine pointer, and
+  on a tap of the message on touch (`data-actions`, closed by a tap elsewhere). Keyboard: messages are one roving stop
+  in the log (↑/↓, Home/End); the focused message's toolbar joins the tab order, and `Q` quotes it directly.
+- **What is quoted:** text the user selected inside that message, if any (trimmed, up to 280 characters with an
+  ellipsis); otherwise the whole message. Attachments quote as their file name.
+- **QuoteDraft** sits above the textarea inside the composer: a 2px accent rule (the sweep colour), author and time,
+  the excerpt clamped to two lines, and Remove. Focus moves to the textarea; Escape removes the quote when no suggest
+  list is open. A quote is never sent on its own: with an empty textarea, Send says "Add a reply to the quote" in
+  the composer hint and sends nothing.
+- **Sent:** the new message's bubble starts with `blockquote[data-part="quote"]` (author · time, excerpt) and a "Jump
+  to original" button that scrolls the log to the source and plays one `warpSweep.confirm` on its bubble. A deleted
+  source reads "Original message deleted" with no link; a source in another channel names the channel.
+- **Accessibility:** the draft is a `group` named "Quoting Mei Tanaka"; the polite region says "Quoting Mei Tanaka.
+  Escape removes the quote." The sent message's text starts "Quoting Mei Tanaka: …" for screen readers (the
+  blockquote is real text, not an image). The jump target gets focus (`tabindex="-1"`).
+- **Motion:** the draft enters with the arrival grammar (§0, `data-arrive`); reduced motion fades.
+
+```ts
+<Thread … onQuote={(m, selection) => draft.quote({ id: m.id, author: m.author, text: selection || m.text })} />
+send.run({ text, quote: draft.quote?.id })   // the server stores the reference; rendering reads the live source
+```
+
 ## 6. Real-time collaboration
 
 Demo: `#collab-demo` (shared brief: cursors, peer selections, lock, conflict, comments, viewport rail, relay),
-`#share-dlg`, versions, kanban.
+`#share-dlg`, versions, kanban, `#sys-403` (access denied, §6.5).
 
 ### 6.1 Parts
 
@@ -550,6 +715,36 @@ message bubble, calendar source toggles and speech wave use `Highlight` / `Highl
 reaction, chosen answer, current version) become a 2px `Highlight` ring; events get a `CanvasText` border; a speaking
 tile is a 3px `Highlight` outline, a remote edit a dashed one, an invalid range 3px double `CanvasText`.
 
+### 6.5 Access denied (403)
+
+Demo: `#sys-403`. The result page anatomy is 09's (`09-app-flows.md` §5.1, `[data-scope="system-page"]`: art, code
+eyebrow, title, one sentence, one primary, one secondary, a support line with the request ID); this is its 403 state,
+which belongs to sharing: the way in is a request the owner answers from their inbox (§4) or the Share dialog (§6.2).
+
+| State | Primary / secondary | What the page says |
+|---|---|---|
+| Can request (default) | Request access / Switch account | "You don't have access to Q4 brief" · "You're signed in as jo@loom.app." |
+| Pending | Withdraw request (outline) / Switch account | "Request sent to Kofi and Ana · we'll email you when they answer" (`role="status"`) |
+| Can't request | Copy link for the owner / Switch account | "This workspace doesn't take access requests. Ask Kofi Mensah, the owner." |
+| Granted | (the object loads in place) | toast "Kofi gave you edit access" and a polite announce |
+
+- **Art:** the weave with a lock knot: a weft thread stops at a padlock drawn on the crossing, in ink (not critical:
+  nothing broke). It draws once on mount; reduced motion shows it drawn.
+- **Request access** opens an optional note (Textarea, 280 characters max, counter) and Send request (the one solid,
+  confirms its sweep once). The owner receives an actionable inbox row ("Jo asked for access to Q4 brief" with
+  Approve / Deny); approval swaps the page for the object in place, no reload.
+- **Switch account** is a Menu of signed-in accounts with "Use another account"; an account that has access is marked,
+  and picking it reloads into the object.
+- **Never confirm existence to outsiders:** someone outside the workspace gets the 404, not this page.
+- **Accessibility:** the title gets focus on load (`tabindex="-1"`) so the route change is heard; the pending line is
+  `role="status"`; the request ID is copyable text with a Copy button that announces "Copied". The page sits in the
+  app shell so navigation still works.
+
+```ts
+<SystemPage kind="403" object={{ title: 'Q4 brief', owner }} account={me}
+  request={{ allowed: true, onSend: requestAccess.run, pending: req.value }} accounts={accounts} onSwitch />
+```
+
 ## 7. Dial and theming
 
 The same markup is quiet, balanced or vivid by `data-expression` on any ancestor: quiet drops the arrival sweep line
@@ -581,6 +776,31 @@ page theme.
   timer and interim transcript. No page errors.
 - `node scripts/contrast-check.mjs`: 858 checks, 0 failures.
 
+**v0.3 gap fills (Playwright, Chromium, 2026-10-28), 114 checks, 0 failures:**
+
+- **Every new demo** (`#cal-year`, `#nt-prefs`, `#rt-transport`, `#chat-quote`, `#sys-403`) renders at 375 / 768 /
+  1280 in light and dark with no console errors and no horizontal page scroll, and no descendant past the viewport.
+  The phone preferences frame restacks (1 column) at every width; the year card is 1 / 2 / 4 columns at 375 / 768 / 1280.
+- **Year (§2.7):** the calendar's Year tab draws 12 grids with one tab stop; → ↓ (across a month), PageUp, Home, End,
+  Shift+PageDown (to 2027, title updates), `T`, Enter (opens Day view), click on the October heading (Month view),
+  an out-of-range day (detail), `M` (month summary). The standalone card offers "Open in Day view" and jumps the
+  calendar.
+- **Preferences (§4.6):** ← → ↓ across checkbox and "—" cells, Ctrl+Home / Ctrl+End; mixed group → on with Space,
+  the phone instance follows, one bulk announce ("Email on for 3 events in Collaboration"); the locked cell ignores
+  click and Space; email all off disables the digest; a daily digest shows "Always instant"; a failed save flips back.
+- **Transport (§4.7):** lanes come up live; WebSocket blocked takes `channel` offline ("no fallback in v0") while
+  `.live` stays live, and Good resumes it from its cursor; memory + Multi-instance shows R002 and holds the lanes
+  offline, Single instance fixes it; durable-object is disabled off Cloudflare; Fall behind reconnects with "reset,
+  refetched"; Tabs only disables the bus group.
+- **Quote reply (§5.5):** `Q` on a focused message opens the draft and moves focus to the composer; Enter with no text
+  is refused ("Add a reply to the quote"); the sent message carries the quote; Jump to original focuses the source;
+  ↑/↓ rove messages; hover shows the toolbar; Escape removes the draft.
+- **403 (§6.5):** Request access → note with counter → Send → pending `role="status"` with the title focused; Switch
+  account menu (focus first item, arrows, Escape back to the button); Owner approves → granted in place; No requests →
+  "Can't request" state.
+- **Dials:** vivid; quiet + classic + compact; reduced motion + comfortable: no errors, no overflow; reduced motion
+  shows the 403 weave drawn (no animation).
+
 ## 9. Coverage map
 
 | Original / COVERAGE row | warp name | Here | P |
@@ -591,7 +811,7 @@ page theme.
 | ScheduleGrid, ScheduleHeader, ScheduleBlockButton, ScheduleOverlays | Calendar grid, toolbar, Event, Ghost/Draft/NowLine | §2 | P0 |
 | MeetingPlanner, MeetingMetaCard, AttendeesCard | MeetingPlanner (attendees, details, availability, slots) | §2 | P0 |
 | Event drag, resize, create-by-drag | move / resize / create + keyboard move mode + MoveSheet | §2 | P0 |
-| Agenda / year view | Agenda (phone default), Year | §2 | P1 |
+| Agenda / year view | Agenda (phone default), YearView (`#cal-tab-year`, `#cal-year`) | §2, §2.7 | P1 |
 | Resource / timeline view | Timeline | §2 | P1 |
 | Recurring + time-zone display | RecurrenceField / TimeZoneSelect (04) in the editor | §2 | P1 |
 | Availability editor | AvailabilityEditor (weekly ranges, validation, overrides) | §6.4 | P1 |
@@ -602,11 +822,14 @@ page theme.
 | MeetingPrejoin, MeetingLobby, MeetingScheduledLobby, MeetingCountdown | Prejoin, Lobby, ScheduledLobby, Countdown | §3 | P0 |
 | Notification center / inbox, bell with count | Inbox, Bell | §4 | P0 |
 | Activity feed | Activity | §4 | P0 |
-| Notification preferences matrix | NotificationPreferences (page in 09 settings) | §4 | P1 |
+| Notification preferences matrix | NotificationPreferences (`#nt-prefs`, `#nt-prefs-phone`; page in 09 settings) | §4.6 | P1 |
+| TransportPicker (realtime sandbox recipe) | TransportPicker: wire, bus, preset, network, lanes (`#rt-transport`) | §4.7 | P2 |
 | Push permission soft-ask | PushSoftAsk | §4 | P2 |
 | `.live` status, offline banner, reconnecting indicator | LiveStatus + Banner states | §4.4 | P0 |
 | Conversation list, message thread, composer | ConversationList, Thread, Composer | §5 | P0 |
-| Typing, receipts, reactions, thread replies, quote reply | as named | §5 | P1 |
+| Typing, receipts, reactions, thread replies | as named | §5 | P1 |
+| Quote reply | Actions (Quote, Copy), QuoteDraft, quote block, Jump to original (`#chat-quote`) | §5.5 | P1 |
+| 403 result page | SystemPage `kind="403"` with request access (`#sys-403`) | §6.5 | P1 |
 | Voice message, GIF picker | one-liners | §5 | P2 |
 | Comment thread, share dialog | CommentThread, ShareDialog | §6 | P0 |
 | Anchored comments, following, peer selections, conflict, version history | as named | §6 | P1 |
@@ -635,7 +858,13 @@ page theme.
 - **foundations (01), resolved:** the settings bar is shared (`specimens/warp-bar.css` / `warp-bar.js`) and is one
   59px row at 1280 and up, with page extras behind More (01 §13).
 - **data (06):** the "3px status-bar buttons" in review 02 are the data tracker, not app.
-- **flows (09):** the role/permission matrix and SignGate stay in 09 (see the scope note at the top).
+- **flows (09):** the role/permission matrix and SignGate stay in 09 (see the scope note at the top). The 403 state
+  lives here (`app.html#sys-403`, §6.5) because it belongs to sharing; 09 §5.1 can link to it from its system pages.
+  `app.html` doesn't load `warp-flows.css` (the `field` / `plan` scopes and the global `mark` / `rail` parts would
+  collide), so `warp-app.css` §13 mirrors the `system-page` anatomy with the same values; where both load, flows wins.
+- **realtime (PLAN §4.2, research 07 §9.5):** the transport picker shows no polling fallback because weft v0 has none.
+  If a long-poll fallback or a `transport` option lands, add it as a Network outcome and a wire card, not before.
+  `server.network({ latency, loss, blockUpgrade })` in §4.7 is a proposed `weft/test` addition.
 - **Signature:** Kanban cards and comment threads still sweep at every stop; gate them with
   `--_on: var(--warp-sweep-surfaces)` if review 01 asks again. Calendar events stay ungated on purpose: they are
   controls.

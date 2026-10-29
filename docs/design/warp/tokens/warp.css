@@ -22,6 +22,8 @@
      data-text-canvas a canvas host: re-resolves the px role strings (--warp-text-*-canvas) against
                       its own container, for weft/text and Surfaces (01-foundations §2, Type)
      data-numeric     figures on a face with tnum at every stop (vivid's serif has none)
+     data-trim        ="display": non-heading text that sets text-box: var(--warp-text-display-trim) keeps
+                      its trimmed box through the font swap (h1–h6 and the hero title do this already)
    Forced colours: @layer warp.signature §5 redraws every signature part in system colours (01 §12).
 
    Signature (SIGNATURE.md): the sweep border and the floating border label
@@ -75,6 +77,9 @@
 @property --warp-text-button-px  { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-control-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
 
+/* cap-trim font-swap fix (01 §2 Type): registered, so it resolves to px on the trimmed element itself */
+@property --warp-trim-fix { syntax: "<length>"; inherits: true; initial-value: 0px; }
+
 /* frame outline head/tail (§1b): registered so they interpolate */
 @property --warp-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --warp-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
@@ -118,6 +123,7 @@
   --warp-ref-measure: 66;        /* prose line length, in --warp-ch */
   --warp-ref-ch: 0.613em;        /* Inter's "0" advance: 1ch of the brand face, steady across the font swap */
   --warp-ref-trim-heading: trim-both cap alphabetic; --warp-ref-trim-display: normal;
+  --warp-ref-trim-heading-k: 1;  --warp-ref-trim-display-k: 0;          /* the same switches as numbers */
   --warp-ref-prose-wrap: pretty; --warp-ref-editable-wrap: auto;
   --warp-ref-display-variation: normal;
   /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
@@ -165,6 +171,7 @@
   --warp-ref-measure: 72;
   --warp-ref-ch: 0.613em;        /* Inter */
   --warp-ref-trim-heading: normal; --warp-ref-trim-display: normal;   /* quiet trims controls only */
+  --warp-ref-trim-heading-k: 0;  --warp-ref-trim-display-k: 0;
   --warp-ref-prose-wrap: auto;   --warp-ref-editable-wrap: auto;      /* headings balance; prose wraps as usual */
   --warp-ref-display-variation: normal;
   /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
@@ -211,6 +218,7 @@
   --warp-ref-measure: 60;        /* larger, more expressive type: a shorter line */
   --warp-ref-ch: 0.641em;        /* Space Grotesk */
   --warp-ref-trim-heading: trim-both cap alphabetic; --warp-ref-trim-display: trim-both cap alphabetic;
+  --warp-ref-trim-heading-k: 1;  --warp-ref-trim-display-k: 1;
   --warp-ref-prose-wrap: pretty; --warp-ref-editable-wrap: stable;
   /* display pinned to its optical-size maximum (values clamp to each face's axis: Inter 32, Fraunces 144;
      Instrument Serif is static, so this only matters for the fallbacks) */
@@ -496,6 +504,7 @@
   --warp-text-display-tracking: var(--warp-ref-display-tracking);
   --warp-text-display-variation: var(--warp-ref-display-variation);   /* vivid: "opsz" pinned to max */
   --warp-text-display-trim: var(--warp-ref-trim-display);
+  --warp-text-display-trim-k: var(--warp-ref-trim-display-k);         /* 1 where display trims (vivid) */
   --warp-text-title-font: var(--warp-ref-title-font);
   --warp-text-title-size: clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
     calc(var(--warp-ref-title-b) * var(--warp-rem) + var(--warp-ref-title-m) * var(--_fu)),
@@ -509,6 +518,7 @@
   --warp-text-heading-weight: var(--warp-ref-heading-weight);
   --warp-text-heading-tracking: -0.01em;
   --warp-text-heading-trim: var(--warp-ref-trim-heading);              /* quiet: normal */
+  --warp-text-heading-trim-k: var(--warp-ref-trim-heading-k);          /* quiet: 0 */
   --warp-text-heading-wrap: balance;
   --warp-text-body-font: var(--warp-font-sans);
   --warp-text-body-size: var(--warp-ref-type-body);
@@ -551,6 +561,22 @@
   /* trimmed text boxes: controls, badges, chips, eyebrows at every stop; headings from balanced;
      display at vivid (research 11 §3.4). The fallback (no text-box) is in warp.base */
   --warp-text-box-trim: trim-both cap alphabetic;
+  /* font-swap fix for trimmed block text (headings, display). A cap-trimmed box is (lines − 1) × lh + 1cap,
+     and 1cap is the cap height of the face that is rendering: the metric-matched fallback until the web font
+     swaps in. This resolves, on the element, to (brand cap − fallback cap) em while one of the four fallback
+     faces renders and to 0 for any other face (brand, system, unknown), so the box is always (lines − 1) × lh
+     + the brand's cap and the swap moves nothing. Each term is a window on 1cap / 1em around a fallback's cap
+     (Capsize cap heights: Inter 0.7275 vs Arial × 1.0712 = 0.767, Space Grotesk 0.700 vs Arial × 1.0969 =
+     0.786, Instrument Serif 0.720 vs Times × 0.8394 = 0.556, Plex Mono 0.698 vs Courier New 0.571 and Courier
+     New Bold 0.591); clamp(0, (1cap − a·1em) × 1000, d·1em) steps from 0 to d just above a. The windows are
+     ±0.005 em; the measured spread across weights and sizes is ±0.001 em. Generated with the fallback faces. */
+  --_tw: calc(1cap * 1000);
+  --warp-ref-trim-swap: calc(
+      clamp(0px, var(--_tw) - 550em, 0.1642em) - clamp(0px, var(--_tw) - 562em, 0.1642em)    /* Instrument Serif */
+    + clamp(0px, var(--_tw) - 566em, 0.1268em) - clamp(0px, var(--_tw) - 576em, 0.1268em)    /* Plex Mono 400–549 */
+    + clamp(0px, var(--_tw) - 586em, 0.1067em) - clamp(0px, var(--_tw) - 596em, 0.1067em)    /* Plex Mono 550+ */
+    - clamp(0px, var(--_tw) - 762em, 0.0395em) + clamp(0px, var(--_tw) - 772em, 0.0395em)    /* Inter */
+    - clamp(0px, var(--_tw) - 780em, 0.0855em) + clamp(0px, var(--_tw) - 791em, 0.0855em));  /* Space Grotesk */
   /* figures: tabular at every stop. numeric-font is a face that HAS tnum (vivid's serif doesn't) */
   --warp-text-numeric-font: var(--warp-ref-numeric-font);
   --warp-text-numeric-variant: tabular-nums lining-nums;
@@ -710,6 +736,47 @@
       text-box: var(--warp-text-box-trim);
     }
     :where(h1, h2, h3, h4, h5, h6) { text-box: var(--warp-text-heading-trim); }
+    /* trimmed block text keeps the brand's box through the font swap: a fixed-height part (control, badge)
+       can't move, but a heading's height is its cap, which differs between the fallback and the web font.
+       --warp-trim-k says whether the element is trimmed (it mirrors the text-box token it uses); the fix is
+       0 once the web font renders, so the loaded layout is exactly the text-box one. Display text trims at
+       vivid only: the hero title, and any element marked data-trim="display", reads the display switch.
+       An element that sets text-box: var(--warp-text-display-trim) itself sets data-trim="display" too, and a
+       heading laid out as flex or grid (text-box only trims block containers) sets --warp-trim-k: 0. */
+    :where(h1, h2, h3, h4, h5, h6) { --warp-trim-k: var(--warp-text-heading-trim-k); }
+    :where([data-scope="hero"] [data-part="title"], [data-trim="display"]) { --warp-trim-k: var(--warp-text-display-trim-k); }
+    /* an accordion / disclosure heading holds a block button, not lines of its own: nothing to trim */
+    :where(h1, h2, h3, h4, h5, h6):where(:has(> button[aria-expanded])) { --warp-trim-k: 0; }
+    :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+      --warp-trim-fix: calc(var(--warp-trim-k, 0) * var(--warp-ref-trim-swap));
+    }
+    /* where the fix goes. Above the first line it keeps the baseline where the web font will put it, so
+       neither the box nor the glyphs move at the swap. A positive fix (serif, mono) is top padding. A
+       negative one (Inter, Space Grotesk) can't be: in WebKit a zero-height table before the first line
+       carries the whole fix as a margin, either sign, and keeps the cap trim; Chromium and Firefox drop the
+       start trim when a block starts with a table, so Chromium takes a negative fix off the auto height with
+       calc-size() (the box holds; its glyphs still rise by the fix at the swap). Firefox's 1cap doesn't see
+       the fallback during the swap, so the fix reads 0 there: unchanged. hanging-punctuation picks out WebKit
+       (no other engine ships it). With the web font
+       loaded every term is 0: padding 0, calc-size(auto, size + 0px), which lays out as auto, stretch included. */
+    @supports not ((hanging-punctuation: first) and (not (block-size: calc-size(auto, size)))) {
+      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+        padding-block-start: max(0px, var(--warp-trim-fix));
+      }
+    }
+    @supports (block-size: calc-size(auto, size)) {
+      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+        block-size: calc-size(auto, size + min(0px, var(--warp-trim-fix)));
+      }
+    }
+    @supports (hanging-punctuation: first) and (not (block-size: calc-size(auto, size))) {
+      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim])::before {
+        /* the box exists only while the fix is non-zero: after the swap it is gone, so it never becomes a
+           flex item (with gap) in a flex heading. An engine without if() drops the pseudo (no fix). */
+        content: if(style(--warp-trim-fix: 0px): none; else: "");
+        display: table; margin-block-end: var(--warp-trim-fix);
+      }
+    }
   }
   /* fallback (iOS < 18.2, Firefox < 154): Capsize-style negative margins from the face's metrics,
      using the line's own height (lh). Without lh (iOS 15) the declarations are dropped: untrimmed, harmless. */

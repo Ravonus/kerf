@@ -34,8 +34,15 @@
     background: transparent; color: var(--warp-color-text); font: var(--warp-text-button-weight) calc(var(--warp-text-button-size) - 1px) / 1 var(--warp-text-button-font);
     letter-spacing: var(--warp-text-button-tracking); text-transform: var(--warp-text-button-case); --warp-sweep-radius: var(--warp-radius-control); }
   /* outline buttons are controls: they rest on the ink base like fields (sweep vs base ≥ 3:1), no override */
-  [data-scope="button"][data-emphasis="solid"] { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); overflow: hidden; }
-  [data-scope="button"][data-emphasis="solid"] > [data-part="sweep-fill"] { z-index: -1; }
+  /* no overflow: hidden here. It clipped the button's own ::after hit area (01 §2: "overflow: hidden … clips the
+     expander"), so "Choose Team" in the comparison header was a 28px target on a coarse pointer. A sweep fill, if a
+     solid button carries one, wipes through clip-path in place (as warp-components.css does) and never paints outside. */
+  [data-scope="button"][data-emphasis="solid"] { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+  [data-scope="button"][data-emphasis="solid"] > [data-part="sweep-fill"] { z-index: -1; transform: none; clip-path: inset(0 calc(100% * var(--_on, 1)) 0 0);
+    transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), opacity var(--warp-duration-fast) var(--warp-ease-out); }
+  [data-scope="button"][data-emphasis="solid"][data-phase="in"] > [data-part="sweep-fill"] { transform: none; clip-path: inset(0); }
+  [data-scope="button"][data-emphasis="solid"][data-phase="out"] > [data-part="sweep-fill"] { transform: none; clip-path: inset(0 0 0 calc(100% * var(--_on, 1))); }
+  [data-scope="button"][data-emphasis="solid"][data-phase="idle"] > [data-part="sweep-fill"] { transition: none; }
   [data-scope="button"][data-emphasis="ghost"]:hover, [data-scope="button"][data-emphasis="outline"]:hover { background: color-mix(in oklab, currentColor 6%, transparent); }
   [data-scope="button"][data-tone="inverse"] { color: var(--warp-color-on-inverse); }
   [data-scope="button"] svg { inline-size: 15px; block-size: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; }
@@ -165,7 +172,7 @@
 </head>
 <body>
 
-<header data-specimen-bar data-label="data v0.2"></header>
+<header data-specimen-bar data-label="data v0.3"></header>
 <script src="warp-bar.js"></script>
 
 <main>
@@ -372,7 +379,8 @@
       <p>Editing, ranges and clipboard turn a table into <code>role="grid"</code>: one tab stop, arrows move the cell,
         Shift + arrows extend a range, ⌘/Ctrl + C copies it as TSV, Enter edits (with validation), Escape cancels. Drag a
         header (or Alt + ←/→ on it) to reorder. Saved views store columns, filters, sort and grouping by name. Groups carry
-        their own subtotal; the footer aggregates what is visible.</p></div>
+        their own subtotal; the footer aggregates what is visible. Tree data is the same grid as a <code>treegrid</code>:
+        → opens a row, ← closes it or climbs to the parent, and a branch loads its children the first time it opens.</p></div>
   </div>
   <div id="ops"></div>
   <div class="g2" style="margin-top:var(--warp-space-group)">
@@ -380,6 +388,7 @@
     <div><p class="sub"><span>Pivot · region × status</span></p><div data-scope="panel" style="padding:0;overflow:hidden" id="pivot"></div></div>
     <div><p class="sub"><span>Pagination bar · offset</span></p><div data-scope="panel" id="pager-demo"></div></div>
     <div><p class="sub"><span>Cursor · load more and infinite scroll</span><span class="counter" id="inf-n"></span></p><div data-scope="panel" style="padding:0" id="infinite"></div></div>
+    <div class="span2"><p class="sub"><span>Tree data · treegrid · lazy children · rolled-up budgets</span><span class="counter" id="treedata-n"></span></p><div id="treedata"></div></div>
     <div class="span2"><p class="sub"><span>Activity table with tabs · dashboard recipe</span></p><div data-scope="panel" id="activity"></div></div>
   </div>
 </div></section>
@@ -634,7 +643,7 @@ const charts = [];
 function shell(fig, { title, desc, legend, summary, table, toolbar = "" }) {
   const id = fig.id || (fig.id = nid("chart"));
   fig.innerHTML = `
-    <div data-part="head"><div><h3 data-scope="panel" data-part="title" style="all:unset;display:block;font-family:var(--warp-text-heading-font);font-size:calc(var(--warp-text-heading-size) - 3px);font-weight:var(--warp-text-heading-weight);letter-spacing:var(--warp-text-heading-tracking)" id="${id}-t">${esc(title)}</h3>
+    <div data-part="head"><div><h3 data-scope="panel" data-part="title" style="all:unset;--warp-trim-k:0;display:block;font-family:var(--warp-text-heading-font);font-size:calc(var(--warp-text-heading-size) - 3px);font-weight:var(--warp-text-heading-weight);letter-spacing:var(--warp-text-heading-tracking)" id="${id}-t">${esc(title)}</h3>
       ${desc ? `<p class="muted" style="font-size:var(--warp-text-caption-size);margin-top:2px">${esc(desc)}</p>` : ""}</div>
       <div class="row">${toolbar}<div data-part="view-toggle" role="group" aria-label="View">
         <button type="button" aria-pressed="true" data-view="chart" aria-label="Chart view">${ICON.chart}</button>
@@ -2436,8 +2445,145 @@ function sortable(host, items, { layers = false, label }) {
   });
 }
 
+/* ------------------------------------------------------------------ TREE DATA (role=treegrid)
+   06 §6 "Tree data". APG treegrid: rows and cells both take focus, one roving tab stop.
+   Rows are keyed (id → tr) and moved, never rebuilt; collapsed descendants leave the DOM.
+   Parents roll up their descendants (budget: sum, used: budget-weighted, projects: leaf count).
+   A lazy branch loads its children the first time it opens (a loading row at the child level). */
+function treeData(host) {
+  const tid = nid("tree");
+  const L = (id, name, owner, budget, used) => ({ id, name, owner, budget, used });
+  const P = (id, name, owner, kids, extra = {}) => ({ id, name, owner, kids, ...extra });
+  const ROOTS = [
+    P("platform", "Platform", "Mara Lind", [
+      P("infra", "Infrastructure", "Mara Lind", [L("edge", "Edge network", "Tomás Ruiz", 186000, 72), L("build", "Build farm", "Ana Sato", 94000, 88),
+        P("obs", "Observability", "Ivo Chen", null, { lazy: () => [L("metrics", "Metrics pipeline", "Ivo Chen", 42000, 64), L("logs", "Log search", "Ruth Achebe", 38000, 91), L("traces", "Tracing", "Lev Marin", 21000, 47)] })]),
+      P("dataplat", "Data platform", "Ivo Chen", [L("wh", "Warehouse sync", "Noor Haddad", 120000, 58), L("stream", "Streaming", "Ada Brennan", 76000, 81)]),
+    ], { c: 1 }),
+    P("growth", "Growth", "Noor Haddad", [
+      P("lifecycle", "Lifecycle", "Noor Haddad", [L("alerts", "Price alerts", "Sol Ferreira", 24000, 35), L("onb", "Onboarding emails", "Ana Sato", 18000, 62)]),
+      P("web", "Web", "Lev Marin", null, { lazy: () => [L("landing", "Landing pages", "Lev Marin", 31000, 44), L("docs", "Docs search", "Tomás Ruiz", 27000, 70)] }),
+    ], { c: 2 }),
+    P("finance", "Finance", "Sol Ferreira", [
+      P("billing", "Billing", "Sol Ferreira", [L("pdf", "Invoice PDFs", "Ruth Achebe", 15000, 93), L("usage", "Usage-based pricing", "Ada Brennan", 52000, 77)]),
+      L("fraud", "Fraud signals", "Mara Lind", 40000, 66),
+    ], { c: 3 }),
+    P("design", "Design", "Ana Sato", [L("ds", "Design system", "Ana Sato", 64000, 51), L("audit", "Dark-mode chart audit", "Noor Haddad", 9000, 20)], { c: 4 }),
+  ];
+  const byId = new Map(), parent = new Map();
+  const index = (nodes, lvl, par, c) => nodes.forEach((n) => { n.lvl = lvl; n.c = n.c || c; byId.set(n.id, n); parent.set(n.id, par); if (n.kids) index(n.kids, lvl + 1, n, n.c); });
+  index(ROOTS, 1, null, 0);
+  const isParent = (n) => !!(n.kids || n.lazy);
+  // the server sends aggregates for an unloaded branch; here they are rolled up from the same rows
+  const leaves = (n) => (n.kids || (n.lazy ? n.lazy() : null))?.flatMap(leaves) ?? [n];
+  const agg = (n) => { const ls = leaves(n), b = ls.reduce((a, l) => a + l.budget, 0); return { budget: b, used: Math.round(ls.reduce((a, l) => a + l.budget * l.used, 0) / (b || 1)), count: ls.length }; };
+  const open = new Set(["platform", "infra"]);
+  let q = "", fclosed = new Set(), focus = { id: "platform", col: -1 }, loading = new Set();
+  host.innerHTML = `<div data-scope="table" data-tree id="${tid}">
+    <div data-part="toolbar">${filterField(tid + "-q", "Filter teams and projects", "Name or owner")}<span data-part="spacer"></span>${btn("Expand all", "data-xall", "ghost")}${btn("Collapse all", "data-call", "ghost")}</div>
+    <div data-part="viewport" style="--warp-table-max-h:520px"><table role="treegrid" aria-labelledby="${tid}-cap" aria-describedby="${tid}-keys"><caption class="vh" id="${tid}-cap">Budget by department, team and project</caption>
+      <thead><tr role="row"><th role="columnheader" scope="col" data-pinned="last">Name</th><th role="columnheader" scope="col">Owner</th><th role="columnheader" scope="col" data-numeric>Budget</th><th role="columnheader" scope="col" data-numeric>Used</th><th role="columnheader" scope="col" data-numeric>Projects</th></tr></thead><tbody></tbody></table></div>
+    <div data-part="footer"><span class="muted" id="${tid}-keys">↑ ↓ rows · → opens a row, then moves into its cells · ← closes it, then climbs to the parent · Home / End · Enter toggles</span><span aria-live="polite" data-status></span></div></div>`;
+  const R = $("#" + tid), tbody = $("tbody", R), table = $("table", R), status = $("[data-status]", R), counter = $("#treedata-n");
+  sweepAll(R); const field = $('[data-scope="field"]', R); requestAnimationFrame(() => floatingLabel(field));
+  const say = (m) => { status.textContent = ""; requestAnimationFrame(() => (status.textContent = m)); };
+  const hi = (text) => { if (!q) return esc(text); const i = text.toLowerCase().indexOf(q.toLowerCase()); return i < 0 ? esc(text) : esc(text.slice(0, i)) + `<mark data-part="hit">${esc(text.slice(i, i + q.length))}</mark>` + esc(text.slice(i + q.length)); };
+  const matches = (n) => !q || n.name.toLowerCase().includes(q.toLowerCase()) || n.owner.toLowerCase().includes(q.toLowerCase());
+  const subtreeMatch = (n) => matches(n) || (n.kids || []).some(subtreeMatch);
+  const expanded = (n) => isParent(n) && !!n.kids && (q ? !fclosed.has(n.id) && (open.has(n.id) || (n.kids || []).some(subtreeMatch)) : open.has(n.id));
+  // the visible rows, in order, with their set size and position among visible siblings
+  const visible = () => { const out = []; const walk = (nodes) => { const vs = nodes.filter((n) => !q || subtreeMatch(n)); vs.forEach((n, i) => { out.push({ n, size: vs.length, pos: i + 1 }); if (expanded(n)) walk(n.kids); if (loading.has(n.id)) out.push({ loadingFor: n }); }); }; walk(ROOTS); return out; };
+  const trs = new Map();
+  const rowFor = (n) => {
+    let tr = trs.get(n.id); if (tr) return tr;
+    tr = document.createElement("tr"); tr.setAttribute("role", "row"); tr.dataset.id = n.id; tr.tabIndex = -1; tr.setAttribute("aria-level", n.lvl);
+    tr.style.cssText = `--_lvl:${n.lvl};--_bc:var(--warp-color-data-${n.c})`;
+    tr.innerHTML = `<th role="rowheader" scope="row" data-part="tree-cell" data-pinned="last" tabindex="-1"><span data-part="tree-label"><span data-part="toggle"${isParent(n) ? "" : " data-leaf"} aria-hidden="true">${CHEV}</span><span data-part="primary"></span></span></th><td role="gridcell" tabindex="-1" data-k="owner"></td><td role="gridcell" tabindex="-1" data-numeric data-k="budget"></td><td role="gridcell" tabindex="-1" data-numeric data-k="used"></td><td role="gridcell" tabindex="-1" data-numeric data-k="count"></td>`;
+    trs.set(n.id, tr); return tr;
+  };
+  const loadRow = (n) => { const tr = document.createElement("tr"); tr.setAttribute("role", "row"); tr.dataset.part = "loading"; tr.setAttribute("aria-level", n.lvl + 1); tr.style.cssText = `--_lvl:${n.lvl + 1};--_bc:var(--warp-color-data-${n.c})`;
+    tr.innerHTML = `<td role="gridcell" data-part="tree-cell" colspan="5"><span data-part="tree-label"><span data-part="toggle" data-leaf aria-hidden="true">${CHEV}</span>Loading ${esc(n.name)}…<span data-part="skeleton" aria-hidden="true"></span></span></td>`; return tr; };
+  function render(reveal = null) {
+    const before = new Set([...tbody.children].map((t) => t.dataset.id));
+    const vis = visible(), nodes = [];
+    let k = 0;
+    for (const v of vis) {
+      if (v.loadingFor) { nodes.push(loadRow(v.loadingFor)); continue; }
+      const { n, size, pos } = v, tr = rowFor(n), a = n.kids || n.lazy ? agg(n) : { budget: n.budget, used: n.used, count: 1 };
+      tr.setAttribute("aria-setsize", size); tr.setAttribute("aria-posinset", pos);
+      if (isParent(n)) tr.setAttribute("aria-expanded", expanded(n)); else tr.removeAttribute("aria-expanded");
+      if (loading.has(n.id)) tr.setAttribute("aria-busy", "true"); else tr.removeAttribute("aria-busy");
+      tr.toggleAttribute("data-context", !!q && !matches(n));
+      $('[data-part="primary"]', tr).innerHTML = hi(n.name); $('[data-k="owner"]', tr).innerHTML = hi(n.owner);
+      $('[data-k="budget"]', tr).textContent = fmt.money(a.budget); $('[data-k="used"]', tr).textContent = a.used + "%"; $('[data-k="count"]', tr).textContent = fmt.int(a.count);
+      if (reveal && !before.has(n.id)) { tr.setAttribute("data-enter", ""); tr.style.setProperty("--i", k++); } else tr.removeAttribute("data-enter");
+      nodes.push(tr);
+    }
+    // reconcile, don't replace: drop what left, then insert what arrived, so a row that stays is never
+    // moved (moving a node blurs it, and the focused row must keep focus through an expand)
+    const had = tbody.contains(document.activeElement), keep = new Set(nodes);
+    [...tbody.children].forEach((t) => keep.has(t) || t.remove());
+    nodes.forEach((t, i) => { if (tbody.children[i] !== t) tbody.insertBefore(t, tbody.children[i] || null); });
+    if (!nodes.length) tbody.innerHTML = `<tr role="row"><td role="gridcell" colspan="5" class="muted">Nothing matches “${esc(q)}”.</td></tr>`;
+    const shown = vis.filter((v) => v.n).length; counter.innerHTML = `<b>${shown}</b> of ${byId.size} rows`;
+    // focus survives: a row hidden by a collapse hands focus to its nearest visible ancestor
+    let f = byId.get(focus.id); while (f && !trs.get(f.id)?.isConnected) f = parent.get(f.id);
+    if (!f && vis.find((v) => v.n)) f = vis.find((v) => v.n).n; if (f) focus.id = f.id;
+    roving(had && !tbody.contains(document.activeElement));
+  }
+  const rows = () => $$('tr[role="row"][data-id]', tbody);
+  const target = () => { const tr = trs.get(focus.id); if (!tr?.isConnected) return null; return focus.col < 0 ? tr : tr.children[focus.col]; };
+  function roving(move = false) { $$('[tabindex="0"]', tbody).forEach((e) => (e.tabIndex = -1)); const t = target(); if (t) { t.tabIndex = 0; if (move) t.focus(); } }
+  const go = (id, col = focus.col) => { focus = { id, col }; roving(true); };
+  function toggle(n, to = !expanded(n), announce = true) {
+    if (!isParent(n) || to === expanded(n) && !(to && !n.kids)) return;
+    if (to && !n.kids) {                                  // lazy: first open fetches the children
+      if (loading.has(n.id)) return; loading.add(n.id); open.add(n.id); render(); if (announce) say(`Loading ${n.name}`);
+      setTimeout(() => { n.kids = n.lazy(); index(n.kids, n.lvl + 1, n, n.c); loading.delete(n.id); render(true); if (announce) say(`${n.name} expanded, ${n.kids.length} rows loaded`); if (document.activeElement === document.body) roving(true); }, 700);
+      return;
+    }
+    if (q) { if (to) { fclosed.delete(n.id); open.add(n.id); } else { fclosed.add(n.id); open.delete(n.id); } } else to ? open.add(n.id) : open.delete(n.id);
+    render(to); if (announce) say(`${n.name} ${to ? `expanded, ${n.kids.filter((c) => !q || subtreeMatch(c)).length} child rows` : "collapsed"}`);
+    const tr = trs.get(n.id); if (R.contains(document.activeElement)) roving(true); else if (tr) roving();
+  }
+  R.addEventListener("click", (e) => {
+    if (e.target.closest("[data-xall]")) { const all = [...byId.values()].filter(isParent); fclosed.clear(); all.forEach((n) => (n.kids ? open.add(n.id) : toggle(n, true, false))); render(true); say("All rows expanded"); return; }
+    if (e.target.closest("[data-call]")) { open.clear(); fclosed = new Set([...byId.values()].filter(isParent).map((n) => n.id)); focus.col = -1; render(); say("All rows collapsed"); return; }
+    const tr = e.target.closest('tbody tr[data-id]'); if (!tr) return; const n = byId.get(tr.dataset.id);
+    const cell = e.target.closest("th, td"); const col = cell ? [...tr.children].indexOf(cell) : -1;
+    if (e.target.closest('[data-part="toggle"]:not([data-leaf])')) { focus = { id: n.id, col: -1 }; roving(true); toggle(n); return; }
+    go(n.id, col);
+  });
+  R.addEventListener("dblclick", (e) => { const tr = e.target.closest('tbody tr[data-id]'); if (tr && !e.target.closest('[data-part="toggle"]')) toggle(byId.get(tr.dataset.id)); });
+  R.addEventListener("focusin", (e) => { const tr = e.target.closest('tbody tr[data-id]'); if (!tr) return; const col = e.target === tr ? -1 : [...tr.children].indexOf(e.target.closest("th, td")); if (focus.id !== tr.dataset.id || focus.col !== col) { focus = { id: tr.dataset.id, col }; roving(); } });
+  R.addEventListener("keydown", (e) => {
+    const tr = e.target.closest('tbody tr[data-id]'); if (!tr || !(e.target === tr || e.target.matches("th, td"))) return;
+    const list = rows(), i = list.indexOf(tr), n = byId.get(tr.dataset.id), last = tr.children.length - 1;
+    const rtl = getComputedStyle(tr).direction === "rtl", k = rtl && e.key === "ArrowLeft" ? "ArrowRight" : rtl && e.key === "ArrowRight" ? "ArrowLeft" : e.key;
+    const row = (j) => { const t = list[clamp(j, 0, list.length - 1)]; if (t) go(t.dataset.id); };
+    if (k === "ArrowDown") row(i + 1); else if (k === "ArrowUp") row(i - 1);
+    else if (k === "PageDown") row(i + 5); else if (k === "PageUp") row(i - 5);
+    else if (k === "Home" && (e.ctrlKey || e.metaKey || focus.col < 0)) row(0);
+    else if (k === "End" && (e.ctrlKey || e.metaKey || focus.col < 0)) row(list.length - 1);
+    else if (k === "Home") go(n.id, 0); else if (k === "End") go(n.id, last);
+    else if (k === "ArrowRight") {
+      if (focus.col < 0 && isParent(n) && !expanded(n)) toggle(n, true);              // closed row: open it
+      else go(n.id, Math.min(focus.col + 1, last));                                    // open row or leaf: into the cells; a cell: one right
+    } else if (k === "ArrowLeft") {
+      if (focus.col > 0) go(n.id, focus.col - 1);
+      else if (focus.col === 0) go(n.id, -1);                                          // first cell: back to the row
+      else if (isParent(n) && expanded(n)) toggle(n, false);                            // open row: close it
+      else { const p = parent.get(n.id); if (p) go(p.id, -1); }                         // closed row or leaf: the parent
+    } else if ((k === "Enter" || k === " ") && focus.col <= 0 && isParent(n)) toggle(n);
+    else return;
+    e.preventDefault();
+  });
+  $(`#${tid}-q`).addEventListener("input", (e) => { q = e.target.value.trim(); fclosed.clear(); render(); const m = [...byId.values()].filter((n) => q && matches(n)).length; say(q ? `${m} matching row${m === 1 ? "" : "s"}` : "Filter cleared"); });
+  render();
+}
+
 /* ------------------------------------------------------------------ MOUNT */
-opsGrid($("#ops")); pivot($("#pivot")); scrollGrid($("#sgrid")); paginationBar($("#pager-demo")); infinite($("#infinite")); activity($("#activity"));
+opsGrid($("#ops")); treeData($("#treedata")); pivot($("#pivot")); scrollGrid($("#sgrid")); paginationBar($("#pager-demo")); infinite($("#infinite")); activity($("#activity"));
 facets($("#facets")); comparison($("#compare")); queryBuilder($("#query")); crud($("#crud"));
 map($("#map")); flow($("#flow"));
 sortable($("#sortable"), [{ n: "Live table cell flash", m: "P0" }, { n: "Cursor pagination", m: "P0" }, { n: "Kanban move menu", m: "P1" }, { n: "Brush and zoom", m: "P1" }, { n: "Sankey layout", m: "P2" }], {});

@@ -133,6 +133,48 @@ Every role has an explicit unitless leading (shorthands included: a `font:` with
   trims at vivid only). Browsers without `text-box` get a Capsize-style fallback behind `@supports not`
   (negative margins from the face's cap height and leading). Fixed-height controls centre the same way either
   way: sweep borders, the label notch, frame corners and control heights are pixel-identical to v0.2.
+- **Trim through the font swap.** A cap-trimmed block is `(lines − 1) × lh + 1cap` tall, and `1cap` is
+  the cap height of the face that is drawing, which is the fallback until the web font arrives. The fallbacks
+  match advance widths and line boxes, not cap heights, so a trimmed heading used to change height at the
+  swap (measured: up to 23 px on a vivid hero, CLS up to 0.016 on a specimen from headings alone):
+
+  | Face | brand cap | fallback cap (em) | fix while the fallback draws |
+  |---|---|---|---|
+  | Inter | 0.7275 | Arial × 1.0712 = 0.767 | −0.0395 em |
+  | Space Grotesk | 0.700 | Arial × 1.0969 = 0.786 | −0.0855 em |
+  | Instrument Serif | 0.720 | Times × 0.8394 = 0.556 | +0.1642 em |
+  | IBM Plex Mono | 0.698 | Courier New 0.571 · Bold 0.591 | +0.1268 · +0.1067 em |
+
+  `--warp-ref-trim-swap` (generated with the fallback faces) reads `1cap / 1em` on the element: a window
+  ±0.005 em around each fallback's cap returns that row's fix, anything else (the loaded brand face, a system
+  face, an unknown one) returns 0. Headings, the hero title and `[data-trim="display"]` multiply it by
+  `--warp-trim-k` (0 or 1, the same switch as their text-box token: `--warp-text-heading-trim-k`,
+  `--warp-text-display-trim-k`) into the registered `--warp-trim-fix` and add it **above the first line**. The
+  box is then always the brand's box, and where the fix sits on top the baseline doesn't move either. With the
+  web font loaded the fix is 0 and the layout is exactly the plain `text-box` one (checked in Chromium and WebKit
+  on all nine specimens: element geometry identical, and the field, label and sweep crops pixel-identical). How each engine carries it:
+
+  | Engine | positive fix (serif, mono) | negative fix (Inter, Space Grotesk) |
+  |---|---|---|
+  | WebKit 18.2+ | zero-height `::before` table, `margin-block-end`, generated only while the fix is non-zero (`content: if(style(--warp-trim-fix: 0px): none; else: "")`) | same; box and glyphs hold |
+  | Chromium 133+ | `padding-block-start`; box and glyphs hold | `block-size: calc-size(auto, size + fix)`: box holds, glyphs rise by the fix at the swap |
+  | Firefox 154+ | none: its `cap` unit doesn't report the fallback during the swap, so the fix reads 0 and the old shift stays | none |
+  | no `text-box` | the Capsize fallback above: trims from the heading face's metrics in `em`/`lh`, unaffected by the swap | same |
+
+  Chromium and Firefox drop the start trim when a block starts with a table, so the `::before` carrier is
+  WebKit-only (`@supports (hanging-punctuation: first)`, no other engine ships it). The `if()` drops the
+  pseudo once the web font is in, so it can't linger as a flex item (and pick up `gap`) in a flex heading; a
+  WebKit without `if()` gets no pseudo and no fix. In Chromium a stretched
+  grid or flex heading counts a negative fix twice until the swap, on its own box only (nothing around it
+  moves). WebKit still moves a heading by up to 0.01 em when its leading is below 1 (heroes at 0.86–0.95): it
+  has no `ascent-override`, so its negative half-leading differs between the faces.
+- **Trim contract.** `--warp-trim-k` has to say whether the element is really trimmed, or the fix moves text
+  that never moved:
+  - text that sets `text-box: var(--warp-text-display-trim)` reads the display switch: `data-trim="display"`
+    on a non-heading, or `--warp-trim-k: var(--warp-text-display-trim-k)` in the heading's rule (h1–h6 default
+    to the heading switch; `[data-scope="hero"] [data-part="title"]` is covered);
+  - a heading laid out as flex or grid (`text-box` only trims block containers), or reset with `all: unset`,
+    sets `--warp-trim-k: 0`. Accordion and disclosure headings (`> button[aria-expanded]`) are excluded already.
 - **Canvas strings.** `--warp-text-{role}-canvas` is a ready `ctx.font` string with a px size
   (`"600 52px Space Grotesk, …"`): the `-px` sizes are registered `<length>` properties, so they compute to
   px. Read them with `getComputedStyle(el)`; inside a `[data-text-canvas]` element the fluid sizes resolve
@@ -141,7 +183,9 @@ Every role has an explicit unitless leading (shorthands included: a `font:` with
   `Space Grotesk Fallback`, `Instrument Serif Fallback`, `IBM Plex Mono Fallback`: `local()` Arial, Times New
   Roman, Courier New with `size-adjust` and ascent / descent / line-gap overrides), placed right after the brand
   face in every stack, and `font-display: swap`. With the explicit leadings this keeps the swap to ~0.001 CLS for
-  untrimmed text; the cap trim still moves trimmed headings a little (§11).
+  untrimmed text, and trimmed headings hold their box through it (Trim through the font swap, above). What
+  remains at the swap is the glyphs themselves: per-string width differences move an `<em>` or a wrapped
+  word sideways, and Chromium's layout-shift API scores those text runs (~0.001–0.003 on a specimen's hero).
 
 | Token | quiet · balanced · vivid | Rule |
 |---|---|---|
@@ -450,10 +494,10 @@ wrapped in `:where()` (specificity 0). Rules of the road:
   picked colour. Every component must render correctly with `data-expression` changed on an ancestor.
 - **All:** run `node docs/design/warp/scripts/contrast-check.mjs` after touching a colour; add pairs there for any
   new fill/ink combination you introduce.
-- **Open (type):** the cap trim is measured in the face that is loaded, so a trimmed heading shifts by the
-  cap-height difference when the web font swaps in (Space Grotesk 0.70 em vs its Arial fallback's adjusted cap).
-  The next step is to trim block text (headings) with the brand face's metrics as margins (Capsize), and keep
-  `text-box` for fixed-height parts, where the swap can't move anything.
+- **Type, trims:** the cap trim is measured in the face that is drawing, so trimmed block text carries a
+  font-swap fix (§2 Type, "Trim through the font swap"). Anything that trims text itself, or lays a heading out
+  as flex or grid, follows the trim contract there. Fixed-height parts keep plain `text-box`: the swap can't
+  move them.
 
 ## 12. Forced colours (Windows High Contrast)
 

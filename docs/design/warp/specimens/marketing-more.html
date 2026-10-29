@@ -1,0 +1,1066 @@
+<!doctype html>
+<html lang="en" data-expression="balanced">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>warp marketing more</title>
+<meta name="description" content="The second marketing specimen for warp: media players, fancy presets, MotionCard, animated backgrounds, text effects, scroll-driven sections, a testimonial wall and the standard section set.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,400..600&family=Space+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../tokens/warp.css">
+<link rel="stylesheet" href="../tokens/warp-components.css">
+<link rel="stylesheet" href="../tokens/warp-marketing.css">
+<link rel="stylesheet" href="warp-bar.css">
+<style>
+@layer warp.tokens, warp.base, warp.signature, warp.components, warp.marketing, specimen;
+
+/* Specimen chrome only. Every demo on this page is styled by warp-marketing.css (08 §3.6, §3.12, §4.2, §5.3, §6). */
+@layer specimen {
+  @media (prefers-reduced-motion: no-preference) { html:not([data-motion="reduce"]) { scroll-behavior: smooth; } }
+  html[data-motion="full"] { scroll-behavior: smooth; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  svg[data-icon] { inline-size: 16px; block-size: 16px; }
+  .ico-lg { inline-size: 18px !important; block-size: 18px !important; }
+  .vh { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  :root [data-scope="topbar"] { inset-block-start: var(--wb-h, 57px); }
+  :root { --warp-mk-sticky-offset: calc(var(--wb-h, 57px) + 72px); scroll-padding-block-start: calc(var(--wb-h, 57px) + 72px); }
+  .wb-links a { color: inherit; font-size: 12px; text-underline-offset: 3px; white-space: nowrap; }
+
+  .head-row { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--warp-space-group); margin-block-end: calc(var(--warp-space-section) * 0.9); }
+  .head-row [data-part="head"] { margin: 0; }
+  .ctrl-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .note { font: 500 11px/1.4 var(--warp-font-mono); color: var(--warp-color-text-subtle); min-block-size: 1.4em; margin: 0; }
+  .muted { color: var(--warp-color-text-subtle); }
+  .stack { display: grid; gap: var(--warp-space-group); align-content: start; }
+  .two-col { display: grid; gap: var(--warp-space-section); }
+  @container block (min-width: 900px) { .two-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+  .media-grid { display: grid; gap: var(--warp-space-section); }
+  @container block (min-width: 980px) { .media-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } }
+  .thread { display: grid; gap: 10px; padding: 16px; border-radius: var(--warp-radius-surface); border: 1px solid var(--warp-color-border); background: var(--warp-color-surface); }
+  .thread .who { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+  .thread .who b { font-weight: 500; }
+  .fx-demos { display: grid; gap: var(--warp-space-section); }
+  .fx-row { display: grid; gap: 8px; padding-block: var(--warp-space-group); border-block-start: 1px solid var(--warp-color-border); }
+  .fx-row > .note { order: -1; }
+  .fx-big { margin: 0; font: var(--warp-text-title-weight) min(var(--warp-mk-title-size), 9cqi)/1.08 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); text-wrap: balance; }
+  .fx-prose { margin: 0; font-size: clamp(20px, 3.2cqi, 30px); line-height: 1.4; max-inline-size: 34ch; text-wrap: pretty; }
+  .spacer { block-size: 30vh; }
+  .dash { display: block; inline-size: 100%; block-size: auto; }
+  .reg { inline-size: 100%; border-collapse: collapse; font-size: 13px; background: var(--warp-color-surface-raised); border: 1px solid var(--warp-color-border); }
+  .reg :is(th, td) { padding: 8px 12px; border-block-end: 1px solid var(--warp-color-border); text-align: start; vertical-align: top; }
+  .reg th { font: 500 11px/1.2 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--warp-color-text-subtle); background: var(--warp-color-surface); }
+  .reg td:first-child { font-family: var(--warp-font-mono); white-space: nowrap; }
+  .reg .st { display: inline-flex; font: 500 11px/1 var(--warp-font-mono); padding: 4px 7px; border-radius: 4px; }
+  .reg .st[data-s="on"] { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+  .reg .st[data-s="still"] { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+  .reg .st[data-s="off"] { background: var(--warp-color-surface-hover); color: var(--warp-color-text-subtle); }
+  .reg-wrap { overflow-x: auto; }
+  #governor { padding: 64px var(--warp-space-page) 120px; background: var(--warp-color-surface-sunken); border-block-start: 1px solid var(--warp-color-border); }
+  #governor > div { max-inline-size: 1200px; margin-inline: auto; display: grid; gap: 16px; }
+  #governor h2 { margin: 0; font: 500 26px/1.15 var(--warp-font-display); }
+  #governor p { margin: 0; color: var(--warp-color-text-subtle); max-inline-size: 80ch; }
+}
+</style>
+</head>
+<body>
+
+<!-- icon sprite: 24 grid, 1.5 stroke -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-trace" viewBox="0 0 24 24"><path d="M3 6h8M7 10h10M5 14h6M9 18h12"/></symbol>
+  <symbol id="i-gate" viewBox="0 0 24 24"><path d="M5 20V8l7-4 7 4v12M9 20v-6h6v6"/></symbol>
+  <symbol id="i-canary" viewBox="0 0 24 24"><path d="M4 18c4 0 5-12 9-12s3 8 7 8"/><circle cx="13" cy="6" r="1.5"/></symbol>
+  <symbol id="i-diff" viewBox="0 0 24 24"><path d="M6 3v12M3 6h6M15 18h6M18 9a3 3 0 100-6 3 3 0 000 6zM18 9v6"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0zM12 17v4"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6zM9 8V6a3 3 0 016 0v2"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 13v7h14v-7"/></symbol>
+  <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></symbol>
+  <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M8 11h6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 2.8 1.1-6.1L3.2 9.4l6.1-.8z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+  <symbol id="i-cursor" viewBox="0 0 24 24"><path d="M4 3l16 7.5-7 1.8-2.6 6.7z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3zM12 10v4M12 17v.5"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 24 24"><path d="M5 3v18M10 3v18M15 3v18M20 3v18" opacity=".55"/><path d="M2 9h20M2 15h20" stroke="var(--warp-color-accent-solid)" stroke-width="2"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/><path d="M10.5 10v5M13.5 10h2v5h-2z" stroke-width="1.2"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></symbol>
+  <symbol id="i-muted" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6"/></symbol>
+  <symbol id="i-pip" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><rect x="12" y="11" width="7" height="6" rx="1"/></symbol>
+  <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
+  <symbol id="i-unfull" viewBox="0 0 24 24"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+</svg>
+
+<header data-specimen-bar data-spec data-label="marketing more v0.3" data-aliases="x:expression">
+  <div class="wb-ctl" title="page extra: the accent seed (hue · chroma)"><span id="wb-l-accent"><span class="wb-vh">Accent</span><span aria-hidden="true">Accent</span></span><div class="wb-seg wb-swatches" role="radiogroup" aria-labelledby="wb-l-accent" data-ctl="accent"><label><input type="radio" name="accent" value="152-0.115" checked><i style="--c: oklch(0.6 0.13 152)"><span class="wb-vh">Green</span></i></label><label><input type="radio" name="accent" value="258-0.14"><i style="--c: oklch(0.58 0.15 258)"><span class="wb-vh">Blue</span></i></label><label><input type="radio" name="accent" value="300-0.14"><i style="--c: oklch(0.56 0.16 300)"><span class="wb-vh">Violet</span></i></label><label><input type="radio" name="accent" value="45-0.14"><i style="--c: oklch(0.64 0.15 45)"><span class="wb-vh">Orange</span></i></label><label><input type="radio" name="accent" value="260-0.015"><i style="--c: oklch(0.35 0.015 260)"><span class="wb-vh">Ink, near-neutral</span></i></label></div></div>
+  <div class="wb-ctl" title="page extra: the first marketing specimen"><span><span class="wb-vh">Pages</span><span aria-hidden="true">Pages</span></span><div class="wb-links"><a href="marketing.html">Landing, pricing, store, gallery, reviews</a></div></div>
+</header>
+<script src="warp-bar.js"></script>
+
+<div id="landing" data-scope="landing">
+
+  <header data-scope="topbar">
+    <a data-part="brand" data-hit href="marketing.html" aria-label="Tensile home (the landing specimen)"><svg data-icon aria-hidden="true" focusable="false" class="ico-lg"><use href="#i-mark"/></svg>Tensile</a>
+    <ul data-part="links">
+      <li><a href="#fancy">Motion</a></li>
+      <li><a href="#video">Media</a></li>
+      <li><a href="#backgrounds">Effects</a></li>
+      <li><a href="#wall">Customers</a></li>
+      <li><a href="#team">Company</a></li>
+      <li><a href="marketing.html">Landing</a></li>
+    </ul>
+    <div data-part="actions">
+      <button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" id="pause-all" aria-pressed="false" aria-label="Pause motion" hidden>
+        <svg data-icon aria-hidden="true" focusable="false"><use href="#i-pause"/></svg><span data-part="hide-sm" aria-hidden="true">Pause motion</span>
+      </button>
+      <button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only type="button" data-theme-toggle aria-label="Switch to dark theme"><svg data-icon aria-hidden="true" focusable="false" data-part="sun"><use href="#i-moon"/></svg><svg data-icon aria-hidden="true" focusable="false" data-part="moon"><use href="#i-sun"/></svg></button>
+      <a data-scope="button" data-size="sm" href="#waitlist">Join the waitlist</a>
+    </div>
+    <div data-scope="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+  </header>
+
+  <main id="top">
+
+  <!-- ===================== fancy presets (§6.5) ===================== -->
+  <section data-scope="block" id="fancy" aria-labelledby="fancy-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(01)</span> Motion presets</p>
+        <h2 data-part="title" id="fancy-title">Six <em>fancy</em> entrances, one governor</h2>
+        <p data-part="lede">CRT power-on and off, flicker, glitch, spotlight and iris. Each is a single run of 400ms or less on transform, opacity and clip-path, and only at vivid. Every other stop, and reduced motion, gets that stop's plain enter or exit.</p>
+      </div>
+      <div class="two-col">
+        <div data-scope="fancy-stage" id="fancy-stage">
+          <span data-part="empty" id="fancy-empty">Pick a preset</span>
+          <div data-fx="fancy" id="fancy-target" data-shown="false" role="img" aria-label="Poster: “Canary”, abstract warp lines"><img alt="" id="fancy-img"></div>
+        </div>
+        <div class="stack">
+          <div data-scope="fancy-presets" role="group" aria-label="Run a preset" id="fancy-presets">
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-run="crt-on-in">CRT on</button>
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-run="crt-off-out">CRT off</button>
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-run="flicker-in">Flicker</button>
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-run="glitch-in">Glitch</button>
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-run="spotlight-in">Spotlight</button>
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-run="iris-in">Iris</button>
+          </div>
+          <p class="note" id="fancy-note" role="status"></p>
+          <p class="muted" style="margin:0">Spotlight opens from where you clicked the stage (from the centre for a keyboard press). Flicker dips twice in 400ms and ignores a repeat within a second, so it never passes two flashes a second.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MotionCard (§6.6) ===================== -->
+  <section data-scope="block" id="motion-card" data-tone-bg="sunken" aria-labelledby="mc-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(02)</span> MotionCard</p>
+        <h2 data-part="title" id="mc-title">Cards that answer a <em>press</em></h2>
+        <p data-part="lede">A selectable card. Balanced lifts the shadow on hover and presses to 0.98. Vivid adds a 2px rise and 1.01 scale on hover, the one place a card moves on hover. Quiet and reduced motion stay flat.</p>
+      </div>
+      <div data-scope="motion-cards" role="group" aria-label="Choose a starting template" id="motion-cards">
+        <button type="button" data-scope="motion-card" aria-pressed="true" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><svg data-icon data-part="check" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><svg data-icon aria-hidden="true" focusable="false" class="ico-lg"><use href="#i-canary"/></svg><span data-part="name">Canary rollout</span><span data-part="body">Ship to 5%, watch cost and evals, promote or roll back on its own.</span></button>
+        <button type="button" data-scope="motion-card" aria-pressed="false" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><svg data-icon data-part="check" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><svg data-icon aria-hidden="true" focusable="false" class="ico-lg"><use href="#i-gate"/></svg><span data-part="name">Merge gate</span><span data-part="body">Agents open the PR. A person or a policy approves it.</span></button>
+        <button type="button" data-scope="motion-card" aria-pressed="false" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><svg data-icon data-part="check" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><svg data-icon aria-hidden="true" focusable="false" class="ico-lg"><use href="#i-trace"/></svg><span data-part="name">Trace everything</span><span data-part="body">Every tool call, prompt and diff on one timeline.</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== video + audio players (§5.3) ===================== -->
+  <section data-scope="block" id="video" aria-labelledby="video-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(03)</span> Media</p>
+        <h2 data-part="title" id="video-title">Tensile in <em>twelve</em> seconds</h2>
+        <p data-part="lede">Custom controls over a native video. Captions, chapters on the timeline, keyboard control and a generated poster. The chapters are timeline() cues, the same boxes a weft app binds to.</p>
+      </div>
+      <div class="media-grid">
+        <div>
+          <div data-scope="player" data-kind="video" id="video-player" data-state="idle" role="region" aria-label="Video player: Tensile in twelve seconds" aria-describedby="video-keys">
+            <div data-part="stage">
+              <video playsinline preload="metadata" id="video-el">
+                <source src="assets/tour.webm" type="video/webm">
+                <source src="assets/tour.mp4" type="video/mp4">
+                <track kind="captions" src="assets/tour.en.vtt" srclang="en" label="English" default>
+              </video>
+              <button type="button" data-part="big-play" aria-label="Play video"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+              <div data-part="badge-row"><span data-part="chip" data-dur>Video · 0:12</span><span data-part="chip" data-cue aria-hidden="true"></span></div>
+            </div>
+            <div data-part="controls">
+              <div data-part="scrubber">
+                <div data-part="rail"><i data-part="buffered"></i><i data-part="hover"></i><i data-part="played"></i></div>
+                <div data-part="ticks"></div>
+                <div data-part="thumb-rail"><span data-part="thumb"></span></div>
+                <span data-part="preview" aria-hidden="true"></span>
+                <input type="range" min="0" max="12" step="0.1" value="0" aria-label="Seek" aria-valuetext="0:00 of 0:12">
+              </div>
+              <button type="button" data-part="play" aria-label="Play"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-play"/></svg></button>
+              <button type="button" data-part="back" aria-label="Back 10 seconds"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-back"/></svg></button>
+              <button type="button" data-part="mute" aria-pressed="false" aria-label="Mute"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-volume"/></svg></button>
+              <span data-part="time"><span data-part="current">0:00</span><span data-part="total"> / 0:12</span></span>
+              <button type="button" data-part="cc" aria-pressed="true" aria-label="Captions">CC</button>
+              <button type="button" data-part="speed" aria-label="Playback speed: 1×">1×</button>
+              <button type="button" data-part="pip" aria-label="Picture in picture"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-pip"/></svg></button>
+              <button type="button" data-part="full" aria-pressed="false" aria-label="Full screen"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-full"/></svg></button>
+            </div>
+          </div>
+          <div data-scope="player-notes" data-for="video-player">
+            <ol data-part="chapters" aria-label="Chapters"></ol>
+            <p data-part="readout" id="video-readout"></p>
+            <p data-part="keys" id="video-keys"><kbd>Space</kbd> or <kbd>K</kbd> play and pause · <kbd>J</kbd> <kbd>L</kbd> 10s · <kbd>←</kbd> <kbd>→</kbd> 5s · <kbd>M</kbd> mute · <kbd>C</kbd> captions · <kbd>F</kbd> full screen · <kbd>Home</kbd> <kbd>End</kbd></p>
+          </div>
+        </div>
+        <div class="stack" id="audio">
+          <div data-scope="player" data-kind="audio" id="audio-player" role="region" aria-label="Audio player: Monday standup" aria-describedby="audio-keys">
+            <audio preload="metadata"><source src="assets/standup.webm" type="audio/webm"><source src="assets/standup.m4a" type="audio/mp4"></audio>
+            <button type="button" data-part="play" aria-label="Play Monday standup"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+            <div data-part="meta"><b>Monday standup: billing canary</b><span>Ada Lin · voice note · 0:22</span></div>
+            <div data-part="tools"><button type="button" data-part="tool" data-speed aria-label="Playback speed: 1×">1×</button><a data-part="tool" href="assets/standup.m4a" download aria-label="Download the voice note (69 KB)"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-download"/></svg></a></div>
+            <div data-part="wave"><canvas aria-hidden="true"></canvas><input type="range" min="0" max="22" step="0.1" value="0" aria-label="Seek" aria-valuetext="0:00 of 0:22"></div>
+            <span data-part="time"><span data-part="current">0:00</span><span data-part="total"> / 0:22</span></span>
+          </div>
+          <details data-scope="transcript" id="audio-transcript">
+            <summary>Transcript</summary>
+            <ol></ol>
+          </details>
+          <p class="note" id="audio-keys">Waveform from 160 precomputed peaks, drawn to a canvas only when something changes. <kbd>Space</kbd> <kbd>K</kbd> play · <kbd>←</kbd> <kbd>→</kbd> 5s · <kbd>J</kbd> <kbd>L</kbd> 10s</p>
+          <div class="thread" aria-label="Message thread (sample)" role="group">
+            <div class="who"><span data-part="avatar">AL</span><span><b>Ada Lin</b> <span class="muted">· 9:02</span></span></div>
+            <div data-scope="player" data-kind="audio" data-chrome="compact" id="voice-note" role="region" aria-label="Voice note from Ada Lin">
+              <audio preload="none"><source src="assets/standup.webm" type="audio/webm"><source src="assets/standup.m4a" type="audio/mp4"></audio>
+              <button type="button" data-part="play" aria-label="Play voice note"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+              <div data-part="wave"><canvas aria-hidden="true"></canvas><input type="range" min="0" max="22" step="0.1" value="0" aria-label="Seek" aria-valuetext="0:00 of 0:22"></div>
+              <span data-part="time"><span data-part="current">0:22</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== animated backgrounds (§6.2) ===================== -->
+  <section data-scope="block" id="backgrounds" data-tone-bg="sunken" aria-labelledby="bg-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(04)</span> Backgrounds</p>
+        <h2 data-part="title" id="bg-title">Texture that <em>stays behind</em> the words</h2>
+        <p data-part="lede">Grid, dots and noise are static at every stop; only their strength follows the Expression dial. The retro grid travels at vivid. Light rays exist at vivid only. All five are aria-hidden and drop out in forced colours.</p>
+      </div>
+      <div data-scope="backdrops">
+        <div data-scope="backdrop" id="bg-grid"><div data-part="bg" data-bg="grid" aria-hidden="true"></div><span data-part="state">Static · every stop</span><h3>Grid</h3><p>Two 1px line gradients under a radial mask. Vivid marks every fourth line in the accent.</p></div>
+        <div data-scope="backdrop" id="bg-dots"><div data-part="bg" data-bg="dots" aria-hidden="true"></div><span data-part="state">Static · every stop</span><h3>Dot</h3><p>One radial gradient tile, fading up from the bottom edge.</p></div>
+        <div data-scope="backdrop" id="bg-noise"><div data-part="bg" data-bg="noise" aria-hidden="true"></div><span data-part="state">Static · every stop</span><h3>Noise</h3><p>An SVG turbulence tile over a soft wash. It never animates.</p></div>
+        <div data-scope="backdrop" data-wide id="bg-retro"><div data-part="bg" data-bg="retro" aria-hidden="true"><div data-part="plane"><i></i></div></div><span data-part="state" data-state-for="retro"></span><h3>Retro grid</h3><p>A plane tipped back in 3D. At vivid its lines travel toward you by translate alone, and pause off-screen.</p></div>
+        <div data-scope="backdrop" data-wide id="bg-rays"><div data-part="bg" data-bg="rays" aria-hidden="true"><div data-part="rays"><i style="--x:4%;--w:9%;--r:-16deg;--o:.75;--t:9s;--dl:-1s"></i><i style="--x:17%;--w:7%;--r:-9deg;--o:.55;--t:11s;--dl:-4s"></i><i style="--x:31%;--w:11%;--r:-4deg;--o:.8;--t:8s;--dl:-2s"></i><i style="--x:46%;--w:8%;--r:3deg;--o:.6;--t:12s;--dl:-6s"></i><i style="--x:60%;--w:10%;--r:8deg;--o:.7;--t:10s;--dl:-3s"></i><i style="--x:74%;--w:7%;--r:12deg;--o:.5;--t:9.5s;--dl:-5s"></i><i style="--x:86%;--w:9%;--r:17deg;--o:.65;--t:11.5s;--dl:-7s"></i></div></div><span data-part="state" data-state-for="rays"></span><h3>Light rays</h3><p>Seven soft beams from the top edge, swaying by rotate.</p><p data-part="note">Rays exist at vivid only. Switch Expression to Vivid to see them.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== text effects (§6.3) ===================== -->
+  <section data-scope="block" id="text-fx" aria-labelledby="tfx-title">
+    <div data-part="inner">
+      <div class="head-row">
+        <div data-part="head">
+          <p data-part="eyebrow"><span data-part="index">(05)</span> Text effects</p>
+          <h2 data-part="title" id="tfx-title">Words that <span data-fx="shiny" id="fx-shiny">catch the light</span></h2>
+          <p data-part="lede">The real string is in the page from first paint. Animated copies are aria-hidden, nothing reflows, and every frame keeps text contrast at 4.5:1 or better.</p>
+        </div>
+        <div class="ctrl-row">
+          <button data-scope="button" data-emphasis="outline" data-tone="neutral" data-size="sm" type="button" id="fx-replay">Replay</button>
+          <button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" id="fx-pause" aria-pressed="false" hidden><svg data-icon aria-hidden="true" focusable="false"><use href="#i-pause"/></svg><span>Pause text</span></button>
+        </div>
+      </div>
+      <div class="fx-demos">
+        <div class="fx-row">
+          <p class="note" data-state-for="highlight"></p>
+          <p class="fx-prose" id="fx-highlight">Gates run before the merge, so a bad change <mark data-fx="highlight">never reaches production</mark>, and the one that does <mark data-fx="highlight" style="--_d: 420ms">rolls back in four minutes</mark>.</p>
+        </div>
+        <div class="fx-row">
+          <p class="note" data-state-for="rotate"></p>
+          <p class="fx-big">Built for <span data-fx="rotate" id="fx-rotate" data-words='["agents","platform teams","auditors","on-call"]'></span></p>
+        </div>
+        <div class="fx-row">
+          <p class="note" data-state-for="morph"></p>
+          <p class="fx-big"><span data-fx="morph" id="fx-morph" data-words='["Trace","Gate","Canary","Ship"]'></span> without the babysitting.</p>
+        </div>
+        <div class="fx-row">
+          <p class="note" data-state-for="text-reveal"></p>
+          <p class="fx-prose" data-fx="text-reveal" id="fx-reveal">Most agent tools stop at the demo. Tensile starts where the demo ends: the second week, the third incident, the audit nobody planned for. Scroll on and every word lands in full ink by the time this paragraph reaches the middle of your screen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== scroll-driven sections (§6.4) ===================== -->
+  <section data-scope="block" id="scroll-fx" data-tone-bg="sunken" aria-labelledby="cs-title">
+    <div data-part="inner">
+      <div data-scope="container-scroll" id="container-scroll">
+        <div data-part="intro">
+          <p data-part="eyebrow"><span data-part="index">(06)</span> Scroll-driven</p>
+          <h2 data-part="title" id="cs-title" style="margin:0; font: var(--warp-text-title-weight) min(var(--warp-mk-title-size), 8cqi)/1.08 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking)">Your whole fleet, <em>one screen</em></h2>
+          <p class="muted" style="margin:0; max-inline-size: 56ch">The device flattens as it scrolls in, on a CSS view timeline. The bar under the top nav is a scroll timeline on the page. Neither runs any script where the browser has scroll timelines.</p>
+        </div>
+        <div data-part="device">
+          <div data-part="screen">
+            <svg class="dash" viewBox="0 0 960 540" role="img" aria-label="Dashboard: 1,284 runs today, 3 rollbacks, cost down 4 percent">
+              <rect width="960" height="540" fill="var(--warp-color-page)"/>
+              <rect width="180" height="540" fill="var(--warp-color-surface)"/><path d="M180 0V540" stroke="var(--warp-color-border)"/>
+              <g fill="var(--warp-color-text-subtle)" font-family="IBM Plex Mono, monospace" font-size="13"><text x="24" y="44">TENSILE</text><text x="24" y="92">Runs</text><text x="24" y="124">Gates</text><text x="24" y="156">Canaries</text><text x="24" y="188">Audit</text></g>
+              <rect x="14" y="74" width="152" height="28" rx="4" fill="var(--warp-color-accent-soft)"/><text x="24" y="92" font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--warp-color-accent-text)">Runs</text>
+              <g font-family="Inter, sans-serif"><g transform="translate(212 32)"><rect width="220" height="92" rx="6" fill="var(--warp-color-surface-raised)" stroke="var(--warp-color-border)"/><text x="16" y="30" font-size="12" fill="var(--warp-color-text-subtle)">Runs today</text><text x="16" y="70" font-size="30" font-weight="600" fill="var(--warp-color-text)">1,284</text></g>
+              <g transform="translate(452 32)"><rect width="220" height="92" rx="6" fill="var(--warp-color-surface-raised)" stroke="var(--warp-color-border)"/><text x="16" y="30" font-size="12" fill="var(--warp-color-text-subtle)">Rollbacks</text><text x="16" y="70" font-size="30" font-weight="600" fill="var(--warp-color-text)">3</text></g>
+              <g transform="translate(692 32)"><rect width="236" height="92" rx="6" fill="var(--warp-color-surface-raised)" stroke="var(--warp-color-border)"/><text x="16" y="30" font-size="12" fill="var(--warp-color-text-subtle)">Cost vs last week</text><text x="16" y="70" font-size="30" font-weight="600" fill="var(--warp-color-positive-text)">−4.0%</text></g></g>
+              <g transform="translate(212 148)"><rect width="716" height="200" rx="6" fill="var(--warp-color-surface-raised)" stroke="var(--warp-color-border)"/><path d="M16 170 L80 150 L144 158 L208 120 L272 128 L336 96 L400 104 L464 70 L528 84 L592 60 L656 66 L700 44" fill="none" stroke="var(--warp-color-data-1)" stroke-width="3"/><path d="M16 170 L80 166 L144 160 L208 162 L272 150 L336 152 L400 140 L464 146 L528 132 L592 136 L656 124 L700 120" fill="none" stroke="var(--warp-color-data-2)" stroke-width="3" stroke-dasharray="6 5"/></g>
+              <g transform="translate(212 372)" font-family="Inter, sans-serif" font-size="13"><rect width="716" height="140" rx="6" fill="var(--warp-color-surface-raised)" stroke="var(--warp-color-border)"/>
+                <circle cx="22" cy="30" r="5" fill="var(--warp-color-positive-solid)"/><text x="40" y="35" fill="var(--warp-color-text)">billing-webhook · canary 25%</text><text x="600" y="35" fill="var(--warp-color-text-subtle)">2m ago</text><path d="M0 52H716" stroke="var(--warp-color-border)"/>
+                <circle cx="22" cy="76" r="5" fill="var(--warp-color-caution-solid)"/><text x="40" y="81" fill="var(--warp-color-text)">eval-suite · waiting on review</text><text x="600" y="81" fill="var(--warp-color-text-subtle)">9m ago</text><path d="M0 98H716" stroke="var(--warp-color-border)"/>
+                <circle cx="22" cy="120" r="5" fill="var(--warp-color-positive-solid)"/><text x="40" y="125" fill="var(--warp-color-text)">search-reindex · promoted</text><text x="600" y="125" fill="var(--warp-color-text-subtle)">31m ago</text></g>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="spacer" aria-hidden="true"></div>
+      <div data-scope="velocity" id="velocity" role="group" aria-label="Trace, gate, canary, ship. Roll back in minutes, not hours.">
+        <p data-part="row" aria-hidden="true"><span>Trace</span><i>/</i><span>Gate</span><i>/</i><span>Canary</span><i>/</i><span>Ship</span><span data-dupe><i>/</i> Trace <i>/</i> Gate <i>/</i> Canary <i>/</i> Ship <i>/</i> Trace <i>/</i> Gate <i>/</i> Canary <i>/</i> Ship</span></p>
+        <p data-part="row" aria-hidden="true"><span>Roll back in minutes</span><i>·</i><span>not hours</span><span data-dupe><i>·</i> Roll back in minutes <i>·</i> not hours <i>·</i> Roll back in minutes <i>·</i> not hours</span></p>
+      </div>
+      <p class="note" data-state-for="velocity" style="margin-block-start:12px"></p>
+    </div>
+  </section>
+
+  <!-- ===================== testimonial wall (§3.6) ===================== -->
+  <section data-scope="block" id="wall" aria-labelledby="wall-title">
+    <div data-part="inner">
+      <div class="head-row">
+        <div data-part="head">
+          <p data-part="eyebrow"><span data-part="index">(07)</span> Customers</p>
+          <h2 data-part="title" id="wall-title">Twelve teams, <em>no</em> babysitting</h2>
+        </div>
+        <div class="ctrl-row">
+          <div data-scope="toggle-group" role="radiogroup" aria-label="Wall layout" id="wall-variant">
+            <button data-scope="toggle" role="radio" aria-checked="true" data-v="masonry">Masonry</button>
+            <button data-scope="toggle" role="radio" aria-checked="false" data-v="marquee">Marquee</button>
+          </div>
+          <button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" id="wall-pause" aria-pressed="false" hidden><svg data-icon aria-hidden="true" focusable="false"><use href="#i-pause"/></svg><span>Pause wall</span></button>
+        </div>
+      </div>
+      <div data-scope="wall" data-variant="masonry" id="wall-root">
+        <div data-part="viewport" id="wall-viewport">
+          <ul data-part="columns" id="wall-list"></ul>
+          <div data-part="tracks"></div>
+        </div>
+        <div data-part="foot"><button data-scope="button" data-emphasis="outline" data-tone="neutral" type="button" data-part="more" aria-expanded="false" aria-controls="wall-viewport">Show all twelve</button></div>
+        <p class="note" data-state-for="wall" style="text-align:center"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== team (§3.12) ===================== -->
+  <section data-scope="block" id="team" data-tone-bg="sunken" aria-labelledby="team-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(08)</span> Team</p>
+        <h2 data-part="title" id="team-title">Eight people, <em>one</em> pager</h2>
+        <p data-part="lede">Vivid shows each photo in grey and brings the colour in on hover or focus. Every other stop shows colour.</p>
+      </div>
+      <ul data-scope="team" id="team-list"></ul>
+    </div>
+  </section>
+
+  <!-- ===================== blog (§3.12) ===================== -->
+  <section data-scope="block" id="blog" aria-labelledby="blog-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(09)</span> Blog</p>
+        <h2 data-part="title" id="blog-title">Notes from the <em>control plane</em></h2>
+      </div>
+      <ul data-scope="blog" id="blog-list" aria-live="off"></ul>
+      <div data-scope="blog-foot">
+        <nav data-scope="pagination" aria-label="Blog pages" id="blog-pages">
+          <ul>
+            <li><a data-part="item" href="#blog" data-page="prev" aria-label="Previous page"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-left"/></svg></a></li>
+            <li data-part="page"><a data-part="item" href="#blog" data-page="1" aria-current="page">1</a></li>
+            <li data-part="page"><a data-part="item" href="#blog" data-page="2">2</a></li>
+            <li data-part="page"><a data-part="item" href="#blog" data-page="3">3</a></li>
+            <li data-part="summary" aria-hidden="true">Page 1 of 3</li>
+            <li><a data-part="item" href="#blog" data-page="next" aria-label="Next page"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-right"/></svg></a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== changelog (§3.12) ===================== -->
+  <section data-scope="block" id="changelog" data-tone-bg="sunken" aria-labelledby="cl-title">
+    <div data-part="inner">
+      <div data-part="head">
+        <p data-part="eyebrow"><span data-part="index">(10)</span> Changelog</p>
+        <h2 data-part="title" id="cl-title">What <em>shipped</em></h2>
+        <p data-part="lede">06's Timeline anatomy. From 860px the date rail is sticky beside each release.</p>
+      </div>
+      <ol data-scope="changelog" id="changelog-list">
+        <li data-part="release" id="v2-4">
+          <span data-part="knot" aria-hidden="true"></span>
+          <div data-part="when"><time datetime="2026-10-22">22 Oct 2026</time><span data-scope="badge" data-tone="accent">v2.4</span></div>
+          <div data-part="what">
+            <h3>Canary budgets</h3>
+            <p>Give each rollout a cost and eval budget. Tensile pauses the canary the moment either is spent, and keeps the trace that spent it.</p>
+            <ul data-part="items">
+              <li><span data-scope="badge" data-tone="positive">New</span><span>Per-rollout budgets for cost, latency and eval score.</span></li>
+              <li><span data-scope="badge" data-tone="info">Improved</span><span>Rollback is now one step from any trace span.</span></li>
+              <li><span data-scope="badge" data-tone="neutral">Fixed</span><span>Gate approvals no longer expire during a deploy freeze.</span></li>
+            </ul>
+            <figure data-part="media" style="margin:0"><svg viewBox="0 0 560 200" role="img" aria-label="A canary at 25 percent with its budget bar two-thirds spent"><rect width="560" height="200" fill="var(--warp-color-surface-sunken)"/><g font-family="Inter, sans-serif" font-size="13" fill="var(--warp-color-text)"><text x="24" y="40">billing-webhook · canary</text><text x="24" y="104" fill="var(--warp-color-text-subtle)">Cost budget</text><text x="24" y="160" fill="var(--warp-color-text-subtle)">Eval budget</text></g><rect x="24" y="56" width="512" height="10" rx="5" fill="var(--warp-color-border)"/><rect x="24" y="56" width="128" height="10" rx="5" fill="var(--warp-color-accent-solid)"/><rect x="24" y="114" width="512" height="10" rx="5" fill="var(--warp-color-border)"/><rect x="24" y="114" width="340" height="10" rx="5" fill="var(--warp-color-data-2)"/><rect x="24" y="170" width="512" height="10" rx="5" fill="var(--warp-color-border)"/><rect x="24" y="170" width="160" height="10" rx="5" fill="var(--warp-color-data-1)"/></svg></figure>
+          </div>
+        </li>
+        <li data-part="release" id="v2-3">
+          <span data-part="knot" aria-hidden="true"></span>
+          <div data-part="when"><time datetime="2026-10-01">1 Oct 2026</time><span data-scope="badge" data-tone="neutral">v2.3</span></div>
+          <div data-part="what">
+            <h3>Diff by intent</h3>
+            <p>Agent pull requests now group changes by what the agent meant to do, so a reviewer reads three intents instead of forty files.</p>
+            <ul data-part="items">
+              <li><span data-scope="badge" data-tone="positive">New</span><span>Intent groups in every agent PR.</span></li>
+              <li><span data-scope="badge" data-tone="info">Improved</span><span>Trace waterfall renders 10,000 spans without a stall.</span></li>
+            </ul>
+          </div>
+        </li>
+        <li data-part="release" id="v2-2">
+          <span data-part="knot" aria-hidden="true"></span>
+          <div data-part="when"><time datetime="2026-09-10">10 Sept 2026</time><span data-scope="badge" data-tone="neutral">v2.2</span></div>
+          <div data-part="what">
+            <h3>Audit export</h3>
+            <p>Six months of agent actions, signed, in one file your auditor can open.</p>
+            <ul data-part="items">
+              <li><span data-scope="badge" data-tone="positive">New</span><span>Signed audit export as JSON Lines or CSV.</span></li>
+              <li><span data-scope="badge" data-tone="neutral">Fixed</span><span>Time zones in exported timestamps.</span></li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===================== contact (§3.12) ===================== -->
+  <section data-scope="block" id="contact" aria-labelledby="ct-title">
+    <div data-part="inner">
+      <div data-scope="contact">
+        <div data-part="aside">
+          <div data-part="head" style="margin:0">
+            <p data-part="eyebrow"><span data-part="index">(11)</span> Contact</p>
+            <h2 data-part="title" id="ct-title">Talk to <em>a person</em></h2>
+            <p data-part="lede">We answer within one working day. For an outage, use the status page; it is faster than any form.</p>
+          </div>
+          <dl data-part="channels">
+            <div><dt>Sales</dt><dd><a href="#contact">sales@tensile.example</a></dd></div>
+            <div><dt>Support</dt><dd><a href="#contact">support@tensile.example</a></dd></div>
+            <div><dt>Security</dt><dd><a href="#contact">security@tensile.example</a> · PGP on request</dd></div>
+          </dl>
+        </div>
+        <div>
+          <form id="contact-form" novalidate aria-labelledby="ct-title">
+            <div data-part="row">
+              <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="ct-name">Name</label><input data-part="input" id="ct-name" type="text" autocomplete="name" required aria-describedby="ct-name-msg"></div><span data-part="message" id="ct-name-msg"></span></div>
+              <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="ct-email">Work email</label><input data-part="input" id="ct-email" type="email" autocomplete="email" required aria-describedby="ct-email-msg"></div><span data-part="message" id="ct-email-msg"></span></div>
+            </div>
+            <div data-part="row">
+              <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="ct-company">Company (optional)</label><input data-part="input" id="ct-company" type="text" autocomplete="organization"></div></div>
+              <div data-scope="field"><div data-part="control" data-sweep data-filled><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="ct-topic">Topic</label><select data-part="input" id="ct-topic"><option>Pricing and plans</option><option>A demo for my team</option><option>Security review</option><option>Something else</option></select><span data-part="indicator"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-down"/></svg></span></div></div>
+            </div>
+            <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="ct-msg">How can we help?</label><textarea data-part="input" id="ct-msg" rows="3" required aria-describedby="ct-msg-msg"></textarea></div><span data-part="message" id="ct-msg-msg"></span></div>
+            <label data-part="consent" data-sweep-trigger><button type="button" data-scope="checkbox" data-part="control" role="checkbox" aria-checked="false" id="ct-consent" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M5 12.5 L9 16.5 L19 6.5"/></svg></button>Send me the monthly changelog email</label>
+            <div data-part="submit"><button data-scope="button" type="submit" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span>Send message</button><span class="muted" style="font-size:12px">Specimen: nothing is sent.</span></div>
+          </form>
+          <div data-part="done" id="contact-done" role="status" tabindex="-1" hidden>
+            <b>Thanks. We will reply within one working day.</b>
+            <span class="muted" id="contact-done-to"></span>
+            <button data-scope="button" data-emphasis="outline" data-tone="neutral" data-size="sm" type="button" id="contact-again">Send another message</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== waitlist (§3.12) ===================== -->
+  <section data-scope="block" aria-labelledby="wl-title" style="padding-block-start:0">
+    <div data-part="inner">
+      <div data-scope="waitlist" id="waitlist">
+        <div data-part="bg" data-bg="dots" aria-hidden="true"></div>
+        <p data-part="eyebrow" style="margin:0"><span data-part="index">(12)</span> Waitlist</p>
+        <h2 id="wl-title">Tensile for <em>self-hosted</em> fleets</h2>
+        <p>Run the control plane inside your own network. We are letting teams in by the week.</p>
+        <form id="waitlist-form" novalidate>
+          <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="wl-email">Work email</label><input data-part="input" id="wl-email" type="email" autocomplete="email" required aria-describedby="wl-msg"></div><span data-part="message" id="wl-msg"></span></div>
+          <button data-scope="button" type="submit" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span>Join the waitlist</button>
+        </form>
+        <div data-part="place" id="waitlist-place" role="status" tabindex="-1" hidden>
+          <span class="muted">You are number</span>
+          <b id="wl-place">2,185</b>
+          <span class="muted">Move up by sharing your link</span>
+          <div data-part="share"><code id="wl-code">tensile.example/w/7f3k</code><button data-scope="button" data-emphasis="outline" data-tone="neutral" data-size="sm" type="button" id="wl-copy">Copy link</button></div>
+        </div>
+        <div data-part="proof"><span class="proof-avatars" aria-hidden="true" style="display:flex"><span data-part="avatar">MA</span><span data-part="avatar">JK</span><span data-part="avatar">RS</span></span><span id="wl-proof">2,184 teams are ahead of you</span></div>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <footer data-scope="footer">
+    <div data-part="inner">
+      <p class="muted" style="margin:0; font-size:12px">Tensile is a fictional product. Sample people, quotes and numbers. Media in <code>specimens/assets/</code> is generated (12s video, 22s voice note).</p>
+    </div>
+  </footer>
+</div>
+
+<section id="governor" data-spec aria-labelledby="gov-title">
+  <div>
+    <h2 id="gov-title">The governor on this page</h2>
+    <p>Same rules as the landing (08 §1.3): one registry, one state per host (on, still or off) from the Expression dial, the Motion dial and reduced motion. Loops pause off-screen and under the page's Pause button.</p>
+    <div class="reg-wrap"><table class="reg"><thead><tr><th scope="col">Effect</th><th scope="col">Exists from</th><th scope="col">Now</th><th scope="col">Below full</th><th scope="col">Reduced</th><th scope="col">Class · note</th></tr></thead><tbody id="reg"></tbody></table></div>
+  </div>
+</section>
+
+<script src="warp-sweep.js"></script>
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = document.documentElement;
+const Q = new URLSearchParams(location.search);
+const uri = (svg) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+const fmt = (s) => { s = Math.max(0, s || 0); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`; };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+/* ======================================================================
+   0 · Generated art (no external images)
+   ==================================================================== */
+function poster(H, title) {
+  const W = 800; let lines = ""; for (let x = 20; x < W; x += 26) lines += `<path d="M${x} 0V${W}" stroke="hsl(${H} 30% 92% / .18)"/>`;
+  return uri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${H} 55% 22%)"/><stop offset="1" stop-color="hsl(${(H + 50) % 360} 60% 12%)"/></linearGradient><radialGradient id="r" cx=".35" cy=".35" r=".6"><stop offset="0" stop-color="hsl(${(H + 20) % 360} 90% 65% / .8)"/><stop offset="1" stop-color="hsl(${H} 90% 50% / 0)"/></radialGradient></defs><rect width="${W}" height="500" fill="url(#g)"/><rect width="${W}" height="500" fill="url(#r)"/>${lines}<path d="M0 150H520" stroke="hsl(${H} 85% 70%)" stroke-width="4"/><path d="M0 330H700" stroke="hsl(${(H + 40) % 360} 85% 70%)" stroke-width="7"/>${title ? `<text x="40" y="440" font-family="Instrument Serif, serif" font-size="64" fill="#fff">${title}</text>` : ""}</svg>`);
+}
+function portrait(i, mono) {
+  const hue = [28, 152, 250, 75, 320, 200, 110, 15][i], skinL = [0.62, 0.78, 0.7, 0.55, 0.82, 0.66, 0.74, 0.5][i];
+  const col = (l, c, h) => mono ? `oklch(${l} 0 0)` : `oklch(${l} ${c} ${h})`;
+  const hair = [0.28, 0.4, 0.22, 0.6, 0.3, 0.75, 0.2, 0.35][i], style = i % 3;
+  const hairPath = style === 0 ? `M46 84c0-32 16-50 34-50s34 18 34 50c-8-14-20-22-34-22s-26 8-34 22z` : style === 1 ? `M42 96c-4-40 14-62 38-62s42 22 38 62c-4-10-6-30-38-30s-34 20-38 30z` : `M48 74c4-24 16-36 32-36s28 12 32 36c-10-8-20-10-32-10s-22 2-32 10z`;
+  return uri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200"><rect width="160" height="200" fill="${col(0.9, 0.05, hue)}"/><circle cx="130" cy="34" r="46" fill="${col(0.84, 0.08, hue + 30)}"/><path d="M14 200c4-50 32-74 66-74s62 24 66 74z" fill="${col(0.45, 0.1, hue + 180)}"/><rect x="68" y="104" width="24" height="28" rx="8" fill="${col(skinL - 0.06, 0.07, 55)}"/><ellipse cx="80" cy="82" rx="30" ry="36" fill="${col(skinL, 0.07, 55)}"/><path d="${hairPath}" fill="${col(hair, 0.05, 40)}"/></svg>`);
+}
+function blogArt(H, k) {
+  let s = ""; for (let x = 0; x <= 600; x += 20) s += `<path d="M${x} 0V400" stroke="hsl(${H} 40% 40% / .16)"/>`;
+  const wefts = [0, 1, 2].map((j) => `<path d="M0 ${90 + j * 110 + (k * 23) % 40}H${300 + ((k * 97 + j * 131) % 300)}" stroke="hsl(${(H + j * 35) % 360} 70% 52%)" stroke-width="${4 + j * 3}"/>`).join("");
+  return `<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><rect width="600" height="400" fill="hsl(${H} 45% 93%)"/>${s}${wefts}<circle cx="${420 + (k * 41) % 120}" cy="${110 + (k * 29) % 140}" r="54" fill="hsl(${(H + 60) % 360} 80% 66% / .55)"/></svg>`;
+}
+
+/* ======================================================================
+   1 · Sweep + floating labels (shared: warp-sweep.js)
+   ==================================================================== */
+warpSweep.init();
+function floatingLabel(field) {
+  const label = $('[data-part="label"]', field), input = $('[data-part="input"]', field), box = $('[data-part="control"]', field);
+  if (!label || label._split) return; label._split = true;
+  warpSweep.label(label);
+  if (input.tagName !== "SELECT") input.addEventListener("input", () => box.toggleAttribute("data-filled", input.value.length > 0));
+  const delays = () => { const w = box.offsetWidth; if (!w) return; const lx = label.offsetLeft; $$("[data-char]", label).forEach((c) => c.style.setProperty("--d", Math.round(((lx + c.offsetLeft) / w) * (warpSweep.duration(box) || 620)) + "ms")); };
+  requestAnimationFrame(delays); label.addEventListener("transitionend", (e) => e.propertyName === "font-size" && delays());
+}
+$$('[data-scope="field"]').forEach(floatingLabel);
+function radioGroup(g, onPick) {
+  const opts = $$("[data-scope=toggle]", g);
+  const pick = (o, focus) => { opts.forEach((x) => { x.setAttribute("aria-checked", String(x === o)); x.tabIndex = x === o ? 0 : -1; }); if (focus) o.focus(); onPick(o.dataset.v, o); };
+  opts.forEach((o) => { o.tabIndex = o.getAttribute("aria-checked") === "true" ? 0 : -1; o.addEventListener("click", () => pick(o)); });
+  g.addEventListener("keydown", (e) => { const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; const i = opts.indexOf(document.activeElement); if (!k || i < 0) return; e.preventDefault(); pick(opts[(i + k + opts.length) % opts.length], true); });
+}
+$$("[data-scope=checkbox][role=checkbox]").forEach((b) => b.addEventListener("click", () => b.setAttribute("aria-checked", String(b.getAttribute("aria-checked") !== "true"))));
+
+/* ======================================================================
+   2 · The governor (08 §1.3): the landing's, with this page's registry
+   ==================================================================== */
+const STOPS = ["quiet", "balanced", "vivid"];
+const FX = {
+  fancy:              { min: 0, full: 2, reduced: "still", cls: "C", note: "one run ≤ 400ms on transform, opacity, clip-path", sub: "the stop's plain enter / exit" },
+  "motion-card":      { sel: '[data-scope="motion-card"]', min: 0, full: 1, reduced: "still", cls: "C", note: "press 0.98; vivid hover −2px, 1.01", sub: "flat: shadow and colour only" },
+  retro:              { sel: '[data-bg="retro"]', min: 0, full: 2, reduced: "still", cls: "C", note: "lines travel by translate, 1.6s loop, offscreen-paused", sub: "static plane", loops: true },
+  rays:               { sel: '[data-bg="rays"]', min: 2, full: 2, reduced: "still", cls: "C", note: "7 beams sway by rotate, 8–12s loop", sub: "hidden (still under reduced)", loops: true },
+  shiny:              { min: 1, full: 1, reduced: "still", cls: "P", note: "sheen crosses once on view (vivid: + hover) 1.1s", sub: "plain ink" },
+  highlight:          { min: 0, full: 1, reduced: "still", cls: "C", note: "mark draws L→R on view, once", sub: "static mark" },
+  rotate:             { min: 1, full: 1, reduced: "still", cls: "S", note: "shared 2.5s ticker with morph; own pause", sub: "first word, static", loops: true },
+  morph:              { min: 2, full: 2, reduced: "still", cls: "S", note: "per-glyph swap on the shared ticker", sub: "first word, static", loops: true },
+  "text-reveal":      { min: 1, full: 1, reduced: "still", cls: "C", note: "per-word ink on a view timeline (JS fallback)", sub: "full ink" },
+  progress:           { sel: '[data-scope="scroll-progress"]', min: 0, full: 0, reduced: "on", cls: "C", note: "scroll(root) timeline; user-driven, so it stays under reduced motion", sub: "-" },
+  "container-scroll": { sel: '[data-scope="container-scroll"]', min: 1, full: 1, reduced: "off", cls: "C", note: "device flattens on a view timeline", sub: "flat device" },
+  velocity:           { sel: '[data-scope="velocity"]', min: 1, full: 1, reduced: "off", cls: "C", note: "rows drift on a view timeline; vivid adds a decaying skew ≤ 6°", sub: "two centred lines" },
+  wall:               { sel: '[data-scope="wall"]', min: 0, full: 1, reduced: "still", cls: "C", note: "marquee variant drifts 38–46s, hover/focus hold, own pause", sub: "masonry", loops: true },
+};
+const hosts = (name) => $$(FX[name].sel || `[data-fx="${name}"]`);
+const num = (el, p, d) => { const v = parseFloat(getComputedStyle(el).getPropertyValue(p)); return Number.isFinite(v) ? v : d; };
+const reduced = () => num(root, "--warp-motion-scale", 1) === 0;
+const level = (el = root) => Math.min(num(el, "--warp-fx-level", 1), num(el, "--warp-fx-cap", 2));
+function stateFor(el, name) {
+  const def = FX[name], lvl = level(el);
+  if (lvl < def.min) return "off";
+  if (reduced()) return def.reduced;
+  return lvl < def.full ? "still" : "on";
+}
+const listeners = new Set();
+const paused = () => root.hasAttribute("data-fx-paused");
+function govern() {
+  let moving = false;
+  for (const name in FX) for (const el of hosts(name)) {
+    const s = stateFor(el, name), prev = el.dataset.fxState;
+    if (s !== prev) { el.dataset.fxState = s; el.dispatchEvent(new CustomEvent("fx", { detail: { state: s, prev } })); }
+    if (FX[name].loops && s === "on" && (name !== "wall" || el.dataset.variant === "marquee")) moving = true;
+  }
+  root.toggleAttribute("data-fx-moving", moving);
+  $("#pause-all").hidden = !moving;
+  listeners.forEach((f) => f());
+  renderRegistry();
+}
+function renderRegistry() {
+  const tb = $("#reg"); if (!tb) return;
+  tb.innerHTML = Object.entries(FX).map(([n, d]) => {
+    const el = hosts(n)[0], s = el ? el.dataset.fxState : "off";
+    return `<tr><td>${n}</td><td>${STOPS[d.min]}${d.full > d.min ? ` (moves at ${STOPS[d.full]})` : ""}</td><td><span class="st" data-s="${s}">${s}</span></td><td>${d.sub}</td><td>${d.reduced}</td><td>${d.cls} · ${d.note}</td></tr>`;
+  }).join("");
+  // the per-demo state lines
+  $$("[data-state-for]").forEach((n) => { const name = n.dataset.stateFor, el = hosts(name)[0]; if (!el) return; const s = el.dataset.fxState; n.textContent = `${name}: ${s}${s === "on" ? "" : " · " + FX[name].sub}${reduced() ? " · reduced motion" : ""}`; });
+}
+// loops pause off-screen; one-shots get data-seen once
+const offIO = new IntersectionObserver((es) => { es.forEach((e) => e.target.toggleAttribute("data-fx-offscreen", !e.isIntersecting)); listeners.forEach((f) => f()); });
+["retro", "rays", "rotate", "morph", "wall"].forEach((n) => hosts(n).forEach((el) => offIO.observe(el)));
+const seenIO = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.setAttribute("data-seen", ""); e.target.dispatchEvent(new Event("seen")); seenIO.unobserve(e.target); } }), { rootMargin: "0px 0px -10% 0px" });
+$$("[data-fx=shiny], [data-fx=highlight]").forEach((el) => seenIO.observe(el));
+if (Q.has("seen")) $$("[data-fx]").forEach((el) => el.setAttribute("data-seen", ""));
+const pauseBtn = $("#pause-all");
+pauseBtn.addEventListener("click", () => {
+  const p = !paused(); root.toggleAttribute("data-fx-paused", p); pauseBtn.setAttribute("aria-pressed", String(p));
+  $("span", pauseBtn).textContent = p ? "Play motion" : "Pause motion"; pauseBtn.setAttribute("aria-label", p ? "Play motion" : "Pause motion"); $("use", pauseBtn).setAttribute("href", p ? "#i-play" : "#i-pause");
+  listeners.forEach((f) => f());
+});
+
+/* ======================================================================
+   3 · fancy presets (§6.5)
+   ==================================================================== */
+(() => {
+  const T = $("#fancy-target"), stage = $("#fancy-stage"), note = $("#fancy-note"), empty = $("#fancy-empty");
+  $("#fancy-img").src = poster(30, "Canary");
+  let lastFlicker = 0, hideT = 0, px = null;
+  const DESC = { "crt-on-in": "CRT power-on: a line opens to the frame, 400ms", "crt-off-out": "CRT power-off: the frame folds to a line, 320ms", "flicker-in": "flicker: two dips in 400ms", "glitch-in": "glitch: four clipped bands, 320ms", "spotlight-in": "spotlight: a circle opens from the press, 340ms", "iris-in": "iris: an octagon opens from the centre, 360ms" };
+  stage.addEventListener("pointerdown", (e) => { const r = stage.getBoundingClientRect(); px = [((e.clientX - r.left) / r.width) * 100, ((e.clientY - r.top) / r.height) * 100]; });
+  $("#fancy-presets").addEventListener("pointerdown", () => (px = null));
+  $("#fancy-presets").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-run]"); if (!b) return; const run = b.dataset.run;
+    if (run === "flicker-in") { if (performance.now() - lastFlicker < 1000) return; lastFlicker = performance.now(); }
+    const out = run.endsWith("-out");
+    if (out && T.dataset.shown !== "true") { note.textContent = "Nothing on stage to switch off. Run an entrance first."; return; }
+    clearTimeout(hideT);
+    T.style.setProperty("--sx", (px ? px[0] : 50) + "%"); T.style.setProperty("--sy", (px ? px[1] : 50) + "%");
+    T.removeAttribute("data-run"); void T.offsetWidth; T.dataset.run = run; T.dataset.shown = "true"; empty.hidden = true;
+    const on = T.dataset.fxState === "on";
+    note.textContent = on ? `vivid · ${DESC[run]}` : `${reduced() ? "reduced motion" : STOPS[Math.round(level())]} · plain ${out ? "exit" : "enter"} (the preset runs at vivid)`;
+    if (out) { const done = () => { T.dataset.shown = "false"; empty.hidden = false; }; T.addEventListener("animationend", done, { once: true }); hideT = setTimeout(done, 700); }
+  });
+})();
+
+/* ======================================================================
+   4 · MotionCard (§6.6): a single-choice set of pressed cards
+   ==================================================================== */
+$("#motion-cards").addEventListener("click", (e) => { const c = e.target.closest('[data-scope="motion-card"]'); if (!c) return; $$('[data-scope="motion-card"]', e.currentTarget).forEach((x) => x.setAttribute("aria-pressed", String(x === c))); });
+
+/* ======================================================================
+   5 · timeline(media, { cues }) — PLAN §6.3, in miniature.
+   Boxes: currentTime, playing, duration, ended, cue. on(id, fn) fires when playback
+   enters a cue. Frames come from requestVideoFrameCallback (video) or rAF (audio),
+   scheduled only while playing and visible; paused, it costs nothing.
+   ==================================================================== */
+function box(v) { const fns = new Set(); return { get: () => v, set(n) { if (n === v) return; v = n; fns.forEach((f) => f(n)); }, sub(f) { fns.add(f); return () => fns.delete(f); } }; }
+const timelines = [];
+function timeline(media, { cues = [] } = {}) {
+  const t = { currentTime: box(0), playing: box(false), duration: box(0), ended: box(false), cue: box(null), media, frames: 0 };
+  const handlers = new Map(); let h = 0, visible = true;
+  const rvfc = "requestVideoFrameCallback" in media;
+  const cueAt = (s) => { let c = null; for (const x of cues) if (s >= x.at && s < (x.end ?? Infinity)) c = x; return c; };
+  const sample = () => {
+    const c = cueAt(media.currentTime);   // cue first, so a currentTime subscriber reads the matching cue
+    if (c !== t.cue.get()) { t.cue.set(c); if (c && !media.paused) (handlers.get(c.id) || []).forEach((f) => f(c)); }
+    t.currentTime.set(media.currentTime);
+  };
+  const cancel = () => { if (!h) return; rvfc ? media.cancelVideoFrameCallback(h) : cancelAnimationFrame(h); h = 0; };
+  const frame = () => { h = 0; t.frames++; sample(); schedule(); };
+  const schedule = () => { if (h || media.paused || !visible) return; h = rvfc ? media.requestVideoFrameCallback(frame) : requestAnimationFrame(frame); };
+  media.addEventListener("play", () => { t.playing.set(true); t.ended.set(false); schedule(); });
+  media.addEventListener("pause", () => { cancel(); sample(); t.playing.set(false); });
+  media.addEventListener("ended", () => { t.ended.set(true); });
+  for (const ev of ["seeked", "seeking", "timeupdate", "loadeddata"]) media.addEventListener(ev, sample);   // timeupdate keeps cues honest off-screen (≈4 Hz, native)
+  for (const ev of ["loadedmetadata", "durationchange"]) media.addEventListener(ev, () => Number.isFinite(media.duration) && t.duration.set(media.duration));
+  t.on = (id, fn) => { if (!handlers.has(id)) handlers.set(id, new Set()); handlers.get(id).add(fn); return () => handlers.get(id).delete(fn); };
+  t.visible = (v) => { visible = v; v ? schedule() : cancel(); };
+  t.idle = () => !h;
+  timelines.push(t); return t;
+}
+const playerIO = new IntersectionObserver((es) => es.forEach((e) => e.target._tl?.visible(e.isIntersecting)));
+// one voice at a time
+document.addEventListener("play", (e) => $$("video, audio").forEach((m) => m !== e.target && !m.paused && m.pause()), true);
+
+/* ---------- video player ---------- */
+(() => {
+  const P = $("#video-player"), v = $("video", P), stage = $('[data-part="stage"]', P), range = $('[data-part="scrubber"] > input', P), scrub = $('[data-part="scrubber"]', P);
+  const playBtn = $('[data-part="play"]', P), big = $('[data-part="big-play"]', P), muteBtn = $('[data-part="mute"]', P), ccBtn = $('[data-part="cc"]', P), speedBtn = $('[data-part="speed"]', P), pipBtn = $('[data-part="pip"]', P), fullBtn = $('[data-part="full"]', P);
+  const cur = $('[data-part="current"]', P), tot = $('[data-part="total"]', P), chip = $('[data-part="chip"][data-cue]', P), preview = $('[data-part="preview"]', P), ticks = $('[data-part="ticks"]', P);
+  const notes = $('[data-for="video-player"]'), chapters = $('[data-part="chapters"]', notes), readout = $("#video-readout");
+  const CUES = [{ id: "trace", at: 0, end: 4, label: "Trace every run" }, { id: "gate", at: 4, end: 8, label: "Gate the merge" }, { id: "canary", at: 8, end: 12.01, label: "Roll out by canary" }];
+  v.poster = poster(152, "");
+  const tl = timeline(v, { cues: CUES }); P._tl = tl; playerIO.observe(P);
+  const dur = () => tl.duration.get() || 12;
+  chapters.innerHTML = CUES.map((c) => `<li><button type="button" data-at="${c.at}" aria-current="false"><time>${fmt(c.at)}</time><span>${c.label}</span></button></li>`).join("");
+  const drawTicks = () => (ticks.innerHTML = CUES.slice(1).map((c) => `<i style="--x:${((c.at / dur()) * 100).toFixed(3)}%"></i>`).join(""));
+  drawTicks();
+  let lastFired = "none yet", sec = -1;
+  const say = () => (readout.textContent = `timeline · currentTime ${tl.currentTime.get().toFixed(1)}s · playing ${tl.playing.get()} · cue ${tl.cue.get()?.id ?? "none"} · last on(): ${lastFired}`);
+  tl.currentTime.sub((t) => {
+    P.style.setProperty("--_p", clamp(t / dur(), 0, 1).toFixed(4)); cur.textContent = fmt(t); range.value = t;
+    const s = Math.floor(t); if (s !== sec) { sec = s; range.setAttribute("aria-valuetext", `${fmt(t)} of ${fmt(dur())}${tl.cue.get() ? ", " + tl.cue.get().label : ""}`); say(); }
+  });
+  tl.duration.sub((d) => { range.max = d.toFixed(2); tot.textContent = " / " + fmt(d); drawTicks(); });
+  tl.cue.sub((c) => { chip.textContent = c ? c.label : ""; $$("button", chapters).forEach((b) => b.setAttribute("aria-current", String(!!c && +b.dataset.at === c.at))); say(); });
+  CUES.forEach((c) => tl.on(c.id, () => { lastFired = `${c.id} at ${v.currentTime.toFixed(1)}s`; say(); }));
+  const setState = () => { P.dataset.state = tl.playing.get() ? "playing" : (v.currentTime > 0 && !v.ended ? "paused" : "idle"); };
+  tl.playing.sub((on) => {
+    setState(); playBtn.setAttribute("aria-label", on ? "Pause" : "Play"); $("use", playBtn).setAttribute("href", on ? "#i-pause" : "#i-play");
+    big.setAttribute("aria-label", v.ended ? "Replay video" : "Play video"); wake(); say();
+  });
+  tl.ended.sub(setState);
+  const toggle = () => (v.paused ? v.play().catch(() => {}) : v.pause());
+  const seekTo = (s) => { v.currentTime = clamp(s, 0, dur()); };
+  const seek = (d) => seekTo(v.currentTime + d);
+  const mute = () => { v.muted = !v.muted; muteBtn.setAttribute("aria-pressed", String(v.muted)); muteBtn.setAttribute("aria-label", v.muted ? "Unmute" : "Mute"); $("use", muteBtn).setAttribute("href", v.muted ? "#i-muted" : "#i-volume"); };
+  const track = () => v.textTracks[0];
+  const cc = () => { const on = ccBtn.getAttribute("aria-pressed") !== "true"; ccBtn.setAttribute("aria-pressed", String(on)); if (track()) track().mode = on ? "showing" : "hidden"; };
+  const SPEEDS = [1, 1.25, 1.5, 2, 0.75];
+  const speed = (b) => { const r = SPEEDS[(SPEEDS.indexOf(v.playbackRate) + 1) % SPEEDS.length]; v.playbackRate = r; b.textContent = r + "×"; b.setAttribute("aria-label", `Playback speed: ${r}×`); };
+  const canFull = !!(P.requestFullscreen || v.webkitEnterFullscreen);
+  const full = () => { if (document.fullscreenElement) return document.exitFullscreen(); if (P.requestFullscreen) P.requestFullscreen().catch(() => {}); else v.webkitEnterFullscreen?.(); };
+  document.addEventListener("fullscreenchange", () => { const on = document.fullscreenElement === P; fullBtn.setAttribute("aria-pressed", String(on)); fullBtn.setAttribute("aria-label", on ? "Exit full screen" : "Full screen"); $("use", fullBtn).setAttribute("href", on ? "#i-unfull" : "#i-full"); });
+  if (!canFull) fullBtn.hidden = true;
+  if (!document.pictureInPictureEnabled || v.disablePictureInPicture) pipBtn.hidden = true;
+  pipBtn.addEventListener("click", () => (document.pictureInPictureElement ? document.exitPictureInPicture() : v.requestPictureInPicture()).catch(() => {}));
+  v.addEventListener("loadedmetadata", () => { if (track()) track().mode = ccBtn.getAttribute("aria-pressed") === "true" ? "showing" : "hidden"; });
+  v.addEventListener("progress", () => { if (v.buffered.length) P.style.setProperty("--_b", clamp(v.buffered.end(v.buffered.length - 1) / dur(), 0, 1).toFixed(3)); });
+  playBtn.addEventListener("click", toggle); big.addEventListener("click", toggle);
+  $('[data-part="back"]', P).addEventListener("click", () => seek(-10));
+  muteBtn.addEventListener("click", mute); ccBtn.addEventListener("click", cc); speedBtn.addEventListener("click", () => speed(speedBtn)); fullBtn.addEventListener("click", full);
+  stage.addEventListener("click", (e) => { if (!e.target.closest("button")) toggle(); });
+  stage.addEventListener("dblclick", (e) => { if (!e.target.closest("button")) full(); });
+  range.addEventListener("input", () => seekTo(+range.value));
+  chapters.addEventListener("click", (e) => { const b = e.target.closest("[data-at]"); if (b) seekTo(+b.dataset.at + 0.01); });
+  // hover preview on the scrubber (fine pointers): time + chapter
+  scrub.addEventListener("pointermove", (e) => {
+    const r = scrub.getBoundingClientRect(), f = clamp((e.clientX - r.left) / r.width, 0, 1), s = f * dur(), c = CUES.find((x) => s >= x.at && s < x.end);
+    P.style.setProperty("--_h", f.toFixed(4)); preview.style.setProperty("--_hx", (f * r.width).toFixed(1)); preview.textContent = `${fmt(s)}${c ? " · " + c.label : ""}`;
+  });
+  // keys, while focus is anywhere in the player
+  P.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const onBtn = e.target.closest("button"), k = e.key.length === 1 ? e.key.toLowerCase() : e.key, onRange = e.target === range;
+    const act = { " ": onBtn ? null : toggle, k: toggle, j: () => seek(-10), l: () => seek(10), ArrowLeft: () => seek(-5), ArrowRight: () => seek(5), ArrowDown: onRange ? () => seek(-5) : null, ArrowUp: onRange ? () => seek(5) : null, PageDown: onRange ? () => seek(-10) : null, PageUp: onRange ? () => seek(10) : null, m: mute, c: cc, f: canFull ? full : null, Home: () => seekTo(0), End: () => seekTo(dur()) }[k];
+    if (!act) return; e.preventDefault(); act(); wake();
+  });
+  // controls fade after 2.5s of stillness while playing, on fine pointers, never while focus is in them
+  let idleT = 0;
+  function wake() {
+    P.removeAttribute("data-idle"); clearTimeout(idleT);
+    if (tl.playing.get() && matchMedia("(pointer: fine)").matches) idleT = setTimeout(() => { if (!P.contains(document.activeElement) || document.activeElement === v) P.setAttribute("data-idle", ""); }, 2500);
+  }
+  P.addEventListener("pointermove", wake); P.addEventListener("focusin", wake); P.addEventListener("pointerleave", () => tl.playing.get() && P.setAttribute("data-idle", ""));
+  say();
+})();
+
+/* ---------- audio players: canvas waveform from precomputed peaks ---------- */
+const PEAKS = [36,54,71,87,66,51,60,54,45,54,76,79,51,0,0,0,0,0,0,0,0,0,26,36,48,39,30,39,42,39,51,79,79,63,87,76,48,51,54,54,45,74,79,42,0,0,0,0,0,0,0,0,0,42,42,60,57,39,39,51,60,51,79,95,71,76,74,54,39,45,54,45,48,66,60,33,0,0,0,0,0,0,0,0,0,57,57,66,48,60,100,68,57,60,92,74,100,68,48,33,54,45,42,33,48,100,100,45,0,0,0,0,0,0,0,0,0,48,100,51,45,54,100,100,54,66,74,51,39,36,36,23,100,100,100,26,45,45,36,0,0,0,0,0,0,0,0,0,48,45,51,57,100,100,100,100,60,39,15,6];
+const LINES = [{ id: "l1", at: 0, end: 5.5, label: "Morning. The billing webhook canary is at twenty-five percent." }, { id: "l2", at: 5.5, end: 11.5, label: "Cost delta is up four tenths of a percent, within budget." }, { id: "l3", at: 11.5, end: 17.5, label: "Maya is reviewing the eval diff before we go to a hundred." }, { id: "l4", at: 17.5, end: 22.1, label: "If nothing moves by noon, I will promote it." }];
+const waves = [];
+function audioPlayer(P, { transcript } = {}) {
+  const a = $("audio", P), cv = $("canvas", P), wave = $('[data-part="wave"]', P), range = $('[data-part="wave"] > input', P), playBtn = $('[data-part="play"]', P), cur = $('[data-part="current"]', P);
+  const compact = P.dataset.chrome === "compact", speedBtn = $("[data-speed]", P);
+  const tl = timeline(a, { cues: LINES }); P._tl = tl; playerIO.observe(P);
+  const dur = () => tl.duration.get() || 22;
+  const probe = document.createElement("i"); probe.style.display = "none"; P.append(probe);
+  let colors = null, hover = -1, q = 0; P._draws = 0;
+  const readColors = () => { colors = ["--_bar", "--_played", "--_hover"].map((v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; }); };
+  function draw() {
+    P._draws++;
+    const dpr = Math.min(2, devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    if (!colors) readColors();
+    const bw = compact ? 2 : 3, gap = compact ? 2 : 2, n = Math.max(8, Math.floor((w + gap) / (bw + gap))), p = tl.currentTime.get() / dur();
+    const vivid = level() >= 2;
+    for (let i = 0; i < n; i++) {
+      const a0 = Math.floor((i / n) * PEAKS.length), a1 = Math.max(a0 + 1, Math.floor(((i + 1) / n) * PEAKS.length));
+      let pk = 0; for (let k = a0; k < a1; k++) pk = Math.max(pk, PEAKS[k]);
+      const bh = Math.max(2, (pk / 100) * h * 0.92), x = i * (bw + gap), f = (i + 0.5) / n;
+      ctx.fillStyle = f <= p ? colors[1] : hover >= 0 && f <= hover ? colors[2] : colors[0];
+      const y = vivid ? h - bh : (h - bh) / 2;   // vivid: bars stand on a baseline (a spectrum), otherwise centred
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, bw, bh, vivid ? 0 : bw / 2) : ctx.rect(x, y, bw, bh); ctx.fill();
+    }
+  }
+  const redraw = () => { if (!q) q = requestAnimationFrame(() => { q = 0; draw(); }); };   // one frame per change, never a loop
+  P._redraw = (fresh) => { if (fresh) colors = null; redraw(); };
+  waves.push(P);
+  new ResizeObserver(redraw).observe(wave);
+  let sec = -1;
+  tl.currentTime.sub((t) => {
+    cur.textContent = compact && !tl.playing.get() && t === 0 ? fmt(dur()) : fmt(t); range.value = t; redraw();
+    const s = Math.floor(t); if (s !== sec) { sec = s; range.setAttribute("aria-valuetext", `${fmt(t)} of ${fmt(dur())}`); }
+  });
+  tl.duration.sub((d) => { range.max = d.toFixed(2); const tt = $('[data-part="total"]', P); if (tt) tt.textContent = " / " + fmt(d); });
+  tl.playing.sub((on) => { const name = playBtn.getAttribute("aria-label").replace(/^(Play|Pause) /, ""); playBtn.setAttribute("aria-label", `${on ? "Pause" : "Play"} ${name}`); $("path", playBtn).setAttribute("d", on ? "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" : "M7 4.5v15l12.5-7.5z"); });
+  const toggle = () => (a.paused ? a.play().catch(() => {}) : a.pause());
+  const seekTo = (s) => { if (a.readyState === 0) a.load(); a.currentTime = clamp(s, 0, dur()); };
+  const seek = (d) => seekTo(a.currentTime + d);
+  playBtn.addEventListener("click", toggle);
+  range.addEventListener("input", () => seekTo(+range.value));
+  wave.addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; const r = wave.getBoundingClientRect(); hover = clamp((e.clientX - r.left) / r.width, 0, 1); redraw(); });
+  wave.addEventListener("pointerleave", () => { hover = -1; redraw(); });
+  speedBtn?.addEventListener("click", () => { const S = [1, 1.25, 1.5, 2]; const r = S[(S.indexOf(a.playbackRate) + 1) % S.length]; a.playbackRate = r; speedBtn.textContent = r + "×"; speedBtn.setAttribute("aria-label", `Playback speed: ${r}×`); });
+  P.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const onBtn = e.target.closest("button, a"), k = e.key.length === 1 ? e.key.toLowerCase() : e.key, onRange = e.target === range;
+    const act = { " ": onBtn ? null : toggle, k: toggle, j: () => seek(-10), l: () => seek(10), ArrowLeft: () => seek(-5), ArrowRight: () => seek(5), ArrowDown: onRange ? () => seek(-5) : null, ArrowUp: onRange ? () => seek(5) : null, Home: () => seekTo(0), End: () => seekTo(dur()) }[k];
+    if (!act) return; e.preventDefault(); act();
+  });
+  if (transcript) {
+    const ol = $("ol", transcript);
+    ol.innerHTML = LINES.map((l) => `<li><button type="button" data-at="${l.at}" aria-current="false"><time>${fmt(l.at)}</time><span>${l.label}</span></button></li>`).join("");
+    tl.cue.sub((c) => $$("button", ol).forEach((b) => b.setAttribute("aria-current", String(!!c && +b.dataset.at === c.at))));
+    ol.addEventListener("click", (e) => { const b = e.target.closest("[data-at]"); if (!b) return; seekTo(+b.dataset.at + 0.01); if (a.paused) a.play().catch(() => {}); });
+  }
+  redraw();
+}
+audioPlayer($("#audio-player"), { transcript: $("#audio-transcript") });
+audioPlayer($("#voice-note"));
+listeners.add(() => waves.forEach((w) => w._redraw(true)));
+
+/* ======================================================================
+   6 · Backgrounds (§6.2): CSS only; the governor writes the state
+   ==================================================================== */
+
+/* ======================================================================
+   7 · Text effects (§6.3)
+   ==================================================================== */
+(() => {
+  // shiny: once on view (CSS, data-seen); vivid replays on hover; Replay runs every one-shot again
+  const shiny = $("#fx-shiny");
+  const again = (el) => el.getAnimations().forEach((an) => { an.cancel(); an.play(); });
+  shiny.addEventListener("pointerenter", () => level() >= 2 && shiny.dataset.fxState === "on" && again(shiny));
+  $("#fx-replay").addEventListener("click", () => {
+    again(shiny);
+    $$("mark[data-fx=highlight]").forEach((m) => { m.removeAttribute("data-seen"); void m.offsetWidth; requestAnimationFrame(() => m.setAttribute("data-seen", "")); });
+  });
+
+  // word rotate + morph: one 2.5s ticker for both (one S loop on the page)
+  const prep = (el, glyphs) => {
+    const words = JSON.parse(el.dataset.words), longest = words.reduce((a, b) => (b.length > a.length ? b : a));
+    el.innerHTML = `<span data-part="sr">${el.dataset.fx === "rotate" ? words.slice(0, -1).join(", ") + " and " + words.at(-1) : words[0]}</span><span data-part="live" aria-hidden="true"><span data-part="ghost">${longest}</span><span>${glyphs ? split(words[0]) : words[0]}</span></span>`;
+    el._words = words; el._i = 0; el._glyphs = glyphs;
+  };
+  const split = (w) => [...w].map((c, i) => `<span data-ch style="--i:${i}">${c === " " ? "&nbsp;" : c}</span>`).join("");
+  const rot = $("#fx-rotate"), morph = $("#fx-morph"), textHosts = [rot, morph];
+  prep(rot, false); prep(morph, true);
+  function advance(el) {
+    const live = $('[data-part="live"]', el), old = live.lastElementChild; el._i = (el._i + 1) % el._words.length;
+    const w = el._words[el._i], nu = document.createElement("span"); nu.innerHTML = el._glyphs ? split(w) : w;
+    old.setAttribute("data-leaving", ""); nu.setAttribute("data-entering", ""); live.append(nu);
+    setTimeout(() => { old.remove(); nu.removeAttribute("data-entering"); }, 900);
+    if (el === morph) $('[data-part="sr"]', el).textContent = w;
+  }
+  const reset = (el) => { const live = $('[data-part="live"]', el); while (live.children.length > 2) live.children[1].remove(); el._i = 0; live.lastElementChild.innerHTML = el._glyphs ? split(el._words[0]) : el._words[0]; live.lastElementChild.removeAttribute("data-leaving"); if (el === morph) $('[data-part="sr"]', el).textContent = el._words[0]; };
+  const pauseText = $("#fx-pause"); let textPaused = false, tick = 0;
+  const live = (el) => el.dataset.fxState === "on" && !el.hasAttribute("data-fx-offscreen");
+  function arm() {
+    clearTimeout(tick); tick = 0;
+    pauseText.hidden = !textHosts.some((el) => el.dataset.fxState === "on");
+    if (!paused() && !textPaused && textHosts.some(live)) tick = setTimeout(() => { textHosts.filter(live).forEach(advance); arm(); }, 2500);
+  }
+  textHosts.forEach((el) => el.addEventListener("fx", (e) => { if (e.detail.state !== "on") reset(el); }));
+  pauseText.addEventListener("click", () => { textPaused = !textPaused; pauseText.setAttribute("aria-pressed", String(textPaused)); $("span", pauseText).textContent = textPaused ? "Play text" : "Pause text"; $("use", pauseText).setAttribute("href", textPaused ? "#i-play" : "#i-pause"); arm(); });
+  listeners.add(arm);
+  window.__textTick = () => tick;
+
+  // scroll reveal: wrap words; CSS does the rest on a view timeline
+  const rev = $("#fx-reveal"), words = rev.textContent.trim().split(/\s+/);
+  rev.innerHTML = words.map((w, i) => `<span data-w style="--_k:${(i / (words.length - 1)).toFixed(3)}">${w}</span>`).join(" ");
+})();
+
+/* ======================================================================
+   8 · Scroll-driven (§6.4): CSS timelines first; one passive listener for the
+   fallback and for the velocity skew (vivid), rAF only while something changes
+   ==================================================================== */
+(() => {
+  const force = Q.has("fallback");
+  const noScrollTL = force || !CSS.supports("animation-timeline: scroll()"), noViewTL = force || !CSS.supports("animation-timeline: view()");
+  const prog = $("#scroll-progress"), cs = $("#container-scroll"), velo = $("#velocity"), rev = $("#fx-reveal");
+  if (noScrollTL) prog.setAttribute("data-fallback", "");
+  if (noViewTL) [cs, velo, rev].forEach((el) => el.setAttribute("data-fallback", ""));
+  const inView = new Map(); const vIO = new IntersectionObserver((es) => es.forEach((e) => inView.set(e.target, e.isIntersecting)));
+  [cs, velo, rev].forEach((el) => vIO.observe(el));
+  const cover = (el) => { const r = el.getBoundingClientRect(); return clamp((innerHeight - r.top) / (innerHeight + r.height), 0, 1); };
+  let pend = 0, lastY = scrollY, lastT = performance.now(), skew = 0, target = 0, decay = 0;
+  function write() {
+    pend = 0;
+    if (noScrollTL) prog.style.setProperty("--_p", (scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight)).toFixed(4));
+    if (noViewTL) {
+      if (inView.get(cs)) { const r = cs.getBoundingClientRect(); cs.style.setProperty("--_p", clamp((innerHeight - r.top) / (innerHeight * 0.9), 0, 1).toFixed(4)); }
+      if (inView.get(velo)) velo.style.setProperty("--_p", cover(velo).toFixed(4));
+      if (inView.get(rev)) rev.style.setProperty("--_p", cover(rev).toFixed(4));
+    }
+  }
+  function skewFrame() {
+    skew += (target - skew) * 0.22; target *= 0.82;
+    if (Math.abs(skew) < 0.05 && Math.abs(target) < 0.05) { skew = 0; decay = 0; velo.style.setProperty("--_skew", "0"); return; }
+    velo.style.setProperty("--_skew", skew.toFixed(2)); decay = requestAnimationFrame(skewFrame);
+  }
+  addEventListener("scroll", () => {
+    if ((noScrollTL || noViewTL) && !pend) pend = requestAnimationFrame(write);
+    const t = performance.now(), dy = scrollY - lastY, dt = Math.max(8, t - lastT); lastY = scrollY; lastT = t;
+    if (velo.dataset.fxState === "on" && level(velo) >= 2 && inView.get(velo) && !paused()) {
+      target = clamp((dy / dt) * -2.4, -6, 6);
+      if (!decay) decay = requestAnimationFrame(skewFrame);
+    }
+  }, { passive: true });
+  write();
+  window.__scrollIdle = () => !pend && !decay;
+})();
+
+/* ======================================================================
+   9 · Testimonial wall (§3.6)
+   ==================================================================== */
+(() => {
+  const Wr = $("#wall-root"), list = $("#wall-list"), tracks = $('[data-part="tracks"]', Wr), more = $('[data-part="more"]', Wr), pauseW = $("#wall-pause");
+  const QUOTES = [
+    ["We went from reading agent logs every morning to reviewing one diff summary. Rollbacks are boring now, which is the point.", "Maya Adeyemi", "Platform lead, Halden", "G2"],
+    ["The canary caught a cost regression our evals missed.", "Jonas Kirk", "Staff engineer, Quarry", "X"],
+    ["Gates let us give agents real permissions. Before Tensile, everything needed a human, so nothing shipped.", "Rina Sato", "VP Engineering, Meridian", "Case study"],
+    ["Our auditors asked for six months of agent actions. We exported it in one click and they had no follow-ups.", "Luis Torres", "Security, Kilnworks", "G2"],
+    ["The trace waterfall is the first agent tool our SREs opened without being asked.", "Ama Owusu", "SRE manager, Oriel", "Slack"],
+    ["Setup took one afternoon. The diff-by-intent view alone paid for the year.", "Priya Nair", "CTO, Tidepool", "X"],
+    ["I stopped writing ‘did the agent do this?’ in incident docs. The trace answers it.", "Sam Whitley", "On-call lead, Ferro", "Slack"],
+    ["Budgets per rollout changed how finance talks to us. They see the cap before we ship.", "Elif Demir", "Head of infra, Lumen", "G2"],
+    ["We run forty agents across three repos and one person reviews the gates. That used to be a team.", "Tomás Rey", "Eng manager, Saltbox", "Case study"],
+    ["The rollback button is the most reassuring UI I have used this year.", "Hana Mori", "Developer, Pell", "X"],
+    ["Self-hosting was a checkbox, not a project.", "Owen Price", "Platform, Northgate", "G2"],
+    ["Our first canary rolled back at 2am and nobody woke up. That was the sale.", "Grace Liu", "CTO, Kettle", "Slack"],
+  ];
+  const ini = (n) => n.split(" ").map((p) => p[0]).join("");
+  const item = (q) => `<li><figure data-scope="quote"><blockquote>“${q[0]}”</blockquote><figcaption><span data-part="avatar">${ini(q[1])}</span><span><b>${q[1]}</b><span>${q[2]}</span></span><span data-part="source">${q[3]}</span></figcaption></figure></li>`;
+  list.innerHTML = QUOTES.map(item).join("");
+  let cols = 0;
+  const build = () => {
+    const w = Wr.clientWidth, n = w >= 940 ? 3 : w >= 600 ? 2 : 1; if (n === cols) return; cols = n; Wr.style.setProperty("--_cols", n);
+    const speeds = [44, 52, 48];
+    tracks.innerHTML = Array.from({ length: n }, (_, c) => { const mine = QUOTES.filter((_, i) => i % n === c).map(item).join(""); return `<div data-part="col"><ul style="--_speed:${speeds[c]}s" aria-label="Quotes, column ${c + 1}">${mine}</ul><ul style="--_speed:${speeds[c]}s" aria-hidden="true" inert>${mine}</ul></div>`; }).join("");
+  };
+  new ResizeObserver(build).observe(Wr);
+  radioGroup($("#wall-variant"), (v) => { Wr.dataset.variant = v; govern(); });
+  more.addEventListener("click", () => { const open = !Wr.hasAttribute("data-expanded"); Wr.toggleAttribute("data-expanded", open); more.setAttribute("aria-expanded", String(open)); more.textContent = open ? "Show fewer" : "Show all twelve"; });
+  pauseW.addEventListener("click", () => { const p = !Wr.hasAttribute("data-paused"); Wr.toggleAttribute("data-paused", p); pauseW.setAttribute("aria-pressed", String(p)); $("span", pauseW).textContent = p ? "Play wall" : "Pause wall"; $("use", pauseW).setAttribute("href", p ? "#i-play" : "#i-pause"); });
+  listeners.add(() => { pauseW.hidden = !(Wr.dataset.variant === "marquee" && Wr.dataset.fxState === "on"); });
+})();
+
+/* ======================================================================
+   10 · Section set (§3.12): team, blog, changelog, contact, waitlist
+   ==================================================================== */
+(() => {
+  const PEOPLE = [["Ada Lin", "Founder, CEO"], ["Jonas Kirk", "Founder, CTO"], ["Rina Sato", "Design"], ["Luis Torres", "Security"], ["Ama Owusu", "Reliability"], ["Priya Nair", "Developer relations"], ["Sam Whitley", "Solutions"], ["Elif Demir", "Infrastructure"]];
+  $("#team-list").innerHTML = PEOPLE.map(([n, r], i) => `<li data-scope="person"><div data-part="photo"><img data-part="mono" src="${portrait(i, true)}" alt="" aria-hidden="true"><img data-part="color" src="${portrait(i, false)}" alt="Illustrated portrait of ${n}"></div><h3 data-part="name">${n}</h3><p data-part="role">${r}</p><ul data-part="links"><li><a href="#team">Profile<span class="vh">: ${n}</span></a></li><li><a href="#team">Writing<span class="vh"> by ${n}</span></a></li></ul></li>`).join("");
+
+  const TAGS = ["Engineering", "Product", "Security", "Customers"];
+  const POSTS = [
+    ["Canary budgets: how we stop a rollout before it costs you", "Cost and eval budgets per rollout, and the three incidents that made us build them.", 152, "Ada Lin", 7],
+    ["Diff by intent", "Forty files, three intents. How agent PRs got readable.", 258, "Rina Sato", 5],
+    ["What auditors actually ask for", "Six months of agent actions, signed, in one file.", 30, "Luis Torres", 6],
+    ["Rendering 10,000 trace spans without a stall", "Virtualised rows, one canvas, no layout per frame.", 300, "Jonas Kirk", 9],
+    ["Gates are policy, not people", "Approvals that scale with your fleet instead of your headcount.", 80, "Elif Demir", 4],
+    ["Our 2am rollback", "The night a canary rolled back on its own, and what the trace showed.", 200, "Sam Whitley", 6],
+    ["Self-hosting the control plane", "One Helm chart, no outbound calls.", 120, "Elif Demir", 8],
+    ["Writing prompts your reviewers can read", "Small habits that make agent diffs reviewable.", 340, "Priya Nair", 5],
+    ["Evals as a merge check", "Turning a flaky eval suite into a gate you trust.", 60, "Ama Owusu", 7],
+  ];
+  const card = (p, k, featured) => `<li><article data-scope="post"${featured ? " data-featured" : ""} data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><div data-part="art">${blogArt(p[2], k)}</div><div data-part="body"><span data-part="tag">${TAGS[k % 4]}</span><h3 data-part="title"><a href="#blog" data-post>${p[0]}</a></h3><p data-part="excerpt">${p[1]}</p><div data-part="meta"><span data-part="avatar">${p[3].split(" ").map((x) => x[0]).join("")}</span><span>${p[3]}</span><time datetime="2026-10-${String(24 - k * 2).padStart(2, "0")}">${24 - k * 2} Oct 2026</time><span>${p[4]} min read</span></div></div></article></li>`;
+  const list = $("#blog-list"), nav = $("#blog-pages"); let page = 1;
+  const render = (focus) => {
+    const rows = page === 1 ? [POSTS[0], ...POSTS.slice(1, 6)] : POSTS.slice(1).concat(POSTS.slice(1)).slice((page - 1) * 3, (page - 1) * 3 + 6);
+    list.innerHTML = rows.map((p, k) => card(p, k + page * 3, page === 1 && k === 0)).join(""); warpSweep.init(list);
+    $$('[data-page]', nav).forEach((a) => { if (!/^\d$/.test(a.dataset.page)) return; if (+a.dataset.page === page) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    $('[data-part="summary"]', nav).textContent = `Page ${page} of 3`;
+    $('[data-page="prev"]', nav).toggleAttribute("aria-disabled", page === 1); $('[data-page="next"]', nav).toggleAttribute("aria-disabled", page === 3);
+    if (focus) $("[data-post]", list).focus();
+  };
+  nav.addEventListener("click", (e) => { const a = e.target.closest("[data-page]"); if (!a) return; e.preventDefault(); const v = a.dataset.page, n = v === "prev" ? page - 1 : v === "next" ? page + 1 : +v; if (n < 1 || n > 3 || n === page) return; page = n; render(true); });
+  list.addEventListener("click", (e) => e.target.closest("[data-post]") && e.preventDefault());
+  render(false);
+
+  // contact: signature Fields, validation on submit, an inline success state
+  const form = $("#contact-form"), done = $("#contact-done");
+  const setInvalid = (input, msg) => { const f = input.closest('[data-scope="field"]'), m = $('[data-part="message"]', f); f.toggleAttribute("data-invalid", !!msg); $('[data-part="control"]', f).toggleAttribute("data-invalid", !!msg); input.setAttribute("aria-invalid", String(!!msg)); if (m) m.textContent = msg || ""; return !msg; };
+  const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const n = $("#ct-name"), em = $("#ct-email"), msg = $("#ct-msg");
+    const ok = [setInvalid(n, n.value.trim() ? "" : "Enter your name."), setInvalid(em, emailOk(em.value.trim()) ? "" : "Enter an email like ada@company.com."), setInvalid(msg, msg.value.trim().length >= 10 ? "" : "Tell us a little more (10 characters or more).")];
+    const bad = [n, em, msg][ok.indexOf(false)]; if (bad) { bad.focus(); return; }
+    $("#contact-done-to").textContent = `We will write to ${em.value.trim()}.`; form.hidden = true; done.hidden = false; done.focus();
+  });
+  $("#contact-again").addEventListener("click", () => { form.reset(); $$('[data-part="control"]', form).forEach((c) => c.querySelector("select") || c.removeAttribute("data-filled")); $("#ct-consent").setAttribute("aria-checked", "false"); done.hidden = true; form.hidden = false; $("#ct-name").focus(); });
+
+  // waitlist: email, then the place in line and a share link
+  const wf = $("#waitlist-form"), place = $("#waitlist-place");
+  wf.addEventListener("submit", (e) => {
+    e.preventDefault(); const em = $("#wl-email");
+    if (!setInvalid(em, emailOk(em.value.trim()) ? "" : "Enter a work email to join.")) { em.focus(); return; }
+    wf.hidden = true; place.hidden = false; $("#wl-proof").textContent = "2,184 teams ahead of you, 312 joined this week"; place.focus();
+  });
+  $("#wl-copy").addEventListener("click", (e) => { const b = e.currentTarget; (navigator.clipboard?.writeText("https://" + $("#wl-code").textContent) || Promise.reject()).then(() => (b.textContent = "Copied"), () => (b.textContent = "Select and copy")).finally(() => setTimeout(() => (b.textContent = "Copy link"), 2000)); });
+})();
+
+/* ======================================================================
+   11 · The bar (01 §13) and theme
+   ==================================================================== */
+const BAR = ["expression", "fields", "theme", "density", "motion", "flair", "accent"];
+const S = Object.fromEntries(BAR.map((k) => [k, warpBar.get(k)]));
+const resolvedTheme = () => root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+function paint() {
+  const [h, c] = String(S.accent || "152-0.115").split("-"); root.style.setProperty("--warp-seed-accent-h", h); root.style.setProperty("--warp-seed-accent-c", c);
+  const dark = resolvedTheme() === "dark";
+  $$("[data-theme-toggle]").forEach((b) => b.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme"));
+  govern();
+}
+warpBar.transition = (k, v, write) => { if (k !== "motion" && document.startViewTransition && !reduced() && level() >= 1) return document.startViewTransition(write); write(); };
+document.addEventListener("warp-bar:change", (e) => { const { name, value } = e.detail; if (!BAR.includes(name)) return; S[name] = value; paint(); });
+$$("[data-theme-toggle]").forEach((b) => b.addEventListener("click", () => warpBar.set("theme", resolvedTheme() === "dark" ? "light" : "dark")));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
+for (const m of ["(prefers-reduced-motion: reduce)", "(pointer: fine)"]) matchMedia(m).addEventListener("change", govern);
+addEventListener("keydown", (e) => { if (e.target.closest("input, textarea, select, [contenteditable], dialog, [data-scope=player]") || e.metaKey || e.ctrlKey || e.altKey) return; const m = { 1: "quiet", 2: "balanced", 3: "vivid" }[e.key]; if (m) warpBar.set("expression", m); });
+paint();
+window.__warpMore = { timelines, waves, govern };
+})();
+</script>
+</body>
+</html>

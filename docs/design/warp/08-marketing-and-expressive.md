@@ -1,9 +1,10 @@
 # warp 08 — Marketing, commerce, media and the expressive governor
 
-Status: v0.2, 2026-10-28 (review round: 01, 02, 03 findings fixed; §3.13, §3.14, §4.1, §6.1 new). Owner: brand and motion (`market` in [COVERAGE.md](COVERAGE.md)). Reads: [SIGNATURE.md](SIGNATURE.md),
+Status: v0.3, 2026-10-28 (market gaps closed: §4.2 reviews, §5.2 selection, §5.3 players + `timeline()`, §3.6 wall, §3.12 section set, §6.2–§6.6 backgrounds, text effects, scroll-driven, `fancy` presets, MotionCard; a second specimen page). v0.2: review round (01, 02, 03 findings fixed; §3.13, §3.14, §4.1, §6.1 new). Owner: brand and motion (`market` in [COVERAGE.md](COVERAGE.md)). Reads: [SIGNATURE.md](SIGNATURE.md),
 [00-direction.md](00-direction.md), [01-foundations.md](01-foundations.md). CSS: [tokens/warp-marketing.css](tokens/warp-marketing.css)
-(`@layer warp.marketing`). Specimen: [specimens/marketing.html](specimens/marketing.html), one landing page that flips between
-quiet, balanced and vivid live, with phone, tablet and desktop frames. Citations: `old:` = the predecessor's
+(`@layer warp.marketing`). Specimens: [specimens/marketing.html](specimens/marketing.html), one landing page that flips between
+quiet, balanced and vivid live, with phone, tablet and desktop frames, and [specimens/marketing-more.html](specimens/marketing-more.html)
+(media, presets, backgrounds, text and scroll effects, the wall and the section set) on the same shared files. Citations: `old:` = the predecessor's
 `packages/ui/src/` (read-only).
 
 Reused by name, never re-drawn: **Button** (solid, soft, outline, ghost, frame), **Toggle / ToggleGroup** with its
@@ -101,6 +102,18 @@ only when the value changes. A host also gets `data-seen` once (IntersectionObse
 | `theme-wipe` (§6.1) | balanced | instant | View Transition crossfade | woven L→R wipe 560ms (420ms touch / < 768px) | instant | C · once per change |
 | `autotrack` (live room, §3.14) | quiet | still snapshot | cursors glide, outlines fade | same | outlines fade in place, no travel | C · loop, own pause, off-screen paused |
 | `list` (animated results, §4.1) | balanced | instant | fade + 2 × `motion-distance` rise, ≤ 6 staggered | same | fade only | C · once per filter |
+| `fancy` presets (§6.5) | quiet | plain enter / exit | plain enter / exit | the preset, ≤ 400ms | fade (plain, distance 0) | C · once per trigger; flicker ignores repeats < 1s |
+| `motion-card` (§6.6) | quiet | flat (shadow, colour) | shadow lift, press 0.98 | + rise 2px, scale 1.01 on hover | flat | C · transform only, never layout |
+| `retro` grid (§6.2) | quiet | static plane | static plane | lines travel, 1.6s | static plane | C · loop, off-screen paused |
+| `rays` (§6.2) | vivid | none | none | 7 beams sway, 8–12s | static beams | C · loop, ≤ 8 nodes, off-screen paused |
+| `shiny` (§6.3) | balanced | plain ink | sheen once on view, 1.1s | + again on hover | static sheen | P · once |
+| `highlight` (§6.3) | quiet | static mark | draws L→R on view | same, marker style | static mark | C · once (`scaleX`) |
+| `rotate` / `morph` (§6.3) | balanced / vivid | first word | words swap every 2.5s (rotate) | + per-glyph morph | first word | S · one shared ticker, own pause, stops off-screen |
+| `text-reveal` (§6.3) | balanced | full ink | word ink on a view timeline | same, lower floor | full ink | C · `view()`; JS fallback |
+| `progress` bar (§6.4) | quiet | `scroll(root)` bar | same | same | same (user-driven) | C · `scroll()`; JS fallback |
+| `container-scroll` (§6.4) | balanced | flat device | tilt 16° → flat | tilt 22° → flat | flat | C · `view()`; JS fallback |
+| `velocity` text (§6.4) | balanced | two centred lines | rows drift with scroll | + skew ≤ 6° from scroll speed, decays | two centred lines | C · `view()`; the skew rAF runs only while it decays |
+| `wall` marquee (§3.6) | quiet | masonry | columns drift 44–52s | same | masonry | C · loop, own pause, hover/focus hold |
 
 The catalogue in §6 adds the P2 effects with the same columns.
 
@@ -239,7 +252,14 @@ type ScrollStoryProps = { steps: { title: Child; body: Child; visual: Child }[];
 ### 3.6 Testimonials (`TestimonialCard`): card, wall, carousel
 - **Card:** `blockquote`, `figcaption` (avatar, name, role), optional `stars` and source logo. Vivid sets the quote
   in serif at 1.35× heading.
-- **Wall:** CSS columns 1 / 2 / 3 (masonry without JS), `max-height` with a "Show more" disclosure; never autoplays.
+- **Wall** (demo `#wall`): CSS columns 1 / 2 / 3 by container width (masonry without JS), collapsed to 680px with a
+  bottom mask and a "Show all" disclosure (`aria-expanded`, `aria-controls` the viewport). A quote may carry a
+  `source` (G2, X, Slack…) in mono caps. `variant="marquee"` turns the columns into `tracks` (one `col` per column,
+  `--_cols` from the container width) that drift upward, alternate columns reversed, 44–52s per lap, only when the
+  `wall` effect is `on` (balanced+). Hover and focus hold it, it has its own "Pause wall" button and obeys the page
+  pause, and it stops off-screen. Each column renders its quotes twice for a seamless loop: the first copy is the
+  readable list, the second is `aria-hidden` and `inert`. Quiet and reduced motion show the masonry. Anatomy:
+  `wall > viewport > columns (ul > li > quote) + tracks > col > ul ×2`, `foot > more`.
 - **Carousel:** §5.1 with `per="auto"` (1 + peek on phone, 2 on tablet, 3 on desktop).
 
 ### 3.7 Pricing: cards, billing toggle, comparison table (`PricingCard`)
@@ -293,14 +313,28 @@ type FactCarouselProps = { items: { id: string; eyebrow?: Child; title: Child; b
 
 ### 3.12 The standard section set
 All use Block + Head and only tokens; each has a quiet and vivid reading and no new motion.
-- **Team:** Avatar (or photo in a 4:5 Frame), name, role, links; 2 / 3 / 4 columns. Vivid: photos grayscale, colour on
-  hover (C: `opacity` of a colour layer, not `filter`).
-- **Changelog:** a Timeline (`06`) of releases: date (mono), version Badge, title, prose, media. Sticky date rail ≥ 860px.
-- **Blog index:** featured post (2:1) + cards (Frame 3:2, eyebrow tag, title, excerpt, meta). Pagination from `05`.
+- **Team** (demo `#team`): `ul[data-scope=team] > li[data-scope=person]`: `photo` (4:5, two images: `color` carrying
+  the alt text, and `mono`, `aria-hidden`), `name` (h3), `role`, `links`; 2 / 3 / 4 columns by container. Vivid shows
+  the grey copy and fades the colour copy in on hover or focus within (C: `opacity` of a layer, not `filter`); the
+  other stops show colour.
+- **Changelog** (demo `#changelog`): `ol[data-scope=changelog] > li[data-part=release]`: `knot`, `when` (`time` in
+  mono + version Badge), `what` (h3, prose, `items` with New / Improved / Fixed badges, optional `media` figure). A
+  Timeline (`06`) rail; from 860px the date column is sticky at `--warp-mk-sticky-offset` beside each release.
+- **Blog index** (demo `#blog`): `ul[data-scope=blog]`: a `post[data-featured]` spanning the row (2:1 art beside the
+  body from 760px), then cards (`art` 3:2, `tag` eyebrow, `title` whose link is the whole-card overlay, `excerpt`,
+  `meta` with avatar, author, date and read time). The surface sweep runs on posts at vivid. `blog-foot` holds the
+  Pagination from `05` (summary "Page n of N" under 420px); a page change moves focus to the first post's link.
 - **Article with TOC:** prose at 68ch (`text.prose`); TOC as AnchorNav (`02`) sticky on the right ≥ 1000px, a
   disclosure "On this page" above the article below that; current heading tracked by IntersectionObserver; a 1px
   reading-progress bar driven by `animation-timeline: scroll()` (C, balanced+).
-- **Contact / waitlist:** Field set + Button; waitlist shows the position after submit with a count-up.
+- **Contact** (demo `#contact`): `contact > aside (head, dl channels) + form (a row of two Fields, a select Field,
+  the multi-line Field, a consent Checkbox inside its label, submit)`. Validation runs on submit only: each failing
+  Field gets `data-invalid`, `aria-invalid` and its `message`, and focus goes to the first. Success swaps the form for
+  `done` (`role=status`, focused) with "Send another".
+- **Waitlist** (demo `#waitlist`): a surface with a static `bg` (the dots backdrop, §6.2), title, one email Field and
+  Button, and `proof` (avatars + count). After submit the form is replaced by `place` (`role=status`, focused): the
+  number in the display numeric face, then `share` (the link in a `code` + Copy). No count-up: the number is the news,
+  so it appears at once at every stop (this replaces v0.2's count-up).
 - **404 / 500:** the empty-state pattern from `00` §7 (a broken weft thread), display-size "404" in the title font,
   search field, three links. Vivid sets "404" in 2× serif with the broken thread drawn by the `rule` effect.
 - **Device mockups:** `Device kind="browser | phone | tablet | laptop"` frames (1px border-strong, radius 10 / 34 / 22,
@@ -357,8 +391,8 @@ type LiveRoomProps = { peers: State<{ id: string; name: string; color: 1|2|3|4|5
 - **Variant picker:** `fieldset` + `legend` with the chosen value in an `output`; colours are radio swatches
   (44px hit area, 2px ink outline when checked, name in `sr` and `title`); sizes are radio tiles; out of stock is
   `disabled` with a hatch and a described-by note; unavailable combinations stay focusable with "Notify me".
-- **Reviews:** rating summary (score in display face, stars, count, 5→1 histogram as a labelled list), review list
-  (verified badge, helpful votes, photos open the Lightbox), "Write a review" (Rating input from `03`).
+- **Reviews:** rating summary (score in display face, stars, count, 5→1 histogram as a labelled list), then the
+  review list and "Write a review" (§4.2).
 - **Cart drawer:** Sheet (`05`), right on ≥ 600px, bottom on phone with the drag handle. Lines (thumb, name, variant,
   quantity stepper from `03`, price, remove with undo toast), totals as a `dl`, coupon field, primary "Checkout".
   The cart badge in the top bar is a count Badge with a polite announcement on change.
@@ -393,6 +427,24 @@ type VariantPickerProps = { name: string; label: Child; kind: "swatch" | "tile";
 type RatingSummaryProps = { score: number; count: number; distribution: [number, number, number, number, number] };
 ```
 
+### 4.2 Reviews (demo `#review-list`, sheet `#review-sheet`)
+- **List:** `section[data-scope=reviews]`: `header` (h3, `count` as a polite status "Showing 4 of 7…", the "Write a
+  review" Button), `tools` (a ToggleGroup radiogroup filter All / 5 / 4 / 3 or less, and a select Field for sort: most
+  helpful, newest, highest, lowest), `list`, `more` ("Show more reviews": +3, focus moves to the first new title,
+  which is `tabindex=-1`).
+- **Review:** `article[data-scope=review]` labelled by its `title` (h4): `head` (stars as `role=img` "n out of 5
+  stars", Verified purchase Badge, Pending Badge), `meta` (name, `time`, variant), `body` (68ch), `photos` (64px
+  buttons that open the Lightbox on that review's photos and return focus), `foot` ("Was this helpful?" toggle
+  Button with `aria-pressed` and the count, Report).
+- **Write a review:** a Sheet (right from 600px, bottom on phones). `fieldset[data-scope=rating-field]` with a legend,
+  the Rating input from `03` (five native radios; stars fill left to right with `data-on`, mouse hover previews with
+  `data-preview`) and an `output` that names the choice ("4 of 5: Very good"); then title, the multi-line Field and
+  name. Validation on submit: a rating is required and the body needs ≥ 20 characters (each failure sets
+  `data-invalid` and its message; focus goes to the first). A sent review arrives at the top as Pending (fade in,
+  `data-enter`) with a toast; filter and sort reset so it is visible.
+- The Rating input and multi-line Field rules are restated in `warp-marketing.css` (CSS §22), so the store loads no
+  inputs pack. They match `warp-inputs.css` and are identical when both load.
+
 ## 5. Media
 
 ### 5.1 Carousel (`old:carousel/*`, all modes kept)
@@ -418,7 +470,20 @@ type CarouselProps = { slides: { id: string; content: Child; label?: string }[];
 
 ### 5.2 Lightbox and gallery (`old:overlays/dialogs/Lightbox.tsx`)
 - **Gallery grid:** 2 cols phone, 3 cols ≥ 760px with the first item 2×2; captions appear on hover (always on touch).
-  `selectable` adds a checkbox per item and a selection toolbar (count, download, delete) for asset libraries.
+  `selectable` adds selection for asset libraries (demo `#gallery` + `#gallery-bar`), below.
+- **Selection** (`selectable`): each item is `div[data-part=item]` holding `open` (the button that opens the Lightbox)
+  and `select` (a signature Checkbox on a raised chip, named "Select poster n, title"). The box shows on hover and
+  focus, always on coarse pointers, and on every item once anything is selected (`data-selecting` on the grid). A
+  selected item gets an accent ring and, at balanced+, its image insets by scale 0.94 (C). Click toggles; Shift+click
+  or Shift+Space selects the range from the last toggled item (the anchor) to this one, to the anchor's state; while
+  anything is selected a click on a poster toggles it instead of opening it (⌘/Ctrl+click always toggles). Ctrl/⌘+A
+  and Esc clears while focus is in the grid or its bar; Delete / Backspace removes while focus is in the grid.
+- **Selection bar** (`selection-bar`, sticky at `--warp-mk-sticky-offset`, accent-soft while `data-active`): a
+  select-all Checkbox (`aria-checked` true / false / `mixed`, the mixed state draws a dash), `count` (`role=status`,
+  "2 of 6 posters selected"), `actions` (Download, Delete in critical tone, both disabled at 0; Clear while any), and a
+  `hint` with the keys (`aria-describedby` of the grid). Delete is immediate with an **Undo** action in the Toast (8s,
+  held while hovered or focused), which restores the items and the selection. Focus moves to select-all after a
+  delete.
 - **Lightbox:** a full-screen `<dialog>` (near-black, opacity fade in and out): bar (`count`, zoom out, zoom in,
   close), `stage` (prev/next buttons, hidden on touch), `caption` (polite). Focus starts on Close and returns to the
   thumbnail. Background is opaque, so contrast holds on any image.
@@ -427,20 +492,53 @@ type CarouselProps = { slides: { id: string; content: Child; label?: string }[];
   2.5× at the tap point; wheel / trackpad zooms at the cursor; keys ← → + − 0 Esc. Pan is clamped to the image.
 ```ts
 type LightboxProps = { items: { src: string; alt: string; caption?: Child; srcset?: string }[]; open: Bindable<boolean>; index?: Bindable<number>; maxZoom?: number };
+type GalleryProps = { items: LightboxProps["items"]; selectable?: boolean; selected?: Bindable<Set<string>>;
+  onDelete?: (ids: string[]) => void | "undoable"; onDownload?: (ids: string[]) => void };
 ```
+The Lightbox takes any list (the gallery, a review's photos), labels itself by it ("Photos from Maya A.") and returns
+focus to the opener. The Toast gains an optional `action: { label, run }`.
 
-### 5.3 Video and audio player chrome
-- **Video:** native `<video>` with a warp bar: play, scrubber (Slider from `03`, buffered range in `border`, chapters as
-  ticks), time (tabular mono), captions menu, speed menu, PiP, fullscreen. Controls fade after 2.5s idle on fine
-  pointers, stay visible on touch and while focused. Poster frame never autoplays with sound; muted autoplay (hero
-  loops) is balanced+, pauses off-screen, and has a visible pause button (2.2.2). Keys: Space/K, J/L ±10s, ←/→ ±5s,
-  M, C, F.
-- **Audio:** play, waveform scrub (peaks precomputed, drawn as 1px bars in `data-1`, played part in accent), time,
-  speed, download. The waveform is an `input[type=range]` underneath for AT. Voice notes use the compact variant.
+### 5.3 Video and audio player chrome (demos `#video-player`, `#audio-player`, `#voice-note`)
+- **Video:** native `<video>` (the clock, the captions renderer and the media's own accessibility) under a warp bar on a
+  dark stage at every stop and theme: `stage` (video, `big-play` while idle, `badge-row` with the duration chip and
+  the current chapter chip), then `controls`: the `scrubber` on its own row (rail with `buffered`, `hover` and
+  `played` layers as `scaleX`, never width; chapter `ticks` as 2px gaps; a `thumb` shown on hover and focus; a hover
+  `preview` "0:05 · Gate the merge" on fine pointers; a transparent native range on top for drag, keys and
+  `aria-valuetext` "0:10 of 0:12, Roll out by canary"), then play, back 10s, mute, time (tabular mono), CC, speed,
+  PiP, full screen. CC is a toggle (`aria-pressed`, track mode `showing` / `hidden`); speed cycles 1, 1.25, 1.5, 2,
+  0.75× and names itself ("Playback speed: 1.5×"). Both are toggles rather than menus in the specimen; a player with
+  several caption languages uses the Menu from `05` for CC. PiP and full screen hide when unsupported (iOS uses the
+  native full screen). Under 420px of player width, back 10s, PiP and the total time hide. Under the player,
+  `player-notes`: `chapters` (buttons, `aria-current` on the playing chapter), a `readout` and the `keys` legend.
+- **Controls fade** after 2.5s without pointer movement while playing, on fine pointers only, never while focus is in
+  the controls; a pointer move, focus or a player key brings them back. Click on the frame plays or pauses; double-click toggles
+  full screen.
+- **Keys** (focus anywhere in the player): Space (except on a button) and K play / pause, J / L ∓10s, ← / → ∓5s
+  (also ↓ / ↑ and PageDown / PageUp ∓10s on the scrubber), M mute, C captions, F full screen, Home / End.
+- **Poster:** a generated SVG or the `--_dominant` colour; never autoplays with sound. Muted autoplay (hero loops) is
+  balanced+, pauses off-screen, and has a visible pause button (2.2.2). One medium plays at a time: starting one
+  pauses the rest.
+- **Audio:** on the page surface: play (accent, round; vivid square), `meta` (title, byline), `tools` (speed, download),
+  `wave` (a canvas from precomputed peaks plus a transparent native range for AT and keys), time. Bars are 3px (2px
+  compact) with 2px gaps, max of each bucket, centred (vivid: standing on a baseline); colours come from `--_bar`
+  (`data-1`), `--_played` (accent) and `--_hover`, resolved through a probe so forced colours and themes apply. The
+  canvas is DPR-aware (≤ 2) and drawn **only on change**: a frame while playing, on hover, on resize, on a theme or
+  dial change; never while idle. Same keys minus M / C / F. A `transcript` disclosure lists the lines as buttons
+  (`aria-current` on the spoken one; a click seeks and plays). `chrome="compact"` is the voice note in a thread: play,
+  wave, time.
+- **Binding (PLAN §6.3):** the chrome is a view of `timeline(media, { cues })`: boxes `currentTime`, `playing`,
+  `duration`, `ended`, `cue`, plus `on(id, fn)` that fires when playback enters a cue. Frames come from
+  `requestVideoFrameCallback` (video) or rAF (audio) and are scheduled only between `play` and `pause` and while the
+  player is on screen; paused or off-screen it costs nothing (`timeupdate` and `seeked` keep the boxes and cues true
+  meanwhile). The cue box updates before `currentTime`, so a time subscriber reads the matching chapter. Chapters and
+  transcript lines are cues; the specimen's readout prints the boxes and the last `on()` firing.
 ```ts
 type MediaPlayerProps = { src: string | { src: string; type: string }[]; kind: "video" | "audio"; poster?: string;
   tracks?: { src: string; lang: string; label: string; kind: "captions" | "chapters" }[]; peaks?: number[];
-  autoplay?: "never" | "muted-loop"; chrome?: "full" | "compact" };
+  cues?: { id: string; at: number; end?: number; label: string }[]; timeline?: Timeline;   // bring your own, or one is made
+  transcript?: boolean; autoplay?: "never" | "muted-loop"; chrome?: "full" | "compact" };
+type Timeline = { currentTime: Box<number>; playing: Box<boolean>; duration: Box<number>; ended: Box<boolean>;
+  cue: Box<Cue | null>; on(id: string, fn: (c: Cue) => void): () => void };
 ```
 
 ### 5.4 Compare slider, QR and share
@@ -462,13 +560,14 @@ wrapped; auto-rotate is a governed loop, min vivid), image editor (crop from `04
 
 | Effect (P2 unless noted) | Min | Below min / still | Reduced | Class · note |
 |---|---|---|---|---|
-| Shiny text, highlighter sweep (P1) | balanced | static mark | static | P · once on view; the highlighter draws L→R like the sweep |
-| Word rotate, morphing text (P1) | balanced | first word | first word | S · ghost holds the longest word; 2.5s per word, pausable |
-| Text reveal on scroll (P1) | balanced | full ink | full ink | C · word opacity by `view()` |
-| Scroll progress bar (P1) | quiet | — | static | C · `scroll()` timeline, 1px |
-| Scroll-velocity text | vivid | static band | off | C · skew ≤ 6° from scroll velocity |
-| Grid, dot, noise, retro-grid backgrounds (P1) | quiet (static) | static pattern | static | static at every stop; only retro-grid moves (vivid, C, loop) |
-| Light rays, meteors, sparkles, particles | vivid | none | none | C · ≤ 24 nodes, loop, off-screen paused |
+| Shiny text, highlighter sweep (P1, shipped: §6.3) | balanced / quiet | plain ink / static mark | static | P / C · once on view; the highlighter draws L→R like the sweep |
+| Word rotate, morphing text (P1, shipped: §6.3) | balanced / vivid | first word | first word | S · ghost holds the longest word; 2.5s per word, pausable |
+| Text reveal on scroll (P1, shipped: §6.3) | balanced | full ink | full ink | C · word opacity by `view()` |
+| Scroll progress bar (P1, shipped: §6.4) | quiet | — | stays (user-driven) | C · `scroll()` timeline, emphasis border |
+| Container scroll (shipped: §6.4) | balanced | flat device | flat | C · `view()` tilt → flat |
+| Scroll-velocity text (shipped: §6.4) | balanced (drift) / vivid (skew) | two centred lines | two centred lines | C · skew ≤ 6° from scroll velocity |
+| Grid, dot, noise, retro-grid backgrounds (P1, shipped: §6.2) | quiet (static) | static pattern | static | static at every stop; only retro-grid moves (vivid, C, loop) |
+| Light rays (shipped: §6.2); meteors, sparkles, particles | vivid | none | static (rays) / none | C · ≤ 24 nodes (rays 7), loop, off-screen paused |
 | Progressive blur edges | balanced | gradient fade | same | static `backdrop-filter` stack; no animation |
 | Animated list (items arrive) | balanced | instant list | instant | C · reveal stagger, max 6 |
 | Animated beam / integration diagram | balanced | static connectors | static | P · dash-offset once per path |
@@ -478,8 +577,8 @@ wrapped; auto-rotate is a governed loop, min vivid), image editor (crop from `04
 | Custom pointer / follow pointer | vivid | system cursor | off | C · never hides the system cursor over text or controls |
 | Click effects (ripple, burst) | balanced (ripple) / vivid (burst) | none | none | C · once per click, ≤ 400ms |
 | Animated terminal / code compare | balanced | static code | static | S · typewriter rules |
-| TiltCard glare, MotionCard | vivid / balanced | flat | flat | C · `old:parallax/*` (ParallaxScene shipped: §3.13) |
-| `fancy` presets: crt-on/off, flicker, glitch, iris, spotlight | vivid | the stop's plain enter/exit | fade | C · ≤ 400ms, flicker ≤ 3 flashes/s, never on text people read |
+| TiltCard glare; MotionCard (shipped: §6.6) | vivid / balanced | flat | flat | C · `old:parallax/*` (ParallaxScene shipped: §3.13) |
+| `fancy` presets: crt-on/off, flicker, glitch, iris, spotlight (shipped: §6.5) | vivid | the stop's plain enter/exit | fade | C · ≤ 400ms, flicker ≤ 2 flashes/s, never on text people read |
 | Shader theme transition (P1, shipped: §6.1) | balanced | instant (quiet) | instant | C · View Transition, once ≤ 560ms |
 | Ken Burns / parallax image slider | balanced | static slides | static | C · carousel `scale` mode + parallax |
 
@@ -500,6 +599,73 @@ The old parallax hooks map to two primitives: `scrollFx(el, { from, to, range })
 IntersectionObserver fallback) and `pointerFx(el, write)` (rAF-batched custom properties). `useGlobalMouse`,
 `useDocumentScroll` and `useInViewport` become `pointer()`, `scroll()` and `inView(el)` signals in weft.
 
+### 6.2 Animated backgrounds (demo `#backgrounds`)
+`backdrop` is a surface with an `aria-hidden` `bg` layer (`z-index: -1`, no pointer events) under its text; the same
+layers serve heroes, CTA bands and the waitlist. All are gone in forced colours.
+- **Grid** `data-bg="grid"`: two 1px line gradients in `border-strong` mixed by `--warp-fx-k`, under a radial mask.
+  Vivid tightens the cell to 24px and marks every fourth line in the accent. Static.
+- **Dot** `data-bg="dots"`: one radial-gradient tile (16px; vivid 18px, larger dots in the accent), fading up. Static.
+- **Noise** `data-bg="noise"`: a static SVG `feTurbulence` tile blended `soft-light` over two `--warp-mk-art` washes;
+  opacity follows fx-k, quiet drops the washes. Never animates.
+- **Retro grid** `data-bg="retro"` `> plane > i`: a grid plane tipped back 64° in 3D under a fade mask. At vivid (`on`)
+  its lines travel toward the reader by `translate3d` one cell per 1.6s (C, loop); otherwise a static plane.
+- **Light rays** `data-bg="rays"` `> rays > i ×7` (each sets `--x --w --r --o --t --dl`): soft beams from the top edge on
+  one statically blurred layer, swaying ±5° by `rotate` with opacity over 8–12s (C, loop). Exist at vivid only;
+  under reduced motion they stay as still beams; below vivid the card shows its `note`.
+- Both loops pause off-screen, under the page pause and under reduced motion, and count toward the two-loop budget.
+
+### 6.3 Text effects (demo `#text-fx`)
+The final string is in the tree from first paint; animated copies are `aria-hidden`; nothing reflows its line.
+- **Shiny** `data-fx="shiny"`: `background-clip: text` with a gradient whose stops are all text inks (`text`,
+  `--warp-mk-ink-1/2`, each ≥ 4.5:1), so every frame passes; the sheen crosses once on view (P, 1.1s); vivid replays
+  it on hover. Quiet: plain ink. Forced colours: `CanvasText`.
+- **Highlighter** `mark[data-fx="highlight"]`: a `::before` layer in `highlight-soft` (vivid: a lower marker band in
+  `highlight-solid`, −1°) that draws in by `scaleX` from the reading start on view (C, once), staggered by `--_d`.
+  Quiet: a static mark. Forced colours: `Mark` / `MarkText`.
+- **Word rotate** `data-fx="rotate"` (balanced+) and **morphing text** `data-fx="morph"` (vivid): `sr` (rotate: the
+  whole list, "agents, platform teams, auditors and on-call"; morph: the current word) + `live` (`aria-hidden`) holding
+  a hidden `ghost` (the longest word, so the box never changes) and the current word. Rotate slides words out and in;
+  morph swaps glyph by glyph (`[data-ch]`, 28 / 34ms stagger). Both run on **one shared 2.5s ticker** (a timeout, so
+  one S loop), which stops when neither host is `on` and on screen, under the page pause, and with the section's own
+  "Pause text". Below their stop: the first word, static, and no ghost.
+- **Scroll reveal** `data-fx="text-reveal"`: each word (`[data-w]`, `--_k` its position 0…1) goes from a faint floor
+  (0.42 − 0.2 × fx-k) to full ink on the paragraph's `view-timeline`; every word is at full ink once the paragraph's
+  centre reaches the middle of the viewport. Without view timelines the one passive scroll listener (§6.4) writes
+  `--_p`. Below balanced and under reduced motion: full ink.
+
+### 6.4 Scroll-driven sections (demo `#scroll-fx`)
+CSS scroll timelines first, off the main thread. Without them (`data-fallback`), **one** passive scroll listener
+writes `--_p` (0…1) in a single rAF per scroll burst, and only for hosts in view; nothing runs while the page is still.
+- **Scroll progress** `scroll-progress` (`#scroll-progress`): an emphasis-border bar on the top bar's bottom edge,
+  `scaleX` on `scroll(root block)`. It shows reading position and moves only when the reader scrolls, so it stays at
+  every stop and under reduced motion (the registry's `reduced: on`). Forced colours: `Highlight`.
+- **Container scroll** `container-scroll` (`#container-scroll`): `intro` (eyebrow, title, lede) rises ahead of a
+  `device > screen` that starts tipped back (8° + 14° × fx-k, scale 1.04) and lands flat by `cover 48%` of its view
+  timeline. Below balanced and under reduced motion it is flat (`off`).
+- **Velocity text** `velocity` (`#velocity`): two display-size rows (`aria-hidden`, with a `role=group` label on the
+  host carrying the words once) drift opposite ways across the section's view timeline (balanced+); `[data-dupe]` makes
+  them long enough. At vivid scroll speed adds a skew ≤ 6° that eases back to 0, in a rAF that exists only while it
+  decays. Quiet and reduced motion: two centred, wrapping lines.
+
+### 6.5 `fancy` motion presets (demo `#fancy`; `old:motion/presets.ts`)
+`data-fx="fancy"` on any entering or leaving element; `data-run` names the preset, `data-shown` hides it after an exit.
+At vivid (`on`) each is one run on `transform`, `opacity` and `clip-path`, ≤ 400ms: **crt-on** (a line opens to the
+frame, 400ms), **crt-off** (the frame folds to a line, 320ms), **flicker** (two dips in 400ms; repeats within 1s are
+ignored, so ≤ 2 flashes in any second), **glitch** (four clipped, offset bands, 320ms, `steps`), **spotlight** (a
+circle opens from the press point `--sx/--sy`, centre for keys, with a fading glow, 340ms), **iris** (an octagon opens
+from the centre, 360ms). Every other stop runs the stop's plain enter / exit (`mk-plain-in/out`); reduced motion makes
+that a fade. Never on text people are reading.
+```ts
+fancy(el, "crt-on" | "crt-off" | "flicker" | "glitch" | "spotlight" | "iris", { at?: [x: number, y: number] }): Promise<void>
+```
+
+### 6.6 MotionCard (demo `#motion-card`; `old:` `MotionCard`, whileHover y −2, scale 1.01, tap 0.98)
+A whole-card `button` (`aria-pressed` in a single-choice set; or a link) with `name`, `body`, a `check` shown while
+pressed, and the surface sweep at vivid. Balanced: hover lifts the shadow (elevation 1 → 2), press scales to 0.98.
+Vivid: hover also rises 2px and scales 1.01 on the pop spring. This is the documented, governed exception to 00 §10's
+"cards don't move on hover": vivid only, transform only, never layout, and the content never shifts under the pointer
+by more than 2px. Quiet and reduced motion: shadow and colour only.
+
 ## 7. Accessibility checklist
 
 - Carousel and fact carousel follow the APG carousel pattern (§5.1); slides beyond view are `inert` in stacked modes.
@@ -517,6 +683,15 @@ IntersectionObserver fallback) and `pointerFx(el, write)` (rAF-batched custom pr
   reach `hit-min` (44px coarse); bespoke ones carry `data-hit` (`="text"` for standalone text links). Inputs are 16px on touch.
 - Overlays (`dialog`, sheet, lightbox) trap focus natively, close on Esc, and restore focus.
 - Pricing: the toggle is a radiogroup; the change is announced once; struck prices carry `sr` "was".
+- Players: every control is a real button with a name that says its next action ("Pause", "Unmute"); toggles use
+  `aria-pressed`; the scrubber and waveform are native ranges with `aria-valuetext`; captions come from a `<track>`;
+  the transcript is in the page. Status lines (selection count, review count, place in line, contact success) are
+  `role=status`.
+- The forced-colours layer for v0.3 parts (CSS §29): backgrounds and the waitlist art hidden; post, MotionCard,
+  selection bar and player borders `CanvasText` (`Highlight` on hover / focus / pressed / active); the shiny gradient
+  becomes `CanvasText`, the highlighter `Mark`; text reveal at full ink; scroll progress, played range and changelog
+  knots `Highlight`; the waveform's colours resolve to `CanvasText` / `Highlight` / `GrayText`; stars `CanvasText`;
+  velocity rows unskewed.
 
 ## 8. Coverage
 
@@ -526,15 +701,15 @@ IntersectionObserver fallback) and `pointerFx(el, write)` (rAF-batched custom pr
 | ScrambleText, Typewriter · Confetti | §1.3, §6 · §1.3, §4 |
 | Hero, CTA, FeatureGrid, LogoCloud, PricingCard, ProductCard, TestimonialCard, FAQ, NewsletterForm, Footer, SessionLobby | §3.1, 3.9, 3.4, 3.2, 3.7, 4, 3.6, 3.8, 3.9, 3.10, 3.11 |
 | Lightbox | §5.2 |
-| ScrollReveal, AnimatedGrid, MotionCard · `fancy` presets · shader transition | §1.3 `reveal`, §6 · §6.1 (demo: top bar toggle, gallery section) |
+| ScrollReveal, AnimatedGrid, MotionCard · `fancy` presets · shader transition | §1.3 `reveal`, §6.6 (demo `#motion-card`) · §6.5 (demo `#fancy`) · §6.1 (demo: top bar toggle, gallery section) |
 | Parallax, ParallaxScene/Layer, TiltCard, MagneticElement, parallax hooks | §1.3, §3.13 (demo `#depth`), §6 |
 | AutoTrack (owner `app`; marketing showcase) | §3.14 (demo `#together`) |
 | Marketplace (template listing, filters, stat strip) | §4.1 (demo `#templates`) |
-| Video, audio, gallery with selection, zoom viewer, PDF, 3D, image editor | §5.3, §5.2, §5.5 |
-| Product gallery, variant picker, reviews, device mockups | §4, §3.12 |
+| Video, audio, gallery with selection, zoom viewer, PDF, 3D, image editor | §5.3 (demos `#video-player`, `#audio-player`, `#voice-note`), §5.2 (demo `#gallery` + `#gallery-bar`), §5.5 |
+| Product gallery, variant picker, reviews, device mockups | §4, §4.2 (demo `#review-list`, `#review-sheet`), §3.12 |
 | Bento, marquee, pricing toggle + matrix (P0) | §3.4, §3.2, §3.7 |
-| Spotlight, border beam, animated backgrounds, text effects, scroll-driven sections, compare | §1.3, §6, §3.5, §5.4 |
-| Testimonial wall · team, blog, changelog, contact, waitlist · 404 | §3.6 · §3.12 |
+| Spotlight, border beam, animated backgrounds, text effects, scroll-driven sections, compare | §1.3, §6.2 (demo `#backgrounds`), §6.3 (demo `#text-fx`), §6.4 (demos `#scroll-progress`, `#container-scroll`, `#velocity`), §3.5, §5.4 |
+| Testimonial wall · team, blog, changelog, contact, waitlist · 404 | §3.6 (demo `#wall`) · §3.12 (demos `#team`, `#blog`, `#changelog`, `#contact`, `#waitlist`) · §3.12 |
 | Particles, animated list and beam, globe, dock, lens, pointer, click effects, progressive blur, terminal, Ken Burns | §6 |
 | Cart drawer, checkout (owner `app`) · QR, Share (owner `comp`) | display parts in §4 · marketing use in §5.4 |
 
@@ -546,6 +721,21 @@ spotlight bento, the ParallaxScene, vivid word band, scroll story, testimonial c
 gallery with pinch-zoom lightbox, compare slider, confetti and the theme-transition demo, pricing with toggle, beam
 and comparison table, template marketplace, store (zoom gallery, variants, reviews, cart sheet with checkout steps),
 lobby with countdown and fact carousel, the live room, FAQ, CTA, newsletter field, footer.
+
+[specimens/marketing-more.html](specimens/marketing-more.html) is the second page, loading the same files (`warp.css`,
+`warp-components.css`, `warp-marketing.css`, `warp-bar`, `warp-sweep`) with the same governor and its own registry
+table: `fancy` presets `#fancy`, MotionCard `#motion-card`, video `#video-player` and audio `#audio-player` /
+`#voice-note` (`#video`, `#audio`), backgrounds `#backgrounds`, text effects `#text-fx`, scroll-driven `#scroll-fx`
+(`#scroll-progress` in the top bar, `#container-scroll`, `#velocity`), the wall `#wall`, and the section set `#team`,
+`#blog`, `#changelog`, `#contact`, `#waitlist`. `?fallback` forces the scroll-timeline fallback; `?seen` marks every
+one-shot as seen. Its media is generated and tiny, in `specimens/assets/` (≈ 370 KB): `tour.webm` / `tour.mp4`
+(480×270, 12s, three chapters), `tour.en.vtt` captions, `tour.chapters.vtt`, `standup.webm` / `standup.m4a` (22s voice
+note) and `standup.en.vtt`; the 160 waveform peaks are inlined. The landing links to it from the top bar ("More"), the
+footer (Careers, Changelog, Blog), the mobile menu and the bar's Pages extra. On the landing, the gallery gained
+selection (`#gallery-bar`) and the store gained the review list and sheet (`#review-list`, `#review-sheet`).
+
+Local token: `--warp-mk-sticky-offset` (72px; the specimens set bar height + 72px) is where sticky marketing parts dock
+(selection bar, changelog dates). It belongs in foundations' sticky set if another area needs it.
 
 The settings bar is the canonical one (01 §13): Expression · Fields · Theme · Density · Motion (Auto / Full /
 Reduced) · Flair, then the page extras Accent (5 brands, including near-neutral ink), Hero layout and View. Inline

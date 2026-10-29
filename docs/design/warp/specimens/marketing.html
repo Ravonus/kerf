@@ -29,8 +29,9 @@
 
   /* the settings bar is the shared one: warp-bar.css / warp-bar.js (01-foundations §13) */
   .vh { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  /* the landing's own sticky nav docks under the bar (warp-bar.js writes --wb-h) */
+  /* the landing's own sticky nav docks under the bar (warp-bar.js writes --wb-h); sticky parts dock under both */
   :root:not([data-embed]) [data-scope="topbar"] { inset-block-start: var(--wb-h, 57px); }
+  :root:not([data-embed]) { --warp-mk-sticky-offset: calc(var(--wb-h, 57px) + 72px); }
 
   /* devices view */
   .devices { display: none; padding: 32px 24px 120px; background: var(--warp-color-surface-sunken); min-block-size: 100vh; box-sizing: border-box; }
@@ -162,10 +163,11 @@
 </svg>
 
 <!-- ============================ specimen settings bar (01-foundations §13) ============================ -->
-<header data-specimen-bar data-spec data-label="marketing v0.2" data-aliases="x:expression">
+<header data-specimen-bar data-spec data-label="marketing v0.3" data-aliases="x:expression">
   <div class="wb-ctl" title="page extra: the accent seed (hue · chroma)"><span id="wb-l-accent"><span class="wb-vh">Accent</span><span aria-hidden="true">Accent</span></span><div class="wb-seg wb-swatches" role="radiogroup" aria-labelledby="wb-l-accent" data-ctl="accent"><label><input type="radio" name="accent" value="152-0.115" checked><i style="--c: oklch(0.6 0.13 152)"><span class="wb-vh">Green</span></i></label><label><input type="radio" name="accent" value="258-0.14"><i style="--c: oklch(0.58 0.15 258)"><span class="wb-vh">Blue</span></i></label><label><input type="radio" name="accent" value="300-0.14"><i style="--c: oklch(0.56 0.16 300)"><span class="wb-vh">Violet</span></i></label><label><input type="radio" name="accent" value="45-0.14"><i style="--c: oklch(0.64 0.15 45)"><span class="wb-vh">Orange</span></i></label><label><input type="radio" name="accent" value="260-0.015"><i style="--c: oklch(0.35 0.015 260)"><span class="wb-vh">Ink, near-neutral</span></i></label></div></div>
   <div data-extra="hero" data-label="Hero" data-options="split:Split, centered:Center, stacked:Stack, editorial:Editorial" title="page extra: the hero layout"></div>
   <div data-extra="view" data-label="View" data-options="page:Page, devices:Devices" title="page extra: this page, or the same page in phone, tablet and desktop frames"></div>
+  <div class="wb-ctl" title="page extra: the second marketing specimen"><span><span class="wb-vh">Pages</span><span aria-hidden="true">Pages</span></span><div class="wb-links"><a href="marketing-more.html">More demos: media, backgrounds, text, scroll, sections</a></div></div>
 </header>
 <script src="warp-bar.js"></script>
 
@@ -186,6 +188,7 @@
       <li><a href="#templates">Templates</a></li>
       <li><a href="#store">Store</a></li>
       <li><a href="#faq">FAQ</a></li>
+      <li><a href="marketing-more.html">More</a></li>
     </ul>
     <div data-part="actions">
       <button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" id="pause-all" aria-pressed="false" aria-label="Pause motion" hidden>
@@ -466,10 +469,20 @@
       <div data-part="head" data-reveal>
         <p data-part="eyebrow"><span data-part="index">(06)</span> Launch week</p>
         <h2 data-part="title" id="gallery-title">Posters from the <em>community</em> jam</h2>
-        <p data-part="lede">Tap any poster to open it. Pinch or double-tap to zoom on a phone; use the arrow keys, + and − on a keyboard.</p>
+        <p data-part="lede">Tap any poster to open it. Pinch or double-tap to zoom on a phone; use the arrow keys, + and − on a keyboard. Tick posters to pick several for download.</p>
         <span data-part="rule" data-fx="rule"></span>
       </div>
-      <div data-scope="gallery" id="gallery"></div>
+      <div data-scope="selection-bar" id="gallery-bar" role="group" aria-label="Poster selection">
+        <label data-sweep-trigger><button type="button" data-scope="checkbox" data-part="control" role="checkbox" aria-checked="false" id="sel-all" aria-controls="gallery" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M5 12.5 L9 16.5 L19 6.5"/></svg></button>Select all</label>
+        <p data-part="count" id="sel-count" role="status">No posters selected</p>
+        <div data-part="actions">
+          <button data-scope="button" data-emphasis="soft" data-size="sm" type="button" id="sel-dl" disabled>Download</button>
+          <button data-scope="button" data-emphasis="ghost" data-tone="critical" data-size="sm" type="button" id="sel-del" disabled>Delete</button>
+          <button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" id="sel-clear" hidden>Clear</button>
+        </div>
+        <p data-part="hint" id="sel-hint">Shift-click (or Shift + Space) selects a range. Ctrl or ⌘ + A selects all, Esc clears, Delete removes.</p>
+      </div>
+      <div data-scope="gallery" id="gallery" data-selectable role="group" aria-label="Posters" aria-describedby="sel-hint"></div>
       <div class="two-col" style="margin-top: calc(var(--warp-space-section) * 1.2)">
         <div class="stack">
           <h3 style="margin:0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.3 var(--warp-text-heading-font)">Before and after Tensile</h3>
@@ -671,6 +684,23 @@
           </div>
         </div>
       </div>
+      <section data-scope="reviews" id="review-list" aria-labelledby="rv-title">
+        <div data-part="header">
+          <div><h3 id="rv-title">What buyers say</h3><p data-part="count" id="rv-count" role="status">Showing 4 of 7 sample reviews</p></div>
+          <button data-scope="button" data-emphasis="outline" data-tone="neutral" data-sweep type="button" id="rv-write" aria-haspopup="dialog" aria-controls="review-sheet"><span data-part="sweep-base"></span><span data-part="sweep"></span><svg data-icon aria-hidden="true" focusable="false"><use href="#i-star"/></svg>Write a review</button>
+        </div>
+        <div data-part="tools">
+          <div data-scope="toggle-group" role="radiogroup" aria-label="Filter reviews by rating" id="rv-filter">
+            <button data-scope="toggle" role="radio" aria-checked="true" data-v="all">All</button>
+            <button data-scope="toggle" role="radio" aria-checked="false" data-v="5">5 stars</button>
+            <button data-scope="toggle" role="radio" aria-checked="false" data-v="4">4 stars</button>
+            <button data-scope="toggle" role="radio" aria-checked="false" data-v="low">3 or less</button>
+          </div>
+          <div data-scope="field" style="inline-size: min(100%, 220px)"><div data-part="control" data-sweep data-filled><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="rv-sort">Sort reviews</label><select data-part="input" id="rv-sort" aria-controls="rv-items"><option value="helpful">Most helpful</option><option value="new">Newest</option><option value="high">Highest rated</option><option value="low">Lowest rated</option></select><span data-part="indicator"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-down"/></svg></span></div></div>
+        </div>
+        <ol data-part="list" id="rv-items" aria-labelledby="rv-title"></ol>
+        <button data-part="more" data-scope="button" data-emphasis="soft" type="button" id="rv-more">Show more reviews</button>
+      </section>
     </div>
   </section>
 
@@ -781,7 +811,7 @@
           <p data-part="fine">No tracking pixels. Unsubscribe in one click.</p>
         </div>
         <nav aria-label="Product"><h3>Product</h3><ul><li><a href="#product">Tracing</a></li><li><a href="#product">Gates</a></li><li><a href="#product">Canary</a></li><li><a href="#pricing">Pricing</a></li></ul></nav>
-        <nav aria-label="Company"><h3>Company</h3><ul><li><a href="#top">About</a></li><li><a href="#top">Careers</a></li><li><a href="#top">Changelog</a></li><li><a href="#store">Store</a></li></ul></nav>
+        <nav aria-label="Company"><h3>Company</h3><ul><li><a href="#top">About</a></li><li><a href="marketing-more.html#team">Careers</a></li><li><a href="marketing-more.html#changelog">Changelog</a></li><li><a href="marketing-more.html#blog">Blog</a></li><li><a href="#store">Store</a></li></ul></nav>
         <nav aria-label="Resources"><h3>Resources</h3><ul><li><a href="#top">Docs</a></li><li><a href="#top">SDK</a></li><li><a href="#top">Status</a></li><li><a href="#faq">Security</a></li></ul></nav>
       </div>
       <p data-part="wordmark" aria-hidden="true">Ten<em>sile</em></p>
@@ -838,9 +868,24 @@
   </div>
 </dialog>
 
+<dialog data-scope="sheet" data-side="right" id="review-sheet" aria-labelledby="rs-title" aria-describedby="rs-sub">
+  <div data-part="header"><h2 data-part="title" id="rs-title">Write a review</h2><button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only type="button" aria-label="Close review form" data-close><svg data-icon aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button><p class="muted" id="rs-sub" style="grid-column:1/-1; margin:0; font-size:12px">The Field Kit. Specimen only: nothing is sent.</p></div>
+  <form data-part="body" class="fields" id="rv-form" novalidate>
+    <fieldset data-scope="rating-field" id="rs-rating">
+      <legend>Your rating</legend>
+      <div data-scope="rating" data-part="input" id="rs-stars"></div>
+      <output id="rs-rating-msg" for="rs-stars">Choose from 1 to 5 stars.</output>
+    </fieldset>
+    <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="rs-head">Headline</label><input data-part="input" type="text" id="rs-head" placeholder="Sturdy and roomy" maxlength="80" autocomplete="off"></div></div>
+    <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="rs-body">Your review</label><textarea data-part="input" id="rs-body" rows="3" placeholder="What did you use it for? How has it held up?" aria-describedby="rs-body-msg"></textarea></div><span data-part="message" id="rs-body-msg"></span></div>
+    <div data-scope="field"><div data-part="control" data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span><label data-part="label" for="rs-name">Name shown</label><input data-part="input" type="text" id="rs-name" placeholder="Ada L." autocomplete="name"></div></div>
+  </form>
+  <div data-part="footer"><button data-scope="button" data-emphasis="ghost" data-tone="neutral" type="button" data-close>Cancel</button><button data-scope="button" type="submit" form="rv-form">Post review</button></div>
+</dialog>
+
 <dialog data-scope="sheet" data-side="left" id="menu" aria-labelledby="menu-title">
   <div data-part="header"><h2 data-part="title" id="menu-title">Tensile</h2><button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only type="button" aria-label="Close menu" data-close><svg data-icon aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div>
-  <nav data-part="body" aria-label="Main"><ul class="menu-list"><li><a href="#product">Product</a></li><li><a href="#story">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#templates">Templates</a></li><li><a href="#store">Store</a></li><li><a href="#faq">FAQ</a></li><li><a href="#pricing">Sign in</a></li></ul></nav>
+  <nav data-part="body" aria-label="Main"><ul class="menu-list"><li><a href="#product">Product</a></li><li><a href="#story">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#templates">Templates</a></li><li><a href="#store">Store</a></li><li><a href="#faq">FAQ</a></li><li><a href="marketing-more.html">More demos</a></li><li><a href="#pricing">Sign in</a></li></ul></nav>
 </dialog>
 
 <dialog data-scope="sheet" data-side="bottom" id="mkt-sheet" aria-labelledby="mkt-sheet-t">
@@ -1221,16 +1266,18 @@ $$("#mode-group [data-scope=toggle]").forEach((b) => b.addEventListener("click",
 /* ======================================================================
    8 · Gallery + lightbox with pinch-zoom, pan, swipe, keyboard
    ==================================================================== */
-const POSTERS = ["Trace", "Gate", "Canary", "Weave", "Ship", "Rollback"].map((t, i) => ({ src: poster(i), alt: `Poster ${i + 1}: “${t}”, abstract warp lines and accent threads`, cap: `“${t}” · poster ${i + 1} of 6 from the launch week jam` }));
-$("#gallery").innerHTML = POSTERS.map((p, i) => `<button type="button" data-part="item" data-i="${i}" aria-label="Open ${p.alt}"><img src="${p.src}" alt="" loading="lazy"><span>${p.cap.split(" · ")[0]}</span></button>`).join("");
+const POSTERS = ["Trace", "Gate", "Canary", "Weave", "Ship", "Rollback"].map((t, i) => ({ title: t, n: i + 1, src: poster(i), alt: `Poster ${i + 1}: “${t}”, abstract warp lines and accent threads`, cap: `“${t}” · poster ${i + 1} of 6 from the launch week jam` }));
+let openLightbox = () => {};
 (() => {
-  const dlg = $("#lightbox"), img = $("#lb-img"), stage = $("#lb-stage"); let i = 0, z = 1, px = 0, py = 0;
+  const dlg = $("#lightbox"), img = $("#lb-img"), stage = $("#lb-stage"); let i = 0, z = 1, px = 0, py = 0, POSTERS = [], ret = null;
+  // the viewer takes any list (gallery, review photos) and returns focus to what opened it
+  openLightbox = (list, k, from, label = "Poster viewer") => { POSTERS = list; ret = from; dlg.setAttribute("aria-label", label); show(k); dlg.showModal(); $("#lb-close").focus(); };
+  dlg.addEventListener("close", () => { if (ret?.isConnected) ret.focus(); ret = null; });
   const apply = () => { img.style.setProperty("--z", z); img.style.setProperty("--px", px + "px"); img.style.setProperty("--py", py + "px"); dlg.toggleAttribute("data-zoomed", z > 1.01); };
   const clampPan = () => { const r = img.getBoundingClientRect(), w = r.width / z, h = r.height / z, mx = (w * z - w) / 2 + 40, my = (h * z - h) / 2 + 40; px = Math.max(-mx, Math.min(mx, px)); py = Math.max(-my, Math.min(my, py)); };
   const reset = () => { z = 1; px = py = 0; apply(); };
   const show = (k) => { i = (k + POSTERS.length) % POSTERS.length; const p = POSTERS[i]; img.src = p.src; img.alt = p.alt; $("#lb-cap").textContent = p.cap; $("#lb-count").textContent = `${i + 1} / ${POSTERS.length}`; reset(); };
   const zoomTo = (nz, cx = 0, cy = 0) => { nz = Math.max(1, Math.min(4, nz)); px = cx - (cx - px) * (nz / z); py = cy - (cy - py) * (nz / z); z = nz; if (z === 1) px = py = 0; clampPan(); apply(); };
-  $("#gallery").addEventListener("click", (e) => { const b = e.target.closest("[data-i]"); if (!b) return; show(+b.dataset.i); dlg.showModal(); $("#lb-close").focus(); });
   $("#lb-close").addEventListener("click", () => dlg.close());
   $("#lb-in").addEventListener("click", () => zoomTo(z * 1.5)); $("#lb-out").addEventListener("click", () => zoomTo(z / 1.5));
   $$('[data-part="nav"]', dlg).forEach((b) => b.addEventListener("click", () => show(i + (b.dataset.dir === "next" ? 1 : -1))));
@@ -1265,6 +1312,63 @@ $("#gallery").innerHTML = POSTERS.map((p, i) => `<button type="button" data-part
   };
   stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
 })();
+/* gallery with selection (§5.2 selectable): a signature checkbox per poster, shift-range, select all,
+   a count bar with download and delete (undo in the toast). While anything is selected a click on a
+   poster toggles it instead of opening the viewer. */
+(() => {
+  const G = $("#gallery"), bar = $("#gallery-bar"), all = $("#sel-all"), count = $("#sel-count"), dl = $("#sel-dl"), del = $("#sel-del"), clr = $("#sel-clear");
+  const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M5 12.5 L9 16.5 L19 6.5"/></svg>';
+  let shown = POSTERS.map((_, i) => i); const sel = new Set(); let anchor = null, rangeKey = false;
+  const visible = () => shown.map((i) => POSTERS[i]);
+  function render() {
+    G.innerHTML = shown.map((pi, k) => { const p = POSTERS[pi]; return `<div data-part="item" data-pi="${pi}"><button type="button" data-part="open" data-k="${k}" aria-label="Open ${p.alt}"><img src="${p.src}" alt="" loading="lazy"><span>${p.cap.split(" · ")[0]}</span></button><span data-part="select"><button type="button" data-scope="checkbox" data-part="control" role="checkbox" aria-checked="false" data-sweep data-sel="${pi}" aria-label="Select poster ${p.n}, ${p.title}"><span data-part="sweep-base"></span><span data-part="sweep"></span>${CHECK}</button></span></div>`; }).join("");
+    warpSweep.init(G); sync();
+  }
+  function sync() {
+    for (const s of [...sel]) if (!shown.includes(s)) sel.delete(s);
+    $$('[data-part="item"]', G).forEach((it) => { const on = sel.has(+it.dataset.pi); it.toggleAttribute("data-selected", on); $("[data-sel]", it).setAttribute("aria-checked", String(on)); });
+    const n = sel.size, t = shown.length;
+    G.toggleAttribute("data-selecting", n > 0); bar.toggleAttribute("data-active", n > 0);
+    all.setAttribute("aria-checked", n === 0 ? "false" : n === t ? "true" : "mixed");
+    count.textContent = n ? `${n} of ${t} poster${t === 1 ? "" : "s"} selected` : t ? "No posters selected" : "No posters left";
+    dl.disabled = del.disabled = !n; clr.hidden = !n; all.disabled = !t;
+  }
+  function toggle(pi, range) {
+    if (range && anchor != null && shown.includes(anchor)) {
+      const a = shown.indexOf(anchor), b = shown.indexOf(pi), on = sel.has(anchor);
+      for (const k of shown.slice(Math.min(a, b), Math.max(a, b) + 1)) on ? sel.add(k) : sel.delete(k);
+    } else { sel.has(pi) ? sel.delete(pi) : sel.add(pi); anchor = pi; }
+    sync();
+  }
+  const selectAll = (on) => { shown.forEach((k) => (on ? sel.add(k) : sel.delete(k))); anchor = on ? shown[0] : null; sync(); };
+  G.addEventListener("keydown", (e) => { if (e.key === " " && e.shiftKey && e.target.matches("[data-sel]")) rangeKey = true; });
+  G.addEventListener("click", (e) => {
+    const box = e.target.closest("[data-sel]"), open = e.target.closest('[data-part="open"]');
+    if (box) { toggle(+box.dataset.sel, e.shiftKey || rangeKey); rangeKey = false; return; }
+    if (!open) return;
+    const pi = +open.closest('[data-part="item"]').dataset.pi;
+    if (sel.size || e.shiftKey || e.metaKey || e.ctrlKey) { e.preventDefault(); toggle(pi, e.shiftKey); return; }
+    openLightbox(visible(), +open.dataset.k, open);
+  });
+  const scope = (t) => G.contains(t) || bar.contains(t);
+  document.addEventListener("keydown", (e) => {
+    if (!scope(e.target)) return;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") { e.preventDefault(); selectAll(true); }
+    else if (e.key === "Escape" && sel.size) { e.preventDefault(); selectAll(false); }
+    else if ((e.key === "Delete" || e.key === "Backspace") && sel.size && G.contains(e.target)) { e.preventDefault(); remove(); }
+  });
+  all.addEventListener("click", () => selectAll(all.getAttribute("aria-checked") !== "true"));
+  clr.addEventListener("click", () => { selectAll(false); all.focus(); });
+  dl.addEventListener("click", () => toast(`Preparing ${sel.size} poster${sel.size === 1 ? "" : "s"}`, "A zip of the full-size files. (Specimen: nothing is downloaded.)", "info"));
+  function remove() {
+    const before = [...shown], gone = [...sel], n = gone.length;
+    shown = shown.filter((k) => !sel.has(k)); sel.clear(); anchor = null; render(); all.focus();
+    toast(`${n} poster${n === 1 ? "" : "s"} deleted`, "Specimen: restored on reload.", "neutral", { label: "Undo", run: () => { shown = before; gone.forEach((k) => sel.add(k)); render(); all.focus(); } });
+  }
+  del.addEventListener("click", remove);
+  render();
+})();
+
 // compare slider: a native range input carries keyboard + AT
 (() => { const c = $("#compare"), r = $("input", c); const set = () => { c.style.setProperty("--_pos", r.value + "%"); r.setAttribute("aria-valuetext", `${100 - r.value}% after`); }; r.addEventListener("input", set); set(); })();
 
@@ -1336,16 +1440,93 @@ $("#gallery").innerHTML = POSTERS.map((p, i) => `<button type="button" data-part
   renderCart(); setStep(0);
 })();
 
+/* reviews (§4.2): list with filter and sort, helpful votes, photos into the Lightbox, and the
+   "Write a review" sheet with the 03 Rating input. New reviews arrive at the top as pending. */
+(() => {
+  const list = $("#rv-items"), count = $("#rv-count"), more = $("#rv-more"), sort = $("#rv-sort");
+  const R = [
+    { id: 1, stars: 5, title: "Carries a laptop and a week of groceries", body: "The canvas is properly heavy and the straps don’t dig in. Three months of daily use and the woven label still looks new.", name: "Maya A.", date: "2026-10-12", v: "Ink · M", verified: true, helpful: 24, photos: [["Ink", 0], ["Ink", 2]] },
+    { id: 2, stars: 5, title: "The label is the best part", body: "I bought it for the warp-and-weft label and stayed for the inside pocket. Fits an A5 notebook exactly.", name: "Jonas K.", date: "2026-10-03", v: "Moss · L", verified: true, helpful: 17, photos: [["Moss", 1]] },
+    { id: 3, stars: 4, title: "Great tote, wish it had a zip", body: "Solid build and a good colour. Things can fall out if you tip it over, so a zip or a snap would make it perfect.", name: "Rina S.", date: "2026-09-28", v: "Clay · M", verified: true, helpful: 11, photos: [] },
+    { id: 4, stars: 5, title: "Survived a conference week", body: "Badges, cables, a hoodie and swag from twelve booths. Not a single seam gave.", name: "Luis T.", date: "2026-09-20", v: "Ink · L", verified: false, helpful: 9, photos: [["Ink", 1]] },
+    { id: 5, stars: 3, title: "Runs smaller than I expected", body: "Nice quality, but M is closer to a small. Check the measurements before you order.", name: "Ama O.", date: "2026-09-14", v: "Moss · M", verified: true, helpful: 14, photos: [] },
+    { id: 6, stars: 4, title: "Pin came loose, support was quick", body: "The enamel pin’s back fell off in week one. Support sent two spares the same day.", name: "Priya N.", date: "2026-08-30", v: "Clay · S", verified: true, helpful: 6, photos: [] },
+    { id: 7, stars: 2, title: "Colour isn’t what I saw on screen", body: "Clay looks more orange in person than in the photos. The bag itself is fine.", name: "Sam W.", date: "2026-08-21", v: "Clay · M", verified: true, helpful: 4, photos: [["Clay", 0]] },
+  ];
+  const st = { filter: "all", sort: "helpful", page: 4, voted: new Set() };
+  const LABEL = ["", "Poor", "Fair", "Good", "Very good", "Excellent"];
+  const star = (on) => `<svg aria-hidden="true" focusable="false"${on ? "" : " data-empty"}><use href="#i-star"/></svg>`;
+  const stars = (n) => `<span data-part="stars" role="img" aria-label="${n} out of 5 stars">${[1, 2, 3, 4, 5].map((k) => star(k <= n)).join("")}</span>`;
+  const day = (d) => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const photoSet = (r) => r.photos.map(([c, v], k) => ({ src: tote(c, v), alt: `Photo ${k + 1} from ${r.name}: the tote in ${c}`, cap: `${r.name} · photo ${k + 1} of ${r.photos.length}` }));
+  function render(enterId) {
+    let rows = R.filter((r) => st.filter === "all" || (st.filter === "low" ? r.stars <= 3 : r.stars === +st.filter));
+    rows.sort({ helpful: (a, b) => (!!b.pending - !!a.pending) || b.helpful - a.helpful, new: (a, b) => b.date.localeCompare(a.date), high: (a, b) => b.stars - a.stars || b.helpful - a.helpful, low: (a, b) => a.stars - b.stars || b.helpful - a.helpful }[st.sort]);
+    const page = rows.slice(0, st.page);
+    list.innerHTML = page.map((r) => `<li><article data-scope="review"${r.pending ? " data-pending" : ""}${r.id === enterId ? " data-enter" : ""} aria-labelledby="rv-t-${r.id}">
+      <div data-part="head">${stars(r.stars)}${r.verified ? `<span data-scope="badge" data-tone="positive"><svg data-icon aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Verified purchase</span>` : ""}${r.pending ? `<span data-scope="badge" data-tone="caution">Pending review</span>` : ""}<h4 data-part="title" id="rv-t-${r.id}" tabindex="-1">${r.title}</h4></div>
+      <div data-part="meta"><b style="color:var(--warp-color-text);font-weight:500">${r.name}</b><time datetime="${r.date}">${day(r.date)}</time>${r.v ? `<span>${r.v}</span>` : ""}</div>
+      <p data-part="body">${r.body}</p>
+      ${r.photos.length ? `<ul data-part="photos" aria-label="Photos from ${r.name}">${r.photos.map(([c, v], k) => `<li><button type="button" data-photo="${r.id}:${k}" aria-label="Open photo ${k + 1} of ${r.photos.length} from ${r.name}"><img src="${tote(c, v)}" alt=""></button></li>`).join("")}</ul>` : ""}
+      <div data-part="foot"><span>Was this helpful?</span><button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" data-helpful="${r.id}" aria-pressed="${st.voted.has(r.id)}">Yes · ${r.helpful + (st.voted.has(r.id) ? 1 : 0)}</button><button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button" data-report="${r.id}">Report</button></div>
+    </article></li>`).join("");
+    count.textContent = `Showing ${page.length} of ${rows.length} ${st.filter === "all" ? "" : "matching "}sample review${rows.length === 1 ? "" : "s"}`;
+    more.hidden = page.length >= rows.length;
+  }
+  radioGroup($("#rv-filter"), (v) => { st.filter = v; st.page = 4; render(); });
+  sort.addEventListener("change", () => { st.sort = sort.value; render(); });
+  more.addEventListener("click", () => { const before = list.children.length; st.page += 3; render(); $("[data-part=title]", list.children[before])?.focus(); });
+  list.addEventListener("click", (e) => {
+    const h = e.target.closest("[data-helpful]"), ph = e.target.closest("[data-photo]"), rp = e.target.closest("[data-report]");
+    if (h) { const id = +h.dataset.helpful; st.voted.has(id) ? st.voted.delete(id) : st.voted.add(id); const r = R.find((x) => x.id === id); h.setAttribute("aria-pressed", String(st.voted.has(id))); h.textContent = `Yes · ${r.helpful + (st.voted.has(id) ? 1 : 0)}`; }
+    if (ph) { const [id, k] = ph.dataset.photo.split(":").map(Number), r = R.find((x) => x.id === id); openLightbox(photoSet(r), k, ph, `Photos from ${r.name}`); }
+    if (rp) toast("Thanks, we’ll take a look", "Specimen: nothing was reported.", "info");
+  });
+  render();
+
+  // write a review: a Sheet (right ≥ 600px, bottom on phones) with the Rating input, signature fields, validation
+  const sheet = $("#review-sheet"), form = $("#rv-form"), starsEl = $("#rs-stars"), msg = $("#rs-rating-msg"), fs = $("#rs-rating");
+  starsEl.innerHTML = [1, 2, 3, 4, 5].map((k) => `<label data-v="${k}" style="--i:${k - 1}"><input type="radio" name="rv-stars" value="${k}"><svg aria-hidden="true" focusable="false"><use href="#i-star"/></svg><span data-part="sr">${k} star${k > 1 ? "s" : ""}, ${LABEL[k]}</span></label>`).join("");
+  const labels = $$("label", starsEl); let value = 0;
+  const paint = (upto, attr) => labels.forEach((l) => l.toggleAttribute(attr, +l.dataset.v <= upto));
+  starsEl.addEventListener("change", (e) => { value = +e.target.value; paint(value, "data-on"); fs.removeAttribute("data-invalid"); msg.textContent = `${value} of 5: ${LABEL[value]}`; });
+  starsEl.addEventListener("pointerover", (e) => { const l = e.target.closest("label"); if (l && e.pointerType === "mouse") paint(+l.dataset.v, "data-preview"); });
+  starsEl.addEventListener("pointerleave", () => paint(0, "data-preview"));
+  $$('[data-scope="field"]', form).forEach(floatingLabel);
+  const setInvalid = (field, bad, text) => { field.toggleAttribute("data-invalid", bad); $('[data-part="control"]', field).toggleAttribute("data-invalid", bad); $('[data-part="input"]', field).setAttribute("aria-invalid", String(bad)); const m = $('[data-part="message"]', field); if (m) m.textContent = bad ? text : ""; };
+  const reset = () => { form.reset(); value = 0; paint(0, "data-on"); fs.removeAttribute("data-invalid"); msg.textContent = "Choose from 1 to 5 stars."; $$('[data-scope="field"]', form).forEach((f) => { setInvalid(f, false); $('[data-part="control"]', f).removeAttribute("data-filled"); }); };
+  $("#rv-write").addEventListener("click", () => { reset(); sheet.dataset.side = innerWidth < 600 ? "bottom" : "right"; sheet.showModal(); $("input", starsEl).focus(); });
+  $$("[data-close]", sheet).forEach((b) => b.addEventListener("click", () => sheet.close()));
+  sheet.addEventListener("click", (e) => e.target === sheet && sheet.close());
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const body = $("#rs-body"), bf = body.closest('[data-scope="field"]'), short = body.value.trim().length < 20;
+    fs.toggleAttribute("data-invalid", !value); if (!value) msg.textContent = "Pick a rating from 1 to 5 stars.";
+    setInvalid(bf, short, "Write at least 20 characters, so other buyers learn something.");
+    if (!value) { $("input", starsEl).focus(); return; }
+    if (short) { body.focus(); return; }
+    const r = { id: Date.now(), stars: value, title: $("#rs-head").value.trim() || LABEL[value], body: body.value.trim(), name: $("#rs-name").value.trim() || "You", date: new Date().toISOString().slice(0, 10), v: "", verified: false, pending: true, helpful: 0, photos: [] };
+    R.unshift(r); st.filter = "all"; st.sort = "helpful"; sort.value = "helpful"; $$("#rv-filter [data-scope=toggle]").forEach((b) => { const on = b.dataset.v === "all"; b.setAttribute("aria-checked", String(on)); b.tabIndex = on ? 0 : -1; });
+    render(r.id); sheet.close();
+    toast("Thanks for the review", "It shows as pending until a quick check. (Specimen: nothing was sent.)");
+  });
+})();
+
 (() => { const m = $("#menu"); $("#menu-btn").addEventListener("click", () => m.showModal()); $("[data-close]", m).addEventListener("click", () => m.close()); m.addEventListener("click", (e) => (e.target === m || e.target.closest("a")) && m.close()); })();
 
 /* ======================================================================
    11 · Confetti (S) with its governed substitute (check + toast)
    ==================================================================== */
-function toast(title, desc, tone = "positive") {
+function toast(title, desc, tone = "positive", action) {
   const li = document.createElement("li"); li.dataset.scope = "toast"; li.dataset.part = "root"; li.dataset.tone = tone; li.setAttribute("role", "status");
-  li.innerHTML = `<svg data-icon aria-hidden="true" focusable="false" data-part="icon"><use href="#i-check"/></svg><span data-part="title">${title}</span>${desc ? `<span data-part="description">${desc}</span>` : ""}`;
+  li.innerHTML = `<svg data-icon aria-hidden="true" focusable="false" data-part="icon"><use href="#i-check"/></svg><span data-part="title">${title}</span>${desc ? `<span data-part="description">${desc}</span>` : ""}${action ? `<span data-part="actions"><button data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" type="button">${action.label}</button></span>` : ""}`;
   const region = $("#toasts"); region.replaceChildren(li);
-  setTimeout(() => { li.dataset.state = "closed"; setTimeout(() => li.remove(), 400); }, 4200);
+  const close = () => { li.dataset.state = "closed"; setTimeout(() => li.remove(), 400); };
+  if (action) $("button", li).addEventListener("click", () => { action.run(); close(); });
+  // an undo gets longer (8s) and holds while hovered or focused
+  let t = setTimeout(close, action ? 8000 : 4200);
+  li.addEventListener("pointerenter", () => clearTimeout(t)); li.addEventListener("focusin", () => clearTimeout(t));
+  li.addEventListener("pointerleave", () => { if (!li.contains(document.activeElement)) t = setTimeout(close, 3000); });
 }
 function colorOf(v) { const p = document.createElement("i"); p.style.color = `var(${v})`; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c; }
 function confetti(fromEl) {

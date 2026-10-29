@@ -289,7 +289,8 @@
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
 }
 :where([data-scope="toggle-group"]) {
-  display: inline-flex; gap: 2px; padding: 2px; border: var(--warp-border-hairline) solid var(--warp-color-border);
+  display: inline-flex; flex-wrap: wrap; max-inline-size: 100%; gap: 2px; padding: 2px;
+  border: var(--warp-border-hairline) solid var(--warp-color-border);
   border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken);
 }
 :where([data-scope="toggle-group"] [data-scope="toggle"]:is([aria-pressed="true"], [aria-checked="true"])) { --_on: 0; }

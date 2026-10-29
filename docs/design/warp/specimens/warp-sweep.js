@@ -177,12 +177,20 @@
   // Returns the letter spans, for the page's per-character delays.
   const ESC = { "&": "&amp;", '"': "&quot;", "<": "&lt;", ">": "&gt;" };
   const esc = (c) => c.replace(/[&"<>]/g, (m) => ESC[m]);
+  // One span per grapheme cluster (emoji, combining marks, Indic conjuncts stay whole), or per word in joining
+  // scripts, where splitting letters would break the joins. Code points are the fallback without Intl.Segmenter.
+  const JOINING = /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Nko}\p{Script=Mongolian}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}\p{Script=Mandaic}]/u;
+  const segments = (text) => {
+    if (typeof Intl === "undefined" || !Intl.Segmenter) return [...text];
+    const seg = new Intl.Segmenter(undefined, { granularity: JOINING.test(text) ? "word" : "grapheme" });
+    return Array.from(seg.segment(text), (s) => s.segment);
+  };
   function label(el) {
     if (!el) return [];
     if (!el.querySelector(':scope > [data-part="label-chars"]')) {
       const named = el.querySelector(':scope > [data-part="label-text"]');
       const text = (named ? named.textContent : el.textContent).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
-      el.innerHTML = `<span data-part="label-text">${esc(text)}</span><span data-part="label-chars" aria-hidden="true">${[...text].map((c) => `<span data-char data-c="${esc(c)}"></span>`).join("")}</span>`;
+      el.innerHTML = `<span data-part="label-text">${esc(text)}</span><span data-part="label-chars" aria-hidden="true">${segments(text).map((c) => `<span data-char data-c="${esc(c)}"></span>`).join("")}</span>`;
     }
     return el.querySelectorAll('[data-part="label-chars"] > [data-char]');
   }

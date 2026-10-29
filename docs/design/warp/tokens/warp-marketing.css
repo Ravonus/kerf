@@ -1,6 +1,6 @@
 /* =============================================================================
    warp · marketing, commerce, media + the expressive-effects governor
-   v0.1 · 2026-10-28 · Spec: ../08-marketing-and-expressive.md · Tokens: ./warp.css
+   v0.3 · 2026-10-28 · Spec: ../08-marketing-and-expressive.md · Tokens: ./warp.css
    Reuses by name: Button, Toggle/ToggleGroup, Chip, Badge, Surface, Accordion,
    Sheet, Dialog, Toast, Steps (warp-components.css); Field (warp.css signature).
 
@@ -43,6 +43,8 @@
     --warp-mk-ink-3: light-dark(oklch(0.45 0.15 calc(var(--_mh) - 74)), oklch(0.82 0.11 calc(var(--_mh) - 74)));
     --warp-mk-glow: light-dark(oklch(0.8 0.12 var(--_mh) / 0.55), oklch(0.7 0.16 var(--_mh) / 0.35));
     --warp-mk-title-size: calc(var(--warp-text-title-size) * var(--warp-mk-title-k));
+    /* where sticky marketing parts (selection bar, changelog dates) dock: under the landing's 60px top bar */
+    --warp-mk-sticky-offset: 72px;
   }
 }
 
@@ -52,7 +54,7 @@
    0 · FX states (the governor writes data-fx-state; CSS reads only that)
    ------------------------------------------------------------------------ */
 :where(:root[data-fx-paused]) :where([data-fx-state="on"], [data-fx-state="on"] *) { animation-play-state: paused !important; }
-:where([data-fx-offscreen]), :where([data-fx-offscreen] *) { animation-play-state: paused; }
+:where([data-fx-offscreen]), :where([data-fx-offscreen] *) { animation-play-state: paused !important; }
 
 /* visually hidden text (the real string behind scramble / typewriter / count-up) */
 :where([data-scope="landing"] [data-scope="button"]) { box-sizing: border-box; }
@@ -404,16 +406,16 @@
    they rest on the hairline (the sweep-base IS the border, so there is no box-in-box), and the sweep
    draws by default only where the dial reaches surfaces (vivid, or data-flair="sweep"). Below that the
    hover is the hairline darkening to border-strong plus one elevation step: present, never a sweep. */
-:where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"]):where([data-sweep]) {
+:where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"], [data-scope="post"], [data-scope="motion-card"]):where([data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
   --warp-color-sweep-base: var(--warp-color-border);
   border-color: transparent; background-clip: padding-box;
   transition: box-shadow var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"]):where([data-sweep]) > [data-part="sweep-base"] {
+:where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"], [data-scope="post"], [data-scope="motion-card"]):where([data-sweep]) > [data-part="sweep-base"] {
   transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), color var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="tile"], [data-scope="plan"], [data-scope="listing"]):where([data-sweep]):is(:hover, :focus-within) {
+:where([data-scope="tile"], [data-scope="plan"], [data-scope="listing"], [data-scope="post"], [data-scope="motion-card"]):where([data-sweep]):is(:hover, :focus-within) {
   --warp-color-sweep-base: var(--warp-color-border-strong); box-shadow: var(--warp-elevation-2);
 }
 
@@ -569,21 +571,61 @@
 /* ---------------------------------------------------------------------------
    9 · Gallery, lightbox (pinch-zoom), compare slider
    ------------------------------------------------------------------------ */
+/* gallery: an item is a frame holding the open button (the image) and, when selectable, a select checkbox.
+   The two never nest: <div item> › <button open> + <span select> › <button checkbox>. */
 :where([data-scope="gallery"]) { display: grid; gap: var(--warp-space-related); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @container block (min-width: 760px) { :where([data-scope="gallery"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } :where([data-scope="gallery"] > :first-child) { grid-column: span 2; grid-row: span 2; } }
 :where([data-scope="gallery"] [data-part="item"]) {
-  position: relative; display: block; padding: 0; border: 0; overflow: hidden; cursor: zoom-in; aspect-ratio: 1;
+  position: relative; display: block; padding: 0; border: 0; overflow: hidden; aspect-ratio: 1;
   border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-sunken);
 }
-:where([data-scope="gallery"] [data-part="item"] img) { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; transition: transform calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-out); }
-:where([data-expression="vivid"] [data-scope="gallery"] [data-part="item"]:hover img) { transform: scale(calc(1 + 0.03 * var(--warp-motion-scale))); }
-:where([data-scope="gallery"] [data-part="item"] > span) {
+:where([data-scope="gallery"] [data-part="open"]) { all: unset; position: absolute; inset: 0; display: block; cursor: zoom-in; border-radius: inherit; }
+:where([data-scope="gallery"] [data-part="open"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1 - 1px); }
+:where([data-scope="gallery"] [data-part="item"] img) { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; transition: transform calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-out), scale calc(var(--warp-duration-base) * var(--warp-motion-scale)) var(--warp-ease-out); }
+:where([data-expression="vivid"] [data-scope="gallery"] [data-part="item"]:not([data-selected]):hover img) { transform: scale(calc(1 + 0.03 * var(--warp-motion-scale))); }
+:where([data-scope="gallery"] [data-part="open"] > span) {
   position: absolute; inset: auto 8px 8px 8px; padding: 4px 8px; border-radius: var(--warp-radius-control); justify-self: start;
   background: color-mix(in oklab, var(--warp-color-surface-overlay) 88%, transparent); color: var(--warp-color-text); font-size: 12px; text-align: start;
   inline-size: fit-content; opacity: 0; translate: 0 calc(4px * var(--warp-motion-scale)); transition: opacity var(--warp-duration-fast), translate var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="gallery"] [data-part="item"]:is(:hover, :focus-visible) > span) { opacity: 1; translate: 0 0; }
-@media (pointer: coarse) { :where([data-scope="gallery"] [data-part="item"] > span) { opacity: 1; translate: 0 0; } }
+:where([data-scope="gallery"] [data-part="item"]:is(:hover, :focus-within) [data-part="open"] > span) { opacity: 1; translate: 0 0; }
+@media (pointer: coarse) { :where([data-scope="gallery"] [data-part="open"] > span) { opacity: 1; translate: 0 0; } }
+
+/* selectable (§5.2): a signature checkbox per item, on a chip so it reads over any image. It shows on
+   hover and focus, always once anything is selected, and always on touch. Selected = an accent ring and
+   (balanced+) the image steps back 6% (C, × motion-scale); quiet keeps the ring only. */
+:where([data-scope="gallery"] [data-part="select"]) {
+  position: absolute; z-index: 2; inset-block-start: 8px; inset-inline-start: 8px; display: grid; place-items: center;
+  inline-size: 32px; block-size: 32px; border-radius: var(--warp-radius-control);
+  background: color-mix(in oklab, var(--warp-color-surface-overlay) 92%, transparent); box-shadow: var(--warp-elevation-1);
+  opacity: 0; transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="gallery"] [data-part="select"] [data-scope="checkbox"]) { background: var(--warp-color-surface-raised); }   /* keeps the standard control base (3:1) */
+:where([data-scope="gallery"] [data-part="item"]:is(:hover, :focus-within, [data-selected]) [data-part="select"], [data-scope="gallery"][data-selecting] [data-part="select"]) { opacity: 1; }
+@media (pointer: coarse) { :where([data-scope="gallery"] [data-part="select"]) { opacity: 1; } }
+:where([data-scope="gallery"][data-selecting] [data-part="open"]) { cursor: pointer; }
+:where([data-scope="gallery"] [data-part="item"])::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 0 transparent; transition: box-shadow var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="gallery"] [data-part="item"][data-selected])::after { box-shadow: inset 0 0 0 calc(var(--warp-border-emphasis) + 1px) var(--warp-color-accent-solid); background: color-mix(in oklab, var(--warp-color-accent-solid) 10%, transparent); }
+:where([data-scope="gallery"] [data-part="item"][data-selected] img) { scale: calc(1 - 0.06 * var(--warp-motion-scale) * min(1, var(--warp-fx-level))); border-radius: calc(var(--warp-radius-surface) - 2px); }
+:where([data-scope="selection-bar"]) {
+  position: sticky; inset-block-start: var(--warp-mk-sticky-offset, 72px); z-index: 4;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related) var(--warp-space-group);
+  margin-block-end: var(--warp-space-related); padding: 6px 8px 6px 12px; min-block-size: var(--warp-control-md);
+  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  transition: background-color var(--warp-duration-base) var(--warp-ease-out), border-color var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="selection-bar"][data-active]) { background: var(--warp-color-accent-soft); border-color: var(--warp-color-accent-border); box-shadow: var(--warp-elevation-2); }
+:where([data-scope="selection-bar"] > label) { display: inline-flex; align-items: center; gap: 10px; min-block-size: var(--warp-hit-min); cursor: pointer; font-weight: 500; font-size: var(--warp-text-caption-size); }
+:where([data-scope="selection-bar"] [data-part="count"]) { margin: 0 auto 0 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); font-variant-numeric: var(--warp-text-numeric-variant); }
+:where([data-scope="selection-bar"][data-active] [data-part="count"]) { color: var(--warp-color-accent-text); font-weight: 500; }
+:where([data-scope="selection-bar"] [data-part="actions"]) { display: flex; flex-wrap: wrap; gap: 4px; }
+:where([data-scope="selection-bar"] [data-part="hint"]) { flex-basis: 100%; margin: 0; color: var(--warp-color-text-subtle); font-size: 12px; }
+@container block (min-width: 760px) { :where([data-scope="selection-bar"] [data-part="hint"]) { flex-basis: auto; order: 9; } }
+/* mixed state of the select-all box: a dash instead of the check */
+:where([data-scope="checkbox"][data-part="control"][aria-checked="mixed"] path) { stroke-dashoffset: 0; stroke-dasharray: none; d: path("M6 12 H18"); }
 
 :where(dialog[data-scope="lightbox"]) {
   position: fixed; inset: 0; inline-size: 100vw; block-size: 100dvh; max-inline-size: none; max-block-size: none; margin: 0; padding: 0; border: 0;
@@ -657,7 +699,7 @@
 :where([data-scope="plan"][data-featured]) { border-color: var(--warp-color-accent-border); box-shadow: 0 0 0 var(--warp-border-emphasis) var(--warp-color-accent-solid), var(--warp-elevation-2); }
 :where([data-expression="vivid"] [data-scope="plan"][data-featured]) { background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); box-shadow: none; border-color: transparent; }
 :where([data-expression="vivid"] [data-scope="plan"][data-featured] :is([data-part="desc"], [data-part="features"] li, [data-part="per"])) { color: color-mix(in oklab, var(--warp-color-on-inverse) 72%, transparent); }
-:where([data-scope="plan"] [data-part="name"]) { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: var(--warp-text-heading-size); font-weight: var(--warp-text-heading-weight); font-family: var(--warp-text-heading-font); }
+:where([data-scope="plan"] [data-part="name"]) { --warp-trim-k: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: var(--warp-text-heading-size); font-weight: var(--warp-text-heading-weight); font-family: var(--warp-text-heading-font); }
 :where([data-scope="plan"] [data-part="desc"]) { margin: 0; color: var(--warp-color-text-subtle); min-block-size: 3em; }
 :where([data-scope="plan"] [data-part="price"]) { display: flex; align-items: baseline; gap: 6px; }
 :where([data-scope="plan"] [data-part="amount"]) {
@@ -999,11 +1041,12 @@
 :where([data-scope="market"] [data-part="rail"] fieldset) { display: grid; gap: var(--warp-space-related); margin: 0; padding: 0; border: 0; min-inline-size: 0; }
 :where([data-scope="market"] [data-part="rail"] legend) { padding: 0; margin-block-end: var(--warp-space-related); font: 500 var(--warp-text-eyebrow-size)/1.2 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
 :where([data-scope="market"] [data-part="chips"]) { display: flex; flex-wrap: wrap; gap: 6px; }
-:where([data-scope="market"] select[data-part="input"]) { appearance: none; cursor: pointer; padding-inline-end: 34px; }
-:where([data-scope="market"] [data-part="control"] > [data-part="indicator"]) {
+/* a select in a landing Field (market sort, review sort, contact topic): chevron indicator, no native arrow */
+:where([data-scope="landing"] [data-scope="field"] select[data-part="input"]) { appearance: none; cursor: pointer; padding-inline-end: 34px; }
+:where([data-scope="landing"] [data-scope="field"] [data-part="control"] > [data-part="indicator"]) {
   position: absolute; z-index: 3; inset-inline-end: 12px; inset-block-start: 50%; translate: 0 -50%; display: grid; pointer-events: none; color: var(--warp-color-text-subtle);
 }
-:where([data-scope="market"] [data-part="indicator"] svg) { inline-size: 16px; block-size: 16px; }
+:where([data-scope="landing"] [data-scope="field"] [data-part="indicator"] svg) { inline-size: 16px; block-size: 16px; }
 :where([data-scope="chip"][data-sweep]) { border-color: transparent; }
 :where([data-scope="market"] [data-part="results"]) { display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
 :where([data-scope="market"] [data-part="toolbar"]) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--warp-space-related); min-block-size: var(--warp-control-md); }
@@ -1045,6 +1088,678 @@
 :where([data-part="grid"][data-fx-state="on"] [data-scope="listing"][data-enter]) { animation: mk-list-in var(--warp-duration-slow) var(--warp-ease-out) var(--_d, 0ms) both; }
 :where([data-part="grid"][data-fx-state="still"] [data-scope="listing"][data-enter]) { animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out) both; }
 @keyframes mk-list-in { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 2); } }
+
+/* ---------------------------------------------------------------------------
+   21 · Media players (§5.3). Custom chrome over a native <video> / <audio>: the element
+   is the clock and the accessibility of the media itself; timeline() turns it into boxes
+   (currentTime, playing, cue). Nothing runs while paused: the frame callback (rVFC, rAF
+   for audio) is scheduled only between play and pause. Progress is a scaleX, never a width.
+   ------------------------------------------------------------------------ */
+:where([data-scope="player"]) {
+  --_mh: var(--warp-seed-accent-h);
+  --_hi: oklch(0.82 0.13 var(--_mh));            /* accent that reads on the dark chrome (≥ 3:1 on 0.16) */
+  --_p: 0; --_b: 0; --_h: 0;                      /* played, buffered, hover position: 0…1 */
+  position: relative; container: player / inline-size; box-sizing: border-box;
+}
+/* video: a dark stage at every stop and in both themes (like the lightbox), so contrast never depends on the frame */
+:where([data-scope="player"][data-kind="video"]) {
+  display: grid; overflow: hidden; isolation: isolate; color: oklch(0.97 0 0);
+  background: var(--_dominant, oklch(0.24 0.03 var(--_mh)));
+  border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: var(--warp-radius-surface);
+  box-shadow: var(--warp-elevation-2);
+}
+:where([data-scope="player"][data-kind="video"] > [data-part="stage"]) { position: relative; display: grid; aspect-ratio: 16 / 9; min-block-size: 0; }
+:where([data-scope="player"][data-kind="video"] video) { grid-area: 1 / 1; inline-size: 100%; block-size: 100%; object-fit: cover; display: block; background: transparent; }
+:where([data-scope="player"] video)::cue {
+  font: 500 clamp(13px, 3.4cqi, 20px)/1.35 var(--warp-font-sans); color: oklch(0.98 0 0); background: oklch(0.08 0 0 / 0.82);
+}
+:where([data-expression="vivid"] [data-scope="player"] video)::cue { font-family: var(--warp-font-mono); letter-spacing: 0.02em; }
+:where([data-scope="player"] [data-part="big-play"]) {
+  grid-area: 1 / 1; place-self: center; z-index: 2; display: grid; place-items: center; inline-size: 72px; block-size: 72px; padding: 0;
+  border-radius: var(--warp-radius-round); border: 1px solid oklch(1 0 0 / 0.4); background: oklch(0.1 0 0 / 0.66); color: inherit; cursor: pointer;
+  transition: opacity var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-pop);
+}
+:where([data-expression="vivid"] [data-scope="player"] [data-part="big-play"]) { border-radius: var(--warp-radius-mark); inline-size: 84px; }
+:where([data-scope="player"] [data-part="big-play"] svg) { inline-size: 28px; block-size: 28px; fill: currentColor; }
+:where([data-scope="player"] [data-part="big-play"]:hover) { background: oklch(0.1 0 0 / 0.82); }
+:where([data-scope="player"]:not([data-state="idle"]) [data-part="big-play"]) { opacity: 0; scale: calc(1 - 0.1 * var(--warp-motion-scale)); pointer-events: none; }
+:where([data-scope="player"] [data-part="badge-row"]) {
+  grid-area: 1 / 1; align-self: start; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; pointer-events: none;
+}
+:where([data-scope="player"] [data-part="chip"]) {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--warp-radius-control);
+  background: oklch(0.1 0 0 / 0.72); font: 500 11px/1.2 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase;
+}
+:where([data-scope="player"] [data-part="chip"][data-cue]) { opacity: 0; translate: 0 calc(-4px * var(--warp-motion-scale)); transition: opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="player"]:not([data-state="idle"]) [data-part="chip"][data-cue]) { opacity: 1; translate: 0 0; }
+:where([data-scope="player"]:not([data-state="idle"]) [data-part="chip"][data-dur]) { display: none; }
+
+/* the bar: scrubber on its own row, buttons under it; a solid-enough scrim keeps ink ≥ 4.5:1 over a white frame */
+:where([data-scope="player"][data-kind="video"] > [data-part="controls"]) {
+  position: absolute; inset: auto 0 0 0; z-index: 3;
+  display: grid; align-items: center; column-gap: 2px;
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto auto auto auto;
+  grid-template-areas: "scrub scrub scrub scrub scrub scrub scrub scrub" "play back mute time cc speed pip full";
+  padding: 18px 6px 6px; background: linear-gradient(to top, oklch(0.08 0 0 / 0.92) 0, oklch(0.08 0 0 / 0.76) 62%, transparent);
+  transition: opacity var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="player"][data-idle] > [data-part="controls"]) { opacity: 0; }
+:where([data-scope="player"][data-idle] > [data-part="stage"]) { cursor: none; }
+:where([data-scope="player"] [data-part="controls"] button, [data-scope="player"] [data-part="tool"]) {
+  all: unset; box-sizing: border-box; position: relative; display: inline-grid; place-items: center; cursor: pointer;
+  min-inline-size: max(40px, var(--warp-target-min)); block-size: max(40px, var(--warp-target-min)); padding-inline: 8px;
+  border-radius: var(--warp-radius-control); color: inherit; font: 500 12px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="player"] [data-part="controls"] button:hover) { background: oklch(1 0 0 / 0.12); }
+:where([data-scope="player"] :is(button, a, input):focus-visible) { outline: var(--warp-focus-width) solid var(--_hi); outline-offset: -2px; }
+:where([data-scope="player"] [data-part="controls"] button svg[data-icon]) { inline-size: 18px; block-size: 18px; }
+:where([data-scope="player"] [data-part="controls"] button[aria-pressed="true"])::after {
+  content: ""; position: absolute; inset: auto 10px 5px; block-size: var(--warp-border-emphasis); background: var(--_hi); border-radius: 1px;
+}
+:where([data-scope="player"] [data-part="play"]) { grid-area: play; }
+:where([data-scope="player"] [data-part="back"]) { grid-area: back; }
+:where([data-scope="player"] [data-part="mute"]) { grid-area: mute; }
+:where([data-scope="player"] [data-part="cc"]) { grid-area: cc; }
+:where([data-scope="player"] [data-part="speed"]) { grid-area: speed; }
+:where([data-scope="player"] [data-part="pip"]) { grid-area: pip; }
+:where([data-scope="player"] [data-part="full"]) { grid-area: full; }
+:where([data-scope="player"] [data-part="time"]) {
+  grid-area: time; justify-self: start; padding-inline: 8px; white-space: nowrap;
+  font: 500 12px/1 var(--warp-text-numeric-font, var(--warp-font-mono)); font-variant-numeric: tabular-nums;
+}
+:where([data-expression="vivid"] [data-scope="player"] [data-part="time"]) { font-family: var(--warp-font-mono); letter-spacing: 0.06em; }
+@container player (max-width: 420px) {
+  :where([data-scope="player"] [data-part="pip"], [data-scope="player"] [data-part="back"]) { display: none; }
+  :where([data-scope="player"][data-kind="video"] [data-part="time"] [data-part="total"]) { display: none; }
+}
+
+/* scrubber: the Slider's anatomy (03) without the value sweep, because the value is driven, not chosen.
+   A transparent native range on top carries drag, keys and aria-valuetext. */
+:where([data-scope="player"] [data-part="scrubber"]) { grid-area: scrub; position: relative; display: grid; align-items: center; block-size: 22px; margin-inline: 8px; touch-action: none; }
+:where([data-scope="player"] [data-part="rail"]) { position: relative; block-size: 4px; border-radius: 999px; background: oklch(1 0 0 / 0.24); overflow: hidden; }
+:where([data-expression="vivid"] [data-scope="player"] [data-part="rail"]) { border-radius: 0; }
+:where([data-scope="player"] [data-part="rail"] > i) { position: absolute; inset: 0; transform-origin: left center; }
+:where([dir="rtl"] [data-scope="player"] [data-part="rail"] > i) { transform-origin: right center; }
+:where([data-scope="player"] [data-part="buffered"]) { background: oklch(1 0 0 / 0.36); transform: scaleX(var(--_b)); }
+:where([data-scope="player"] [data-part="played"]) { background: var(--_hi); transform: scaleX(var(--_p)); }
+:where([data-scope="player"] [data-part="hover"]) { background: oklch(1 0 0 / 0.3); transform: scaleX(var(--_h)); opacity: 0; }
+:where([data-scope="player"] [data-part="scrubber"]:hover [data-part="hover"]) { opacity: 1; }
+/* chapter ticks: a 2px gap in the rail at every cue (the timeline's cues are the chapters) */
+:where([data-scope="player"] [data-part="ticks"]) { position: absolute; inset: 0; pointer-events: none; }
+:where([data-scope="player"] [data-part="ticks"] > i) { position: absolute; inset-block: 0; inset-inline-start: var(--x); inline-size: 2px; margin-inline-start: -1px; background: oklch(0.08 0 0 / 0.95); }
+:where([data-scope="player"][data-kind="audio"] [data-part="ticks"] > i) { background: var(--warp-color-surface-raised); }
+:where([data-scope="player"] [data-part="thumb-rail"]) { position: absolute; inset: 0; pointer-events: none; translate: calc(var(--_p) * 100%) 0; }
+:where([data-scope="player"] [data-part="thumb"]) {
+  position: absolute; inset-block-start: 50%; inset-inline-start: 0; inline-size: 14px; block-size: 14px; margin: -7px 0 0 -7px;
+  border-radius: var(--warp-radius-round); background: var(--_hi); box-shadow: 0 0 0 2px oklch(0.08 0 0 / 0.6);
+  scale: 0; transition: scale var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-expression="vivid"] [data-scope="player"] [data-part="thumb"]) { border-radius: 1px; inline-size: 4px; margin-inline-start: -2px; block-size: 16px; margin-block-start: -8px; }
+:where([data-scope="player"] [data-part="scrubber"]:is(:hover, :focus-within) [data-part="thumb"]) { scale: 1; }
+:where([data-scope="player"] [data-part="scrubber"] > input) { position: absolute; inset: -6px 0; inline-size: 100%; block-size: calc(100% + 12px); margin: 0; opacity: 0; cursor: pointer; }
+:where([data-scope="player"] [data-part="scrubber"]:has(> input:focus-visible) [data-part="rail"]) { outline: var(--warp-focus-width) solid var(--_hi); outline-offset: 4px; overflow: visible; }
+:where([data-scope="player"] [data-part="preview"]) {
+  position: absolute; inset-block-end: calc(100% + 6px); inset-inline-start: 0; translate: calc(var(--_hx, 0) * 1px - 50%) 0; pointer-events: none;
+  padding: 4px 8px; border-radius: var(--warp-radius-control); background: oklch(0.08 0 0 / 0.92); color: oklch(0.97 0 0); white-space: nowrap;
+  font: 500 11px/1.2 var(--warp-font-mono); opacity: 0; transition: opacity var(--warp-duration-fast);
+}
+@media (pointer: fine) { :where([data-scope="player"] [data-part="scrubber"]:hover [data-part="preview"]) { opacity: 1; } }
+
+:where([data-scope="player"]:fullscreen) { border: 0; border-radius: 0; display: grid; align-content: center; background: oklch(0 0 0); }
+:where([data-scope="player"]:fullscreen > [data-part="stage"]) { aspect-ratio: auto; block-size: 100dvh; }
+:where([data-scope="player"]:fullscreen video) { object-fit: contain; }
+
+/* the chapter list and the timeline readout sit under the player, on the page */
+:where([data-scope="player-notes"]) { display: grid; gap: var(--warp-space-related); margin-block-start: var(--warp-space-group); }
+:where([data-scope="player-notes"] [data-part="chapters"]) { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); }
+:where([data-scope="player-notes"] [data-part="chapters"] button) {
+  all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; inline-size: 100%; min-block-size: max(40px, var(--warp-hit-min)); padding: 6px 10px; cursor: pointer;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); color: var(--warp-color-text);
+  transition: border-color var(--warp-duration-fast), background-color var(--warp-duration-fast);
+}
+:where([data-scope="player-notes"] [data-part="chapters"] button:hover) { border-color: var(--warp-color-border-strong); }
+:where([data-scope="player-notes"] [data-part="chapters"] button[aria-current="true"]) { border-color: var(--warp-color-accent-solid); background: var(--warp-color-accent-soft); box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
+:where([data-scope="player-notes"] [data-part="chapters"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="player-notes"] [data-part="chapters"] time) { font: 500 12px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="player-notes"] [data-part="readout"]) { margin: 0; font: 500 12px/1.5 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+:where([data-scope="player-notes"] [data-part="keys"]) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="player-notes"] kbd, [data-scope="player"] kbd) { font: 500 11px/1 var(--warp-font-mono); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--warp-color-border-strong); background: var(--warp-color-surface-raised); color: var(--warp-color-text); }
+
+/* audio: on the page's own surface. play · title · tools, then the waveform with its time */
+:where([data-scope="player"][data-kind="audio"]) {
+  display: grid; align-items: center; gap: var(--warp-space-related) var(--warp-space-group);
+  grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "play meta tools" "wave wave time";
+  padding: calc(var(--warp-pad-surface) * 0.9); color: var(--warp-color-text);
+  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border);
+  border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1);
+  --_bar: var(--warp-color-data-1); --_played: var(--warp-color-accent-solid); --_hover: color-mix(in oklab, var(--warp-color-accent-solid) 55%, var(--warp-color-data-1));
+}
+:where([data-scope="player"][data-kind="audio"] [data-part="play"]) {
+  all: unset; box-sizing: border-box; grid-area: play; display: grid; place-items: center; cursor: pointer;
+  inline-size: max(44px, var(--warp-hit-min)); block-size: max(44px, var(--warp-hit-min)); border-radius: var(--warp-radius-round);
+  background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid);
+  transition: background-color var(--warp-duration-fast), scale var(--warp-duration-instant) var(--warp-ease-out);
+}
+:where([data-expression="vivid"] [data-scope="player"][data-kind="audio"] [data-part="play"]) { border-radius: var(--warp-radius-mark); }
+:where([data-scope="player"][data-kind="audio"] [data-part="play"]:hover) { background: var(--warp-color-accent-solid-hover); }
+:where([data-scope="player"][data-kind="audio"] [data-part="play"]:active) { scale: calc(1 - 0.04 * var(--warp-motion-scale)); }
+:where([data-scope="player"][data-kind="audio"] [data-part="play"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="player"][data-kind="audio"] [data-part="play"] svg) { inline-size: 18px; block-size: 18px; fill: currentColor; }
+:where([data-scope="player"][data-kind="audio"] [data-part="meta"]) { grid-area: meta; display: grid; gap: 2px; min-inline-size: 0; }
+:where([data-scope="player"][data-kind="audio"] [data-part="meta"] b) { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="player"][data-kind="audio"] [data-part="meta"] span) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-expression="vivid"] [data-scope="player"][data-kind="audio"] [data-part="meta"] span) { font: 500 11px/1.3 var(--warp-font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+:where([data-scope="player"][data-kind="audio"] [data-part="tools"]) { grid-area: tools; display: flex; gap: 2px; }
+:where([data-scope="player"][data-kind="audio"] [data-part="tool"]) { color: var(--warp-color-text-subtle); text-decoration: none; }
+:where([data-scope="player"][data-kind="audio"] [data-part="tool"]:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
+:where([data-scope="player"][data-kind="audio"] :is(button, a, input):focus-visible) { outline-color: var(--warp-color-focus); }
+:where([data-scope="player"][data-kind="audio"] [data-part="time"]) { grid-area: time; justify-self: end; color: var(--warp-color-text-subtle); padding: 0; }
+:where([data-scope="player"] [data-part="wave"]) { grid-area: wave; position: relative; block-size: 52px; min-inline-size: 0; touch-action: none; }
+:where([data-scope="player"] [data-part="wave"] canvas) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; display: block; }
+:where([data-scope="player"] [data-part="wave"] > input) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; margin: 0; opacity: 0; cursor: pointer; }
+:where([data-scope="player"] [data-part="wave"]:has(> input:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 4px; border-radius: var(--warp-radius-control); }
+/* compact: a voice note in a message thread */
+:where([data-scope="player"][data-kind="audio"][data-chrome="compact"]) {
+  grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "play wave time"; max-inline-size: 380px;
+  padding: 8px 12px 8px 8px; border-radius: calc(var(--warp-radius-surface) + 6px); background: var(--warp-color-surface-sunken); box-shadow: none;
+}
+:where([data-scope="player"][data-kind="audio"][data-chrome="compact"] [data-part="wave"]) { block-size: 32px; }
+:where([data-scope="player"][data-kind="audio"][data-chrome="compact"] [data-part="play"]) { inline-size: max(36px, var(--warp-hit-min)); block-size: max(36px, var(--warp-hit-min)); }
+:where([data-scope="transcript"]) { margin-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-block-start: var(--warp-space-related); }
+:where([data-scope="transcript"] summary) { cursor: pointer; font-weight: 500; font-size: var(--warp-text-caption-size); min-block-size: var(--warp-hit-min); display: flex; align-items: center; }
+:where([data-scope="transcript"] ol) { display: grid; gap: 2px; margin: 6px 0 0; padding: 0; list-style: none; }
+:where([data-scope="transcript"] button) {
+  all: unset; box-sizing: border-box; display: grid; grid-template-columns: 5ch minmax(0, 1fr); gap: 8px; inline-size: 100%; padding: 6px 8px; cursor: pointer;
+  border-radius: var(--warp-radius-control); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="transcript"] button:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+:where([data-scope="transcript"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="transcript"] button[aria-current="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-text); }
+:where([data-scope="transcript"] time) { font: 500 12px/1.5 var(--warp-font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------------------
+   22 · Reviews (§4.2): summary, list, "Write a review" (a Sheet with a Rating input)
+   ------------------------------------------------------------------------ */
+:where([data-scope="reviews"]) { display: grid; gap: var(--warp-space-group); margin-block-start: calc(var(--warp-space-section) * 1.2); }
+:where([data-scope="reviews"] > [data-part="header"]) { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--warp-space-group); }
+:where([data-scope="reviews"] > [data-part="header"] h3) { margin: 0; font: var(--warp-text-title-weight) calc(var(--warp-text-heading-size) * 1.25)/1.2 var(--warp-text-title-font); }
+:where([data-scope="reviews"] > [data-part="tools"]) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related) var(--warp-space-group); }
+:where([data-scope="reviews"] [data-part="count"]) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="reviews"] [data-part="list"]) { display: grid; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="review"]) { display: grid; gap: var(--warp-space-related); padding-block: var(--warp-space-group); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="review"][data-enter]) { animation: warp-fade-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+:where([data-scope="review"] [data-part="head"]) { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+:where([data-scope="review"] [data-part="title"]) { margin: 0; flex-basis: 100%; font: 500 var(--warp-text-heading-size)/1.3 var(--warp-text-heading-font); letter-spacing: var(--warp-text-heading-tracking); }
+:where([data-expression="vivid"] [data-scope="review"] [data-part="title"]) { font-family: var(--warp-font-display); font-weight: 400; font-size: calc(var(--warp-text-heading-size) * 1.25); }
+:where([data-scope="review"] [data-part="meta"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="review"] [data-part="body"]) { margin: 0; max-inline-size: 68ch; text-wrap: pretty; }
+:where([data-scope="review"] [data-part="photos"]) { display: flex; flex-wrap: wrap; gap: var(--warp-space-related); margin: 0; padding: 0; list-style: none; }
+:where([data-scope="review"] [data-part="photos"] button) {
+  all: unset; display: block; inline-size: 64px; block-size: 64px; overflow: hidden; cursor: zoom-in; position: relative;
+  border-radius: var(--warp-radius-control); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-sunken);
+}
+:where([data-scope="review"] [data-part="photos"] button)::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-scope="review"] [data-part="photos"] img) { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+:where([data-scope="review"] [data-part="photos"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="review"] [data-part="foot"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-part="stars"] svg[data-empty]) { fill: none; stroke: currentColor; stroke-width: 1.5; color: var(--warp-color-border-control); }
+:where([data-scope="reviews"] [data-part="more"]) { justify-self: start; }
+
+/* the Rating input: 03's anatomy (five native radios, stars fill left to right, hover previews).
+   Restated here so the store needs no inputs pack; identical to warp-inputs.css when both load. */
+:where([data-scope="rating"][data-part="input"]) { display: inline-flex; gap: 2px; border: 0; padding: 0; margin: 0; }
+:where([data-scope="rating"][data-part="input"] label) { position: relative; display: grid; place-items: center; inline-size: max(32px, var(--warp-hit-min)); block-size: max(32px, var(--warp-hit-min)); cursor: pointer; color: var(--warp-color-border-control); }
+:where([data-scope="rating"][data-part="input"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+:where([data-scope="rating"][data-part="input"] svg) { inline-size: 24px; block-size: 24px; fill: transparent; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; transition: fill var(--warp-duration-fast), color var(--warp-duration-fast), scale var(--warp-duration-base) var(--warp-ease-pop); transition-delay: calc(var(--i, 0) * 40ms * var(--warp-motion-scale)); }
+:where([data-expression="vivid"] [data-scope="rating"][data-part="input"] svg) { stroke-linejoin: miter; }
+:where([data-scope="rating"][data-part="input"] label[data-on] svg) { fill: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
+:where([data-scope="rating"][data-part="input"] label[data-preview] svg) { fill: color-mix(in oklab, var(--warp-color-sweep) 40%, transparent); color: var(--warp-color-sweep); }
+:where([data-scope="rating"][data-part="input"] label:active svg) { scale: calc(1 - 0.12 * var(--warp-motion-scale)); }
+:where([data-scope="rating"][data-part="input"] input:focus-visible + svg) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 3px; border-radius: 2px; }
+:where([data-scope="rating-field"]) { display: grid; gap: 4px; border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+:where([data-scope="rating-field"] legend) { padding: 0; margin-block-end: 2px; font-weight: 500; font-size: var(--warp-text-caption-size); }
+:where([data-scope="rating-field"] output) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); min-block-size: 1.4em; }
+:where([data-scope="rating-field"][data-invalid] output) { color: var(--warp-color-critical-text); }
+/* the multi-line field (03): grows from 3 lines; label rests on the first line. Restated for the same reason. */
+:where([data-scope="field"] > [data-part="control"]:has(> textarea)) { block-size: auto; min-block-size: var(--warp-field-height); }
+:where([data-scope="field"] textarea[data-part="input"]) {
+  display: block; block-size: auto; white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
+  padding-block: calc((var(--warp-field-height) - 1.5em) / 2);
+  min-block-size: calc(4.5em + var(--warp-field-height) - 1.5em); max-block-size: calc(15em + var(--warp-field-height) - 1.5em); overflow: auto;
+}
+:where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:has(> textarea):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
+
+/* ---------------------------------------------------------------------------
+   23 · Animated backgrounds (§6.2). Grid, dot and noise are static at every stop (only
+   their strength follows fx-k); the retro grid moves at vivid (C, loop); light rays exist
+   at vivid only (C, ≤ 8 nodes, loop). Every layer is aria-hidden and gone in forced colours.
+   ------------------------------------------------------------------------ */
+:where([data-scope="backdrops"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: minmax(0, 1fr); }
+@container block (min-width: 680px) { :where([data-scope="backdrops"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container block (min-width: 1000px) { :where([data-scope="backdrops"]) { grid-template-columns: repeat(6, minmax(0, 1fr)); } :where([data-scope="backdrops"] > *) { grid-column: span 2; } :where([data-scope="backdrops"] > [data-wide]) { grid-column: span 3; } }
+:where([data-scope="backdrop"]) {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; align-content: end; gap: 6px; min-block-size: 220px;
+  padding: calc(var(--warp-pad-surface) * 1.1); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  background: var(--warp-color-surface-raised);
+}
+:where([data-scope="backdrop"] > [data-part="bg"]) { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+:where([data-scope="backdrop"] h3) { margin: 0; font: var(--warp-text-title-weight) calc(var(--warp-text-heading-size) * 1.2)/1.2 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); }
+:where([data-scope="backdrop"] p) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); max-inline-size: 46ch; }
+:where([data-scope="backdrop"] [data-part="state"]) { font: 500 11px/1.3 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+/* grid: two 1px line gradients, faded out by a radial mask; vivid marks every fourth line in accent */
+:where([data-bg="grid"]) {
+  --_c: 28px; --_l: color-mix(in oklab, var(--warp-color-border-strong) calc(35% + 45% * var(--warp-fx-k)), transparent);
+  background-image: linear-gradient(to right, var(--_l) 1px, transparent 1px), linear-gradient(to bottom, var(--_l) 1px, transparent 1px);
+  background-size: var(--_c) var(--_c); background-position: -1px -1px;
+  mask-image: radial-gradient(75% 85% at 70% 20%, #000 20%, transparent 78%);
+}
+:where([data-expression="vivid"] [data-bg="grid"]) {
+  --_c: 24px;
+  background-image: linear-gradient(to right, color-mix(in oklab, var(--warp-color-accent-solid) 45%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--warp-color-accent-solid) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(to right, var(--_l) 1px, transparent 1px), linear-gradient(to bottom, var(--_l) 1px, transparent 1px);
+  background-size: calc(var(--_c) * 4) calc(var(--_c) * 4), calc(var(--_c) * 4) calc(var(--_c) * 4), var(--_c) var(--_c), var(--_c) var(--_c);
+}
+/* dots: one radial gradient; vivid dots grow and take the accent */
+:where([data-bg="dots"]) {
+  --_d: color-mix(in oklab, var(--warp-color-text-subtle) calc(30% + 40% * var(--warp-fx-k)), transparent);
+  background-image: radial-gradient(circle at 1px 1px, var(--_d) 1px, transparent 1.6px); background-size: 16px 16px;
+  mask-image: linear-gradient(to top, #000 10%, transparent 92%);
+}
+:where([data-expression="vivid"] [data-bg="dots"]) { --_d: color-mix(in oklab, var(--warp-color-accent-solid) 70%, transparent); background-image: radial-gradient(circle at 2px 2px, var(--_d) 1.5px, transparent 2.2px); background-size: 18px 18px; }
+/* noise: a static SVG turbulence tile over a soft accent wash (no animation at any stop) */
+:where([data-bg="noise"]) {
+  opacity: calc(0.35 + 0.65 * var(--warp-fx-k));
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(90% 120% at 0% 0%, var(--warp-mk-art-1), transparent 70%), radial-gradient(80% 110% at 100% 100%, var(--warp-mk-art-2), transparent 70%);
+  background-blend-mode: soft-light, normal, normal;
+}
+:where([data-expression="quiet"] [data-bg="noise"]) { background-blend-mode: soft-light; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+/* retro grid: a plane tipped back in 3D; at vivid the lines travel toward the reader (translate only) */
+:where([data-bg="retro"]) { overflow: hidden; perspective: 260px; perspective-origin: 50% 0%; }
+:where([data-bg="retro"] > [data-part="plane"]) {
+  position: absolute; inset: 30% -60% -40%; transform: rotateX(64deg); transform-origin: 50% 0%;
+  mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+}
+:where([data-bg="retro"] > [data-part="plane"] > i) {
+  --_c: 40px; --_l: color-mix(in oklab, var(--warp-color-accent-solid) calc(30% + 45% * var(--warp-fx-k)), transparent);
+  position: absolute; inset: calc(var(--_c) * -1) 0 0; display: block;
+  background-image: linear-gradient(to right, var(--_l) 1.5px, transparent 1.5px), linear-gradient(to bottom, var(--_l) 1.5px, transparent 1.5px);
+  background-size: var(--_c) var(--_c);
+}
+:where([data-bg="retro"][data-fx-state="on"] > [data-part="plane"] > i) { animation: mk-retro 1.6s linear infinite; animation-play-state: var(--warp-loop-play); }
+@keyframes mk-retro { to { transform: translate3d(0, var(--_c), 0); } }
+:where([data-bg="retro"])::after { content: ""; position: absolute; inset: 0 0 auto; block-size: 42%; background: linear-gradient(var(--warp-color-surface-raised), transparent); }
+/* light rays: ≤ 8 soft beams from the top edge, swaying by rotate (C). Vivid only; the static blur is on the layer */
+:where([data-bg="rays"]) { overflow: hidden; display: none; }
+:where([data-bg="rays"]:is([data-fx-state="on"], [data-fx-state="still"])) { display: block; }
+:where([data-bg="rays"] > [data-part="rays"]) { position: absolute; inset: -20% -10% 0; filter: blur(14px); opacity: calc(0.4 + 0.45 * var(--warp-fx-k)); }
+:where([data-bg="rays"] > [data-part="rays"] > i) {
+  position: absolute; inset-block-start: -10%; inset-inline-start: var(--x); inline-size: var(--w, 9%); block-size: 120%;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--warp-mk-art-1) 90%, transparent), transparent 82%);
+  transform-origin: 50% 0%; rotate: var(--r, 0deg); opacity: var(--o, 0.7); border-radius: 50%;
+}
+:where([data-bg="rays"] > [data-part="rays"] > i:nth-child(3n)) { background: linear-gradient(to bottom, color-mix(in oklab, var(--warp-mk-art-2) 90%, transparent), transparent 78%); }
+:where([data-bg="rays"] > [data-part="rays"] > i:nth-child(4n)) { background: linear-gradient(to bottom, color-mix(in oklab, var(--warp-mk-art-3) 90%, transparent), transparent 75%); }
+:where([data-bg="rays"][data-fx-state="on"] > [data-part="rays"] > i) { animation: mk-ray var(--t, 9s) ease-in-out infinite alternate; animation-delay: var(--dl, 0s); animation-play-state: var(--warp-loop-play); }
+@keyframes mk-ray { from { rotate: calc(var(--r, 0deg) - 5deg); opacity: calc(var(--o, 0.7) * 0.55); } to { rotate: calc(var(--r, 0deg) + 5deg); opacity: var(--o, 0.7); } }
+:where([data-scope="backdrop"]:has(> [data-bg="rays"][data-fx-state="off"]) [data-part="note"]) { display: block; }
+:where([data-scope="backdrop"] [data-part="note"]) { display: none; }
+
+/* ---------------------------------------------------------------------------
+   24 · Text effects (§6.3): shiny, highlighter, word rotate, morphing text, scroll reveal.
+   The real string is in the tree from first paint (sr); animated copies are aria-hidden.
+   ------------------------------------------------------------------------ */
+/* shiny (P): a sheen crosses the words once on view (vivid: again on hover). Both stops of the
+   gradient are text inks that clear 4.5:1, so every pixel of every frame passes. */
+:where([data-fx="shiny"]) { color: inherit; }
+:where([data-fx="shiny"]:is([data-fx-state="on"], [data-fx-state="still"])) {
+  background: linear-gradient(105deg, var(--warp-color-text) 0 38%, var(--warp-mk-ink-1) 46%, var(--warp-mk-ink-2) 50%, var(--warp-mk-ink-1) 54%, var(--warp-color-text) 62% 100%) 100% 0 / 260% 100% no-repeat;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+:where([data-fx="shiny"][data-fx-state="still"]) { background-position: 100% 0; }
+:where([data-fx="shiny"][data-fx-state="on"]:is([data-seen], [data-again])) { animation: mk-shine 1.1s var(--warp-sweep-ease) 1 both; }
+@keyframes mk-shine { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+/* highlighter: the mark draws in left to right like the sweep (C: scaleX of a layer under the text) */
+:where(mark[data-fx="highlight"]) {
+  position: relative; isolation: isolate; background: none; color: inherit; padding-inline: 0.12em; margin-inline: -0.06em; border-radius: 0.18em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+:where(mark[data-fx="highlight"])::before {
+  content: ""; position: absolute; inset: 0.08em 0 0.04em; z-index: -1; border-radius: inherit;
+  background: var(--warp-color-highlight-soft); transform-origin: left center; transform: scaleX(1);
+}
+:where([dir="rtl"] mark[data-fx="highlight"])::before { transform-origin: right center; }
+:where([data-expression="vivid"] mark[data-fx="highlight"])::before { inset: 0.42em -0.04em -0.02em; border-radius: 1px; rotate: -1deg; background: color-mix(in oklab, var(--warp-color-highlight-solid) 70%, var(--warp-color-highlight-soft)); }
+:where(mark[data-fx="highlight"][data-fx-state="on"]:not([data-seen]))::before { transform: scaleX(0); }
+:where(mark[data-fx="highlight"][data-fx-state="on"][data-seen])::before { transition: transform calc(var(--warp-sweep-duration) * 1.3) var(--warp-sweep-ease) var(--_d, 0ms); }
+/* word rotate and morph share one 2.5s ticker (one S loop per page); CSS does the motion (C) */
+:where([data-fx="rotate"]) { color: var(--warp-color-accent-text); }
+:where([data-fx="rotate"] > [data-part="live"]) { display: inline-grid; overflow: clip; overflow-clip-margin: 0.2em; }
+:where([data-fx="rotate"] > [data-part="live"] > span) { grid-area: 1 / 1; white-space: pre; }
+:where([data-fx="rotate"] > [data-part="live"] > [data-leaving]) { animation: mk-word-out calc(var(--warp-duration-slow) * 1.1) var(--warp-ease-in) both; }
+:where([data-fx="rotate"] > [data-part="live"] > [data-entering]) { animation: mk-word-in calc(var(--warp-duration-slow) * 1.4) var(--warp-ease-pop) both; }
+@keyframes mk-word-out { to { opacity: 0; transform: translateY(calc(-0.7em * var(--warp-motion-scale))); } }
+@keyframes mk-word-in { from { opacity: 0; transform: translateY(calc(0.8em * var(--warp-motion-scale))); } }
+/* the ghost (longest word, hidden) reserves the box only while the words actually change */
+:where([data-fx="rotate"]:not([data-fx-state="on"]) [data-part="ghost"], [data-fx="morph"]:not([data-fx-state="on"]) [data-part="ghost"]) { display: none; }
+:where([data-fx="rotate"] [data-part="ghost"], [data-fx="morph"] [data-part="ghost"]) { visibility: hidden; }
+:where([data-fx="morph"]) { font-family: var(--warp-text-display-font); }
+:where([data-fx="morph"] > [data-part="live"]) { display: inline-grid; }
+:where([data-fx="morph"] > [data-part="live"] > span) { grid-area: 1 / 1; white-space: pre; }
+:where([data-fx="morph"] [data-ch]) { display: inline-block; }
+:where([data-fx="morph"] [data-leaving] [data-ch]) { animation: mk-ch-out calc(var(--warp-duration-slow) * 0.9) var(--warp-ease-in) calc(var(--i) * 28ms) both; }
+:where([data-fx="morph"] [data-entering] [data-ch]) { animation: mk-ch-in calc(var(--warp-duration-slow) * 1.2) var(--warp-ease-out) calc(120ms + var(--i) * 34ms) both; }
+@keyframes mk-ch-out { to { opacity: 0; transform: translateY(calc(-0.25em * var(--warp-motion-scale))) scale(calc(1 - 0.3 * var(--warp-motion-scale))); } }
+@keyframes mk-ch-in { from { opacity: 0; transform: translateY(calc(0.3em * var(--warp-motion-scale))) scale(calc(1 - 0.3 * var(--warp-motion-scale))); } }
+/* scroll reveal (C): each word goes from faint to full ink on the paragraph's view timeline;
+   every word is at full ink once the paragraph's centre reaches the middle of the viewport */
+:where([data-fx="text-reveal"]) { view-timeline: --mk-reveal block; }
+:where([data-fx="text-reveal"] [data-w]) { --_lo: calc(0.42 - 0.2 * var(--warp-fx-k)); }
+@supports (animation-timeline: view()) {
+  :where([data-fx="text-reveal"][data-fx-state="on"] [data-w]) {
+    animation: mk-ink linear both; animation-timeline: --mk-reveal;
+    animation-range: cover calc(8% + var(--_k) * 36%) cover calc(14% + var(--_k) * 36%);
+  }
+}
+@keyframes mk-ink { from { opacity: var(--_lo); } to { opacity: 1; } }
+:where([data-fx="text-reveal"][data-fx-state="on"][data-fallback] [data-w]) { opacity: clamp(var(--_lo), calc(var(--_lo) + (var(--_p, 1) - 0.08 - var(--_k) * 0.36) * 16), 1); }
+
+/* ---------------------------------------------------------------------------
+   25 · Scroll-driven sections (§6.4): progress bar, container scroll, velocity text.
+   CSS scroll timelines first (off the main thread); without them, one rAF-batched passive
+   scroll listener writes --_p (0…1) and only while the host is in view.
+   ------------------------------------------------------------------------ */
+:where([data-scope="scroll-progress"]) {
+  position: absolute; inset: auto 0 calc(var(--warp-border-hairline) * -1) 0; block-size: var(--warp-border-emphasis); pointer-events: none;
+  background: var(--warp-color-sweep); transform-origin: left center; transform: scaleX(var(--_p, 0));
+}
+:where([dir="rtl"] [data-scope="scroll-progress"]) { transform-origin: right center; }
+@supports (animation-timeline: scroll()) {
+  :where([data-scope="scroll-progress"]:not([data-fallback])) { animation: mk-progress linear both; animation-timeline: scroll(root block); }
+}
+@keyframes mk-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+:where([data-scope="scroll-progress"][data-fx-state="off"]) { display: none; }
+
+/* container scroll: a device tipped back flattens as it scrolls in, the title rises ahead of it */
+:where([data-scope="container-scroll"]) {
+  --_tilt: calc(8deg + 14deg * var(--warp-fx-k)); --_rise: calc(24px + 40px * var(--warp-fx-k));
+  view-timeline: --mk-cs block; display: grid; justify-items: center; gap: var(--warp-space-section); perspective: 1100px;
+}
+:where([data-scope="container-scroll"] > [data-part="intro"]) { text-align: center; max-inline-size: 760px; display: grid; gap: var(--warp-space-related); justify-items: center; }
+:where([data-scope="container-scroll"] > [data-part="device"]) {
+  inline-size: min(100%, 980px); box-sizing: border-box; padding: clamp(6px, 1.2cqi, 12px); transform-origin: 50% 100%;
+  border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: calc(var(--warp-radius-surface) + 10px);
+  background: var(--warp-color-surface); box-shadow: var(--warp-elevation-3);
+}
+:where([data-scope="container-scroll"] [data-part="screen"]) { overflow: hidden; border-radius: calc(var(--warp-radius-surface) + 2px); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-page); }
+@supports (animation-timeline: view()) {
+  :where([data-scope="container-scroll"][data-fx-state="on"]:not([data-fallback]) > [data-part="device"]) { animation: mk-cs-device linear both; animation-timeline: --mk-cs; animation-range: entry 0% cover 48%; }
+  :where([data-scope="container-scroll"][data-fx-state="on"]:not([data-fallback]) > [data-part="intro"]) { animation: mk-cs-title linear both; animation-timeline: --mk-cs; animation-range: entry 0% cover 40%; }
+}
+@keyframes mk-cs-device { from { transform: rotateX(var(--_tilt)) scale(1.04); } to { transform: none; } }
+@keyframes mk-cs-title { from { transform: translateY(var(--_rise)); opacity: 0.4; } to { transform: none; opacity: 1; } }
+:where([data-scope="container-scroll"][data-fx-state="on"][data-fallback] > [data-part="device"]) { transform: rotateX(calc(var(--_tilt) * (1 - var(--_p, 1)))) scale(calc(1 + 0.04 * (1 - var(--_p, 1)))); }
+:where([data-scope="container-scroll"][data-fx-state="on"][data-fallback] > [data-part="intro"]) { transform: translateY(calc(var(--_rise) * (1 - var(--_p, 1)))); }
+
+/* velocity text: two rows drift opposite ways with the section's view timeline (no idle loop);
+   scroll velocity adds a skew ≤ 6° that decays to 0, then nothing runs */
+:where([data-scope="velocity"]) { view-timeline: --mk-velo block; display: grid; gap: 4px; overflow: hidden; padding-block: 12px; border-block: var(--warp-border-hairline) solid var(--warp-color-border-strong); }
+:where([data-scope="velocity"] > [data-part="row"]) {
+  display: flex; gap: 0.5em; white-space: nowrap; inline-size: max-content; transform: skewX(calc(var(--_skew, 0) * 1deg));
+  font: 400 clamp(36px, 9cqi, 110px)/1 var(--warp-text-display-font); letter-spacing: -0.03em;
+}
+:where([data-scope="velocity"] > [data-part="row"]:nth-child(even)) { color: var(--warp-color-accent-text); font-style: var(--warp-text-emphasis-style, normal); }
+:where([data-scope="velocity"] > [data-part="row"] i) { font-style: normal; color: var(--warp-color-accent-solid); }
+:where([data-scope="velocity"]:not([data-fx-state="on"]) > [data-part="row"]) { inline-size: auto; flex-wrap: wrap; justify-content: center; white-space: normal; transform: none; font-size: clamp(28px, 6cqi, 64px); }
+:where([data-scope="velocity"]:not([data-fx-state="on"]) > [data-part="row"] [data-dupe]) { display: none; }
+@supports (animation-timeline: view()) {
+  :where([data-scope="velocity"][data-fx-state="on"]:not([data-fallback]) > [data-part="row"]) { animation: mk-velo linear both; animation-timeline: --mk-velo; animation-range: cover; }
+  :where([data-scope="velocity"][data-fx-state="on"]:not([data-fallback]) > [data-part="row"]:nth-child(even)) { animation-name: mk-velo-rev; }
+}
+@keyframes mk-velo { from { translate: -4% 0; } to { translate: -34% 0; } }
+@keyframes mk-velo-rev { from { translate: -34% 0; } to { translate: -4% 0; } }
+:where([data-scope="velocity"][data-fx-state="on"][data-fallback] > [data-part="row"]) { translate: calc(-4% - 30% * var(--_p, 0)) 0; }
+:where([data-scope="velocity"][data-fx-state="on"][data-fallback] > [data-part="row"]:nth-child(even)) { translate: calc(-34% + 30% * var(--_p, 0)) 0; }
+
+/* ---------------------------------------------------------------------------
+   26 · `fancy` motion presets (§6.5) and MotionCard (§6.6)
+   ------------------------------------------------------------------------ */
+:where([data-scope="fancy-stage"]) {
+  position: relative; display: grid; place-items: center; aspect-ratio: 16 / 10; overflow: hidden;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  background: repeating-linear-gradient(90deg, transparent 0 23px, var(--warp-color-border) 23px 24px), var(--warp-color-surface-sunken);
+}
+:where([data-scope="fancy-stage"] > [data-part="empty"]) { grid-area: 1 / 1; color: var(--warp-color-text-subtle); font: 500 12px/1.4 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+:where([data-fx="fancy"]) { grid-area: 1 / 1; inline-size: 78%; aspect-ratio: 16 / 10; border-radius: var(--warp-radius-surface); overflow: hidden; box-shadow: var(--warp-elevation-2); background: var(--warp-color-surface-inverse); }
+:where([data-fx="fancy"] img) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+:where([data-fx="fancy"][data-shown="false"]) { visibility: hidden; }
+/* below vivid (and under reduced motion) every preset is the stop's plain enter or exit */
+:where([data-fx="fancy"][data-run$="-in"]:not([data-fx-state="on"])) { animation: mk-plain-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+:where([data-fx="fancy"][data-run$="-out"]:not([data-fx-state="on"])) { animation: mk-plain-out calc(var(--warp-duration-slow) * 0.7) var(--warp-ease-in) both; }
+@keyframes mk-plain-in { from { opacity: 0; transform: translateY(var(--warp-motion-distance)) scale(var(--warp-motion-scale-from)); } }
+@keyframes mk-plain-out { to { opacity: 0; transform: translateY(calc(var(--warp-motion-distance) * -0.5)); } }
+/* vivid: the presets themselves. Each ≤ 400ms, compositor (transform, opacity, clip-path), once */
+:where([data-fx="fancy"][data-fx-state="on"][data-run="crt-on-in"]) { animation: mk-crt-on 400ms var(--warp-ease-out) both; }
+:where([data-fx="fancy"][data-fx-state="on"][data-run="crt-off-out"]) { animation: mk-crt-off 320ms var(--warp-sweep-ease) both; }
+:where([data-fx="fancy"][data-fx-state="on"][data-run="flicker-in"]) { animation: mk-flicker 400ms linear both; }
+:where([data-fx="fancy"][data-fx-state="on"][data-run="glitch-in"]) { animation: mk-glitch 320ms steps(1, end) both; }
+:where([data-fx="fancy"][data-fx-state="on"][data-run="spotlight-in"]) { animation: mk-spot 340ms var(--warp-ease-out) both; }
+:where([data-fx="fancy"][data-fx-state="on"][data-run="spotlight-in"])::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at var(--sx, 50%) var(--sy, 50%), oklch(1 0 0 / 0.55), transparent 55%); animation: mk-spot-glow 340ms var(--warp-ease-out) both; pointer-events: none; }
+:where([data-fx="fancy"][data-fx-state="on"][data-run="iris-in"]) { animation: mk-iris 360ms var(--warp-ease-out) both; }
+:where([data-fx="fancy"]) { position: relative; }
+@keyframes mk-crt-on { 0% { opacity: 0; transform: scale(0.6, 0.006); } 35% { opacity: 1; transform: scale(1, 0.006); } 100% { opacity: 1; transform: none; } }
+@keyframes mk-crt-off { 0% { transform: none; } 55% { opacity: 1; transform: scale(1, 0.006); } 100% { opacity: 0; transform: scale(0.6, 0.006); } }
+/* two dips in 400ms, then nothing: at most 2 flashes in any second (WCAG 2.3.1 allows 3) */
+@keyframes mk-flicker { 0% { opacity: 0; } 20% { opacity: 1; } 32% { opacity: 0.35; } 60% { opacity: 1; } 78% { opacity: 0.6; } 100% { opacity: 1; } }
+@keyframes mk-glitch {
+  0% { opacity: 0; clip-path: inset(0 0 100% 0); transform: none; }
+  15% { opacity: 1; clip-path: inset(10% 0 52% 0); transform: translateX(-5px); }
+  35% { clip-path: inset(48% 0 14% 0); transform: translateX(6px); }
+  55% { clip-path: inset(0 0 30% 0); transform: translateX(-2px); }
+  75% { clip-path: inset(22% 0 0 0); transform: translateX(3px); }
+  100% { opacity: 1; clip-path: inset(0); transform: none; }
+}
+@keyframes mk-spot { from { opacity: 0; transform: scale(0.96); clip-path: circle(12% at var(--sx, 50%) var(--sy, 50%)); } to { opacity: 1; transform: none; clip-path: circle(150% at var(--sx, 50%) var(--sy, 50%)); } }
+@keyframes mk-spot-glow { from { opacity: 1; } to { opacity: 0; } }
+@keyframes mk-iris { from { opacity: 0; clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%); } 30% { opacity: 1; } to { opacity: 1; clip-path: polygon(50% -70%, 120% -20%, 170% 50%, 120% 120%, 50% 170%, -20% 120%, -70% 50%, -20% -20%); } }
+:where([data-scope="fancy-presets"]) { display: flex; flex-wrap: wrap; gap: var(--warp-space-related); }
+
+/* MotionCard: hover lift + press, governed. balanced: shadow lift, press 0.98. vivid: + 2px rise and 1.01
+   on the spring (the old cardHover), the one place a card may move on hover; transform only, never layout.
+   quiet and reduced: flat (colour and shadow only, no scale). */
+:where([data-scope="motion-cards"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+:where([data-scope="motion-card"]) {
+  all: unset; box-sizing: border-box; position: relative; isolation: isolate; display: grid; align-content: start; gap: var(--warp-space-related); cursor: pointer;
+  padding: calc(var(--warp-pad-surface) * 1.1); background: var(--warp-color-surface-raised); color: var(--warp-color-text);
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1);
+  transition: box-shadow var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-slow) var(--warp-ease-pop), scale var(--warp-duration-base) var(--warp-ease-pop), background-color var(--warp-duration-fast);
+}
+:where([data-scope="motion-card"] > :not([data-part^="sweep"])) { position: relative; z-index: 1; }
+:where([data-scope="motion-card"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="motion-card"] [data-part="name"]) { margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); }
+:where([data-expression="vivid"] [data-scope="motion-card"] [data-part="name"]) { font-family: var(--warp-font-display); font-weight: 400; font-size: calc(var(--warp-text-heading-size) * 1.35); }
+:where([data-scope="motion-card"] [data-part="body"]) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="motion-card"] [data-part="check"]) { position: absolute; inset-block-start: 14px; inset-inline-end: 14px; color: var(--warp-color-accent-solid); opacity: 0; }
+:where([data-scope="motion-card"][aria-pressed="true"]) { background: color-mix(in oklab, var(--warp-color-accent-soft) 60%, var(--warp-color-surface-raised)); --warp-color-sweep-base: var(--warp-color-accent-solid); box-shadow: 0 0 0 1px var(--warp-color-accent-solid), var(--warp-elevation-1); }
+:where([data-scope="motion-card"][aria-pressed="true"] [data-part="check"]) { opacity: 1; }
+:where([data-scope="motion-card"]:hover) { box-shadow: var(--warp-elevation-2); }
+:where([data-scope="motion-card"][data-fx-state="on"]:active) { scale: calc(1 - 0.02 * var(--warp-motion-scale)); transition-duration: var(--warp-duration-instant); }
+:where([data-expression="vivid"] [data-scope="motion-card"][data-fx-state="on"]:hover:not(:active)) { translate: 0 calc(-2px * var(--warp-motion-scale)); scale: calc(1 + 0.01 * var(--warp-motion-scale)); }
+
+/* ---------------------------------------------------------------------------
+   27 · Testimonial wall (§3.6): masonry by CSS columns (no JS), "Show more" disclosure;
+   variant "marquee": columns drift upward at balanced+ (C, loop, own pause, hover/focus hold)
+   ------------------------------------------------------------------------ */
+:where([data-scope="wall"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="wall"] > [data-part="viewport"]) { position: relative; }
+:where([data-scope="wall"]:not([data-expanded]) > [data-part="viewport"]) { max-block-size: 680px; overflow: hidden; mask-image: linear-gradient(to bottom, #000 72%, transparent); }
+:where([data-scope="wall"] [data-part="columns"]) { columns: 1; column-gap: var(--warp-space-group); margin: 0; padding: 0; list-style: none; }
+@container block (min-width: 600px) { :where([data-scope="wall"] [data-part="columns"]) { columns: 2; } }
+@container block (min-width: 940px) { :where([data-scope="wall"] [data-part="columns"]) { columns: 3; } }
+:where([data-scope="wall"] [data-part="columns"] > li) { break-inside: avoid; margin-block-end: var(--warp-space-group); }
+:where([data-scope="wall"] [data-scope="quote"]) { block-size: auto; gap: var(--warp-space-related); }
+:where([data-scope="wall"] [data-scope="quote"] blockquote) { font-size: var(--warp-text-prose-size); }
+:where([data-expression="vivid"] [data-scope="wall"] [data-scope="quote"] blockquote) { font-size: calc(var(--warp-text-heading-size) * 1.12); }
+:where([data-scope="quote"] [data-part="source"]) { margin-inline-start: auto; align-self: start; font: 500 11px/1.2 var(--warp-font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+:where([data-scope="wall"] > [data-part="foot"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--warp-space-related); }
+:where([data-scope="wall"] [data-part="tracks"]) { display: none; }
+:where([data-scope="wall"][data-variant="marquee"][data-fx-state="on"] > [data-part="viewport"]) { max-block-size: none; overflow: visible; mask-image: none; }
+:where([data-scope="wall"][data-variant="marquee"][data-fx-state="on"] [data-part="columns"], [data-scope="wall"][data-variant="marquee"][data-fx-state="on"] [data-part="more"]) { display: none; }
+:where([data-scope="wall"][data-variant="marquee"][data-fx-state="on"] [data-part="tracks"]) {
+  display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(var(--_cols, 1), minmax(0, 1fr)); block-size: 600px; overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+}
+:where([data-scope="wall"] [data-part="col"]) { display: grid; align-content: start; overflow: hidden; }
+:where([data-scope="wall"] [data-part="col"] > ul) { display: grid; gap: var(--warp-space-group); margin: 0; padding: 0 0 var(--warp-space-group); list-style: none; }
+:where([data-scope="wall"][data-variant="marquee"][data-fx-state="on"] [data-part="col"] > ul) { animation: mk-wall var(--_speed, 40s) linear infinite; animation-play-state: var(--warp-loop-play); }
+:where([data-scope="wall"][data-fx-state="on"] [data-part="col"]:nth-child(even) > ul) { animation-direction: reverse; }
+:where([data-scope="wall"][data-fx-state="on"]:is(:hover, :focus-within, [data-paused]) [data-part="col"] > ul) { animation-play-state: paused; }
+@keyframes mk-wall { to { transform: translate3d(0, -100%, 0); } }
+
+/* ---------------------------------------------------------------------------
+   28 · The standard section set (§3.12): team, blog, changelog, contact, waitlist
+   ------------------------------------------------------------------------ */
+/* team: photo in a 4:5 frame; vivid shows a grey copy and fades the colour copy in on hover/focus (C: opacity) */
+:where([data-scope="team"]) { display: grid; gap: var(--warp-space-section) var(--warp-space-group); grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+@container block (min-width: 640px) { :where([data-scope="team"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@container block (min-width: 960px) { :where([data-scope="team"]) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+:where([data-scope="person"]) { display: grid; gap: 4px; align-content: start; margin: 0; }
+:where([data-scope="person"] [data-part="photo"]) { position: relative; display: grid; aspect-ratio: 4 / 5; overflow: hidden; margin-block-end: 8px; border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="person"] [data-part="photo"] img) { grid-area: 1 / 1; inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+:where([data-scope="person"] [data-part="photo"] [data-part="mono"]) { display: none; }
+:where([data-expression="vivid"] [data-scope="person"] [data-part="photo"] [data-part="mono"]) { display: block; }
+:where([data-expression="vivid"] [data-scope="person"] [data-part="photo"] [data-part="color"]) { opacity: 0; transition: opacity var(--warp-duration-slow) var(--warp-ease-out); }
+:where([data-expression="vivid"] [data-scope="person"]:is(:hover, :focus-within) [data-part="photo"] [data-part="color"]) { opacity: 1; }
+:where([data-scope="person"] [data-part="name"]) { margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); }
+:where([data-expression="vivid"] [data-scope="person"] [data-part="name"]) { font-family: var(--warp-font-display); font-weight: 400; font-size: calc(var(--warp-text-heading-size) * 1.3); }
+:where([data-scope="person"] [data-part="role"]) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="person"] [data-part="links"]) { display: flex; flex-wrap: wrap; gap: 0 12px; margin: 2px 0 0; padding: 0; list-style: none; font-size: var(--warp-text-caption-size); }
+:where([data-scope="person"] [data-part="links"] a) { display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min); color: var(--warp-color-text); text-underline-offset: 3px; }
+
+/* blog: a featured post (2:1 art) then cards (3:2 art); each card is one link overlay */
+:where([data-scope="blog"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: minmax(0, 1fr); margin: 0; padding: 0; list-style: none; }
+@container block (min-width: 640px) { :where([data-scope="blog"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container block (min-width: 960px) { :where([data-scope="blog"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+:where([data-scope="blog"] > li) { display: grid; min-inline-size: 0; }
+:where([data-scope="blog"] > li:has([data-featured])) { grid-column: 1 / -1; }
+:where([data-scope="post"]) {
+  position: relative; isolation: isolate; display: grid; grid-template-rows: auto 1fr; overflow: hidden; block-size: 100%; box-sizing: border-box;
+  background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1);
+}
+:where([data-scope="post"] > [data-part="art"]) { display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--warp-color-surface-sunken); border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="post"] > [data-part="art"] svg) { display: block; inline-size: 100%; block-size: 100%; }
+:where([data-scope="post"] > [data-part="body"]) { display: grid; gap: 8px; align-content: start; padding: 16px 18px 18px; }
+:where([data-scope="post"] [data-part="tag"]) { font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-accent-text); font-weight: 500; }
+:where([data-scope="post"] [data-part="title"]) { margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); letter-spacing: var(--warp-text-heading-tracking); text-wrap: balance; }
+:where([data-expression="vivid"] [data-scope="post"] [data-part="title"]) { font-family: var(--warp-font-display); font-weight: 400; font-size: calc(var(--warp-text-heading-size) * 1.35); line-height: 1.1; }
+:where([data-scope="post"] [data-part="title"] a) { color: inherit; text-decoration: none; }
+:where([data-scope="post"] [data-part="title"] a)::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+:where([data-scope="post"] [data-part="title"] a:focus-visible) { outline: none; }
+:where([data-scope="post"]:has([data-part="title"] a:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="post"] [data-part="excerpt"]) { margin: 0; color: var(--warp-color-text-subtle); text-wrap: pretty; }
+:where([data-scope="post"] [data-part="meta"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-block-start: 4px; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="post"] [data-part="meta"] [data-part="avatar"]) { inline-size: 24px; block-size: 24px; font-size: 10px; }
+:where([data-scope="post"] > :not([data-part^="sweep"])) { position: relative; z-index: 1; }
+:where([data-scope="post"][data-featured]) { grid-template-rows: auto; }
+@container block (min-width: 760px) {
+  :where([data-scope="post"][data-featured]) { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  :where([data-scope="post"][data-featured] > [data-part="art"]) { aspect-ratio: 2 / 1; border-block-end: 0; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); block-size: 100%; }
+  :where([data-scope="post"][data-featured] > [data-part="body"]) { align-content: center; padding: 28px; }
+  :where([data-scope="post"][data-featured] [data-part="title"]) { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: min(var(--warp-mk-title-size), 5cqi); line-height: 1.1; }
+}
+:where([data-scope="blog-foot"]) { display: flex; justify-content: center; margin-block-start: var(--warp-space-section); }
+:where([data-scope="blog-foot"] [data-scope="pagination"]) { inline-size: min(100%, 480px); }
+:where([data-scope="blog-foot"] [data-scope="pagination"] ul) { justify-content: center; }
+
+/* changelog: 06's Timeline anatomy (knot, when, what, detail) with a sticky date rail ≥ 860px */
+:where([data-scope="changelog"]) { display: grid; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="changelog"] > [data-part="release"]) { position: relative; display: grid; gap: var(--warp-space-related) var(--warp-space-section); padding-block: 0 var(--warp-space-section); padding-inline-start: 28px; }
+:where([data-scope="changelog"] > [data-part="release"])::before { content: ""; position: absolute; inset: 8px auto 0 5px; inline-size: var(--warp-border-hairline); background: var(--warp-color-border-strong); }
+:where([data-scope="changelog"] > [data-part="release"]:last-child)::before { inset-block-end: auto; block-size: 24px; }
+:where([data-scope="changelog"] [data-part="knot"]) { position: absolute; inset-block-start: 4px; inset-inline-start: 0; inline-size: 11px; block-size: 11px; box-sizing: border-box; border-radius: var(--warp-radius-round); background: var(--warp-color-page); border: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); }
+:where([data-expression="vivid"] [data-scope="changelog"] [data-part="knot"]) { border-radius: 1px; }
+:where([data-scope="changelog"] [data-part="when"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; align-self: start; }
+:where([data-scope="changelog"] [data-part="when"] time) { font: 500 12px/1.3 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="changelog"] [data-part="what"]) { display: grid; gap: var(--warp-space-related); min-inline-size: 0; }
+:where([data-scope="changelog"] [data-part="what"] h3) { margin: 0; font: var(--warp-text-heading-weight) calc(var(--warp-text-heading-size) * 1.15)/1.25 var(--warp-text-heading-font); }
+:where([data-expression="vivid"] [data-scope="changelog"] [data-part="what"] h3) { font-family: var(--warp-font-display); font-weight: 400; font-size: calc(var(--warp-text-heading-size) * 1.5); }
+:where([data-scope="changelog"] [data-part="what"] p) { margin: 0; max-inline-size: 68ch; color: var(--warp-color-text-subtle); }
+:where([data-scope="changelog"] [data-part="items"]) { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="changelog"] [data-part="items"] li) { display: flex; align-items: baseline; gap: 10px; }
+:where([data-scope="changelog"] [data-part="items"] [data-scope="badge"]) { flex: none; min-inline-size: 72px; justify-content: center; }
+:where([data-scope="changelog"] [data-part="media"]) { overflow: hidden; border-radius: var(--warp-radius-surface); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-sunken); max-inline-size: 560px; }
+:where([data-scope="changelog"] [data-part="media"] svg) { display: block; inline-size: 100%; block-size: auto; }
+@container block (min-width: 860px) {
+  :where([data-scope="changelog"] > [data-part="release"]) { grid-template-columns: 180px minmax(0, 1fr); padding-inline-start: 0; }
+  :where([data-scope="changelog"] > [data-part="release"])::before { inset-inline-start: 205px; }
+  :where([data-scope="changelog"] [data-part="knot"]) { inset-inline-start: 200px; }
+  :where([data-scope="changelog"] [data-part="when"]) { position: sticky; inset-block-start: var(--warp-mk-sticky-offset, 72px); flex-direction: column; align-items: start; padding-block-start: 2px; }
+  :where([data-scope="changelog"] [data-part="what"]) { padding-inline-start: 48px; }
+}
+
+/* contact + waitlist: signature Fields + Button (03); the waitlist shows the place after submit */
+:where([data-scope="contact"]) { display: grid; gap: var(--warp-space-section); }
+@container block (min-width: 900px) { :where([data-scope="contact"]) { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: start; } }
+:where([data-scope="contact"] [data-part="aside"]) { display: grid; gap: var(--warp-space-group); align-content: start; }
+:where([data-scope="contact"] [data-part="channels"]) { display: grid; gap: 0; margin: 0; }
+:where([data-scope="contact"] [data-part="channels"] > div) { display: grid; gap: 2px; padding-block: 12px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="contact"] [data-part="channels"] :is(dt, dd)) { margin: 0; }
+:where([data-scope="contact"] [data-part="channels"] dt) { font: 500 11px/1.2 var(--warp-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+:where([data-scope="contact"] form) { display: grid; gap: 14px; padding: calc(var(--warp-pad-surface) * 1.2); background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1); }
+:where([data-scope="contact"] [data-part="row"]) { display: grid; gap: 14px; }
+@container block (min-width: 640px) { :where([data-scope="contact"] [data-part="row"]) { grid-template-columns: 1fr 1fr; } }
+:where([data-scope="contact"] [data-part="consent"]) { display: flex; align-items: center; gap: 10px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); cursor: pointer; min-block-size: var(--warp-hit-min); }
+:where([data-scope="contact"] [data-part="submit"]) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-group); }
+:where([data-scope="contact"] [data-part="done"]) { display: grid; gap: 8px; justify-items: start; padding: var(--warp-space-group); border-radius: var(--warp-radius-surface); background: var(--warp-color-positive-soft); color: var(--warp-color-text); }
+:where([data-scope="waitlist"]) {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; gap: var(--warp-space-group); justify-items: center; text-align: center;
+  padding: calc(var(--warp-space-section) * 1.2) var(--warp-space-group); border-radius: calc(var(--warp-radius-surface) + 4px);
+  border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-raised);
+}
+:where([data-scope="waitlist"] > [data-part="bg"]) { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+:where([data-scope="waitlist"] h2) { margin: 0; font: var(--warp-text-title-weight) min(var(--warp-mk-title-size), 8cqi)/1.08 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); text-wrap: balance; }
+:where([data-scope="waitlist"] p) { margin: 0; color: var(--warp-color-text-subtle); max-inline-size: 52ch; }
+:where([data-scope="waitlist"] form) { display: flex; flex-wrap: wrap; gap: 8px; inline-size: min(100%, 460px); align-items: stretch; }
+:where([data-scope="waitlist"] form [data-scope="field"]) { flex: 1 1 240px; text-align: start; }
+:where([data-scope="waitlist"] form [data-scope="button"]) { flex: 0 0 auto; block-size: var(--warp-field-height); }
+@container block (max-width: 420px) { :where([data-scope="waitlist"] form [data-scope="button"]) { flex: 1 1 100%; } }
+:where([data-scope="waitlist"] [data-part="place"]) { display: grid; gap: 6px; justify-items: center; }
+:where([data-scope="waitlist"] [data-part="place"] b) { font: var(--warp-text-display-weight) calc(var(--warp-text-title-size) * 1.6 * var(--warp-mk-title-k))/1 var(--warp-text-numeric-font, var(--warp-text-display-font)); font-variant-numeric: var(--warp-text-numeric-variant); letter-spacing: -0.02em; }
+:where([data-scope="waitlist"] [data-part="share"]) { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+:where([data-scope="waitlist"] [data-part="share"] code) { font: 500 12px/1.4 var(--warp-font-mono); padding: 6px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); overflow-wrap: anywhere; }
+:where([data-scope="waitlist"] [data-part="proof"]) { display: flex; align-items: center; gap: 10px; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+
+/* the marketing-more page's own top bar: a scroll progress bar sits on its bottom edge */
+:where([data-scope="topbar"]:has([data-scope="scroll-progress"])) { position: sticky; }
+
+/* ---------------------------------------------------------------------------
+   29 · Forced colours for 21–28: system colours, decorative layers gone, nothing by hue alone
+   ------------------------------------------------------------------------ */
+@media (forced-colors: active) {
+  :where([data-scope="backdrop"] > [data-part="bg"], [data-scope="waitlist"] > [data-part="bg"], [data-scope="fancy-stage"])::after { display: none; }
+  :where([data-scope="backdrop"] > [data-part="bg"], [data-scope="waitlist"] > [data-part="bg"]) { display: none; }
+  :where([data-scope="backdrop"], [data-scope="post"], [data-scope="motion-card"], [data-scope="selection-bar"], [data-scope="player"]) { border-color: CanvasText; }
+  :where([data-scope="post"], [data-scope="motion-card"]):is(:hover, :focus-within) { border-color: Highlight; }
+  :where([data-scope="motion-card"][aria-pressed="true"]) { outline: 2px solid Highlight; }
+  :where([data-fx="shiny"]) { background: none !important; color: CanvasText !important; }
+  :where(mark[data-fx="highlight"]) { background: Mark; color: MarkText; forced-color-adjust: none; }
+  :where(mark[data-fx="highlight"])::before { display: none; }
+  :where([data-fx="text-reveal"] [data-w]) { opacity: 1 !important; animation: none !important; }
+  :where([data-scope="scroll-progress"], [data-scope="player"] [data-part="played"], [data-scope="changelog"] [data-part="knot"]) { background: Highlight; forced-color-adjust: none; }
+  :where([data-scope="player"] [data-part="rail"]) { background: GrayText; forced-color-adjust: none; }
+  :where([data-scope="player"] [data-part="buffered"], [data-scope="player"] [data-part="hover"]) { background: CanvasText; opacity: 0.4; forced-color-adjust: none; }
+  :where([data-scope="player"][data-kind="video"] > [data-part="controls"]) { background: Canvas; forced-color-adjust: none; color: CanvasText; }
+  :where([data-scope="player"] [data-part="controls"] button[aria-pressed="true"])::after { background: Highlight; }
+  :where([data-scope="player"][data-kind="audio"]) { --_bar: CanvasText; --_played: Highlight; --_hover: GrayText; }
+  :where([data-scope="player-notes"] [data-part="chapters"] button[aria-current="true"], [data-scope="transcript"] button[aria-current="true"]) { border: 2px solid Highlight; }
+  :where([data-scope="gallery"] [data-part="item"][data-selected])::after { box-shadow: none; outline: 3px solid Highlight; outline-offset: -3px; background: none; }
+  :where([data-scope="selection-bar"][data-active]) { border: 2px solid Highlight; }
+  :where([data-scope="rating"][data-part="input"] label[data-on] svg) { fill: Highlight; color: Highlight; }
+  :where([data-part="stars"] svg) { fill: CanvasText; }
+  :where([data-part="stars"] svg[data-empty]) { fill: none; stroke: CanvasText; }
+  :where([data-scope="velocity"] > [data-part="row"]) { transform: none !important; }
+}
 
 /* ---------------------------------------------------------------------------
    20 · Forced colours (WHCM): every effect drops to system colours, nothing relies on hue

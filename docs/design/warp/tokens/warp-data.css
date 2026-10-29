@@ -1,5 +1,5 @@
 /* =============================================================================
-   warp · data — tables, collections, stats, charts             v0.2 · 2026-10-28
+   warp · data — tables, collections, stats, charts             v0.3 · 2026-10-28
    Spec: ../06-data-and-charts.md     Tokens: ./warp.css (load first)
 
    Load after warp.css. Declare the order once, before either file:
@@ -37,16 +37,20 @@
   --warp-ref-data-area: 0.14;  /* area wash alpha */
   --warp-ref-data-line: 1.75px;
   --warp-ref-data-num-font: var(--warp-font-display);
+  --warp-ref-tree-guides: 1;   /* tree data (06 §6): hairline level guides */
+  --warp-ref-tree-tint: 0;     /* guides + leading edge in the top-level branch's series colour */
 }
 [data-expression="quiet"] {
   --warp-ref-data-draw: 0; --warp-ref-data-rise: 0; --warp-ref-data-fade: 0;
   --warp-ref-data-area: 0; --warp-ref-data-line: 1.5px;
   --warp-ref-data-num-font: var(--warp-font-sans);
+  --warp-ref-tree-guides: 0; --warp-ref-tree-tint: 0;
 }
 [data-expression="vivid"] {
   --warp-ref-data-draw: 1; --warp-ref-data-rise: 1; --warp-ref-data-fade: 1;
   --warp-ref-data-area: 0.34; --warp-ref-data-line: 2px;
   --warp-ref-data-num-font: var(--warp-font-display);
+  --warp-ref-tree-guides: 1; --warp-ref-tree-tint: 1;
 }
 
 /* sys: re-declared on every scope root, exactly like warp.css §2 */
@@ -103,6 +107,10 @@
   --warp-table-row: max(calc(var(--warp-ref-control-md) + 4px), var(--warp-target-min)); /* 36 · 40 · 44; 44 coarse */
   --warp-table-pad-x: calc(var(--warp-pad-control) * 1);
   --warp-table-head: max(calc(var(--warp-ref-control-md) - 2px), var(--warp-target-min));
+  /* tree data: one level of indent (toggle 24 + related gap, density-scaled: 30 · 32 · 34) */
+  --warp-table-indent: calc(24px + var(--warp-space-related));
+  --warp-table-tree-guides: var(--warp-ref-tree-guides);
+  --warp-table-tree-tint: var(--warp-ref-tree-tint);
 }
 } /* @layer warp.tokens */
 
@@ -1160,3 +1168,83 @@
   :where([data-pointer="coarse"] [data-scope="table"][data-phone="cards"] tbody tr > [data-editable]) { pointer-events: none; }
 }
 }
+
+/* ---------------------------------------------------------------------------
+   4 · TREE DATA (06 §6 "Tree data"): <DataGrid tree>, APG treegrid.
+   table[role=treegrid] > tbody > tr[role=row][aria-level][aria-setsize][aria-posinset]
+   (+ aria-expanded on parents) > th[role=rowheader][data-part=tree-cell] + td[role=gridcell].
+   Rows AND cells take focus (one roving tab stop). Collapsed descendants are not
+   in the DOM; rows are keyed and moved, never rebuilt. --_lvl is the level (1…n),
+   --_bc the top-level branch's series colour, --i the reveal order.
+   ------------------------------------------------------------------------ */
+@layer warp.data {
+:where([data-scope="table"][data-tree]) {
+  --_indent: var(--warp-table-indent);
+  --_guide: color-mix(in oklab, var(--_bc, var(--warp-color-border-strong)) calc(var(--warp-table-tree-tint) * 70%), var(--warp-color-border-strong));
+}
+:where([data-scope="table"][data-tree] tbody tr) { outline: none; }
+:where([data-scope="table"][data-tree] [data-part="tree-cell"]) {
+  font-weight: 400; color: var(--warp-color-text);
+  padding-inline-start: calc(var(--_px) + (var(--_lvl, 1) - 1) * var(--_indent));
+}
+:where([data-scope="table"][data-tree] [data-part="tree-cell"]:not([data-pinned])) { position: relative; }   /* pinned cells are sticky, which is a containing block too */
+:where([data-scope="table"][data-tree] [data-part="tree-cell"] > [data-part="tree-label"]) { display: inline-flex; align-items: center; gap: var(--warp-space-related); min-inline-size: 0; }
+/* level guides: one hairline per ancestor level, through the centre of that level's toggle */
+:where([data-scope="table"][data-tree] tr:not([aria-level="1"]) > [data-part="tree-cell"])::before {
+  content: ""; position: absolute; inset-block: 0; pointer-events: none;
+  inset-inline-start: calc(var(--_px) + 11.5px); inline-size: calc((var(--_lvl, 1) - 1) * var(--_indent));
+  background: repeating-linear-gradient(to right, var(--_guide) 0 1px, transparent 1px var(--_indent));
+  opacity: var(--warp-table-tree-guides);
+}
+:where([data-scope="table"][data-tree] [data-part="tree-cell"]:dir(rtl))::before { background: repeating-linear-gradient(to left, var(--_guide) 0 1px, transparent 1px var(--_indent)); }
+/* vivid: the branch's colour runs down the leading edge of every row in it */
+:where([data-scope="table"][data-tree] tbody tr > :first-child) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint)) 0 0 var(--_bc, transparent); }
+:where([data-scope="table"][data-tree] tbody tr > :first-child:dir(rtl)) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint) * -1) 0 0 var(--_bc, transparent); }
+/* parents: name in medium weight; aggregates (sum of descendants) in the subtle ink so leaf values read first */
+:where([data-scope="table"][data-tree] tr[aria-expanded] [data-part="primary"]) { font-weight: 600; }
+:where([data-scope="table"][data-tree] tr[aria-expanded] td[data-numeric]) { color: var(--warp-color-text-subtle); font-weight: 500; }
+:where([data-scope="table"][data-tree] tr[data-context] > *) { color: var(--warp-color-text-subtle); }   /* an ancestor shown only because a descendant matches the filter */
+/* the toggle: a 24px chevron box (pointer only; the row's aria-expanded is the state), hit-min on coarse */
+:where([data-scope="table"][data-tree] [data-part="toggle"]) {
+  position: relative; display: inline-grid; place-items: center; flex: none; inline-size: 24px; block-size: 24px;
+  border-radius: var(--warp-radius-mark); color: var(--warp-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="table"][data-tree] [data-part="toggle"])::after { content: ""; position: absolute; inset: min(0px, calc((24px - var(--warp-hit-min)) / 2)); }
+:where([data-scope="table"][data-tree] [data-part="toggle"]:hover) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor 8%, transparent); }
+:where([data-scope="table"][data-tree] [data-part="toggle"] svg) { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="table"][data-tree] [data-part="toggle"]:dir(rtl) svg) { scale: -1 1; }
+:where([data-scope="table"][data-tree] tr[aria-expanded="true"] [data-part="toggle"] svg) { rotate: 90deg; }
+:where([data-scope="table"][data-tree] tr[aria-expanded="true"] [data-part="toggle"]:dir(rtl) svg) { rotate: -90deg; }
+:where([data-scope="table"][data-tree] [data-part="toggle"][data-leaf]) { visibility: hidden; }
+:where([data-scope="table"][data-tree] tr[aria-busy="true"] [data-part="toggle"] svg) { opacity: 0.4; }
+/* focus: a row or a cell (APG treegrid). The row ring is drawn by its cells (a tr outline is unreliable
+   with border-collapse: separate); forced colours use a real outline (box-shadow is dropped there) */
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > *) { box-shadow: inset 0 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > :first-child) { box-shadow: inset 2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > :last-child) { box-shadow: inset -2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > :first-child:dir(rtl)) { box-shadow: inset -2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody tr:focus-visible > :last-child:dir(rtl)) { box-shadow: inset 2px 2px 0 var(--warp-color-focus), inset 0 -2px 0 var(--warp-color-focus); }
+:where([data-scope="table"][data-tree] tbody :is(td, th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="table"][data-tree] tbody tr:is(:focus, :focus-within)) { --_cell-bg: var(--warp-color-accent-soft); }
+/* lazy children: one loading row at the child level until they arrive */
+:where([data-scope="table"][data-tree] tr[data-part="loading"] > *) { color: var(--warp-color-text-subtle); }
+:where([data-scope="table"][data-tree] tr[data-part="loading"] [data-part="skeleton"]) { display: inline-block; vertical-align: middle; inline-size: 96px; margin-inline-start: var(--warp-space-related); }
+/* reveal: children rise into place in order; the dial scales distance and stagger (0 under reduced motion) */
+@keyframes warp-tree-in { from { opacity: 0; translate: 0 calc(-6px * var(--warp-motion-scale)); } }
+:where([data-scope="table"][data-tree] tr[data-enter] > *) {
+  animation: warp-tree-in var(--warp-duration-base) var(--warp-ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 8) * var(--warp-stagger) * 0.5);
+}
+@media (forced-colors: active) {
+  :where([data-scope="table"][data-tree] tbody tr:focus-visible) { outline: 2px solid Highlight; outline-offset: -2px; }
+  :where([data-scope="table"][data-tree] tbody :is(td, th):focus-visible) { outline-color: Highlight; }
+  :where([data-scope="table"][data-tree] [data-part="tree-cell"])::before { background: repeating-linear-gradient(to right, GrayText 0 1px, transparent 1px var(--_indent)); opacity: 1; forced-color-adjust: none; }
+  :where([data-scope="table"][data-tree] tr[data-context] > *) { color: GrayText; }
+  :where([data-scope="table"][data-tree] tbody tr:is(:focus, :focus-within)) { --_cell-bg: Canvas; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(:root:not([data-motion="full"]) [data-scope="table"][data-tree] tr[data-enter] > *) { animation-duration: 120ms; animation-delay: 0ms; }
+}
+:where([data-motion="reduce"] [data-scope="table"][data-tree] tr[data-enter] > *) { animation-duration: 120ms; animation-delay: 0ms; }
+}
+

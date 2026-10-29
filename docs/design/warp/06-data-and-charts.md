@@ -156,12 +156,59 @@ The same parts as `Table`, plus `role="grid"` (or `treegrid` when grouped). It k
 | Column reorder | headers are draggable; a 2px accent drop line | Alt + ←/→ on a header, announced |
 | Per-column filters | a filter row (contains, select or ≥ by type) mirrored as **applied-filter chips** with "Clear all" | — |
 | Group + aggregate | `tr[data-part=group]` with count and subtotal, collapsible (`aria-expanded`, `aria-level`); the footer `aggregate` row covers the visible rows | Enter or Space on a group row |
-| Tree data | the same treegrid levels with `aria-level` / `aria-setsize`; children load lazily | → / ← expand and collapse |
+| Tree data | `role="treegrid"`, rows at `aria-level` with `aria-setsize` / `aria-posinset`; parents roll up their descendants; children load lazily ([below](#tree-data)) | APG treegrid: → / ← open, close, climb |
 | Master/detail | the detail `<tr>` from §5 | — |
 | Saved views | `{order, hidden, filters, sort, group}` snapshots in a select, plus "Save view" | — |
 | Export | CSV of the visible rows in the visible column order (XLSX through the pack) | — |
 | Bulk action bar | appears on selection (inverse surface, `role="region"`), counts, and holds actions | — |
 | Pivot | rows × columns × measure (sum or count) with a heat cell (`td[data-heat]`, `--v`) and totals | — |
+
+### Tree data
+
+`<DataGrid tree={{ children: (row) => row.kids ?? load(row.id), rollup }}>` renders hierarchical rows (an org →
+team → project budget, a file system with sizes, a bill of materials) as an [APG treegrid](https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/).
+Demo: `data.html#treedata`.
+
+- **Structure.** `table[role=treegrid]` (named by its caption, described by the key hint) > `tbody` >
+  `tr[role=row][aria-level][aria-setsize][aria-posinset]`, plus `aria-expanded` on parents only. The first cell is
+  `th[role=rowheader][data-part=tree-cell]` and holds the toggle and the name. The rest are `td[role=gridcell]`.
+  `aria-setsize` and `aria-posinset` count the **visible** siblings, so they stay honest while filtered.
+- **Identity.** Rows are keyed (`id → tr`). Expanding inserts the children after their parent, and collapsing removes
+  the descendants (they are not in the DOM, so they aren't in the accessibility tree). The update reconciles: rows that
+  leave are removed first, then rows that arrive are inserted, so a row that stays is never moved. Moving a node blurs
+  it, and the focused row has to keep focus through its own expand.
+- **Roll-up.** A parent shows its descendants' aggregate in the subtle ink, so leaf values read first: budget is a
+  sum, used % is budget-weighted, projects is a leaf count. For an unloaded branch the server sends the aggregate with
+  the row (`rollup`), so the numbers are right before the children exist.
+- **Lazy children.** The first expand of a branch with no children loaded sets `aria-busy="true"` on its row and
+  inserts one loading row at the child level (a skeleton, which is static under reduced motion). The children replace
+  it, and a polite status announces "Observability expanded, 3 rows loaded". Focus stays on the parent row.
+- **Filter.** The floating-border filter field keeps each match plus its ancestors. An ancestor shown only for context
+  is `data-context` (subtle ink). Ancestors of matches open for the duration of the query, and a branch the user closes
+  stays closed until the query changes. Matches get `mark[data-part=hit]`. Unloaded branches are filtered on the server
+  (the query goes to `children`).
+- **Look.** Each level indents by `--warp-table-indent` (24px toggle + `space.related`, density-scaled). The dial sets
+  the guides: quiet has none (`--warp-table-tree-guides: 0`), balanced draws a hairline through each ancestor's
+  toggle, and vivid tints the guides and the row's leading edge in the top-level branch's series colour
+  (`--warp-table-tree-tint: 1`, `--_bc`). The chevron turns 90° on open and mirrors under `:dir(rtl)`. Revealed
+  children rise into place in order (`warp-tree-in`, distance and stagger × motion-scale, a 120ms fade under reduced
+  motion).
+- **Pointer.** The 24px chevron toggles (its `::after` reaches `hit-min` on a coarse pointer, inside the 44px row).
+  A click elsewhere focuses that row's cell, and a double-click toggles. Expand all and Collapse all sit in the toolbar.
+- **Forced colours.** The focused row gets a real `Highlight` outline (the cell box-shadow ring is dropped there),
+  guides are `GrayText`, and context rows are `GrayText`.
+
+**Keys** (APG treegrid; one tab stop, roving over rows *and* cells; ← and → swap under `dir="rtl"`):
+
+| Key | Row focused | Cell focused |
+|---|---|---|
+| → | closed parent: open it; open parent or leaf: focus its first cell | next cell (stops at the last) |
+| ← | open parent: close it; closed parent or leaf: focus the parent row | previous cell; first cell: back to the row |
+| ↓ / ↑ | next / previous visible row | same column, next / previous row |
+| Home / End | first / last row | first / last cell in the row |
+| Ctrl + Home / End | first / last row | first / last row, same column |
+| PageDown / PageUp | 5 rows | 5 rows, same column |
+| Enter (or Space) | toggle the row | on the first cell: toggle the row |
 
 **ScrollableGrid** (`<ScrollGrid>`) is the two-axis primitive: a sticky header row and column, both axes virtualised.
 It follows the APG data grid, read-only:
@@ -397,7 +444,10 @@ render in the same frame height.
 - Live price tick: 2 mutation records, 0 rows recreated (counted in specimen 03).
 - Virtual list: about 16 nodes for 10k rows. Scroll grid: about 100 cells for 240k.
 - Every target is ≥ 44px on coarse pointers (`--warp-target-min`, invisible hit extenders on small controls). Phone
-  table cards give the select cell a 44 × 44 box; the tracker is one 44px scrubber.
+  table cards give the select cell a 44 × 44 box; the tracker is one 44px scrubber. A target never sits inside an
+  `overflow: hidden` host, because that clips its `::after` expander. The specimen's solid stand-in button (the
+  comparison table's "Choose Team") used to clip its own and was a 28px target. Its sweep fill now wipes through
+  `clip-path` in place, like the real button in `warp-components.css`. Tree toggles reach 44px inside their 44px row.
 - Dial switch: no long task over 50 ms (§4). Reduced motion: no running animation except the cell colour flash.
 - Contrast: marks ≥ 3:1, text ≥ 4.5:1. Both are checked with `scripts/contrast-check.mjs` against
   `warp.css + warp-data.css`: 804 checks, 6 flags, all from one deliberate choice. Data surfaces rest on the hairline
