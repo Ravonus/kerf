@@ -1,0 +1,374 @@
+{
+  "shop-css": {
+    "hidden": {
+      "passed": 23,
+      "total": 23
+    },
+    "spike": [
+      "pass markup snapshots for counting (catalogue, then cart with a moved price)",
+      "pass stock change (in → low): the axis is one attribute write",
+      "pass price push in the catalogue: 1 DOM mutation (text)",
+      "pass price push in the cart (trend same → up): the axis is one attribute write",
+      "pass tab switch: one aria-pressed write per tab, plus the view swap"
+    ],
+    "failures": [],
+    "measured": {
+      "stockChange": {
+        "mutations": 2,
+        "added": 1,
+        "removed": 0,
+        "text": 1,
+        "attributes": 0,
+        "runs": 20,
+        "attrs": []
+      },
+      "pricePush": {
+        "mutations": 1,
+        "added": 0,
+        "removed": 0,
+        "text": 1,
+        "attributes": 0,
+        "runs": 10,
+        "attrs": []
+      },
+      "trendChange": {
+        "mutations": 3,
+        "added": 1,
+        "removed": 0,
+        "text": 2,
+        "attributes": 0,
+        "runs": 13,
+        "attrs": []
+      },
+      "tabSwitch": {
+        "mutations": 4,
+        "added": 1,
+        "removed": 1,
+        "text": 0,
+        "attributes": 2,
+        "runs": 7,
+        "attrs": [
+          "aria-pressed",
+          "aria-pressed"
+        ],
+        "pressed": "true"
+      }
+    },
+    "css": {
+      "raw": 4343,
+      "min": 4342,
+      "gz": 923,
+      "br": 762
+    },
+    "jsGz": 5471
+  },
+  "shop-groups": {
+    "hidden": {
+      "passed": 23,
+      "total": 23
+    },
+    "spike": [
+      "pass markup snapshots for counting (catalogue, then cart with a moved price)",
+      "pass stock change (in → low): the axis is one attribute write",
+      "pass price push in the catalogue: 1 DOM mutation (text)",
+      "pass price push in the cart (trend same → up): the axis is one attribute write",
+      "pass tab switch: one aria-pressed write per tab, plus the view swap"
+    ],
+    "failures": [],
+    "measured": {
+      "stockChange": {
+        "mutations": 3,
+        "added": 1,
+        "removed": 0,
+        "text": 1,
+        "attributes": 1,
+        "runs": 20,
+        "attrs": [
+          "data-stock"
+        ]
+      },
+      "pricePush": {
+        "mutations": 1,
+        "added": 0,
+        "removed": 0,
+        "text": 1,
+        "attributes": 0,
+        "runs": 10,
+        "attrs": []
+      },
+      "trendChange": {
+        "mutations": 4,
+        "added": 1,
+        "removed": 0,
+        "text": 2,
+        "attributes": 1,
+        "runs": 14,
+        "attrs": [
+          "data-trend"
+        ]
+      },
+      "tabSwitch": {
+        "mutations": 4,
+        "added": 1,
+        "removed": 1,
+        "text": 0,
+        "attributes": 2,
+        "runs": 7,
+        "attrs": [
+          "aria-pressed",
+          "aria-pressed"
+        ],
+        "pressed": "true"
+      }
+    },
+    "css": {
+      "raw": 5957,
+      "min": 5956,
+      "gz": 979,
+      "br": 829
+    },
+    "jsGz": 5373
+  },
+  "matrix": [
+    {
+      "label": "hand CSS",
+      "raw": 5113,
+      "min": 4342,
+      "gz": 923,
+      "br": 762,
+      "vsHand": 0
+    },
+    {
+      "label": "default: bare parts, @scope, local tones, similar order",
+      "raw": 7762,
+      "min": 5956,
+      "gz": 979,
+      "br": 829,
+      "vsHand": 8.8
+    },
+    {
+      "label": "  with :where()",
+      "raw": 8058,
+      "min": 6252,
+      "gz": 993,
+      "br": 836,
+      "vsHand": 9.7
+    },
+    {
+      "label": "  shared blocks (one @scope over the owners)",
+      "raw": 7048,
+      "min": 5470,
+      "gz": 1009,
+      "br": 845,
+      "vsHand": 10.9
+    },
+    {
+      "label": "  shared blocks, groups in file order",
+      "raw": 7048,
+      "min": 5470,
+      "gz": 1008,
+      "br": 851,
+      "vsHand": 11.7
+    },
+    {
+      "label": "  shared blocks, groups by name",
+      "raw": 7048,
+      "min": 5470,
+      "gz": 1004,
+      "br": 845,
+      "vsHand": 10.9
+    },
+    {
+      "label": "  tones not folded",
+      "raw": 8078,
+      "min": 6197,
+      "gz": 1042,
+      "br": 893,
+      "vsHand": 17.2
+    },
+    {
+      "label": "  tagged parts (data-g on parts), @scope",
+      "raw": 8102,
+      "min": 6296,
+      "gz": 991,
+      "br": 840,
+      "vsHand": 10.2
+    },
+    {
+      "label": "  tagged parts, flat",
+      "raw": 7818,
+      "min": 6476,
+      "gz": 1010,
+      "br": 852,
+      "vsHand": 11.8
+    },
+    {
+      "label": "  tagged parts, flat, shared blocks",
+      "raw": 6745,
+      "min": 5627,
+      "gz": 1012,
+      "br": 845,
+      "vsHand": 10.9
+    },
+    {
+      "label": "  tagged parts, @scope, shared blocks",
+      "raw": 7169,
+      "min": 5727,
+      "gz": 1047,
+      "br": 879,
+      "vsHand": 15.4
+    },
+    {
+      "label": "  prod short group names (attr)",
+      "raw": 7691,
+      "min": 5905,
+      "gz": 953,
+      "br": 808,
+      "vsHand": 6
+    },
+    {
+      "label": "  prod short group names (class)",
+      "raw": 7601,
+      "min": 5815,
+      "gz": 952,
+      "br": 796,
+      "vsHand": 4.5
+    },
+    {
+      "label": "  prod short group + part names",
+      "raw": 7525,
+      "min": 5777,
+      "gz": 921,
+      "br": 774,
+      "vsHand": 1.6
+    },
+    {
+      "label": "  groups by name",
+      "raw": 7762,
+      "min": 5956,
+      "gz": 1001,
+      "br": 834,
+      "vsHand": 9.4
+    },
+    {
+      "label": "  groups in file order",
+      "raw": 7762,
+      "min": 5956,
+      "gz": 987,
+      "br": 825,
+      "vsHand": 8.3
+    },
+    {
+      "label": "  groups in reverse file order",
+      "raw": 7762,
+      "min": 5956,
+      "gz": 996,
+      "br": 841,
+      "vsHand": 10.4
+    },
+    {
+      "label": "  similar order, from reversed input",
+      "raw": 7762,
+      "min": 5956,
+      "gz": 979,
+      "br": 829,
+      "vsHand": 8.8
+    },
+    {
+      "label": "atomic",
+      "raw": 4045,
+      "min": 4032,
+      "gz": 1020,
+      "br": 844,
+      "vsHand": 10.8
+    }
+  ],
+  "css": {
+    "hand (shop-css build)": {
+      "raw": 4343,
+      "min": 4342,
+      "gz": 923,
+      "br": 762
+    },
+    "groups, @scope (shop-groups build)": {
+      "raw": 5957,
+      "min": 5956,
+      "gz": 979,
+      "br": 829
+    },
+    "groups, @scope (emitter, prod)": {
+      "raw": 7762,
+      "min": 5956,
+      "gz": 979,
+      "br": 829
+    },
+    "groups, tagged parts, flat (emitter, prod)": {
+      "raw": 7818,
+      "min": 6476,
+      "gz": 1010,
+      "br": 852
+    },
+    "atomic (emitter)": {
+      "raw": 4045,
+      "min": 4032,
+      "gz": 1020,
+      "br": 844
+    },
+    "groups, all values (no call-site pruning)": {
+      "raw": 7762,
+      "min": 5956,
+      "gz": 979,
+      "br": 829
+    }
+  },
+  "handCssSource": {
+    "raw": 5113,
+    "min": 4342,
+    "gz": 923,
+    "br": 762
+  },
+  "groupCount": 10,
+  "useCount": 33,
+  "perElement": {
+    "catalog": {
+      "hand CSS: classes": {
+        "elements": 33,
+        "mean": 1.09,
+        "max": 2,
+        "total": 36
+      },
+      "groups: attributes": {
+        "elements": 33,
+        "mean": 1.3,
+        "max": 2,
+        "total": 43
+      },
+      "atomic: classes": {
+        "elements": 33,
+        "mean": 8.42,
+        "max": 23,
+        "total": 278
+      }
+    },
+    "cart": {
+      "hand CSS: classes": {
+        "elements": 21,
+        "mean": 1.24,
+        "max": 2,
+        "total": 26
+      },
+      "groups: attributes": {
+        "elements": 21,
+        "mean": 1.38,
+        "max": 2,
+        "total": 29
+      },
+      "atomic: classes": {
+        "elements": 21,
+        "mean": 9.57,
+        "max": 24,
+        "total": 201
+      }
+    }
+  }
+}

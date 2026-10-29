@@ -1,6 +1,6 @@
 # 23 — Style groups: named, grouped styles instead of class storms (design)
 
-Research date: 2026-10-29. Status: **design, nothing built**. Builds on [03](03-design-language.md) (tokens, intent
+Research date: 2026-10-29. Status: **design; step 1 (the spike) done and passed, results in §6**. Builds on [03](03-design-language.md) (tokens, intent
 props, adapters) and warp's CSS contract (`docs/design/warp/`, PLAN §6.1). Number 22 is taken by the verify-loop
 branch. Statements about other tools are from their docs as fetched today and marked **(unverified)** where a version
 or detail matters.
@@ -253,11 +253,270 @@ warp's contrast gate keeps its own code (D010, in the warp branch).
 ## 5. Open questions
 
 - **Spread syntax or a prop?** `{...orderCard(...)}` (above) works on any element and composes with other props.
-  A `g={orderCard(...)}` prop reads shorter but needs compiler support on every element. Decide in the spike.
+  A `g={orderCard(...)}` prop reads shorter but needs compiler support on every element. **Answered in §6.3:
+  spread.**
 - **Groups in `.css` files too?** Some people will want to write groups as CSS (`@group order-card { … }`),
   compiled the same way. That could be the input format that maps most directly to the future native `@mixin`.
 - **Cross-file accents:** should an accent be allowed at all, or should every variation be an axis value? Start
   allowed with D022, and tighten if the eval shows agents overuse them.
+
+## 6. Spike results
+
+Step 1 of §4, run 2026-10-29, then a second pass the same day on CSS size (6.4). Code: `weft/style`
+(`packages/weft/src/style.ts`, `src/style/vocab.ts`, `src/style/css.ts`), the compiler's
+`crates/weft-compiler/src/style.rs`, and the `weft:style` part of `vite.mjs`. The measurements are in
+`spikes/style-groups/` (`run.mjs` for the shop, `scale.mjs` for 6.5, `results.json`, sample output in `out/`).
+
+### 6.1 What was built
+
+- **`group(name, { base, axes, parts, states, compounds, defaults })`**, fully typed. Every key is an intent from a
+  closed table, and every value is one of that intent's token names. `pad: '13px'`, `padding: …`, `tone: 'danger'`, a
+  default that isn't a value of its axis, a compound on a missing part, `card({ status: 'lost' })` and `card.footer`
+  are all type errors (`test/style-types.tsx`, 10 negative cases). `css: { … }` is the escape. A part may be called
+  `name`, which shadows `Function.name`.
+- **Token table: warp's names.** `vocab.ts` maps research 03's intent keys (`surface`, `pad`, `gap`, `radius`, `tone`,
+  `emphasis`, `text`, `ink`, `layout`, `align`, `justify`, `ring`, …) to `--warp-*` variables from
+  `docs/design/warp/tokens/warp.css`. A test checks that every variable it names is defined there. Using warp's names
+  means a page with warp loaded needs no second theme. Tones are written in warp's channel form (`--_solid`,
+  `--_soft`, `--_text`, …) and folded to direct tokens at emit (6.4).
+- **Static evaluation at build.** The compiler evaluates each `group()` call as literal data. A value that isn't a
+  literal is W060, which names it and its path: `` `px` at g.axes.size.big.pad isn't a literal ``. The Vite plugin
+  resolves every intent against the table, and a bad token is a build error naming the group, its file and line, and
+  the valid values. The codes are placeholders until the D-codes in step 2.
+- **Call sites lower to plain attributes** before the back end runs, so they get its existing template and binding
+  paths:
+
+  | Authored | Compiled (DOM) |
+  |---|---|
+  | `<li {...productRow({ stock: left <= 0 ? 'out' : left <= 3 ? 'low' : 'in' })}>` | `data-g="product-row"` in the template, then `_$attr(el, "data-stock", v)` in one `bind` |
+  | `<span {...productRow.price}>` | `data-part="price"`, static |
+  | `<button {...action()}>` | `data-g="action" data-emphasis="solid"` (the default), static |
+  | `{...tabButton({ pressed: tab === 'cart' })}` | `aria-pressed={tab === 'cart' ? "true" : "false"}` |
+
+  Unknown axes, values, states and parts at a call site are W061 errors. A site whose argument isn't an object
+  literal stays a runtime spread of `group()`'s return value and is reported as dynamic. The call is marked
+  `/* @__PURE__ */`, so a definition whose sites were all lowered drops out of the bundle: the groups shop's JS is
+  5.29 KB gz against 5.39 KB for the class version.
+- **CSS only for what sites can produce.** Literals emit their value. A conditional whose leaves are all literals
+  emits those leaves. Anything else emits the whole axis. Parts, states and compounds are emitted only when they can
+  be reached, and a group with no call site emits nothing. Output is `@layer app.groups`, one `@scope (group) to
+  (nested group)` block per group, and a `/* name · file:line */` comment in dev. SSR writes the same attributes.
+  The dev output for one group, as shipped (minified in prod):
+
+```css
+  /* product-row · spikes/style-groups/shop-groups/src/components/ProductRow.tsx:7 */
+  @scope ([data-g="product-row"]) to ([data-g]) {
+    :scope { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related); … }
+    [data-part="price"] { font-size: var(--warp-text-label-size); …; font-variant-numeric: tabular-nums; }
+    [data-part="note"] { font-size: var(--warp-text-caption-size); …; border-radius: var(--warp-radius-round); }
+    :scope[data-stock="out"] { color: var(--warp-color-text-subtle); }
+    :scope[data-stock="low"] [data-part="note"] { background-color: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+    :scope[data-stock="out"] [data-part="note"] { background-color: var(--warp-color-neutral-soft); color: var(--warp-color-neutral-text); }
+  }
+```
+
+Not built, as planned: the matrix file, the CLI, D020–D025, Tailwind input, accents (§2.2 level 3), `inherit` axes
+beyond typing, and per-module CSS splitting (§2.5 step 7). The spike serves one `virtual:weft/groups.css`, which each
+defining module imports.
+
+### 6.2 The shop, three ways
+
+The v3 reference shop ships no CSS at all, so "today's shop CSS" had to be written first. `shop-css/` is the same
+design as BEM classes plus one hand-written stylesheet on the same warp tokens, written the way a careful person
+would: rules shared across components with selector lists (`.product-row, .cart-line { … }`). `shop-groups/` is that
+design as 10 groups (33 call sites). Both are copies; the reference is untouched. Atomic output comes from the same
+definitions and call sites: one class per declaration and condition, as StyleX and Panda emit.
+
+**CSS bytes** after the fixes in 6.4 (lightningcss-minified; gz and br compress the minified CSS):
+
+| | min | gz | br | br vs hand |
+|---|---|---|---|---|
+| Hand CSS (`shop-css` build) | 4,342 | 923 | **762** | — |
+| **Groups, default** (`shop-groups` build) | 5,956 | 979 | **829** | **+8.8%** |
+| Groups, parts tagged with `data-g`, flat selectors | 6,476 | 1,010 | 852 | +11.8% |
+| Atomic | 4,032 | 1,020 | 844 | +10.8% |
+
+Call-site pruning removes nothing in this app: every axis is reactive over all its values, so "all values" gives the
+same 829 B (unit tests show a literal emitting one rule). The groups CSS now has 149 declarations against the hand
+CSS's 115 (163 before 6.4). The remaining 34 are blocks the hand author shares across components with selector lists
+(row layout, lists, name parts, notes). Selectors are the rest of the minified gap: `@scope ([data-g="product-row"])`
+and `[data-part="price"]` against `.product-row__price`. Rewriting the groups' own rules as BEM classes, with no
+sharing, gives 808 B (`scale.mjs`), so about 21 B of the 67 B gap is the attribute selectors and preludes and about
+46 B is the hand author's sharing.
+
+**Styling tokens per styled element** (54 elements across the catalogue and cart views):
+
+| | catalogue: mean / max | cart: mean / max |
+|---|---|---|
+| Hand CSS: classes | 1.09 / 2 | 1.24 / 2 |
+| Groups: attributes (`data-g`, `data-part`, axis, state) | 1.30 / 2 | 1.38 / 2 (1.73 / 1.86 before parts went bare) |
+| Atomic: classes | 8.42 / 23 | 9.57 / 24 |
+
+A groups root carries a name and at most one variation (`data-g="product-row" data-stock="low"`), and a part carries
+only its part name (`data-part="note"`). Atomic is the class storm research 23 set out to avoid: up to 24 classes on
+one button.
+
+**DOM work per interaction** (`touches()`, in the eval's weft framework):
+
+| Interaction | Hand CSS | Groups | Attribute writes (groups) |
+|---|---|---|---|
+| Price push in the catalogue | 1 (text) | 1 (text) | none |
+| Add one, stock in → low | 2 | 3 | `data-stock` ×1 |
+| Price push in the cart, trend same → up | 3 | 4 | `data-trend` ×1 |
+| Tab switch | 4 | 4 | `aria-pressed` ×2 |
+
+Each axis change is exactly one attribute write, with no class string rebuilt and no re-render. The one extra
+mutation against the class version is that write. The hand version styles "low" from the note element alone and never
+marks the row, while the group axis names the row's state on the row.
+
+**Same look.** In a real browser (Chromium, warp.css loaded), the two builds compute the same value for 34 properties
+on every element in the catalogue, with a field focused, after adding items, and in the cart with the price trend both
+down and up. This was re-run after every fix in 6.4. The one difference is the pressed tab, where the hand CSS is the
+broken one: weft's client wrote `aria-pressed=""` for `true` when this was measured, so `.tab[aria-pressed="true"]`
+never matched (6.7, since fixed).
+`:hover` and `:focus-visible` don't fire under automation, so those two rules were compared by their declarations.
+
+**Tests.** Both shops pass the hidden suite, **23/23**. `packages/weft/test/style.test.tsx` (14 tests) covers the
+lowering, the diagnostics, the emitter (scope prelude, folding, flat tagged mode) and the round trip. SSR of the
+groups shop writes `data-stock="low"`, `data-trend="up"` and `aria-pressed="true"`. Hydration then claims everything
+with **0 misses and 0 DOM writes**, and the next axis change is one write. The full weft suite (201 tests) and the
+compiler's Rust tests pass.
+
+### 6.3 Spread or a `g=` prop (§5)
+
+| | `<li {...productRow({ stock })}>` | `<li g={productRow({ stock })}>` |
+|---|---|---|
+| Compiler | Done (style.rs lowers the spread) | The same lowering, keyed on an attribute name `g` that would then be reserved on every element and component |
+| Without the compiler (tests in plain TS, other JSX runtimes, a dynamic argument) | Works: `group()` returns the attributes | Needs a `g` handler in the runtime's attribute setter, and in every other runtime |
+| Types | Ordinary JSX spread | `g?: GroupAttrs` added to every intrinsic element, and a clash with any component prop called `g` |
+| Two groups on one element | Possible, and the last `data-g` wins silently (step 2 should flag it) | Ruled out by syntax |
+| Length | 3 characters longer | Shorter |
+| Agents | Standard JSX they already write | weft-only vocabulary to learn |
+
+**Decision: spread.** It's already compiled, it works uncompiled, and it needs nothing new in the runtime, the types
+or the agent's vocabulary. The one thing the prop gives, at most one group per element, should be a diagnostic in
+step 2 ("two group roots on one element").
+
+### 6.4 CSS size: the fixes, one at a time
+
+The first run missed the CSS bar: 914 B br from the Vite build (906 B from the emitter), **+19.9%** against 762 B.
+Each fix below was applied on top of the one before and checked against the bars before moving on (same computed
+styles, 23/23, one write per axis change, 0 hydration writes). Bytes are the emitter's prod output, br:
+
+| Fix | br | vs hand | Change |
+|---|---|---|---|
+| First run: tagged parts, `@scope` with `:not([data-part])`, `:where()`, tone channels | 906 | +18.9% | |
+| 1. Fold static tones into direct tokens | 858 | +12.6% | −48 |
+| 2. Body text leaves `font-weight` to inheritance | 849 | +11.4% | −9 |
+| 3. Parts carry only `data-part` | 834 | +9.4% | −15 |
+| 4. Tones are local to their group | 836 | +9.7% | +2 |
+| 5. No `:where()` | **829** | **+8.8%** | −7 |
+| Vite build of the final default | **829** | **+8.8%** | |
+
+1. **Tone folding.** A group's tone set the six channels and its emphasis read them (`background-color:
+   var(--_soft)`). Where the tone is static on an element, the emitter now substitutes: `background-color:
+   var(--warp-color-caution-soft)`, and the channels go. Two shapes fold. One unconditional tone setter on an element
+   substitutes into every read on it. Conditional setters (an axis value or compound that sets a tone) take the
+   substituted reads into their own rule, and the element's unconditional reads keep only their fallback or drop.
+   This removed every channel from the shop's CSS. Without it the default is 893 B (+17.2%).
+2. **Body weight.** `text: 'body'` wrote `font-weight: var(--warp-text-body-weight)`, which is 400, what the hand
+   author leaves to inheritance. The vocab now leaves it out, as it already did for `caption` and `code`.
+3. **Bare parts.** A part is `<span data-part="price">`, no `data-g`. The group's `@scope ([data-g="x"]) to
+   ([data-g])` finds it under its root, and the prelude no longer needs `:not([data-part])`. Tested with nesting in
+   the browser: a group nested in itself doesn't leak rules into the inner copy, and a nested group with the same part
+   names doesn't take the outer group's part rules. **The limit:** a part rendered inside a nested group's root (an
+   outer group's part passed as children into another group's component) is past the scope's bound and gets no
+   styles. The compiler can't see that across components. `taggedParts` (compiler and Vite option) keeps the old
+   form for apps that need it, at 852 B flat. Step 2 should decide whether warp's contract (`data-scope` +
+   `data-part`) adopts bare parts, and whether a runtime dev check warns on a part with no matching root.
+4. **Local tones.** Folding needs to know where a channel comes from. A group now never reads a tone from a group it
+   sits in: an untoned group's reads (`color: var(--_text, var(--warp-color-text))`) emit their fallback. Context
+   tone (a tone that flows down the tree) stays warp's `data-tone`, which is unchanged. This cost 2 B and makes the
+   folding sound, so it stays.
+5. **No `:where()`.** Inside `@layer app.groups`, unlayered CSS and later layers (Tailwind's utilities) win whatever
+   the specificity. Within the layer, two groups never style one element (a nested root is the scope's bound), and one
+   group's rules rise in specificity in the order they should win: base, axis, compound. So `:where()` settled
+   nothing, and dropping it saves 7 B.
+
+**Also measured, not taken:**
+
+| Option | br | vs hand | Why not |
+|---|---|---|---|
+| Identical blocks shared across groups (one `@scope` over their owners) | 845 | +10.9% | Smaller minified (5,470 B) but larger after brotli. Re-tested after the other fixes; it still loses |
+| Shared blocks, tagged parts, flat | 845 | +10.9% | Same |
+| Prod short group names, as attributes (`data-g="a"`) | 808 | +6.0% | Unreadable in devtools and in a bug report |
+| Prod short group names as classes | 796 | +4.5% | Same, and a second markup contract between dev and prod |
+| Prod short group and part names | 774 | +1.6% | Same |
+
+**Short names: no.** They are the only option that reaches the bar with margin, but the point of groups is markup a
+person can read (`data-g="product-row" data-stock="low"`), and prod is where people read it in bug reports and
+devtools. 21 B to 55 B on a 10-group app doesn't pay for that. If size ever forces it, it should be an explicit opt-in
+with a name map in the matrix, not a default.
+
+**Group order moves brotli by ±1%.** Groups never compete for an element, so their order in the file can't change a
+computed style, but it changes how well brotli matches across blocks: 825 B in file order, 834 B by name, 841 B in
+reverse file order. The emitter now orders by similarity (greedy nearest neighbour on shared declarations, starting
+from the first group by name), which gives 829 B whatever order the files compiled in. Before this, the Vite build
+and the emitter differed by 17 B on the same rules.
+
+### 6.5 At more groups
+
+The shop has 10 groups, so per-group costs (one `@scope` prelude each) weigh most there. Neither bigger candidate was
+cheap: the v4 eval app has no CSS to compare against, and warp's tier-1 set is hand-written to warp's own contract.
+So `scale.mjs` generates N groups from the vocabulary with a fixed seed (a base, 0–3 parts from a shared pool of 10
+names, 0–2 axes of 2–4 values with half of them tones, some hover states and compounds) and compares the groups CSS
+with the same rules written as BEM classes (`.x`, `.x__part`, `.x--axis-value`). **Synthetic**, and with no
+cross-component sharing on either side, so it measures the selector cost alone:
+
+| Groups | BEM, br | Groups, br | Groups vs BEM |
+|---|---|---|---|
+| 10 | 1,091 | 1,071 | −1.8% |
+| 30 | 2,367 | 2,214 | −6.5% |
+| 100 | 6,063 | 5,233 | −13.7% |
+| 300 | 15,528 | 12,492 | −19.6% |
+| *The shop, for calibration* | *808* | *829* | *+2.6%* |
+
+The selector cost doesn't grow with the number of groups; it shrinks. A BEM part selector repeats its block name
+(`.order-card__title`), while a bare part (`[data-part="title"]`) is the same string in every group that has a title,
+which brotli stores once. The synthetic names (`card-badge-12`) are longer and more varied than the shop's, which
+flatters groups here, so read the table as "no growth", not as groups beating hand CSS at scale. What it can't
+measure is the hand author's cross-component sharing, the ~46 B in the shop (6.2). That should be measured on a real
+app in step 5's eval, with a hand-CSS version written for it.
+
+### 6.6 Go/no-go
+
+| Pass bar (§4) | Result | |
+|---|---|---|
+| CSS ≤ today's shop CSS + 10% (≤ 838 B br) | 829 B br against 762 B: **+8.8%** (first run +19.9%) | met |
+| One attribute mutation per axis change | `data-stock` ×1, `data-trend` ×1 | met |
+| 0 hydration writes | 0 writes, 0 misses | met |
+| Same look as the hand CSS | Same computed styles for every element and state checked | met |
+
+**Go to step 2.** All bars pass with readable output (full group and part names, a source comment per group in dev).
+Things to carry into step 2:
+
+- **The margin is thin.** 9 B under the bar, and group order alone moved the result by 16 B. The similarity order
+  makes it deterministic, but a small change to one group could cross the line on this app. 6.5 says the margin
+  grows with app size rather than shrinking.
+- **Bare parts change the markup contract.** Decide with warp's `data-scope`/`data-part` contract, and decide what to
+  do about parts slotted into another group (6.4 fix 3): a dev check, `taggedParts`, or a documented rule.
+- **Local tones** mean a group never takes its tone from the group around it. Context tone is warp's `data-tone`.
+  The matrix should say which groups read a context tone.
+- **Sharing stays off** and short names stay out. Both are measured above if the trade changes.
+- Atomic (844 B) is still larger than semantic, so §2.5's "semantic unless it costs > 20%" holds without an atomic
+  mode.
+
+### 6.7 Found along the way
+
+- **weft wrote boolean `true` as an empty attribute** (`aria-pressed=""` on the client; a bare `aria-pressed` from
+  SSR). `aria-pressed=""` isn't valid ARIA, and `[aria-pressed="true"]` never matches it, which is the hand shop's one
+  computed-style difference in 6.2. The v4 eval branch (PR #17) fixed it in weft/dom and the SSR back end: `aria-*`
+  booleans are now the words. Groups still lower an ARIA state to `"true"`/`"false"`, since a state's value may be any
+  truthy expression and a static one becomes plain template text.
+- **With tagged parts, `@scope` needs `:not([data-part])` in its prelude and its bound**, or a part becomes its own
+  scope root and stops its own group's rules. Bare parts (the default) don't have this problem.
+- **brotli rewards repetition, not deduplication.** Every attempt to share blocks across groups made the minified CSS
+  smaller and the compressed CSS larger. Size work on generated CSS should be judged on brotli bytes only.
 
 ## Sources
 

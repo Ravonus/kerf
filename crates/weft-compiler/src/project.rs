@@ -12,6 +12,11 @@ use crate::{Diagnostic, Severity};
 pub struct Facts {
     pub spread_props: Vec<SpreadProp>,
     pub keyed_props: Vec<KeyedProp>,
+    /// Style groups this file defines, and its group call sites (style.rs), for the Vite plugin's CSS.
+    #[serde(default)]
+    pub groups: Vec<crate::style::GroupDef>,
+    #[serde(default)]
+    pub group_uses: Vec<crate::style::GroupUse>,
 }
 
 /// A W014 warning's box passed as `<component prop={box…}>`.
