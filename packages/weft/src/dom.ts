@@ -1,9 +1,9 @@
 // weft/dom: the helpers compiled templates call (the import surface of Solid 2's DOM back end), plus `render`
 // and the keyed list. Compiled code only; app code imports `render` and nothing else from here.
 
-import { createRoot, effect, memo, onCleanup, state, untrack, type State } from './index'
+import { createRoot, effect, getOwner, memo, onCleanup, state, untrack, type State } from './index'
 
-export { effect, memo, untrack }
+export { effect, getOwner, memo, untrack }
 
 type Mountable = Element | DocumentFragment
 
@@ -164,10 +164,23 @@ export function setStyleProperty(node: HTMLElement, name: string, value: any) {
   value == null ? node.style.removeProperty(name) : node.style.setProperty(name, value)
 }
 
+export function setAttributeNS(node: Element, ns: string, name: string, value: any) {
+  if (value == null || value === false) node.removeAttributeNS(ns, name.split(':').pop()!)
+  else node.setAttributeNS(ns, name, value === true ? '' : value)
+}
+
+export function applyRef(r: any, el: Element) {
+  Array.isArray(r) ? r.flat(Infinity).forEach(f => f && f(el)) : r(el)
+}
+
 export function ref(get: () => any, el: Element) {
-  const r = get()
-  if (typeof r === 'function') r(el)
-  else if (Array.isArray(r)) for (const f of r) f(el)
+  const r = untrack(get)
+  if (typeof r === 'function' || Array.isArray(r)) applyRef(r, el)
+}
+
+/** Hydration claims; weft has no claim consumers yet, so this is the identity. */
+export function claimElement<T extends Element>(node: T, _owner?: unknown): T {
+  return node
 }
 
 export function mergeProps(...sources: any[]) {
@@ -182,6 +195,52 @@ export function mergeProps(...sources: any[]) {
     ownKeys: () => [...new Set(sources.flatMap(s => (s ? Reflect.ownKeys(typeof s === 'function' ? s() : s) : [])))],
     getOwnPropertyDescriptor: () => ({ configurable: true, enumerable: true }),
   })
+}
+
+/**
+ * `<div {...rest} a={x}>`: `sources` is one source or an array of them (objects with getters, or accessors);
+ * later sources win per key. One effect applies attributes, properties, class, style, events and `ref`; children
+ * get their own `insert` so an attribute change never rebuilds them.
+ */
+export function spread(node: any, sources: any, skipChildren?: boolean) {
+  const list = Array.isArray(sources) ? sources : [sources]
+  const read = (k: string) => {
+    for (let i = list.length - 1; i >= 0; i--) {
+      const s = typeof list[i] === 'function' ? list[i]() : list[i]
+      if (s != null && k in s) return s[k]
+    }
+  }
+  const svg = node instanceof SVGElement
+  let prev: Record<string, any> = {}
+  effect(
+    () => {
+      const next: Record<string, any> = {}
+      for (const s of list) {
+        const v = typeof s === 'function' ? s() : s
+        if (v != null) for (const k of Object.keys(v)) if (k !== 'children') next[k] = undefined
+      }
+      for (const k in next) next[k] = read(k)
+      return next
+    },
+    next => {
+      for (const k in prev) if (!(k in next)) assignProp(node, k, undefined, prev[k], svg)
+      for (const k in next) if (next[k] !== prev[k]) assignProp(node, k, next[k], prev[k], svg)
+      prev = next
+    },
+  )
+  if (!skipChildren) insert(node, () => read('children'))
+}
+
+function assignProp(node: any, k: string, v: any, p: any, svg: boolean) {
+  if (k === 'ref') v && applyRef(v, node)
+  else if (k === 'class' || k === 'className') className(node, v, p)
+  else if (k === 'style') style(node, v, p)
+  else if (k.startsWith('on') && k.length > 2) {
+    const name = k.slice(2).toLowerCase()
+    if (p) node.removeEventListener(name, p)
+    if (v) node.addEventListener(name, v)
+  } else if (!svg && k in node && !k.includes('-')) node[k] = v
+  else setAttribute(node, k, v)
 }
 
 // ---- events ---------------------------------------------------------------------------------------------------
@@ -209,6 +268,13 @@ export function delegateEvents(names: string[]) {
     delegated.add(name)
     document.addEventListener(name, dispatch)
   }
+}
+
+export function addEvent(node: any, name: string, handler: any, delegate?: boolean) {
+  if (!delegate) return addEventListener(node, name, handler)
+  const key = `_$$${name}`
+  node[key] = Array.isArray(handler) ? handler[0] : handler
+  node[`${key}Data`] = Array.isArray(handler) ? handler[1] : undefined
 }
 
 export function addEventListener(node: Element, name: string, handler: any) {

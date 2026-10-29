@@ -1,3 +1,4 @@
+use weft_compiler::project::{FileView, link_w014};
 use weft_compiler::{Diagnostic, Options, Severity, compile};
 
 fn run(source: &str) -> (String, Vec<Diagnostic>) {
@@ -37,6 +38,22 @@ fn defaults_apply_on_every_read() {
 }
 
 #[test]
+fn defaults_that_read_other_props_are_rewritten() {
+    let (code, d) = run("export function A({ a, b = a, c = b + 1 }) { return <p title={c}>{b}</p> }");
+    assert!(d.is_empty(), "defaults are live reads, not setup reads: {d:?}");
+    assert!(code.contains("props.b === undefined ? props.a : props.b"), "{code}");
+    assert!(code.contains("props.c === undefined ? (props.b === undefined ? props.a : props.b) + 1 : props.c"), "{code}");
+    assert!(!code.contains(" a ") && !code.contains("(a)"), "no unbound `a` left: {code}");
+}
+
+#[test]
+fn defaults_keep_list_and_box_reads_live() {
+    let (code, d) = run("import { state } from 'weft'; const on = state(1); export function A({ n = on.value }) { return <p>{n}</p> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("props.n === undefined ? on.value : props.n"), "{code}");
+}
+
+#[test]
 fn rest_props_stay_live() {
     let (code, _) = run("export function A({ a, ...rest }) { return <div {...rest}>{a}</div> }");
     assert!(code.contains(r#"import { omit as _$omit } from "weft""#), "{code}");
@@ -73,6 +90,58 @@ fn w006_nested_destructuring_has_a_safe_fix() {
     let fixed = apply_fix(src, &d[0]);
     assert_eq!(fixed, "export function A({ user }) { return <p>{user.name}</p> }");
     assert!(run(&fixed).1.is_empty());
+}
+
+// ---- §3.3 children --------------------------------------------------------------------------------------------
+
+#[test]
+fn children_are_memoised_once_per_component() {
+    let (code, d) = run("export function Box({ title, children }) { return <div><h2>{title}</h2>{children}{children}</div> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains(r#"import { memo as _$weftMemo } from "weft""#), "{code}");
+    assert_eq!(code.matches("_$weftMemo(() => props.children)").count(), 1, "{code}");
+    assert_eq!(code.matches("_children").count(), 3, "one declaration, two reads: {code}");
+    assert!(!code.contains("return props.children"), "no read bypasses the memo: {code}");
+}
+
+#[test]
+fn children_memo_in_props_form_and_expression_arrows() {
+    let (code, _) = run("export function P(props) { return <div>{props.children}</div> }");
+    assert!(code.contains("const _children = _$weftMemo(() => props.children);"), "{code}");
+    let (code, _) = run("export const Card = ({ children }) => <section>{children}</section>");
+    assert!(code.contains("const _children = _$weftMemo(() => props.children);"), "the body becomes a block: {code}");
+}
+
+#[test]
+fn children_memo_only_when_read() {
+    let (code, _) = run("export function A({ children, a }) { return <p>{a}</p> }");
+    assert!(!code.contains("_$weftMemo") && !code.contains("from \"weft\""), "{code}");
+    let (code, _) = run("export function A({ children }) { const _children = 1; return <p>{children}{_children}</p> }");
+    assert!(code.contains("const _children$ = _$weftMemo("), "avoids the name in use: {code}");
+}
+
+// ---- W016: call-expression props (§3.3) ------------------------------------------------------------------------
+
+#[test]
+fn w016_call_with_nothing_reactive_in_a_component_prop() {
+    let (code, d) = run("render(() => <App api={createFakeApi()} />, root)");
+    assert_eq!(codes(&d), ["W016"]);
+    assert_eq!(d[0].severity, Severity::Warning);
+    assert!(d[0].message.contains("`createFakeApi` runs again on every read of `api`"), "{}", d[0].message);
+    assert!(d[0].fix.is_none(), "hoisting can't be proven safe without seeing inside the callee");
+    assert!(code.contains("get api()"), "codegen is unchanged: {code}");
+}
+
+#[test]
+fn w016_not_for_live_calls_constructors_or_native_attributes() {
+    let (_, d) = run(
+        "import { state } from 'weft'
+         export function L({ xs, rate }) {
+           const q = state('')
+           return <ul title={stamp()}>{xs.map(x => <Row key={x.id} price={fmt(x.price * rate)} hit={match(q.value)} at={new Date()} />)}</ul>
+         }",
+    );
+    assert!(d.is_empty(), "{d:?}");
 }
 
 // ---- W001 / W005 ---------------------------------------------------------------------------------------------
@@ -171,6 +240,37 @@ fn list_inside_conditional() {
 }
 
 #[test]
+fn conditional_row_roots_are_keyed() {
+    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(x => (x.on ? <li key={x.id}>{x.n}</li> : <b key={x.id}>off</b>))}</ul> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("by: (x) => x.id"), "{code}");
+    assert!(!code.contains("key"), "every branch's key is removed: {code}");
+}
+
+#[test]
+fn fragment_row_roots_are_keyed() {
+    let (code, d) = run("export function L({ xs }) { return <dl>{xs.map(x => <><dt key={x.id}>{x.k}</dt><dd>{x.v}</dd></>)}</dl> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("by: (x) => x.id"), "{code}");
+    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(x => x.on && <li key={x.id}>{x.n}</li>)}</ul> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("by: (x) => x.id"), "{code}");
+}
+
+#[test]
+fn w010_rows_keyed_differently() {
+    let (_, d) = run("export function L({ xs }) { return <ul>{xs.map(x => (x.on ? <li key={x.id}>a</li> : <li key={x.name}>b</li>))}</ul> }");
+    assert_eq!(codes(&d), ["W010"]);
+    assert!(d[0].message.contains("keyed differently"), "{}", d[0].message);
+}
+
+#[test]
+fn w010_fragment_row_without_key() {
+    let (_, d) = run("export function L({ xs }) { return <dl>{xs.map(x => <><dt>{x.k}</dt><dd>{x.v}</dd></>)}</dl> }");
+    assert_eq!(codes(&d), ["W010"]);
+}
+
+#[test]
 fn w010_missing_key_with_safe_fix() {
     let src = "export function L({ xs }) { return <ul>{xs.map(x => <li>{x.name} {x.id}</li>)}</ul> }";
     let (_, d) = run(src);
@@ -233,6 +333,57 @@ fn w014_not_for_replacing_one_item() {
          }",
     );
     assert!(d.is_empty(), "{d:?}");
+}
+
+#[test]
+fn w014_project_view_upgrades_a_warning_that_reaches_a_keyed_list() {
+    let app = compile(
+        "import { derived } from 'weft'
+         import { List as ProductList } from './List'
+         export function App({ products, prices }) {
+           const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] })))
+           return <ProductList items={merged.value} />
+         }",
+        &Options { filename: "src/App.tsx".into(), check_only: true, ..Default::default() },
+    );
+    let list = compile(
+        "export function List({ items }) { return <ul>{items.map(p => <li key={p.id}>{p.price}</li>)}</ul> }",
+        &Options { filename: "src/List.tsx".into(), check_only: true, ..Default::default() },
+    );
+    assert_eq!(app.facts.spread_props.len(), 1, "{:?}", app.facts);
+    assert_eq!(app.facts.spread_props[0].component, "List", "the imported name, not the local alias");
+    assert_eq!(list.facts.keyed_props[0].prop, "items");
+    let (mut app_d, mut list_d) = (app.diagnostics.clone(), list.diagnostics.clone());
+    assert_eq!(app_d[0].severity, Severity::Warning, "per file it stays a warning");
+    let mut files = [
+        FileView { path: "src/App.tsx", facts: &app.facts, diagnostics: &mut app_d },
+        FileView { path: "src/List.tsx", facts: &list.facts, diagnostics: &mut list_d },
+    ];
+    link_w014(&mut files, |_, spec| (spec == "./List").then(|| "src/List.tsx".to_string()));
+    assert_eq!(app_d[0].severity, Severity::Error);
+    assert!(app_d[0].message.contains("`<List items>` renders it as a keyed list (src/List.tsx:1)"), "{}", app_d[0].message);
+}
+
+#[test]
+fn w014_project_view_leaves_unkeyed_targets_alone() {
+    let src = "import { derived } from 'weft'
+         export function Grid(props) { return <p>{props.rows.length}</p> }
+         export function Keyed(props) { return <ul>{props.rows.map(r => <li key={r.id} />)}</ul> }
+         export function App({ products, prices }) {
+           const merged = derived(() => products.map(p => ({ ...p, price: prices[p.id] })))
+           return <Grid rows={merged.value} />
+         }";
+    let out = compile(src, &Options { check_only: true, ..Default::default() });
+    assert_eq!(out.facts.keyed_props.len(), 1, "{:?}", out.facts);
+    assert_eq!(out.facts.keyed_props[0].component, "Keyed", "the `props.rows` form counts");
+    let mut d = out.diagnostics.clone();
+    link_w014(&mut [FileView { path: "App.tsx", facts: &out.facts, diagnostics: &mut d }], |_, _| None);
+    assert_eq!(d[0].severity, Severity::Warning, "`Grid` doesn't key `rows`");
+
+    let out = compile(&src.replace("<Grid rows", "<Keyed rows"), &Options { check_only: true, ..Default::default() });
+    let mut d = out.diagnostics.clone();
+    link_w014(&mut [FileView { path: "App.tsx", facts: &out.facts, diagnostics: &mut d }], |_, _| None);
+    assert_eq!(d[0].severity, Severity::Error, "a same-file component needs no resolver");
 }
 
 // ---- W015: a box where JSX needs its value (§11 `.value` question) -------------------------------------------

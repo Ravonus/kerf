@@ -1,67 +1,172 @@
 //! Apply the plan to the AST: props become live reads (§3.3), JSX `.map` becomes a keyed list (§3.4).
 //!
-//! `({ a, b = 1, ...rest }) => …`  →  `(props) => …` with `a` → `props.a`, `b` → `(props.b === undefined ? 1 : props.b)`,
+//! `({ a, b = a, ...rest }) => …`  →  `(props) => …` with `a` → `props.a`, `b` → `(props.b === undefined ? props.a : props.b)`,
 //! `rest` → `omit(props, ["a", "b"])`.
+//! `({ children }) => …`  →  `const _children = memo(() => props.children)` and `children` → `_children()`.
 //! `{xs.map(x => <Row key={x.id} x={x} />)}`  →  `<For each={xs} by={(x) => x.id}>{x => <Row x={x()} />}</For>`.
+//!
+//! New nodes are built directly in the file's allocator, around nodes moved out of the original program, so moved
+//! code keeps its spans and reference IDs and is rewritten like any other code. Synthesized nodes are unspanned
+//! (`SPAN`), so source maps and the back end's comment lookups only ever see authored positions.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use oxc_allocator::{Allocator, TakeIn};
+use oxc_allocator::{Allocator, CloneIn, TakeIn, Vec as ArenaVec};
 use oxc_ast::ast::*;
+use oxc_ast::builder::AstBuilder;
 use oxc_ast_visit::{VisitMut, walk_mut};
 use oxc_semantic::{Scoping, SymbolId};
-use oxc_span::GetSpan;
+use oxc_span::{GetSpan, SPAN, Span};
+use oxc_syntax::operator::BinaryOperator;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::analyze::{Plan, Rewrite, SpanKey, is_key_attr, key};
-use crate::snippet;
 
-pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &Scoping, plan: &Plan, source: &str) {
-    let mut t = Transformer { allocator, scoping, plan, source, raw: HashSet::new() };
+pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &Scoping, plan: &Plan) {
+    let mut t = Transformer {
+        allocator,
+        ast: AstBuilder::new(allocator),
+        scoping,
+        plan,
+        raw: HashSet::new(),
+        defaults: HashMap::new(),
+        children_used: HashSet::new(),
+        needs_memo: false,
+    };
     t.visit_program(program);
+    let mut imports = Vec::new();
     if plan.needs_omit {
-        program.body.insert(0, snippet::statement(allocator, "import { omit as _$omit } from \"weft\";"));
+        imports.push(("omit", "_$omit"));
+    }
+    if t.needs_memo {
+        imports.push(("memo", "_$weftMemo"));
+    }
+    if !imports.is_empty() {
+        program.body.insert(0, t.import("weft", &imports));
     }
 }
 
 struct Transformer<'a, 'p> {
     allocator: &'a Allocator,
+    ast: AstBuilder<'a>,
     scoping: &'p Scoping,
     plan: &'p Plan,
-    source: &'p str,
     /// Item symbols kept as raw values (inside a list's `by` function).
     raw: HashSet<SymbolId>,
+    /// Prop defaults moved out of the destructuring pattern, already rewritten; cloned into every read.
+    defaults: HashMap<SymbolId, Expression<'a>>,
+    /// Components whose memoised children are read.
+    children_used: HashSet<SpanKey>,
+    needs_memo: bool,
+}
+
+/// Node constructors.
+impl<'a, 'p> Transformer<'a, 'p> {
+    fn str(&self, s: &str) -> &'a str {
+        self.allocator.alloc_str(s)
+    }
+
+    fn ident(&self, name: &str) -> Expression<'a> {
+        Expression::new_identifier(SPAN, self.str(name), &self.ast)
+    }
+
+    fn member(&self, object: Expression<'a>, property: &str) -> Expression<'a> {
+        let property = IdentifierName::new(SPAN, self.str(property), &self.ast);
+        Expression::new_static_member_expression(SPAN, object, property, false, &self.ast)
+    }
+
+    fn call(&self, callee: Expression<'a>, args: impl IntoIterator<Item = Expression<'a>>) -> Expression<'a> {
+        let args = ArenaVec::from_iter_in(args.into_iter().map(Argument::from), &self.ast);
+        Expression::new_call_expression(SPAN, callee, None, args, false, &self.ast)
+    }
+
+    fn string(&self, value: &str) -> Expression<'a> {
+        Expression::new_string_literal(SPAN, self.str(value), None, &self.ast)
+    }
+
+    fn arrow(&self, param: Option<BindingPattern<'a>>, body: Expression<'a>) -> Expression<'a> {
+        let items = param.map(|pattern| {
+            FormalParameter::new(SPAN, ArenaVec::new_in(&self.ast), pattern, None, None, false, None, false, false, &self.ast)
+        });
+        let params = FormalParameters::boxed(
+            SPAN,
+            FormalParameterKind::ArrowFormalParameters,
+            ArenaVec::from_iter_in(items, &self.ast),
+            None,
+            &self.ast,
+        );
+        Expression::new_arrow_function_expression(SPAN, false, None, params, None, ArrowFunctionBody::from(body), &self.ast)
+    }
+
+    fn binding(&self, name: &str) -> BindingPattern<'a> {
+        BindingPattern::new_binding_identifier(SPAN, self.str(name), &self.ast)
+    }
+
+    fn jsx_attr(&self, name: &str, value: Expression<'a>) -> JSXAttributeItem<'a> {
+        let value = JSXAttributeValue::new_expression_container(SPAN, JSXExpression::from(value), &self.ast);
+        JSXAttributeItem::new_attribute(SPAN, JSXAttributeName::new_identifier(SPAN, self.str(name), &self.ast), Some(value), &self.ast)
+    }
+
+    fn const_decl(&self, name: &str, init: Expression<'a>) -> Statement<'a> {
+        let declarator = VariableDeclarator::new(SPAN, self.binding(name), None, Some(init), false, &self.ast);
+        let declarations = ArenaVec::from_iter_in([declarator], &self.ast);
+        Statement::new_variable_declaration(SPAN, VariableDeclarationKind::Const, declarations, false, &self.ast)
+    }
+
+    fn import(&self, source: &str, names: &[(&str, &str)]) -> Statement<'a> {
+        let specifiers = names.iter().map(|(imported, local)| {
+            ImportDeclarationSpecifier::new_import_specifier(
+                SPAN,
+                ModuleExportName::new_identifier_name(SPAN, self.str(imported), &self.ast),
+                BindingIdentifier::new(SPAN, self.str(local), &self.ast),
+                ImportOrExportKind::Value,
+                &self.ast,
+            )
+        });
+        let source = StringLiteral::new(SPAN, self.str(source), None, &self.ast);
+        let specifiers = Some(ArenaVec::from_iter_in(specifiers, &self.ast));
+        Statement::new_import_declaration(SPAN, specifiers, source, None, None, ImportOrExportKind::Value, &self.ast)
+    }
 }
 
 impl<'a, 'p> Transformer<'a, 'p> {
-    fn rewrite_of(&self, id: &IdentifierReference<'a>) -> Option<&'p Rewrite> {
+    fn rewrite_of(&self, id: &IdentifierReference<'a>) -> Option<(SymbolId, &'p Rewrite)> {
         let sym = id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id())?;
         if self.raw.contains(&sym) {
             return None;
         }
-        self.plan.rewrites.get(&sym)
+        self.plan.rewrites.get(&sym).map(|r| (sym, r))
     }
 
-    fn rewritten(&self, id: &IdentifierReference<'a>) -> Option<Expression<'a>> {
-        let text = match self.rewrite_of(id)? {
-            Rewrite::Prop { props, path, default } => {
-                let read = format!("{props}.{}", path.join("."));
-                match default {
-                    Some((s, e)) => {
-                        let fallback = &self.source[*s as usize..*e as usize];
-                        format!("({read} === undefined ? ({fallback}) : {read})")
+    /// The live read that replaces `original` (an identifier bound to `sym`).
+    fn rewritten(&mut self, sym: SymbolId, rewrite: &Rewrite, original: Expression<'a>) -> Expression<'a> {
+        match rewrite {
+            Rewrite::Prop { props, path } => {
+                let read = || path.iter().fold(self.ident(props), |object, p| self.member(object, p));
+                match self.defaults.get(&sym) {
+                    Some(fallback) => {
+                        let fallback = fallback.clone_in(self.allocator);
+                        let undefined = self.ident("undefined");
+                        let test = Expression::new_binary_expression(SPAN, read(), BinaryOperator::StrictEquality, undefined, &self.ast);
+                        let pick = Expression::new_conditional_expression(SPAN, test, fallback, read(), &self.ast);
+                        Expression::new_parenthesized_expression(SPAN, pick, &self.ast)
                     }
-                    None => read,
+                    None => read(),
                 }
             }
-            Rewrite::Rest { props, exclude } => {
-                let keys: Vec<String> = exclude.iter().map(|k| format!("{k:?}")).collect();
-                format!("_$omit({props}, [{}])", keys.join(", "))
+            Rewrite::Children { local, component } => {
+                self.children_used.insert(*component);
+                self.call(self.ident(local), [])
             }
-            Rewrite::Accessor => format!("{}()", id.name),
-            Rewrite::AccessorMember { key } => format!("_item().{key}"),
-        };
-        Some(snippet::expr(self.allocator, &text))
+            Rewrite::Rest { props, exclude } => {
+                let keys = exclude.iter().map(|k| ArrayExpressionElement::from(self.string(k)));
+                let keys = Expression::new_array_expression(SPAN, ArenaVec::from_iter_in(keys, &self.ast), &self.ast);
+                self.call(self.ident("_$omit"), [self.ident(props), keys])
+            }
+            // The identifier itself becomes the callee, so it keeps its span and reference.
+            Rewrite::Accessor => self.call(original, []),
+            Rewrite::AccessorMember { key } => self.member(self.call(self.ident("_item"), []), key),
+        }
     }
 
     fn is_list(&self, e: &Expression<'a>) -> bool {
@@ -72,10 +177,12 @@ impl<'a, 'p> Transformer<'a, 'p> {
         let Expression::CallExpression(call) = it else { unreachable!() };
         let plan = &self.plan.lists[&key(call.span)];
         let Expression::StaticMemberExpression(member) = &mut call.callee else { unreachable!() };
-        let mut each = member.object.take_in(&self.allocator);
+        let mut each = member.object.take_in(&self.ast);
         self.visit_expression(&mut each);
-        let mut row = call.arguments[0].to_expression_mut().take_in(&self.allocator);
-        let mut by = plan.key_attr.and_then(|span| take_key(self.allocator, &mut row, span));
+        let mut row = call.arguments[0].to_expression_mut().take_in(&self.ast);
+        // The `by` function reuses the row's item pattern, taken before the row's own parameter is rewritten.
+        let param = row_param(&row).map(|p| p.clone_in(self.allocator)).unwrap_or_else(|| self.binding("_"));
+        let mut by = take_keys(self, &mut row, &plan.key_attrs);
         if let Some(by) = by.as_mut() {
             self.raw.extend(plan.item_syms.iter().copied());
             self.visit_expression(by);
@@ -84,26 +191,21 @@ impl<'a, 'p> Transformer<'a, 'p> {
             }
         }
         self.visit_expression(&mut row);
-        let param = plan.item_param.map_or("_", |(s, e)| &self.source[s as usize..e as usize]);
-        let mut list = match by {
-            Some(by) => {
-                let mut list = snippet::expr(
-                    self.allocator,
-                    &format!("<For each={{$each}} by={{({param}) => $by}}>{{$row}}</For>"),
-                );
-                snippet::fill(&mut list, vec![("$each", each), ("$by", by), ("$row", row)]);
-                list
-            }
-            None => {
-                let mut list = snippet::expr(self.allocator, "<For each={$each}>{$row}</For>");
-                snippet::fill(&mut list, vec![("$each", each), ("$row", row)]);
-                list
-            }
-        };
-        std::mem::swap(it, &mut list);
+        let mut attrs = vec![self.jsx_attr("each", each)];
+        if let Some(by) = by {
+            attrs.push(self.jsx_attr("by", self.arrow(Some(param), by)));
+        }
+        let name = || JSXElementName::new_identifier_reference(SPAN, "For", &self.ast);
+        let opening = JSXOpeningElement::boxed(SPAN, name(), None, ArenaVec::from_iter_in(attrs, &self.ast), &self.ast);
+        let closing = JSXClosingElement::boxed(SPAN, name(), &self.ast);
+        let child = JSXChild::new_expression_container(SPAN, JSXExpression::from(row), &self.ast);
+        let children = ArenaVec::from_iter_in([child], &self.ast);
+        *it = Expression::new_jsx_element(SPAN, opening, children, Some(closing), &self.ast);
     }
 
-    fn replace_first_param(&self, params: &mut FormalParameters<'a>, span: SpanKey) {
+    /// Before walking a component: move its prop defaults out of the pattern (rewritten, in declaration order so
+    /// `b = a` sees `a`'s live read), then replace the pattern with the props parameter.
+    fn enter_params(&mut self, params: &mut FormalParameters<'a>, span: SpanKey) {
         let name = if let Some(props) = self.plan.components.get(&span) {
             props.as_str()
         } else if self.plan.destructured_rows.contains(&span) {
@@ -111,14 +213,56 @@ impl<'a, 'p> Transformer<'a, 'p> {
         } else {
             return;
         };
-        if let Some(first) = params.items.first_mut() {
-            first.pattern = snippet::param_pattern(self.allocator, name);
+        let Some(first) = params.items.first_mut() else { return };
+        if self.plan.components.contains_key(&span) {
+            self.take_defaults(&mut first.pattern);
         }
+        first.pattern = self.binding(name);
+    }
+
+    fn take_defaults(&mut self, pattern: &mut BindingPattern<'a>) {
+        let BindingPattern::ObjectPattern(obj) = pattern else { return };
+        for prop in obj.properties.iter_mut() {
+            match &mut prop.value {
+                BindingPattern::AssignmentPattern(ap) => {
+                    let BindingPattern::BindingIdentifier(id) = &ap.left else { continue };
+                    let Some(sym) = id.symbol_id.get() else { continue };
+                    let mut fallback = ap.right.take_in(&self.ast);
+                    self.visit_expression(&mut fallback);
+                    Unspan.visit_expression(&mut fallback);
+                    self.defaults.insert(sym, fallback);
+                }
+                inner @ BindingPattern::ObjectPattern(_) => self.take_defaults(inner),
+                _ => {}
+            }
+        }
+    }
+
+    /// After walking a component: declare its memoised children at the top of the body, if they are read.
+    fn exit_component(&mut self, span: SpanKey, body: &mut FunctionBody<'a>) {
+        let Some(children) = self.plan.children.get(&span) else { return };
+        if !self.children_used.contains(&span) {
+            return;
+        }
+        let read = self.arrow(None, self.member(self.ident(&children.props), "children"));
+        let memo = self.call(self.ident("_$weftMemo"), [read]);
+        body.statements.insert(0, self.const_decl(&children.local, memo));
+        self.needs_memo = true;
     }
 }
 
-/// Remove the `key` attribute from the row callback's root element and return its expression.
-fn take_key<'a>(allocator: &'a Allocator, row: &mut Expression<'a>, span: SpanKey) -> Option<Expression<'a>> {
+fn row_param<'b, 'a>(row: &'b Expression<'a>) -> Option<&'b BindingPattern<'a>> {
+    let params = match row {
+        Expression::ArrowFunctionExpression(f) => &f.params,
+        Expression::FunctionExpression(f) => &f.params,
+        _ => return None,
+    };
+    params.items.first().map(|p| &p.pattern)
+}
+
+/// Remove the `key` attributes from the row's roots and return the first one's expression.
+fn take_keys<'a>(t: &Transformer<'a, '_>, row: &mut Expression<'a>, spans: &[SpanKey]) -> Option<Expression<'a>> {
+    let first = *spans.first()?;
     let returned: &mut Expression<'a> = match row {
         Expression::ArrowFunctionExpression(f) => match &mut f.body {
             ArrowFunctionBody::FunctionBody(body) => last_return(&mut body.statements)?,
@@ -127,30 +271,80 @@ fn take_key<'a>(allocator: &'a Allocator, row: &mut Expression<'a>, span: SpanKe
         Expression::FunctionExpression(f) => last_return(&mut f.body.as_mut()?.statements)?,
         _ => return None,
     };
-    let Expression::JSXElement(el) = returned.without_parentheses_mut() else { return None };
-    let attrs = &mut el.opening_element.attributes;
-    let index = attrs.iter().position(|a| is_key_attr(a) && key(a.span()) == span)?;
-    let JSXAttributeItem::Attribute(mut attr) = attrs.remove(index) else { return None };
-    match attr.value.as_mut()? {
-        JSXAttributeValue::ExpressionContainer(c) => c.expression.as_expression_mut().map(|e| e.take_in(&allocator)),
-        JSXAttributeValue::StringLiteral(s) => Some(snippet::expr(allocator, &format!("{:?}", s.value.as_str()))),
-        _ => None,
+    let mut by = None;
+    strip_keys(t, returned, spans, first, &mut by);
+    by
+}
+
+fn strip_keys<'a>(t: &Transformer<'a, '_>, e: &mut Expression<'a>, spans: &[SpanKey], first: SpanKey, by: &mut Option<Expression<'a>>) {
+    match e.without_parentheses_mut() {
+        Expression::JSXElement(el) => strip_element(t, el, spans, first, by),
+        Expression::JSXFragment(f) => {
+            for child in f.children.iter_mut() {
+                match child {
+                    JSXChild::Element(el) => strip_element(t, el, spans, first, by),
+                    JSXChild::ExpressionContainer(c) => {
+                        if let Some(e) = c.expression.as_expression_mut() {
+                            strip_keys(t, e, spans, first, by)
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::ConditionalExpression(c) => {
+            strip_keys(t, &mut c.consequent, spans, first, by);
+            strip_keys(t, &mut c.alternate, spans, first, by);
+        }
+        Expression::LogicalExpression(l) => strip_keys(t, &mut l.right, spans, first, by),
+        _ => {}
     }
 }
 
-fn last_return<'b, 'a>(statements: &'b mut oxc_allocator::Vec<'a, Statement<'a>>) -> Option<&'b mut Expression<'a>> {
+fn strip_element<'a>(t: &Transformer<'a, '_>, el: &mut JSXElement<'a>, spans: &[SpanKey], first: SpanKey, by: &mut Option<Expression<'a>>) {
+    let attrs = &mut el.opening_element.attributes;
+    while let Some(index) = attrs.iter().position(|a| is_key_attr(a) && spans.contains(&key(a.span()))) {
+        let JSXAttributeItem::Attribute(mut attr) = attrs.remove(index) else { continue };
+        if key(attr.span) != first {
+            continue;
+        }
+        *by = match attr.value.as_mut() {
+            Some(JSXAttributeValue::ExpressionContainer(c)) => c.expression.as_expression_mut().map(|e| e.take_in(&t.ast)),
+            Some(JSXAttributeValue::StringLiteral(s)) => Some(t.string(s.value.as_str())),
+            _ => None,
+        };
+    }
+}
+
+fn last_return<'b, 'a>(statements: &'b mut ArenaVec<'a, Statement<'a>>) -> Option<&'b mut Expression<'a>> {
     match statements.last_mut()? {
         Statement::ReturnStatement(r) => r.argument.as_mut(),
         _ => None,
     }
 }
 
+struct Unspan;
+
+impl<'a> VisitMut<'a> for Unspan {
+    fn visit_span(&mut self, span: &mut Span) {
+        *span = SPAN;
+    }
+}
+
 impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
     fn visit_expression(&mut self, it: &mut Expression<'a>) {
         if let Expression::Identifier(id) = it
-            && let Some(new) = self.rewritten(id)
+            && let Some((sym, rewrite)) = self.rewrite_of(id)
         {
-            *it = new;
+            let original = it.take_in(&self.ast);
+            *it = self.rewritten(sym, rewrite, original);
+            return;
+        }
+        if let Expression::StaticMemberExpression(m) = it
+            && let Some((local, component)) = self.plan.children_reads.get(&key(m.span))
+        {
+            self.children_used.insert(*component);
+            *it = self.call(self.ident(local), []);
             return;
         }
         if self.is_list(it) {
@@ -166,7 +360,7 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             && self.is_list(e)
         {
             self.lower_list(e);
-            if let Expression::JSXElement(el) = e.take_in(&self.allocator) {
+            if let Expression::JSXElement(el) = e.take_in(&self.ast) {
                 *it = JSXChild::Element(el);
             }
             return;
@@ -185,12 +379,29 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
     }
 
     fn visit_function(&mut self, it: &mut Function<'a>, flags: ScopeFlags) {
-        self.replace_first_param(&mut it.params, key(it.span));
+        let span = key(it.span);
+        self.enter_params(&mut it.params, span);
         walk_mut::walk_function(self, it, flags);
+        if let Some(body) = it.body.as_mut() {
+            self.exit_component(span, body);
+        }
     }
 
     fn visit_arrow_function_expression(&mut self, it: &mut ArrowFunctionExpression<'a>) {
-        self.replace_first_param(&mut it.params, key(it.span));
+        let span = key(it.span);
+        self.enter_params(&mut it.params, span);
         walk_mut::walk_arrow_function_expression(self, it);
+        if self.plan.children.contains_key(&span) && self.children_used.contains(&span) {
+            // `({ children }) => <div>{children}</div>`: the memo needs a statement, so the body becomes a block.
+            if let Some(e) = it.body.as_expression_mut() {
+                let e = e.take_in(&self.ast);
+                let ret = Statement::new_return_statement(SPAN, Some(e), &self.ast);
+                let statements = ArenaVec::from_iter_in([ret], &self.ast);
+                it.body = ArrowFunctionBody::FunctionBody(FunctionBody::boxed(SPAN, ArenaVec::new_in(&self.ast), statements, &self.ast));
+            }
+            if let ArrowFunctionBody::FunctionBody(body) = &mut it.body {
+                self.exit_component(span, body);
+            }
+        }
     }
 }

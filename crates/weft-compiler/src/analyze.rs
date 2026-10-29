@@ -1,5 +1,6 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014). Produces a `Plan` that `transform` applies to the same AST.
+//! W010, W013, W014, W015, W016). Produces a `Plan` that `transform` applies to the same AST, and the per-file
+//! facts `weft check`'s project view joins across files (`project`).
 
 use std::collections::{HashMap, HashSet};
 
@@ -10,6 +11,7 @@ use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::diag::{Diagnostic, Edit, Fix, Severity, line_col};
+use crate::project::{Facts, KeyedProp, SpreadProp};
 
 pub type SpanKey = (u32, u32);
 
@@ -19,8 +21,11 @@ pub fn key(span: Span) -> SpanKey {
 
 #[derive(Clone, Debug)]
 pub enum Rewrite {
-    /// `a` → `props.a` (with `path` for nested members), default applied on every read.
-    Prop { props: String, path: Vec<String>, default: Option<SpanKey> },
+    /// `a` → `props.a` (with `path` for nested members). A default, if any, is applied on every read; `transform`
+    /// takes it from the pattern, so references inside it (`b = a`) are rewritten too.
+    Prop { props: String, path: Vec<String> },
+    /// Destructured `children` → `_children()`, the component's memoised children (§3.3).
+    Children { local: String, component: SpanKey },
     /// `rest` → `omit(props, [...])`, a live view of the other props.
     Rest { props: String, exclude: Vec<String> },
     /// A keyed-list item or index: `p` → `p()`.
@@ -31,10 +36,10 @@ pub enum Rewrite {
 
 #[derive(Debug, Default)]
 pub struct ListPlan {
-    /// The `key={…}` attribute on the row root; it moves to the list's `by` function.
-    pub key_attr: Option<SpanKey>,
-    /// Source span of the item parameter pattern, reused as the `by` function's parameter.
-    pub item_param: Option<SpanKey>,
+    /// The `key={…}` attributes on the row's root elements (one for an element, one per branch or top-level child
+    /// for a conditional or fragment). The first one's expression moves to the list's `by` function; all are
+    /// removed from the row.
+    pub key_attrs: Vec<SpanKey>,
     /// Item and index symbols: rewritten to accessor calls in the row, kept raw in the `by` function.
     pub item_syms: Vec<SymbolId>,
 }
@@ -48,8 +53,19 @@ pub struct Plan {
     pub lists: HashMap<SpanKey, ListPlan>,
     /// Row callbacks whose destructured item parameter becomes `_item`.
     pub destructured_rows: HashSet<SpanKey>,
+    /// Component span → memoised children: `const <local> = memo(() => <props>.children)` at the top of its body.
+    pub children: HashMap<SpanKey, ChildrenPlan>,
+    /// `props.children` reads (span) → the memo's local name and its component.
+    pub children_reads: HashMap<SpanKey, (String, SpanKey)>,
     pub needs_omit: bool,
     pub diagnostics: Vec<Diagnostic>,
+    pub facts: Facts,
+}
+
+#[derive(Debug, Clone)]
+pub struct ChildrenPlan {
+    pub props: String,
+    pub local: String,
 }
 
 pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
@@ -69,6 +85,8 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         spread_ctx: Vec::new(),
         spreads: Vec::new(),
         list_sources: Vec::new(),
+        imports: HashMap::new(),
+        box_props: Vec::new(),
     };
     a.visit_program(program);
     a.finish()
@@ -151,22 +169,59 @@ fn root_element<'b, 'a>(e: &'b Expression<'a>) -> Option<&'b JSXElement<'a>> {
     }
 }
 
+/// The elements a row can start with: the element itself, each branch of a conditional (`a ? <A/> : <B/>`,
+/// `on && <A/>`), and the top-level child elements of a fragment. Their `key` attributes key the row.
+pub fn row_roots<'b, 'a>(e: &'b Expression<'a>, out: &mut Vec<&'b JSXElement<'a>>) {
+    match e.without_parentheses() {
+        Expression::JSXElement(el) => out.push(el),
+        Expression::JSXFragment(f) => {
+            for child in &f.children {
+                match child {
+                    JSXChild::Element(el) => out.push(el),
+                    JSXChild::ExpressionContainer(c) => {
+                        if let Some(e) = c.expression.as_expression() {
+                            row_roots(e, out)
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::ConditionalExpression(c) => {
+            row_roots(&c.consequent, out);
+            row_roots(&c.alternate, out);
+        }
+        Expression::LogicalExpression(l) => row_roots(&l.right, out),
+        _ => {}
+    }
+}
+
 pub fn is_key_attr(item: &JSXAttributeItem<'_>) -> bool {
     matches!(item, JSXAttributeItem::Attribute(a)
         if matches!(&a.name, JSXAttributeName::Identifier(n) if n.name == "key"))
 }
 
-/// Root identifier of a member/call chain: `shown.value.filter(…)` → `shown`.
-fn chain_root<'b, 'a>(mut e: &'b Expression<'a>) -> Option<&'b IdentifierReference<'a>> {
+/// `props.items.filter(…)` → (`props`, `items`): the root identifier and the member read right off it.
+fn chain_root_member<'b, 'a>(mut e: &'b Expression<'a>) -> Option<(&'b IdentifierReference<'a>, Option<&'b str>)> {
+    let mut member = None;
     loop {
         e = match e.without_parentheses() {
-            Expression::Identifier(id) => return Some(id),
-            Expression::StaticMemberExpression(m) => &m.object,
-            Expression::ComputedMemberExpression(m) => &m.object,
+            Expression::Identifier(id) => return Some((id, member)),
+            Expression::StaticMemberExpression(m) => {
+                member = Some(m.property.name.as_str());
+                &m.object
+            }
+            Expression::ComputedMemberExpression(m) => {
+                member = None;
+                &m.object
+            }
             Expression::CallExpression(c) => &c.callee,
             Expression::ChainExpression(c) => match &c.expression {
                 ChainElement::CallExpression(c) => &c.callee,
-                ChainElement::StaticMemberExpression(m) => &m.object,
+                ChainElement::StaticMemberExpression(m) => {
+                    member = Some(m.property.name.as_str());
+                    &m.object
+                }
                 ChainElement::ComputedMemberExpression(m) => &m.object,
                 _ => return None,
             },
@@ -175,11 +230,25 @@ fn chain_root<'b, 'a>(mut e: &'b Expression<'a>) -> Option<&'b IdentifierReferen
     }
 }
 
+fn jsx_name(name: &JSXElementName<'_>) -> String {
+    match name {
+        JSXElementName::Identifier(n) => n.name.to_string(),
+        JSXElementName::IdentifierReference(n) => n.name.to_string(),
+        JSXElementName::MemberExpression(m) => format!("{}", m.property.name),
+        JSXElementName::NamespacedName(n) => format!("{}:{}", n.namespace.name, n.name.name),
+        JSXElementName::ThisExpression(_) => "this".into(),
+    }
+}
+
 fn static_key(k: &PropertyKey<'_>) -> Option<String> {
     k.static_name().map(|s| s.to_string())
 }
 
 struct CompCtx {
+    name: Option<String>,
+    span: Span,
+    /// The `props` parameter of the `(props) =>` form.
+    props_param: Option<SymbolId>,
     prop_syms: HashSet<SymbolId>,
     fn_depth: u32,
     jsx_depth: u32,
@@ -206,6 +275,10 @@ struct Analyzer<'s> {
     spread_ctx: Vec<Option<SymbolId>>,
     spreads: Vec<(Span, Option<SymbolId>)>,
     list_sources: Vec<(SymbolId, Span)>,
+    /// Local import binding → (module specifier, imported name).
+    imports: HashMap<SymbolId, (String, String)>,
+    /// Box symbol passed as a component prop: (box, component name, import, prop name).
+    box_props: Vec<(SymbolId, String, Option<String>, String)>,
 }
 
 impl<'s> Analyzer<'s> {
@@ -227,8 +300,11 @@ impl<'s> Analyzer<'s> {
         }
     }
 
-    fn enter_component(&mut self, span: Span, params: &FormalParameters<'_>, f: impl FnOnce(&mut Self)) {
+    fn enter_component(&mut self, name: String, span: Span, params: &FormalParameters<'_>, f: impl FnOnce(&mut Self)) {
         let mut ctx = CompCtx {
+            name: Some(name),
+            span,
+            props_param: None,
             prop_syms: HashSet::new(),
             fn_depth: 0,
             jsx_depth: 0,
@@ -240,7 +316,10 @@ impl<'s> Analyzer<'s> {
         let props_name = if text.contains("props") { "$props" } else { "props" }.to_string();
         if let Some(first) = params.items.first() {
             match &first.pattern {
-                BindingPattern::BindingIdentifier(id) => ctx.prop_syms.extend(binding_symbol(id)),
+                BindingPattern::BindingIdentifier(id) => {
+                    ctx.prop_syms.extend(binding_symbol(id));
+                    ctx.props_param = binding_symbol(id);
+                }
                 BindingPattern::ObjectPattern(obj) => {
                     self.plan.components.insert(key(span), props_name.clone());
                     self.destructure_props(obj, &props_name, &[], &mut ctx);
@@ -263,7 +342,12 @@ impl<'s> Analyzer<'s> {
             match &prop.value {
                 BindingPattern::BindingIdentifier(id) => {
                     if let Some(sym) = binding_symbol(id) {
-                        self.plan.rewrites.insert(sym, Rewrite::Prop { props: props.into(), path: sub, default: None });
+                        let rewrite = if path.is_empty() && k == "children" {
+                            Rewrite::Children { local: self.children_local(ctx, props), component: key(ctx.span) }
+                        } else {
+                            Rewrite::Prop { props: props.into(), path: sub }
+                        };
+                        self.plan.rewrites.insert(sym, rewrite);
                         ctx.prop_syms.insert(sym);
                     }
                 }
@@ -271,8 +355,7 @@ impl<'s> Analyzer<'s> {
                     if let BindingPattern::BindingIdentifier(id) = &ap.left
                         && let Some(sym) = binding_symbol(id)
                     {
-                        let default = Some(key(ap.right.span()));
-                        self.plan.rewrites.insert(sym, Rewrite::Prop { props: props.into(), path: sub, default });
+                        self.plan.rewrites.insert(sym, Rewrite::Prop { props: props.into(), path: sub });
                         ctx.prop_syms.insert(sym);
                     }
                 }
@@ -318,6 +401,16 @@ impl<'s> Analyzer<'s> {
             self.plan.needs_omit = true;
             ctx.prop_syms.insert(sym);
         }
+    }
+
+    /// The memo local for a component's children, planned on first use.
+    fn children_local(&mut self, ctx: &CompCtx, props: &str) -> String {
+        let plan = self.plan.children.entry(key(ctx.span)).or_insert_with(|| {
+            let text = &self.source[ctx.span.start as usize..ctx.span.end as usize];
+            let local = if text.contains("_children") { "_children$" } else { "_children" };
+            ChildrenPlan { props: props.into(), local: local.into() }
+        });
+        plan.local.clone()
     }
 
     fn report_body_read(&mut self, span: Span, what: &str) {
@@ -389,6 +482,38 @@ impl<'s> Analyzer<'s> {
         self.plan.diagnostics.push(d);
     }
 
+    /// W016: `<App api={createFakeApi()} />`. A component prop compiles to a getter, so a call in it runs again on
+    /// every read and each read gets a new value. Calls that read props, list items or boxes are meant to stay
+    /// live and are left alone; the compiler can't see inside the callee, so it reports instead of hoisting.
+    fn call_prop(&mut self, attr: &JSXAttribute<'_>, component: &str) {
+        let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else { return };
+        let Some(value) = c.expression.as_expression() else { return };
+        // Only calls: the back end treats `new X()` as static and passes its value once.
+        let Expression::CallExpression(call) = value.without_parentheses() else { return };
+        let (callee, span) = (&call.callee, call.span);
+        let mut reactive = Reactive { a: self, found: false };
+        reactive.visit_expression(value);
+        if reactive.found {
+            return;
+        }
+        let JSXAttributeName::Identifier(name) = &attr.name else { return };
+        let (name, call, callee) = (name.name.as_str(), self.text(span), self.text(callee.span()));
+        self.plan.diagnostics.push(Diagnostic::new(
+            self.source,
+            "W016",
+            Severity::Warning,
+            (span.start, span.end),
+            format!(
+                "`<{component} {name}={{{call}}}>`: props are live getters, so `{callee}` runs again on every read of \
+                 `{name}` and each read gets a new value."
+            ),
+            format!(
+                "Create it once outside the JSX (`const {name} = {call}`) and pass `{name}={{{name}}}`. If `{callee}` \
+                 reads state and should re-run, keep it."
+            ),
+        ));
+    }
+
     fn analyze_list(&mut self, call: &CallExpression<'_>, cb: &Expression<'_>) {
         let (ret, early) = returned(cb);
         let mut plan = ListPlan::default();
@@ -397,7 +522,6 @@ impl<'s> Analyzer<'s> {
         let mut item_sym = None;
         let mut destructured = false;
         if let Some(p0) = params.items.first() {
-            plan.item_param = Some(key(p0.pattern.span()));
             match &p0.pattern {
                 BindingPattern::BindingIdentifier(id) => {
                     item_name = Some(id.name.to_string());
@@ -429,8 +553,29 @@ impl<'s> Analyzer<'s> {
             plan.item_syms.push(sym);
         }
         let root = ret.and_then(root_element);
-        if let Some(el) = root {
-            plan.key_attr = el.opening_element.attributes.iter().find(|a| is_key_attr(a)).map(|a| key(a.span()));
+        let mut roots = Vec::new();
+        if let Some(ret) = ret {
+            row_roots(ret, &mut roots);
+        }
+        let mut keys: Vec<(Span, &str)> = Vec::new();
+        for el in &roots {
+            for a in el.opening_element.attributes.iter().filter(|a| is_key_attr(a)) {
+                let JSXAttributeItem::Attribute(attr) = a else { continue };
+                keys.push((attr.span, attr.value.as_ref().map_or("", |v| self.text(v.span()))));
+            }
+        }
+        plan.key_attrs = keys.iter().map(|(s, _)| key(*s)).collect();
+        if let Some((_, first)) = keys.first()
+            && let Some((other, text)) = keys.iter().find(|(_, t)| t != first)
+        {
+            self.plan.diagnostics.push(Diagnostic::new(
+                self.source,
+                "W010",
+                Severity::Error,
+                (other.start, other.end),
+                format!("The row's roots are keyed differently (`{first}` and `{text}`): a row has one key."),
+                format!("Key every branch by the same field (`key={first}`)."),
+            ));
         }
         if early {
             self.plan.diagnostics.push(Diagnostic::new(
@@ -442,7 +587,7 @@ impl<'s> Analyzer<'s> {
                 "Filter the list first (`xs.filter(…).map(…)`), then render every item.",
             ));
         }
-        if plan.key_attr.is_none() {
+        if plan.key_attrs.is_empty() {
             let mut uses = MemberUse { scoping: self.scoping, sym: item_sym, props: Vec::new() };
             uses.visit_expression(cb);
             if destructured || !uses.props.is_empty() {
@@ -467,12 +612,28 @@ impl<'s> Analyzer<'s> {
             }
         }
         if let Expression::StaticMemberExpression(m) = &call.callee
-            && let Some(root) = chain_root(&m.object)
+            && let Some((root, member)) = chain_root_member(&m.object)
             && let Some(sym) = symbol_of(self.scoping, root)
         {
             self.list_sources.push((sym, call.span));
+            self.keyed_prop(sym, member, call.span);
         }
         self.plan.lists.insert(key(call.span), plan);
+    }
+
+    /// Facts for the project view: a list keyed over a prop of an enclosing component (`items.map` or
+    /// `props.items.map`).
+    fn keyed_prop(&mut self, sym: SymbolId, member: Option<&str>, span: Span) {
+        let prop = match self.plan.rewrites.get(&sym) {
+            Some(Rewrite::Prop { path, .. }) if path.len() == 1 => Some(path[0].clone()),
+            _ => None,
+        };
+        let Some(comp) = self.comps.iter().rev().find(|c| c.prop_syms.contains(&sym)) else { return };
+        let prop = prop.or_else(|| (comp.props_param == Some(sym)).then(|| member.map(String::from)).flatten());
+        if let (Some(component), Some(prop)) = (comp.name.clone(), prop) {
+            let (line, _) = line_col(self.source, span.start);
+            self.plan.facts.keyed_props.push(KeyedProp { component, prop, line });
+        }
     }
 
     fn finish(mut self) -> Plan {
@@ -507,15 +668,26 @@ impl<'s> Analyzer<'s> {
                         help,
                     )
                 }
-                (None, Some(_)) => Diagnostic::new(
-                    self.source,
-                    "W014",
-                    Severity::Warning,
-                    (span.start, span.end),
-                    "`.map(p => ({ ...p, … }))` gives every item a new identity on each update; if this list is \
-                     rendered by key, every row re-runs on every change.",
-                    help,
-                ),
+                (None, Some(sym)) => {
+                    for (_, component, import, prop) in self.box_props.iter().filter(|(b, ..)| *b == sym) {
+                        self.plan.facts.spread_props.push(SpreadProp {
+                            start: span.start,
+                            end: span.end,
+                            component: component.clone(),
+                            import: import.clone(),
+                            prop: prop.clone(),
+                        });
+                    }
+                    Diagnostic::new(
+                        self.source,
+                        "W014",
+                        Severity::Warning,
+                        (span.start, span.end),
+                        "`.map(p => ({ ...p, … }))` gives every item a new identity on each update; if this list is \
+                         rendered by key, every row re-runs on every change.",
+                        help,
+                    )
+                }
                 (None, None) => continue,
             };
             self.plan.diagnostics.push(d);
@@ -559,8 +731,10 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
     fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
         let name = it.id.as_ref().map(|i| i.name.to_string()).or_else(|| self.pending_name.take());
         self.pending_name = None;
-        if name.as_deref().is_some_and(is_component_name) && it.body.is_some() {
-            self.enter_component(it.span, &it.params, |s| walk::walk_function(s, it, flags));
+        if let Some(name) = name.filter(|n| is_component_name(n))
+            && it.body.is_some()
+        {
+            self.enter_component(name, it.span, &it.params, |s| walk::walk_function(s, it, flags));
         } else {
             self.nested(|s| walk::walk_function(s, it, flags));
         }
@@ -568,11 +742,16 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
 
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
         let name = self.pending_name.take();
-        if name.as_deref().is_some_and(is_component_name) {
-            self.enter_component(it.span, &it.params, |s| walk::walk_arrow_function_expression(s, it));
+        if let Some(name) = name.filter(|n| is_component_name(n)) {
+            self.enter_component(name, it.span, &it.params, |s| walk::walk_arrow_function_expression(s, it));
         } else {
             self.nested(|s| walk::walk_arrow_function_expression(s, it));
         }
+    }
+
+    /// Parameter defaults are applied on every read (`transform`), so reads in them are live, not setup reads.
+    fn visit_formal_parameters(&mut self, it: &FormalParameters<'a>) {
+        self.nested(|s| walk::walk_formal_parameters(s, it));
     }
 
     fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
@@ -620,6 +799,26 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
                     self.bare_box(id);
                 }
             }
+        } else {
+            let component = jsx_name(&it.name);
+            let import = match &it.name {
+                JSXElementName::IdentifierReference(r) => symbol_of(self.scoping, r).and_then(|s| self.imports.get(&s)),
+                _ => None,
+            };
+            let (component, import) = match import {
+                Some((spec, imported)) => (imported.clone(), Some(spec.clone())),
+                None => (component, None),
+            };
+            for attr in &it.attributes {
+                let JSXAttributeItem::Attribute(a) = attr else { continue };
+                self.call_prop(a, &component);
+                if let (JSXAttributeName::Identifier(n), Some(JSXAttributeValue::ExpressionContainer(c))) = (&a.name, &a.value)
+                    && let Some((root, _)) = c.expression.as_expression().and_then(chain_root_member)
+                    && let Some(sym) = symbol_of(self.scoping, root).filter(|s| self.boxes.contains(s))
+                {
+                    self.box_props.push((sym, component.clone(), import.clone(), n.name.to_string()));
+                }
+            }
         }
         walk::walk_jsx_opening_element(self, it);
     }
@@ -632,7 +831,33 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
         }
     }
 
+    fn visit_import_declaration(&mut self, it: &ImportDeclaration<'a>) {
+        for spec in it.specifiers.iter().flatten() {
+            let (local, imported) = match spec {
+                ImportDeclarationSpecifier::ImportSpecifier(s) => (&s.local, s.imported.name().to_string()),
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => (&s.local, "default".to_string()),
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => continue,
+            };
+            if let Some(sym) = binding_symbol(local) {
+                self.imports.insert(sym, (it.source.value.to_string(), imported));
+            }
+        }
+    }
+
     fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
+        if it.property.name == "children"
+            && !self.assign_target
+            && let Expression::Identifier(id) = &it.object
+            && let Some(sym) = symbol_of(self.scoping, id)
+            && let Some(i) = self.comps.iter().rposition(|c| c.props_param == Some(sym))
+        {
+            let props = id.name.to_string();
+            let ctx = self.comps.remove(i);
+            let ctx_span = ctx.span;
+            let local = self.children_local(&ctx, &props);
+            self.comps.insert(i, ctx);
+            self.plan.children_reads.insert(key(it.span), (local, key(ctx_span)));
+        }
         if it.property.name == "value"
             && !self.assign_target
             && let Expression::Identifier(id) = &it.object
@@ -695,6 +920,30 @@ fn spread_of_param<'b, 'a>(cb: &'b Expression<'a>) -> Option<(&'b str, &'b Objec
     match body {
         Expression::ObjectExpression(obj) => Some((param.name.as_str(), obj)),
         _ => None,
+    }
+}
+
+/// Whether an expression reads anything reactive the compiler can see: a prop, a list item, a box, or `.value`.
+struct Reactive<'x, 's> {
+    a: &'x Analyzer<'s>,
+    found: bool,
+}
+
+impl<'a, 'x, 's> Visit<'a> for Reactive<'x, 's> {
+    fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
+        if let Some(sym) = symbol_of(self.a.scoping, it)
+            && (self.a.plan.rewrites.contains_key(&sym)
+                || self.a.boxes.contains(&sym)
+                || self.a.comps.iter().any(|c| c.prop_syms.contains(&sym)))
+        {
+            self.found = true;
+        }
+    }
+    fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
+        if it.property.name == "value" {
+            self.found = true;
+        }
+        walk::walk_static_member_expression(self, it);
     }
 }
 
