@@ -141,17 +141,22 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W040 | Early `return` in a component body that depends on state (runs once, never re-checked) | Branch in JSX |
 | W041 | `let` variable mutated in a handler and read in JSX (never updates) | Make it `state` |
 | W042 | `onChange` on text inputs (React fires per keystroke, DOM on blur) | `onInput` (autofix) |
+| W014 | Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list (error in-file, warning when the list leaves the file) | Keep items stable and read the changing field live, or replace only the changed item |
+| W015 | A box rendered without `.value` in JSX (a child, or a native element's attribute) | `.value` (autofix) |
 
 `class`/`className`, `for`/`htmlFor`, and `style` as object or string are all accepted.
 
 ### 3.6 Compiler, runtime, tooling
 
 - **Compiler: Rust/Oxc from day one** ([08](research/08-builder-and-compiler.md)).
-  - Fork Solid 2's native `solidjs-compiler` crate (MIT) at a pinned revision. Keep NOTICE and track upstream.
+  - Build on Solid 2's native `solidjs-compiler` crate (MIT) at a pinned git revision, called through
+    `compile_program` on weft's own Oxc AST. Fork into `crates/` only for a back-end change upstream won't take. Keep
+    NOTICE and track upstream; weft's Oxc version follows the pinned rev ([16](research/16-compiler-spike.md)).
   - It already does template cloning, bindings, SSR/hydration keys, dev names, server-function extraction and the
     HMR transform. It is 23× faster than Babel on Solid's own test set.
   - weft adds one crate, `weft-compiler`: `pre` (§3.3 props, §3.4 lists, naming) → `diag` (W-codes with spans and
-    autofix) → the forked back end. One Oxc parse and one source map per file.
+    autofix) → the pinned back end. One Oxc parse and one source map per file. A helper-contract
+    conformance test checks that every helper the back end can import exists in `weft/dom`.
   - Shipped through napi-rs as prebuilt binaries plus a WASI fallback. Text goes in; code, map and diagnostics come
     out. ASTs never cross JS↔Rust.
   - **Decision rule:** a 2-week spike must pass all four checks:
@@ -181,7 +186,7 @@ Measured on a quiet runner and gated on ratios, not on wall-clock from a busy la
 |---|---|
 | Runtime (benchmark app) | ≤ 6 KB brotli; hello world ≤ 3 KB |
 | v3 shop app, total JS | ≤ 10 KB brotli |
-| DOM work | every eval scenario has a `toTouchAtMost`; v3 price-push ≤ 1 mutation, add-one ≤ 3 |
+| DOM work | every eval scenario has a `toTouchAtMost(n, { runs })`; v3 price-push ≤ 1 mutation and ≤ 10 re-runs, add-one ≤ 3 |
 | js-framework-benchmark | ≤ 1.10× Solid's geomean in the same run |
 | Compiler | ≤ 0.5 s per 1k files, single-threaded, diagnostics included |
 | `weft check`, 1k files | ≤ 3 s cold, ≤ 0.5 s warm (weft's own diagnostics pass) |
@@ -666,6 +671,9 @@ into the same catalog: `T0xx` for tests and `P0xx` for project hygiene.
 - **Authoring:** `weft/test` gives `render`, user-level queries only (`getByRole/Label/Text`), and `user.click/type`.
   Every action ends in `flush()`, so there's no `waitFor` guessing. A deterministic `clock` drives timers, `resource`
   and rAF. Snapshots are off; opt-in aria snapshots are allowed. `test.prop` comes from fast-check for property tests.
+- **Work budgets:** `await expect(interaction).toTouchAtMost(n, { runs })` bounds the DOM mutations and the reactive
+  re-runs one interaction causes; `touches(interaction)` returns both counts. DOM mutations alone miss identity bugs
+  that re-run every row but write the DOM once (research 16 §4), so eval scenarios set both.
 - **Lanes:** a fast lane (Vitest + happy-dom), `--browser` (Vitest Browser Mode + Playwright, the same files), and
   `--e2e` (Playwright against `weft dev`).
 - **Static T-codes:**
@@ -738,7 +746,7 @@ packages/
   start       routing, server functions, cache, Nitro integration, real-time   (weft/server, weft/db, weft/realtime)
   rust        weft/rust (native, remote) + the `weft` crate (codegen, Ctx, axum router), opt-in
 crates/
-  weft-compiler   pre + diag + forked Solid back end; napi + WASI builds
+  weft-compiler   pre + diag on Solid 2's back end (pinned crate); napi + WASI builds
   ds          tokens, layout primitives, components, Tailwind adapter
   ui-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
@@ -816,11 +824,19 @@ Also out of v0:
 - **Consequence for Phase 1:** lead with performance, size and the verify loop, not correctness. Two additions:
   - a compile-time diagnostic for identity-breaking spreads into keyed lists,
   - a first-class work-budget assertion in `weft test` (`toTouchAtMost(n)`), promoted from the eval probe into §7b.
+- **Compiler spike (2026-10-28,** [16](research/16-compiler-spike.md)**):** weft keys rows by key, so the v3 spread
+  habit costs 1 DOM write instead of 300. W014 and the `runs` budget catch the per-row CPU cost that remains (756
+  re-runs against 10). The v3 app on weft passes 23/23 at 3.5 KB br, with 1 DOM write per price push.
 
 ## 11. Open questions
 
-- **`.value` in JSX:** required everywhere (current) or auto-read? Settle with the eval.
-- **Compiler spike outcome.** Rust/Oxc fork of Solid 2's crate unless the 2-week spike fails (§3.6).
+- **`.value` in JSX: settled, required everywhere** ([16 §5](research/16-compiler-spike.md)). Auto-read only works
+  for boxes declared in the same file, so it would be a partial rule. W015 catches bare boxes; the agent eval only
+  confirms the error rate.
+- **Compiler spike outcome: settled.** Rust/Oxc on Solid 2's crate as a pinned dependency (§3.6, §12).
+- **Keyed reads of record boxes.** A row reading `cart[p.id]` from one `cart` box re-runs in every row on any cart
+  change (v3 add-one: 452 re-runs for 1 DOM write). Box per key, a `select(box, key)` primitive, or deep tracking in
+  `.set(draft)`?
 - **Native addons on Bun and Deno.** napi-rs doesn't test addons on Deno, and Bun support is best-effort. Native
   addons also can't be unloaded in dev, so dev reload means restarting the server worker. Spike before Phase 5b.
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
@@ -843,6 +859,8 @@ Also out of v0:
 - **Rust/Oxc compiler from day one** (2026-10-28). Solid 2 already ships a native Oxc compiler with dev names, server
   extraction and refresh, so forking the Babel plugin would mean building on the path upstream is leaving. The 2-week
   spike is the fallback gate.
+- **Compiler spike passed** (2026-10-28). weft is a pre-pass on Solid 2's crate, used unmodified; 193 ms per 1k
+  components; v3 app 3.5 KB br with 1 DOM write per price push ([16](research/16-compiler-spike.md)).
 - **Performance gates start in Phase 1** (2026-10-28). The v3 eval showed efficiency is the differentiator.
 - **Real-time is poke + refetch over tags, owned by the client cache** (2026-10-28). It reuses auth and the tagged
   cache. Subscriptions outlive the components that read them, which fixes the v3 bug class by design.

@@ -65,7 +65,12 @@ and memos.
 node run-app.mjs prepare --name v3-sonnet          # then give each workspace PROMPT.md + tickets in order,
 node run-app.mjs snapshot --name v3-sonnet --frameworks react --ticket 1   # snapshot after each ticket
 node run-app.mjs grade --name v3-sonnet && node run-app.mjs measure --name v3-sonnet && node run-app.mjs summary --name v3-sonnet
+node run-app.mjs reference --name v3-ref --frameworks react,solid,weft   # grade/measure the reference apps instead
 ```
+
+`weft` is a framework too (`frameworks/weft`, `reference-v3/weft`), from the Phase 1 compiler spike
+([research 16](../docs/research/16-compiler-spike.md)). It has an adapter and starter config but no starter `src/`
+yet, so it can be graded and measured but not yet given to agents.
 
 ## Results so far
 

@@ -1,0 +1,20 @@
+{
+  "add-one": {
+    "domMutations": 1,
+    "commits": null,
+    "renderMs": null,
+    "wallMs": 47.23
+  },
+  "price-push": {
+    "domMutations": 1,
+    "commits": null,
+    "renderMs": null,
+    "wallMs": 0.35
+  },
+  "type-3-chars": {
+    "domMutations": 152,
+    "commits": null,
+    "renderMs": null,
+    "wallMs": 14.71
+  }
+}
