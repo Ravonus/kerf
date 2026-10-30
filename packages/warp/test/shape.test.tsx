@@ -6,6 +6,7 @@ import axe from 'axe-core'
 import { Boundary, resource } from 'weft'
 import { flush, render } from 'weft/test'
 import { Shape } from '../src/Shape'
+import '../src/skeleton-css'
 
 function Feed() {
   const posts = resource(() => new Promise<{ id: number; title: string }[]>(ok => setTimeout(() => ok([{ id: 1, title: 'One' }, { id: 2, title: 'Two' }]), 300)))
@@ -31,6 +32,16 @@ test('a list shape: one avatar and two lines per row, busy and inert, then the c
   await flush()
   expect(screen.queryByRole('status')).toBeNull()
   expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['One', 'Two'])
+})
+
+test('pending="shape": a compiled variant in the same SkeletonScope, and it passes axe', async () => {
+  render(() => <Boundary pending="shape"><Feed /></Boundary>)
+  await vi.advanceTimersByTimeAsync(150)
+  const region = screen.getByRole('status', { name: 'Loading' })
+  expect(region.getAttribute('data-scope')).toBe('skeleton-scope')
+  expect(region.querySelectorAll('[data-skeleton]').length).toBeGreaterThan(0)
+  vi.useRealTimers()
+  expect((await axe.run(document.body)).violations).toEqual([])
 })
 
 test('every shape passes axe', async () => {

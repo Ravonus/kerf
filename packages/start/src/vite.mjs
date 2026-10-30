@@ -13,9 +13,9 @@
 //   virtual:weft/migrations     server: `drizzle/`'s migrations, embedded (a bundle can't read a folder on every preset)
 //
 // Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation` export gets an `$id` on
-// both sides; the client build replaces the module with stubs that keep only `optimistic`.
+// both sides; the client build replaces the module with stubs that keep only `optimistic` and the query's shape.
 
-import { existsSync, readFileSync, readdirSync, watch } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -54,6 +54,20 @@ export default function weftStart(options = {}) {
   }
   const abs = f => resolve(root, f)
   const id = s => (s.startsWith('virtual:') ? '\0' + s : s)
+  let shapes
+  /** Research 31 §3: the shape table, when the project asks for shapes at all. Loads the server modules, once per edit. */
+  const shapeTable = async ctx => {
+    if (!usesShapes(root)) return undefined
+    const stamp = serverModules.map(f => statSync(abs(f)).mtimeMs).join()
+    if (shapes?.stamp === stamp) return shapes.table
+    try {
+      const { readShapes } = await import('./contract.mjs')
+      shapes = { stamp, table: await readShapes({ root, site: options.site }) }
+      return shapes.table
+    } catch (e) {
+      ctx.warn(`the query shapes couldn't be read, so skeletons only have last-seen shapes: ${e.message}`)
+    }
+  }
   const clientEntry = () => (existsSync(join(root, 'src', 'entry.client.ts')) ? join(root, 'src', 'entry.client.ts') : V.client)
 
   return {
@@ -138,13 +152,13 @@ export default function weftStart(options = {}) {
     },
     transform: {
       filter: { id: /\.[jt]sx?$/ },
-      handler(code, file) {
+      async handler(code, file) {
         const path = file.replace(/\?.*$/, '')
         if (path.includes('/node_modules/')) return
         const client = this.environment?.config.consumer === 'client'
         const rel = relative(root, path).split('\\').join('/')
         if (isServerModule(rel)) {
-          const out = client ? clientStubs(code, path, rel) : withIds(code, path, rel)
+          const out = client ? clientStubs(code, path, rel, await shapeTable(this)) : withIds(code, path, rel)
           return out === code ? undefined : { code: out, map: null }
         }
         if (client && !rel.startsWith('..')) {
@@ -172,6 +186,13 @@ function packageDirs(root) {
     }
   }
   return out
+}
+
+/** The project asks for shapes: a `pending="shape"`, or a read of `.shape`. */
+function usesShapes(root) {
+  const src = join(root, 'src')
+  if (!existsSync(src)) return false
+  return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[jt]sx?$/.test(f.name) && /pending="shape"|\.shape\b/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
 }
 
 function serverRoutes(manifest, abs) {
@@ -353,11 +374,11 @@ export function withIds(code, file, rel) {
 }
 
 /**
- * The client build of a server module: stubs (`query({ $id })`, `mutation({ $id, optimistic })`), the top-level
+ * The client build of a server module: stubs (`query({ $id, shape })`, `mutation({ $id, optimistic })`), the top-level
  * declarations a kept `optimistic` references, type declarations, and the imports those use. Nothing else: no
  * `run`, no database client, no other export. Exported for tests.
  */
-export function clientStubs(code, file, rel) {
+export function clientStubs(code, file, rel, shapes) {
   const ast = parse(file, code)
   const locals = fnLocals(ast)
   const defs = new Map(fnExports(ast, locals).map(f => [f.node, f]))
@@ -372,8 +393,10 @@ export function clientStubs(code, file, rel) {
     const f = defs.get(n)
     if (f && f.single) {
       const opt = prop(f.obj, 'optimistic')
-      const id = JSON.stringify(fnId(f.name, rel))
-      kept.push([n.start, `export const ${f.name} = ${f.callee}({ $id: ${id}${opt ? `, ${code.slice(opt.start, opt.end)}` : ''} })`])
+      const id = fnId(f.name, rel)
+      // The tree the schema gave when there's a table; else what was declared, as it was written.
+      const shape = shapes?.[id] !== undefined ? `shape: ${JSON.stringify(shapes[id])}` : prop(f.obj, 'shape') && code.slice(prop(f.obj, 'shape').start, prop(f.obj, 'shape').end)
+      kept.push([n.start, `export const ${f.name} = ${f.callee}({ $id: ${JSON.stringify(id)}${opt ? `, ${code.slice(opt.start, opt.end)}` : ''}${shape ? `, ${shape}` : ''} })`])
       continue
     }
     const decl = n.type === 'ExportNamedDeclaration' ? n.declaration : n

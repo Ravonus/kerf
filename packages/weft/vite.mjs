@@ -75,6 +75,33 @@ function tokens() {
 const MODE = /\?weft-(ssr|hydrate)$/
 const EXT = /\.[cm]?[jt]sx?$/
 const GROUPS_CSS = 'virtual:weft/groups.css'
+const SHAPE_IMPORTS = /import\s+(?:([\w$]+)\s*,?\s*)?(?:\{([^}]*)\}\s*)?from\s+['"](\.[^'"]+)['"]/g
+
+/** Exports with a shape variant by file (`facts.shapes`, research 31 §5), read when a file imports one. */
+const shapeExports = new Map()
+function exportsOf(file) {
+  const mtime = statSync(file, { throwIfNoEntry: false })?.mtimeMs
+  if (mtime === undefined) return []
+  const seen = shapeExports.get(file)
+  if (seen?.mtime === mtime) return seen.exports
+  const exports = transform(readFileSync(file, 'utf8'), { filename: file, checkOnly: true }).facts.shapes
+  shapeExports.set(file, { mtime, exports })
+  return exports
+}
+
+/** `options.shapes` for one file: which of the components it imports by relative path have a variant. */
+async function importedShapes(ctx, code, id) {
+  const out = {}
+  for (const [, def, names, spec] of code.matchAll(SHAPE_IMPORTS)) {
+    const file = (await ctx.resolve(spec, id, { skipSelf: true }))?.id?.replace(/\?.*$/, '')
+    if (!file || !/\.[jt]sx$/.test(file)) continue
+    const found = exportsOf(file)
+    const key = resolvePath(dirname(id), spec).replace(EXT, '')
+    for (const n of [...(def ? ['default'] : []), ...(names ?? '').split(',').map(n => n.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0])])
+      if (found.includes(n)) out[`${key}#${n}`] = true
+  }
+  return out
+}
 const IMPORTS = /import\s+\{([^}]*)\}\s+from\s+['"](\.[^'"]+)['"]/g
 
 /*
@@ -275,7 +302,8 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
         const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
-        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups, taggedParts: !!styleOptions?.taggedParts })
+        const shapes = await importedShapes(this, code, id.replace(/\?.*$/, ''))
+        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups, shapes, taggedParts: !!styleOptions?.taggedParts })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }

@@ -12,7 +12,7 @@ import * as server from './fixtures/Cases.tsx?weft-ssr'
 // @ts-expect-error
 import * as client from './fixtures/Cases.tsx?weft-hydrate'
 
-test.each(Object.keys(cases))('%s: SSR + hydrate, 0 misses, 0 writes, then it works', async name => {
+test.each(Object.keys(cases).filter(n => !n.endsWith('$shape')))('%s: SSR + hydrate, 0 misses, 0 writes, then it works', async name => {
   resetIds()
   const html = renderToString(() => server[name]())
   const root = document.body.appendChild(document.createElement('div'))

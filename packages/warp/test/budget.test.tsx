@@ -4,7 +4,7 @@ import { flush, render, touches } from 'weft/test'
 import * as C from './fixtures/Cases'
 import { cases } from './fixtures/interactions'
 
-test.each(Object.keys(cases) as (keyof typeof C)[])('%s', async name => {
+test.each(Object.keys(cases).filter(n => !n.endsWith('$shape')) as (keyof typeof C)[])('%s', async name => {
   const c = cases[name]
   const { container } = render(C[name] as any)
   await flush()

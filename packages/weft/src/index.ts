@@ -140,8 +140,10 @@ function run(node: Computation) {
   const prevListener = listener, prevOwner = owner
   listener = owner = node
   try {
-    const v = node.effect === 2 ? unwrap(node.fn) : node.fn(node.v) // a hole's value takes no arguments
-    if (node.a) {
+    const v = node.effect === 2 ? node.fn() : node.fn(node.v) // a hole's value takes no arguments
+    if (node.effect === 2 && live(v)) {
+      settle(computation(() => unwrap(v), 1, node.a)) // its reads are its own, or a change here would rebuild what `fn` made
+    } else if (node.a) {
       listener = null
       node.a(v, node.v)
       node.v = v
@@ -181,6 +183,8 @@ function unwrap(v: any): any {
   while (typeof v === 'function') v = v()
   return Array.isArray(v) ? v.map(unwrap) : v
 }
+
+const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) && v.some(live))
 
 function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {
   const node: Computation = {

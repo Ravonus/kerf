@@ -1,6 +1,6 @@
 // Phase 2's X-codes in `weft check` (research 11 §8.5, research 26 §7): responsive type and zoom (X005, X006, X008),
-// the font build (X020–X023) and media inside query boundaries (X030, X034). X031 is measured at runtime by
-// <Boundary> in dev. Reads .css and .html files and the JSX of the checked files; X022 also reads the font build's
+// the font build (X020–X023), media inside query boundaries (X030, X034), and refetches and streams (X033, X035,
+// research 31 §7). X031, X032 and X036 are reported at runtime in dev. Reads .css and .html files and the JSX of the checked files; X022 also reads the font build's
 // report in `.weft/fonts.json`.
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -132,6 +132,11 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
       continue // syntax errors are W000's
     }
     const report = reporter(f)
+    // X033: `x.pending ? <Skeleton /> : …`, with no `x.value` test beside it.
+    for (const m of f.text.matchAll(/\b([\w$]+)\.pending\s*(?:\?|&&)\s*\(?\s*<\s*(Shape|Skeleton|Spinner|Progress)\b/g)) {
+      const line = f.text.slice(f.text.lastIndexOf('\n', m.index) + 1, m.index)
+      if (!line.includes(`${m[1]}.value`)) report('X033', m.index, m.index + m[0].length, `\`${m[1]}.pending\` is true on every refetch too, so this <${m[2]}> flashes over a value that's already on screen.`)
+    }
     for (const el of scan.elements) {
       const style = el.attr('style')
       if (style) {
@@ -148,6 +153,10 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
       if (['img', 'video', 'iframe'].includes(el.name) && el.ancestors.includes('Boundary')) {
         const sized = (el.attr('width') && el.attr('height')) || /aspect-?ratio/i.test(style?.value ?? style?.expr ?? '')
         if (!sized) report('X030', el.start, el.tagEnd, `<${el.name}> inside a <Boundary> has no \`width\`/\`height\` or \`aspect-ratio\`: it renders 0 px tall, then pushes the content down when it loads.`)
+      }
+      if (/overflow(-[xy]|Y|X)?\s*:\s*['"]?(auto|scroll)/.test(style?.value ?? style?.expr ?? '')) {
+        const live = /\{\s*(\w+)\.value\b/.exec(el.children)?.[1]
+        if (live && new RegExp(`\\b${live}\\s*=\\s*[^\\n]*\\bstream\\b`).test(f.text)) report('X035', el.start, el.tagEnd, `\`${live}\` is streamed straight into a scroll container: as its tail reflows, the lines above it move.`)
       }
       const pending = el.name === 'Boundary' && el.attr('pending')
       if (pending?.kind === 'expr') {

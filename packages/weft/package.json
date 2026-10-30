@@ -21,6 +21,8 @@
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
     "./media": "./src/media.tsx",
+    "./shape": "./src/shape.ts",
+    "./text": "./src/text.tsx",
     "./media-probe": "./media-probe.mjs",
     "./client": { "types": "./client.d.ts" },
     "./style/matrix": "./src/style/matrix.ts",

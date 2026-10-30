@@ -218,7 +218,7 @@ fn resolves(scoping: &Scoping, e: &Expression) -> Option<SymbolId> {
 }
 
 /// `./order-card` from `/app/src/x.tsx` → `/app/src/order-card` (extension stripped, as the plugin keys groups).
-fn resolve(filename: &str, spec: &str) -> String {
+pub(crate) fn resolve(filename: &str, spec: &str) -> String {
     let base = Path::new(filename).parent().unwrap_or(Path::new("")).join(spec);
     let mut out = PathBuf::new();
     for c in base.components() {
