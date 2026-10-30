@@ -42,6 +42,12 @@ describe('weft (bin)', () => {
     expect(weft('docs', 'W015', '--root', fixture).stdout).toContain('# W015')
   })
 
+  it('db and start refuse what they can\'t do, with a usage error', () => {
+    const dir = project()
+    expect(weft('db', 'push', '--root', dir)).toMatchObject({ code: 2, stderr: expect.stringContaining('use generate') })
+    expect(weft('start', '--runtime', 'workerd', '--root', dir)).toMatchObject({ code: 2, stderr: expect.stringContaining('unknown runtime') })
+  })
+
   it('agents-md --check exits 1 when AGENTS.md is missing or stale', () => {
     const dir = project()
     expect(weft('agents-md', '--check', '--root', dir).code).toBe(1)

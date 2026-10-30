@@ -277,8 +277,8 @@ server module imports that db, so the stubs are covered there too.
   serialized after the stream (research 14 §2.9), and the cookie backend needs `weft/persist` to read request cookies
   on the server (through `ctx.request`) and write them through `ctx.response.headers`. Both are the next state slice,
   with S013.
-- **The next slice:** Drizzle (`ctx.db`, the touched-tables check), Better Auth (`ctx.user`, `scope: 'user'`),
-  `create-weft --db --auth --runtime`, `.weft/contract.json`, the Node/Bun/Deno e2e matrix (§9).
+- **The next slice, built:** Drizzle, Better Auth, `create-weft --db --auth --runtime`, `.weft/contract.json` and the
+  Node/Bun/Deno e2e matrix are in [28](28-db-auth-runtimes.md).
 - **`<Form of={mutation}>`** (works without JS: a plain POST that the server answers with a redirect) isn't built;
   without it, the CSRF check only admits the stubs.
 - **Route data after a mutation is a second request** (`/_weft/data`). The mutation's response could carry it.

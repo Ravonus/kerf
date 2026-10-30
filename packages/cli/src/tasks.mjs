@@ -1,24 +1,27 @@
 // `weft tasks`: the single list of what can be run (PLAN §7b). Built-ins first, then the project's `tasks`.
 
-import { relative, resolve } from 'node:path'
+import { existsSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
 import { z } from 'zod'
 import { loadConfig } from './load-config.mjs'
 
 const files = { type: 'array', items: { type: 'string' }, description: 'Files relative to the project root; default: the whole project' }
 
-/** `available: false` marks commands PLAN names that this CLI does not ship yet. */
+/** `available: false` marks commands PLAN names that this CLI does not ship yet; `stack` ones ship for apps with src/routes. */
 export const builtins = [
   { name: 'check', description: 'Compile every component in check mode and report W- and P-diagnostics with fixes', args: { type: 'object', properties: { files } }, sideEffects: [], available: true },
   { name: 'tasks', description: 'List every command and project task with args, side effects and environments', args: { type: 'object', properties: {} }, sideEffects: [], available: true },
   { name: 'docs', description: 'Print a docs topic or a diagnostic code (`weft docs W014`)', args: { type: 'object', properties: { topic: { type: 'string' } } }, sideEffects: [], available: true },
-  { name: 'agents-md', description: 'Regenerate AGENTS.md from the installed weft, its diagnostics and these tasks (`--check` fails if stale)', args: { type: 'object', properties: { check: { type: 'boolean' } } }, sideEffects: ['fs:AGENTS.md'], available: true },
+  { name: 'agents-md', description: 'Regenerate AGENTS.md (`--check` fails if stale)', args: { type: 'object', properties: { check: { type: 'boolean' } } }, sideEffects: ['fs:AGENTS.md'], available: true },
   { name: 'mcp', description: 'These commands as MCP tools (stdio)', args: { type: 'object', properties: {} }, sideEffects: [], available: true, longRunning: true },
   { name: 'style', description: 'Style groups: `find <query>`, `explain <group|selector>`, `matrix` (writes .weft/styles.json)', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['find', 'explain', 'matrix'] }, query: { type: 'string' }, target: { type: 'string' } } }, sideEffects: ['fs:.weft/styles.json'], available: true },
-  { name: 'dev', description: 'Vite dev server with HMR', sideEffects: ['network:listen'], available: false },
-  { name: 'build', description: 'Production build', sideEffects: ['fs:dist/**'], available: false },
-  { name: 'test', description: 'The test gate on the diff (`--gate`): fail-before (T010), mutants on changed lines (T011), no weakened tests (T020)', args: { type: 'object', properties: { gate: { type: 'boolean' }, base: { type: 'string' }, budget: { type: 'number' }, refactor: { type: 'boolean' } } }, sideEffects: ['fs:.weft/gate'], available: true },
+  { name: 'dev', description: 'Dev server', sideEffects: ['network:listen'], available: false, stack: true, longRunning: true },
+  { name: 'build', description: 'Production build and contract', sideEffects: ['fs:.output/**'], available: false, stack: true },
+  { name: 'start', description: 'Serve the build', sideEffects: ['network:listen'], available: false, stack: true, longRunning: true },
+  { name: 'db', description: '`generate`: new migrations', sideEffects: ['fs:drizzle/**'], available: false, stack: true },
+  { name: 'test', description: 'The test gate on the diff (`--gate`)', args: { type: 'object', properties: { gate: { type: 'boolean' }, base: { type: 'string' }, budget: { type: 'number' }, refactor: { type: 'boolean' } } }, sideEffects: ['fs:.weft/gate'], available: true },
   { name: 'fix', description: 'Apply safe autofixes from `weft check`', sideEffects: ['fs:scope.write'], available: false },
-  { name: 'browser', description: 'Drive the running app in any open browser by role/label/text, with the reactive graph, clock and network control, and a recorder (`weft browser help`)', args: { type: 'object', properties: { command: { type: 'string' } } }, sideEffects: ['network:dev-server', 'fs:.weft/browser'], available: true },
+  { name: 'browser', description: 'Drive the running app in any open browser by role/label/text (`weft browser help`)', args: { type: 'object', properties: { command: { type: 'string' } } }, sideEffects: ['network:dev-server', 'fs:.weft/browser'], available: true },
   { name: 'run', description: 'Run a project task by name', sideEffects: ['task'], available: false },
   { name: 'create', description: 'Scaffold a weft app', sideEffects: ['fs'], available: false },
   { name: 'plugins', description: 'List and explain plugins and slot bindings; `sync` regenerates .weft/slots and plugin tokens', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['list', 'explain', 'sync'] }, slot: { type: 'string' } } }, sideEffects: ['fs:.weft/**'], available: true },
@@ -40,6 +43,7 @@ export async function tasks(root) {
   root = resolve(root)
   const { file, config, diagnostics } = await loadConfig(root)
   const environments = Object.keys(config.environments ?? {})
+  const stack = existsSync(join(root, 'src', 'routes'))
   const list = builtins.map(b => ({
     name: b.name,
     kind: 'builtin',
@@ -48,7 +52,7 @@ export async function tasks(root) {
     args: b.args ?? { type: 'object', properties: {} },
     sideEffects: b.sideEffects,
     env: environments,
-    available: b.available,
+    available: b.available || (b.stack && stack),
     ...(b.longRunning && { longRunning: true }),
   }))
   for (const [name, t] of Object.entries(config.tasks ?? {})) {

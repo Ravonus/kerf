@@ -39,31 +39,44 @@ export interface Context {
   response: { headers: Headers }
 }
 
+/** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
+export const CLIENT_IP = 'x-weft-client-ip'
+
 /** `'minutes'` etc. or seconds: how long the shared server cache keeps a value (research 27 §4). */
 export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
+
+/** `auth: 'user'` narrows `ctx.user` to non-null in `run` (A002 answers a call with no session). */
+export type AuthScope = 'user'
+type Ctx<A> = A extends 'user' ? (Context extends { user: infer U } ? Omit<Context, 'user'> & { user: NonNullable<U> } : Context) : Context
 
 type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
 type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
 type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
 
-export interface QueryDef<S, O> {
+export interface QueryDef<S, O, A = undefined> {
   input?: S
+  /** The result's shape: checked in dev and tests (C002), and the contract's `output`. */
+  output?: StandardSchemaV1
+  /** `'user'`: refuse a call with no session (A002). The contract's auth scope. */
+  auth?: A
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
   tags?: Tags<[input: Out<S>]>
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
-  cache?: { life?: Life }
-  run: (args: { input: Out<S>; ctx: Context }) => O | Promise<O>
+  cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
+  run: (args: { input: Out<S>; ctx: Ctx<A> }) => O | Promise<O>
   /** Set by the `weft:start` plugin: `<export>.<file hash>`. */
   $id?: string
 }
 
-export interface MutationDef<S, O> {
+export interface MutationDef<S, O, A = undefined> {
   input?: S
+  output?: StandardSchemaV1
+  auth?: A
   /** Tags whose queries the response refreshes (single-flight) and whose cached values it drops. */
   invalidates?: Tags<[input: Out<S>, result: Awaited<O>]>
   /** Client only: predict the result. Each call's layers are re-applied on new values until it settles. */
   optimistic?: (args: { input: In<S> }, cache: OptimisticCache) => void
-  run: (args: { input: Out<S>; ctx: Context }) => O | Promise<O>
+  run: (args: { input: Out<S>; ctx: Ctx<A> }) => O | Promise<O>
   $id?: string
 }
 
@@ -96,7 +109,7 @@ export interface Mutation<I, O> {
 export interface Fn {
   kind: 'query' | 'mutation'
   $id: string
-  def: { input?: StandardSchemaV1; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
+  def: { input?: StandardSchemaV1; output?: StandardSchemaV1; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
 }
 
 /** Every definition by id (the server answers `/_weft/fn/<id>` from it). */
@@ -159,7 +172,7 @@ export const keyOf = (id: string, input: unknown) => `${id}:${stable(input)}`
 export type Wire = [id: string, input: unknown, value: unknown, tags: string[]]
 
 /** What the transports answer (research 27 §3). */
-export interface Answer { v?: unknown; t?: string[]; c?: Wire[]; r?: string }
+export interface Answer { v?: unknown; t?: string[]; c?: Wire[]; r?: string; /** `r` is a full load: the session changed, so nothing cached may survive. */ x?: 1 }
 
 export interface Transport {
   query(id: string, input: unknown): Promise<Answer>
@@ -172,9 +185,13 @@ export interface Transport {
  */
 export const runtime: {
   scope?: () => any
+  /** Run `fn` with `scope` current (the request's AsyncLocalStorage). */
+  enter?: <T>(scope: any, fn: () => T) => T
   exec?: typeof import('./exec')
   transport?: Transport
   navigate?: (href: string, replace?: boolean) => void
+  /** The databases `createDb` made: the server applies migrations to them before the first request. */
+  dbs?: Set<{ $weft: { migrate(list: { tag: string; sql: string }[]): Promise<void> } }>
 } = {}
 
 const go = (href: string, replace?: boolean) => (runtime.navigate ? runtime.navigate(href, replace) : void client.navigate?.(href, { replace }))
@@ -208,7 +225,7 @@ export interface NetControl {
 
 // ---- definitions --------------------------------------------------------------------------------------------------
 
-export function query<O, S extends StandardSchemaV1 | undefined = undefined>(def: QueryDef<S, O>): Query<In<S>, Awaited<O>> {
+export function query<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: QueryDef<S, O, A>): Query<In<S>, Awaited<O>> {
   const id = def.$id ?? `q${++auto}`
   const fn: Fn = { kind: 'query', $id: id, def: def as Fn['def'] }
   fns.set(id, fn)
@@ -217,7 +234,7 @@ export function query<O, S extends StandardSchemaV1 | undefined = undefined>(def
   return Object.assign(q, { kind: 'query', $id: id, [FN]: fn })
 }
 
-export function mutation<O, S extends StandardSchemaV1 | undefined = undefined>(def: MutationDef<S, O>): Mutation<In<S>, Awaited<O>> {
+export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: MutationDef<S, O, A>): Mutation<In<S>, Awaited<O>> {
   const id = def.$id ?? `m${++auto}`
   const fn: Fn = { kind: 'mutation', $id: id, def: def as Fn['def'] }
   fns.set(id, fn)
@@ -235,6 +252,10 @@ export const fnOf = (h: any): Fn => h?.[FN] ?? h
 // ---- server and client calls ---------------------------------------------------------------------------------
 
 const server = () => runtime.scope?.() ?? net()?.als.getStore()
+/** The request scope in progress, on the server or under the fake transport. */
+export const currentScope = server
+/** Run `fn` with `scope` current. */
+export const enter = <T>(scope: unknown, fn: () => T): T => (runtime.enter ? runtime.enter(scope, fn) : net() ? net()!.als.run(scope, fn) : fn())
 
 function fetchQuery(fn: Fn, input: unknown): Promise<any> {
   const scope = server()
@@ -387,7 +408,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
       error.value = undefined
       out = a.v
     })
-    if (a.r !== undefined) go(a.r)
+    if (a.r !== undefined) a.x ? location.assign(a.r) : go(a.r)
     return out
   } catch (err) {
     untrack(() => {

@@ -67,6 +67,11 @@ export interface Stream {
   chunks: AsyncIterable<string>
   /** After `chunks` ends: the page data for `hydrate(code, container, { data })` (resources and boundary states), or null. */
   data(): SsrData | null
+  /**
+   * Wait for the resources outside any Boundary, which have nowhere to stream to, and update `shell`. Without it they
+   * render empty and the client fetches them again. They hold the first byte, as `load` does.
+   */
+  settle(): Promise<void>
 }
 
 /** The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every marker. */
@@ -82,15 +87,16 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
   const flight = new Map<string, Promise<unknown>>()
   const html = new Map<string, string>()
   let wait: Promise<unknown>[] = []
+  let top: Promise<unknown>[] = []
   let last: SsrData | null = null
   const run = () => {
     html.clear()
     wait = []
-    const out = pass(code, options, cache, wait, flight, html)
+    top = []
+    const out = pass(code, options, cache, wait, flight, html, top)
     last = out.data
     return out.html
   }
-  const shell = run()
   const pending = () => Object.keys(last?.b ?? {}).filter(k => last!.b[k] === 'p')
   async function* chunks() {
     const deadline = Date.now() + (options.timeout ?? 10_000)
@@ -122,17 +128,35 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
     }
     if (open.size) yield `<script>${defined ? '' : SWAP + ';'}$wb()</script>` // what's left keeps its fallback
   }
-  return { shell, chunks: chunks(), data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length) ? last : null) }
+  const stream: Stream = {
+    shell: run(),
+    chunks: chunks(),
+    data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length) ? last : null),
+    async settle() {
+      const deadline = Date.now() + (options.timeout ?? 10_000)
+      for (let n = 1; top.length && n < (options.passes ?? 50); n++) {
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const late = await Promise.race([
+          Promise.all(top).then(() => false),
+          new Promise<boolean>(ok => (timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true))),
+        ])
+        clearTimeout(timer)
+        if (late) return
+        stream.shell = run()
+      }
+    },
+  }
+  return stream
 }
 
 function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>): string
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream: Map<string, string>): { html: string; data: SsrData }
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream?: Map<string, string>): any {
+function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream: Map<string, string>, top: Promise<unknown>[]): { html: string; data: SsrData }
+function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream?: Map<string, string>, top?: Promise<unknown>[]): any {
   const prev = { ...rt }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys
   const data: SsrData = { r: cache, b: {} }
-  Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream })
+  Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream, top })
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false

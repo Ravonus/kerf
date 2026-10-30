@@ -12,7 +12,7 @@ import { loadConfig } from './load-config.mjs'
 import { tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
-import { buildCommand, devCommand, routesCommand } from './start.mjs'
+import { buildCommand, dbCommand, devCommand, routesCommand, startCommand } from './start.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
@@ -22,7 +22,9 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
   browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
-  build [--preset <p>]  production build to .output (node, bun, deno_server…)
+  build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
+  start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
+  db generate         a migration in drizzle/ for the schema's changes (it applies on the next request)
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
@@ -37,7 +39,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port'])
+const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
 const booleans = new Set(['gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
@@ -100,9 +102,18 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return 0
       }
       case 'build': {
-        const result = await buildCommand(args.root, { preset: args.flags.preset })
+        const result = await buildCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime })
         if (args.json) print(result)
-        say(`weft build: ${result.preset} → ${result.output} (${result.ms} ms)`)
+        say(formatHuman(result.diagnostics))
+        say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract (${result.ms} ms)`)
+        return 0
+      }
+      case 'start':
+        return await startCommand(args.root, { runtime: args.flags.runtime })
+      case 'db': {
+        const result = dbCommand(args.root, args.positional[0])
+        if (args.json) print(result)
+        say(result.output)
         return 0
       }
       case 'routes': {

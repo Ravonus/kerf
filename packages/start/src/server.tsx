@@ -16,7 +16,7 @@ import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, cr
 import { createMemoryHistory } from '@tanstack/history'
 import { headTags, mergeMeta, metaTags, renderToStream, renderToString, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
-import { fns, isRedirect, runtime, StartError, type Redirect, type Wire } from './data'
+import { CLIENT_IP, FnError, fns, isRedirect, runtime, StartError, type Redirect, type Wire } from './data'
 import * as exec from './exec'
 import type { Scope, Store } from './exec'
 import { App } from './view'
@@ -56,6 +56,10 @@ export interface HandlerOptions {
   context?: (args: { request: Request }) => object | Promise<object>
   /** The shared cache for `cache: { life }` queries (memory by default). */
   store?: Store
+  /** `src/auth.server.ts`'s default export: mounted at its base path, its secret checked on the first request. */
+  auth?: { handler: (request: Request) => Promise<Response>; options?: { basePath?: string }; $weft?: { check(): void } }
+  /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
+  migrations?: () => { tag: string; sql: string }[]
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
   onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
 }
@@ -76,6 +80,7 @@ export interface Resolved {
 
 const als = new AsyncLocalStorage<Scope>()
 runtime.scope = () => als.getStore()
+runtime.enter = (scope, fn) => als.run(scope, fn)
 runtime.exec = exec
 
 const CARD = { width: 1200, height: 630 }
@@ -109,6 +114,20 @@ export function createHandler(options: HandlerOptions) {
   const tree = routeTree(manifest, modules)
   const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic }
   let checked = !options.dev
+  const authBase = (options.auth?.options?.basePath ?? '/api/auth').replace(/\/$/, '')
+  let applied = -1
+  let ready: Promise<void> | undefined
+
+  /** Before the first request (and in dev, when `drizzle/` grows): the auth secret, then the migrations. */
+  function boot(): Promise<void> | undefined {
+    const list = options.migrations?.() ?? []
+    if (applied === list.length) return ready
+    applied = list.length
+    return (ready = (async () => {
+      options.auth?.$weft?.check()
+      for (const db of runtime.dbs ?? []) await db.$weft.migrate(list)
+    })())
+  }
 
   async function resolve(path: string, request: Request): Promise<Resolved> {
     const scope = als.getStore() ?? exec.createScope(request, scopeOptions)
@@ -132,6 +151,7 @@ export function createHandler(options: HandlerOptions) {
     }
     const special = (id: '404' | 'error', status: number, error?: unknown): Promise<Resolved> => {
       const entry = byId.get(id)
+      if ((error as any)?.code && error instanceof StartError) options.onDiagnostic?.({ code: error.code, severity: 'error', message: error.message })
       const data = id === 'error' ? { status, message: options.dev && error instanceof Error ? error.message : 'Something went wrong.' } : { path }
       const levels: Level[] = [...(rootOk && !(failed && failed === rootOk) ? [levelOf(rootOk)] : []), { id, params: {}, data, raw: data, mod: mod(entry?.file) }]
       if (entry && mod(entry.file)?.default) comps[id] = mod(entry.file)!.default!
@@ -178,6 +198,7 @@ export function createHandler(options: HandlerOptions) {
     // carries the settled part.
     const route = createRouteState({ ...payloadOf(r, false), m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
     const s = renderToStream(() => <App route={route} />, { timeout: options.timeout })
+    await s.settle() // queries read outside a Boundary have nowhere to stream to
     const assets = options.assets ?? {}
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
     const head =
@@ -240,9 +261,13 @@ export function createHandler(options: HandlerOptions) {
       if (cross || request.headers.get('x-weft') !== '1' || !request.headers.get('content-type')?.startsWith('application/json'))
         return fail('Q010', `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`, 403)
       const body = (await request.json()) as { i?: unknown; f?: [string, unknown][] }
-      return out(await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : []))
+      const answer = await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : [])
+      if (options.dev && sessionChanged(scope)) options.onDiagnostic?.({ code: 'A004', severity: 'warning', message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it` })
+      return out(answer)
     } catch (e) {
-      if (isRedirect(e)) return out({ r: e.href })
+      // The session changed: a full load, so nothing cached for the last user survives in the tab (research 28 §3).
+      if (isRedirect(e)) return out({ r: e.href, ...(sessionChanged(scope) && { x: 1 }) })
+      if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)
       if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : {})
       options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
       return out({ e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' } }, 500)
@@ -293,6 +318,7 @@ export function createHandler(options: HandlerOptions) {
 
   const route = (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
+    if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
     if (request.method !== 'GET' && request.method !== 'HEAD') return Promise.resolve(new Response('Method not allowed', { status: 405 }))
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)
@@ -300,13 +326,16 @@ export function createHandler(options: HandlerOptions) {
     if (url.pathname === '/_weft/og-routes') return prerenderList(request)
     return page(url, request, scope)
   }
-  const handler = (request: Request): Promise<Response> => {
+  const handler = (incoming: Request): Promise<Response> => {
+    const request = options.auth ? stamped(incoming) : incoming
     if (!checked) {
       checked = true
       exec.checkTags(d => options.onDiagnostic?.(d))
     }
     const scope = exec.createScope(request, scopeOptions)
-    return als.run(scope, () => route(request, scope))
+    // The build's prerender only lists cards: it holds no secrets and may have no database.
+    if (new URL(request.url).pathname === '/_weft/og-routes') return als.run(scope, () => route(request, scope))
+    return Promise.resolve(boot()).then(() => als.run(scope, () => route(request, scope)))
   }
   return Object.assign(handler, { resolve })
 }
@@ -315,13 +344,21 @@ export function createHandler(options: HandlerOptions) {
  * What each router-core loader gets as `context`: the request scope, and where it leaves tags and redirects (router-core
  * copies the context object, so those go in shared containers).
  */
-interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect } }
+interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect; chain?: Promise<unknown> } }
 
 /** The router-core tree for the manifest: layouts are path prefixes, routes hang under their innermost layout. */
 function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
   const loader = (file: string) => async ({ params, context, abortController }: { params: any; context: LoadContext; abortController: AbortController }) => {
     const load = modules[file]?.load
     if (!load) return undefined
+    // Parent first (router-core starts them together): a layout's `load` is a guard, so a child never runs for a
+    // visitor its parent redirects (research 28 §3).
+    const out = context.out
+    const before = out.chain
+    let done!: () => void
+    out.chain = new Promise<void>(ok => (done = ok))
+    await before
+    if (out.redirect) return done(), undefined
     // Each loader runs in its own frame of the request scope, which records the tags of the queries it read.
     const f = exec.frame(context.scope)
     context.tags.set(file, f.tags!)
@@ -332,8 +369,10 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
       return v
     } catch (e) {
       if (!isRedirect(e)) throw e
-      context.out.redirect ??= e
+      out.redirect ??= e
       return undefined
+    } finally {
+      done()
     }
   }
   const rootLayout = manifest.layouts.find(l => l.dir === '')
@@ -408,6 +447,19 @@ function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
 function wire(scope: Scope): Wire[] {
   return [...scope.entries.values()].filter(e => e.done && e.e === undefined).map(e => [e.id, e.input, e.v, e.tags])
 }
+
+/** The request with the socket's address in CLIENT_IP, replacing any the client sent. Nitro's server sets `.ip`. */
+function stamped(request: Request): Request {
+  const headers = new Headers(request.headers)
+  const ip = (request as any).ip as string | undefined
+  headers.delete(CLIENT_IP)
+  if (ip) headers.set(CLIENT_IP, ip)
+  // `new Request(request, …)` refuses the server's request wrapper; the parts are enough.
+  return new Request(request.url, { method: request.method, headers, ...(request.body && { body: request.body, duplex: 'half' }) } as RequestInit)
+}
+
+/** A Better Auth session cookie went out on this response. */
+const sessionChanged = (scope: Scope) => scope.headers.getSetCookie().some(c => /^(__Secure-)?[\w.-]*session_token=/.test(c))
 
 /** The cookies and headers server functions set (`ctx.response.headers`), on the response. */
 function withHeaders(res: Response, scope: Scope): Response {

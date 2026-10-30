@@ -27,6 +27,7 @@ export interface FieldProps {
   value?: string
   disabled?: boolean
   readonly?: boolean
+  onInput?: (e: InputEvent & { currentTarget: HTMLInputElement & HTMLTextAreaElement }) => void
   [attr: string]: any
 }
 

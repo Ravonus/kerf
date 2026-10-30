@@ -76,6 +76,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         pending.value = true
         const done = Promise.resolve(out).catch(() => {})
         rt.wait?.push(done)
+        if (!boundaries.use) rt.top?.push(done)
       } else settle(out)
     } catch (e) {
       fail(e)
@@ -85,6 +86,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
     if (flying && !saved) {
       pending.value = true // an earlier pass started it: wait on that fetch, don't start another
       rt.wait?.push(flying)
+      if (!boundaries.use) rt.top?.push(flying)
     } else if (!saved && key !== undefined && data) {
       const record = (r: { v?: unknown; e?: string }) => void (data.r[key] = r)
       try {
@@ -94,6 +96,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
           const done = Promise.resolve(out).then(v => record({ v }), e => record({ e: message(e) }))
           rt.flight?.set(key, done)
           rt.wait?.push(done)
+          if (!boundaries.use) rt.top?.push(done)
         } else {
           settle(out)
           record({ v: out })
