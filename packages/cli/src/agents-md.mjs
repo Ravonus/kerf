@@ -10,6 +10,19 @@ import { agentsSection } from './plugins.mjs'
 import { tasks } from './tasks.mjs'
 
 export const limit = 8 * 1024
+
+/** `T001, T002, T003, P007` → `T001–T003, P007`: runs of consecutive codes as ranges (three or more). */
+export function ranges(codes) {
+  const out = []
+  for (let i = 0; i < codes.length; ) {
+    let j = i
+    const num = c => Number(c.slice(1))
+    while (j + 1 < codes.length && codes[j + 1][0] === codes[i][0] && num(codes[j + 1]) === num(codes[j]) + 1) j++
+    out.push(j - i >= 2 ? `${codes[i]}–${codes[j]}` : codes.slice(i, j + 1).join(', '))
+    i = j + 1
+  }
+  return out.join(', ')
+}
 /** PLAN §3.1 primitives an agent may reach for; listed as missing when the installed weft doesn't export them. */
 const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount', 'onCleanup', 'context', 'defineState', 'flush', 'untrack', 'batch']
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
@@ -23,9 +36,13 @@ export async function agentsMd(root) {
   const core = info.exports.weft ?? []
   const missing = planned.filter(n => !core.includes(n))
 
-  const reported = catalog.filter(e => e.by === 'compiler' && info.status[e.code]?.implemented && e.code !== 'W000')
+  // Style-group codes (D0xx, W060) and `weft style` belong to the Styling section, which only a weft with weft/style gets.
+  const isStyle = code => /^D0|^W06/.test(code)
+  const styled = info.exports['weft/style']?.includes('group')
+  const reported = catalog.filter(e => e.by === 'compiler' && info.status[e.code]?.implemented && e.code !== 'W000' && !isStyle(e.code))
   const notYet = catalog.filter(e => e.by === 'compiler' && !info.status[e.code]?.implemented).map(e => e.code)
   const pcodes = catalog.filter(e => e.by === 'cli' && e.code.startsWith('P')).map(e => e.code)
+  const dcodes = catalog.filter(e => /^D0/.test(e.code) && (e.by === 'cli' || info.status[e.code]?.implemented)).map(e => e.code)
   const tcodes = catalog.filter(e => e.code.startsWith('T') && info.status[e.code]?.implemented).map(e => e.code)
 
   // with plugins: the `weft plugins` command and their sections; without, neither
@@ -49,9 +66,10 @@ export async function agentsMd(root) {
     `## API in weft@${info.weft.version}`,
     '',
     `- \`weft\`: ${core.filter(n => planned.includes(n)).map(n => `\`${n}\``).join(', ')}` + (core.includes('state') ? ', `state.linked`' : ''),
-    ...['weft/dom', 'weft/ssr'].map(mod => {
+    ...['weft/dom', 'weft/ssr'].map((mod, i, all) => {
       const names = entryPoints[mod].filter(n => info.exports[mod]?.includes(n))
-      return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}. Its other exports are helpers compiled code calls; never import them.` : ''
+      const last = all.slice(i + 1).every(m => !entryPoints[m].some(n => info.exports[m]?.includes(n)))
+      return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}.${last ? ' Their other exports are for compiled code; never import them.' : ''}` : ''
     }).filter(Boolean),
     info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`.` : '',
     info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
@@ -63,19 +81,25 @@ export async function agentsMd(root) {
     '|---|---|---|',
     ...reported.map(e => `| ${e.code} | ${e.catches} | ${e.fix}${info.status[e.code].autofix ? ' (autofix)' : info.status[e.code].suggestion ? ' (suggested edit)' : ''} |`),
     '',
-    tcodes.length ? `Test checks (\`weft check\` on \`*.test.*\` files): ${tcodes.join(', ')}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
-    `Project checks: ${pcodes.join(', ')}. In the catalog but not reported yet: ${notYet.join(', ')}. \`weft docs <code>\` explains any code.`,
+    tcodes.length ? `Test checks (\`weft check\` on \`*.test.*\` files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
+    `Project checks: ${ranges(pcodes)}. In the catalog but not reported yet: ${ranges(notYet)}. \`weft docs <code>\` explains any code.`,
     '',
-    'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` from your own browser: roles, names and the live reactive graph) and run `weft test --gate`: each new test must fail on the old code (T010) and kill a mutant of the changed lines (T011); weakening a test is T020. More: `weft docs verify`.',
+    'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code (T010) and kill a mutant of the changed lines (T011); weakening a test is T020. More: `weft docs verify`.',
     '',
+    ...(styled
+      ? ['## Styling',
+         '',
+         `**Run \`weft style find <what it is>\` first**, then reuse a group or add an axis value; never class lists. New: \`const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })\` from \`weft/style\`, \`<li {...card({ status })}>\`. Tokens only. ${ranges(dcodes)}, W060: \`weft docs style\`.`,
+         '']
+      : []),
     '## Commands',
     '',
-    commandsPage(sections.length ? list : { ...list, tasks: list.tasks.filter(t => t.name !== 'plugins') }),
+    commandsPage({ ...list, tasks: list.tasks.filter(t => (sections.length || t.name !== 'plugins') && t.name !== 'style') }),
     '',
     ...(sections.length ? ['## Plugins', '', ...sections] : []),
     '## More',
     '',
-    '`weft docs <topic>` or the `docs` tool of `weft mcp`: `rules`, `props`, `lists`, `async`, `testing`, `browser`, `verify`, `config`, `diagnostics`, `commands`.',
+    `\`weft docs <topic>\` or the \`docs\` tool of \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${info.exports['weft/style'] ? '`style`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
     '',
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))

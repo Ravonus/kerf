@@ -3,6 +3,7 @@ import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync 
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './src/style/css.ts'
+import { buildMatrix } from './src/style/matrix.ts'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
@@ -81,8 +82,11 @@ const IMPORTS = /import\s+\{([^}]*)\}\s+from\s+['"](\.[^'"]+)['"]/g
  * compile the groups its relative imports bring in (`options.groups`), and serves `virtual:weft/groups.css`, which
  * every module that defines a group imports. A build scans the project first, so the CSS is complete when loaded;
  * dev and tests fill the registry as files compile and reload the CSS when it changes.
+ *
+ * It also writes the matrix, `.weft/styles.json` (src/style/matrix.ts, research 23 §2.4): after the build's scan, and
+ * in dev whenever a compile changes it. `matrix: false` turns that off (it's off under vitest by default).
  */
-function styleGroups({ taggedParts = false } = {}) {
+function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {}) {
   const defs = new Map() // file → [{ name, binding, exported, def, line }]
   const uses = new Map() // file → [GroupUse]
   const scanned = new Map() // file → mtime of the defs above, for files read off disk
@@ -133,18 +137,38 @@ function styleGroups({ taggedParts = false } = {}) {
         for (const [k, i] of Object.entries({ ...parts, ...states })) resolveIntent(i, `group ${g.name} (${where}) ${k}`)
         for (const [n, c] of compounds.entries()) resolveIntent(c.set, `group ${g.name} (${where}) compound ${n}`)
       } catch (e) {
-        if (e instanceof GroupError) ctx.error(`weft/style: ${e.message}`)
+        if (e instanceof GroupError) ctx.error(`D025 weft/style: ${e.message}`)
         throw e
       }
     }
   }
 
   const css = () => {
-    const all = [...defs].flatMap(([file, gs]) => gs.map(g => ({ ...g, file: relative(root, file) })))
-    const used = [...uses].flatMap(([file, us]) => us.map(u => ({ ...u, file: relative(root, file) })))
+    const { all, used } = sources()
     return emitGroups(all, used, { dev: isDev, taggedParts })
   }
   let last = ''
+
+  /** The matrix of everything compiled so far; written only when it changed. Returns it. */
+  let written = ''
+  let timer
+  const sources = () => ({
+    all: [...defs].flatMap(([file, gs]) => gs.map(g => ({ ...g, file: relative(root, file).split('\\').join('/') }))),
+    used: [...uses].flatMap(([file, us]) => us.map(u => ({ ...u, file: relative(root, file).split('\\').join('/') }))),
+  })
+  const writeMatrix = () => {
+    const { all, used } = sources()
+    const m = buildMatrix(all, used)
+    const text = `${JSON.stringify(m, null, 2)}\n`
+    if (matrix && text !== written && (all.length || existsSync(join(root, '.weft', 'styles.json')))) {
+      try {
+        mkdirSync(join(root, '.weft'), { recursive: true })
+        writeFileSync(join(root, '.weft', 'styles.json'), text)
+        written = text
+      } catch {}
+    }
+    return m
+  }
 
   return {
     /** Before compiling: the groups option. After: record the facts; a module that defines groups imports the CSS. */
@@ -159,6 +183,10 @@ function styleGroups({ taggedParts = false } = {}) {
         scanned.delete(file)
       } else if (defs.get(file)?.length) defs.set(file, [])
       uses.set(file, facts.groupUses ?? [])
+      if (server && matrix) {
+        clearTimeout(timer)
+        timer = setTimeout(writeMatrix, 100)
+      }
       if (server) {
         const next = css()
         if (next !== last) {
@@ -189,6 +217,14 @@ function styleGroups({ taggedParts = false } = {}) {
           const out = transform(code, { filename: file, checkOnly: true, taggedParts, groups: await importedGroups(this, code, file) })
           uses.set(file, out.facts.groupUses)
         }
+        if (!matrix) return
+        // The project-wide style codes (research 23 §3): errors stop the build, the rest are warnings.
+        for (const d of writeMatrix().diagnostics) {
+          const text = `${d.code} weft/style: ${d.message}\n  help: ${d.help}`
+          const loc = { file: join(root, d.file), line: d.line, column: 0 }
+          if (d.severity === 'error') this.error({ message: text, loc })
+          else this.warn({ message: text, loc })
+        }
       },
       resolveId(source) {
         return source === GROUPS_CSS ? '\0' + GROUPS_CSS : null
@@ -206,7 +242,8 @@ function styleGroups({ taggedParts = false } = {}) {
  * loads a component graph compiled that way into any process (round-trip tests); the query follows .tsx/.jsx imports.
  */
 /*
- * `style.taggedParts`: group parts carry `data-g` as well as `data-part` (style groups, below).
+ * `style.taggedParts`: group parts carry `data-g` as well as `data-part`; `style.matrix: false`: no `.weft/styles.json`
+ * (style groups, below).
  */
 /*
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept

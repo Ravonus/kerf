@@ -3,6 +3,7 @@
 //
 //   <li {...productRow({ stock: s })}>      →  <li data-g="product-row" data-stock={s}>   (one attribute binding)
 //   <span {...productRow.price}>            →  <span data-part="price">
+//   <li {...productRow({ accent: { radius: 'round' } })}>  →  <li data-g="product-row" data-accent="radius:round">
 //
 // The Vite plugin turns definitions plus call sites into readable CSS in `@layer app.groups` (./style/css.ts). The
 // function below only runs where a call site wasn't lowered (an argument that isn't an object literal).
@@ -43,8 +44,11 @@ type Pseudo = 'hover' | 'focus' | 'active' | 'disabled'
 export type GroupAttrs = { 'data-g': string } & Record<`data-${string}` | `aria-${string}`, string | boolean | undefined>
 export type PartAttrs = { readonly 'data-part': string }
 
+/** A one-off variation at a call site: tokens only, no `css` (research 23 §2.2). Three of the same suggest an axis value (D022). */
+export type Accent = Omit<Intent, 'css'>
+
 export type Group<N extends string, A, P, S> = {
-  (axes?: AxisArgs<A> & { [K in Exclude<keyof S, Pseudo>]?: boolean }): GroupAttrs
+  (axes?: AxisArgs<A> & { [K in Exclude<keyof S, Pseudo>]?: boolean } & { accent?: Accent }): GroupAttrs
   readonly group: N
 } & { readonly [K in keyof P]: PartAttrs }
 
@@ -60,6 +64,7 @@ export function group<const N extends string, const A extends Record<string, Val
     const out: Record<string, unknown> = { 'data-g': name, ...Object.fromEntries(Object.entries(def.defaults ?? {}).map(([k, v]) => [`data-${k}`, v])) }
     for (const [k, v] of Object.entries(axes)) {
       if (def.axes && k in def.axes) out[`data-${k}`] = v
+      else if (k === 'accent' && v) out['data-accent'] = Object.entries(v as Record<string, string>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([i, t]) => `${i}:${t}`).join(' ') || undefined
       else if (def.states && k in def.states && !PSEUDO.has(k)) out[ARIA.has(k) ? `aria-${k}` : `data-${k}`] = ARIA.has(k) ? String(!!v) : v ? '' : undefined
     }
     return out

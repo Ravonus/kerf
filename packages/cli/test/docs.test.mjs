@@ -12,7 +12,7 @@ const status = probe(loadCompiler(resolveWeft(fixture)))
 describe('catalog probe', () => {
   it('finds the codes the Phase 1 compiler reports, with their autofixes', () => {
     const reported = Object.entries(status).filter(([, s]) => s.implemented).map(([c]) => c)
-    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015', 'W017', 'W018', 'W050', 'W051', 'W054', 'W056'])
+    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015', 'W017', 'W018', 'W050', 'W051', 'W054', 'W056', 'W060', 'D024', 'D025'])
     expect(status.W006.autofix).toBe(true)
     expect(status.W015.autofix).toBe(true)
     expect(status.W001).toMatchObject({ autofix: false, suggestion: true })
@@ -57,9 +57,14 @@ describe('AGENTS.md', () => {
     expect(text).toContain('weft@0.0.0')
     for (const [code, s] of Object.entries(status)) {
       if (code === 'W000') continue
-      if (s.implemented) expect(text).toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
+      // style-group codes are taught in their own section, not the table
+      if (/^D0|^W06/.test(code)) expect(text).not.toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
+      else if (s.implemented) expect(text).toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
       else expect(text).not.toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
     }
+    expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D020–D025, W060: `weft docs style`\.$/m)
+    expect(text).not.toContain('| `weft style` |') // the section covers it
+    expect(text).toContain('Test checks (`weft check` on `*.test.*` files): T001–T009.')
     // The installed weft has every planned export now, so the async rule is in and nothing is listed as missing.
     expect(text).toContain('**Async data is `resource(signal => fetch(…))`**')
     expect(text).not.toContain('Not in this version yet')

@@ -1,5 +1,5 @@
 // `weft mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `tasks`,
-// `test_gate` and the `browser_*` tools.
+// `style_find`, `style_explain`, `test_gate` and the `browser_*` tools.
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
 import { createInterface } from 'node:readline'
@@ -8,6 +8,7 @@ import { docs, topics } from './docs.mjs'
 import { tasks } from './tasks.mjs'
 import { browser, expectations, actions as browserActions } from './browser/commands.mjs'
 import { gate } from './gate.mjs'
+import { explainTarget, findGroups, styleMatrix } from './style.mjs'
 
 const versions = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05']
 
@@ -63,6 +64,26 @@ export const tools = [
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'style_find',
+    description: "Before styling anything, find the style groups that already fit (`weft style find`): name, doc, axes and values, parts, states, how often it's used, and similar groups. Reuse or add an axis value; don't write a new group or class list for the same thing.",
+    inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'What the thing is: `card`, `status badge`, `nav`, or a token such as `critical`' } }, required: ['query'] },
+  },
+  {
+    name: 'style_explain',
+    description: 'Explain one variation of a style group (`weft style explain`): every declaration on its root and parts in cascade order with the token, axis, state, compound or accent it came from, the attributes it renders, the CSS it emits, and the call sites that produce it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        target: { type: 'string', description: 'A group (`order-card`), a part (`order-card.title`), `order-card[status=late][selected]`, or a DOM selector (`[data-g="order-card"][data-status="late"]`)' },
+        axes: { type: 'object', additionalProperties: { type: 'string' }, description: 'Axis values, e.g. { "status": "late" } (defaults fill the rest)' },
+        states: { type: 'array', items: { type: 'string' }, description: 'States to apply: selected, hover…' },
+        accent: { type: 'object', additionalProperties: { type: 'string' }, description: 'A call-site accent, intent → token: { "radius": "round" }' },
+        part: { type: 'string', description: 'Only this part (and the root)' },
+      },
+      required: ['target'],
+    },
+  },
+  {
     name: 'test_gate',
     description: 'Run the test gate on the diff (`weft test --gate`): each new or changed test must fail on the old code (T010), kill a mutant of the changed lines (T011), and no existing test may get weaker (T020). Returns per-test results, surviving mutants with what to assert, and diagnostics.',
     inputSchema: { type: 'object', properties: { base: { type: 'string', description: 'Git ref to diff against (default HEAD: the uncommitted change)' }, budgetSec: { type: 'number' }, maxMutants: { type: 'number' }, refactor: { type: 'boolean' } } },
@@ -90,7 +111,7 @@ export async function handle(root, msg) {
         protocolVersion: versions.includes(asked) ? asked : versions[0],
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: 'weft', version: '0.0.0' },
-        instructions: 'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
+        instructions: 'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Style with groups from weft/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
       })
     }
     case 'ping':
@@ -107,6 +128,8 @@ export async function handle(root, msg) {
         }
         if (name === 'check') data = await check(root, { files: args.files })
         else if (name === 'tasks') data = await tasks(root)
+        else if (name === 'style_find') data = findGroups((await styleMatrix(root)).matrix, args.query)
+        else if (name === 'style_explain') data = explainTarget(await styleMatrix(root), args.target, { axes: args.axes, states: args.states, accent: args.accent, part: args.part })
         else if (name === 'test_gate') data = await gate(root, { base: args.base, budgetSec: args.budgetSec, maxMutants: args.maxMutants, refactor: args.refactor })
         else if (name.startsWith('browser_')) data = await callBrowser(root, name, args)
         else return fail(-32602, `Unknown tool: ${name}`)

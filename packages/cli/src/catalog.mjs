@@ -1,11 +1,12 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), plus the codes proposed in research 17 (marked `proposed`).
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups), plus
+// the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
 // come from `weft check`'s test pass (tests.mjs); their examples are test files, checked the same way.
 
-/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'reserved', example?: string, proposed?: boolean }} Entry */
+/** @typedef {{ code: string, severity: 'error' | 'warning' | 'info', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'reserved', example?: string, proposed?: boolean }} Entry */
 
 /** @type {Entry[]} */
 export const catalog = [
@@ -56,8 +57,8 @@ export const catalog = [
   },
   {
     code: 'W014', severity: 'error', by: 'compiler',
-    catches: 'Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list: every row re-runs on every change (error in-file; `weft check` follows props across files)',
-    fix: 'Replace only the changed item (`p.id === id ? { ...p, price } : p`), or keep items stable and read the changing field live',
+    catches: 'Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list: every row re-runs on every change (in-file, and across files via props in `weft check`)',
+    fix: 'Replace only the changed item (`p.id === id ? { ...p, price } : p`), or read the changing field live',
     example: "import { state } from 'weft'\nexport function A() { const xs = state([{ id: 'a', price: 1 }]); const push = (price: number) => { xs.value = xs.value.map(p => ({ ...p, price })) }; return <ul onClick={() => push(2)}>{xs.value.map(p => <li key={p.id}>{p.price}</li>)}</ul> }",
   },
   {
@@ -66,14 +67,14 @@ export const catalog = [
   },
   {
     code: 'W017', severity: 'warning', by: 'compiler',
-    catches: 'One entry of a whole object read per row: `cart[p.id]` / `cart.value[p.id]` in a keyed-list row (or passed to its child as a prop), or `box.value[prop]` in a component\'s JSX or `derived` (a row component). Every change re-runs every row',
-    fix: 'Read the entry from the box: `cart.get(p.id)`; for a prop, pass the box (`cart={cart}`, `State<Cart>`) and read `.get(id)` in the child',
+    catches: 'One entry of a whole object read per row (`cart[p.id]`, `cart.value[p.id]` in a keyed-list row or its props, `box.value[prop]` in a row component): every change re-runs every row',
+    fix: 'Read the entry from the box: `cart.get(p.id)`; to a row component pass the box (`State<Cart>`) and read `.get(id)` there',
     example: "export function A({ xs, cart }: any) { return <ul>{xs.map((x: any) => <li key={x.id}>{cart[x.id]}</li>)}</ul> }",
   },
   {
     code: 'W018', severity: 'warning', by: 'compiler',
     catches: '`const x = untrack(() => …reactive…)` in a component body that only the JSX reads: it renders the setup-time value and never updates',
-    fix: '`derived(() => …)` and render `x.value`; keep `untrack` only for a value that must stay fixed',
+    fix: '`derived(() => …)` and render `x.value`; `untrack` only for a value meant to stay fixed',
     example: "import { untrack, type State } from 'weft'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
   },
   {
@@ -97,7 +98,7 @@ export const catalog = [
   {
     code: 'W050', severity: 'error', by: 'compiler',
     catches: 'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
-    fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser (edit offered), or clean it up in `onCleanup`',
+    fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser, or clean it up in `onCleanup`',
     example: "export function A() { window.addEventListener('keydown', () => {}); return <p /> }",
   },
   {
@@ -116,6 +117,32 @@ export const catalog = [
     code: 'W056', severity: 'warning', by: 'compiler', catches: '`watch` that copies a live value (a weft/browser value, `.live()`) into `state`',
     fix: 'Read `live.value` directly, or `derived(() => live.value)`',
     example: "import { state, watch } from 'weft'\nimport { online } from 'weft/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
+  },
+  {
+    code: 'W060', severity: 'error', by: 'compiler', catches: "A `group()` from weft/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
+    fix: 'Inline the token name or literal; define groups as `export const x = group(\'x\', { … })`; raw CSS goes in `css: { … }`',
+    example: "import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
+  },
+
+  // Style groups (research 23 §3). D010 is warp's contrast gate (its own plugin); D040 and D081 are reserved by warp's docs.
+  {
+    code: 'D020', severity: 'warning', by: 'cli', catches: 'Class soup: a static `class`/`className` with more than 8 classes, or the same class list (4+ classes) in two or more places',
+    fix: "Extract a style group (`group('order-card', …)`, name suggested from the component) and spread it; `weft style find` first, one may already fit",
+  },
+  { code: 'D021', severity: 'warning', by: 'cli', catches: 'Two style groups resolve to 90% or more of the same CSS (`similar` in .weft/styles.json)', fix: 'Merge them into one group with an axis for what differs' },
+  { code: 'D022', severity: 'info', by: 'cli', catches: 'The same accent (`accent: { … }` at a call site) on one group at 3 or more sites', fix: 'Promote it to an axis value and pass that value at those sites' },
+  { code: 'D023', severity: 'warning', by: 'cli', catches: 'A `css: { … }` escape (raw CSS) in a style group', fix: 'Use the token the fix names; keep the escape only where no intent sets the property' },
+  {
+    code: 'D024', severity: 'error', by: 'compiler',
+    catches: 'Styles that fight with no order: two group roots spread on one element; two compounds that can match at once and set one property differently, or an accent that sets what the site\'s own axis value sets (`weft check`)',
+    fix: 'One group per element (nest an element, or make it an axis); exclusive compound `when`s; drop the accent or make it an axis value',
+    example: "import { group } from 'weft/style'\nconst a = group('a', { base: { pad: 'group' } })\nconst b = group('b', { base: { gap: 'related' } })\nexport function X() { return <li {...a()} {...b()} /> }",
+  },
+  {
+    code: 'D025', severity: 'error', by: 'compiler',
+    catches: "Unknown name in a style group: an axis value, axis, state or part a call site uses that the group doesn't have, or an intent or token that isn't in the vocabulary (also a type error)",
+    fix: 'Use one of the names listed (the closest come first); `weft style explain <group>` shows them all',
+    example: "import { group } from 'weft/style'\nconst card = group('card', { axes: { status: { open: {}, late: {} } } })\nexport function X() { return <article {...card({ status: 'lost' })} /> }",
   },
 
   {

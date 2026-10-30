@@ -20,6 +20,7 @@
     "./history": "./src/history.ts",
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
+    "./style/matrix": "./src/style/matrix.ts",
     "./hmr": "./src/hmr.ts",
     "./plugin": { "types": "./src/plugin.d.ts", "default": "./src/plugin.mjs" },
     "./devtools": "./src/devtools.ts",
