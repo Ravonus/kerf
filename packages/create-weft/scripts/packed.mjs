@@ -4,27 +4,18 @@
 //
 //   node packages/create-weft/scripts/packed.mjs <empty-dir>
 import { execFileSync, spawn } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parseEnv } from 'node:util'
 import { scaffold } from '../src/index.mjs'
+import { packAll, pin, pkgs } from './tarballs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir>')
 const root = resolve(process.argv[2])
 if (existsSync(root) && readdirSync(root).length) throw new Error(`${root} is not empty`)
-const pkgs = fileURLToPath(new URL('../../', import.meta.url))
-const tgz = join(root, 'tgz')
 const sh = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] })
 
-mkdirSync(tgz, { recursive: true })
-const tarballs = {}
-for (const dir of readdirSync(pkgs)) {
-  const file = join(pkgs, dir, 'package.json')
-  if (!existsSync(file)) continue
-  const { name } = JSON.parse(readFileSync(file, 'utf8'))
-  tarballs[name] = `file:${join(tgz, sh('npm', ['pack', '--silent', '--pack-destination', tgz], join(pkgs, dir)).trim().split('\n').pop())}`
-}
+const tarballs = packAll(join(root, 'tgz'))
 
 // Three apps: the default, Tailwind, and a re-themed warp app that gets Tailwind later through `weft add`.
 const theme = `{ seed: { hue: 220, chroma: 0.12 }, dials: { expression: 'quiet', density: 'compact' }, radius: 'round', fonts: { body: 'Georgia, serif' } }`
@@ -39,9 +30,7 @@ for (const { name, options, theme, add, css } of apps) {
   const app = join(root, name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
   scaffold(app, options)
-  const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
-  for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const dep in deps) if (tarballs[dep]) deps[dep] = tarballs[dep]
-  writeFileSync(join(app, 'package.json'), JSON.stringify({ ...pkg, overrides: tarballs }, null, 2))
+  writeFileSync(join(app, 'package.json'), JSON.stringify(pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs), null, 2))
   if (theme) {
     const file = join(app, 'weft.config.ts')
     writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${theme})`))

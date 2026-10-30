@@ -8,6 +8,7 @@ surfaces (Keel engine), and an agent-driven design language that coexists with T
 
 Status: planning. Start with [docs/PLAN.md](docs/PLAN.md).
 
+- [docs/getting-started.md](docs/getting-started.md) — make an app from this checkout
 - [docs/PLAN.md](docs/PLAN.md) — the plan
 - [docs/REVIEW.md](docs/REVIEW.md) — independent review that shaped it
 - [docs/research/](docs/research/) — landscape research (reactivity, full stack, design language, Keel driver, native targets, payments)

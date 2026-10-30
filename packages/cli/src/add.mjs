@@ -26,6 +26,27 @@ function installer(root) {
   return INSTALL[lock] ?? INSTALL['package-lock.json']
 }
 
+/** What to install: for an app on local tarballs (`local.mjs`) those go straight in `package.json`, since npm refuses any
+ *  spec for them that isn't spelled exactly as their override is. */
+export function pinned(root, specs) {
+  const file = join(root, 'package.json')
+  const pkg = JSON.parse(readFileSync(file, 'utf8'))
+  const local = {}
+  const rest = specs.filter(spec => {
+    const name = spec.replace(/(?<=.)@.*$/, '')
+    const override = pkg.overrides?.[name]
+    if (typeof override !== 'string' || !override.startsWith('file:')) return true
+    local[name] = override
+    return false
+  })
+  if (Object.keys(local).length) writeFileSync(file, JSON.stringify({ ...pkg, dependencies: { ...pkg.dependencies, ...local } }, null, 2))
+  return rest
+}
+
+function installSpecs(root, manager, verb, specs) {
+  execFileSync(manager, [verb, ...pinned(root, specs)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+}
+
 /** The import to write: `<pkg>/plugin` when the package has one, and however it exports its factory. */
 function pluginImport(root, pkg) {
   const require = createRequire(join(root, 'package.json'))
@@ -118,7 +139,7 @@ async function addTailwind(root, { dryRun, install }) {
   const specs = Object.entries(packages).map(([name, version]) => `${name}@${version}`)
   if (install) {
     actions.push(`install ${specs.join(' ')} with ${manager}`)
-    if (!dryRun) execFileSync(manager, [verb, ...specs], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+    if (!dryRun) installSpecs(root, manager, verb, specs)
   }
   const warp = '@weft/warp' in { ...pkg.dependencies, ...pkg.devDependencies }
   const edits = [[join(root, viteName ?? 'vite.config.ts'), vite], ...(has ? [] : [[cssFile, `${cssEntry(warp)}${css && '\n'}${css}`]])]
@@ -157,7 +178,7 @@ async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, insta
   if (install) {
     const specs = Object.entries({ ...deps, ...dev }).map(([n, v]) => `${n}@${v}`)
     actions.push(`install ${specs.join(' ')} with ${manager}`)
-    if (!dryRun) execFileSync(manager, [verb, ...specs], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+    if (!dryRun) installSpecs(root, manager, verb, specs)
   }
   actions.push(...Object.keys(files).map(f => `write ${f}`))
   if (dryRun) return { ok: true, package: `${layer} on ${engine}`, actions, dryRun: true }
@@ -196,7 +217,7 @@ async function addAuth(root, { dryRun, install }) {
   const specs = Object.entries(wanted).filter(([name]) => !(name in (pkg.dependencies ?? {}))).map(([n, v]) => `${n}@${v}`)
   if (install && specs.length) {
     actions.push(`install ${specs.join(' ')} with ${manager}`)
-    if (!dryRun) execFileSync(manager, [verb, ...specs], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+    if (!dryRun) installSpecs(root, manager, verb, specs)
   }
   const edits = { ...files, 'src/context.server.ts': context }
   if (!envText.includes('BETTER_AUTH_SECRET')) edits['src/env.server.ts'] = envText.replace('server: {\n', 'server: {\n    BETTER_AUTH_SECRET: z.string().min(32),\n')
@@ -238,7 +259,7 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   const [manager, verb] = installer(root)
   if (install) {
     actions.push(`install ${pkg} with ${manager}`)
-    if (!dryRun) execFileSync(manager, [verb, pkg], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+    if (!dryRun) installSpecs(root, manager, verb, [pkg])
   }
   const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from 'weft/config'\n\nexport default defineConfig({})\n"
   const next = /\.(json|ya?ml)$/.test(file) ? addToData(file, text, pkg) : addToTs(root, file, text, pkg)

@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+// Use this checkout from any app on this machine, without publishing: the packages go in as tarballs from one directory
+// (`~/.weft/local`, or WEFT_LOCAL_DIR), so an app sees what a consumer would (docs/getting-started.md).
+//
+//   node packages/create-weft/scripts/local.mjs pack                       build what's stale and pack
+//   node packages/create-weft/scripts/local.mjs new <dir> [create-weft flags]    that, then an app wired to the tarballs
+//   node packages/create-weft/scripts/local.mjs refresh [dir]              that, then put the new tarballs in an app
+import { execFileSync } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { homedir } from 'node:os'
+import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { packAll, pin, pkgs } from './tarballs.mjs'
+
+const store = resolve(process.env.WEFT_LOCAL_DIR ?? join(homedir(), '.weft/local'))
+const tgz = join(store, 'tgz')
+const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit' })
+const OTHER_LOCKS = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock']
+
+/** The compiler, when its stamp no longer matches the crate. */
+function buildNative() {
+  const { sourceStamp, stampFile } = createRequire(import.meta.url)(join(pkgs, 'weft/scripts/native-stamp.cjs'))
+  const native = join(pkgs, 'weft/native', `weft-compiler.${process.platform}-${process.arch}.node`)
+  if (existsSync(stampFile(native)) && readFileSync(stampFile(native), 'utf8').trim() === sourceStamp()) return
+  console.log('[local] building the native compiler')
+  run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
+}
+
+/** dist/ is gitignored and it's all @weft/text-engine exports, so it's built every time rather than trusted. */
+function buildTextEngine() {
+  const dir = join(pkgs, 'text-engine')
+  if (!existsSync(join(dir, 'node_modules'))) run('npm', ['ci', '--silent'], dir)
+  run('npm', ['run', '--silent', 'build'], dir)
+}
+
+/** Build and pack, then swap the store in whole, so a failed pack leaves the last good one. Returns the name map. */
+function pack() {
+  buildNative()
+  buildTextEngine()
+  const next = `${tgz}.next`
+  rmSync(next, { recursive: true, force: true })
+  const packed = packAll(next)
+  rmSync(tgz, { recursive: true, force: true })
+  renameSync(next, tgz)
+  const tarballs = Object.fromEntries(Object.entries(packed).map(([name, spec]) => [name, spec.replace(next, tgz)]))
+  writeFileSync(join(store, 'tarballs.json'), JSON.stringify(tarballs, null, 2))
+  console.log(`[local] ${Object.keys(tarballs).length} packages in ${tgz}`)
+  return tarballs
+}
+
+/** npm keeps a tarball's hash and treats a same-version package as satisfied, so what's being replaced has to go first. */
+function forget(app, tarballs) {
+  const installed = (name, path) => path === `node_modules/${name}` || path.endsWith(`/node_modules/${name}`)
+  const file = join(app, 'package-lock.json')
+  const lock = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : { packages: {} }
+  for (const path of Object.keys(lock.packages)) {
+    if (!Object.keys(tarballs).some(name => installed(name, path))) continue
+    delete lock.packages[path]
+    rmSync(join(app, path), { recursive: true, force: true })
+  }
+  if (existsSync(file)) writeFileSync(file, JSON.stringify(lock, null, 2))
+  for (const stale of ['.package-lock.json', '.vite']) rmSync(join(app, 'node_modules', stale), { recursive: true, force: true })
+}
+
+function refresh(dir) {
+  const app = resolve(dir)
+  const file = join(app, 'package.json')
+  if (!existsSync(file)) throw new Error(`${app} has no package.json`)
+  const other = OTHER_LOCKS.find(lock => existsSync(join(app, lock)))
+  if (other) throw new Error(`${app} has ${other}; this works with npm only`)
+  const pkg = JSON.parse(readFileSync(file, 'utf8'))
+  if (!pkg.dependencies?.weft && !pkg.devDependencies?.weft) throw new Error(`${app} doesn't depend on weft; start one with \`local.mjs new\``)
+  const tarballs = pack()
+  forget(app, tarballs)
+  writeFileSync(file, JSON.stringify(pin(pkg, tarballs), null, 2))
+  run('npm', ['install', '--silent'], app)
+  console.log(`[local] ${app} is on this checkout`)
+}
+
+const [command, ...rest] = process.argv.slice(2)
+try {
+  if (Number(process.versions.node.split('.')[0]) < 26) throw new Error(`weft needs Node 26; this is ${process.version}`)
+  mkdirSync(store, { recursive: true })
+  if (command === 'pack') pack()
+  else if (command === 'refresh') refresh(rest[0] ?? '.')
+  else if (command === 'new' && rest[0] && !rest[0].startsWith('-')) {
+    pack()
+    // Last, so they win: the tarballs are wired up through npm's overrides, and the app is no use uninstalled.
+    run(process.execPath, [fileURLToPath(new URL('../bin/create-weft.mjs', import.meta.url)), ...rest, '--tarballs', store, '--pm', 'npm', '--install'])
+  } else {
+    console.error('usage: local.mjs pack | new <dir> [create-weft flags] | refresh [dir]')
+    process.exit(1)
+  }
+} catch (e) {
+  if (!e.status) console.error(`local: ${e.message}`) // a child that failed has already said why
+  process.exit(e.status || 1)
+}
