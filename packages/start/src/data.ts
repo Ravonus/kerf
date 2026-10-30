@@ -37,6 +37,8 @@ export interface Context {
   request: Request
   /** Headers merged into the response (cookies a sign-in sets). */
   response: { headers: Headers }
+  /** Uploads and CMS images (research 29 §6): `ingest` stores the original and returns the record `z.media()` validates. */
+  media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('weft/media').MediaAsset> }
 }
 
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
@@ -156,6 +158,43 @@ export function redirect(href: string, status: 301 | 302 | 303 | 307 | 308 = 307
 
 export const isRedirect = (v: unknown): v is Redirect => !!v && typeof v === 'object' && (v as any).isRedirect === true
 
+/** Refuse a value the schema can't judge (`email` is taken): `<Form>` shows it next to the field, as a schema issue. */
+export function invalid(fields: Record<string, string>): never {
+  throw new StartError('Q002', Object.keys(fields).join(', '), undefined, { status: 422, issues: Object.entries(fields).map(([k, message]) => ({ message, path: k.split('.') })) })
+}
+
+/** Issues as a form shows them: by field (`a.b`), and the ones that name no field. */
+export function fieldsOf(issues: readonly SchemaIssue[] = []) {
+  const errors: Record<string, string> = {}
+  let message: string | undefined
+  for (const i of issues) {
+    const key = i.path?.map(p => (typeof p === 'object' ? p.key : p)).join('.')
+    if (key) errors[key] ??= i.message
+    else message ??= i.message
+  }
+  return { errors, message }
+}
+
+const UNSAFE = new Set(['__proto__', 'constructor', 'prototype'])
+
+/** A form's fields as a mutation's input, on both sides (research 29 §5): `a.b` nests, `x[]` and repeats are arrays. */
+export function decodeForm(data: FormData): Record<string, unknown> {
+  const out: Record<string, any> = {}
+  for (const [name, value] of data) {
+    if (name[0] === '$' || (typeof value !== 'string' && !value.size)) continue // `$fn`; a file input left empty
+    const list = name.endsWith('[]')
+    const path = (list ? name.slice(0, -2) : name).split('.')
+    if (path.some(p => UNSAFE.has(p))) continue
+    let at = out
+    for (const p of path.slice(0, -1)) at = at[p] && typeof at[p] === 'object' ? at[p] : (at[p] = {})
+    const k = path.at(-1)!
+    if (list) (at[k] ??= []).push(value)
+    else if (k in at) at[k] = [at[k]].flat().concat(value)
+    else at[k] = value
+  }
+  return out
+}
+
 // ---- keys -------------------------------------------------------------------------------------------------------
 
 /** JSON with sorted object keys: the same input gives the same key on both sides (no input: `''`; JSON sends null). */
@@ -176,7 +215,8 @@ export interface Answer { v?: unknown; t?: string[]; c?: Wire[]; r?: string; /**
 
 export interface Transport {
   query(id: string, input: unknown): Promise<Answer>
-  mutate(id: string, input: unknown, refresh: [string, unknown][]): Promise<Answer>
+  /** `form`: the input came from a form, so strings may be coerced; a FormData is sent as is (it holds files). */
+  mutate(id: string, input: unknown, refresh: [string, unknown][], form?: true | FormData): Promise<Answer>
 }
 
 /**
@@ -242,10 +282,12 @@ export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, 
   const { calls, error } = createRoot(() => ({ calls: state(0), error: state<unknown>(undefined) }), null)
   const pending = createRoot(() => derived(() => calls.value > 0), null)
   const m: any = (input?: unknown) => mutate(fn, input, calls, error)
-  return Object.assign(m, { kind: 'mutation', $id: id, pending, error: { get value() { return error.value } }, [FN]: fn })
+  return Object.assign(m, { kind: 'mutation', $id: id, pending, error: { get value() { return error.value } }, [FN]: fn, [SUBMIT]: (input: unknown, form: true | FormData) => mutate(fn, input, calls, error, form) })
 }
 
 const FN = Symbol.for('weft.fn')
+/** `<Form>`'s call: a mutation handle's `m(input)` with the input marked as coming from a form. */
+export const SUBMIT = Symbol.for('weft.submit')
 /** The definition behind a query or mutation handle (also accepts the definition). */
 export const fnOf = (h: any): Fn => h?.[FN] ?? h
 
@@ -373,9 +415,9 @@ function staleTags(tags: string[], except: Set<string> = new Set()) {
   client.invalidated?.(tags)
 }
 
-async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State<unknown>): Promise<unknown> {
+async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State<unknown>, form?: true | FormData): Promise<unknown> {
   const scope = server()
-  if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [])).v
+  if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [], !!form)).v
   const m = ++callId
   const touched = new Set<Entry>()
   untrack(() => calls.value++)
@@ -383,7 +425,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
   const refresh = [...entries.values()].filter(e => e.readers > 0).map(e => [e.id, e.input] as [string, unknown])
   const drop = (e: Entry) => { e.layers.value = e.layers.value.filter(l => l.m !== m) }
   try {
-    const a = await transport().mutate(fn.$id, input, refresh)
+    const a = await transport().mutate(fn.$id, input, refresh, form)
     let out: unknown
     untrack(() => {
       const refreshed = new Set<string>()
@@ -494,8 +536,12 @@ const answer = async (res: Response): Promise<Answer> => {
 /** The browser's: GET for queries, POST + JSON + `x-weft` for mutations (research 27 §3). */
 export const http: Transport = {
   query: (id, input) => fetch(`/_weft/fn/${id}${input === undefined ? '' : `?i=${encodeURIComponent(stable(input))}`}`, { headers: { accept: 'application/json' } }).then(answer),
-  mutate: (id, input, f) =>
-    fetch(`/_weft/fn/${id}`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json', 'x-weft': '1' }, body: JSON.stringify({ i: input, f }) }).then(answer),
+  mutate(id, input, f, form) {
+    const headers: Record<string, string> = { accept: 'application/json', 'x-weft': '1' }
+    if (form instanceof FormData) form.set('$r', JSON.stringify(f))
+    else headers['content-type'] = 'application/json'
+    return fetch(`/_weft/fn/${id}`, { method: 'POST', headers, body: form instanceof FormData ? form : JSON.stringify({ i: input, f, ...(form && { c: 1 }) }) }).then(answer)
+  },
 }
 
 /**
@@ -504,7 +550,7 @@ export const http: Transport = {
  */
 const inProcess: Transport = {
   query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),
-  mutate: (id, input, f) => fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f)),
+  mutate: (id, input, f, form) => fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f, !!form)),
 }
 
 function fake(id: string, kind: string, input: unknown, call: (exec: typeof import('./exec'), scope: any, fn: Fn) => Promise<Answer>): Promise<Answer> {

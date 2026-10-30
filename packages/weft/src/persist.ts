@@ -1,13 +1,18 @@
-// weft/persist: `state(init, { persist })` inside a defineState scope (research 14 §2.7). Phase 1 backends: local,
-// session and memory (cookie and idb come with SSR). The weft() Vite plugin imports this where the option is used.
+// weft/persist: `state(init, { persist })` inside a defineState scope (research 14 §2.7, research 29 §2–3). Backends:
+// local, session, cookie (the one a server can read) and memory (idb comes later). The weft() Vite plugin imports this
+// where the option is used.
 //
 // Key `weft:<app>:<scope>.<box>`, envelope `{ v, at, data }`. On load: migrate[v] … migrate[current - 1], then the
 // schema; any failure keeps `init` and moves the payload to `<key>:corrupt` (S003). Writes are coalesced to one per
 // box per microtask and flushed on pagehide.
+//
+// A server renders `init` for local and session, so while hydrating those boxes stay at `init` and take the stored
+// value once hydration ends; reading one in a server render is S013. A cookie is the same on both sides.
 
-import { DEV, type Box, type StandardSchema, type StateOptions } from './index'
+import { DEV, createRoot, onMount, rt, type Box, type StandardSchema, type StateOptions } from './index'
+import { keys } from './keys'
 import { memoryStorage } from './memory'
-import { StateError, features, report, type Instance, type StorageLike } from './scope'
+import { StateError, features, report, unserializable, type Instance, type StorageLike } from './scope'
 
 type Options = Exclude<Exclude<StateOptions<unknown>['persist'], undefined>, string>
 type Envelope = { v: number; at: number; data: unknown }
@@ -16,8 +21,32 @@ type Slot = { store: StorageLike; key: string; opts: Options }
 const slots = new WeakMap<Box<any>, Slot>()
 const pending = new Set<Box<any>>()
 
-function backend(inst: Instance, where: string): StorageLike {
-  if (where !== 'memory') {
+/** A cookie's name for a key: `:` isn't a cookie-name character. */
+const cookieName = (key: string) => key.replace(/:/g, '.')
+const YEAR = 31_536_000
+
+/** Reads and writes `document.cookie`; a server reads the request's cookies and writes nothing (research 29 §3). */
+function cookies(inst: Instance, maxAge = YEAR): StorageLike {
+  const jar = inst.app.cookies
+  const write = (key: string, value: string, age: number) => {
+    if (jar || key.endsWith(':corrupt')) return
+    document.cookie = `${cookieName(key)}=${value}; Path=/; Max-Age=${age}; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`
+  }
+  return {
+    getItem(key) {
+      const name = cookieName(key)
+      const raw = jar ? jar.get(name) : document.cookie.split('; ').find(c => c.startsWith(`${name}=`))?.slice(name.length + 1)
+      return raw === undefined ? null : decodeURIComponent(raw)
+    },
+    setItem: (key, value) => write(key, encodeURIComponent(value), maxAge),
+    removeItem: key => write(key, '', 0),
+  }
+}
+
+function backend(inst: Instance, where: string, maxAge?: number): StorageLike {
+  if (where === 'cookie') {
+    if (inst.app.cookies || typeof document === 'object') return cookies(inst, maxAge)
+  } else if (where !== 'memory' && !rt.server) {
     try {
       const s = where === 'local' ? localStorage : sessionStorage
       if (s) return s
@@ -31,8 +60,8 @@ function options(scope: string, name: string, box: Box<any>): Options {
   const object = box.v !== null && typeof box.v === 'object'
   const o: Options = typeof p === 'string' ? { in: p } : p
   if (DEV) {
-    if (o.in !== 'local' && o.in !== 'session' && o.in !== 'memory')
-      throw new StateError('S008', `\`${scope}.${name}\` persists to '${o.in}', which Phase 1 doesn't have`, "use 'local', 'session' or 'memory' (cookie and idb come with SSR, Phase 3)")
+    if (o.in !== 'local' && o.in !== 'session' && o.in !== 'cookie' && o.in !== 'memory')
+      throw new StateError('S008', `\`${scope}.${name}\` persists to '${o.in}', which weft doesn't have yet`, "use 'local', 'session', 'cookie' or 'memory'")
     if (object && !o.schema)
       throw new StateError('S008', `\`${scope}.${name}\` persists an object or array without a schema`, `persist: { in: '${o.in}', schema: z.…(), version: 1 }`)
     if (o.migrate && o.version === undefined)
@@ -49,9 +78,10 @@ function validate<T>(schema: StandardSchema<T>, value: unknown): { value: T } | 
 
 function load(inst: Instance, box: Box<any>, name: string) {
   const opts = options(inst.name, name, box)
-  const store = backend(inst, opts.in)
+  const store = backend(inst, opts.in, opts.maxAge)
   const key = `weft:${inst.app.name}:${inst.name}.${name}`
   slots.set(box, { store, key, opts })
+  if (DEV && rt.server && (opts.in === 'local' || opts.in === 'session')) readsOnServer(box, `${inst.name}.${name}`, opts.in)
   let raw: string | null = null
   try { raw = store.getItem(key) } catch {}
   if (raw === null) return
@@ -75,21 +105,36 @@ function load(inst: Instance, box: Box<any>, name: string) {
     if (typeof r === 'string') return corrupt(r)
     data = r.value
   } else if (typeof data !== typeof box.v) return corrupt(`expected a ${typeof box.v}`)
-  box.v = data
+  // The server rendered `init` for these. Storage already holds the value, so the late write skips the write hook.
+  if (keys.hydrating && opts.in !== 'cookie')
+    createRoot(() => onMount(() => {
+      const hook = box.h
+      box.h = undefined
+      box.w(data)
+      box.h = hook
+    }), null)
+  else box.v = data
 }
 
-/** Dev-only S010: the first value JSON would silently change (a Date, Map, class instance, function, NaN). */
-function unserializable(v: unknown, path: string): string | void {
-  if (v === null || typeof v === 'string' || typeof v === 'boolean') return
-  if (typeof v === 'number') return Number.isFinite(v) ? undefined : `${path} is ${v}`
-  if (typeof v !== 'object') return `${path} is a ${typeof v}`
-  const proto = Object.getPrototypeOf(v)
-  if (!Array.isArray(v) && proto !== Object.prototype && proto !== null) return `${path} is a ${(v as object).constructor?.name ?? 'class instance'}`
-  for (const [k, x] of Object.entries(v)) {
-    const bad = unserializable(x, `${path}.${k}`)
-    if (bad) return bad
-  }
+/** Dev-only S013: the first read in a server render of a box the server can't see the stored value of. */
+function readsOnServer(box: Box<any>, name: string, where: string) {
+  const { get, set } = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(box), 'value')!
+  let told = false
+  Object.defineProperty(box, 'value', {
+    get() {
+      if (rt.server && !told) {
+        told = true
+        report('S013', `\`${name}\` persists to '${where}', which a server can't read: the page shows its initial value, then flashes to the stored one`, "`persist: { in: 'cookie' }` if it's small, or render it client-only")
+      }
+      return get!.call(box)
+    },
+    set(v) { set!.call(box, v) },
+  })
 }
+
+/** Dev-only S008: the bytes this app's cookies take; a browser drops a cookie over 4 KB without a word. */
+const COOKIE_BUDGET = 3072
+const cookieBytes = () => document.cookie.split('; ').filter(c => c.startsWith('weft.')).reduce((n, c) => n + c.length, 0)
 
 function flush() {
   for (const box of pending) {
@@ -98,6 +143,7 @@ function flush() {
     if (bad) { report('S010', `\`${box.n}\` can't be persisted: ${bad}`, 'store plain data (ids, numbers, strings), or drop `persist`'); continue }
     try { store.setItem(key, JSON.stringify({ v: opts.version ?? 1, at: Date.now(), data: box.v } satisfies Envelope)) }
     catch (e) { if (DEV) report('S008', `writing \`${box.n}\` failed: ${(e as Error).message}`, 'the storage is full or blocked; persist less') }
+    if (DEV && opts.in === 'cookie' && cookieBytes() > COOKIE_BUDGET) report('S008', `this app's cookies take ${cookieBytes()} bytes, over the 3 KB budget`, "move the big box to `persist: 'local'`")
   }
   pending.clear()
 }

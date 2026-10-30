@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     include: ['test/**/*.test.{mjs,ts,tsx}'],
     globalSetup: ['test/dev-server.setup.mjs'],
+    // One dev server, one fixture database: a file's mutation shows up in another's DOM-write count.
+    fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 120_000,
   },

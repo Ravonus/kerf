@@ -8,6 +8,7 @@
 //   shared store   only for `cache: { life }`: a value is valid while every tag's version still matches (a mutation
 //                  bumps the versions of the tags it invalidates).
 
+import type { MediaAsset } from 'weft/media'
 import { enter, fns, isRedirect, keyOf, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 
 export interface ScopeEntry {
@@ -33,11 +34,21 @@ export interface Scope {
   tags?: Set<string>
   /** Dev: the tables this function's statements read and wrote (a frame per `run`; research 28 §2). */
   touched?: Touched
+  /** A no-JS form POST that failed: `<Form>` renders it into the page (research 29 §5). */
+  form?: FormFailure
   ctx(): Promise<Context>
   options: ScopeOptions
 }
 
 export interface Touched { read: Set<string>; write: Set<string> }
+
+export interface FormFailure { id: string; key?: string; values: Record<string, unknown>; errors: Record<string, string>; message?: string; status: number }
+
+/** The `media.server@1` provider (`@weft/plugin-media/server`, research 29 §6). */
+export interface MediaServer {
+  ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
+  serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{ bytes: Uint8Array; type: string; width: number; format: string; negotiated: boolean } | null>
+}
 
 export interface ScopeOptions {
   /** The app's context (`src/context.server.ts`). */
@@ -47,6 +58,7 @@ export interface ScopeOptions {
   handlers?: Map<string, (input: any, ctx: any) => unknown>
   onDiagnostic?: (d: { code: string; severity: string; message: string }) => void
   dev?: boolean
+  media?: () => Promise<MediaServer> | undefined
 }
 
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
@@ -54,9 +66,23 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
-    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers } }) as Context, e => { throw dbError(e) })),
+    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers }, media: mediaApi(options) }) as Context, e => { throw dbError(e) })),
   }
 }
+
+/** `ctx.media`. A refusal is the user's answer, with its own status; `<Form>` shows it. */
+const mediaApi = (options: ScopeOptions): Context['media'] => ({
+  async ingest(file, { name } = {}) {
+    const server = await options.media?.()
+    if (!server) throw new StartError('M017', '`ctx.media` needs a `media.server` provider', 'add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts', { status: 500 })
+    const bytes = file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
+    try {
+      return await server.ingest(bytes, { name: name ?? (file as File).name })
+    } catch (e: any) {
+      throw e?.code ? new StartError(e.code, e.message, undefined, { status: 422 }) : e
+    }
+  },
+})
 
 /** A child scope for one loader: the same entries, its own `tags` collector. */
 export const frame = (scope: Scope): Scope => Object.create(scope, { tags: { value: new Set<string>() } })
@@ -211,11 +237,11 @@ function shared(ctx: Context, fn: Fn): Context {
 // ---- mutations --------------------------------------------------------------------------------------------------
 
 /** Run a mutation; then refresh the listed queries whose tags it invalidated (single-flight, research 27 §3). */
-export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh: [string, unknown][]): Promise<Answer> {
+export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh: [string, unknown][], form?: boolean): Promise<Answer> {
   if (fn.kind !== 'mutation') throw new StartError('Q009', `\`${fn.$id}\` is a query, not a mutation`, `\`${fn.$id.replace(/\..*$/, '')}.fetch(input)\``)
   if (scope.request.method === 'GET' || scope.request.method === 'HEAD')
     throw new StartError('Q004', `mutation \`${fn.$id}\` called while the server handles a GET (\`load\`, a page render or a query)`, 'call mutations from handlers or other mutations; GET handlers must be side-effect free', { status: 500 })
-  const valid = await validate(fn, input)
+  const valid = await (form ? formInput(fn, input) : validate(fn, input))
   const touched = tracker(scope)
   const v = await call(scope, fn, valid, await scope.ctx(), touched)
   if (scope.options.dev) await checked(v, fn, scope)
@@ -258,9 +284,60 @@ async function validate(fn: Fn, input: unknown): Promise<unknown> {
   if (!schema) return input
   const r = await schema['~standard'].validate(input)
   if (!r.issues) return r.value
-  const issues = r.issues.map(i => ({ message: i.message, path: i.path?.map(p => (typeof p === 'object' ? p.key : p)) })) as SchemaIssue[]
+  throw rejected(fn, r.issues)
+}
+
+const plainPath = (i: SchemaIssue) => (i.path ?? []).map(p => (typeof p === 'object' ? p.key : p))
+
+function rejected(fn: Fn, list: readonly SchemaIssue[]) {
+  const issues = list.map(i => ({ message: i.message, path: i.path && plainPath(i) })) as SchemaIssue[]
   const where = issues.map(i => `${i.path?.length ? i.path.join('.') + ': ' : ''}${i.message}`).join('; ')
-  throw new StartError('Q002', `\`${fn.$id}\` rejected its input: ${where}`, 'pass what the schema accepts', { status: 400, issues })
+  return new StartError('Q002', `\`${fn.$id}\` rejected its input: ${where}`, 'pass what the schema accepts', { status: 400, issues })
+}
+
+/** A form's string as the type it may stand for (research 29 §5): the schema says whether it was wrong. */
+function reading(s: string): unknown {
+  if (s === '') return undefined
+  if (s === 'on' || s === 'true') return true
+  if (s === 'false') return false
+  return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s
+}
+
+/**
+ * A form sends strings and a schema may want numbers or booleans, and Standard Schema can't say which: each issue
+ * on a string tries its obvious reading, then the input is validated again. Fields a reading fixed report nothing; the
+ * rest report what the schema says of what was typed (an empty field: its "required", not "expected a string").
+ */
+async function formInput(fn: Fn, input: any): Promise<unknown> {
+  const schema = fn.def.input
+  if (!schema || !input || typeof input !== 'object') return validate(fn, input)
+  const value = { ...input }
+  let left: readonly SchemaIssue[] = []
+  for (let i = 0; i < 3; i++) {
+    const r = await schema['~standard'].validate(value)
+    if (!r.issues) return r.value
+    left = r.issues
+    let changed = false
+    for (const issue of r.issues) {
+      const path = plainPath(issue)
+      if (!path.length) continue
+      let at: any = value
+      for (const p of path.slice(0, -1)) {
+        if (!at?.[p] || typeof at[p] !== 'object') { at = undefined; break }
+        at = at[p] = Array.isArray(at[p]) ? [...at[p]] : { ...at[p] }
+      }
+      const k = path.at(-1)!
+      if (typeof at?.[k] !== 'string') continue
+      const next = reading(at[k])
+      if (next === at[k]) continue
+      next === undefined ? delete at[k] : (at[k] = next)
+      changed = true
+    }
+    if (!changed) break
+  }
+  const first = await schema['~standard'].validate(input)
+  const where = (i: SchemaIssue) => JSON.stringify(plainPath(i))
+  throw rejected(fn, left.map(i => first.issues?.find(o => where(o) === where(i)) ?? i))
 }
 
 /** Dev and tests: the value against `output` (C002), and what JSON would change (Q005). */

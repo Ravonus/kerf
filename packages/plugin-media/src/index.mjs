@@ -1,10 +1,12 @@
-// media() for weft.config.ts (research 15 §7.4, research 26 §2): provides media.build@1 (src/build.mjs, run by
-// weft/vite for `?media` imports) and reports M001–M013 through its `check` hook (src/check.mjs).
+// media() for weft.config.ts (research 15 §7.4, research 26 §2, research 29 §6): provides media.build@1 (src/build.mjs,
+// run by weft/vite for `?media` imports) and media.server@1 (src/server.mjs, the route for uploads and `encoder:
+// 'server'`), and reports M001–M013 and M016 through its `check` hook (src/check.mjs).
 import { fileURLToPath } from 'node:url'
 import { definePlugin, defineSlot, provide } from 'weft/plugin'
 import { checkMedia } from './check.mjs'
 
 const mediaBuild = defineSlot({ id: 'media.build', version: 1, cardinality: 'one', sides: ['build'] })
+const mediaServer = defineSlot({ id: 'media.server', version: 1, cardinality: 'one', sides: ['server'] })
 const FORMATS = ['avif', 'webp']
 
 const fail = (path, message) => {
@@ -12,8 +14,18 @@ const fail = (path, message) => {
 }
 
 function options(input) {
-  for (const key of Object.keys(input)) if (!['formats', 'widths', 'quality', 'placeholder', 'gifLimit'].includes(key)) fail(key, 'unknown option')
+  for (const key of Object.keys(input)) if (!['formats', 'widths', 'quality', 'placeholder', 'gifLimit', 'encoder', 'server'].includes(key)) fail(key, 'unknown option')
   const out = {}
+  if (input.encoder !== undefined) {
+    if (!['off', 'server'].includes(input.encoder)) fail('encoder', `\`${input.encoder}\`: 'off' or 'server' ('background' comes with the ffmpeg provider)`)
+    out.encoder = input.encoder
+  }
+  if (input.server !== undefined) {
+    const { dir, maxBytes } = input.server
+    if (dir !== undefined && typeof dir !== 'string') fail('server.dir', 'a directory, relative to the app')
+    if (maxBytes !== undefined && !(Number.isInteger(maxBytes) && maxBytes > 0)) fail('server.maxBytes', 'a positive number of bytes')
+    out.server = input.server
+  }
   if (input.formats !== undefined) {
     if (!Array.isArray(input.formats)) fail('formats', 'expected an array')
     for (const [i, f] of input.formats.entries()) if (!FORMATS.includes(f)) fail(`formats.${i}`, `\`${f}\`: the efficient formats are ${FORMATS.join(', ')} (the fallback follows the source)`)
@@ -48,6 +60,9 @@ const CODES = [
   ['M011', 'Endless motion with no pause control'],
   ['M012', 'Unsafe SVG used as an image'],
   ['M013', 'public/ file referenced by string'],
+  ['M016', '<Media src> given a string: no dimensions before render'],
+  ['M017', 'Media requested with no media.server provider'],
+  ['M018', 'An upload refused: not an image, or over the size limit'],
 ]
 
 export const media = definePlugin({
@@ -58,7 +73,7 @@ export const media = definePlugin({
   options,
   permissions: { fs: { read: ['**/*.{png,jpg,jpeg,gif,webp,avif,svg}'] }, spawn: ['ssimulacra2'], native: true },
   contribute: o => ({
-    provides: [provide(mediaBuild, { sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaBuild', options: o } } })],
+    provides: [provide(mediaBuild, { sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaBuild', options: o } } }), provide(mediaServer, { sides: { server: { module: '@weft/plugin-media/server', export: 'createMediaServer', options: o } } })],
     check: { include: ['**/*.{tsx,jsx}'], run: ctx => checkMedia(ctx, { gifLimit: o.gifLimit }) },
     diagnostics: CODES.map(([code, catches]) => ({ code, catches, fix: `weft docs ${code}` })),
     agents: {
@@ -68,6 +83,7 @@ export const media = definePlugin({
         '- Mark the one hero image `priority` and give it `width` (`"1/2"`, `"480px"`) so its `sizes` is right (M010). Nothing else gets `priority` (M009).',
         '- `alt` is required; use `alt="" decorative` for purely visual media (M007).',
         '- Never reference files in public/ by string (M013) or render `?url` imports in `<img>` (M002).',
+        "- Uploads: `await ctx.media.ingest(file)` in a mutation returns a record. Store it, type the field `z.media()` (from `@weft/start/media`), and pass it to `<Media src>` (M016).",
       ].join('\n'),
     },
     catalog: [{ name: 'Media', import: 'weft/media', summary: '<Media src={x} alt>: dimensions, AVIF + fallback, srcset/sizes, placeholder' }],

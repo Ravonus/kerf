@@ -17,7 +17,7 @@ export const topics = {
   props: 'How props stay live; W001, W005, W006',
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
   async: 'resource, <Boundary pending error>, weft/ssr and hydrate; W012',
-  start: 'full stack: routes, load, query, mutation, the database, auth, runtimes; Q001–Q015, A001–A004, C001–C002',
+  start: 'full stack: routes, load, query, mutation, the database, auth, runtimes; Q001–Q015, A001–A004, C001–C002, F001–F003',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
@@ -88,7 +88,7 @@ export async function docs(root, topic) {
     return { topic: 'index', text, topics }
   }
   const info = installed(root)
-  if (/^[WPTHDQSAC]\d{3}$/i.test(key)) {
+  if (/^[WPTHDQSACFM]\d{3}$/i.test(key)) {
     const code = key.toUpperCase()
     if (!entry(code)) throw Object.assign(new Error(`unknown diagnostic code ${code}`), { code: 'E_UNKNOWN_TOPIC' })
     return { topic: code, text: codePage(code, info) }

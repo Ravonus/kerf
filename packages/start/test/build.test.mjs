@@ -6,6 +6,7 @@ import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
+import { fnId } from '../src/vite.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
@@ -66,6 +67,24 @@ describe('node preset, end to end', () => {
     expect([live.status, live.headers.get('cache-control')]).toEqual([200, 'public, max-age=31536000, immutable'])
     const stale = await fetch(server.url + '/_weft/og/users/2.png?v=old')
     expect(stale.headers.get('cache-control')).toBe('no-cache') // not the current hash: never cached as immutable
+  })
+
+  test('a form works without JS, and an upload reaches the media route', async () => {
+    const id = (name, file) => fnId(name, file)
+    const add = new URLSearchParams({ $fn: id('addNote', 'src/server/forms.ts'), title: 'Built', qty: '2' })
+    const refused = await fetch(server.url + '/notes', { method: 'POST', redirect: 'manual', body: add })
+    expect(refused.status).toBe(403) // no origin proof
+    const done = await fetch(server.url + '/notes', { method: 'POST', redirect: 'manual', headers: { origin: server.url }, body: add })
+    expect([done.status, done.headers.get('location')]).toEqual([303, '/notes'])
+    const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))('sharp')
+    const file = await sharp({ create: { width: 200, height: 100, channels: 3, background: '#468' } }).png().toBuffer()
+    const form = new FormData()
+    form.set('$fn', id('setCover', 'src/server/forms.ts'))
+    form.set('file', new File([file], 'built.png', { type: 'image/png' }))
+    expect((await fetch(server.url + '/cover', { method: 'POST', redirect: 'manual', headers: { origin: server.url }, body: form })).status).toBe(303)
+    const { v } = await (await fetch(`${server.url}/_weft/fn/${id('getCover', 'src/server/forms.ts')}`)).json()
+    const image = await fetch(server.url + v.src, { headers: { accept: 'image/avif' } })
+    expect([image.status, image.headers.get('content-type'), image.headers.get('cache-control')]).toEqual([200, 'image/avif', 'public, max-age=31536000, immutable'])
   })
 
   test('the production build hydrates with 0/0 in Chrome and navigates', async () => {

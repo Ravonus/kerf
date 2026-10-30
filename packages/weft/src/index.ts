@@ -59,9 +59,13 @@ export const rt: {
   flight?: Map<string, Promise<unknown>>
   /** Server only, streaming: each resolved Boundary's content HTML by key; pending ones wrap their fallback in markers. */
   stream?: Map<string, string>
+  /** The state payload of the page being hydrated: each scope takes its entry once, as it's created (research 29 §2). */
+  state?: Record<string, Record<string, unknown>>
+  /** A server process (@weft/start): a scope reached outside a render throws S002 instead of sharing one app. */
+  isolated?: boolean
 } = { server: false }
 
-export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'> }
+export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; /** `defineState` boxes that differ from `init`, by scope */ s?: Record<string, Record<string, unknown>> }
 
 /** Reactive work counter, read by `weft/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }
@@ -227,12 +231,14 @@ export interface State<T> {
 
 export interface StateOptions<T> {
   /** Persist through reloads (§4.5). Only inside `defineState`. The short form takes primitive `init` only. */
-  persist?: 'local' | 'session' | 'memory' | {
-    in: 'local' | 'session' | 'memory'
+  persist?: 'local' | 'session' | 'cookie' | 'memory' | {
+    in: 'local' | 'session' | 'cookie' | 'memory'
     /** Required for object and array values: a Standard Schema (Zod, Valibot, ArkType). */
     schema?: StandardSchema<T>
     version?: number
     migrate?: Record<number, (old: any) => unknown>
+    /** `cookie` only: seconds it lives. Default one year. */
+    maxAge?: number
   }
   /** Leave this box out of its scope's undo history. */
   history?: false
@@ -310,21 +316,46 @@ export function state<T>(init: T, options?: StateOptions<T>): State<T> {
   return new Box(init, options)
 }
 
-/** A writable box that resets whenever `source` changes (a local copy of a prop). */
-state.linked = <T>(source: () => T): State<T> => {
+export interface Linked<T> extends State<T> {
+  /** With `key`: the source moved under a local edit. `theirs` is its value now, `base` the one the edit started from. */
+  readonly conflict: Derived<{ theirs: T; base: T } | undefined>
+}
+
+/**
+ * A writable box that resets whenever `source` changes (a local copy of a prop). With `key`, it resets when the key
+ * changes; while the key stays, it follows the source until a local edit, then keeps the edit and reports `conflict`
+ * (a refetch or a push never clobbers what someone is typing, research 14 §3.4).
+ */
+state.linked = <T>(source: () => T, options?: { key: () => unknown }): Linked<T> => {
   const src = derived(source)
-  // A fresh object per source change, so a write belongs to one source value even if the source later returns to it.
-  const from = derived(() => ({ v: src.value }))
-  const local = new Box<{ v: T; from: { v: T } } | undefined>(undefined)
+  // A fresh object per key, so a write belongs to one key even if the key later returns to it. No `key`: the source.
+  const from = derived<{ k: unknown }>(((prev?: { k: unknown }) => {
+    const k = options ? options.key() : src.value
+    return prev && Object.is(prev.k, k) ? prev : { k }
+  }) as () => { k: unknown })
+  const local = new Box<{ v: T; from: { k: unknown }; base: T } | undefined>(undefined)
+  const edit = () => {
+    const f = from.value
+    const l = local.value
+    return l && l.from === f ? l : undefined
+  }
   return {
     get value() {
-      const f = from.value
-      const l = local.value
-      return l && l.from === f ? l.v : f.v
+      const l = edit()
+      return l ? l.v : src.value
     },
-    set value(v: T) { local.value = { v, from: from.value } },
+    set value(v: T) {
+      const f = from.value
+      const l = local.v
+      local.value = { v, from: f, base: l && l.from === f ? l.base : untrack(() => src.value) }
+    },
     set(update) { const d: any = this.value; update(d); this.value = d },
     get(key) { return (this.value as any)?.[key] },
+    conflict: derived(() => {
+      const l = edit()
+      const theirs = src.value
+      return l && !Object.is(theirs, l.base) ? { theirs, base: l.base } : undefined
+    }),
   }
 }
 

@@ -12,6 +12,7 @@ import { projectView } from './project.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
+import { stateChecks } from './state-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 import { schemaHash } from './start.mjs'
@@ -90,6 +91,7 @@ export async function check(root, options = {}) {
     ...files.flatMap(f => f.diagnostics),
     ...styles,
     ...textChecks(root, { files, exclude, fontBuild }),
+    ...stateChecks(root, { files, exclude }),
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
     ...hygiene(root),

@@ -2,7 +2,8 @@
 //   probe (sharp, EXIF orientation) → width ladder → per-format quality search at the largest width (SSIMULACRA2,
 //   the libjxl tool) → encode every width → dominant colour + 16 px WebP placeholder. SVG: refuse unsafe files
 //   (M012), then SVGO. Animated GIFs stay as they are (video conversion is @weft/plugin-media-ffmpeg, Phase 3c).
-// Cached by content hash under `cacheDir`, so dev restarts and rebuilds don't re-encode.
+// Cached by content hash under `cacheDir`, so dev restarts and rebuilds don't re-encode. With `encoder: 'server'` the
+// build only stores the original: the variants are media.server@1's to encode (research 29 §6).
 import { execFile, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -12,6 +13,7 @@ import { promisify } from 'node:util'
 import sharp from 'sharp'
 import { optimize } from 'svgo'
 import { probe } from 'weft/media-probe'
+import { createMediaServer } from './server.mjs'
 import { unsafeSvg } from './svg.mjs'
 
 const run = promisify(execFile)
@@ -27,7 +29,7 @@ export const DEFAULTS = {
 /** Encoder settings without a scorer (research 26 §2.4), and the range the search walks. */
 export const FIXED = { avif: 50, webp: 75, jpeg: 78 }
 const RANGE = { avif: [20, 90], webp: [40, 95], jpeg: [40, 95] }
-const MIME = { avif: 'image/avif', webp: 'image/webp', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', svg: 'image/svg+xml' }
+export const MIME = { avif: 'image/avif', webp: 'image/webp', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', svg: 'image/svg+xml' }
 const EXT = { avif: 'avif', webp: 'webp', jpeg: 'jpg', png: 'png', gif: 'gif', svg: 'svg' }
 
 const scorers = new Map()
@@ -41,7 +43,7 @@ export function findScorer(name) {
   return scorers.get(name)
 }
 
-const encoders = {
+export const encoders = {
   avif: (img, q) => img.avif({ quality: q, effort: 4, chromaSubsampling: '4:2:0' }),
   webp: (img, q) => img.webp({ quality: q, effort: 5 }),
   jpeg: (img, q) => img.jpeg({ quality: q, mozjpeg: true }),
@@ -68,7 +70,9 @@ async function search(format, base, width, scorer, target, dir) {
   return hi
 }
 
-const hex = ({ r, g, b }) => `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`
+export const hex = ({ r, g, b }) => `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`
+/** Lossy sources get a lossy fallback; a WebP with alpha is a graphic. */
+export const isPhoto = meta => ['jpeg', 'jpg', 'avif', 'heif', 'tiff', 'webp'].includes(meta.format) && !(meta.format === 'webp' && meta.hasAlpha)
 const short = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
 
 export function createMediaBuild(input = {}) {
@@ -78,8 +82,16 @@ export function createMediaBuild(input = {}) {
      * @param {{ file: string, bytes: Uint8Array }} source
      * @param {{ cacheDir: string, dev?: boolean }} ctx
      */
-    async build({ file, bytes }, { cacheDir }) {
+    async build({ file, bytes }, { cacheDir, root }) {
       const name = basename(file)
+      if (o.encoder === 'server') {
+        try {
+          return { asset: await createMediaServer(o).at(root).ingest(bytes, { name }), files: [] }
+        } catch (e) {
+          if (!e.code) throw e
+          return { asset: null, files: [], diagnostics: [{ code: e.code, severity: 'error', message: e.message }] }
+        }
+      }
       const stem = basename(file, extname(file)).replace(/[^\w-]+/g, '-')
       const key = createHash('sha256').update(bytes).update(JSON.stringify(o)).update(String(VERSION)).digest('hex').slice(0, 20)
       const cached = join(cacheDir, `${key}.json`)
@@ -124,7 +136,7 @@ async function raster(name, stem, bytes, o) {
     return { asset: { kind: 'graphic', src: fileName, width, height, type: MIME.gif, sources: [], name, quality: 'original' }, files: [{ name: fileName, bytes }], diagnostics }
   }
 
-  const photo = ['jpeg', 'jpg', 'avif', 'heif', 'tiff', 'webp'].includes(meta.format) && !(meta.format === 'webp' && meta.hasAlpha)
+  const photo = isPhoto(meta)
   const fallback = photo ? 'jpeg' : 'png'
   const formats = [...new Set(o.formats.filter(f => f !== fallback)), fallback]
   const largest = Math.min(width, o.widths.at(-1))
