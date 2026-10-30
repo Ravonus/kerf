@@ -1215,3 +1215,7 @@ Also out of v0:
   price is Node ≥ 22.15 and a transaction gate on the single connection. Mutations give sign-in weft's CSRF check and
   keep Better Auth's client out of the bundle. Parent-first loaders cost a waterfall for nested `load`s and mean a
   guard's redirect stops its children. New letters: A (auth), C (contract) ([28](research/28-db-auth-runtimes.md)).
+- **Latest stable everywhere; TypeScript in two versions** (2026-10-30). weft is new, so it targets the current Node LTS
+  (26, `engines` and `.nvmrc`), a pinned current Rust, and current Bun and Deno. TypeScript 7 is the type checker, but
+  it has no stable JS compiler API (`createSourceFile` is gone, the AST sits under `typescript/unstable/*`), so the
+  CLI's parser passes and text-engine's scripts stay on 6.0.3 until that API settles or they move to it.

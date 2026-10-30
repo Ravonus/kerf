@@ -13,13 +13,13 @@
     "./config": "./src/config.mjs"
   },
   "engines": {
-    "node": ">=22.15"
+    "node": ">=26"
   },
   "scripts": {
     "test": "vitest run"
   },
   "dependencies": {
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "zod": "4.6.7"
   },
   "peerDependencies": {
