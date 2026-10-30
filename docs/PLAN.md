@@ -677,6 +677,8 @@ Details: [11](research/11-text-and-type.md) (measured in Chrome and WebKit).
   - `.live` refetches never flash a skeleton.
   - **Measured CLS:** 0 for last-seen and shape skeletons, against 0.47–0.85 for naive bars. Undimensioned media is
     the remaining source (X030).
+- **Built (Phase 3):** [31](research/31-query-shapes.md) replaces the measuring above with placeholder text in the
+  real elements, so the browser does the sizing, and adds `pending="shape"`.
 - **Diagnostics `X001`–`X041`:** measure/render drift, zoom-breaking clamps, canvas text without a mirror,
   undimensioned media, skeleton size drift, lists with no count hint, skeleton flash on refetch, and streamed text
   without `<Text stream>`.
@@ -959,8 +961,16 @@ Node/Bun/Deno presets and a local runtime matrix ([28](research/28-db-auth-runti
 `.live`, `topic`, `stream`, the `memory` and `postgres` buses, reconnect and resume, the realtime fake transport,
 W052, W053, T013 and R002–R010, verified on Node, Bun and Deno ([30](research/30-realtime.md)). The fifth
 (2026-10-30): `<Form>`, the `defineState` SSR state payload, `cookie` persist, S001/S002/S012/S013, `z.media()` and
-the media route with `encoder: 'server'` ([29](research/29-forms-state-media.md)). Still to do in this row:
-`query.shape` and X032–X036.
+the media route with `encoder: 'server'` ([29](research/29-forms-state-media.md)). The row's work is
+built.
+
+**3 shapes (2026-10-30):** built ([31](research/31-query-shapes.md)): `query.shape` and `q(input).shape`, last-seen
+shapes in the client cache, compiler shape variants (`pending="shape"`, a tree-shaken `Name$shape` beside each
+component), `<Text reserve>` in `weft/text`, and X032, X033, X035 and X036. Measured in Chrome at phone size: CLS 0 at
+the reveal and the swap for every shape source, and 0 px moved with a last-seen shape of the same payload, against
+2986 px for naive bars. A `pending="shape"` page costs 350 B br over a hand-written fallback, and a component no
+`pending="shape"` reaches costs 0. `<Text>` holds its place with placeholder text in the real element, so
+`text.measure` isn't needed yet. Not built: variants through barrels, `sessionStorage` records, viewport-fill counts.
 
 **3 exit check (2026-10-30): met** ([result](../evals/results/phase3-exit.md),
 [findings](../evals/results/phase3-exit-FINDINGS.md); rerun with `node evals/phase3-exit.mjs`). The check covers the

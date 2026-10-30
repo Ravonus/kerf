@@ -14,6 +14,7 @@
 // (research 30) costs a query app one method here: `q.live()` imports live.ts on its first call.
 
 import { DEV, createRoot, derived, effect, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from 'weft'
+import { fill, mask } from 'weft/shape'
 import { client } from './router'
 
 // ---- definitions ------------------------------------------------------------------------------------------------
@@ -54,6 +55,7 @@ type Ctx<A> = A extends 'user' ? (Context extends { user: infer U } ? Omit<Conte
 
 type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
 type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
+type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
 
 export interface QueryDef<S, O, A = undefined> {
@@ -62,6 +64,8 @@ export interface QueryDef<S, O, A = undefined> {
   output?: StandardSchemaV1
   /** `'user'`: refuse a call with no session (A002). The contract's auth scope. */
   auth?: A
+  /** An example result, for what `output` can't say: sizes a pending view (research 31 §2). */
+  shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
   tags?: Tags<[input: Out<S>]>
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
@@ -94,6 +98,8 @@ export interface Query<I, O> {
   (...args: [I] extends [void] ? [input?: undefined | (() => undefined | Skip)] : [input: Arg<I>]): Resource<O>
   /** The value as a promise: in `load`, handlers, server code and tests. Through the request or client cache. */
   fetch(...args: [I] extends [void] ? [] : [input: I]): Promise<O>
+  /** A placeholder result to size a pending view by (last seen, else declared), or undefined when nothing is known. */
+  shape(...args: [I] extends [void] ? [] : [input: I]): O | undefined
   /**
    * The same value, refetched whenever a mutation anywhere invalidates one of its tags. `.live` is the connection's
    * status. `keep`: how long the subscription outlives its last reader (`'30s'`, `'session'`).
@@ -121,7 +127,7 @@ export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus> }
 export interface Fn {
   kind: 'query' | 'mutation' | 'stream'
   $id: string
-  def: { input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
+  def: { input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
 }
 
 /** Every definition by id (the server answers `/_weft/fn/<id>` from it). */
@@ -295,6 +301,7 @@ export function query<O, S extends StandardSchemaV1 | undefined = undefined, con
   fns.set(id, fn)
   const q: any = (input?: unknown) => use(fn, input)
   q.fetch = (input?: unknown) => fetchQuery(fn, input)
+  q.shape = (input?: unknown) => shapeOf(fn, input)
   q.live = (input?: unknown, options?: LiveOptions) => liveQuery(fn, input, options)
   return Object.assign(q, { kind: 'query', $id: id, [FN]: fn })
 }
@@ -347,7 +354,26 @@ function use(fn: Fn, input: unknown): Resource<any> {
     const v = e.value.value // tracked: a new base or layer re-runs this, and the resource settles to it in place
     if (fresh(e)) return v
     return load(e)
-  }, { data: false })
+  }, {
+    data: false,
+    shape: {
+      of: fn,
+      read() {
+        const arg = read()
+        return arg === skip ? undefined : shapeOf(fn, arg)
+      },
+    },
+  })
+}
+
+/** Research 31 §2: this entry's value or the query's last seen, masked; else the declared shape. */
+function shapeOf(fn: Fn, input: unknown): any {
+  const limit: number | undefined = (input as { limit?: number } | undefined)?.limit
+  const here = entries.get(keyOf(fn.$id, input))
+  const e = server() ? undefined : here && untrack(() => here.has.value) ? here : lastSeen.get(fn.$id)
+  if (e) return mask(untrack(() => e.value.value), limit)
+  const tree = runtime.exec ? runtime.exec.shapeOf(fn) : fn.def.shape
+  return tree === undefined ? undefined : fill(tree, limit)
 }
 
 /** `q()` plus a subscription: its tags come from the server, and a poke is a local `cache.invalidate`. */
@@ -393,6 +419,8 @@ interface Entry {
 }
 
 const entries = new Map<string, Entry>()
+/** Each query's latest entry: a skeleton for other args takes its shape (research 31 §4). */
+const lastSeen = new Map<string, Entry>()
 /** Objects an optimistic layer made (`cache.isOptimistic(row)`). */
 let made = new WeakSet<object>()
 
@@ -444,6 +472,7 @@ function setBase(e: Entry, v: unknown, tags: string[]) {
     e.base.value = share(e.base.value, v)
     e.has.value = true
     e.stale.value = false
+    lastSeen.set(e.id, e)
     if (e.layers.value.some(l => l.waiting)) e.layers.value = e.layers.value.filter(l => !l.waiting)
   })
 }
@@ -560,6 +589,7 @@ export const cache: OptimisticCache & { invalidate(...tags: string[]): void; cle
   },
   clear() {
     entries.clear()
+    lastSeen.clear()
     made = new WeakSet()
   },
 }

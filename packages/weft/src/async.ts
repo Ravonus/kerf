@@ -22,6 +22,8 @@ export interface Resource<T> {
   readonly error: unknown
   /** Fetch again. The current value stays until the new one lands. */
   refresh(): void
+  /** A placeholder value of the result's type (research 31 §2): what a pending view sizes itself from. */
+  readonly shape?: T
 }
 
 export interface ResourceOptions<T> {
@@ -33,10 +35,14 @@ export interface ResourceOptions<T> {
    * resource settles as it's created and hydration writes nothing).
    */
   data?: false
+  /** Where `.shape` comes from, and what a shape variant asks for this resource by (`of`, research 31 §5). */
+  shape?: { of: unknown; read(): T | undefined }
 }
 
-type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void }
+type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void; shape?: ResourceOptions<any>['shape'] }
 const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
+/** While a Boundary's `pending` renders: the resources it's waiting for (weft/shape). */
+export const waiting = context<Tracked[] | undefined>(undefined)
 
 const thenable = (v: any): v is PromiseLike<any> => v != null && typeof v.then === 'function'
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -54,7 +60,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
   const first = state(true)
   const version = state(0)
   const refresh = () => void version.value++
-  boundaries.use?.add({ first, err: error, refresh })
+  boundaries.use?.add({ first, err: error, refresh, shape: options.shape })
 
   const settle = (v: T) => {
     value.value = v
@@ -141,6 +147,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
     get value() { return value.value },
     get pending() { return pending.value },
     get error() { return error.value },
+    get shape() { return options.shape?.read() },
     refresh,
   }
 }
@@ -149,7 +156,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
  * `<Boundary pending={<Skeleton />} error={(e, retry) => …}>…</Boundary>`. Without `error`, a failure renders
  * nothing (dev builds log it).
  */
-export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () => void) => any; children?: any }) {
+export function Boundary(props: { pending?: any; /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => any; error?: (e: unknown, retry: () => void) => any; children?: any }) {
   const parent = getOwner()
   const list: Tracked[] = []
   const added = state(0)
@@ -237,6 +244,10 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
   }
 
   let side: { kind: 'p' | 'e'; node: any; dispose: () => void } | undefined
+  const pendingView = () => waiting.provide(list, () => {
+    const v = props.shape ? props.shape() : props.pending
+    return rt.server ? { t: rt.resolve!(v) } : v
+  })
   const sideView = (kind: 'p' | 'e', make: () => any) => {
     if (side?.kind === kind && kind === 'p') return side.node
     side?.dispose()
@@ -259,9 +270,14 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
     if (s === 'fallback' && rt.stream && key !== undefined) {
       // Streaming: the fallback goes out between markers, and renderToStream sends the content to replace it.
       const k = encodeURIComponent(key)
-      return { t: `<!--wb:${k}-->${rt.resolve!(sideView('p', () => props.pending))}<!--/wb:${k}-->` }
+      return { t: `<!--wb:${k}-->${rt.resolve!(sideView('p', pendingView))}<!--/wb:${k}-->` }
     }
-    if (s === 'fallback') return sideView('p', () => props.pending)
+    if (s === 'fallback' || (s === 'wait' && props.shape)) {
+      // A shape holds its place unseen until the 150 ms are up, so showing it moves nothing (research 11 §7.4).
+      const n = sideView('p', pendingView)
+      if (props.shape && !rt.server) n.style.visibility = s === 'wait' ? 'hidden' : ''
+      return n
+    }
     if (side) {
       if (DEV && s === 'content' && side.kind === 'p') checkSwap(side.node, content)
       side.dispose()
@@ -277,6 +293,7 @@ function boxOf(value: unknown): { w: number; h: number } | undefined {
   const visit = (v: unknown) => {
     if (Array.isArray(v)) return v.forEach(visit)
     if (typeof Element === 'undefined' || !(v instanceof Element) || !v.isConnected) return
+    if (getComputedStyle(v).display === 'contents') return visit([...v.children]) // a shape variant's wrapper has no box
     const r = v.getBoundingClientRect()
     top = Math.min(top, r.top); left = Math.min(left, r.left); bottom = Math.max(bottom, r.bottom); right = Math.max(right, r.right)
   }

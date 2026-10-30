@@ -282,7 +282,7 @@ export const catalog = [
   { code: 'R009', severity: 'error', by: 'start', catches: 'Over 100 subscriptions on a connection, or 10 connections for a user', fix: 'Read fewer keys; `limits` raises it' },
   { code: 'R010', severity: 'error', by: 'start', catches: 'An origin that isn\'t the app\'s own or in `realtime({ origins })` tried to open a connection', fix: 'List it, scheme and port included' },
 
-  // Text, type and skeletons (research 11 §8.5; Phase 2's set, research 26 §7). `cli`: weft check (text-checks.mjs).
+  // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },
   { code: 'X006', severity: 'error', by: 'cli', catches: 'A fluid `clamp()` font size whose max/min is over 2.5: 200% zoom no longer doubles it', fix: 'Narrow the range (raise the minimum or lower the maximum)' },
   { code: 'X008', severity: 'error', by: 'cli', catches: 'Viewport meta with `user-scalable=no` or `maximum-scale` under 2: blocks pinch zoom', fix: 'Remove them (autofix)' },
@@ -292,9 +292,14 @@ export const catalog = [
   { code: 'X023', severity: 'warning', by: 'cli', catches: 'A `<link rel="preload" as="font">` whose file no `@font-face` uses', fix: 'Remove the preload' },
   { code: 'X030', severity: 'error', by: 'cli', catches: '`<img>`, `<video>` or `<iframe>` without `width`/`height` or `aspect-ratio` inside a `<Boundary>`: it lands at 0 px and pushes content down', fix: '`<Media src={x}>` with a `?media` import (it always has dimensions), or set `width` and `height`' },
   { code: 'X031', severity: 'warning', by: 'runtime', catches: 'A `pending` fallback whose box differs from the content\'s by more than 1 px at the swap (measured by `<Boundary>` in dev)', fix: 'Size the fallback like the content: warp\'s `<Shape>` with the content\'s counts' },
+  { code: 'X032', severity: 'warning', by: 'runtime', catches: 'A skeleton repeats a list with no count hint: no `limit` input, no `.max()` on the array, nothing seen yet. It shows 5 rows, so the swap can shift', fix: 'Add a `limit` input or `.max()` to the array in `output`' },
+  { code: 'X033', severity: 'warning', by: 'cli', catches: '`x.pending` renders a skeleton or spinner with no check that `x` has no value: every refetch flashes it', fix: 'Let `<Boundary>` show first loads, and test `x.value === undefined` here. A refetch keeps the old value in place' },
   { code: 'X034', severity: 'error', by: 'cli', catches: 'A `pending` fallback with its own `setTimeout`/`setInterval`: `<Boundary>` already owns the 150 ms / 400 ms timing', fix: 'Remove the timers from the fallback' },
 
   // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft/plugin-media's check hook.
+  { code: 'X035', severity: 'warning', by: 'cli', catches: 'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it', fix: 'Render it with `<Text stream>` from weft/text: the height only grows' },
+  { code: 'X036', severity: 'warning', by: 'runtime', catches: 'A skeleton shows a string from `output` with no length hint, so its bar is a guess', fix: 'Add `.max()`, `.length()` or `.meta({ example })` to the schema, or an example in the query\'s `shape`' },
+
   { code: 'M001', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)', fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`' },
   { code: 'M002', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer', fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`' },
   { code: 'M003', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A raw `<img>` whose file is wider than its `width` × 2 (DPR) × 1.25: bytes nobody sees', fix: '`<Media>`, which resizes' },

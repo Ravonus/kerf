@@ -12,6 +12,7 @@
   ],
   "exports": {
     ".": "./src/index.ts",
+    "./skeleton": "./src/skeleton-css.ts",
     "./plugin": "./plugin.mjs"
   },
   "scripts": {

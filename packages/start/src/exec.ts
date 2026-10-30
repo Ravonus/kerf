@@ -8,6 +8,7 @@
 //   shared store   only for `cache: { life }`: a value is valid while every tag's version still matches (a mutation
 //                  bumps the versions of the tags it invalidates).
 
+import { shapeTree } from './shape.mjs'
 import type { MediaAsset } from 'weft/media'
 import { enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 
@@ -125,6 +126,14 @@ export function readQuery(scope: Scope, fn: Fn, input: unknown): unknown {
   if (!e.done) return e.p.then(x => x.v)
   if (e.e !== undefined) throw e.e
   return e.v
+}
+
+const trees = new WeakMap<Fn, { tree: unknown }>()
+/** A query's shape tree, once per definition. */
+export function shapeOf(fn: Fn): unknown {
+  let t = trees.get(fn)
+  if (!t) trees.set(fn, (t = { tree: shapeTree(fn.def) }))
+  return t.tree
 }
 
 export const fetchQuery = (scope: Scope, fn: Fn, input: unknown): Promise<ScopeEntry> => {

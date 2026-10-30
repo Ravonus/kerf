@@ -797,3 +797,71 @@ fn a_key_on_the_index_parameter_keys_by_position() {
     let (code, _) = run("export function L({ xs }: any) { return <ul>{xs.map((x: any, i: number) => <li key={i}>{x.name}</li>)}</ul> }");
     assert!(code.contains("by: (x, i) => i"), "{code}");
 }
+
+// ---- shape variants (research 31 §5) ---------------------------------------------------------------------------
+
+fn shaped(source: &str) -> String {
+    let opts = Options { filename: "/app/App.tsx".into(), shapes: Some(Default::default()), ..Default::default() };
+    compile(source, &opts).code.expect("compiled")
+}
+
+#[test]
+fn no_variants_unless_asked() {
+    let (code, _) = run("export function A() { return <p>{1}</p> }");
+    assert!(!code.contains("$shape") && !code.contains("weft/shape"), "{code}");
+}
+
+#[test]
+fn a_variant_keeps_markup_and_drops_behaviour() {
+    let code = shaped(
+        "import { q } from './q'; import { state } from 'weft';
+         export function Feed() {
+           const posts = q({ limit: 5 }); const n = state(0);
+           return <ul id=\"a\" class=\"l\" onClick={() => n.value++}>{posts.value?.map(p => <li key={p.id}><b>{p.title}</b><i>{n.value}</i></li>)}</ul>
+         }",
+    );
+    let variant = &code[code.find("function Feed$shape").expect("a variant")..];
+    assert!(variant.contains("$$sr(q)"), "{variant}");
+    assert!(!variant.contains("q({"), "the query isn't called again: {variant}");
+    assert!(code.contains("data-skeleton") && variant.contains("p.title"), "{code}");
+    assert!(!variant.contains("n.value"), "a dropped local is one bar: {variant}");
+    assert!(code.contains("Feed$shape as Feed$shape"), "{code}");
+}
+
+#[test]
+fn a_component_without_a_variant_never_runs() {
+    let code = shaped("import { Chart } from 'lib'; export const A = (p) => <div><Chart data={p.x} /></div>");
+    let variant = &code[code.find("function A$shape").expect("a variant")..];
+    assert!(!variant.contains("Chart"), "{variant}");
+    assert!(code.contains("data-skeleton"), "{code}");
+}
+
+#[test]
+fn imported_variants_come_from_options_shapes() {
+    let mut known = std::collections::HashMap::new();
+    known.insert("/app/Row#Row".to_string(), true);
+    let opts = Options { filename: "/app/App.tsx".into(), shapes: Some(known), ..Default::default() };
+    let src = "import { Row } from './Row'; import { Other } from './Other'; export const A = (p) => <div><Row a={p.a} on={1} onClick={p.f} /><Other /></div>";
+    let code = compile(src, &opts).code.expect("compiled");
+    assert!(code.contains("Row$shape as Row$$v"), "{code}");
+    assert!(!code.contains("Other$shape"), "only what exists is imported: {code}");
+}
+
+#[test]
+fn pending_shape_is_lowered_with_no_options() {
+    let src = "import { Boundary } from 'weft'; function Feed() { return <p>{1 + 1}</p> } export function P() { return <Boundary pending=\"shape\"><Feed /></Boundary> }";
+    let (code, d) = run(src);
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("$$site0"), "{code}");
+    assert!(!code.contains("\"shape\""), "{code}");
+    assert!(code.contains("skeleton-scope"), "{code}");
+}
+
+#[test]
+fn check_reports_exported_variants() {
+    let src = "export function A() { return <p /> } export const B = () => <p />; function C() { return <p /> } export { C as D }; export default function E() { return <p /> } export function f() { return 1 }";
+    let opts = Options { check_only: true, ..Default::default() };
+    let mut names = compile(src, &opts).facts.shapes;
+    names.sort();
+    assert_eq!(names, ["A", "B", "D", "default"]);
+}

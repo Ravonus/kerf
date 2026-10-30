@@ -151,8 +151,9 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     let module = o.module;
     let mut order = JsxOrder::default();
     order.visit_program(&program);
-    // If the counts differ the mapping can't be trusted: no lines rather than wrong ones.
-    let origin = if order.spans.len() == o.origins.len() {
+    // Fewer origins than nodes: shape variants, appended after the authored code, have no line. Any other difference
+    // and the mapping can't be trusted: no lines rather than wrong ones.
+    let origin = if order.spans.len() >= o.origins.len() {
         order.spans.iter().zip(&o.origins).filter_map(|(s, l)| l.map(|l| (s.start, l))).collect()
     } else {
         HashMap::new()
