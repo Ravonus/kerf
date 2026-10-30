@@ -11,6 +11,7 @@ import { pathToFileURL } from 'node:url'
 import { diagnostic, locate } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
+import { requireTrust } from './trust.mjs'
 
 async function start(root, sub) {
   let file
@@ -38,6 +39,7 @@ export const PRESETS = { node: 'node', bun: 'bun', deno: 'deno_server' }
 export async function devCommand(root, { port } = {}) {
   // Production takes the host's environment; dev takes `.env`. What's already set wins.
   if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
+  requireTrust(root, await loadConfig(root))
   const { dev } = await start(root, 'app')
   await writeMap(root)
   const server = await dev({ root, ...(await site(root)), port })
@@ -45,6 +47,7 @@ export async function devCommand(root, { port } = {}) {
 }
 
 export async function buildCommand(root, { preset, runtime } = {}) {
+  requireTrust(root, await loadConfig(root))
   const { build } = await start(root, 'app')
   const { writeContract } = await start(root, 'contract')
   const t = performance.now()

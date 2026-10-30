@@ -171,7 +171,8 @@ export const warp = definePlugin({
   weft: '*',
   namespace: 'D',
   options,
-  permissions: {},
+  // A custom seed runs ui-core's contrast checker over a temporary copy of its stylesheet (checkSeed).
+  permissions: { fs: { read: ['node_modules/@weft/ui-core/**'], write: ['$TMPDIR/warp-seed-*'] }, spawn: ['node'] },
   contribute(o) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma

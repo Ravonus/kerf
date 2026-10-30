@@ -71,7 +71,7 @@ export const media = definePlugin({
   weft: '*',
   namespace: 'M',
   options,
-  permissions: { fs: { read: ['**/*.{png,jpg,jpeg,gif,webp,avif,svg}'] }, spawn: ['ssimulacra2'], native: true },
+  permissions: { fs: { read: ['**/*.{png,jpg,jpeg,gif,webp,avif,svg}'] }, env: ['WEFT_MEDIA_DIR'], spawn: ['ssimulacra2'], native: true },
   contribute: o => ({
     provides: [provide(mediaBuild, { sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaBuild', options: o } } }), provide(mediaServer, { sides: { server: { module: '@weft/plugin-media/server', export: 'createMediaServer', options: o } } })],
     check: { include: ['**/*.{tsx,jsx}'], run: ctx => checkMedia(ctx, { gifLimit: o.gifLimit }) },

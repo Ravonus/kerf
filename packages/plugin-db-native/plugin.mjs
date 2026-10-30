@@ -20,7 +20,7 @@ export const native = definePlugin({
   name: '@weft/plugin-db-native',
   version: '0.0.0',
   weft: '*',
-  permissions: {},
+  permissions: { fs: { read: ['migrations/**'], write: ['migrations/**'] } },
   contribute: () => ({
     db: { layer: 'native', migrations: DIR, generate },
     agents: { title: 'Database (Native)', text: 'No ORM: `ctx.db.sql` is a tagged template, and values are always bound, never concatenated. Rows are plain objects. `ctx.db.transaction(tx => …)` gives `tx.sql`, and `ctx.db.driver` is the real driver. `weft db generate <name>` starts a file in `migrations/`; write the SQL by hand. Validate input with your own Zod schemas.' },

@@ -13,6 +13,7 @@ import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
 import { database } from './map.mjs'
 import { dbLayer } from './start.mjs'
+import { trustStatus } from './trust.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
@@ -254,9 +255,12 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   }
   sync(root, after)
   actions.push('regenerate .weft/slots')
+  // Never approved here: installing a plugin isn't having read what it asks for.
+  const trust = trustStatus(root, after).plugins.find(p => p.name === pkg)
   if (existsSync(join(root, 'AGENTS.md'))) {
     await writeAgentsMd(root)
     actions.push('regenerate AGENTS.md')
   }
-  return { ok: true, package: pkg, config, actions }
+  if (trust?.blocked) actions.push(`${pkg} asks for ${[...trust.added, ...trust.hidden.map(n => `${n} (undeclared)`)].join(', ') || 'a code change'}; \`weft check\` stops until you run \`weft plugins approve ${pkg}\``)
+  return { ok: true, package: pkg, config, actions, ...(trust?.blocked && { approve: { added: trust.added, undeclared: trust.hidden } }) }
 }

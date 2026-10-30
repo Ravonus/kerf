@@ -106,6 +106,7 @@ export const configSchema = z.strictObject({
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),
   runtime: z.enum(['node', 'bun', 'deno']).optional(),
+  trust: z.enum(['enforce', 'warn']).optional(),
 })
 
 /** What a JSON or YAML file may hold: data, so a plugin is `name` or `[name, options]`. Also the editor schema. */
