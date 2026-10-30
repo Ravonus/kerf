@@ -192,6 +192,12 @@ const transport = {
   als: new AsyncLocalStorage<unknown>(),
   /** @weft/start registers its client cache reset here. */
   resets: [] as (() => void)[],
+  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as weft/browser's. */
+  open,
+  /** The realtime fake while one is connected (@weft/start's live.ts). */
+  rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
+  /** Times the realtime connection was lost. */
+  reconnects: 0,
 }
 ;(globalThis as any)[Symbol.for('weft.net')] = transport
 
@@ -222,6 +228,22 @@ export const net = {
   handle<I = any, O = unknown>(fn: FnRef, run: (input: I, ctx: any) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
   /** The calls so far, in order: `{ id, kind, input }`. */
   calls() { return transport.log.slice() },
+  /** A message straight to every reader of `stream`, as the server would send it. Returns how many got it. */
+  push(stream: FnRef, message: unknown) {
+    const n = connected().push(fnId(stream), message)
+    return flush().then(() => n)
+  },
+  /** Poke these tags, as a mutation on another server or tab would. */
+  async poke(...tags: string[]) {
+    await connected().poke(tags)
+    await net.settle()
+  },
+  /** Cut the realtime connection: the client reconnects and resumes, as after a dropped socket. */
+  drop() { connected().drop(); return net.settle() },
+  /** How many times the realtime connection was lost so far. */
+  reconnects: () => transport.reconnects,
+  /** What the client is subscribed to: `{ kind, id, input }`. */
+  subscriptions: () => transport.rt?.subscriptions() ?? [],
   /** Wait until no call is in flight (with latency: real time, or `clock.tick` under fake timers), then flush. */
   async settle() {
     for (let i = 0; i < 100; i++) {
@@ -231,6 +253,11 @@ export const net = {
     }
     throw new Error('net.settle(): calls kept starting (a refetch loop?)')
   },
+}
+
+function connected() {
+  if (!transport.rt) throw new Error('net: no realtime connection yet: render a `.live()` or a stream, then `await net.settle()`')
+  return transport.rt
 }
 
 const visibility = (to: DocumentVisibilityState) => { fake.visibility = to; fire(document, 'visibilitychange') }

@@ -4,7 +4,7 @@ import { screen } from '@testing-library/dom'
 import { renderToString, renderToStringAsync } from 'weft/ssr'
 import { hydrate } from 'weft/dom'
 import { flush, render } from 'weft/test'
-import { resource, state } from 'weft'
+import { Boundary, resource, state } from 'weft'
 import { hydration } from '../src/hydrate'
 import { Users, type Load } from './fixtures/ssr/Users'
 // @ts-expect-error: query imports (vite.mjs)
@@ -181,4 +181,48 @@ test('SSR, data not awaited: the fallback hydrates, then the content swaps in af
   await flush()
   expect(container.querySelector('.skeleton')).toBeNull()
   expect(container.querySelector('.profile')!.textContent).toBe('Ada')
+})
+
+describe('a Boundary directly in a conditional hole', () => {
+  function setup(view: (open: { value: boolean }, boundary: () => any) => () => any) {
+    const open = state(false), mounts: number[] = []
+    const load = vi.fn(() => new Promise<string>(ok => setTimeout(() => ok('loaded'), 300)))
+    function Spy() {
+      mounts.push(1)
+      return <i class="wait">wait</i>
+    }
+    function Inner() {
+      const r = resource(() => load())
+      return <p class="done">{r.value}</p>
+    }
+    render(view(open, () => <Boundary pending={<Spy />}><Inner /></Boundary>))
+    return { open, load, mounts }
+  }
+
+  test.each([
+    ['bare', (open: any, B: any) => () => <section>{open.value ? <B /> : null}</section>],
+    ['in a fragment', (open: any, B: any) => () => <section>{open.value ? <><b>head</b><B /></> : null}</section>],
+  ])('%s: the fallback shows and the Boundary is built once', async (_, view) => {
+    const { open, load, mounts } = setup(view)
+    open.value = true
+    await flush()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(load).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(150)
+    await flush()
+    expect(has('.wait')).toBe(true)
+    expect(mounts).toHaveLength(1)
+    await vi.advanceTimersByTimeAsync(400)
+    await flush()
+    expect(has('.wait')).toBe(false)
+    expect(text()).toContain('loaded')
+    expect(load).toHaveBeenCalledTimes(1)
+    open.value = false
+    await flush()
+    expect(has('.done')).toBe(false)
+    open.value = true
+    await flush()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(load).toHaveBeenCalledTimes(2)
+  })
 })

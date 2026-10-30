@@ -11,6 +11,7 @@ mod diag;
 mod emit;
 mod hmr;
 pub mod project;
+mod shape;
 mod srcmap;
 pub mod style;
 mod transform;
@@ -50,6 +51,9 @@ pub struct Options {
     /// Group parts carry `data-g` as well as `data-part` (warp's `data-scope` + `data-part` shape). Off: parts carry
     /// only `data-part`, and the group's `@scope` tells them apart.
     pub tagged_parts: bool,
+    /// Emit a shape variant of each component (research 31 §5). The value lists imported components that have one,
+    /// keyed `"<absolute path without extension>#<export>"`. `None`: only what this file's `pending="shape"` needs.
+    pub shapes: Option<std::collections::HashMap<String, bool>>,
 }
 
 impl Default for Options {
@@ -66,6 +70,7 @@ impl Default for Options {
             hmr: false,
             groups: Default::default(),
             tagged_parts: false,
+            shapes: None,
         }
     }
 }
@@ -112,8 +117,13 @@ pub fn compile(source: &str, options: &Options) -> Output {
     facts.groups = groups;
     facts.group_uses = group_uses;
     if options.check_only {
+        facts.shapes = shape::exports(&program);
         return Output { code: None, map: None, diagnostics, facts, explain: None };
     }
+
+    // Before the pre-pass, which rewrites the params and lists the variants copy. Appended after printing.
+    let shapes = shape::apply(&allocator, &mut program, &scoping, source, &options.filename, options.shapes.as_ref());
+    facts.shapes = shapes.exports;
 
     transform::apply(&allocator, &mut program, &scoping, &plan);
 
@@ -135,7 +145,7 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let origins = order.spans.iter().map(|s| (s.end > 0).then(|| diag::line_col(source, s.start))).collect();
     let opts = oxc_codegen::CodegenOptions { source_map_path: options.source_map.then(|| options.filename.clone().into()), ..Default::default() };
     let built = oxc_codegen::Codegen::new().with_options(opts).build(&program);
-    let printed = built.code;
+    let printed = built.code + &shapes.code;
     let points = built.map.as_ref().map(|m| srcmap::points(&printed, m));
     let module = if ssr && options.module_name == "weft/dom" { "weft/ssr" } else { &options.module_name };
     let display = display_path(&options.filename);

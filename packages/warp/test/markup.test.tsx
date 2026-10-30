@@ -28,7 +28,7 @@ const tidy = (html: string) => {
   for (const c of t.content.children) walk(c)
   return t.innerHTML.replace(/></g, '>\n<')
 }
-const names = Object.keys(client).filter(n => n !== 'seedToasts') as (keyof typeof client)[]
+const names = Object.keys(client).filter(n => n !== 'seedToasts' && !n.endsWith('$shape')) as (keyof typeof client)[]
 
 test.each(names)('%s: server HTML', name => {
   if (name === 'Toasts') server.seedToasts()

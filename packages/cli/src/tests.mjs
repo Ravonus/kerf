@@ -3,6 +3,7 @@
 //   T001 no assertion          T004 sleeps / real timers     T007 unapproved snapshot
 //   T002 tautology             T005 implementation queries   T008 conditional or looped `expect`
 //   T003 asserts what it set   T006 mocks weft or the unit   T009 `.only` / `.skip`
+//   T013 a real socket
 //
 // Syntax only (TypeScript's parser, no type checker), like the project view. `weft/test` adds a runtime T001 for
 // assertions this pass can't see. A finding a test needs on purpose is kept with a written reason:
@@ -397,6 +398,10 @@ export function checkTestFile(text, rel, options = {}) {
         else if (ns && isUnitSpec(ns.spec)) report('T006', n, `Spying on \`${ns.spec}\` replaces the unit under test, so the test checks the mock.`)
       }
     }
+
+    // T013: a real socket in the fast lane.
+    if (ts.isNewExpression(n) && ts.isIdentifier(n.expression) && ['WebSocket', 'EventSource'].includes(n.expression.text))
+      report('T013', n, `\`new ${n.expression.text}\` opens a real socket in a fast test.`, { help: "Render the `.live()` or stream against weft/test's fake transport: `await net.push(stream, message)`, `await net.poke('tag')`, `await net.drop()`" })
 
     if (ts.isPropertyAccessExpression(n) && n.name.text === 'container' && !(ts.isCallExpression(n.parent) && n.parent.expression === n)) {
       const obj = unwrap(n.expression)

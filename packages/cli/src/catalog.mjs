@@ -2,7 +2,8 @@
 // P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
-// plus the codes proposed in research 17 (marked `proposed`).
+// research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
+// 30 §8 (W052, W053, T013, R002–R010, realtime), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -110,6 +111,13 @@ export const catalog = [
     example: "import { online } from 'weft/browser'\nexport const up = online()",
   },
   {
+    code: 'W052', severity: 'error', by: 'compiler',
+    catches: '`watch` folding a stream by hand',
+    fix: '`fold` + `initial` where it is read: kept in the cache',
+    example: "import { state, watch } from 'weft'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
+  },
+  { code: 'W053', severity: 'error', by: 'start', catches: '`.live()` on a query with no `tags` (dev): no mutation can ever poke it', fix: 'Add `tags` to the query, and the same tag to the mutations that change it' },
+  {
     code: 'W054', severity: 'error', by: 'compiler',
     catches: '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `weft check` cannot tell',
     fix: "Pass the server value: `media(query, { ssr: false })`",
@@ -200,6 +208,11 @@ export const catalog = [
   },
 
   {
+    code: 'T013', severity: 'error', by: 'cli', catches: 'A real `WebSocket` or `EventSource` in a fast test',
+    fix: 'Use the fake transport: `net.push`, `net.poke`, `net.drop`',
+    example: "test('feed', () => { const socket = new WebSocket('ws://localhost/feed'); expect(socket).toBeTruthy() })",
+  },
+  {
     code: 'T020', severity: 'error', by: 'gate', catches: 'An existing test deleted, skipped, marked `.fails`, or with an assertion removed or loosened (`toBe(3)` → `toBeTruthy()`)',
     fix: 'Restore it, or keep the change with `// weft-allow T020: <reason>` on that test',
   },
@@ -238,6 +251,13 @@ export const catalog = [
   { code: 'Q009', severity: 'error', by: 'start', catches: '`/_weft/fn/<id>` names no function: the page is older than the server, or the module isn\'t a server module', fix: 'Reload; keep `query`/`mutation` exports in server modules' },
   { code: 'Q010', severity: 'error', by: 'start', catches: 'A mutation request without the CSRF proof (POST, JSON, `x-weft: 1`, same origin): 403', fix: 'Call mutations through their stub, not a hand-made `fetch` or form' },
   { code: 'S011', severity: 'warning', by: 'runtime', catches: '`mutation({ optimistic })` updated a query its invalidated tags didn\'t cover: the prediction has no fresh value to land on (held until a refetch)', fix: 'Add one of the query\'s tags to `invalidates`' },
+  { code: 'S001', severity: 'error', by: 'cli', catches: 'A server object or array (`q().value`, `await q.fetch()`, or a map, filter or spread of one) copied into `state`: it goes stale and its rows lose their identity', fix: 'Reference the query and `derived` from it; store ids; `state.linked` for edits, `untrack` for a deliberate snapshot' },
+  { code: 'S002', severity: 'error', by: 'runtime', catches: 'A `defineState` scope reached on the server outside a render (module scope, `load`, a server function, a timer): it would be shared by every request', fix: 'Read it in a component, a handler or a `derived`; pass values into server code as arguments' },
+  { code: 'S012', severity: 'warning', by: 'cli', catches: '`state.linked` over a query value with no `key`: a refetch resets what someone is typing', fix: 'Add `{ key: () => source.value?.id }`' },
+  { code: 'S013', severity: 'warning', by: 'runtime', catches: 'A `local` or `session` persisted box read in a server render: the page shows `init`, then flashes to the stored value', fix: '`persist: { in: \'cookie\' }` if it\'s small, or render it client-only' },
+  { code: 'F001', severity: 'error', by: 'runtime', catches: '`<Form of>` was given something that isn\'t a mutation', fix: '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module' },
+  { code: 'F002', severity: 'error', by: 'start', catches: 'A form POST without the same-origin proof (`Origin`, or `Sec-Fetch-Site: same-origin`): 403', fix: 'Submit through a `<Form>` on the same origin; behind a proxy, forward the host so the origins match' },
+  { code: 'F003', severity: 'error', by: 'start', catches: 'A form POST naming no known mutation: the page is older than the server', fix: 'Reload; keep `mutation` exports in server modules' },
   { code: 'Q011', severity: 'warning', by: 'start', catches: 'A function read or wrote a table its `tags`/`invalidates` don\'t name (dev): a mutation of that table won\'t refresh it', fix: 'Add the table\'s name (or `table:…`) to `tags`/`invalidates`' },
   { code: 'Q012', severity: 'error', by: 'start', catches: '`@weft/start/db*` or `@weft/start/auth` reached the client graph', fix: 'Import it from a server module (`src/server/**`, `*.server.ts`) or a route\'s `load`' },
   { code: 'Q013', severity: 'error', by: 'start', catches: 'A database URL the driver can\'t open (a `postgres://` URL given to the SQLite entry, or the reverse)', fix: 'Use the matching `createDb`: `@weft/start/db/sqlite` or `@weft/start/db/postgres`' },
@@ -250,7 +270,19 @@ export const catalog = [
   { code: 'C001', severity: 'warning', by: 'cli', catches: 'A function\'s `input` or `output` schema can\'t become JSON Schema: the contract says `{}`', fix: 'Use a schema with JSON Schema support (Zod 4 has it), or drop what can\'t be represented' },
   { code: 'C002', severity: 'error', by: 'start', catches: 'A function\'s value failed its `output` schema (dev and tests)', fix: 'Fix `run`, or the schema' },
 
-  // Text, type and skeletons (research 11 §8.5; Phase 2's set, research 26 §7). `cli`: weft check (text-checks.mjs).
+  // Realtime (research 30 §8; R for realtime). R001 and R004's upgrade check belong to `channel` (Phase 3b).
+  { code: 'R001', severity: 'error', by: 'reserved', catches: '`channel` without `authorize`', fix: 'Add it (`() => true` must be written explicitly)' },
+  { code: 'R002', severity: 'error', by: 'cli', catches: 'The memory bus on a multi-instance preset (`weft build` fails): a message reaches one instance\'s clients', fix: "`realtime({ bus: postgresBus({ url }) })` in `src/realtime.server.ts`" },
+  { code: 'R003', severity: 'warning', by: 'start', catches: 'A mutation wrote a table a live query reads, and their tags don\'t intersect (dev): open pages won\'t update', fix: 'Add one of the query\'s tags to `invalidates`' },
+  { code: 'R004', severity: 'error', by: 'start', catches: '`realtime({ origins: [\'*\'] })`: any site could read this app\'s streams with a visitor\'s cookies', fix: 'List the origins, scheme and port included' },
+  { code: 'R005', severity: 'warning', by: 'cli', catches: 'A stream\'s `input` has an unbounded string or array (`weft build`): a client decides how much the server holds', fix: 'Add `.max()`' },
+  { code: 'R006', severity: 'warning', by: 'start', catches: 'A stream\'s `run` read the database before it subscribed to a topic (dev): what\'s published in between is lost', fix: 'Call `topic.subscribe()` first, or pass `after`' },
+  { code: 'R007', severity: 'warning', by: 'cli', catches: '`ws`, `socket.io-client`, `reconnecting-websocket` or `@microsoft/fetch-event-source` in dependencies: weft owns the connection', fix: 'Use `stream` or `.live()`; a real need goes in `weft-allow`-style config when `channel` lands' },
+  { code: 'R008', severity: 'error', by: 'start', catches: 'A message over 1 MiB, or a request to `/_weft/rt` over 64 KiB', fix: 'Send less, or an id the client fetches; `limits` raises it' },
+  { code: 'R009', severity: 'error', by: 'start', catches: 'Over 100 subscriptions on a connection, or 10 connections for a user', fix: 'Read fewer keys; `limits` raises it' },
+  { code: 'R010', severity: 'error', by: 'start', catches: 'An origin that isn\'t the app\'s own or in `realtime({ origins })` tried to open a connection', fix: 'List it, scheme and port included' },
+
+  // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },
   { code: 'X006', severity: 'error', by: 'cli', catches: 'A fluid `clamp()` font size whose max/min is over 2.5: 200% zoom no longer doubles it', fix: 'Narrow the range (raise the minimum or lower the maximum)' },
   { code: 'X008', severity: 'error', by: 'cli', catches: 'Viewport meta with `user-scalable=no` or `maximum-scale` under 2: blocks pinch zoom', fix: 'Remove them (autofix)' },
@@ -260,9 +292,14 @@ export const catalog = [
   { code: 'X023', severity: 'warning', by: 'cli', catches: 'A `<link rel="preload" as="font">` whose file no `@font-face` uses', fix: 'Remove the preload' },
   { code: 'X030', severity: 'error', by: 'cli', catches: '`<img>`, `<video>` or `<iframe>` without `width`/`height` or `aspect-ratio` inside a `<Boundary>`: it lands at 0 px and pushes content down', fix: '`<Media src={x}>` with a `?media` import (it always has dimensions), or set `width` and `height`' },
   { code: 'X031', severity: 'warning', by: 'runtime', catches: 'A `pending` fallback whose box differs from the content\'s by more than 1 px at the swap (measured by `<Boundary>` in dev)', fix: 'Size the fallback like the content: warp\'s `<Shape>` with the content\'s counts' },
+  { code: 'X032', severity: 'warning', by: 'runtime', catches: 'A skeleton repeats a list with no count hint: no `limit` input, no `.max()` on the array, nothing seen yet. It shows 5 rows, so the swap can shift', fix: 'Add a `limit` input or `.max()` to the array in `output`' },
+  { code: 'X033', severity: 'warning', by: 'cli', catches: '`x.pending` renders a skeleton or spinner with no check that `x` has no value: every refetch flashes it', fix: 'Let `<Boundary>` show first loads, and test `x.value === undefined` here. A refetch keeps the old value in place' },
   { code: 'X034', severity: 'error', by: 'cli', catches: 'A `pending` fallback with its own `setTimeout`/`setInterval`: `<Boundary>` already owns the 150 ms / 400 ms timing', fix: 'Remove the timers from the fallback' },
 
   // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft/plugin-media's check hook.
+  { code: 'X035', severity: 'warning', by: 'cli', catches: 'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it', fix: 'Render it with `<Text stream>` from weft/text: the height only grows' },
+  { code: 'X036', severity: 'warning', by: 'runtime', catches: 'A skeleton shows a string from `output` with no length hint, so its bar is a guess', fix: 'Add `.max()`, `.length()` or `.meta({ example })` to the schema, or an example in the query\'s `shape`' },
+
   { code: 'M001', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)', fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`' },
   { code: 'M002', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer', fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`' },
   { code: 'M003', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A raw `<img>` whose file is wider than its `width` × 2 (DPR) × 1.25: bytes nobody sees', fix: '`<Media>`, which resizes' },
@@ -276,6 +313,9 @@ export const catalog = [
   { code: 'M011', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video autoplay loop>` without `controls`, or a GIF in a raw `<img>`: endless motion with no pause (WCAG 2.2.2)', fix: '`<Media>` (pause control, poster under reduced motion), or add `controls`' },
   { code: 'M012', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An SVG with `<script>`, `foreignObject`, `on*=` handlers or external references, used as an image', fix: 'Sanitise the file; the build refuses to optimise it' },
   { code: 'M013', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A file in `public/` referenced by string: untracked, unoptimised, no dimensions', fix: 'Move it next to the code and `import x from \'./x.jpg?media\'`' },
+  { code: 'M016', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<Media src>` given a string: nothing knows its size before it loads, so the page shifts', fix: 'Import it with `?media`, or store what `ctx.media.ingest` returns and type the field `z.media()`' },
+  { code: 'M017', severity: 'error', by: 'start', catches: '`ctx.media` or a `/_weft/m/` URL used with no `media.server` provider', fix: 'Add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts' },
+  { code: 'M018', severity: 'error', by: 'start', catches: 'An upload refused: it isn\'t an image weft can read, or it\'s over the size limit (422)', fix: 'Raise `media({ server: { maxBytes } })`, or check the file on the client first' },
 
   { code: 'P100', severity: 'error', by: 'cli', catches: 'Two providers for a `one` slot (or the same key in a `keyed` slot)', fix: 'Remove one, or name the winner in `slots: {}`' },
   { code: 'P101', severity: 'error', by: 'reserved', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },

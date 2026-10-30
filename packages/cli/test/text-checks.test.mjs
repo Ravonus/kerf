@@ -84,6 +84,39 @@ export function Outside() { return <img src="/d.png" alt="D" /> }
     expect(x(r)[0].why).toContain('(<Spinner>)')
   })
 
+  it('X033: a pending skeleton with no value check', async () => {
+    const dir = project({
+      'src/Feed.tsx': `import { Skeleton } from '@weft/warp'
+export function A(props) { return props.q.pending ? <Skeleton /> : <p>{props.q.value}</p> }
+export function B(props) { return props.q.value === undefined && props.q.pending ? <Skeleton /> : <p /> }
+export function C(props) { return props.q.pending ? <p>Saving</p> : <p /> }
+`,
+    })
+    const r = await check(dir)
+    expect(x(r).map(d => [d.code, d.span[0]])).toEqual([['X033', 2]])
+    expect(x(r)[0].why).toContain('props.q'.split('.').pop())
+  })
+
+  it('X035: streamed text in a scroll container', async () => {
+    const dir = project({
+      'src/Chat.tsx': `import { reply } from './x'
+export function A() {
+  const out = reply.stream()
+  return <div style="overflow-y: auto"><p>{out.value}</p></div>
+}
+export function B() {
+  const out = reply.stream()
+  return <div style="overflow-y: hidden"><p>{out.value}</p></div>
+}
+export function C() {
+  const n = count()
+  return <div style="overflow: auto"><p>{n.value}</p></div>
+}
+`,
+    })
+    expect(x(await check(dir)).map(d => [d.code, d.span[0]])).toEqual([['X035', 4]])
+  })
+
   it('the v3 reference stays clean', async () => {
     expect(x(await check(project()))).toEqual([])
   })

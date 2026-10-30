@@ -1,6 +1,5 @@
 import { skeletonShape, isPart, type ShapeSpec, type SkeletonBox, type SkeletonPart } from '@weft/ui-core'
-import './styles'
-import '@weft/ui-core/styles/components/skeleton.css'
+import './skeleton-css'
 
 const part = (p: SkeletonPart) => <span data-scope="skeleton" data-shape={p.shape === 'text' ? undefined : p.shape} style={p.style}></span>
 const box = (b: SkeletonBox): any => <div style={b.style}>{b.children.map(c => (isPart(c) ? part(c) : box(c)))}</div>

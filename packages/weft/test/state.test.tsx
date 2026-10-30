@@ -207,8 +207,8 @@ describe('persist', () => {
     expect(() => scope(priv)).toThrow(/S008.*name/)
     const named = defineState('named', () => { const hidden = state(4, { persist: 'memory', name: 'hidden' }); return { read: () => hidden.value } })
     expect(scope(named).read()).toBe(4)
-    const cookie = defineState('cookie', () => ({ c: state('', { persist: { in: 'cookie' as any } }) }))
-    expect(() => scope(cookie)).toThrow(/S008[\s\S]*Phase 3/)
+    const idb = defineState('idb', () => ({ c: state('', { persist: { in: 'idb' as any } }) }))
+    expect(() => scope(idb)).toThrow(/S008.*idb/)
   })
 
   test('S010: a non-serializable value is reported and not written', async () => {

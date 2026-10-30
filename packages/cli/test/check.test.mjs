@@ -23,6 +23,7 @@ describe('weft check on evals/reference-v3/weft', () => {
       'db.adapter': { drizzle: 'weft:default' },
       'font.build': null,
       'media.build': null,
+      'media.server': null,
       'pay.rail': {},
       'realtime.bus': 'weft:default:memory',
       'surface.renderer': { canvas2d: 'weft:default', webgl2: 'weft:default' },
@@ -120,6 +121,13 @@ describe('diagnostic shape', () => {
     const r = await check(dir)
     expect(r.diagnostics.map(d => [d.code, d.file, d.span[0]])).toEqual([['P002', 'package.json', 4]])
     expect(r.ok).toBe(true)
+  })
+
+  it('reports R007 for a socket library in dependencies, and nothing for one in devDependencies', async () => {
+    const dir = project({ 'package.json': JSON.stringify({ dependencies: { ws: '8.0.0' }, devDependencies: { 'socket.io-client': '4.0.0' } }, null, 2) })
+    const r = await check(dir)
+    expect(r.diagnostics.map(d => [d.code, d.file])).toEqual([['R007', 'package.json']])
+    expect(r.diagnostics[0].severity).toBe('warning')
   })
 
   it('reports P120 for a weft plugin wired straight into vite.config.ts', async () => {

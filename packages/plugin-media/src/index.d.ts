@@ -11,6 +11,10 @@ export interface MediaOptions {
   placeholder?: boolean
   /** Bytes over which a GIF is M004. Default 256 KB. */
   gifLimit?: number
+  /** 'server': `?media` imports are encoded on first request by the media route, not at build. Default 'off'. */
+  encoder?: 'off' | 'server'
+  /** The media route's store (uploads, and `encoder: 'server'`). `dir` default `.weft/media`, `maxBytes` default 20 MB. */
+  server?: { dir?: string; maxBytes?: number }
 }
 
 export declare function media(options?: MediaOptions): PluginInstance<MediaOptions>

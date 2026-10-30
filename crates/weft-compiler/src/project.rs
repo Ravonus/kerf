@@ -17,6 +17,9 @@ pub struct Facts {
     pub groups: Vec<crate::style::GroupDef>,
     #[serde(default)]
     pub group_uses: Vec<crate::style::GroupUse>,
+    /// Exports with a shape variant (shape.rs), for the Vite plugin's `options.shapes`.
+    #[serde(default)]
+    pub shapes: Vec<String>,
 }
 
 /// A W014 warning's box passed as `<component prop={box…}>`.
