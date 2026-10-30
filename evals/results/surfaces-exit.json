@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-30",
+  "ok": true,
+  "request": "Add an animated starfield to the home page, with a slider that sets how dense it is.",
+  "parts": {
+    "check": {
+      "ok": true,
+      "summary": {
+        "files": 4,
+        "tests": 0,
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      },
+      "diagnostics": []
+    },
+    "types": {
+      "ok": true,
+      "app": [],
+      "packages": 9
+    },
+    "build": {
+      "ok": true
+    },
+    "e2e": {
+      "ok": true,
+      "checks": [
+        {
+          "name": "the server renders a sized host and no canvas",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "the canvas is named, or decorative",
+          "ok": true,
+          "detail": "Animated starfield"
+        },
+        {
+          "name": "it paints stars",
+          "ok": true,
+          "detail": "{\"colours\":272,\"lit\":2868}"
+        },
+        {
+          "name": "it animates",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "there is a slider, with a name",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "the slider changes the density",
+          "ok": true,
+          "detail": "1884 → 6713 lit pixels"
+        },
+        {
+          "name": "moving it touches nothing in the surface: the same canvas, 0 DOM writes",
+          "ok": true,
+          "detail": "{\"mutations\":0,\"same\":true}"
+        },
+        {
+          "name": "no errors or warnings in the console",
+          "ok": true,
+          "detail": ""
+        }
+      ]
+    }
+  },
+  "kind": "canvas2d"
+}

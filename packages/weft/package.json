@@ -17,6 +17,7 @@
     "./ssr": "./src/ssr.ts",
     "./head": "./src/head-client.ts",
     "./test": "./src/test.ts",
+    "./test/plugins": "./src/test-plugins.ts",
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
     "./sync": "./src/sync.ts",
@@ -25,6 +26,7 @@
     "./media": "./src/media.tsx",
     "./shape": "./src/shape.ts",
     "./text": "./src/text.tsx",
+    "./surface": "./src/surface.tsx",
     "./media-probe": "./media-probe.mjs",
     "./client": {
       "types": "./client.d.ts"

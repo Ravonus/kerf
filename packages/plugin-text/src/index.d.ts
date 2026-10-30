@@ -23,8 +23,10 @@ export interface TextOptions {
   fonts?: Record<string, Face>
   /** Default `['latin']`. */
   subsets?: Subset[]
-  /** `text.measure` arrives with Surfaces; only `'off'` for now. */
-  measure?: 'off'
+  /** `'auto'` provides `text.measure`, loaded lazily by what uses it; `'off'` leaves it unbound. */
+  measure?: 'auto' | 'off'
+  /** `'slim'` is @weft/text-engine; `'pretext'` is pinned upstream (33.9 KB br). */
+  engine?: 'slim' | 'pretext'
 }
 
 export declare const SUBSETS: Subset[]

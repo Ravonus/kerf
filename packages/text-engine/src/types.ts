@@ -1,5 +1,5 @@
 // weft's `measure` provider: the smallest pure surface weft/text needs from a text engine. Another provider
-// (an SSR advance-table estimator, a test double) implements the same four calls.
+// (an SSR advance-table estimator, a test double) implements the same five calls.
 
 export type PrepareOptions = {
   whiteSpace?: 'normal' | 'pre-wrap'
@@ -21,12 +21,14 @@ export type LayoutResult = { height: number, lineCount: number }
 // A line as a range of the prepared text: segment and grapheme cursors as Pretext gives them (Pretext has
 // no source offsets for plain text yet, upstream issue #198), and the line's width without hanging spaces.
 export type Cursor = { segmentIndex: number, graphemeIndex: number }
-export type LineRange = { width: number, start: Cursor, end: Cursor }
+// `lite`: the range indexes the lite tier's segments.
+export type LineRange = { width: number, start: Cursor, end: Cursor, lite?: boolean }
 
 export interface MeasureProvider {
   prepare(text: string, font: string, opts?: PrepareOptions): Handle
   layout(handle: Handle, width: number, lineHeight: number): LayoutResult
   lines(handle: Handle, width: number): LineRange[]
+  lineText(handle: Handle, line: LineRange): string
   clear(): void
 }
 
@@ -39,6 +41,5 @@ export interface TextEngine extends MeasureProvider {
   needs(text: string, font: string, opts?: PrepareOptions): Pack[]
   load(packs: readonly Pack[]): Promise<void>
   loaded(): readonly Pack[]
-  lineText(handle: Handle, line: LineRange): string
   setLocale(locale?: string): void
 }

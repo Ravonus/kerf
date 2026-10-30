@@ -513,8 +513,8 @@ export const Starfield = defineSurface({
 - One schema: props types come from the Zod object; validation runs in dev only.
 - SSR renders an aspect-ratio placeholder; the canvas mounts on the client.
 - Surfaces are listed by the MCP catalog, so an agent can find and drop one into any layout by name.
-- `weft/surface/keel` registers `keel-pixel` and accepts Keel theme recipes. (Check Keel's license before it ships
-  inside weft.)
+- `@weft/plugin-surface-keel` registers `keel-pixel` and accepts Keel theme recipes. keel-engine is MIT, and the plugin
+  keeps the notice. It moved out of core with [13](research/13-plugins.md) §2.9.
 
 ## 5b. Native: iOS and Android from the same TSX
 
@@ -894,7 +894,7 @@ crates/
   ui-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
   multiplayer presence, cursors, interaction relay (from Agorix)
-  surface     defineSurface, canvas2d, webgl2; keel subpath
+  surface     defineSurface, canvas2d, webgl2 (a `weft` subpath, 33); Keel is @weft/plugin-surface-keel
   text        weft/text + weft/skeleton consumer APIs (measure, lines, fit, <Text>, s.text() + mirror); no engine
   text-engine slim Pretext fork (MIT, credited), no weft dependency
   media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
@@ -991,7 +991,18 @@ component), `<Text reserve>` in `weft/text`, and X032, X033, X035 and X036. Meas
 the reveal and the swap for every shape source, and 0 px moved with a last-seen shape of the same payload, against
 2986 px for naive bars. A `pending="shape"` page costs 350 B br over a hand-written fallback, and a component no
 `pending="shape"` reaches costs 0. `<Text>` holds its place with placeholder text in the real element, so
-`text.measure` isn't needed yet. Not built: variants through barrels, `sessionStorage` records, viewport-fill counts.
+it doesn't use `text.measure`. Not built: variants through barrels, `sessionStorage` records, viewport-fill counts.
+
+**2 Surfaces (2026-10-30):** built ([33](research/33-surfaces.md)): `defineSurface` and `<Surface>` in `weft/surface`,
+`canvas2d`, `webgl2`, the `surface.renderer` and `text.measure` slots, both `text.measure` engines passing conformance
+in Chrome and WebKit, `s.text()` with its mirror, and X001–X004, X009–X012, X040 and X041. X009 was undefined and now
+means a `<Surface>` with neither `label` nor `decorative`; X007 stays undefined. Three writes in a frame give 1 paint,
+0 DOM mutations and 0 re-renders. An app with no surface pays 0, `<Surface>` adds 4.2 KB br, and the engine and Keel's
+renderer (25.9 KB br) are lazy. `measure()`, `lines()` and `fit()` move to 3c, their first users.
+
+**2 Surfaces exit check (2026-10-30): met** ([result](../evals/results/surfaces-exit.md); rerun with
+`node evals/surfaces-exit.mjs`). `@weft/plugin-surface-keel`'s demo hashes equal to Keel's renderer driven directly, and
+a fresh agent added an animated surface with a live slider from a one-line request, passing 8 hidden checks.
 
 **3 exit check (2026-10-30): met** ([result](../evals/results/phase3-exit.md),
 [findings](../evals/results/phase3-exit-FINDINGS.md); rerun with `node evals/phase3-exit.mjs`). The check covers the

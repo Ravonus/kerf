@@ -9,6 +9,7 @@ import { docs } from './docs.mjs'
 import { serve } from './mcp.mjs'
 import { explain, list, sync } from './plugins.mjs'
 import { loadConfig } from './load-config.mjs'
+import { listSurfaces } from './surface-checks.mjs'
 import { tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
@@ -122,6 +123,12 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         else say(result.routes.map(r => `${r.path.padEnd(24)} ${r.file}${r.meta ? `  ${r.meta.title}${r.image ? `  [card: ${r.image}]` : ''}` : ''}`).join('\n'))
         say(formatHuman(result.diagnostics))
         return result.ok ? 0 : 1
+      }
+      case 'surfaces': {
+        const surfaces = listSurfaces(args.root)
+        if (args.json) print({ surfaces })
+        else say(surfaces.length ? surfaces.map(x => `${String(x.name).padEnd(20)} ${String(x.kind).padEnd(10)} ${x.file}:${x.line}  props: ${x.props.join(', ') || '(none)'}`).join('\n') : 'No surfaces yet: `weft docs surface`.')
+        return 0
       }
       case 'tasks': {
         const result = await tasks(args.root)

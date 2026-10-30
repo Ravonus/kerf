@@ -5,6 +5,7 @@
 import { createInterface } from 'node:readline'
 import { check } from './check.mjs'
 import { docs, topics } from './docs.mjs'
+import { listSurfaces } from './surface-checks.mjs'
 import { tasks } from './tasks.mjs'
 import { browser, expectations, actions as browserActions } from './browser/commands.mjs'
 import { gate } from './gate.mjs'
@@ -84,6 +85,11 @@ export const tools = [
     },
   },
   {
+    name: 'surfaces',
+    description: "List the project's canvas and WebGL surfaces (`weft surfaces`): each `defineSurface` with its name, kind, props and file, ready to drop in as `<Surface use={X} label=\"…\" />`.",
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
     name: 'test_gate',
     description: 'Run the test gate on the diff (`weft test --gate`): each new or changed test must fail on the old code (T010), kill a mutant of the changed lines (T011), and no existing test may get weaker (T020). Returns per-test results, surviving mutants with what to assert, and diagnostics.',
     inputSchema: { type: 'object', properties: { base: { type: 'string', description: 'Git ref to diff against (default HEAD: the uncommitted change)' }, budgetSec: { type: 'number' }, maxMutants: { type: 'number' }, refactor: { type: 'boolean' } } },
@@ -130,6 +136,7 @@ export async function handle(root, msg) {
         else if (name === 'tasks') data = await tasks(root)
         else if (name === 'style_find') data = findGroups((await styleMatrix(root)).matrix, args.query)
         else if (name === 'style_explain') data = explainTarget(await styleMatrix(root), args.target, { axes: args.axes, states: args.states, accent: args.accent, part: args.part })
+        else if (name === 'surfaces') data = { surfaces: listSurfaces(root) }
         else if (name === 'test_gate') data = await gate(root, { base: args.base, budgetSec: args.budgetSec, maxMutants: args.maxMutants, refactor: args.refactor })
         else if (name.startsWith('browser_')) data = await callBrowser(root, name, args)
         else return fail(-32602, `Unknown tool: ${name}`)

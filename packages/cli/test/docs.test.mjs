@@ -70,7 +70,7 @@ describe('AGENTS.md', () => {
     }
     expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D020–D025, W060: `weft docs style`\.$/m)
     expect(text).not.toContain('| `weft style` |') // the section covers it
-    expect(text).toContain('Test checks (`weft check` on `*.test.*` files): T001–T009, T013.')
+    expect(text).toContain('Test checks (`weft check` on test files): T001–T009, T013.')
     // The installed weft has every planned export now, so the async rule is in and nothing is listed as missing.
     expect(text).toContain('**Async data is `resource(signal => fetch(…))`**')
     expect(text).not.toContain('Not in this version yet')

@@ -154,6 +154,9 @@ export type LiteHandle = {
   readonly widths: Float64Array // per segment, TEXT and SPACE alternating as Pretext's simple handles
   readonly text: Uint8Array // 1 where the segment is TEXT
   readonly maxText: number // widest TEXT segment: narrower layouts need an emergency break
+  // Kept for { segments: true }: the collapsed text and each segment's start, so a line's text is a slice.
+  readonly source?: string
+  readonly starts?: Uint32Array
 }
 
 // The envelope check that needs no font: run before the font probes.
@@ -162,7 +165,7 @@ export function textFits(text: string, opts?: { whiteSpace?: string, wordBreak?:
 }
 
 // Prepare, or null when this text and font fall outside the envelope.
-export function prepareLite(input: string, font: string): LiteHandle | null {
+export function prepareLite(input: string, font: string, keepText = false): LiteHandle | null {
   if (__ENGINE__ === 'gecko') return null
   if (__ENGINE__ === 'webkit' && GENERIC.test(font)) return null
   const lang = language()
@@ -184,7 +187,7 @@ export function prepareLite(input: string, font: string): LiteHandle | null {
   }
   // prepare.ts asks for the font's space kerning only where the text has a space
   const kernable = t.includes(' ')
-  const widths: number[] = [], kinds: number[] = []
+  const widths: number[] = [], kinds: number[] = [], starts: number[] = []
   let maxText = 0
   for (let s = 0, i = 1; i <= t.length; i++) {
     if (i < t.length && !br[i]) continue
@@ -195,13 +198,14 @@ export function prepareLite(input: string, font: string): LiteHandle | null {
       if (__ENGINE__ === 'blink' && f.kerns && kernable && !edgesKernNothing(f, font, word)) return null
       // WebKit: getFollowingSpaceTail() is '' where a U+0020 follows, whether or not the scan put a break before it
       const w = __ENGINE__ === 'webkit' && t.charCodeAt(e) === 0x20 ? measure(f, font, word + ' ') - f.space : measure(f, font, word)
-      widths.push(w); kinds.push(1)
+      widths.push(w); kinds.push(1); starts.push(s)
       if (w > maxText) maxText = w
     }
-    if (e < i) { widths.push(f.space); kinds.push(0) }
+    if (e < i) { widths.push(f.space); kinds.push(0); starts.push(e) }
     s = i
   }
-  return { widths: Float64Array.from(widths), text: Uint8Array.from(kinds), maxText }
+  const handle = { widths: Float64Array.from(widths), text: Uint8Array.from(kinds), maxText }
+  return keepText ? { ...handle, source: t, starts: Uint32Array.from(starts) } : handle
 }
 
 // countPreparedLines() for a simple handle without trims, which is what an in-envelope text prepares to.
@@ -243,5 +247,11 @@ export function walkLite(h: LiteHandle, maxWidth: number, onLine: (width: number
   return count
 }
 
+// A line's text, for handles prepared with keepText: its segments as a slice, without the hanging space.
+export function lineTextLite(h: LiteHandle, start: number, end: number): string {
+  return h.source!.slice(h.starts![start]!, end < h.starts!.length ? h.starts![end]! : h.source!.length).trimEnd()
+}
+
 export function setLiteLocale(l?: string): void { locale = l; ctx = null }
-export function clearLite(): void { fonts.clear() }
+// A new context too: WebKit's keeps the face it resolved a font string to, so a font that loaded later is never seen.
+export function clearLite(): void { fonts.clear(); ctx = null }

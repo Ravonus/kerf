@@ -27,6 +27,10 @@ const features = {
   },
 }
 
+// Slots weft/surface imports dynamically: it has to build in an app that never ran `weft plugins sync` (research 33 §5).
+const CORE_SLOTS = new Set(['text.measure', 'surface.renderer'])
+const UNSYNCED = '\0weft:slot-unsynced/'
+
 /** `weft:slot/<id>` → the generated `<root>/.weft/slots/<id>.ts` (research 13 §2.6; `weft plugins sync` writes it). */
 function slots() {
   let root = process.cwd()
@@ -40,8 +44,17 @@ function slots() {
       handler(source) {
         const id = source.slice('weft:slot/'.length)
         const file = join(root, '.weft', 'slots', `${id}.ts`)
+        if (!existsSync(file) && CORE_SLOTS.has(id)) return `${UNSYNCED}${id}`
         if (!existsSync(file)) this.error(`P101 ${source}: ${file} does not exist. Run \`weft plugins sync\`, or add a plugin that provides \`${id}\` to weft.config.ts.`)
         return file
+      },
+    },
+    load: {
+      filter: { id: /^\0weft:slot-unsynced\// },
+      handler(id) {
+        const slot = id.slice(UNSYNCED.length)
+        const why = `P101 ${slot}: nothing provides this slot. Add a plugin that provides it to \`plugins\` in weft.config.ts, then run \`weft plugins sync\`.`
+        return `export const provider = null\nexport const load = () => { throw Object.assign(new Error(${JSON.stringify(why)}), { code: 'P101' }) }\n`
       },
     },
   }

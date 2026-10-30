@@ -36,6 +36,9 @@ test('weft:slot/<id> resolves to .weft/slots/<id>.ts, and a missing one is P101'
     expect(out[0].output[0].code).toContain('42')
     writeFileSync(join(root, 'main.js'), "import { load } from 'weft:slot/c.d'\nload()\n")
     await expect(run()).rejects.toThrow(/P101 weft:slot\/c\.d/)
+    // A slot weft/surface imports builds without `weft plugins sync`, and fails only if it's used (research 33 §5).
+    writeFileSync(join(root, 'main.js'), "import { load } from 'weft:slot/text.measure'\nconsole.log(load())\n")
+    await expect(run()).resolves.toBeTruthy()
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
