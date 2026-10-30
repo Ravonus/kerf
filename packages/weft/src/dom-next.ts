@@ -2,7 +2,7 @@
 // claiming versions of `tpl` and `child` from claim.ts (`htpl`, `hchild`), so client-only apps don't ship them.
 // Bindings here skip their first write while hydrating (the server wrote it).
 
-import { DEV, effect, untrack } from './index'
+import { DEV, effect } from './index'
 import { addEvent, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
 import { keys } from './keys'
 
@@ -65,36 +65,33 @@ export function component<P>(Comp: (props: P) => unknown, props: P, name?: strin
 }
 
 const PROPERTIES = new Set(['value', 'checked', 'selected', 'muted', 'indeterminate', 'textContent', 'innerHTML'])
-const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for' }
+const NAMES: Record<string, string> = { htmlFor: 'for' }
+const ON = /^on[A-Z]/
 
 /**
- * `<div {...rest} a={x}>`: `props` is the merged object (later wins). One binding reads every key and writes what
- * changed; `onX` handlers are listeners (swapped when the value changes), `ref` runs once. `children` isn't
- * applied here: the compiler gives it its own hole. Hydrating, the first run attaches handlers and refs only.
+ * `<div {...rest} a={x}>`: `props` reads the element's attributes as one plain object (`{ a: x, ...rest }`, later
+ * wins). One binding runs it and writes what changed; `onX` handlers are listeners (swapped when the value changes),
+ * `ref` runs once. `children` isn't applied here: the compiler gives it its own hole. Hydrating, the first run
+ * attaches handlers and refs only.
  */
-export function spread(el: Element, props: Record<string, any>) {
+export function spread(el: Element, props: () => Record<string, any>) {
   const listeners: Record<string, EventListener> = {}
   let refDone = false
   let latest: unknown
   let hydrating = keys.hydrating
-  effect(
-    () => {
-      const v: Record<string, any> = {}
-      for (const k of Reflect.ownKeys(props) as string[]) if (k !== 'children' && k !== 'key') v[k] = props[k]
-      return v
-    },
-    (v, p = {}) => {
-      for (const k in p) if (!(k in v)) write(k, undefined, p[k])
-      for (const k in v) if (v[k] !== p[k] && (!hydrating || k === 'ref' || /^on[A-Z]/.test(k))) write(k, v[k], p[k])
-      hydrating = false
-    },
-  )
+  effect(props, (v, p = {}) => {
+    delete v.children
+    delete v.key
+    for (const k in p) if (!(k in v)) write(k, undefined, p[k])
+    for (const k in v) if (v[k] !== p[k] && (!hydrating || k === 'ref' || ON.test(k))) write(k, v[k], p[k])
+    hydrating = false
+  })
 
   function write(key: string, value: any, prev: any) {
     if (key === 'ref') {
-      if (!refDone && value) untrack(() => ref(() => value, el))
+      if (!refDone && value) ref(() => value, el) // apply runs untracked
       refDone = true
-    } else if (/^on[A-Z]/.test(key)) {
+    } else if (ON.test(key)) {
       const name = key.slice(2).toLowerCase()
       if (listeners[name]) el.removeEventListener(name, listeners[name])
       if (typeof value === 'function') el.addEventListener(name, (listeners[name] = value))

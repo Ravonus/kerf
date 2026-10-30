@@ -136,7 +136,9 @@ the table is a compile error with a W-code. It doesn't silently fall back.
   - conditionals over JSX read their condition through a memo, so a branch rebuilds only when the condition
     flips;
   - element spreads go through one `mergeProps` object and the `spread` helper. Later attributes win, sources stay
-    live, and handlers become listeners that are swapped when they change;
+    live, and handlers become listeners that are swapped when they change (since [24 §7](24-warp-sizes.md), an
+    element with JSX children, or a void one, reads its attributes as one plain object instead:
+    `spread(el, () => ({ a: x, ...rest }))`);
   - `ref={el}` assigns the variable and `ref={fn}` (or an array) calls it;
   - `<select value>` is applied after its options are inserted;
   - an SVG element outside an `<svg>` gets its own template mode, and `xlink:`/`xml:` attributes keep their

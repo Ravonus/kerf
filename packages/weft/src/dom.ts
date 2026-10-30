@@ -2,7 +2,7 @@
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
-import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, runMounts, untrack, within, type Owner } from './index'
+import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, runMounts, untrack, view, within, type Owner } from './index'
 import { keys, step, under } from './keys'
 
 export { memo }
@@ -173,21 +173,8 @@ export function ref(get: () => any, el: Element) {
   else if (Array.isArray(r)) for (const f of r.flat(Infinity)) f && f(el)
 }
 
-export function mergeProps(...sources: any[]) {
-  // a source is an object or a getter for one (a spread of a prop), which may be undefined (`{...rest.attrs}`)
-  const at = (s: any) => Object(typeof s === 'function' ? s() : s)
-  return new Proxy({} as any, {
-    get(_, k) {
-      for (let i = sources.length - 1; i >= 0; i--) {
-        const s = at(sources[i])
-        if (k in s) return s[k]
-      }
-    },
-    has: (_, k) => sources.some(s => k in at(s)),
-    ownKeys: () => [...new Set(sources.flatMap(s => Reflect.ownKeys(at(s))))],
-    getOwnPropertyDescriptor: () => ({ configurable: true, enumerable: true }),
-  })
-}
+/** `<Comp {...a} b={x}>`: a live view of the sources (later wins). A source is an object or a getter for one. */
+export const mergeProps = (...sources: any[]) => view(sources)
 
 // ---- events ---------------------------------------------------------------------------------------------------
 
@@ -234,10 +221,10 @@ interface Row extends Owner { item: Box<any>; index: Box<number> | undefined; no
 const reader = (box: Box<any>) => () => box.value
 
 /**
- * Compiled from `xs.map(x => <Row key={x.id} … />)`. Rows are keyed by `by(item)` (or the item itself): a new
+ * Compiled from `xs.map(x => <Row key={x.id} … />)`. Rows are keyed by `by(item, index)` (or the item itself): a new
  * object under the same key updates the row in place through its live `item` accessor; it never rebuilds it.
  */
-export function For<T>(props: { each: readonly T[] | null | undefined; by?: (item: T) => unknown; children: (item: () => T, index: () => number) => any }) {
+export function For<T>(props: { each: readonly T[] | null | undefined; by?: (item: T, index: number) => unknown; children: (item: () => T, index: () => number) => any }) {
   const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
   let rows = new Map<unknown, Row>()
   let order: Row[] = []
@@ -256,7 +243,7 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
       const nextOrder: Row[] = []
       for (let i = 0; i < list.length; i++) {
         const item = list[i]
-        let key = props.by ? props.by(item) : item
+        let key = props.by ? props.by(item, i) : item
         if (next.has(key)) key = { duplicate: key }
         let row = rows.get(key)
         if (row) {

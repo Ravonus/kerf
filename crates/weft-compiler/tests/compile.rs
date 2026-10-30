@@ -55,9 +55,24 @@ fn defaults_keep_list_and_box_reads_live() {
 
 #[test]
 fn rest_props_stay_live() {
+    // on an element: a plain copy, read by the element's one spread binding (no view, no merged object)
     let (code, _) = run("export function A({ a, ...rest }) { return <div {...rest}>{a}</div> }");
-    assert!(code.contains(r#"import { omit as _$omit } from "weft""#), "{code}");
-    assert!(code.contains(r#"_$omit(props, ["a"])"#), "{code}");
+    assert!(code.contains(r#"import { restOf as _$restOf } from "weft""#), "{code}");
+    assert!(code.contains(r#"_$spread(_e1, () => ({ ..._$restOf(props, ["a"]) }))"#), "{code}");
+    assert!(!code.contains("_$omit") && !code.contains("_$mergeProps"), "{code}");
+    // passed on as a value: one live view
+    let (code, _) = run("export function A({ a, ...rest }) { return <B {...rest} a={a} /> }");
+    assert!(code.contains(r#"const _rest = _$omit(props, ["a"])"#), "{code}");
+    assert!(code.contains("_$mergeProps(_rest, "), "{code}");
+}
+
+#[test]
+fn element_spreads_read_their_attributes_in_order() {
+    let (code, _) = run("export function A(props: any) { return <a title=\"t\" {...props.attrs} href={props.href} {...props}>x</a> }");
+    assert!(code.contains(r#"_$spread(_e1, () => ({ title: "t", ...props.attrs, href: props.href, ...props }))"#), "{code}");
+    // without JSX children, the merged props' `children` is the element's hole
+    let (code, _) = run("export function A(props: any) { return <p {...props} /> }");
+    assert!(code.contains("_$mergeProps(props)") && code.contains("() => _p2.children"), "{code}");
 }
 
 #[test]
@@ -732,4 +747,53 @@ fn hmr_is_dev_dom_only() {
         assert!(!code.contains("weft/hmr") && !code.contains("_$keep"), "{code}");
     }
     assert!(!hot("const x = 1").contains("weft/hmr"), "no components, no registration");
+}
+
+// ---- warp findings (research 24 §6) ----------------------------------------------------------------------------
+
+#[test]
+fn an_import_after_jsx_compiles() {
+    for o in [Options::default(), Options { hydratable: true, ..Default::default() }, Options { generate: "ssr".into(), ..Default::default() }] {
+        let out = compile("// a — b\nexport const A = () => <p>— x</p>\nimport { state } from 'weft'\nexport const B = () => <i>{state(1).value}</i>", &o);
+        let code = out.code.expect("compiles");
+        assert!(code.contains(r#"import { state } from "weft""#), "{code}");
+        assert_eq!(code.matches("_$tpl(").count() + code.matches("_$htpl(").count(), if o.generate == "ssr" { 0 } else { 2 }, "{code}");
+    }
+}
+
+#[test]
+fn w001_not_on_a_rest_alias() {
+    // a rest parameter is a live view of the props: holding it is not a read
+    let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest; return <p {...x}>{a}</p> }");
+    assert!(d.is_empty(), "{d:?}");
+    let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest.title; return <p title={x}>{a}</p> }");
+    assert_eq!(codes(&d), ["W001"], "a member of rest is a prop read");
+}
+
+#[test]
+fn a_rest_parameter_is_one_view_however_often_it_is_used() {
+    let (code, _) = run("export function A({ a, ...rest }: any) { const f = () => rest.x; watch(() => rest, () => {}); return <B {...rest} y={rest.y}>{a}</B> }");
+    assert_eq!(code.matches("_$omit(").count(), 1, "{code}");
+}
+
+#[test]
+fn ref_to_a_const_or_an_import_calls_it() {
+    let src = "import { register } from './reg'\nconst local = (el: Element) => el\nexport function A() { let mine; return <div><p ref={register}>x</p><i ref={local}>y</i><b ref={mine}>z</b></div> }";
+    let (code, _) = run(src);
+    assert!(!code.contains("register = ") && !code.contains("local = _"), "no assignment to a const or an import: {code}");
+    assert!(code.contains("mine = _e"), "a `let` is still assigned: {code}");
+}
+
+#[test]
+fn ref_to_a_variable_beside_a_spread_assigns_it() {
+    let (code, _) = run("export function A(props: any) { let el: any; return <p ref={el} {...props}>x</p> }");
+    assert!(code.contains("el = _"), "{code}");
+    let (code, _) = run("import { register } from './reg'\nexport function A(props: any) { return <p ref={register} {...props}>x</p> }");
+    assert!(!code.contains("register = "), "{code}");
+}
+
+#[test]
+fn a_key_on_the_index_parameter_keys_by_position() {
+    let (code, _) = run("export function L({ xs }: any) { return <ul>{xs.map((x: any, i: number) => <li key={i}>{x.name}</li>)}</ul> }");
+    assert!(code.contains("by: (x, i) => i"), "{code}");
 }

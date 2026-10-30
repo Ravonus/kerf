@@ -26,8 +26,9 @@ pub enum Rewrite {
     Prop { props: String, path: Vec<String> },
     /// Destructured `children` → `_children()`, the component's memoised children (§3.3).
     Children { local: String, component: SpanKey },
-    /// `rest` → `omit(props, [...])`, a live view of the other props.
-    Rest { props: String, exclude: Vec<String> },
+    /// `rest` → `<local>`, one live view of the other props (`const <local> = omit(props, [...])`, declared at the top
+    /// of the component when something holds it); `rest.x` → `props.x`; `<el {...rest}>` → a copy, `restOf(props, [...])`.
+    Rest { props: String, exclude: Vec<String>, local: String, component: SpanKey },
     /// A keyed-list item or index: `p` → `p()`.
     Accessor,
     /// A destructured keyed-list item: `name` → `_item().name`.
@@ -57,7 +58,6 @@ pub struct Plan {
     pub children: HashMap<SpanKey, ChildrenPlan>,
     /// `props.children` reads (span) → the memo's local name and its component.
     pub children_reads: HashMap<SpanKey, (String, SpanKey)>,
-    pub needs_omit: bool,
     pub diagnostics: Vec<Diagnostic>,
     pub facts: Facts,
 }
@@ -315,6 +315,10 @@ impl<'s> Analyzer<'s> {
         &self.source[span.start as usize..span.end as usize]
     }
 
+    fn is_rest(&self, sym: SymbolId) -> bool {
+        matches!(self.plan.rewrites.get(&sym), Some(Rewrite::Rest { .. }))
+    }
+
     fn body_level(&self) -> Option<&CompCtx> {
         self.comps.last().filter(|c| c.fn_depth == 0 && c.jsx_depth == 0)
     }
@@ -514,8 +518,10 @@ impl<'s> Analyzer<'s> {
             && let BindingPattern::BindingIdentifier(id) = &rest.argument
             && let Some(sym) = binding_symbol(id)
         {
-            self.plan.rewrites.insert(sym, Rewrite::Rest { props: props.into(), exclude: seen });
-            self.plan.needs_omit = true;
+            let text = &self.source[ctx.span.start as usize..ctx.span.end as usize];
+            let local = if text.contains("_rest") { "_rest$" } else { "_rest" };
+            let rewrite = Rewrite::Rest { props: props.into(), exclude: seen, local: local.into(), component: key(ctx.span) };
+            self.plan.rewrites.insert(sym, rewrite);
             ctx.prop_syms.insert(sym);
         }
     }
@@ -1034,7 +1040,8 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
                 snap.other = true;
             }
         }
-        if self.body_level().is_some_and(|c| c.prop_syms.contains(&sym)) {
+        // A rest parameter is a live view: holding it reads nothing (`rest.x` is reported as a member read).
+        if self.body_level().is_some_and(|c| c.prop_syms.contains(&sym)) && !self.is_rest(sym) {
             self.report_body_read(it.span, it.name.as_str());
         }
     }
@@ -1053,6 +1060,14 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
     }
 
     fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
+        if !self.assign_target
+            && let Expression::Identifier(id) = &it.object
+            && let Some(sym) = symbol_of(self.scoping, id)
+            && self.is_rest(sym)
+            && self.body_level().is_some_and(|c| c.prop_syms.contains(&sym))
+        {
+            self.report_body_read(it.span, self.text(it.span));
+        }
         if it.property.name == "children"
             && !self.assign_target
             && let Expression::Identifier(id) = &it.object

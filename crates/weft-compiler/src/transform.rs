@@ -1,7 +1,8 @@
 //! Apply the plan to the AST: props become live reads (§3.3), JSX `.map` becomes a keyed list (§3.4).
 //!
 //! `({ a, b = a, ...rest }) => …`  →  `(props) => …` with `a` → `props.a`, `b` → `(props.b === undefined ? props.a : props.b)`,
-//! `rest` → `omit(props, ["a", "b"])`.
+//! `rest` → `_rest`, declared once as `const _rest = omit(props, ["a", "b"])`; `rest.x` → `props.x`;
+//! `<div {...rest}>` → `<div {...restOf(props, ["a", "b"])}>`, a plain copy read where the element's spread reads it.
 //! `({ children }) => …`  →  `const _children = memo(() => props.children)` and `children` → `_children()`.
 //! `{xs.map(x => <Row key={x.id} x={x} />)}`  →  `<For each={xs} by={(x) => x.id}>{x => <Row x={x()} />}</For>`.
 //!
@@ -31,12 +32,17 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
         raw: HashSet::new(),
         defaults: HashMap::new(),
         children_used: HashSet::new(),
+        rest_used: HashSet::new(),
         needs_memo: false,
+        needs_rest_of: false,
     };
     t.visit_program(program);
     let mut imports = Vec::new();
-    if plan.needs_omit {
+    if !t.rest_used.is_empty() {
         imports.push(("omit", "_$omit"));
+    }
+    if t.needs_rest_of {
+        imports.push(("restOf", "_$restOf"));
     }
     if t.needs_memo {
         imports.push(("memo", "_$weftMemo"));
@@ -57,7 +63,10 @@ struct Transformer<'a, 'p> {
     defaults: HashMap<SymbolId, Expression<'a>>,
     /// Components whose memoised children are read.
     children_used: HashSet<SpanKey>,
+    /// Components whose rest parameter is held as a value (its `omit` view is declared).
+    rest_used: HashSet<SpanKey>,
     needs_memo: bool,
+    needs_rest_of: bool,
 }
 
 /// Node constructors.
@@ -84,8 +93,8 @@ impl<'a, 'p> Transformer<'a, 'p> {
         Expression::new_string_literal(SPAN, self.str(value), None, &self.ast)
     }
 
-    fn arrow(&self, param: Option<BindingPattern<'a>>, body: Expression<'a>) -> Expression<'a> {
-        let items = param.map(|pattern| {
+    fn arrow(&self, params: impl IntoIterator<Item = BindingPattern<'a>>, body: Expression<'a>) -> Expression<'a> {
+        let items = params.into_iter().map(|pattern| {
             FormalParameter::new(SPAN, ArenaVec::new_in(&self.ast), pattern, None, None, false, None, false, false, &self.ast)
         });
         let params = FormalParameters::boxed(
@@ -158,15 +167,27 @@ impl<'a, 'p> Transformer<'a, 'p> {
                 self.children_used.insert(*component);
                 self.call(self.ident(local), [])
             }
-            Rewrite::Rest { props, exclude } => {
-                let keys = exclude.iter().map(|k| ArrayExpressionElement::from(self.string(k)));
-                let keys = Expression::new_array_expression(SPAN, ArenaVec::from_iter_in(keys, &self.ast), &self.ast);
-                self.call(self.ident("_$omit"), [self.ident(props), keys])
+            Rewrite::Rest { local, component, .. } => {
+                self.rest_used.insert(*component);
+                self.ident(local)
             }
             // The identifier itself becomes the callee, so it keeps its span and reference.
             Rewrite::Accessor => self.call(original, []),
             Rewrite::AccessorMember { key } => self.member(self.call(self.ident("_item"), []), key),
         }
+    }
+
+    /// `<helper>(props, ["a", "b"])` for a rest parameter.
+    fn rest_call(&self, helper: &str, props: &str, exclude: &[String]) -> Expression<'a> {
+        let keys = exclude.iter().map(|k| ArrayExpressionElement::from(self.string(k)));
+        let keys = Expression::new_array_expression(SPAN, ArenaVec::from_iter_in(keys, &self.ast), &self.ast);
+        self.call(self.ident(helper), [self.ident(props), keys])
+    }
+
+    /// The rest parameter `e` names, if it is one.
+    fn rest_of(&self, e: &Expression<'a>) -> Option<&'p Rewrite> {
+        let Expression::Identifier(id) = e else { return None };
+        self.rewrite_of(id).map(|(_, r)| r).filter(|r| matches!(r, Rewrite::Rest { .. }))
     }
 
     fn is_list(&self, e: &Expression<'a>) -> bool {
@@ -180,8 +201,12 @@ impl<'a, 'p> Transformer<'a, 'p> {
         let mut each = member.object.take_in(&self.ast);
         self.visit_expression(&mut each);
         let mut row = call.arguments[0].to_expression_mut().take_in(&self.ast);
-        // The `by` function reuses the row's item pattern, taken before the row's own parameter is rewritten.
-        let param = row_param(&row).map(|p| p.clone_in(self.allocator)).unwrap_or_else(|| self.binding("_"));
+        // The `by` function reuses the row's item and index patterns, taken before the row's own parameters are
+        // rewritten (`key={i}` keys by position).
+        let mut params: Vec<_> = row_params(&row).iter().take(2).map(|p| p.pattern.clone_in(self.allocator)).collect();
+        if params.is_empty() {
+            params.push(self.binding("_"));
+        }
         let mut by = take_keys(self, &mut row, &plan.key_attrs);
         if let Some(by) = by.as_mut() {
             self.raw.extend(plan.item_syms.iter().copied());
@@ -193,7 +218,7 @@ impl<'a, 'p> Transformer<'a, 'p> {
         self.visit_expression(&mut row);
         let mut attrs = vec![self.jsx_attr("each", each)];
         if let Some(by) = by {
-            attrs.push(self.jsx_attr("by", self.arrow(Some(param), by)));
+            attrs.push(self.jsx_attr("by", self.arrow(params, by)));
         }
         let name = || JSXElementName::new_identifier_reference(SPAN, "For", &self.ast);
         let opening = JSXOpeningElement::boxed(SPAN, name(), None, ArenaVec::from_iter_in(attrs, &self.ast), &self.ast);
@@ -238,26 +263,40 @@ impl<'a, 'p> Transformer<'a, 'p> {
         }
     }
 
-    /// After walking a component: declare its memoised children at the top of the body, if they are read.
+    /// Whether the component declares anything at the top of its body.
+    fn declares(&self, span: SpanKey) -> bool {
+        self.children_used.contains(&span) || self.rest_used.contains(&span)
+    }
+
+    /// After walking a component: declare its memoised children and its rest view at the top of the body, if used.
     fn exit_component(&mut self, span: SpanKey, body: &mut FunctionBody<'a>) {
-        let Some(children) = self.plan.children.get(&span) else { return };
-        if !self.children_used.contains(&span) {
-            return;
+        if self.rest_used.contains(&span) {
+            let rest = self.plan.rewrites.values().find_map(|r| match r {
+                Rewrite::Rest { props, exclude, local, component } if *component == span => Some((props, exclude, local)),
+                _ => None,
+            });
+            if let Some((props, exclude, local)) = rest {
+                let view = self.rest_call("_$omit", props, exclude);
+                body.statements.insert(0, self.const_decl(local, view));
+            }
         }
-        let read = self.arrow(None, self.member(self.ident(&children.props), "children"));
-        let memo = self.call(self.ident("_$weftMemo"), [read]);
-        body.statements.insert(0, self.const_decl(&children.local, memo));
-        self.needs_memo = true;
+        if let Some(children) = self.plan.children.get(&span)
+            && self.children_used.contains(&span)
+        {
+            let read = self.arrow([], self.member(self.ident(&children.props), "children"));
+            let memo = self.call(self.ident("_$weftMemo"), [read]);
+            body.statements.insert(0, self.const_decl(&children.local, memo));
+            self.needs_memo = true;
+        }
     }
 }
 
-fn row_param<'b, 'a>(row: &'b Expression<'a>) -> Option<&'b BindingPattern<'a>> {
-    let params = match row {
-        Expression::ArrowFunctionExpression(f) => &f.params,
-        Expression::FunctionExpression(f) => &f.params,
-        _ => return None,
-    };
-    params.items.first().map(|p| &p.pattern)
+fn row_params<'b, 'a>(row: &'b Expression<'a>) -> &'b [FormalParameter<'a>] {
+    match row {
+        Expression::ArrowFunctionExpression(f) => &f.params.items,
+        Expression::FunctionExpression(f) => &f.params.items,
+        _ => &[],
+    }
 }
 
 /// Remove the `key` attributes from the row's roots and return the first one's expression.
@@ -340,6 +379,14 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             *it = self.rewritten(sym, rewrite, original);
             return;
         }
+        // `rest.x` is `props.x` (or nothing, for a key the pattern took).
+        if let Expression::StaticMemberExpression(m) = it
+            && let Some(Rewrite::Rest { props, exclude, .. }) = self.rest_of(&m.object)
+        {
+            let name = m.property.name.as_str();
+            *it = if exclude.iter().any(|k| k == name) { self.ident("undefined") } else { self.member(self.ident(props), name) };
+            return;
+        }
         if let Expression::StaticMemberExpression(m) = it
             && let Some((local, component)) = self.plan.children_reads.get(&key(m.span))
         {
@@ -352,6 +399,21 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             return;
         }
         walk_mut::walk_expression(self, it);
+    }
+
+    fn visit_jsx_opening_element(&mut self, it: &mut JSXOpeningElement<'a>) {
+        // `<div {...rest}>`: the element's spread reads every attribute anyway, so it gets a plain copy, not a view.
+        if matches!(it.name, JSXElementName::Identifier(_) | JSXElementName::NamespacedName(_)) {
+            for attr in it.attributes.iter_mut() {
+                if let JSXAttributeItem::SpreadAttribute(s) = attr
+                    && let Some(Rewrite::Rest { props, exclude, .. }) = self.rest_of(&s.argument)
+                {
+                    s.argument = self.rest_call("_$restOf", props, exclude);
+                    self.needs_rest_of = true;
+                }
+            }
+        }
+        walk_mut::walk_jsx_opening_element(self, it);
     }
 
     fn visit_jsx_child(&mut self, it: &mut JSXChild<'a>) {
@@ -391,7 +453,7 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
         let span = key(it.span);
         self.enter_params(&mut it.params, span);
         walk_mut::walk_arrow_function_expression(self, it);
-        if self.plan.children.contains_key(&span) && self.children_used.contains(&span) {
+        if self.declares(span) {
             // `({ children }) => <div>{children}</div>`: the memo needs a statement, so the body becomes a block.
             if let Some(e) = it.body.as_expression_mut() {
                 let e = e.take_in(&self.ast);

@@ -116,12 +116,13 @@ function create(doc: Document): SweepMachine {
   }
   const idle = (h: Element) => { if (data(h).phase === 'out') data(h).phase = 'idle' }
 
-  // one attribute write per change
+  // one attribute write per change. Only going back in cancels the backstop: a host already on its way out (the
+  // observer re-steps it after pin(el, false)) keeps its timer.
   function step(h: Element) {
     if (!live(h)) return
-    clearTimeout(timers.get(h))
     const d = data(h)
     if (active(h)) {
+      clearTimeout(timers.get(h))
       if (d.phase === 'in') return
       if (d.phase === 'out') { d.phase = 'idle'; void (h as HTMLElement).offsetWidth } // restart from the left
       d.phase = 'in'

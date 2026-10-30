@@ -17,6 +17,22 @@ const hosts = () =>
     .map(h => `${h.id || h.tagName}:${h.dataset.phase ?? '-'}${h.hasAttribute('data-confirm') ? '+confirm' : ''}${h.hasAttribute('data-touch-effect') ? '+touch' : ''}${h.hasAttribute('data-pin') ? '+pin' : ''}`)
     .join(' ')
 
+// research 24 §6.5: the observer re-steps an unpinned host, which used to clear the backstop timer it had just set,
+// so a host whose part never fires transitionend stayed "out"
+test('unpinning a host falls back to the backstop timer', async () => {
+  document.head.innerHTML = `<style>[data-part="sweep"] { transition-property: clip-path; transition-duration: 300ms }</style>`
+  document.body.innerHTML = `<button id="b" data-sweep data-phase="idle"><span data-part="sweep"></span>B</button>`
+  const m = installSweep()
+  m.pin($('#b'), true)
+  await settle()
+  expect($('#b').dataset.phase).toBe('in')
+  m.pin($('#b'), false)
+  await settle()
+  expect($('#b').dataset.phase).toBe('out')
+  await settle(451)
+  expect($('#b').dataset.phase).toBe('idle')
+})
+
 test('sweep machine: a scripted session', async () => {
   document.head.innerHTML = `<style>
     [data-part="sweep"], [data-part="sweep-corners"], [data-part="rail-hover"] { transition-property: clip-path; transition-duration: 300ms }

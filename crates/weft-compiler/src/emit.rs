@@ -11,7 +11,7 @@
 //! | dynamic attributes of one el  | one `_$bind(() => [a, b], (v, p) => …)` (`<select>`: after children) |
 //! | `onX={fn}`                    | `_$on(el, "x", fn, delegated)`                                       |
 //! | `ref={el}` / `ref={fn}`       | assigns the variable / calls the function                            |
-//! | `{...rest}` on an element     | `_$spread(el, _$mergeProps(() => rest, { … }))`; no JSX children: a hole for its `children` |
+//! | `{...rest}` on an element     | `_$spread(el, () => ({ a: x, ...rest }))`; no JSX children: a `_$mergeProps` object whose `children` is a hole |
 //! | `{expr}` child                | `_$child(parent, () => expr, marker?)` (`<!>` marks mixed content)   |
 //! | `{c ? <A/> : <B/>}`, `&&`     | a `_$child` whose condition is read through `_$memo`                 |
 //! | `<Comp a={x} />`              | `_$component(Comp, { get a() { return x; } })`                       |
@@ -146,6 +146,8 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
         return Err(Error { message: format!("weft back end: the printed pre-pass output didn't parse: {d}"), offset: 0 });
     }
     let program = parsed.program;
+    // Resolves `ref={x}`: a `let` is assigned the element, a const or an import is called with it.
+    let scoping = code.contains("ref").then(|| oxc_semantic::SemanticBuilder::new().build(&program).semantic.into_scoping());
     let module = o.module;
     let mut order = JsxOrder::default();
     order.visit_program(&program);
@@ -158,6 +160,7 @@ pub fn emit(code: &str, o: EmitOptions) -> Result<Emitted, Error> {
     let mut e = Emitter {
         text: code, templates: Vec::new(), helpers: BTreeSet::new(), delegated: BTreeSet::new(), uses_for: false, n: 0, error: None,
         ssr: o.ssr, hydratable: o.hydratable && !o.ssr, dev: o.dev, display: o.display.to_string(), origin, explained: Vec::new(), keys: Vec::new(),
+        scoping,
     };
     let mut top = Outermost::default();
     top.visit_program(&program);
@@ -209,12 +212,13 @@ fn trim_marked_newlines(body: &str) -> String {
     format!("\u{E000}{}\u{E003}{trimmed}", at + rest.len() - trimmed.len())
 }
 
-/// Byte offset just past the last top-level import (0 if none).
+/// Byte offset just past the module's leading imports (0 if none). An import after other code stays where it is in
+/// the body (imports are hoisted anyway), so JSX before it is still lowered.
 fn imports_end(program: &Program) -> usize {
-    program.body.iter().filter_map(|s| match s {
+    program.body.iter().map_while(|s| match s {
         Statement::ImportDeclaration(i) => Some(i.span.end as usize),
         _ => None,
-    }).max().unwrap_or(0)
+    }).last().unwrap_or(0)
 }
 
 fn imports_binding(program: &Program, name: &str) -> bool {
@@ -244,6 +248,7 @@ struct Emitter<'t> {
     /// The keys of the keyed lists being emitted (`row().id` for `by={(row) => row.id}`), innermost last. A row's
     /// key can't change while the row lives, so a hole or attribute that is exactly its key is written once.
     keys: Vec<String>,
+    scoping: Option<oxc_semantic::Scoping>,
 }
 
 /// One template being built: its HTML, the node references it needs, and the operations after cloning.
@@ -276,6 +281,22 @@ impl<'t> Emitter<'t> {
     fn helper(&mut self, name: &'static str) -> String {
         self.helpers.insert(name);
         format!("_${name}")
+    }
+
+    /// `ref={x}` may assign `x`: a member, or a name that isn't a const, an import, a function or a class.
+    fn assignable(&self, e: &Expression<'_>) -> bool {
+        match e.get_inner_expression() {
+            Expression::StaticMemberExpression(_) | Expression::ComputedMemberExpression(_) => true,
+            Expression::Identifier(id) => {
+                let Some(scoping) = &self.scoping else { return true };
+                let sym = id.reference_id.get().and_then(|r| scoping.get_reference(r).symbol_id());
+                sym.is_none_or(|s| {
+                    let f = scoping.symbol_flags(s);
+                    !(f.is_const_variable() || f.is_import() || f.is_function() || f.is_class())
+                })
+            }
+            _ => false,
+        }
     }
 
     fn fail(&mut self, message: impl Into<String>, at: Span) {
@@ -459,20 +480,35 @@ impl<'t> Emitter<'t> {
         }
         let has_kids = !children(&el.children, self.text).is_empty();
 
-        // `<div {...rest} a={x}>`: every attribute goes through one merged props object (later wins, as for
-        // components), applied by `spread`. JSX children stay in the template. Without them, the props' `children`
-        // is the element's one hole, so the server renders it and hydration adopts it like any other.
+        // `<div {...rest} a={x}>`: every attribute goes through one `spread` (later wins, as for components), which
+        // reads them all as one plain object, `{ a: x, ...rest }`. JSX children stay in the template. Without them,
+        // the merged props' `children` is the element's one hole, so the server renders it and hydration adopts it
+        // like any other.
         if el.opening_element.attributes.iter().any(|a| matches!(a, JSXAttributeItem::SpreadAttribute(_))) {
-            let props = self.props(&el.opening_element.attributes, Vec::new());
-            let spread = self.helper("spread");
             let void = VOID.contains(&tag.as_str());
+            if !self.ssr
+                && (has_kids || void)
+                && let Some(object) = self.spread_object(&el.opening_element.attributes)
+            {
+                let el_var = self.node(b, &path);
+                let spread = self.helper("spread");
+                b.ops.push(format!("{spread}({el_var}, () => ({object}));"));
+                Self::put(b, ">");
+                if !void {
+                    self.kids(el, b, &path);
+                    Self::put(b, &format!("</{tag}>"));
+                }
+                return;
+            }
+            let props = self.props(&el.opening_element.attributes, Vec::new(), true);
+            let spread = self.helper("spread");
             if self.ssr {
                 Self::server(b, Piece::Code(format!("{spread}({props})")));
             } else {
                 let el_var = self.node(b, &path);
                 self.n += 1;
                 let p = format!("_p{}", self.n);
-                b.ops.push(format!("const {p} = {props}; {spread}({el_var}, {p});"));
+                b.ops.push(format!("const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"));
                 if !has_kids && !void {
                     Self::put(b, ">");
                     self.hole_code(b, &path, format!("() => {p}.children"), false, None);
@@ -538,11 +574,7 @@ impl<'t> Emitter<'t> {
                 let el_var = self.node(b, &path);
                 let r = self.expr(expr);
                 let call = self.helper("ref");
-                let assignable = matches!(
-                    expr.get_inner_expression(),
-                    Expression::Identifier(_) | Expression::StaticMemberExpression(_) | Expression::ComputedMemberExpression(_)
-                );
-                b.ops.push(if assignable {
+                b.ops.push(if self.assignable(expr) {
                     format!("{{ const _r = {r}; typeof _r === \"function\" || Array.isArray(_r) ? {call}(() => _r, {el_var}) : ({r} = {el_var}); }}")
                 } else {
                     format!("{call}(() => {r}, {el_var});")
@@ -873,7 +905,7 @@ impl<'t> Emitter<'t> {
         if keyed {
             self.keys.pop();
         }
-        let props = self.props(&el.opening_element.attributes, fields);
+        let props = self.props(&el.opening_element.attributes, fields, false);
         let component = self.helper("component");
         // Dev builds name the component, so a <Boundary> can say where an error was thrown.
         match self.origin.get(&el.span.start) {
@@ -884,9 +916,51 @@ impl<'t> Emitter<'t> {
         }
     }
 
+    /// An element's attributes as one object literal, read in order on every run of its `spread` (later wins):
+    /// `{ a: x, ...rest, b: y }`. `ref={el}` on a variable is a function that assigns it. `None` when an attribute's
+    /// value is JSX, which must not be rebuilt on every run.
+    fn spread_object(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>) -> Option<String> {
+        let mut fields: Vec<String> = Vec::new();
+        for item in attrs {
+            match item {
+                JSXAttributeItem::SpreadAttribute(s) => {
+                    // a spread element takes any assignment expression, so `...a ?? b` needs no parentheses
+                    fields.push(format!("...{}", self.expr(&s.argument)));
+                }
+                JSXAttributeItem::Attribute(a) => {
+                    let key = match &a.name {
+                        JSXAttributeName::Identifier(id) => id.name.to_string(),
+                        JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
+                    };
+                    if key == "key" {
+                        continue;
+                    }
+                    let k = prop_key(&key);
+                    fields.push(match &a.value {
+                        None => format!("{k}: true"),
+                        Some(JSXAttributeValue::StringLiteral(s)) => format!("{k}: {}", serde_json::to_string(&decode_entities(s.value.as_str())).unwrap()),
+                        Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
+                            None => continue,
+                            Some(e) if key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
+                            Some(e) => format!("{k}: {}", self.expr(e)),
+                        },
+                        Some(JSXAttributeValue::Element(_) | JSXAttributeValue::Fragment(_)) => return None,
+                    });
+                }
+            }
+        }
+        Some(format!("{{ {} }}", fields.join(", ")))
+    }
+
+    /// `ref={el}` beside a spread: a function that calls `el` with the element, or assigns it to `el`.
+    fn assigner(&mut self, e: &Expression<'_>) -> String {
+        let (r, call) = (self.expr(e), self.helper("ref"));
+        format!("(_e) => {{ const _r = {r}; typeof _r === \"function\" || Array.isArray(_r) ? {call}(() => _r, _e) : ({r} = _e); }}")
+    }
+
     /// Props from JSX attributes, in order: literals and plain values as fields, the rest as getters, spreads as
-    /// `mergeProps` sources (later wins). `extra` fields go last.
-    fn props(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>, extra: Vec<String>) -> String {
+    /// `mergeProps` sources (later wins). `extra` fields go last. An `element`'s `ref={el}` may assign `el`.
+    fn props(&mut self, attrs: &oxc_allocator::Vec<'_, JSXAttributeItem<'_>>, extra: Vec<String>, element: bool) -> String {
         let mut sources: Vec<String> = Vec::new();
         let mut fields: Vec<String> = Vec::new();
         for item in attrs {
@@ -914,6 +988,7 @@ impl<'t> Emitter<'t> {
                         Some(JSXAttributeValue::StringLiteral(s)) => format!("{k}: {}", serde_json::to_string(&decode_entities(s.value.as_str())).unwrap()),
                         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                             None => continue,
+                            Some(e) if element && key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
                             Some(e) if passes_as_value(e) => format!("{k}: {}", self.expr(e)),
                             Some(e) => format!("get {k}() {{ return {}; }}", self.expr(e)),
                         },

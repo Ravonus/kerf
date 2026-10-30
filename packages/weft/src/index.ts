@@ -467,15 +467,35 @@ export function context<T>(fallback?: T) {
   }
 }
 
-/** A live view of `props` without `keys` (`({ a, ...rest }) =>`, §3.3). */
-export function omit<T extends object>(props: T, keys: string[]): any {
-  return new Proxy(props, {
-    get: (t, k) => (keys.includes(k as string) ? undefined : (t as any)[k]),
-    has: (t, k) => !keys.includes(k as string) && k in t,
-    ownKeys: t => Reflect.ownKeys(t).filter(k => !keys.includes(k as string)),
-    getOwnPropertyDescriptor: (t, k) =>
-      keys.includes(k as string) ? undefined : { configurable: true, enumerable: true, get: () => (t as any)[k] },
+/**
+ * A live view of `sources` merged (later wins), without the `skip` keys. A source is an object, or a getter for one
+ * (a spread of a prop), which may be undefined (`{...rest.attrs}`). `mergeProps` and `omit` are both views.
+ */
+export function view(sources: any[], skip: string[] = []): any {
+  const at = (s: any) => Object(typeof s === 'function' ? s() : s)
+  const kept = (k: any) => !skip.includes(k)
+  return new Proxy({}, {
+    get(_, k) {
+      if (kept(k))
+        for (let i = sources.length - 1; i >= 0; i--) {
+          const s = at(sources[i])
+          if (k in s) return s[k]
+        }
+    },
+    has: (_, k) => kept(k) && sources.some(s => k in at(s)),
+    ownKeys: () => [...new Set(sources.flatMap(s => Reflect.ownKeys(at(s))))].filter(kept),
+    getOwnPropertyDescriptor: (_, k) => (kept(k) ? { configurable: true, enumerable: true } : undefined),
   })
+}
+
+/** A live view of `props` without `keys` (`({ a, ...rest }) =>`, §3.3). */
+export const omit = (props: object, keys: string[]): any => view([props], keys)
+
+/** `<div {...rest}>`: a plain copy of `props` without `keys`, read where the element's spread reads its attributes. */
+export function restOf(props: any, keys: string[]) {
+  const out: any = {}
+  for (const k in props) if (!keys.includes(k)) out[k] = props[k]
+  return out
 }
 
 export { Boundary, resource, type Resource } from './async'
