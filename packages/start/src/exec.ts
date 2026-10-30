@@ -9,7 +9,8 @@
 //                  bumps the versions of the tags it invalidates).
 
 import { shapeTree } from './shape.mjs'
-import { enter, fns, isRedirect, keyOf, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
+import type { MediaAsset } from 'weft/media'
+import { enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 
 export interface ScopeEntry {
   id: string
@@ -34,11 +35,23 @@ export interface Scope {
   tags?: Set<string>
   /** Dev: the tables this function's statements read and wrote (a frame per `run`; research 28 §2). */
   touched?: Touched
+  /** A no-JS form POST that failed: `<Form>` renders it into the page (research 29 §5). */
+  form?: FormFailure
+  /** The render read a live query or a stream: the page carries the realtime cursor (research 30 §1). */
+  live?: boolean
   ctx(): Promise<Context>
   options: ScopeOptions
 }
 
 export interface Touched { read: Set<string>; write: Set<string> }
+
+export interface FormFailure { id: string; key?: string; values: Record<string, unknown>; errors: Record<string, string>; message?: string; status: number }
+
+/** The `media.server@1` provider (`@weft/plugin-media/server`, research 29 §6). */
+export interface MediaServer {
+  ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
+  serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{ bytes: Uint8Array; type: string; width: number; format: string; negotiated: boolean } | null>
+}
 
 export interface ScopeOptions {
   /** The app's context (`src/context.server.ts`). */
@@ -48,6 +61,7 @@ export interface ScopeOptions {
   handlers?: Map<string, (input: any, ctx: any) => unknown>
   onDiagnostic?: (d: { code: string; severity: string; message: string }) => void
   dev?: boolean
+  media?: () => Promise<MediaServer> | undefined
 }
 
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
@@ -55,9 +69,23 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
-    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers } }) as Context, e => { throw dbError(e) })),
+    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers }, media: mediaApi(options) }) as Context, e => { throw dbError(e) })),
   }
 }
+
+/** `ctx.media`. A refusal is the user's answer, with its own status; `<Form>` shows it. */
+const mediaApi = (options: ScopeOptions): Context['media'] => ({
+  async ingest(file, { name } = {}) {
+    const server = await options.media?.()
+    if (!server) throw new StartError('M017', '`ctx.media` needs a `media.server` provider', 'add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts', { status: 500 })
+    const bytes = file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
+    try {
+      return await server.ingest(bytes, { name: name ?? (file as File).name })
+    } catch (e: any) {
+      throw e?.code ? new StartError(e.code, e.message, undefined, { status: 422 }) : e
+    }
+  },
+})
 
 /** A child scope for one loader: the same entries, its own `tags` collector. */
 export const frame = (scope: Scope): Scope => Object.create(scope, { tags: { value: new Set<string>() } })
@@ -138,7 +166,10 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const touched = tracker(scope)
     const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx, touched)
     if (scope.options.dev) await checked(v, fn, scope)
-    if (touched) missedTags(fn, 'read', touched.read, entry.tags, scope)
+    if (touched) {
+      missedTags(fn, 'read', touched.read, entry.tags, scope)
+      reads.set(fn.$id, touched.read)
+    }
     if (cached) await store.set(stored, { v, tags: entry.tags, versions, expires: Date.now() + seconds(cached.life) * 1000 })
     return v
   })().then(
@@ -176,7 +207,7 @@ async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?
 }
 
 /** `auth: 'user'`: A003 when `ctx` has no `user` at all, A002 when no one is signed in. */
-function guard(fn: Fn, ctx: Context) {
+export function guard(fn: Fn, ctx: Context) {
   if (fn.def.auth !== 'user') return
   if (!('user' in ctx)) throw new StartError('A003', `\`${fn.$id}\` has \`auth: 'user'\`, but \`ctx\` has no \`user\``, 'spread `session(auth, request)` into what `src/context.server.ts` returns', { status: 500 })
   if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
@@ -204,6 +235,21 @@ function missedTags(fn: Fn, verb: 'read' | 'write', tables: Set<string>, tags: r
 }
 const warned = new Set<string>()
 
+/** Dev: the tables each query last read, and the tags of the queries read with `.live()` (the hub fills it). */
+const reads = new Map<string, Set<string>>()
+export const liveQueries = new Map<string, string[]>()
+
+/** R003 (dev, once per pair): this mutation wrote what a live query reads, and pokes none of its tags. */
+function missedPokes(fn: Fn, write: Set<string>, tags: string[], scope: Scope) {
+  for (const [id, own] of liveQueries) {
+    const table = [...(reads.get(id) ?? [])].find(t => write.has(t))
+    const key = `${fn.$id}>${id}`
+    if (!table || warned.has(key) || own.some(t => tags.includes(t))) continue
+    warned.add(key)
+    scope.options.onDiagnostic?.({ code: 'R003', severity: 'warning', message: `\`${fn.$id}\` writes table \`${table}\`, which live query \`${id}\` reads, but their tags don't intersect (${JSON.stringify(tags)} and ${JSON.stringify(own)}): open pages won't update. Add one of the query's tags to \`invalidates\`` })
+  }
+}
+
 /** A cached query's ctx: no request, response or user. Its value is shared by every user (Q006). With `scope: 'user'`, one value per user: `ctx.user` is allowed. */
 function shared(ctx: Context, fn: Fn): Context {
   const own = fn.def.cache?.scope === 'user'
@@ -220,18 +266,21 @@ function shared(ctx: Context, fn: Fn): Context {
 // ---- mutations --------------------------------------------------------------------------------------------------
 
 /** Run a mutation; then refresh the listed queries whose tags it invalidated (single-flight, research 27 §3). */
-export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh: [string, unknown][]): Promise<Answer> {
+export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh: [string, unknown][], form?: boolean): Promise<Answer> {
   if (fn.kind !== 'mutation') throw new StartError('Q009', `\`${fn.$id}\` is a query, not a mutation`, `\`${fn.$id.replace(/\..*$/, '')}.fetch(input)\``)
   if (scope.request.method === 'GET' || scope.request.method === 'HEAD')
     throw new StartError('Q004', `mutation \`${fn.$id}\` called while the server handles a GET (\`load\`, a page render or a query)`, 'call mutations from handlers or other mutations; GET handlers must be side-effect free', { status: 500 })
-  const valid = await validate(fn, input)
+  const valid = await (form ? formInput(fn, input) : validate(fn, input))
   const touched = tracker(scope)
   const v = await call(scope, fn, valid, await scope.ctx(), touched)
   if (scope.options.dev) await checked(v, fn, scope)
   const declared = typeof fn.def.invalidates === 'function' ? fn.def.invalidates(valid, v) : fn.def.invalidates ?? []
   await invalidate(scope, [...declared])
   const tags = [...scope.invalidated]
-  if (touched) missedTags(fn, 'write', touched.write, tags, scope)
+  if (touched) {
+    missedTags(fn, 'write', touched.write, tags, scope)
+    missedPokes(fn, touched.write, tags, scope)
+  }
   const c: Wire[] = []
   for (const [id, inp] of refresh) {
     const q = fns.get(id)
@@ -258,18 +307,72 @@ export async function invalidate(scope: Scope, tags: string[]) {
   for (const t of tags) scope.invalidated.add(t)
   for (const [k, e] of scope.entries) if (e.tags.some(t => tags.includes(t))) scope.entries.delete(k)
   await storeOf(scope).bump(tags)
+  // After the bump, and after `run`: a refetch reads committed data and misses the shared cache (research 30 §5).
+  // A bus that's down costs open pages a refresh, not this request its result.
+  await runtime.poke?.(tags, scope.request.headers.get('x-weft-conn')).catch(e => scope.options.onDiagnostic?.({ code: 'E_RT', severity: 'error', message: `poke of ${tags.join(', ')} failed: ${e instanceof Error ? e.message : e}` }))
 }
 
 // ---- validation and checks ------------------------------------------------------------------------------------
 
-async function validate(fn: Fn, input: unknown): Promise<unknown> {
+export async function validate(fn: Fn, input: unknown): Promise<unknown> {
   const schema = fn.def.input
   if (!schema) return input
   const r = await schema['~standard'].validate(input)
   if (!r.issues) return r.value
-  const issues = r.issues.map(i => ({ message: i.message, path: i.path?.map(p => (typeof p === 'object' ? p.key : p)) })) as SchemaIssue[]
+  throw rejected(fn, r.issues)
+}
+
+const plainPath = (i: SchemaIssue) => (i.path ?? []).map(p => (typeof p === 'object' ? p.key : p))
+
+function rejected(fn: Fn, list: readonly SchemaIssue[]) {
+  const issues = list.map(i => ({ message: i.message, path: i.path && plainPath(i) })) as SchemaIssue[]
   const where = issues.map(i => `${i.path?.length ? i.path.join('.') + ': ' : ''}${i.message}`).join('; ')
-  throw new StartError('Q002', `\`${fn.$id}\` rejected its input: ${where}`, 'pass what the schema accepts', { status: 400, issues })
+  return new StartError('Q002', `\`${fn.$id}\` rejected its input: ${where}`, 'pass what the schema accepts', { status: 400, issues })
+}
+
+/** A form's string as the type it may stand for (research 29 §5): the schema says whether it was wrong. */
+function reading(s: string): unknown {
+  if (s === '') return undefined
+  if (s === 'on' || s === 'true') return true
+  if (s === 'false') return false
+  return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s
+}
+
+/**
+ * A form sends strings and a schema may want numbers or booleans, and Standard Schema can't say which: each issue
+ * on a string tries its obvious reading, then the input is validated again. Fields a reading fixed report nothing; the
+ * rest report what the schema says of what was typed (an empty field: its "required", not "expected a string").
+ */
+async function formInput(fn: Fn, input: any): Promise<unknown> {
+  const schema = fn.def.input
+  if (!schema || !input || typeof input !== 'object') return validate(fn, input)
+  const value = { ...input }
+  let left: readonly SchemaIssue[] = []
+  for (let i = 0; i < 3; i++) {
+    const r = await schema['~standard'].validate(value)
+    if (!r.issues) return r.value
+    left = r.issues
+    let changed = false
+    for (const issue of r.issues) {
+      const path = plainPath(issue)
+      if (!path.length) continue
+      let at: any = value
+      for (const p of path.slice(0, -1)) {
+        if (!at?.[p] || typeof at[p] !== 'object') { at = undefined; break }
+        at = at[p] = Array.isArray(at[p]) ? [...at[p]] : { ...at[p] }
+      }
+      const k = path.at(-1)!
+      if (typeof at?.[k] !== 'string') continue
+      const next = reading(at[k])
+      if (next === at[k]) continue
+      next === undefined ? delete at[k] : (at[k] = next)
+      changed = true
+    }
+    if (!changed) break
+  }
+  const first = await schema['~standard'].validate(input)
+  const where = (i: SchemaIssue) => JSON.stringify(plainPath(i))
+  throw rejected(fn, left.map(i => first.issues?.find(o => where(o) === where(i)) ?? i))
 }
 
 /** Dev and tests: the value against `output` (C002), and what JSON would change (Q005). */

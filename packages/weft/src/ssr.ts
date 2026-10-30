@@ -12,7 +12,7 @@
 
 import { createRoot, memo, rt, type SsrData } from './index'
 import { keys, nextKey, under } from './keys'
-import { createApp, useApp, type AppOptions } from './scope'
+import { createApp, dehydrate, useApp, type AppOptions } from './scope'
 import { withHead, type HeadOptions } from './head'
 
 export { memo }
@@ -29,7 +29,7 @@ let writeKeys = true
 export interface RenderOptions {
   /** Emit hydration keys for `hydrate()` (default true). */
   hydratable?: boolean
-  /** The request's app: each render gets its own defineState instances (seeded from `state`), never a shared one. */
+  /** The request's app: each render pass gets its own defineState instances (seeded from `state`), never a shared one. */
   app?: AppOptions
   /**
    * Page metadata (research 20): merged and written as `data-wm` tags at the top of the app's `<head>`, or, when the
@@ -131,7 +131,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
   const stream: Stream = {
     shell: run(),
     chunks: chunks(),
-    data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length) ? last : null),
+    data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length || last.s) ? last : null),
     async settle() {
       const deadline = Date.now() + (options.timeout ?? 10_000)
       for (let n = 1; top.length && n < (options.passes ?? 50); n++) {
@@ -161,7 +161,8 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
   let html = ''
-  const prevApp = useApp(createApp(options.app)) // a swap, not an owner: the render is synchronous
+  const app = createApp(options.app)
+  const prevApp = useApp(app) // a swap, not an owner: the render is synchronous
   try {
     createRoot(dispose => {
       try { html = text(code) } finally { dispose() }
@@ -173,9 +174,10 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
     writeKeys = prevWrite
   }
   if (selects) html = resolveSelects(html)
-  if (stream) return { html, data: { r: data.r, b: data.b } }
-  if (options.hydratable === false || (!Object.keys(data.r).length && !Object.keys(data.b).length)) return html
-  const json = JSON.stringify({ r: data.r, b: data.b }).replace(/</g, '\\u003c')
+  const s = dehydrate(app) // this pass's: every pass re-runs the setups, and the last one is what the page shows
+  if (stream) return { html, data: { r: data.r, b: data.b, ...(s && { s }) } }
+  if (options.hydratable === false || (!Object.keys(data.r).length && !Object.keys(data.b).length && !s)) return html
+  const json = JSON.stringify({ r: data.r, b: data.b, ...(s && { s }) }).replace(/</g, '\\u003c')
   return `${html}<script type="application/json" data-weft>${json}</script>`
 }
 

@@ -25,6 +25,7 @@ jobs:
           node packages/create-weft/bin/create-weft.mjs "$RUNNER_TEMP/app" --db sqlite --auth --ui warp
           cd "$RUNNER_TEMP/app"
           for p in start warp cli; do npm pkg set "dependencies.@weft/$p=file:$GITHUB_WORKSPACE/packages/$p"; done
+          npm pkg delete devDependencies.@weft/cli
           npm pkg set "dependencies.weft=file:$GITHUB_WORKSPACE/packages/weft"
           npm install
           npx weft db generate

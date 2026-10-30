@@ -103,3 +103,62 @@ A guard: `export const load = ({ ctx }: LoadArgs) => ctx.user ?? redirect('/logi
 `weft dev` runs on Node. `weft build` targets `runtime` in weft.config.ts (`node`, `bun`, `deno`; `--runtime` overrides)
 and writes `.output/` and `.weft/contract.json`. Runtime-specific APIs (`Bun.*`, `Deno.*`, `better-sqlite3`) in server
 code break the other targets; `node:` modules and web APIs work on all three.
+
+## Realtime
+
+Never poll, and never open a socket yourself (R007, T013): a live query and a `stream` reconnect, resume and clean up
+for you.
+
+**Live queries need no server code.** Tags are the contract: any mutation that invalidates one of the query's tags,
+on any tab, refetches it for every reader. Unchanged rows keep their identity, so the page writes what changed.
+
+```tsx
+const todos = listTodos.live()             // the same Resource as listTodos(), plus todos.live.value
+<p>{todos.live.value}</p>                  // 'connecting' | 'live' | 'reconnecting' | 'offline'
+```
+
+A live query needs `tags` (W053), and its mutations need one of them in `invalidates` (R003 in dev).
+
+**Topics and streams carry messages.** Define them in server modules, next to queries:
+
+```ts
+export const priceTopic = topic('prices', { key: z.string().max(12), message: Price })
+export const prices = stream({
+  input: z.object({ symbols: z.array(z.string().max(12)).max(50) }),   // bound it (R005)
+  message: Price,
+  auth: 'user',                                                        // optional; re-checked every 5 minutes
+  async *run({ input, signal, lastEventId }) {
+    yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId })   // subscribe first (R006)
+  },
+})
+await priceTopic.publish('AAPL', { symbol: 'AAPL', price: 1 })         // anywhere on the server
+```
+
+```tsx
+const tick = prices({ symbols: ['AAPL'] })                             // tick.value: the latest message
+const board = prices(() => ({ symbols: syms.value }), {                // input is tracked; `skip` works
+  fold: (acc, m) => ({ ...acc, [m.symbol]: m }), initial: {}, keep: '30s',
+})
+```
+
+Never fold a stream with `watch` into `state` (W052): that list dies with the component. `fold` lives in the cache, so
+a remount within `keep` finds it. Without `fold` you get the latest value, and a slow client skips messages.
+`yield tracked(row.id, row)` from your own source gives a resumed `run` that id as `lastEventId`. `lastEventId` is
+undefined after a reset: start again, or read from the database.
+
+**One instance needs nothing.** Several need a bus: `weft build` refuses the memory bus on a multi-instance preset (R002).
+
+```ts
+// src/realtime.server.ts
+import { realtime } from '@weft/start'
+import { postgresBus } from '@weft/start/bus/postgres'
+export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: ['https://other.example'], maxDuration: 300 })
+```
+
+`postgresBus` needs a direct connection: pgBouncer in transaction mode breaks LISTEN. `maxDuration` is the platform's
+response limit in seconds: streams end 10 s earlier and resume. `stale` is true when the server runs a newer build
+than this tab: offer a reload.
+
+**Testing** uses the real hub and client over `weft/test`'s fake transport: `await net.settle()`, then
+`await net.push(prices, message)`, `await net.poke('todos')`, `await net.drop()`, `net.offline()`, `net.reconnects()`,
+`net.subscriptions()`.

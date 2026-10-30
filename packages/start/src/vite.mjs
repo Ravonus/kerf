@@ -11,9 +11,12 @@
 //   virtual:weft/context        server: `src/context.server.ts`'s default export (the app's part of `ctx`)
 //   virtual:weft/auth           server: `src/auth.server.ts`'s default export, mounted at its base path
 //   virtual:weft/migrations     server: `drizzle/`'s migrations, embedded (a bundle can't read a folder on every preset)
+//   virtual:weft/media          server: the `media.server` provider when one is bound (research 29 §6)
+//   virtual:weft/realtime       server: `src/realtime.server.ts`'s default export (the bus, origins and limits)
 //
-// Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation` export gets an `$id` on
-// both sides; the client build replaces the module with stubs that keep only `optimistic` and the query's shape.
+// Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream` export gets an
+// `$id` on both sides; the client build replaces the module with stubs that keep only `optimistic` and the query's
+// shape.
 
 import { existsSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -35,6 +38,8 @@ const V = {
   context: 'virtual:weft/context',
   auth: 'virtual:weft/auth',
   migrations: 'virtual:weft/migrations',
+  media: 'virtual:weft/media',
+  realtime: 'virtual:weft/realtime',
 }
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
 const DEFAULT_FONTS = ['Inter:400,700']
@@ -89,7 +94,7 @@ export default function weftStart(options = {}) {
         // sits outside the app's root).
         server: { fs: { allow: [searchForWorkspaceRoot(root), join(here, '..'), ...packageDirs(root)] } },
         // One copy of the router: the app's route files and the generated entries import the same module.
-        resolve: { alias: [{ find: /^@weft\/start$/, replacement: join(here, 'index.ts') }, { find: /^@weft\/start\/(client|server)$/, replacement: join(here, '$1.tsx') }] },
+        resolve: { alias: [{ find: /^@weft\/start$/, replacement: join(here, 'index.ts') }, { find: /^@weft\/start\/(client|server)$/, replacement: join(here, '$1.tsx') }, { find: /^@weft\/start\/media$/, replacement: join(here, 'media.ts') }] },
       }
     },
     configResolved(config) {
@@ -120,10 +125,19 @@ export default function weftStart(options = {}) {
       server.close = () => (w.close(), close())
     },
     resolveId: {
-      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth)(\/|$))/ },
+      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus)(\/|$)|sharp$)/ },
       handler(source, importer) {
+        // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
+        if (source === 'sharp') {
+          if (dev || !importer?.includes('plugin-media')) return
+          try { createRequire(join(root, 'package.json')).resolve('sharp') } catch {
+            this.warn('M017: `sharp` isn\'t a dependency of this app, so the built server can\'t load it for the media route.\n  fix: add `sharp` to dependencies')
+            return
+          }
+          return { id: 'sharp', external: true }
+        }
         if (source.startsWith('@weft/')) {
-          if (this.environment?.config.consumer === 'client') this.error(`Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(root, importer)}` : ''}: the database and auth run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``)
+          if (this.environment?.config.consumer === 'client') this.error(`Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(root, importer)}` : ''}: the database, auth and buses run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``)
           return
         }
         const base = source.replace(/\?.*$/, '')
@@ -141,12 +155,13 @@ export default function weftStart(options = {}) {
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
         if (which === V.server) return serverEntry(clientEntry())
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
-        if (which === V.context || which === V.auth) {
-          const name = which === V.auth ? 'auth' : 'context'
+        if (which === V.context || which === V.auth || which === V.realtime) {
+          const name = which.slice('virtual:weft/'.length)
           const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/${name}.server.${x}`).find(x => existsSync(abs(x)))
           return f ? `export { default } from ${JSON.stringify(abs(f))}\n` : 'export default undefined\n'
         }
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
+        if (which === V.media) return mediaModule(root, dev)
         if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
       },
     },
@@ -218,14 +233,23 @@ import '${V.fns}'
 import context from '${V.context}'
 import auth from '${V.auth}'
 import migrations from '${V.migrations}'
+import media from '${V.media}'
+import realtime from '${V.realtime}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, context, auth, migrations, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, css: assets.css, fonts: preloads },
-  // H005–H008, Q002–Q014 and A002–A004 found while serving: the server log, in dev and production.
-  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQAC]\\d{3}:? /, '')}\`) })
+const fetch = createHandler({ manifest, modules, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, css: assets.css, fonts: preloads },
+  // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
+  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQACFMRW]\\d{3}:? /, '')}\`) })
 export default { fetch }
 `
+}
+
+/** Dev serves from the project; a built server from the directory it runs in (or `WEFT_MEDIA_DIR`). */
+function mediaModule(root, dev) {
+  const slot = join(root, '.weft', 'slots', 'media.server.ts')
+  if (!existsSync(slot) || readFileSync(slot, 'utf8').includes('provider = null')) return 'export default undefined\n'
+  return `import { load } from 'weft:slot/media.server'\nexport default () => load().then(m => m.at(${dev ? JSON.stringify(root) : 'undefined'}))\n`
 }
 
 function appModule({ site, build, dev, fonts, timeout }) {
@@ -333,9 +357,9 @@ function scanServerModules(root) {
   return out.sort()
 }
 
-const FN_KINDS = new Set(['query', 'mutation'])
+const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic'])
 
-/** Local names bound to `query`/`mutation` from @weft/start. */
+/** Local names bound to `query`/`mutation`/`stream`/`topic` from @weft/start. */
 function fnLocals(ast) {
   const locals = new Map()
   for (const n of ast.program.body) {
@@ -424,7 +448,7 @@ export function clientStubs(code, file, rel, shapes) {
 
 /** Q003: a `query`/`mutation` defined in a file that isn't a server module (its name and kind), or undefined. */
 function definesFns(code, file) {
-  if (!/@weft\/start/.test(code) || !/\b(query|mutation)\b/.test(code)) return
+  if (!/@weft\/start/.test(code) || !/\b(query|mutation|stream|topic)\b/.test(code)) return
   const ast = parse(file, code)
   const locals = fnLocals(ast)
   if (!locals.size) return

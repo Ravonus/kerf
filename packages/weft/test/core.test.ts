@@ -108,6 +108,27 @@ test('state.linked follows its source until written, then resets when the source
   expect(local.value).toBe('b')
 })
 
+test('state.linked with `key`: a refetch of the same row keeps an edit and reports the conflict', () => {
+  const row = state({ id: 1, title: 'a' })
+  const title = state.linked(() => row.value.title, { key: () => row.value.id })
+  expect(title.value).toBe('a')
+  row.value = { id: 1, title: 'b' } // no edit yet: follows the source
+  expect(title.value).toBe('b')
+  expect(title.conflict.value).toBeUndefined()
+  title.value = 'mine'
+  expect(title.conflict.value).toBeUndefined()
+  row.value = { id: 1, title: 'theirs' }
+  expect(title.value).toBe('mine')
+  expect(title.conflict.value).toEqual({ theirs: 'theirs', base: 'b' })
+  title.value = 'mine 2' // the base stays the value the edit started from
+  expect(title.conflict.value).toEqual({ theirs: 'theirs', base: 'b' })
+  row.value = { id: 2, title: 'other' } // another row: reset
+  expect(title.value).toBe('other')
+  expect(title.conflict.value).toBeUndefined()
+  row.value = { id: 1, title: 'back' } // the first row again: its old edit doesn't come back
+  expect(title.value).toBe('back')
+})
+
 test('state.linked resets when the source changes back to the value it was written against', () => {
   const prop = state('')
   const local = state.linked(() => prop.value)

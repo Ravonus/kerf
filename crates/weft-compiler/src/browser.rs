@@ -1,10 +1,13 @@
-//! Browser events and subscriptions (PLAN §4.2, research 07 §9.3): W050, W051, W054, W056. Its own read-only pass
+//! Browser events and subscriptions (PLAN §4.2, research 07 §9.3): W050–W052, W054, W056. Its own read-only pass
 //! over the program, after `analyze`.
 //!
 //! - W050: a raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no
 //!   matching cleanup. Listeners and intervals in an owned place get an edit to `on`/`interval` (weft/browser).
 //! - W051: a weft/browser value, listener or interval created where there is no owner: module scope, a timer, a
 //!   promise callback, an event handler, or after `await`.
+//! - W052: `watch(() => tick.value, m => { list.value = [...list.value, m] })`: a stream folded by hand into a
+//!   component's `state`, which is lost when the component unmounts (the v3 bug). A stream is a call of something
+//!   imported from a server module.
 //! - W054: `media(q)` without `ssr` in a file that is server-rendered. `online`, `visible` and `lifecycle` have
 //!   server values that match a first paint (`true`, `true`, `'active'`); a media query has none.
 //! - W056: `watch(() => live.value, v => { s.value = v })`: a live value copied into state.
@@ -58,9 +61,23 @@ pub fn check(program: &Program<'_>, scoping: &Scoping, source: &str, ssr: Ssr) -
     bound.visit_program(program);
     let mut last_import = None;
     let mut browser_import = None;
+    let mut server_imports = HashSet::new();
     for stmt in &program.body {
         if let Statement::ImportDeclaration(d) = stmt {
             last_import = Some(d.span.end);
+            let from = d.source.value.as_str();
+            if d.import_kind.is_value() && (from.contains("/server/") || from.contains(".server")) {
+                for s in d.specifiers.iter().flatten() {
+                    let local = match s {
+                        ImportDeclarationSpecifier::ImportSpecifier(s) => &s.local,
+                        ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => &s.local,
+                        ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => &s.local,
+                    };
+                    if let Some(sym) = local.symbol_id.get() {
+                        server_imports.insert(sym);
+                    }
+                }
+            }
             if d.source.value == MODULE && d.import_kind.is_value() {
                 let last =
                     d.specifiers.iter().flatten().filter(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_))).last();
@@ -79,6 +96,7 @@ pub fn check(program: &Program<'_>, scoping: &Scoping, source: &str, ssr: Ssr) -
         last_import,
         browser_import,
         live: HashSet::new(),
+        server_imports,
         fns: Vec::new(),
         next_role: None,
         pending_name: None,
@@ -140,6 +158,8 @@ struct Checker<'s> {
     browser_import: Option<u32>,
     /// Symbols holding a live value: a weft/browser value, or `query.live(…)`.
     live: HashSet<SymbolId>,
+    /// Bindings imported from a server module: calling one in a component reads a query or a stream.
+    server_imports: HashSet<SymbolId>,
     fns: Vec<FnCtx>,
     next_role: Option<Role>,
     pending_name: Option<String>,
@@ -444,6 +464,18 @@ impl<'s> Checker<'s> {
             Expression::FunctionExpression(f) => f.params.items.first(),
             _ => None,
         };
+        let (name, list) = (live.name.as_str(), boxed.name.as_str());
+        if target.property.name == "value" && self.text(a.right.span()).contains(&format!("{list}.value")) {
+            self.out.push(Diagnostic::new(
+                self.source,
+                "W052",
+                Severity::Error,
+                (call.span.start, call.span.end),
+                format!("This `watch` folds `{name}` into `{list}` by hand: `{list}` is lost when the component unmounts, and messages that arrive meanwhile are gone."),
+                format!("Pass `fold` and `initial` where `{name}` is read: the fold lives in the cache and survives a remount for `keep`."),
+            ));
+            return;
+        }
         let copies_param = matches!((param.map(|p| &p.pattern), a.right.without_parentheses()),
             (Some(BindingPattern::BindingIdentifier(p)), Expression::Identifier(r)) if p.name == r.name);
         let copies_value = self.text(a.right.span()) == self.text(read.span);
@@ -528,7 +560,8 @@ impl<'a, 's> Visit<'a> for Checker<'s> {
             }
             if let Expression::CallExpression(c) = init {
                 let live = self.browser_fn(&c.callee).is_some_and(|n| VALUES.contains(&n))
-                    || matches!(&c.callee, Expression::StaticMemberExpression(m) if m.property.name == "live");
+                    || matches!(&c.callee, Expression::StaticMemberExpression(m) if m.property.name == "live")
+                    || matches!(&c.callee, Expression::Identifier(f) if self.symbol(f).is_some_and(|s| self.server_imports.contains(&s)));
                 if live && let Some(sym) = id.symbol_id.get() {
                     self.live.insert(sym);
                 }

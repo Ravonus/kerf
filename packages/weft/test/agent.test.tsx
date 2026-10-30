@@ -117,6 +117,7 @@ test('the network: offline fails fetch, fires the events, and drops open sockets
   const seen: string[] = []
   addEventListener('offline', () => seen.push('offline'))
   addEventListener('online', () => seen.push('online'))
+  // weft-allow T013: this tests the agent's own socket tracking, so it needs a real one
   const ws = new WebSocket('ws://127.0.0.1:9/never')
   ws.onerror = () => {}
   expect(net.status().sockets).toBe(1)

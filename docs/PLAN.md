@@ -47,7 +47,7 @@ Nobody owns "the framework built for agents" yet, and no one has measured agent 
 | Primitive | Job |
 |---|---|
 | `state(init)` → `State<T>` | Writable box. Read/write `.value`. Deep updates: `.set(draft => { draft.push(x) })`. |
-| `state.linked(() => expr)` | Writable, but resets whenever `expr` changes. For "local copy of a prop" (editable form defaults, optimistic values). |
+| `state.linked(() => expr, { key? })` | Writable, but resets whenever `expr` changes. For "local copy of a prop" (editable form defaults, optimistic values). With `key`, a refetch of the same row keeps the edit and sets `conflict`. |
 | `derived(() => expr)` → `Derived<T>` | B = f(A). Pure, lazy, cached, read-only. **The default tool.** Async functions are rejected; use `resource`. |
 | `resource(async (signal) => …)` → `Resource<T>` | Async derived: `.value .pending .error .refresh()`, cancels via AbortSignal. Server queries return these. A superseded fetch is aborted and ignored; a refetch keeps the value; hydrated, it starts with the server's value. |
 | `watch(() => source, (value, prev) => cleanup?)` | Side effects only (DOM APIs, logging, imperative libraries). Source phase tracked, callback not. |
@@ -288,7 +288,11 @@ whether or not a query is cached on the server.)
   migrations, embedded in the build and applied on first request. The dev touched-tables check is Q011, at run time.
   Better Auth gives `ctx.user`, `auth: 'user'`, guards through `redirect()` (loaders now run parent first), and
   sign-in as a mutation, so nothing of it reaches the client. `cache: { scope: 'user' }` is in. Q011–Q015, A001–A004,
-  C001–C002. Not yet: `<Form>`, the `defineState` SSR payload and `cookie` persist.
+  C001–C002.
+- **Status (2026-10-30): `<Form>`, the `defineState` SSR payload, `cookie` persist and the media route are built**
+  ([29](research/29-forms-state-media.md)). `<Form of={mutation}>` works without JS (same-origin proof, 303, a 422 page
+  that re-renders the errors and values) and with it (in place, single-flight, focus on the first invalid field).
+  `invalid()` adds field errors from a `run`. F001–F003, S001, S002, S012, S013, M016–M018.
 
 ### 4.1 Runtimes: Node, Bun, Deno built in
 
@@ -370,7 +374,8 @@ const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', sche
   that don't intersect; wildcard origins; unbounded client schemas; reading a backlog before subscribing.
 - T012: a test that leaves subscriptions open.
 - T013: a real socket in the fast test lane.
-- P007: `ws`, `socket.io-client` and the like as dependencies.
+- R007: `ws`, `socket.io-client` and the like as dependencies (planned as P007, which the catalog already uses).
+- R008–R010: an over-limit message or body; too many subscriptions or connections; a refused Origin.
 
 **Phase 1 status (2026-10-29):** `weft/browser` ships `online`, `visible`, `lifecycle`, `media`, `on` and `interval`
 (≈1 KB br with every export, paid only where imported), with W050, W051, W054, W056 and T012. Each value subscribes on
@@ -463,7 +468,7 @@ export const cart = defineState('cart', () => {
     only its own change, so concurrent rollbacks don't clobber each other.
 - **What zustand's middleware does, built in as options:**
   - `persist` (`local | session | cookie | idb`), with a required Zod schema, versions and migrations (S003 autofix
-    adds the migration). The `cookie` backend lets SSR render persisted values.
+    adds the migration). The `cookie` backend lets SSR render persisted values (built, [29](research/29-forms-state-media.md)).
   - `sync: 'tabs'`, `history` (undo/redo, one step per action call), devtools names (`cart.count` in
     `weft browser state` and the recorder), `$reset` and `$snapshot`, and a fresh instance per test.
 - **Fine-grained updates mean no selectors.** Typing in the cart note re-runs nothing in the 150 product rows.
@@ -721,7 +726,7 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
   the whole pipeline (the four slots above split out when the ffmpeg provider lands in 3c). Quality search uses
   libjxl's `ssimulacra2` tool when it is on `PATH`, and fixed qualities otherwise (the asset records which). GIFs
   ship unchanged, with M004 over 256 KB. `sizes` comes from `width` (`"1/3"`, `"240px"`) or `sizes="auto"`, not
-  yet from layout. M001–M013 are built; M014–M016 come with video.
+  yet from layout. M001–M013 and M016–M018 are built; M014–M015 come with video.
 - **Unverified:** whether every browser's "Save as" honours a URL swapped inside `contextmenu` (a headful test gates
   `background` in 3c), and Firefox.
 
@@ -946,15 +951,18 @@ every warp component and on the shop. Two contrast failures were in the spec's o
 (`opacity: .7`, 3.2:1) and the Segmented count (`opacity: .8`, 4.0–4.1:1), both in light theme. They were fixed in
 the spec on 2026-10-30 with the review's fix (reviews/03 m12: drop the opacity), so the gate runs with no exemptions.
 
-**3 status (2026-10-29):** two slices are built. The first: routing, route `meta` and share cards, streaming SSR,
+**3 status (2026-10-30):** four slices are built. The first: routing, route `meta` and share cards, streaming SSR,
 Nitro `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The second:
 `query`/`mutation` typed end to end, the tagged cache (client, request and shared), `mutation({ optimistic })`
 overlays with per-call rollback, `redirect()` on the server and in the client router, SSR-dehydrated query results
 (0/0 hydration), Q001–Q010 and S011, and the fake transport in `weft/test` ([27](research/27-server-functions.md)).
 The third (2026-10-30): Drizzle, Better Auth, `create-weft --db/--auth/--runtime`, `.weft/contract.json`, the
-Node/Bun/Deno presets and a local runtime matrix ([28](research/28-db-auth-runtimes.md)). Still to do in this row:
-`<Form>`, the `defineState` SSR state payload and `cookie` persist (with S013), `.live`, `topic`, `stream` and the
-buses, `z.media()` and the media route.
+Node/Bun/Deno presets and a local runtime matrix ([28](research/28-db-auth-runtimes.md)). The fourth (2026-10-30):
+`.live`, `topic`, `stream`, the `memory` and `postgres` buses, reconnect and resume, the realtime fake transport,
+W052, W053, T013 and R002–R010, verified on Node, Bun and Deno ([30](research/30-realtime.md)). The fifth
+(2026-10-30): `<Form>`, the `defineState` SSR state payload, `cookie` persist, S001/S002/S012/S013, `z.media()` and
+the media route with `encoder: 'server'` ([29](research/29-forms-state-media.md)). The row's work is
+built.
 
 **3 shapes (2026-10-30):** built ([31](research/31-query-shapes.md)): `query.shape` and `q(input).shape`, last-seen
 shapes in the client cache, compiler shape variants (`pending="shape"`, a tree-shaken `Name$shape` beside each

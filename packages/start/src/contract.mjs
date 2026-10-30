@@ -2,7 +2,7 @@
 // scope. `weft build` writes it; the OpenAPI export, the MCP server and Rust codegen read it. The server modules are
 // loaded through Vite, never run: creating a database client connects to nothing.
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
 import weft from 'weft/vite'
@@ -10,6 +10,25 @@ import { shapeTree, toJson } from './shape.mjs'
 import weftStart, { startDir } from './vite.mjs'
 
 const tagsOf = t => (typeof t === 'function' ? 'dynamic' : [...(t ?? [])])
+
+/** The first string or array in a JSON Schema with no upper bound, as a path. */
+function unbounded(s, path = 'input') {
+  if (!s || typeof s !== 'object') return
+  if (s.type === 'string' && s.maxLength === undefined && !s.enum && s.const === undefined) return path
+  if (s.type === 'array' && s.maxItems === undefined) return path
+  if (s.items) {
+    const hit = unbounded(s.items, `${path}[]`)
+    if (hit) return hit
+  }
+  for (const [k, v] of Object.entries(s.properties ?? {})) {
+    const hit = unbounded(v, `${path}.${k}`)
+    if (hit) return hit
+  }
+  for (const v of [...(s.anyOf ?? []), ...(s.oneOf ?? [])]) {
+    const hit = unbounded(v, path)
+    if (hit) return hit
+  }
+}
 
 export function describe(fns) {
   const diagnostics = []
@@ -22,15 +41,40 @@ export function describe(fns) {
       return json ?? {}
     }
     const errors = [...(f.def.input ? ['Q002'] : []), ...(f.def.auth ? ['A002'] : []), ...(f.kind === 'mutation' ? ['Q010'] : [])]
+    const input = schema('input', 'input') ?? null
+    if (f.kind === 'stream') {
+      const hit = unbounded(input)
+      if (hit) diagnostics.push({ code: 'R005', severity: 'warning', why: `\`${f.$id}\`'s \`${hit}\` has no upper bound: a client decides how much the server holds. Add \`.max()\`.` })
+    }
     return {
       id: f.$id, name: f.$id.replace(/\..*$/, ''), kind: f.kind,
-      input: schema('input', 'input') ?? null, output: schema('output', 'output') ?? null,
-      ...(f.kind === 'query' ? { tags: tagsOf(f.def.tags), cache: f.def.cache ?? null } : { invalidates: tagsOf(f.def.invalidates) }),
+      input, output: schema(f.kind === 'stream' ? 'message' : 'output', 'output') ?? null,
+      ...(f.kind === 'query' ? { tags: tagsOf(f.def.tags), cache: f.def.cache ?? null } : f.kind === 'mutation' ? { invalidates: tagsOf(f.def.invalidates) } : {}),
       auth: f.def.auth ?? 'public', errors,
     }
   })
   return { version: 1, functions, diagnostics }
 }
+
+/** Presets that run many instances: a process-local bus reaches a fraction of the clients (R002). */
+const MULTI = /^(vercel|netlify|aws[-_]|azure|cloudflare|firebase|deno[-_]deploy|digitalocean|render|koyeb|zeabur)/
+
+const usesLive = root => {
+  const walk = dir => readdirSync(dir, { withFileTypes: true }).some(d => {
+    const f = join(dir, d.name)
+    return d.isDirectory() ? walk(f) : /\.[cm]?[jt]sx?$/.test(d.name) && /\.live\(/.test(readFileSync(f, 'utf8'))
+  })
+  return existsSync(join(root, 'src')) && walk(join(root, 'src'))
+}
+
+/**
+ * R002 for one build: `bus` is the configured bus's name.
+ * @returns {string | undefined} the message when this build would drop messages
+ */
+export const busProblem = ({ preset, bus, streams, root }) =>
+  bus === 'memory' && MULTI.test(preset ?? '') && (streams || usesLive(root))
+    ? `the \`${preset}\` preset runs many instances, and the memory bus only reaches clients on its own: pokes and messages would be lost`
+    : undefined
 
 /** Every query's shape tree (research 31 §3), by id. */
 export function shapeTable(fns) {
@@ -42,7 +86,7 @@ export function shapeTable(fns) {
   return table
 }
 
-/** `fn` with every server module loaded through a private Vite server. */
+/** `fn(fns, server)` with every server module loaded through a private Vite server. */
 async function withFns({ root, site = {} }, fn) {
   const server = await createServer({
     root, configFile: false, logLevel: 'silent', appType: 'custom',
@@ -52,7 +96,7 @@ async function withFns({ root, site = {} }, fn) {
   try {
     await server.ssrLoadModule('virtual:weft/fns')
     const { fns } = await server.ssrLoadModule(join(startDir, 'data.ts'))
-    return await fn(fns)
+    return await fn(fns, server)
   } finally {
     await server.close()
   }
@@ -62,10 +106,13 @@ async function withFns({ root, site = {} }, fn) {
 export const readShapes = options => withFns({ ...options, root: resolve(options.root) }, shapeTable)
 
 /** Load every server module and write `.weft/contract.json`. */
-export function writeContract({ root, site = {} }) {
+export function writeContract({ root, site = {}, preset }) {
   root = resolve(root)
-  return withFns({ root, site }, fns => {
+  return withFns({ root, site }, async (fns, server) => {
     const { diagnostics, ...contract } = describe(fns)
+    const mod = await server.ssrLoadModule('virtual:weft/realtime')
+    const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream'), root })
+    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Set \`bus: postgresBus({ url })\` in \`src/realtime.server.ts\`.` })
     mkdirSync(join(root, '.weft'), { recursive: true })
     const path = join(root, '.weft', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')

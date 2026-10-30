@@ -20,6 +20,9 @@ function bindFonts() {
   mkdirSync(dir, { recursive: true })
   const module = fileURLToPath(new URL('./fixtures/font-provider.mjs', import.meta.url))
   writeFileSync(join(dir, 'font.build.build.json'), JSON.stringify({ plugin: '@test/fonts', version: '0.0.0', module, export: 'createFontBuild' }))
+  // The media route, as `weft plugins sync` binds @weft/plugin-media's media.server@1.
+  const media = fileURLToPath(new URL('../../plugin-media/src/server.mjs', import.meta.url))
+  writeFileSync(join(dir, 'media.server.ts'), `export const provider = { plugin: '@weft/plugin-media' }\nexport const load = () => import(${JSON.stringify(media)}).then(m => m.createMediaServer({ formats: ['avif', 'webp'], widths: [64, 128] }))\n`)
   return () => rmSync(join(fixture, '.weft'), { recursive: true, force: true })
 }
 

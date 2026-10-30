@@ -10,9 +10,10 @@
 //
 // The cache entry's value is `base` with each pending layer applied. New bases are structurally shared with the old
 // one, so unchanged rows keep their identity and `For` keeps them. This module ships to the client; the executor
-// (exec.ts) is the server's, and the in-process fake transport weft/test turns on loads it on demand.
+// (exec.ts) is the server's, and the in-process fake transport weft/test turns on loads it on demand. Realtime
+// (research 30) costs a query app one method here: `q.live()` imports live.ts on its first call.
 
-import { DEV, createRoot, derived, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from 'weft'
+import { DEV, createRoot, derived, effect, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from 'weft'
 import { fill, mask } from 'weft/shape'
 import { client } from './router'
 
@@ -38,6 +39,8 @@ export interface Context {
   request: Request
   /** Headers merged into the response (cookies a sign-in sets). */
   response: { headers: Headers }
+  /** Uploads and CMS images (research 29 §6): `ingest` stores the original and returns the record `z.media()` validates. */
+  media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('weft/media').MediaAsset> }
 }
 
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
@@ -97,6 +100,11 @@ export interface Query<I, O> {
   fetch(...args: [I] extends [void] ? [] : [input: I]): Promise<O>
   /** A placeholder result to size a pending view by (last seen, else declared), or undefined when nothing is known. */
   shape(...args: [I] extends [void] ? [] : [input: I]): O | undefined
+  /**
+   * The same value, refetched whenever a mutation anywhere invalidates one of its tags. `.live` is the connection's
+   * status. `keep`: how long the subscription outlives its last reader (`'30s'`, `'session'`).
+   */
+  live(...args: [I] extends [void] ? [input?: undefined | (() => undefined | Skip), options?: LiveOptions] : [input: Arg<I>, options?: LiveOptions]): LiveQuery<O>
   readonly kind: 'query'
   readonly $id: string
 }
@@ -111,11 +119,15 @@ export interface Mutation<I, O> {
   readonly $id: string
 }
 
+export type LiveStatus = 'connecting' | 'live' | 'reconnecting' | 'offline'
+export interface LiveOptions { keep?: string | number }
+export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus> }
+
 /** Any definition, as the executor and transports see it. */
 export interface Fn {
-  kind: 'query' | 'mutation'
+  kind: 'query' | 'mutation' | 'stream'
   $id: string
-  def: { input?: StandardSchemaV1; output?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
+  def: { input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
 }
 
 /** Every definition by id (the server answers `/_weft/fn/<id>` from it). */
@@ -162,6 +174,43 @@ export function redirect(href: string, status: 301 | 302 | 303 | 307 | 308 = 307
 
 export const isRedirect = (v: unknown): v is Redirect => !!v && typeof v === 'object' && (v as any).isRedirect === true
 
+/** Refuse a value the schema can't judge (`email` is taken): `<Form>` shows it next to the field, as a schema issue. */
+export function invalid(fields: Record<string, string>): never {
+  throw new StartError('Q002', Object.keys(fields).join(', '), undefined, { status: 422, issues: Object.entries(fields).map(([k, message]) => ({ message, path: k.split('.') })) })
+}
+
+/** Issues as a form shows them: by field (`a.b`), and the ones that name no field. */
+export function fieldsOf(issues: readonly SchemaIssue[] = []) {
+  const errors: Record<string, string> = {}
+  let message: string | undefined
+  for (const i of issues) {
+    const key = i.path?.map(p => (typeof p === 'object' ? p.key : p)).join('.')
+    if (key) errors[key] ??= i.message
+    else message ??= i.message
+  }
+  return { errors, message }
+}
+
+const UNSAFE = new Set(['__proto__', 'constructor', 'prototype'])
+
+/** A form's fields as a mutation's input, on both sides (research 29 §5): `a.b` nests, `x[]` and repeats are arrays. */
+export function decodeForm(data: FormData): Record<string, unknown> {
+  const out: Record<string, any> = {}
+  for (const [name, value] of data) {
+    if (name[0] === '$' || (typeof value !== 'string' && !value.size)) continue // `$fn`; a file input left empty
+    const list = name.endsWith('[]')
+    const path = (list ? name.slice(0, -2) : name).split('.')
+    if (path.some(p => UNSAFE.has(p))) continue
+    let at = out
+    for (const p of path.slice(0, -1)) at = at[p] && typeof at[p] === 'object' ? at[p] : (at[p] = {})
+    const k = path.at(-1)!
+    if (list) (at[k] ??= []).push(value)
+    else if (k in at) at[k] = [at[k]].flat().concat(value)
+    else at[k] = value
+  }
+  return out
+}
+
 // ---- keys -------------------------------------------------------------------------------------------------------
 
 /** JSON with sorted object keys: the same input gives the same key on both sides (no input: `''`; JSON sends null). */
@@ -182,7 +231,8 @@ export interface Answer { v?: unknown; t?: string[]; c?: Wire[]; r?: string; /**
 
 export interface Transport {
   query(id: string, input: unknown): Promise<Answer>
-  mutate(id: string, input: unknown, refresh: [string, unknown][]): Promise<Answer>
+  /** `form`: the input came from a form, so strings may be coerced; a FormData is sent as is (it holds files). */
+  mutate(id: string, input: unknown, refresh: [string, unknown][], form?: true | FormData): Promise<Answer>
 }
 
 /**
@@ -198,13 +248,22 @@ export const runtime: {
   navigate?: (href: string, replace?: boolean) => void
   /** The databases `createDb` made: the server applies migrations to them before the first request. */
   dbs?: Set<{ $weft: { migrate(list: { tag: string; sql: string }[]): Promise<void> } }>
+  /** Fan invalidated tags out to live subscribers (hub.ts). `origin`: the connection that needs no poke. */
+  poke?: (tags: string[], origin?: string | null) => Promise<void>
+  /** This tab's realtime connection: sent with mutations, so the tab doesn't poke itself. */
+  conn?: string
 } = {}
+
+/** The realtime connection's status and "this tab is older than the server" (research 30 §2). */
+export const rt = createRoot(() => ({ status: state<LiveStatus>('connecting'), stale: state(false) }), null)
+/** The server runs a different build than this tab loaded: offer a reload. */
+export const stale: Derived<boolean> = rt.stale
 
 const go = (href: string, replace?: boolean) => (runtime.navigate ? runtime.navigate(href, replace) : void client.navigate?.(href, { replace }))
 
 /** weft/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
 let registered = false
-const net = () => {
+export const net = () => {
   const n = (globalThis as any)[Symbol.for('weft.net')] as NetControl | undefined
   if (n && !registered) {
     registered = true
@@ -227,6 +286,11 @@ export interface NetControl {
   inflight: Set<Promise<unknown>>
   als: { run<T>(store: unknown, fn: () => T): T; getStore(): unknown }
   resets: (() => void)[]
+  /** Subscriptions an owner holds: open at the end of a test, they're T012. */
+  open: Map<object, [what: string, close: () => void]>
+  /** The realtime fake, while one is connected: `net.push`, `net.poke`, `net.drop`. */
+  rt?: { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] }
+  reconnects: number
 }
 
 // ---- definitions --------------------------------------------------------------------------------------------------
@@ -238,6 +302,7 @@ export function query<O, S extends StandardSchemaV1 | undefined = undefined, con
   const q: any = (input?: unknown) => use(fn, input)
   q.fetch = (input?: unknown) => fetchQuery(fn, input)
   q.shape = (input?: unknown) => shapeOf(fn, input)
+  q.live = (input?: unknown, options?: LiveOptions) => liveQuery(fn, input, options)
   return Object.assign(q, { kind: 'query', $id: id, [FN]: fn })
 }
 
@@ -249,10 +314,12 @@ export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, 
   const { calls, error } = createRoot(() => ({ calls: state(0), error: state<unknown>(undefined) }), null)
   const pending = createRoot(() => derived(() => calls.value > 0), null)
   const m: any = (input?: unknown) => mutate(fn, input, calls, error)
-  return Object.assign(m, { kind: 'mutation', $id: id, pending, error: { get value() { return error.value } }, [FN]: fn })
+  return Object.assign(m, { kind: 'mutation', $id: id, pending, error: { get value() { return error.value } }, [FN]: fn, [SUBMIT]: (input: unknown, form: true | FormData) => mutate(fn, input, calls, error, form) })
 }
 
 const FN = Symbol.for('weft.fn')
+/** `<Form>`'s call: a mutation handle's `m(input)` with the input marked as coming from a form. */
+export const SUBMIT = Symbol.for('weft.submit')
 /** The definition behind a query or mutation handle (also accepts the definition). */
 export const fnOf = (h: any): Fn => h?.[FN] ?? h
 
@@ -307,6 +374,29 @@ function shapeOf(fn: Fn, input: unknown): any {
   if (e) return mask(untrack(() => e.value.value), limit)
   const tree = runtime.exec ? runtime.exec.shapeOf(fn) : fn.def.shape
   return tree === undefined ? undefined : fill(tree, limit)
+}
+
+/** `q()` plus a subscription: its tags come from the server, and a poke is a local `cache.invalidate`. */
+function liveQuery(fn: Fn, input: unknown, options?: LiveOptions): LiveQuery<any> {
+  const r = use(fn, input)
+  const scope = server()
+  if (scope) scope.live = true
+  else
+    effect(() => {
+      const arg = typeof input === 'function' ? (input as () => unknown)() : input
+      if (arg === skip) return
+      let gone = false, stop: (() => void) | undefined
+      const held = import('./live').then(m => {
+        m.use(liveApi)
+        if (!gone) stop = m.hold(fn, arg, options)
+      })
+      track(held)
+      onCleanup(() => {
+        gone = true
+        stop?.()
+      })
+    }, () => {})
+  return Object.assign(r, { live: rt.status })
 }
 
 const name = (fn: Fn) => fn.$id.replace(/\..*$/, '')
@@ -402,9 +492,9 @@ function staleTags(tags: string[], except: Set<string> = new Set()) {
   client.invalidated?.(tags)
 }
 
-async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State<unknown>): Promise<unknown> {
+async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State<unknown>, form?: true | FormData): Promise<unknown> {
   const scope = server()
-  if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [])).v
+  if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [], !!form)).v
   const m = ++callId
   const touched = new Set<Entry>()
   untrack(() => calls.value++)
@@ -412,7 +502,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
   const refresh = [...entries.values()].filter(e => e.readers > 0).map(e => [e.id, e.input] as [string, unknown])
   const drop = (e: Entry) => { e.layers.value = e.layers.value.filter(l => l.m !== m) }
   try {
-    const a = await transport().mutate(fn.$id, input, refresh)
+    const a = await transport().mutate(fn.$id, input, refresh, form)
     let out: unknown
     untrack(() => {
       const refreshed = new Set<string>()
@@ -523,23 +613,35 @@ const answer = async (res: Response): Promise<Answer> => {
 
 /** The browser's: GET for queries, POST + JSON + `x-weft` for mutations (research 27 §3). */
 export const http: Transport = {
-  query: (id, input) => fetch(`/_weft/fn/${id}${input === undefined ? '' : `?i=${encodeURIComponent(stable(input))}`}`, { headers: { accept: 'application/json' } }).then(answer),
-  mutate: (id, input, f) =>
-    fetch(`/_weft/fn/${id}`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json', 'x-weft': '1' }, body: JSON.stringify({ i: input, f }) }).then(answer),
+  query: (id, input) => fetch(`/_weft/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(stable(input))}`}`, { headers: { accept: 'application/json' } }).then(answer),
+  mutate(id, input, f, form) {
+    const headers: Record<string, string> = { accept: 'application/json', 'x-weft': '1', ...(runtime.conn && { 'x-weft-conn': runtime.conn }) }
+    if (form instanceof FormData) form.set('$r', JSON.stringify(f))
+    else headers['content-type'] = 'application/json'
+    return fetch(`/_weft/fn/${id}`, { method: 'POST', headers, body: form instanceof FormData ? form : JSON.stringify({ i: input, f, ...(form && { c: 1 }) }) }).then(answer)
+  },
 }
 
 /**
  * weft/test's fake transport: the server's executor in process, with the controls weft/test's `net` sets (latency,
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
+export const fakeScope = (exec: typeof import('./exec'), n: NetControl, request: Request) =>
+  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+
 const inProcess: Transport = {
   query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),
-  mutate: (id, input, f) => fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f)),
+  mutate: (id, input, f, form) => fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f, !!form)),
 }
 
 function fake(id: string, kind: string, input: unknown, call: (exec: typeof import('./exec'), scope: any, fn: Fn) => Promise<Answer>): Promise<Answer> {
-  const n = net()!
-  const p = fakeCall(n, id, kind, input, call)
+  return track(fakeCall(net()!, id, kind, input, call))
+}
+
+/** `net.settle()` waits for `p`. */
+export function track<T>(p: Promise<T>): Promise<T> {
+  const n = net()
+  if (!n) return p
   n.inflight.add(p)
   const done = () => void n.inflight.delete(p)
   p.then(done, done)
@@ -555,7 +657,7 @@ async function fakeCall(n: NetControl, id: string, kind: string, input: unknown,
   if (fails?.length) throw fails.shift()
   const fn = fns.get(id)
   if (!fn) throw new FnError({ code: 'Q009', message: `Q009: no server function \`${id}\`` }, 404)
-  const scope = exec.createScope(new Request(`http://localhost/_weft/fn/${id}`, { method: kind === 'query' ? 'GET' : 'POST' }), { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+  const scope = fakeScope(exec, n, new Request(`http://localhost/_weft/fn/${id}`, { method: kind === 'query' ? 'GET' : 'POST', headers: runtime.conn ? { 'x-weft-conn': runtime.conn } : {} }))
   try {
     return JSON.parse(JSON.stringify(await n.als.run(scope, () => call(exec, scope, fn))))
   } catch (e) {
@@ -652,6 +754,10 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
   const r = recipe(root.px)
   return r === undefined || r === root.px ? fin(root) : deep(r)
 }
+
+/** What `live.ts` reads from here; see its header. */
+export const liveApi = { cache, currentScope, fakeScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track }
+export type LiveApi = typeof liveApi
 
 // ---- start-up ----------------------------------------------------------------------------------------------------
 

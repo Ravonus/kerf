@@ -34,6 +34,10 @@ export function checkMedia(ctx, { gifLimit = 256 * 1024 } = {}) {
       const sized = (a('width') && a('height')) || /aspect-?ratio/i.test(style)
       const raw = el.name !== 'Media'
 
+      // M016: a string has no dimensions until it loads
+      if (!raw && (src?.kind === 'string' || /^[`'"]/.test(src?.expr ?? '')))
+        report('M016', el, '`<Media src>` is a string, so nothing knows its size before it loads and the page shifts.', { description: 'Import it with `?media`, or store the record `ctx.media.ingest` returns and type the field `z.media()`', safe: false })
+
       // M001: raw media with no box (X030 covers it inside a Boundary)
       if (raw && !sized && !el.ancestors.includes('Boundary')) {
         report('M001', el, `<${el.name}> has no \`width\`/\`height\` or \`aspect-ratio\`: it renders 0 px tall and pushes the page down when it loads.`,

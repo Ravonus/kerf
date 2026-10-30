@@ -103,3 +103,40 @@ test('client navigation to a redirecting route lands on its target, with one his
   expect(errors).toEqual([])
   await page.close()
 })
+
+// Realtime in Chrome (research 30): the same page in two tabs, a real reader on a real connection.
+const text = (page, label) => page.getByLabel(label).textContent()
+
+test('a live query and a stream hydrate 0/0, then update in place from another tab', async () => {
+  const a = await open('/live')
+  const b = await open('/live')
+  await a.page.waitForFunction(() => document.querySelector('[aria-label=status]').textContent === 'live', null, { timeout: 10_000 })
+  await b.page.waitForFunction(() => document.querySelector('[aria-label=status]').textContent === 'live', null, { timeout: 10_000 })
+  const hits = Number(await text(a.page, 'hits'))
+  const writes = await record(a.page)
+  await b.page.getByRole('button', { name: 'bump' }).click()
+  await a.page.waitForFunction(n => document.querySelector('[aria-label=hits]').textContent === String(n), hits + 1, { timeout: 10_000 })
+  expect(await writes()).toEqual(['characterData:#text'])
+  await b.page.getByRole('button', { name: 'post' }).click()
+  await a.page.waitForFunction(() => document.querySelector('[aria-label=notes]').textContent.endsWith('hi'), null, { timeout: 10_000 })
+  expect(a.errors).toEqual([])
+  expect(b.errors).toEqual([])
+  await a.page.close()
+  await b.page.close()
+})
+
+test('cut off and back: status follows, and what was published meanwhile arrives', async () => {
+  const a = await open('/live')
+  const b = await open('/live')
+  await a.page.waitForFunction(() => document.querySelector('[aria-label=status]').textContent === 'live', null, { timeout: 10_000 })
+  const hits = Number(await text(a.page, 'hits'))
+  await a.page.context().setOffline(true) // shared context: each `newPage` has its own
+  // Headless Chrome cuts the network and leaves `navigator.onLine` true: the connection dropping is what shows.
+  await a.page.waitForFunction(() => document.querySelector('[aria-label=status]').textContent !== 'live', null, { timeout: 10_000 })
+  await b.page.getByRole('button', { name: 'bump' }).click()
+  await a.page.context().setOffline(false)
+  await a.page.waitForFunction(n => document.querySelector('[aria-label=hits]').textContent === String(n), hits + 1, { timeout: 15_000 })
+  expect(await text(a.page, 'status')).toBe('live')
+  await a.page.close()
+  await b.page.close()
+})
