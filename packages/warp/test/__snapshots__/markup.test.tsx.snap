@@ -1504,6 +1504,32 @@ exports[`Surfaces: client DOM after mount 1`] = `
 </span>
 <span data-scope="skeleton" style="inline-size: 60%;">
 </span>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display: flex; flex-direction: column; gap: 0px;">
+<span data-scope="skeleton" style="inline-size: 100%; block-size: 0.7em; margin-block: calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+<span data-scope="skeleton" style="inline-size: 60%; block-size: 0.7em; margin-block: calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+</div>
+<div aria-busy="true" aria-label="Loading people" data-scope="skeleton-scope" inert="" role="status" style="display: flex; flex-direction: column; gap: 0px;">
+<div style="display: flex; align-items: center; gap: 12px; padding-block: 8px;">
+<span data-scope="skeleton" data-shape="circle" style="inline-size: 36px; block-size: 36px; flex: 0 0 auto;">
+</span>
+<div style="display: flex; flex-direction: column; gap: 0px; flex: 1 1 0%; min-inline-size: 0px;">
+<span data-scope="skeleton" style="inline-size: 40%; block-size: 0.7em; margin-block: calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+<span data-scope="skeleton" style="inline-size: 70%; block-size: 0.7em; margin-block: calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+</div>
+</div>
+</div>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display: flex; flex-direction: column; gap: 0px;">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-block: 8px; min-block-size: calc(var(--warp-text-body-leading, 1.55) * 1em);">
+<span data-scope="skeleton" style="inline-size: 80%; block-size: 0.7em; margin-block: calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+<span data-scope="skeleton" style="inline-size: 60%; block-size: 0.7em; margin-block: calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+</div>
+</div>
 </div>"
 `;
 
@@ -1584,6 +1610,32 @@ exports[`Surfaces: server HTML 1`] = `
 </span>
 <span data-scope="skeleton" style="inline-size:60%">
 </span>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display:flex;flex-direction:column;gap:0">
+<span data-scope="skeleton" style="inline-size:100%;block-size:0.7em;margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+<span data-scope="skeleton" style="inline-size:60%;block-size:0.7em;margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+</div>
+<div aria-busy="true" aria-label="Loading people" data-scope="skeleton-scope" inert="" role="status" style="display:flex;flex-direction:column;gap:0">
+<div style="display:flex;align-items:center;gap:12px;padding-block:8px">
+<span data-scope="skeleton" data-shape="circle" style="inline-size:36px;block-size:36px;flex:none">
+</span>
+<div style="display:flex;flex-direction:column;gap:0;flex:1;min-inline-size:0">
+<span data-scope="skeleton" style="inline-size:40%;block-size:0.7em;margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+<span data-scope="skeleton" style="inline-size:70%;block-size:0.7em;margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+</div>
+</div>
+</div>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display:flex;flex-direction:column;gap:0">
+<div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px;padding-block:8px;min-block-size:calc(var(--warp-text-body-leading, 1.55) * 1em)">
+<span data-scope="skeleton" style="inline-size:80%;block-size:0.7em;margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+<span data-scope="skeleton" style="inline-size:60%;block-size:0.7em;margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+</div>
+</div>
 </div>"
 `;
 

@@ -16,6 +16,7 @@ import { Modal } from '../../src/Modal'
 import { Popover } from '../../src/Popover'
 import { Progress } from '../../src/Progress'
 import { Skeleton } from '../../src/Skeleton'
+import { Shape } from '../../src/Shape'
 import { Spinner } from '../../src/Spinner'
 import { Tabs } from '../../src/Tabs'
 import { Tag } from '../../src/Tag'
@@ -108,6 +109,10 @@ export function SpinnerCase() {
 export function SkeletonCase() {
   const n = state(0)
   return <div><Skeleton lines={3} /> {n.value}<Drive onClick={() => n.value++} /></div>
+}
+export function ShapeCase() {
+  const n = state(0)
+  return <div><Shape kind="card" media="16/9" lines={2} /> {n.value}<Drive onClick={() => n.value++} /></div>
 }
 export function TooltipCase() {
   return <Tooltip content="Keyboard shortcuts" kbd="?"><Button emphasis="ghost" icon="info" label="Help" /></Tooltip>

@@ -184,3 +184,17 @@ describe('share cards', () => {
     expect(list.some(p => p.includes('boom') || p.includes('deferred'))).toBe(false)
   })
 })
+
+describe('fonts', () => {
+  test('a bound font.build puts its preloads in <head> before the stylesheets, and serves the face', async () => {
+    const { text } = await html('/')
+    const head = text.slice(0, text.indexOf('</head>'))
+    const link = /<link rel="preload" as="font" type="font\/woff2" href="([^"]+)" crossorigin>/.exec(head)
+    expect(link?.[1]).toBe('/@weft-assets/acme-400-latin-0123abcd.woff2')
+    const css = head.indexOf('rel="stylesheet"')
+    if (css >= 0) expect(link.index).toBeLessThan(css)
+    const res = await get(link[1])
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('wOF2 fixture')
+  })
+})

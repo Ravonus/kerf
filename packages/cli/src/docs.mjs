@@ -45,6 +45,8 @@ function status(code, info) {
   if (e.by === 'start') return 'reported by @weft/start when it serves or renders the route, and by `weft routes --meta`'
   if (e.by === 'cli' && e.code.startsWith('H')) return e.code === 'H001' || e.code === 'H003' || e.code === 'H004' ? 'reported by weft check (from `site`) and by `weft routes --meta` (per route)' : 'reported by `weft routes --meta`'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
+  if (e.by === 'runtime') return 'reported in dev by the runtime (a console warning)'
+  if (e.by === 'plugin') return `reported by weft check when \`${e.owner}\` is in \`plugins\``
   return 'reserved'
 }
 

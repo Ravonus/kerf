@@ -10,3 +10,5 @@ export { pushLayer, place, justEscaped, type Layer, type Side, type Align } from
 export { dialog, popover, tooltip, type DialogOptions, type PopoverOptions } from './overlays'
 export { indicator, overflow, type IndicatorOptions } from './indicator'
 export { toastStore, toaster, announce, lifeOf, type Toast, type ToastInput, type ToastStore, type Tone } from './toast'
+export { TYPE_SCALE, FLUID_RANGE, MAX_FLUID_RATIO, fluid, fluidRatio, fluidCss, type Fluid, type FluidRole, type Stop } from './type'
+export { skeletonShape, isPart, type ShapeKind, type ShapeSpec, type SkeletonPart, type SkeletonBox } from './shape'

@@ -38,6 +38,7 @@ export const ENTRIES = {
   Progress: ['Progress', '<Progress label="Upload" value={40} />'],
   Spinner: ['Spinner', '<Spinner label="Loading" />'],
   Skeleton: ['Skeleton', '<Skeleton />'],
+  Shape: ['Shape', '<Shape kind="list" rows={3} />'],
   Tooltip: ['Tooltip', '<Tooltip content="Hint"><button>x</button></Tooltip>'],
   Popover: ['Popover', '<Popover label="Open">x</Popover>'],
   Modal: ['Modal', '<Modal open={open} title="T">x</Modal>'],

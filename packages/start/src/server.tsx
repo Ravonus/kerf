@@ -35,8 +35,8 @@ export interface HandlerOptions {
   /** Route, layout and card modules by manifest file. */
   modules: Record<string, RouteModule>
   site?: Site
-  /** The client entry and what to preload (Nitro's `?assets=client`). */
-  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[] }
+  /** The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`). */
+  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[] }
   /** Changes with every build: part of each card's `?v=` hash. */
   build?: string
   dev?: boolean
@@ -155,6 +155,7 @@ export function createHandler(options: HandlerOptions) {
     const head =
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
+      (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
       (assets.css ?? []).map(c => `<link rel="stylesheet" href="${esc(c.href)}">\n`).join('') +
       (assets.js ?? []).map(c => `<link rel="modulepreload" href="${esc(c.href)}">\n`).join('') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.

@@ -1,0 +1,23 @@
+{
+  "name": "create-weft",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scaffold a weft app: `npm create weft@latest my-app -- --ui warp|headless|none` (PLAN §6.3, research 26 §6)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-weft": "./bin/create-weft.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5"
+  }
+}

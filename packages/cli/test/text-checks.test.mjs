@@ -1,0 +1,90 @@
+// Phase 2's X-codes in `weft check` (research 26 §7), on a copy of the v3 reference app with planted files.
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { check } from '../src/check.mjs'
+import { fluidFor } from '../src/text-checks.mjs'
+import { project } from './helpers.mjs'
+
+const x = r => r.diagnostics.filter(d => d.code.startsWith('X'))
+const apply = (dir, d) => {
+  const text = readFileSync(join(dir, d.file), 'utf8')
+  const e = d.fix.edits[0]
+  return text.slice(0, e.offset[0]) + e.text + text.slice(e.offset[1])
+}
+
+describe('X-codes', () => {
+  it('X005 and X006: viewport-only sizes and clamps that zoom can\'t double', async () => {
+    const dir = project({
+      'src/type.css': 'h1 { font-size: 4vw; }\nh2 { font-size: clamp(1rem, 1rem + 5vw, 3rem); }\nh3 { font-size: clamp(1.5rem, 1.3rem + 0.7cqi, 1.9rem); }\n.t { font-size: var(--warp-text-title-size); }\n',
+      'src/Hero.tsx': "export function Hero() { return <h1 style={{ fontSize: '3cqi' }}>Hi</h1> }\n",
+    })
+    const r = await check(dir)
+    expect(x(r).map(d => [d.code, d.file, d.span[0]])).toEqual([['X005', 'src/Hero.tsx', 1], ['X005', 'src/type.css', 1], ['X006', 'src/type.css', 2]])
+    const [tsx, css, clamp] = x(r)
+    expect(readFileSync(join(dir, 'src/type.css'), 'utf8').slice(...css.offset)).toBe('4vw')
+    expect(css.fix).toMatchObject({ safe: false, edits: [{ text: fluidFor(4) }] })
+    expect(apply(dir, css)).toContain('h1 { font-size: clamp(0.938rem, calc(0.355rem + 2.486cqi), 2.344rem); }') // 15px → 37.5px, ratio 2.5
+    expect(readFileSync(join(dir, 'src/Hero.tsx'), 'utf8').slice(...tsx.offset)).toBe('3cqi')
+    expect(clamp.why).toContain('3.00×')
+  })
+
+  it('X020, X021, X022: a hand-written face with no fallback, block display and no subset', async () => {
+    const face = "@font-face { font-family: 'Brand'; src: url(./brand.woff2) format('woff2'); font-display: block; }\n"
+    const r = await check(project({ 'src/fonts.css': face }))
+    expect(x(r).map(d => d.code)).toEqual(['X020', 'X022', 'X021'])
+    const x021 = x(r).find(d => d.code === 'X021')
+    expect(x021.fix).toMatchObject({ safe: true, edits: [{ text: 'swap' }] })
+    expect(x(r).find(d => d.code === 'X020').why).toContain('add `@weft/plugin-text` and declare it in `text({ fonts })`')
+
+    const fine = "@font-face { font-family: 'Brand'; src: url(./brand-latin.woff2); font-display: swap; unicode-range: U+0000-00FF; }\n" +
+      "@font-face { font-family: 'Brand Fallback'; src: local('Arial'); size-adjust: 104%; }\n"
+    expect(x(await check(project({ 'src/fonts.css': fine })))).toEqual([])
+  })
+
+  it('X008: zoom-blocking viewport meta in HTML and JSX, with a safe fix', async () => {
+    const dir = project({
+      'index.html': '<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">',
+      'src/Head.tsx': 'export function Head() { return <meta name="viewport" content="width=device-width, maximum-scale=1.5" /> }\n',
+    })
+    const r = await check(dir)
+    const [html, tsx] = x(r).sort((a, b) => a.file.localeCompare(b.file))
+    expect([html.code, tsx.code]).toEqual(['X008', 'X008'])
+    expect(apply(dir, html)).toBe('<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1">')
+    expect(apply(dir, tsx)).toContain('content="width=device-width"')
+    expect(x(await check(project({ 'index.html': '<meta name="viewport" content="width=device-width, maximum-scale=5">' })))).toEqual([])
+  })
+
+  it('X023: a font preload no face uses', async () => {
+    const r = await check(project({
+      'src/fonts.css': "@font-face { font-family: 'Brand'; src: url(./brand-latin.woff2); unicode-range: U+0000-00FF; }\n@font-face { font-family: 'Brand Fallback'; src: local('Arial'); }\n",
+      'index.html': '<link rel="preload" as="font" type="font/woff2" href="/fonts/old.woff2" crossorigin><link rel="preload" as="font" href="/brand-latin.woff2" crossorigin>',
+    }))
+    expect(x(r).map(d => [d.code, d.why.match(/`([^`]+)`/)[1]])).toEqual([['X023', '/fonts/old.woff2']])
+  })
+
+  it('X030 and X034: undimensioned media and timers inside a Boundary', async () => {
+    const dir = project({
+      'src/Feed.tsx': `import { Boundary } from 'weft'
+function Spinner() { setTimeout(() => {}, 300); return <p>…</p> }
+export function Feed() {
+  return (
+    <Boundary pending={<Spinner />}>
+      <img src="/a.png" alt="A" />
+      <img src="/b.png" alt="B" width={64} height={64} />
+      <video src="/c.mp4" style="aspect-ratio: 16/9" />
+    </Boundary>
+  )
+}
+export function Outside() { return <img src="/d.png" alt="D" /> }
+`,
+    })
+    const r = await check(dir)
+    expect(x(r).map(d => [d.code, d.span[0]])).toEqual([['X034', 5], ['X030', 6]])
+    expect(x(r)[0].why).toContain('(<Spinner>)')
+  })
+
+  it('the v3 reference stays clean', async () => {
+    expect(x(await check(project()))).toEqual([])
+  })
+})

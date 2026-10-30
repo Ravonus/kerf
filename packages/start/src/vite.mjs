@@ -96,6 +96,8 @@ export default function weftStart(options = {}) {
     load: {
       filter: { id: /^\0virtual:weft\// },
       handler(raw) {
+        // `virtual:weft/entry-client?assets=client` (no src/entry.client.ts) is Nitro's assets plugin's to load.
+        if (/[?&]assets\b/.test(raw)) return
         const which = raw.slice(1).replace(/\?.*$/, '')
         const client = this.environment?.config.consumer === 'client'
         if (which === V.routes) return client ? clientRoutes(manifest, abs) : serverRoutes(manifest, abs)
@@ -152,7 +154,8 @@ function serverEntry(clientEntry) {
 import { manifest, modules } from '${V.routes}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
-const fetch = createHandler({ manifest, modules, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, css: assets.css },
+import { preloads } from 'weft:fonts/preloads'
+const fetch = createHandler({ manifest, modules, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, css: assets.css, fonts: preloads },
   // H005–H008 found while serving (a card's unsupported style, an image that didn't load): the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^H\\d{3} /, '')}\`) })
 export default { fetch }

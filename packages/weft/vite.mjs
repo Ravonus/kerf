@@ -3,6 +3,7 @@ import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync 
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './src/style/css.ts'
+import { assets } from './assets.mjs'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
@@ -249,7 +250,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
       },
     },
   }
-  return [main, features, style.plugin, agent(), slots(), tokens()]
+  return [main, features, style.plugin, agent(), slots(), tokens(), assets()]
 }
 
 /**

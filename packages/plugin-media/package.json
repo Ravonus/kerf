@@ -1,0 +1,26 @@
+{
+  "name": "@weft/plugin-media",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/plugin-media: the media.build@1 provider (sharp + SVGO: AVIF plus a compatible fallback, an SSIMULACRA2 quality search, width ladders, placeholders) and M001–M013",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "default": "./src/index.mjs" },
+    "./build": "./src/build.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "sharp": "0.35.5",
+    "svgo": "4.1.0"
+  },
+  "peerDependencies": {
+    "weft": "*"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  }
+}

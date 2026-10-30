@@ -16,6 +16,7 @@ import { Popover } from '../../src/Popover'
 import { Progress } from '../../src/Progress'
 import { Select } from '../../src/Select'
 import { Skeleton } from '../../src/Skeleton'
+import { Shape } from '../../src/Shape'
 import { Tabs } from '../../src/Tabs'
 import { Tag } from '../../src/Tag'
 import { Toaster, toast } from '../../src/Toast'
@@ -91,6 +92,9 @@ export function Surfaces() {
       <Skeleton />
       <Skeleton shape="circle" width="2rem" height="2rem" />
       <Skeleton lines={2} />
+      <Shape kind="text" lines={2} />
+      <Shape kind="list" rows={1} label="Loading people" />
+      <Shape kind="table" rows={1} cols={2} />
     </div>
   )
 }

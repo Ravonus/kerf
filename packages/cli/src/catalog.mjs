@@ -1,11 +1,12 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), plus the codes proposed in research 17 (marked `proposed`).
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 11 §8.5 and 15 §7.5 as built in
+// research 26 §7 (Phase 2's X-codes, M001–M013), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
 // come from `weft check`'s test pass (tests.mjs); their examples are test files, checked the same way.
 
-/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'reserved', example?: string, proposed?: boolean }} Entry */
+/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'runtime' | 'plugin' | 'reserved', owner?: string, example?: string, proposed?: boolean }} Entry */
 
 /** @type {Entry[]} */
 export const catalog = [
@@ -195,6 +196,33 @@ export const catalog = [
   { code: 'H006', severity: 'error', by: 'cli', proposed: true, catches: '`meta` reads a box or calls a hook (metadata is plain data); found statically by `weft routes --meta`', fix: 'Compute it from `params` and `data`' },
   { code: 'H007', severity: 'error', by: 'start', proposed: true, catches: '`meta` (or a card) reads a deferred (streamed) field of the loader\'s data: the request fails with 500 instead of a page with missing tags', fix: 'Await the field in `load`, or leave it out of `meta`' },
   { code: 'H008', severity: 'warning', by: 'start', proposed: true, catches: 'A card\'s `<img>` didn\'t load (timeout, HTTP error, not an image, too large, host not allowed); the card renders without it', fix: 'Fix the URL, or embed the image with an import' },
+
+  // Text, type and skeletons (research 11 §8.5; Phase 2's set, research 26 §7). `cli`: weft check (text-checks.mjs).
+  { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },
+  { code: 'X006', severity: 'error', by: 'cli', catches: 'A fluid `clamp()` font size whose max/min is over 2.5: 200% zoom no longer doubles it', fix: 'Narrow the range (raise the minimum or lower the maximum)' },
+  { code: 'X008', severity: 'error', by: 'cli', catches: 'Viewport meta with `user-scalable=no` or `maximum-scale` under 2: blocks pinch zoom', fix: 'Remove them (autofix)' },
+  { code: 'X020', severity: 'warning', by: 'cli', catches: 'A hand-written `@font-face` for a local file with no `"<Family> Fallback"` face: the font swap shifts layout', fix: 'Declare the font in `text({ fonts })` (@weft/plugin-text), which generates a metric-matched fallback' },
+  { code: 'X021', severity: 'error', by: 'cli', catches: '`font-display: block` or `auto`: text is invisible while the font loads', fix: '`swap` (autofix), or `optional` for faces that may skip' },
+  { code: 'X022', severity: 'warning', by: 'cli', catches: 'A local `@font-face` without `unicode-range` (not subset), or the font build\'s preloads over the 100 KB budget', fix: '`text({ fonts })` subsets every face; preload fewer faces' },
+  { code: 'X023', severity: 'warning', by: 'cli', catches: 'A `<link rel="preload" as="font">` whose file no `@font-face` uses', fix: 'Remove the preload' },
+  { code: 'X030', severity: 'error', by: 'cli', catches: '`<img>`, `<video>` or `<iframe>` without `width`/`height` or `aspect-ratio` inside a `<Boundary>`: it lands at 0 px and pushes content down', fix: '`<Media src={x}>` with a `?media` import (it always has dimensions), or set `width` and `height`' },
+  { code: 'X031', severity: 'warning', by: 'runtime', catches: 'A `pending` fallback whose box differs from the content\'s by more than 1 px at the swap (measured by `<Boundary>` in dev)', fix: 'Size the fallback like the content: warp\'s `<Shape>` with the content\'s counts' },
+  { code: 'X034', severity: 'error', by: 'cli', catches: 'A `pending` fallback with its own `setTimeout`/`setInterval`: `<Boundary>` already owns the 150 ms / 400 ms timing', fix: 'Remove the timers from the fallback' },
+
+  // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft/plugin-media's check hook.
+  { code: 'M001', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)', fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`' },
+  { code: 'M002', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer', fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`' },
+  { code: 'M003', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A raw `<img>` whose file is wider than its `width` × 2 (DPR) × 1.25: bytes nobody sees', fix: '`<Media>`, which resizes' },
+  { code: 'M004', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A GIF over 256 KB rendered raw', fix: '`<Media>`; video conversion arrives with @weft/plugin-media-ffmpeg' },
+  { code: 'M005', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video autoplay>` without `muted`: browsers block it, and sound before a gesture is hostile', fix: 'Add `muted` (autofix)' },
+  { code: 'M006', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video>` without `poster`: a blank box until the first frame decodes', fix: 'Add a `poster` image' },
+  { code: 'M007', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'Missing `alt` on `<Media>`/`<img>`, `<Media alt="">` without `decorative`, or `alt` equal to the file name', fix: 'Describe what the image shows; `alt="" decorative` for purely visual media' },
+  { code: 'M008', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A route\'s first media is `loading="lazy"`, or `priority` media is lazy: the likely LCP image loads late', fix: 'Mark the hero `priority` and drop `loading="lazy"`' },
+  { code: 'M009', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`priority` on more than 2 media in one route: they compete for the first bytes', fix: 'Keep `priority` on the one hero image' },
+  { code: 'M010', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A `priority` `<Media>` without `width` or `sizes`: eager images can\'t use `sizes="auto"`, so the browser assumes 100vw', fix: 'Pass `width="1/2"` (a viewport fraction or CSS length) or `sizes`' },
+  { code: 'M011', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video autoplay loop>` without `controls`, or a GIF in a raw `<img>`: endless motion with no pause (WCAG 2.2.2)', fix: '`<Media>` (pause control, poster under reduced motion), or add `controls`' },
+  { code: 'M012', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An SVG with `<script>`, `foreignObject`, `on*=` handlers or external references, used as an image', fix: 'Sanitise the file; the build refuses to optimise it' },
+  { code: 'M013', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A file in `public/` referenced by string: untracked, unoptimised, no dimensions', fix: 'Move it next to the code and `import x from \'./x.jpg?media\'`' },
 
   { code: 'P100', severity: 'error', by: 'cli', catches: 'Two providers for a `one` slot (or the same key in a `keyed` slot)', fix: 'Remove one, or name the winner in `slots: {}`' },
   { code: 'P101', severity: 'error', by: 'reserved', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },

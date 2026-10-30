@@ -1,4 +1,5 @@
-// `weft check`: compile every project file in check mode, add the project view, the test T-codes and the config P-codes.
+// `weft check`: compile every project file in check mode, add the project view, the X-codes (text-checks.mjs), plugin
+// `check` hooks, the test T-codes and the config P-codes.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
@@ -8,6 +9,8 @@ import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { projectView } from './project.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
+import { pluginChecks } from './plugin-checks.mjs'
+import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 
 const posix = p => p.split('\\').join('/')
@@ -59,7 +62,15 @@ export async function check(root, options = {}) {
 
   projectView(files, file => posByAbs.get(file.abs))
 
-  const diagnostics = [...loaded.diagnostics, ...files.flatMap(f => f.diagnostics), ...checkTests(root, testRels), ...hygiene(root)]
+  const fontBuild = typeof loaded.slots['font.build'] === 'string' && !loaded.slots['font.build'].startsWith('weft:default')
+  const diagnostics = [
+    ...loaded.diagnostics,
+    ...files.flatMap(f => f.diagnostics),
+    ...textChecks(root, { files, exclude, fontBuild }),
+    ...(await pluginChecks(root, loaded, { files, exclude })),
+    ...checkTests(root, testRels),
+    ...hygiene(root),
+  ]
   sortDiagnostics(diagnostics)
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }
   return {

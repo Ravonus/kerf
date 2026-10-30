@@ -19,6 +19,7 @@ const fixtures = {
   'Boundary + resource': join(pkg, 'bench/fixtures/async.tsx'),
   'js-framework-benchmark': join(pkg, 'bench/fixtures/jfb.tsx'),
   'setHead (weft/head)': join(pkg, 'bench/fixtures/head.ts'),
+  '<Media> (weft/media)': join(pkg, 'bench/fixtures/media.tsx'),
 }
 const hydratable = new Set(['v3 shop app (hydrate)'])
 // Runtime: 10 KB is the gate, 6 KB the target (PLAN §3.7).
@@ -31,7 +32,7 @@ for (const [name, entry] of Object.entries(fixtures)) {
     configFile: false,
     logLevel: 'silent',
     plugins: [weft({ hydratable: hydratable.has(name) })],
-    resolve: { alias: [{ find: /^weft\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^weft\/(dom|persist|history|browser)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
+    resolve: { alias: [{ find: /^weft\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^weft\/media$/, replacement: join(pkg, 'src/media.tsx') }, { find: /^weft\/(dom|persist|history|browser)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^weft$/, replacement: join(pkg, 'src/index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
   const code = [out].flat().flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')
