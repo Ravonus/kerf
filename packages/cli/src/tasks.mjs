@@ -20,7 +20,7 @@ export const builtins = [
   { name: 'dev', description: 'Dev server', sideEffects: ['network:listen'], available: false, stack: true, longRunning: true },
   { name: 'build', description: 'Production build and contract', sideEffects: ['fs:.output/**'], available: false, stack: true },
   { name: 'start', description: 'Serve the build', sideEffects: ['network:listen'], available: false, stack: true, longRunning: true },
-  { name: 'db', description: '`generate`: new migrations', sideEffects: ['fs:drizzle/**'], available: false, stack: true },
+  { name: 'db', description: '`generate`: new migrations', sideEffects: ['fs:drizzle/**', 'fs:migrations/**', 'fs:prisma/**'], available: false, stack: true },
   { name: 'test', description: 'The test gate on the diff (`--gate`)', args: { type: 'object', properties: { gate: { type: 'boolean' }, base: { type: 'string' }, budget: { type: 'number' }, refactor: { type: 'boolean' } } }, sideEffects: ['fs:.weft/gate'], available: true },
   { name: 'fix', description: 'Apply safe autofixes from `weft check`', sideEffects: ['fs:scope.write'], available: false },
   { name: 'browser', description: 'Drive the running app in any open browser by role/label/text (`weft browser help`)', args: { type: 'object', properties: { command: { type: 'string' } } }, sideEffects: ['network:dev-server', 'fs:.weft/browser'], available: true },

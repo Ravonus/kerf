@@ -71,7 +71,6 @@ describe('weft add', () => {
 
   it('names features that are not built yet, and changes nothing', async () => {
     const dir = project({ 'weft.config.ts': 'export default {}\n' })
-    await expect(add(dir, 'db')).rejects.toThrow("isn't built yet")
     await expect(add(dir, 'auth')).rejects.toThrow("isn't built yet")
   })
 })
@@ -116,6 +115,37 @@ describe('weft add tailwind', () => {
 
     const done = app({ tailwindcss: '4.3.3' }, { 'src/app.css': '@import "tailwindcss";\n' })
     expect(await addTw(done)).toMatchObject({ already: true })
+  })
+})
+
+describe('weft add db', () => {
+  const app = (extra = {}) => project({ 'package.json': JSON.stringify({ name: 'shop' }), 'src/routes/index.tsx': 'export default () => null\n', ...extra })
+  const addDb = (dir, o = {}) => addCommand(dir, 'db', { install: false, ...o })
+
+  it('writes the wiring and no todo app; a layer brings its plugin', async () => {
+    const dir = app({ 'weft.config.ts': 'export default {}\n', 'node_modules/@weft/plugin-db-native/package.json': JSON.stringify({ name: '@weft/plugin-db-native', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/@weft/plugin-db-native/plugin.mjs': "import { definePlugin } from 'weft/plugin'\nexport const native = definePlugin({ name: '@weft/plugin-db-native', contribute: () => ({}) })\n" })
+    const r = await addDb(dir, { engine: 'mysql', layer: 'native' })
+    expect(r.package).toBe('native on mysql')
+    expect(read(dir, 'src/db/index.server.ts')).toContain('@weft/plugin-db-native/mysql')
+    expect(read(dir, '.env')).toContain('mysql://')
+    expect(() => read(dir, 'src/server/todos.ts')).toThrow()
+    expect(await names(dir)).toEqual(['@weft/plugin-db-native'])
+  })
+
+  it('keeps an .env, and refuses an app that has a database or a file in the way', async () => {
+    const dir = app({ '.env': 'KEY=1\n' })
+    await addDb(dir)
+    expect(read(dir, '.env')).toMatch(/^KEY=1\nDATABASE_URL=/)
+    await expect(addDb(dir)).rejects.toMatchObject({ code: 'E_ADD' })
+
+    const context = app({ 'src/context.server.ts': 'export default () => ({})\n' })
+    await expect(addDb(context)).rejects.toThrow('context.server.ts')
+    expect(() => read(context, '.env')).toThrow()
+  })
+
+  it('names what it takes', async () => {
+    await expect(addDb(app(), { engine: 'oracle' })).rejects.toMatchObject({ code: 'E_USAGE' })
+    await expect(addDb(app(), { layer: 'sequel' })).rejects.toMatchObject({ code: 'E_USAGE' })
   })
 })
 

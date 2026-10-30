@@ -271,6 +271,7 @@ export const catalog = [
   { code: 'A002', severity: 'error', by: 'start', catches: 'A function with `auth: \'user\'` was called with no session (401)', fix: 'Sign in first, or guard the route with `redirect()` in its `load`' },
   { code: 'A003', severity: 'error', by: 'start', catches: '`auth: \'user\'`, but `ctx` has no `user`: the context file never asked for the session', fix: 'Spread `session(auth, request)` into what `src/context.server.ts` returns' },
   { code: 'A004', severity: 'warning', by: 'start', catches: 'A mutation changed the session cookie without a redirect: the tab keeps what the last session cached', fix: '`redirect()` after it: that\'s a full load, which drops the client cache' },
+  { code: 'A005', severity: 'error', by: 'start', catches: 'The database provider has no Better Auth adapter', fix: 'Pass `options.database` to `createAuth`, or use a provider that has one' },
   { code: 'C001', severity: 'warning', by: 'cli', catches: 'A function\'s `input` or `output` schema can\'t become JSON Schema: the contract says `{}`', fix: 'Use a schema with JSON Schema support (Zod 4 has it), or drop what can\'t be represented' },
   { code: 'C002', severity: 'error', by: 'start', catches: 'A function\'s value failed its `output` schema (dev and tests)', fix: 'Fix `run`, or the schema' },
 

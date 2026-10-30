@@ -94,9 +94,12 @@ export async function base(t, { url, browser }) {
       window.__mo = new MutationObserver(r => window.__w.push(...r.map(x => `${x.type}:${x.target.nodeName}.${x.attributeName ?? ''}`)))
       window.__mo.observe(document.querySelector('ul.todos'), { subtree: true, childList: true, characterData: true, attributes: true })
     })
+    // Not `networkidle`: a page that reached it once reports it at once, and the row flips optimistically before the write lands.
+    const written = a.page.waitForResponse(r => r.url().includes('/_weft/fn/') && r.request().method() === 'POST')
     await a.page.locator('ul.todos li', { hasText: 'Write the note' }).getByRole('checkbox').click()
     await a.page.locator('ul.todos li.done').waitFor()
-    await a.page.waitForLoadState('networkidle')
+    await written
+    await a.page.waitForTimeout(100) // the refetch that follows
     const writes = await a.page.evaluate(() => (window.__w.push(...window.__mo.takeRecords().map(x => x.type)), window.__w))
     if (writes.length > 1) fail(`toggle wrote ${JSON.stringify(writes)}`)
   })

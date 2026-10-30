@@ -4,12 +4,14 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { eq, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { mysqlTable, varchar } from 'drizzle-orm/mysql-core'
 import { integer as pgInteger, pgTable, text as pgText } from 'drizzle-orm/pg-core'
 import { mutation, query } from '@weft/start'
 import { fnOf, runtime, StartError } from '@weft/start/data'
 import { createScope, fetchQuery, runMutation } from '../src/exec'
 import { schemasOf } from '../src/db/index'
 import { createDb } from '../src/db/sqlite'
+import { createDb as createMysql } from '../src/db/mysql'
 import { readMigrations } from '../src/migrations.mjs'
 
 const todos = sqliteTable('todos', { id: text().primaryKey(), title: text().notNull(), done: integer({ mode: 'boolean' }).notNull().default(false) })
@@ -140,6 +142,22 @@ test('readMigrations: the journal\'s order, and nothing for an app with no folde
   writeFileSync(join(root, 'drizzle/meta/_journal.json'), JSON.stringify({ entries: [{ tag: '0000_a' }, { tag: '0001_b' }] }))
   expect(readMigrations(root)).toEqual([{ tag: '0000_a', sql: 'a' }, { tag: '0001_b', sql: 'b' }])
   rmSync(root, { recursive: true, force: true })
+})
+
+describe.skipIf(!process.env.WEFT_TEST_MYSQL)('mysql', () => {
+  const my = mysqlTable('my_todos', { id: varchar({ length: 36 }).primaryKey(), title: varchar({ length: 200 }).notNull() })
+  const tables = { my }
+  const url = process.env.WEFT_TEST_MYSQL!
+  const migrations = [{ tag: `0000_${Date.now()}`, sql: 'drop table if exists my_todos;--> statement-breakpoint\ncreate table my_todos (id varchar(36) primary key, title varchar(200) not null)' }]
+
+  test('same API and migrations, each file once; Q013 on a file URL', async () => {
+    const db = createMysql({ schema: tables, url, migrate: false })
+    await db.$weft.migrate(migrations)
+    await db.insert(my).values({ id: '1', title: 'Milk' })
+    await db.$weft.migrate(migrations) // a second run would drop the row
+    expect(await db.select().from(my)).toEqual([{ id: '1', title: 'Milk' }])
+    expect(() => createMysql({ schema: tables, url: 'file:x.db' })).toThrow(/Q013|mysql:/)
+  })
 })
 
 describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {

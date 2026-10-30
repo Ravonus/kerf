@@ -4,19 +4,20 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import ts from 'typescript'
 import { writeAgentsMd } from './agents-md.mjs'
 import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
+import { dbLayer } from './start.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
 const ALIASES = { warp: '@weft/warp', text: '@weft/plugin-text', media: '@weft/plugin-media', 'surface-keel': '@weft/plugin-surface-keel' }
 /** Features 3x hasn't built: an honest answer beats treating them as a package name. */
-const COMING = { db: 'database layers (research 34 slice C)', auth: 'auth providers (slice D)' }
+const COMING = { auth: 'auth providers (slice D)' }
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -133,11 +134,50 @@ async function addTailwind(root, { dryRun, install }) {
   return { ok: true, package: 'tailwindcss', actions }
 }
 
-export async function addCommand(root, feature, { dryRun = false, install = true } = {}) {
+const ENGINES = ['sqlite', 'postgres', 'mysql']
+const LAYER_PLUGIN = { prisma: '@weft/plugin-db-prisma', native: '@weft/plugin-db-native' }
+
+/** A database on an app that has none: the wiring a scaffold writes, with no todo app. Never touches what's there. */
+async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, install }) {
+  if (!ENGINES.includes(engine)) throw usageError(`weft add db takes ${ENGINES.join(', ')}, not \`${engine}\``)
+  if (!['drizzle', ...Object.keys(LAYER_PLUGIN)].includes(layer)) throw usageError(`--layer takes drizzle, prisma or native, not \`${layer}\``)
+  if (await dbLayer(root)) throw refused('This app already has a database. Changing engine or layer changes your queries, so it\'s yours to do. Nothing was changed.')
+  const { stackDeps, stackFiles } = await import('create-weft/stack')
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+  const name = String(pkg.name ?? 'app').replace(/^@.*\//, '')
+  const files = stackFiles({ db: engine, layer, auth: false, name, secret: '' })
+  delete files['src/routes/todos/index.tsx']
+  delete files['src/server/todos.ts']
+  const taken = Object.keys(files).filter(f => f !== '.env' && f !== '.env.example' && existsSync(join(root, f)))
+  if (taken.length) throw refused(`${taken.join(', ')} already exist, so this can't add a database without overwriting them. Nothing was changed.`)
+
+  const { deps, dev } = stackDeps({ db: engine, layer, auth: false })
+  const actions = []
+  const [manager, verb] = installer(root)
+  if (install) {
+    const specs = Object.entries({ ...deps, ...dev }).map(([n, v]) => `${n}@${v}`)
+    actions.push(`install ${specs.join(' ')} with ${manager}`)
+    if (!dryRun) execFileSync(manager, [verb, ...specs], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+  }
+  actions.push(...Object.keys(files).map(f => `write ${f}`))
+  if (dryRun) return { ok: true, package: `${layer} on ${engine}`, actions, dryRun: true }
+  for (const [file, text] of Object.entries(files)) {
+    const path = join(root, file)
+    mkdirSync(dirname(path), { recursive: true })
+    if (file.startsWith('.env') && existsSync(path)) writeFileSync(path, `${readFileSync(path, 'utf8').trimEnd()}\n${text}`)
+    else writeFileSync(path, text)
+  }
+  if (LAYER_PLUGIN[layer]) actions.push(...(await addCommand(root, LAYER_PLUGIN[layer], { install: false })).actions)
+  actions.push('next: `weft db generate`')
+  return { ok: true, package: `${layer} on ${engine}`, actions }
+}
+
+export async function addCommand(root, feature, { dryRun = false, install = true, engine, layer } = {}) {
   root = resolve(root)
-  if (!feature) throw usageError(`weft add needs a feature: tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
+  if (!feature) throw usageError(`weft add needs a feature: db, tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
   if (COMING[feature]) throw refused(`\`weft add ${feature}\` isn't built yet: ${COMING[feature]}. Nothing was changed.`)
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
+  if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   const pkg = ALIASES[feature] ?? feature
   const before = await loadConfig(root)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')

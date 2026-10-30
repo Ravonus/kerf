@@ -19,17 +19,17 @@ import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
-import { schemaHash } from './start.mjs'
+import { dbLayer, schemaHash } from './start.mjs'
 
 const posix = p => p.split('\\').join('/')
 
 /** Q015: the schema's hash against the one `weft db generate` recorded (research 28 §2). */
-function schemaDrift(root) {
-  const schema = join(root, 'src', 'db', 'schema.ts')
-  if (!existsSync(schema) || !existsSync(join(root, 'drizzle.config.ts'))) return []
-  const file = join(root, 'drizzle', '.schema-hash')
+function schemaDrift(root, layer) {
+  const schema = layer?.schema && join(root, layer.schema)
+  if (!schema || !existsSync(schema)) return []
+  const file = join(root, layer.migrations, '.schema-hash')
   if (existsSync(file) && readFileSync(file, 'utf8').trim() === schemaHash(readFileSync(schema))) return []
-  return [diagnostic({ code: 'Q015', file: 'src/db/schema.ts', why: existsSync(file) ? 'The schema changed since the last `weft db generate`: the database will not match it.' : 'No migrations yet: the first request that reads a table fails with Q014.' })]
+  return [diagnostic({ code: 'Q015', file: layer.schema, why: existsSync(file) ? 'The schema changed since the last `weft db generate`: the database will not match it.' : 'No migrations yet: the first request that reads a table fails with Q014.' })]
 }
 
 /**
@@ -104,7 +104,7 @@ export async function check(root, options = {}) {
     ...checkTests(root, testRels),
     ...hygiene(root),
     ...(await socketChecks(root)),
-    ...schemaDrift(root),
+    ...schemaDrift(root, await dbLayer(root, loaded)),
   ]
   sortDiagnostics(diagnostics)
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }

@@ -1,12 +1,12 @@
 // The create-weft wizard (research 34 §3): each choice is a list with the default selected. A flag answers its question,
 // and with no terminal or with --yes every unanswered question takes its default, so agents and CI never see a prompt.
 import { emitKeypressEvents } from 'node:readline'
-import { CONFIGS, DB, RUNTIMES, UI } from './index.mjs'
+import { CONFIGS, DB, LAYERS, RUNTIMES, UI } from './index.mjs'
 
 const PMS = ['npm', 'pnpm', 'bun', 'yarn']
 const LABELS = {
   warp: 'warp', headless: 'Headless (warp behaviour, your markup)', tailwind: 'Tailwind', none: 'None',
-  sqlite: 'SQLite', postgres: 'Postgres', node: 'Node', bun: 'Bun', deno: 'Deno', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn',
+  sqlite: 'SQLite', postgres: 'Postgres', mysql: 'MySQL', drizzle: 'Drizzle', prisma: 'Prisma', native: 'Native (no ORM)', node: 'Node', bun: 'Bun', deno: 'Deno', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn',
   ts: 'TypeScript', json: 'JSON', yaml: 'YAML',
 }
 const list = values => values.map(value => ({ value, label: LABELS[value] ?? value }))
@@ -17,7 +17,8 @@ const packageManager = env => PMS.find(pm => env.npm_config_user_agent?.startsWi
 export const questions = env => [
   { key: 'ui', label: 'UI', default: 'warp', options: list(UI) },
   { key: 'db', label: 'Database', default: 'sqlite', options: list(DB) },
-  { key: 'auth', label: 'Sign-in', default: true, options: yesNo, when: a => a.db !== 'none' },
+  { key: 'layer', label: 'Data layer', default: 'drizzle', skip: 'drizzle', options: list(LAYERS), when: a => a.db !== 'none' },
+  { key: 'auth', label: 'Sign-in', default: true, options: yesNo, when: a => a.db !== 'none' && a.layer !== 'native' },
   { key: 'runtime', label: 'Runtime', default: 'node', options: list(RUNTIMES) },
   { key: 'config', label: 'Config file', default: 'ts', options: list(CONFIGS) },
   { key: 'pm', label: 'Package manager', default: packageManager(env), options: list(PMS) },
@@ -64,7 +65,7 @@ export async function resolveChoices(given, { interactive, yes = false, env = pr
   const choices = { ...given }
   for (const q of questions(env)) {
     if (q.when && !q.when(choices)) {
-      choices[q.key] ??= false
+      choices[q.key] ??= q.skip ?? false
       continue
     }
     if (choices[q.key] !== undefined) continue

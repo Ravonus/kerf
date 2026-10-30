@@ -27,13 +27,13 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
-  db generate         a migration in drizzle/ for the schema's changes (it applies on the next request)
+  db generate [name]  a migration for the schema's changes (it applies on the next request)
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
-  add <plugin>        install a plugin and wire it into the config [--dry-run] [--no-install]
+  add <feature>       install a plugin and wire it into the config; also tailwind, and db [engine] [--layer drizzle|prisma|native] [--dry-run] [--no-install]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
   plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
@@ -44,7 +44,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
+const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
 const booleans = new Set(['dry-run', 'no-install', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
@@ -116,7 +116,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'start':
         return await startCommand(args.root, { runtime: args.flags.runtime })
       case 'db': {
-        const result = dbCommand(args.root, args.positional[0])
+        const result = await dbCommand(args.root, args.positional[0], args.positional[1])
         if (args.json) print(result)
         say(result.output)
         return 0
@@ -162,7 +162,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return 0
       }
       case 'add': {
-        const result = await addCommand(args.root, args.positional[0], { dryRun: args.flags['dry-run'], install: !args.flags['no-install'] })
+        const result = await addCommand(args.root, args.positional[0], { dryRun: args.flags['dry-run'], install: !args.flags['no-install'], engine: args.positional[1], layer: args.flags.layer })
         if (args.json) print(result)
         else say(result.already ? `${result.package} is already in ${result.config}` : result.actions.map(a => `${args.flags['dry-run'] ? 'would ' : ''}${a}`).join('\n'))
         return 0
