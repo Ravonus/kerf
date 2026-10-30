@@ -3,7 +3,8 @@
 //
 // - seed: the brand accent. The spec tokens (ui-core/styles/warp.css) derive every colour from
 //   --warp-seed-accent-h/-c, so a seed is those two values. It is checked with the spec's own contrast checker
-//   (ui-core/scripts/contrast-check.mjs: every sys pair, both themes, every dial stop); any failure is D010.
+//   (ui-core/scripts/contrast-check.mjs: every sys pair, both themes, every dial stop). A hue that fails is fitted (see
+//   fitted()), so every hue passes; what can still fail is a token override, which is D010.
 // - fields: 'classic' makes classic fields the default with no attribute in the app: the spec's classic rules
 //   (keyed on [data-fields="classic"]) are copied, re-scoped to :root unless an ancestor says data-fields="floating".
 // - dials: the app's default expression, density, flair and theme, the same way. Markup still wins: a data-* on <html>
@@ -14,7 +15,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { definePlugin } from 'weft/plugin'
-import { fromHex } from './tokens/color.mjs'
+import { fromHex, luminance, toLinear } from './tokens/color.mjs'
 
 const core = new URL('../ui-core/', import.meta.url)
 const DEFAULT = { hue: 152, chroma: 0.115 }
@@ -109,6 +110,47 @@ export function checkSeed(seed, declarations = '') {
   }
 }
 
+// A token's value in the spec, with `from` (its lightness for one theme) replaced by `to`.
+function relit(token, from, to) {
+  const value = readFileSync(new URL('styles/warp.css', core), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').match(new RegExp(`${token}:\\s*([^;]+);`))[1]
+  return value.replace(/\s+/g, ' ').replace(`oklch(${from} `, `oklch(${to} `)
+}
+
+/** The lightness at which `chroma` and `hue` have luminance `Y`: contrast only sees luminance, so this keeps the default's contrast. */
+function lightnessFor(Y, chroma, hue) {
+  let lo = 0, hi = 1
+  for (let k = 0; k < 24; k++) {
+    const mid = (lo + hi) / 2
+    if (luminance(toLinear({ L: mid, C: chroma, H: hue })) < Y) lo = mid
+    else hi = mid
+  }
+  return Math.ceil(hi * 1000) / 1000
+}
+
+// The spec's lightnesses are tuned for the default hue, and equal lightness is not equal luminance: other hues land just
+// outside the two tightest pairs (light sweep against the ink, dark accent text on its pressed fill). Those two tokens
+// are relit to the default's luminance, keeping the hue and chroma. Accent text takes a 3% margin: at these hues the soft
+// fill behind it is brighter too, and text only ever gets lighter.
+function fitted(seed) {
+  const sweep = lightnessFor(luminance(toLinear({ L: 0.515, C: 0.13, H: DEFAULT.hue })), Math.min(Math.max(seed.chroma * 1.25, 0.12), 0.13), seed.hue)
+  const text = lightnessFor(luminance(toLinear({ L: 0.8, C: DEFAULT.chroma, H: DEFAULT.hue })) * 1.03, seed.chroma, seed.hue)
+  return { '--warp-color-sweep': relit('--warp-color-sweep', 0.515, sweep), '--warp-color-accent-text': relit('--warp-color-accent-text', 0.8, Math.max(text, 0.8)) }
+}
+
+/** `declarations` plus whatever a custom seed needs to pass, or D010. A token set in the config beats a fitted one. */
+function fitSeed(seed, declarations) {
+  try {
+    checkSeed(seed, declarations)
+    return declarations
+  } catch (error) {
+    if (error.code !== 'D010') throw error
+  }
+  const fit = Object.entries(fitted(seed)).filter(([token]) => !declarations.includes(`${token}:`)).map(([k, v]) => `${k}:${v}`)
+  const merged = [...fit, ...(declarations ? [declarations] : [])].join(';')
+  checkSeed(seed, merged)
+  return merged
+}
+
 /** Every spec rule keyed on `key`, re-scoped to `scope`, inside its original layer. */
 function rescoped(key, scope) {
   const files = [new URL('styles/warp.css', core), ...['inputs', 'components'].flatMap(dir => readdirSync(new URL(`styles/${dir}/`, core)).map(f => new URL(`styles/${dir}/${f}`, core)))]
@@ -175,8 +217,9 @@ export const warp = definePlugin({
   contribute(o) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
-    const declarations = overrides(o)
-    if (custom || declarations) checkSeed(seed, declarations) // throws { code: 'D010' }
+    let declarations = overrides(o)
+    if (custom) declarations = fitSeed(seed, declarations) // throws { code: 'D010' }
+    else if (declarations) checkSeed(seed, declarations)
     const dials = Object.entries(o.dials ?? {}).map(([dial, value]) => dialCss(dial, value)).join('')
     const css = (custom ? seedCss(seed) : '') + (o.fields === 'classic' ? classicCss() : '') + dials + overrideCss(declarations)
     return {
@@ -185,7 +228,7 @@ export const warp = definePlugin({
       catalog,
       map: [{ want: 'UI components', call: 'Import from `@weft/warp`; `weft plugins` has the catalog', have: `${catalog.length} components` }],
       diagnostics: [
-        { code: 'D010', catches: 'A seed or token override that leaves text, a control boundary or the focus ring below WCAG contrast at some dial stop', fix: 'Change the seed or token; the message lists each failing pair', severity: 'error' },
+        { code: 'D010', catches: 'A token override, alone or with the seed, that leaves text, a control boundary or the focus ring below WCAG contrast at some dial stop', fix: 'Change the token or seed; the message lists each failing pair', severity: 'error' },
       ],
     }
   },

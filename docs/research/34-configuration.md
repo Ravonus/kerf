@@ -123,10 +123,12 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
   config format. Every override goes through the contrast check at every dial stop, so D010 still protects users. Dials
   are defaults: a `data-*` on `<html>` or any scope still wins. One limit: a default dial's rules on descendants (the
   quiet heading rule) also reach a nested scope that sets a different value.
-- **Seed range:** warp requires the sweep stroke to reach 3:1 against both the ink base and the surface, which leaves a
-  narrow lightness window. At the default chroma, seeds with hues of about 120 to 240 pass; the others fail D010 in
-  light mode. Some can be rescued by setting `--warp-color-sweep` (hue 270 can). Opening this up for every hue is a
-  design decision about the signature, so it stays open here.
+- **Seeds (built):** every hue passes D010 by default. The spec's lightnesses are tuned for the default green, and equal
+  lightness isn't equal luminance, so other hues landed just outside the two tightest pairs: the sweep against the ink
+  base in light, and accent text on its pressed fill in dark. A seed that fails is fitted: `warp()` relights those two
+  tokens to the default's luminance, which keeps the hue and chroma, and the signature's 3:1 rule, unchanged. The spec
+  stays as designed, the default adds no CSS, and a seed that already passes is emitted as is. D010 still catches a token
+  override that breaks a pair. A seed set in markup isn't fitted, because the check runs at build time.
 - **Styling (built):** the Tailwind adapter moved up from Phase 4. `create-weft --ui tailwind` and `weft add tailwind`
   write the same files. In a warp app Tailwind's reset stays out, because its `base` layer would beat warp, and
   `@weft/warp/tailwind.css` maps warp tokens to theme values. D020 is off in an app with `tailwindcss` installed.
@@ -200,7 +202,3 @@ The map is a matrix of *what you want → what to call*, listing only what this 
 
 **Costs:** every option multiplies testing. The matrix covers the tested tiers rather than every combination, and this
 work comes before 3c, because 3c's `@weft/db-*` packs build on these slots.
-
-## 10. Open questions
-
-- **warp seeds:** whether every hue should pass D010 by default (§5).
