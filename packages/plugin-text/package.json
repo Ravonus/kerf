@@ -1,0 +1,31 @@
+{
+  "name": "@weft/plugin-text",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/plugin-text: the font build step (font.build@1): subsets per unicode-range, metric-matched fallback faces, preloads and fonts.json. text.measure arrives with Surfaces.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    },
+    "./build": "./src/build.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@capsizecss/metrics": "4.4.0",
+    "@capsizecss/unpack": "4.0.1",
+    "subset-font": "2.9.0"
+  },
+  "peerDependencies": {
+    "weft": "*"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "5.3.0",
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  }
+}

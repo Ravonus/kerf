@@ -153,3 +153,36 @@ describe('weft/plugin + weft plugins', () => {
     expect(existsSync(join(bare, '.weft'))).toBe(false)
   })
 })
+
+describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
+  it('sync writes .weft/slots/<id>.build.json for a bound build-side provider', async () => {
+    const dir = project({ 'weft.config.ts': config() })
+    await check(dir)
+    expect(JSON.parse(readFileSync(join(dir, '.weft/slots/font.build.build.json'), 'utf8'))).toEqual({
+      plugin: '@acme/plugin-fonts', version: '1.2.0', module: '@acme/plugin-fonts/build', export: 'build', options: { subset: true },
+    })
+    expect(existsSync(join(dir, '.weft/slots/surface.renderer.build.json'))).toBe(false) // client-only
+    const after = project({ 'weft.config.ts': config({ order: ['kit'] }) })
+    await check(after)
+    expect(existsSync(join(after, '.weft/slots/font.build.build.json'))).toBe(false)
+  })
+
+  it("runs a plugin's check hook over its files: owner, span, fix; codes outside its namespace are P111", async () => {
+    const kit = `check: {
+      include: ['src/**/*.tsx'],
+      run: (ctx) => ctx.files.flatMap(file => ctx.jsx(file).elements.filter(e => e.name === 'button' && !e.attr('type')).map(e => ({
+        code: 'D011', file, start: e.start, end: e.tagEnd, why: 'A <button> without a type submits forms.',
+        fix: { description: 'Add type', safe: true, edits: [{ start: e.tagEnd, end: e.tagEnd, text: ' type="button"' }] },
+      }))).concat([{ code: 'X999', file: 'src/main.tsx', start: 0, end: 0, why: 'not mine' }]),
+    },
+    diagnostics: [{ code: 'D011', catches: 'Untyped button', fix: 'Add type="button"', severity: 'warning' }],`
+    const dir = project({ 'weft.config.ts': config({ kit }) }) // its `diagnostics` comes after the fixture's, so it wins
+    const r = await check(dir)
+    const d011 = r.diagnostics.filter(d => d.code === 'D011')
+    expect(d011.length).toBeGreaterThan(0)
+    expect(d011[0]).toMatchObject({ owner: '@acme/kit', severity: 'warning', fix: { safe: true, description: 'Add type' } })
+    const text = readFileSync(join(dir, d011[0].file), 'utf8')
+    expect(text.slice(...d011[0].offset)).toBe('<button')
+    expect(r.diagnostics.find(d => d.code === 'P111').why).toContain('`X999`, outside its namespace `D`')
+  })
+})

@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { diagnostic, locate } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
+import { sync } from './plugins.mjs'
 
 async function start(root, sub) {
   let file
@@ -20,9 +21,11 @@ async function start(root, sub) {
   return import(typeof file === 'string' ? pathToFileURL(file).href : file.href)
 }
 
-/** The config's `site` (metadata defaults), and the config diagnostics. */
+/** The config's `site` (metadata defaults), and the config diagnostics. Slot files are synced first, so weft/vite
+ * finds the build-side providers (`.weft/slots/<id>.build.json`, research 26 §3.1). */
 async function site(root) {
   const loaded = await loadConfig(root)
+  if (!loaded.diagnostics.some(d => d.code === 'P007') && loaded.config?.plugins?.length) sync(root, loaded)
   return { site: loaded.config?.site ?? {}, diagnostics: loaded.diagnostics }
 }
 

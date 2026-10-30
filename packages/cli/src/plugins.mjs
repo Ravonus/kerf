@@ -130,6 +130,15 @@ export function generated(root, loaded) {
     }
     files[slotFile(id)] = `${header}\n${body}`
   }
+  // Build-side providers, for weft/vite to import in Node (it can't load the generated .ts): research 26 §3.1.
+  for (const [id, binding] of Object.entries(loaded.slots)) {
+    if (typeof binding !== 'string' || binding.startsWith('weft:default')) continue
+    const side = providerRef(loaded, binding, id)?.sides.build
+    if (!side) continue
+    const plugin = loaded.contributions.find(x => x.name === binding)
+    const module = side.module.startsWith('.') ? posix(resolve(root, side.module)) : side.module
+    files[`.weft/slots/${id}.build.json`] = `${JSON.stringify({ plugin: binding, version: plugin.version, module, export: side.export, ...(side.options === undefined ? {} : { options: side.options }) }, null, 2)}\n`
+  }
   files['.weft/slots.d.ts'] = `${header}\n// Only bound slots are declared: importing an unbound one is a type error (P101).\n${typed
     .map(id => `declare module 'weft:slot/${id}' {\n  export const provider: unknown\n  export const load: (key?: string) => Promise<any>\n}\n`)
     .join('')}`

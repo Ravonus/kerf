@@ -40,6 +40,7 @@ export const cases: Record<keyof typeof C, Case> = {
   ProgressCase: { act: drive, see: r => expect(q(r, '[role="progressbar"]').getAttribute('aria-valuenow')).toBe('30'), budget: 3, runs: 2 },
   SpinnerCase: { act: drive, see: r => expect(r.textContent).toContain('1'), budget: 1, runs: 1 },
   SkeletonCase: { act: drive, see: r => expect(r.textContent).toContain('1'), budget: 1, runs: 1 },
+  ShapeCase: { act: drive, see: r => expect(r.textContent).toContain('1'), budget: 1, runs: 1 },
   TooltipCase: {
     act: r => { q(r, 'button').dispatchEvent(new FocusEvent('focusin', { bubbles: true })); q(r, 'button').focus() },
     see: r => expect(q(r, 'button').getAttribute('aria-describedby')).toBe(q(r, '[role="tooltip"]').id), budget: 0, runs: 0,

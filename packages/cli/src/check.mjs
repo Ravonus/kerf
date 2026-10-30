@@ -1,5 +1,6 @@
-// `weft check`: compile every project file in check mode, add the project view, the test T-codes, the config P-codes and
-// the style D-codes (style.mjs), and keep `.weft/styles.json` current when the project has style groups.
+// `weft check`: compile every project file in check mode, add the project view, the X-codes (text-checks.mjs), plugin
+// `check` hooks, the test T-codes, the config P-codes and the style D-codes (style.mjs), and keep `.weft/styles.json`
+// current when the project has style groups.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
@@ -10,6 +11,8 @@ import { sync } from './plugins.mjs'
 import { projectView } from './project.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
+import { pluginChecks } from './plugin-checks.mjs'
+import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 
 const posix = p => p.split('\\').join('/')
@@ -71,7 +74,16 @@ export async function check(root, options = {}) {
   if (matrix && scan.groups.length) writeMatrixFile(root, matrix)
   const styles = [...classSoup(files.filter(f => /\.[jt]sx$/.test(f.rel))), ...(matrix ? matrixDiagnostics(root, matrix) : [])]
 
-  const diagnostics = [...loaded.diagnostics, ...files.flatMap(f => f.diagnostics), ...styles, ...checkTests(root, testRels), ...hygiene(root)]
+  const fontBuild = typeof loaded.slots['font.build'] === 'string' && !loaded.slots['font.build'].startsWith('weft:default')
+  const diagnostics = [
+    ...loaded.diagnostics,
+    ...files.flatMap(f => f.diagnostics),
+    ...styles,
+    ...textChecks(root, { files, exclude, fontBuild }),
+    ...(await pluginChecks(root, loaded, { files, exclude })),
+    ...checkTests(root, testRels),
+    ...hygiene(root),
+  ]
   sortDiagnostics(diagnostics)
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }
   return {

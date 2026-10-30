@@ -695,6 +695,11 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
   sharp, SVGO and SSIMULACRA2 are bundled. ffmpeg is an opt-in provider (`@weft/plugin-media-ffmpeg`), with licence
   and patent notes for LGPL/GPL, x264/x265 and the H.264/HEVC/AAC pools.
 - **Diagnostics M001–M016 with autofixes,** plus a 7-line AGENTS block.
+- **Phase 2 status ([26](research/26-phase-2-completion.md) §2):** stills only. One `media.build@1` slot carries
+  the whole pipeline (the four slots above split out when the ffmpeg provider lands in 3c). Quality search uses
+  libjxl's `ssimulacra2` tool when it is on `PATH`, and fixed qualities otherwise (the asset records which). GIFs
+  ship unchanged, with M004 over 256 KB. `sizes` comes from `width` (`"1/3"`, `"240px"`) or `sizes="auto"`, not
+  yet from layout. M001–M013 are built; M014–M016 come with video.
 - **Unverified:** whether every browser's "Save as" honours a URL swapped inside `contextmenu` (a headful test gates
   `background` in 3c), and Firefox.
 
@@ -865,8 +870,9 @@ crates/
   text        weft/text + weft/skeleton consumer APIs (measure, lines, fit, <Text>, s.text() + mirror); no engine
   text-engine slim Pretext fork (MIT, credited), no weft dependency
   media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
-  plugin-*    @weft/plugin-text (text.measure + font.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
+  plugin-*    @weft/plugin-text (text.measure + font.build), @weft/plugin-media (media.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
               (weft itself adds weft/plugin, weft/slots, weft/test/plugins and the `weft plugins` CLI)
+  create-weft `create-weft <dir> --ui warp|headless|none`; Phase 3 adds db, auth, runtime and deploy flags
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
@@ -882,7 +888,7 @@ evals/        agent eval harness
 | **0. Eval** | 6 tasks, one per root cause (stale snapshot, effect-as-derivation, invisible tracking, context-dependent magic, scheduling, silent failure). PROMPT.md + hidden vitest. Baselines in React 19 and Solid, 5 samples each. | Baseline pass@1 and failures tagged by cause. |
 | **1. Core + agent layer** | 2-week compiler spike, then the Rust compiler with weft's own back end (replacing the spike's Solid crate). Client-only runtime, `weft/browser` values + W050/W051/W054/W056 + T012, §3.5 diagnostics, §3.7 gates (size, DOM work, compiler speed), `weft/test` + T001–T009, HMR, `defineState` (client instance, `persist` local/session, `history`, names, `$reset`) + S003–S010, `weft.config.ts` (with reserved `plugins`/`slots` keys and P100–P120) + `weft tasks --json` + P-codes, generated AGENTS.md, `weft check --json`, MCP `docs`/`check`/`tasks`. | Agent pass@1 on weft ≥ both baselines, efficiency (bundle, DOM and formatter work) ≥ both, and every eval failure maps to a W-code or becomes a new one. (Restated 2026-10-29 from "pass@1 beats both baselines", which can't be shown when every framework scores 100%.) **Passed 2026-10-29 on v3 + v4** (n=1 per cell, Haiku and Sonnet). History: **2026-10-29 ([v3-weft](../evals/results/v3-weft-FINDINGS.md)):** failure mapping met (the one uncaught miss became W017); "beats" not met: 23/23 everywhere, so correctness ties at the ceiling. weft leads on size (5.0–5.1 KB gz vs 8.8–10.5 Solid, 68 React) and price-push DOM work (1 in both sessions). Needs a harder eval or a restated criterion. **2026-10-29, v4 ([v4](../evals/results/v4-FINDINGS.md)):** a harder 6-ticket app with 7 work-budget tests, and a second ticket set that doesn't state the budgets. weft 4/4 sessions 47/47, React 4/4, Solid 3/4 (Haiku missed the burst budget once on the quiet set). "Beats" still not met (ties React). Failure mapping met: W017 fired and was autofixed in-session; planted-bug gaps became an extended W017 and the new W018. weft leads on size (6.8–6.9 KB gz vs 10.4–11.8 Solid, about 70 React) and ties Solid on DOM work. Restated criterion accepted; weft meets it, so Phase 1's exit check passes. |
 | **1b. Verify loop** | Name-keyed state-preserving HMR (flagged), 1k-component perf gates, `weft browser` daemon + graph overlay + recorder + network/time control for reconnects, test gate (fail-before, diff-scoped mutation, T020). | The gate accepts every eval reference test and catches planted junk tests (tautologies, implementation-detail, no-fail-before). |
-| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft/plugin-text`'s `font.build` as the first provider. `<Media>` for stills and `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, skeleton shapes for `<Boundary pending>` (the timing landed in Phase 1), X005–X008, X020–X031. | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
+| **2. UI (warp tier 1)** | The minimal plugin API (§7c: `definePlugin`, slots, generated slot modules, `weft plugins`), with `@weft/plugin-text`'s `font.build` as the first provider. `<Media>` for stills and `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013. `ui-core` + `/motion` + `@weft/zag`, warp tokens and the signature (`sweep()`, `floatingLabel()`, floating/classic fields), ~20 tier-1 components (Button, Card, Badge, Stat, Kbd, Alert, Input/Search/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal, Drawer, Toast, Skeleton), `create-weft --ui`, the font build step (subsets, matched fallbacks, preloads), fluid `cqi` type tokens, skeleton shapes for `<Boundary pending>` (the timing landed in Phase 1), X005, X006, X008, X020–X023, X030, X031, X034 (X007 and X024–X029 were never defined; [26](research/26-phase-2-completion.md) §7). | The v3 shop app rebuilt on weft + warp passes its hidden tests within the §3.7 budget plus a measured kit allowance; contrast and a11y suites green at every dial stop. |
 | **2. Surfaces** | `defineSurface`, canvas2d, webgl2, Keel port. the `text.measure` slot (slim engine and pretext) with conformance, `s.text()` with the DOM mirror, X001–X012, X040/X041. | A Keel demo ported; an agent adds a surface to a page from a one-line request. |
 | **3. Start** | Streaming SSR (the string renderer and hydration landed in Phase 1), routing, route `meta` and OG images ([20](research/20-metadata-and-og.md)), `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). The `defineState` SSR state payload (per-request instances landed in Phase 1), `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
 | **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
@@ -900,9 +906,19 @@ verify loop is built: the in-page agent bridge with the graph overlay, recorder,
 dev-server relay, `weft browser` and the MCP browser tools; and the test gate (T010, T011, T020). The exit check is
 `node evals/gate.mjs` ([22](research/22-verify-loop.md)).
 
+**2 status (2026-10-29):** the remaining Phase 2 pieces are built ([26](research/26-phase-2-completion.md)):
+`<Media>` (`weft/media`) and `@weft/plugin-media` (one `media.build@1` slot, M001–M013 through a plugin `check`
+hook); the font build step in `@weft/plugin-text` (`font.build@1`: subsets, matched fallback faces, preloads that
+`@weft/start` writes into the head); warp's `<Shape>` for `<Boundary pending>`, with X031 measured in dev; fluid
+type tokens mirrored and checked in `ui-core` (`fluid()`, `TYPE_SCALE`); `create-weft --ui warp|headless|none`;
+and the Phase 2 X-codes. Build-side slots (`.weft/slots/<id>.build.json`) let `weft/vite` run a provider in Node.
+Still open: layout-solved `sizes` (needs warp's layout primitives and `weft-layout`), a bundled SSIMULACRA2, and
+the exit check (the v3 shop on weft + warp).
+
 **3 status (2026-10-29):** the first slice is built: routing, route `meta` and share cards, streaming SSR, Nitro
 `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The rest of the row is
-still to do: `query`/`mutation`, the tagged cache, Drizzle, Better Auth, `create-weft`, the CI matrix and the
+still to do: `query`/`mutation`, the tagged cache, Drizzle, Better Auth, `create-weft`'s db/auth/runtime flags (`--ui`
+landed in Phase 2), the CI matrix and the
 contract.
 
 Performance is gated from Phase 1 (§3.7). The v3 eval showed that efficiency, not correctness, is where frameworks
@@ -1078,3 +1094,9 @@ Also out of v0:
   client router is 3.25 KB. The server already matches, loads and merges `meta`, so the client asks
   `/_weft/data/<path>` and writes levels of boxes in place. Diagnostics for metadata are **H001–H008** (renumbered
   from research 20's M-codes, which belong to media) ([25](research/25-routing.md)).
+- **One `media.build` slot for Phase 2, and the `ssimulacra2` tool instead of a bundled scorer** (2026-10-29). The
+  four media slots of §6.3 only pay off once there are two encoders to swap, which is 3c's ffmpeg provider. Until
+  then one provider owns probe, encode and quality search. SSIMULACRA2 runs through libjxl's CLI when installed, and
+  the build falls back to fixed qualities (recorded per asset) rather than shipping an unvetted wasm port. Plugins
+  can also run their own `check` hook in `weft check` now, so M-codes live with plugin-media
+  ([26](research/26-phase-2-completion.md)).
