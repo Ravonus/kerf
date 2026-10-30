@@ -12,8 +12,6 @@ export interface DbHandle {
   migrate(list: Migration[]): Promise<void>
   /** Tables Q011 doesn't report (Better Auth's). */
   exempt: Set<string>
-  /** What Better Auth's `database` option takes on this client. Exempts the tables it owns. */
-  auth?(schema?: Record<string, unknown>): unknown
 }
 
 /** Attach weft's handle to a client and register it for the server's first request. */

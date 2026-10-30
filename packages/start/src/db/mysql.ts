@@ -6,7 +6,6 @@ import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2'
 import { createPool } from 'mysql2/promise'
 import { StartError } from '../data'
 import { register, statements, touch, type DbHandle, type Migration } from './core'
-import { drizzleAuth } from './drizzle-auth'
 
 export interface MysqlOptions<S extends Record<string, unknown>> {
   schema: S
@@ -31,7 +30,6 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
   const handle: DbHandle = {
     dialect: 'mysql',
     exempt: new Set(),
-    auth: schema => drizzleAuth(db, handle, 'mysql', schema),
     async migrate(list: Migration[]) {
       const c = await pool.getConnection()
       try {

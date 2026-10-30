@@ -15,11 +15,16 @@ const full = {
   'src/server/todos.ts': "export const listTodos = query({ run: () => [] })\nexport const addTodo = mutation({ run: () => {} })\nexport const room = channel({})\n",
   'src/db/index.server.ts': "import { createDb } from '@weft/start/db/postgres'\n",
   'src/db/schema.ts': "export const todos = pgTable('todos', {})\nexport const users = pgTable('users', {})\n",
-  'src/auth.server.ts': 'export default {}\n',
+  'src/auth.server.ts': "import { createAuth } from '@weft/start/auth/better-auth'\n",
   'src/env.server.ts': 'export default {}\n',
 }
 
 describe('weft map', () => {
+  it('names a hand-written auth provider as custom', async () => {
+    const dir = project({ 'weft.config.ts': 'export default {}\n', 'src/auth.server.ts': "import { defineAuth } from '@weft/start/auth'\n" })
+    expect((await agentMap(dir)).stack.auth).toBe('custom')
+  })
+
   it('lists what the app has, and what to call for it', async () => {
     const map = await agentMap(project(full))
     expect(map).toMatchObject({ app: 'Acme', stack: { runtime: 'bun', db: { engine: 'postgres', layer: 'drizzle' }, auth: 'better-auth' } })

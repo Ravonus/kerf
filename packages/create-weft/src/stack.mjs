@@ -3,10 +3,10 @@
 
 const VERSIONS = {
   '@types/node': '26.6.5',
-  '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',
+  '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', kysely: '0.29.7', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',
   prisma: '7.10.1', '@prisma/client': '7.10.1', '@prisma/adapter-libsql': '7.10.1', '@prisma/adapter-pg': '7.10.1', '@prisma/adapter-mariadb': '7.10.1',
 }
-import { nativeFiles, prismaAdapterPackage, prismaFiles } from './data.mjs'
+import { nativeAuthSql, nativeFiles, prismaAdapterPackage, prismaAuthModels, prismaFiles } from './data.mjs'
 
 const pin = (...names) => Object.fromEntries(names.map(n => [n, VERSIONS[n]]))
 
@@ -15,13 +15,26 @@ const drivers = db => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mys
 export function stackDeps({ db, auth, layer = 'drizzle', version = '0.0.0' }) {
   if (db === 'none') return { deps: {}, dev: {} }
   const base = pin('@t3-oss/env-core', 'zod', ...(auth ? ['better-auth'] : []))
-  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db)), '@weft/plugin-db-native': version }, dev: pin('@types/node') }
+  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db), ...(auth ? ['kysely'] : [])), '@weft/plugin-db-native': version }, dev: pin('@types/node') }
   if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft/plugin-db-prisma': version }, dev: pin('prisma', '@types/node') }
   return {
     deps: pin('@t3-oss/env-core', 'drizzle-orm', 'drizzle-zod', 'zod', ...drivers(db), ...(auth ? ['better-auth'] : [])),
     dev: pin('drizzle-kit', '@types/node'),
   }
 }
+
+/** Sign-in on an app with a database, for `weft add auth`: new files only, and what to add to the existing ones. */
+export function authFiles({ db, layer, ui }) {
+  const files = stackFiles({ db, layer, auth: true, name: 'app', secret: '' })
+  const out = { 'src/auth.server.ts': files['src/auth.server.ts'], 'src/server/session.ts': files['src/server/session.ts'], 'src/routes/login.tsx': loginPage(ui) }
+  return { files: out, context: files['src/context.server.ts'], tables: { drizzle: authTablesFile(db), prisma: prismaAuthModels(db), native: nativeAuthSql(db) }[layer] }
+}
+
+const authTablesFile = db => ({
+  sqlite: () => `import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'\n${authTablesSqlite()}`,
+  postgres: () => `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg()}`,
+  mysql: () => `import { boolean, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core'\n${authTablesMysql()}`,
+}[db]())
 
 export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
   const shared = {
@@ -32,7 +45,7 @@ export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
     'src/routes/todos/index.tsx': '', // filled by the caller, which knows the UI kit
     ...(auth && { 'src/server/session.ts': sessionServer(), 'src/routes/todos/_layout.tsx': guard() }),
   }
-  if (layer === 'native') return { ...shared, ...nativeFiles({ db }) }
+  if (layer === 'native') return { ...shared, ...nativeFiles({ db, auth }) }
   if (layer === 'prisma') return { ...shared, ...prismaFiles({ db, auth }) }
   return { ...shared, ...drizzleFiles({ db, auth }) }
 }
@@ -44,7 +57,7 @@ function drizzleFiles({ db, auth }) {
     'src/db/index.server.ts': `import { createDb } from '@weft/start/db/${db}'\nimport { env } from '../env.server'\nimport * as schema from './schema'\n\nexport const db = createDb({ schema, url: env.DATABASE_URL })\n`,
     'src/server/todos.ts': todosServer(auth, db),
     ...(auth && {
-      'src/auth.server.ts': `import { createAuth } from '@weft/start/auth'\nimport { db } from '#/db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, schema, secret: env.BETTER_AUTH_SECRET })\n`,
+      'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'\nimport { drizzleAuth } from '@weft/start/auth/drizzle'\nimport { db } from '#/db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { database: drizzleAuth(db, schema) } })\n`,
     }),
   }
 }
@@ -214,14 +227,14 @@ export const verification = pgTable('verification', {
 })
 `
 
-const context = auth => auth
+export const context = auth => auth
   ? `import { session } from '@weft/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
 export default async ({ request }: { request: Request }) => ({ db, ...(await session(auth, request)) })
 
-type Session = Awaited<ReturnType<typeof session<typeof auth>>>
+type Session = Awaited<ReturnType<typeof auth.session>>
 
 declare module '@weft/start' {
   interface Context {

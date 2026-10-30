@@ -65,6 +65,8 @@
     "./db/postgres": "./src/db/postgres.ts",
     "./db/mysql": "./src/db/mysql.ts",
     "./auth": "./src/auth.ts",
+    "./auth/better-auth": "./src/auth/better-auth.ts",
+    "./auth/drizzle": "./src/auth/drizzle.ts",
     "./client": "./src/client.tsx",
     "./server": "./src/server.tsx",
     "./vite": "./src/vite.mjs",

@@ -4,7 +4,9 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { mutation, query, redirect } from '@weft/start'
 import { fnOf, runtime, StartError } from '@weft/start/data'
-import { createAuth, forward, session } from '../src/auth'
+import { forward, session, sessionChanged } from '../src/auth'
+import { createAuth } from '../src/auth/better-auth'
+import { drizzleAuth } from '../src/auth/drizzle'
 import { createDb } from '../src/db/sqlite'
 import { createScope, fetchQuery, memoryStore, runMutation } from '../src/exec'
 import { createHandler, type Manifest } from '../src/server'
@@ -27,7 +29,7 @@ const secret = crypto.randomUUID() + crypto.randomUUID()
 const password = crypto.randomUUID()
 const base = 'http://localhost:3000'
 const db = createDb({ schema, url: ':memory:', migrate: false })
-const auth = createAuth({ db, schema, secret, options: { baseURL: base, rateLimit: { enabled: false } } })
+const auth = createAuth({ db, secret, options: { database: drizzleAuth(db, schema), baseURL: base, rateLimit: { enabled: false } } })
 const context = async ({ request }: { request: Request }) => ({ db, ...(await session(auth, request)) })
 
 async function signUp(email: string) {
@@ -100,12 +102,12 @@ test('createAuth exempts its tables from Q011 and keeps the app\'s options', () 
 })
 
 test('A001: a short or missing secret on a production server; dev and tests pass', () => {
-  const weak = createAuth({ db, schema, secret: 'short', options: { baseURL: base } })
+  const weak = createAuth({ db, secret: 'short', options: { database: drizzleAuth(db, schema), baseURL: base } })
   expect(() => weak.$weft.check()).not.toThrow()
   vi.stubEnv('NODE_ENV', 'production')
   try {
     expect(() => weak.$weft.check()).toThrow(StartError)
-    expect(() => createAuth({ db, schema, options: { baseURL: base } }).$weft.check()).toThrow(/A001|secret/)
+    expect(() => createAuth({ db, options: { database: drizzleAuth(db, schema), baseURL: base } }).$weft.check()).toThrow(/A001|secret/)
     expect(() => auth.$weft.check()).not.toThrow()
   } finally {
     vi.unstubAllEnvs()
@@ -166,4 +168,11 @@ test('the server\'s first request migrates and checks; `runtime.dbs` holds what 
   const before = runtime.dbs?.size ?? 0
   createDb({ schema, url: ':memory:' })
   expect(runtime.dbs?.size).toBe(before + 1)
+})
+
+test('any provider that goes through forward counts as a session change, whatever its cookie is called', async () => {
+  const headers = new Headers()
+  await forward({ response: { headers } } as never, new Response('{}', { headers: { 'set-cookie': 'hand_session=x' } }))
+  expect(sessionChanged(headers)).toBe(true)
+  expect(sessionChanged(new Headers())).toBe(false)
 })

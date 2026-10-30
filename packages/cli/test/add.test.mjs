@@ -69,9 +69,24 @@ describe('weft add', () => {
     expect(read(b, 'weft.config.yaml')).toBe('site: { name: A }\n')
   })
 
-  it('names features that are not built yet, and changes nothing', async () => {
-    const dir = project({ 'weft.config.ts': 'export default {}\n' })
-    await expect(add(dir, 'auth')).rejects.toThrow("isn't built yet")
+  it('auth needs a database, and stops rather than replace a provider', async () => {
+    const bare = project({ 'weft.config.ts': 'export default {}\n' })
+    await expect(add(bare, 'auth')).rejects.toThrow('weft add db')
+    const taken = project({ 'weft.config.ts': 'export default {}\n', 'drizzle.config.ts': '', 'src/auth.server.ts': 'mine\n' })
+    await expect(add(taken, 'auth')).rejects.toThrow('already exists')
+    expect(read(taken, 'src/auth.server.ts')).toBe('mine\n')
+  })
+
+  it('auth on Drizzle writes the tables, the context and the secret', async () => {
+    const dir = project({ 'weft.config.ts': 'export default {}\n', 'package.json': '{"name":"a","dependencies":{}}\n' })
+    await add(dir, 'db')
+    await add(dir, 'auth')
+    expect(read(dir, 'src/db/auth.schema.ts')).toContain('sqliteTable')
+    expect(read(dir, 'src/db/schema.ts')).toContain("export * from './auth.schema'")
+    expect(read(dir, 'src/env.server.ts')).toContain('BETTER_AUTH_SECRET: z.string()')
+    expect(read(dir, '.env')).toMatch(/BETTER_AUTH_SECRET=.{40}/)
+    expect(read(dir, 'src/context.server.ts')).toContain('session(auth, request)')
+    await expect(add(dir, 'auth')).rejects.toThrow('already exists')
   })
 })
 

@@ -9,7 +9,6 @@ import { dirname } from 'node:path'
 import { drizzle, type SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy'
 import { StartError } from '../data'
 import { register, statements, touch, type DbHandle, type Migration } from './core'
-import { drizzleAuth } from './drizzle-auth'
 
 export type Method = 'run' | 'all' | 'values' | 'get'
 
@@ -69,7 +68,6 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
   const handle: DbHandle = {
     dialect: 'sqlite',
     exempt: new Set(),
-    auth: schema => drizzleAuth(db, handle, 'sqlite', schema),
     async migrate(list: Migration[]) {
       const c = await connect()
       c.exec('create table if not exists __weft_migrations (tag text primary key, at integer not null)')

@@ -7,9 +7,12 @@ src/routes/**            file routes: _layout.tsx, index.tsx, [id].tsx, [...rest
 src/server/**            server modules: queries and mutations (the client gets stubs)
 src/db/schema.ts         Drizzle tables; safe to import anywhere
 src/db/index.server.ts   the database client
-src/auth.server.ts       Better Auth, mounted at /api/auth/*
+src/auth.server.ts       the auth provider (Better Auth by default), mounted at /api/auth/*
 src/context.server.ts    what `ctx` holds
 ```
+
+Any auth provider works: `defineAuth` from `@weft/start/auth` takes a `handler(request)` for `/api/auth/*` and a
+`session(request)` that returns `{ user, session }`. `ctx.user` and `auth: 'user'` come from those two.
 
 ## Routes
 

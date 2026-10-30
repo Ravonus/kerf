@@ -29,7 +29,7 @@ function serverFunctions(root) {
 const sqlText = (root, dir) => (existsSync(join(root, dir)) ? readdirSync(join(root, dir)).filter(f => f.endsWith('.sql')).map(f => read(root, join(dir, f))).join('\n') : '')
 const ENGINE = { PrismaLibSql: 'sqlite', PrismaPg: 'postgres', PrismaMariaDb: 'mysql' }
 
-function database(root, layer) {
+export function database(root, layer) {
   if (!layer) return null
   const entry = read(root, 'src/db/index.server.ts')
   const engine = entry.match(/@weft\/(?:start\/db|plugin-db-native)\/(\w+)/)?.[1] ?? ENGINE[entry.match(/Prisma(?:LibSql|Pg|MariaDb)/)?.[0]] ?? 'unknown'
@@ -54,7 +54,8 @@ export async function agentMap(root) {
   const env = ['src/env.ts', 'src/env.server.ts'].find(f => existsSync(join(root, f)))
   const layer = await dbLayer(root, loaded)
   const db = database(root, layer)
-  const auth = existsSync(join(root, 'src/auth.server.ts'))
+  const authFile = read(root, 'src/auth.server.ts')
+  const auth = authFile && (authFile.includes('better-auth') ? 'better-auth' : 'custom')
   const surfaces = listSurfaces(root).map(s => s.name)
   const styled = existsSync(join(root, '.weft/styles.json')) ? Object.keys(JSON.parse(read(root, '.weft/styles.json')).groups ?? {}) : []
   const bound = Object.entries(loaded.slots ?? {}).filter(([, v]) => typeof v === 'string' && !v.startsWith('weft:default')).map(([slot]) => slot)
@@ -66,7 +67,7 @@ export async function agentMap(root) {
     fns.functions.length && row('Server functions', 'The file named here; signatures in `.weft/contract.json` after a build', fns.functions.join('; ')),
     fns.channels.length && row('Channels', '`weft docs start`', sample(fns.channels)),
     db && row('Tables and migrations', layer.schema ? `\`${layer.schema}\`, then \`weft db generate\`` : `\`weft db generate <name>\`, then SQL in \`${layer.migrations}/\``, sample(db.tables)),
-    auth && row('Who the user is', '`ctx.user` on the server; `src/auth.server.ts`', 'better-auth'),
+    auth && row('Who the user is', '`ctx.user` on the server; `src/auth.server.ts`', auth),
     row('Styles', 'Before writing one: `weft style find <what it is>`', styled.length ? sample(styled) : undefined),
     env && row('Environment variables', `\`${env}\`; values in \`.env\``),
     surfaces.length && row('Canvas and WebGL', '`weft surfaces`', sample(surfaces)),
@@ -77,7 +78,7 @@ export async function agentMap(root) {
     row('The running app', '`weft browser snapshot`'),
   ].filter(Boolean)
 
-  return { version: 1, app: config.site?.name ?? null, stack: { runtime: config.runtime ?? 'node', ui: config.plugins?.map(p => p.name) ?? [], db, auth: auth ? 'better-auth' : null }, rows }
+  return { version: 1, app: config.site?.name ?? null, stack: { runtime: config.runtime ?? 'node', ui: config.plugins?.map(p => p.name) ?? [], db, auth: auth || null }, rows }
 }
 
 export function formatMap(map) {
