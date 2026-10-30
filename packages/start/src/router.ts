@@ -1,0 +1,104 @@
+// The route state both sides render from (research 25 §3). A page is a chain of levels, outer to inner: the root
+// layout, nested layouts, the page. Each level is three boxes: which route it shows, its params and its loader
+// data. Navigating writes only what changed: a level that keeps its route keeps its component and gets new params
+// or data in place (the bindings that read them re-run, nothing remounts); the first level whose route changes
+// renders its new route, and everything inside it goes. One state per request on the server (passed down as a
+// prop), one per tab on the client.
+
+import { state, untrack, type State } from 'weft'
+import type { Merged } from 'weft/ssr'
+
+/** One level as the server sends it: `d` lists the data's deferred fields (promises on the server, research 25 §4). */
+export interface Match {
+  id: string
+  params: Record<string, string>
+  data?: unknown
+  d?: string[]
+}
+
+export interface Level {
+  id: State<string | undefined>
+  params: State<Record<string, string>>
+  data: State<any>
+}
+
+export type Component = (props: any) => unknown
+
+export interface RouteState {
+  levels: Level[]
+  /** The current path (pathname + search). */
+  path: State<string>
+  status: State<number>
+  /** Loaded route components by id. */
+  comps: Record<string, Component>
+}
+
+/** What `/_weft/data/<path>` answers and what the page carries in `#weft-route`: the matches, the head, the status. */
+export interface RoutePayload {
+  m: Match[]
+  p: string
+  s: number
+  h?: Merged
+  /** A redirect (the client navigates there instead). */
+  r?: string
+}
+
+/** The route state of the render in progress: a server pass sets it as it starts (passes are synchronous). */
+export const active: { route?: RouteState } = {}
+
+export function createRouteState(payload: RoutePayload, comps: Record<string, Component>): RouteState {
+  const r: RouteState = { levels: [], path: state(payload.p), status: state(payload.s), comps }
+  payload.m.forEach((m, d) => {
+    const lv = level(r, d)
+    lv.id.value = m.id
+    lv.params.value = m.params
+    lv.data.value = m.data
+  })
+  return r
+}
+
+/** Level `d`, made on first use (an empty level renders nothing). */
+export function level(r: RouteState, d: number): Level {
+  return (r.levels[d] ??= { id: state<string | undefined>(undefined), params: state({}), data: state<any>(undefined) })
+}
+
+const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * Show `matches`: levels that keep their route get their new params and data (only when they differ, so a shared
+ * layout whose data didn't change sees no write at all); the first level whose route changes, and every level after
+ * it, switch route.
+ */
+export function applyMatches(r: RouteState, matches: Match[], path: string, status: number) {
+  untrack(() => {
+    const depth = Math.max(matches.length, r.levels.length)
+    for (let d = 0; d < depth; d++) {
+      const m = matches[d]
+      const lv = level(r, d)
+      if (m) {
+        if (!same(lv.params.value, m.params)) lv.params.value = m.params
+        if (!same(lv.data.value, m.data)) lv.data.value = m.data
+      }
+      if (lv.id.value !== m?.id) lv.id.value = m?.id
+    }
+    if (r.path.value !== path) r.path.value = path
+    if (r.status.value !== status) r.status.value = status
+  })
+}
+
+/** The tab's route state and navigation, set by `start()` (client.tsx). Server renders never touch them. */
+export const client: { route?: RouteState; navigate?: (href: string, options?: NavigateOptions) => Promise<void> } = {}
+
+export interface NavigateOptions {
+  /** Replace the history entry instead of pushing one. */
+  replace?: boolean
+  /** Keep the scroll position (default: top, or the URL's #hash). */
+  scroll?: false
+}
+
+/** Go to `href` without a page load (a full load before `start()` ran, or for another origin). */
+export function navigate(href: string, options?: NavigateOptions): Promise<void> {
+  if (client.navigate) return client.navigate(href, options)
+  location.assign(href)
+  return Promise.resolve()
+}

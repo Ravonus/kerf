@@ -51,7 +51,7 @@ The ones that broke let it arrive later. weft takes the Remix/Astro shape (route
 skips Next's user-agent switch: one code path, so what a developer sees in View Source is what a crawler gets.
 
 **The cost** is time to first byte: the head waits for the data `meta` reads. Keep that data small. A route's `load`
-can return deferred parts (Phase 3 streaming), and `meta` only sees the awaited part, as in Remix. M007 (§6) flags
+can return deferred parts (Phase 3 streaming), and `meta` only sees the awaited part, as in Remix. H007 (§6) flags
 `meta` reading a deferred field.
 
 ## 2. Defaults: the app's config
@@ -222,16 +222,19 @@ so `/_weft/og/users/<anything>.png` can't be used to render arbitrary text, and 
 
 ## 6. Proposed diagnostics
 
+Renumbered 2026-10-29 from M001–M008 to **H001–H008** (H for head): M001–M016 belong to media (research 15). Where
+each one is reported now is in research 25 §8.
+
 | Code | Severity | Rule |
 |---|---|---|
-| M001 | error | Relative `og:image`/canonical and no `site.url` |
-| M002 | error | Param route with an `auto` image on a static-only preset and no `prerender` |
-| M003 | warning | No description after merging |
-| M004 | warning | Title over 60 characters or description over 160 |
-| M005 | error | `.og.tsx` uses a style or element the card renderer doesn't support |
-| M006 | error | `meta` reads a box or calls a hook (metadata is plain data) |
-| M007 | error | `meta` reads a deferred (streamed) field of the loader's data |
-| M008 | warning | A card's `<img>` didn't load (timeout, HTTP error, not an image, too large, host not allowed); the card rendered without it (§9.8) |
+| H001 | error | Relative `og:image`/canonical and no `site.url` |
+| H002 | error | Param route with an `auto` image on a static-only preset and no `prerender` |
+| H003 | warning | No description after merging |
+| H004 | warning | Title over 60 characters or description over 160 |
+| H005 | error | `.og.tsx` uses a style or element the card renderer doesn't support |
+| H006 | error | `meta` reads a box or calls a hook (metadata is plain data) |
+| H007 | error | `meta` reads a deferred (streamed) field of the loader's data |
+| H008 | warning | A card's `<img>` didn't load (timeout, HTTP error, not an image, too large, host not allowed); the card rendered without it (§9.8) |
 
 ## 7. Order of work
 
@@ -248,16 +251,18 @@ so `/_weft/og/users/<anything>.png` can't be used to render arbitrary text, and 
    `head: { site, meta, path }`: tags go at the top of the app's `<head>` (after a leading `<meta charset>`), or the
    output is wrapped in a minimal document when the app renders no `<head>`. `weft/head` exports `setHead(merged, path)`
    for the router: 0.64 KB br on its own (`size.mjs` row "setHead"), nothing calls it, existing bundle sizes unchanged.
-   `weft check` reports M001 (relative or `auto` image, no `site.url`), M003 (no `site.description`) and M004 (default
-   title over 60, template's fixed part over 40, description over 160) from `site` alone; M002/M005–M007 are in the
+   `weft check` reports H001 (relative or `auto` image, no `site.url`), H003 (no `site.description`) and H004 (default
+   title over 60, template's fixed part over 40, description over 160) from `site` alone; H002/H005–H007 are in the
    catalog as reserved. Tests: `packages/weft/test/head.test.ts` (snapshot, escaping, merge order, an HTTP fetch of a
    rendered page read as plain text) and `packages/cli/test/config.test.mjs`. Not covered: hydrating a TSX-rendered
    `<head>` with the inserted tags in it (Phase 3 renders the shell).
 2. **With Phase 3 routing:** route `meta`, layout merge, loader data, 404/error metadata, client navigation updates.
+   **Built (2026-10-29)** in `@weft/start`; see research 25.
 3. **OG spike:** Takumi (native and wasm) against Satori + resvg, in all three modes on Node, Vercel and Netlify.
    Measure cold start, function size and render time for the default card and a card with an avatar. Pass: under
    300 ms warm render, inside each platform's function size limit. Pick the renderer from the numbers.
-4. **Diagnostics** M001–M007 and `weft routes --meta`.
+4. **Diagnostics** H001–H007 and `weft routes --meta`. **Built (2026-10-29)**: H001–H008 and `weft routes --meta`
+   (research 25 §7–8).
 
 ## 8. Open questions
 
@@ -374,7 +379,7 @@ what the edge will serve. Takumi's PNGs are smaller: 55 KB and 211 KB against Sa
    `fromHtml` (and satori-html) drop the text before a comment, so `Hello, <!--[-->Ada<!--]-->!` renders as `!`. The
    spike's `renderCard` strips them. The better fix is for non-hydratable SSR not to write markers at all.
 2. **§4.1's example uses React-style styles** (`{ fontSize: 72 }`). weft's SSR writes object keys and values as given,
-   so that becomes `fontSize:72`, which isn't CSS. weft takes `{ 'font-size': '72px' }`. Fix the example, or have M005
+   so that becomes `fontSize:72`, which isn't CSS. weft takes `{ 'font-size': '72px' }`. Fix the example, or have H005
    flag camelCase and unitless numbers in `.og.tsx`.
 3. **Takumi takes HTML through `@takumi-rs/helpers/html`'s `fromHtml`** (JS, 17 KB gz in the Worker together with
    weft's code), not through `render()` directly. No adapter is needed beyond that.
@@ -421,11 +426,11 @@ Use **Takumi** behind `renderCard(html, size, fonts) → PNG`:
 
 | From | What | How |
 |---|---|---|
-| Satori: strict styles (`onStyleError`) | Each style declaration is checked once (cached, about 26 µs) against the renderer itself. Takumi throws on an invalid value, which would fail the whole card, and silently ignores an unknown property. The first becomes an M005 error, the second an M005 warning. Production drops the bad declaration and renders the rest; `strict` (dev, `weft build`) throws; `check(html)` reports without rendering. | Probe the property with the card's value, then with `}{`, a value no CSS grammar accepts. A property the renderer knows rejects it; one it doesn't know takes anything. No allowlist to keep in sync with Takumi. |
+| Satori: strict styles (`onStyleError`) | Each style declaration is checked once (cached, about 26 µs) against the renderer itself. Takumi throws on an invalid value, which would fail the whole card, and silently ignores an unknown property. The first becomes an H005 error, the second an H005 warning. Production drops the bad declaration and renders the rest; `strict` (dev, `weft build`) throws; `check(html)` reports without rendering. | Probe the property with the card's value, then with `}{`, a value no CSS grammar accepts. A property the renderer knows rejects it; one it doesn't know takes anything. No allowlist to keep in sync with Takumi. |
 | Satori: reads WOFF | Takes TTF, OTF, WOFF and WOFF2 on both builds (Takumi wasm can't read WOFF). | WOFF 1.0 unpacked to SFNT with `DecompressionStream` (Node, Bun and workerd all have it). The result draws byte-for-byte what Takumi native draws from the WOFF itself. |
 | Satori: browser box model | A preview page (`previewHtml`) with the same HTML, the same font bytes and the same preflight (`box-sizing: border-box` everywhere) as the PNG. In a 1200×630 browser viewport it matches the PNG by eye, stress card included. | One `PREFLIGHT` string goes into both the renderer's `css` and the page. |
 | `@vercel/og`: `ImageResponse` | `cardResponse()` sets the §4.3 headers (`immutable`, or `no-store` in dev). Output is PNG, JPEG, WebP, or SVG via Takumi's `renderSvg`. | |
-| §4.1, neither renderer | Remote `<img>`s are fetched with a timeout (1.5 s), a size cap (4 MB), a content-type check, no redirects and an `allow(url)` host check (https only by default: the SSRF guard for on-demand routes), and cached in a byte-capped LRU. A failed image is left out with its box kept, so the layout doesn't move, and reported as M008. | |
+| §4.1, neither renderer | Remote `<img>`s are fetched with a timeout (1.5 s), a size cap (4 MB), a content-type check, no redirects and an `allow(url)` host check (https only by default: the SSRF guard for on-demand routes), and cached in a byte-capped LRU. A failed image is left out with its box kept, so the layout doesn't move, and reported as H008. | |
 | §9.5.1 | SSR hole comments are removed before parsing. | |
 
 Satori's other selling points are already in Takumi: HarfRust shaping, COLR emoji fonts, and grid and transforms.
@@ -445,7 +450,7 @@ That is within about 1 ms of plain Takumi warm (§9.2). The workerd default p95 
 avatar here is a data URI that the renderer decodes on every render, so it is about 1 ms slower than passing bytes.
 The Worker is 4,070 KiB raw and 1,831 KiB gzipped, 14 KiB more than plain Takumi and still inside Vercel Pro's 2 MB.
 
-M008 is new: **warning**, a card image failed to load (timeout, HTTP error, not an image, too large, or host not
+H008 is new: **warning**, a card image failed to load (timeout, HTTP error, not an image, too large, or host not
 allowed), and the card rendered without it.
 
 ## Sources

@@ -40,11 +40,11 @@ export interface PluginEntry {
 /** Page metadata defaults (research 20 §2). Every page writes these as static tags in the server's first response. */
 export interface SiteConfig {
   name?: string
-  /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is M001. */
+  /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is H001. */
   url?: string
   /** Title template containing `%s`, which a page's title fills: `'%s · Acme'`. A page without a title gets `name`. */
   title?: string
-  /** Missing is M003; over 160 characters is M004. */
+  /** Missing is H003; over 160 characters is H004. */
   description?: string
   /** `en_US` style: og:locale and `<html lang>`. */
   locale?: string

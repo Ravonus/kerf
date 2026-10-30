@@ -1,0 +1,1373 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the fixture: merged meta, tags, card mode and diagnostics for every route 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "H007",
+      "file": "src/routes/deferred-meta.tsx",
+      "route": "/deferred-meta",
+      "severity": "error",
+      "why": "\`meta\` (or a card) of route /deferred-meta reads \`data.late\`, a deferred field that is still streaming. Await it in \`load\`, or leave it out of \`meta\`.",
+    },
+  ],
+  "ok": false,
+  "routes": [
+    {
+      "card": "built-in",
+      "data": "placeholder",
+      "file": "src/routes/tags/[tag].tsx",
+      "image": "on-demand",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Posts tagged <tag>.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/tags/<tag>.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "#<tag> · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [
+        "tag",
+      ],
+      "path": "/tags/[tag]",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "#<tag> · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Posts tagged <tag>.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/tags/<tag>",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#<tag> · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Posts tagged <tag>.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/tags/<tag>",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/tags/<tag>.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/tags/<tag>",
+    },
+    {
+      "card": "src/routes/users/[id].og.tsx",
+      "data": "placeholder",
+      "file": "src/routes/users/[id].tsx",
+      "image": "prerender+on-demand",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+        "src/routes/users/_layout.tsx",
+      ],
+      "meta": {
+        "description": "<data.bio>",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/users/<id>.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "profile",
+        },
+        "title": "<data.name> · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [
+        "id",
+      ],
+      "path": "/users/[id]",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "<data.name> · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "<data.bio>",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/users/<id>",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "profile",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "<data.name> · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "<data.bio>",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/users/<id>",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/users/<id>.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/users/<id>",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/about.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Who we are.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/about.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "About · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/about",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "About · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Who we are.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/about",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "About · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Who we are.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/about",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/about.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/about",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/boom.tsx",
+      "image": "none",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Something broke · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/boom",
+      "status": 500,
+      "tags": [
+        [
+          "title",
+          {},
+          "Something broke · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/boom",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/boom",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/boom",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/deferred-meta.tsx",
+      "image": "none",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Something broke · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/deferred-meta",
+      "status": 500,
+      "tags": [
+        [
+          "title",
+          {},
+          "Something broke · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/deferred-meta",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/deferred-meta",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/deferred-meta",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/slow.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/slow.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Slow page · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/slow",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Slow page · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/slow",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Slow page · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/slow",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/slow.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/slow",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/users/index.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+        "src/routes/users/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/users.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "profile",
+        },
+        "title": "Users · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/users",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Users · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/users",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "profile",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Users · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/users",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/users.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/users",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/index.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/index.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/index.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/",
+    },
+    {
+      "card": null,
+      "data": "none",
+      "file": "src/routes/404.tsx",
+      "image": "none",
+      "kind": "404",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "There is nothing here.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Page not found · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "404",
+      "status": 404,
+      "tags": [
+        [
+          "title",
+          {},
+          "Page not found · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "There is nothing here.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Page not found · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "There is nothing here.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": null,
+    },
+    {
+      "card": null,
+      "data": "none",
+      "file": "src/routes/_error.tsx",
+      "image": "none",
+      "kind": "error",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Something broke · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "error",
+      "status": 500,
+      "tags": [
+        [
+          "title",
+          {},
+          "Something broke · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Something broke · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": null,
+    },
+  ],
+  "site": {
+    "description": "Tools for builders.",
+    "image": "auto",
+    "locale": "en_US",
+    "name": "Acme",
+    "title": "%s · Acme",
+    "twitter": {
+      "card": "summary_large_image",
+      "site": "@acme",
+    },
+    "url": "https://acme.dev",
+  },
+  "version": 1,
+}
+`;

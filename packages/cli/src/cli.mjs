@@ -12,6 +12,7 @@ import { loadConfig } from './load-config.mjs'
 import { tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
+import { buildCommand, devCommand, routesCommand } from './start.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
@@ -19,6 +20,9 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
   browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
+  dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
+  build [--preset <p>]  production build to .output (node, bun, deno_server…)
+  routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
@@ -28,8 +32,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   mcp                 MCP server on stdio: docs, check, tasks`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
-const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout'])
-const booleans = new Set(['gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload'])
+const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port'])
+const booleans = new Set(['gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
@@ -79,6 +83,26 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       }
       case 'browser':
         return await browserCommand(args, { print, say, io })
+      case 'dev': {
+        const server = await devCommand(args.root, { port: args.flags.port && Number(args.flags.port) })
+        say(`weft dev: ${server.resolvedUrls.local[0]}`)
+        await new Promise(ok => process.once('SIGINT', ok))
+        await server.close()
+        return 0
+      }
+      case 'build': {
+        const result = await buildCommand(args.root, { preset: args.flags.preset })
+        if (args.json) print(result)
+        say(`weft build: ${result.preset} → ${result.output} (${result.ms} ms)`)
+        return 0
+      }
+      case 'routes': {
+        const result = await routesCommand(args.root, { meta: !!args.flags.meta, preset: args.flags.preset })
+        if (args.json) print(result)
+        else say(result.routes.map(r => `${r.path.padEnd(24)} ${r.file}${r.meta ? `  ${r.meta.title}${r.image ? `  [card: ${r.image}]` : ''}` : ''}`).join('\n'))
+        say(formatHuman(result.diagnostics))
+        return result.ok ? 0 : 1
+      }
       case 'tasks': {
         const result = await tasks(args.root)
         if (args.json) print(result)

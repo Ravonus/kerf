@@ -1,0 +1,41 @@
+{
+  "name": "@weft/start",
+  "version": "0.0.0",
+  "private": true,
+  "description": "weft/start (Phase 3): file routes on @tanstack/router-core, route load and meta, streaming SSR, OG cards (Takumi), Nitro integration",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@takumi-rs/core": "2.16.2",
+    "@takumi-rs/helpers": "2.16.2",
+    "@tanstack/history": "1.162.5",
+    "@tanstack/router-core": "1.171.39",
+    "nitro": "3.0.260903-beta",
+    "@fontsource/inter": "5.3.0"
+  },
+  "peerDependencies": {
+    "weft": "*"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5",
+    "weft": "file:../weft",
+    "playwright-core": "1.64.1"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.tsx",
+    "./server": "./src/server.tsx",
+    "./vite": "./src/vite.mjs",
+    "./routes": "./src/routes.mjs",
+    "./og": "./src/og/index.mjs",
+    "./app": "./src/app.mjs",
+    "./inspect": "./src/inspect.mjs"
+  },
+  "sideEffects": false
+}

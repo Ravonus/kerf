@@ -42,6 +42,8 @@ function status(code, info) {
   if (e.by === 'test') return 'reported by weft/test after each test'
   if (e.by === 'gate') return 'reported by `weft test --gate` on a diff'
   if (/^T/.test(e.code)) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
+  if (e.by === 'start') return 'reported by @weft/start when it serves or renders the route, and by `weft routes --meta`'
+  if (e.by === 'cli' && e.code.startsWith('H')) return e.code === 'H001' || e.code === 'H003' || e.code === 'H004' ? 'reported by weft check (from `site`) and by `weft routes --meta` (per route)' : 'reported by `weft routes --meta`'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
   return 'reserved'
 }
@@ -82,7 +84,7 @@ export async function docs(root, topic) {
     return { topic: 'index', text, topics }
   }
   const info = installed(root)
-  if (/^[WPT]\d{3}$/i.test(key)) {
+  if (/^[WPTH]\d{3}$/i.test(key)) {
     const code = key.toUpperCase()
     if (!entry(code)) throw Object.assign(new Error(`unknown diagnostic code ${code}`), { code: 'E_UNKNOWN_TOPIC' })
     return { topic: code, text: codePage(code, info) }

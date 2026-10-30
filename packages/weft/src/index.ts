@@ -53,6 +53,10 @@ export const rt: {
   /** Server only: fetches the current render started, and a hole resolver (weft/ssr). */
   wait?: Promise<unknown>[]
   resolve?: (v: unknown) => string
+  /** Server only: fetches in flight by resource key, so a later render pass waits on them instead of refetching. */
+  flight?: Map<string, Promise<unknown>>
+  /** Server only, streaming: each resolved Boundary's content HTML by key; pending ones wrap their fallback in markers. */
+  stream?: Map<string, string>
 } = { server: false }
 
 export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'> }

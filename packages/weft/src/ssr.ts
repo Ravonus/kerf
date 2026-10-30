@@ -4,7 +4,8 @@
 // hydratable, and each hole renders in its own scope (`hole(k, slot, value)`), wrapped in `<!--[-->…<!--]-->` when
 // it shares its parent with other content. `renderToString` renders what it can now (a pending `resource` renders
 // its Boundary's fallback, and the client fetches after hydrating); `renderToStringAsync` waits for the resources
-// and renders again until none is pending. Streaming comes with Phase 3.
+// and renders again until none is pending; `renderToStream` sends the shell at once (pending Boundaries show their
+// fallbacks) and then each Boundary's content as its resources resolve (research 25 §4).
 //
 // Hydratable output ends with `<script type="application/json" data-weft>`: resolved resources and boundary
 // states by key. Put the whole string in the container `hydrate()` gets.
@@ -39,27 +40,99 @@ export interface RenderOptions {
 
 /** Render `code` (usually `() => <App />`) to HTML now. Effects and watchers don't run on the server. */
 export function renderToString(code: () => unknown, options: RenderOptions = {}): string {
-  const html = pass(code, options, {}, [])
+  const html = pass(code, options, {}, [], new Map())
   return options.head ? withHead(html, options.head) : html
 }
 
 /** Render, wait for the resources it started, and render again until none is pending (at most `passes`). */
 export async function renderToStringAsync(code: () => unknown, options: RenderOptions & { passes?: number } = {}): Promise<string> {
   const cache: SsrData['r'] = {}
+  const flight = new Map<string, Promise<unknown>>()
   for (let n = 1; ; n++) {
     const wait: Promise<unknown>[] = []
-    const html = pass(code, options, cache, wait)
+    const html = pass(code, options, cache, wait, flight)
     if (!wait.length || n >= (options.passes ?? 10)) return options.head ? withHead(html, options.head) : html
     await Promise.all(wait)
   }
 }
 
-function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[]): string {
+export interface Stream {
+  /** The first pass: what renders now, with each pending Boundary's fallback between `<!--wb:key-->` markers. */
+  shell: string
+  /**
+   * Each later chunk: a Boundary's content as `<template>` + `<script>$wb(key)</script>`, which swaps it in for the
+   * fallback, in the order they resolve. The first chunk also defines `$wb`. Send them after the shell, outside the
+   * container `hydrate()` gets; the page data comes last, from `data()`.
+   */
+  chunks: AsyncIterable<string>
+  /** After `chunks` ends: the page data for `hydrate(code, container, { data })` (resources and boundary states), or null. */
+  data(): SsrData | null
+}
+
+/** The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every marker. */
+export const SWAP = `$wb=function(k,t){var d=document,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();b.replaceWith(t.content);a.remove();t.remove()}`
+
+/**
+ * Render with streaming: `shell` now, then a chunk per Boundary whose resources resolve, re-rendering after each
+ * settles (cached values, in-flight fetches reused, so nothing is fetched twice). Boundaries that are still pending
+ * after `timeout` ms keep their fallbacks, and the client fetches them after hydrating.
+ */
+export function renderToStream(code: () => unknown, options: RenderOptions & { timeout?: number; passes?: number } = {}): Stream {
+  const cache: SsrData['r'] = {}
+  const flight = new Map<string, Promise<unknown>>()
+  const html = new Map<string, string>()
+  let wait: Promise<unknown>[] = []
+  let last: SsrData | null = null
+  const run = () => {
+    html.clear()
+    wait = []
+    const out = pass(code, options, cache, wait, flight, html)
+    last = out.data
+    return out.html
+  }
+  const shell = run()
+  const pending = () => Object.keys(last?.b ?? {}).filter(k => last!.b[k] === 'p')
+  async function* chunks() {
+    const deadline = Date.now() + (options.timeout ?? 10_000)
+    let open = new Set(pending())
+    let defined = false
+    for (let n = 1; open.size && wait.length && n < (options.passes ?? 50); n++) {
+      const left = deadline - Date.now()
+      if (left <= 0) break
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const late = await Promise.race([
+        Promise.race(wait).then(() => false),
+        new Promise<boolean>(ok => (timer = setTimeout(ok, left, true))),
+      ])
+      clearTimeout(timer)
+      if (late) break
+      await new Promise(ok => setTimeout(ok, 0)) // fetches that settle together go out together
+      run()
+      let out = ''
+      for (const k of [...open]) {
+        const content = html.get(k)
+        if (content === undefined) continue
+        open.delete(k)
+        const id = encodeURIComponent(k)
+        out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}$wb(${JSON.stringify(id)})</script>`
+        defined = true
+      }
+      for (const k of pending()) open.add(k) // nested Boundaries inside content that just arrived
+      if (out) yield out
+    }
+    if (open.size) yield `<script>${defined ? '' : SWAP + ';'}$wb()</script>` // what's left keeps its fallback
+  }
+  return { shell, chunks: chunks(), data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length) ? last : null) }
+}
+
+function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>): string
+function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream: Map<string, string>): { html: string; data: SsrData }
+function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], wait: Promise<unknown>[], flight: Map<string, Promise<unknown>>, stream?: Map<string, string>): any {
   const prev = { ...rt }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys
   const data: SsrData = { r: cache, b: {} }
-  Object.assign(rt, { server: true, data, wait, resolve: text })
+  Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream })
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
@@ -71,11 +144,12 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
     }, null)
   } finally {
     useApp(prevApp)
-    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve })
+    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream })
     Object.assign(keys, prevKeys)
     writeKeys = prevWrite
   }
   if (selects) html = resolveSelects(html)
+  if (stream) return { html, data: { r: data.r, b: data.b } }
   if (options.hydratable === false || (!Object.keys(data.r).length && !Object.keys(data.b).length)) return html
   const json = JSON.stringify({ r: data.r, b: data.b }).replace(/</g, '\\u003c')
   return `${html}<script type="application/json" data-weft>${json}</script>`
