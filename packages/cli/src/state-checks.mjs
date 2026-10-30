@@ -4,8 +4,9 @@
 // function it was declared in, so a same-named primitive elsewhere isn't flagged.
 
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { join, relative } from 'node:path'
 import ts from 'typescript'
+import { local } from './alias.mjs'
 import { diagnostic, positions } from './diag.mjs'
 import { discover } from './files.mjs'
 
@@ -17,8 +18,9 @@ const ESCAPES = new Set(['untrack', 'optimistic'])
 const queriesOf = text => new Set([...text.matchAll(/export\s+const\s+([A-Za-z_$][\w$]*)\s*=\s*query\s*\(/g)].map(m => m[1]))
 
 function moduleFile(root, from, spec) {
-  if (!spec.startsWith('.')) return undefined
-  const base = join(dirname(from), spec).split('\\').join('/').replace(/\.js$/, '')
+  const abs = local(join(root, from), spec)
+  if (!abs) return undefined
+  const base = relative(root, abs).split('\\').join('/').replace(/\.js$/, '')
   return ['', '.ts', '.tsx', '.mts', '.js', '/index.ts'].map(x => base + x).find(f => /\.[cm]?[jt]sx?$/.test(f) && existsSync(join(root, f)))
 }
 

@@ -39,7 +39,7 @@ export function gitChanges(root, base = 'HEAD') {
   }).filter(c => c.before !== c.after)
 }
 
-const importRe = /(?:from\s*|import\s*\(\s*|import\s+)['"](\.[^'"]+)['"]/g
+const importRe = /(?:from\s*|import\s*\(\s*|import\s+)['"]((?:\.|#\/)[^'"]+)['"]/g
 const typeOnly = /^\s*(?:import|export)\s+type\b[^;'"]*from\s*['"][^'"]+['"];?/gm
 /** Runtime imports only: `import type` brings no code a test could run. */
 function importsOf(abs, text) {

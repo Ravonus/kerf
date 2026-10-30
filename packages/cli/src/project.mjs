@@ -7,6 +7,7 @@
 
 import { dirname, join, relative } from 'node:path'
 import ts from 'typescript'
+import { local } from './alias.mjs'
 
 const exts = ['', '.tsx', '.ts', '.jsx', '.js', '/index.tsx', '/index.ts', '/index.jsx', '/index.js']
 const isComponentName = name => /^[A-Z]/.test(name)
@@ -109,8 +110,9 @@ export function projectView(files, pos) {
     for (const st of f.sf.statements) {
       if (!ts.isImportDeclaration(st) || !st.importClause || !ts.isStringLiteral(st.moduleSpecifier)) continue
       const spec = st.moduleSpecifier.text
-      if (!spec.startsWith('.')) continue
-      const target = exts.map(e => join(dirname(f.abs), spec + e)).find(p => byAbs.has(p))
+      const base = local(f.abs, spec)
+      if (!base) continue
+      const target = exts.map(e => base + e).find(p => byAbs.has(p))
       if (!target) continue
       if (st.importClause.name) f.imports.set(st.importClause.name.text, { file: target, name: 'default' })
       const named = st.importClause.namedBindings

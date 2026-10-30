@@ -28,7 +28,7 @@ export function stackFiles({ db, auth, name, secret }) {
     'src/server/todos.ts': todosServer(auth),
     'src/routes/todos/index.tsx': '', // filled by the caller, which knows the UI kit
     ...(auth && {
-      'src/auth.server.ts': `import { createAuth } from '@weft/start/auth'\nimport { db } from './db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, schema, secret: env.BETTER_AUTH_SECRET })\n`,
+      'src/auth.server.ts': `import { createAuth } from '@weft/start/auth'\nimport { db } from '#/db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, schema, secret: env.BETTER_AUTH_SECRET })\n`,
       'src/server/session.ts': sessionServer(),
       'src/routes/todos/_layout.tsx': guard(),
     }),
@@ -182,8 +182,8 @@ export const verification = pgTable('verification', {
 
 const context = auth => auth
   ? `import { session } from '@weft/start/auth'
-import auth from './auth.server'
-import { db } from './db/index.server'
+import auth from '#/auth.server'
+import { db } from '#/db/index.server'
 
 export default async ({ request }: { request: Request }) => ({ db, ...(await session(auth, request)) })
 
@@ -197,7 +197,7 @@ declare module '@weft/start' {
   }
 }
 `
-  : `import { db } from './db/index.server'
+  : `import { db } from '#/db/index.server'
 
 export default () => ({ db })
 
@@ -215,7 +215,7 @@ function todosServer(auth) {
 import { schemasOf } from '@weft/start/db'
 import { ${auth ? 'and, ' : ''}asc, eq, not } from 'drizzle-orm'
 import { z } from 'zod'
-import * as schema from '../db/schema'
+import * as schema from '#/db/schema'
 
 const { todos } = schema
 const schemas = schemasOf(schema, { todos: { title: (s: z.ZodString) => s.trim().min(1).max(200) } })
@@ -260,7 +260,7 @@ export const deleteTodo = mutation({
 const sessionServer = () => `import { mutation, query, redirect } from '@weft/start'
 import { forward } from '@weft/start/auth'
 import { z } from 'zod'
-import auth from '../auth.server'
+import auth from '#/auth.server'
 
 const credentials = z.object({ email: z.email(), password: z.string().min(8) })
 
@@ -329,7 +329,7 @@ export function todosPage(ui, auth) {
   const c = controls(ui)
   return `import type { Meta } from '@weft/start'
 import { Boundary, state } from 'weft'
-${c.imports}import { addTodo, deleteTodo, listTodos, toggleTodo } from '../../server/todos'
+${c.imports}import { addTodo, deleteTodo, listTodos, toggleTodo } from '#/server/todos'
 
 export const meta: Meta = { title: 'Todos' }
 
@@ -374,7 +374,7 @@ export function loginPage(ui) {
   const c = controls(ui)
   return `import { redirect, type LoadArgs, type Meta } from '@weft/start'
 import { state } from 'weft'
-${c.imports}import { signIn, signUp } from '../server/session'
+${c.imports}import { signIn, signUp } from '#/server/session'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (ctx.user) redirect('/todos')
