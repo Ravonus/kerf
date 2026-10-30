@@ -40,6 +40,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./data": "./src/data.ts",
+    "./hub": "./src/hub.ts",
+    "./live": "./src/stream.ts",
+    "./bus": "./src/bus.ts",
+    "./bus/postgres": "./src/bus/postgres.ts",
     "./db": "./src/db/index.ts",
     "./db/sqlite": "./src/db/sqlite.ts",
     "./db/postgres": "./src/db/postgres.ts",

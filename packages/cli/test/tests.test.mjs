@@ -15,7 +15,7 @@ const apply = (src, fix) => [...fix.edits].sort((a, b) => b.offset[0] - a.offset
 describe('T-codes: each fires on junk', () => {
   it('every catalog example reports its own code', () => {
     const status = probeTests(catalog)
-    expect(Object.keys(status)).toEqual(['T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007', 'T008', 'T009'])
+    expect(Object.keys(status)).toEqual(['T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007', 'T008', 'T009', 'T013'])
     for (const [code, s] of Object.entries(status)) expect(s.implemented, code).toBe(true)
     expect(status.T009.autofix).toBe(true)
   })

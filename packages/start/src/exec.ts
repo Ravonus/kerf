@@ -8,7 +8,7 @@
 //   shared store   only for `cache: { life }`: a value is valid while every tag's version still matches (a mutation
 //                  bumps the versions of the tags it invalidates).
 
-import { enter, fns, isRedirect, keyOf, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
+import { enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 
 export interface ScopeEntry {
   id: string
@@ -33,6 +33,8 @@ export interface Scope {
   tags?: Set<string>
   /** Dev: the tables this function's statements read and wrote (a frame per `run`; research 28 §2). */
   touched?: Touched
+  /** The render read a live query or a stream: the page carries the realtime cursor (research 30 §1). */
+  live?: boolean
   ctx(): Promise<Context>
   options: ScopeOptions
 }
@@ -129,7 +131,10 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const touched = tracker(scope)
     const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx, touched)
     if (scope.options.dev) await checked(v, fn, scope)
-    if (touched) missedTags(fn, 'read', touched.read, entry.tags, scope)
+    if (touched) {
+      missedTags(fn, 'read', touched.read, entry.tags, scope)
+      reads.set(fn.$id, touched.read)
+    }
     if (cached) await store.set(stored, { v, tags: entry.tags, versions, expires: Date.now() + seconds(cached.life) * 1000 })
     return v
   })().then(
@@ -167,7 +172,7 @@ async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?
 }
 
 /** `auth: 'user'`: A003 when `ctx` has no `user` at all, A002 when no one is signed in. */
-function guard(fn: Fn, ctx: Context) {
+export function guard(fn: Fn, ctx: Context) {
   if (fn.def.auth !== 'user') return
   if (!('user' in ctx)) throw new StartError('A003', `\`${fn.$id}\` has \`auth: 'user'\`, but \`ctx\` has no \`user\``, 'spread `session(auth, request)` into what `src/context.server.ts` returns', { status: 500 })
   if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
@@ -194,6 +199,21 @@ function missedTags(fn: Fn, verb: 'read' | 'write', tables: Set<string>, tags: r
   }
 }
 const warned = new Set<string>()
+
+/** Dev: the tables each query last read, and the tags of the queries read with `.live()` (the hub fills it). */
+const reads = new Map<string, Set<string>>()
+export const liveQueries = new Map<string, string[]>()
+
+/** R003 (dev, once per pair): this mutation wrote what a live query reads, and pokes none of its tags. */
+function missedPokes(fn: Fn, write: Set<string>, tags: string[], scope: Scope) {
+  for (const [id, own] of liveQueries) {
+    const table = [...(reads.get(id) ?? [])].find(t => write.has(t))
+    const key = `${fn.$id}>${id}`
+    if (!table || warned.has(key) || own.some(t => tags.includes(t))) continue
+    warned.add(key)
+    scope.options.onDiagnostic?.({ code: 'R003', severity: 'warning', message: `\`${fn.$id}\` writes table \`${table}\`, which live query \`${id}\` reads, but their tags don't intersect (${JSON.stringify(tags)} and ${JSON.stringify(own)}): open pages won't update. Add one of the query's tags to \`invalidates\`` })
+  }
+}
 
 /** A cached query's ctx: no request, response or user. Its value is shared by every user (Q006). With `scope: 'user'`, one value per user: `ctx.user` is allowed. */
 function shared(ctx: Context, fn: Fn): Context {
@@ -222,7 +242,10 @@ export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh:
   const declared = typeof fn.def.invalidates === 'function' ? fn.def.invalidates(valid, v) : fn.def.invalidates ?? []
   await invalidate(scope, [...declared])
   const tags = [...scope.invalidated]
-  if (touched) missedTags(fn, 'write', touched.write, tags, scope)
+  if (touched) {
+    missedTags(fn, 'write', touched.write, tags, scope)
+    missedPokes(fn, touched.write, tags, scope)
+  }
   const c: Wire[] = []
   for (const [id, inp] of refresh) {
     const q = fns.get(id)
@@ -249,11 +272,14 @@ export async function invalidate(scope: Scope, tags: string[]) {
   for (const t of tags) scope.invalidated.add(t)
   for (const [k, e] of scope.entries) if (e.tags.some(t => tags.includes(t))) scope.entries.delete(k)
   await storeOf(scope).bump(tags)
+  // After the bump, and after `run`: a refetch reads committed data and misses the shared cache (research 30 §5).
+  // A bus that's down costs open pages a refresh, not this request its result.
+  await runtime.poke?.(tags, scope.request.headers.get('x-weft-conn')).catch(e => scope.options.onDiagnostic?.({ code: 'E_RT', severity: 'error', message: `poke of ${tags.join(', ')} failed: ${e instanceof Error ? e.message : e}` }))
 }
 
 // ---- validation and checks ------------------------------------------------------------------------------------
 
-async function validate(fn: Fn, input: unknown): Promise<unknown> {
+export async function validate(fn: Fn, input: unknown): Promise<unknown> {
   const schema = fn.def.input
   if (!schema) return input
   const r = await schema['~standard'].validate(input)

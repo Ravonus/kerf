@@ -687,6 +687,150 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "url": "/deferred-meta",
     },
     {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/live.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/live.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/live",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/live",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/live",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/live.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/live",
+    },
+    {
       "card": null,
       "data": "loaded",
       "file": "src/routes/old.tsx",
