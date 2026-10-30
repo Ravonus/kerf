@@ -24,6 +24,17 @@ export interface Resource<T> {
   refresh(): void
 }
 
+export interface ResourceOptions<T> {
+  initial?: T
+  /**
+   * `false`: the value isn't written into the page's data or read back from it, because the caller's own cache
+   * transfers it (@weft/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
+   * value synchronously once it's known) and during hydration (return the transferred value synchronously, so the
+   * resource settles as it's created and hydration writes nothing).
+   */
+  data?: false
+}
+
 type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void }
 const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
 
@@ -34,8 +45,8 @@ const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
  * `resource(async signal => (await fetch(url(), { signal })).json())`. Reads before the first `await` are tracked:
  * when they change, the in-flight fetch is aborted and a new one starts. Reads after an `await` are not (W012).
  */
-export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, options: { initial?: T } = {}): Resource<T> {
-  const data = rt.data
+export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, options: ResourceOptions<T> = {}): Resource<T> {
+  const data = options.data === false ? undefined : rt.data
   const key = keys.on ? nextKey() : undefined
   const value = state<T | undefined>(options.initial)
   const pending = state(false)
@@ -58,7 +69,18 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
   const saved = key !== undefined ? data?.r[key] : undefined
   if (saved) saved.e !== undefined ? fail(new Error(saved.e)) : settle(saved.v as T)
 
-  if (rt.server) {
+  if (rt.server && options.data === false) {
+    try {
+      const out = untrack(() => fetcher(new AbortController().signal))
+      if (thenable(out)) {
+        pending.value = true
+        const done = Promise.resolve(out).catch(() => {})
+        rt.wait?.push(done)
+      } else settle(out)
+    } catch (e) {
+      fail(e)
+    }
+  } else if (rt.server) {
     const flying = key !== undefined ? rt.flight?.get(key) : undefined
     if (flying && !saved) {
       pending.value = true // an earlier pass started it: wait on that fetch, don't start another

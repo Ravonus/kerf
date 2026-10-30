@@ -23,8 +23,10 @@ export async function routesMeta({ root, site = {}, preset }) {
     const { manifest, modules } = await server.ssrLoadModule('virtual:weft/routes')
     const { createHandler, hash, cardPath } = await server.ssrLoadModule(join(startDir, 'server.tsx'))
     const { mergeMeta, headTags } = await server.ssrLoadModule('weft/ssr')
+    await server.ssrLoadModule('virtual:weft/fns')
+    const { default: context } = await server.ssrLoadModule('virtual:weft/context')
     const found = []
-    const handler = createHandler({ manifest, modules, site, build: 'inspect', onDiagnostic: d => found.push(d) })
+    const handler = createHandler({ manifest, modules, site, context, build: 'inspect', onDiagnostic: d => found.push(d) })
     const out = []
     const diagnostics = []
     for (const route of manifest.routes) {
@@ -33,7 +35,7 @@ export async function routesMeta({ root, site = {}, preset }) {
       const entry = { path: route.kind === 'page' ? filePath(manifest, route) : route.kind, kind: route.kind, file: route.file, layouts: layouts.map(l => l.file), params: route.params }
       const report = (code, severity, why) => diagnostics.push({ code, severity, file: route.file, route: entry.path, why })
       for (const f of [route.file, ...entry.layouts]) h006(readFileSync(join(root, f), 'utf8'), f, (why, file) => diagnostics.push({ code: 'H006', severity: 'error', file, route: entry.path, why }))
-      let head, status, url, data
+      let head, status, url, data, redirect
       if (route.kind !== 'page') {
         const metas = [...layouts.map(l => modules[l.file]?.meta), mod.meta ?? { title: route.kind === '404' ? 'Not found' : 'Error' }]
         head = mergeMeta(site, ...(await Promise.all(metas.map(m => (typeof m === 'function' ? m({ params: {}, data: placeholder('data') }) : m)))))
@@ -45,6 +47,7 @@ export async function routesMeta({ root, site = {}, preset }) {
         found.length = 0
         const r = await handler.resolve(route.pattern, new Request(`http://weft.local${route.pattern}`))
         ;({ head, status } = r)
+        redirect = r.redirect?.href
         url = route.pattern
         data = 'loaded'
         for (const d of found) report(d.code, d.severity, d.message.replace(/^H\d{3} /, ''))
@@ -63,6 +66,12 @@ export async function routesMeta({ root, site = {}, preset }) {
       const image = head.og.image
       entry.url = url
       entry.status = status
+      if (redirect !== undefined) {
+        // `load` redirects (research 27 §3): the response has no body, so no tags and no card.
+        Object.assign(entry, { redirect, data, card: null, image: 'none', meta: null, tags: [] })
+        out.push(entry)
+        continue
+      }
       entry.data = data
       entry.card = route.kind !== 'page' ? null : route.card ?? manifest.defaultCard ?? 'built-in'
       entry.image = typeof image !== 'object' || !image ? 'none' : !image.url.startsWith('/_weft/og/') ? 'url' : !route.params.length ? 'build' : mod.prerender ? 'prerender+on-demand' : 'on-demand'

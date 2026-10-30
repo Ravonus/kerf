@@ -11,6 +11,10 @@ import { Users, type Load } from './fixtures/ssr/Users'
 import { Users as ServerUsers } from './fixtures/ssr/Users.tsx?weft-ssr'
 // @ts-expect-error
 import { Users as ClientUsers } from './fixtures/ssr/Users.tsx?weft-hydrate'
+// @ts-expect-error
+import { Cached as ServerCached } from './fixtures/ssr/Cached.tsx?weft-ssr'
+// @ts-expect-error
+import { Cached as ClientCached } from './fixtures/ssr/Cached.tsx?weft-hydrate'
 
 const names: Record<string, string> = { u1: 'Ada', u2: 'Grace' }
 
@@ -136,6 +140,30 @@ test('SSR, data awaited: the content is in the HTML and hydrates without refetch
   await flush()
   await new Promise(r => setTimeout(r, 5))
   expect(container.querySelector('.profile')!.textContent).toBe('Grace')
+})
+
+test('SSR with `data: false`: the value stays out of the page data, and a synchronous read hydrates with 0 writes', async () => {
+  vi.useRealTimers()
+  // A toy cache, as @weft/start's request cache behaves: a promise first, the value itself once it's known.
+  const known = new Map<string, { name: string }>()
+  const read = (id: string) => known.get(id) ?? new Promise<{ name: string }>(ok => setTimeout(() => { known.set(id, { name: names[id] }); ok(known.get(id)!) }, 1))
+  const html = await renderToStringAsync(() => ServerCached({ read }))
+  expect(html).toMatch(/^<p wk="[^"]+" class="cached">Ada<\/p>$/) // no data-weft script: nothing recorded
+
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = html
+  const writes: MutationRecord[] = []
+  const mo = new MutationObserver(r => writes.push(...r))
+  mo.observe(container, { subtree: true, childList: true, characterData: true, attributes: true })
+  const calls: string[] = []
+  hydrate(() => ClientCached({ read: (id: string) => (calls.push(id), known.get(id)!) }), container)
+  await flush()
+  writes.push(...mo.takeRecords())
+  mo.disconnect()
+  expect(hydration.misses).toBe(0)
+  expect(writes).toEqual([])
+  expect(calls).toEqual(['u1'])
+  expect(container.textContent).toBe('Ada')
 })
 
 test('SSR, data not awaited: the fallback hydrates, then the content swaps in after the hold', async () => {

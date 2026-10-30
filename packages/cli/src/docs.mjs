@@ -83,11 +83,11 @@ export async function docs(root, topic) {
   root = resolve(root)
   const key = (topic ?? 'index').trim()
   if (key === 'index') {
-    const text = ['# weft docs', '', ...Object.entries(topics).map(([t, d]) => `- \`${t}\`: ${d}`), '', 'Any diagnostic code works too: `W014`, `T003`, `P004`, `D025`.'].join('\n')
+    const text = ['# weft docs', '', ...Object.entries(topics).map(([t, d]) => `- \`${t}\`: ${d}`), '', 'Any diagnostic code works too: `W014`, `T003`, `P004`, `D025`, `Q001`.'].join('\n')
     return { topic: 'index', text, topics }
   }
   const info = installed(root)
-  if (/^[WPTHD]\d{3}$/i.test(key)) {
+  if (/^[WPTHDQS]\d{3}$/i.test(key)) {
     const code = key.toUpperCase()
     if (!entry(code)) throw Object.assign(new Error(`unknown diagnostic code ${code}`), { code: 'E_UNKNOWN_TOPIC' })
     return { topic: code, text: codePage(code, info) }

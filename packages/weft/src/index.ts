@@ -502,5 +502,5 @@ export function restOf(props: any, keys: string[]) {
   return out
 }
 
-export { Boundary, resource, type Resource } from './async'
+export { Boundary, resource, type Resource, type ResourceOptions } from './async'
 export { defineState, StateError, type ScopeHandle, type History, type HistoryEntry } from './scope'

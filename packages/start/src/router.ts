@@ -7,13 +7,18 @@
 
 import { state, untrack, type State } from 'weft'
 import type { Merged } from 'weft/ssr'
+import type { Wire } from './data'
 
-/** One level as the server sends it: `d` lists the data's deferred fields (promises on the server, research 25 §4). */
+/**
+ * One level as the server sends it: `d` lists the data's deferred fields (promises on the server, research 25 §4),
+ * `t` the tags of the queries its `load` read (a mutation that invalidates one refreshes the route, research 27 §4).
+ */
 export interface Match {
   id: string
   params: Record<string, string>
   data?: unknown
   d?: string[]
+  t?: string[]
 }
 
 export interface Level {
@@ -41,6 +46,8 @@ export interface RoutePayload {
   h?: Merged
   /** A redirect (the client navigates there instead). */
   r?: string
+  /** The queries the loaders resolved, for the client cache (navigation only; a page carries `#weft-cache`). */
+  c?: Wire[]
 }
 
 /** The route state of the render in progress: a server pass sets it as it starts (passes are synchronous). */
@@ -86,8 +93,18 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
   })
 }
 
-/** The tab's route state and navigation, set by `start()` (client.tsx). Server renders never touch them. */
-export const client: { route?: RouteState; navigate?: (href: string, options?: NavigateOptions) => Promise<void> } = {}
+/**
+ * The tab's route state and navigation, set by `start()` (client.tsx). Server renders never touch them. The query
+ * cache (data.ts, loaded only by apps that use a query) hooks in here, so `start()` doesn't ship it: `seed` takes
+ * the entries a navigation brought (`seeds` holds them until it loads), `invalidated` refreshes the route data.
+ */
+export const client: {
+  route?: RouteState
+  navigate?: (href: string, options?: NavigateOptions & { replace?: boolean }) => Promise<void>
+  seed?: (list: Wire[]) => void
+  seeds?: Wire[]
+  invalidated?: (tags: string[]) => void
+} = {}
 
 export interface NavigateOptions {
   /** Replace the history entry instead of pushing one. */

@@ -687,6 +687,23 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       "url": "/deferred-meta",
     },
     {
+      "card": null,
+      "data": "loaded",
+      "file": "src/routes/old.tsx",
+      "image": "none",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": null,
+      "params": [],
+      "path": "/old",
+      "redirect": "/todos",
+      "status": 307,
+      "tags": [],
+      "url": "/old",
+    },
+    {
       "card": "built-in",
       "data": "loaded",
       "file": "src/routes/slow.tsx",
@@ -829,6 +846,150 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
       ],
       "url": "/slow",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/todos.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Tools for builders.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/todos.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Todos (3) · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/todos",
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Todos (3) · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/todos",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Todos (3) · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Tools for builders.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/todos",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/todos.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/todos",
     },
     {
       "card": "built-in",

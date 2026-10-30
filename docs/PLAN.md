@@ -232,7 +232,8 @@ Standard Schema) · Better Auth · `@t3-oss/env-core`.
 // server/todos.ts
 export const listTodos = query({
   input: z.object({ done: z.boolean().optional() }),
-  cache: { life: 'minutes', tags: ['todos'] },          // omit cache → never cached on the server
+  tags: ['todos'],                                      // client, request and shared caches invalidate by these
+  cache: { life: 'minutes' },                           // omit cache → never cached across requests
   run: ({ input, ctx }) => ctx.db.select().from(todos).where(…),
 })
 
@@ -243,8 +244,10 @@ export const addTodo = mutation({
 })
 ```
 
-From one declaration: a validated endpoint, a typed client call returning a `Resource`, form validation
-(`<Form of={addTodo}>` works without JS), a cache key, tags.
+From one declaration: a validated endpoint, a typed client call returning a `Resource` (`listTodos(input)` in
+components and scopes, `await listTodos.fetch(input)` in `load` and handlers), form validation (`<Form of={addTodo}>`
+works without JS), a cache key, tags. (`tags` moved out of `cache` in research 27 §1: the client cache needs them
+whether or not a query is cached on the server.)
 
 - **v0 caching:** `cache.life`, `cache.tags`, `invalidates`, `revalidateTag`. Tags are **explicit**. In dev, weft
   records which tables each function actually touched and `weft check` warns when declared tags miss one. That gives
@@ -268,8 +271,19 @@ From one declaration: a validated endpoint, a typed client call returning a `Res
   place (`/users/1 → /users/2` writes 5 DOM nodes and keeps both layouts). Streaming sends the head and shell first,
   then Boundaries in resolve order; hydration is 0/0. Takumi renders cards (build, on demand, immutable).
   `weft dev`/`weft build` run through Nitro; the node preset is verified end to end, bun builds and serves, and deno
-  builds. `weft routes --meta` and H001–H008 are in. The router adds 3.25 KB brotli. Not yet: `query`/`mutation`, the
-  cache, Drizzle, auth, `create-weft`, `redirect()`.
+  builds. `weft routes --meta` and H001–H008 are in. The router adds 3.25 KB brotli.
+- **Status (2026-10-29): `query`/`mutation`, the tagged cache, optimistic overlays and `redirect()` are built**
+  ([27](research/27-server-functions.md)). Server modules (`src/server/**`, `*.server.ts`) become client stubs that
+  keep only `optimistic`; `/_weft/fn/<id>` answers GET queries and CSRF-checked POST mutations. One request cache per
+  request (`AsyncLocalStorage`): `load` and the render share each run, and the page's `#weft-cache` seeds the client
+  cache, so hydration is 0/0 with no fetch. A mutation's response carries the refreshed queries it invalidated
+  (single-flight); a shared cache for `cache: { life }` goes by tag versions. Client entries are boxes updated in
+  place with structural sharing: an optimistic toggle is 1 DOM write in Chrome. Overlays roll back per call.
+  `redirect()` works in `load` (307) and in a `run` (the client router follows). `ctx` comes from
+  `src/context.server.ts`, the plug for Drizzle and Better Auth. Q001–Q010 and S011; `weft/test`'s `net` is the fake
+  transport. The data runtime adds 3.93 KB brotli, only to apps that use a query. Not yet: Drizzle, auth,
+  `create-weft --db/--auth`, the CI matrix, `.weft/contract.json`, `<Form>`, the `defineState` SSR payload and
+  `cookie` persist.
 
 ### 4.1 Runtimes: Node, Bun, Deno built in
 
@@ -915,11 +929,13 @@ and the Phase 2 X-codes. Build-side slots (`.weft/slots/<id>.build.json`) let `w
 Still open: layout-solved `sizes` (needs warp's layout primitives and `weft-layout`), a bundled SSIMULACRA2, and
 the exit check (the v3 shop on weft + warp).
 
-**3 status (2026-10-29):** the first slice is built: routing, route `meta` and share cards, streaming SSR, Nitro
-`weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The rest of the row is
-still to do: `query`/`mutation`, the tagged cache, Drizzle, Better Auth, `create-weft`'s db/auth/runtime flags (`--ui`
-landed in Phase 2), the CI matrix and the
-contract.
+**3 status (2026-10-29):** two slices are built. The first: routing, route `meta` and share cards, streaming SSR,
+Nitro `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The second:
+`query`/`mutation` typed end to end, the tagged cache (client, request and shared), `mutation({ optimistic })`
+overlays with per-call rollback, `redirect()` on the server and in the client router, SSR-dehydrated query results
+(0/0 hydration), Q001–Q010 and S011, and the fake transport in `weft/test` ([27](research/27-server-functions.md)).
+Still to do: Drizzle, Better Auth, `create-weft`'s db/auth/runtime flags (`--ui` landed in Phase 2), the CI matrix,
+the contract, `<Form>`, the `defineState` SSR state payload and `cookie` persist (with S013), `.live` and the buses.
 
 Performance is gated from Phase 1 (§3.7). The v3 eval showed that efficiency, not correctness, is where frameworks
 differ.
@@ -1100,3 +1116,9 @@ Also out of v0:
   the build falls back to fixed qualities (recorded per asset) rather than shipping an unvetted wasm port. Plugins
   can also run their own `check` hook in `weft check` now, so M-codes live with plugin-media
   ([26](research/26-phase-2-completion.md)).
+- **Server functions: `q()` for the live value, `q.fetch()` for a promise; `tags` outside `cache`; the query cache
+  built on `resource`** (2026-10-29). One context-sensitive call would have one type that lies half the time, so the
+  resource form needs an owner (Q001 otherwise) and `fetch` works anywhere. Tags drive the client and request caches
+  too, so they don't depend on `cache: { life }`. Query resources pass `resource(…, { data: false })`: the query
+  cache, not the page data, transfers values, so there is one copy with one identity. Diagnostics are **Q001–Q010**
+  (Q was unused) plus research 14's S011 ([27](research/27-server-functions.md)).
