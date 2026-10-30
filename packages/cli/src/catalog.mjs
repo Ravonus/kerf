@@ -81,6 +81,10 @@ export const catalog = [
     example: "import { untrack, type State } from 'weft'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
   },
   {
+    code: 'W019', severity: 'error', by: 'compiler', catches: 'Unsupported row pattern', fix: 'Read from one item param',
+    example: "export function L({ xs }) { return <ul>{xs.map(({ id, ...more }) => <li key={id}>{id}</li>)}</ul> }",
+  },
+  {
     code: 'W020', severity: 'error', by: 'compiler', catches: 'React-isms (W020–W029): `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, custom `useX()` hooks, dependency arrays',
     fix: '`state`, `watch`, `derived`, `ref={el}`, plain functions',
     example: "import { useState } from 'react'\nexport function A() { const [n] = useState(0); return <p>{n}</p> }",

@@ -70,7 +70,7 @@ export async function agentsMd(root) {
     ...['weft/dom', 'weft/ssr'].map((mod, i, all) => {
       const names = entryPoints[mod].filter(n => info.exports[mod]?.includes(n))
       const last = all.slice(i + 1).every(m => !entryPoints[m].some(n => info.exports[m]?.includes(n)))
-      return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}.${last ? ' Their other exports are for compiled code; never import them.' : ''}` : ''
+      return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}.${last ? ' The rest are for compiled code; never import them.' : ''}` : ''
     }).filter(Boolean),
     info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`.` : '',
     info.exports['weft/surface'] ? '- `weft/surface`: canvas and WebGL, never raw `<canvas>`: `weft docs surface`.' : '',

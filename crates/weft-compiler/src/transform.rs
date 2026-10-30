@@ -22,7 +22,7 @@ use oxc_span::{GetSpan, SPAN, Span};
 use oxc_syntax::operator::BinaryOperator;
 use oxc_syntax::scope::ScopeFlags;
 
-use crate::analyze::{Plan, Rewrite, SpanKey, is_key_attr, key};
+use crate::analyze::{Plan, Rewrite, RowStep, SpanKey, is_key_attr, key};
 
 pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &Scoping, plan: &Plan) {
     let mut t = Transformer {
@@ -88,6 +88,10 @@ impl<'a, 'p> Transformer<'a, 'p> {
     fn call(&self, callee: Expression<'a>, args: impl IntoIterator<Item = Expression<'a>>) -> Expression<'a> {
         let args = ArenaVec::from_iter_in(args.into_iter().map(Argument::from), &self.ast);
         Expression::new_call_expression(SPAN, callee, None, args, false, &self.ast)
+    }
+
+    fn number(&self, value: u32) -> Expression<'a> {
+        Expression::new_numeric_literal(SPAN, f64::from(value), None, NumberBase::Decimal, &self.ast)
     }
 
     fn string(&self, value: &str) -> Expression<'a> {
@@ -174,11 +178,11 @@ impl<'a, 'p> Transformer<'a, 'p> {
             }
             // The identifier itself becomes the callee, so it keeps its span and reference.
             Rewrite::Accessor => self.call(original, []),
-            Rewrite::AccessorMember { key } => self.member(self.call(self.ident("_item"), []), key),
-            Rewrite::AccessorIndex { index } => {
-                let at = Expression::new_numeric_literal(SPAN, f64::from(*index), None, NumberBase::Decimal, &self.ast);
-                Expression::new_computed_member_expression(SPAN, self.call(self.ident("_item"), []), at, false, &self.ast)
-            }
+            Rewrite::AccessorPath { path } => path.iter().fold(self.call(self.ident("_item"), []), |at, step| match step {
+                RowStep::Key(key) => self.member(at, key),
+                RowStep::Index(index) => Expression::new_computed_member_expression(SPAN, at, self.number(*index), false, &self.ast),
+                RowStep::From(index) => self.call(self.member(at, "slice"), [self.number(*index)]),
+            }),
         }
     }
 

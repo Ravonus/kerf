@@ -440,6 +440,22 @@ fn destructured_row_item() {
 }
 
 #[test]
+fn destructured_row_rest_and_nested() {
+    let (code, d) = run("export function L({ xs }) { return <ul>{xs.map(([id, { name: [first] }, ...more]) => <li key={id}>{first}{more.length}</li>)}</ul> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("_item()[1].name[0]"), "{code}");
+    assert!(code.contains("_item().slice(2).length"), "{code}");
+}
+
+#[test]
+fn destructured_row_it_cant_bind_is_w019() {
+    for row in ["({ id, ...more })", "({ id, n = 1 })", "([id, n = 1])", "({ id, [k]: n })"] {
+        let (_, d) = run(&format!("const k = 'a'; export function L({{ xs }}) {{ return <ul>{{xs.map({row} => <li key={{id}}>{{id}}</li>)}}</ul> }}"));
+        assert!(d.iter().any(|x| x.code == "W019"), "{row}: {d:?}");
+    }
+}
+
+#[test]
 fn destructured_row_tuple() {
     let (code, d) = run("export function L({ xs }) { return <ul>{Object.entries(xs).map(([id, name]) => <li key={id}>{name}</li>)}</ul> }");
     assert!(d.is_empty(), "{d:?}");

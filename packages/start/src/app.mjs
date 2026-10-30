@@ -22,7 +22,7 @@ function config({ root, site, preset, port, logLevel, command, nitro: nitroOptio
     root,
     configFile: user ?? false,
     logLevel,
-    server: { port, strictPort: port !== undefined },
+    server: { port: port ?? 5173, strictPort: port !== undefined },
     plugins: [
       weft({ hydratable: true }),
       weftStart({ root, site }),

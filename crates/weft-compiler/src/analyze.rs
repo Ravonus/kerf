@@ -1,5 +1,5 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014, W015, W016, W017, W018; the weft/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
+//! W010, W013, W014, W015, W016, W017, W018, W019; the weft/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
 //! facts `weft check`'s project view joins across files (`project`).
 
 use std::collections::{HashMap, HashSet};
@@ -31,10 +31,17 @@ pub enum Rewrite {
     Rest { props: String, exclude: Vec<String>, local: String, component: SpanKey },
     /// A keyed-list item or index: `p` → `p()`.
     Accessor,
-    /// A destructured keyed-list item: `name` → `_item().name`.
-    AccessorMember { key: String },
-    /// A destructured tuple item, `Object.entries(x).map(([k, v]) => …)`: `v` → `_item()[1]`.
-    AccessorIndex { index: u32 },
+    /// A destructured keyed-list item, any depth: `name` → `_item().name`, `v` → `_item()[1]`, `...more` →
+    /// `_item().slice(2)`.
+    AccessorPath { path: Vec<RowStep> },
+}
+
+/// One step from a keyed-list item to a name bound in its destructuring pattern.
+#[derive(Clone, Debug)]
+pub enum RowStep {
+    Key(String),
+    Index(u32),
+    From(u32),
 }
 
 #[derive(Debug, Default)]
@@ -639,6 +646,58 @@ impl<'s> Analyzer<'s> {
         ));
     }
 
+    /// Every name `pattern` binds in a keyed-list row, as a live path from `_item()`. W019 for what a path can't say.
+    fn bind_row(&mut self, pattern: &BindingPattern<'_>, path: &mut Vec<RowStep>, plan: &mut ListPlan) {
+        match pattern {
+            BindingPattern::BindingIdentifier(id) => {
+                if let Some(sym) = binding_symbol(id) {
+                    self.plan.rewrites.insert(sym, Rewrite::AccessorPath { path: path.clone() });
+                    plan.item_syms.push(sym);
+                }
+            }
+            BindingPattern::ObjectPattern(obj) => {
+                for p in &obj.properties {
+                    let Some(k) = static_key(&p.key) else {
+                        self.row_pattern_error(p.span);
+                        continue;
+                    };
+                    path.push(RowStep::Key(k));
+                    self.bind_row(&p.value, path, plan);
+                    path.pop();
+                }
+                if let Some(rest) = &obj.rest {
+                    self.row_pattern_error(rest.span);
+                }
+            }
+            BindingPattern::ArrayPattern(arr) => {
+                for (index, el) in arr.elements.iter().enumerate() {
+                    if let Some(el) = el {
+                        path.push(RowStep::Index(index as u32));
+                        self.bind_row(el, path, plan);
+                        path.pop();
+                    }
+                }
+                if let Some(rest) = &arr.rest {
+                    path.push(RowStep::From(arr.elements.len() as u32));
+                    self.bind_row(&rest.argument, path, plan);
+                    path.pop();
+                }
+            }
+            BindingPattern::AssignmentPattern(p) => self.row_pattern_error(p.span),
+        }
+    }
+
+    fn row_pattern_error(&mut self, span: Span) {
+        self.plan.diagnostics.push(Diagnostic::new(
+            self.source,
+            "W019",
+            Severity::Error,
+            (span.start, span.end),
+            "A keyed-list row can't destructure a default, an object rest or a computed key: the name would have no value.".to_string(),
+            "Take the item as one parameter and read from it: `row => <li>{row.a ?? 1}</li>`.".to_string(),
+        ));
+    }
+
     fn analyze_list(&mut self, call: &CallExpression<'_>, cb: &Expression<'_>) {
         let (ret, early) = returned(cb);
         let mut plan = ListPlan::default();
@@ -656,29 +715,10 @@ impl<'s> Analyzer<'s> {
                         item_sym = Some(sym);
                     }
                 }
-                BindingPattern::ObjectPattern(obj) => {
+                pattern @ (BindingPattern::ObjectPattern(_) | BindingPattern::ArrayPattern(_)) => {
                     destructured = true;
                     self.plan.destructured_rows.insert(key(cb.span()));
-                    for p in &obj.properties {
-                        if let (BindingPattern::BindingIdentifier(id), Some(k)) = (&p.value, static_key(&p.key))
-                            && let Some(sym) = binding_symbol(id)
-                        {
-                            self.plan.rewrites.insert(sym, Rewrite::AccessorMember { key: k });
-                            plan.item_syms.push(sym);
-                        }
-                    }
-                }
-                BindingPattern::ArrayPattern(arr) if arr.rest.is_none() => {
-                    destructured = true;
-                    self.plan.destructured_rows.insert(key(cb.span()));
-                    for (index, el) in arr.elements.iter().enumerate() {
-                        if let Some(BindingPattern::BindingIdentifier(id)) = el
-                            && let Some(sym) = binding_symbol(id)
-                        {
-                            self.plan.rewrites.insert(sym, Rewrite::AccessorIndex { index: index as u32 });
-                            plan.item_syms.push(sym);
-                        }
-                    }
+                    self.bind_row(pattern, &mut Vec::new(), &mut plan);
                 }
                 _ => {}
             }
