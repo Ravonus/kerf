@@ -42,9 +42,18 @@ export function describe(fns) {
     }
     const errors = [...(f.def.input ? ['Q002'] : []), ...(f.def.auth ? ['A002'] : []), ...(f.kind === 'mutation' ? ['Q010'] : [])]
     const input = schema('input', 'input') ?? null
-    if (f.kind === 'stream') {
-      const hit = unbounded(input)
+    const bound = (json, path) => {
+      const hit = unbounded(json, path)
       if (hit) diagnostics.push({ code: 'R005', severity: 'warning', why: `\`${f.$id}\`'s \`${hit}\` has no upper bound: a client decides how much the server holds. Add \`.max()\`.` })
+    }
+    if (f.kind === 'stream') bound(input)
+    if (f.kind === 'channel' || f.kind === 'shared') {
+      const part = key => (f.def[key] ? toJson(f.def[key], 'input') ?? {} : undefined)
+      const messages = list => Object.fromEntries(Object.entries(list ?? {}).map(([k, s]) => [k, toJson(s, 'input') ?? {}]))
+      const client = f.kind === 'shared' ? { value: part('value') } : messages(f.def.client)
+      bound(part(f.kind === 'shared' ? 'key' : 'params'), f.kind === 'shared' ? 'key' : 'params')
+      for (const [k, json] of Object.entries(client)) bound(json, `client.${k}`)
+      return { id: f.$id, name: f.$id.replace(/\..*$/, ''), kind: f.kind, input: part(f.kind === 'shared' ? 'key' : 'params') ?? null, output: null, client, server: messages(f.def.server), auth: 'authorize', errors: ['R011', 'Q002'] }
     }
     return {
       id: f.$id, name: f.$id.replace(/\..*$/, ''), kind: f.kind,
@@ -72,7 +81,9 @@ const usesLive = root => {
  * @returns {string | undefined} the message when this build would drop messages
  */
 export const busProblem = ({ preset, bus, streams, root }) =>
-  bus === 'memory' && MULTI.test(preset ?? '') && (streams || usesLive(root))
+  bus === 'durable-object' && preset !== 'cloudflare_durable'
+    ? `\`durableObjectBus\` holds a socket open, and on the \`${preset}\` preset that socket dies with the request that opened it: use the \`cloudflare_durable\` preset`
+    : bus === 'memory' && MULTI.test(preset ?? '') && (streams || usesLive(root))
     ? `the \`${preset}\` preset runs many instances, and the memory bus only reaches clients on its own: pokes and messages would be lost`
     : undefined
 
@@ -111,8 +122,8 @@ export function writeContract({ root, site = {}, preset }) {
   return withFns({ root, site }, async (fns, server) => {
     const { diagnostics, ...contract } = describe(fns)
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
-    const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream'), root })
-    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Set \`bus: postgresBus({ url })\` in \`src/realtime.server.ts\`.` })
+    const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
+    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Set a bus in \`src/realtime.server.ts\`: \`postgresBus\`, \`redisBus\` or \`natsBus\`.` })
     mkdirSync(join(root, '.weft'), { recursive: true })
     const path = join(root, '.weft', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')

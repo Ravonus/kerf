@@ -17,7 +17,7 @@ export const topics = {
   props: 'How props stay live; W001, W005, W006',
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
   async: 'resource, <Boundary pending error>, weft/ssr and hydrate; W012',
-  start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q015, A001–A004, C001–C002, F001–F003, R002–R010',
+  start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q015, A001–A004, C001–C002, F001–F003, R001–R011',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',

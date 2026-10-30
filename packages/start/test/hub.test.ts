@@ -1,9 +1,10 @@
 // The hub and `/_weft/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
 // contract. What a sink does, a real connection does; test/rt.test.mjs runs the same protocol over HTTP.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { memoryBus, mutation, query, realtime, StartError, stream, topic, tracked } from '@weft/start'
+import { channel, memoryBus, mutation, query, realtime, StartError, stream, topic, tracked } from '@weft/start'
 import { configure, hub, resetHub, rtRoute, type Sink } from '@weft/start/hub'
 import { postgresBus } from '@weft/start/bus/postgres'
+import { attach, socketRoute } from '../src/socket'
 import { createScope, fetchQuery, liveQueries, runMutation } from '../src/exec'
 import { currentScope, enter, fns, runtime } from '@weft/start/data'
 
@@ -27,6 +28,7 @@ const open = async (body: any, s = sink(), ctx: object = {}) => {
 }
 const of = (s: { frames: [string, any][] }, e: string) => s.frames.filter(f => f[0] === e).map(f => f[1])
 const wait = () => new Promise(ok => setTimeout(ok))
+const bare: any = { '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) } }
 
 afterEach(async () => {
   await resetHub()
@@ -384,5 +386,65 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres bus', () => {
     await other.publish('weft:poke', JSON.stringify({ t: ['a'] }))
     await vi.waitFor(() => expect(of(s, 'p')).toHaveLength(1))
     await other.close!()
+  })
+})
+
+describe('channels on the hub', () => {
+  test('R004: a wildcard anywhere in an origin', () => {
+    expect(() => realtime({ origins: ['https://*.example.com'] })).toThrow('R004')
+    expect(() => realtime({ origins: ['*'] })).toThrow('R004')
+    expect(() => realtime({ origins: ['https://a.example'] })).not.toThrow()
+  })
+
+  test('R004 again at the upgrade, for an app that skipped `realtime()`', async () => {
+    const r = new Request('http://app.test/_weft/ws', { headers: { upgrade: 'websocket', origin: 'http://app.test' } })
+    const seen: string[] = []
+    const res: any = await socketRoute(r, createScope(r, { onDiagnostic: d => seen.push(d.code) }), ['*'])
+    expect(seen).toEqual(['R004'])
+    expect(() => res.crossws.upgrade()).toThrow()
+  })
+
+  test('a refused upgrade is a hook that throws the status; an allowed one has `open`', async () => {
+    const at = (origin?: string, origins?: string[]) => {
+      const r = new Request('http://app.test/_weft/ws', { headers: { upgrade: 'websocket', ...(origin && { origin }) } })
+      return socketRoute(r, createScope(r), origins) as Promise<any>
+    }
+    const status = async (p: Promise<any>) => { try { (await p).crossws.upgrade() } catch (e: any) { return e.status } }
+    expect(await status(at('http://evil.example'))).toBe(403)
+    expect(await status(at())).toBe(403)
+    expect(await status(at('http://app.test:81'))).toBe(403)
+    expect(await status(at('https://app.test'))).toBe(403)
+    expect(typeof (await at('http://app.test')).crossws.open).toBe('function')
+    expect(typeof (await at('https://other.example', ['https://other.example'])).crossws.open).toBe('function')
+  })
+
+  test('R009: joins and sockets are limited', async () => {
+    configure({ limits: { subscriptions: 1, connections: 1 } })
+    const d = channel({ $id: 'hub.c', authorize: () => true })
+    const frames: any[][] = []
+    let closed = 0
+    const peer = { send: (t: string) => void frames.push(JSON.parse(t)), close: (c: number) => void (closed = c), backlog: () => 0 }
+    const r = new Request('http://app.test/_weft/ws')
+    const a = await attach(peer, r, createScope(r, { context: () => ({ user: { id: 'u' } }) }))
+    await attach(peer, r, createScope(r, { context: () => ({ user: { id: 'u' } }) }))
+    expect(closed).toBe(1008)
+    a.message(JSON.stringify(['j', 1, d.$id]))
+    a.message(JSON.stringify(['j', 2, d.$id]))
+    await wait()
+    await wait()
+    expect(frames.filter(f => f[0] === 'e').map(f => f[2].code)).toEqual(['R009'])
+    await resetHub()
+  })
+
+  test('a socket over its send queue closes with 1013 and can resume', async () => {
+    configure({ limits: { queue: 10 } })
+    const d = channel({ $id: 'hub.q', authorize: () => true, server: { m: bare } })
+    let closed = 0
+    const peer = { send() {}, close: (c: number) => void (closed = c), backlog: () => 100 }
+    const r = new Request('http://app.test/_weft/ws')
+    await attach(peer, r, createScope(r))
+    expect(closed).toBe(1013)
+    expect(d.kind).toBe('channel')
+    await resetHub()
   })
 })

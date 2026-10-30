@@ -123,6 +123,12 @@ describe('diagnostic shape', () => {
     expect(r.ok).toBe(true)
   })
 
+  it('reports R004 for a socket handler of the app\'s own', async () => {
+    const dir = project({ 'src/server/ws.ts': "import { defineWebSocketHandler } from 'nitro'\nexport default defineWebSocketHandler({})\n" })
+    const r = await check(dir)
+    expect(r.diagnostics.map(d => [d.code, d.file])).toEqual([['R004', 'src/server/ws.ts']])
+  })
+
   it('reports R007 for a socket library in dependencies, and nothing for one in devDependencies', async () => {
     const dir = project({ 'package.json': JSON.stringify({ dependencies: { ws: '8.0.0' }, devDependencies: { 'socket.io-client': '4.0.0' } }, null, 2) })
     const r = await check(dir)

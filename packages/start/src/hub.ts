@@ -29,11 +29,15 @@ export interface Limits {
   window: number
   /** Ms between `: ping`s. */
   heartbeat: number
-  /** Ms between session re-checks of `auth` subscriptions. */
+  /** Ms between session re-checks of `auth` subscriptions and channel joins. */
   session: number
+  /** Channel messages a client may send per second, per socket. */
+  perSecond: number
+  /** The burst `perSecond` allows. */
+  burst: number
 }
 
-const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000 }
+const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40 }
 const HIGH = 64 * 1024
 
 export interface RealtimeOptions {
@@ -48,8 +52,13 @@ export interface RealtimeOptions {
 
 /** `src/realtime.server.ts`'s default export. */
 export function realtime(options: RealtimeOptions): RealtimeOptions {
-  if (options.origins?.includes('*')) throw new StartError('R004', '`realtime({ origins })` has a wildcard: any site could read this app\'s streams with a visitor\'s cookies', 'list the origins, scheme and port included')
+  checkOrigins(options.origins)
   return options
+}
+
+/** R004. `realtime()` is a wrapper an app can leave out, so the upgrade calls this too. */
+export function checkOrigins(origins: string[] = []) {
+  if (origins.some(o => o.includes('*'))) throw new StartError('R004', '`realtime({ origins })` has a wildcard: any site could read this app\'s streams and join its channels with a visitor\'s cookies', 'list the origins, scheme and port included')
 }
 
 /** Where a connection's frames go. `data` is JSON. */
@@ -74,8 +83,8 @@ export const tracked = <M>(id: string, value: M) => new Tracked(id, value)
 /** Thrown out of `run` when its cursor can't resume: the stream restarts without one. */
 const RESET = Symbol('weft.reset')
 
-interface Ev { seq: number; at: number; raw: string }
-interface Channel {
+export interface Ev { seq: number; at: number; raw: string; /** Parsed once, for every socket of a room. */ p?: any }
+export interface Channel {
   name: string
   ring: Ev[]
   floor: number
@@ -132,16 +141,31 @@ export interface Hub {
   /** Server-side counts for tests and `weft browser`. */
   stats(): { connections: number; subscriptions: number; channels: number }
   shutdown(): Promise<void>
+  /** The position a new listener resumes from. */
+  position(): string
+  /** Every poked tag, on this instance: socket.ts's `session:<user>` re-check. */
+  watch(fn: (tags: string[]) => void): void
+  /** Run at shutdown: socket.ts closes its sockets. */
+  closing: Set<() => void>
+  /** `room.publish` checks its messages (C002). */
+  dev?: boolean
+  /** The instance's name in a shared value's stamp. */
+  epoch: string
+  /** Seconds a connection may live (`RealtimeOptions.maxDuration`). */
+  maxDuration?: number
+  build?: string
 }
 
 const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
 
-function createHub(options: RealtimeOptions & { build?: string }): Hub {
+function createHub(options: RealtimeOptions & { build?: string; dev?: boolean }): Hub {
   const bus = options.bus ?? memoryBus()
   const limits = { ...LIMITS, ...options.limits }
   const epoch = crypto.randomUUID().slice(0, 8)
   const channels = new Map<string, Channel>()
   const conns = new Map<string, Conn>()
+  const watchers = new Set<(tags: string[]) => void>()
+  const closing = new Set<() => void>()
   let seq = 0
   const cursorOf = (n: number) => `${epoch}:${n}`
 
@@ -211,6 +235,7 @@ function createHub(options: RealtimeOptions & { build?: string }): Hub {
       }
       const { t, o } = JSON.parse(ev.raw) as { t: string[]; o?: string }
       for (const c of conns.values()) if (c.k !== o) poke(c, t.filter(x => c.tags.has(x)), ev.seq)
+      for (const w of watchers) w(t)
     })
     return ch
   }
@@ -412,7 +437,12 @@ function createHub(options: RealtimeOptions & { build?: string }): Hub {
   }
 
   return {
-    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close,
+    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close, closing, epoch, dev: options.dev, maxDuration: options.maxDuration, build: options.build,
+    position: () => cursorOf(seq),
+    watch(fn) {
+      watchers.add(fn)
+      void pokes()
+    },
     find: k => conns.get(k),
     connections: () => [...conns.values()],
     cursor: () => (pokes().stop ? cursorOf(seq) : undefined),
@@ -433,6 +463,7 @@ function createHub(options: RealtimeOptions & { build?: string }): Hub {
     },
     stats: () => ({ connections: conns.size, subscriptions: [...conns.values()].reduce((n, c) => n + c.subs.size, 0), channels: channels.size }),
     async shutdown() {
+      for (const fn of closing) fn()
       for (const c of conns.values()) close(c)
       for (const ch of channels.values()) {
         clearTimeout(ch.idle)
@@ -453,7 +484,7 @@ let current: Hub | undefined
 /** The process's hub: the first caller makes the default one (memory bus). */
 export const hub = (): Hub => (current ??= createHub({}))
 /** Set by `createHandler`, from `src/realtime.server.ts`. */
-export const configure = (options: RealtimeOptions & { build?: string }) => {
+export const configure = (options: RealtimeOptions & { build?: string; dev?: boolean }) => {
   void current?.shutdown() // a dev server's reload makes a new handler
   return (current = createHub(options))
 }

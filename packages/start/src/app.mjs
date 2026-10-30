@@ -1,12 +1,19 @@
 // `weft dev` and `weft build` for an app with src/routes (research 25 §6): Vite 8 with weft() (hydratable output),
 // weftStart() and Nitro's Vite plugin. A vite.config in the app is merged in. The CLI passes the config's `site`.
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
 import weft from 'weft/vite'
 import weftStart from './vite.mjs'
+
+/** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
+function usesSockets(root) {
+  const src = join(root, 'src')
+  if (!existsSync(src)) return false
+  return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[cm]?[jt]sx?$/.test(f.name) && /\b(channel|sharedState)\s*[(<]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
+}
 
 function config({ root, site, preset, port, logLevel, command, nitro: nitroOptions = {} }) {
   root = resolve(root)
@@ -21,6 +28,7 @@ function config({ root, site, preset, port, logLevel, command, nitro: nitroOptio
       weftStart({ root, site }),
       nitro({
         preset,
+        ...(usesSockets(root) && { features: { websocket: true } }),
         // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.
         prerender: { routes: ['/_weft/og-routes'], failOnError: true },
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a

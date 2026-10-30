@@ -2,7 +2,7 @@
 // sign-in/sign-up flow and a guarded `/todos`. Pinned versions, so a scaffold builds what the matrix tested.
 
 const VERSIONS = {
-  '@types/node': '22.20.5',
+  '@types/node': '26.6.5',
   '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', postgres: '4.0.0', zod: '4.6.7',
 }
 const pin = (...names) => Object.fromEntries(names.map(n => [n, VERSIONS[n]]))

@@ -440,6 +440,14 @@ fn destructured_row_item() {
 }
 
 #[test]
+fn destructured_row_tuple() {
+    let (code, d) = run("export function L({ xs }) { return <ul>{Object.entries(xs).map(([id, name]) => <li key={id}>{name}</li>)}</ul> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("by: ([id, name]) => id"), "{code}");
+    assert!(code.contains("_item()[1]"), "{code}");
+}
+
+#[test]
 fn primitive_lists_need_no_key() {
     let (code, d) = run("export function L({ tags }) { return <ul>{tags.map(t => <li>{t}</li>)}</ul> }");
     assert!(d.is_empty(), "{d:?}");

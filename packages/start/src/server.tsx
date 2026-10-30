@@ -26,6 +26,7 @@ import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, Sta
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
 import { configure, hub, rtRoute, type RealtimeOptions } from './hub'
+import { socketRoute } from './socket'
 import { App } from './view'
 import { DefaultCard } from './og/DefaultCard'
 import { ErrorPage, NotFoundPage } from './builtin'
@@ -132,7 +133,7 @@ export function createHandler(options: HandlerOptions) {
   const authBase = (options.auth?.options?.basePath ?? '/api/auth').replace(/\/$/, '')
   let applied = -1
   let ready: Promise<void> | undefined
-  configure({ ...options.realtime, build: options.build })
+  configure({ ...options.realtime, build: options.build, dev: options.dev })
 
   /** Before the first request (and in dev, when `drizzle/` grows): the auth secret, then the migrations. */
   function boot(): Promise<void> | undefined {
@@ -403,6 +404,7 @@ export function createHandler(options: HandlerOptions) {
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
     if (request.method === 'POST' && !url.pathname.startsWith('/_weft/') && /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(request.headers.get('content-type') ?? '')) return form(url, request, scope)
     if (url.pathname === '/_weft/rt') return rtRoute(request, scope, options.realtime?.origins)
+    if (url.pathname === '/_weft/ws') return socketRoute(request, scope, options.realtime?.origins)
     if (request.method !== 'GET' && request.method !== 'HEAD') return Promise.resolve(new Response('Method not allowed', { status: 405 }))
     if (url.pathname.startsWith('/_weft/m/')) return media(url, request)
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)

@@ -33,6 +33,8 @@ pub enum Rewrite {
     Accessor,
     /// A destructured keyed-list item: `name` → `_item().name`.
     AccessorMember { key: String },
+    /// A destructured tuple item, `Object.entries(x).map(([k, v]) => …)`: `v` → `_item()[1]`.
+    AccessorIndex { index: u32 },
 }
 
 #[derive(Debug, Default)]
@@ -662,6 +664,18 @@ impl<'s> Analyzer<'s> {
                             && let Some(sym) = binding_symbol(id)
                         {
                             self.plan.rewrites.insert(sym, Rewrite::AccessorMember { key: k });
+                            plan.item_syms.push(sym);
+                        }
+                    }
+                }
+                BindingPattern::ArrayPattern(arr) if arr.rest.is_none() => {
+                    destructured = true;
+                    self.plan.destructured_rows.insert(key(cb.span()));
+                    for (index, el) in arr.elements.iter().enumerate() {
+                        if let Some(BindingPattern::BindingIdentifier(id)) = el
+                            && let Some(sym) = binding_symbol(id)
+                        {
+                            self.plan.rewrites.insert(sym, Rewrite::AccessorIndex { index: index as u32 });
                             plan.item_syms.push(sym);
                         }
                     }

@@ -1,5 +1,5 @@
 // weft/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
-// (§7b, §10b), the page fakes for weft/browser (`net`, `page`) and the leak check (T012).
+// (§7b, §10b), the page fakes for weft/browser (`net`, `page`, `tabs`) and the leak check (T012).
 //
 //   render(Counter)
 //   await user.click(screen.getByRole('button', { name: 'Add' }))             // ends in flush()
@@ -174,7 +174,7 @@ afterEach(context => {
   cleanup()
   clock.uninstall()
   session = undefined
-  try { assertNoLeaks() } finally { resetPage(); resetTransport() } // T012
+  try { assertNoLeaks() } finally { resetPage(); resetTransport(); lines.clear(); posted.clear() } // T012
   // T001 at runtime: catches what the static check can't see (assertions hidden in helpers it couldn't read, or none).
   const failed = context.task.result?.state === 'fail' || (context.task.result?.errors?.length ?? 0) > 0
   if (!failed && !context.task.fails && expect.getState().assertionCalls === 0)
@@ -253,6 +253,10 @@ const transport = {
   resets: [] as (() => void)[],
   /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as weft/browser's. */
   open,
+  /** The channel fake while a socket is open (@weft/start's channel.ts). */
+  ws: undefined as undefined | { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> },
+  /** What this client's sockets sent. */
+  sent: [] as { id: string; name: string; msg: unknown }[],
   /** The realtime fake while one is connected (@weft/start's live.ts). */
   rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
   /** Times the realtime connection was lost. */
@@ -265,6 +269,7 @@ function resetTransport() {
   transport.fails.clear()
   transport.handlers.clear()
   transport.log.length = 0
+  transport.sent.length = 0
   transport.inflight.clear()
   for (const r of transport.resets) r()
 }
@@ -297,8 +302,27 @@ export const net = {
     await connected().poke(tags)
     await net.settle()
   },
-  /** Cut the realtime connection: the client reconnects and resumes, as after a dropped socket. */
-  drop() { connected().drop(); return net.settle() },
+  /** Cut the realtime connection and the channel socket: the client reconnects and resumes, as after a dropped socket. */
+  drop() {
+    if (!transport.ws) connected()
+    transport.rt?.drop()
+    transport.ws?.drop()
+    return net.settle()
+  },
+  /** A message to everyone in a room, as another user's `room.publish` would: `net.publish(room, { roomId }, 'said', row)`. */
+  async publish(room: FnRef, params: unknown, name: string, message: unknown) {
+    if (!transport.ws) throw new Error('net: no channel socket yet: render a `.connect()`, then `await net.settle()`')
+    await transport.ws.publish(fnId(room), params, name, message)
+    await net.settle()
+  },
+  /** What this client's sockets sent: `{ id, name, msg }`, in order. */
+  sent(room?: FnRef) { return transport.sent.filter(s => !room || s.id === fnId(room)) },
+  /** A new `ctx` (or none: signed out), and the session re-check at once. */
+  async session(ctx: object) {
+    transport.ctx = ctx
+    await transport.ws?.recheck()
+    await net.settle()
+  },
   /** How many times the realtime connection was lost so far. */
   reconnects: () => transport.reconnects,
   /** What the client is subscribed to: `{ kind, id, input }`. */
@@ -317,6 +341,42 @@ export const net = {
 function connected() {
   if (!transport.rt) throw new Error('net: no realtime connection yet: render a `.live()` or a stream, then `await net.settle()`')
   return transport.rt
+}
+
+// ---- tabs: BroadcastChannel without a real one, so a `render()` is a tab ---------------------------------------------
+
+const lines = new Map<string, Set<FakeLine>>()
+const posted = new Map<string, unknown[]>()
+
+class FakeLine {
+  onmessage: ((e: { data: unknown }) => void) | null = null
+  constructor(public name: string) {
+    if (!lines.has(name)) lines.set(name, new Set())
+    lines.get(name)!.add(this)
+  }
+  postMessage(data: unknown) {
+    const copy = structuredClone(data)
+    posted.set(this.name, [...(posted.get(this.name) ?? []), copy])
+    deliver(this.name, copy, this)
+  }
+  close() { lines.get(this.name)?.delete(this) }
+}
+
+function deliver(name: string, data: unknown, from?: FakeLine) {
+  queueMicrotask(() => { for (const line of [...(lines.get(name) ?? [])]) if (line !== from) line.onmessage?.({ data }) })
+}
+
+if (typeof document != 'undefined') (globalThis as any).BroadcastChannel = FakeLine
+
+/**
+ * Other tabs. Two `render()`s are two tabs: each gets its own channels, and a shared `storage` is the shared
+ * `localStorage`. `tabs.channel` names here are the ones the app gave it.
+ */
+export const tabs = {
+  /** A message from another tab. */
+  post(name: string, message: unknown) { deliver(`weft:tab:${name}`, structuredClone(message)); return flush() },
+  /** What this page posted, in order. */
+  posted: (name: string) => (posted.get(`weft:tab:${name}`) ?? []).slice(),
 }
 
 const visibility = (to: DocumentVisibilityState) => { fake.visibility = to; fire(document, 'visibilitychange') }

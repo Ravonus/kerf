@@ -1,13 +1,13 @@
-// weft/browser: browser events as reactive values (PLAN §4.2, research 07 §6). Phase 1: `online`, `visible`,
-// `lifecycle`, `media`, `on` and `interval`. `tabs.channel` comes with Phase 3b; `storage` is `state(…, { persist })`
-// inside `defineState` (§4.5).
+// weft/browser: browser events as reactive values (PLAN §4.2, research 07 §6): `online`, `visible`, `lifecycle`,
+// `media`, `on`, `interval` and `tabs.channel` (research 32); `storage` is `state(…, { persist })` inside `defineState`
+// (§4.5).
 //
 // Each value is created in setup and subscribes on its first read: one listener per (target, type) per document,
 // shared by every reader and refcounted, and released when the reader's owner is disposed. On the server (and
 // during hydration) a value is its declared `ssr` value and touches no browser global; hydrated readers switch to
 // the real value in the first flush after hydration. Outside an owner these throw in dev (W051).
 
-import { Box, DEV, collect, devComponent, getOwner, onCleanup, rt, type Derived } from './index'
+import { Box, DEV, collect, devComponent, getOwner, onCleanup, rt, type Derived, type StandardSchema } from './index'
 import { keys } from './keys'
 
 type Handler = (e: any) => void
@@ -213,3 +213,78 @@ export function interval(every: number | `${number}${'ms' | 's' | 'm' | 'h'}`, f
   onCleanup(stop)
   return stop
 }
+
+// ---- tabs ---------------------------------------------------------------------------------------------------------
+
+export interface TabChannel<T> {
+  /** To every other tab of this origin. Validated first: a wrong message throws in dev, and is dropped in production. */
+  post(message: T): void
+  /** Each message from another tab, until the owner is disposed. Returns a stop function. */
+  on(fn: (message: T) => void): () => void
+  /** The last message from another tab. */
+  readonly value: T | undefined
+}
+
+interface TabLine { bc: BroadcastChannel; refs: number; fns: Set<(data: unknown) => void> }
+const lines = new Map<string, TabLine>()
+
+const valid = <T>(schema: StandardSchema<T>, v: unknown): { value: T } | undefined => {
+  const r: any = schema['~standard'].validate(v)
+  return r instanceof Promise || r.issues ? undefined : { value: r.value }
+}
+
+/**
+ * `BroadcastChannel`, typed and validated (research 32 §1): one per name per document, removed with the owner. A
+ * received message the schema refuses is dropped, because the other tab may be an older deploy. Inert on the server.
+ */
+function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
+  if (DEV && !schema?.['~standard']) throw new Error(`tabs.channel('${name}') needs a schema: another tab can be another deploy.\n  fix: tabs.channel('${name}', z.object({ … }))`)
+  const last = box<T | undefined>(undefined)
+  if (server() || typeof BroadcastChannel == 'undefined') return { post() {}, on: () => () => {}, get value() { return last.value } }
+  owned(`tabs.channel('${name}')`)
+  let line = lines.get(name)
+  if (!line) {
+    const made: TabLine = { bc: new BroadcastChannel(`weft:tab:${name}`), refs: 0, fns: new Set() }
+    made.bc.onmessage = e => { for (const f of [...made.fns]) f(e.data) }
+    lines.set(name, (line = made))
+  }
+  const held = line
+  held.refs++
+  const token = {}
+  const handlers = new Set<(message: T) => void>()
+  const receive = (data: unknown) => {
+    const ok = valid(schema, data)
+    if (!ok) {
+      if (DEV) console.warn(`weft: tabs.channel('${name}') dropped a message its schema refuses (another deploy's tab?)`)
+      return
+    }
+    last.value = ok.value
+    for (const f of [...handlers]) f(ok.value)
+  }
+  held.fns.add(receive)
+  const close = () => {
+    if (!held.fns.delete(receive)) return
+    if (DEV) open.delete(token)
+    if (--held.refs) return
+    held.bc.close()
+    lines.delete(name)
+  }
+  if (DEV) open.set(token, [`tabs.channel('${name}')${where()}`, close])
+  onCleanup(close)
+  return {
+    post(message) {
+      const ok = valid(schema, message)
+      if (ok) held.bc.postMessage(ok.value)
+      else if (DEV) throw new Error(`tabs.channel('${name}'): the message doesn't match its schema`)
+    },
+    on(fn) {
+      handlers.add(fn)
+      const stop = () => void handlers.delete(fn)
+      onCleanup(stop)
+      return stop
+    },
+    get value() { return last.value },
+  }
+}
+
+export const tabs = { channel }

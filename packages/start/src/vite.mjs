@@ -14,9 +14,9 @@
 //   virtual:weft/media          server: the `media.server` provider when one is bound (research 29 §6)
 //   virtual:weft/realtime       server: `src/realtime.server.ts`'s default export (the bus, origins and limits)
 //
-// Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream` export gets an
-// `$id` on both sides; the client build replaces the module with stubs that keep only `optimistic` and the query's
-// shape.
+// Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream`/`channel` export
+// gets an `$id` on both sides; the client build replaces the module with stubs that keep only `optimistic`, the
+// query's shape and a shared state's `initial`.
 
 import { existsSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -357,9 +357,9 @@ function scanServerModules(root) {
   return out.sort()
 }
 
-const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic'])
+const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic', 'channel', 'sharedState'])
 
-/** Local names bound to `query`/`mutation`/`stream`/`topic` from @weft/start. */
+/** Local names bound to the `FN_KINDS` from @weft/start. */
 function fnLocals(ast) {
   const locals = new Map()
   for (const n of ast.program.body) {
@@ -377,7 +377,7 @@ function fnExports(ast, locals) {
     for (const d of n.declaration.declarations) {
       const call = d.init?.type === 'CallExpression' ? d.init : d.init?.type === 'TSAsExpression' || d.init?.type === 'TSSatisfiesExpression' ? d.init.expression : undefined
       if (call?.type !== 'CallExpression' || call.callee.type !== 'Identifier' || !locals.has(call.callee.name)) continue
-      const obj = call.arguments[0]
+      const obj = call.arguments[locals.get(call.callee.name) === 'sharedState' ? 1 : 0] // `sharedState(name, { … })`
       if (obj?.type !== 'ObjectExpression' || d.id.type !== 'Identifier') continue
       out.push({ node: n, name: d.id.name, callee: call.callee.name, obj, single: n.declaration.declarations.length === 1 })
     }
@@ -391,7 +391,16 @@ export const fnId = (name, rel) => `${name}.${createHash('sha256').update(rel).d
 /** The server build of a server module: each definition gets its `$id`. Exported for tests. */
 export function withIds(code, file, rel) {
   const ast = parse(file, code)
-  const list = fnExports(ast, fnLocals(ast)).filter(f => !prop(f.obj, '$id'))
+  const locals = fnLocals(ast)
+  const all = fnExports(ast, locals)
+  for (const f of all) {
+    const kind = locals.get(f.callee)
+    if ((kind === 'channel' || kind === 'sharedState') && !prop(f.obj, 'authorize')) {
+      const line = code.slice(0, f.obj.start).split('\n').length
+      throw Object.assign(new Error(`R001: ${rel}:${line} \`${f.name}\` has no \`authorize\`: anyone could join it.\n  fix: add \`authorize\` (\`() => true\` must be written out)`), { code: 'R001' })
+    }
+  }
+  const list = all.filter(f => !prop(f.obj, '$id'))
   let out = code
   for (const f of list.sort((a, b) => b.obj.start - a.obj.start)) out = out.slice(0, f.obj.start + 1) + ` $id: ${JSON.stringify(fnId(f.name, rel))},` + out.slice(f.obj.start + 1)
   return out
@@ -418,6 +427,12 @@ export function clientStubs(code, file, rel, shapes) {
     if (f && f.single) {
       const opt = prop(f.obj, 'optimistic')
       const id = fnId(f.name, rel)
+      const kind = locals.get(f.callee)
+      if (kind === 'channel' || kind === 'sharedState') {
+        const initial = prop(f.obj, 'initial')
+        kept.push([n.start, `export const ${f.name} = ${f.callee}(${kind === 'sharedState' ? "'', " : ''}{ $id: ${JSON.stringify(id)}, $stub: 1${initial ? `, ${code.slice(initial.start, initial.end)}` : ''} })`])
+        continue
+      }
       // The tree the schema gave when there's a table; else what was declared, as it was written.
       const shape = shapes?.[id] !== undefined ? `shape: ${JSON.stringify(shapes[id])}` : prop(f.obj, 'shape') && code.slice(prop(f.obj, 'shape').start, prop(f.obj, 'shape').end)
       kept.push([n.start, `export const ${f.name} = ${f.callee}({ $id: ${JSON.stringify(id)}${opt ? `, ${code.slice(opt.start, opt.end)}` : ''}${shape ? `, ${shape}` : ''} })`])
@@ -448,7 +463,7 @@ export function clientStubs(code, file, rel, shapes) {
 
 /** Q003: a `query`/`mutation` defined in a file that isn't a server module (its name and kind), or undefined. */
 function definesFns(code, file) {
-  if (!/@weft\/start/.test(code) || !/\b(query|mutation|stream|topic)\b/.test(code)) return
+  if (!/@weft\/start/.test(code) || !/\b(query|mutation|stream|topic|channel|sharedState)\b/.test(code)) return
   const ast = parse(file, code)
   const locals = fnLocals(ast)
   if (!locals.size) return
