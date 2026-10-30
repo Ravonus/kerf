@@ -5,6 +5,7 @@
 //! `<div {...rest}>` → `<div {...restOf(props, ["a", "b"])}>`, a plain copy read where the element's spread reads it.
 //! `({ children }) => …`  →  `const _children = memo(() => props.children)` and `children` → `_children()`.
 //! `{xs.map(x => <Row key={x.id} x={x} />)}`  →  `<For each={xs} by={(x) => x.id}>{x => <Row x={x()} />}</For>`.
+//! `{xs?.map(…)}` is the same list: `For` renders a nullish `each` as empty.
 //!
 //! New nodes are built directly in the file's allocator, around nodes moved out of the original program, so moved
 //! code keeps its spans and reference IDs and is rewritten like any other code. Synthesized nodes are unspanned
@@ -191,15 +192,31 @@ impl<'a, 'p> Transformer<'a, 'p> {
     }
 
     fn is_list(&self, e: &Expression<'a>) -> bool {
-        matches!(e, Expression::CallExpression(c) if self.plan.lists.contains_key(&key(c.span)))
+        let call = match e {
+            Expression::CallExpression(c) => c,
+            Expression::ChainExpression(c) => match &c.expression {
+                ChainElement::CallExpression(c) => c,
+                _ => return false,
+            },
+            _ => return false,
+        };
+        self.plan.lists.contains_key(&key(call.span))
     }
 
     fn lower_list(&mut self, it: &mut Expression<'a>) {
-        let Expression::CallExpression(call) = it else { unreachable!() };
+        let call = match it {
+            Expression::CallExpression(c) => c,
+            Expression::ChainExpression(c) => match &mut c.expression {
+                ChainElement::CallExpression(c) => c,
+                _ => unreachable!(),
+            },
+            _ => unreachable!(),
+        };
         let plan = &self.plan.lists[&key(call.span)];
         let Expression::StaticMemberExpression(member) = &mut call.callee else { unreachable!() };
         let mut each = member.object.take_in(&self.ast);
         self.visit_expression(&mut each);
+        let each = self.rechained(each);
         let mut row = call.arguments[0].to_expression_mut().take_in(&self.ast);
         // The `by` function reuses the row's item and index patterns, taken before the row's own parameters are
         // rewritten (`key={i}` keys by position).
@@ -226,6 +243,20 @@ impl<'a, 'p> Transformer<'a, 'p> {
         let child = JSXChild::new_expression_container(SPAN, JSXExpression::from(row), &self.ast);
         let children = ArenaVec::from_iter_in([child], &self.ast);
         *it = Expression::new_jsx_element(SPAN, opening, children, Some(closing), &self.ast);
+    }
+
+    /// A list's receiver, cut out of `xs?.filter(f).map(…)`, keeps the `?.` links it holds: they need a chain of their own.
+    fn rechained(&self, e: Expression<'a>) -> Expression<'a> {
+        if !has_optional_link(&e) {
+            return e;
+        }
+        let element = match e {
+            Expression::CallExpression(c) => ChainElement::CallExpression(c),
+            Expression::TSNonNullExpression(n) => ChainElement::TSNonNullExpression(n),
+            e if e.is_member_expression() => ChainElement::from(e.into_member_expression()),
+            e => return e,
+        };
+        Expression::new_chain_expression(SPAN, element, &self.ast)
     }
 
     /// Before walking a component: move its prop defaults out of the pattern (rewritten, in declaration order so
@@ -288,6 +319,17 @@ impl<'a, 'p> Transformer<'a, 'p> {
             body.statements.insert(0, self.const_decl(&children.local, memo));
             self.needs_memo = true;
         }
+    }
+}
+
+fn has_optional_link(e: &Expression<'_>) -> bool {
+    match e {
+        Expression::CallExpression(c) => c.optional || has_optional_link(&c.callee),
+        Expression::StaticMemberExpression(m) => m.optional || has_optional_link(&m.object),
+        Expression::ComputedMemberExpression(m) => m.optional || has_optional_link(&m.object),
+        Expression::PrivateFieldExpression(m) => m.optional || has_optional_link(&m.object),
+        Expression::TSNonNullExpression(n) => has_optional_link(&n.expression),
+        _ => false,
     }
 }
 

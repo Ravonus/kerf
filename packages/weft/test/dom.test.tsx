@@ -142,3 +142,30 @@ test('onMount is skipped when its owner is disposed before it mounts', async () 
   await flush()
   expect(seen).toEqual([])
 })
+
+test('an optional .map is a keyed list, and a nullish list renders no rows', async () => {
+  const items = state<{ id: string; n: number }[] | null>(null)
+  const { container } = render(() => <ul>{items.value?.map(i => <li key={i.id}>{i.n}</li>)}</ul>)
+  const text = () => [...container.querySelectorAll('li')].map(li => li.textContent)
+  expect(text()).toEqual([])
+  items.value = [{ id: 'a', n: 1 }, { id: 'b', n: 2 }]
+  await flush()
+  expect(text()).toEqual(['1', '2'])
+  const first = container.querySelector('li')
+  items.value = [{ id: 'b', n: 2 }, { id: 'a', n: 3 }]
+  await flush()
+  expect(text()).toEqual(['2', '3'])
+  expect(container.querySelectorAll('li')[1]).toBe(first)
+  items.value = null
+  await flush()
+  expect(text()).toEqual([])
+})
+
+test('a ?. link before .map stays in the list source', async () => {
+  const q = state<{ data: { id: string; on: boolean }[] } | undefined>(undefined)
+  const { container } = render(() => <ul>{q.value?.data.filter(x => x.on).map(x => <li key={x.id}>{x.id}</li>)}</ul>)
+  expect(container.querySelectorAll('li').length).toBe(0)
+  q.value = { data: [{ id: 'a', on: true }, { id: 'b', on: false }] }
+  await flush()
+  expect(container.textContent).toBe('a')
+})

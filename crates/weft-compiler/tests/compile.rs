@@ -366,6 +366,39 @@ fn map_becomes_keyed_list_with_live_item() {
 }
 
 #[test]
+fn optional_map_is_a_keyed_list() {
+    let (code, d) = run("export function L({ xs }) { return <ul>{xs?.map(x => <li key={x.id}>{x.name}</li>)}</ul> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("_$component(For, "), "{code}");
+    assert!(code.contains("by: (x) => x.id"), "{code}");
+    assert!(code.contains("x().name"), "{code}");
+    assert!(!code.contains(".map"), "no plain `.map` over accessor reads: {code}");
+
+    let src = "import { state } from 'weft'\nexport function L() { const posts = state(null); return <ul>{posts.value?.map(p => <li key={p.id}>{p.title}</li>)}</ul> }";
+    let (code, d) = run(src);
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("return posts.value;"), "`each` reads the box live: {code}");
+    assert!(code.contains("p().title"), "{code}");
+
+    let (code, _) = run("export function L({ xs }) { return <ul>{xs?.map(t => <li>{t}</li>)}</ul> }");
+    assert!(code.contains("_$component(For, "), "unkeyed rows too: {code}");
+    let (code, _) = run("export function L({ xs }) { return <ul>{xs.map?.(x => <li key={x.id}>{x.n}</li>)}</ul> }");
+    assert!(code.contains("_$component(For, ") && code.contains("x().n"), "{code}");
+}
+
+#[test]
+fn optional_links_before_map_stay_in_the_list_source() {
+    let src = "export function L({ q }) { return <ul>{q?.data.filter(x => x.on).map(x => <li key={x.id}>{x.n}</li>)}</ul> }";
+    let (code, _) = run(src);
+    assert!(code.contains("_$component(For, "), "{code}");
+    assert!(code.contains("q?.data.filter((x) => x.on)"), "{code}");
+    assert!(code.contains("x().n"), "{code}");
+    let (code, _) = run("export function L({ q }) { return <ul>{q?.data?.map(x => <li key={x.id}>{x.n}</li>)}</ul> }");
+    assert!(code.contains("q?.data"), "{code}");
+    assert!(code.contains("x().n"), "{code}");
+}
+
+#[test]
 fn a_rows_key_is_written_once() {
     // The key can't change while the row lives (a new item under the same key has the same key), so a hole or
     // attribute that is exactly the key gets no effect. Anything else about the item stays live.
