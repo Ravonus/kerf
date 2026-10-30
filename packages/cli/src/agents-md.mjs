@@ -25,6 +25,8 @@ export function ranges(codes) {
 }
 /** PLAN §3.1 primitives an agent may reach for; listed as missing when the installed weft doesn't export them. */
 const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount', 'onCleanup', 'context', 'defineState', 'flush', 'untrack', 'batch']
+/** Commands AGENTS.md leaves to `weft tasks --json`: rarely run by hand, or taught in their own section. */
+const elsewhere = new Set(['agents-md', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks'])
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
 const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'], 'weft/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
 
@@ -37,11 +39,7 @@ export async function agentsMd(root) {
   const missing = planned.filter(n => !core.includes(n))
 
   // Style-group codes (D0xx, W060) and `weft style` belong to the Styling section, which only a weft with weft/style gets.
-  const isStyle = code => /^D0|^W06/.test(code)
   const styled = info.exports['weft/style']?.includes('group')
-  const reported = catalog.filter(e => e.by === 'compiler' && info.status[e.code]?.implemented && e.code !== 'W000' && !isStyle(e.code))
-  const notYet = catalog.filter(e => e.by === 'compiler' && !info.status[e.code]?.implemented).map(e => e.code)
-  const pcodes = catalog.filter(e => e.by === 'cli' && e.code.startsWith('P')).map(e => e.code)
   const dcodes = catalog.filter(e => /^D0/.test(e.code) && (e.by === 'cli' || info.status[e.code]?.implemented)).map(e => e.code)
   const startApp = existsSync(join(root, 'src', 'routes'))
   const tcodes = catalog.filter(e => e.code.startsWith('T') && info.status[e.code]?.implemented).map(e => e.code)
@@ -58,7 +56,6 @@ export async function agentsMd(root) {
     '## Rules',
     '',
     readDoc('rules'),
-    '',
     ...(core.includes('resource')
       ? ['10. **Async data is `resource(signal => fetch(…))`** (`.value .pending .error .refresh()`), never `derived(async …)` (W012).',
          core.includes('Boundary') ? '    Show loading and errors with `<Boundary pending={…} error={(e, retry) => …}>`. More: `weft docs async`.' : '']
@@ -77,15 +74,11 @@ export async function agentsMd(root) {
     info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].filter(n => !['canvasCalls', 'cleanup', 'fakeMeasure', 'leaks'].includes(n)).map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
     missing.length ? `- Not in this version yet: ${missing.map(n => `\`${n}\``).join(', ')}. Don't import them.` : '',
     '',
-    '## Diagnostics this weft reports',
+    '## Diagnostics',
     '',
-    // A full-stack app's section takes the room of the Fix column; `weft check --json` prints each fix anyway.
-    ...(startApp
-      ? ['| Code | Catches |', '|---|---|', ...reported.map(e => `| ${e.code} | ${e.catches} |`)]
-      : ['| Code | Catches | Fix |', '|---|---|---|', ...reported.map(e => `| ${e.code} | ${e.catches} | ${e.fix}${info.status[e.code].autofix ? ' (autofix)' : info.status[e.code].suggestion ? ' (suggested edit)' : ''} |`)]),
+    '`weft check` reports every code with its location, why and fix; `weft docs <code>` explains one. Also flagged: an early `return` in a `.map` callback (W013), raw `addEventListener`, `setInterval` or sockets with no cleanup (W050), and a `watch` that folds a stream (W052) or copies a live value into `state` (W056).',
     '',
     tcodes.length ? `Test checks (\`weft check\` on test files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
-    `Project checks: ${ranges(pcodes)}. Not reported yet: ${ranges(notYet)}. \`weft docs <code>\` explains any code.`,
     '',
     'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). More: `weft docs verify`.',
     '',
@@ -100,12 +93,14 @@ export async function agentsMd(root) {
       : []),
     '## Commands',
     '',
-    commandsPage({ ...list, tasks: list.tasks.filter(t => (sections.length || t.name !== 'plugins') && t.name !== 'style' && t.name !== 'surfaces') }),
+    commandsPage({ ...list, tasks: list.tasks.filter(t => !elsewhere.has(t.name)) }, { planned: false }),
+    '',
+    '`weft tasks --json` lists the rest.',
     '',
     ...(sections.length ? ['## Plugins', '', ...sections] : []),
     '## More',
     '',
-    `\`weft docs <topic>\` or the \`docs\` tool of \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${info.exports['weft/style'] ? '`style`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
+    `\`weft docs <topic>\` or the \`docs\` tool of \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${startApp ? '`start`, ' : ''}${info.exports['weft/style'] ? '`style`, ' : ''}${info.exports['weft/surface'] ? '`surface`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
     '',
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))

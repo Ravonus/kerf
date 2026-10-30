@@ -68,12 +68,12 @@ function diagnosticsPage(info) {
   return [`# Diagnostics (weft@${info.weft.version})`, '', '| Code | Severity | Catches | Fix | Status |', '|---|---|---|---|---|', ...rows].join('\n')
 }
 
-export function commandsPage(list) {
+export function commandsPage(list, { planned: showPlanned = true } = {}) {
   const rows = list.tasks
     .filter(t => t.available)
     .map(t => `| \`${t.command}\` | ${t.description ?? '(no description: P004)'} | ${t.sideEffects?.length ? t.sideEffects.join(', ') : 'none'} |`)
   const planned = list.tasks.filter(t => !t.available).map(t => `\`${t.name}\``)
-  return ['| Command | Does | Side effects |', '|---|---|---|', ...rows, '', planned.length ? `Planned, not shipped yet: ${planned.join(', ')}.` : ''].join('\n').trim()
+  return ['| Command | Does | Side effects |', '|---|---|---|', ...rows, '', showPlanned && planned.length ? `Planned, not shipped yet: ${planned.join(', ')}.` : ''].join('\n').trim()
 }
 
 /**
