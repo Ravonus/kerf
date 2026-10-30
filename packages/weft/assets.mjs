@@ -36,7 +36,8 @@ function fileStore() {
       base = config.base ?? '/'
       serving = config.command === 'serve'
     },
-    url: name => (serving ? DEV_PREFIX : `${base}assets/`) + name,
+    // A name, or already a URL: `encoder: 'server'` records point at the media route.
+    url: name => (name[0] === '/' ? name : (serving ? DEV_PREFIX : `${base}assets/`) + name),
     add(ctx, name, bytes) {
       files.set(name, bytes)
       if (!serving) ctx.emitFile({ type: 'asset', fileName: `assets/${name}`, source: bytes })

@@ -10,15 +10,21 @@
 // Server functions (research 27): each request gets a scope (AsyncLocalStorage), so `q.fetch()` in loaders and `q()`
 // in the render share one request cache; `/_weft/fn/<id>` answers the client's calls; the page ends with the
 // scope's resolved entries (`#weft-cache`) so the client cache starts seeded and hydration fetches nothing.
+//
+// Forms and media (research 29): a form POST to a page URL runs its mutation, then answers 303 or the page with the
+// errors in it, so `<Form>` works without JS. `/_weft/m/<hash>/<width>.<fmt>` serves media through the `media.server`
+// provider. The request's cookies reach `persist: 'cookie'` boxes, and the `rt.isolated` below makes a scope reached
+// outside a render S002: this process serves many users, so it has no "the tab's app".
 
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, isNotFound } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
+import { rt } from 'weft'
 import { headTags, mergeMeta, metaTags, renderToStream, renderToString, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
-import { CLIENT_IP, FnError, fns, isRedirect, runtime, StartError, type Redirect, type Wire } from './data'
+import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
-import type { Scope, Store } from './exec'
+import type { MediaServer, Scope, Store } from './exec'
 import { configure, hub, rtRoute, type RealtimeOptions } from './hub'
 import { App } from './view'
 import { DefaultCard } from './og/DefaultCard'
@@ -61,6 +67,8 @@ export interface HandlerOptions {
   auth?: { handler: (request: Request) => Promise<Response>; options?: { basePath?: string }; $weft?: { check(): void } }
   /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
+  /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
+  media?: () => Promise<MediaServer>
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
@@ -85,6 +93,7 @@ const als = new AsyncLocalStorage<Scope>()
 runtime.scope = () => als.getStore()
 runtime.enter = (scope, fn) => als.run(scope, fn)
 runtime.exec = exec
+rt.isolated = true
 runtime.poke = (tags, origin) => hub().poke(tags, origin)
 
 const CARD = { width: 1200, height: 630 }
@@ -116,7 +125,9 @@ export function createHandler(options: HandlerOptions) {
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
   const tree = routeTree(manifest, modules)
-  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic }
+  let provider: Promise<MediaServer> | undefined
+  const mediaServer = () => (provider ??= options.media?.())
+  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer }
   let checked = !options.dev
   const authBase = (options.auth?.options?.basePath ?? '/api/auth').replace(/\/$/, '')
   let applied = -1
@@ -202,7 +213,7 @@ export function createHandler(options: HandlerOptions) {
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.
     const route = createRouteState({ ...payloadOf(r, false), m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
-    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout })
+    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, app: { cookies: cookieJar(request) } })
     await s.settle() // queries read outside a Boundary have nowhere to stream to
     const assets = options.assets ?? {}
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
@@ -215,7 +226,8 @@ export function createHandler(options: HandlerOptions) {
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
-      `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payloadOf(r, false))}</script>\n`
+      `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payloadOf(r, false))}</script>\n` +
+      (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '')
     const enc = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -233,7 +245,61 @@ export function createHandler(options: HandlerOptions) {
         controller.close()
       },
     })
-    return withHeaders(new Response(body, { status: r.status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }), scope)
+    const status = r.status === 200 && scope.form ? scope.form.status : r.status
+    return withHeaders(new Response(body, { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }), scope)
+  }
+
+  /**
+   * A form POST to a page (research 29 §5): the mutation, then 303 (Post/Redirect/Get) or the page again with the
+   * errors and what was typed. A form can't send `x-weft`, so the CSRF proof is the browser's own origin headers.
+   */
+  async function form(url: URL, request: Request, scope: Scope): Promise<Response> {
+    const origin = request.headers.get('origin')
+    const site = request.headers.get('sec-fetch-site')
+    if (!(origin ? origin === url.origin && (!site || site === 'same-origin') : site === 'same-origin')) {
+      options.onDiagnostic?.({ code: 'F002', severity: 'error', message: `F002: a form POST to ${url.pathname} without the same-origin proof (\`Origin\` or \`Sec-Fetch-Site\`)` })
+      return new Response('Forbidden', { status: 403 })
+    }
+    const data = await request.formData()
+    const id = String(data.get('$fn'))
+    const f = fns.get(id)
+    if (f?.kind !== 'mutation') {
+      options.onDiagnostic?.({ code: 'F003', severity: 'error', message: `F003: a form POST names \`${id}\`, which is no mutation (the page is older than the server)` })
+      return new Response('Not found', { status: 404 })
+    }
+    const see = (href: string) => withHeaders(new Response(null, { status: 303, headers: { location: href, 'cache-control': 'no-cache' } }), scope)
+    const input = decodeForm(data)
+    try {
+      await exec.runMutation(scope, f, input, [], true)
+      return see(url.pathname + url.search)
+    } catch (e: any) {
+      if (isRedirect(e)) return see(e.href)
+      const known = e instanceof StartError || e instanceof FnError
+      if (!known) options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
+      const issues = e?.issues as SchemaIssue[] | undefined
+      const { errors, message } = fieldsOf(issues)
+      const key = data.get('$form')
+      scope.form = {
+        id, ...(typeof key === 'string' && { key }), values: echoed(input), errors,
+        message: issues ? message : known || options.dev ? e.message : 'Server function failed.',
+        status: issues ? 422 : (e?.status as number) ?? 500,
+      }
+      return page(url, request, scope)
+    }
+  }
+
+  /** `/_weft/m/<hash>/<width>.<fmt>` (research 29 §6): content-addressed, so cached for good; `auto` varies on `Accept`. */
+  async function media(url: URL, request: Request): Promise<Response> {
+    const m = /^\/_weft\/m\/([0-9a-f]{32})\/(\d+)\.([a-z]+)$/.exec(url.pathname)
+    const server = await mediaServer()
+    if (!server) options.onDiagnostic?.({ code: 'M017', severity: 'error', message: 'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@weft/plugin-media` to `plugins`' })
+    const out = m && (await server?.serve({ hash: m[1], width: Number(m[2]), format: m[3], accept: request.headers.get('accept') ?? '' }))
+    if (!out) return new Response('Not found', { status: 404 })
+    const headers = new Headers({ 'content-type': out.type, 'cache-control': 'public, max-age=31536000, immutable', etag: `"${m![1]}-${out.width}-${out.format}"`, 'x-content-type-options': 'nosniff' })
+    if (out.negotiated) headers.set('vary', 'Accept')
+    if (out.type === 'image/svg+xml') headers.set('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+    if (request.headers.get('if-none-match') === headers.get('etag')) return new Response(null, { status: 304, headers })
+    return new Response(out.bytes as BodyInit, { headers })
   }
 
   /** The route as JSON for client navigation: deferred fields awaited (no streaming on navigation yet). */
@@ -255,6 +321,7 @@ export function createHandler(options: HandlerOptions) {
       return out({ e: { code, message, ...extra } }, status)
     }
     if (!f) return fail('Q009', `Q009: no server function \`${id}\` (the page is older than the server, or the module isn't a server module): reload`, 404)
+    let fromForm = false
     if (f.kind === 'stream') return fail('Q009', `Q009: \`${id}\` is a stream: its client reads it over \`/_weft/rt\``, 405)
     try {
       if (f.kind === 'query') {
@@ -267,16 +334,21 @@ export function createHandler(options: HandlerOptions) {
       const origin = request.headers.get('origin')
       const site = request.headers.get('sec-fetch-site')
       const cross = (origin && origin !== url.origin) || (site && site !== 'same-origin' && site !== 'none')
-      if (cross || request.headers.get('x-weft') !== '1' || !request.headers.get('content-type')?.startsWith('application/json'))
+      const type = request.headers.get('content-type') ?? ''
+      const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-weft` still forces a preflight
+      if (cross || request.headers.get('x-weft') !== '1' || !(multipart || type.startsWith('application/json')))
         return fail('Q010', `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`, 403)
-      const body = (await request.json()) as { i?: unknown; f?: [string, unknown][] }
-      const answer = await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : [])
+      const body = multipart ? await multipartBody(request) : ((await request.json()) as { i?: unknown; f?: [string, unknown][]; c?: 1 })
+      fromForm = !!body.c
+      const answer = await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : [], fromForm)
       if (options.dev && sessionChanged(scope)) options.onDiagnostic?.({ code: 'A004', severity: 'warning', message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it` })
       return out(answer)
     } catch (e) {
       // The session changed: a full load, so nothing cached for the last user survives in the tab (research 28 §3).
       if (isRedirect(e)) return out({ r: e.href, ...(sessionChanged(scope) && { x: 1 }) })
       if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)
+      // A wrong field in a form is an answer, not a fault: nothing to log.
+      if (e instanceof StartError && fromForm && e.extra.issues) return out({ e: { code: e.code, message: e.message, issues: e.extra.issues } }, 422)
       if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : {})
       options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
       return out({ e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' } }, 500)
@@ -329,8 +401,10 @@ export function createHandler(options: HandlerOptions) {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
+    if (request.method === 'POST' && !url.pathname.startsWith('/_weft/') && /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(request.headers.get('content-type') ?? '')) return form(url, request, scope)
     if (url.pathname === '/_weft/rt') return rtRoute(request, scope, options.realtime?.origins)
     if (request.method !== 'GET' && request.method !== 'HEAD') return Promise.resolve(new Response('Method not allowed', { status: 405 }))
+    if (url.pathname.startsWith('/_weft/m/')) return media(url, request)
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)
     if (url.pathname.startsWith('/_weft/data/') || url.pathname === '/_weft/data') return data((url.pathname.slice('/_weft/data'.length) || '/') + url.search, request, scope)
     if (url.pathname === '/_weft/og-routes') return prerenderList(request)
@@ -470,6 +544,29 @@ function stamped(request: Request): Request {
 
 /** A Better Auth session cookie went out on this response. */
 const sessionChanged = (scope: Scope) => scope.headers.getSetCookie().some(c => /^(__Secure-)?[\w.-]*session_token=/.test(c))
+
+/** The request's cookies for `persist: 'cookie'`, parsed on first read: a page with none pays nothing. */
+function cookieJar(request: Request) {
+  let jar: Map<string, string> | undefined
+  return {
+    get(name: string) {
+      jar ??= new Map((request.headers.get('cookie') ?? '').split(/;\s*/).map(c => [c.slice(0, c.indexOf('=')), c.slice(c.indexOf('=') + 1)]))
+      return jar.get(name)
+    },
+  }
+}
+
+/** The multipart body `<Form>` sends when a form holds a file: the fields, and the refresh list in `$r`. */
+async function multipartBody(request: Request) {
+  const data = await request.formData()
+  return { i: decodeForm(data), f: JSON.parse(String(data.get('$r') ?? '[]')) as [string, unknown][], c: 1 as const }
+}
+
+/** What a failed form's page gives back: no secrets (the HTML outlives the request) and no files. */
+function echoed(input: Record<string, unknown>): Record<string, unknown> {
+  const keep = (v: unknown): unknown => (typeof v === 'string' ? v : Array.isArray(v) ? v.filter(x => typeof x === 'string') : v && typeof v === 'object' && !(v instanceof Blob) ? echoed(v as Record<string, unknown>) : undefined)
+  return Object.fromEntries(Object.entries(input).filter(([k]) => !/pass|secret|token|card|cvv|cvc/i.test(k)).map(([k, v]) => [k, keep(v)]))
+}
 
 /** The cookies and headers server functions set (`ctx.response.headers`), on the response. */
 function withHeaders(res: Response, scope: Scope): Response {

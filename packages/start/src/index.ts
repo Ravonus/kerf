@@ -12,9 +12,10 @@ import type { Merged, Meta as MetaObject, Site } from 'weft/ssr'
 import type { Context } from './data'
 
 export { Link } from './view'
+export { Form, type FormApi, type FormProps } from './form'
 export { navigate, type NavigateOptions } from './router'
 export {
-  query, mutation, redirect, invalidate, cache, skip, isRedirect, stale, StartError, FnError,
+  query, mutation, redirect, invalid, invalidate, cache, skip, isRedirect, stale, StartError, FnError,
   type Query, type Mutation, type QueryDef, type MutationDef, type AuthScope, type Context, type Life, type LiveOptions, type LiveQuery, type LiveStatus, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
 } from './data'
 export { stream, type Stream, type StreamDef, type StreamOptions, type StreamStatus } from './stream'

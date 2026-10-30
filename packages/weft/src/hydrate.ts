@@ -24,6 +24,7 @@ export function hydrate(code: () => any, container: Element, options: { data?: S
   // The server's data (resources, boundary states) stays where it is: the app hydrates the nodes before it.
   const script = container.querySelector(':scope > script[data-weft]')
   rt.data = options.data ?? (script ? JSON.parse(script.textContent!) : undefined)
+  rt.state = rt.data?.s
   let dispose!: () => void
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
   try {
