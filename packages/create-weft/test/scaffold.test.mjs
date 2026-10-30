@@ -1,5 +1,6 @@
 // Each `--ui` variant scaffolds an app that `weft check` passes clean and `weft dev` server-renders. The workspace
 // packages stand in for the npm ones through node_modules links.
+import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { join } from 'node:path'
@@ -50,6 +51,12 @@ describe.each([
     } finally {
       await server.close()
     }
+  })
+
+  it('tsc is clean, on the app and the packages it pulls in', () => {
+    const dir = app(ui)
+    const tsc = spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' })
+    expect(tsc.stdout).toBe('')
   })
 })
 

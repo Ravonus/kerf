@@ -169,7 +169,7 @@ export function field(el: HTMLElement) {
   box?.addEventListener('click', onClick)
   box?.addEventListener('pointerdown', onDown)
   input?.addEventListener('input', onInput)
-  input?.addEventListener('keydown', onKey)
+  input?.addEventListener('keydown', onKey as EventListener)
   count()
   grow()
   return {
@@ -179,7 +179,7 @@ export function field(el: HTMLElement) {
       box?.removeEventListener('click', onClick)
       box?.removeEventListener('pointerdown', onDown)
       input?.removeEventListener('input', onInput)
-      input?.removeEventListener('keydown', onKey)
+      input?.removeEventListener('keydown', onKey as EventListener)
     },
   }
 }

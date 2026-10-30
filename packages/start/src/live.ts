@@ -265,6 +265,7 @@ function readPage() {
 
 const entry = (s: Sub): SubEntry => (s.fn.kind === 'query' ? [s.n, 'q', s.fn.$id, s.input] : [s.n, 's', s.fn.$id, s.input, s.cursor, s.buffer])
 const set = (status: LiveStatus) => { rt.status.value = status }
+const offline = () => navigator.onLine === false
 
 function flushPokes() {
   const tags = [...pokes]
@@ -336,7 +337,7 @@ async function run() {
   listen(true)
   readPage()
   while (subs.size) {
-    if (parked || navigator.onLine === false) {
+    if (parked || offline()) {
       set(parked ? 'reconnecting' : 'offline')
       await sleep(CAP)
       continue
@@ -362,7 +363,7 @@ async function run() {
     if (!subs.size) break
     const n = net()
     if (n) n.reconnects++
-    set(navigator.onLine === false ? 'offline' : 'reconnecting')
+    set(offline() ? 'offline' : 'reconnecting')
     if (!n) await sleep(retry ?? backoff(attempt++))
   }
   running = false
