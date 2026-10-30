@@ -1,4 +1,4 @@
-`@weft/start` app: file routes in `src/routes` (`_layout.tsx`, `[id].tsx`, `load`, `meta`), server functions in `src/server/**` or `*.server.ts`. Read `weft docs start` first.
+`@weft/start` app: file routes in `src/routes` (`_layout.tsx`, `[id].tsx`, `load`, `meta`), server functions in `src/server/**` or `*.server.ts`. Read `weft docs start` first. Import your own code as `#/server/todos` (`src/server/todos`); generated files are `weft:slot/<id>` and `weft:tokens/<name>`.
 
 - **Reads:** `query({ tags: ['todos'], auth: 'user', run: ({ ctx }) => ctx.db.select().from(todos) })`. In a component `todos().value ?? []`; in `load` and handlers `await todos.fetch()`.
 - **Writes:** `mutation({ input, auth: 'user', invalidates: ['todos'], optimistic, run })`.

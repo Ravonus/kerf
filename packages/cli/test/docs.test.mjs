@@ -61,13 +61,11 @@ describe('AGENTS.md', () => {
     expect(bytes).toBeLessThan(limit)
     expect(overLimit).toBe(false)
     expect(text).toContain('weft@0.0.0')
-    for (const [code, s] of Object.entries(status)) {
-      if (code === 'W000') continue
-      // style-group codes are taught in their own section, not the table
-      if (/^D0|^W06/.test(code)) expect(text).not.toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
-      else if (s.implemented) expect(text).toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
-      else expect(text).not.toMatch(new RegExp(`^\\| ${code} \\|`, 'm'))
-    }
+    // `weft check` prints what a catalog here would: the rules cite the main codes, the rest are one line
+    expect(text).not.toMatch(/^\| [A-Z]\d{3} \|/m)
+    expect(text).toContain('`weft docs <code>` explains one')
+    expect(text).not.toContain('Not reported yet')
+    expect(text).not.toContain('Planned, not shipped yet')
     expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D020–D025, W060: `weft docs style`\.$/m)
     expect(text).not.toContain('| `weft style` |') // the section covers it
     expect(text).toContain('Test checks (`weft check` on test files): T001–T009, T013.')
@@ -76,6 +74,7 @@ describe('AGENTS.md', () => {
     expect(text).not.toContain('Not in this version yet')
     expect(text).not.toContain('`setAttribute`')
     expect(text).toContain('| `weft check --json` |')
+    expect(text).not.toContain('| `weft mcp` |') // `weft tasks --json` has it
     expect(text).toContain('- `weft/browser`: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`. Create them in setup (W051)')
     expect(text).toMatch(/^- `weft\/test`: .*`net`.*`page`/m)
   })
@@ -110,6 +109,8 @@ describe('AGENTS.md', () => {
     const dir = project({ 'src/routes/index.tsx': 'export default () => <h1>Hi</h1>\n' })
     const { text, bytes } = await agentsMd(dir)
     expect(text).toContain('## Full stack')
+    expect(text).toContain('`#/server/todos`')
+    expect(text).toMatch(/`start`, .*`surface`, /)
     expect(bytes).toBeLessThan(limit)
     expect((await agentsMd(project())).text).not.toContain('## Full stack')
   })

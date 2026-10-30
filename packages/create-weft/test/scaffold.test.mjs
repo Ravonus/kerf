@@ -6,6 +6,7 @@ import { createServer } from 'node:net'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
+import { agentsMd, limit } from '../../cli/src/agents-md.mjs'
 import { check } from '../../cli/src/check.mjs'
 import { devCommand } from '../../cli/src/start.mjs'
 import { scaffold, template } from '../src/index.mjs'
@@ -16,12 +17,12 @@ afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
 
-function app(ui) {
+function app(ui, options = {}) {
   const dir = join(tmp, `app-${ui}`)
   rmSync(dir, { recursive: true, force: true })
-  scaffold(dir, { ui })
+  scaffold(dir, { ui, ...options })
   const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft/cli': 1 })
-  for (const name of deps) {
+  for (const name of deps.filter(d => /^(weft$|@weft\/)/.test(d))) {
     mkdirSync(join(dir, 'node_modules', '@weft'), { recursive: true })
     symlinkSync(join(pkgs, name.replace('@weft/', '')), join(dir, 'node_modules', name), 'dir')
   }
@@ -58,6 +59,13 @@ describe.each([
     const tsc = spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' })
     expect(tsc.stdout).toBe('')
   })
+})
+
+it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections included', async () => {
+  const { text, bytes } = await agentsMd(app('warp', { db: 'sqlite', auth: true }))
+  expect(text).toContain('## Full stack')
+  expect(text).toContain('### warp')
+  expect(bytes).toBeLessThan(limit)
 })
 
 it('the template: warp() only for warp, a stylesheet otherwise, and only weft scripts', () => {
