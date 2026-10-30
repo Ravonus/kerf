@@ -72,7 +72,7 @@ parts.check = { ok: check.ok === true, summary: check.summary, diagnostics: (che
 // Linked packages keep their own node_modules: types resolve to the app's copy, as they do once published.
 const shared = ['drizzle-orm', 'drizzle-zod', 'zod', 'better-auth']
 const paths = Object.fromEntries(shared.flatMap(p => [[p, [`./node_modules/${p}`]], [`${p}/*`, [`./node_modules/${p}/*`]]]))
-writeFileSync(join(dir, 'tsconfig.check.json'), JSON.stringify({ extends: './tsconfig.json', compilerOptions: { preserveSymlinks: true, baseUrl: '.', paths }, include: ['src'] }, null, 2))
+writeFileSync(join(dir, 'tsconfig.check.json'), JSON.stringify({ extends: './tsconfig.json', compilerOptions: { preserveSymlinks: true, paths }, include: ['src'] }, null, 2))
 const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), ['--noEmit', '-p', 'tsconfig.check.json'])
 const errors = `${tsc.stdout}`.split('\n').filter(l => /error TS/.test(l))
 const own = errors.filter(l => l.startsWith('src/'))
