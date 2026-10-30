@@ -34,6 +34,7 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
       name,
       private: true,
       type: 'module',
+      imports: { '#/*': './src/*' },
       scripts: { dev: 'weft dev', build: 'weft build', check: 'weft check', start: 'weft start', ...(db !== 'none' && { 'db:generate': 'weft db generate' }) },
       dependencies: { ...deps, ...stack.deps },
       devDependencies: { '@weft/cli': version, typescript: '7.0.2', ...stack.dev },
@@ -49,9 +50,9 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
     'tsconfig.json': json({
       compilerOptions: {
         target: 'es2022', module: 'esnext', moduleResolution: 'bundler', strict: true, noEmit: true, skipLibCheck: true,
-        jsx: 'preserve', jsxImportSource: 'weft', lib: ['es2023', 'dom', 'dom.iterable'], types: db === 'none' ? ['weft/client'] : ['weft/client', 'node'],
+        jsx: 'preserve', jsxImportSource: 'weft', lib: ['es2023', 'dom', 'dom.iterable'], paths: { '#/*': ['./src/*'] }, types: db === 'none' ? ['weft/client'] : ['weft/client', 'node'],
       },
-      include: ['src', 'weft.config.ts'],
+      include: ['src', 'weft.config.ts', '.weft/*.d.ts'],
     }),
     '.gitignore': `node_modules/\n.weft/\n.output/\ndist/\n${db === 'none' ? '' : '.env\n.data/\n'}`,
     'src/routes/_layout.tsx': layout(ui, { db, auth }),
@@ -97,7 +98,7 @@ export default function Root(props: RouteProps) {
 `
   }
   return `${imports}import { Link, type LoadArgs, type RouteProps } from '@weft/start'
-import { me, signOut } from '../server/session'
+import { me, signOut } from '#/server/session'
 
 export const load = ({ ctx }: LoadArgs) => me.fetch()
 

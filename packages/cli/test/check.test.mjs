@@ -33,6 +33,13 @@ describe('weft check on evals/reference-v3/weft', () => {
 })
 
 describe('project view: cross-file W014', () => {
+  it('follows the #/ alias like a relative import', async () => {
+    const aliased = app.replace(...spreadBug).replaceAll("from './components/", "from '#/components/")
+    expect(aliased).toContain('#/components/ProductList')
+    const r = await check(project({ 'src/App.tsx': aliased, 'package.json': JSON.stringify({ imports: { '#/*': './src/*' } }) }))
+    expect(r.diagnostics.map(d => [d.code, d.severity, d.project])).toEqual([['W014', 'error', true]])
+  })
+
   it('promotes the spread habit to an error when the box reaches a keyed list in another file', async () => {
     expect(app).toContain(spreadBug[0])
     const dir = project({ 'src/App.tsx': app.replace(...spreadBug) })
