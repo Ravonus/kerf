@@ -27,7 +27,7 @@ export const builtins = [
   { name: 'run', description: 'Run a project task by name', sideEffects: ['task'], available: false },
   { name: 'create', description: 'Scaffold a weft app', sideEffects: ['fs'], available: false },
   { name: 'surfaces', description: "List the project's surfaces: name, kind, props and file", sideEffects: [], available: true },
-  { name: 'plugins', description: 'List and explain plugins and slot bindings; `sync` regenerates .weft/slots and plugin tokens', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['list', 'explain', 'sync'] }, slot: { type: 'string' } } }, sideEffects: ['fs:.weft/**'], available: true },
+  { name: 'plugins', description: 'List and explain plugins and slot bindings; `sync` regenerates .weft/slots and plugin tokens; `audit` and `approve` check and write the permissions lock', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['list', 'explain', 'sync', 'audit', 'approve'] }, slot: { type: 'string' }, all: { type: 'boolean' } } }, sideEffects: ['fs:.weft/**', 'fs:.gitignore'], available: true },
 ]
 
 function jsonSchema(args) {

@@ -34,7 +34,7 @@ export const prisma = definePlugin({
   name: '@weft/plugin-db-prisma',
   version: '0.0.0',
   weft: '*',
-  permissions: {},
+  permissions: { fs: { read: ['prisma/**'], write: ['prisma/migrations/**'] }, spawn: ['node'] },
   contribute: () => ({
     db: { layer: 'prisma', schema: 'prisma/schema.prisma', migrations: DIR, generate },
     agents: { title: 'Database (Prisma)', text: '`ctx.db` is the real Prisma client, so Prisma\'s docs apply. The schema is `prisma/schema.prisma`; after changing it, run `weft db generate <name>`, which updates the client and adds a migration that applies on the next request.' },

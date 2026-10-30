@@ -24,8 +24,23 @@ const title = name => name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUppe
 /** `weft.config.ts`, `.json` or `.yaml`: one schema, so the same app in each (research 34 §2). */
 const LAYER_PLUGIN = { prisma: { pkg: '@weft/plugin-db-prisma', name: 'prisma' }, native: { pkg: '@weft/plugin-db-native', name: 'native' } }
 
+const appPlugins = ({ ui, layer }) => [...(ui === 'warp' ? [{ pkg: '@weft/warp', name: 'warp' }] : []), ...(LAYER_PLUGIN[layer] ? [LAYER_PLUGIN[layer]] : [])]
+
+/** What each plugin a scaffold picks declares. `weft check` fails a scaffold where these fall behind the plugin. */
+const GRANTS = {
+  '@weft/warp': ['fs.read:node_modules/@weft/ui-core/**', 'fs.write:$TMPDIR/warp-seed-*', 'spawn:node'],
+  '@weft/plugin-db-prisma': ['fs.read:prisma/**', 'fs.write:prisma/migrations/**', 'spawn:node'],
+  '@weft/plugin-db-native': ['fs.read:migrations/**', 'fs.write:migrations/**'],
+}
+
+/** Choosing a plugin here is approving it. There's no install yet, so `weft plugins approve --all` pins the code later. */
+function pluginLock(options) {
+  const plugins = Object.fromEntries(appPlugins(options).map(p => [p.pkg, { version: null, integrity: null, permissions: GRANTS[p.pkg], provides: [], undeclared: [] }]))
+  return Object.keys(plugins).length ? { '.weft/plugins.lock.json': json({ version: 1, plugins }) } : {}
+}
+
 function configFile(format, { ui, label, runtime, layer }) {
-  const plugins = [...(ui === 'warp' ? [{ pkg: '@weft/warp', name: 'warp' }] : []), ...(LAYER_PLUGIN[layer] ? [LAYER_PLUGIN[layer]] : [])]
+  const plugins = appPlugins({ ui, layer })
   const site = { name: label, title: `%s · ${label}`, description: 'Made with weft.' }
   if (format === 'json') {
     const config = { $schema: './.weft/config.schema.json', site, ...(plugins.length && { plugins: plugins.map(p => p.pkg) }), ...(runtime !== 'node' && { runtime }) }
@@ -84,11 +99,12 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
       },
       include: ['src', ...(config === 'ts' ? ['weft.config.ts'] : []), '.weft/*.d.ts'],
     }),
-    '.gitignore': `node_modules/\n.weft/\n.output/\ndist/\n${db === 'none' ? '' : '.env\n.data/\n'}${layer === 'prisma' ? 'src/generated/\n' : ''}`,
+    '.gitignore': `node_modules/\n.weft/*\n!.weft/plugins.lock.json\n.output/\ndist/\n${db === 'none' ? '' : '.env\n.data/\n'}${layer === 'prisma' ? 'src/generated/\n' : ''}`,
     'src/routes/_layout.tsx': layout(ui, { db, auth }),
     'src/routes/index.tsx': home(ui, label),
     'src/routes/about.tsx': `export const meta = { title: 'About', description: 'What this app is.' }\n\nexport default function About() {\n  return <h1>About</h1>\n}\n`,
   }
+  Object.assign(files, pluginLock({ ui, layer }))
   if (ui !== 'warp') files['src/app.css'] = css(ui)
   if (ui === 'tailwind') files['vite.config.ts'] = TAILWIND_VITE
   if (db !== 'none') {

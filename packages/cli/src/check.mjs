@@ -15,6 +15,7 @@ import { projectView } from './project.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, usesTailwind, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
+import { trustDiagnostics } from './trust.mjs'
 import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
@@ -95,6 +96,7 @@ export async function check(root, options = {}) {
   const fontBuild = typeof loaded.slots['font.build'] === 'string' && !loaded.slots['font.build'].startsWith('weft:default')
   const diagnostics = [
     ...loaded.diagnostics,
+    ...(loaded.diagnostics.some(d => d.code === 'P007') ? [] : trustDiagnostics(root, loaded)),
     ...files.flatMap(f => f.diagnostics),
     ...styles,
     ...textChecks(root, { files, exclude, fontBuild }),

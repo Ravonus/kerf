@@ -10,6 +10,7 @@ import { docs } from './docs.mjs'
 import { formatMap, writeMap } from './map.mjs'
 import { serve } from './mcp.mjs'
 import { explain, list, sync } from './plugins.mjs'
+import { approveCommand, auditCommand, formatTrust } from './trust.mjs'
 import { loadConfig } from './load-config.mjs'
 import { listSurfaces } from './surface-checks.mjs'
 import { tasks } from './tasks.mjs'
@@ -37,6 +38,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
   plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
+  plugins audit       each plugin's permissions and code against .weft/plugins.lock.json, and what it uses undeclared
+  plugins approve [name…] [--all]  record them in the lock; with no names, show what's waiting and write nothing
   style find <query>  style groups that fit what you're about to style (\`card\`, \`status badge\`): reuse before you write
   style explain <group|selector> [--<axis> <value>] [--states a,b] [--accent intent:token] [--part p]
                       resolved CSS for one variation, and where each value came from
@@ -47,7 +50,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
 const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['dry-run', 'no-install', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
+const booleans = new Set(['dry-run', 'no-install', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
@@ -190,6 +193,20 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           say(formatHuman(loaded.diagnostics))
           say(`weft plugins sync: ${written.length} files written`)
           return errors.length ? 1 : 0
+        }
+        if (sub === 'audit') {
+          const loaded = await loadConfig(args.root)
+          const result = auditCommand(args.root, loaded)
+          if (args.json) print(result)
+          else say(result.plugins.map(formatTrust).join('\n') || 'no plugins')
+          say(formatHuman(result.diagnostics))
+          return result.ok ? 0 : 1
+        }
+        if (sub === 'approve') {
+          const result = approveCommand(args.root, await loadConfig(args.root), { names: args.positional.slice(1), all: !!args.flags.all })
+          if (args.json) print(result)
+          else say([...(result.written ? result.approved : result.pending).map(formatTrust), result.written ? `${result.lock}: ${result.approved.length} approved` : result.pending.length ? 'nothing written: name a plugin, or pass --all' : 'nothing waiting', ...result.written ? result.pending.map(p => `still waiting: ${p.name}`) : [], ...(result.gitignore ? ['.gitignore: the lock is no longer ignored, so commit it'] : [])].join('\n'))
+          return result.ok ? 0 : 1
         }
         throw Object.assign(new Error(`unknown plugins subcommand ${sub}`), { code: 'E_USAGE' })
       }
