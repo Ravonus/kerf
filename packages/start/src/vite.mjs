@@ -9,6 +9,8 @@
 //   virtual:weft/entry-client   the client entry: `start()`, unless the app has src/entry.client.ts
 //   virtual:weft/fns            server: imports every server module, so `/_weft/fn/<id>` knows every function
 //   virtual:weft/context        server: `src/context.server.ts`'s default export (the app's part of `ctx`)
+//   virtual:weft/auth           server: `src/auth.server.ts`'s default export, mounted at its base path
+//   virtual:weft/migrations     server: `drizzle/`'s migrations, embedded (a bundle can't read a folder on every preset)
 //
 // Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation` export gets an `$id` on
 // both sides; the client build replaces the module with stubs that keep only `optimistic`.
@@ -21,6 +23,7 @@ import { createHash } from 'node:crypto'
 import { parseSync, searchForWorkspaceRoot } from 'vite'
 import { realpathSync } from 'node:fs'
 import { scanRoutes, routeTypes } from './routes.mjs'
+import { readMigrations } from './migrations.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const V = {
@@ -30,6 +33,8 @@ const V = {
   client: 'virtual:weft/entry-client',
   fns: 'virtual:weft/fns',
   context: 'virtual:weft/context',
+  auth: 'virtual:weft/auth',
+  migrations: 'virtual:weft/migrations',
 }
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
 const DEFAULT_FONTS = ['Inter:400,700']
@@ -101,8 +106,12 @@ export default function weftStart(options = {}) {
       server.close = () => (w.close(), close())
     },
     resolveId: {
-      filter: { id: /^virtual:weft\// },
-      handler(source) {
+      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth)(\/|$))/ },
+      handler(source, importer) {
+        if (source.startsWith('@weft/')) {
+          if (this.environment?.config.consumer === 'client') this.error(`Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(root, importer)}` : ''}: the database and auth run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``)
+          return
+        }
         const base = source.replace(/\?.*$/, '')
         if (Object.values(V).includes(base)) return id(source)
       },
@@ -118,10 +127,12 @@ export default function weftStart(options = {}) {
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
         if (which === V.server) return serverEntry(clientEntry())
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
-        if (which === V.context) {
-          const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/context.server.${x}`).find(x => existsSync(abs(x)))
+        if (which === V.context || which === V.auth) {
+          const name = which === V.auth ? 'auth' : 'context'
+          const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/${name}.server.${x}`).find(x => existsSync(abs(x)))
           return f ? `export { default } from ${JSON.stringify(abs(f))}\n` : 'export default undefined\n'
         }
+        if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
         if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
       },
     },
@@ -184,12 +195,14 @@ function serverEntry(clientEntry) {
 import { manifest, modules } from '${V.routes}'
 import '${V.fns}'
 import context from '${V.context}'
+import auth from '${V.auth}'
+import migrations from '${V.migrations}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, context, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, css: assets.css, fonts: preloads },
-  // H005–H008 and Q002–Q010 found while serving: the server log, in dev and production.
-  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQ]\\d{3}:? /, '')}\`) })
+const fetch = createHandler({ manifest, modules, context, auth, migrations, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, css: assets.css, fonts: preloads },
+  // H005–H008, Q002–Q014 and A002–A004 found while serving: the server log, in dev and production.
+  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQAC]\\d{3}:? /, '')}\`) })
 export default { fetch }
 `
 }

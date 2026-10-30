@@ -1,9 +1,11 @@
 // `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft/start (research 25 §6–7).
 // @weft/start resolves from the app first (its own version), then from this workspace.
 
-import { existsSync, readFileSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { diagnostic, locate } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
@@ -29,17 +31,70 @@ async function site(root) {
   return { site: loaded.config?.site ?? {}, diagnostics: loaded.diagnostics }
 }
 
+/** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
+export const PRESETS = { node: 'node', bun: 'bun', deno: 'deno_server' }
+
 export async function devCommand(root, { port } = {}) {
+  // Production takes the host's environment; dev takes `.env`. What's already set wins.
+  if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
   const { dev } = await start(root, 'app')
   const server = await dev({ root, ...(await site(root)), port })
   return server
 }
 
-export async function buildCommand(root, { preset = 'node' } = {}) {
+export async function buildCommand(root, { preset, runtime } = {}) {
   const { build } = await start(root, 'app')
+  const { writeContract } = await start(root, 'contract')
   const t = performance.now()
-  const { output } = await build({ root, ...(await site(root)), preset, logLevel: 'warn' })
-  return { ok: true, preset, output, ms: Math.round(performance.now() - t) }
+  const config = await site(root)
+  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? 'node'
+  if (!preset && !PRESETS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(PRESETS).join(', ')}`), { code: 'E_USAGE' })
+  preset ??= PRESETS[chosen]
+  // A build holds no secrets: an app's env check stands down, and server modules load without a database.
+  const held = process.env.WEFT_BUILD
+  process.env.WEFT_BUILD = '1'
+  try {
+    const { output } = await build({ root, ...config, preset, logLevel: 'warn' })
+    const contract = await writeContract({ root, site: config.site })
+    return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: contract.diagnostics.map(d => diagnostic({ ...d, file: '.weft/contract.json' })), ms: Math.round(performance.now() - t) }
+  } finally {
+    if (held === undefined) delete process.env.WEFT_BUILD
+    else process.env.WEFT_BUILD = held
+  }
+}
+
+/** The built server's command for each runtime: `.env` for a local run, the host's environment otherwise. */
+const SERVERS = { node: ['node', ['--disable-warning=ExperimentalWarning']], bun: ['bun', ['run']], deno: ['deno', ['run', '-A']] }
+
+/** `weft start`: run `.output/` on the runtime it was built for. Resolves with the exit code. */
+export async function startCommand(root, { runtime } = {}) {
+  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? 'node'
+  if (!SERVERS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(SERVERS).join(', ')}`), { code: 'E_USAGE' })
+  if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
+  const [cmd, flags] = SERVERS[chosen]
+  const child = spawn(cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit' })
+  process.once('SIGINT', () => child.kill('SIGINT'))
+  return new Promise(ok => child.on('close', code => ok(code ?? 0)))
+}
+
+/** The hash `weft db generate` records and Q015 compares. */
+export const schemaHash = text => createHash('sha256').update(text).digest('hex').slice(0, 16)
+
+/** `weft db generate`: drizzle-kit's diff of the schema into `drizzle/`, on Node like all of dev (research 28 §2). */
+export function dbCommand(root, sub) {
+  if (sub !== 'generate') throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request)`), { code: 'E_USAGE' })
+  let bin
+  try {
+    const req = createRequire(join(root, 'package.json'))
+    bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
+  } catch {
+    throw Object.assign(new Error('drizzle-kit is not installed in this project'), { code: 'E_USAGE' })
+  }
+  const r = spawnSync(process.execPath, [bin, 'generate'], { cwd: root, encoding: 'utf8' })
+  if (r.status !== 0) throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), { code: 'E_INTERNAL' })
+  const schema = join(root, 'src', 'db', 'schema.ts')
+  if (existsSync(schema)) writeFileSync(join(root, 'drizzle', '.schema-hash'), schemaHash(readFileSync(schema)) + '\n')
+  return { ok: true, output: r.stdout.trim() }
 }
 
 /** Every route's merged metadata, tags and card mode (`--meta`), or just the route table. */

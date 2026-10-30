@@ -30,8 +30,11 @@ export interface Action<O = void> {
 }
 
 let next = 0
+// A server counts across requests and a client from 0, so the two sides never agree on a number. Hydration writes
+// nothing, so server ids stay in the page: they get their own namespace, or a field added later could take one.
+const side = typeof document === 'undefined' ? 's' : ''
 /** A document-unique id for ARIA wiring (`warp-0`, `warp-1`, …). */
-export const uid = (prefix = 'warp') => `${prefix}-${(next++).toString(36)}`
+export const uid = (prefix = 'warp') => `${prefix}-${side}${(next++).toString(36)}`
 /**
  * Restart the id sequence. A server render and the hydration that adopts it each call this first, so the same
  * component order yields the same ids on both sides.

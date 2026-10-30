@@ -21,3 +21,9 @@ export function Page(props: { load: (what: string) => Promise<string> }) {
     </main>
   )
 }
+
+/** A resource outside any Boundary: nothing can stream it in, so `settle()` holds the shell for it. */
+export function Bare(props: { load: (what: string) => Promise<string> }) {
+  const v = resource(() => props.load('bare'))
+  return <p class="bare">{v.value}</p>
+}

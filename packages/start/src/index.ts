@@ -15,7 +15,7 @@ export { Link } from './view'
 export { navigate, type NavigateOptions } from './router'
 export {
   query, mutation, redirect, invalidate, cache, skip, isRedirect, StartError, FnError,
-  type Query, type Mutation, type QueryDef, type MutationDef, type Context, type Life, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
+  type Query, type Mutation, type QueryDef, type MutationDef, type AuthScope, type Context, type Life, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
 } from './data'
 export type { Merged, Site } from 'weft/ssr'
 

@@ -1,7 +1,8 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
 // P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
-// server functions, and S011), plus the codes proposed in research 17 (marked `proposed`).
+// server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
+// plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -237,6 +238,17 @@ export const catalog = [
   { code: 'Q009', severity: 'error', by: 'start', catches: '`/_weft/fn/<id>` names no function: the page is older than the server, or the module isn\'t a server module', fix: 'Reload; keep `query`/`mutation` exports in server modules' },
   { code: 'Q010', severity: 'error', by: 'start', catches: 'A mutation request without the CSRF proof (POST, JSON, `x-weft: 1`, same origin): 403', fix: 'Call mutations through their stub, not a hand-made `fetch` or form' },
   { code: 'S011', severity: 'warning', by: 'runtime', catches: '`mutation({ optimistic })` updated a query its invalidated tags didn\'t cover: the prediction has no fresh value to land on (held until a refetch)', fix: 'Add one of the query\'s tags to `invalidates`' },
+  { code: 'Q011', severity: 'warning', by: 'start', catches: 'A function read or wrote a table its `tags`/`invalidates` don\'t name (dev): a mutation of that table won\'t refresh it', fix: 'Add the table\'s name (or `table:…`) to `tags`/`invalidates`' },
+  { code: 'Q012', severity: 'error', by: 'start', catches: '`@weft/start/db*` or `@weft/start/auth` reached the client graph', fix: 'Import it from a server module (`src/server/**`, `*.server.ts`) or a route\'s `load`' },
+  { code: 'Q013', severity: 'error', by: 'start', catches: 'A database URL the driver can\'t open (a `postgres://` URL given to the SQLite entry, or the reverse)', fix: 'Use the matching `createDb`: `@weft/start/db/sqlite` or `@weft/start/db/postgres`' },
+  { code: 'Q014', severity: 'error', by: 'start', catches: 'The database doesn\'t match the schema: a table or column is missing', fix: 'Run `weft db generate`, then reload (new migrations apply on the next request)' },
+  { code: 'Q015', severity: 'warning', by: 'cli', catches: '`src/db/schema.ts` changed since the last `weft db generate`', fix: 'Run `weft db generate`' },
+  { code: 'A001', severity: 'error', by: 'start', catches: 'The auth secret is missing or under 32 characters on a production server', fix: 'Set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) in the server\'s environment' },
+  { code: 'A002', severity: 'error', by: 'start', catches: 'A function with `auth: \'user\'` was called with no session (401)', fix: 'Sign in first, or guard the route with `redirect()` in its `load`' },
+  { code: 'A003', severity: 'error', by: 'start', catches: '`auth: \'user\'`, but `ctx` has no `user`: the context file never asked for the session', fix: 'Spread `session(auth, request)` into what `src/context.server.ts` returns' },
+  { code: 'A004', severity: 'warning', by: 'start', catches: 'A mutation changed the session cookie without a redirect: the tab keeps what the last session cached', fix: '`redirect()` after it: that\'s a full load, which drops the client cache' },
+  { code: 'C001', severity: 'warning', by: 'cli', catches: 'A function\'s `input` or `output` schema can\'t become JSON Schema: the contract says `{}`', fix: 'Use a schema with JSON Schema support (Zod 4 has it), or drop what can\'t be represented' },
+  { code: 'C002', severity: 'error', by: 'start', catches: 'A function\'s value failed its `output` schema (dev and tests)', fix: 'Fix `run`, or the schema' },
 
   // Text, type and skeletons (research 11 §8.5; Phase 2's set, research 26 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },

@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { check } from '../src/check.mjs'
+import { schemaHash } from '../src/start.mjs'
 import { fixture, project, spreadBug } from './helpers.mjs'
 
 const app = readFileSync(join(fixture, 'src/App.tsx'), 'utf8')
@@ -157,5 +158,24 @@ export function Clock() {
     expect(fixed).toContain("import { media, online, interval } from 'weft/browser'")
     expect(fixed).toContain('interval(1000, () => { now.value++ })')
     expect(w050.docs).toBe('weft docs W050')
+  })
+})
+
+describe('Q015', () => {
+  const db = { 'drizzle.config.ts': 'export default {}\n', 'src/db/schema.ts': 'export const a = 1\n' }
+  const q015 = async dir => (await check(dir)).diagnostics.filter(d => d.code === 'Q015')
+
+  it('no migrations yet, then the schema drifting from the recorded hash', async () => {
+    const dir = project(db)
+    expect((await q015(dir))[0].why).toContain('No migrations yet')
+    mkdirSync(join(dir, 'drizzle'))
+    writeFileSync(join(dir, 'drizzle/.schema-hash'), schemaHash(db['src/db/schema.ts']))
+    expect(await q015(dir)).toEqual([])
+    writeFileSync(join(dir, 'src/db/schema.ts'), 'export const a = 2\n')
+    expect((await q015(dir))[0].why).toContain('changed since')
+  })
+
+  it('an app with no database has nothing to report', async () => {
+    expect(await q015(project())).toEqual([])
   })
 })

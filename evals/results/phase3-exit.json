@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-30",
+  "ok": true,
+  "parts": {
+    "check": {
+      "ok": true,
+      "summary": {
+        "files": 6,
+        "tests": 0,
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      },
+      "diagnostics": []
+    },
+    "types": {
+      "ok": true,
+      "app": [],
+      "packages": 2
+    },
+    "matrix": {
+      "ok": true,
+      "runtimes": [
+        {
+          "runtime": "node",
+          "version": "v22.22.1",
+          "ok": true,
+          "buildMs": 2169,
+          "checks": [
+            "a visitor to /todos gets a 307 to /login, from the layout guard",
+            "Better Auth is mounted at /api/auth",
+            "wrong credentials show the error and stay on /login",
+            "sign-up lands on /todos, signed in",
+            "add, toggle and delete work, each through the optimistic path",
+            "a toggle writes at most one attribute in the list",
+            "a reload renders the list on the server and hydrates with no fetch and no writes",
+            "sign-out is a full load: the client cache is gone and /todos redirects",
+            "a second user sees none of the first user's todos",
+            "the first user signs back in to the same list",
+            "a user can't change another user's todo by its id",
+            "A002: a call with no session is a 401",
+            "Q010: a cross-site mutation is refused",
+            "Q002: invalid input is a 400 naming the field",
+            "no page threw",
+            "sharing with an unknown email shows `No such user` and shares nothing",
+            "a shared todo appears under `Shared with me`, server-rendered, with no delete button",
+            "a hydrated shared list fetches nothing",
+            "the recipient toggles it without a reload; the owner sees it",
+            "the owner's toggle reaches the recipient's list on their next load",
+            "a third user can't read, toggle or share it, by any id",
+            "a recipient can't delete it or take the share back",
+            "unshare removes it; the recipient can no longer toggle it",
+            "the owner's list still adds, and no page threw"
+          ]
+        },
+        {
+          "runtime": "bun",
+          "version": "1.3.14",
+          "ok": true,
+          "buildMs": 1845,
+          "checks": [
+            "a visitor to /todos gets a 307 to /login, from the layout guard",
+            "Better Auth is mounted at /api/auth",
+            "wrong credentials show the error and stay on /login",
+            "sign-up lands on /todos, signed in",
+            "add, toggle and delete work, each through the optimistic path",
+            "a toggle writes at most one attribute in the list",
+            "a reload renders the list on the server and hydrates with no fetch and no writes",
+            "sign-out is a full load: the client cache is gone and /todos redirects",
+            "a second user sees none of the first user's todos",
+            "the first user signs back in to the same list",
+            "a user can't change another user's todo by its id",
+            "A002: a call with no session is a 401",
+            "Q010: a cross-site mutation is refused",
+            "Q002: invalid input is a 400 naming the field",
+            "no page threw",
+            "sharing with an unknown email shows `No such user` and shares nothing",
+            "a shared todo appears under `Shared with me`, server-rendered, with no delete button",
+            "a hydrated shared list fetches nothing",
+            "the recipient toggles it without a reload; the owner sees it",
+            "the owner's toggle reaches the recipient's list on their next load",
+            "a third user can't read, toggle or share it, by any id",
+            "a recipient can't delete it or take the share back",
+            "unshare removes it; the recipient can no longer toggle it",
+            "the owner's list still adds, and no page threw"
+          ]
+        },
+        {
+          "runtime": "deno",
+          "version": "deno 2.9.8 (stable, release, aarch64-apple-darwin)",
+          "ok": true,
+          "buildMs": 1844,
+          "checks": [
+            "a visitor to /todos gets a 307 to /login, from the layout guard",
+            "Better Auth is mounted at /api/auth",
+            "wrong credentials show the error and stay on /login",
+            "sign-up lands on /todos, signed in",
+            "add, toggle and delete work, each through the optimistic path",
+            "a toggle writes at most one attribute in the list",
+            "a reload renders the list on the server and hydrates with no fetch and no writes",
+            "sign-out is a full load: the client cache is gone and /todos redirects",
+            "a second user sees none of the first user's todos",
+            "the first user signs back in to the same list",
+            "a user can't change another user's todo by its id",
+            "A002: a call with no session is a 401",
+            "Q010: a cross-site mutation is refused",
+            "Q002: invalid input is a 400 naming the field",
+            "no page threw",
+            "sharing with an unknown email shows `No such user` and shares nothing",
+            "a shared todo appears under `Shared with me`, server-rendered, with no delete button",
+            "a hydrated shared list fetches nothing",
+            "the recipient toggles it without a reload; the owner sees it",
+            "the owner's toggle reaches the recipient's list on their next load",
+            "a third user can't read, toggle or share it, by any id",
+            "a recipient can't delete it or take the share back",
+            "unshare removes it; the recipient can no longer toggle it",
+            "the owner's list still adds, and no page threw"
+          ]
+        }
+      ]
+    }
+  },
+  "migrations": [
+    "0000_bumpy_alice.sql",
+    "0001_cloudy_praxagora.sql"
+  ],
+  "tables": [
+    "user",
+    "session",
+    "account",
+    "verification",
+    "todos",
+    "todo_shares"
+  ]
+}

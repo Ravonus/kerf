@@ -257,7 +257,7 @@ whether or not a query is cached on the server.)
   `ctx.user` is typed nullable; reading request cookies inside a cached query is a type error.
 - **`create-weft`:** flag-driven CLI (db, auth, runtime, deploy target, styling, UI kit). Writes AGENTS.md and MCP
   config.
-- Later: ISR/static routes, `updateTag`, per-user cache scope.
+- Later: ISR/static routes, `updateTag`.
 - **Page metadata and OG images** ([20](research/20-metadata-and-og.md)): metadata is plain data on the route
   (`export const meta = ({ params, data }) => …`), awaited before the first byte and written as static tags, because
   link-preview crawlers don't run JS and frameworks that streamed or patched the head broke previews. Never reactive,
@@ -281,19 +281,25 @@ whether or not a query is cached on the server.)
   place with structural sharing: an optimistic toggle is 1 DOM write in Chrome. Overlays roll back per call.
   `redirect()` works in `load` (307) and in a `run` (the client router follows). `ctx` comes from
   `src/context.server.ts`, the plug for Drizzle and Better Auth. Q001–Q010 and S011; `weft/test`'s `net` is the fake
-  transport. The data runtime adds 3.93 KB brotli, only to apps that use a query. Not yet: Drizzle, auth,
-  `create-weft --db/--auth`, the CI matrix, `.weft/contract.json`, `<Form>`, the `defineState` SSR payload and
-  `cookie` persist.
+  transport. The data runtime adds 3.93 KB brotli, only to apps that use a query.
+- **Status (2026-10-30): Drizzle, Better Auth, the contract and three runtimes are built**
+  ([28](research/28-db-auth-runtimes.md)). `@weft/start/db/sqlite` runs on `node:sqlite` or `bun:sqlite` behind Drizzle's
+  proxy driver, with no native binary and the same async API as `@weft/start/db/postgres`. `weft db generate` writes
+  migrations, embedded in the build and applied on first request. The dev touched-tables check is Q011, at run time.
+  Better Auth gives `ctx.user`, `auth: 'user'`, guards through `redirect()` (loaders now run parent first), and
+  sign-in as a mutation, so nothing of it reaches the client. `cache: { scope: 'user' }` is in. Q011–Q015, A001–A004,
+  C001–C002. Not yet: `<Form>`, the `defineState` SSR payload and `cookie` persist.
 
 ### 4.1 Runtimes: Node, Bun, Deno built in
 
 Nitro presets give `node` (the default), `bun`, `deno_server` and edge targets from the same code
 ([06](research/06-runtimes-and-rust.md)).
 
-- `create-weft --runtime node|bun|deno` picks the preset and a DB driver that works on that runtime. No single SQLite
-  driver works on all three, so `weft/db` picks one per runtime.
-- **Dev always runs on Node**, so dev never catches a Bun or Deno break. CI therefore runs the e2e suite on all
-  three.
+- `create-weft --runtime node|bun|deno` picks the preset. SQLite is built in on all three: `node:sqlite` on Node and
+  Deno, `bun:sqlite` on Bun, chosen at run time, so one build's code and no native binary ([28](research/28-db-auth-runtimes.md)).
+- **Dev always runs on Node**, so dev never catches a Bun or Deno break. `packages/start/scripts/runtime-matrix.mjs`
+  therefore builds and serves an app on all three and runs one e2e against each. It's the gate until the repo has CI;
+  `.github/workflows/runtime-matrix.yml` is written but has never run.
 - `weft build` writes **`.weft/contract.json`**: JSON Schema for every `query`/`mutation`, with input, output,
   errors, cache and auth scope. The OpenAPI export, the MCP server and Rust codegen all read it.
 
@@ -886,7 +892,7 @@ crates/
   media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
   plugin-*    @weft/plugin-text (text.measure + font.build), @weft/plugin-media (media.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
               (weft itself adds weft/plugin, weft/slots, weft/test/plugins and the `weft plugins` CLI)
-  create-weft `create-weft <dir> --ui warp|headless|none`; Phase 3 adds db, auth, runtime and deploy flags
+  create-weft `create-weft <dir> --ui warp|headless|none --db sqlite|postgres|none --auth --runtime node|bun|deno`; deploy flags later
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
@@ -943,8 +949,15 @@ Nitro `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](resear
 `query`/`mutation` typed end to end, the tagged cache (client, request and shared), `mutation({ optimistic })`
 overlays with per-call rollback, `redirect()` on the server and in the client router, SSR-dehydrated query results
 (0/0 hydration), Q001–Q010 and S011, and the fake transport in `weft/test` ([27](research/27-server-functions.md)).
-Still to do: Drizzle, Better Auth, `create-weft`'s db/auth/runtime flags (`--ui` landed in Phase 2), the CI matrix,
-the contract, `<Form>`, the `defineState` SSR state payload and `cookie` persist (with S013), `.live` and the buses.
+The third (2026-10-30): Drizzle, Better Auth, `create-weft --db/--auth/--runtime`, `.weft/contract.json`, the
+Node/Bun/Deno presets and a local runtime matrix ([28](research/28-db-auth-runtimes.md)). Still to do in this row:
+`<Form>`, the `defineState` SSR state payload and `cookie` persist (with S013), `.live`, `topic`, `stream` and the
+buses, `z.media()` and the media route, `query.shape` and X032–X036.
+
+**3 exit check (2026-10-30): met** ([result](../evals/results/phase3-exit.md),
+[findings](../evals/results/phase3-exit-FINDINGS.md); rerun with `node evals/phase3-exit.mjs`). The check covers the
+app, not the rest of the row above. `create-weft --db sqlite --auth --ui warp`, extended with todo sharing by a fresh
+agent from a brief, passes 24 hidden e2e checks on Node, Bun and Deno, with `weft check` and the app's `tsc` clean.
 
 Performance is gated from Phase 1 (§3.7). The v3 eval showed that efficiency, not correctness, is where frameworks
 differ.
@@ -1053,6 +1066,11 @@ Also out of v0:
     - the warp eval adapter didn't count re-runs.
   - **Exit check met**, with no open findings: the Chip and Segmented counts (dimmed below 4.5:1 in light theme) were
     fixed in the spec on 2026-10-30.
+- **Phase 3 exit check, todo + auth on three runtimes (2026-10-30,** [findings](../evals/results/phase3-exit-FINDINGS.md)**):**
+  - One Sonnet agent, with the scaffold and a brief, no e2e: 24/24 hidden checks on Node, Bun and Deno on the first run,
+    including a stranger and a recipient calling server functions directly. No diagnostic fired.
+  - The e2e has teeth: with the agent's share check removed from `toggleTodo`, it fails.
+  - One run, not a baseline: there's no comparison against a T3 app yet, and the brief was unusually exact.
 
 ## 11. Open questions
 
@@ -1149,3 +1167,9 @@ Also out of v0:
   too, so they don't depend on `cache: { life }`. Query resources pass `resource(…, { data: false })`: the query
   cache, not the page data, transfers values, so there is one copy with one identity. Diagnostics are **Q001–Q010**
   (Q was unused) plus research 14's S011 ([27](research/27-server-functions.md)).
+- **One SQLite path over built-ins, not a driver per runtime; two `createDb` entries; sign-in as mutations, not
+  `better-auth/client`; loaders parent first** (2026-10-30). §4.1 expected a driver per runtime, but `node:sqlite` and
+  `bun:sqlite` fit behind ten lines of Drizzle's proxy, so nothing is compiled and SQLite and Postgres read alike. The
+  price is Node ≥ 22.15 and a transaction gate on the single connection. Mutations give sign-in weft's CSRF check and
+  keep Better Auth's client out of the bundle. Parent-first loaders cost a waterfall for nested `load`s and mean a
+  guard's redirect stops its children. New letters: A (auth), C (contract) ([28](research/28-db-auth-runtimes.md)).

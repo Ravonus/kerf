@@ -36,6 +36,12 @@ describe('docs', () => {
     }
   })
 
+  it('explains the full-stack codes, and `start` carries them', async () => {
+    for (const code of ['Q011', 'Q012', 'Q013', 'Q014', 'Q015', 'A001', 'A002', 'A003', 'A004', 'C001', 'C002']) expect((await docs(fixture, code)).text, code).toMatch(new RegExp(`^# ${code} \\((error|warning)\\)`))
+    const page = (await docs(fixture, 'start')).text
+    for (const word of ['weft db generate', 'contract.json', "auth: 'user'"]) expect(page).toContain(word)
+  })
+
   it('explains a code with its status in the installed weft', async () => {
     expect((await docs(fixture, 'w014')).text).toMatch(/^# W014 \(error\)[\s\S]*Status in weft@0\.0\.0:\*\* reported\./)
     expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
@@ -98,6 +104,14 @@ describe('AGENTS.md', () => {
   it('lists project tasks in Commands, so docs cannot drift from weft tasks', async () => {
     const dir = project({ 'weft.config.ts': "export default { tasks: { seed: { run: 'node seed.mjs', description: 'Load demo products', sideEffects: ['db'] } } }\n" })
     expect((await agentsMd(dir)).text).toContain('| `node seed.mjs` | Load demo products | db |')
+  })
+
+  it('a full-stack app gets the Full stack section, still under the limit', async () => {
+    const dir = project({ 'src/routes/index.tsx': 'export default () => <h1>Hi</h1>\n' })
+    const { text, bytes } = await agentsMd(dir)
+    expect(text).toContain('## Full stack')
+    expect(bytes).toBeLessThan(limit)
+    expect((await agentsMd(project())).text).not.toContain('## Full stack')
   })
 
   it('writes the file, then --check reports current until something changes', async () => {

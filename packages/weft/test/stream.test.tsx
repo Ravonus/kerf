@@ -7,7 +7,7 @@ import { renderToStream, SWAP } from 'weft/ssr'
 import { hydrate } from 'weft/dom'
 import { hydration } from '../src/hydrate'
 // @ts-expect-error: query imports (vite.mjs)
-import { Page as ServerPage } from './fixtures/ssr/Streamed.tsx?weft-ssr'
+import { Bare as ServerBare, Page as ServerPage } from './fixtures/ssr/Streamed.tsx?weft-ssr'
 // @ts-expect-error
 import { Page as ClientPage } from './fixtures/ssr/Streamed.tsx?weft-hydrate'
 
@@ -52,6 +52,15 @@ test('the shell has every fallback; content streams in the order resources resol
   expect(chunks[0]).toContain('$wb=function') // defined once, with the first chunk
   expect(chunks[1]).toContain('slow data')
   expect(chunks[1]).not.toContain('$wb=function')
+})
+
+test('settle(): a resource outside every Boundary lands in the shell, and its value in the data', async () => {
+  const s = renderToStream(() => <ServerBare load={what => later(5, `${what} data`)} />)
+  expect(s.shell).not.toContain('bare data')
+  await s.settle()
+  expect(s.shell).toContain('bare data')
+  for await (const _ of s.chunks); // nothing pending: the stream ends
+  expect(JSON.stringify(s.data())).toContain('bare data')
 })
 
 test('a Boundary that resolves while another is pending sends only its own content, once', async () => {

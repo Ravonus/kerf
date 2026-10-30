@@ -58,12 +58,62 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
   expect(warp['weft.config.ts']).toContain("import { warp } from '@weft/warp/plugin'")
   expect(warp['weft.config.ts']).toContain('plugins: [warp()]')
   expect(warp['src/app.css']).toBeUndefined()
-  expect(JSON.parse(warp['package.json']).scripts).toEqual({ dev: 'weft dev', build: 'weft build', check: 'weft check' })
+  expect(JSON.parse(warp['package.json']).scripts).toEqual({ dev: 'weft dev', build: 'weft build', check: 'weft check', start: 'weft start' })
   const headless = template({ ui: 'headless' })
   expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual(['weft', '@weft/start', '@weft/ui-core'])
   expect(headless['src/routes/_layout.tsx']).toContain("import '@weft/ui-core/styles/warp.css'")
   expect(template({ ui: 'none' })['weft.config.ts']).not.toContain('plugins')
   expect(() => template({ ui: 'tailwind' })).toThrow('--ui must be one of warp, headless, none')
+})
+
+describe('--db, --auth, --runtime', () => {
+  const pkg = t => JSON.parse(t['package.json'])
+
+  it('--db sqlite: drizzle and one driver-free app, a generated script, no postgres', () => {
+    const t = template({ ui: 'none', db: 'sqlite' })
+    expect(Object.keys(pkg(t).dependencies)).toEqual(expect.arrayContaining(['drizzle-orm', 'drizzle-zod', 'zod']))
+    expect(pkg(t).dependencies.postgres).toBeUndefined()
+    expect(pkg(t).scripts['db:generate']).toBe('weft db generate')
+    expect(t['src/db/index.server.ts']).toContain("from '@weft/start/db/sqlite'")
+    expect(t['src/db/schema.ts']).toContain('sqliteTable')
+    expect(t['src/server/todos.ts']).toContain('schemasOf')
+    expect(t['src/server/todos.ts']).not.toContain("auth: 'user'")
+    expect(t['src/auth.server.ts']).toBeUndefined()
+  })
+
+  it('--db postgres: the postgres driver, its schema, a URL to fill in', () => {
+    const t = template({ ui: 'none', db: 'postgres' })
+    expect(pkg(t).dependencies.postgres).toBeDefined()
+    expect(t['src/db/index.server.ts']).toContain("from '@weft/start/db/postgres'")
+    expect(t['src/db/schema.ts']).toContain('pgTable')
+    expect(t['.env.example']).toContain('DATABASE_URL=postgres')
+  })
+
+  it('--auth: better-auth, a guard, a sign-in page, a fresh secret per scaffold', () => {
+    const a = template({ ui: 'warp', db: 'sqlite', auth: true })
+    const b = template({ ui: 'warp', db: 'sqlite', auth: true })
+    const secret = t => /BETTER_AUTH_SECRET=(.+)/.exec(t['.env'])[1]
+    expect(pkg(a).dependencies['better-auth']).toBeDefined()
+    expect(a['src/routes/todos/_layout.tsx']).toContain("redirect('/login')")
+    expect(a['src/routes/login.tsx']).toBeDefined()
+    expect(a['src/server/todos.ts']).toContain("auth: 'user'")
+    expect(a['src/context.server.ts']).toContain('session(auth, request)')
+    expect(secret(a).length).toBeGreaterThanOrEqual(32)
+    expect(secret(a)).not.toBe(secret(b))
+    expect(a['.env.example']).not.toContain(secret(a))
+    expect(a['.gitignore']).toMatch(/^\.env$/m)
+    expect(a['.gitignore']).toMatch(/^\.data/m)
+  })
+
+  it.each(['bun', 'deno'])('--runtime %s lands in the config', runtime => {
+    expect(template({ ui: 'none', runtime })['weft.config.ts']).toContain(`runtime: '${runtime}'`)
+  })
+
+  it('refuses what can\'t work', () => {
+    expect(() => template({ ui: 'none', db: 'mongo' })).toThrow('--db must be one of sqlite, postgres, none')
+    expect(() => template({ ui: 'none', runtime: 'workerd' })).toThrow('--runtime must be one of node, bun, deno')
+    expect(() => template({ ui: 'none', auth: true })).toThrow('--auth keeps users in a database')
+  })
 })
 
 it('refuses a non-empty directory', () => {

@@ -14,8 +14,18 @@ import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
+import { schemaHash } from './start.mjs'
 
 const posix = p => p.split('\\').join('/')
+
+/** Q015: the schema's hash against the one `weft db generate` recorded (research 28 §2). */
+function schemaDrift(root) {
+  const schema = join(root, 'src', 'db', 'schema.ts')
+  if (!existsSync(schema) || !existsSync(join(root, 'drizzle.config.ts'))) return []
+  const file = join(root, 'drizzle', '.schema-hash')
+  if (existsSync(file) && readFileSync(file, 'utf8').trim() === schemaHash(readFileSync(schema))) return []
+  return [diagnostic({ code: 'Q015', file: 'src/db/schema.ts', why: existsSync(file) ? 'The schema changed since the last `weft db generate`: the database will not match it.' : 'No migrations yet: the first request that reads a table fails with Q014.' })]
+}
 
 /**
  * @param {string} root
@@ -83,6 +93,7 @@ export async function check(root, options = {}) {
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
     ...hygiene(root),
+    ...schemaDrift(root),
   ]
   sortDiagnostics(diagnostics)
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }

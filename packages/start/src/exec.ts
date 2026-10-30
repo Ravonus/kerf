@@ -8,7 +8,7 @@
 //   shared store   only for `cache: { life }`: a value is valid while every tag's version still matches (a mutation
 //                  bumps the versions of the tags it invalidates).
 
-import { fns, isRedirect, keyOf, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
+import { enter, fns, isRedirect, keyOf, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 
 export interface ScopeEntry {
   id: string
@@ -31,9 +31,13 @@ export interface Scope {
   started?: boolean
   /** The tags of the queries a route level's `load` read (a frame per loader; research 27 §4). */
   tags?: Set<string>
+  /** Dev: the tables this function's statements read and wrote (a frame per `run`; research 28 §2). */
+  touched?: Touched
   ctx(): Promise<Context>
   options: ScopeOptions
 }
+
+export interface Touched { read: Set<string>; write: Set<string> }
 
 export interface ScopeOptions {
   /** The app's context (`src/context.server.ts`). */
@@ -50,7 +54,7 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
-    ctx: () => (ctx ??= Promise.resolve(options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers } }) as Context)),
+    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers } }) as Context, e => { throw dbError(e) })),
   }
 }
 
@@ -112,15 +116,21 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     entry.tags = [...(typeof fn.def.tags === 'function' ? fn.def.tags(valid) : fn.def.tags ?? [])]
     const cached = fn.def.cache
     const store = storeOf(scope)
+    // Checked before the shared cache, so a value stored for one user is never answered to no one.
+    const early = fn.def.auth || cached?.scope ? await scope.ctx() : undefined
+    if (early) guard(fn, cached ? shared(early, fn) : early)
+    const stored = cached?.scope ? `${key}@${(early as any).user?.id ?? ''}` : key
     if (cached) {
-      const hit = await store.get(key)
+      const hit = await store.get(stored)
       if (hit && hit.expires > Date.now() && same(hit.versions, await store.versions(hit.tags))) return hit.v
     }
     const versions = cached ? await store.versions(entry.tags) : []
-    const ctx = await scope.ctx()
-    const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx)
-    if (scope.options.dev) serializable(v, fn, scope)
-    if (cached) await store.set(key, { v, tags: entry.tags, versions, expires: Date.now() + seconds(cached.life) * 1000 })
+    const ctx = early ?? (await scope.ctx())
+    const touched = tracker(scope)
+    const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx, touched)
+    if (scope.options.dev) await checked(v, fn, scope)
+    if (touched) missedTags(fn, 'read', touched.read, entry.tags, scope)
+    if (cached) await store.set(stored, { v, tags: entry.tags, versions, expires: Date.now() + seconds(cached.life) * 1000 })
     return v
   })().then(
     v => Object.assign(entry, { done: true, v }),
@@ -141,17 +151,56 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
 
 const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => x === b[i])
 
-async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context) {
+async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?: Touched) {
+  guard(fn, ctx)
   const replaced = scope.options.handlers?.get(fn.$id)
-  const v = await (replaced ? replaced(input, ctx) : fn.def.run!({ input, ctx }))
+  // Awaited inside the frame: a Drizzle query is a thenable, and only runs when something awaits it.
+  const run = async () => await (replaced ? replaced(input, ctx) : fn.def.run!({ input, ctx }))
+  let v: unknown
+  try {
+    v = await (touched ? enter(Object.create(scope, { touched: { value: touched } }), run) : run())
+  } catch (e) {
+    throw dbError(e)
+  }
   if (isRedirect(v)) throw v
   return v
 }
 
-/** A cached query's ctx: no request, response or user. Its value is shared by every user (Q006). */
+/** `auth: 'user'`: A003 when `ctx` has no `user` at all, A002 when no one is signed in. */
+function guard(fn: Fn, ctx: Context) {
+  if (fn.def.auth !== 'user') return
+  if (!('user' in ctx)) throw new StartError('A003', `\`${fn.$id}\` has \`auth: 'user'\`, but \`ctx\` has no \`user\``, 'spread `session(auth, request)` into what `src/context.server.ts` returns', { status: 500 })
+  if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
+}
+
+/** A missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
+function dbError(e: unknown): unknown {
+  const cause = (e as any)?.cause ?? e
+  const m = `${cause?.message ?? ''}`
+  if (e instanceof StartError || !(/no such (table|column)|has no column named/.test(m) || cause?.code === '42P01' || cause?.code === '42703')) return e
+  return new StartError('Q014', `the database doesn't match the schema: ${m}`, 'run `weft db generate`, then reload (new migrations apply on the next request)', { status: 500 })
+}
+
+const tracker = (scope: Scope): Touched | undefined => (scope.options.dev ? { read: new Set(), write: new Set() } : undefined)
+
+/** Q011 (dev, once per function and table): a table the function touched that no tag names (PLAN §4). */
+function missedTags(fn: Fn, verb: 'read' | 'write', tables: Set<string>, tags: readonly string[], scope: Scope) {
+  for (const t of tables) {
+    const key = `${fn.$id}:${t}`
+    if (warned.has(key) || tags.some(x => x === t || x.startsWith(`${t}:`))) continue
+    warned.add(key)
+    const list = fn.kind === 'query' ? '`tags`' : '`invalidates`'
+    scope.options.onDiagnostic?.({ code: 'Q011', severity: 'warning', message: `\`${fn.$id}\` ${verb === 'read' ? 'reads' : 'writes'} table \`${t}\`, but its ${list} don't name it: ${fn.kind === 'query' ? 'a mutation of that table won\'t refresh it' : 'queries of that table stay stale'}. Add \`'${t}'\` to ${list}` })
+  }
+}
+const warned = new Set<string>()
+
+/** A cached query's ctx: no request, response or user. Its value is shared by every user (Q006). With `scope: 'user'`, one value per user: `ctx.user` is allowed. */
 function shared(ctx: Context, fn: Fn): Context {
+  const own = fn.def.cache?.scope === 'user'
   return new Proxy(ctx, {
     get(t, k, r) {
+      if (own && (k === 'user' || k === 'session')) return Reflect.get(t, k, r)
       if (k === 'request' || k === 'response' || k === 'user' || k === 'session')
         throw new StartError('Q006', `\`${fn.$id}\` is cached (\`cache: { life }\`) and reads \`ctx.${String(k)}\`: its value would be shared by every user`, 'drop `cache`, or pass the value as input')
       return Reflect.get(t, k, r)
@@ -167,11 +216,13 @@ export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh:
   if (scope.request.method === 'GET' || scope.request.method === 'HEAD')
     throw new StartError('Q004', `mutation \`${fn.$id}\` called while the server handles a GET (\`load\`, a page render or a query)`, 'call mutations from handlers or other mutations; GET handlers must be side-effect free', { status: 500 })
   const valid = await validate(fn, input)
-  const v = await call(scope, fn, valid, await scope.ctx())
-  if (scope.options.dev) serializable(v, fn, scope)
+  const touched = tracker(scope)
+  const v = await call(scope, fn, valid, await scope.ctx(), touched)
+  if (scope.options.dev) await checked(v, fn, scope)
   const declared = typeof fn.def.invalidates === 'function' ? fn.def.invalidates(valid, v) : fn.def.invalidates ?? []
   await invalidate(scope, [...declared])
   const tags = [...scope.invalidated]
+  if (touched) missedTags(fn, 'write', touched.write, tags, scope)
   const c: Wire[] = []
   for (const [id, inp] of refresh) {
     const q = fns.get(id)
@@ -210,6 +261,15 @@ async function validate(fn: Fn, input: unknown): Promise<unknown> {
   const issues = r.issues.map(i => ({ message: i.message, path: i.path?.map(p => (typeof p === 'object' ? p.key : p)) })) as SchemaIssue[]
   const where = issues.map(i => `${i.path?.length ? i.path.join('.') + ': ' : ''}${i.message}`).join('; ')
   throw new StartError('Q002', `\`${fn.$id}\` rejected its input: ${where}`, 'pass what the schema accepts', { status: 400, issues })
+}
+
+/** Dev and tests: the value against `output` (C002), and what JSON would change (Q005). */
+async function checked(v: unknown, fn: Fn, scope: Scope) {
+  serializable(v, fn, scope)
+  const schema = fn.def.output
+  if (!schema) return
+  const r = await schema['~standard'].validate(v)
+  if (r.issues) throw new StartError('C002', `\`${fn.$id}\` returned a value its \`output\` schema rejects: ${r.issues.map(i => `${i.path?.map(p => (typeof p === 'object' ? p.key : p)).join('.') ?? ''}: ${i.message}`).join('; ')}`, 'fix `run`, or the schema', { status: 500 })
 }
 
 /** Q005 (dev): what JSON would change on the way to the client. */

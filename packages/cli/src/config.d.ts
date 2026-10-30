@@ -64,6 +64,8 @@ export interface WeftConfig {
   check?: { include?: readonly string[]; exclude?: readonly string[] }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig
+  /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */
+  runtime?: 'node' | 'bun' | 'deno'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */
   slots?: { [id: string]: string | Record<string, string> }
 }

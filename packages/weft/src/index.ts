@@ -52,6 +52,8 @@ export const rt: {
   data?: SsrData
   /** Server only: fetches the current render started, and a hole resolver (weft/ssr). */
   wait?: Promise<unknown>[]
+  /** Resources outside any Boundary: `settle()` waits for them, since they have nowhere to stream to. */
+  top?: Promise<unknown>[]
   resolve?: (v: unknown) => string
   /** Server only: fetches in flight by resource key, so a later render pass waits on them instead of refetching. */
   flight?: Map<string, Promise<unknown>>

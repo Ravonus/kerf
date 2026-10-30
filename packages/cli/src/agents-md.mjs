@@ -43,6 +43,7 @@ export async function agentsMd(root) {
   const notYet = catalog.filter(e => e.by === 'compiler' && !info.status[e.code]?.implemented).map(e => e.code)
   const pcodes = catalog.filter(e => e.by === 'cli' && e.code.startsWith('P')).map(e => e.code)
   const dcodes = catalog.filter(e => /^D0/.test(e.code) && (e.by === 'cli' || info.status[e.code]?.implemented)).map(e => e.code)
+  const startApp = existsSync(join(root, 'src', 'routes'))
   const tcodes = catalog.filter(e => e.code.startsWith('T') && info.status[e.code]?.implemented).map(e => e.code)
 
   // with plugins: the `weft plugins` command and their sections; without, neither
@@ -77,15 +78,19 @@ export async function agentsMd(root) {
     '',
     '## Diagnostics this weft reports',
     '',
-    '| Code | Catches | Fix |',
-    '|---|---|---|',
-    ...reported.map(e => `| ${e.code} | ${e.catches} | ${e.fix}${info.status[e.code].autofix ? ' (autofix)' : info.status[e.code].suggestion ? ' (suggested edit)' : ''} |`),
+    // A full-stack app's section takes the room of the Fix column; `weft check --json` prints each fix anyway.
+    ...(startApp
+      ? ['| Code | Catches |', '|---|---|', ...reported.map(e => `| ${e.code} | ${e.catches} |`)]
+      : ['| Code | Catches | Fix |', '|---|---|---|', ...reported.map(e => `| ${e.code} | ${e.catches} | ${e.fix}${info.status[e.code].autofix ? ' (autofix)' : info.status[e.code].suggestion ? ' (suggested edit)' : ''} |`)]),
     '',
     tcodes.length ? `Test checks (\`weft check\` on \`*.test.*\` files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
     `Project checks: ${ranges(pcodes)}. In the catalog but not reported yet: ${ranges(notYet)}. \`weft docs <code>\` explains any code.`,
     '',
     'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code (T010) and kill a mutant of the changed lines (T011); weakening a test is T020. More: `weft docs verify`.',
     '',
+    ...(startApp
+      ? ['## Full stack', '', readDoc('start-short'), '']
+      : []),
     ...(styled
       ? ['## Styling',
          '',
