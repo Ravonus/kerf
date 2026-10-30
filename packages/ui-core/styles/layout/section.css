@@ -1,0 +1,15 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Section — vertical rhythm with an optional header; band = full-bleed surface */
+:where([data-scope="section"]) {
+  display: flex; flex-direction: column; gap: var(--warp-space-group); padding-block: var(--warp-space-section);
+}
+:where([data-scope="section"][data-divided]) { border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="section"][data-variant="band"]) {
+  background: var(--warp-color-surface); border-block: var(--warp-border-hairline) solid var(--warp-color-border);
+  padding-inline: max(var(--warp-space-page), var(--warp-safe-left)) max(var(--warp-space-page), var(--warp-safe-right));
+}
+:where([data-scope="section"][data-variant="inset"]) {
+  background: var(--warp-color-surface-sunken); border-radius: var(--warp-radius-surface); padding: var(--warp-pad-surface);
+}
+}

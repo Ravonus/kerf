@@ -44,6 +44,8 @@ export const ENTRIES = {
   Modal: ['Modal', '<Modal open={open} title="T">x</Modal>'],
   Drawer: ['Drawer', '<Drawer open={open} title="T">x</Drawer>'],
   Toaster: ['Toaster', '<Toaster />'],
+  Table: ['Table', '<Table caption="Projects" rows={[]} columns={[{ id: "name", header: "Name", sort: true }]} filter="Filter" selection page={{ size: 25 }} />'],
+  Shell: ['Shell', '<Shell brand={{ name: "Loom" }} title="Orders" nav={[{ items: [{ id: "a", label: "A", href: "/" }] }]} account={{ name: "A", initials: "A" }}>x</Shell>'],
 }
 
 async function measure(name, [imp, jsx]) {

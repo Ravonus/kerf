@@ -1,0 +1,23 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* PageHeader — eyebrow · title · description | actions; meta row; tabs slot */
+:where([data-scope="page-header"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-group); min-inline-size: 0;
+}
+:where([data-scope="page-header"] [data-part="heading"]) { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
+:where([data-scope="page-header"] [data-part="eyebrow"]) {
+  font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="page-header"] [data-part="title"]) {
+  margin: 0; font-family: var(--warp-text-title-font); font-size: var(--warp-text-title-size); font-weight: var(--warp-text-title-weight);
+  letter-spacing: var(--warp-text-title-tracking); line-height: var(--warp-text-title-leading); text-wrap: balance;
+}
+:where([data-scope="page-header"] [data-part="description"]) { margin: 0; color: var(--warp-color-text-subtle); max-inline-size: var(--warp-layout-measure); }
+:where([data-scope="page-header"] [data-part="actions"]) { display: flex; flex-wrap: wrap; gap: var(--warp-space-related); }
+:where([data-scope="page-header"] [data-part="meta"]) { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight) var(--warp-space-group); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+@container (min-width: 600px) {
+:where([data-scope="page-header"]) { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+:where([data-scope="page-header"] > :not([data-part="heading"], [data-part="actions"])) { grid-column: 1 / -1; }
+}
+}

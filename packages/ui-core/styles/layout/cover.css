@@ -1,0 +1,11 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Cover — fills the screen; one child is centred, header/footer hug the edges */
+:where([data-scope="cover"]) {
+  display: flex; flex-direction: column; gap: var(--_gap, var(--warp-space-group));
+  min-block-size: var(--warp-viewport-block);
+  padding-block: max(var(--warp-space-group), var(--warp-safe-top)) max(var(--warp-space-group), var(--warp-safe-bottom));
+}
+:where([data-scope="cover"][data-min="fill"]) { min-block-size: 100%; }
+:where([data-scope="cover"] > [data-part="center"]) { margin-block: auto; }
+}

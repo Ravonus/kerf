@@ -205,6 +205,8 @@ const catalog = [
   ['Modal', 'Native modal dialog; alert dialog'],
   ['Drawer', 'Sheet: side on wide screens, bottom on phones'],
   ['Toaster', 'Toast region; toast.show() from anywhere'],
+  ['Table', 'Data table: sort, filter, Columns, resize, pin, selection, bulk bar, details, inline edit, live cells, phone cards'],
+  ['Shell', 'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant'],
 ].map(([name, summary]) => ({ name, import: '@weft/warp', summary }))
 
 export const warp = definePlugin({

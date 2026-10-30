@@ -264,9 +264,18 @@
 :where([data-scope="table"] [data-part="expand"]:hover) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor 8%, transparent); }
 :where([data-scope="table"] [data-part="expand"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
 :where([data-scope="table"] tr[data-part="detail"] > td) {
-  white-space: normal; block-size: auto; padding-block: var(--warp-space-group); background: var(--warp-color-surface);
+  white-space: normal; block-size: auto; padding-block: 0; background: var(--warp-color-surface);
 }
-:where([data-scope="table"] tr[data-part="detail"] > td > *) { animation: warp-enter var(--warp-duration-base) var(--warp-ease-out); }
+/* details slide open in place at every width, the row below moves down; closing runs it backwards */
+@keyframes warp-slide-open { from { grid-template-rows: 0fr; } }
+:where([data-scope="table"] [data-part="slide"]) {
+  display: grid; grid-template-rows: 1fr;
+  animation: warp-slide-open calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-out);
+  transition: grid-template-rows calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-out);
+}
+:where([data-scope="table"] [data-part="slide"][data-closing]) { grid-template-rows: 0fr; }
+:where([data-scope="table"] [data-part="slide"] > div) { min-block-size: 0; overflow: hidden; }
+:where([data-scope="table"] [data-part="slide"] > div > div) { padding-block: var(--warp-space-group); }
 
 /* inline edit: an editable cell shows a hairline on hover; editing swaps in an input */
 :where([data-scope="table"] [data-editable]) { cursor: text; }
@@ -303,6 +312,7 @@
   animation: warp-enter var(--warp-duration-base) var(--warp-ease-out);
 }
 :where([data-scope="table"] [data-part="bulk"][hidden]) { display: none; }
+:where([data-scope="table"] [data-part="bulk"] [data-scope="button"]) { color: var(--warp-color-on-inverse); }
 :where([data-scope="table"] [data-part="bulk"] b) { font-weight: 600; margin-inline-end: auto; font-variant-numeric: tabular-nums; }
 
 /* footer + pagination (page or cursor) */
@@ -369,6 +379,7 @@
   /* the disclosure button (opens the sheet) sits in the badge column, under the badge */
   :where([data-scope="table"][data-phone="cards"] tbody tr > :has(> [data-part="expand"])) { grid-column: 3; grid-row: 2; justify-content: end; padding: 0; }
   :where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="title"])::before { content: none; }
+  :where([data-scope="table"][data-phone="cards"] tbody tr[data-part="detail"] > td) { display: block; padding-inline: 14px; text-align: start; }
   :where([data-scope="table"][data-phone="cards"] tbody tr > [data-part="select"]) { grid-column: 1; grid-row: 1; inline-size: auto; padding: 0 0 6px;
     min-block-size: var(--warp-target-min); min-inline-size: var(--warp-target-min); align-items: center; justify-content: center; }  /* 44×44 cell on coarse */
   :where([data-scope="table"][data-phone="cards"] tbody tr > [data-card="badge"]) { grid-column: 3; grid-row: 1; padding-block-end: 6px; }

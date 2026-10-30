@@ -1,0 +1,25 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* pagination bar -------------------------------------------------------------- */
+:where([data-scope="pagination"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="pagination"] ol) { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="pagination"] [data-part="page"]) {
+  all: unset; position: relative; box-sizing: border-box; display: grid; place-items: center; min-inline-size: var(--warp-control-sm); block-size: var(--warp-control-sm);
+  padding-inline: 6px; border-radius: var(--warp-radius-control); color: var(--warp-color-text); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+:where([data-scope="pagination"] [data-part="page"])::after { content: ""; position: absolute; inset: min(0px, calc((var(--warp-control-sm) - var(--warp-hit-min)) / 2)) -1px; }
+:where([data-scope="pagination"] [data-part="page"]:hover) { background: var(--warp-color-surface-hover); }
+:where([data-scope="pagination"] [data-part="page"]:focus-visible) { outline: 2px solid var(--warp-color-focus); }
+:where([data-scope="pagination"] [data-part="page"][aria-current="page"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+:where([data-scope="pagination"] [data-part="page"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
+:where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
+:where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
+@container (max-width: 520px) {
+:where([data-scope="pagination"] [data-part="page"]:not([aria-current], [data-edge])) { display: none; }
+:where([data-scope="pagination"] [data-part="gap"]) { display: none; }
+}
+/* pagination: pages are sm wide with a 2px gap (a 38px pitch: 24px floor + spacing); the edge buttons
+   (previous, next) reach outward to hit-min */
+:where([data-scope="pagination"] ol > li:first-child > [data-part="page"])::after { inset-inline-start: min(-1px, calc(100% + 1px - var(--warp-hit-min))); }
+:where([data-scope="pagination"] ol > li:last-child > [data-part="page"])::after { inset-inline-end: min(-1px, calc(100% + 1px - var(--warp-hit-min))); }
+}

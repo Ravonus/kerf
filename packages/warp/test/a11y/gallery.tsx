@@ -6,6 +6,7 @@ import { Button } from '../../src/Button'
 import { Kbd } from '../../src/Kbd'
 import { Spinner } from '../../src/Spinner'
 import { Tooltip } from '../../src/Tooltip'
+import { Dashboard, Tables } from '../fixtures/Data'
 import { Alerts, Buttons, Choices, Fields, Icons, Overlays, Surfaces, Tabbed, Toasts, Toggles, seedToasts } from '../fixtures/Variants'
 
 function Static() {
@@ -32,5 +33,8 @@ function Static() {
 
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
-const View = part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
+const View = part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
+// the shell brings its own main
+const host = document.getElementById('root')!
+if (part === 'shell') host.replaceWith(Object.assign(document.createElement('div'), { id: 'root' }))
 render(() => <View />, document.getElementById('root')!)

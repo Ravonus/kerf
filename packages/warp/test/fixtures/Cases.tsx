@@ -17,7 +17,9 @@ import { Popover } from '../../src/Popover'
 import { Progress } from '../../src/Progress'
 import { Skeleton } from '../../src/Skeleton'
 import { Shape } from '../../src/Shape'
+import { Shell } from '../../src/Shell'
 import { Spinner } from '../../src/Spinner'
+import { Table } from '../../src/Table'
 import { Tabs } from '../../src/Tabs'
 import { Tag } from '../../src/Tag'
 import { Toaster, toast } from '../../src/Toast'
@@ -130,4 +132,27 @@ export function DrawerCase() {
 }
 export function ToastCase() {
   return <><Toaster /><Drive onClick={() => toast.show({ title: 'Saved', tone: 'positive' })} /></>
+}
+
+const projects = [{ id: 'a', name: 'Apollo', budget: 300 }, { id: 'b', name: 'Borealis', budget: 100 }, { id: 'c', name: 'Cirrus', budget: 200 }]
+const projectColumns = [
+  { id: 'name', header: 'Project', rowHeader: true, pin: true, sort: true, card: 'title' as const },
+  { id: 'budget', header: 'Budget', numeric: true, sort: true, priority: 2 as const },
+]
+export function TableSortCase() {
+  return <Table caption="Projects" rows={projects} columns={projectColumns} picker={false} />
+}
+export function TableSelectCase() {
+  return <Table caption="Projects" rows={projects} columns={projectColumns} selection picker={false} />
+}
+export function TableFilterCase() {
+  return <Table caption="Projects" rows={projects} columns={projectColumns} filter="Filter projects" picker={false} />
+}
+export function TableLiveCase() {
+  const rows = state(projects)
+  return <><Table caption="Projects" rows={rows} columns={[projectColumns[0], { id: 'budget', header: 'Budget', numeric: true, live: true }]} picker={false} /><Drive onClick={() => (rows.value = rows.value.map(r => (r.id === 'a' ? { ...r, budget: 301 } : r)))} /></>
+}
+const shellNav = [{ label: 'Workspace', items: [{ id: 'orders', label: 'Orders', icon: 'search' as const, href: '#o', count: 3 }, { id: 'people', label: 'People', icon: 'info' as const, href: '#p' }] }]
+export function ShellCase() {
+  return <Shell brand={{ name: 'Loom' }} title="Orders" crumbs={[{ label: 'Home', href: '#' }, { label: 'Orders' }]} nav={shellNav} current="orders" island label="Orders" account={{ name: 'Ana Ruiz', initials: 'AR', items: [{ label: 'Profile', href: '#' }, 'separator', { label: 'Sign out', tone: 'critical' }] }}><h1>Orders</h1></Shell>
 }

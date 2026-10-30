@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+:where([data-scope="locale"]) { display: contents; }
+:where([data-scope="locale"][data-box]) { display: block; }
+}

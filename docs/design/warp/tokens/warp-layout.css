@@ -260,6 +260,8 @@
    The root is the container; anything that changes per form is set on
    [data-part="layout"] or deeper (an element can't query itself).
    ======================================================================== */
+/* the shell owns the viewport, so nothing may inset it */
+:where(body:has([data-scope="shell"])) { margin: 0; overflow-x: clip; }
 :where([data-scope="shell"]) {
   container: warp-shell / inline-size;
   --_navw: 0px;

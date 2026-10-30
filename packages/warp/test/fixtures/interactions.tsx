@@ -48,5 +48,25 @@ export const cases: Record<keyof typeof C, Case> = {
   PopoverCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-expanded')).toBe('true'), budget: 7, runs: 2 },
   ModalCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 2, runs: 1 },
   DrawerCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 3, runs: 1 },
+  TableSortCase: {
+    act: r => q(r, '[data-part="sort"]').click(),
+    see: r => { expect(q(r, 'th[data-col="name"]').getAttribute('aria-sort')).toBe('ascending'); expect(r.querySelector('tbody tr td[data-col="name"]')!.textContent).toBe('Apollo') }, budget: 3, runs: 12,
+  },
+  TableSelectCase: {
+    act: r => r.querySelectorAll<HTMLElement>('tbody input')[1].click(),
+    see: r => { expect(r.querySelectorAll('tr[data-selected]')).toHaveLength(1); expect((q(r, 'thead input') as HTMLInputElement).indeterminate).toBe(true); expect(q(r, '[data-part="bulk"] b').textContent).toBe('1 selected') }, budget: 3, runs: 7,
+  },
+  TableFilterCase: {
+    act: r => type(r, 'bor'),
+    see: r => { expect(r.querySelectorAll('tbody tr')).toHaveLength(1); expect(q(r, '[data-part="count"]').textContent).toBe('1 of 3') }, budget: 6, runs: 13,
+  },
+  TableLiveCase: {
+    act: drive,
+    see: r => { expect(q(r, 'td[data-col="budget"]').textContent).toBe('301'); expect(q(r, 'td[data-col="budget"]').dataset.delta).toBe('up') }, budget: 2, runs: 13,
+  },
+  ShellCase: {
+    act: r => q(r, '[aria-haspopup="menu"]').click(),
+    see: r => { expect(q(r, '[data-part="menu"]').hidden).toBe(false); expect(document.activeElement!.textContent).toBe('Profile') }, budget: 3, runs: 4,
+  },
   ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 5 },
 }

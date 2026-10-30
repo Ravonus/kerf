@@ -1,0 +1,23 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Banner — page-level message inside main (not a toast, not a modal). */
+:where([data-scope="banner"]) {
+  --_t: var(--warp-color-info-text); --_s: var(--warp-color-info-soft); --_b: var(--warp-color-info-border);
+  display: flex; align-items: flex-start; gap: var(--warp-space-related) var(--warp-space-group); flex-wrap: wrap;
+  padding: var(--warp-space-related) var(--warp-pad-control) var(--warp-space-related) var(--warp-space-group);
+  border: var(--warp-border-hairline) solid var(--_b); border-inline-start: var(--warp-border-emphasis) solid var(--_t);
+  border-radius: var(--warp-radius-control); background: var(--_s); color: var(--warp-color-text);
+  animation: warp-route-in var(--warp-duration-base) var(--warp-ease-out) both;
+}
+:where([data-scope="banner"][data-tone="positive"]) { --_t: var(--warp-color-positive-text); --_s: var(--warp-color-positive-soft); --_b: var(--warp-color-positive-border); }
+:where([data-scope="banner"][data-tone="caution"]) { --_t: var(--warp-color-caution-text); --_s: var(--warp-color-caution-soft); --_b: var(--warp-color-caution-border); }
+:where([data-scope="banner"][data-tone="critical"]) { --_t: var(--warp-color-critical-text); --_s: var(--warp-color-critical-soft); --_b: var(--warp-color-critical-border); }
+:where([data-scope="banner"][data-tone="accent"]) { --_t: var(--warp-color-accent-text); --_s: var(--warp-color-accent-soft); --_b: var(--warp-color-accent-border); }
+:where([data-scope="banner"] > [data-part="icon"]) { color: var(--_t); flex: none; margin-block-start: 3px; }
+:where([data-scope="banner"] > [data-part="body"]) { flex: 1 1 16rem; min-inline-size: 0; padding-block: 2px; }
+:where([data-scope="banner"] > [data-part="body"] b) { font-weight: 600; }
+:where([data-scope="banner"] > [data-part="actions"]) { display: flex; gap: var(--warp-space-related); align-items: center; }
+@keyframes warp-route-in {
+  from { opacity: 0; transform: translateY(calc(var(--warp-motion-distance) * 0.75)); }
+}
+}

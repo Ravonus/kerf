@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+:where([data-scope="inset"]) { padding: var(--warp-space-group); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-sunken); }
+:where([data-scope="inset"][data-pad="section"]) { padding: var(--warp-space-section); }
+}

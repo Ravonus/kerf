@@ -116,10 +116,10 @@ with Retry). The frame keeps its height. Rows are idle, hover, `data-selected`, 
 - **Live cells** (§7).
 
 **Phone, tablet, desktop.** The table queries its own container.
-- **≥ 1000px:** every column shows, and rows expand in place.
-- **600–999px:** `data-priority="3"` columns hide, and a row opens a detail **sheet** (`role="dialog"`, Escape
-  closes it and returns focus).
-- **< 600px:** depends on the use case, which the author declares.
+- **≥ 1000px:** every column shows, and rows slide open in place (under reduced motion, at once).
+- **600–999px:** `data-priority="3"` columns hide, and rows slide open in place. `details="sheet"` opens a detail
+  **sheet** instead (`role="dialog"`, Escape closes it and returns focus).
+- **< 600px:** rows slide open under their card. The layout depends on the use case, which the author declares.
   - `data-phone="cards"` is for **entity lists**. The same `<table>` becomes stacked cards: cells are labelled by
     `data-label`, `data-card="title|badge|hide"` places them, a sort bar replaces the headers, and the explicit ARIA
     table roles survive the display change.

@@ -9,6 +9,7 @@
 //
 //   node scripts/a11y.mjs                         the gallery (test/a11y: every component, fixtures/Variants.tsx)
 //   node scripts/a11y.mjs shop=<dist dir> [--json] also a built v3 shop (evals/warp-exit.mjs builds and passes it)
+//   node scripts/a11y.mjs --stop=quiet/dark/full   one stop, while fixing what it finds
 //
 // Exit 1 on any violation, page error or motion leak.
 import { createServer } from 'node:http'
@@ -51,6 +52,57 @@ const SCENARIOS = {
     await page.goto(`${url}?part=toasts`)
     await settle(page)
     await audit('toasts')
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${url}?part=table`)
+    await settle(page)
+    await audit('tables')
+    await page.getByRole('checkbox', { name: 'Select Apollo' }).check({ force: true })
+    await page.getByRole('button', { name: 'Details for Apollo' }).click()
+    await audit('row selected and open')
+    await page.getByRole('button', { name: 'Columns' }).first().click()
+    await audit('columns open')
+    await page.keyboard.press('Escape')
+    await page.getByRole('searchbox', { name: 'Filter projects' }).fill('zzz')
+    await audit('filter, no match')
+    await page.setViewportSize({ width: 800, height: 800 })
+    await page.goto(`${url}?part=table`)
+    await page.getByRole('button', { name: 'Details for Apollo' }).click()
+    await audit('tablet, details open')
+    await page.goto(`${url}?part=table&sheet`)
+    await page.getByRole('button', { name: 'Details for Apollo' }).click()
+    await audit('tablet, detail sheet')
+    await page.setViewportSize({ width: 390, height: 800 })
+    await page.goto(`${url}?part=table`)
+    await settle(page)
+    await audit('phone cards')
+    await page.getByRole('button', { name: 'Details for Apollo' }).click()
+    await audit('phone card, details open')
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${url}?part=shell`)
+    await settle(page)
+    await audit('desktop shell')
+    await page.getByRole('button', { name: 'Account: Ana Ruiz' }).click()
+    await audit('account menu')
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Collapse sidebar' }).click()
+    await audit('collapsed sidebar')
+    await page.setViewportSize({ width: 800, height: 800 })
+    await page.reload()
+    await settle(page)
+    await audit('tablet rail')
+    await page.getByRole('button', { name: 'Expand navigation' }).click()
+    await audit('rail overlay')
+    await page.setViewportSize({ width: 390, height: 800 })
+    await page.reload()
+    await settle(page)
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight)) // nothing left under the sticky bottom bar
+    await audit('phone bars')
+    await page.getByRole('button', { name: 'More' }).click()
+    await audit('more sheet')
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${url}?part=shell&focus`)
+    await settle(page)
+    await audit('focus shell')
   },
   async shop(page, audit, url) {
     await page.goto(url)
@@ -72,7 +124,7 @@ const hex = c => `#${c.map(v => Math.round(v).toString(16).padStart(2, '0')).joi
 /**
  * WCAG contrast of the text in `[data-a11y-px=i]`, measured: the text's own colour (resolved through a canvas, so
  * oklch and color-mix work, times every ancestor's opacity) over the backgrounds actually painted under its text box
- * (a screenshot with the text made transparent), unless an overlay covers it. Every background covering ≥ 10% of the box counts; the worst wins.
+ * (a screenshot with the text made transparent), unless an overlay or scrim covers it. Every background covering ≥ 10% of the box counts; the worst wins.
  */
 async function pixelContrast(page, i) {
   const sel = `[data-a11y-px="${i}"]`
@@ -82,10 +134,13 @@ async function pixelContrast(page, i) {
     el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })
     const range = document.createRange()
     range.selectNodeContents(el)
-    const box = range.getBoundingClientRect()
+    // clipped to the element: a visually hidden child's text is measured at full width but never painted
+    const own = el.getBoundingClientRect(), all = range.getBoundingClientRect()
+    const left = Math.max(all.left, own.left), right = Math.min(all.right, own.right)
+    const box = own.width ? { x: left, y: all.y, width: right - left, height: all.height } : all
     if (box.width < 1 || box.height < 1) return null
     // covered by an overlay in the top layer (an open tooltip over the text above its trigger): not this text's contrast
-    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog')
+    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog, [data-part="scrim"]')
     if (top && !top.contains(el)) return null
     const cs = getComputedStyle(el)
     let alpha = 1
@@ -100,7 +155,9 @@ async function pixelContrast(page, i) {
   }, sel)
   if (!info || info.a < 0.05) return null
   const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; }` })
-  const png = await page.screenshot({ clip: info.box, animations: 'disabled' })
+  // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
+  const { x, y, width, height } = info.box
+  const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
   await hide.evaluate(n => n.remove())
   const bgs = await page.evaluate(async b64 => {
     const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob())
@@ -146,7 +203,7 @@ const serve = dir => new Promise(ok => {
 })
 
 /** Run every site at every stop. `sites` is [{ name, dir }] with name a SCENARIOS key. */
-export async function a11y(sites, { log = () => {} } = {}) {
+export async function a11y(sites, { log = () => {}, only } = {}) {
   const { chromium } = require('playwright-core')
   const axe = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   const browser = await chromium.launch()
@@ -155,7 +212,7 @@ export async function a11y(sites, { log = () => {} } = {}) {
     for (const { name, dir } of sites) {
       const server = await serve(dir)
       const url = `http://127.0.0.1:${server.address().port}/`
-      for (const stop of STOPS) {
+      for (const stop of only ? STOPS.filter(s => `${s.expression}/${s.theme}/${s.motion}` === only) : STOPS) {
         const context = await browser.newContext({ colorScheme: stop.theme, reducedMotion: stop.motion === 'reduce' ? 'reduce' : 'no-preference' })
         // the dials live on <html> before any script runs, as an app's server render puts them
         await context.addInitScript(s => {
@@ -225,9 +282,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { mkdtempSync } = await import('node:fs')
   const { tmpdir } = await import('node:os')
   const json = process.argv.includes('--json')
-  const extra = process.argv.slice(2).filter(a => a.includes('=')).map(a => { const [name, dir] = a.split('='); return { name, dir } })
+  const extra = process.argv.slice(2).filter(a => a.includes('=') && !a.startsWith('--')).map(a => { const [name, dir] = a.split('='); return { name, dir } })
   const gallery = await buildGallery(mkdtempSync(join(tmpdir(), 'warp-a11y-')))
-  const r = await a11y([{ name: 'gallery', dir: gallery }, ...extra], { log: json ? () => {} : l => console.error(l) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
   if (json) console.log(JSON.stringify(r, null, 2))
   else {
     for (const f of r.spec) console.error(`spec finding ${f.where} (${f.theme}, ${f.stops.length} runs): ${f.why}`)
