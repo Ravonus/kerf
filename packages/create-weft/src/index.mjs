@@ -12,16 +12,46 @@ import { loginPage, stackDeps, stackFiles, todosPage } from './stack.mjs'
 export const UI = ['warp', 'headless', 'none']
 export const DB = ['sqlite', 'postgres', 'none']
 export const RUNTIMES = ['node', 'bun', 'deno']
+export const CONFIGS = ['ts', 'json', 'yaml']
 
 
 const json = v => JSON.stringify(v, null, 2) + '\n'
 const title = name => name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
+/** `weft.config.ts`, `.json` or `.yaml`: one schema, so the same app in each (research 34 §2). */
+function configFile(format, { ui, label, runtime }) {
+  const site = { name: label, title: `%s · ${label}`, description: 'Made with weft.' }
+  if (format === 'json') {
+    const config = { $schema: './.weft/config.schema.json', site, ...(ui === 'warp' && { plugins: ['@weft/warp'] }), ...(runtime !== 'node' && { runtime }) }
+    return { 'weft.config.json': json(config) }
+  }
+  if (format === 'yaml') {
+    return {
+      'weft.config.yaml':
+        `# yaml-language-server: $schema=./.weft/config.schema.json\nsite:\n` +
+        Object.entries(site).map(([k, v]) => `  ${k}: ${JSON.stringify(v)}\n`).join('') +
+        (ui === 'warp' ? `plugins:\n  - "@weft/warp"\n` : '') +
+        (runtime !== 'node' ? `runtime: ${runtime}\n` : ''),
+    }
+  }
+  return {
+    'weft.config.ts':
+      `import { defineConfig } from 'weft/config'\n` +
+      (ui === 'warp' ? `import { warp } from '@weft/warp/plugin'\n` : '') +
+      `\nexport default defineConfig({\n` +
+      `  site: { name: ${JSON.stringify(label)}, title: ${JSON.stringify(site.title)}, description: 'Made with weft.' },\n` +
+      (ui === 'warp' ? `  plugins: [warp()],\n` : '') +
+      (runtime !== 'node' ? `  runtime: '${runtime}',\n` : '') +
+      `})\n`,
+  }
+}
+
 /** The files for an app, as `{ path: text }`. */
-export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db = 'none', auth = false, runtime = 'node', secret = randomBytes(32).toString('base64') } = {}) {
+export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db = 'none', auth = false, runtime = 'node', config = 'ts', secret = randomBytes(32).toString('base64') } = {}) {
   if (!UI.includes(ui)) throw new Error(`--ui must be one of ${UI.join(', ')} (got "${ui}")`)
   if (!DB.includes(db)) throw new Error(`--db must be one of ${DB.join(', ')} (got "${db}")`)
   if (!RUNTIMES.includes(runtime)) throw new Error(`--runtime must be one of ${RUNTIMES.join(', ')} (got "${runtime}")`)
+  if (!CONFIGS.includes(config)) throw new Error(`--config must be one of ${CONFIGS.join(', ')} (got "${config}")`)
   if (auth && db === 'none') throw new Error('--auth keeps users in a database: add --db sqlite or --db postgres')
   const label = title(name)
   const stack = stackDeps({ db, auth })
@@ -38,20 +68,13 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
       dependencies: { ...deps, ...stack.deps },
       devDependencies: { '@weft/cli': version, typescript: '7.0.2', ...stack.dev },
     }),
-    'weft.config.ts':
-      `import { defineConfig } from 'weft/config'\n` +
-      (ui === 'warp' ? `import { warp } from '@weft/warp/plugin'\n` : '') +
-      `\nexport default defineConfig({\n` +
-      `  site: { name: ${JSON.stringify(label)}, title: ${JSON.stringify(`%s · ${label}`)}, description: 'Made with weft.' },\n` +
-      (ui === 'warp' ? `  plugins: [warp()],\n` : '') +
-      (runtime !== 'node' ? `  runtime: '${runtime}',\n` : '') +
-      `})\n`,
+    ...configFile(config, { ui, label, runtime }),
     'tsconfig.json': json({
       compilerOptions: {
         target: 'es2022', module: 'esnext', moduleResolution: 'bundler', strict: true, noEmit: true, skipLibCheck: true,
         jsx: 'preserve', jsxImportSource: 'weft', lib: ['es2023', 'dom', 'dom.iterable'], paths: { '#/*': ['./src/*'] }, types: db === 'none' ? ['weft/client'] : ['weft/client', 'node'],
       },
-      include: ['src', 'weft.config.ts', '.weft/*.d.ts'],
+      include: ['src', ...(config === 'ts' ? ['weft.config.ts'] : []), '.weft/*.d.ts'],
     }),
     '.gitignore': `node_modules/\n.weft/\n.output/\ndist/\n${db === 'none' ? '' : '.env\n.data/\n'}`,
     'src/routes/_layout.tsx': layout(ui, { db, auth }),

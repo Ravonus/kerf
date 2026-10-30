@@ -1,6 +1,7 @@
-// Find, load and validate weft.config.ts. Plugins run only their pure `contribute()` (plugins.mjs); `slots` is data.
+// Find, load and validate weft.config (TypeScript, JSON or YAML, one schema: research 34 §2). Plugins run only their pure
+// `contribute()` (plugins.mjs); `slots` is data.
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire, registerHooks } from 'node:module'
 import { join, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -11,8 +12,8 @@ import { checkSite } from './site.mjs'
 import { contributions } from './plugins.mjs'
 import { bindSlots } from './slots.mjs'
 
-export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs']
-export const builtinNames = ['dev', 'build', 'start', 'db', 'test', 'check', 'fix', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
+export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
+export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'fix', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
 
 const configModule = pathToFileURL(join(fileURLToPath(new URL('.', import.meta.url)), 'config.mjs')).href
 const nativeRequire = createRequire(import.meta.url)
@@ -104,11 +105,64 @@ export const configSchema = z.strictObject({
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),
+  runtime: z.enum(['node', 'bun', 'deno']).optional(),
 })
 
+/** What a JSON or YAML file may hold: data, so a plugin is `name` or `[name, options]`. Also the editor schema. */
+const dataSchema = configSchema.extend({
+  $schema: z.string().optional(),
+  plugins: z.array(z.union([z.string(), z.tuple([z.string(), z.unknown()]), pluginEntry])).optional(),
+})
+
+export const isDataConfig = file => /\.(json|ya?ml)$/.test(file)
+
+const configFiles = root => configNames.map(name => join(root, name)).filter(existsSync)
+
 export function findConfig(root) {
-  for (const name of configNames) if (existsSync(join(root, name))) return join(root, name)
-  return null
+  return configFiles(root)[0] ?? null
+}
+
+/** The schema `$schema` points at, for completion in `weft.config.json` and `.yaml`. */
+export function writeConfigSchema(root) {
+  mkdirSync(join(root, '.weft'), { recursive: true })
+  writeFileSync(join(root, '.weft', 'config.schema.json'), `${JSON.stringify(z.toJSONSchema(dataSchema, { unrepresentable: 'any' }), null, 2)}\n`)
+}
+
+/** `@weft/plugin-text` → `text`, the name a plugin's named export goes by. */
+export const pluginName = pkg => pkg.replace(/^@[^/]+\//, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
+
+/** A plugin module's factory, and its import name: the default, or a named export (`surface-keel` may export `keel`). */
+export function pluginFactory(mod, pkg) {
+  if (typeof mod.default === 'function') return { value: mod.default, name: pluginName(pkg), named: false }
+  const name = [pluginName(pkg), pkg.split('-').at(-1)].find(n => typeof mod[n] === 'function')
+  return name ? { value: mod[name], name, named: true } : null
+}
+
+/** A data plugin from the project's own install: `<name>/plugin` when the package has one, else its main entry. */
+function loadPlugin(root, entry) {
+  if (typeof entry !== 'string' && !Array.isArray(entry)) return entry
+  const [name, options] = [entry].flat()
+  const require = createRequire(join(root, 'package.json'))
+  for (const spec of [`${name}/plugin`, name]) {
+    let path
+    try {
+      path = require.resolve(spec)
+    } catch {
+      continue
+    }
+    const factory = pluginFactory(nativeRequire(path), name)
+    if (!factory) throw new Error(`plugin \`${name}\` exports no factory to call`)
+    return factory.value(options)
+  }
+  throw new Error(`plugin \`${name}\` isn't installed`)
+}
+
+/** A JSON or YAML config as what a `.ts` one evaluates to. */
+function readDataConfig(root, file, text) {
+  const data = file.endsWith('.json') ? JSON.parse(text) : nativeRequire('yaml').parse(text)
+  const { $schema, ...config } = data ?? {}
+  if (Array.isArray(config.plugins)) config.plugins = config.plugins.map(p => loadPlugin(root, p))
+  return config
 }
 
 let generation = 0
@@ -123,13 +177,14 @@ export async function loadConfig(root) {
   const rel = file ? relative(root, file).split('\\').join('/') : 'weft.config.ts'
   const text = file ? readFileSync(file, 'utf8') : ''
   const report = (code, why, near, extra) => diagnostics.push(diagnostic({ code, file: rel, why, ...locate(text, near), ...extra }))
+  const others = configFiles(root).slice(1).map(f => relative(root, f))
+  if (others.length) report('P010', `\`${rel}\` is the config in use, and \`${others.join('`, `')}\` would be ignored.`, null)
 
   let config = {}
   if (file) {
     hook()
     try {
-      const mod = nativeRequire(`${file}.weft-load-${generation++}`)
-      config = mod.default ?? {}
+      config = isDataConfig(file) ? readDataConfig(root, file, text) : (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {})
     } catch (error) {
       // A plugin factory rejecting its options throws while the config module evaluates (weft/plugin).
       if (error?.code === 'P115') report('P115', error.message.split('\n')[0], error.message.match(/^`([^`]+)`/)?.[1] ?? null)

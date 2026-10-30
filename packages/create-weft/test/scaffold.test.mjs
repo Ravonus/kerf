@@ -86,6 +86,21 @@ it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections in
   expect(bytes).toBeLessThan(limit)
 })
 
+it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async format => {
+  const dir = app('warp', { config: format })
+  const r = await check(dir)
+  expect(r.diagnostics).toEqual([])
+  expect(spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' }).stdout).toBe('')
+  const server = await devCommand(dir, { port: await freePort() })
+  try {
+    const html = await (await fetch(server.resolvedUrls.local[0])).text()
+    expect(html).toMatch(/data-scope="surface"/)
+    expect(html).toMatch(/<title[^>]*>App Warp<\/title>/)
+  } finally {
+    await server.close()
+  }
+})
+
 it('the template: warp() only for warp, a stylesheet otherwise, and only weft scripts', () => {
   const warp = template({ ui: 'warp', name: 'shop' })
   expect(warp['weft.config.ts']).toContain("import { warp } from '@weft/warp/plugin'")

@@ -28,7 +28,7 @@ const must = (cmd, args, cwd) => {
 export const REQUEST = 'Add an animated starfield to the home page, with a slider that sets how dense it is.'
 
 if (step === 'prepare') {
-  must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), dir, '--ui', 'warp', '--name', 'stars'], repo)
+  must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), dir, '--ui', 'warp', '--db', 'none', '--name', 'stars'], repo)
   const file = join(dir, 'package.json')
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === 'weft' || name.startsWith('@weft/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft/', ''))}`

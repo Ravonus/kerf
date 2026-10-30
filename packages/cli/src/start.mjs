@@ -1,6 +1,7 @@
 // `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft/start (research 25 §6–7).
 // @weft/start resolves from the app first (its own version), then from this workspace.
 
+import { writeMap } from './map.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -38,6 +39,7 @@ export async function devCommand(root, { port } = {}) {
   // Production takes the host's environment; dev takes `.env`. What's already set wins.
   if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
   const { dev } = await start(root, 'app')
+  await writeMap(root)
   const server = await dev({ root, ...(await site(root)), port })
   return server
 }
@@ -58,6 +60,7 @@ export async function buildCommand(root, { preset, runtime } = {}) {
     const contract = await writeContract({ root, site: config.site, preset })
     const refused = contract.diagnostics.find(d => d.severity === 'error')
     if (refused) throw Object.assign(new Error(`${refused.code}: ${refused.why}`), { code: 'E_USAGE' })
+    await writeMap(root)
     return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: contract.diagnostics.map(d => diagnostic({ ...d, file: '.weft/contract.json' })), ms: Math.round(performance.now() - t) }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD

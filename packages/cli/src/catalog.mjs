@@ -332,6 +332,7 @@ export const catalog = [
   { code: 'M017', severity: 'error', by: 'start', catches: '`ctx.media` or a `/_weft/m/` URL used with no `media.server` provider', fix: 'Add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts' },
   { code: 'M018', severity: 'error', by: 'start', catches: 'An upload refused: it isn\'t an image weft can read, or it\'s over the size limit (422)', fix: 'Raise `media({ server: { maxBytes } })`, or check the file on the client first' },
 
+  { code: 'P010', severity: 'error', by: 'cli', catches: 'More than one weft.config file', fix: 'Keep one: `.ts`, `.json` or `.yaml`' },
   { code: 'P100', severity: 'error', by: 'cli', catches: 'Two providers for a `one` slot (or the same key in a `keyed` slot)', fix: 'Remove one, or name the winner in `slots: {}`' },
   { code: 'P101', severity: 'error', by: 'cli', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },
   { code: 'P102', severity: 'error', by: 'reserved', catches: 'Provider implements no slot interface version this weft supports (P102w: bound through an adapter)', fix: 'Upgrade the plugin or weft' },

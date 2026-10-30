@@ -7,6 +7,8 @@ import { loadConfig } from './load-config.mjs'
 import { slotDef } from './slots.mjs'
 
 export const agentsLimit = 1024
+/** Rows a plugin may add to the agent map. */
+const mapLimit = 5
 const header = '// Generated from weft.config.ts. Do not edit: change weft.config.ts and run `weft plugins sync`.'
 const byName = (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
 
@@ -56,6 +58,7 @@ export function contributions(plugins, report, env) {
       const bytes = Buffer.byteLength(agentsSection(agents))
       if (bytes > agentsLimit) report('P112', `\`${p.name}\`'s AGENTS section is ${bytes} bytes (limit ${agentsLimit}).`, p.name)
     }
+    if ((manifest.map?.length ?? 0) > mapLimit) report('P112', `\`${p.name}\` adds ${manifest.map.length} map rows (limit ${mapLimit}).`, p.name)
     const tns = manifest.tokens?.namespace
     if (tns) {
       if (tokenOwner.has(tns)) report('P113', `Token namespace \`${tns}\` is contributed by both \`${tokenOwner.get(tns)}\` and \`${p.name}\`.`, p.name)

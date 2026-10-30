@@ -8,8 +8,9 @@ import { isAbsolute, join, relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { diagnostic, locate, positions, sortDiagnostics, summarize } from './diag.mjs'
 import { discover } from './files.mjs'
-import { loadConfig } from './load-config.mjs'
+import { isDataConfig, loadConfig, writeConfigSchema } from './load-config.mjs'
 import { sync } from './plugins.mjs'
+import { writeMap } from './map.mjs'
 import { projectView } from './project.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
@@ -44,6 +45,9 @@ export async function check(root, options = {}) {
   const { config } = loaded
   // Slot modules and plugin token files stay current with the config (research 13 §2.6).
   if (!loaded.diagnostics.some(d => d.code === 'P007') && (config.plugins?.length || existsSync(join(root, '.weft', 'slots')))) sync(root, loaded)
+
+  if (loaded.file && isDataConfig(loaded.file)) writeConfigSchema(root)
+  if (existsSync(join(root, '.weft'))) await writeMap(root)
 
   const exclude = [...(config.check?.exclude ?? []), ...(config.scope?.forbid ?? [])]
   const given = options.files?.map(f => posix(relative(root, isAbsolute(f) ? f : join(root, f))))
