@@ -1,8 +1,9 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { addCommand } from '../src/add.mjs'
+import { addCommand, pinned } from '../src/add.mjs'
 import { loadConfig } from '../src/load-config.mjs'
 import { project } from './helpers.mjs'
 
@@ -162,5 +163,11 @@ describe('weft add db', () => {
     await expect(addDb(app(), { engine: 'oracle' })).rejects.toMatchObject({ code: 'E_USAGE' })
     await expect(addDb(app(), { layer: 'sequel' })).rejects.toMatchObject({ code: 'E_USAGE' })
   })
-})
 
+  it('installs a package an app has as a local tarball from that tarball', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'weft-add-'))
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ overrides: { '@weft/warp': 'file:/x/warp.tgz', zod: '4.0.0' } }))
+    expect(pinned(dir, ['@weft/warp@0.0.0', 'zod@4.6.7'])).toEqual(['zod@4.6.7'])
+    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@weft/warp': 'file:/x/warp.tgz' })
+  })
+})

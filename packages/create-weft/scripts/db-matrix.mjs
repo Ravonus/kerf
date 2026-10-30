@@ -12,11 +12,11 @@
 // whose accounts can create databases. An engine with no URL is skipped and reported. Exit 1 on any failure.
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { scaffold } from '../src/index.mjs'
+import { packAll, pin, pkgs } from './tarballs.mjs'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -25,19 +25,10 @@ const { values, positionals } = parseArgs({
 if (!positionals[0]) throw new Error('usage: db-matrix.mjs <empty-dir>')
 const root = resolve(positionals[0])
 if (existsSync(root) && readdirSync(root).length) throw new Error(`${root} is not empty`)
-const pkgs = fileURLToPath(new URL('../../', import.meta.url))
-const tgz = join(root, 'tgz')
 const script = name => join(pkgs, 'start/scripts', name)
 const sh = (cmd, args, cwd, env) => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, ...env } })
 
-mkdirSync(tgz, { recursive: true })
-const tarballs = {}
-for (const dir of readdirSync(pkgs)) {
-  const file = join(pkgs, dir, 'package.json')
-  if (!existsSync(file)) continue
-  const { name } = JSON.parse(readFileSync(file, 'utf8'))
-  tarballs[name] = `file:${join(tgz, sh('npm', ['pack', '--silent', '--pack-destination', tgz], join(pkgs, dir)).trim().split('\n').pop())}`
-}
+const tarballs = packAll(join(root, 'tgz'))
 
 const SERVER = { mysql: process.env.WEFT_MATRIX_MYSQL, postgres: process.env.WEFT_MATRIX_POSTGRES }
 let fresh = 0
@@ -80,9 +71,7 @@ for (const { layer, db, seam } of combos) {
       copyFileSync(new URL('auth.server.ts', from), join(app, 'src/auth.server.ts'))
       copyFileSync(new URL('session.ts', from), join(app, 'src/server/session.ts'))
     }
-    const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
-    for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name in deps) if (tarballs[name]) deps[name] = tarballs[name]
-    writeFileSync(join(app, 'package.json'), JSON.stringify({ ...pkg, overrides: tarballs }, null, 2))
+    writeFileSync(join(app, 'package.json'), JSON.stringify(pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs), null, 2))
     step('install', 'npm', ['install', '--silent'])
     const bin = name => join(app, 'node_modules/.bin', name)
     if (seam === 'add') step('weft add auth', bin('weft'), ['add', 'auth'])
