@@ -1,6 +1,7 @@
 # 23 — Style groups: named, grouped styles instead of class storms (design)
 
-Research date: 2026-10-29. Status: **design; step 1 (the spike) done and passed, results in §6**. Builds on [03](03-design-language.md) (tokens, intent
+Research date: 2026-10-29. Status: **design; step 1 (the spike) done and passed, results in §6; step 2 (the matrix,
+`weft style`, MCP tools, AGENTS.md, D020–D025) built, §7**. Builds on [03](03-design-language.md) (tokens, intent
 props, adapters) and warp's CSS contract (`docs/design/warp/`, PLAN §6.1). Number 22 is taken by the verify-loop
 branch. Statements about other tools are from their docs as fetched today and marked **(unverified)** where a version
 or detail matters.
@@ -122,8 +123,9 @@ Three levels, from most to least preferred:
 2. **A compound** (`when: { status: 'late', density: 'compact' }, part: 'meta', set: { … }`) for a combination that
    needs something neither axis gives alone, as Panda's compound variants do.
 3. **A one-off accent at the call site**: `orderCard({ status: 'late', accent: { radius: 'round' } })`. Still
-   token-only, still the same group, and it renders as an attribute on that element, so it stays visible. The matrix
-   records every accent and where it's used. When the same accent appears three times, `weft check` suggests
+   token-only, still the same group, and it renders as an attribute on that element, so it stays visible
+   (`data-accent="radius:round"`, as built in step 2: one word per intent, sorted). The matrix records every accent
+   and where it's used. When the same accent appears three times, `weft check` suggests
    promoting it to an axis value (D022) with an autofix.
 
 Tone works the way warp's does: a tone sets local channel variables (`--_solid`, `--_text`, `--_border`…) once, and
@@ -185,6 +187,9 @@ Groups are the unit; Tailwind can be the input. Three entry points, all opt-in:
   axis, compound, accent), as `weft explain` does for compiled code.
 - Humans don't need the file. The markup names the group and the variation, and the group's definition is in the
   file that uses it, with a doc comment.
+- As built (§7), `tokens` at the top level is `vocab` (intent → token names: the closed vocabulary, not token values),
+  `resolved` is keyed by place (`base`, `status=late`, `part title`, `state selected`, `compound 0`), and each group
+  also lists `escapes` (D023), `compounds`, `binding`/`exported` (how to import it) and `contextTone`.
 
 ### 2.5 The compiler
 
@@ -228,14 +233,36 @@ mode only if semantic output costs more than ~20% CSS on a real app.
 
 | Code | Severity | Rule | Autofix |
 |---|---|---|---|
-| D020 | warning | An element carries more than 8 utility classes, or the same class list appears in 2+ places | Extract a group (name suggested from the component and element) |
+| D020 | warning | An element carries more than 8 utility classes, or the same class list (4+ classes) appears in 2+ places | Extract a group (name suggested from the component and element) |
 | D021 | warning | Two groups resolve to ≥ 90% the same CSS | Merge into one group with an axis |
 | D022 | info | The same accent appears 3+ times | Promote it to an axis value |
 | D023 | warning | A `css: {…}` escape or a raw value in a group | Suggest the nearest token |
-| D024 | error | Two values in one group set the same property (Tailwind input or compound overlap) without an explicit order | Show both and the winner |
-| D025 | error | Unknown group, axis value or part (also a type error) | The closest names from the matrix |
+| D024 | error | Two values in one group set the same property without an explicit order, or two groups claim one element | Show both and the winner |
+| D025 | error | Unknown group, axis, axis value, state, part, intent or token (also a type error) | The closest names from the matrix |
 
-warp's contrast gate keeps its own code (D010, in the warp branch).
+Exactly what each code fires on, as step 2 defines them (W060, "not a literal", stays a compiler W-code: it's about
+evaluating code, not about styles):
+
+- **D020** (`weft check`, any `.tsx`/`.jsx`): a static `class`/`className` string with more than 8 classes, or the same
+  class list (4+ classes, any order) in two or more places. Groups never produce a class, so this only finds class soup
+  written by hand, and it names a group from the component and the element (`order-card` for `<article>` in
+  `OrderCard`).
+- **D021** (matrix): two groups whose resolved declarations (base, parts, every axis value, state and compound, each
+  keyed by where it applies) have a Jaccard similarity of 0.9 or more. Listed in `similar`.
+- **D022** (matrix): the same accent (same keys and tokens on the same group) at 3 or more call sites.
+- **D023** (matrix): each `css: { … }` in a group's base, axis value, part, state or compound, with the properties it
+  sets. A warning, not an error: it's the sanctioned escape, counted so it stays rare.
+- **D024**: (a) two group roots spread on one element (`<li {...a()} {...b()}>`), where the second `data-g` would
+  silently replace the first (the compiler); (b) two compounds on the same part that can match at once (no axis where
+  their `when`s disagree) and set the same property to different values, so only definition order decides (the
+  matrix); (c) an accent that sets an intent the call site's own axis values already set, so the accent and the axis
+  fight for the same property (the matrix).
+- **D025**: at a call site, an axis value, axis, state or part the group doesn't have (the compiler; was the spike's
+  W061), with the closest names; in a definition or an accent, an intent or token that isn't in the vocabulary (the
+  Vite plugin and `weft check`).
+
+warp's contrast gate keeps its own code (D010, in the warp branch). D040 and D081 are reserved by warp's design docs;
+none of these collide.
 
 ## 4. Order of work
 
@@ -293,7 +320,7 @@ Step 1 of §4, run 2026-10-29, then a second pass the same day on CSS size (6.4)
   | `<button {...action()}>` | `data-g="action" data-emphasis="solid"` (the default), static |
   | `{...tabButton({ pressed: tab === 'cart' })}` | `aria-pressed={tab === 'cart' ? "true" : "false"}` |
 
-  Unknown axes, values, states and parts at a call site are W061 errors. A site whose argument isn't an object
+  Unknown axes, values, states and parts at a call site are W061 errors (D025 since step 2). A site whose argument isn't an object
   literal stays a runtime spread of `group()`'s return value and is reported as dynamic. The call is marked
   `/* @__PURE__ */`, so a definition whose sites were all lowered drops out of the bundle: the groups shop's JS is
   5.29 KB gz against 5.39 KB for the class version.
@@ -316,7 +343,8 @@ Step 1 of §4, run 2026-10-29, then a second pass the same day on CSS size (6.4)
 ```
 
 Not built, as planned: the matrix file, the CLI, D020–D025, Tailwind input, accents (§2.2 level 3), `inherit` axes
-beyond typing, and per-module CSS splitting (§2.5 step 7). The spike serves one `virtual:weft/groups.css`, which each
+beyond typing, and per-module CSS splitting (§2.5 step 7). Step 2 (§7) built the matrix, the CLI, the D-codes and
+accents. The spike serves one `virtual:weft/groups.css`, which each
 defining module imports.
 
 ### 6.2 The shop, three ways
@@ -517,6 +545,71 @@ Things to carry into step 2:
   scope root and stops its own group's rules. Bare parts (the default) don't have this problem.
 - **brotli rewards repetition, not deduplication.** Every attempt to share blocks across groups made the minified CSS
   smaller and the compressed CSS larger. Size work on generated CSS should be judged on brotli bytes only.
+
+## 7. Step 2: the matrix, `weft style`, MCP tools, D020–D025
+
+Built 2026-10-29 on the spike's code. Nothing in `packages/warp` or `packages/ui-core` changed.
+
+### 7.1 What shipped
+
+| Piece | Where | What it does |
+|---|---|---|
+| The matrix | `packages/weft/src/style/matrix.ts` (`weft/style/matrix`) | `buildMatrix(groups, uses)` → `{ version, groups, vocab, similar, diagnostics }`; `scanProject(root, files, transform)` (definitions, then each component compiled with the groups its relative imports bring in); `explainGroup(group, selection)` |
+| `.weft/styles.json` | `vite.mjs` (`weft:style`) | Written after a build's project scan (errors among the project-wide codes stop the build, the rest are warnings) and in dev, debounced, whenever a compile changes it. `style.matrix: false` turns it off; off under vitest |
+| | `weft check` | Also writes it when the project has groups, so an agent that never ran `weft dev` has it |
+| `weft style find <query>` | `packages/cli/src/style.mjs` | Every query word must hit the group's name, doc, parts, axes, values, states or tokens (one typo allowed in a name word); best first, results under a quarter of the best score dropped. Gives how to import the group, its axes, parts, states, use count and similar groups |
+| `weft style explain <target>` | same | Target: `order-card`, `order-card.title`, `order-card[status=late][selected]`, or a selector copied from devtools (`[data-g="order-card"][data-status="late"] [data-part="meta"]`, `aria-*`, `data-accent~=`). Axes as flags (`--status late`), `--states`, `--accent`, `--part`. Prints each element's declarations in cascade order with the token and the place it came from, marks overridden ones, then the CSS that selection emits (tones folded) and the sites that can produce it |
+| `weft style matrix` | same | Writes the file; `--stdout` prints it |
+| MCP `style_find`, `style_explain` | `packages/cli/src/mcp.mjs` | The same JSON as `--json`. The server's instructions now say to `style_find` before writing a group |
+| AGENTS.md "Styling" section | `packages/cli/src/agents-md.mjs` | Only when the installed weft exports `weft/style`'s `group`. One paragraph: find first, the shape of a group, tokens only, the codes, `weft docs style`. The style codes left the general diagnostics table and `weft style` the commands table, since the section covers both |
+| `weft docs style` | `packages/cli/docs/style.md` | The rules (find first, tokens, axes, accents, one group per element, states, no class soup) and the tools |
+| Accents | compiler, `style.ts`, `css.ts` | `card({ accent: { radius: 'round' } })` lowers to a static `data-accent="radius:round"`; the CSS gets `:scope[data-accent~="radius:round"]` after the group's own rules. Typed (`Accent` = intents without `css`); a non-literal accent is W060 |
+| Doc comments | compiler | The `/** … */` right above a definition is `facts.groups[].doc`, for the matrix and `find` |
+
+### 7.2 The codes, as built
+
+Defined in §3. W061 (the spike's placeholder) is now D025, and every "unknown name" message gets the closest names
+(edit distance with adjacent swaps as one edit, within a third of the word, or containing it): ``group order-card has
+no part `titel` `` → ``Did you mean `title`?``. W060 stays a compiler W-code: it's about evaluating code.
+
+| Code | Found by | Tested on |
+|---|---|---|
+| D020 | `weft check`, on the text of every `.tsx`/`.jsx` | 9 classes on a `<section>`; the same 4 classes in a `class` and a `className={'…'}` in another order |
+| D021 | the matrix | Two identical groups under two names (similarity 1.0) |
+| D022 | the matrix | `accent: { radius: 'round' }` at three sites |
+| D023 | the matrix | `css: { letterSpacing }` (no intent sets it, so the fix says so) and `css: { padding: 'var(--warp-space-group)' }` (the fix names `pad: 'group'`) |
+| D024 | the compiler (two roots), the matrix (compounds, accents) | `<p {...a()} {...b()}>`; compounds on `size=l` and `tone=b` setting `pad` (a third on `size=s` is correctly not flagged); an accent `tone: 'caution'` on a site whose `status=late` sets the tone |
+| D025 | the compiler (sites), the matrix and the Vite plugin (tokens) | `status: 'Late'`, `selcted`, `card.titel`, `pad: 'grup'`, `accent: { radius: 'roundish' }` |
+
+A site whose accent is D025 is left out of the CSS and the other checks, so one bad accent doesn't hide the rest
+(found while testing: it first switched off D024 for the whole group).
+
+All six are in the CLI catalog. `weft docs D025` works, and `probe()` confirms the compiler reports W060, D024 and
+D025 from their catalog examples.
+
+### 7.3 Numbers and checks
+
+- **Tests:** weft 239 (new: `test/style-matrix.test.ts`, 9; `test/style.test.tsx` +4; 2 new type cases), CLI 101
+  (new: `test/style.test.mjs`, 11), warp 74, ui-core 21, compiler (Rust) 93. All pass.
+- **The spike's shop through the CLI:** `weft style find row` → `product-row` first (doc and name), then `action`
+  (its doc says "row"); groups that only use `layout: row` drop under the score cut. The matrix lists 10 groups and
+  one diagnostic, D023 on `cart-line`'s `qty` part (`minInlineSize`, `textAlign`: no intent sets them).
+- **AGENTS.md stays under 8 KB:** it was 8,173 B before step 2, 19 B under the cap, so the section needed room.
+  It's 8,175 B now with the section. What paid for it, with no loss of meaning: runs of codes as ranges
+  (`T001–T009`, `P002–P004`), one "other exports are for compiled code" sentence instead of two, the style codes out
+  of the general table, a shorter W017 entry, and a few redundant words. **The cap is the real constraint on
+  teaching agents more in AGENTS.md**; the next addition will need `weft docs` topics, not more AGENTS.md text.
+
+### 7.4 Open
+
+- **`.ts` in `node_modules`.** The CLI imports `weft/style/matrix` (TypeScript) with Node's type stripping, as
+  `vite.mjs` already imports `css.ts`. That works in this repo (packages are linked, so the real path isn't under
+  `node_modules`) but Node refuses to strip types under `node_modules`. A published weft needs these compiled to JS.
+- **The dev matrix is what's been compiled.** In dev the Vite plugin writes only the files it has compiled so far
+  (no project scan, to keep startup fast). `weft check` and `weft style` always scan the whole project.
+- **Steps 3–5 unchanged:** Tailwind input, warp on groups, the agent eval. The eval should now count `style_find`
+  calls and D020/D021 hits per run, since both are what the matrix exists to prevent.
+- Decisions still open from 6.6: bare parts in warp's contract, and parts slotted into another group.
 
 ## Sources
 

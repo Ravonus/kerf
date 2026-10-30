@@ -16,7 +16,8 @@ node bin/weft.mjs check --json --root ../../evals/reference-v3/weft
 | `weft tasks` | Built-in commands plus the project's `tasks`, with args (JSON Schema), side effects, environments and scope | `--json`: the task list |
 | `weft docs [topic\|code]` | `rules`, `props`, `lists`, `async`, `testing`, `config`, `diagnostics`, `commands`, `agents`, or a code (`W014`, `T003`) | Markdown (`--json`: `{ topic, text }`) |
 | `weft agents-md` | Write AGENTS.md from the installed weft. `--check` exits 1 when stale, `--stdout` prints it | Under 8 KB (it is ~5.4 KB) |
-| `weft mcp` | MCP server on stdio with the tools `docs`, `check`, `tasks` | JSON-RPC 2.0, one message per line |
+| `weft style find <query>` / `explain <group\|selector>` / `matrix` | Style groups (research 23): the groups that fit, one variation's CSS with where each value came from, and `.weft/styles.json`. `weft check` adds D020–D025 and keeps the matrix current | `--json`: the result; `matrix --stdout`: the matrix |
+| `weft mcp` | MCP server on stdio with the tools `docs`, `check`, `tasks`, `style_find`, `style_explain`, `test_gate`, `browser_*` | JSON-RPC 2.0, one message per line |
 
 Every command takes `--root <dir>` (default: the working directory). JSON goes to stdout, human text to stderr. Exit
 codes: 0 ok, 1 errors found (or a stale AGENTS.md under `--check`), 2 usage or internal error (`{ ok: false, error:
@@ -82,6 +83,7 @@ a runtime T001: a test that finishes without an assertion fails.
 | `src/catalog.mjs` | W-, T- and P-codes; each W- and T-code has an example that `probe()`/`probeTests()` checks really reports it |
 | `src/docs.mjs`, `docs/*.md`, `src/agents-md.mjs` | Docs topics and AGENTS.md, generated from the installed weft (version, exports, codes it reports) |
 | `src/tasks.mjs`, `src/mcp.mjs` | `weft tasks`; the MCP server |
+| `src/style.mjs` | `weft style find\|explain\|matrix`, D020 (class soup) and the matrix's D-codes in `weft check`; the matrix itself is `weft/style/matrix` |
 
 Not built yet: `weft run`, `fix`, `dev`, `build`, `test`, `browser`, `create` and `plugins` (`weft tasks` lists them
 as `available: false`), the tsc pass with TS→W mapping, content-hash caching, P001/P005/P006 (they need a diff), and
