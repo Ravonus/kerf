@@ -3,6 +3,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { sourceAlias } from './alias.mjs'
 import { catalog } from './catalog.mjs'
 import { commandsPage, installed, readDoc } from './docs.mjs'
 import { loadConfig } from './load-config.mjs'
@@ -29,6 +30,13 @@ const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount',
 const elsewhere = new Set(['agents-md', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks'])
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
 const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'], 'weft/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
+
+/** The Full stack section, with this app's alias for its source. */
+function fullStack(root) {
+  const alias = sourceAlias(root)
+  const text = readDoc('start-short')
+  return alias ? text.replaceAll('#/', alias) : text.replace(/ Import your own code as [^(]*\(`src\/server\/todos`\); generated files are/, ' Generated files are')
+}
 
 export async function agentsMd(root) {
   root = resolve(root)
@@ -83,7 +91,7 @@ export async function agentsMd(root) {
     'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). More: `weft docs verify`.',
     '',
     ...(startApp
-      ? ['## Full stack', '', readDoc('start-short'), '']
+      ? ['## Full stack', '', fullStack(root), '']
       : []),
     ...(styled
       ? ['## Styling',

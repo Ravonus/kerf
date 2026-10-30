@@ -298,10 +298,14 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
   const main = {
     name: 'weft',
     enforce: 'pre',
-    config(_, env) {
+    config(user, env) {
       isDev = dev ?? env.command === 'serve'
       isHot = hmr ?? (env.command === 'serve' && !process.env.VITEST)
-      return { oxc: { jsx: 'preserve' }, optimizeDeps: { rolldownOptions: { transform: { jsx: 'preserve' } } } }
+      return {
+        oxc: { jsx: 'preserve' },
+        optimizeDeps: { rolldownOptions: { transform: { jsx: 'preserve' } } },
+        resolve: { tsconfigPaths: user.resolve?.tsconfigPaths ?? true }, // an app's aliases live in its tsconfig
+      }
     },
     async resolveId(source, importer) {
       const mode = importer && MODE.exec(importer)

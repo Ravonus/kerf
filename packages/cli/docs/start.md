@@ -23,7 +23,7 @@ export default function List(props: RouteProps<typeof load, '/lists/[id]'>) { re
 
 Read `props.data` in JSX or `derived`, not in the component body (W001).
 
-Import your own code as `#/server/todos`, which is `src/server/todos`. Generated files have their own prefix: `weft:slot/<id>` and `weft:tokens/<name>`.
+Import your own code as `#/server/todos`, which is `src/server/todos`. That alias is `paths` in `tsconfig.json`: change it or add your own there, and Vite and `weft check` follow. Generated files have their own prefix: `weft:slot/<id>` and `weft:tokens/<name>`.
 
 `load` and `meta` never ship to the client. A layout's `load` runs before its children's, so it's where a guard goes.
 Links are `<Link href>`; code navigates with `navigate(href)`.
