@@ -61,6 +61,8 @@ export async function agentsMd(root) {
     `This is a **weft** app (fine-grained reactive TSX). It is not React: components run once, state is a box, and`,
     `React hooks don't exist. Run \`weft check --json\` after every change; each diagnostic has a code, a location, why, and a fix.`,
     '',
+    'Start with `.weft/map.md` (`weft map` writes it): what this app has, and what to call for each part.',
+    '',
     '## Rules',
     '',
     readDoc('rules'),

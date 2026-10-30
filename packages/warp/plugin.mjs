@@ -134,6 +134,7 @@ export const warp = definePlugin({
       tokens: { namespace: 'warp', ...(css && { css }), values: { seed, fields: o.fields ?? 'floating' } },
       agents: { title: 'warp (UI kit)', text: agents },
       catalog,
+      map: [{ want: 'UI components', call: 'Import from `@weft/warp`; `weft plugins` has the catalog', have: `${catalog.length} components` }],
       diagnostics: [
         { code: 'D010', catches: 'A seed that leaves text, a control boundary or the focus ring below WCAG contrast at some dial stop', fix: 'Change the seed; the message lists each failing pair', severity: 'error' },
       ],

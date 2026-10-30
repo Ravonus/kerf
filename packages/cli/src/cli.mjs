@@ -2,10 +2,12 @@
 // Exit codes: 0 ok, 1 diagnostics with errors (or a stale AGENTS.md under --check), 2 usage or internal error.
 
 import { resolve } from 'node:path'
+import { addCommand } from './add.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
 import { check } from './check.mjs'
 import { formatHuman } from './diag.mjs'
 import { docs } from './docs.mjs'
+import { formatMap, writeMap } from './map.mjs'
 import { serve } from './mcp.mjs'
 import { explain, list, sync } from './plugins.mjs'
 import { loadConfig } from './load-config.mjs'
@@ -30,6 +32,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   tasks               commands and project tasks
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
+  map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
+  add <plugin>        install a plugin and wire it into the config [--dry-run] [--no-install]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
   plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
@@ -43,7 +47,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
 const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
+const booleans = new Set(['dry-run', 'no-install', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
@@ -149,6 +153,19 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         if (args.json) print({ path: out.path, bytes: out.bytes, limit: 8192, overLimit: out.overLimit, current: out.current, written: out.written })
         say(`AGENTS.md: ${out.bytes} bytes${out.overLimit ? ' (over the 8 KB limit)' : ''}, ${out.written ? 'written' : out.current ? 'current' : 'stale'}`)
         return (args.check && !out.current) || out.overLimit ? 1 : 0
+      }
+      case 'map': {
+        const map = await writeMap(args.root)
+        if (args.json) print(map)
+        else if (args.stdout) process.stdout.write(formatMap(map))
+        else say(`.weft/map.md: ${map.rows.length} rows`)
+        return 0
+      }
+      case 'add': {
+        const result = await addCommand(args.root, args.positional[0], { dryRun: args.flags['dry-run'], install: !args.flags['no-install'] })
+        if (args.json) print(result)
+        else say(result.already ? `${result.package} is already in ${result.config}` : result.actions.map(a => `${args.flags['dry-run'] ? 'would ' : ''}${a}`).join('\n'))
+        return 0
       }
       case 'plugins': {
         const sub = args.positional[0] ?? 'list'

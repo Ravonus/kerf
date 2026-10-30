@@ -165,3 +165,31 @@ describe('slot binding (research 13 §2.2)', () => {
     expect(r.slots['device.camera']).toEqual({ ios: 'charts' })
   })
 })
+
+describe('JSON and YAML config (research 34 §2)', () => {
+  const plugin = "import { definePlugin } from 'weft/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
+  const files = { 'node_modules/acme/package.json': JSON.stringify({ name: 'acme', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/acme/plugin.mjs': plugin }
+  const site = { name: 'Acme', title: '%s · Acme', description: 'Tools.' }
+
+  it('reads the same config from TypeScript, JSON and YAML', async () => {
+    const ts = await loadConfig(project({ ...files, 'weft.config.ts': `import acme from 'acme/plugin'\nexport default { site: ${JSON.stringify(site)}, runtime: 'bun', plugins: [acme({ level: 1 })] }\n` }))
+    const json = await loadConfig(project({ ...files, 'weft.config.json': JSON.stringify({ $schema: './.weft/config.schema.json', site, runtime: 'bun', plugins: [['acme', { level: 1 }]] }) }))
+    const yaml = await loadConfig(project({ ...files, 'weft.config.yaml': 'site: { name: Acme, title: "%s · Acme", description: Tools. }\nruntime: bun\nplugins:\n  - [acme, { level: 1 }]\n' }))
+    for (const r of [ts, json, yaml]) expect(r.diagnostics).toEqual([])
+    expect(json.config).toEqual(ts.config)
+    expect(yaml.config).toEqual(ts.config)
+  })
+
+  it('reports a bad key at its path, and a syntax error or a missing plugin as P007', async () => {
+    const bad = await loadConfig(project({ 'weft.config.yaml': 'site:\n  title: no placeholder\n' }))
+    expect(bad.diagnostics.map(d => [d.code, d.span?.[0]])).toEqual([['P007', 2]])
+    expect((await loadConfig(project({ 'weft.config.json': '{ nope' }))).diagnostics.map(d => d.code)).toEqual(['P007'])
+    expect((await loadConfig(project({ 'weft.config.yaml': 'plugins: [ghost]\n' }))).diagnostics[0].why).toContain("`ghost` isn't installed")
+  })
+
+  it('two config files is P010, not a silent pick', async () => {
+    const r = await loadConfig(project({ 'weft.config.ts': 'export default {}\n', 'weft.config.yaml': 'site: { name: Acme }\n' }))
+    expect(r.diagnostics.map(d => d.code)).toEqual(['P010'])
+    expect(r.diagnostics[0].why).toContain('`weft.config.yaml`')
+  })
+})

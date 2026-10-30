@@ -1,6 +1,6 @@
 # 34. Configuration: a strong default, one setting away from anything else
 
-Status: design, 2026-10-30. Nothing here is built except the alias (§6). It changes PLAN §4, §7c, §8 and §9.
+Status: design, 2026-10-30. Built so far: the alias (§6) and slice A (§2, §3, §7 for plugins, §8). It changes PLAN §4, §7c, §8 and §9.
 
 **Goal:** weft has a clear default stack, and every part of it can be swapped by configuration. A new app needs no
 decisions. An app that wants MySQL, Prisma, Tailwind or its own auth gets it from the wizard or one setting, and nothing
@@ -45,8 +45,8 @@ plugins:
 
 - **TypeScript or data, same result.** A plugin is `warp()` in TypeScript or `["@weft/warp", { … }]` in JSON and YAML.
   Data formats can't hold functions, so anything that needs one uses `weft.config.ts`.
-- **Editors:** `weft check` writes `.weft/config.schema.json`, including each installed plugin's options, so JSON and
-  YAML get completion through `$schema`.
+- **Editors:** `weft check` writes `.weft/config.schema.json`, so JSON and YAML get completion through `$schema`. Plugin
+  options aren't in it yet, because plugins validate them with a function rather than a schema.
 - **YAML's parser is a lazy dependency,** loaded only when that file exists.
 - **Config is data at build time.** It's never read reactively, like metadata.
 
@@ -65,8 +65,9 @@ Native, and an app that wants the default never has to think about it.
 7. Package manager, git, and whether to install
 
 - **Flags answer questions.** Every question has a flag, and any flag skips its question.
-- **Agents and CI never see a prompt.** With no terminal, or with `--yes`, unanswered questions take their defaults.
-- **The wizard only writes files.** Its answers go into the config and the app. Nothing depends on how the app was made.
+- **Agents and CI never see a prompt.** With no terminal, or with `--yes`, unanswered questions take their defaults. With
+  no terminal, git and the install stay off unless a flag asks for them.
+- **Nothing depends on how the app was made.** The answers go into the config and the app's files.
 - **Agents read the outcome.** AGENTS.md describes the choices this app made, not every option, so it stays under 8 KB.
 
 ## 4. Databases
@@ -148,7 +149,7 @@ This replaces the planned `weft plugins add`. Editing config by hand keeps worki
 
 Every choice above changes what an agent should call, so a static doc can't describe an app. `weft map` generates
 `.weft/map.md` and `.weft/map.json` from this app's config and code, and regenerates them on `weft dev`, `weft build` and
-`weft check`. `--check` fails when they're stale, like AGENTS.md. AGENTS.md keeps a stable pointer to the map, so it
+`weft check`. AGENTS.md keeps a stable pointer to the map, so it
 stays small however much the app grows.
 
 The map is a matrix of *what you want → what to call*, listing only what this app has:
@@ -187,6 +188,5 @@ work comes before 3c, because 3c's `@weft/db-*` packs build on these slots.
 
 ## 10. Open questions
 
-- **Default stack:** should Enter-through give the todo + auth app, or a plain app?
 - **Auth on Native:** Better Auth needs a store. Whether it can use Native's connection directly on all three engines is
   unverified, and slice D has to settle it.

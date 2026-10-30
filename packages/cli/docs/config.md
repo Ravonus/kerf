@@ -1,4 +1,9 @@
-# weft.config.ts
+# weft.config
+
+`weft.config.ts` is the default. `weft.config.json` and `weft.config.yaml` take the same keys, and `weft check` writes
+`.weft/config.schema.json` for editor completion. In JSON and YAML a plugin is a package name or `[name, options]`, like
+`["@weft/warp", { "fields": "classic" }]`; anything that needs a function belongs in `weft.config.ts`. Keep one file:
+two is P010. `weft add <plugin>` installs a plugin and adds it to whichever format you use.
 
 ```ts
 import { defineConfig } from 'weft/config'

@@ -994,6 +994,8 @@ the reveal and the swap for every shape source, and 0 px moved with a last-seen 
 `pending="shape"` reaches costs 0. `<Text>` holds its place with placeholder text in the real element, so
 it doesn't use `text.measure`. Not built: variants through barrels, `sessionStorage` records, viewport-fill counts.
 
+**3x status (2026-10-30):** slice A is built ([34](research/34-configuration.md)): `weft.config.json` and `.yaml` with one schema (P010 for two files), the `create-weft` wizard with `--yes`, `weft add` for plugins, and `weft map` with its MCP tool. Enter-through gives the todo + auth app. Plugin options aren't in the config schema yet.
+
 **2 Surfaces (2026-10-30):** built ([33](research/33-surfaces.md)): `defineSurface` and `<Surface>` in `weft/surface`,
 `canvas2d`, `webgl2`, the `surface.renderer` and `text.measure` slots, both `text.measure` engines passing conformance
 in Chrome and WebKit, `s.text()` with its mirror, and X001–X004, X009–X012, X040 and X041. X009 was undefined and now
@@ -1146,8 +1148,8 @@ Also out of v0:
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
 - **Native host on Android:** Views for the core (finer recycling control), Compose for system components through
   interop? And Hermes everywhere, or JSC on iOS for binary size? Both are settled by the 6a spike.
-- **Configuration ([34 §10](research/34-configuration.md)):** what Enter-through scaffolds, and whether Better Auth can
-  run on Native's connection on all three engines.
+- **Configuration ([34 §10](research/34-configuration.md)):** whether Better Auth can run on Native's connection on all
+  three engines.
 - **Default `idiom`:** `blend` for every app, or should `create-weft` ask?
 - **Store payment rules** change with US litigation. Who owns refreshing the policy table, and how often?
 - **Names (settled 2026-10-28):** weft is the framework and warp is its default UI toolkit (the rebuild of Agorix).

@@ -15,6 +15,8 @@ export const builtins = [
   { name: 'agents-md', description: 'Regenerate AGENTS.md (`--check` fails if stale)', args: { type: 'object', properties: { check: { type: 'boolean' } } }, sideEffects: ['fs:AGENTS.md'], available: true },
   { name: 'mcp', description: 'These commands as MCP tools (stdio)', args: { type: 'object', properties: {} }, sideEffects: [], available: true, longRunning: true },
   { name: 'style', description: 'Style groups: `find <query>`, `explain <group|selector>`, `matrix` (writes .weft/styles.json)', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['find', 'explain', 'matrix'] }, query: { type: 'string' }, target: { type: 'string' } } }, sideEffects: ['fs:.weft/styles.json'], available: true },
+  { name: 'map', description: 'Write `.weft/map.md`: a matrix of what to call in this app', args: { type: 'object', properties: {} }, sideEffects: ['fs:.weft/map.*'], available: true },
+  { name: 'add', description: 'Install a plugin and wire it into the config (`--dry-run` shows the changes)', args: { type: 'object', properties: { plugin: { type: 'string' }, 'dry-run': { type: 'boolean' } } }, sideEffects: ['fs:weft.config.*', 'fs:package.json', 'network:install'], available: true },
   { name: 'dev', description: 'Dev server', sideEffects: ['network:listen'], available: false, stack: true, longRunning: true },
   { name: 'build', description: 'Production build and contract', sideEffects: ['fs:.output/**'], available: false, stack: true },
   { name: 'start', description: 'Serve the build', sideEffects: ['network:listen'], available: false, stack: true, longRunning: true },

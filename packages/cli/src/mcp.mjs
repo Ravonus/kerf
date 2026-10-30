@@ -2,6 +2,7 @@
 // `style_find`, `style_explain`, `test_gate` and the `browser_*` tools.
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
+import { agentMap } from './map.mjs'
 import { createInterface } from 'node:readline'
 import { check } from './check.mjs'
 import { docs, topics } from './docs.mjs'
@@ -58,6 +59,11 @@ export const tools = [
     name: 'check',
     description: 'Run `weft check`: every W- and P-diagnostic with code, file, span, why and fix (edits when an autofix exists), plus slot bindings.',
     inputSchema: { type: 'object', properties: { files: { type: 'array', items: { type: 'string' }, description: 'Files relative to the project root; default: all' } } },
+  },
+  {
+    name: 'map',
+    description: 'What this app has and what to call for each part: routes, server functions, data, styles, plugins',
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'tasks',
@@ -134,6 +140,7 @@ export async function handle(root, msg) {
         }
         if (name === 'check') data = await check(root, { files: args.files })
         else if (name === 'tasks') data = await tasks(root)
+        else if (name === 'map') data = await agentMap(root)
         else if (name === 'style_find') data = findGroups((await styleMatrix(root)).matrix, args.query)
         else if (name === 'style_explain') data = explainTarget(await styleMatrix(root), args.target, { axes: args.axes, states: args.states, accent: args.accent, part: args.part })
         else if (name === 'surfaces') data = { surfaces: listSurfaces(root) }
