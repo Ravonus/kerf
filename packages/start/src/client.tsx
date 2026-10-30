@@ -3,6 +3,11 @@
 // the client), loads the route chunks it needs (started in parallel from a guess against the route table), and
 // writes the levels: a level that keeps its route keeps its component and gets new params/data in place.
 // `setHead` writes the server's merged tags for the tab title and history; crawlers only read the server's HTML.
+//
+// Server functions (research 27): the query cache seeds itself from the page's `#weft-cache` as it loads, and gets
+// each navigation's `c` through `client.seed`, so hydration fetches nothing (and an app without queries doesn't ship
+// the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
+// mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
 import { hydrate } from 'weft/dom'
 import { setHead } from 'weft/head'
@@ -21,6 +26,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const container = options.container ?? document.getElementById('app')!
   const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent!)
   const data = JSON.parse(document.getElementById('weft-data')?.textContent ?? 'null')
+  let tags = page.m.map(m => m.t ?? [])
   const comps: Record<string, Component> = {}
   // The built-in 404 and error pages stand in only when the app has no route file for them.
   const builtin: Record<string, Component> = { 404: NotFoundPage, error: ErrorPage }
@@ -34,7 +40,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   client.route = route
 
   let current: AbortController | undefined
-  async function go(href: string, opts: NavigateOptions & { pop?: boolean } = {}) {
+  async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
     current?.abort()
@@ -49,10 +55,15 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       if (ctrl.signal.aborted) return
       return location.assign(url.href) // the data request failed: let the server render the page
     }
-    if (next.r) return go(next.r, { replace: true })
+    if (next.r) {
+      const hops = (opts.hops ?? 0) + 1
+      return hops > 5 ? location.assign(next.r) : go(next.r, { replace: opts.pop || opts.replace, hops }) // a back/forward to a moved URL replaces its entry
+    }
     await Promise.all(next.m.map(m => chunk(m.id)))
     if (ctrl.signal.aborted) return
     if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+    if (next.c) client.seed ? client.seed(next.c) : (client.seeds ??= []).push(...next.c)
+    tags = next.m.map(m => m.t ?? [])
     applyMatches(route, next.m.map(revive), path, next.s)
     if (next.h) setHead(next.h, url.pathname)
     if (opts.scroll !== false && !opts.pop) {
@@ -61,6 +72,10 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     }
   }
   client.navigate = go
+  // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
+  client.invalidated = t => {
+    if (tags.some(l => l.some(x => t.includes(x)))) void go(location.href, { pop: true })
+  }
 
   document.addEventListener('click', e => {
     const a = (e.target as Element | null)?.closest?.('a')

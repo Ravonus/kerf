@@ -4,12 +4,21 @@
 // client navigations (`/_weft/data/<path>`) and renders share cards (`/_weft/og/<path>.png`).
 //
 // Status codes are decided before the first byte: 404 when nothing matches or a loader returns `notFound()`, 500 when
-// a loader or `meta` throws. Both render inside the root layout when it loaded.
+// a loader or `meta` throws, 307 (or the given status) when a loader calls `redirect()`. 404 and 500 render inside
+// the root layout when it loaded.
+//
+// Server functions (research 27): each request gets a scope (AsyncLocalStorage), so `q.fetch()` in loaders and `q()`
+// in the render share one request cache; `/_weft/fn/<id>` answers the client's calls; the page ends with the
+// scope's resolved entries (`#weft-cache`) so the client cache starts seeded and hydration fetches nothing.
 
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, isNotFound } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
 import { headTags, mergeMeta, metaTags, renderToStream, renderToString, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
+import { fns, isRedirect, runtime, StartError, type Redirect, type Wire } from './data'
+import * as exec from './exec'
+import type { Scope, Store } from './exec'
 import { App } from './view'
 import { DefaultCard } from './og/DefaultCard'
 import { ErrorPage, NotFoundPage } from './builtin'
@@ -22,7 +31,7 @@ export interface Manifest { dir: string; routes: RouteEntry[]; layouts: LayoutEn
 
 export interface RouteModule {
   default?: Component
-  load?: (args: { params: Record<string, string>; request: Request; signal: AbortSignal }) => unknown
+  load?: (args: { params: Record<string, string>; request: Request; signal: AbortSignal; ctx: any }) => unknown
   meta?: MetaObject | ((args: { params: Record<string, string>; data: any }) => MetaObject | Promise<MetaObject>)
   prerender?: Record<string, string>[] | (() => Record<string, string>[] | Promise<Record<string, string>[]>)
   size?: { width: number; height: number }
@@ -43,7 +52,11 @@ export interface HandlerOptions {
   fonts?: Font[]
   /** Stream timeout for Boundaries (ms). */
   timeout?: number
-  /** Dev and tests: diagnostics found while serving (H005–H008). */
+  /** The app's context for `load` and server functions (`src/context.server.ts`'s default export). */
+  context?: (args: { request: Request }) => object | Promise<object>
+  /** The shared cache for `cache: { life }` queries (memory by default). */
+  store?: Store
+  /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
   onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
 }
 
@@ -57,7 +70,13 @@ export interface Resolved {
   /** The page route, when one matched. */
   route?: RouteEntry
   error?: unknown
+  /** A loader called `redirect()`: nothing renders. */
+  redirect?: Redirect
 }
+
+const als = new AsyncLocalStorage<Scope>()
+runtime.scope = () => als.getStore()
+runtime.exec = exec
 
 const CARD = { width: 1200, height: 630 }
 const stores = () => ({ createMutableStore: createNonReactiveMutableStore, createReadonlyStore: createNonReactiveReadonlyStore, batch: (f: () => void) => f() })
@@ -88,10 +107,16 @@ export function createHandler(options: HandlerOptions) {
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
   const tree = routeTree(manifest, modules)
+  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic }
+  let checked = !options.dev
 
   async function resolve(path: string, request: Request): Promise<Resolved> {
-    const router = new RouterCore({ routeTree: tree, history: createMemoryHistory({ initialEntries: [path] }), isServer: true, context: { request } } as any, stores as any)
+    const scope = als.getStore() ?? exec.createScope(request, scopeOptions)
+    const hold: LoadContext = { request, scope, tags: new Map(), out: {} }
+    const router = new RouterCore({ routeTree: tree, history: createMemoryHistory({ initialEntries: [path] }), isServer: true, context: hold } as any, stores as any)
     await router.load()
+    const moved = hold.out.redirect
+    if (moved) return { status: moved.status, path, levels: [], head: mergeMeta(site), redirect: moved }
     const matches = router.state.matches.map(m => ({ m, weft: (router.routesById as any)[m.routeId]?.options.weft as RouteEntry | LayoutEntry | undefined }))
     const params = (m: any) => cleanParams(m.params)
     const leaf = matches.at(-1)?.weft
@@ -102,7 +127,8 @@ export function createHandler(options: HandlerOptions) {
     const rootOk = rootLayout && matches[0]?.weft === rootLayout && matches[0].m.status === 'success' ? matches[0] : undefined
     const levelOf = (x: (typeof matches)[number]): Level => {
       const raw = x.m.loaderData
-      return { id: x.weft!.id, params: params(x.m), mod: mod(x.weft!.file), raw, ...split(raw) }
+      const t = hold.tags.get(x.weft!.file)
+      return { id: x.weft!.id, params: params(x.m), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
     }
     const special = (id: '404' | 'error', status: number, error?: unknown): Promise<Resolved> => {
       const entry = byId.get(id)
@@ -143,9 +169,11 @@ export function createHandler(options: HandlerOptions) {
     return `/_weft/og/${cardPath(path)}.png?v=${v}`
   }
 
-  async function page(url: URL, request: Request): Promise<Response> {
+  async function page(url: URL, request: Request, scope: Scope): Promise<Response> {
     const path = url.pathname + url.search
     const r = await resolve(path, request)
+    if (r.redirect) return withHeaders(new Response(null, { status: r.redirect.status, headers: { location: r.redirect.href, 'cache-control': 'no-cache' } }), scope)
+    scope.started = true // from here a redirect can't change the status (Q007)
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.
     const route = createRouteState({ ...payloadOf(r, false), m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
@@ -171,18 +199,54 @@ export function createHandler(options: HandlerOptions) {
         } catch (e) {
           options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
         }
-        controller.enqueue(enc.encode(`<script type="application/json" id="weft-data">${json(s.data())}</script>\n</body>\n</html>\n`))
+        const cached = wire(scope)
+        controller.enqueue(enc.encode(`<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + '</body>\n</html>\n'))
         controller.close()
       },
     })
-    return new Response(body, { status: r.status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } })
+    return withHeaders(new Response(body, { status: r.status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }), scope)
   }
 
   /** The route as JSON for client navigation: deferred fields awaited (no streaming on navigation yet). */
-  async function data(path: string, request: Request): Promise<Response> {
+  async function data(path: string, request: Request, scope: Scope): Promise<Response> {
     const r = await resolve(path, request)
+    if (r.redirect) return withHeaders(Response.json({ m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload, { headers: { 'cache-control': 'no-cache' } }), scope)
     for (const lv of r.levels) if (lv.d?.length) lv.data = { ...(lv.data as object), ...Object.fromEntries(await Promise.all(lv.d.map(async k => [k, await (lv.raw as any)[k]]))) }
-    return Response.json(payloadOf(r, true), { status: 200, headers: { 'cache-control': 'no-cache' } })
+    const c = wire(scope)
+    return withHeaders(Response.json({ ...payloadOf(r, true), ...(c.length && { c }) }, { status: 200, headers: { 'cache-control': 'no-cache' } }), scope)
+  }
+
+  /** `/_weft/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
+  async function fn(url: URL, request: Request, scope: Scope): Promise<Response> {
+    const id = decodeURIComponent(url.pathname.slice('/_weft/fn/'.length))
+    const f = fns.get(id)
+    const out = (body: unknown, status = 200) => withHeaders(Response.json(body, { status, headers: { 'cache-control': 'no-store' } }), scope)
+    const fail = (code: string, message: string, status: number, extra: object = {}) => {
+      options.onDiagnostic?.({ code, severity: 'error', message })
+      return out({ e: { code, message, ...extra } }, status)
+    }
+    if (!f) return fail('Q009', `Q009: no server function \`${id}\` (the page is older than the server, or the module isn't a server module): reload`, 404)
+    try {
+      if (f.kind === 'query') {
+        if (request.method !== 'GET' && request.method !== 'HEAD') return fail('Q009', `Q009: \`${id}\` is a query: GET only`, 405)
+        const raw = url.searchParams.get('i')
+        const e = await exec.fetchQuery(scope, f, raw === null ? undefined : JSON.parse(raw))
+        return out({ v: e.v, t: e.tags })
+      }
+      if (request.method !== 'POST') return fail('Q010', `Q010: mutation \`${id}\` needs POST`, 405)
+      const origin = request.headers.get('origin')
+      const site = request.headers.get('sec-fetch-site')
+      const cross = (origin && origin !== url.origin) || (site && site !== 'same-origin' && site !== 'none')
+      if (cross || request.headers.get('x-weft') !== '1' || !request.headers.get('content-type')?.startsWith('application/json'))
+        return fail('Q010', `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`, 403)
+      const body = (await request.json()) as { i?: unknown; f?: [string, unknown][] }
+      return out(await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : []))
+    } catch (e) {
+      if (isRedirect(e)) return out({ r: e.href })
+      if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : {})
+      options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
+      return out({ e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' } }, 500)
+    }
   }
 
   async function og(url: URL, request: Request): Promise<Response> {
@@ -227,25 +291,50 @@ export function createHandler(options: HandlerOptions) {
     return new Response(`<!doctype html>\n<meta name="robots" content="noindex">\n${list}\n`, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-nitro-prerender': paths.join(',') } })
   }
 
-  const handler = async (request: Request): Promise<Response> => {
+  const route = (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
-    if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 })
+    if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
+    if (request.method !== 'GET' && request.method !== 'HEAD') return Promise.resolve(new Response('Method not allowed', { status: 405 }))
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)
-    if (url.pathname.startsWith('/_weft/data/') || url.pathname === '/_weft/data') return data((url.pathname.slice('/_weft/data'.length) || '/') + url.search, request)
+    if (url.pathname.startsWith('/_weft/data/') || url.pathname === '/_weft/data') return data((url.pathname.slice('/_weft/data'.length) || '/') + url.search, request, scope)
     if (url.pathname === '/_weft/og-routes') return prerenderList(request)
-    return page(url, request)
+    return page(url, request, scope)
+  }
+  const handler = (request: Request): Promise<Response> => {
+    if (!checked) {
+      checked = true
+      exec.checkTags(d => options.onDiagnostic?.(d))
+    }
+    const scope = exec.createScope(request, scopeOptions)
+    return als.run(scope, () => route(request, scope))
   }
   return Object.assign(handler, { resolve })
 }
 
+/**
+ * What each router-core loader gets as `context`: the request scope, and where it leaves tags and redirects (router-core
+ * copies the context object, so those go in shared containers).
+ */
+interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<string>>; out: { redirect?: Redirect } }
+
 /** The router-core tree for the manifest: layouts are path prefixes, routes hang under their innermost layout. */
 function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
-  const loader = (file: string) => async ({ params, context, abortController }: any) => {
+  const loader = (file: string) => async ({ params, context, abortController }: { params: any; context: LoadContext; abortController: AbortController }) => {
     const load = modules[file]?.load
     if (!load) return undefined
-    const v = await load({ params: cleanParams(params), request: context.request, signal: abortController.signal })
-    if (isNotFound(v)) throw v
-    return v
+    // Each loader runs in its own frame of the request scope, which records the tags of the queries it read.
+    const f = exec.frame(context.scope)
+    context.tags.set(file, f.tags!)
+    try {
+      const ctx = await f.ctx()
+      const v = await als.run(f, () => load({ params: cleanParams(params), request: context.request, signal: abortController.signal, ctx }))
+      if (isNotFound(v)) throw v
+      return v
+    } catch (e) {
+      if (!isRedirect(e)) throw e
+      context.out.redirect ??= e
+      return undefined
+    }
   }
   const rootLayout = manifest.layouts.find(l => l.dir === '')
   const root = new BaseRootRoute({ ...(rootLayout && { loader: loader(rootLayout.file), weft: rootLayout }) } as any)
@@ -312,7 +401,18 @@ function settledView(raw: unknown, deferred: string[] | undefined, id: string, o
 }
 
 function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
-  return { m: r.levels.map(({ id, params, data, d }) => ({ id, params, data, ...(d && { d }) })), p: r.path, s: r.status, ...(withHead && { h: r.head }) }
+  return { m: r.levels.map(({ id, params, data, d, t }) => ({ id, params, data, ...(d && { d }), ...(t && { t }) })), p: r.path, s: r.status, ...(withHead && { h: r.head }) }
+}
+
+/** The request's resolved queries, as the client cache seeds them (failures are left for the client to retry). */
+function wire(scope: Scope): Wire[] {
+  return [...scope.entries.values()].filter(e => e.done && e.e === undefined).map(e => [e.id, e.input, e.v, e.tags])
+}
+
+/** The cookies and headers server functions set (`ctx.response.headers`), on the response. */
+function withHeaders(res: Response, scope: Scope): Response {
+  for (const [k, v] of scope.headers) res.headers.append(k, v)
+  return res
 }
 
 export { headTags }

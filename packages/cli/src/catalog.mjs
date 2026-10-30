@@ -1,7 +1,7 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
 // P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups),
-// research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), plus the codes proposed in
-// research 17 (marked `proposed`).
+// research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
+// server functions, and S011), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -223,6 +223,20 @@ export const catalog = [
   { code: 'H006', severity: 'error', by: 'cli', proposed: true, catches: '`meta` reads a box or calls a hook (metadata is plain data); found statically by `weft routes --meta`', fix: 'Compute it from `params` and `data`' },
   { code: 'H007', severity: 'error', by: 'start', proposed: true, catches: '`meta` (or a card) reads a deferred (streamed) field of the loader\'s data: the request fails with 500 instead of a page with missing tags', fix: 'Await the field in `load`, or leave it out of `meta`' },
   { code: 'H008', severity: 'warning', by: 'start', proposed: true, catches: 'A card\'s `<img>` didn\'t load (timeout, HTTP error, not an image, too large, host not allowed); the card renders without it', fix: 'Fix the URL, or embed the image with an import' },
+
+  // Server functions and the query cache (research 27 §6; Q for query). `start`: reported by @weft/start while serving
+  // (the server log, and the error the call rejects with); `runtime`: thrown or warned by the client runtime.
+  { code: 'Q001', severity: 'error', by: 'runtime', catches: '`q()` (a live query, a Resource) called with no owner: in `load`, a handler, a timer or module scope', fix: '`await q.fetch(input)` there; `q()` in components and defineState scopes' },
+  { code: 'Q002', severity: 'error', by: 'start', catches: 'A query\'s or mutation\'s input failed its schema (400, with the issues and their paths)', fix: 'Pass what the schema accepts' },
+  { code: 'Q003', severity: 'error', by: 'start', catches: '`query`/`mutation` defined outside a server module: its `run` and imports would ship to the client (the build fails)', fix: 'Move it to `src/server/**` or a `*.server.ts` file' },
+  { code: 'Q004', severity: 'error', by: 'start', catches: 'A mutation called while the server handles a GET (`load`, a page render, a query\'s `run`)', fix: 'Call it from a handler or another mutation; reads go in queries' },
+  { code: 'Q005', severity: 'warning', by: 'start', catches: 'A server function\'s result doesn\'t survive JSON (`Date`, `Map`, `Set`, a class, `undefined` in an array, a function, `NaN`): the client sees another value', fix: 'Send plain data (ISO strings, arrays, objects)' },
+  { code: 'Q006', severity: 'error', by: 'start', catches: 'A cached (`cache: { life }`) query reads `ctx.request`, `ctx.response` or `ctx.user`: its value is shared by every user', fix: 'Drop `cache`, or pass the value as input' },
+  { code: 'Q007', severity: 'error', by: 'start', catches: '`redirect()` after the page started streaming (a component\'s query): the status is already sent', fix: 'Call the query in the route\'s `load`, which runs before the first byte' },
+  { code: 'Q008', severity: 'warning', by: 'start', catches: 'A mutation `invalidates` a tag no query declares (`todo:*` covers `todo:${id}`): nothing refreshes', fix: 'Fix the tag name, or add it to the query\'s `tags`' },
+  { code: 'Q009', severity: 'error', by: 'start', catches: '`/_weft/fn/<id>` names no function: the page is older than the server, or the module isn\'t a server module', fix: 'Reload; keep `query`/`mutation` exports in server modules' },
+  { code: 'Q010', severity: 'error', by: 'start', catches: 'A mutation request without the CSRF proof (POST, JSON, `x-weft: 1`, same origin): 403', fix: 'Call mutations through their stub, not a hand-made `fetch` or form' },
+  { code: 'S011', severity: 'warning', by: 'runtime', catches: '`mutation({ optimistic })` updated a query its invalidated tags didn\'t cover: the prediction has no fresh value to land on (held until a refetch)', fix: 'Add one of the query\'s tags to `invalidates`' },
 
   // Text, type and skeletons (research 11 §8.5; Phase 2's set, research 26 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },

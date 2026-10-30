@@ -29,6 +29,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./data": "./src/data.ts",
     "./client": "./src/client.tsx",
     "./server": "./src/server.tsx",
     "./vite": "./src/vite.mjs",

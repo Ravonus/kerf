@@ -18,3 +18,16 @@ export const db = {
 }
 
 export const later = <T,>(ms: number, v: T) => new Promise<T>(ok => setTimeout(ok, ms, v))
+
+// Todos for the server-function routes (research 27): mutable, shared by every request of the dev server.
+export interface Todo { id: string; title: string; done: boolean }
+export const todos = {
+  list: [
+    { id: '1', title: 'Write the note', done: true },
+    { id: '2', title: 'Build the cache', done: false },
+    { id: '3', title: 'Ship it', done: false },
+  ] as Todo[],
+  /** How often each query's `run` ran, so tests can see dedupe and the shared cache. */
+  runs: { list: 0, stats: 0 },
+  next: 4,
+}

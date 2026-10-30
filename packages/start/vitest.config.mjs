@@ -1,10 +1,13 @@
 import { defineConfig } from 'vitest/config'
+import weft from 'weft/vite'
 
 export default defineConfig({
+  // .tsx tests (the server-function cache under weft/test, jsdom) compile with weft's plugin.
+  plugins: [weft()],
   test: {
     environment: 'node',
     globals: true,
-    include: ['test/**/*.test.{mjs,ts}'],
+    include: ['test/**/*.test.{mjs,ts,tsx}'],
     globalSetup: ['test/dev-server.setup.mjs'],
     testTimeout: 30_000,
     hookTimeout: 120_000,

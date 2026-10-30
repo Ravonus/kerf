@@ -8,6 +8,7 @@
 //
 // `weft check` reports junk tests statically (T001–T009); a test here that never asserts also fails at runtime (T001).
 
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { screen as dom } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
 import { afterEach, expect, vi } from 'vitest'
@@ -114,7 +115,7 @@ afterEach(context => {
   cleanup()
   clock.uninstall()
   session = undefined
-  try { assertNoLeaks() } finally { resetPage() } // T012
+  try { assertNoLeaks() } finally { resetPage(); resetTransport() } // T012
   // T001 at runtime: catches what the static check can't see (assertions hidden in helpers it couldn't read, or none).
   const failed = context.task.result?.state === 'fail' || (context.task.result?.errors?.length ?? 0) > 0
   if (!failed && !context.task.fails && expect.getState().assertionCalls === 0)
@@ -171,10 +172,65 @@ installPage()
 
 const fire = (target: EventTarget, type: string, init?: object) => target.dispatchEvent(Object.assign(new Event(type), init))
 
-/** The network as weft/browser's `online()` sees it. Phase 3 adds the fake transport (`net.drop`, `net.latency`). */
+/**
+ * The fake transport for @weft/start's server functions (research 27 §7). With weft/test loaded, `query`/`mutation`
+ * calls run in process through the server's executor (validation, request cache, tags, single-flight, a JSON round
+ * trip) instead of HTTP. @weft/start finds these controls under a global symbol, so weft doesn't depend on it.
+ */
+type FnRef = { $id: string } | string
+const fnId = (f: FnRef) => (typeof f === 'string' ? f : f.$id)
+const transport = {
+  latency: 0,
+  ctx: undefined as object | undefined,
+  online: () => fake.online,
+  fails: new Map<string, unknown[]>(),
+  handlers: new Map<string, (input: any, ctx: any) => unknown>(),
+  log: [] as { id: string; kind: string; input: unknown }[],
+  /** Calls in flight (`net.settle()` waits for them). */
+  inflight: new Set<Promise<unknown>>(),
+  /** Inside a call, the fake request's scope: nested calls in a `run` are server calls, as on a real server. */
+  als: new AsyncLocalStorage<unknown>(),
+  /** @weft/start registers its client cache reset here. */
+  resets: [] as (() => void)[],
+}
+;(globalThis as any)[Symbol.for('weft.net')] = transport
+
+function resetTransport() {
+  Object.assign(transport, { latency: 0, ctx: undefined })
+  transport.fails.clear()
+  transport.handlers.clear()
+  transport.log.length = 0
+  transport.inflight.clear()
+  for (const r of transport.resets) r()
+}
+
+/** The network as weft/browser's `online()` and @weft/start's server functions see it. */
 export const net = {
+  /** Offline: `online()` turns false, and server function calls reject with an `OfflineError`. */
   offline() { fake.online = false; fire(window, 'offline'); return flush() },
   online() { fake.online = true; fire(window, 'online'); return flush() },
+  /** Every server function call waits `ms` first (fake timers: advance them with `clock.tick`). */
+  latency(ms: number) { transport.latency = ms },
+  /** The `ctx` server functions get (`{ db, user }`); `request` and `response` are added. */
+  context(ctx: object) { transport.ctx = ctx },
+  /** The next call of `fn` rejects with `error` (queue several by calling again). */
+  fail(fn: FnRef, error: unknown = new Error(`net.fail(${fnId(fn)})`)) {
+    const id = fnId(fn)
+    transport.fails.set(id, [...(transport.fails.get(id) ?? []), error])
+  },
+  /** Replace `fn`'s `run`: `net.handle(listTodos, () => [{ id: '1', title: 'Milk', done: false }])`. */
+  handle<I = any, O = unknown>(fn: FnRef, run: (input: I, ctx: any) => O | Promise<O>) { transport.handlers.set(fnId(fn), run) },
+  /** The calls so far, in order: `{ id, kind, input }`. */
+  calls() { return transport.log.slice() },
+  /** Wait until no call is in flight (with latency: real time, or `clock.tick` under fake timers), then flush. */
+  async settle() {
+    for (let i = 0; i < 100; i++) {
+      await flush()
+      if (!transport.inflight.size) return
+      await Promise.allSettled([...transport.inflight])
+    }
+    throw new Error('net.settle(): calls kept starting (a refetch loop?)')
+  },
 }
 
 const visibility = (to: DocumentVisibilityState) => { fake.visibility = to; fire(document, 'visibilitychange') }
