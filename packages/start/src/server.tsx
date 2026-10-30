@@ -19,6 +19,7 @@ import { createRouteState, type Component, type Match, type RoutePayload } from 
 import { CLIENT_IP, FnError, fns, isRedirect, runtime, StartError, type Redirect, type Wire } from './data'
 import * as exec from './exec'
 import type { Scope, Store } from './exec'
+import { configure, hub, rtRoute, type RealtimeOptions } from './hub'
 import { App } from './view'
 import { DefaultCard } from './og/DefaultCard'
 import { ErrorPage, NotFoundPage } from './builtin'
@@ -60,6 +61,8 @@ export interface HandlerOptions {
   auth?: { handler: (request: Request) => Promise<Response>; options?: { basePath?: string }; $weft?: { check(): void } }
   /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
+  /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
+  realtime?: RealtimeOptions
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
   onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
 }
@@ -82,6 +85,7 @@ const als = new AsyncLocalStorage<Scope>()
 runtime.scope = () => als.getStore()
 runtime.enter = (scope, fn) => als.run(scope, fn)
 runtime.exec = exec
+runtime.poke = (tags, origin) => hub().poke(tags, origin)
 
 const CARD = { width: 1200, height: 630 }
 const stores = () => ({ createMutableStore: createNonReactiveMutableStore, createReadonlyStore: createNonReactiveReadonlyStore, batch: (f: () => void) => f() })
@@ -117,6 +121,7 @@ export function createHandler(options: HandlerOptions) {
   const authBase = (options.auth?.options?.basePath ?? '/api/auth').replace(/\/$/, '')
   let applied = -1
   let ready: Promise<void> | undefined
+  configure({ ...options.realtime, build: options.build })
 
   /** Before the first request (and in dev, when `drizzle/` grows): the auth secret, then the migrations. */
   function boot(): Promise<void> | undefined {
@@ -221,7 +226,10 @@ export function createHandler(options: HandlerOptions) {
           options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
         }
         const cached = wire(scope)
-        controller.enqueue(enc.encode(`<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + '</body>\n</html>\n'))
+        // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
+        if (scope.live) await hub().ready()
+        const rt = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
+        controller.enqueue(enc.encode(`<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'))
         controller.close()
       },
     })
@@ -247,6 +255,7 @@ export function createHandler(options: HandlerOptions) {
       return out({ e: { code, message, ...extra } }, status)
     }
     if (!f) return fail('Q009', `Q009: no server function \`${id}\` (the page is older than the server, or the module isn't a server module): reload`, 404)
+    if (f.kind === 'stream') return fail('Q009', `Q009: \`${id}\` is a stream: its client reads it over \`/_weft/rt\``, 405)
     try {
       if (f.kind === 'query') {
         if (request.method !== 'GET' && request.method !== 'HEAD') return fail('Q009', `Q009: \`${id}\` is a query: GET only`, 405)
@@ -320,6 +329,7 @@ export function createHandler(options: HandlerOptions) {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
+    if (url.pathname === '/_weft/rt') return rtRoute(request, scope, options.realtime?.origins)
     if (request.method !== 'GET' && request.method !== 'HEAD') return Promise.resolve(new Response('Method not allowed', { status: 405 }))
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)
     if (url.pathname.startsWith('/_weft/data/') || url.pathname === '/_weft/data') return data((url.pathname.slice('/_weft/data'.length) || '/') + url.search, request, scope)

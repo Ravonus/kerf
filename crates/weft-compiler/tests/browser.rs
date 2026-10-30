@@ -235,6 +235,30 @@ fn w056_not_for_state_sources_or_transforms() {
     assert!(!has(&check(src), "W056"), "{:?}", check(src));
 }
 
+// ---- W052: a stream folded by hand --------------------------------------------------------------------------------
+
+#[test]
+fn w052_a_watch_that_accumulates_a_stream() {
+    for run in ["m => { list.value = [...list.value, m] }", "m => list.value = list.value.concat(m)"] {
+        let src = format!(
+            "import {{ state, watch }} from 'weft'\nimport {{ prices }} from '../server/prices'\nexport function A() {{\n  const tick = prices({{ symbols: ['A'] }})\n  const list = state([])\n  watch(() => tick.value, {run})\n  return <p>{{list.value.length}}</p>\n}}"
+        );
+        let d = check(&src);
+        let w = one(&d, "W052");
+        assert_eq!(w.severity, Severity::Error);
+        assert!(w.message.contains("folds `tick` into `list`"), "{}", w.message);
+        assert!(!has(&d, "W056"), "{d:?}");
+    }
+}
+
+#[test]
+fn w052_not_for_local_sources_or_plain_copies() {
+    let src = "import { state, watch } from 'weft'\nimport { format } from './format'\nexport function A() {\n  const a = format(1)\n  const list = state([])\n  watch(() => a.value, m => { list.value = [...list.value, m] })\n  return <p>{list.value.length}</p>\n}";
+    assert!(!has(&check(src), "W052"), "{:?}", check(src));
+    let copy = "import { state, watch } from 'weft'\nimport { prices } from '../server/prices'\nexport function A() {\n  const tick = prices({})\n  const last = state(null)\n  watch(() => tick.value, m => { last.value = m })\n  return <p>{last.value}</p>\n}";
+    assert!(has(&check(copy), "W056") && !has(&check(copy), "W052"), "{:?}", check(copy));
+}
+
 // ---- browser values are boxes for the other checks ---------------------------------------------------------------
 
 #[test]
