@@ -1,0 +1,30 @@
+/* warp's tokens as Tailwind v4 theme values: `bg-surface`, `text-accent`, `rounded-control`, `font-display`. `inline`
+   keeps each utility on the var(), so dials and scopes re-theme utilities the same way they re-theme components. */
+@theme inline {
+  --color-page: var(--warp-color-page);
+  --color-surface: var(--warp-color-surface);
+  --color-surface-raised: var(--warp-color-surface-raised);
+  --color-surface-sunken: var(--warp-color-surface-sunken);
+  --color-text: var(--warp-color-text);
+  --color-text-subtle: var(--warp-color-text-subtle);
+  --color-text-faint: var(--warp-color-text-faint);
+  --color-border: var(--warp-color-border);
+  --color-border-strong: var(--warp-color-border-strong);
+  --color-focus: var(--warp-color-focus);
+  --color-accent: var(--warp-color-accent-solid);
+  --color-accent-soft: var(--warp-color-accent-soft);
+  --color-accent-text: var(--warp-color-accent-text);
+  --color-on-accent: var(--warp-color-accent-on-solid);
+  --color-positive: var(--warp-color-positive-solid);
+  --color-caution: var(--warp-color-caution-solid);
+  --color-critical: var(--warp-color-critical-solid);
+  --color-info: var(--warp-color-info-solid);
+
+  --font-sans: var(--warp-font-sans);
+  --font-display: var(--warp-font-display);
+  --font-mono: var(--warp-font-mono);
+
+  --radius-mark: var(--warp-radius-mark);
+  --radius-control: var(--warp-radius-control);
+  --radius-surface: var(--warp-radius-surface);
+}

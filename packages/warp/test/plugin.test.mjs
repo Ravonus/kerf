@@ -37,3 +37,48 @@ test('fields: "classic" re-scopes the spec\'s classic rules to the root, inside 
   expect(css).toContain(':root:not([data-fields="floating"])')
   expect(css).not.toContain('[data-fields="classic"]')
 })
+
+test('dials become the default at the root, and markup on <html> still wins', () => {
+  const css = run({ dials: { density: 'compact', expression: 'quiet' } }).tokens.css
+  expect(css).toContain(':root:not([data-density]){--warp-density-k: 0.75')
+  expect(css).toContain(':root:not([data-expression])')
+  expect(css).not.toContain('[data-density="compact"]')
+})
+
+test('radius, fonts and tokens land on every scope, in a layer after the dial stops', () => {
+  const css = run({ radius: 'round', fonts: { body: 'Inter', mono: 'Menlo, monospace' }, tokens: { '--warp-space-page': '20px' } }).tokens.css
+  expect(css).toMatch(/^@layer warp\.base\{:root,\[data-expression\]/)
+  expect(css).toContain('--warp-radius-control:14px')
+  expect(css).toContain('--warp-font-sans:"Inter", ui-sans-serif')
+  expect(css).toContain('--warp-font-mono:Menlo, monospace')
+  expect(css).toContain('--warp-space-page:20px')
+})
+
+test('a token that breaks contrast fails D010 like a bad seed', () => {
+  expect(code(() => run({ tokens: { '--warp-color-page': '#fafafa' } }))).toBe('D010') // dark text-on-page goes
+  expect(code(() => run({ tokens: { '--warp-color-text': '#ffffff', '--warp-color-page': '#ffffff' } }))).toBe('D010')
+  expect(code(() => run({ tokens: { '--warp-color-accent-solid': '#ffffff' } }))).toBe('D010')
+})
+
+test('a token can rescue a seed outside the sweep window', () => {
+  const seed = { hue: 270, chroma: 0.115 }
+  expect(code(() => run({ seed }))).toBe('D010')
+  expect(code(() => run({ seed, tokens: { '--warp-color-sweep': 'light-dark(oklch(0.53 0.13 270), oklch(0.6 0.155 270))' } }))).toBeUndefined()
+})
+
+test.each([
+  [{ dials: { nope: 'x' } }, 'dials.nope'],
+  [{ dials: { density: 'huge' } }, 'dials.density'],
+  [{ radius: 'pill' }, 'radius'],
+  [{ fonts: { body: 'x;}' } }, 'fonts.body'],
+  [{ tokens: { color: 'red' } }, 'tokens.color'],
+  [{ tokens: { '--warp-color-page': 'red' } }, 'tokens.--warp-color-page'],
+])('rejects %j', (input, path) => {
+  let error
+  try {
+    warp(input)
+  } catch (e) {
+    error = e
+  }
+  expect(error).toMatchObject({ code: 'P115', path })
+})

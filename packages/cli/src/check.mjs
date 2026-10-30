@@ -12,7 +12,7 @@ import { isDataConfig, loadConfig, writeConfigSchema } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { writeMap } from './map.mjs'
 import { projectView } from './project.mjs'
-import { classSoup, matrixDiagnostics, styleFiles, styleModule, writeMatrixFile } from './style.mjs'
+import { classSoup, matrixDiagnostics, styleFiles, styleModule, usesTailwind, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
 import { stateChecks } from './state-checks.mjs'
@@ -90,7 +90,7 @@ export async function check(root, options = {}) {
 
   const matrix = scan && style.buildMatrix(scan.groups, scan.uses)
   if (matrix && scan.groups.length) writeMatrixFile(root, matrix)
-  const styles = [...classSoup(files.filter(f => /\.[jt]sx$/.test(f.rel))), ...(matrix ? matrixDiagnostics(root, matrix) : [])]
+  const styles = [...(usesTailwind(root) ? [] : classSoup(files.filter(f => /\.[jt]sx$/.test(f.rel)))), ...(matrix ? matrixDiagnostics(root, matrix) : [])]
 
   const fontBuild = typeof loaded.slots['font.build'] === 'string' && !loaded.slots['font.build'].startsWith('weft:default')
   const diagnostics = [

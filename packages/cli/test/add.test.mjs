@@ -72,6 +72,50 @@ describe('weft add', () => {
   it('names features that are not built yet, and changes nothing', async () => {
     const dir = project({ 'weft.config.ts': 'export default {}\n' })
     await expect(add(dir, 'db')).rejects.toThrow("isn't built yet")
-    await expect(add(dir, 'tailwind')).rejects.toThrow("isn't built yet")
+    await expect(add(dir, 'auth')).rejects.toThrow("isn't built yet")
   })
 })
+
+describe('weft add tailwind', () => {
+  const app = (deps = {}, extra = {}) => project({ 'package.json': JSON.stringify({ dependencies: deps }), 'src/routes/_layout.tsx': "import { Link } from '@weft/start'\n", ...extra })
+  const addTw = (dir, o = {}) => addCommand(dir, 'tailwind', { install: false, ...o })
+
+  it('leaves the reset out of a warp app, whose components it would override', async () => {
+    const dir = app({ '@weft/warp': '0.0.0' })
+    await addTw(dir)
+    const css = read(dir, 'src/app.css')
+    expect(css).toContain('@layer warp, theme, base, components, utilities;')
+    expect(css).toContain('@import "@weft/warp/tailwind.css"')
+    expect(css).not.toContain('@import "tailwindcss";')
+    expect(read(dir, 'src/routes/_layout.tsx').startsWith("import '../app.css'\n")).toBe(true)
+    expect(read(dir, 'vite.config.ts')).toContain('tailwindcss()')
+  })
+
+  it('keeps the CSS an app has, under the imports', async () => {
+    const dir = app({}, { 'src/app.css': 'nav { color: red; }\n', 'src/routes/_layout.tsx': "import '../app.css'\n" })
+    await addTw(dir)
+    expect(read(dir, 'src/app.css')).toBe('@import "tailwindcss";\n\nnav { color: red; }\n')
+    expect(read(dir, 'src/routes/_layout.tsx')).toBe("import '../app.css'\n")
+  })
+
+  it('adds to a Vite config, and stops at one it can\'t place the plugin in', async () => {
+    const dir = app({}, { 'vite.config.ts': 'export default { plugins: [other()] }\n' })
+    await addTw(dir)
+    expect(read(dir, 'vite.config.ts')).toContain('plugins: [tailwindcss(), other()]')
+
+    const odd = app({}, { 'vite.config.ts': 'export default make()\n' })
+    await expect(addTw(odd)).rejects.toMatchObject({ code: 'E_ADD' })
+    expect(read(odd, 'vite.config.ts')).toBe('export default make()\n')
+  })
+
+  it('dry run changes nothing, and a second run does nothing', async () => {
+    const dir = app()
+    const planned = await addTw(dir, { dryRun: true })
+    expect(planned.dryRun).toBe(true)
+    expect(() => read(dir, 'src/app.css')).toThrow()
+
+    const done = app({ tailwindcss: '4.3.3' }, { 'src/app.css': '@import "tailwindcss";\n' })
+    expect(await addTw(done)).toMatchObject({ already: true })
+  })
+})
+

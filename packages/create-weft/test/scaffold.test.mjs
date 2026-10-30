@@ -111,7 +111,7 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
   expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual(['weft', '@weft/start', '@weft/ui-core'])
   expect(headless['src/routes/_layout.tsx']).toContain("import '@weft/ui-core/styles/warp.css'")
   expect(template({ ui: 'none' })['weft.config.ts']).not.toContain('plugins')
-  expect(() => template({ ui: 'tailwind' })).toThrow('--ui must be one of warp, headless, none')
+  expect(() => template({ ui: 'bootstrap' })).toThrow('--ui must be one of warp, headless, tailwind, none')
 })
 
 describe('--db, --auth, --runtime', () => {
@@ -162,6 +162,17 @@ describe('--db, --auth, --runtime', () => {
     expect(() => template({ ui: 'none', runtime: 'workerd' })).toThrow('--runtime must be one of node, bun, deno')
     expect(() => template({ ui: 'none', auth: true })).toThrow('--auth keeps users in a database')
   })
+})
+
+it('--ui tailwind writes what `weft add tailwind` writes', async () => {
+  const { cssEntry, packages, viteConfig } = await import('../../cli/src/tailwind.mjs')
+  const files = template({ ui: 'tailwind' })
+  expect(files['src/app.css']).toBe(cssEntry(false))
+  expect(files['vite.config.ts']).toBe(viteConfig)
+  expect(JSON.parse(files['package.json']).devDependencies).toMatchObject(packages)
+  expect(files['src/routes/index.tsx']).toContain('rounded-lg')
+  expect(files['src/routes/_layout.tsx']).toContain('<nav class="flex gap-4 p-4">')
+  expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('@weft/warp')
 })
 
 it('refuses a non-empty directory', () => {

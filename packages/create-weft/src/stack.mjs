@@ -306,6 +306,24 @@ export default function TodosLayout(props: RouteProps) {
 }
 `
 
+// Tailwind: the same files `weft add tailwind` writes (packages/cli/src/tailwind.mjs, held equal by a test).
+export const tailwindPackages = { tailwindcss: '4.3.3', '@tailwindcss/vite': '4.3.3' }
+export const TAILWIND_VITE = `import tailwindcss from '@tailwindcss/vite'
+
+export default { plugins: [tailwindcss()] }
+`
+export const TAILWIND_CSS = `@import "tailwindcss";
+`
+const tw = {
+  card: 'mx-auto max-w-2xl space-y-4 rounded-lg border border-current/15 p-6',
+  title: 'text-2xl font-semibold',
+  button: 'rounded-md border border-current/30 px-3 py-1.5 hover:bg-current/5',
+  input: 'rounded-md border border-current/30 px-3 py-1.5',
+}
+/** The class of a scaffold element: Tailwind's utilities, or the plain CSS in src/app.css. */
+export const classes = (ui, part) => (ui === 'tailwind' ? tw[part] : part === 'card' ? 'card' : '')
+const attr = (ui, part) => (ui === 'tailwind' ? ` class="${tw[part]}"` : '')
+
 /** The page's controls in each UI kit: warp's components, or plain elements with the same roles and names. */
 export const controls = ui => ui === 'warp'
   ? {
@@ -318,10 +336,10 @@ export const controls = ui => ui === 'warp'
     }
   : {
       imports: '',
-      card: (title, body) => `<section class="card"><h1>${title}</h1>${body}</section>`,
-      input: (label, box, type = 'text') => `<label>${label} <input type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} /></label>`,
-      submit: (label, pending) => `<button type="submit" disabled={${pending}}>${label}</button>`,
-      button: (label, onClick, extra = '') => `<button type="button" ${extra}onClick={${onClick}}>${label}</button>`,
+      card: (title, body) => `<section class="${classes(ui, 'card')}"><h1${attr(ui, 'title')}>${title}</h1>${body}</section>`,
+      input: (label, box, type = 'text') => `<label>${label} <input${attr(ui, 'input')} type="${type}" value={${box}.value} onInput={e => (${box}.value = e.currentTarget.value)} /></label>`,
+      submit: (label, pending) => `<button${attr(ui, 'button')} type="submit" disabled={${pending}}>${label}</button>`,
+      button: (label, onClick, extra = '') => `<button${attr(ui, 'button')} type="button" ${extra}onClick={${onClick}}>${label}</button>`,
       error: box => `{${box}.value && <p role="alert">{${box}.value}</p>}`,
     }
 

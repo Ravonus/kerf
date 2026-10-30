@@ -2,20 +2,21 @@
 // the config, whichever format that is. It only ever inserts, and stops rather than guess at a config it can't read.
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, relative, resolve } from 'node:path'
 import ts from 'typescript'
 import { writeAgentsMd } from './agents-md.mjs'
 import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config.mjs'
 import { sync } from './plugins.mjs'
+import { cssEntry, packages, viteConfig } from './tailwind.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
 const ALIASES = { warp: '@weft/warp', text: '@weft/plugin-text', media: '@weft/plugin-media', 'surface-keel': '@weft/plugin-surface-keel' }
 /** Features 3x hasn't built: an honest answer beats treating them as a package name. */
-const COMING = { db: 'database layers (research 34 slice C)', auth: 'auth providers (slice D)', tailwind: 'the Tailwind adapter (slice B)' }
+const COMING = { db: 'database layers (research 34 slice C)', auth: 'auth providers (slice D)' }
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -89,10 +90,54 @@ function addToData(file, text, pkg) {
 
 const listed = (config, pkg) => (config.plugins ?? []).some(p => p.name === pkg)
 
+const VITE = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs']
+
+/** The app's Vite config with Tailwind in it. Stops rather than guess at one it can't place the plugin in. */
+function viteWithTailwind(file, text) {
+  if (text.includes('@tailwindcss/vite')) return text
+  if (!/plugins:\s*\[/.test(text)) throw refused(`${file} has no \`plugins: [\` to add Tailwind to. Add \`tailwindcss()\` from @tailwindcss/vite there, then run this again. Nothing was changed.`)
+  return `import tailwindcss from '@tailwindcss/vite'\n${text.replace(/plugins:\s*\[/, '$&tailwindcss(), ')}`
+}
+
+/** Tailwind's packages, the Vite plugin, and the top of src/app.css, imported first by the root layout. */
+async function addTailwind(root, { dryRun, install }) {
+  if (!existsSync(join(root, 'package.json'))) throw refused('`weft add tailwind` needs a package.json. Nothing was changed.')
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+  const cssFile = join(root, 'src/app.css')
+  const css = existsSync(cssFile) ? readFileSync(cssFile, 'utf8') : ''
+  const viteName = VITE.find(f => existsSync(join(root, f)))
+  const vite = viteName ? viteWithTailwind(viteName, readFileSync(join(root, viteName), 'utf8')) : viteConfig
+  const layoutFile = join(root, 'src/routes/_layout.tsx')
+  const layout = existsSync(layoutFile) ? readFileSync(layoutFile, 'utf8') : null
+  const has = /['"]tailwindcss['"]|tailwindcss\/utilities/.test(css)
+  if (has && pkg.dependencies?.tailwindcss) return { ok: true, already: true, package: 'tailwindcss', actions: [] }
+
+  const actions = []
+  const [manager, verb] = installer(root)
+  const specs = Object.entries(packages).map(([name, version]) => `${name}@${version}`)
+  if (install) {
+    actions.push(`install ${specs.join(' ')} with ${manager}`)
+    if (!dryRun) execFileSync(manager, [verb, ...specs], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+  }
+  const warp = '@weft/warp' in { ...pkg.dependencies, ...pkg.devDependencies }
+  const edits = [[join(root, viteName ?? 'vite.config.ts'), vite], ...(has ? [] : [[cssFile, `${cssEntry(warp)}${css && '\n'}${css}`]])]
+  actions.push(`add Tailwind to ${viteName ?? 'vite.config.ts'}`, ...(has ? [] : [`add Tailwind to src/app.css${warp ? ' (without its reset, which would override warp)' : ''}`]))
+  if (layout === null) actions.push('import src/app.css from your root layout: there is no src/routes/_layout.tsx')
+  else if (!/['"][^'"]*app\.css['"]/.test(layout)) {
+    edits.push([layoutFile, `import '../app.css'\n${layout}`])
+    actions.push('import src/app.css first in src/routes/_layout.tsx')
+  }
+  if (dryRun) return { ok: true, package: 'tailwindcss', actions, dryRun: true }
+  mkdirSync(join(root, 'src'), { recursive: true })
+  for (const [file, text] of edits) writeFileSync(file, text)
+  return { ok: true, package: 'tailwindcss', actions }
+}
+
 export async function addCommand(root, feature, { dryRun = false, install = true } = {}) {
   root = resolve(root)
-  if (!feature) throw usageError(`weft add needs a plugin: ${Object.keys(ALIASES).join(', ')}, or a package name`)
+  if (!feature) throw usageError(`weft add needs a feature: tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
   if (COMING[feature]) throw refused(`\`weft add ${feature}\` isn't built yet: ${COMING[feature]}. Nothing was changed.`)
+  if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   const pkg = ALIASES[feature] ?? feature
   const before = await loadConfig(root)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')
