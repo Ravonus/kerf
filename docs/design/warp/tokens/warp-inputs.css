@@ -459,7 +459,7 @@
   border-radius: var(--warp-radius-control); transition: color calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
 }
 :where([data-scope="segmented"] [data-part="item"] svg) { inline-size: 14px; block-size: 14px; }
-:where([data-scope="segmented"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); opacity: 0.8; }
+:where([data-scope="segmented"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); }   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
 :where([data-scope="segmented"] label:hover [data-part="item"]) { color: var(--warp-color-text); }
 :where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); }
 :where([data-scope="segmented"] input:focus-visible + [data-part="item"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
@@ -488,7 +488,7 @@
 :where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); }
 :where([data-scope="chip"][data-sweep]:focus-visible) { outline: none; }
 :where([data-scope="chip"][data-sweep]:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
-:where([data-scope="chip"] [data-part="count"]) { opacity: 0.7; font-variant-numeric: tabular-nums; }
+:where([data-scope="chip"] [data-part="count"]) { font-variant-numeric: tabular-nums; }   /* full ink: 0.7 opacity fell to 3.2:1 (review 03 m12) */
 
 /* tag (inside tags input / multi-combobox) */
 :where([data-scope="tag"]) {

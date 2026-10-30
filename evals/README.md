@@ -73,6 +73,16 @@ a generated `AGENTS.md` into the weft workspace, and ticket 1's intro adds a wef
 use `npx weft check --json`). The tickets themselves are identical across frameworks. For weft, the probe's
 "renders" column counts reactive re-runs. Phase 1 exit-check run: `results/v3-weft-FINDINGS.md`.
 
+`warp` is the same shop on weft + the warp kit (`frameworks/warp`, `reference-v3/warp`, `starter/warp`). Phase 2's
+exit check runs it end to end: hidden tests and work budgets, production size against §3.7 plus the kit allowance,
+token contrast at every theme × expression stop, and axe plus pixel-measured contrast in Chromium at all 12 dial stops
+on the shop and on every warp component (`packages/warp/scripts/a11y.mjs`). Exit 1 on any failure. Results:
+`results/v3-warp-FINDINGS.md`.
+
+```bash
+node warp-exit.mjs        # writes results/v3-warp-exit/exit.{json,md}
+```
+
 ### v4 (`tasks-v4/watchlist`, `run-app.mjs --suite tasks-v4`)
 
 A stock watchlist: about 8 files, a fake API, 50 rows (200 in budget tests). Six tickets in one session:
