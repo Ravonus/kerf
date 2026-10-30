@@ -20,6 +20,7 @@ export const topics = {
   start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q015, A001–A004, C001–C002, F001–F003, R002–R010',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
+  surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   style: 'Style groups (weft/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',

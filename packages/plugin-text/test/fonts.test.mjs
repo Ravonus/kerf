@@ -13,7 +13,7 @@ const inter = w => fileURLToPath(new URL(`../node_modules/@fontsource/inter/file
 describe('text() options', () => {
   it('provides font.build with its build module and the resolved faces', () => {
     const p = text({ fonts: { body: { family: 'Inter', src: './fonts/Inter.woff2', fallback: 'Arial' }, mono: { family: 'Plex', src: './p.woff2', fallback: 'Courier New', display: 'optional' } } })
-    expect(p.provides).toEqual(['font.build'])
+    expect(p.provides).toEqual(['font.build', 'text.measure'])
     const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides
     expect(ref.sides.build.module).toBe(fileURLToPath(new URL('../src/build.mjs', import.meta.url)))
     expect(ref.sides.build.export).toBe('createFontBuild')
@@ -29,7 +29,8 @@ describe('text() options', () => {
       [{ fonts: { body: { family: 'Inter', src: 'a', fallback: 'Arial', display: 'block' } } }, 'fonts.body.display', /X021/],
       [{ fonts: { body: { family: 'Inter', src: 'a' } } }, 'fonts.body.fallback', /non-empty string/],
       [{ subsets: ['klingon'] }, 'subsets.0', /unknown subset/],
-      [{ measure: 'auto' }, 'measure', /arrives with Surfaces/],
+      [{ measure: 'on' }, 'measure', /'auto' or 'off'/],
+      [{ engine: 'fast' }, 'engine', /'slim' \| 'pretext'/],
     ]
     for (const [input, path, message] of bad) {
       let error

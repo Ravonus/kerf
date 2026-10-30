@@ -29,11 +29,13 @@ const ranges = te.lines(h, width)             // [{ width, start, end }], cursor
 te.clear()                                    // Pretext's clearCache(), plus the lite tier's caches
 ```
 
-It follows weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `clear`, see `src/types.ts`). Extras:
+It follows weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see `src/types.ts`). Extras:
 - `needs(text, font, opts)`: the lazy packs a text needs, from a scan of its code points.
 - `load(packs)`: preload those packs.
-- `lineText(h, line)`: the line's text, for handles prepared with `{ segments: true }`.
 - `setLocale()`.
+
+`lineText(h, line)` needs a handle prepared with `{ segments: true }`. That works on both tiers: a lite handle keeps its
+collapsed text and segment starts, so asking for strings doesn't load the exact tier.
 
 A handle has `exact` and `ready`. While a pack it needs is still loading, `layout()` returns an estimate marked
 `exact: false`. Once `ready` settles the same handle is exact, so there's no need to prepare it again. Call

@@ -3,7 +3,7 @@
 // exact. A lite handle laid out narrower than its widest word needs an emergency break, which only the
 // exact tier models: that layout loads the exact tier and is marked inexact until it has.
 import { inBaseAlphabet } from './alphabet.js'
-import { clearLite, countLite, prepareLite, setLiteLocale, textFits, walkLite, type LiteHandle } from './lite.js'
+import { clearLite, countLite, lineTextLite, prepareLite, setLiteLocale, textFits, walkLite, type LiteHandle } from './lite.js'
 import type { Handle, LayoutResult, LineRange, Pack, PrepareOptions, TextEngine } from './types.js'
 
 declare const __ENGINE__: 'blink' | 'webkit' | 'gecko'
@@ -67,7 +67,7 @@ export const engine: TextEngine = {
   engine: __ENGINE__,
   prepare(text, font, opts) {
     const h = new TextHandle(text, font, opts)
-    if (!opts?.segments && inBaseAlphabet(text) && textFits(text, opts)) h.lite = prepareLite(text, font)
+    if (inBaseAlphabet(text) && textFits(text, opts)) h.lite = prepareLite(text, font, opts?.segments)
     if (h.lite) h.exact = true
     else toExact(h)
     return h
@@ -86,7 +86,7 @@ export const engine: TextEngine = {
     const h = handle as TextHandle
     if (h.lite && h.lite.maxText <= Math.max(0, width) + EPS) {
       const out: LineRange[] = []
-      walkLite(h.lite, width, (w, s, e) => { out.push({ width: w, start: { segmentIndex: s, graphemeIndex: 0 }, end: { segmentIndex: e, graphemeIndex: 0 } }) })
+      walkLite(h.lite, width, (w, s, e) => { out.push({ width: w, start: { segmentIndex: s, graphemeIndex: 0 }, end: { segmentIndex: e, graphemeIndex: 0 }, lite: true }) })
       return out
     }
     if (h.lite && !h.x) toExact(h)
@@ -94,12 +94,13 @@ export const engine: TextEngine = {
   },
   lineText(handle, line) {
     const h = handle as TextHandle
+    if (line.lite && h.lite?.source !== undefined) return lineTextLite(h.lite, line.start.segmentIndex, line.end.segmentIndex)
     if (!X || !h.x) throw new Error('text-engine: lineText needs a handle prepared with { segments: true } once it is exact')
     return X.lineText(h.x, line)
   },
   clear() { clearLite(); X?.clear() },
   needs(text, font, opts) {
-    if (!opts?.segments && inBaseAlphabet(text) && textFits(text, opts)) return []
+    if (inBaseAlphabet(text) && textFits(text, opts)) return []
     const out: Pack[] = X ? [] : ['exact']
     // the exact tier's own packs, by the same pre-check it runs
     if (!inBaseAlphabet(text)) out.push('scripts')

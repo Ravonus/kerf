@@ -34,7 +34,7 @@ export function loadCompiler(weft) {
 }
 
 /** Exported names per public subpath, read from the installed package's entry files (no execution). */
-export function exportsOf(weft, subpaths = ['.', './dom', './ssr', './test', './browser', './style']) {
+export function exportsOf(weft, subpaths = ['.', './dom', './ssr', './test', './browser', './style', './surface']) {
   const out = {}
   for (const sub of subpaths) {
     const target = weft.pkg.exports?.[sub]

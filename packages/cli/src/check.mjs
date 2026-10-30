@@ -13,6 +13,7 @@ import { classSoup, matrixDiagnostics, styleFiles, styleModule, writeMatrixFile 
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
 import { stateChecks } from './state-checks.mjs'
+import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 import { schemaHash } from './start.mjs'
@@ -92,6 +93,7 @@ export async function check(root, options = {}) {
     ...styles,
     ...textChecks(root, { files, exclude, fontBuild }),
     ...stateChecks(root, { files, exclude }),
+    ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
     ...hygiene(root),

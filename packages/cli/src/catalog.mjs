@@ -283,9 +283,17 @@ export const catalog = [
   { code: 'R010', severity: 'error', by: 'start', catches: 'An origin that isn\'t the app\'s own or in `realtime({ origins })` tried to open a connection', fix: 'List it, scheme and port included' },
 
   // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
+  { code: 'X001', severity: 'warning', by: 'runtime', catches: '`s.text()` predicted one height and its DOM mirror renders another: `font`, `lineHeight` or `width` differs from the CSS', fix: 'Drop `font` and `lineHeight` so they come from CSS, or make them match; the message names the values' },
+  { code: 'X002', severity: 'warning', by: 'cli', catches: '`system-ui`, `-apple-system` or a generic-only family on a measured `s.text()`: canvas and CSS can resolve it differently (also checked in dev, for fonts that come from CSS)', fix: 'Name a family' },
+  { code: 'X003', severity: 'warning', by: 'runtime', catches: '`s.text()` prepared while its font isn\'t loaded and no `"<Family> Fallback"` face exists: it\'s measured on another font until the swap', fix: 'Declare the font in `text({ fonts })`, which generates the fallback' },
+  { code: 'X004', severity: 'warning', by: 'runtime', catches: 'A surface text mirror uses a style line breaking can\'t predict: `text-wrap: balance|pretty`, `hyphens: auto`, `word-spacing`, `letter-spacing`, `font-feature-settings`, `font-variant-numeric`, `font-variation-settings`', fix: 'Drop the style, or pass `exact: false`' },
   { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },
   { code: 'X006', severity: 'error', by: 'cli', catches: 'A fluid `clamp()` font size whose max/min is over 2.5: 200% zoom no longer doubles it', fix: 'Narrow the range (raise the minimum or lower the maximum)' },
   { code: 'X008', severity: 'error', by: 'cli', catches: 'Viewport meta with `user-scalable=no` or `maximum-scale` under 2: blocks pinch zoom', fix: 'Remove them (autofix)' },
+  { code: 'X009', severity: 'error', by: 'cli', catches: '`<Surface>` with neither `label` nor `decorative`: a screen reader finds an unnamed image', fix: 'Add `label`, or `decorative` if it shows nothing a reader needs' },
+  { code: 'X010', severity: 'error', by: 'cli', catches: '`fillText` or `strokeText` in a surface: text only the canvas knows, with no selection, find, translation or screen reader', fix: 'Use `s.text()`, or wrap it in `s.decorative()` if it is truly decoration' },
+  { code: 'X011', severity: 'error', by: 'cli', catches: 'A surface text mirror hidden from assistive tech: `aria-hidden` on `<Surface>` or `s.el`, or `display: none`/`visibility: hidden` on `[data-surface-text]` (also checked in dev)', fix: 'Leave the mirror to weft; use `decorative` for a surface with nothing to read' },
+  { code: 'X012', severity: 'error', by: 'cli', catches: 'CSS that defeats a surface\'s text fallback: `forced-color-adjust: none`, or a print rule hiding `[data-surface-text]`', fix: 'Remove it: the mirror is what forced-colours mode and print show' },
   { code: 'X020', severity: 'warning', by: 'cli', catches: 'A hand-written `@font-face` for a local file with no `"<Family> Fallback"` face: the font swap shifts layout', fix: 'Declare the font in `text({ fonts })` (@weft/plugin-text), which generates a metric-matched fallback' },
   { code: 'X021', severity: 'error', by: 'cli', catches: '`font-display: block` or `auto`: text is invisible while the font loads', fix: '`swap` (autofix), or `optional` for faces that may skip' },
   { code: 'X022', severity: 'warning', by: 'cli', catches: 'A local `@font-face` without `unicode-range` (not subset), or the font build\'s preloads over the 100 KB budget', fix: '`text({ fonts })` subsets every face; preload fewer faces' },
@@ -295,6 +303,8 @@ export const catalog = [
   { code: 'X032', severity: 'warning', by: 'runtime', catches: 'A skeleton repeats a list with no count hint: no `limit` input, no `.max()` on the array, nothing seen yet. It shows 5 rows, so the swap can shift', fix: 'Add a `limit` input or `.max()` to the array in `output`' },
   { code: 'X033', severity: 'warning', by: 'cli', catches: '`x.pending` renders a skeleton or spinner with no check that `x` has no value: every refetch flashes it', fix: 'Let `<Boundary>` show first loads, and test `x.value === undefined` here. A refetch keeps the old value in place' },
   { code: 'X034', severity: 'error', by: 'cli', catches: 'A `pending` fallback with its own `setTimeout`/`setInterval`: `<Boundary>` already owns the 150 ms / 400 ms timing', fix: 'Remove the timers from the fallback' },
+  { code: 'X040', severity: 'warning', by: 'cli', catches: 'Per-grapheme DOM spans over a string known to exceed 200 graphemes', fix: 'Use word-level motion or a Surface' },
+  { code: 'X041', severity: 'warning', by: 'cli', catches: 'Per-character spans without `aria-hidden`, or a parent with no accessible name: a screen reader spells the word out', fix: '`aria-hidden` on each span and `aria-label` with the whole text on the parent' },
 
   // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft/plugin-media's check hook.
   { code: 'X035', severity: 'warning', by: 'cli', catches: 'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it', fix: 'Render it with `<Text stream>` from weft/text: the height only grows' },
@@ -318,7 +328,7 @@ export const catalog = [
   { code: 'M018', severity: 'error', by: 'start', catches: 'An upload refused: it isn\'t an image weft can read, or it\'s over the size limit (422)', fix: 'Raise `media({ server: { maxBytes } })`, or check the file on the client first' },
 
   { code: 'P100', severity: 'error', by: 'cli', catches: 'Two providers for a `one` slot (or the same key in a `keyed` slot)', fix: 'Remove one, or name the winner in `slots: {}`' },
-  { code: 'P101', severity: 'error', by: 'reserved', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },
+  { code: 'P101', severity: 'error', by: 'cli', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },
   { code: 'P102', severity: 'error', by: 'reserved', catches: 'Provider implements no slot interface version this weft supports (P102w: bound through an adapter)', fix: 'Upgrade the plugin or weft' },
   { code: 'P103', severity: 'error', by: 'reserved', catches: "Plugin's `weft` peer range doesn't include the installed weft", fix: 'Upgrade either side' },
   { code: 'P104', severity: 'error', by: 'reserved', catches: '`requires` names a slot that nothing provides', fix: 'Add a provider' },

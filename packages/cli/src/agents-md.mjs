@@ -73,7 +73,8 @@ export async function agentsMd(root) {
       return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}.${last ? ' Their other exports are for compiled code; never import them.' : ''}` : ''
     }).filter(Boolean),
     info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`.` : '',
-    info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
+    info.exports['weft/surface'] ? '- `weft/surface`: canvas and WebGL, never raw `<canvas>`: `weft docs surface`.' : '',
+    info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].filter(n => !['canvasCalls', 'cleanup', 'fakeMeasure', 'leaks'].includes(n)).map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
     missing.length ? `- Not in this version yet: ${missing.map(n => `\`${n}\``).join(', ')}. Don't import them.` : '',
     '',
     '## Diagnostics this weft reports',
@@ -83,10 +84,10 @@ export async function agentsMd(root) {
       ? ['| Code | Catches |', '|---|---|', ...reported.map(e => `| ${e.code} | ${e.catches} |`)]
       : ['| Code | Catches | Fix |', '|---|---|---|', ...reported.map(e => `| ${e.code} | ${e.catches} | ${e.fix}${info.status[e.code].autofix ? ' (autofix)' : info.status[e.code].suggestion ? ' (suggested edit)' : ''} |`)]),
     '',
-    tcodes.length ? `Test checks (\`weft check\` on \`*.test.*\` files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
-    `Project checks: ${ranges(pcodes)}. In the catalog but not reported yet: ${ranges(notYet)}. \`weft docs <code>\` explains any code.`,
+    tcodes.length ? `Test checks (\`weft check\` on test files): ${ranges(tcodes)}. No assertion, tautologies, sleeps, \`container\`/selectors/test ids, mocking weft, snapshots, conditional \`expect\`, \`.only\`/\`.skip\`. A deliberate one needs \`// weft-allow T00x: <reason>\`.` : '',
+    `Project checks: ${ranges(pcodes)}. Not reported yet: ${ranges(notYet)}. \`weft docs <code>\` explains any code.`,
     '',
-    'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code (T010) and kill a mutant of the changed lines (T011); weakening a test is T020. More: `weft docs verify`.',
+    'Before a change is done, see it work in the running app (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). More: `weft docs verify`.',
     '',
     ...(startApp
       ? ['## Full stack', '', readDoc('start-short'), '']
@@ -99,7 +100,7 @@ export async function agentsMd(root) {
       : []),
     '## Commands',
     '',
-    commandsPage({ ...list, tasks: list.tasks.filter(t => (sections.length || t.name !== 'plugins') && t.name !== 'style') }),
+    commandsPage({ ...list, tasks: list.tasks.filter(t => (sections.length || t.name !== 'plugins') && t.name !== 'style' && t.name !== 'surfaces') }),
     '',
     ...(sections.length ? ['## Plugins', '', ...sections] : []),
     '## More',

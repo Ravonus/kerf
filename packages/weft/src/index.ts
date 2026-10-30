@@ -63,6 +63,8 @@ export const rt: {
   state?: Record<string, Record<string, unknown>>
   /** A server process (@weft/start): a scope reached outside a render throws S002 instead of sharing one app. */
   isolated?: boolean
+  /** weft/test: slot overrides for this render (`render(App, {}, { slots })`), so a slot needs no generated module. */
+  slots?: Record<string, unknown>
 } = { server: false }
 
 export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; /** `defineState` boxes that differ from `init`, by scope */ s?: Record<string, Record<string, unknown>> }

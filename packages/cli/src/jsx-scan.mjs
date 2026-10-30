@@ -7,7 +7,7 @@ import ts from 'typescript'
 /**
  * @typedef {{ name: string, kind: 'string' | 'expr' | 'bool' | 'spread', value?: string, expr?: string, start: number, end: number, valueStart?: number, valueEnd?: number }} Attr
  * @typedef {{ name: string, attrs: Attr[], attr: (n: string) => Attr | undefined, ancestors: string[], start: number, end: number, tagEnd: number, children: string }} Element
- * @typedef {{ local: string, source: string, start: number, end: number }} Import
+ * @typedef {{ local: string, imported?: string, source: string, start: number, end: number }} Import
  */
 
 /**
@@ -56,7 +56,7 @@ export function scanJsx(text, file = 'file.tsx') {
       const c = node.importClause
       const at = { source, start: node.getStart(sf), end: node.end }
       if (c?.name) imports.push({ local: c.name.text, ...at })
-      if (c?.namedBindings && ts.isNamedImports(c.namedBindings)) for (const s of c.namedBindings.elements) imports.push({ local: s.name.text, ...at })
+      if (c?.namedBindings && ts.isNamedImports(c.namedBindings)) for (const s of c.namedBindings.elements) imports.push({ local: s.name.text, imported: s.propertyName?.text ?? s.name.text, ...at })
       if (!c) imports.push({ local: '', ...at })
     }
     if (ts.isFunctionDeclaration(node) && node.name && node.body) functions.set(node.name.text, node.body.getText(sf))

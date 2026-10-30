@@ -2,7 +2,7 @@
   "name": "@weft/plugin-text",
   "version": "0.0.0",
   "private": true,
-  "description": "@weft/plugin-text: the font build step (font.build@1): subsets per unicode-range, metric-matched fallback faces, preloads and fonts.json. text.measure arrives with Surfaces.",
+  "description": "@weft/plugin-text: the font build step (font.build@1) and text measuring (text.measure@1, slim engine or pinned Pretext).",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -10,14 +10,18 @@
       "types": "./src/index.d.ts",
       "default": "./src/index.mjs"
     },
-    "./build": "./src/build.mjs"
+    "./build": "./src/build.mjs",
+    "./measure": "./src/measure.mjs"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:conformance": "npm run build --prefix ../text-engine && node test/conformance.mjs chrome && node test/conformance.mjs webkit"
   },
   "dependencies": {
     "@capsizecss/metrics": "4.4.0",
     "@capsizecss/unpack": "4.0.1",
+    "@chenglou/pretext": "1.0.0",
+    "@weft/text-engine": "file:../text-engine",
     "subset-font": "2.9.0"
   },
   "peerDependencies": {
@@ -25,6 +29,8 @@
   },
   "devDependencies": {
     "@fontsource/inter": "5.3.0",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.64.1",
     "vitest": "5.0.5",
     "weft": "file:../weft"
   }

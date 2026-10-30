@@ -7,7 +7,7 @@ describe('weft tasks', () => {
     const r = await tasks(fixture)
     expect(r).toMatchObject({ version: 1, ok: true, config: null, environments: [], diagnostics: [] })
     const available = r.tasks.filter(t => t.available).map(t => t.name)
-    expect(available).toEqual(['check', 'tasks', 'docs', 'agents-md', 'mcp', 'style', 'test', 'browser', 'plugins'])
+    expect(available).toEqual(['check', 'tasks', 'docs', 'agents-md', 'mcp', 'style', 'test', 'browser', 'surfaces', 'plugins'])
     for (const t of r.tasks) {
       expect(t).toMatchObject({ kind: 'builtin', command: expect.stringMatching(/^weft /), description: expect.any(String), sideEffects: expect.any(Array) })
       expect(t.args.type).toBe('object')
