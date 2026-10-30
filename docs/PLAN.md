@@ -374,7 +374,8 @@ const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', sche
   that don't intersect; wildcard origins; unbounded client schemas; reading a backlog before subscribing.
 - T012: a test that leaves subscriptions open.
 - T013: a real socket in the fast test lane.
-- P007: `ws`, `socket.io-client` and the like as dependencies.
+- R007: `ws`, `socket.io-client` and the like as dependencies (planned as P007, which the catalog already uses).
+- R008–R010: an over-limit message or body; too many subscriptions or connections; a refused Origin.
 
 **Phase 1 status (2026-10-29):** `weft/browser` ships `online`, `visible`, `lifecycle`, `media`, `on` and `interval`
 (≈1 KB br with every export, paid only where imported), with W050, W051, W054, W056 and T012. Each value subscribes on
@@ -955,9 +956,11 @@ overlays with per-call rollback, `redirect()` on the server and in the client ro
 (0/0 hydration), Q001–Q010 and S011, and the fake transport in `weft/test` ([27](research/27-server-functions.md)).
 The third (2026-10-30): Drizzle, Better Auth, `create-weft --db/--auth/--runtime`, `.weft/contract.json`, the
 Node/Bun/Deno presets and a local runtime matrix ([28](research/28-db-auth-runtimes.md)). The fourth (2026-10-30):
-`<Form>`, the `defineState` SSR state payload, `cookie` persist, S001/S002/S012/S013, `z.media()` and the media route
-with `encoder: 'server'` ([29](research/29-forms-state-media.md)). Still to do in this row: `.live`, `topic`, `stream`
-and the buses, `query.shape` and X032–X036.
+`.live`, `topic`, `stream`, the `memory` and `postgres` buses, reconnect and resume, the realtime fake transport,
+W052, W053, T013 and R002–R010, verified on Node, Bun and Deno ([30](research/30-realtime.md)). The fifth
+(2026-10-30): `<Form>`, the `defineState` SSR state payload, `cookie` persist, S001/S002/S012/S013, `z.media()` and
+the media route with `encoder: 'server'` ([29](research/29-forms-state-media.md)). Still to do in this row:
+`query.shape` and X032–X036.
 
 **3 exit check (2026-10-30): met** ([result](../evals/results/phase3-exit.md),
 [findings](../evals/results/phase3-exit-FINDINGS.md); rerun with `node evals/phase3-exit.mjs`). The check covers the

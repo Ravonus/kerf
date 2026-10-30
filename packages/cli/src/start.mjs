@@ -55,7 +55,9 @@ export async function buildCommand(root, { preset, runtime } = {}) {
   process.env.WEFT_BUILD = '1'
   try {
     const { output } = await build({ root, ...config, preset, logLevel: 'warn' })
-    const contract = await writeContract({ root, site: config.site })
+    const contract = await writeContract({ root, site: config.site, preset })
+    const refused = contract.diagnostics.find(d => d.severity === 'error')
+    if (refused) throw Object.assign(new Error(`${refused.code}: ${refused.why}`), { code: 'E_USAGE' })
     return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: contract.diagnostics.map(d => diagnostic({ ...d, file: '.weft/contract.json' })), ms: Math.round(performance.now() - t) }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD

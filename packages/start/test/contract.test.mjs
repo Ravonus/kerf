@@ -1,9 +1,10 @@
 // `.weft/contract.json` (research 28 §4): functions as JSON Schema with tags, cache and auth; C001 for a schema with
 // no converter, C002 for a value its `output` rejects; Q012 when the database or auth reaches the client graph.
 import { z } from 'zod'
-import { describe as contract } from '../src/contract.mjs'
+import { busProblem, describe as contract } from '../src/contract.mjs'
 import { createScope, fetchQuery } from '../src/exec'
-import weftStart from '../src/vite.mjs'
+import { fileURLToPath } from 'node:url'
+import weftStart, { clientStubs } from '../src/vite.mjs'
 
 const fn = (kind, $id, def) => ({ kind, $id, def })
 const bare = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
@@ -49,4 +50,30 @@ test('Q012: the database or auth in the client graph stops the build; on the ser
   const ctx = consumer => ({ environment: { config: { consumer } }, error(m) { throw new Error(m) } })
   expect(() => handler.call(ctx('client'), '@weft/start/db/sqlite', `${import.meta.dirname}/page.tsx`)).toThrow(/^Q012: .*page\.tsx/)
   expect(handler.call(ctx('server'), '@weft/start/auth', 'x')).toBeUndefined()
+})
+
+test('a stream is in the contract, with its message; R005: an unbounded input warns', () => {
+  const { functions, diagnostics } = contract(new Map([
+    ['s', fn('stream', 'feed.a1b2c3', { input: z.object({ room: z.string(), ids: z.array(z.string().max(4)) }), message: z.object({ text: z.string() }) })],
+    ['b', fn('stream', 'ok.a1b2c3', { input: z.object({ room: z.string().max(40), kind: z.enum(['a', 'b']), ids: z.array(z.string().max(4)).max(8) }) })],
+  ]))
+  expect(functions[0]).toMatchObject({ kind: 'stream', output: { type: 'object', required: ['text'] } })
+  expect(diagnostics).toEqual([{ code: 'R005', severity: 'warning', why: expect.stringContaining('`input.room` has no upper bound') }])
+})
+
+test('R002: the memory bus on a multi-instance preset, only in an app that uses realtime', () => {
+  const root = fileURLToPath(new URL('./fixtures/app', import.meta.url))
+  expect(busProblem({ preset: 'vercel', bus: 'memory', streams: true, root })).toContain('`vercel` preset runs many instances')
+  expect(busProblem({ preset: 'vercel', bus: 'postgres', streams: true, root })).toBeUndefined()
+  expect(busProblem({ preset: 'node', bus: 'memory', streams: true, root })).toBeUndefined()
+  expect(busProblem({ preset: 'cloudflare_module', bus: 'memory', streams: false, root })).toContain('cloudflare') // the fixture's `.live()`
+  expect(busProblem({ preset: 'vercel', bus: 'memory', streams: false, root: fileURLToPath(new URL('./fixtures/scan', import.meta.url)) })).toBeUndefined()
+})
+
+test('a stream gets a client stub, and a topic stays on the server', () => {
+  const source = `import { stream, topic } from '@weft/start'\nimport { db } from '../db'\nexport const t = topic('t', { message: db })\nexport const s = stream({ async *run() { yield* t.subscribe('k') } })\n`
+  const out = clientStubs(source, 'x.ts', 'src/server/x.ts')
+  expect(out).toContain('stream({ $id: "s.')
+  expect(out).not.toContain('topic(')
+  expect(out).not.toContain('../db')
 })

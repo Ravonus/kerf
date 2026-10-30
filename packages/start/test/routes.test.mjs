@@ -23,6 +23,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/cover', 'page', [], ['layout:'], null],
     ['/deferred-meta', 'page', [], ['layout:'], null],
     ['/leak', 'page', [], ['layout:'], null],
+    ['/live', 'page', [], ['layout:'], null],
     ['/notes', 'page', [], ['layout:'], null],
     ['/old', 'page', [], ['layout:'], null],
     ['/prefs', 'page', [], ['layout:'], null],

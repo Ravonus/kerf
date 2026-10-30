@@ -115,16 +115,24 @@ export async function check(root, options = {}) {
   }
 }
 
-/** P002 (`package.json` scripts that aren't `weft …`) and P120 (weft plugins wired straight into Vite). */
+/** weft owns the connection: these bypass reconnects, resume and the fake transport (research 30 §8). */
+const SOCKET_PACKAGES = ['ws', 'socket.io-client', 'reconnecting-websocket', '@microsoft/fetch-event-source']
+
+/** P002 (`package.json` scripts that aren't `weft …`), P120 (weft plugins wired straight into Vite), R007 (socket libraries). */
 function hygiene(root) {
   const out = []
   const pkgFile = join(root, 'package.json')
   if (existsSync(pkgFile)) {
     const text = readFileSync(pkgFile, 'utf8')
-    let scripts = {}
+    let scripts = {}, deps = {}
     try {
-      scripts = JSON.parse(text).scripts ?? {}
+      const pkg = JSON.parse(text)
+      scripts = pkg.scripts ?? {}
+      deps = pkg.dependencies ?? {}
     } catch {}
+    for (const name of SOCKET_PACKAGES) {
+      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in weft/test. Use \`stream\` or \`.live()\`.` }))
+    }
     for (const [name, cmd] of Object.entries(scripts)) {
       if (!/^weft(\s|$)/.test(cmd.trim())) {
         out.push(diagnostic({ code: 'P002', file: 'package.json', ...locate(text, `"${name}"`), why: `Script \`${name}\` runs \`${cmd}\`, not \`weft …\`: agents can't see what it does or what it touches.` }))

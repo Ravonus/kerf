@@ -2,8 +2,8 @@
 // P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
-// research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), plus the
-// codes proposed in research 17 (marked `proposed`).
+// research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
+// 30 §8 (W052, W053, T013, R002–R010, realtime), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -111,6 +111,13 @@ export const catalog = [
     example: "import { online } from 'weft/browser'\nexport const up = online()",
   },
   {
+    code: 'W052', severity: 'error', by: 'compiler',
+    catches: '`watch` folding a stream by hand',
+    fix: '`fold` + `initial` where it is read: kept in the cache',
+    example: "import { state, watch } from 'weft'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
+  },
+  { code: 'W053', severity: 'error', by: 'start', catches: '`.live()` on a query with no `tags` (dev): no mutation can ever poke it', fix: 'Add `tags` to the query, and the same tag to the mutations that change it' },
+  {
     code: 'W054', severity: 'error', by: 'compiler',
     catches: '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `weft check` cannot tell',
     fix: "Pass the server value: `media(query, { ssr: false })`",
@@ -201,6 +208,11 @@ export const catalog = [
   },
 
   {
+    code: 'T013', severity: 'error', by: 'cli', catches: 'A real `WebSocket` or `EventSource` in a fast test',
+    fix: 'Use the fake transport: `net.push`, `net.poke`, `net.drop`',
+    example: "test('feed', () => { const socket = new WebSocket('ws://localhost/feed'); expect(socket).toBeTruthy() })",
+  },
+  {
     code: 'T020', severity: 'error', by: 'gate', catches: 'An existing test deleted, skipped, marked `.fails`, or with an assertion removed or loosened (`toBe(3)` → `toBeTruthy()`)',
     fix: 'Restore it, or keep the change with `// weft-allow T020: <reason>` on that test',
   },
@@ -257,6 +269,18 @@ export const catalog = [
   { code: 'A004', severity: 'warning', by: 'start', catches: 'A mutation changed the session cookie without a redirect: the tab keeps what the last session cached', fix: '`redirect()` after it: that\'s a full load, which drops the client cache' },
   { code: 'C001', severity: 'warning', by: 'cli', catches: 'A function\'s `input` or `output` schema can\'t become JSON Schema: the contract says `{}`', fix: 'Use a schema with JSON Schema support (Zod 4 has it), or drop what can\'t be represented' },
   { code: 'C002', severity: 'error', by: 'start', catches: 'A function\'s value failed its `output` schema (dev and tests)', fix: 'Fix `run`, or the schema' },
+
+  // Realtime (research 30 §8; R for realtime). R001 and R004's upgrade check belong to `channel` (Phase 3b).
+  { code: 'R001', severity: 'error', by: 'reserved', catches: '`channel` without `authorize`', fix: 'Add it (`() => true` must be written explicitly)' },
+  { code: 'R002', severity: 'error', by: 'cli', catches: 'The memory bus on a multi-instance preset (`weft build` fails): a message reaches one instance\'s clients', fix: "`realtime({ bus: postgresBus({ url }) })` in `src/realtime.server.ts`" },
+  { code: 'R003', severity: 'warning', by: 'start', catches: 'A mutation wrote a table a live query reads, and their tags don\'t intersect (dev): open pages won\'t update', fix: 'Add one of the query\'s tags to `invalidates`' },
+  { code: 'R004', severity: 'error', by: 'start', catches: '`realtime({ origins: [\'*\'] })`: any site could read this app\'s streams with a visitor\'s cookies', fix: 'List the origins, scheme and port included' },
+  { code: 'R005', severity: 'warning', by: 'cli', catches: 'A stream\'s `input` has an unbounded string or array (`weft build`): a client decides how much the server holds', fix: 'Add `.max()`' },
+  { code: 'R006', severity: 'warning', by: 'start', catches: 'A stream\'s `run` read the database before it subscribed to a topic (dev): what\'s published in between is lost', fix: 'Call `topic.subscribe()` first, or pass `after`' },
+  { code: 'R007', severity: 'warning', by: 'cli', catches: '`ws`, `socket.io-client`, `reconnecting-websocket` or `@microsoft/fetch-event-source` in dependencies: weft owns the connection', fix: 'Use `stream` or `.live()`; a real need goes in `weft-allow`-style config when `channel` lands' },
+  { code: 'R008', severity: 'error', by: 'start', catches: 'A message over 1 MiB, or a request to `/_weft/rt` over 64 KiB', fix: 'Send less, or an id the client fetches; `limits` raises it' },
+  { code: 'R009', severity: 'error', by: 'start', catches: 'Over 100 subscriptions on a connection, or 10 connections for a user', fix: 'Read fewer keys; `limits` raises it' },
+  { code: 'R010', severity: 'error', by: 'start', catches: 'An origin that isn\'t the app\'s own or in `realtime({ origins })` tried to open a connection', fix: 'List it, scheme and port included' },
 
   // Text, type and skeletons (research 11 §8.5; Phase 2's set, research 26 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X005', severity: 'error', by: 'cli', catches: '`font-size` in `vw`/`vi`/`cqi`/`cqw` with no `rem` term: zoom and the user\'s font size don\'t change it (WCAG 1.4.4)', fix: '`clamp(rem, rem + cqi, rem)`; the suggestion keeps the same sizes at 375 and 1280 px' },
