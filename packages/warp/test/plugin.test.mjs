@@ -22,9 +22,25 @@ test('a seed that passes the spec checker at every stop becomes two token overri
   expect(run({ seed: { accent: '#0a7d4f' } }).tokens.css).toBe('@layer warp.tokens{:root{--warp-seed-accent-h:158.6;--warp-seed-accent-c:0.118}}\n')
 }, 30_000)
 
-test('a seed that fails contrast somewhere is D010, listing the pairs; an invalid seed is weft\'s option error (P115)', () => {
+// The checker covers both themes at every expression, so a hue passing here passes in light and dark.
+test.each([0.03, 0.115, 0.2, 0.37])('every hue passes at chroma %d', chroma => {
+  for (let hue = 0; hue < 360; hue += 15) expect(code(() => run({ seed: { hue, chroma } })), `hue ${hue}`).toBeUndefined()
+}, 120_000)
+
+test('every primary brand hex passes', () => {
+  for (const accent of ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff', '#ff6a00', '#6a00ff']) expect(code(() => run({ seed: { accent } })), accent).toBeUndefined()
+}, 60_000)
+
+test('a hue outside the default\'s window keeps its hue and chroma: only the lightness of two tokens moves', () => {
+  const css = run({ seed: { hue: 270, chroma: 0.115 } }).tokens.css
+  expect(css).toContain('--warp-seed-accent-h:270;--warp-seed-accent-c:0.115')
+  expect(css).toMatch(/--warp-color-sweep:light-dark\( ?oklch\(0\.5[2-5]\d? min\(max\(calc\(var\(--_ac\) \* 1\.25\), 0\.12\), 0\.13\) var\(--_ah\)\), oklch\(0\.6 /)
+  expect(css).toMatch(/--warp-color-accent-text:light-dark\(oklch\(0\.46 min\(var\(--_ac\), 0\.12\) var\(--_ah\)\), oklch\(0\.8\d* var\(--_ac\) var\(--_ah\)\)\)/)
+}, 30_000)
+
+test('a token that breaks contrast with a seed is D010, listing the pairs; an invalid seed is weft\'s option error (P115)', () => {
   let err
-  try { run({ seed: { hue: 20, chroma: 0.2 } }) } catch (e) { err = e }
+  try { run({ seed: { hue: 20, chroma: 0.2 }, tokens: { '--warp-color-accent-solid': '#ffffff' } }) } catch (e) { err = e }
   expect(err?.code).toBe('D010')
   expect(err.failures.length).toBeGreaterThan(0)
   expect(code(() => run({ seed: { hue: 400, chroma: 0.1 } }))).toBe('P115')
@@ -60,11 +76,12 @@ test('a token that breaks contrast fails D010 like a bad seed', () => {
   expect(code(() => run({ tokens: { '--warp-color-accent-solid': '#ffffff' } }))).toBe('D010')
 })
 
-test('a token can rescue a seed outside the sweep window', () => {
-  const seed = { hue: 270, chroma: 0.115 }
-  expect(code(() => run({ seed }))).toBe('D010')
-  expect(code(() => run({ seed, tokens: { '--warp-color-sweep': 'light-dark(oklch(0.53 0.13 270), oklch(0.6 0.155 270))' } }))).toBeUndefined()
-})
+test('a token in the config beats the fitted one', () => {
+  const sweep = 'light-dark(oklch(0.53 0.13 270), oklch(0.6 0.155 270))'
+  const css = run({ seed: { hue: 270, chroma: 0.115 }, tokens: { '--warp-color-sweep': sweep } }).tokens.css
+  expect(css).toContain(`--warp-color-sweep:${sweep}`)
+  expect(css.match(/--warp-color-sweep:/g)).toHaveLength(1)
+}, 30_000)
 
 test.each([
   [{ dials: { nope: 'x' } }, 'dials.nope'],
