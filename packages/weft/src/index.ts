@@ -244,6 +244,8 @@ export interface StateOptions<T> {
     /** `cookie` only: seconds it lives. Default one year. */
     maxAge?: number
   }
+  /** Keep this box the same in every tab (research 32 §1). Needs `persist`, not in `'session'`: new tabs read it there. */
+  sync?: 'tabs'
   /** Leave this box out of its scope's undo history. */
   history?: false
   /** Name inside its scope (`cart.<name>`). Returned boxes are named by their key; a private persisted box needs one. */

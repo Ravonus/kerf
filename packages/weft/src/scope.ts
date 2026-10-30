@@ -100,12 +100,14 @@ export const features: {
     replay(fn: () => void): void
   }
   persist?: { load(inst: Instance, box: Box<any>, name: string): void; write(inst: Instance, box: Box<any>): void }
+  sync?: { attach(inst: Instance, box: Box<any>, name: string): void; write(inst: Instance, box: Box<any>): void }
 } = {}
 
 function onWrite(box: Box<any>, before: unknown) {
   const inst = owners.get(box)!
   if (inst.history) features.history!.record(inst, box, before)
   if (box.opts?.persist) features.persist!.write(inst, box)
+  if (box.opts?.sync) features.sync!.write(inst, box)
 }
 
 // ---- scopes -----------------------------------------------------------------------------------------------------
@@ -193,6 +195,11 @@ export class Instance {
         features.persist!.load(this, box, name!)
       }
       if (name && name in seed) box.v = seed[name] // before setup returns: nothing has read it yet
+      if (box.opts?.sync) {
+        if (DEV && !features.sync) throw new StateError('S008', `\`${def.name}\` syncs a box, but weft/sync isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/sync'`")
+        if (DEV && !name) throw new StateError('S008', `\`${def.name}\` syncs a box it doesn't return or name`, "return it from the setup, or give it `name: '…'`")
+        features.sync!.attach(this, box, name!)
+      }
       box.h = onWrite
     }
     if (DEV) {

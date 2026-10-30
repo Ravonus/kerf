@@ -2,8 +2,10 @@
 // `check` hooks, the test T-codes, the config P-codes and the style D-codes (style.mjs), and keep `.weft/styles.json`
 // current when the project has style groups.
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { isAbsolute, join, relative, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { diagnostic, locate, positions, sortDiagnostics, summarize } from './diag.mjs'
 import { discover } from './files.mjs'
 import { loadConfig } from './load-config.mjs'
@@ -95,6 +97,7 @@ export async function check(root, options = {}) {
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
     ...hygiene(root),
+    ...(await socketChecks(root)),
     ...schemaDrift(root),
   ]
   sortDiagnostics(diagnostics)
@@ -115,6 +118,30 @@ export async function check(root, options = {}) {
   }
 }
 
+/** R001 for a server module's `channel`, and R004 for a socket handler of the app's own (research 32 §1). */
+async function socketChecks(root) {
+  const src = join(root, 'src')
+  if (!existsSync(src)) return []
+  const out = []
+  let withIds
+  for (const f of readdirSync(src, { recursive: true, withFileTypes: true })) {
+    if (!f.isFile() || !/\.[cm]?[jt]sx?$/.test(f.name) || /\.d\.ts$/.test(f.name)) continue
+    const abs = join(f.parentPath, f.name), rel = relative(root, abs).replaceAll('\\', '/'), text = readFileSync(abs, 'utf8')
+    const hand = /from\s+['"]crossws|\bdefineWebSocketHandler\b/.exec(text)
+    if (hand) out.push(diagnostic({ code: 'R004', file: rel, ...locate(text, hand[0]), why: 'A WebSocket handler of its own skips the Origin check, `authorize`, the limits and resume. Use `channel`.' }))
+    if (!/\b(channel|sharedState)\s*[(<]/.test(text) || !/^src\/server\/|\.server\.[cm]?[jt]sx?$/.test(rel)) continue
+    if (withIds === undefined) {
+      try { withIds = (await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft/start/vite')).href)).withIds } catch { withIds = null }
+    }
+    try { withIds?.(text, abs, rel) } catch (e) {
+      if (e.code !== 'R001') continue
+      const line = +/:(\d+) /.exec(e.message)?.[1]
+      out.push(diagnostic({ code: 'R001', file: rel, span: [line, 1, line, 1], why: e.message.split('\n')[0].replace(/^R001: \S+ /, '') }))
+    }
+  }
+  return out
+}
+
 /** weft owns the connection: these bypass reconnects, resume and the fake transport (research 30 §8). */
 const SOCKET_PACKAGES = ['ws', 'socket.io-client', 'reconnecting-websocket', '@microsoft/fetch-event-source']
 
@@ -131,7 +158,7 @@ function hygiene(root) {
       deps = pkg.dependencies ?? {}
     } catch {}
     for (const name of SOCKET_PACKAGES) {
-      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in weft/test. Use \`stream\` or \`.live()\`.` }))
+      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in weft/test. Use \`stream\`, \`.live()\` or \`channel\`.` }))
     }
     for (const [name, cmd] of Object.entries(scripts)) {
       if (!/^weft(\s|$)/.test(cmd.trim())) {

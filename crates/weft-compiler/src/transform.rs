@@ -175,6 +175,10 @@ impl<'a, 'p> Transformer<'a, 'p> {
             // The identifier itself becomes the callee, so it keeps its span and reference.
             Rewrite::Accessor => self.call(original, []),
             Rewrite::AccessorMember { key } => self.member(self.call(self.ident("_item"), []), key),
+            Rewrite::AccessorIndex { index } => {
+                let at = Expression::new_numeric_literal(SPAN, f64::from(*index), None, NumberBase::Decimal, &self.ast);
+                Expression::new_computed_member_expression(SPAN, self.call(self.ident("_item"), []), at, false, &self.ast)
+            }
         }
     }
 

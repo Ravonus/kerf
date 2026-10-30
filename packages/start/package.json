@@ -20,16 +20,21 @@
     "better-auth": "^1.7.0",
     "drizzle-orm": "^0.45.0",
     "drizzle-zod": "^0.8.0",
+    "@nats-io/transport-node": "^3.4.0",
+    "ioredis": "^6.0.0",
     "postgres": ">=3",
     "weft": "*",
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@nats-io/transport-node": "^3.4.0",
     "better-auth": "1.7.14",
     "drizzle-kit": "0.31.11",
     "drizzle-orm": "0.45.4",
     "drizzle-zod": "0.8.3",
+    "ioredis": "^6.0.0",
     "jsdom": "30.1.3",
+    "miniflare": "^4.20260730.0",
     "playwright-core": "1.64.1",
     "postgres": "4.0.0",
     "sharp": "^0.35.5",
@@ -47,6 +52,10 @@
     "./live": "./src/stream.ts",
     "./bus": "./src/bus.ts",
     "./bus/postgres": "./src/bus/postgres.ts",
+    "./bus/redis": "./src/bus/redis.ts",
+    "./bus/nats": "./src/bus/nats.ts",
+    "./bus/durable-object": "./src/bus/durable-object.ts",
+    "./channel": "./src/channel.ts",
     "./db": "./src/db/index.ts",
     "./db/sqlite": "./src/db/sqlite.ts",
     "./db/postgres": "./src/db/postgres.ts",
@@ -72,6 +81,12 @@
       "optional": true
     },
     "postgres": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    },
+    "@nats-io/transport-node": {
       "optional": true
     },
     "zod": {

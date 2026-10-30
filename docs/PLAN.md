@@ -370,18 +370,19 @@ const density = state<'compact' | 'cozy'>('cozy', { persist: { in: 'local', sche
 - W050–W056: raw sockets, listeners or intervals without cleanup; subscriptions outside an owner; hand-rolled folds
   in conditional components; `.live` without tags; browser values without an SSR value; `watch` copying a stream into
   `state`.
-- R001–R006: `channel` without `authorize`; the memory bus on multi-instance presets; live-query and mutation tags
+- R001–R006: `channel` or `sharedState` without `authorize`; the memory bus on multi-instance presets; live-query and mutation tags
   that don't intersect; wildcard origins; unbounded client schemas; reading a backlog before subscribing.
 - T012: a test that leaves subscriptions open.
 - T013: a real socket in the fast test lane.
 - R007: `ws`, `socket.io-client` and the like as dependencies (planned as P007, which the catalog already uses).
-- R008–R010: an over-limit message or body; too many subscriptions or connections; a refused Origin.
+- R008–R011: an over-limit message, body or rate; too many subscriptions or connections; a refused Origin; a refused
+  `authorize`.
 
 **Phase 1 status (2026-10-29):** `weft/browser` ships `online`, `visible`, `lifecycle`, `media`, `on` and `interval`
 (≈1 KB br with every export, paid only where imported), with W050, W051, W054, W056 and T012. Each value subscribes on
 first read, shares one listener per (target, type), goes with its owner, and throws W051 in dev outside one. Server
-values: `online`/`visible` `true`, `lifecycle` `'active'`; `media` has none, so W054 covers only `media`. `tabs` is
-Phase 3b (`tabs.channel`), and research 07's `storage` is `state(…, { persist })` in `defineState` (§4.5). `weft/test`
+values: `online`/`visible` `true`, `lifecycle` `'active'`; `media` has none, so W054 covers only `media`. `tabs` came
+in Phase 3b (`tabs.channel`), and research 07's `storage` is `state(…, { persist })` in `defineState` (§4.5). `weft/test`
 fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, true)` …) and runs T012 after each test.
 `interval` uses the platform timer (vi fake timers in tests) until the test clock owns it.
 
@@ -951,7 +952,7 @@ every warp component and on the shop. Two contrast failures were in the spec's o
 (`opacity: .7`, 3.2:1) and the Segmented count (`opacity: .8`, 4.0–4.1:1), both in light theme. They were fixed in
 the spec on 2026-10-30 with the review's fix (reviews/03 m12: drop the opacity), so the gate runs with no exemptions.
 
-**3 status (2026-10-30):** four slices are built. The first: routing, route `meta` and share cards, streaming SSR,
+**3 status (2026-10-30):** five slices are built. The first: routing, route `meta` and share cards, streaming SSR,
 Nitro `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The second:
 `query`/`mutation` typed end to end, the tagged cache (client, request and shared), `mutation({ optimistic })`
 overlays with per-call rollback, `redirect()` on the server and in the client router, SSR-dehydrated query results
@@ -963,6 +964,26 @@ W052, W053, T013 and R002–R010, verified on Node, Bun and Deno ([30](research/
 (2026-10-30): `<Form>`, the `defineState` SSR state payload, `cookie` persist, S001/S002/S012/S013, `z.media()` and
 the media route with `encoder: 'server'` ([29](research/29-forms-state-media.md)). The row's work is
 built.
+
+**3b status (2026-10-30):** built ([32](research/32-channels.md)): `channel` over crossws with an exact Origin check
+at the upgrade, a required `authorize` (R001 at definition, build and `weft check`), a re-check every 5 minutes and on
+`invalidate('session:<id>')`, per-socket limits and R011; `sharedState` as a box, last writer wins, with a refused
+write rolling back; `sync: 'tabs'` by top-level key and `tabs.channel`, both behind one `BroadcastChannel`; `redisBus`,
+`natsBus` and `durableObjectBus`; the `channel` fake in `weft/test` (`net.publish`, `net.sent`, `net.session`, `tabs`).
+Verified in Chrome (real socket and `BroadcastChannel`), on Node, Bun and Deno (20 socket checks each), and with Redis
+and NATS across two real instances on each runtime, including a server restart for the gap. `durableObjectBus` ran on
+workerd through Miniflare, locally only: no deploy. A plain scaffold's client bundle is byte-identical to the commit
+before (18,267 B, 8,170 B gzip); its server output is 17.5 KB larger (447 → 465 KB), and socket routes stay off unless a
+server module defines a channel. A route with a channel adds 6.7 KB gzip in its own chunk, and `sync` with `persist`
+about 3.5 KB. Limits: the 64 KiB frame cap applies after receipt, because Nitro passes no `maxPayload`; a `sharedState`
+value lives in memory, so it's gone when every instance is; `usesSockets` scans at startup, so a channel added under
+a running `weft dev` needs a restart. `geolocation` wasn't built (it isn't in the row).
+
+**3b exit check (2026-10-30): met** ([result](../evals/results/phase3b-exit.md),
+[findings](../evals/results/phase3b-exit-FINDINGS.md)). A chat room built by a fresh agent passes `weft check`, `tsc`, the
+source rules and 13 hidden checks on Node, Bun and Deno, in Chrome and over a raw socket: a killed socket, a long
+offline and a reset all end up right, and Origin, `authorize` and the bounds hold. It took a compiler fix the run found
+(`.map(([k, v]) => …)` crashed at runtime). The first agent's app failed `tsc`.
 
 **3 shapes (2026-10-30):** built ([31](research/31-query-shapes.md)): `query.shape` and `q(input).shape`, last-seen
 shapes in the client cache, compiler shape variants (`pending="shape"`, a tree-shaken `Name$shape` beside each
@@ -1084,6 +1105,9 @@ Also out of v0:
     - the warp eval adapter didn't count re-runs.
   - **Exit check met**, with no open findings: the Chip and Segmented counts (dimmed below 4.5:1 in light theme) were
     fixed in the spec on 2026-10-30.
+- **Phase 3b exit check, a chat room on three runtimes (2026-10-30,** [findings](../evals/results/phase3b-exit-FINDINGS.md)**):**
+  passed by the second of two fresh agents, after a fix to a compiler bug the run found. Three mutants of the app each
+  fail the e2e at the expected check.
 - **Phase 3 exit check, todo + auth on three runtimes (2026-10-30,** [findings](../evals/results/phase3-exit-FINDINGS.md)**):**
   - One Sonnet agent, with the scaffold and a brief, no e2e: 24/24 hidden checks on Node, Bun and Deno on the first run,
     including a stranger and a recipient calling server functions directly. No diagnostic fired.

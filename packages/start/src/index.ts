@@ -19,6 +19,7 @@ export {
   type Query, type Mutation, type QueryDef, type MutationDef, type AuthScope, type Context, type Life, type LiveOptions, type LiveQuery, type LiveStatus, type OptimisticCache, type Redirect, type Skip, type StandardSchemaV1,
 } from './data'
 export { stream, type Stream, type StreamDef, type StreamOptions, type StreamStatus } from './stream'
+export { channel, sharedState, type Channel, type ChannelDef, type ChannelStatus, type Connection, type SharedBox, type SharedState } from './channel'
 export { realtime, realtimeStats, topic, tracked, type Limits, type RealtimeOptions, type Topic, type Tracked } from './hub'
 export { memoryBus, type Bus } from './bus'
 export type { Merged, Site } from 'weft/ssr'

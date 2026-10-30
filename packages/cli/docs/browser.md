@@ -20,8 +20,11 @@ export function Toolbar() {
   default: pass `ssr` in server-rendered components (**W054**). Hydration renders the server value, then the real one.
 - Not `window.addEventListener` / `setInterval` in components (**W050**, with an edit to `on` / `interval`), and not
   `watch(() => live.value, v => { s.value = v })` (**W056**): read `live.value` where you need it.
+- `tabs.channel('cart', schema)` is a validated `BroadcastChannel` between tabs: `.post(msg)`, `.on(fn)`, `.value`.
+  `state(init, { persist: 'local', sync: 'tabs' })` in a `defineState` keeps a box the same in every tab (S008 without
+  `persist`, or with `session`).
 
 In tests (`weft/test`): `await net.offline()`, `net.online()`, `page.hide()`, `page.show()`, `page.blur()`,
 `page.focus()`, `page.freeze()`, `page.resume()`, `page.leave({ persisted })`, `page.restore()`,
-`page.media(query, true)`. Each test starts online, visible and focused with every query false. After each test
+`page.media(query, true)`, `tabs.post(name, msg)`, `tabs.posted(name)`. Each test starts online, visible and focused with every query false. After each test
 weft/test fails if anything is still open (**T012**); `leaks()` lists it.
