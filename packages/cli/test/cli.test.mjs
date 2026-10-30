@@ -10,6 +10,18 @@ const weft = (...args) => {
 }
 
 describe('weft (bin)', () => {
+  it('routes and routes --meta read an app with src/routes (@weft/start from the workspace)', () => {
+    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const list = JSON.parse(weft('routes', '--json', '--root', app).stdout)
+    expect(list.routes.map(r => r.path)).toContain('/users/[id]')
+    const r = weft('routes', '--meta', '--json', '--root', app)
+    expect(r.code).toBe(1) // the fixture's /deferred-meta route is an H007 on purpose
+    const meta = JSON.parse(r.stdout)
+    expect(meta.routes.find(x => x.path === '/about').meta.title).toBe('About · Acme')
+    expect(meta.diagnostics).toMatchObject([{ code: 'H007', file: 'src/routes/deferred-meta.tsx', span: [expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number)], docs: 'weft docs H007' }])
+    expect(r.stderr).toMatch(/^src\/routes\/deferred-meta\.tsx:\d+:\d+ {2}H007 error/m)
+  }, 60_000)
+
   it('check --json: JSON on stdout, human text on stderr, exit 0 on the reference', () => {
     const r = weft('check', '--json', '--root', fixture)
     expect(r.code).toBe(0)

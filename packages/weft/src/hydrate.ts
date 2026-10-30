@@ -7,20 +7,23 @@
 // Phase 1: events fired before hydration finishes are dropped (no capture script yet), and hydration is one
 // synchronous pass over the whole container.
 
-import { DEV, createRoot, rt, runMounts } from './index'
+import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
 import { hchild } from './claim'
 import { keys } from './keys'
 
 export const hydration = { misses: 0, registry: new Map<string, Element>() }
 
-/** Hydrate `container`'s server HTML with `code` (the same `() => <App />` the server rendered). */
-export function hydrate(code: () => any, container: Element): () => void {
+/**
+ * Hydrate `container`'s server HTML with `code` (the same `() => <App />` the server rendered). The page data is the
+ * container's trailing `<script data-weft>`, or `options.data` when the page sends it elsewhere (a stream, research 25).
+ */
+export function hydrate(code: () => any, container: Element, options: { data?: SsrData | null } = {}): () => void {
   const registry = hydration.registry
   for (const el of container.querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
   hydration.misses = 0
   // The server's data (resources, boundary states) stays where it is: the app hydrates the nodes before it.
   const script = container.querySelector(':scope > script[data-weft]')
-  rt.data = script ? JSON.parse(script.textContent!) : undefined
+  rt.data = options.data ?? (script ? JSON.parse(script.textContent!) : undefined)
   let dispose!: () => void
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
   try {

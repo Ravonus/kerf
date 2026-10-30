@@ -59,13 +59,19 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
   if (saved) saved.e !== undefined ? fail(new Error(saved.e)) : settle(saved.v as T)
 
   if (rt.server) {
-    if (!saved && key !== undefined && data) {
+    const flying = key !== undefined ? rt.flight?.get(key) : undefined
+    if (flying && !saved) {
+      pending.value = true // an earlier pass started it: wait on that fetch, don't start another
+      rt.wait?.push(flying)
+    } else if (!saved && key !== undefined && data) {
       const record = (r: { v?: unknown; e?: string }) => void (data.r[key] = r)
       try {
         const out = untrack(() => fetcher(new AbortController().signal))
         if (thenable(out)) {
           pending.value = true
-          rt.wait?.push(Promise.resolve(out).then(v => record({ v }), e => record({ e: message(e) })))
+          const done = Promise.resolve(out).then(v => record({ v }), e => record({ e: message(e) }))
+          rt.flight?.set(key, done)
+          rt.wait?.push(done)
         } else {
           settle(out)
           record({ v: out })
@@ -173,6 +179,7 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
       if (status === 'e') data.r[key] = { e: message(untrack(() => failure.value)) }
     }
     if (status === 'p') show.value = 'fallback'
+    else if (status === 'c' && key !== undefined) rt.stream?.set(key, content?.t ?? '')
   } else {
     let timer: ReturnType<typeof setTimeout> | undefined
     let shownAt = 0
@@ -224,6 +231,11 @@ export function Boundary(props: { pending?: any; error?: (e: unknown, retry: () 
       return sideView('e', () => props.error!(e, retry))
     }
     const s = show.value
+    if (s === 'fallback' && rt.stream && key !== undefined) {
+      // Streaming: the fallback goes out between markers, and renderToStream sends the content to replace it.
+      const k = encodeURIComponent(key)
+      return { t: `<!--wb:${k}-->${rt.resolve!(sideView('p', () => props.pending))}<!--/wb:${k}-->` }
+    }
     if (s === 'fallback') return sideView('p', () => props.pending)
     if (side) { side.dispose(); side = undefined }
     return s === 'content' ? content : null

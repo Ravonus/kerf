@@ -8,7 +8,7 @@ import { keys, step, under } from './keys'
 export { memo }
 export { attr, bind, child, cls, component, css, delegate, on, spread, tpl } from './dom-next'
 export { first, hchild, htpl, next } from './claim'
-export { hydrate } from './hydrate'
+export { hydrate, hydration } from './hydrate'
 
 type Mountable = Element | DocumentFragment
 

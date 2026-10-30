@@ -262,6 +262,14 @@ From one declaration: a validated endpoint, a typed client call returning a `Res
   config, and canonical, `og:*` and `twitter:*` are derived. Share cards are `.og.tsx` files rendered server-side to
   PNG at `/_weft/og/<path>.png?v=<hash>`: at build for static routes, on demand (immutable cache) for param routes,
   locally in dev, as a function on Vercel/Netlify. Renderer: Takumi (Rust, takes HTML) vs Satori, decided by a spike.
+- **Status (2026-10-29): routing, `meta`, streaming SSR and cards are built** in `@weft/start`
+  ([25](research/25-routing.md)). File routes with layouts, typed params, `load`, 404/error routes and `notFound()`.
+  RouterCore matches on the server only. The client router asks `/_weft/data/<path>` and updates levels of boxes in
+  place (`/users/1 → /users/2` writes 5 DOM nodes and keeps both layouts). Streaming sends the head and shell first,
+  then Boundaries in resolve order; hydration is 0/0. Takumi renders cards (build, on demand, immutable).
+  `weft dev`/`weft build` run through Nitro; the node preset is verified end to end, bun builds and serves, and deno
+  builds. `weft routes --meta` and H001–H008 are in. The router adds 3.25 KB brotli. Not yet: `query`/`mutation`, the
+  cache, Drizzle, auth, `create-weft`, `redirect()`.
 
 ### 4.1 Runtimes: Node, Bun, Deno built in
 
@@ -892,6 +900,11 @@ verify loop is built: the in-page agent bridge with the graph overlay, recorder,
 dev-server relay, `weft browser` and the MCP browser tools; and the test gate (T010, T011, T020). The exit check is
 `node evals/gate.mjs` ([22](research/22-verify-loop.md)).
 
+**3 status (2026-10-29):** the first slice is built: routing, route `meta` and share cards, streaming SSR, Nitro
+`weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The rest of the row is
+still to do: `query`/`mutation`, the tagged cache, Drizzle, Better Auth, `create-weft`, the CI matrix and the
+contract.
+
 Performance is gated from Phase 1 (§3.7). The v3 eval showed that efficiency, not correctness, is where frameworks
 differ.
 
@@ -1061,3 +1074,7 @@ Also out of v0:
   relays CLI and MCP commands to whatever tab is open. Every agent already has a browser tool; weft adds what none
   of them can see (the named reactive graph) and the controls tests need (clock, network, recording), without a
   second browser or an automation dependency ([22](research/22-verify-loop.md)).
+- **RouterCore on the server only** (2026-10-29). On the client it costs 18.6 KB brotli with history, while weft's
+  client router is 3.25 KB. The server already matches, loads and merges `meta`, so the client asks
+  `/_weft/data/<path>` and writes levels of boxes in place. Diagnostics for metadata are **H001–H008** (renumbered
+  from research 20's M-codes, which belong to media) ([25](research/25-routing.md)).

@@ -106,17 +106,17 @@ describe('site (research 20 §2, §6)', () => {
     expect(r.diagnostics.map(d => d.why).join('\n')).toMatch(/site\.url[\s\S]*site\.title[\s\S]*site\.locale[\s\S]*descripton/)
   })
 
-  it('M001: a relative image (or auto) with no site.url', async () => {
+  it('H001: a relative image (or auto) with no site.url', async () => {
     for (const image of ["'/og.png'", "'auto'", "{ url: 'og.png', width: 1200, height: 630 }"]) {
       const r = await loadConfig(withConfig(`export default defineConfig({ site: { name: 'Acme', description: 'Tools.', image: ${image} } })\n`))
-      expect(codes(r)).toEqual([['M001', 2]])
+      expect(codes(r)).toEqual([['H001', 2]])
       expect(r.diagnostics[0].severity).toBe('error')
     }
     const abs = await loadConfig(withConfig("export default defineConfig({ site: { name: 'Acme', description: 'Tools.', image: 'https://cdn.acme.dev/og.png' } })\n"))
     expect(abs.diagnostics).toEqual([])
   })
 
-  it('M003: no description; M004: long title, template or description (warnings)', async () => {
+  it('H003: no description; H004: long title, template or description (warnings)', async () => {
     const long = 'x'.repeat(61)
     const r = await loadConfig(
       withConfig(`export default defineConfig({
@@ -128,10 +128,10 @@ describe('site (research 20 §2, §6)', () => {
 })
 `),
     )
-    expect(codes(r)).toEqual([['M003', 3], ['M004', 4], ['M004', 6]])
+    expect(codes(r)).toEqual([['H003', 3], ['H004', 4], ['H004', 6]])
     expect(r.diagnostics.every(d => d.severity === 'warning')).toBe(true)
     const d = await loadConfig(withConfig(`export default defineConfig({ site: { url: 'https://acme.dev', description: '${'z'.repeat(161)}' } })\n`))
-    expect(d.diagnostics).toMatchObject([{ code: 'M004', why: expect.stringContaining('161 characters') }])
+    expect(d.diagnostics).toMatchObject([{ code: 'H004', why: expect.stringContaining('161 characters') }])
   })
 })
 

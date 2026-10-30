@@ -1,11 +1,11 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), plus the codes proposed in research 17 (marked `proposed`).
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
 // come from `weft check`'s test pass (tests.mjs); their examples are test files, checked the same way.
 
-/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'reserved', example?: string, proposed?: boolean }} Entry */
+/** @typedef {{ code: string, severity: 'error' | 'warning', catches: string, fix: string, by: 'compiler' | 'cli' | 'test' | 'gate' | 'start' | 'reserved', example?: string, proposed?: boolean }} Entry */
 
 /** @type {Entry[]} */
 export const catalog = [
@@ -185,13 +185,16 @@ export const catalog = [
   { code: 'P008', severity: 'error', by: 'cli', proposed: true, catches: '`slots` names a slot id weft does not define', fix: 'Use an id from `weft check --json` `slots`' },
   { code: 'P009', severity: 'error', by: 'cli', proposed: true, catches: '`slots` picks a winner that is not in `plugins` (or does not provide that slot)', fix: 'Add the plugin, or pick one that provides the slot' },
 
-  { code: 'M001', severity: 'error', by: 'cli', proposed: true, catches: 'Relative `og:image` (a relative `site.image`, or `auto`) and no `site.url`: crawlers need absolute URLs', fix: 'Set `site.url` to the absolute origin' },
-  { code: 'M002', severity: 'error', by: 'reserved', catches: 'Param route with an `auto` image on a static-only preset and no `prerender`', fix: 'Export `prerender`, or set `og.image`' },
-  { code: 'M003', severity: 'warning', by: 'cli', proposed: true, catches: 'No description after merging (config-level until routing: `site.description`)', fix: 'Set `site.description` (or the route\'s `meta.description`)' },
-  { code: 'M004', severity: 'warning', by: 'cli', proposed: true, catches: 'Title over 60 characters or description over 160 (search results and cards cut them)', fix: 'Shorten it' },
-  { code: 'M005', severity: 'error', by: 'reserved', catches: '`.og.tsx` uses a style or element the card renderer does not support', fix: 'Use flexbox, text, images, borders, radius, gradients, shadows' },
-  { code: 'M006', severity: 'error', by: 'reserved', catches: '`meta` reads a box or calls a hook (metadata is plain data)', fix: 'Compute it from `params` and `data`' },
-  { code: 'M007', severity: 'error', by: 'reserved', catches: '`meta` reads a deferred (streamed) field of the loader\'s data', fix: 'Await the field in `load`, or leave it out of `meta`' },
+  // Metadata and share cards (research 20 §6; H for head, M is media). `start`: reported by @weft/start at request or
+  // render time, and by `weft routes --meta` for every route.
+  { code: 'H001', severity: 'error', by: 'cli', proposed: true, catches: 'Relative `og:image` (a relative `site.image`, or `auto`) and no `site.url`: crawlers need absolute URLs', fix: 'Set `site.url` to the absolute origin' },
+  { code: 'H002', severity: 'error', by: 'cli', proposed: true, catches: 'Param route with an `auto` image on a static-only preset and no `prerender` (`weft routes --meta --preset static`)', fix: 'Export `prerender`, or set `og.image`' },
+  { code: 'H003', severity: 'warning', by: 'cli', proposed: true, catches: 'No description after merging the config, layouts and route (`weft check` on `site`; `weft routes --meta` per route)', fix: 'Set `site.description` (or the route\'s `meta.description`)' },
+  { code: 'H004', severity: 'warning', by: 'cli', proposed: true, catches: 'Title over 60 characters or description over 160 (search results and cards cut them)', fix: 'Shorten it' },
+  { code: 'H005', severity: 'error', by: 'start', proposed: true, catches: '`.og.tsx` uses a style or element the card renderer does not support (an error in dev; production drops the declaration)', fix: 'Use flexbox, text, images, borders, radius, gradients, shadows' },
+  { code: 'H006', severity: 'error', by: 'cli', proposed: true, catches: '`meta` reads a box or calls a hook (metadata is plain data); found statically by `weft routes --meta`', fix: 'Compute it from `params` and `data`' },
+  { code: 'H007', severity: 'error', by: 'start', proposed: true, catches: '`meta` (or a card) reads a deferred (streamed) field of the loader\'s data: the request fails with 500 instead of a page with missing tags', fix: 'Await the field in `load`, or leave it out of `meta`' },
+  { code: 'H008', severity: 'warning', by: 'start', proposed: true, catches: 'A card\'s `<img>` didn\'t load (timeout, HTTP error, not an image, too large, host not allowed); the card renders without it', fix: 'Fix the URL, or embed the image with an import' },
 
   { code: 'P100', severity: 'error', by: 'cli', catches: 'Two providers for a `one` slot (or the same key in a `keyed` slot)', fix: 'Remove one, or name the winner in `slots: {}`' },
   { code: 'P101', severity: 'error', by: 'reserved', catches: 'A slot consumer is used but nothing provides it', fix: 'Add the plugin, or set the option that disables it back' },
