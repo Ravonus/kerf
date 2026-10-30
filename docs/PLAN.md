@@ -255,7 +255,7 @@ whether or not a query is cached on the server.)
   automatic later if the dev check proves reliable.
 - **Security defaults:** mutations are POST with CSRF protection; queries are GET and must be side-effect free;
   `ctx.user` is typed nullable; reading request cookies inside a cached query is a type error.
-- **`create-weft`:** flag-driven CLI (db, auth, runtime, deploy target, styling, UI kit). Writes AGENTS.md and MCP
+- **`create-weft`:** a short wizard in a terminal, flags and `--yes` everywhere else (db, data layer, auth, runtime, deploy target, styling, UI kit; [34](research/34-configuration.md)). Writes AGENTS.md and MCP
   config.
 - Later: ISR/static routes, `updateTag`.
 - **Page metadata and OG images** ([20](research/20-metadata-and-og.md)): metadata is plain data on the route
@@ -742,12 +742,12 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
 Details: [13](research/13-plugins.md).
 
 - **Model.** Core defines typed, versioned **slots**: `text.measure@1`, `font.build@1`, `surface.renderer`,
-  `realtime.bus`, `db.adapter`, `pay.rail`, `device.*`. A plugin *provides* an implementation, and core, warp and app
+  `realtime.bus`, `db.adapter`, `auth.provider`, `pay.rail`, `device.*`. A plugin *provides* an implementation, and core, warp and app
   code *consume* the slot.
   - Consumers import a generated file you can open, `.weft/slots/<id>.ts`. Installing `text()` makes every measured
     text use go through it, with nothing hidden and no per-call-site changes.
 - **Configuration** goes in `weft.config.ts`: `plugins: [text({ fonts }), warp()]`, with an optional `slots: {}` to
-  pick a winner.
+  pick a winner. `weft.config.json` and `.yaml` hold the same schema ([34](research/34-configuration.md)).
   - **No provider:** the slot's declared default is used. `text.measure` has none, so text stays CSS-only. Using
     something that needs a missing provider is P101, reported at your own line with an autofix.
   - **Two providers:** P100. It is never settled by array order, and output is byte-identical for any order of
@@ -762,7 +762,7 @@ Details: [13](research/13-plugins.md).
   - **Server:** server code enters only through server-side slots (P118). No plugin can add request middleware or
     routes behind the app's back.
 - **Agent surface:**
-  - `weft plugins list|explain|add|verify|audit|approve --json`, plus a `slots` block in `weft check --json`.
+  - `weft plugins list|explain|verify|audit|approve --json` and `weft add`, plus a `slots` block in `weft check --json`.
   - Each plugin adds at most 1 KB to AGENTS.md.
   - Each plugin's diagnostics live in its own namespace.
 - **Trust:** each plugin declares the permissions it needs, and `.weft/plugins.lock.json` records them. This makes any
@@ -900,7 +900,7 @@ crates/
   media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
   plugin-*    @weft/plugin-text (text.measure + font.build), @weft/plugin-media (media.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
               (weft itself adds weft/plugin, weft/slots, weft/test/plugins and the `weft plugins` CLI)
-  create-weft `create-weft <dir> --ui warp|headless|none --db sqlite|postgres|none --auth --runtime node|bun|deno`; deploy flags later
+  create-weft a wizard, or flags: `create-weft <dir> --ui warp|headless|none --db sqlite|postgres|none --auth --runtime node|bun|deno`; more choices in 3x (34), deploy flags later
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
@@ -920,8 +920,9 @@ evals/        agent eval harness
 | **2. Surfaces** | `defineSurface`, canvas2d, webgl2, Keel port. the `text.measure` slot (slim engine and pretext) with conformance, `s.text()` with the DOM mirror, X001–X012, X040/X041. | A Keel demo ported; an agent adds a surface to a page from a one-line request. |
 | **3. Start** | Streaming SSR (the string renderer and hydration landed in Phase 1), routing, route `meta` and OG images ([20](research/20-metadata-and-og.md)), `query`/`mutation`, tagged cache, Drizzle, Better Auth, `create-weft`. Node/Bun/Deno presets with a CI matrix, `.weft/contract.json`. `.live`, `topic`, `stream`, `memory` + `postgres` buses, fake transport in `weft/test`. `z.media()`, the media server route with `Accept` negotiation (`encoder: 'server'`). The `defineState` SSR state payload (per-request instances landed in Phase 1), `cookie` persist, `mutation({ optimistic })` overlays, S001/S002/S011–S013. `query.shape`, last-seen shapes in the cache, compiler shape variants, `<Text reserve>`, X032–X036. | A T3-equivalent todo + auth app scaffolded and extended by an agent; the same app passes e2e on Node, Bun and Deno. |
 | **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
+| **3x. Configuration** | A default stack that's one setting away from anything else ([34](research/34-configuration.md)). A: `weft.config.json` and `.yaml`, the config schema, the `create-weft` wizard, `weft add`, `weft map` (a generated matrix of what to call in this app). B: warp config options, the Tailwind adapter. C: `db.adapter@1`, Drizzle, Prisma and Native (no ORM) providers, MySQL. D: `auth.provider@1`. | The todo + auth app passes its hidden checks on every tested engine, data layer and runtime; a hand-written auth provider works with no change to weft. |
 | **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'background'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
-| **4. Design** | `weft/ds` tokens, primitives, Tailwind adapter, D-checks. | weft/ds vs raw Tailwind on consistency and a11y. |
+| **4. Design** | `weft/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | weft/ds vs raw Tailwind on consistency and a11y. |
 | **5a. Rust: remote** | `remote()`, the `weft` crate (typify codegen, `Ctx`, envelope, `touch`, tracing, `weft::router()`), sidecar supervisor + dev reload, R101–R103. | A search sidecar replaces a TS `query` with no client change. |
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
 | **6a. Native spike (3 weeks)** | Hermes + op buffer + `weft-layout` + Swift/Kotlin hosts for `Stack Row Text Button Input Scroll`, `weft dev --ios/--android`, HMR. | The v3 list screen runs on both platforms; price push ≤ 1 host op; Node layout matches device within 1pt for non-text boxes. Stop and revisit if a mid-range Android can't hold 60 Hz. |
@@ -1145,6 +1146,8 @@ Also out of v0:
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
 - **Native host on Android:** Views for the core (finer recycling control), Compose for system components through
   interop? And Hermes everywhere, or JSC on iOS for binary size? Both are settled by the 6a spike.
+- **Configuration ([34 §10](research/34-configuration.md)):** what Enter-through scaffolds, and whether Better Auth can
+  run on Native's connection on all three engines.
 - **Default `idiom`:** `blend` for every app, or should `create-weft` ask?
 - **Store payment rules** change with US litigation. Who owns refreshing the policy table, and how often?
 - **Names (settled 2026-10-28):** weft is the framework and warp is its default UI toolkit (the rebuild of Agorix).
@@ -1230,3 +1233,8 @@ Also out of v0:
   (26, `engines` and `.nvmrc`), a pinned current Rust, and current Bun and Deno. TypeScript 7 is the type checker, but
   it has no stable JS compiler API (`createSourceFile` is gone, the AST sits under `typescript/unstable/*`), so the
   CLI's parser passes and text-engine's scripts stay on 6.0.3 until that API settles or they move to it.
+- **A strong default, one setting away from anything else** (2026-10-30). weft keeps a clear default stack, but each part
+  of it is a provider with no private path into weft, so a default that needs one means the seam is wrong. MySQL, Prisma,
+  Tailwind and other auth arrive through `db.adapter`, `auth.provider`, config and a `create-weft` wizard, ahead of 3c
+  because its packs build on those slots. weft doesn't wrap queries: `ctx.db` stays the real client. Aliases live in
+  `tsconfig.json` `paths`, with `#/` only the scaffold's default ([34](research/34-configuration.md)).

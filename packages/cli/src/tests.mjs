@@ -16,7 +16,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import ts from 'typescript'
-import { isLocal, local } from './alias.mjs'
+import { local } from './alias.mjs'
 import { diagnostic, positions } from './diag.mjs'
 
 export const testGlobs = ['**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}']
@@ -263,7 +263,7 @@ export function checkTestFile(text, rel, options = {}) {
   for (const name of renders) {
     const imp = imports.get(name)
     if (imp?.abs) units.add(moduleKey(imp.abs))
-    if (imp && isLocal(imp.spec)) unitSpecs.add(specKey(imp.spec))
+    if (imp && local(abs, imp.spec)) unitSpecs.add(specKey(imp.spec))
   }
   const own = resolveImport(abs, `./${relative(dirname(abs), abs).replace(/\.(test|spec)\.[cm]?[jt]sx?$/, '')}`)
   if (own) units.add(moduleKey(own))
@@ -443,7 +443,7 @@ function readsInternalState(subject, imports) {
     if (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) n = n.expression
     else break
   }
-  return ts.isIdentifier(n) && isLocal(imports.get(n.text)?.spec ?? '') && Boolean(imports.get(n.text)?.abs)
+  return ts.isIdentifier(n) && Boolean(imports.get(n.text)?.abs)
 }
 
 /** `new Promise(r => setTimeout(r, ms))`: the timer call's enclosing sleep, or undefined. */

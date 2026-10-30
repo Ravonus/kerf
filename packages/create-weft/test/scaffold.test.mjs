@@ -1,7 +1,7 @@
 // Each `--ui` variant scaffolds an app that `weft check` passes clean and `weft dev` server-renders. The workspace
 // packages stand in for the npm ones through node_modules links.
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -61,10 +61,28 @@ describe.each([
   })
 })
 
+it('the alias is the app\'s: a tsconfig edit is all it takes to use its own', async () => {
+  const dir = app('none')
+  const file = join(dir, 'tsconfig.json')
+  writeFileSync(file, readFileSync(file, 'utf8').replace('"#/*"', '"~/*"'))
+  mkdirSync(join(dir, 'src/lib'))
+  writeFileSync(join(dir, 'src/lib/label.ts'), "export const label = 'from the alias'\n")
+  writeFileSync(join(dir, 'src/routes/about.tsx'), "import { label } from '~/lib/label'\n\nexport default function About() {\n  return <p>{label}</p>\n}\n")
+  expect(spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' }).stdout).toBe('')
+  expect((await check(dir)).diagnostics.filter(d => d.severity === 'error')).toEqual([])
+  const server = await devCommand(dir, { port: await freePort() })
+  try {
+    expect(await (await fetch(`${server.resolvedUrls.local[0]}about`)).text()).toContain('from the alias')
+  } finally {
+    await server.close()
+  }
+})
+
 it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections included', async () => {
   const { text, bytes } = await agentsMd(app('warp', { db: 'sqlite', auth: true }))
   expect(text).toContain('## Full stack')
   expect(text).toContain('### warp')
+  expect(text).toContain('`#/server/todos`')
   expect(bytes).toBeLessThan(limit)
 })
 
