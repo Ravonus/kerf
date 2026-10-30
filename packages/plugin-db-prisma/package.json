@@ -1,0 +1,28 @@
+{
+  "name": "@weft/plugin-db-prisma",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/plugin-db-prisma: Prisma as a weft data layer. ctx.db is the real client",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "better-auth": "^1.7.0",
+    "weft": "*"
+  },
+  "peerDependenciesMeta": {
+    "better-auth": { "optional": true }
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  }
+}

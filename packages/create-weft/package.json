@@ -2,14 +2,15 @@
   "name": "create-weft",
   "version": "0.0.0",
   "private": true,
-  "description": "Scaffold a weft app: `npm create weft@latest my-app -- --ui warp|headless|none --db sqlite|postgres|none --auth --runtime node|bun|deno` (PLAN §6.3, research 26 §6, research 28 §6)",
+  "description": "Scaffold a weft app: `npm create weft@latest my-app -- --ui warp|headless|none --db sqlite|postgres|mysql|none --layer drizzle|prisma|native --auth --runtime node|bun|deno` (PLAN §6.3, research 26 §6, research 28 §6)",
   "license": "MIT",
   "type": "module",
   "bin": {
     "create-weft": "./bin/create-weft.mjs"
   },
   "exports": {
-    ".": "./src/index.mjs"
+    ".": "./src/index.mjs",
+    "./stack": "./src/stack.mjs"
   },
   "engines": {
     "node": ">=26"

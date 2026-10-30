@@ -85,13 +85,17 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
 | The adapter Better Auth needs | Auth |
 | A test database | `weft/test` |
 
-- **Providers:** `@weft/plugin-db-drizzle` is the default, and `@weft/plugin-db-prisma` is the second, which proves the
-  seam. `@weft/plugin-db-native` is the third. With `db: none` there's no slot: `ctx` is yours, and query and mutation
-  work as they do now.
+- **Providers (built):** Drizzle stays in `@weft/start/db/*` as the built-in default and goes through the same seam as
+  the others. `@weft/plugin-db-prisma` and `@weft/plugin-db-native` are plugins, which proves the seam: a client made
+  through `register` carries the runtime handle, and a plugin's `db` contribution tells the CLI its schema, migrations
+  folder and `generate`. With no database there's no provider: `ctx` is yours, and query and mutation work as they do now.
+- **Prisma on SQLite uses the libSQL adapter.** The better-sqlite3 adapter failed on Node, Bun and Deno in our spike.
 - **Native means no ORM, still a real database layer.** You get a connection to the engine you chose and a parameterised
   `` ctx.db.sql`select * from todos where id = ${id}` `` (values are always bound, never concatenated). You can pass your
-  own driver or connection instead. Migrations are plain `.sql` files, Q015 hashes them, and `schemas` are Zod schemas you
-  write. The driver stays reachable, so nothing weft doesn't cover is out of reach.
+  own driver instead (`createNative`). Migrations are plain `.sql` files in `migrations/`, and `weft db generate <name>`
+  starts one. There's no schema to drift from, so Q015 doesn't apply, and validators are Zod schemas you write. The
+  driver stays reachable as `ctx.db.driver`, so nothing weft doesn't cover is out of reach.
+- **Auth on Native isn't available yet.** `create-weft --auth --layer native` refuses, and slice D settles it.
 - **Support tiers:** *tested* combinations run in the matrix on every runtime. *Community* providers implement the slot
   and pass its conformance suite. `weft plugins verify` reports which is which.
 - **First tested set:** Drizzle, Prisma and Native on SQLite, Postgres and MySQL. MariaDB, libSQL and others follow as providers

@@ -38,7 +38,7 @@ describe('select', () => {
 
 describe('resolveChoices', () => {
   const env = {}
-  const defaults = { ui: 'warp', db: 'sqlite', auth: true, runtime: 'node', config: 'ts', pm: 'npm' }
+  const defaults = { ui: 'warp', db: 'sqlite', layer: 'drizzle', auth: true, runtime: 'node', config: 'ts', pm: 'npm' }
 
   it('--yes is Enter all the way through, the todo + auth app', async () => {
     expect(await resolveChoices({}, { interactive: true, yes: true, env })).toEqual({ ...defaults, git: true, install: true })
@@ -60,6 +60,11 @@ describe('resolveChoices', () => {
   it('uses the package manager that ran it', async () => {
     expect(await resolveChoices({}, { interactive: false, env: { npm_config_user_agent: 'pnpm/10 node/26' } })).toMatchObject({ pm: 'pnpm' })
   })
+})
+
+it('Native skips the sign-in question, and no database skips the layer', async () => {
+  expect(await resolveChoices({ db: 'mysql', layer: 'native' }, { interactive: false, env: {} })).toMatchObject({ layer: 'native', auth: false })
+  expect(await resolveChoices({ db: 'none' }, { interactive: false, env: {} })).toMatchObject({ layer: 'drizzle', auth: false })
 })
 
 describe('the command', () => {

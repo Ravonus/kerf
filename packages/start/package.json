@@ -23,6 +23,7 @@
     "drizzle-zod": "^0.8.0",
     "@nats-io/transport-node": "^3.4.0",
     "ioredis": "^6.0.0",
+    "mysql2": "^3.24.0",
     "postgres": ">=3",
     "weft": "*",
     "zod": "^4.0.0"
@@ -37,6 +38,7 @@
     "jsdom": "30.1.3",
     "miniflare": "^4.20260730.0",
     "playwright-core": "1.64.1",
+    "mysql2": "3.24.6",
     "postgres": "4.0.0",
     "sharp": "^0.35.5",
     "typescript": "7.0.2",
@@ -58,8 +60,10 @@
     "./bus/durable-object": "./src/bus/durable-object.ts",
     "./channel": "./src/channel.ts",
     "./db": "./src/db/index.ts",
+    "./db/core": "./src/db/core.ts",
     "./db/sqlite": "./src/db/sqlite.ts",
     "./db/postgres": "./src/db/postgres.ts",
+    "./db/mysql": "./src/db/mysql.ts",
     "./auth": "./src/auth.ts",
     "./client": "./src/client.tsx",
     "./server": "./src/server.tsx",
@@ -79,6 +83,9 @@
       "optional": true
     },
     "drizzle-zod": {
+      "optional": true
+    },
+    "mysql2": {
       "optional": true
     },
     "postgres": {

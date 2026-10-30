@@ -1,19 +1,17 @@
-// `@weft/start/auth` (research 28 §3): Better Auth on the app's Drizzle client. `src/auth.server.ts` default-exports
+// `@weft/start/auth` (research 28 §3): Better Auth on the app's database, through its handle's `auth`. `src/auth.server.ts` default-exports
 // `createAuth(…)`, and the plugin mounts its handler; `session()` is the context's `ctx.user`; `forward()` is how a
 // mutation signs someone in. No client code: sign-in is a mutation, so nothing of Better Auth ships to the browser.
 
 import { betterAuth, type BetterAuthOptions } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { CLIENT_IP, FnError, StartError, type Context } from './data'
-import { getTableName, isTable } from 'drizzle-orm'
 import type { DbHandle } from './db/core'
 
 const SESSION = /(?:^|;\s*)(?:__Secure-)?[\w.-]*session_token=/
 
 export interface AuthOptions<S extends Record<string, unknown>, O extends BetterAuthOptions> {
   db: { $weft: DbHandle }
-  /** The tables, Better Auth's included. */
-  schema: S
+  /** The tables, Better Auth's included, for a data layer that needs them. */
+  schema?: S
   /** 32+ characters (A001 in production). */
   secret?: string
   /** The rest of Better Auth's options; they win over the defaults here. */
@@ -22,17 +20,15 @@ export interface AuthOptions<S extends Record<string, unknown>, O extends Better
 
 export function createAuth<S extends Record<string, unknown>, const O extends BetterAuthOptions = {}>({ db, schema, secret, options }: AuthOptions<S, O>) {
   const handle = db.$weft
-  for (const name of ['user', 'session', 'account', 'verification']) {
-    const t = schema[name]
-    if (isTable(t)) handle.exempt.add(getTableName(t))
-  }
+  if (options?.database) for (const name of ['user', 'session', 'account', 'verification']) handle.exempt.add(name)
+  else if (!handle.auth) throw new StartError('A005', 'this database provider has no Better Auth adapter', 'pass `options.database` to `createAuth`, or use a provider that has one')
   const auth = betterAuth({
     secret,
     // A build's prerender holds no environment; a server takes `BETTER_AUTH_URL`, or the request's origin.
     ...(process.env.WEFT_BUILD && { baseURL: 'http://localhost' }),
     telemetry: { enabled: false },
     emailAndPassword: { enabled: true },
-    database: drizzleAdapter(db as any, { provider: handle.dialect === 'postgresql' ? 'pg' : 'sqlite', schema }),
+    database: options?.database ?? handle.auth?.(schema),
     ...options,
     // The server stamps this header from the socket (server.tsx), so rate limits aren't one bucket for everyone.
     advanced: { ...options?.advanced, ipAddress: { ipAddressHeaders: [CLIENT_IP], ...options?.advanced?.ipAddress } },

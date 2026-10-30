@@ -85,21 +85,43 @@ export async function startCommand(root, { runtime } = {}) {
 /** The hash `weft db generate` records and Q015 compares. */
 export const schemaHash = text => createHash('sha256').update(text).digest('hex').slice(0, 16)
 
-/** `weft db generate`: drizzle-kit's diff of the schema into `drizzle/`, on Node like all of dev (research 28 §2). */
-export function dbCommand(root, sub) {
+/** The app's data layer: the plugin that declares one, or Drizzle, which is built in. Null with no database. */
+export async function dbLayer(root, loaded) {
+  const { contributions = [] } = loaded ?? await loadConfig(root)
+  const plugin = contributions.find(c => c.manifest.db)?.manifest.db
+  if (plugin) return plugin
+  // Drizzle has no plugin to say so: its config file, or a client from `@weft/start/db/*`, does.
+  const entry = join(root, 'src/db/index.server.ts')
+  return existsSync(join(root, 'drizzle.config.ts')) || (existsSync(entry) && readFileSync(entry, 'utf8').includes('@weft/start/db/')) ? DRIZZLE : null
+}
+
+const DRIZZLE = {
+  layer: 'drizzle',
+  schema: 'src/db/schema.ts',
+  migrations: 'drizzle',
+  generate(root) {
+    let bin
+    try {
+      const req = createRequire(join(root, 'package.json'))
+      bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
+    } catch {
+      throw Object.assign(new Error('drizzle-kit is not installed in this project'), { code: 'E_USAGE' })
+    }
+    const r = spawnSync(process.execPath, [bin, 'generate'], { cwd: root, encoding: 'utf8' })
+    if (r.status !== 0) throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), { code: 'E_INTERNAL' })
+    return r.stdout.trim()
+  },
+}
+
+/** `weft db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
+export async function dbCommand(root, sub, name) {
   if (sub !== 'generate') throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request)`), { code: 'E_USAGE' })
-  let bin
-  try {
-    const req = createRequire(join(root, 'package.json'))
-    bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
-  } catch {
-    throw Object.assign(new Error('drizzle-kit is not installed in this project'), { code: 'E_USAGE' })
-  }
-  const r = spawnSync(process.execPath, [bin, 'generate'], { cwd: root, encoding: 'utf8' })
-  if (r.status !== 0) throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), { code: 'E_INTERNAL' })
-  const schema = join(root, 'src', 'db', 'schema.ts')
-  if (existsSync(schema)) writeFileSync(join(root, 'drizzle', '.schema-hash'), schemaHash(readFileSync(schema)) + '\n')
-  return { ok: true, output: r.stdout.trim() }
+  const layer = await dbLayer(root)
+  if (!layer) throw Object.assign(new Error('this app has no database: `weft add db` adds one'), { code: 'E_USAGE' })
+  const output = layer.generate(root, name)
+  const schema = layer.schema && join(root, layer.schema)
+  if (schema && existsSync(schema)) writeFileSync(join(root, layer.migrations, '.schema-hash'), schemaHash(readFileSync(schema)) + '\n')
+  return { ok: true, output }
 }
 
 /** Every route's merged metadata, tags and card mode (`--meta`), or just the route table. */

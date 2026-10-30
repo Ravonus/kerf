@@ -6,6 +6,7 @@ import postgres from 'postgres'
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { StartError } from '../data'
 import { register, statements, touch, type DbHandle, type Migration } from './core'
+import { drizzleAuth } from './drizzle-auth'
 
 export interface PostgresOptions<S extends Record<string, unknown>> {
   schema: S
@@ -30,6 +31,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
   const handle: DbHandle = {
     dialect: 'postgresql',
     exempt: new Set(),
+    auth: schema => drizzleAuth(db, handle, 'pg', schema),
     async migrate(list: Migration[]) {
       await client.begin(async tx => {
         await tx.unsafe(`select pg_advisory_xact_lock(${LOCK})`)

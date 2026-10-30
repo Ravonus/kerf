@@ -2,10 +2,11 @@
 // `weft check`, so it reads files and never starts Vite. Rows point at where an answer lives instead of copying it, and
 // a system the app doesn't have gets no row.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { discover } from './files.mjs'
 import { loadConfig } from './load-config.mjs'
+import { dbLayer } from './start.mjs'
 import { listSurfaces } from './surface-checks.mjs'
 
 const read = (root, rel) => (existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : '')
@@ -25,11 +26,17 @@ function serverFunctions(root) {
   return out
 }
 
-function database(root) {
+const sqlText = (root, dir) => (existsSync(join(root, dir)) ? readdirSync(join(root, dir)).filter(f => f.endsWith('.sql')).map(f => read(root, join(dir, f))).join('\n') : '')
+const ENGINE = { PrismaLibSql: 'sqlite', PrismaPg: 'postgres', PrismaMariaDb: 'mysql' }
+
+function database(root, layer) {
+  if (!layer) return null
   const entry = read(root, 'src/db/index.server.ts')
-  const engine = entry.match(/@weft\/start\/db\/(\w+)/)?.[1]
-  if (!engine) return null
-  return { engine, layer: 'drizzle', tables: names(read(root, 'src/db/schema.ts'), /export\s+const\s+([A-Za-z_$][\w$]*)\s*=\s*\w+Table\s*\(/g) }
+  const engine = entry.match(/@weft\/(?:start\/db|plugin-db-native)\/(\w+)/)?.[1] ?? ENGINE[entry.match(/Prisma(?:LibSql|Pg|MariaDb)/)?.[0]] ?? 'unknown'
+  const tables = layer.layer === 'prisma' ? names(read(root, layer.schema), /^model\s+(\w+)/gm)
+    : layer.layer === 'native' ? names(sqlText(root, layer.migrations), /create\s+table\s+(?:if\s+not\s+exists\s+)?["`]?(\w+)/gi)
+      : names(read(root, 'src/db/schema.ts'), /export\s+const\s+([A-Za-z_$][\w$]*)\s*=\s*\w+Table\s*\(/g)
+  return { engine, layer: layer.layer, tables }
 }
 
 function routes(root) {
@@ -45,7 +52,8 @@ export async function agentMap(root) {
   const pages = routes(root)
   const fns = serverFunctions(root)
   const env = ['src/env.ts', 'src/env.server.ts'].find(f => existsSync(join(root, f)))
-  const db = database(root)
+  const layer = await dbLayer(root, loaded)
+  const db = database(root, layer)
   const auth = existsSync(join(root, 'src/auth.server.ts'))
   const surfaces = listSurfaces(root).map(s => s.name)
   const styled = existsSync(join(root, '.weft/styles.json')) ? Object.keys(JSON.parse(read(root, '.weft/styles.json')).groups ?? {}) : []
@@ -57,7 +65,7 @@ export async function agentMap(root) {
     pages.length && row('Pages, their data and metadata', '`weft routes --meta`', sample(pages)),
     fns.functions.length && row('Server functions', 'The file named here; signatures in `.weft/contract.json` after a build', fns.functions.join('; ')),
     fns.channels.length && row('Channels', '`weft docs start`', sample(fns.channels)),
-    db && row('Tables and migrations', '`src/db/schema.ts`, then `weft db generate`', sample(db.tables)),
+    db && row('Tables and migrations', layer.schema ? `\`${layer.schema}\`, then \`weft db generate\`` : `\`weft db generate <name>\`, then SQL in \`${layer.migrations}/\``, sample(db.tables)),
     auth && row('Who the user is', '`ctx.user` on the server; `src/auth.server.ts`', 'better-auth'),
     row('Styles', 'Before writing one: `weft style find <what it is>`', styled.length ? sample(styled) : undefined),
     env && row('Environment variables', `\`${env}\`; values in \`.env\``),

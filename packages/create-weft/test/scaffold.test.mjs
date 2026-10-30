@@ -158,7 +158,7 @@ describe('--db, --auth, --runtime', () => {
   })
 
   it('refuses what can\'t work', () => {
-    expect(() => template({ ui: 'none', db: 'mongo' })).toThrow('--db must be one of sqlite, postgres, none')
+    expect(() => template({ ui: 'none', db: 'mongo' })).toThrow('--db must be one of sqlite, postgres, mysql, none')
     expect(() => template({ ui: 'none', runtime: 'workerd' })).toThrow('--runtime must be one of node, bun, deno')
     expect(() => template({ ui: 'none', auth: true })).toThrow('--auth keeps users in a database')
   })
@@ -173,6 +173,32 @@ it('--ui tailwind writes what `weft add tailwind` writes', async () => {
   expect(files['src/routes/index.tsx']).toContain('rounded-lg')
   expect(files['src/routes/_layout.tsx']).toContain('<nav class="flex gap-4 p-4">')
   expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('@weft/warp')
+})
+
+describe('--layer', () => {
+  it.each([
+    ['native', 'mysql', 'migrations/0000_todos.sql', '@weft/plugin-db-native/mysql', 'mysql2'],
+    ['prisma', 'mysql', 'prisma/schema.prisma', '@prisma/adapter-mariadb', '@prisma/client'],
+    ['prisma', 'sqlite', 'prisma/schema.prisma', '@prisma/adapter-libsql', '@prisma/client'],
+    ['drizzle', 'mysql', 'drizzle.config.ts', '@weft/start/db/mysql', 'mysql2'],
+  ])('%s on %s has its files, driver and plugin', (layer, db, file, entry, dep) => {
+    const files = template({ db, layer })
+    expect(files).toHaveProperty([file])
+    expect(files['src/db/index.server.ts']).toContain(entry)
+    expect(JSON.parse(files['package.json']).dependencies).toHaveProperty([dep])
+    if (layer !== 'drizzle') expect(files['weft.config.ts']).toContain(`${layer}()`)
+    else expect(files['weft.config.ts']).not.toContain('plugin-db')
+  })
+
+  it('drizzle on MySQL never calls returning(), and Native never concatenates', () => {
+    expect(template({ db: 'mysql' })['src/server/todos.ts']).not.toContain('.returning()')
+    expect(template({ db: 'sqlite', layer: 'native' })['src/server/todos.ts']).not.toMatch(/sql\([`'"]/)
+  })
+
+  it('refuses auth on Native and an unknown layer', () => {
+    expect(() => template({ db: 'sqlite', layer: 'native', auth: true })).toThrow("isn't available on --layer native")
+    expect(() => template({ db: 'sqlite', layer: 'sequel' })).toThrow('--layer must be one of')
+  })
 })
 
 it('refuses a non-empty directory', () => {

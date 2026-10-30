@@ -3,49 +3,64 @@
 
 const VERSIONS = {
   '@types/node': '26.6.5',
-  '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', postgres: '4.0.0', zod: '4.6.7',
+  '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',
+  prisma: '7.10.1', '@prisma/client': '7.10.1', '@prisma/adapter-libsql': '7.10.1', '@prisma/adapter-pg': '7.10.1', '@prisma/adapter-mariadb': '7.10.1',
 }
+import { nativeFiles, prismaAdapterPackage, prismaFiles } from './data.mjs'
+
 const pin = (...names) => Object.fromEntries(names.map(n => [n, VERSIONS[n]]))
 
-export function stackDeps({ db, auth }) {
+const drivers = db => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mysql2'] : [])
+
+export function stackDeps({ db, auth, layer = 'drizzle', version = '0.0.0' }) {
   if (db === 'none') return { deps: {}, dev: {} }
+  const base = pin('@t3-oss/env-core', 'zod', ...(auth ? ['better-auth'] : []))
+  if (layer === 'native') return { deps: { ...base, ...pin(...drivers(db)), '@weft/plugin-db-native': version }, dev: pin('@types/node') }
+  if (layer === 'prisma') return { deps: { ...base, ...pin('@prisma/client', prismaAdapterPackage(db)), '@weft/plugin-db-prisma': version }, dev: pin('prisma', '@types/node') }
   return {
-    deps: pin('@t3-oss/env-core', 'drizzle-orm', 'drizzle-zod', 'zod', ...(db === 'postgres' ? ['postgres'] : []), ...(auth ? ['better-auth'] : [])),
+    deps: pin('@t3-oss/env-core', 'drizzle-orm', 'drizzle-zod', 'zod', ...drivers(db), ...(auth ? ['better-auth'] : [])),
     dev: pin('drizzle-kit', '@types/node'),
   }
 }
 
-export function stackFiles({ db, auth, name, secret }) {
-  const pg = db === 'postgres'
-  return {
-    'drizzle.config.ts': `import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: '${pg ? 'postgresql' : 'sqlite'}', schema: './src/db/schema.ts', out: './drizzle' })\n`,
-    '.env': envFile({ pg, auth, name, secret }),
-    '.env.example': envFile({ pg, auth, name, secret: '' }),
-    'src/env.server.ts': envModule({ pg, auth }),
-    'src/db/schema.ts': pg ? pgSchema(auth) : sqliteSchema(auth),
-    'src/db/index.server.ts': `import { createDb } from '@weft/start/db/${pg ? 'postgres' : 'sqlite'}'\nimport { env } from '../env.server'\nimport * as schema from './schema'\n\nexport const db = createDb({ schema, url: env.DATABASE_URL })\n`,
+export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
+  const shared = {
+    '.env': envFile({ db, auth, name, secret }),
+    '.env.example': envFile({ db, auth, name, secret: '' }),
+    'src/env.server.ts': envModule({ db, auth }),
     'src/context.server.ts': context(auth),
-    'src/server/todos.ts': todosServer(auth),
     'src/routes/todos/index.tsx': '', // filled by the caller, which knows the UI kit
+    ...(auth && { 'src/server/session.ts': sessionServer(), 'src/routes/todos/_layout.tsx': guard() }),
+  }
+  if (layer === 'native') return { ...shared, ...nativeFiles({ db }) }
+  if (layer === 'prisma') return { ...shared, ...prismaFiles({ db, auth }) }
+  return { ...shared, ...drizzleFiles({ db, auth }) }
+}
+
+function drizzleFiles({ db, auth }) {
+  return {
+    'drizzle.config.ts': `import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: '${{ postgres: 'postgresql', sqlite: 'sqlite', mysql: 'mysql' }[db]}', schema: './src/db/schema.ts', out: './drizzle' })\n`,
+    'src/db/schema.ts': { postgres: pgSchema, sqlite: sqliteSchema, mysql: mysqlSchema }[db](auth),
+    'src/db/index.server.ts': `import { createDb } from '@weft/start/db/${db}'\nimport { env } from '../env.server'\nimport * as schema from './schema'\n\nexport const db = createDb({ schema, url: env.DATABASE_URL })\n`,
+    'src/server/todos.ts': todosServer(auth, db),
     ...(auth && {
       'src/auth.server.ts': `import { createAuth } from '@weft/start/auth'\nimport { db } from '#/db/index.server'\nimport * as schema from './db/schema'\nimport { env } from './env.server'\n\nexport default createAuth({ db, schema, secret: env.BETTER_AUTH_SECRET })\n`,
-      'src/server/session.ts': sessionServer(),
-      'src/routes/todos/_layout.tsx': guard(),
     }),
   }
 }
 
-const envFile = ({ pg, auth, name, secret }) =>
-  (pg ? `DATABASE_URL=postgres://localhost:5432/${name.replace(/[^a-z0-9_]/g, '_')}\n` : 'DATABASE_URL=file:.data/app.db\n') +
+const database = name => name.replace(/[^a-z0-9_]/g, '_')
+const envFile = ({ db, auth, name, secret }) =>
+  ({ postgres: `DATABASE_URL=postgres://localhost:5432/${database(name)}\n`, mysql: `DATABASE_URL=mysql://root@localhost:3306/${database(name)}\n`, sqlite: 'DATABASE_URL=file:.data/app.db\n' }[db]) +
   (auth ? `BETTER_AUTH_SECRET=${secret}\nBETTER_AUTH_URL=http://localhost:5173\n` : '')
 
-const envModule = ({ pg, auth }) => `import { createEnv } from '@t3-oss/env-core'
+const envModule = ({ db, auth }) => `import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
 // Checked when the server starts. A build holds no secrets, so \`weft build\` skips it.
 export const env = createEnv({
   server: {
-    DATABASE_URL: ${pg ? 'z.url()' : "z.string().min(1).default('file:.data/app.db')"},${auth ? '\n    BETTER_AUTH_SECRET: z.string().min(32),' : ''}
+    DATABASE_URL: ${db !== 'sqlite' ? 'z.url()' : "z.string().min(1).default('file:.data/app.db')"},${auth ? '\n    BETTER_AUTH_SECRET: z.string().min(32),' : ''}
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
@@ -73,6 +88,25 @@ ${auth ? authTablesPg() : ''}
 export const todos = pgTable('todos', {
   id: text('id').primaryKey(),${owner}
   title: text('title').notNull(),
+  done: boolean('done').notNull().default(false),
+  createdAt: bigint('created_at', { mode: 'number' }).notNull(),
+})
+`
+}
+
+// MySQL can't index a TEXT column, so ids, keys and anything unique are VARCHAR. Otherwise Postgres's tables hold.
+const authTablesMysql = () => authTablesPg()
+  .replaceAll('pgTable', 'mysqlTable')
+  .replace(/text\('(id|user_id|email|token|account_id|provider_id|identifier)'\)/g, "varchar('$1', { length: 255 })")
+  .replace(/timestamp\('(\w+)'\)/g, "timestamp('$1', { fsp: 3 })")
+
+function mysqlSchema(auth) {
+  const owner = auth ? `\n  userId: varchar('user_id', { length: 255 }).notNull().references(() => user.id, { onDelete: 'cascade' }),` : ''
+  return `import { bigint, boolean, mysqlTable, ${auth ? 'text, timestamp, ' : ''}varchar } from 'drizzle-orm/mysql-core'
+${auth ? authTablesMysql() : ''}
+export const todos = mysqlTable('todos', {
+  id: varchar('id', { length: 36 }).primaryKey(),${owner}
+  title: varchar('title', { length: 200 }).notNull(),
   done: boolean('done').notNull().default(false),
   createdAt: bigint('created_at', { mode: 'number' }).notNull(),
 })
@@ -208,9 +242,11 @@ declare module '@weft/start' {
 }
 `
 
-function todosServer(auth) {
+function todosServer(auth, db) {
   const use = auth ? `\n  auth: 'user',` : ''
   const mine = auth ? `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` : `eq(todos.id, input.id)`
+  // MySQL has no \`returning\`.
+  const returning = db === 'mysql' ? '' : '.returning()'
   return `import { mutation, query } from '@weft/start'
 import { schemasOf } from '@weft/start/db'
 import { ${auth ? 'and, ' : ''}asc, eq, not } from 'drizzle-orm'
@@ -232,8 +268,10 @@ export const addTodo = mutation({
   optimistic: ({ input }, cache) =>
     cache.update(listTodos, undefined, list => void list.push({ id: \`tmp:\${input.title}\`,${auth ? " userId: ''," : ''} title: input.title, done: false, createdAt: 0 })),
   run: async ({ input, ctx }) => {
-    const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }).returning()
-    return row
+    ${db === 'mysql' ? `const row = { id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }
+    await ctx.db.insert(todos).values(row)
+    return { ...row, done: false }` : `const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(),${auth ? ' userId: ctx.user.id,' : ''} title: input.title, createdAt: Date.now() }).returning()
+    return row`}
   },
 })
 
@@ -245,14 +283,14 @@ export const toggleTodo = mutation({
       const t = list.find(x => x.id === input.id)
       if (t) t.done = !t.done
     }),
-  run: ({ input, ctx }) => ctx.db.update(todos).set({ done: not(todos.done) }).where(${mine}).returning(),
+  run: ({ input, ctx }) => ctx.db.update(todos).set({ done: not(todos.done) }).where(${mine})${returning},
 })
 
 export const deleteTodo = mutation({
   input: byId,${use}
   invalidates: ['todos'],
   optimistic: ({ input }, cache) => cache.update(listTodos, undefined, list => list.filter(x => x.id !== input.id)),
-  run: ({ input, ctx }) => ctx.db.delete(todos).where(${mine}).returning(),
+  run: ({ input, ctx }) => ctx.db.delete(todos).where(${mine})${returning},
 })
 `
 }
