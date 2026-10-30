@@ -21,6 +21,8 @@ export const meta: Meta<typeof load> = ({ data }) => ({ title: data.list.name })
 export default function List(props: RouteProps<typeof load, '/lists/[id]'>) { return <h1>{props.data.list.name}</h1> }
 ```
 
+Read `props.data` in JSX or `derived`, not in the component body (W001).
+
 `load` and `meta` never ship to the client. A layout's `load` runs before its children's, so it's where a guard goes.
 Links are `<Link href>`; code navigates with `navigate(href)`.
 

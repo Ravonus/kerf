@@ -146,7 +146,7 @@ function run(node: Computation) {
   const prevListener = listener, prevOwner = owner
   listener = owner = node
   try {
-    const v = node.effect === 2 ? node.fn() : node.fn(node.v) // a hole's value takes no arguments
+    const v = node.effect === 2 ? (node.fn as () => unknown)() : node.fn(node.v) // a hole's value takes no arguments
     if (node.effect === 2 && live(v)) {
       settle(computation(() => unwrap(v), 1, node.a)) // its reads are its own, or a change here would rebuild what `fn` made
     } else if (node.a) {

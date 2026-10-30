@@ -39,6 +39,10 @@
     },
     "./devtools": "./src/devtools.ts",
     "./agent": "./src/agent.ts",
+    "./config": {
+      "types": "./src/config.d.ts",
+      "default": "./src/config.mjs"
+    },
     "./vite": "./vite.mjs",
     "./compiler": "./compiler.cjs"
   },

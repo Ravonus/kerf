@@ -36,7 +36,7 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
       type: 'module',
       scripts: { dev: 'weft dev', build: 'weft build', check: 'weft check', start: 'weft start', ...(db !== 'none' && { 'db:generate': 'weft db generate' }) },
       dependencies: { ...deps, ...stack.deps },
-      devDependencies: { '@weft/cli': version, ...stack.dev },
+      devDependencies: { '@weft/cli': version, typescript: '7.0.2', ...stack.dev },
     }),
     'weft.config.ts':
       `import { defineConfig } from 'weft/config'\n` +

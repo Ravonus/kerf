@@ -1,5 +1,5 @@
 // `defineConfig` for weft.config.ts. Identity at runtime; the types (config.d.ts) are the point.
-// PLAN §8 names this `weft/config`; the CLI's loader maps that specifier here until packages/weft ships it.
+// Apps import it from `weft/config`; the CLI's loader falls back here when a project's weft doesn't resolve.
 
-/** @type {import('./config').defineConfig} */
+/** @type {import('weft/config').defineConfig} */
 export const defineConfig = config => config
