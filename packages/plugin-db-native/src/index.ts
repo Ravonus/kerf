@@ -23,6 +23,8 @@ export type Sql = (strings: TemplateStringsArray, ...values: unknown[]) => Promi
 
 export interface NativeDb<D = unknown> {
   sql: Sql
+  /** One statement you built, with its values bound. For a tool that writes SQL; in app code use `sql`. */
+  query: Driver['query']
   driver: D
   transaction<T>(fn: (tx: { sql: Sql }) => Promise<T>): Promise<T>
   $weft: DbHandle
@@ -53,6 +55,7 @@ export function createNative<D>(driver: Driver<D>, { migrate = true }: { migrate
   }
   const db = {
     sql: tag(handle, driver.query),
+    query: driver.query,
     driver: driver.raw,
     transaction: <T>(fn: (tx: { sql: Sql }) => Promise<T>) => driver.transaction(tx => fn({ sql: tag(handle, tx.query) })),
   }

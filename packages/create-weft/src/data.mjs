@@ -7,45 +7,53 @@ const engineSql = {
   mysql: { bool: 'boolean not null default false', big: 'bigint' },
 }
 
-export const nativeFiles = ({ db }) => ({
-  'migrations/0000_todos.sql': `create table todos (
-  id varchar(36) primary key,
-  title varchar(200) not null,
-  done ${engineSql[db].bool},
-  created_at ${engineSql[db].big} not null
-);
-`,
-  'src/db/index.server.ts': `import { createDb } from '@weft/plugin-db-native/${db}'
-import { env } from '../env.server'
+// Better Auth's tables under its default names, which are camelCase, so they're quoted. MySQL can't key a TEXT column.
+export function nativeAuthSql(db) {
+  const q = name => (db === 'mysql' ? `\`${name}\`` : `"${name}"`)
+  const key = 'varchar(255)'
+  const text = 'text'
+  const when = { sqlite: 'date', postgres: 'timestamptz', mysql: 'datetime(3)' }[db]
+  const bool = { sqlite: 'integer', postgres: 'boolean', mysql: 'boolean' }[db]
+  const table = (name, columns) => `create table ${q(name)} (\n${columns.map(([c, type]) => `  ${q(c)} ${type}`).join(',\n')}\n);\n`
+  const ref = table => `references ${q(table)} (${q('id')}) on delete cascade`
+  const stamps = [['createdAt', `${when} not null`], ['updatedAt', `${when} not null`]]
+  return [
+    table('user', [['id', `${key} primary key`], ['name', `${text} not null`], ['email', `${key} not null unique`], ['emailVerified', `${bool} not null`], ['image', text], ...stamps]),
+    table('session', [['id', `${key} primary key`], ['expiresAt', `${when} not null`], ['token', `${key} not null unique`], ...stamps, ['ipAddress', text], ['userAgent', text], ['userId', `${key} not null ${ref('user')}`]]),
+    table('account', [['id', `${key} primary key`], ['accountId', `${text} not null`], ['providerId', `${text} not null`], ['userId', `${key} not null ${ref('user')}`], ['accessToken', text], ['refreshToken', text], ['idToken', text], ['accessTokenExpiresAt', when], ['refreshTokenExpiresAt', when], ['scope', text], ['password', text], ...stamps]),
+    table('verification', [['id', `${key} primary key`], ['identifier', `${text} not null`], ['value', `${text} not null`], ['expiresAt', `${when} not null`], ['createdAt', when], ['updatedAt', when]]),
+  ].join('\n')
+}
 
-export const db = createDb({ url: env.DATABASE_URL })
-`,
-  'src/server/todos.ts': `import { mutation, query } from '@weft/start'
+const nativeTodos = auth => {
+  const use = auth ? `\n  auth: 'user',` : ''
+  const mine = auth ? ' and user_id = \${ctx.user.id}' : ''
+  return `import { mutation, query } from '@weft/start'
 import { z } from 'zod'
 
 interface Todo { id: string; title: string; done: boolean }
 const byId = z.object({ id: z.string() })
 
 export const listTodos = query({
-  tags: ['todos'],
+  tags: ['todos'],${use}
   run: async ({ ctx }) => {
-    const rows = await ctx.db.sql\`select id, title, done from todos order by created_at\`
+    const rows = await ctx.db.sql\`select id, title, done from todos${auth ? ' where user_id = \${ctx.user.id}' : ''} order by created_at\`
     return (rows as unknown as Todo[]).map(t => ({ ...t, done: Boolean(t.done) }))
   },
 })
 
 export const addTodo = mutation({
-  input: z.object({ title: z.string().trim().min(1).max(200) }),
+  input: z.object({ title: z.string().trim().min(1).max(200) }),${use}
   invalidates: ['todos'],
   optimistic: ({ input }, cache) =>
     cache.update(listTodos, undefined, list => void list.push({ id: \`tmp:\${input.title}\`, title: input.title, done: false })),
   run: async ({ input, ctx }) => {
-    await ctx.db.sql\`insert into todos (id, title, done, created_at) values (\${crypto.randomUUID()}, \${input.title}, \${false}, \${Date.now()})\`
+    await ctx.db.sql\`insert into todos (id, title, done, created_at${auth ? ', user_id' : ''}) values (\${crypto.randomUUID()}, \${input.title}, \${false}, \${Date.now()}${auth ? ', \${ctx.user.id}' : ''})\`
   },
 })
 
 export const toggleTodo = mutation({
-  input: byId,
+  input: byId,${use}
   invalidates: ['todos'],
   optimistic: ({ input }, cache) =>
     cache.update(listTodos, undefined, list => {
@@ -53,19 +61,44 @@ export const toggleTodo = mutation({
       if (t) t.done = !t.done
     }),
   run: async ({ input, ctx }) => {
-    await ctx.db.sql\`update todos set done = not done where id = \${input.id}\`
+    await ctx.db.sql\`update todos set done = not done where id = \${input.id}${mine}\`
   },
 })
 
 export const deleteTodo = mutation({
-  input: byId,
+  input: byId,${use}
   invalidates: ['todos'],
   optimistic: ({ input }, cache) => cache.update(listTodos, undefined, list => list.filter(x => x.id !== input.id)),
   run: async ({ input, ctx }) => {
-    await ctx.db.sql\`delete from todos where id = \${input.id}\`
+    await ctx.db.sql\`delete from todos where id = \${input.id}${mine}\`
   },
 })
+`
+}
+
+export const nativeFiles = ({ db, auth }) => ({
+  'migrations/0000_todos.sql': `${auth ? `${nativeAuthSql(db)}\n` : ''}create table todos (
+  id varchar(36) primary key,
+  title varchar(200) not null,
+  done ${engineSql[db].bool},
+  created_at ${engineSql[db].big} not null${auth ? `,\n  user_id varchar(255) not null references ${db === 'mysql' ? '`user`' : '"user"'} (id) on delete cascade` : ''}
+);
 `,
+  'src/db/index.server.ts': `import { createDb } from '@weft/plugin-db-native/${db}'
+import { env } from '../env.server'
+
+export const db = createDb({ url: env.DATABASE_URL })
+`,
+  ...(auth && {
+    'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'
+import { nativeAuth } from '@weft/plugin-db-native/auth'
+import { db } from '#/db/index.server'
+import { env } from './env.server'
+
+export default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { database: nativeAuth(db) } })
+`,
+  }),
+  'src/server/todos.ts': nativeTodos(auth),
 })
 
 const PROVIDER = { sqlite: 'sqlite', postgres: 'postgresql', mysql: 'mysql' }
@@ -140,6 +173,8 @@ model Verification {
 }
 `
 }
+
+export const prismaAuthModels = db => authModels(db).replace('  todos         Todo[]\n', '')
 
 const prismaTodos = auth => {
   const use = auth ? `\n  auth: 'user',` : ''
@@ -226,7 +261,7 @@ const adapter = new ${ADAPTER[db].name}(${ADAPTER[db].make})
 export const db = withWeft(new PrismaClient({ adapter, log: [{ emit: 'event', level: 'query' }] }), '${PROVIDER[db]}')
 `,
   ...(auth && {
-    'src/auth.server.ts': `import { createAuth } from '@weft/start/auth'
+    'src/auth.server.ts': `import { createAuth } from '@weft/start/auth/better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { db } from '#/db/index.server'
 import { env } from './env.server'
@@ -236,3 +271,18 @@ export default createAuth({ db, secret: env.BETTER_AUTH_SECRET, options: { datab
   }),
   'src/server/todos.ts': prismaTodos(auth),
 })
+
+/** `--auth-provider custom`: the seam, with nothing behind it yet. An app that compiles, with no one signed in. */
+export const customAuth = `import { defineAuth } from '@weft/start/auth'
+
+// Your auth provider. weft needs only these: \`handler\` serves everything under /api/auth, and \`session\` says who a
+// request is, which is \`ctx.user\`. \`auth: 'user'\` on a query or mutation works with whatever you return here.
+export default defineAuth<{ id: string }, { id: string }>({
+  async session(request) {
+    return { user: null, session: null }
+  },
+  async handler(request) {
+    return new Response('Not found', { status: 404 })
+  },
+})
+`

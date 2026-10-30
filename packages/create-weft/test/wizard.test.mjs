@@ -62,8 +62,7 @@ describe('resolveChoices', () => {
   })
 })
 
-it('Native skips the sign-in question, and no database skips the layer', async () => {
-  expect(await resolveChoices({ db: 'mysql', layer: 'native' }, { interactive: false, env: {} })).toMatchObject({ layer: 'native', auth: false })
+it('no database skips the layer and sign-in', async () => {
   expect(await resolveChoices({ db: 'none' }, { interactive: false, env: {} })).toMatchObject({ layer: 'drizzle', auth: false })
 })
 

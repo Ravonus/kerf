@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// create-weft [dir] [--ui warp|headless|tailwind|none] [--db sqlite|postgres|mysql|none] [--layer drizzle|prisma|native] [--[no-]auth] [--runtime node|bun|deno]
+// create-weft [dir] [--ui warp|headless|tailwind|none] [--db sqlite|postgres|mysql|none] [--layer drizzle|prisma|native] [--[no-]auth] [--auth-provider better-auth|custom] [--runtime node|bun|deno]
 //   [--config ts|json|yaml] [--pm npm|pnpm|bun|yarn] [--[no-]git] [--[no-]install] [--name <name>] [--yes]
 // In a terminal it asks what the flags don't answer; --yes, or no terminal, takes the defaults.
 import { execFileSync } from 'node:child_process'
@@ -9,12 +9,12 @@ import { parseArgs } from 'node:util'
 import { CONFIGS, DB, LAYERS, RUNTIMES, scaffold, UI } from '../src/index.mjs'
 import { resolveChoices } from '../src/wizard.mjs'
 
-const usage = `Usage: create-weft [dir] [--ui ${UI.join('|')}] [--db ${DB.join('|')}] [--layer ${LAYERS.join('|')}] [--[no-]auth] [--runtime ${RUNTIMES.join('|')}] [--config ${CONFIGS.join('|')}] [--pm <manager>] [--[no-]git] [--[no-]install] [--name <name>] [--yes]`
+const usage = `Usage: create-weft [dir] [--ui ${UI.join('|')}] [--db ${DB.join('|')}] [--layer ${LAYERS.join('|')}] [--[no-]auth] [--auth-provider better-auth|custom] [--runtime ${RUNTIMES.join('|')}] [--config ${CONFIGS.join('|')}] [--pm <manager>] [--[no-]git] [--[no-]install] [--name <name>] [--yes]`
 const string = { type: 'string' }, boolean = { type: 'boolean' }
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   allowNegative: true,
-  options: { ui: string, db: string, layer: string, auth: boolean, runtime: string, config: string, pm: string, git: boolean, install: boolean, name: string, yes: { ...boolean, short: 'y' }, help: { ...boolean, short: 'h' } },
+  options: { ui: string, db: string, layer: string, auth: boolean, 'auth-provider': string, runtime: string, config: string, pm: string, git: boolean, install: boolean, name: string, yes: { ...boolean, short: 'y' }, help: { ...boolean, short: 'h' } },
 })
 const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)
 if (values.help || positionals.length > 1 || (!positionals.length && !interactive)) {
@@ -43,7 +43,9 @@ function step(what, command, args, cwd) {
 }
 
 try {
-  const { yes, help, name, ...flags } = values
+  const { yes, help, name, 'auth-provider': authProvider, ...flags } = values
+  if (authProvider && !['better-auth', 'custom'].includes(authProvider)) throw new Error('--auth-provider must be better-auth or custom')
+  if (authProvider) flags.auth = authProvider === 'custom' ? 'custom' : true
   const where = await directory()
   const dir = resolve(where)
   const choices = await resolveChoices(flags, { interactive, yes, io: { input: process.stdin, output: process.stdout } })

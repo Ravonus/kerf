@@ -31,7 +31,6 @@ all three. Two config files in one project is a P-code error.
 site: { name: Acme, title: "%s · Acme" }
 runtime: node
 db: { engine: mysql, layer: native }
-auth: { provider: better-auth }
 plugins:
   - - "@weft/warp"
     - seed: { accent: "#0a7d4f" }
@@ -95,7 +94,9 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
   own driver instead (`createNative`). Migrations are plain `.sql` files in `migrations/`, and `weft db generate <name>`
   starts one. There's no schema to drift from, so Q015 doesn't apply, and validators are Zod schemas you write. The
   driver stays reachable as `ctx.db.driver`, so nothing weft doesn't cover is out of reach.
-- **Auth on Native isn't available yet.** `create-weft --auth --layer native` refuses, and slice D settles it.
+- **Auth on Native:** Better Auth speaks Kysely, so `@weft/plugin-db-native/auth` gives it a Kysely dialect over Native's
+  own connection, on all three engines and runtimes. There's no second driver. Its only dependency is `kysely`, added to
+  apps with both.
 - **Support tiers:** *tested* combinations run in the matrix on every runtime. *Community* providers implement the slot
   and pass its conformance suite. `weft plugins verify` reports which is which.
 - **First tested set:** Drizzle, Prisma and Native on SQLite, Postgres and MySQL. MariaDB, libSQL and others follow as providers
@@ -112,8 +113,12 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
 
 ## 5. Auth, UI and styling
 
-- **Auth:** a new `auth.provider@1` slot gives `ctx.user`, sign-in routes and the A-code checks. Better Auth is the
-  default provider and takes its store from `db.adapter`. `auth: 'user'` works with any provider.
+- **Auth:** the provider is the default export of `src/auth.server.ts`, written with `defineAuth`: a `handler` for
+  everything under `/api/auth`, a `session` that says who a request is, and optional `basePath` and `$weft.check()`.
+  That's the whole contract, so it's a file and not a generated `auth.provider` slot: an app has one provider and already
+  imports it. Better Auth is the default (`@weft/start/auth/better-auth`, kept in `@weft/start` as Drizzle is) and takes
+  its store from `db.adapter`. `auth: 'user'` works with any provider. `create-weft --auth-provider custom` writes the
+  stub. `weft add auth` adds Better Auth to an app with a database, and stops rather than replace a provider.
 - **warp (built):** `warp()` takes `dials` (expression, density, flair, theme), `radius`, `fonts` and `tokens`, in any
   config format. Every override goes through the contrast check at every dial stop, so D010 still protects users. Dials
   are defaults: a `data-*` on `<html>` or any scope still wins. One limit: a default dial's rules on descendants (the
@@ -169,7 +174,7 @@ The map is a matrix of *what you want → what to call*, listing only what this 
 | Pages and their data | `weft routes` | `src/routes` |
 | Server functions: input, auth, tags | `.weft/contract.json` | The build's contract |
 | Tables and the data layer | `weft db …`, `src/db/schema` | `db.adapter` |
-| Who a user is | `ctx.user` and this app's provider | `auth.provider` |
+| Who a user is | `ctx.user` and this app's provider | `src/auth.server.ts` |
 | Styles | `weft style find <what>` | `.weft/styles.json` |
 | UI components | The kit's catalog | The `ui` plugin |
 | Slots and plugins in use | `weft plugins explain <slot>` | Slot bindings |
@@ -191,7 +196,7 @@ The map is a matrix of *what you want → what to call*, listing only what this 
 | **A. Config, wizard and map** | JSON and YAML, the schema file, the wizard, `--yes`, `weft add` for plugins and UI, `weft map` | One app configured in all three formats builds identically; `--yes` with no terminal gives the default app; a fresh agent answers where-is questions about an unfamiliar app from the map alone |
 | **B. warp and styling** | warp config options, the Tailwind adapter, `weft add tailwind` | A Tailwind scaffold and a re-themed warp scaffold pass the packed gate and every contrast and a11y stop |
 | **C. Databases** | `db.adapter@1` and conformance, the Drizzle, Prisma and Native providers, MySQL, `weft add db` | The todo + auth app passes its hidden checks on each tested combination and runtime |
-| **D. Auth** | `auth.provider@1`, Better Auth over any adapter, `weft add auth` | A hand-written provider passes the same auth checks with no change to weft |
+| **D. Auth** | `defineAuth`, Better Auth over any adapter, `weft add auth` | A hand-written provider passes the same auth checks with no change to weft |
 
 **Costs:** every option multiplies testing. The matrix covers the tested tiers rather than every combination, and this
 work comes before 3c, because 3c's `@weft/db-*` packs build on these slots.
@@ -199,5 +204,3 @@ work comes before 3c, because 3c's `@weft/db-*` packs build on these slots.
 ## 10. Open questions
 
 - **warp seeds:** whether every hue should pass D010 by default (§5).
-- **Auth on Native:** Better Auth needs a store. Whether it can use Native's connection directly on all three engines is
-  unverified, and slice D has to settle it.

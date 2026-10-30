@@ -4,11 +4,15 @@
 //
 //   node packages/create-weft/scripts/db-matrix.mjs <empty-dir> [--layers a,b] [--dbs a,b] [--runtimes a,b] [--json <out>]
 //
+// `--auth-seam` adds four apps on SQLite: Native with the hand-written provider in scripts/custom-auth, which has to pass
+// the same e2e as Better Auth with no change to weft (research 34 §9); `--auth-provider custom`'s stub; and `weft add auth`
+// on an app scaffolded without it, on each layer.
+//
 // WEFT_MATRIX_MYSQL and WEFT_MATRIX_POSTGRES are server URLs with no database name (`mysql://root@127.0.0.1:13306`),
 // whose accounts can create databases. An engine with no URL is skipped and reported. Exit 1 on any failure.
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -16,7 +20,7 @@ import { scaffold } from '../src/index.mjs'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
-  options: { layers: { type: 'string', default: 'drizzle,prisma,native' }, dbs: { type: 'string', default: 'sqlite,postgres,mysql' }, runtimes: { type: 'string', default: 'node,bun,deno' }, json: { type: 'string' } },
+  options: { layers: { type: 'string', default: 'drizzle,prisma,native' }, dbs: { type: 'string', default: 'sqlite,postgres,mysql' }, runtimes: { type: 'string', default: 'node,bun,deno' }, json: { type: 'string' }, 'auth-seam': { type: 'boolean' } },
 })
 if (!positionals[0]) throw new Error('usage: db-matrix.mjs <empty-dir>')
 const root = resolve(positionals[0])
@@ -52,15 +56,17 @@ async function database(app, db) {
 }
 
 const results = []
-for (const layer of values.layers.split(',')) for (const db of values.dbs.split(',')) {
-  const combo = `${layer}/${db}`
-  const auth = layer !== 'native'
+const combos = values.layers.split(',').flatMap(layer => values.dbs.split(',').map(db => ({ layer, db })))
+if (values['auth-seam']) combos.push({ layer: 'native', db: 'sqlite', seam: 'hand-written' }, { layer: 'drizzle', db: 'sqlite', seam: 'stub' }, ...['drizzle', 'prisma', 'native'].map(layer => ({ layer, db: 'sqlite', seam: 'add' })))
+for (const { layer, db, seam } of combos) {
+  const combo = `${layer}/${db}${seam ? `/${seam}` : ''}`
+  const auth = seam === 'stub' ? 'custom' : seam !== 'add'
   if (db !== 'sqlite' && !SERVER[db]) {
     results.push({ combo, skipped: `no WEFT_MATRIX_${db.toUpperCase()}` })
     console.log(`[db] ${combo}: skipped, no server`)
     continue
   }
-  const app = join(root, `${layer}-${db}`)
+  const app = join(root, `${layer}-${db}${seam ? `-${seam}` : ''}`)
   const entry = { combo, runtimes: {} }
   results.push(entry)
   const step = (what, cmd, args, env) => {
@@ -69,11 +75,17 @@ for (const layer of values.layers.split(',')) for (const db of values.dbs.split(
   }
   try {
     scaffold(app, { ui: 'warp', db, layer, auth })
+    if (seam === 'hand-written') {
+      const from = new URL('./custom-auth/', import.meta.url)
+      copyFileSync(new URL('auth.server.ts', from), join(app, 'src/auth.server.ts'))
+      copyFileSync(new URL('session.ts', from), join(app, 'src/server/session.ts'))
+    }
     const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
     for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name in deps) if (tarballs[name]) deps[name] = tarballs[name]
     writeFileSync(join(app, 'package.json'), JSON.stringify({ ...pkg, overrides: tarballs }, null, 2))
     step('install', 'npm', ['install', '--silent'])
     const bin = name => join(app, 'node_modules/.bin', name)
+    if (seam === 'add') step('weft add auth', bin('weft'), ['add', 'auth'])
     step('db generate', bin('weft'), ['db', 'generate'])
     step('tsc', bin('tsc'), ['--noEmit'])
     step('weft check', bin('weft'), ['check'])
@@ -84,7 +96,7 @@ for (const layer of values.layers.split(',')) for (const db of values.dbs.split(
   }
   for (const runtime of values.runtimes.split(',')) {
     const url = await database(app, db)
-    const r = spawnSync(process.execPath, [script('runtime-matrix.mjs'), app, '--runtimes', runtime, '--e2e', script(auth ? 'e2e-todo.mjs' : 'e2e-crud.mjs')], { encoding: 'utf8', env: { ...process.env, DATABASE_URL: url } })
+    const r = spawnSync(process.execPath, [script('runtime-matrix.mjs'), app, '--runtimes', runtime, '--e2e', script(auth === true ? 'e2e-todo.mjs' : 'e2e-crud.mjs')], { encoding: 'utf8', env: { ...process.env, DATABASE_URL: url } })
     entry.runtimes[runtime] = r.status === 0 ? 'pass' : 'fail'
     console.log(`[db] ${combo} on ${runtime}: ${entry.runtimes[runtime]}`)
     if (r.status !== 0) entry[`${runtime}Error`] = `${r.stdout}${r.stderr}`.slice(-2500)

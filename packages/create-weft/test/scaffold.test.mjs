@@ -195,8 +195,22 @@ describe('--layer', () => {
     expect(template({ db: 'sqlite', layer: 'native' })['src/server/todos.ts']).not.toMatch(/sql\([`'"]/)
   })
 
-  it('refuses auth on Native and an unknown layer', () => {
-    expect(() => template({ db: 'sqlite', layer: 'native', auth: true })).toThrow("isn't available on --layer native")
+  it('auth on Native brings Better Auth\'s tables and scopes every todo query', () => {
+    const files = template({ db: 'mysql', layer: 'native', auth: true })
+    expect(files['migrations/0000_todos.sql']).toContain('create table `user`')
+    expect(files['src/auth.server.ts']).toContain('nativeAuth(db)')
+    expect(files['src/server/todos.ts'].match(/user_id = \$\{ctx\.user\.id\}/g)).toHaveLength(3)
+  })
+
+  it('bring your own auth: the seam, no Better Auth, and a public todo app', () => {
+    const files = template({ db: 'sqlite', auth: 'custom' })
+    expect(files['src/auth.server.ts']).toContain('defineAuth')
+    expect(files['src/context.server.ts']).toContain('session(auth, request)')
+    expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('better-auth')
+    expect(files).not.toHaveProperty(['src/routes/login.tsx'])
+  })
+
+  it('refuses an unknown layer', () => {
     expect(() => template({ db: 'sqlite', layer: 'sequel' })).toThrow('--layer must be one of')
   })
 })

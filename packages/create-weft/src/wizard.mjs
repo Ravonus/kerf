@@ -18,7 +18,7 @@ export const questions = env => [
   { key: 'ui', label: 'UI', default: 'warp', options: list(UI) },
   { key: 'db', label: 'Database', default: 'sqlite', options: list(DB) },
   { key: 'layer', label: 'Data layer', default: 'drizzle', skip: 'drizzle', options: list(LAYERS), when: a => a.db !== 'none' },
-  { key: 'auth', label: 'Sign-in', default: true, options: yesNo, when: a => a.db !== 'none' && a.layer !== 'native' },
+  { key: 'auth', label: 'Sign-in', default: true, options: [{ value: true, label: 'Better Auth' }, { value: 'custom', label: 'Bring your own' }, { value: false, label: 'None' }], when: a => a.db !== 'none' },
   { key: 'runtime', label: 'Runtime', default: 'node', options: list(RUNTIMES) },
   { key: 'config', label: 'Config file', default: 'ts', options: list(CONFIGS) },
   { key: 'pm', label: 'Package manager', default: packageManager(env), options: list(PMS) },

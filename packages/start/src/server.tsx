@@ -22,6 +22,7 @@ import { createMemoryHistory } from '@tanstack/history'
 import { rt } from 'weft'
 import { headTags, mergeMeta, metaTags, renderToStream, renderToString, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
+import { sessionChanged, type AuthProvider } from './auth'
 import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
@@ -64,8 +65,8 @@ export interface HandlerOptions {
   context?: (args: { request: Request }) => object | Promise<object>
   /** The shared cache for `cache: { life }` queries (memory by default). */
   store?: Store
-  /** `src/auth.server.ts`'s default export: mounted at its base path, its secret checked on the first request. */
-  auth?: { handler: (request: Request) => Promise<Response>; options?: { basePath?: string }; $weft?: { check(): void } }
+  /** `src/auth.server.ts`'s default export, any provider: mounted at its base path, checked on the first request. */
+  auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$weft'>
   /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
   /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
@@ -130,7 +131,7 @@ export function createHandler(options: HandlerOptions) {
   const mediaServer = () => (provider ??= options.media?.())
   const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer }
   let checked = !options.dev
-  const authBase = (options.auth?.options?.basePath ?? '/api/auth').replace(/\/$/, '')
+  const authBase = (options.auth?.basePath ?? '/api/auth').replace(/\/$/, '')
   let applied = -1
   let ready: Promise<void> | undefined
   configure({ ...options.realtime, build: options.build, dev: options.dev })
@@ -342,11 +343,11 @@ export function createHandler(options: HandlerOptions) {
       const body = multipart ? await multipartBody(request) : ((await request.json()) as { i?: unknown; f?: [string, unknown][]; c?: 1 })
       fromForm = !!body.c
       const answer = await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : [], fromForm)
-      if (options.dev && sessionChanged(scope)) options.onDiagnostic?.({ code: 'A004', severity: 'warning', message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it` })
+      if (options.dev && sessionChanged(scope.headers)) options.onDiagnostic?.({ code: 'A004', severity: 'warning', message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it` })
       return out(answer)
     } catch (e) {
       // The session changed: a full load, so nothing cached for the last user survives in the tab (research 28 §3).
-      if (isRedirect(e)) return out({ r: e.href, ...(sessionChanged(scope) && { x: 1 }) })
+      if (isRedirect(e)) return out({ r: e.href, ...(sessionChanged(scope.headers) && { x: 1 }) })
       if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)
       // A wrong field in a form is an answer, not a fault: nothing to log.
       if (e instanceof StartError && fromForm && e.extra.issues) return out({ e: { code: e.code, message: e.message, issues: e.extra.issues } }, 422)
@@ -543,9 +544,6 @@ function stamped(request: Request): Request {
   // `new Request(request, …)` refuses the server's request wrapper; the parts are enough.
   return new Request(request.url, { method: request.method, headers, ...(request.body && { body: request.body, duplex: 'half' }) } as RequestInit)
 }
-
-/** A Better Auth session cookie went out on this response. */
-const sessionChanged = (scope: Scope) => scope.headers.getSetCookie().some(c => /^(__Secure-)?[\w.-]*session_token=/.test(c))
 
 /** The request's cookies for `persist: 'cookie'`, parsed on first read: a page with none pays nothing. */
 function cookieJar(request: Request) {

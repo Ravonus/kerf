@@ -8,7 +8,8 @@
 import { randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { classes, loginPage, stackDeps, stackFiles, TAILWIND_CSS, TAILWIND_VITE, tailwindPackages, todosPage } from './stack.mjs'
+import { customAuth } from './data.mjs'
+import { classes, context, loginPage, stackDeps, stackFiles, TAILWIND_CSS, TAILWIND_VITE, tailwindPackages, todosPage } from './stack.mjs'
 
 export const UI = ['warp', 'headless', 'tailwind', 'none']
 export const DB = ['sqlite', 'postgres', 'mysql', 'none']
@@ -59,9 +60,8 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
   if (!CONFIGS.includes(config)) throw new Error(`--config must be one of ${CONFIGS.join(', ')} (got "${config}")`)
   if (!LAYERS.includes(layer)) throw new Error(`--layer must be one of ${LAYERS.join(', ')} (got "${layer}")`)
   if (auth && db === 'none') throw new Error('--auth keeps users in a database: add --db sqlite, postgres or mysql')
-  if (auth && layer === 'native') throw new Error('--auth isn\'t available on --layer native yet: Better Auth needs a store it can use there. Use --layer drizzle or prisma, or leave auth off')
   const label = title(name)
-  const stack = stackDeps({ db, auth, layer, version })
+  const stack = stackDeps({ db, auth: auth === true, layer, version })
   const deps = { weft: version, '@weft/start': version }
   if (ui === 'warp') deps['@weft/warp'] = version
   if (ui === 'headless') deps['@weft/ui-core'] = version
@@ -92,8 +92,9 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
   if (ui !== 'warp') files['src/app.css'] = css(ui)
   if (ui === 'tailwind') files['vite.config.ts'] = TAILWIND_VITE
   if (db !== 'none') {
-    Object.assign(files, stackFiles({ db, auth, name, secret, layer }), { 'src/routes/todos/index.tsx': todosPage(ui, auth) })
-    if (auth) files['src/routes/login.tsx'] = loginPage(ui)
+    Object.assign(files, stackFiles({ db, auth: auth === true, name, secret, layer }), { 'src/routes/todos/index.tsx': todosPage(ui, auth === true) })
+    if (auth === true) files['src/routes/login.tsx'] = loginPage(ui)
+    if (auth === 'custom') Object.assign(files, { 'src/auth.server.ts': customAuth, 'src/context.server.ts': context(true) })
   }
   return files
 }
@@ -114,7 +115,8 @@ function layout(ui, options) {
   return ui === 'tailwind' ? text.replace('<nav>', '<nav class="flex gap-4 p-4">').replace('<main>', '<main class="p-4">') : text
 }
 
-function shell(ui, { db, auth }) {
+function shell(ui, { db, auth: which }) {
+  const auth = which === true
   const imports = ui === 'warp' ? '' : (ui === 'headless' ? `import '@weft/ui-core/styles/warp.css'\n` : '') + `import '../app.css'\n`
   const links = db === 'none' ? '' : `\n        <Link href="/todos">Todos</Link>`
   if (!auth) {

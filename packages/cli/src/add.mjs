@@ -2,7 +2,8 @@
 // the config, whichever format that is. It only ever inserts, and stops rather than guess at a config it can't read.
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import ts from 'typescript'
@@ -10,14 +11,13 @@ import { writeAgentsMd } from './agents-md.mjs'
 import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
+import { database } from './map.mjs'
 import { dbLayer } from './start.mjs'
 
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
 const ALIASES = { warp: '@weft/warp', text: '@weft/plugin-text', media: '@weft/plugin-media', 'surface-keel': '@weft/plugin-surface-keel' }
-/** Features 3x hasn't built: an honest answer beats treating them as a package name. */
-const COMING = { auth: 'auth providers (slice D)' }
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -172,12 +172,62 @@ async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, insta
   return { ok: true, package: `${layer} on ${engine}`, actions }
 }
 
+/** Better Auth on an app with a database. Its tables go beside yours, and your own routes stay as they are. */
+async function addAuth(root, { dryRun, install }) {
+  const layer = await dbLayer(root)
+  if (!layer) throw refused('Better Auth keeps users in a database: run `weft add db` first. Nothing was changed.')
+  if (existsSync(join(root, 'src/auth.server.ts'))) throw refused('src/auth.server.ts already exists, so this app has an auth provider. Nothing was changed.')
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+  const db = database(root, layer).engine
+  const ui = '@weft/warp' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'warp' : 'none'
+  const { authFiles, stackDeps } = await import('create-weft/stack')
+  const { files, context, tables } = authFiles({ db, layer: layer.layer, ui })
+  const contextFile = join(root, 'src/context.server.ts')
+  if (existsSync(contextFile) && !/export default \(\) => \(\{ db \}\)/.test(readFileSync(contextFile, 'utf8'))) throw refused('src/context.server.ts has been changed. Spread `session(auth, request)` from @weft/start/auth into it, then run this again. Nothing was changed.')
+  const taken = Object.keys(files).filter(f => existsSync(join(root, f)))
+  if (taken.length) throw refused(`${taken.join(', ')} already exist. Nothing was changed.`)
+  const envModule = join(root, 'src/env.server.ts')
+  const envText = existsSync(envModule) ? readFileSync(envModule, 'utf8') : ''
+  if (!envText.includes('BETTER_AUTH_SECRET') && !/server: \{\n/.test(envText)) throw refused('src/env.server.ts has no `server: {` block to add BETTER_AUTH_SECRET to. Nothing was changed.')
+
+  const actions = []
+  const [manager, verb] = installer(root)
+  const wanted = stackDeps({ db, layer: layer.layer, auth: true }).deps
+  const specs = Object.entries(wanted).filter(([name]) => !(name in (pkg.dependencies ?? {}))).map(([n, v]) => `${n}@${v}`)
+  if (install && specs.length) {
+    actions.push(`install ${specs.join(' ')} with ${manager}`)
+    if (!dryRun) execFileSync(manager, [verb, ...specs], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+  }
+  const edits = { ...files, 'src/context.server.ts': context }
+  if (!envText.includes('BETTER_AUTH_SECRET')) edits['src/env.server.ts'] = envText.replace('server: {\n', 'server: {\n    BETTER_AUTH_SECRET: z.string().min(32),\n')
+  if (layer.layer === 'drizzle') {
+    edits['src/db/auth.schema.ts'] = tables
+    edits['src/db/schema.ts'] = `${readFileSync(join(root, 'src/db/schema.ts'), 'utf8').trimEnd()}\n\nexport * from './auth.schema'\n`
+  } else if (layer.layer === 'prisma') {
+    edits['prisma/schema.prisma'] = `${readFileSync(join(root, 'prisma/schema.prisma'), 'utf8').trimEnd()}\n${tables}`
+  } else {
+    const next = existsSync(join(root, 'migrations')) ? readdirSync(join(root, 'migrations')).filter(f => f.endsWith('.sql')).length : 0
+    edits[`migrations/${String(next).padStart(4, '0')}_auth.sql`] = tables
+  }
+  actions.push(...Object.keys(edits).map(f => `write ${f}`))
+  if (!dryRun) {
+    for (const [file, text] of Object.entries(edits)) {
+      mkdirSync(dirname(join(root, file)), { recursive: true })
+      writeFileSync(join(root, file), text)
+    }
+    const env = join(root, '.env')
+    if (!(existsSync(env) && readFileSync(env, 'utf8').includes('BETTER_AUTH_SECRET'))) writeFileSync(env, `${existsSync(env) ? `${readFileSync(env, 'utf8').trimEnd()}\n` : ''}BETTER_AUTH_SECRET=${randomBytes(32).toString('base64')}\nBETTER_AUTH_URL=http://localhost:5173\n`)
+  }
+  actions.push('add BETTER_AUTH_SECRET to .env', ...(layer.schema ? ['next: `weft db generate`'] : []), 'next: `weft db migrate`', "next: add `auth: 'user'` to what needs a user, and link to /login")
+  return { ok: true, package: `Better Auth on ${layer.layer}`, actions, ...(dryRun && { dryRun: true }) }
+}
+
 export async function addCommand(root, feature, { dryRun = false, install = true, engine, layer } = {}) {
   root = resolve(root)
-  if (!feature) throw usageError(`weft add needs a feature: db, tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
-  if (COMING[feature]) throw refused(`\`weft add ${feature}\` isn't built yet: ${COMING[feature]}. Nothing was changed.`)
+  if (!feature) throw usageError(`weft add needs a feature: db, auth, tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
+  if (feature === 'auth') return addAuth(root, { dryRun, install })
   const pkg = ALIASES[feature] ?? feature
   const before = await loadConfig(root)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')

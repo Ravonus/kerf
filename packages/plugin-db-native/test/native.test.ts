@@ -1,5 +1,7 @@
 // The Native layer: bound values, migrations once, transactions. MySQL and Postgres repeat it when WEFT_TEST_MYSQL or
 // WEFT_TEST_POSTGRES names a private instance.
+import { Kysely } from 'kysely'
+import { nativeAuth } from '../src/auth'
 import { createNative, type Driver } from '../src/index'
 import { createDb as mysql } from '../src/mysql'
 import { createDb as postgres } from '../src/postgres'
@@ -54,4 +56,20 @@ test('your own driver works the same way', async () => {
   await db.sql`select ${1}, ${2}`
   expect(seen).toEqual([['select $1, $2', [1, 2]]])
   expect(db.driver).toBe('mine')
+})
+
+describe.each([
+  ['sqlite', true, () => sqlite({ url: ':memory:', migrate: false })],
+  ['mysql', !!process.env.WEFT_TEST_MYSQL, () => mysql({ url: process.env.WEFT_TEST_MYSQL!, migrate: false })],
+  ['postgres', !!process.env.WEFT_TEST_POSTGRES, () => postgres({ url: process.env.WEFT_TEST_POSTGRES!, migrate: false })],
+])('Better Auth on %s', (_, on, make) => {
+  test.runIf(on)('nativeAuth gives Kysely rows and affected counts over the same connection', async () => {
+    const db = make()
+    await db.$weft.migrate([{ tag: `0_${Math.random()}`, sql: `drop table if exists native_auth;\ncreate table native_auth (id varchar(36) primary key, title varchar(200) not null);` }])
+    const kysely = new Kysely<{ native_auth: { id: string; title: string } }>({ dialect: nativeAuth(db).dialect })
+    await kysely.insertInto('native_auth').values({ id: 'a', title: 'x' }).execute()
+    const changed = await kysely.updateTable('native_auth').set({ title: 'y' }).where('id', '=', 'a').executeTakeFirst()
+    if (db.$weft.dialect === 'mysql') expect(changed.numUpdatedRows).toBe(1n)
+    expect(await kysely.selectFrom('native_auth').selectAll().execute()).toEqual([{ id: 'a', title: 'y' }])
+  })
 })
