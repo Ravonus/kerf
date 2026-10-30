@@ -926,8 +926,17 @@ hook); the font build step in `@weft/plugin-text` (`font.build@1`: subsets, matc
 `@weft/start` writes into the head); warp's `<Shape>` for `<Boundary pending>`, with X031 measured in dev; fluid
 type tokens mirrored and checked in `ui-core` (`fluid()`, `TYPE_SCALE`); `create-weft --ui warp|headless|none`;
 and the Phase 2 X-codes. Build-side slots (`.weft/slots/<id>.build.json`) let `weft/vite` run a provider in Node.
-Still open: layout-solved `sizes` (needs warp's layout primitives and `weft-layout`), a bundled SSIMULACRA2, and
-the exit check (the v3 shop on weft + warp).
+Still open: layout-solved `sizes` (needs warp's layout primitives and `weft-layout`) and a bundled SSIMULACRA2.
+
+**2 exit check (2026-10-29): met** ([v3-warp findings](../evals/results/v3-warp-FINDINGS.md); rerun with
+`node evals/warp-exit.mjs`). The v3 shop on weft + warp passes 23/23 hidden tests, and the §3.7 work budgets hold:
+price-push 1 DOM and 9 re-runs, add-one 2 DOM. Its JS is 10.7 KB br: the weft shop's 4.6 KB plus a 6.1 KB kit,
+gated at §3.7's 10 KB plus a **7 KB kit allowance** set from that measurement. CSS is 15.6 KB, and JS + CSS is
+26.3 KB, under the 50 KB ceiling. The token contrast check passes 858/858 across theme × expression. The a11y suite
+(axe, pixel-measured contrast where axe can't decide, and a motion check at reduce) is clean at all 12 dial stops on
+every warp component and on the shop. Two contrast failures were in the spec's own CSS: the pressed Chip count
+(`opacity: .7`, 3.2:1) and the Segmented count (`opacity: .8`, 4.0–4.1:1), both in light theme. They were fixed in
+the spec on 2026-10-30 with the review's fix (reviews/03 m12: drop the opacity), so the gate runs with no exemptions.
 
 **3 status (2026-10-29):** two slices are built. The first: routing, route `meta` and share cards, streaming SSR,
 Nitro `weft dev`/`weft build`, `weft routes --meta` and H001–H008 ([25](research/25-routing.md)). The second:
@@ -1026,6 +1035,24 @@ Also out of v0:
   - Open:
     - an async-in-`watch` code for the search race;
     - a burst budget that quotes the same stock twice.
+- **Phase 2 exit check, v3 on weft + warp (2026-10-29,** [v3-warp findings](../evals/results/v3-warp-FINDINGS.md)**):**
+  - Setup: `node evals/warp-exit.mjs` runs the reference shop through four parts:
+    - hidden tests and work budgets;
+    - production size;
+    - the spec contrast checker on the resolved tokens;
+    - an a11y suite at all 12 dial stops (expression × theme × motion), on every warp component and on the shop.
+  - Results:
+    - 23/23, with price-push at 1 DOM and 9 re-runs;
+    - JS 10.7 KB br, against 10 KB + a 7 KB kit allowance (the kit measured 6.1 KB);
+    - 858/858 token pairs;
+    - 96 axe audits and 1,042 pixel-measured contrasts clean.
+  - The suite needed pixel measurement because axe can't determine the background under warp's sweep parts and
+    pseudo-element fills, so on most controls it returns "incomplete".
+  - Fixed along the way:
+    - the warp starter's `<html>` had no `lang`;
+    - the warp eval adapter didn't count re-runs.
+  - **Exit check met**, with no open findings: the Chip and Segmented counts (dimmed below 4.5:1 in light theme) were
+    fixed in the spec on 2026-10-30.
 
 ## 11. Open questions
 

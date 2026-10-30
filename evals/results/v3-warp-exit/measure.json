@@ -1,0 +1,56 @@
+{
+  "warp": {
+    "probe": {
+      "add-one": {
+        "domMutations": 2,
+        "commits": 5,
+        "renderMs": 0,
+        "wallMs": 44.07
+      },
+      "price-push": {
+        "domMutations": 1,
+        "commits": 9,
+        "renderMs": 0,
+        "wallMs": 0.47
+      },
+      "type-3-chars": {
+        "domMutations": 158,
+        "commits": 33,
+        "renderMs": 0,
+        "wallMs": 25.2
+      }
+    },
+    "bundleGzBytes": 12139,
+    "srcFiles": 9,
+    "srcLines": 216,
+    "effects": 1,
+    "memos": 4
+  },
+  "weft": {
+    "probe": {
+      "add-one": {
+        "domMutations": 1,
+        "commits": 5,
+        "renderMs": 0,
+        "wallMs": 42.37
+      },
+      "price-push": {
+        "domMutations": 1,
+        "commits": 9,
+        "renderMs": 0,
+        "wallMs": 0.24
+      },
+      "type-3-chars": {
+        "domMutations": 152,
+        "commits": 21,
+        "renderMs": 0,
+        "wallMs": 12.82
+      }
+    },
+    "bundleGzBytes": 5214,
+    "srcFiles": 8,
+    "srcLines": 190,
+    "effects": 1,
+    "memos": 4
+  }
+}
