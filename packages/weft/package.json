@@ -7,7 +7,8 @@
   "type": "module",
   "sideEffects": [
     "./src/persist.ts",
-    "./src/history.ts"
+    "./src/history.ts",
+    "./src/sync.ts"
   ],
   "exports": {
     ".": "./src/index.ts",
@@ -18,6 +19,7 @@
     "./test": "./src/test.ts",
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
+    "./sync": "./src/sync.ts",
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
     "./media": "./src/media.tsx",

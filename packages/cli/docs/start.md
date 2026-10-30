@@ -106,8 +106,8 @@ code break the other targets; `node:` modules and web APIs work on all three.
 
 ## Realtime
 
-Never poll, and never open a socket yourself (R007, T013): a live query and a `stream` reconnect, resume and clean up
-for you.
+Never poll, and never open a socket yourself (R007, T013): a live query, a `stream` and a `channel` reconnect, resume and
+clean up for you.
 
 **Live queries need no server code.** Tags are the contract: any mutation that invalidates one of the query's tags,
 on any tab, refetches it for every reader. Unchanged rows keep their identity, so the page writes what changed.
@@ -159,6 +159,94 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: 
 response limit in seconds: streams end 10 s earlier and resume. `stale` is true when the server runs a newer build
 than this tab: offer a reload.
 
+`redisBus({ url })` (`@weft/start/bus/redis`, needs `ioredis`), `natsBus({ servers })` (`@weft/start/bus/nats`, needs
+`@nats-io/transport-node`) and `durableObjectBus({ namespace })` (`@weft/start/bus/durable-object`, the
+`cloudflare_durable` preset only) plug in the same way.
+
 **Testing** uses the real hub and client over `weft/test`'s fake transport: `await net.settle()`, then
 `await net.push(prices, message)`, `await net.poke('todos')`, `await net.drop()`, `net.offline()`, `net.reconnects()`,
 `net.subscriptions()`.
+
+## Channels
+
+`channel` is a WebSocket with named messages each way, for what the client sends often: chat, typing, cursors. For
+anything else use a mutation and `.live()`. Define it in a server module. `authorize` is required (R001), and runs on
+every join and every 5 minutes.
+
+```ts
+// src/server/chat.ts
+export const room = channel({
+  params: z.object({ roomId: z.string().max(64) }),
+  authorize: ({ ctx, params }) => isMember(ctx.user, params.roomId),   // false: status 'unauthorized' (R011)
+  client: { say: z.object({ text: z.string().min(1).max(2000) }) },    // always validated; bound them (R005)
+  server: { said: Message },                                           // validated in dev and tests
+  on: {
+    say: async ({ msg, ctx, params, room }) => {
+      const row = await insertMessage(ctx, params.roomId, msg.text)    // throw StartError or FnError to refuse `send`
+      await room.publish('said', row)                                  // `{ exceptSelf: true }` skips the sender
+    },
+  },
+  limits: { perSecond: 10 },                                           // default 20 a second per socket
+})
+await room.in({ roomId }).publish('said', row)                         // from a mutation or a job
+```
+
+```tsx
+const chat = room.connect(() => ({ roomId: props.roomId }))            // tracked; `skip` leaves; { keep: '30s' }
+const said = chat.collect('said', { max: 200, key: m => m.id })        // Derived<Message[]>, kept in the cache
+chat.on('typing', ({ userId }) => show(userId))                        // removed with the owner
+await chat.send('say', { text })                                       // resolves on the server's ack; rejects with the refusal
+chat.status.value                                                      // 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
+```
+
+**The channel is a wire, not a log.** A reconnect replays what the last 60 s or 256 messages hold, per instance. Past
+that, or on a new server, `collect` empties, `chat.resets` ticks and `chat.onReset(fn)` runs. So what must survive goes
+in the database: read history with a query, `chat.collect` the new messages with `key`, and invalidate the query on a
+reset.
+
+```tsx
+import { invalidate, skip } from '@weft/start'
+const history = listMessages({ roomId })
+const said = chat.collect('said', { key: m => m.id })
+chat.onReset(() => invalidate('messages'))
+const all = derived(() => dedupe([...(history.value ?? []), ...said.value]))
+```
+
+A refused join is only known once the socket is up, and `status` is `'connecting'` on the server. To render "not
+allowed" on the server, share one function between `authorize` and the route's `load` (`allowed: mayEnter(ctx.user, id)`).
+`authorize` doesn't narrow types: `ctx.user` in `on` is still nullable. Ephemeral messages such as `typing` go with
+`{ exceptSelf: true }`, sent at most once a second.
+
+In JSX leave a handler's `e` unannotated. A separate handler takes `Event & { currentTarget: HTMLInputElement }`: `input`
+is a plain `Event` in TypeScript's DOM types, not `InputEvent`.
+
+`send` has no offline queue. While the socket reconnects it waits up to 10 s, then rejects. A `send` in flight when the
+socket dies rejects too, because it may or may not have arrived: put an id in the message if a retry must not double.
+
+**Origin:** the socket takes the app's own origin and `realtime({ origins })`, exactly (R010, R004). There's nothing
+else to configure, and no handler of your own (R004, R007). `invalidate('session:' + userId)` after a sign-out or a
+kick re-checks that user's sockets at once. A user whose session ended is closed with 4401, and `status` is
+`unauthorized`.
+
+**Shared state** is one value per key, last writer wins, as a box. A write is optimistic. A refused one goes back and
+sets `.error`.
+
+```ts
+export const deckSlide = sharedState('deck-slide', {
+  key: z.string().max(64), value: z.number().int().max(999), initial: 0,
+  authorize: { read: isParticipant, write: isPresenter },              // ({ ctx, key }) => boolean, both required
+})
+await deckSlide.in(id).set(3)                                          // on the server
+const slide = deckSlide.connect(() => (id.value ? id.value : skip))    // in a defineState: State<number> & { status, error }
+```
+
+Its value lives in server memory: it survives a restart only while another instance runs. What must last is a mutation.
+
+**Tabs:** `tabs.channel('cart', schema)` from `weft/browser` is a validated `BroadcastChannel`: `.post(msg)`, `.on(fn)`,
+`.value`. `state(init, { persist: { in: 'local', schema, version: 1 }, sync: 'tabs' })` in a `defineState` keeps a box the
+same in every tab, by key for plain objects, last writer wins. It needs `persist`, and not `session` (S008).
+
+**Testing:** `room.connect` runs the real server code over the fake socket: `await net.settle()`, then
+`await net.publish(room, { roomId }, 'said', row)`, `net.sent(room)`, `await net.drop()`, `await net.offline()`,
+`await net.session({ user })`. From `weft/test`, `tabs.post(name, msg)` and `tabs.posted(name)` play another tab, and two
+`render()`s sharing one `storage` are two tabs.

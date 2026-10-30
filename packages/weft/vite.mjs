@@ -8,17 +8,18 @@ import { buildMatrix } from './src/style/matrix.ts'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
-// Scope options backed by their own module: an app pays for weft/persist and weft/history only where it uses them.
+// Scope options backed by their own module: an app pays for weft/persist, weft/history and weft/sync only where it uses them.
 const FEATURES = [
   [/\bpersist\s*:/, 'weft/persist'],
   [/\bhistory\s*:\s*\{/, 'weft/history'],
+  [/\bsync\s*:\s*['"]tabs['"]/, 'weft/sync'],
 ]
 
 /** Adds `import 'weft/<feature>'` to app modules that use the option (filtered on id and code, §7c). */
 const features = {
   name: 'weft:features',
   transform: {
-    filter: { id: { include: /\.[cm]?[jt]sx?$/, exclude: /node_modules|[\\/]packages[\\/]weft[\\/]src[\\/]/ }, code: /\b(persist|history)\s*:/ },
+    filter: { id: { include: /\.[cm]?[jt]sx?$/, exclude: /node_modules|[\\/]packages[\\/]weft[\\/]src[\\/]/ }, code: /\b(persist|history|sync)\s*:/ },
     handler(code) {
       const add = FEATURES.filter(([re]) => re.test(code)).map(([, mod]) => `import '${mod}';`)
       return add.length ? { code: `${add.join('')}${code}`, map: null } : undefined

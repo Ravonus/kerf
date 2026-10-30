@@ -79,12 +79,22 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === 'weft' || name.startsWith('@weft/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft/', ''))}`
   pkg.dependencies.postgres = '4.0.0'
+  pkg.dependencies.ioredis = '6.0.0'
+  pkg.dependencies['@nats-io/transport-node'] = '3.4.0'
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   const fixture = join(here, '../test/fixtures/app/src')
   cpSync(join(fixture, 'server/feed.ts'), join(dir, 'src/server/feed.ts'))
   cpSync(join(fixture, 'schema.ts'), join(dir, 'src/schema.ts'))
   cpSync(join(fixture, 'routes/live.tsx'), join(dir, 'src/routes/live.tsx'))
-  writeFileSync(join(dir, 'src/realtime.server.ts'), `import { realtime } from '@weft/start'\nimport { postgresBus } from '@weft/start/bus/postgres'\nconst url = process.env.WEFT_RT_POSTGRES\nexport default realtime(url ? { bus: postgresBus({ url }) } : {})\n`)
+  cpSync(join(fixture, 'server/chat.ts'), join(dir, 'src/server/chat.ts'))
+  cpSync(join(fixture, 'routes/chat.tsx'), join(dir, 'src/routes/chat.tsx'))
+  writeFileSync(join(dir, 'src/realtime.server.ts'), `import { realtime } from '@weft/start'
+import { postgresBus } from '@weft/start/bus/postgres'
+import { redisBus } from '@weft/start/bus/redis'
+import { natsBus } from '@weft/start/bus/nats'
+const { WEFT_RT_POSTGRES: pg, WEFT_RT_REDIS: redis, WEFT_RT_NATS: nats } = process.env
+export default realtime(pg ? { bus: postgresBus({ url: pg }) } : redis ? { bus: redisBus({ url: redis }) } : nats ? { bus: natsBus({ servers: nats }) } : {})
+`)
   must('npm', ['install', '--no-audit', '--no-fund'])
   console.log(`prepared ${dir}`)
 }

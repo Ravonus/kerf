@@ -125,9 +125,13 @@ export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus> }
 
 /** Any definition, as the executor and transports see it. */
 export interface Fn {
-  kind: 'query' | 'mutation' | 'stream'
+  kind: 'query' | 'mutation' | 'stream' | 'channel' | 'shared'
   $id: string
-  def: { input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void }
+  def: {
+    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
+    /** `channel` and `sharedState` (research 32). */
+    params?: StandardSchemaV1; authorize?: any; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: any) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
+  }
 }
 
 /** Every definition by id (the server answers `/_weft/fn/<id>` from it). */
@@ -252,6 +256,8 @@ export const runtime: {
   poke?: (tags: string[], origin?: string | null) => Promise<void>
   /** This tab's realtime connection: sent with mutations, so the tab doesn't poke itself. */
   conn?: string
+  /** `room.in(params).publish`: socket.ts, on a server or under the fake. */
+  channels?: { publish(fn: Fn, params: unknown, name: string, message: unknown, options?: { exceptSelf?: boolean; from?: string }): Promise<void>; set(fn: Fn, key: unknown, value: unknown): Promise<void> }
 } = {}
 
 /** The realtime connection's status and "this tab is older than the server" (research 30 §2). */
@@ -290,6 +296,10 @@ export interface NetControl {
   open: Map<object, [what: string, close: () => void]>
   /** The realtime fake, while one is connected: `net.push`, `net.poke`, `net.drop`. */
   rt?: { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] }
+  /** The channel fake, while a socket is open. */
+  ws?: { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> }
+  /** What this client's sockets sent, across reconnects. */
+  sent: { id: string; name: string; msg: unknown }[]
   reconnects: number
 }
 

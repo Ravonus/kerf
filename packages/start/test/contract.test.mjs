@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { busProblem, describe as contract } from '../src/contract.mjs'
 import { createScope, fetchQuery } from '../src/exec'
 import { fileURLToPath } from 'node:url'
-import weftStart, { clientStubs } from '../src/vite.mjs'
+import weftStart, { clientStubs, withIds } from '../src/vite.mjs'
 
 const fn = (kind, $id, def) => ({ kind, $id, def })
 const bare = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
@@ -59,6 +59,33 @@ test('a stream is in the contract, with its message; R005: an unbounded input wa
   ]))
   expect(functions[0]).toMatchObject({ kind: 'stream', output: { type: 'object', required: ['text'] } })
   expect(diagnostics).toEqual([{ code: 'R005', severity: 'warning', why: expect.stringContaining('`input.room` has no upper bound') }])
+})
+
+test('a channel is in the contract; R005 covers its params and client messages', () => {
+  const { functions, diagnostics } = contract(new Map([['c', fn('channel', 'room.a', { params: z.object({ id: z.string() }), client: { say: z.object({ text: z.string().max(9) }), bad: z.object({ text: z.string() }) }, server: { said: z.object({ text: z.string() }) } })]]))
+  expect(functions[0]).toMatchObject({ kind: 'channel', auth: 'authorize', client: { say: { properties: { text: { maxLength: 9 } } } } })
+  expect(diagnostics.map(d => d.why)).toEqual([expect.stringContaining('`params.id`'), expect.stringContaining('`client.bad.text`')])
+})
+
+test('a shared state is bounded by the same check', () => {
+  const { diagnostics } = contract(new Map([['s', fn('shared', 'deck.a', { key: z.string(), value: z.number() })]]))
+  expect(diagnostics.map(d => d.why)).toEqual([expect.stringContaining('`key`')])
+})
+
+test('R002: `durableObjectBus` outside `cloudflare_durable`', () => {
+  expect(busProblem({ preset: 'cloudflare_module', bus: 'durable-object', streams: true })).toContain('cloudflare_durable')
+  expect(busProblem({ preset: 'cloudflare_durable', bus: 'durable-object', streams: true })).toBeUndefined()
+})
+
+test('R001 at build, with the line; a client stub keeps `initial` and drops the rest', () => {
+  const code = `import { channel, sharedState } from '@weft/start'\nexport const room = channel({ client: {} })\n`
+  expect(() => withIds(code, 'chat.ts', 'src/server/chat.ts')).toThrow(/R001: src\/server\/chat.ts:2 `room`/)
+  const ok = `import { channel, sharedState } from '@weft/start'\nimport { db } from './db'\nexport const room = channel({ authorize: () => db.ok(), on: { say: () => db.write() } })\nexport const n = sharedState('n', { key: k, value: v, initial: { a: 1 }, authorize: { read, write } })\n`
+  expect(withIds(ok, 'chat.ts', 'src/server/chat.ts')).toContain('$id: "room.')
+  const stub = clientStubs(ok, 'chat.ts', 'src/server/chat.ts')
+  expect(stub).toMatch(/channel\(\{ \$id: "room\.\w+", \$stub: 1 \}\)/)
+  expect(stub).toMatch(/sharedState\('', \{ \$id: "n\.\w+", \$stub: 1, initial: \{ a: 1 \} \}\)/)
+  expect(stub).not.toContain('db')
 })
 
 test('R002: the memory bus on a multi-instance preset, only in an app that uses realtime', () => {
