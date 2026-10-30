@@ -2,7 +2,7 @@
 // accents, resolved declarations and where each is used, plus the style D-codes that need the whole project (D021–D025,
 // research 23 §3). The Vite plugin writes it from what it compiled; `weft style` and `weft check` build it by scanning
 // the project with the same compiler (`scanProject`). Generated, never hand-edited. Plain data and erasable types: the
-// plugin and the CLI import it in Node.
+// plugin and the CLI import it in Node, as node/matrix.mjs (scripts/node-style.mjs).
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { VOCAB } from './vocab.ts'

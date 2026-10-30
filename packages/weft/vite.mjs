@@ -2,9 +2,9 @@
 import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
-import { emitGroups, GroupError, resolve as resolveIntent } from './src/style/css.ts'
+import { emitGroups, GroupError, resolve as resolveIntent } from './node/css.mjs'
 import { assets } from './assets.mjs'
-import { buildMatrix } from './src/style/matrix.ts'
+import { buildMatrix } from './node/matrix.mjs'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 

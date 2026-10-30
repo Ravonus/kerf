@@ -31,7 +31,7 @@
     "./client": {
       "types": "./client.d.ts"
     },
-    "./style/matrix": "./src/style/matrix.ts",
+    "./style/matrix": "./node/matrix.mjs",
     "./hmr": "./src/hmr.ts",
     "./plugin": {
       "types": "./src/plugin.d.ts",
@@ -48,7 +48,7 @@
   },
   "scripts": {
     "build:native": "node scripts/build-native.mjs",
-    "test": "vitest run",
+    "test": "node --no-warnings scripts/node-style.mjs --check && vitest run",
     "bench": "node scripts/bench.mjs",
     "size": "node scripts/size.mjs"
   },

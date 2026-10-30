@@ -30,3 +30,4 @@ jobs:
           npm install
           npx weft db generate
       - run: node packages/start/scripts/runtime-matrix.mjs "$RUNNER_TEMP/app"
+      - run: node packages/create-weft/scripts/packed.mjs "$RUNNER_TEMP/packed"
