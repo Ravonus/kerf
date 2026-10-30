@@ -13,7 +13,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./skeleton": "./src/skeleton-css.ts",
-    "./plugin": "./plugin.mjs"
+    "./plugin": "./plugin.mjs",
+    "./tailwind.css": "./tailwind.css"
   },
   "scripts": {
     "test": "vitest run",

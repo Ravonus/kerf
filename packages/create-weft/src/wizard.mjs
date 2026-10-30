@@ -5,7 +5,7 @@ import { CONFIGS, DB, RUNTIMES, UI } from './index.mjs'
 
 const PMS = ['npm', 'pnpm', 'bun', 'yarn']
 const LABELS = {
-  warp: 'warp', headless: 'Headless (warp behaviour, your markup)', none: 'None',
+  warp: 'warp', headless: 'Headless (warp behaviour, your markup)', tailwind: 'Tailwind', none: 'None',
   sqlite: 'SQLite', postgres: 'Postgres', node: 'Node', bun: 'Bun', deno: 'Deno', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn',
   ts: 'TypeScript', json: 'JSON', yaml: 'YAML',
 }

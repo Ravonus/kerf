@@ -900,7 +900,7 @@ crates/
   media       weft/media: <Media>, timeline(), z.media(), swap + chooser runtime (lazy); encoders live in plugin-media(-ffmpeg|-rust|…)
   plugin-*    @weft/plugin-text (text.measure + font.build), @weft/plugin-media (media.build), -bus-*, -db-*, -pay-*, -surface-keel, -device-*, -tailwind
               (weft itself adds weft/plugin, weft/slots, weft/test/plugins and the `weft plugins` CLI)
-  create-weft a wizard, or flags: `create-weft <dir> --ui warp|headless|none --db sqlite|postgres|none --auth --runtime node|bun|deno`; more choices in 3x (34), deploy flags later
+  create-weft a wizard, or flags: `create-weft <dir> --ui warp|headless|tailwind|none --db sqlite|postgres|none --auth --runtime node|bun|deno`; more choices in 3x (34), deploy flags later
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
@@ -994,7 +994,7 @@ the reveal and the swap for every shape source, and 0 px moved with a last-seen 
 `pending="shape"` reaches costs 0. `<Text>` holds its place with placeholder text in the real element, so
 it doesn't use `text.measure`. Not built: variants through barrels, `sessionStorage` records, viewport-fill counts.
 
-**3x status (2026-10-30):** slice A is built ([34](research/34-configuration.md)): `weft.config.json` and `.yaml` with one schema (P010 for two files), the `create-weft` wizard with `--yes`, `weft add` for plugins, and `weft map` with its MCP tool. Enter-through gives the todo + auth app. Plugin options aren't in the config schema yet.
+**3x status (2026-10-30):** slices A and B are built. B: `warp()` takes `dials`, `radius`, `fonts` and `tokens`, all contrast-checked; `create-weft --ui tailwind` and `weft add tailwind` share their files; warp apps skip Tailwind's reset. warp seeds pass D010 only for hues of about 120 to 240, which is open. Slice A is built ([34](research/34-configuration.md)): `weft.config.json` and `.yaml` with one schema (P010 for two files), the `create-weft` wizard with `--yes`, `weft add` for plugins, and `weft map` with its MCP tool. Enter-through gives the todo + auth app. Plugin options aren't in the config schema yet.
 
 **2 Surfaces (2026-10-30):** built ([33](research/33-surfaces.md)): `defineSurface` and `<Surface>` in `weft/surface`,
 `canvas2d`, `webgl2`, the `surface.renderer` and `text.measure` slots, both `text.measure` engines passing conformance

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// create-weft [dir] [--ui warp|headless|none] [--db sqlite|postgres|none] [--[no-]auth] [--runtime node|bun|deno]
+// create-weft [dir] [--ui warp|headless|tailwind|none] [--db sqlite|postgres|none] [--[no-]auth] [--runtime node|bun|deno]
 //   [--config ts|json|yaml] [--pm npm|pnpm|bun|yarn] [--[no-]git] [--[no-]install] [--name <name>] [--yes]
 // In a terminal it asks what the flags don't answer; --yes, or no terminal, takes the defaults.
 import { execFileSync } from 'node:child_process'

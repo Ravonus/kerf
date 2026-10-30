@@ -245,6 +245,14 @@ export function formatExplain(r) {
   return out.join('\n')
 }
 
+/** Long class lists are how Tailwind is written, so D020 stays out of an app that chose it. */
+export function usesTailwind(root) {
+  const file = join(root, 'package.json')
+  if (!existsSync(file)) return false
+  const { dependencies, devDependencies } = JSON.parse(readFileSync(file, 'utf8'))
+  return 'tailwindcss' in { ...dependencies, ...devDependencies }
+}
+
 /**
  * D020: class soup. A static `class`/`className` with more than 8 classes, or one class list (4+ classes, any order)
  * in two or more places. The fix names a group after the component and element.

@@ -32,14 +32,12 @@ site: { name: Acme, title: "%s · Acme" }
 runtime: node
 db: { engine: mysql, layer: native }
 auth: { provider: better-auth }
-ui:
-  kit: warp
-  warp:
-    seed: { accent: "#0a7d4f" }
-    dials: { expression: quiet, density: compact }
-    radius: soft
-    fonts: { body: Inter }
 plugins:
+  - - "@weft/warp"
+    - seed: { accent: "#0a7d4f" }
+      dials: { expression: quiet, density: compact }
+      radius: soft
+      fonts: { body: Inter }
   - ["@acme/weft-audit", { level: strict }]
 ```
 
@@ -112,10 +110,18 @@ so a provider's docs stay true. The `db.adapter@1` slot covers only what weft it
 
 - **Auth:** a new `auth.provider@1` slot gives `ctx.user`, sign-in routes and the A-code checks. Better Auth is the
   default provider and takes its store from `db.adapter`. `auth: 'user'` works with any provider.
-- **warp:** config gains default dials, fonts, radius, density and token overrides. Every override goes through the
-  existing contrast check at every dial stop, so D010 still protects users.
-- **Styling:** the Tailwind adapter moves up from Phase 4 into this work. `headless` and `none` stay. Plain CSS keeps
-  working as it does.
+- **warp (built):** `warp()` takes `dials` (expression, density, flair, theme), `radius`, `fonts` and `tokens`, in any
+  config format. Every override goes through the contrast check at every dial stop, so D010 still protects users. Dials
+  are defaults: a `data-*` on `<html>` or any scope still wins. One limit: a default dial's rules on descendants (the
+  quiet heading rule) also reach a nested scope that sets a different value.
+- **Seed range:** warp requires the sweep stroke to reach 3:1 against both the ink base and the surface, which leaves a
+  narrow lightness window. At the default chroma, seeds with hues of about 120 to 240 pass; the others fail D010 in
+  light mode. Some can be rescued by setting `--warp-color-sweep` (hue 270 can). Opening this up for every hue is a
+  design decision about the signature, so it stays open here.
+- **Styling (built):** the Tailwind adapter moved up from Phase 4. `create-weft --ui tailwind` and `weft add tailwind`
+  write the same files. In a warp app Tailwind's reset stays out, because its `base` layer would beat warp, and
+  `@weft/warp/tailwind.css` maps warp tokens to theme values. D020 is off in an app with `tailwindcss` installed.
+  `headless` and `none` stay, and plain CSS works as it did.
 
 ## 6. Aliases (built)
 
@@ -188,5 +194,6 @@ work comes before 3c, because 3c's `@weft/db-*` packs build on these slots.
 
 ## 10. Open questions
 
+- **warp seeds:** whether every hue should pass D010 by default (§5).
 - **Auth on Native:** Better Auth needs a store. Whether it can use Native's connection directly on all three engines is
   unverified, and slice D has to settle it.
