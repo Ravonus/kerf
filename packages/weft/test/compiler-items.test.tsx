@@ -5,6 +5,7 @@ import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
 import { state } from 'weft'
 import { flush, render, touches } from 'weft/test'
+import { seen, seenRef } from './fixtures/refs'
 
 test('children are built once, however often and wherever the component reads them', async () => {
   let built = 0
@@ -52,6 +53,44 @@ test('rest props spread on a native element stay live', async () => {
   expect(button.getAttribute('title')).toBe('two')
   await userEvent.setup().click(button)
   expect(clicks).toBe(1)
+})
+
+test('a rest parameter held in a variable is the same live view as the parameter', async () => {
+  const title = state('one')
+  function Box({ label, ...rest }: { label: string; [k: string]: any }) {
+    const attrs = rest // not a setup-time read (W001 no longer fires here)
+    return <p {...attrs} data-n={Object.keys(rest).length}>{label}{rest.label === undefined ? '' : '!'}</p>
+  }
+  render(() => <Box label="x" title={title.value} />)
+  const p = screen.getByText('x')
+  expect(p.title).toBe('one')
+  expect(p.dataset.n).toBe('1')
+  await expect(() => { title.value = 'two' }).toTouchAtMost(1)
+  expect(p.title).toBe('two')
+})
+
+test('ref to an imported or const function calls it; ref to a let beside a spread assigns it', async () => {
+  const local: Element[] = []
+  const keep = (el: Element) => local.push(el)
+  let mine: HTMLElement | undefined
+  function A(props: { title: string }) {
+    return <div><p ref={seenRef}>a</p><i ref={keep}>b</i><b ref={mine} {...props}>c</b></div>
+  }
+  render(() => <A title="t" />)
+  expect(seen).toEqual([screen.getByText('a')])
+  expect(local).toEqual([screen.getByText('b')])
+  expect(mine).toBe(screen.getByText('c'))
+  expect(mine!.title).toBe('t')
+})
+
+test('key={index} keys rows by position', async () => {
+  const items = state(['a', 'b'])
+  render(() => <ul>{items.value.map((x, i) => <li key={i}>{x}</li>)}</ul>)
+  const first = screen.getByText('a')
+  items.value = ['c', 'b', 'd']
+  await flush()
+  expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['c', 'b', 'd'])
+  expect(screen.getByText('c')).toBe(first) // the row at position 0 stayed and took the new item
 })
 
 test('fragment rows are keyed: a reorder moves them', async () => {

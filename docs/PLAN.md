@@ -102,7 +102,7 @@ agents will write anyway) is correct.
 | `({ a, b }) =>` | Each name compiles to a live read of `props.a`. |
 | `(props) =>` | `props.a` is a live getter. |
 | `({ size = 'md' }) =>` | Default applied on every read when the prop is `undefined`. |
-| `({ a, ...rest }) =>` | `rest` is a live object; `<div {...rest}>` stays live. |
+| `({ a, ...rest }) =>` | `rest` is a live object; `<div {...rest}>` stays live. `rest.x` compiles to `props.x`; `rest` held or passed on is one view per component; an element's `{...rest}` is copied where its spread binding reads it (no Proxy). |
 | `({ user: { name } }) =>` | **W006** nested destructuring can't stay live. Fix: `user.name` at the use site. |
 | `children` | Resolved once and memoized by the compiler; reading it twice returns the same nodes. |
 | Props built outside JSX (`Cart({...})`, tests) | Plain values = constants. `render()` in `weft/test` wraps them correctly. |
@@ -584,13 +584,15 @@ warp is the rebuild of the Agorix kit for weft. It keeps the base idea and rebui
        own brotli size (`scripts/size.mjs`).
      - Importing one component pays for that component, its CSS files and the shared runtime only.
      - **Sizes (2026-10-29, [24](research/24-warp-sizes.md)):** own JS br over the 1.78 KB runtime.
-       - Simple controls: Badge 1.2 KB, Button 3.6, Toggle 3.2, Card 3.0.
-       - Inputs: 5.9–6.1 KB.
-       - Overlays: Modal 1.6 KB, Drawer 1.7, Popover 4.9, Toaster 4.1.
-       - The sweep machine (1.65 KB), weft's attribute pass-through (~1.1 KB) and Icon (0.36 KB) are paid once per
-         page, so ten Buttons cost what one does. All 24 components on one page: 14.1 KB.
-       - The shop is 11.0 KB, 1 KB over its 10 KB target. Getting there means shrinking weft's pass-through or cutting
-         sweep or field behaviour.
+       - Simple controls: Badge 1.0 KB, Button 3.4, Toggle 3.0, Card 2.7.
+       - Inputs: 5.8–6.0 KB.
+       - Overlays: Modal 1.6 KB, Drawer 1.7, Popover 4.9, Toaster 4.0.
+       - The sweep machine (1.65 KB), weft's attribute pass-through and Icon (0.36 KB) are paid once per page, so ten
+         Buttons cost what one does. All 24 components on one page: 14.1 KB.
+       - Pass-through after the weft pass ([24 §7](research/24-warp-sizes.md)): an element spread is one plain-object
+         binding with no Proxy, so a control that only spreads onto elements saves ~200 B; what's left in the shop is
+         `spread` (~0.38 KB) and the shared props view (~0.14 KB).
+       - The shop is 10.99 KB, ~1 KB over its 10 KB target. What's left to cut is sweep or field behaviour.
   3. **Portability proof.** A test drives core widgets with plain DOM and no framework. A React binding would be a
      sibling of `@weft/warp` over the same core.
 - **Server pieces:** Agorix's data and real-time breadth merges into `weft/start` on weft's protocol (§4.2;
