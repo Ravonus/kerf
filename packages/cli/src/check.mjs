@@ -1,5 +1,6 @@
 // `weft check`: compile every project file in check mode, add the project view, the X-codes (text-checks.mjs), plugin
-// `check` hooks, the test T-codes and the config P-codes.
+// `check` hooks, the test T-codes, the config P-codes and the style D-codes (style.mjs), and keep `.weft/styles.json`
+// current when the project has style groups.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
@@ -8,6 +9,7 @@ import { discover } from './files.mjs'
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { projectView } from './project.mjs'
+import { classSoup, matrixDiagnostics, styleFiles, styleModule, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
 import { textChecks } from './text-checks.mjs'
@@ -35,6 +37,11 @@ export async function check(root, options = {}) {
   const rels = given?.length ? given.filter(f => /\.[jt]sx$/.test(f) || !isTestFile(f)) : discover(root, { include, exclude })
   const testRels = given?.length ? given.filter(isTestFile) : discover(root, { include: config.test?.include ?? testGlobs, exclude })
 
+  // Style groups (research 23): the project's definitions first, so each file compiles with the groups it imports.
+  const style = await styleModule(weft)
+  const sfiles = style ? styleFiles(root, config) : []
+  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('weft/style')) ? style.scanProject(root, sfiles, compiler.transform) : null
+
   const files = []
   const posByAbs = new Map()
   for (const rel of rels) {
@@ -42,7 +49,8 @@ export async function check(root, options = {}) {
     const text = readFileSync(abs, 'utf8')
     const pos = positions(text)
     posByAbs.set(abs, pos)
-    const out = compiler.transform(text, { filename: rel, checkOnly: true })
+    const groups = scan ? style.importedGroups(abs, text, f => scan.groups.filter(g => join(root, g.file) === f)) : {}
+    const out = compiler.transform(text, Object.keys(groups).length ? { filename: abs, checkOnly: true, groups } : { filename: rel, checkOnly: true })
     const diagnostics = out.diagnostics.map(d => {
       const start = pos.fromByte(d.start)
       const end = pos.fromByte(d.end)
@@ -62,10 +70,15 @@ export async function check(root, options = {}) {
 
   projectView(files, file => posByAbs.get(file.abs))
 
+  const matrix = scan && style.buildMatrix(scan.groups, scan.uses)
+  if (matrix && scan.groups.length) writeMatrixFile(root, matrix)
+  const styles = [...classSoup(files.filter(f => /\.[jt]sx$/.test(f.rel))), ...(matrix ? matrixDiagnostics(root, matrix) : [])]
+
   const fontBuild = typeof loaded.slots['font.build'] === 'string' && !loaded.slots['font.build'].startsWith('weft:default')
   const diagnostics = [
     ...loaded.diagnostics,
     ...files.flatMap(f => f.diagnostics),
+    ...styles,
     ...textChecks(root, { files, exclude, fontBuild }),
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
@@ -82,6 +95,7 @@ export async function check(root, options = {}) {
     summary,
     diagnostics,
     slots: loaded.slots,
+    styles: matrix ? { groups: Object.keys(matrix.groups).length, matrix: '.weft/styles.json' } : null,
     files: rels,
     tests: testRels,
     ms: Math.round(performance.now() - started),

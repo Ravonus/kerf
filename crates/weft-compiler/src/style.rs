@@ -12,8 +12,13 @@
 //!
 //! Each lowered site goes to `facts.groupUses` with the axis values it can produce (a literal, the literal leaves of
 //! a conditional, or any), and the Vite plugin emits CSS for exactly those. Unknown axes, values, states and parts are
-//! W061 errors. Groups defined in other modules arrive through `options.groups`. A site whose argument isn't an
-//! object literal stays a runtime spread of `group()`'s result, and its use is reported as dynamic.
+//! D025 errors, with the closest names; two group roots on one element are D024. Groups defined in other modules
+//! arrive through `options.groups`. A site whose argument isn't an object literal stays a runtime spread of
+//! `group()`'s result, and its use is reported as dynamic.
+//!
+//! An accent (`card({ status: 'late', accent: { radius: 'round' } })`, research 23 §2.2) is token-only and literal. It
+//! lowers to one static attribute, `data-accent="radius:round"`, so it stays visible in the markup, and the Vite plugin
+//! emits a rule for each accent some site uses. Intents and tokens are checked against the vocabulary there.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
@@ -38,6 +43,8 @@ pub struct GroupDef {
     pub name: String,
     pub def: Value,
     pub line: u32,
+    /// The `/** … */` comment right above the definition, without its markers.
+    pub doc: Option<String>,
 }
 
 /// One call site of a group.
@@ -51,6 +58,8 @@ pub struct GroupUse {
     pub part: Option<String>,
     /// The argument isn't an object literal, so the site can produce any value of any axis (a runtime spread).
     pub dynamic: bool,
+    /// The site's accent, intent → token (`{ radius: 'round' }`).
+    pub accent: Option<BTreeMap<String, String>>,
     pub line: u32,
 }
 
@@ -137,6 +146,7 @@ pub fn apply<'a>(
     let mut defs = Vec::new();
     let mut handled = HashSet::new();
     for stmt in program.body.iter_mut() {
+        let start = stmt.span().start;
         let (decl, exported) = match stmt {
             Statement::VariableDeclaration(d) => (d, false),
             Statement::ExportDeclaration(e) => match &mut e.declaration {
@@ -175,13 +185,27 @@ pub fn apply<'a>(
             if let Some(sym) = id.symbol_id.get() {
                 metas.insert(sym, meta(&name, &def));
             }
-            defs.push(GroupDef { binding: id.name.to_string(), exported, name, def, line });
+            defs.push(GroupDef { binding: id.name.to_string(), exported, name, def, line, doc: doc_before(source, start) });
         }
     }
 
     let mut lower = Lower { allocator, ast: AstBuilder::new(allocator), scoping, source, metas, group_fn, handled, tagged_parts, diagnostics, uses: Vec::new() };
     lower.visit_program(program);
     (defs, lower.uses)
+}
+
+/// The JSDoc block that ends right before `at` (only whitespace between), as plain text.
+fn doc_before(source: &str, at: u32) -> Option<String> {
+    let before = source[..at as usize].trim_end();
+    let body = before.strip_suffix("*/")?;
+    let open = body.rfind("/**")?;
+    let text = body[open + 3..]
+        .lines()
+        .map(|l| l.trim().trim_start_matches('*').trim())
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ");
+    (!text.is_empty()).then_some(text)
 }
 
 fn not_static(source: &str, span: Span, what: &str, help: &str) -> Diagnostic {
@@ -319,7 +343,7 @@ impl<'a> Lower<'a, '_> {
     }
 
     fn error(&mut self, span: Span, message: String, help: String) {
-        self.diagnostics.push(Diagnostic::new(self.source, "W061", Severity::Error, (span.start, span.end), message, help));
+        self.diagnostics.push(Diagnostic::new(self.source, "D025", Severity::Error, (span.start, span.end), message, help));
     }
 
     fn meta_of(&self, e: &Expression) -> Option<&Meta> {
@@ -332,11 +356,11 @@ impl<'a> Lower<'a, '_> {
             let meta = self.meta_of(&m.object)?;
             let (name, part) = (meta.name.clone(), m.property.name.to_string());
             if !meta.parts.contains(&part) {
-                let help = format!("Parts of {name}: {}.", list(&meta.parts));
+                let help = format!("{}Parts of {name}: {}.", did_you_mean(&part, &meta.parts), list(&meta.parts));
                 self.error(m.property.span, format!("group {name} has no part `{part}`"), help);
                 return None;
             }
-            self.uses.push(GroupUse { group: name.clone(), axes: BTreeMap::new(), states: Vec::new(), part: Some(part.clone()), dynamic: false, line });
+            self.uses.push(GroupUse { group: name.clone(), axes: BTreeMap::new(), states: Vec::new(), part: Some(part.clone()), dynamic: false, accent: None, line });
             let part_attr = self.text("data-part", &part);
             return Some(if self.tagged_parts { vec![self.text("data-g", &name), part_attr] } else { vec![part_attr] });
         }
@@ -345,7 +369,7 @@ impl<'a> Lower<'a, '_> {
         let name = meta.name.clone();
         let axes = meta.axes.clone();
         let (inherit, states, defaults) = (meta.inherit.clone(), meta.states.clone(), meta.defaults.clone());
-        let mut use_ = GroupUse { group: name.clone(), axes: BTreeMap::new(), states: Vec::new(), part: None, dynamic: false, line };
+        let mut use_ = GroupUse { group: name.clone(), axes: BTreeMap::new(), states: Vec::new(), part: None, dynamic: false, accent: None, line };
         let props = match call.arguments.first_mut() {
             None => None,
             Some(Argument::ObjectExpression(o)) if o.properties.iter().all(|p| matches!(p, ObjectPropertyKind::ObjectProperty(p) if !p.computed)) => Some(o),
@@ -359,11 +383,26 @@ impl<'a> Lower<'a, '_> {
         for p in props.into_iter().flat_map(|o| o.properties.iter_mut()) {
             let ObjectPropertyKind::ObjectProperty(p) = p else { continue };
             let Some(key) = p.key.static_name().map(|k| k.to_string()) else { continue };
+            if key == "accent" && !axes.iter().any(|(a, _)| a == "accent") && !states.contains(&key) {
+                match accent(&p.value) {
+                    Ok(set) if set.is_empty() => {}
+                    Ok(set) => {
+                        let words: Vec<String> = set.iter().map(|(k, v)| format!("{k}:{v}")).collect();
+                        out.push(self.text("data-accent", &words.join(" ")));
+                        use_.accent = Some(set);
+                    }
+                    Err(span) => {
+                        let what = format!("`{}` in {name}'s accent", &self.source[span.start as usize..span.end as usize]);
+                        self.diagnostics.push(not_static(self.source, span, &what, "An accent is `{ intent: 'token' }` with literal tokens: accent: { radius: 'round' }."));
+                    }
+                }
+                continue;
+            }
             if let Some((_, values)) = axes.iter().find(|(a, _)| *a == key) {
                 let produced = literals(&p.value);
                 for v in produced.iter().flatten() {
                     if !values.contains(v) {
-                        let help = format!("Values of {name}.{key}: {}.", list(values));
+                        let help = format!("{}Values of {name}.{key}: {}.", did_you_mean(v, values), list(values));
                         self.error(p.value.span(), format!("`{v}` isn't a value of {name}'s `{key}` axis"), help);
                     }
                 }
@@ -400,7 +439,8 @@ impl<'a> Lower<'a, '_> {
                     (format!("{name}'s `{key}` axis is inherited from the nearest surface"), "Set it on an ancestor, not here.".to_string())
                 } else {
                     let ax: Vec<String> = axes.iter().map(|(a, _)| a.clone()).collect();
-                    (format!("group {name} has no axis or state `{key}`"), format!("Axes: {}. States: {}.", list(&ax), list(&states)))
+                    let all: Vec<String> = ax.iter().chain(states.iter()).cloned().collect();
+                    (format!("group {name} has no axis or state `{key}`"), format!("{}Axes: {}. States: {}.", did_you_mean(&key, &all), list(&ax), list(&states)))
                 };
                 self.error(p.key.span(), message, help);
             }
@@ -420,6 +460,60 @@ fn list(xs: &[String]) -> String {
     if xs.is_empty() { "none".into() } else { xs.join(", ") }
 }
 
+/// `accent: { radius: 'round' }` → intent → token (sorted by intent); `Err` is the first part that isn't literal.
+fn accent(e: &Expression) -> Result<BTreeMap<String, String>, Span> {
+    let Expression::ObjectExpression(o) = e.without_parentheses() else { return Err(e.span()) };
+    let mut out = BTreeMap::new();
+    for p in &o.properties {
+        let ObjectPropertyKind::ObjectProperty(p) = p else { return Err(p.span()) };
+        let Some(key) = p.key.static_name().filter(|_| !p.computed) else { return Err(p.key.span()) };
+        match literals(&p.value).as_deref() {
+            Some([v]) => out.insert(key.to_string(), v.clone()),
+            _ => return Err(p.value.span()),
+        };
+    }
+    Ok(out)
+}
+
+/// Edit distance with adjacent swaps counted as one edit (`titel` → `title`), for "did you mean".
+fn distance(a: &str, b: &str) -> usize {
+    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+    let mut d = vec![vec![0usize; b.len() + 1]; a.len() + 1];
+    for (i, row) in d.iter_mut().enumerate() {
+        row[0] = i;
+    }
+    for j in 0..=b.len() {
+        d[0][j] = j;
+    }
+    for i in 1..=a.len() {
+        for j in 1..=b.len() {
+            let cost = usize::from(a[i - 1] != b[j - 1]);
+            d[i][j] = (d[i - 1][j] + 1).min(d[i][j - 1] + 1).min(d[i - 1][j - 1] + cost);
+            if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
+                d[i][j] = d[i][j].min(d[i - 2][j - 2] + 1);
+            }
+        }
+    }
+    d[a.len()][b.len()]
+}
+
+/// `Did you mean `late`? ` for the closest names (case-insensitive, within a third of the word), else nothing.
+fn did_you_mean(word: &str, names: &[String]) -> String {
+    let w = word.to_lowercase();
+    let limit = (w.chars().count() / 3).max(1);
+    let mut close: Vec<(usize, &String)> = names
+        .iter()
+        .map(|n| (distance(&w, &n.to_lowercase()), n))
+        .filter(|(d, n)| *d <= limit || n.to_lowercase().contains(&w) || w.contains(&n.to_lowercase()))
+        .collect();
+    close.sort_by_key(|(d, _)| *d);
+    match close.as_slice() {
+        [] => String::new(),
+        [(_, n)] => format!("Did you mean `{n}`? "),
+        many => format!("Did you mean {}? ", many.iter().take(3).map(|(_, n)| format!("`{n}`")).collect::<Vec<_>>().join(" or ")),
+    }
+}
+
 impl<'a> VisitMut<'a> for Lower<'a, '_> {
     fn visit_jsx_opening_element(&mut self, it: &mut JSXOpeningElement<'a>) {
         let is_group = |a: &JSXAttributeItem, me: &Self| match a {
@@ -430,6 +524,22 @@ impl<'a> VisitMut<'a> for Lower<'a, '_> {
             },
             _ => false,
         };
+        let roots: Vec<(Span, String)> = it
+            .attributes
+            .iter()
+            .filter_map(|a| match a {
+                JSXAttributeItem::SpreadAttribute(s) => match &s.argument {
+                    Expression::CallExpression(c) => self.meta_of(&c.callee).map(|m| (s.span, m.name.clone())),
+                    _ => None,
+                },
+                _ => None,
+            })
+            .collect();
+        if let [(_, first), .., (span, last)] = roots.as_slice() {
+            let message = format!("two group roots on one element: {first} and {last} (the last `data-g` would win)");
+            let help = "One group per element: nest an element for the second group, or make the variation an axis of one group.";
+            self.diagnostics.push(Diagnostic::new(self.source, "D024", Severity::Error, (span.start, span.end), message, help));
+        }
         if it.attributes.iter().any(|a| is_group(a, self)) {
             let old = std::mem::replace(&mut it.attributes, ArenaVec::new_in(&self.ast));
             for mut item in old {

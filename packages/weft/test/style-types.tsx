@@ -43,3 +43,10 @@ card({ density: 'compact' })
 card({ hover: true })
 // @ts-expect-error unknown part
 void card.footer
+
+// accents: tokens only, at a call site
+card({ status: 'late', accent: { radius: 'round', pad: 'tight' } })
+// @ts-expect-error an accent's token is checked
+card({ accent: { radius: 'roundish' } })
+// @ts-expect-error an accent has no css escape
+card({ accent: { css: { color: 'red' } } })

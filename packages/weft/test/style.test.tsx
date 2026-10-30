@@ -74,14 +74,38 @@ describe('compiler: call sites lower to attributes', () => {
     expect(out.diagnostics[0].message).toBe("group can't be evaluated at build: `px` at g.axes.size.big.pad isn't a literal")
   })
 
-  test('W061: unknown axis values, keys and parts', () => {
-    const bad = SRC + `export const B = () => <p {...card({ status: 'lost', colour: 'red' })}><i {...card.footer} /></p>`
-    const messages = transform(bad, { filename: '/app/card.tsx' }).diagnostics.map(d => `${d.code} ${d.message}`)
-    expect(messages).toEqual([
-      "W061 `lost` isn't a value of order-card's `status` axis",
-      'W061 group order-card has no axis or state `colour`',
-      'W061 group order-card has no part `footer`',
+  test('D025: unknown axis values, keys and parts, with the closest names', () => {
+    const bad = SRC + `export const B = () => <p {...card({ status: 'lost', colour: 'red', selcted: true })}><i {...card.titel} /></p>`
+    const out = transform(bad, { filename: '/app/card.tsx' }).diagnostics.map(d => `${d.code} ${d.message} | ${(d as { help?: string }).help}`)
+    expect(out).toEqual([
+      "D025 `lost` isn't a value of order-card's `status` axis | Values of order-card.status: open, shipped, late.",
+      'D025 group order-card has no axis or state `colour` | Axes: status. States: selected.',
+      'D025 group order-card has no axis or state `selcted` | Did you mean `selected`? Axes: status. States: selected.',
+      'D025 group order-card has no part `titel` | Did you mean `title`? Parts of order-card: title.',
     ])
+  })
+
+  test('D024: two group roots on one element', () => {
+    const two = SRC.replace("export const card", "export const other = group('other', { base: { gap: 'tight' } })\nexport const card") + `export const T = () => <p {...card()} {...other()} />`
+    expect(transform(two, { filename: '/app/card.tsx' }).diagnostics.map(d => `${d.code} ${d.message}`)).toEqual([
+      'D024 two group roots on one element: order-card and other (the last `data-g` would win)',
+    ])
+  })
+
+  test('an accent lowers to one static data-accent attribute, sorted by intent', () => {
+    const src = SRC + `export const A = () => <article {...card({ status: 'late', accent: { radius: 'round', pad: 'tight' } })} />`
+    const out = transform(src, { filename: '/app/card.tsx' })
+    expect(out.diagnostics).toEqual([])
+    expect(out.code).toContain('<article data-g=\\"order-card\\" data-status=\\"late\\" data-accent=\\"pad:tight radius:round\\">')
+    expect(out.facts.groupUses.at(-1)).toMatchObject({ axes: { status: ['late'] }, accent: { pad: 'tight', radius: 'round' } })
+    const dynamic = transform(SRC + 'const r = "round"\nexport const B = () => <i {...card({ accent: { radius: r } })} />', { filename: '/app/card.tsx' })
+    expect(dynamic.diagnostics.map(d => `${d.code} ${d.message}`)).toEqual(["W060 group can't be evaluated at build: `r` in order-card's accent isn't a literal"])
+  })
+
+  test('the doc comment above a definition is kept', () => {
+    const src = SRC.replace('export const card', '/**\n * A summary card\n * for one order.\n */\nexport const card')
+    expect(transform(src, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0]).toMatchObject({ doc: 'A summary card for one order.', line: 6 })
+    expect(transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0].doc).toBeNull()
   })
 })
 
@@ -107,6 +131,12 @@ describe('CSS: only what call sites can produce', () => {
     expect(css).toContain('[aria-selected="true"]')
     expect(css).toContain('[data-g="order-card"][data-part="title"] {')
     expect(css).not.toContain('@scope')
+  })
+
+  test('an accent emits one rule per word, after the group\'s own rules', () => {
+    const css = emitGroups(groups(), [{ group: 'order-card', axes: { status: ['late'] }, states: [], part: null, dynamic: false, accent: { radius: 'round' } }], { dev: true })
+    expect(css).toContain(':scope[data-accent~="radius:round"] {\n      border-radius: var(--warp-radius-round);')
+    expect(css.indexOf('data-accent')).toBeGreaterThan(css.indexOf('data-status="late"'))
   })
 
   test('unused groups emit nothing', () => {

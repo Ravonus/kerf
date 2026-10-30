@@ -13,6 +13,7 @@ import { tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
 import { buildCommand, devCommand, routesCommand } from './start.mjs'
+import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
@@ -29,10 +30,16 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
   plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
-  mcp                 MCP server on stdio: docs, check, tasks`
+  style find <query>  style groups that fit what you're about to style (\`card\`, \`status badge\`): reuse before you write
+  style explain <group|selector> [--<axis> <value>] [--states a,b] [--accent intent:token] [--part p]
+                      resolved CSS for one variation, and where each value came from
+  style matrix        write .weft/styles.json (every group: axes, parts, accents, resolved CSS, uses)
+  mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
 const valued = new Set(['base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port'])
+/** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
+const styleFlags = new Set(['states', 'accent', 'part'])
 const booleans = new Set(['gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta'])
 
 export function parse(argv) {
@@ -48,6 +55,8 @@ export function parse(argv) {
       const [name, inline] = a.slice(2).split(/=(.*)/s)
       if (valued.has(name)) out.flags[name] = inline ?? argv[++i]
       else if (booleans.has(name) && inline === undefined) out.flags[name] = true
+      else if (out.command === 'style' && styleFlags.has(name)) out.flags[name] = inline ?? argv[++i]
+      else if (out.command === 'style' && /^[a-z][\w-]*$/i.test(name) && (inline ?? argv[i + 1]) !== undefined) (out.flags.axes ??= {})[name] = inline ?? argv[++i]
       else throw Object.assign(new Error(`unknown flag ${a}`), { code: 'E_USAGE' })
     } else out.positional.push(a)
   }
@@ -148,6 +157,31 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           return errors.length ? 1 : 0
         }
         throw Object.assign(new Error(`unknown plugins subcommand ${sub}`), { code: 'E_USAGE' })
+      }
+      case 'style': {
+        const sub = args.positional[0]
+        if (sub === 'find') {
+          const result = findGroups((await styleMatrix(args.root)).matrix, args.positional.slice(1).join(' '))
+          if (args.json) print(result)
+          else say(formatFind(result))
+          return 0
+        }
+        if (sub === 'explain') {
+          const accent = args.flags.accent ? Object.fromEntries(args.flags.accent.split(/[\s,]+/).filter(Boolean).map(w => w.split(':'))) : undefined
+          const states = args.flags.states?.split(',').map(s => s.trim()).filter(Boolean)
+          const result = explainTarget(await styleMatrix(args.root), args.positional.slice(1).join(' '), { axes: args.flags.axes, states, accent, part: args.flags.part })
+          if (args.json) print(result)
+          else say(formatExplain(result))
+          return 0
+        }
+        if (sub === 'matrix') {
+          const { matrix } = await styleMatrix(args.root)
+          const written = args.stdout ? false : writeMatrixFile(args.root, matrix)
+          if (args.stdout || args.json) print(matrix)
+          say(`.weft/styles.json: ${Object.keys(matrix.groups).length} groups, ${matrix.diagnostics.length} diagnostics, ${args.stdout ? 'not written' : written ? 'written' : 'current'}`)
+          return 0
+        }
+        throw Object.assign(new Error(`weft style ${sub ?? ''}: use find <query>, explain <group|selector> or matrix`), { code: 'E_USAGE' })
       }
       case 'mcp':
         await serve(args.root)
