@@ -1,9 +1,15 @@
 // Ambient types for weft/vite's virtual imports. Add `"types": ["weft/client"]` to tsconfig (create-weft does).
 
+/** Side-effect stylesheet imports: TypeScript 7 checks those by default (TS2882). */
+declare module '*.css' {}
+
 declare module '*?media' {
   const asset: import('weft/media').MediaAsset
   export default asset
 }
+
+/** Design tokens the `weft:tokens/*` plugin virtual modules emit as CSS. */
+declare module 'weft:tokens/*' {}
 
 /** The `font.build` provider's @font-face rules and matched fallback faces (empty without one). */
 declare module 'weft:fonts' {}
