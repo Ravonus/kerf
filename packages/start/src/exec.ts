@@ -11,6 +11,7 @@
 import { shapeTree } from './shape.mjs'
 import type { MediaAsset } from 'weft/media'
 import { enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
+import { unavailable } from './db/core'
 
 export interface ScopeEntry {
   id: string
@@ -213,9 +214,13 @@ export function guard(fn: Fn, ctx: Context) {
   if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
 }
 
-/** A missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
-function dbError(e: unknown): unknown {
+const DOWN = /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|CONNECT_TIMEOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|PROTOCOL_CONNECTION_LOST|P100[12])$/
+
+/** A dropped connection is Q016; a missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
+export function dbError(e: unknown): unknown {
   const cause = (e as any)?.cause ?? e
+  if (cause instanceof StartError) return cause // Drizzle wraps what a driver throws, the gate's Q016 included
+  if (!(e instanceof StartError) && DOWN.test(`${cause?.code ?? (e as any)?.code ?? ''}`)) return unavailable(e)
   const m = `${cause?.message ?? ''}`
   if (e instanceof StartError || !(/no such (table|column)|has no column named/.test(m) || cause?.code === '42P01' || cause?.code === '42703')) return e
   return new StartError('Q014', `the database doesn't match the schema: ${m}`, 'run `weft db generate`, then reload (new migrations apply on the next request)', { status: 500 })

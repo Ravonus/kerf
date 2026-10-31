@@ -250,8 +250,10 @@ export const runtime: {
   exec?: typeof import('./exec')
   transport?: Transport
   navigate?: (href: string, replace?: boolean) => void
-  /** The databases `createDb` made: the server applies migrations to them before the first request. */
-  dbs?: Set<{ $weft: { migrate(list: { tag: string; sql: string }[]): Promise<void> } }>
+  /** Set by the server's first request (and in dev when `drizzle/` grows): what each database applies before its first statement (db/core.ts). */
+  migrations?: { list: { tag: string; sql: string }[]; report(e: unknown): void }
+  /** The gates of clients whose statements can't be held (Prisma's): the server waits on them per request, and a failure doesn't fail it. */
+  dbs?: Set<() => Promise<void> | undefined>
   /** Fan invalidated tags out to live subscribers (hub.ts). `origin`: the connection that needs no poke. */
   poke?: (tags: string[], origin?: string | null) => Promise<void>
   /** This tab's realtime connection: sent with mutations, so the tab doesn't poke itself. */

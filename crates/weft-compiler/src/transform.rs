@@ -23,6 +23,7 @@ use oxc_syntax::operator::BinaryOperator;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::analyze::{Plan, Rewrite, RowStep, SpanKey, is_key_attr, key};
+use crate::emit::TAG;
 
 pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &Scoping, plan: &Plan) {
     let mut t = Transformer {
@@ -197,6 +198,30 @@ impl<'a, 'p> Transformer<'a, 'p> {
     fn rest_of(&self, e: &Expression<'a>) -> Option<&'p Rewrite> {
         let Expression::Identifier(id) = e else { return None };
         self.rewrite_of(id).map(|(_, r)| r).filter(|r| matches!(r, Rewrite::Rest { .. }))
+    }
+
+    /// The live read of a component tag whose root name is rewritten: `<g.meta.icon />` → `g().meta.icon`.
+    fn tag_read(&mut self, name: &JSXElementName<'a>) -> Option<Expression<'a>> {
+        match name {
+            JSXElementName::IdentifierReference(id) => self.tag_root(id),
+            JSXElementName::MemberExpression(m) => self.tag_member(m),
+            _ => None,
+        }
+    }
+
+    fn tag_member(&mut self, m: &JSXMemberExpression<'a>) -> Option<Expression<'a>> {
+        let object = match &m.object {
+            JSXMemberExpressionObject::IdentifierReference(id) => self.tag_root(id),
+            JSXMemberExpressionObject::MemberExpression(m) => self.tag_member(m),
+            JSXMemberExpressionObject::ThisExpression(_) => None,
+        }?;
+        Some(self.member(object, m.property.name.as_str()))
+    }
+
+    fn tag_root(&mut self, id: &IdentifierReference<'a>) -> Option<Expression<'a>> {
+        let (sym, rewrite) = self.rewrite_of(id)?;
+        let original = self.ident(id.name.as_str());
+        Some(self.rewritten(sym, rewrite, original))
     }
 
     fn is_list(&self, e: &Expression<'a>) -> bool {
@@ -464,6 +489,10 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             }
         }
         walk_mut::walk_jsx_opening_element(self, it);
+        // A tag can't hold `g()`: the read goes beside it, and the back end calls it instead of the tag's text.
+        if let Some(read) = self.tag_read(&it.name) {
+            it.attributes.push(self.jsx_attr(TAG, read));
+        }
     }
 
     fn visit_jsx_child(&mut self, it: &mut JSXChild<'a>) {

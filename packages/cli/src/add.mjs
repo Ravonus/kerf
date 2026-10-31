@@ -113,6 +113,9 @@ function addToData(file, text, pkg) {
 
 const listed = (config, pkg) => (config.plugins ?? []).some(p => p.name === pkg)
 
+/** The config names the package already (imported or listed), which a read can tell without loading it. */
+const names = (text, pkg) => new RegExp(`['"]${pkg.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(/[\\w-]+)?['"]`).test(text)
+
 const VITE = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs']
 
 /** The app's Vite config with Tailwind in it. Stops rather than guess at one it can't place the plugin in. */
@@ -251,10 +254,14 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
   const pkg = ALIASES[feature] ?? feature
-  const before = await loadConfig(root)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')
   const config = relative(root, file)
-  if (listed(before.config, pkg)) return { ok: true, already: true, package: pkg, config, actions: [] }
+  const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from 'weft/config'\n\nexport default defineConfig({})\n"
+  const named = names(text, pkg)
+  // A config can name a package that isn't installed yet, and importing it then would leave this process's module
+  // resolver sure the package has no `exports`, so the load after the install would fail too. Load it once it's there.
+  const present = existsSync(join(root, 'node_modules', pkg, 'package.json'))
+  if (present && (named || listed((await loadConfig(root)).config, pkg))) return { ok: true, already: true, package: pkg, config, actions: [] }
 
   const actions = []
   const [manager, verb] = installer(root)
@@ -262,9 +269,8 @@ export async function addCommand(root, feature, { dryRun = false, install = true
     actions.push(`install ${pkg} with ${manager}`)
     if (!dryRun) installSpecs(root, manager, verb, [pkg])
   }
-  const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from 'weft/config'\n\nexport default defineConfig({})\n"
-  const next = /\.(json|ya?ml)$/.test(file) ? addToData(file, text, pkg) : addToTs(root, file, text, pkg)
-  actions.push(`add ${pkg} to ${config}`)
+  const next = named ? text : /\.(json|ya?ml)$/.test(file) ? addToData(file, text, pkg) : addToTs(root, file, text, pkg)
+  if (!named) actions.push(`add ${pkg} to ${config}`)
   if (dryRun) return { ok: true, package: pkg, config, actions, dryRun: true }
 
   writeFileSync(file, next)
@@ -272,7 +278,7 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   const failed = after.diagnostics.filter(d => d.severity === 'error')
   if (failed.length) {
     writeFileSync(file, text)
-    throw refused(`${pkg} didn't load, so ${config} is back as it was: ${failed[0].code} ${failed[0].why}`)
+    throw refused(`${config} doesn't load with ${pkg} in it${install ? ', though the package installed' : ''}, so it's back as it was: ${failed[0].code} ${failed[0].why}`)
   }
   sync(root, after)
   actions.push('regenerate .weft/slots')

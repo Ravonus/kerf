@@ -104,3 +104,50 @@ test('a stream gets a client stub, and a topic stays on the server', () => {
   expect(out).not.toContain('topic(')
   expect(out).not.toContain('../db')
 })
+
+test('types keep no value: a schema read only by `z.infer` stays out of the stub, and zod with it', () => {
+  const source = `import { mutation } from '@weft/start'
+import { z } from 'zod'
+const input = z.object({ title: z.string() })
+export type Input = z.infer<typeof input>
+export interface Saved extends Input { id: typeof input }
+export const save = mutation({ input, run: ({ input }) => input })
+`
+  const out = clientStubs(source, 'x.ts', 'src/server/x.ts')
+  expect(out).toContain('mutation({ $id: "save.')
+  expect(out).not.toContain('zod')
+  expect(out).not.toContain('z.object')
+  expect(out).not.toContain('infer')
+})
+
+test('a stub keeps what `optimistic` reads, not what its parameters, property names or annotations spell', () => {
+  const source = `import { mutation } from '@weft/start'
+import { z } from 'zod'
+import { pick } from './pick'
+const input = z.object({ title: z.string() })
+const title = z.string()
+const render = (row: z.infer<typeof input>) => pick(row)
+export enum Kind { A = 'a' }
+export const save = mutation({ input, optimistic: ({ input }, cache) => cache.title = render(input) + Kind.A, run() {} })
+`
+  const out = clientStubs(source, 'x.ts', 'src/server/x.ts')
+  expect(out).toContain('const render =')
+  expect(out).toContain('enum Kind')
+  expect(out).toContain("from './pick'")
+  expect(out).not.toContain('z.object')
+  expect(out).not.toContain('z.string')
+  expect(out).not.toContain('zod')
+})
+
+test('a value read inside a type-free position still keeps its import', () => {
+  const source = `import { mutation } from '@weft/start'
+import { z } from 'zod'
+import Icon from './icon'
+const input = z.object({ title: z.string() })
+const check = () => [typeof input, <Icon />, input as unknown]
+export const save = mutation({ optimistic: () => check(), run() {} })
+`
+  const out = clientStubs(source, 'x.tsx', 'src/server/x.tsx')
+  expect(out).toContain("from 'zod'")
+  expect(out).toContain('import Icon')
+})

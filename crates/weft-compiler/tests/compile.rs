@@ -922,3 +922,25 @@ fn check_reports_exported_variants() {
     names.sort();
     assert_eq!(names, ["A", "B", "D", "default"]);
 }
+
+#[test]
+fn a_rewritten_name_as_a_tag_is_read_live() {
+    let (row, d) = run("const ns = {}; export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon class=\"x\" /><g.meta.icon /><ns.Icon /></li>)}</ul>;");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(row.contains("_$component(g().icon, { class: \"x\" })"), "{row}");
+    assert!(row.contains("_$component(g().meta.icon, {})"), "{row}");
+    assert!(row.contains("_$component(ns.Icon, {})"), "{row}");
+    assert!(!row.contains("_$tag"), "{row}");
+
+    let (entries, _) = run("export const C = (p) => <ul>{p.xs.map(({ id, ui, Icon }) => <li key={id}><ui.Icon /><Icon /></li>)}</ul>;");
+    assert!(entries.contains("_$component(_item().ui.Icon, {})"), "{entries}");
+    assert!(entries.contains("_$component(_item().Icon, {})"), "{entries}");
+
+    let (props, _) = run("export function C({ ui, Icon = Dot, ...rest }) { return <p><ui.Icon /><Icon /><rest.Icon /></p>; }");
+    assert!(props.contains(".ui.Icon, {})"), "{props}");
+    assert!(props.contains("=== undefined ? Dot :"), "{props}");
+    assert!(!props.contains("_$component(ui.Icon") && !props.contains("_$component(Icon") && !props.contains("_$component(rest.Icon"), "{props}");
+
+    let dev = compile("export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon /></li>)}</ul>;", &Options { filename: "App.tsx".into(), dev: true, ..Default::default() });
+    assert!(dev.code.unwrap().contains("_$component(g().icon, {}, \"g.icon\", \"App.tsx:1\")"));
+}

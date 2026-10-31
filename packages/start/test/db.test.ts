@@ -144,6 +144,29 @@ test('readMigrations: the journal\'s order, and nothing for an app with no folde
   rmSync(root, { recursive: true, force: true })
 })
 
+describe.each([
+  ['postgres', process.env.WEFT_TEST_POSTGRES, 'postgres://u:p@127.0.0.1:1/none', () => import('../src/db/postgres'), pgTable('weft_lazy', { id: pgText().primaryKey() })],
+  ['mysql', process.env.WEFT_TEST_MYSQL, 'mysql://u:p@127.0.0.1:1/none', () => import('../src/db/mysql'), mysqlTable('weft_lazy', { id: varchar({ length: 36 }).primaryKey() })],
+] as const)('%s, migrated on first use', (_, url, closed, load, table) => {
+  afterEach(() => { runtime.migrations = undefined })
+
+  test.skipIf(!url)('statements and transactions wait for one run; a dead server is Q016', async () => {
+    const { createDb: make } = (await load()) as any
+    const tag = `lazy_${Date.now()}`
+    const db = make({ schema: { table }, url })
+    const migrate = vi.spyOn(db.$weft, 'migrate')
+    runtime.migrations = { list: [{ tag, sql: 'drop table if exists weft_lazy;\n--> statement-breakpoint\ncreate table weft_lazy (id varchar(36) primary key);' }], report() {} }
+    await Promise.all([db.select().from(table), db.select().from(table), db.transaction((tx: any) => tx.insert(table).values({ id: 'a' }))])
+    expect(migrate).toHaveBeenCalledTimes(1)
+    expect(await db.select().from(table)).toEqual([{ id: 'a' }])
+
+    const seen: unknown[] = []
+    runtime.migrations = { list: [], report: e => seen.push(e) }
+    await expect(make({ schema: { table }, url: closed }).select().from(table)).rejects.toMatchObject({ cause: { code: 'Q016', status: 503 } })
+    expect(seen).toHaveLength(1)
+  })
+})
+
 describe.skipIf(!process.env.WEFT_TEST_MYSQL)('mysql', () => {
   const my = mysqlTable('my_todos', { id: varchar({ length: 36 }).primaryKey(), title: varchar({ length: 200 }).notNull() })
   const tables = { my }

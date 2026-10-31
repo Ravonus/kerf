@@ -79,7 +79,9 @@ to `ctx.user`. `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` in t
 
 Drizzle, async on every driver: `await ctx.db.select()…`, `const [row] = await ….returning()`,
 `await ctx.db.transaction(async tx => …)`. Change `src/db/schema.ts`, run `weft db generate` (Q015 until
-you do), reload: migrations apply on the next request (Q014 names a missing table). Never edit `drizzle/` by hand.
+you do), reload: migrations apply before the next statement a request runs (Q014 names a missing table). Never edit
+`drizzle/` by hand. A page with no queries needs no database: with it down it still serves, and a request that does use
+it answers 503 with Q016, then works once the database is back, no restart.
 
 Access beyond ownership goes in the `where`, so a stranger's id matches no row: `and(eq(todos.id, input.id),
 or(eq(todos.userId, ctx.user.id), exists(ctx.db.select({ one: sql\`1\` }).from(shares).where(…))))`. A mutation touching

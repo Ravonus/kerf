@@ -1,7 +1,7 @@
 // The no-ORM client (research 34 §4): one `sql` tag over any driver. Values always go to the driver as parameters, so
 // a template can't build SQL from a value. An engine file supplies the driver; `createNative` takes your own the same way.
 
-import { register, touch, type DbHandle, type Migration } from '@weft/start/db/core'
+import { gate, register, touch, type DbHandle, type Migration } from '@weft/start/db/core'
 
 export type Row = Record<string, unknown>
 
@@ -53,12 +53,14 @@ export function createNative<D>(driver: Driver<D>, { migrate = true }: { migrate
       }
     }),
   }
+  const ready = gate(handle, migrate)
+  const query: Driver['query'] = async (text, params) => (await ready(), driver.query(text, params))
   const db = {
-    sql: tag(handle, driver.query),
-    query: driver.query,
+    sql: tag(handle, query),
+    query,
     driver: driver.raw,
-    transaction: <T>(fn: (tx: { sql: Sql }) => Promise<T>) => driver.transaction(tx => fn({ sql: tag(handle, tx.query) })),
+    transaction: async <T>(fn: (tx: { sql: Sql }) => Promise<T>) => (await ready(), driver.transaction(tx => fn({ sql: tag(handle, tx.query) }))),
   }
-  return register(db, handle, migrate)
+  return register(db, handle)
 }
 

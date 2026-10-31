@@ -17,7 +17,7 @@ declare module '*?media&audio=*' {
 /** Design tokens the `weft:tokens/*` plugin virtual modules emit as CSS. */
 declare module 'weft:tokens/*' {}
 
-/** The `font.build` provider's @font-face rules and matched fallback faces (empty without one). */
+/** The `font.build` provider's @font-face rules and matched fallback faces (empty without one). `weft/vite` imports it for you. */
 declare module 'weft:fonts' {}
 
 declare module 'weft:fonts/preloads' {

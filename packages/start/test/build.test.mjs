@@ -2,7 +2,7 @@
 // (pages, prerendered and on-demand cards, hydration in Chrome); Bun runs its build when `bun` is on PATH; Deno's
 // build is checked to complete (no deno here).
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
@@ -85,6 +85,30 @@ describe('node preset, end to end', () => {
     const { v } = await (await fetch(`${server.url}/_weft/fn/${id('getCover', 'src/server/forms.ts')}`)).json()
     const image = await fetch(server.url + v.src, { headers: { accept: 'image/avif' } })
     expect([image.status, image.headers.get('content-type'), image.headers.get('cache-control')]).toEqual([200, 'image/avif', 'public, max-age=31536000, immutable'])
+  })
+
+  test('a page links the CSS of its entry, layouts, route and components before the first byte, and no other route\'s', async () => {
+    const sheets = async path => {
+      const html = await (await fetch(server.url + path)).text()
+      const head = html.slice(0, html.indexOf('</head>'))
+      const hrefs = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m => m[1])
+      expect(new Set(hrefs).size).toBe(hrefs.length)
+      return (await Promise.all(hrefs.map(h => fetch(server.url + h).then(r => r.text())))).join('\n')
+    }
+    const styled = await sheets('/styled')
+    for (const rule of ['html{', '.root{', '.styled{', '.badge{']) expect(styled).toContain(rule)
+    const about = await sheets('/about')
+    expect(about).toContain('.root{')
+    expect(about).not.toContain('.styled{')
+    expect(about).not.toContain('.badge{')
+    expect(await sheets('/users/999')).toContain('.not-found{') // the 404 page is a level too
+  })
+
+  test('no chunk carries zod: a schema only `z.infer` reads stays on the server', () => {
+    const dir = join(out('node'), 'public/assets')
+    const js = readdirSync(dir).filter(f => f.endsWith('.js')).map(f => readFileSync(join(dir, f), 'utf8'))
+    expect(js.join('\n')).toContain('save.') // the stub is there
+    expect(js.join('\n')).not.toMatch(/ZodObject|ZodError/)
   })
 
   test('the production build hydrates with 0/0 in Chrome and navigates', async () => {

@@ -1,5 +1,6 @@
 // The Native layer: bound values, migrations once, transactions. MySQL and Postgres repeat it when WEFT_TEST_MYSQL or
 // WEFT_TEST_POSTGRES names a private instance.
+import { runtime } from '@weft/start/data'
 import { Kysely } from 'kysely'
 import { nativeAuth } from '../src/auth'
 import { createNative, type Driver } from '../src/index'
@@ -8,6 +9,28 @@ import { createDb as postgres } from '../src/postgres'
 import { createDb as sqlite } from '../src/sqlite'
 
 const init = `create table if not exists native_todos (id varchar(36) primary key, title varchar(200) not null);`
+
+test('statements wait for the server\'s migrations, and only a request that sends one runs them', async () => {
+  const ran: string[] = []
+  let down = true
+  const driver: Driver = {
+    dialect: 'sqlite', raw: null,
+    query: async text => { if (down) throw new Error('down'); ran.push(text); return [] },
+    exec: async text => { if (down) throw new Error('down'); ran.push(text) },
+    transaction: fn => fn(driver),
+    locked: fn => fn(),
+  }
+  const db = createNative(driver)
+  const seen: unknown[] = []
+  runtime.migrations = { list: [{ tag: '0', sql: 'create table t (id int)' }], report: e => seen.push(e) }
+  await expect(db.sql`select 1`).rejects.toMatchObject({ code: 'Q016', status: 503 })
+  expect(seen).toHaveLength(1)
+  down = false
+  await Promise.all([db.sql`select 2`, db.query('select 3', []), db.transaction(tx => tx.sql`select 4`)])
+  expect(ran.filter(s => s.startsWith('create table t'))).toHaveLength(1)
+  expect(ran.indexOf('create table t (id int)')).toBeLessThan(ran.findIndex(s => s.startsWith('select 2')))
+  runtime.migrations = undefined
+})
 
 describe.each([
   ['sqlite', true, () => sqlite({ url: ':memory:', migrate: false })],

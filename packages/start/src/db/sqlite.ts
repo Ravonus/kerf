@@ -8,7 +8,7 @@ import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { drizzle, type SqliteRemoteDatabase } from 'drizzle-orm/sqlite-proxy'
 import { StartError } from '../data'
-import { register, statements, touch, type DbHandle, type Migration } from './core'
+import { gate, register, statements, touch, type DbHandle, type Migration } from './core'
 
 export type Method = 'run' | 'all' | 'values' | 'get'
 
@@ -51,7 +51,7 @@ export interface SqliteOptions<S extends Record<string, unknown>> {
   schema: S
   /** `file:.data/app.db` (the default), a path, or `:memory:`. */
   url?: string
-  /** Apply `drizzle/` before the first request (default true). */
+  /** Apply `drizzle/` before the first statement a request runs (default true). */
   migrate?: boolean
 }
 
@@ -62,9 +62,9 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
     throw new StartError('Q013', `\`@weft/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``, 'use `file:<path>`, or `createDb` from `@weft/start/db/postgres` for a Postgres URL')
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined
-  const connect = () => (conn ??= open(path))
+  const connect = () => (conn ??= open(path).catch(e => { conn = undefined; throw e }))
   const inside = new AsyncLocalStorage<boolean>()
-  let gate: Promise<unknown> = Promise.resolve()
+  let held: Promise<unknown> = Promise.resolve()
   const handle: DbHandle = {
     dialect: 'sqlite',
     exempt: new Set(),
@@ -86,15 +86,18 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
       }
     },
   }
+  const ready = gate(handle, migrate)
   const run = async (sql: string, params: unknown[], method: Method) => {
     touch(handle, sql)
+    await ready()
     const c = await connect()
-    if (!inside.getStore()) await gate
+    if (!inside.getStore()) await held
     return { rows: c.query(sql, params, method) as any }
   }
   const batch = async (list: { sql: string; params: unknown[]; method: Method }[]) => {
+    await ready()
     const c = await connect()
-    await gate
+    await held
     c.exec('begin')
     try {
       const out = list.map(q => (touch(handle, q.sql), { rows: c.query(q.sql, q.params, q.method) as any }))
@@ -109,9 +112,10 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
   const transaction = db.transaction.bind(db)
   db.transaction = (async (fn: any, config: any) => {
     if (inside.getStore()) return transaction(fn, config)
-    const before = gate
+    await ready()
+    const before = held
     let open!: () => void
-    gate = new Promise<void>(ok => (open = ok))
+    held = new Promise<void>(ok => (open = ok))
     await before
     try {
       return await inside.run(true, () => transaction(fn, config))
@@ -119,5 +123,5 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
       open()
     }
   }) as typeof db.transaction
-  return register(db, handle, migrate)
+  return register(db, handle)
 }

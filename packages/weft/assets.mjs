@@ -1,7 +1,8 @@
 // Build-side slots in weft/vite (research 26 §2–3): `?media` imports (`media.build@1`) and `weft:fonts`
 // (`font.build@1`). `weft plugins sync` writes `.weft/slots/<id>.build.json` for each bound build-side provider; this
 // imports the provider module in Node and serves or emits the files it returns. With no provider, `?media` still
-// gives dimensions (a header probe) and the fonts modules are empty.
+// gives dimensions (a header probe) and the fonts modules are empty. With a font build the client imports `weft:fonts`
+// on its own: the entry a Start app boots from, or a script in an HTML app's page.
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -37,6 +38,8 @@ const MEDIA = /\?media(?:&audio=[^&]+)?$/
 const FONTS = 'weft:fonts'
 const PRELOADS = 'weft:fonts/preloads'
 const DEV_PREFIX = '/@weft-assets/'
+/** A Start app's client entry: the generated one, or its own `src/entry.client.ts`. */
+const CLIENT_ENTRY = /(?:^\0virtual:weft\/entry-client|[\\/]src[\\/]entry\.client\.[cm]?[jt]sx?)$/
 
 /** Files the providers return: served from memory in dev, emitted under `assets/` in a build. */
 function fileStore() {
@@ -97,18 +100,27 @@ export function assets() {
   }
   let fonts
   let encode
+  const fontEnvs = new Set()
+  const fontBuild = () => existsSync(join(root, '.weft', 'slots', 'font.build.build.json'))
 
   /** Run font.build once per process; writes `.weft/fonts.json` (metrics and the budget report X022 reads). */
-  const buildFonts = ctx =>
-    (fonts ??= (async () => {
+  const buildFonts = async ctx => {
+    const out = await (fonts ??= (async () => {
       const p = await provider('font.build')
-      if (!p) return { css: '', preloads: [] }
+      if (!p) return { css: '', preloads: [], files: [] }
       const out = await p.impl.build({ root, cacheDir: join(root, '.weft', 'cache', 'fonts'), url: name => store.url(name) })
-      for (const f of out.files) store.add(ctx, f.name, f.bytes)
       mkdirSync(join(root, '.weft'), { recursive: true })
       writeFileSync(join(root, '.weft', 'fonts.json'), `${JSON.stringify({ plugin: p.plugin, metrics: out.metrics ?? {}, report: out.report ?? {} }, null, 2)}\n`)
       return out
     })())
+    // Each environment writes its own output: the server's asking first mustn't leave the client's without the files.
+    const env = ctx.environment?.name
+    if (!fontEnvs.has(env)) {
+      fontEnvs.add(env)
+      for (const f of out.files) store.add(ctx, f.name, f.bytes)
+    }
+    return out
+  }
 
   return {
     name: 'weft:assets',
@@ -120,6 +132,16 @@ export function assets() {
     },
     configureServer(server) {
       server.middlewares.use(store.middleware)
+    },
+    transform: {
+      filter: { id: CLIENT_ENTRY },
+      handler(code) {
+        if (this.environment?.config.consumer !== 'server' && fontBuild()) return { code: `import '${FONTS}'\n${code}`, map: null }
+      },
+    },
+    transformIndexHtml: {
+      order: 'pre',
+      handler: () => (fontBuild() ? [{ tag: 'script', attrs: { type: 'module' }, children: `import '${FONTS}'`, injectTo: 'head' }] : undefined),
     },
     resolveId(source) {
       if (source === FONTS) return '\0weft:fonts.css'
