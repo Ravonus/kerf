@@ -129,6 +129,8 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     // Claim the server's nodes on the first run; later runs place values as usual.
     let current = range(parent, marker ?? undefined)
     const at = marker ?? null
+    // a fragment's holes must stay live: read flat here, a root `<>{cond && …}</>` would never update
+    if (Array.isArray(v) && v.flat(Infinity).some(x => typeof x === 'function')) { const list = v; v = () => list }
     if (typeof v !== 'function') return void place(parent, adopt(v, current, { i: 0 }, []), current, at)
     let claimed = false
     hole(v as () => unknown, x => {

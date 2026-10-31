@@ -115,7 +115,7 @@ if (!process.argv.includes('--skip-a11y')) {
   log('== a11y (axe + measured contrast, 12 stops)')
   const { a11y, buildGallery } = await import(join(repo, 'packages', 'warp', 'scripts', 'a11y.mjs'))
   const gallery = await buildGallery(join(results.size.work, 'gallery'))
-  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, { name: 'shop', dir: builds.warp.dist }], { log: l => log(`   ${l}`) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: builds.warp.dist }], { log: l => log(`   ${l}`) })
   const failures = r.results.flatMap(run => [
     ...run.errors.map(e => ({ site: run.site, stop: `${run.expression}/${run.theme}/${run.motion}`, error: e })),
     ...run.states.flatMap(s => [...s.violations.map(v => ({ id: v.id, nodes: v.nodes })), ...s.moving.map(m => ({ id: 'moving at reduce', nodes: [{ target: m }] }))]

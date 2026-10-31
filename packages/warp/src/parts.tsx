@@ -1,6 +1,6 @@
 // Small 05 and 02 atoms the app patterns and flows share, each the specimen markup. Internal: not exported from the
 // index, so a pack that needs one pays only for its own CSS.
-import { derived, untrack } from 'weft'
+import { derived } from 'weft'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
 import './styles'
@@ -61,11 +61,10 @@ export type Step = { id: string; title: any; description?: any; error?: boolean 
 
 /** Steps (05 §4): full labels, the compact count from the CSS. `current` is an index. */
 export function Steps({ label, steps, current }: { label: string; steps: Step[]; current: number }) {
-  const list = untrack(() => steps)
   return (
     <div data-scope="steps">
       <ol aria-label={label}>
-        {list.map((s, i) => (
+        {steps.map((s, i) => (
           <li key={s.id} data-part="item" data-state={s.error ? 'error' : i < current ? 'complete' : i === current ? 'current' : undefined} aria-current={i === current ? 'step' : undefined}>
             <span data-part="indicator"><Icon name="check" /></span>
             <span data-part="title">{s.title}</span>

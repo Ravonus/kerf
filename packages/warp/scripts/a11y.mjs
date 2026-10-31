@@ -320,7 +320,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const json = process.argv.includes('--json')
   const extra = process.argv.slice(2).filter(a => a.includes('=') && !a.startsWith('--')).map(a => { const [name, dir] = a.split('='); return { name, dir } })
   const gallery = await buildGallery(mkdtempSync(join(tmpdir(), 'warp-a11y-')))
-  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
   if (json) console.log(JSON.stringify(r, null, 2))
   else {
     for (const f of r.spec) console.error(`spec finding ${f.where} (${f.theme}, ${f.stops.length} runs): ${f.why}`)

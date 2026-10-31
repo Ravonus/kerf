@@ -26,3 +26,11 @@ test('one form brings its own layout, not the others', async () => {
   expect(js).toContain('donut chart')
   for (const kind of ['line chart', 'sankey diagram', 'treemap', 'candlestick chart', 'streaming line chart']) expect(js, kind).not.toContain(kind)
 }, 60000)
+
+test('an app pays for the flows it uses: SignIn brings no calendar, chat or checkout, and a Button no pack at all', async () => {
+  const button = await bundle('<Button>Save</Button>', 'Button')
+  for (const word of ['warp-arrive', 'data-scope="auth"', 'data-scope="calendar"']) expect(button.js + button.css, word).not.toContain(word)
+  const signIn = await bundle('<SignIn />', 'SignIn')
+  for (const scope of ['"calendar"', '"thread"', '"checkout"', '"room"', '"tool-call"']) expect(signIn.js, scope).not.toContain(scope)
+  for (const scope of ['data-scope="calendar"', 'data-scope="checkout"', 'data-scope="tool-call"']) expect(signIn.css, scope).not.toContain(scope)
+}, 90000)
