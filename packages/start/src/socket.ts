@@ -7,6 +7,7 @@
 //   limits       frame size (1009), a token bucket per socket and per channel (1008), joins, sockets, send queue (1013).
 //   shared state last writer wins by `(at, instance)`. Instances hold the value; a new listener asks on the bus.
 
+import type { PublishOptions } from './channel'
 import { enter, fns, FnError, isRedirect, runtime, stable, StartError, type Context, type Fn, type StandardSchemaV1 } from './data'
 import { createScope, type Scope, type ScopeOptions } from './exec'
 import { checkOrigins, hub, type Channel, type Ev, type Hub } from './hub'
@@ -98,8 +99,8 @@ const denied = (fn: Fn) => new StartError('R011', `\`${fn.$id}\`: \`authorize\` 
 
 /** Fan-out of a room's messages to one join. */
 function deliver(c: Sock, j: Join, h: Hub, ev: Ev) {
-  const m = (ev.p ??= JSON.parse(ev.raw)) as { f?: string; x?: 1; n: string; m: unknown }
-  if (m.n === ASK || (m.x && m.f === c.k)) return
+  const m = (ev.p ??= JSON.parse(ev.raw)) as { f?: string; x?: 1; t?: string; n: string; m: unknown }
+  if (m.n === ASK || (m.x && m.f === c.k) || (m.t && m.t !== c.k)) return
   send(c, ['m', j.n, h.cursorOf(ev.seq), m.n, m.m])
 }
 
@@ -191,6 +192,19 @@ function leave(h: Hub, c: Sock, j: Join) {
   if (j.room && j.on) {
     j.room.ch.listeners.delete(j.on)
     leaveRoom(h, stateOf(h), j.room)
+    if (j.fn.def.left) void left(c, j)
+  }
+}
+
+const bound = (c: Sock, j: Join) => ({ params: j.params, publish: (n: string, m: unknown, o?: PublishOptions) => publish(j.fn, j.params, n, m, { ...o, from: c.k }) })
+
+/** `def.left`, once per join that got in, however it ended. Nothing is listening for a failure, so it's reported. */
+async function left(c: Sock, j: Join) {
+  const scope: Scope = { ...createScope(c.request, c.options), ctx: async () => c.ctx }
+  try {
+    await enter(scope, () => j.fn.def.left({ id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j) }))
+  } catch (e) {
+    known(c, j.fn.$id, e)
   }
 }
 
@@ -218,8 +232,7 @@ async function run(h: Hub, c: Sock, j: Join, ack: number, name: string, msg: unk
       if (!schema || !handler) throw new StartError('Q002', `\`${fn.$id}\` takes no message \`${name}\``, 'name one of `client`, with a handler in `on`')
       const valid = await check(schema, msg, `\`${fn.$id}.${name}\``)
       const scope: Scope = { ...createScope(c.request, c.options), ctx: async () => c.ctx }
-      const bound = { params: j.params, publish: (n: string, m: unknown, o?: { exceptSelf?: boolean }) => publish(fn, j.params, n, m, { ...o, from: c.k }) }
-      await enter(scope, () => handler({ msg: valid, ctx: c.ctx, params: j.params, room: bound }))
+      await enter(scope, () => handler({ msg: valid, id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j) }))
     }
     if (!j.gone) send(c, ['a', j.n, ack])
   } catch (e) {
@@ -301,7 +314,7 @@ export async function attach(peer: Peer, request: Request, scope: Scope, h = hub
 }
 
 /** `room.publish` and `room.in(params).publish`. */
-export async function publish(fn: Fn, params: unknown, name: string, message: unknown, o: { exceptSelf?: boolean; from?: string } = {}) {
+export async function publish(fn: Fn, params: unknown, name: string, message: unknown, o: PublishOptions & { from?: string } = {}) {
   const h = hub()
   const valid = await check(fn.kind === 'shared' ? fn.def.key : fn.def.params, params, `\`${fn.$id}\`'s params`)
   if (h.dev) {
@@ -310,7 +323,8 @@ export async function publish(fn: Fn, params: unknown, name: string, message: un
     const r = await schema['~standard'].validate(message)
     if (r.issues) throw new StartError('C002', `\`${fn.$id}.${name}\` was published with a message its schema rejects: ${r.issues.map(i => i.message).join('; ')}`, 'fix the message, or the schema', { status: 500 })
   }
-  const raw = JSON.stringify({ ...(o.from && { f: o.from }), ...(o.exceptSelf && { x: 1 }), n: name, m: message })
+  // `v` first: the hub reads it off the front of the string, to leave the ring alone.
+  const raw = JSON.stringify({ ...(o.volatile && { v: 1 }), ...(o.from && { f: o.from }), ...(o.exceptSelf && { x: 1 }), ...(o.to && { t: o.to }), n: name, m: message })
   if (raw.length > h.limits.message) throw new StartError('R008', `a \`${fn.$id}\` message is ${raw.length} bytes; a message may be ${h.limits.message}`, 'publish less, or an id subscribers fetch')
   await h.bus.publish(roomName(fn.$id, valid), raw)
 }

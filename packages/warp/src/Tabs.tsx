@@ -28,8 +28,7 @@ export function Tabs<V extends string>({ label, value, onChange, options, varian
     if (to < 0) return
     e.preventDefault()
     onChange(tabs[to].value)
-    const i = options.indexOf(tabs[to])
-    ;(e.currentTarget as HTMLElement).ownerDocument.getElementById(tab(i))?.focus()
+    ;(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')[options.findIndex(o => o.value === tabs[to].value)]?.focus() // by position: a hydrated server id isn't this side's
   }
   const selected = () => options.findIndex(o => o.value === value)
   return (

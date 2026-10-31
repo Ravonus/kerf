@@ -218,7 +218,7 @@ const http: Link = {
  * weft/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
  * fake, and through it the hub, as chunks of every app, used or not.
  */
-const FAKE = './live-fake'
+const FAKE = './live-fake.ts'
 const fake: Link = {
   open(body, frame, signal) {
     let up!: () => void

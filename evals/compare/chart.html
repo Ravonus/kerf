@@ -24,6 +24,7 @@ details { margin-top: 10px; font-size: 13px; color: var(--ink-2); } table { bord
 <section><h2>Load, by phase</h2><div class="note">Main-thread ms under 4x CPU throttle. Lower is better.</div><div id="phaseLegend" class="legend"></div><div id="load"></div></section>
 <section class="grid"><div><h2>Download as screens grow</h2><div class="note">KB brotli against number of screens.</div><div id="grow"></div></div>
 <div><h2>DOM elements as rows grow</h2><div class="note">Elements on the page against rows on it.</div><div id="els"></div></div></section>
+<section><h2>Long list, 10,000 wrapped rows</h2><div class="note">Each stack on its usual virtualiser: how far the list's total height moved once rows had been seen, which is how wrong the scrollbar was. Lower is better. Hover for jumps, size and load.</div><div id="longlist"></div></section>
 <section class="grid"><div><h2>Sort, as rows grow</h2><div class="note">CPU ms for one sort, 4x throttle.</div><div id="sort"></div></div>
 <div><h2>Live cell, as rows grow</h2><div class="note">CPU ms for one changed value, 4x throttle.</div><div id="live"></div></div></section>
 <section id="trend"><h2>Over time</h2><div class="note">JS + CSS brotli per measure.mjs run.</div><div id="time"></div></section>
@@ -79,6 +80,7 @@ const PH = [['script', 'Script', '--p1'], ['style', 'Style', '--p2'], ['layout',
 legend('phaseLegend', PH.map(p => [`var(${p[2]})`, p[1]]))
 bars('load', keys.map(k => { const l = results[k].load, v = { script: l.scriptMs, style: l.styleMs, layout: l.layoutMs, other: Math.max(l.taskMs - l.scriptMs - l.styleMs - l.layoutMs, 0) }; return { name: label(k), parts: PH.map(p => [v[p[0]], `var(${p[2]})`, p[1]]) } }), 'ms')
 lines('grow', screens, (k, n) => (results[k].sweep[n].js.br + results[k].sweep[n].css.br) / 1024, 'KB')
+bars('longlist', keys.filter(k => results[k].longList).map(k => ({ name: label(k), parts: [[(results[k].longList.heightMoved ?? 0) / 1000, color(k), `${results[k].longList.upJump} px jump up, ${results[k].longList.downJump} px down, ${results[k].longList.elements} elements, ${(results[k].longList.loadedBr / 1024).toFixed(1)} KB br fetched, ${results[k].longList.load} ms load`]] })), 'K px')
 lines('els', rowsOf, (k, n) => results[k].scale[n]?.elements, 'elements')
 lines('sort', rowsOf, (k, n) => results[k].scale[n]?.sort.ms, 'ms')
 lines('live', rowsOf, (k, n) => results[k].scale[n]?.live.ms, 'ms')

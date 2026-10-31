@@ -51,13 +51,13 @@ export interface AddressProvider {
   suggest(q: string, o: { country?: string; signal: AbortSignal }): Promise<Array<{ id: string; label: string; secondary?: string }>>
   resolve(id: string): Promise<Address>
 }
-export type AddressFieldProps = Bindable<Address | null> & { label?: string; provider?: AddressProvider; countries?: string[]; defaultCountry?: string; locale?: string; name?: string }
+export type AddressFieldProps = Bindable<Address | null> & { label?: string; provider?: AddressProvider; countries?: string[]; defaultCountry?: string; locale?: string; name?: string; errors?: Partial<Record<AddressPart, string>> }
 
 /**
  * AddressField (04 §3): the country comes first and decides the fields. Line 1 is a combobox when there is a `provider`;
  * manual entry is one click away, and automatic when the provider fails or takes over 1.5s.
  */
-export function AddressField({ value, defaultValue, onValueChange, label = 'Address', provider, countries, defaultCountry = 'US', locale, name }: AddressFieldProps) {
+export function AddressField({ value, defaultValue, onValueChange, label = 'Address', provider, countries, defaultCountry = 'US', locale, name, errors }: AddressFieldProps) {
   const v = bindable<Address | null>(() => value, () => defaultValue, null, () => onValueChange)
   const country = state<string | null>(untrack(() => v.value?.country ?? defaultCountry))
   const format = derived(() => addressFormat(country.value!))
@@ -88,7 +88,7 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
           <div key={`${country.value}:${part}`} data-span={span}>
             {part === 'line1' && provider && !manual.value
               ? <ComboField icon="pin" label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: 'pin' as const })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
-              : <Input label={title} autocomplete={auto} icon={part === 'line1' ? 'pin' : undefined} value={addressPart(v.value, part)} error={part === 'postalCode' ? postal.value : undefined} onInput={e => write(part, e.currentTarget.value)} onBlur={part === 'postalCode' ? () => (touched.value = { ...touched.value, postal: true }) : undefined} />}
+              : <Input label={title} autocomplete={auto} icon={part === 'line1' ? 'pin' : undefined} value={addressPart(v.value, part)} error={errors?.[part] ?? (part === 'postalCode' ? postal.value : undefined) ?? (errors ? '' : undefined)} onInput={e => write(part, e.currentTarget.value)} onBlur={part === 'postalCode' ? () => (touched.value = { ...touched.value, postal: true }) : undefined} />}
           </div>
         ))}
       </div>

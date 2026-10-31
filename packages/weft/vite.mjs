@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { dirname, join, relative, resolve as resolvePath } from 'node:path'
+import { basename, dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './node/css.mjs'
 import { purge, words } from './node/purge.mjs'
 import { assets } from './assets.mjs'
@@ -445,7 +445,7 @@ function purgeCss(keep = []) {
         for (const f of Object.values(bundle)) {
           for (const [from, to] of moved) {
             if (f.type === 'chunk') {
-              f.code = f.code.replaceAll(from, to)
+              f.code = f.code.replaceAll(basename(from), basename(to)) // by file name: with `base: './'` a chunk's preload list says ./index-….css
               if (f.viteMetadata?.importedCss.delete(from)) f.viteMetadata.importedCss.add(to)
             } else if (/\.(html|json)$/.test(f.fileName)) f.source = text(f).replaceAll(from, to)
           }

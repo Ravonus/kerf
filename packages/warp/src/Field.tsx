@@ -31,6 +31,9 @@ export interface FieldProps {
   [attr: string]: any
 }
 
+/** FieldProps for a component with its own value type: Omit alone would also drop what the index signature hides. */
+export type FieldShell = Omit<FieldProps, 'value' | 'defaultValue'> & { label: string }
+
 // `invalid` is a getter and `rest` the live props: the control is made once and its attributes update in place
 type Control = (p: { id: string; describedby?: string; readonly invalid: boolean; rest: Record<string, any> }) => any
 
@@ -39,7 +42,7 @@ type Control = (p: { id: string; describedby?: string; readonly invalid: boolean
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount ui-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean }) {
+export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean; wrap?: boolean }) {
   const id = untrack(() => given) ?? uid('field')
   const glyph = derived(() => icon)
   const message = untrack(() => hint !== undefined || error !== undefined || counter !== undefined)
@@ -64,7 +67,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       data-readonly={live.readonly ? '' : undefined}
       {...attrs}
     >
-      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? live.value ? '' : undefined} data-hold={hold ? '' : undefined}>
+      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? live.value ? '' : undefined} data-hold={hold ? '' : undefined} data-wrap={wrap ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         {glyph.value && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph.value} /></span><span data-part="sweep"><Icon name={glyph.value} /></span></span>}
         <label data-part="label" for={group ? undefined : id} id={group ? `${id}-l` : undefined}>
@@ -94,9 +97,9 @@ export function Input({ placeholder, ...props }: FieldProps & { placeholder?: st
   return (
     <Field
       {...props}
-      control={({ id, describedby, invalid, rest }) => (
+      control={p => (
         // a placeholder, " " at least: the label floats on :placeholder-shown (03 §1 decision 3)
-        <input data-part="input" id={id} placeholder={placeholder ?? ' '} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} {...rest} />
+        <input data-part="input" id={p.id} placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest} />
       )}
     />
   )
@@ -110,8 +113,8 @@ export function Search({ placeholder, ...props }: FieldProps & { placeholder?: s
       clearable
       {...props}
       attrs={{ role: 'search' }}
-      control={({ id, describedby, invalid, rest }) => (
-        <input data-part="input" id={id} type="search" enterkeyhint="search" autocomplete="off" placeholder={placeholder ?? ' '} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} {...rest} />
+      control={p => (
+        <input data-part="input" id={p.id} type="search" enterkeyhint="search" autocomplete="off" placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest} />
       )}
     />
   )
@@ -122,8 +125,8 @@ export function Textarea({ placeholder, rows = 3, ...props }: FieldProps & { pla
   return (
     <Field
       {...props}
-      control={({ id, describedby, invalid, rest }) => (
-        <textarea data-part="input" id={id} rows={rows} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} {...rest} />
+      control={p => (
+        <textarea data-part="input" id={p.id} rows={rows} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>{untrack(() => p.rest.value)}</textarea>
       )}
     />
   )

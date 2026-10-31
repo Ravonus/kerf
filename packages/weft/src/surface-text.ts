@@ -2,18 +2,10 @@
 // mirror is always on, so selection, find, translation, screen readers, forced colours and print need nothing else.
 // A surface with no 2D context has no text path: there the mirror itself is the visible text.
 
-import { DEV, effect, onCleanup, rt, state, type State } from 'weft'
+import { DEV, effect, onCleanup, state, type State } from 'weft'
+import { loadMeasure, type MeasureHandle, type MeasureProvider } from './measure'
 
-/** `text.measure@1` (research 33 §6), what `weft:slot/text.measure` loads. */
-export interface MeasureProvider {
-  prepare(text: string, font: string, opts?: { segments?: boolean }): MeasureHandle
-  layout(handle: MeasureHandle, width: number, lineHeight: number): { height: number; lineCount: number }
-  lines(handle: MeasureHandle, width: number): MeasureLine[]
-  lineText(handle: MeasureHandle, line: MeasureLine): string
-  clear(): void
-}
-export interface MeasureHandle { readonly exact: boolean; readonly ready: Promise<void> | null }
-export interface MeasureLine { width: number }
+export type { MeasureHandle, MeasureLine, MeasureProvider } from './measure'
 
 export interface TextOptions {
   x: number
@@ -53,17 +45,9 @@ type Live = { prepare(): void; host: TextHost }
 const nodes = new Set<Live>()
 
 let provider: MeasureProvider | undefined
-let loading: Promise<MeasureProvider> | undefined
 let styled = false
 let plain: MediaQueryList | undefined
 let fontsWatched = false
-
-function measure(): Promise<MeasureProvider> {
-  const test = rt.slots?.['text.measure'] as MeasureProvider | undefined
-  if (test) return Promise.resolve(test)
-  // @ts-ignore a generated module (`weft plugins sync`), declared in .weft/slots.d.ts once bound
-  return (loading ??= import('weft:slot/text.measure').then((m: any) => m.load()).then((p: MeasureProvider) => (provider = p)))
-}
 
 /** The stylesheet, once: mirrors take the page's type, minus what line breaking can't predict. */
 function sheet() {
@@ -185,7 +169,7 @@ export function surfaceText(host: TextHost, text: string | (() => string), optio
     const changed = new MutationObserver(() => { live.prepare(); host.invalidate() }) // a write of ours, or a translator's
     changed.observe(el, { childList: true, characterData: true, subtree: true })
     onCleanup(() => changed.disconnect())
-    measure().then(p => {
+    loadMeasure().then(p => {
       provider = p
       if (nodes.has(live)) ready()
     }, error => console.error(error))

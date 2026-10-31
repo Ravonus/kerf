@@ -19,6 +19,10 @@ import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
 
+import { scenes } from '../test/a11y/scenes/index.mjs'
+
+export { scenes }
+
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
 
@@ -105,6 +109,21 @@ const SCENARIOS = {
     await settle(page)
     await audit('focus shell')
   },
+  async virtual(page, audit, url) {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${url}?part=virtual`)
+    await settle(page)
+    await audit('virtual collections')
+    await page.getByRole('button', { name: /^Move /, exact: false }).first().click()
+    await audit('kanban move menu')
+    await page.keyboard.press('Escape')
+    await page.getByRole('grid').focus()
+    await page.keyboard.press('ArrowDown')
+    await audit('grid active cell')
+    await page.getByRole('log').getByRole('article').first().focus()
+    await page.keyboard.press('End')
+    await audit('thread at the end')
+  },
   async charts(page, audit, url) {
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto(`${url}?part=charts`)
@@ -134,7 +153,33 @@ const SCENARIOS = {
     await page.getByRole('combobox', { name: 'Place of birth' }).fill('li')
     await page.getByRole('option').first().waitFor()
     await audit('combobox open')
+    await page.goto(`${url}?part=surfaces`)
+    await settle(page)
+    await audit('grids and editors on a phone')
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await settle(page)
+    await audit('grids and editors')
+    await page.getByRole('grid').first().locator('tbody [tabindex="0"]').first().focus()
+    await page.keyboard.press('ArrowRight')
+    await audit('grid cell focused')
+    await page.getByRole('button', { name: 'Page 4' }).focus()
+    await audit('page button focused')
+    await page.getByRole('combobox', { name: 'Comment' }).or(page.getByRole('textbox', { name: 'Comment' })).first().fill('Hi @a')
+    await page.locator(':popover-open [role="option"]').first().waitFor()
+    await audit('mention list open')
+    await page.keyboard.press('Escape')
+    await page.getByRole('textbox', { name: 'Notes' }).focus()
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('Backspace')
+    await page.keyboard.type('/')
+    await page.locator(':popover-open [role="option"]').first().waitFor()
+    await audit('slash menu open')
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Open', exact: true }).click()
+    await page.locator('input[role="combobox"]:visible').first().fill('e')
+    await audit('palette open')
   },
+  ...Object.fromEntries(Object.entries(scenes).map(([name, run]) => [name, (page, audit, url) => run(page, audit, url, settle)])),
   async shop(page, audit, url) {
     await page.goto(url)
     await page.getByRole('button', { name: /^Add/ }).first().waitFor()
@@ -173,8 +218,10 @@ async function pixelContrast(page, i) {
     const box = own.width ? { x: left, y: all.y, width: right - left, height: all.height } : all
     if (box.width < 1 || box.height < 1) return null
     // covered by an overlay in the top layer (an open tooltip over the text above its trigger): not this text's contrast
-    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog, [data-part="scrim"]')
+    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog, [data-part="scrim"], [data-scope="save-bar"]')
     if (top && !top.contains(el)) return null
+    // mid-sweep the label's sweep-content twin paints the same text over it: that twin is what's read
+    if (el.matches('[data-phase="in"] > [data-part="sweep-label"]')) return null
     const cs = getComputedStyle(el)
     let alpha = 1
     for (let e = el; e; e = e.parentElement) alpha *= Number(getComputedStyle(e).opacity)
@@ -188,7 +235,9 @@ async function pixelContrast(page, i) {
     return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
   }, sel)
   if (!info || info.a < 0.05) return null
-  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; }` })
+  // what passes over or beside text without being behind it: the now line, peers' cursors and flags, a plan's radio dot
+  const passing = `[data-scope="calendar"] [data-part="now"], [data-scope="cursor"]:not(:has(${sel})), [data-peer-selection]::before, [data-scope="plan-card"] [data-part="radio"] { visibility: hidden !important; } [data-peer-selection] { outline-color: transparent !important; }`
+  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } ${passing}` })
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
@@ -328,7 +377,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const json = process.argv.includes('--json')
   const extra = process.argv.slice(2).filter(a => a.includes('=') && !a.startsWith('--')).map(a => { const [name, dir] = a.split('='); return { name, dir } })
   const gallery = await buildGallery(mkdtempSync(join(tmpdir(), 'warp-a11y-')))
-  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
   if (json) console.log(JSON.stringify(r, null, 2))
   else {
     for (const f of r.spec) console.error(`spec finding ${f.where} (${f.theme}, ${f.stops.length} runs): ${f.why}`)

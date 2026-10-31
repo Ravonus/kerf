@@ -1,0 +1,46 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="room"][data-part="root"]) {
+  container: room / inline-size; position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%; min-block-size: 0; background: var(--warp-color-page); color: var(--warp-color-text);
+}
+:where([data-scope="room"] [data-part="header"]) { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--warp-space-related); padding: 10px var(--warp-space-group); }
+:where([data-scope="room"] [data-part="rec"]) { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-critical-text); text-transform: uppercase; letter-spacing: 0.08em; }
+:where([data-scope="room"] [data-part="stage"]) { grid-column: 1; grid-row: 2; position: relative; min-block-size: 0; padding: 0 var(--warp-space-related) var(--warp-space-related); display: grid; }
+:where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) {
+  grid-template-columns: repeat(var(--_cols, 3), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: var(--warp-tile-gap); align-content: stretch;
+}
+:where([data-scope="room"] [data-part="stage"][data-layout="speaker"]) { grid-template-rows: minmax(0, 1fr) 96px; gap: var(--warp-tile-gap); }
+:where([data-scope="room"] [data-part="stage"][data-layout="speaker"] > [data-part="strip"]) { display: grid; grid-auto-flow: column; grid-auto-columns: 148px; gap: var(--warp-tile-gap); overflow-x: auto; scrollbar-width: none; }
+:where([data-scope="room"] [data-part="stage"][data-layout="presentation"], [data-scope="room"] [data-part="stage"][data-layout="board"]) {
+  grid-template-columns: minmax(0, 1fr) 168px; gap: var(--warp-tile-gap);
+}
+:where([data-scope="room"] [data-part="stage"][data-layout="board"]) { grid-template-columns: minmax(0, 1fr) 112px; }
+:where([data-scope="room"] [data-part="stage"] > [data-part="rail"]) { display: grid; grid-auto-rows: 96px; gap: var(--warp-tile-gap); align-content: start; overflow: auto; scrollbar-width: none; }
+:where([data-scope="room"] [data-part="stage"][data-layout="board"] > [data-part="rail"]) { grid-auto-rows: 72px; }
+:where([data-scope="room"] [data-part="share"]) {
+  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--warp-radius-surface); overflow: hidden;
+  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border);
+}
+:where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); border-block-end: 1px solid var(--warp-color-border); }
+:where([data-scope="room"] [data-part="tiles"]) { display: contents; }
+@container room (max-width: 599.98px) {
+:where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) { --_cols: 2 !important; }
+}
+/* sidebar: chat / people; a column on desktop, a sheet below 1000 */
+:where([data-scope="room"] [data-part="sidebar"]) {
+  grid-column: 2; grid-row: 2; inline-size: 300px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-block-size: 0;
+  margin: 0 var(--warp-space-related) var(--warp-space-related) 0; border-radius: var(--warp-radius-surface);
+  background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border); overflow: hidden;
+  animation: warp-side-in var(--warp-duration-slow) var(--warp-ease-out);
+}
+:where([data-scope="room"] [data-part="sidebar"][hidden]) { display: none; }
+@container room (max-width: 999.98px) {
+:where([data-scope="room"] [data-part="sidebar"]) { position: absolute; inset: auto 8px 72px 8px; inline-size: auto; block-size: 60%; z-index: var(--warp-z-overlay); box-shadow: var(--warp-elevation-3), 0 0 0 1px var(--warp-color-border); margin: 0; }
+}
+:where([data-scope="room"] [data-part="people"] li) { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: var(--warp-text-body-size); }
+:where([data-scope="room"] [data-part="people"] li > span:not([data-scope])) { flex: 1; min-inline-size: 0; }
+:where([data-scope="room"] [data-part="people"] li small) { display: block; color: var(--warp-color-text-subtle); font-size: 12px; }
+@keyframes warp-side-in { from { opacity: 0; translate: calc(var(--warp-motion-distance) * 2) 0; } }
+}

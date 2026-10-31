@@ -1,4 +1,4 @@
-import { checkState, filterRows, installSweep, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/ui-core'
+import { checkState, filterRows, hideRule, installSweep, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
 import { Button } from './Button'
 import { Checkbox } from './Choice'
@@ -77,6 +77,8 @@ export interface TableProps<T> {
   actions?: any
   /** The Columns disclosure. */
   picker?: boolean
+  /** Columns hidden from the start, in the server's HTML too. Bind a State to keep what people choose. */
+  hiddenColumns?: readonly string[] | State<readonly string[]>
   /** Forces a state; a Resource's own is used otherwise. */
   status?: TableStatus
   empty?: { title?: any; text?: any; action?: any }
@@ -87,9 +89,9 @@ export interface TableProps<T> {
   heading?: number
 }
 
-const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
-const sortIcon = () => <svg data-part="sort-icon" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M2 5.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
-const columnsIcon = () => <svg data-icon aria-hidden="true" focusable="false" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M15 4v16" /></svg>
+export const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
+export const sortIcon = () => <svg data-part="sort-icon" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M2 5.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
+export const columnsIcon = () => <svg data-icon aria-hidden="true" focusable="false" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M15 4v16" /></svg>
 const SKELETON_ROWS = 6
 const CARDS_BELOW = 600 // table width: the phone cards' @container query, so the sort bar exists only there
 const DETAILS_FROM = 1000 // table width: below it `details="sheet"` opens the sheet (06 §5)
@@ -119,7 +121,7 @@ function Fields<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
   return <dl data-scope="desc">{ctx.cols().map(c => <div key={c.id}><dt>{c.header}</dt><dd>{(c.cell ?? ((r: T) => ctx.read(c, r)))(row)}</dd></div>)}</dl>
 }
 
-function Editor({ label, start, onDone }: { label: string; start: string; onDone: (save: boolean, text: string) => void }) {
+export function Editor({ label, start, onDone, onLeave, invalid, describedby }: { label: string; start: string; onDone: (save: boolean, text: string) => void; onLeave?: (save: boolean, text: string) => void; invalid?: boolean; describedby?: string }) {
   let input: HTMLInputElement | undefined
   onMount(() => { input?.focus(); input?.select() })
   return (
@@ -128,6 +130,8 @@ function Editor({ label, start, onDone }: { label: string; start: string; onDone
       <input
         ref={(n: any) => (input = n)}
         data-part="editor"
+        aria-invalid={invalid ? 'true' : undefined}
+        aria-describedby={describedby}
         value={start}
         onKeyDown={(e: KeyboardEvent) => {
           if (e.key !== 'Enter' && e.key !== 'Escape') return
@@ -135,7 +139,7 @@ function Editor({ label, start, onDone }: { label: string; start: string; onDone
           e.stopPropagation()
           onDone(e.key === 'Enter', (e.currentTarget as HTMLInputElement).value)
         }}
-        onBlur={(e: FocusEvent) => onDone(true, (e.currentTarget as HTMLInputElement).value)}
+        onBlur={(e: FocusEvent) => (onLeave ?? onDone)(true, (e.currentTarget as HTMLInputElement).value)}
       />
     </label>
   )
@@ -255,12 +259,12 @@ function Sheet<T>({ row, ctx, onClose }: { row: T; ctx: Ctx<T>; onClose: (restor
   )
 }
 
-function ColumnsPanel<T>({ id, open, trigger, items, flip }: { id: string; open: State<boolean>; trigger: () => HTMLElement; items: Column<T>[]; flip: (c: Column<T>, shown: boolean) => void }) {
+export function ColumnsPanel<T>({ id, open, trigger, items, shown, flip }: { id: string; open: State<boolean>; trigger: () => HTMLElement; items: Column<T>[]; shown: (c: Column<T>) => boolean; flip: (c: Column<T>, shown: boolean) => void }) {
   let panel: HTMLDivElement | undefined
   use(popover, () => panel, () => ({ open: open.value, trigger: trigger(), side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" id={id} role="group" aria-label="Visible columns">
-      {items.map(c => <div key={c.id}><Checkbox checked onChange={(e: any) => flip(c, e.currentTarget.checked)}>{c.header}</Checkbox></div>)}
+      {items.map(c => <div key={c.id}><Checkbox checked={shown(c)} onChange={(e: any) => flip(c, e.currentTarget.checked)}>{c.header}</Checkbox></div>)}
     </div>
   )
 }
@@ -272,7 +276,7 @@ function ColumnsPanel<T>({ id, open, trigger, items, flip }: { id: string; open:
  * value patches a cell. Given `T[]` it sorts, filters and pages by itself; a Resource or `server` leaves that to the
  * server and reports what was asked. Queries its own width, never the window.
  */
-export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id', phone = 'cards', density, filter, query, sort, onSortChange, server, selection, onSelectionChange, bulk, page, onPageChange, expand, details = 'inline', onEdit, actions, picker = true, status, empty, error, onRetry, maxHeight, heading = 2 }: TableProps<T>) {
+export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id', phone = 'cards', density, filter, query, sort, onSortChange, server, selection, onSelectionChange, bulk, page, onPageChange, expand, details = 'inline', onEdit, actions, picker = true, hiddenColumns, status, empty, error, onRetry, maxHeight, heading = 2 }: TableProps<T>) {
   const id = uid('tbl')
   const level = untrack(() => heading)
   const cols = derived(() => columns)
@@ -286,7 +290,8 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const given = untrack(() => selection)
   const sel = given ? (given === true ? state<Record<string, boolean>>({}) : given) : undefined
   const open = state<Record<string, boolean>>({})
-  const hidden = state<string[]>([])
+  const startHidden = untrack(() => hiddenColumns)
+  const hidden: State<readonly string[]> = isState(startHidden) ? startHidden : state<readonly string[]>(startHidden ?? [])
   const at = state(0)
   const sheet = state<{ row: T; from: HTMLElement } | undefined>(undefined)
   const narrow = () => (el?.clientWidth ?? DETAILS_FROM) < DETAILS_FROM
@@ -406,6 +411,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const flip = (c: Column<T>, shown: boolean) => { hidden.value = shown ? hidden.value.filter(x => x !== c.id) : [...hidden.value, c.id] }
   return (
     <div ref={(n: any) => (el = n)} data-scope="table" data-phone={phone} data-state={phase.value} data-density={density} id={id}>
+      {untrack(() => hidden.value.length > 0) && <style data-part="hide" innerHTML={untrack(() => hideRule(id, hidden.value))}></style>}
       {toolbar.value && (
         <div data-part="toolbar">
           {filter !== undefined && <Search label={filter} value={typed.value} onInput={(e: any) => (typed.value = e.currentTarget.value)} />}
@@ -415,7 +421,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
           {picker && (
             <div>
               <Button emphasis="outline" tone="neutral" ref={(n: any) => (columnsButton = n)} aria-expanded={picking.value ? 'true' : 'false'} aria-controls={picked.value ? `${id}-cols` : undefined} onClick={() => { picked.value = true; picking.value = !picking.value }}>{columnsIcon()}Columns</Button>
-              {picked.value && <ColumnsPanel id={`${id}-cols`} open={picking} trigger={() => columnsButton!} items={hideable.value} flip={flip} />}
+              {picked.value && <ColumnsPanel id={`${id}-cols`} open={picking} trigger={() => columnsButton!} items={hideable.value} shown={c => !hidden.value.includes(c.id)} flip={flip} />}
             </div>
           )}
         </div>

@@ -587,3 +587,12 @@ continue the entry direction, and leave toward the anchor.
 | Give sm and icon buttons, chips and filter chips a hit-min expander, with `overflow: visible`. | Leave a 28px button inside `overflow: hidden`, where its expander is clipped. |
 | Set `aria-checked` on every chip radio, with one tab stop and arrows that move and select. | Leave the unchecked radios without `aria-checked`. |
 | Set non-vivid hero `em` upright in the accent colour (`font-synthesis-style: none`). | Let the browser slant Space Grotesk into a fake italic. |
+
+**As built, the editors and code inputs** (`packages/ui-core/src/{editor,code,mention}.ts`, `packages/warp/src/{RichTextEditor,Markdown,CodeInput,MentionsInput,KeyValueEditor}.tsx`). Where the build differs from this spec:
+
+- RichTextEditor is contenteditable with `execCommand`, like the specimen, not a ProseMirror `@weft/editor`: the app pays about 16 KB br of JS rather than a full editor engine. Everything that enters it goes through ui-core's allow-list `sanitizeHtml`. `format` is `html` or `markdown`; `json` and the `renderer` prop aren't built.
+- Undo stops at a mention and at a list made by a Markdown shortcut: Chromium needs a direct DOM change for both (it drops or nests the element otherwise), and that ends its undo history there.
+- CodeInput paints with the CSS Custom Highlight API over a mirrored `<pre>`, since ranges can't reach inside a textarea. Without the API the textarea shows plain text.
+- `aria-expanded` is left off MentionsInput and RichTextEditor: axe rejects it on textbox roles. `aria-activedescendant` and `aria-controls` carry the list.
+- Tools are labelled `H2 heading` and `H3 subheading` so the name holds the visible text (WCAG 2.5.3).
+- JSON errors are located by a small walker, because V8 doesn't report a position for most messages.

@@ -11,8 +11,14 @@ export interface MediaOptions {
   placeholder?: boolean
   /** Bytes over which a GIF is M004. Default 256 KB. */
   gifLimit?: number
-  /** 'server': `?media` imports are encoded on first request by the media route, not at build. Default 'off'. */
-  encoder?: 'off' | 'server'
+  /** 'server': `?media` imports are encoded on first request by the media route, not at build. 'compatible': the page shows the efficient file, and a compatible copy swaps in so saving gives a file that opens anywhere. Default 'off'. */
+  encoder?: 'off' | 'compatible' | 'server'
+  /** When a compatible copy swaps in, with `encoder: 'compatible'`. Default 'intent': on right-click, long-press or drag. */
+  swap?: 'intent' | 'idle' | 'never'
+  /** Efficient codecs next to H.264 (default `['av1']`), and the ladder (default 640, 960, 1280, 1920). */
+  video?: { codecs?: ('av1' | 'vp9' | 'hevc')[]; widths?: number[] }
+  /** `toVideo: 'never'` keeps GIFs. `keepUnder`: bytes under which a GIF stays one. Default 8 KB. */
+  gif?: { toVideo?: 'auto' | 'never'; keepUnder?: number }
   /** The media route's store (uploads, and `encoder: 'server'`). `dir` default `.weft/media`, `maxBytes` default 20 MB. */
   server?: { dir?: string; maxBytes?: number }
 }

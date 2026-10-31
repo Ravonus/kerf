@@ -88,6 +88,18 @@ export const ENTRIES = {
   PaymentCardInput: ['PaymentCardInput', '<PaymentCardInput label="Card" mount={() => ({ on() {}, destroy() {} })} />'],
   CardNumberText: ['CardNumberText', '<CardNumberText last4="4242" />'],
   SignaturePad: ['SignaturePad', '<SignaturePad label="Signature" />'],
+  DataGrid: ['DataGrid', '<DataGrid caption="Projects" rows={[]} columns={[{ id: "name", header: "Name", sort: true, edit: true }]} />'],
+  PivotTable: ['PivotTable', '<PivotTable caption="Cost" rows={[]} row={r => r.a} column={r => r.b} measures={[]} />'],
+  PaginationBar: ['PaginationBar', '<PaginationBar total={100} size={10} />'],
+  LoadMore: ['LoadMore', '<LoadMore onLoad={() => {}} />'],
+  CommandPalette: ['CommandPalette', '<CommandPalette open={open} commands={[{ label: "New" }]} />'],
+  MentionsInput: ['MentionsInput', '<MentionsInput label="Comment" triggers={{ "@": async () => [] }} />'],
+  CodeInput: ['CodeInput', '<CodeInput label="Script" />'],
+  JsonEditor: ['JsonEditor', '<JsonEditor label="Config" />'],
+  KeyValueEditor: ['KeyValueEditor', '<KeyValueEditor label="Environment" />'],
+  RichTextEditor: ['RichTextEditor', '<RichTextEditor label="Notes" />'],
+  Markdown: ['Markdown', '<Markdown source="# Hi" />'],
+  MarkdownEditor: ['MarkdownEditor', '<MarkdownEditor label="Body" />'],
 }
 
 async function measure(name, [imp, jsx]) {

@@ -33,7 +33,7 @@ export async function open(frame: (d: any[]) => void, done: (code: number) => vo
   const socket = await attach(peer, request, fakeScope(exec, n, request), h)
   n.ws = {
     publish: (id, params, name, msg) => publish(fns.get(id)!, params, name, msg),
-    drop: () => peer.close(1006),
+    drop: () => { peer.close(1006); socket.close() }, // both ends, as a real cut: the server runs `left`
     recheck: () => socket.recheck(),
   }
   up()

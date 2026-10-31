@@ -162,12 +162,12 @@ curve as `live.ts`, so neither module pulls in the other), reconnect is immediat
 
 All three implement research 30's `Bus` and carry its gap contract: first connect is not a gap, every later one is.
 
-- **`redisBus({ url })`**, `@weft/start/bus/redis`, peer `ioredis`. Two connections (a subscriber can't publish).
+- **`redisBus({ url })`**, `@weft/realtime-redis`, peer `ioredis`. Two connections (a subscriber can't publish).
   `ready` after the first is the gap. A channel maps 1:1 to a Redis channel, prefix `weft:`.
-- **`natsBus({ servers })`**, `@weft/start/bus/nats`, peer `@nats-io/transport-node`. Subjects can't hold `*`, `>` or
+- **`natsBus({ servers })`**, `@weft/realtime-nats`, peer `@nats-io/transport-node`. Subjects can't hold `*`, `>` or
   spaces, and channels come from tags and keys, so the subject is `weft.<base64url of the channel>`. A `reconnect` status
   is the gap.
-- **`durableObjectBus({ namespace })`**, `@weft/start/bus/durable-object`, with `WeftBusObject`, the class the app
+- **`durableObjectBus({ namespace })`**, `@weft/realtime-durable-object`, with `WeftBusObject`, the class the app
   exports and binds. One object per channel. It has no state of its own beyond its sockets: a publish POSTs to the object,
   which writes to every socket, using the hibernation API (`acceptWebSocket`). A subscribe is a WebSocket to the object;
   a close is the gap, then it reconnects. No platform account: tested on workerd through Miniflare, locally.

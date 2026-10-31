@@ -21,6 +21,7 @@
     "weft": "*"
   },
   "devDependencies": {
+    "@weft/plugin-media-ffmpeg": "file:../plugin-media-ffmpeg",
     "vitest": "5.0.5",
     "weft": "file:../weft"
   }

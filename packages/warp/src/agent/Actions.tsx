@@ -1,0 +1,78 @@
+import { announce, popover } from '@weft/ui-core'
+import { derived, state } from 'weft'
+import { Badge } from '../Badge'
+import { Button } from '../Button'
+import { Icon } from '../Icon'
+import { use } from '../use'
+import { G, IconButton } from './bits'
+import '../styles'
+import '@weft/ui-core/styles/components/popover.css'
+import '@weft/ui-core/styles/app/branch.css'
+
+const say = (e: Event, text: string) => announce((e.currentTarget as Element).ownerDocument, text)
+
+/** BranchSwitcher (07 §1.3): `‹ 2/2 ›`, shown once a turn has more than one version. `index` counts from 0. */
+export function BranchSwitcher({ index, count, onChange }: { index: number; count: number; onChange: (index: number) => void }) {
+  const go = (e: Event, to: number) => { onChange(to); say(e, `Version ${to + 1} of ${count}`) }
+  return (
+    <>
+      {count > 1 && (
+        <span data-scope="branch" role="group" aria-label="Versions">
+          <button type="button" aria-label="Previous version" disabled={index <= 0} onClick={e => go(e, index - 1)}><Icon name="left" /></button>
+          <span data-numeric="">{index + 1}/{count}</span>
+          <button type="button" aria-label="Next version" disabled={index >= count - 1} onClick={e => go(e, index + 1)}><Icon name="right" /></button>
+        </span>
+      )}
+    </>
+  )
+}
+
+export type Feedback = 'up' | 'down' | null
+
+export interface MessageActionsProps {
+  onCopy?: (el: HTMLElement) => void
+  onFeedback?: (value: Feedback, reason?: string) => void
+  reasons?: string[]
+  onRegenerate?: () => void
+  onBranch?: () => void
+  stopped?: boolean
+  branch?: { index: number; count: number; onChange: (index: number) => void }
+}
+
+/**
+ * Message actions (07 §1.3): copy, good and bad answer (toggles; bad opens a short reason popover), regenerate, branch
+ * and the switcher. Regenerate, branch and thumbs render only when they have a handler.
+ */
+export function MessageActions({ onCopy, onFeedback, reasons = ['Wrong', 'Too long', 'Missed the point'], onRegenerate, onBranch, stopped, branch }: MessageActionsProps) {
+  const value = state<Feedback>(null)
+  const asking = state(false)
+  const has = derived(() => branch)
+  let bad: HTMLElement | undefined
+  let panel: HTMLElement | undefined
+  use(popover, () => panel, () => ({ open: asking.value, trigger: bad!, side: 'top' as const, onClose: () => (asking.value = false) }))
+  const rate = (e: Event, to: 'up' | 'down') => {
+    const next = value.value === to ? null : to
+    value.value = next
+    onFeedback?.(next)
+    if (next === 'down') asking.value = true
+    else if (next) say(e, 'Thanks for the feedback.')
+  }
+  const because = (e: Event, reason: string) => { onFeedback?.('down', reason); say(e, 'Thanks for the feedback.') }
+  return (
+    <div data-part="actions">
+      {stopped && <Badge tone="neutral">Stopped · kept what arrived</Badge>}
+      {onCopy && <IconButton d={G.copy} label="Copy" onClick={(e: Event) => onCopy(e.currentTarget as HTMLElement)} />}
+      {onFeedback && <IconButton d={G.up} label="Good answer" aria-pressed={value.value === 'up' ? 'true' : 'false'} onClick={(e: Event) => rate(e, 'up')} />}
+      {onFeedback && <IconButton d={G.down} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: any) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
+      {onFeedback && (
+        <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" aria-label="What went wrong?">
+          <p data-part="title">What went wrong?</p>
+          <div>{reasons.map(r => <Button key={r} emphasis="ghost" tone="neutral" size="sm" data-close-popover="" onClick={(e: Event) => because(e, r)}>{r}</Button>)}</div>
+        </div>
+      )}
+      {onRegenerate && <IconButton d={G.refresh} label="Regenerate" onClick={onRegenerate} />}
+      {onBranch && <IconButton d={G.branch} label="Branch from here" onClick={onBranch} />}
+      {has.value && <BranchSwitcher index={has.value.index} count={has.value.count} onChange={has.value.onChange} />}
+    </div>
+  )
+}

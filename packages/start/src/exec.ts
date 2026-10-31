@@ -50,7 +50,7 @@ export interface FormFailure { id: string; key?: string; values: Record<string, 
 /** The `media.server@1` provider (`@weft/plugin-media/server`, research 29 §6). */
 export interface MediaServer {
   ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
-  serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{ bytes: Uint8Array; type: string; width: number; format: string; negotiated: boolean } | null>
+  serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{ bytes: Uint8Array; type: string; width: number; format: string; negotiated: boolean; temporary?: boolean } | null>
 }
 
 export interface ScopeOptions {

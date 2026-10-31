@@ -188,13 +188,14 @@
   :where([data-part="country"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
   :where([data-part="country"] b) { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.04em; padding: 3px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
   :where([data-part="country"] svg) { inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); }
-  :where([data-part="search"]) { display: flex; align-items: center; gap: 8px; block-size: var(--warp-control-md); padding-inline: 10px; margin-block-end: 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border-control); }
-  :where([data-part="search"]:focus-within) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
-  :where([data-part="search"] input) { all: unset; flex: 1; min-inline-size: 0; font-size: var(--warp-text-control-size); }
-  :where([data-part="search"] input::placeholder) { color: var(--warp-color-text-subtle); }
-  :where([data-part="search"] svg) { inline-size: 16px; block-size: 16px; color: var(--warp-color-text-subtle); flex: none; }
+  :where(label[data-part="search"]) { display: flex; align-items: center; gap: 8px; block-size: var(--warp-control-md); padding-inline: 10px; margin-block-end: 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border-control); }
+  :where(label[data-part="search"]:focus-within) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
+  :where(label[data-part="search"] input) { all: unset; flex: 1; min-inline-size: 0; font-size: var(--warp-text-control-size); }
+  :where(label[data-part="search"] input::placeholder) { color: var(--warp-color-text-subtle); }
+  :where(label[data-part="search"] svg) { inline-size: 16px; block-size: 16px; color: var(--warp-color-text-subtle); flex: none; }
 
   /* -- rich text ------------------------------------------------------- */
+  :where([data-part="caret-anchor"]) { position: absolute; inline-size: 0; block-size: 0; pointer-events: none; }
   :where([data-scope="rte"]) { display: grid; gap: var(--warp-space-tight); }
   :where([data-scope="rte"] [data-part="frame"]) {
     position: relative; display: flex; flex-direction: column; background: var(--warp-color-surface-raised);
@@ -233,6 +234,8 @@
   :where([data-scope="rte"] [data-part="linkbar"] input) { all: unset; flex: 1; min-inline-size: 0; padding-inline: 8px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: var(--warp-text-control-size); }
   :where([data-scope="rte"] [data-part="slash"]) { position: absolute; z-index: var(--warp-z-menu); inline-size: 240px; }
   :where([data-scope="rte"] [data-part="slash"] [role="option"] small) { margin-inline-start: auto; color: var(--warp-color-text-subtle); font: 400 11px var(--warp-font-mono); }
+  :where([data-scope="rte"] [role="toolbar"][data-bubble]) { position: fixed; inset: auto; margin: 0; padding: 4px; border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); background: var(--warp-color-surface-overlay); box-shadow: var(--warp-elevation-2); }
+  :where([data-scope="rte"] [role="toolbar"][data-docked]) { position: fixed; inset-inline: 0; z-index: var(--warp-z-menu); display: flex; margin: 0; padding: 4px; border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: 0; background: var(--warp-color-surface-overlay); }
   /* phone: the toolbar docks above the keyboard (visualViewport in production) */
   :where([data-form="phone"] [data-scope="rte"] [role="toolbar"]) {
     order: 2; position: sticky; inset-block-end: 0; border-block-end: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -400,8 +403,49 @@
   /* -- code-input */
   :where(.code-in) { display: grid; grid-template-columns: auto 1fr; flex: 1; align-self: stretch; min-inline-size: 0; font: 400 var(--warp-text-code-size)/1.6 var(--warp-font-mono); }
   :where(.code-in .ln) { margin: 0 10px 0 0; padding: 0 10px 0 0; list-style: none; text-align: end; color: var(--warp-color-text-subtle); overflow: hidden; user-select: none; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); }
-  :where(.code-in textarea) { all: unset; box-sizing: border-box; white-space: pre; overflow: auto; tab-size: 2; min-block-size: 11em; font: inherit; color: var(--warp-color-text); caret-color: var(--warp-color-accent-solid); }
-  @media (pointer: coarse) { :where(.code-in textarea) { font-size: 16px; } }
+  :where(.code-in .ln [data-error]) { color: var(--warp-color-critical-text); font-weight: 600; }
+  :where(.code-in [data-part="surface"]) { position: relative; min-inline-size: 0; overflow: hidden; }
+  /* the layer repeats the text behind the textarea; its colours are ::highlight()s, so typing builds no spans */
+  :where(.code-in [data-part="layer"]) { position: absolute; inset: 0 auto auto 0; margin: 0; padding: 0; font: inherit; tab-size: var(--_tab, 2); white-space: pre; color: var(--warp-color-text); pointer-events: none; visibility: hidden; }
+  :where(.code-in[data-wrap] [data-part="layer"]) { inline-size: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+  :where(.code-in[data-painted] [data-part="layer"]) { visibility: visible; }
+  :where(.code-in textarea) { all: unset; box-sizing: border-box; position: relative; display: block; inline-size: 100%; white-space: pre; overflow: auto; tab-size: var(--_tab, 2); min-block-size: 11em; font: inherit; color: var(--warp-color-text); caret-color: var(--warp-color-accent-solid); }
+  :where(.code-in[data-wrap] textarea) { white-space: pre-wrap; overflow-wrap: anywhere; }
+  :where(.code-in[data-painted] textarea) { color: transparent; }
+  :where(.code-in textarea)::selection { background: color-mix(in oklab, var(--warp-color-accent-solid) 30%, transparent); }
+  ::highlight(warp-code-comment) { color: var(--warp-color-text-subtle); }
+  ::highlight(warp-code-string) { color: var(--warp-color-accent-text); }
+  ::highlight(warp-code-number) { color: var(--warp-color-info-text); }
+  ::highlight(warp-code-keyword) { color: var(--warp-color-positive-text); }
+  @media (pointer: coarse) { :where(.code-in textarea, .code-in [data-part="layer"]) { font-size: 16px; } }
+  /* -- key-value */
+  :where([data-scope="kv"]) { display: grid; gap: var(--warp-space-related); min-inline-size: 0; }
+  :where([data-scope="kv"] [data-part="body"] > div) { flex: 1; min-inline-size: 0; padding: 18px var(--warp-pad-control) 8px; }
+  :where([data-scope="kv"] table) { inline-size: 100%; border-collapse: collapse; font-size: var(--warp-text-control-size); }
+  :where([data-scope="kv"] th) { padding: 0 8px 4px 0; text-align: start; font: 500 var(--warp-text-caption-size)/1.3 var(--warp-text-body-font); color: var(--warp-color-text-subtle); }
+  :where([data-scope="kv"] td) { padding: 2px 8px 2px 0; }
+  :where([data-scope="kv"] td:last-child, [data-scope="kv"] th:last-child) { inline-size: 1px; padding-inline-end: 0; }
+  :where([data-scope="kv"] input) { all: unset; box-sizing: border-box; inline-size: 100%; block-size: max(var(--warp-control-sm), var(--warp-target-min)); padding-inline: 8px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font: 400 max(var(--warp-text-code-size), var(--warp-input-font-min)) var(--warp-font-mono); color: var(--warp-color-text); }
+  :where([data-scope="kv"] input:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+  :where([data-scope="kv"] input[data-duplicate]) { box-shadow: inset 0 -2px 0 var(--warp-color-caution-solid); }
+  :where([data-scope="kv"] [data-part="remove"]) { all: unset; position: relative; display: grid; place-items: center; inline-size: 28px; block-size: 28px; border-radius: var(--warp-radius-mark); color: var(--warp-color-text-subtle); cursor: pointer; }
+  :where([data-scope="kv"] [data-part="remove"])::after { content: ""; position: absolute; inset: min(0px, calc((28px - var(--warp-hit-min)) / 2)); }
+  :where([data-scope="kv"] [data-part="remove"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+  :where([data-scope="kv"] [data-part="remove"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+  :where([data-scope="kv"] [data-part="remove"] svg) { inline-size: 14px; block-size: 14px; }
+  /* -- md-editor */
+  :where([data-scope="md-editor"]) { container-type: inline-size; display: grid; gap: var(--warp-space-related); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  :where([data-scope="md-editor"] [data-part="tabs"]) { display: none; grid-column: 1 / -1; gap: 2px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
+  :where([data-scope="md-editor"] [role="tab"]) { all: unset; position: relative; padding: 8px 12px; cursor: pointer; font-size: var(--warp-text-caption-size); font-weight: 500; color: var(--warp-color-text-subtle); }
+  :where([data-scope="md-editor"] [role="tab"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)) 0; }
+  :where([data-scope="md-editor"] [role="tab"][aria-selected="true"]) { color: var(--warp-color-text); box-shadow: inset 0 -2px 0 var(--warp-color-accent-solid); }
+  :where([data-scope="md-editor"] [role="tab"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+  :where([data-scope="md-editor"] > [data-scope="markdown"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; border-radius: var(--warp-radius-mark); }
+  @container (max-width: 639.98px) {
+    :where([data-scope="md-editor"] > *) { grid-column: 1 / -1; }
+    :where([data-scope="md-editor"] [data-part="tabs"]) { display: flex; }
+    :where([data-scope="md-editor"][data-tab="write"] > [data-scope="markdown"], [data-scope="md-editor"][data-tab="preview"] > [data-part="source"]) { display: none; }
+  }
   /* -- codeblock */
   :where([data-scope="code"]) { font: 400 0.88em var(--warp-font-mono); padding: 0.1em 0.38em; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); white-space: nowrap; }
   :where([data-scope="codeblock"]) { margin: 0; border-radius: var(--warp-radius-surface); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-sunken); overflow: hidden; min-inline-size: 0; }

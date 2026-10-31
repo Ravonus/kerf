@@ -23,6 +23,7 @@ describe('weft check on evals/reference-v3/weft', () => {
       'db.adapter': { drizzle: 'weft:default' },
       'font.build': null,
       'media.build': null,
+      'media.encode': {},
       'media.server': null,
       'pay.rail': {},
       'realtime.bus': 'weft:default:memory',

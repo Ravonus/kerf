@@ -3,6 +3,7 @@
 export const slotTable = [
   { id: 'font.build', version: 1, cardinality: 'one', sides: ['build'], default: null, phase: '2' },
   { id: 'media.build', version: 1, cardinality: 'one', sides: ['build'], default: null, phase: '2' },
+  { id: 'media.encode', version: 1, cardinality: 'keyed', sides: ['build', 'server'], default: null, phase: '3c' },
   { id: 'media.server', version: 1, cardinality: 'one', sides: ['server'], default: null, phase: '3' },
   { id: 'text.measure', version: 1, cardinality: 'one', sides: ['client', 'worker'], default: null, phase: '2 (Surfaces)' },
   { id: 'surface.renderer', version: 1, cardinality: 'keyed', sides: ['client'], default: ['canvas2d', 'webgl2'], phase: '2 (Surfaces)' },

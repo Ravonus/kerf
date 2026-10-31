@@ -1,0 +1,15 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* starter prompts / follow-up suggestions: sweep cards */
+:where([data-scope="suggestions"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+:where([data-scope="suggestions"] button) {
+  all: unset; position: relative; box-sizing: border-box; display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--warp-radius-control);
+  background: var(--warp-color-surface-raised); cursor: pointer; font-size: 13px; line-height: 1.4;
+}
+:where([data-scope="suggestions"] button small) { color: var(--warp-color-text-subtle); font-size: 12px; }
+:where([data-scope="suggestions"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="suggestions"][data-variant="chips"]) { display: flex; flex-wrap: wrap; }
+:where([data-scope="suggestions"][data-variant="chips"] button) { padding: 6px 12px; border-radius: var(--warp-radius-round); }
+:where([data-scope="suggestions"] button, [data-scope="thread-replies"]) { min-block-size: var(--warp-hit-min); }
+:where([data-scope="suggestions"][data-variant="chips"] button) { display: inline-flex; align-items: center; }
+}

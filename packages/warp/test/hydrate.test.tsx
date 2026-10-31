@@ -37,3 +37,20 @@ test.each(Object.keys(cases).filter(n => !n.endsWith('$shape')))('%s: SSR + hydr
   dispose()
   root.remove()
 })
+
+test('focus never leans on an id: a real server counts on, so its ids differ from the client\'s', async () => {
+  resetIds()
+  const root = document.body.appendChild(document.createElement('div'))
+  root.innerHTML = renderToString(() => server.TabsCase())
+  for (const n of root.querySelectorAll('[id]')) n.id = `server-${n.id}`
+  resetIds()
+  const dispose = hydrate(() => client.TabsCase(), root)
+  await flush()
+  const [a, b] = root.querySelectorAll<HTMLElement>('[role="tab"]')
+  a.focus()
+  a.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+  await flush()
+  expect(document.activeElement).toBe(b)
+  dispose()
+  root.remove()
+})

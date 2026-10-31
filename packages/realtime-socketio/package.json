@@ -1,0 +1,37 @@
+{
+  "name": "@weft/realtime-socketio",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./relay": "./src/relay.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "socket.io-client": "4.8.4"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "weft": "*",
+    "@weft/multiplayer": "*",
+    "socket.io": "^4.8.0"
+  },
+  "peerDependenciesMeta": {
+    "socket.io": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft",
+    "@weft/multiplayer": "file:../multiplayer",
+    "socket.io": "4.8.4"
+  }
+}

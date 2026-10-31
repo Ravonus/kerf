@@ -3,6 +3,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
 import weft from 'weft/vite'
@@ -34,9 +35,9 @@ function config({ root, site, preset, port, logLevel, command, nitro: nitroOptio
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
         // `/_weft/og/**` rule would also override the handler's no-cache for a stale `?v=` on demand). Prerender runs
         // before Nitro bundles the server, so rules added when it is done are in the build. (Dev sends no-store.)
-        ...(command === 'build' && { hooks: immutableCards() }),
-        // The media route: sharp's addon, and css-tree (under svgo) reads JSON from its package at runtime.
-        ...(existsSync(join(root, '.weft/slots/media.server.ts')) && { traceDeps: ['css-tree*', 'sharp*'] }),
+        ...(command === 'build' && { hooks: immutableCards(), plugins: [fileURLToPath(new URL('./range.mjs', import.meta.url))] }),
+        // The media route: sharp's addon, and css-tree and csso (under svgo) read JSON from their packages at runtime.
+        ...(existsSync(join(root, '.weft/slots/media.server.ts')) && { traceDeps: ['css-tree*', 'csso*', 'sharp*'] }),
         ...nitroOptions,
       }),
     ],

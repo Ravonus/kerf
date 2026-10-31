@@ -1,0 +1,27 @@
+{
+  "name": "@weft/realtime-redis",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/realtime-redis: the realtime.bus provider for Redis pub/sub",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ioredis": "6.0.0"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "weft": "*"
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  }
+}

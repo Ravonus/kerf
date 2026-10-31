@@ -1,0 +1,102 @@
+import { announce, copyText, mapFlowError } from '@weft/ui-core'
+import { derived, state, type State } from 'weft'
+import { Button } from '../Button'
+import { Checkbox } from '../Choice'
+import { Input } from '../Field'
+import { Modal } from '../Modal'
+import { Glyph } from '../parts'
+import { toast } from '../Toast'
+import { Flow } from './Flow'
+import { G, TextLink } from './kit'
+import '@weft/ui-core/styles/layout/row.css'
+
+export interface MfaSetupProps {
+  open: State<boolean>
+  /** The QR code: the app's SVG or image, with its own label. */
+  /** Brings its own light plate, like QRCode: a code must stay dark on light in every theme. */
+  qr?: any
+  /** The key for "Can't scan?". */
+  secret: string
+  /** Checks the code: throw, or resolve false, when it's wrong. */
+  onVerify: (code: string) => unknown
+  /** Backup codes, shown once verified. */
+  codes: string[]
+  /** Default: saves `backup-codes.txt`. */
+  onDownload?: (codes: string[]) => void
+  onDone?: () => void
+}
+
+const STEPS = { scan: 'Step 1 of 3 · Scan the code with 1Password, Authy or Google Authenticator.', verify: 'Step 2 of 3 · Enter the code the app shows now.', codes: 'Step 3 of 3 · Save your backup codes.' }
+
+function save(codes: string[]) {
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([codes.join('\n')], { type: 'text/plain' }))
+  a.download = 'backup-codes.txt'
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
+/** MFA setup (09 §9, specimen `mfaSetup`): QR and key, confirm a code, backup codes; one dialog over a Flow. Finish waits for "I saved my backup codes". */
+export function MfaSetup({ open, qr, secret, onVerify, codes, onDownload, onDone }: MfaSetupProps) {
+  const step = state<keyof typeof STEPS>('scan')
+  const code = state('')
+  const problem = state<string | undefined>(undefined)
+  const busy = state(false)
+  const saved = state(false)
+  const copy = async (text: string) => { await copyText(document, text); announce(document, 'Copied') }
+  const next = async () => {
+    if (step.value === 'scan') { step.value = 'verify'; return }
+    if (step.value === 'codes') { open.value = false; onDone?.(); return }
+    if (!/^\d{6}$/.test(code.value)) { problem.value = 'Enter the 6 digits from the app.'; return }
+    busy.value = true
+    try {
+      if ((await onVerify(code.value)) === false) problem.value = "That code didn't match. Use the newest one."
+      else { problem.value = undefined; step.value = 'codes' }
+    } catch (e) {
+      const m = mapFlowError(e)
+      if (m.surface === 'toast') toast.show({ title: m.title, description: m.description, tone: 'critical' })
+      else problem.value = m.fields.code ?? m.title
+    } finally { busy.value = false }
+  }
+  const label = derived(() => (step.value === 'codes' ? 'Finish' : 'Continue'))
+  return (
+    <Modal
+      open={open}
+      title="Set up an authenticator app"
+      description={STEPS[step.value]}
+      footer={<>
+        <Button emphasis="frame" data-close="">Cancel</Button>
+        <Button loading={busy.value} disabled={step.value === 'codes' && !saved.value} onClick={next}>{label.value}</Button>
+      </>}
+    >
+      <Flow
+        data-part="mfa"
+        step={step}
+        steps={[
+          { id: 'scan', label: 'scan', render: () => (
+            <div data-scope="stack">
+              {qr}
+              <p>Can't scan? Enter this key: <code>{secret}</code> <TextLink onClick={() => copy(secret)}>Copy key</TextLink></p>
+            </div>
+          ) },
+          { id: 'verify', label: 'confirm', render: () => (
+            <form novalidate onSubmit={(e: SubmitEvent) => { e.preventDefault(); next() }}>
+              <Input label="6-digit code from the app" name="totp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" hint="" error={problem.value} data-autofocus="" onInput={e => (code.value = e.currentTarget.value)} />
+            </form>
+          ) },
+          { id: 'codes', label: 'backup codes', render: () => (
+            <div data-scope="stack">
+              <p>Each code works once if you lose your phone. Store them somewhere safe; you won't see them again.</p>
+              <ol data-part="codes" aria-label="Backup codes">{codes.map(c => <li key={c}><code>{c}</code></li>)}</ol>
+              <div data-scope="row">
+                <Button emphasis="frame" size="sm" onClick={() => (onDownload ?? save)(codes)}>{() => <><Glyph d={G.download} />Download</>}</Button>
+                <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => copy(codes.join('\n'))}>Copy all</Button>
+              </div>
+              <Checkbox onChange={(e: Event) => (saved.value = (e.currentTarget as HTMLInputElement).checked)}>I saved my backup codes</Checkbox>
+            </div>
+          ) },
+        ]}
+      />
+    </Modal>
+  )
+}

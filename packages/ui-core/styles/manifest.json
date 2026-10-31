@@ -3,6 +3,15 @@
   "components/base.css",
   "components/accordion.css"
  ],
+ "activity": [
+  "app/activity.css"
+ ],
+ "activity-feed": [
+  "app/activity-feed.css"
+ ],
+ "agenda": [
+  "app/agenda.css"
+ ],
  "ai-label": [
   "components/link.css",
   "components/logo.css",
@@ -33,17 +42,39 @@
  "announcer": [
   "components/base.css"
  ],
+ "api-key": [
+  "flows/api-key.css"
+ ],
+ "artifact": [
+  "app/artifact.css"
+ ],
+ "assistant": [
+  "app/assistant.css"
+ ],
+ "auth": [
+  "flows/auth.css"
+ ],
+ "auto-track": [
+  "app/auto-track.css"
+ ],
  "autosave": [
   "inputs/pickers.css"
  ],
+ "availability": [
+  "app/availability.css"
+ ],
  "avatar": [
   "data/avatar.css",
+  "app/avatar.css",
   "components/avatar.css",
   "components/persona.css"
  ],
  "avatar-group": [
   "data/avatar-group.css",
   "components/avatar.css"
+ ],
+ "avatar-stack": [
+  "app/avatar-stack.css"
  ],
  "back-to-top": [
   "layout/back-to-top.css"
@@ -52,6 +83,7 @@
   "components/dialog.css"
  ],
  "badge": [
+  "app/badge.css",
   "components/tabs.css",
   "components/badge.css"
  ],
@@ -62,14 +94,26 @@
  "bar-list": [
   "data/bar-list.css"
  ],
+ "bell": [
+  "app/bell.css"
+ ],
  "board": [
   "layout/board.css"
+ ],
+ "booking": [
+  "app/booking.css"
+ ],
+ "branch": [
+  "app/branch.css"
  ],
  "breadcrumb": [
   "layout/breadcrumb.css"
  ],
  "breadcrumbs": [
   "components/breadcrumbs.css"
+ ],
+ "bulk-bar": [
+  "flows/bulk-bar.css"
  ],
  "button": [
   "components/base.css",
@@ -84,9 +128,13 @@
   "components/button-group.css"
  ],
  "calendar": [
+  "app/calendar.css",
   "rich/calendar-grid.css",
   "rich/datetime.css",
   "rich/gap-rows.css"
+ ],
+ "call-controls": [
+  "app/call-controls.css"
  ],
  "callout": [
   "components/alert.css"
@@ -110,6 +158,15 @@
   "inputs/field.css",
   "inputs/choice.css"
  ],
+ "checklist": [
+  "flows/checklist.css"
+ ],
+ "checkout": [
+  "flows/checkout.css"
+ ],
+ "checkpoint": [
+  "app/checkpoint.css"
+ ],
  "chip": [
   "data/chip.css",
   "components/base.css",
@@ -122,9 +179,18 @@
  "chips": [
   "data/chips.css"
  ],
+ "choice": [
+  "flows/choice.css"
+ ],
  "choice-card": [
   "inputs/field.css",
   "inputs/choice.css"
+ ],
+ "cite": [
+  "app/cite.css"
+ ],
+ "click-ripple": [
+  "app/click-ripple.css"
  ],
  "code": [
   "rich/codeblock.css"
@@ -139,14 +205,44 @@
  "color": [
   "inputs/range.css"
  ],
+ "comment-anchor": [
+  "app/comment-anchor.css"
+ ],
+ "comment-thread": [
+  "app/comment-thread.css"
+ ],
+ "commit": [
+  "app/commit.css"
+ ],
  "comparison": [
   "data/comparison.css"
+ ],
+ "composer": [
+  "app/composer.css"
+ ],
+ "confirm": [
+  "flows/confirm.css"
+ ],
+ "confirmation": [
+  "flows/confirmation.css"
+ ],
+ "conflict": [
+  "app/conflict.css"
+ ],
+ "conn": [
+  "flows/conn.css"
  ],
  "consent": [
   "layout/consent.css"
  ],
  "context-menu": [
   "components/menu.css"
+ ],
+ "context-meter": [
+  "app/context-meter.css"
+ ],
+ "conversations": [
+  "app/conversations.css"
  ],
  "copy": [
   "components/copy.css"
@@ -163,6 +259,12 @@
  ],
  "cropper": [
   "inputs/file.css"
+ ],
+ "cursor": [
+  "app/cursor.css"
+ ],
+ "cursors": [
+  "app/cursors.css"
  ],
  "delta": [
   "data/delta.css"
@@ -210,6 +312,9 @@
  "error-summary": [
   "inputs/form.css"
  ],
+ "event-card": [
+  "app/event-card.css"
+ ],
  "fab": [
   "components/fab.css",
   "components/speed-dial.css"
@@ -218,6 +323,7 @@
   "rich/props.css"
  ],
  "field": [
+  "app/field.css",
   "components/dialog.css",
   "inputs/field.css",
   "inputs/text.css",
@@ -242,13 +348,23 @@
   "layout/float-panel.css"
  ],
  "flow": [
-  "data/flow.css"
+  "data/flow.css",
+  "flows/flow.css"
+ ],
+ "follow-flag": [
+  "app/follow-flag.css"
  ],
  "form": [
   "inputs/form.css"
  ],
  "frame": [
   "layout/frame.css"
+ ],
+ "gate": [
+  "flows/gate.css"
+ ],
+ "gate-badge": [
+  "flows/gate-badge.css"
  ],
  "gradient": [
   "inputs/pickers.css"
@@ -283,6 +399,15 @@
  "image": [
   "components/image.css"
  ],
+ "import-map": [
+  "flows/import-map.css"
+ ],
+ "import-preview": [
+  "flows/import-preview.css"
+ ],
+ "inbox": [
+  "app/inbox.css"
+ ],
  "input-group": [
   "inputs/text.css"
  ],
@@ -291,6 +416,15 @@
  ],
  "inspector": [
   "layout/inspector.css"
+ ],
+ "integration": [
+  "flows/integration.css"
+ ],
+ "integrations": [
+  "flows/integrations.css"
+ ],
+ "integrity": [
+  "app/integrity.css"
  ],
  "item": [
   "components/item-row.css"
@@ -303,7 +437,8 @@
   "rich/json-tree.css"
  ],
  "kanban": [
-  "data/kanban.css"
+  "data/kanban.css",
+  "app/kanban.css"
  ],
  "kbd": [
   "components/base.css"
@@ -315,11 +450,20 @@
  "knob-row": [
   "inputs/pickers.css"
  ],
+ "kv": [
+  "rich/key-value.css"
+ ],
  "layers": [
   "data/layers.css"
  ],
  "legend": [
   "data/legend.css"
+ ],
+ "line-item": [
+  "flows/line-item.css"
+ ],
+ "lines": [
+  "flows/lines.css"
  ],
  "link": [
   "components/link.css",
@@ -349,6 +493,9 @@
  "locale": [
   "layout/locale.css"
  ],
+ "lock": [
+  "app/lock.css"
+ ],
  "log": [
   "rich/log.css"
  ],
@@ -368,6 +515,7 @@
   "components/highlight.css"
  ],
  "markdown": [
+  "rich/md-editor.css",
   "rich/markdown.css"
  ],
  "masonry": [
@@ -375,6 +523,9 @@
  ],
  "master-detail": [
   "layout/master-detail.css"
+ ],
+ "md-editor": [
+  "rich/md-editor.css"
  ],
  "menu": [
   "components/base.css",
@@ -391,12 +542,19 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "message": [
+  "app/message.css"
+ ],
  "meta-list": [
   "components/meta-list.css"
  ],
  "meter": [
   "data/meter.css",
+  "flows/meter.css",
   "components/meter.css"
+ ],
+ "model-menu": [
+  "app/model-menu.css"
  ],
  "monthgrid": [
   "rich/monthgrid.css",
@@ -405,10 +563,14 @@
  "navlist": [
   "layout/navlist.css"
  ],
+ "notification": [
+  "app/notification.css"
+ ],
  "number": [
   "components/number.css"
  ],
  "otp": [
+  "flows/otp.css",
   "inputs/field.css",
   "inputs/text.css"
  ],
@@ -431,6 +593,9 @@
  "panel": [
   "data/panel.css"
  ],
+ "pay-frame": [
+  "flows/pay-frame.css"
+ ],
  "persona": [
   "components/persona.css"
  ],
@@ -438,6 +603,18 @@
   "components/base.css",
   "components/pill.css",
   "components/menubar.css"
+ ],
+ "pip": [
+  "app/pip.css"
+ ],
+ "plan": [
+  "app/plan.css"
+ ],
+ "plan-card": [
+  "flows/plan-card.css"
+ ],
+ "plans": [
+  "flows/plans.css"
  ],
  "popconfirm": [
   "components/popconfirm.css"
@@ -458,8 +635,17 @@
  "prefs": [
   "components/theme-panel.css"
  ],
+ "prefs-matrix": [
+  "app/prefs-matrix.css"
+ ],
+ "prejoin": [
+  "app/prejoin.css"
+ ],
  "progress": [
   "components/progress.css"
+ ],
+ "prompt": [
+  "app/prompt.css"
  ],
  "props": [
   "rich/props.css"
@@ -471,8 +657,14 @@
  "pull-refresh": [
   "layout/pull-refresh.css"
  ],
+ "push-ask": [
+  "app/push-ask.css"
+ ],
  "qr": [
   "components/qr-code.css"
+ ],
+ "qty": [
+  "flows/qty.css"
  ],
  "quantity": [
   "inputs/field.css",
@@ -480,6 +672,9 @@
  ],
  "query": [
   "data/query.css"
+ ],
+ "question": [
+  "app/question.css"
  ],
  "quote": [
   "components/quote.css"
@@ -497,6 +692,15 @@
  "rating": [
   "inputs/range.css"
  ],
+ "reactions": [
+  "app/reactions.css"
+ ],
+ "reasoning": [
+  "app/reasoning.css"
+ ],
+ "receipts": [
+  "app/receipts.css"
+ ],
  "relative-time": [
   "components/link.css",
   "components/logo.css",
@@ -512,6 +716,12 @@
  "ring": [
   "data/ring.css"
  ],
+ "roles-matrix": [
+  "flows/roles-matrix.css"
+ ],
+ "room": [
+  "app/room.css"
+ ],
  "route-progress": [
   "layout/route-progress.css"
  ],
@@ -524,7 +734,11 @@
  "rules": [
   "inputs/pickers.css"
  ],
+ "run": [
+  "app/run.css"
+ ],
  "save-bar": [
+  "flows/save-bar.css",
   "inputs/pickers.css"
  ],
  "scroll-area": [
@@ -538,6 +752,9 @@
  ],
  "section-message": [
   "components/section-message.css"
+ ],
+ "section-peers": [
+  "app/section-peers.css"
  ],
  "segmented": [
   "inputs/field.css",
@@ -558,7 +775,17 @@
  "setting": [
   "inputs/form.css"
  ],
+ "setting-row": [
+  "flows/setting-row.css"
+ ],
+ "settings": [
+  "flows/settings.css"
+ ],
+ "settings-section": [
+  "flows/settings-section.css"
+ ],
  "share": [
+  "app/share.css",
   "components/share.css"
  ],
  "sheet": [
@@ -567,6 +794,12 @@
  ],
  "shell": [
   "layout/shell.css"
+ ],
+ "shimmer": [
+  "app/shimmer.css"
+ ],
+ "shortcuts": [
+  "flows/shortcuts.css"
  ],
  "signature": [
   "rich/signature.css",
@@ -588,8 +821,14 @@
   "data/sortable.css",
   "rich/sortable.css"
  ],
+ "sources": [
+  "app/sources.css"
+ ],
  "spacer": [
   "layout/spacer.css"
+ ],
+ "speech": [
+  "app/speech.css"
  ],
  "speed-dial": [
   "components/speed-dial.css"
@@ -603,6 +842,9 @@
  ],
  "split-pane": [
   "layout/split-pane.css"
+ ],
+ "sso": [
+  "flows/sso.css"
  ],
  "stack": [
   "layout/stack.css",
@@ -638,6 +880,12 @@
  "strength": [
   "inputs/text.css"
  ],
+ "suggest": [
+  "app/suggest.css"
+ ],
+ "suggestions": [
+  "app/suggestions.css"
+ ],
  "surface": [
   "layout/surface.css",
   "components/base.css",
@@ -649,6 +897,16 @@
  "switch": [
   "inputs/field.css",
   "inputs/choice.css"
+ ],
+ "sync": [
+  "app/sync.css"
+ ],
+ "synced-form": [
+  "app/synced-form.css"
+ ],
+ "system-page": [
+  "app/system-page.css",
+  "flows/system-page.css"
  ],
  "table": [
   "data/table.css"
@@ -666,10 +924,20 @@
  "tests": [
   "rich/log.css"
  ],
+ "thread": [
+  "app/thread.css"
+ ],
+ "thread-replies": [
+  "app/thread-replies.css"
+ ],
+ "tile": [
+  "app/tile.css"
+ ],
  "timeline": [
   "data/timeline.css"
  ],
  "toast": [
+  "app/toast.css",
   "components/toast.css"
  ],
  "toggle": [
@@ -682,6 +950,9 @@
  "toggletip": [
   "components/toggletip.css"
  ],
+ "tool-call": [
+  "app/tool-call.css"
+ ],
  "toolbar": [
   "components/toolbar.css"
  ],
@@ -693,13 +964,21 @@
   "layout/topnav.css"
  ],
  "tour": [
+  "flows/tour.css",
   "components/tour.css"
  ],
+ "trace": [
+  "app/trace.css"
+ ],
  "tracker": [
-  "data/tracker.css"
+  "data/tracker.css",
+  "flows/tracker.css"
  ],
  "transfer": [
   "inputs/listbox.css"
+ ],
+ "transport": [
+  "app/transport.css"
  ],
  "tree": [
   "data/tree.css",
@@ -714,8 +993,20 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "typing": [
+  "app/typing.css"
+ ],
  "uploads": [
   "inputs/file.css"
+ ],
+ "usage": [
+  "flows/usage.css"
+ ],
+ "versions": [
+  "app/versions.css"
+ ],
+ "viewport-rail": [
+  "app/viewport-rail.css"
  ],
  "virtual": [
   "data/virtual.css"
@@ -729,5 +1020,8 @@
  "xy-pad": [
   "inputs/field.css",
   "inputs/pickers.css"
+ ],
+ "year": [
+  "app/year.css"
  ]
 }

@@ -66,16 +66,21 @@ export interface TableOptions {
   onWidth?: (width: number) => void
 }
 
+/** The stylesheet that hides columns: one rule, so no row re-renders. */
+export const hideRule = (id: string, ids: readonly string[]) => ids.map(c => `#${id} [data-col="${c}"]{display:none}`).join('')
+
 /** Attach to `[data-scope="table"]`, which needs an id: the hide rule is scoped by it. */
 export function table(root: HTMLElement, opts: TableOptions) {
   let o = opts
   const doc = root.ownerDocument
   const win = doc.defaultView!
   const viewport = () => root.querySelector<HTMLElement>('[data-part="viewport"]')
-  const sheet = doc.createElement('style')
-  root.append(sheet)
+  // the binding renders it when columns start hidden, so the server's HTML is right before this runs
+  const given = root.querySelector<HTMLStyleElement>(':scope > style[data-part="hide"]')
+  const sheet = given ?? doc.createElement('style')
+  if (!given) root.append(sheet)
 
-  const hide = (ids: readonly string[]) => { sheet.textContent = ids.map(id => `#${root.id} [data-col="${id}"]{display:none}`).join('') }
+  const hide = (ids: readonly string[]) => { const rule = hideRule(root.id, ids); if (sheet.textContent !== rule) sheet.textContent = rule }
   // the pinned column sits after the select column, whose width only the browser knows
   const pin = () => {
     const cells = root.querySelectorAll<HTMLElement>('[data-pinned="last"]')
@@ -133,7 +138,7 @@ export function table(root: HTMLElement, opts: TableOptions) {
       root.removeEventListener('keydown', onKey)
       root.removeEventListener('pointerdown', onDown)
       sizes?.disconnect()
-      sheet.remove()
+      if (!given) sheet.remove()
     },
   }
 }

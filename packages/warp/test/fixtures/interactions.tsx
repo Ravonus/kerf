@@ -69,4 +69,9 @@ export const cases: Record<keyof typeof C, Case> = {
     see: r => { expect(q(r, '[data-part="menu"]').hidden).toBe(false); expect(document.activeElement!.textContent).toBe('Profile') }, budget: 3, runs: 4,
   },
   ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 5 },
+  PagesCase: { act: r => [...r.querySelectorAll('button')].find(b => b.textContent === '4')!.click(), see: r => expect(q(r, '[aria-current="page"]').textContent).toBe('4'), budget: 7, runs: 15 },
+  PaletteCase: { act: r => q(r, 'button').click(), see: () => expect(document.querySelector('[role="combobox"]')).toBeTruthy(), budget: 6, runs: 24 },
+  CodeCase: { act: r => { const a = q(r, 'textarea') as HTMLTextAreaElement; a.value = 'x'; fireEvent.input(a) }, see: r => expect(q(r, '[data-out]').textContent).toBe('x'), budget: 3, runs: 8 },
+  GridCase: { act: r => fireEvent.keyDown(q(r, 'tbody [tabindex="0"]'), { key: 'ArrowRight' }), see: r => expect(r.querySelectorAll('tbody [tabindex="0"]')).toHaveLength(1), budget: 2, runs: 0 },
+  MarkdownEditorCase: { act: r => { const a = q(r, 'textarea') as HTMLTextAreaElement; a.value = '# x'; fireEvent.input(a) }, see: r => expect(q(r, '[data-scope="markdown"]').textContent).toBe('x'), budget: 2, runs: 6 },
 }

@@ -135,6 +135,15 @@ export function generated(root, loaded) {
   }
   // Build-side providers, for weft/vite to import in Node (it can't load the generated .ts): research 26 §3.1.
   for (const [id, binding] of Object.entries(loaded.slots)) {
+    if (binding && typeof binding === 'object') {
+      const keys = {}
+      for (const [key, name] of Object.entries(binding)) {
+        const side = name && !name.startsWith('weft:default') ? providerRef(loaded, name, id, key)?.sides.build : null
+        if (side) keys[key] = { plugin: name, module: side.module, export: side.export, options: side.options }
+      }
+      if (Object.keys(keys).length) files[`.weft/slots/${id}.build.json`] = `${JSON.stringify({ keys }, null, 2)}\n`
+      continue
+    }
     if (typeof binding !== 'string' || binding.startsWith('weft:default')) continue
     const side = providerRef(loaded, binding, id)?.sides.build
     if (!side) continue

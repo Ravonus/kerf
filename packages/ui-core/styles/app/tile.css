@@ -1,0 +1,48 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* tile: video or avatar; state lives on attributes; nothing loops */
+:where([data-scope="tile"]) {
+  --_ring: transparent;
+  position: relative; isolation: isolate; overflow: hidden; min-block-size: 0; min-inline-size: 0;
+  display: grid; place-items: center; border-radius: var(--warp-radius-surface);
+  background: radial-gradient(120% 90% at 30% 20%, color-mix(in oklab, var(--_hue, var(--warp-color-data-1)) 30%, var(--warp-color-surface-raised)), var(--warp-color-surface-sunken));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--warp-color-text) 8%, transparent);
+  cursor: pointer;
+}
+:where([data-scope="tile"] [data-scope="avatar"]) { --_s: clamp(40px, 28cqi, 88px); font-size: calc(var(--_s) * 0.36); }
+:where([data-scope="tile"]) { container-type: size; }
+:where([data-scope="tile"] [data-part="name"]) {
+  position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 2; max-inline-size: calc(100% - 16px);
+  display: inline-flex; align-items: center; gap: 6px; block-size: 24px; padding-inline: 8px; border-radius: var(--warp-radius-control);
+  background: color-mix(in oklab, var(--warp-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--warp-blur-overlay));
+  font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+:where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
+:where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }
+:where([data-scope="tile"] [data-part="video"] > :is(video, img, canvas)) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+:where([data-scope="tile"] [data-part="level"]) { color: var(--warp-color-sweep); }
+:where([data-scope="tile"] [data-part="flags"]) { position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 2; display: flex; gap: 4px; }
+:where([data-scope="tile"] [data-part="flag"]) {
+  display: inline-grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: var(--warp-radius-control);
+  background: color-mix(in oklab, var(--warp-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--warp-blur-overlay));
+}
+:where([data-scope="tile"] [data-part="flag"][data-tone]) { color: var(--_text); }
+:where([data-scope="tile"] [data-part="flag"] svg[data-icon]) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="tile"][data-hand] [data-part="flag"][data-kind="hand"]) { background: var(--warp-color-highlight-solid); color: var(--warp-color-highlight-on-solid); animation: warp-bump var(--warp-duration-slow) var(--warp-ease-pop); }
+/* speaking: an accent ring drawn by the sweep (in when speaking starts, out when it stops) */
+:where([data-scope="tile"])::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 calc(var(--warp-border-emphasis) + 1px) var(--warp-color-sweep);
+  clip-path: inset(0 100% 0 0 round var(--warp-radius-surface));
+  transition: clip-path calc(var(--warp-sweep-duration) * 0.6) var(--warp-sweep-ease);
+}
+:where([data-scope="tile"][data-speaking])::after { clip-path: inset(0 0 0 0 round var(--warp-radius-surface)); }
+:where([data-scope="tile"][data-speaking-out])::after { clip-path: inset(0 0 0 100% round var(--warp-radius-surface)); }
+:where([data-scope="tile"][data-network="poor"]) { box-shadow: inset 0 0 0 1px var(--warp-color-caution-border); }
+:where([data-scope="tile"][data-network="poor"] [data-scope="avatar"]) { filter: saturate(0.6); }
+:where([data-scope="tile"][data-cam="off"] [data-part="video"]) { display: none; }
+@media (forced-colors: active) {
+:where([data-scope="tile"][data-speaking]) { outline: 3px solid Highlight; outline-offset: -3px; }
+}
+@keyframes warp-bump { 40% { scale: calc(1 + 0.18 * var(--warp-motion-scale)); } }
+}

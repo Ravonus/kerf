@@ -1,0 +1,6 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* AutoTrack (MultiplayerAutoTrack): follow whoever is presenting; any manual scroll pauses it */
+:where([data-scope="auto-track"]) { display: inline-flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="auto-track"][data-state="paused"]) { color: var(--warp-color-caution-text); }
+}

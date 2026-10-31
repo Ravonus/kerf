@@ -113,7 +113,7 @@ it('media() validates options as P115 and provides media.build with the M namesp
   expect(p.provides).toEqual(['media.build', 'media.server'])
   const m = p.contribute({ command: 'check', mode: 'development', root: '' })
   expect(m.provides[0].sides.build.options).toEqual({ formats: ['avif', 'webp'], widths: [400, 800] })
-  expect(m.diagnostics.map(d => d.code)).toEqual([...Array.from({ length: 13 }, (_, i) => `M${String(i + 1).padStart(3, '0')}`), 'M016', 'M017', 'M018'])
+  expect(m.diagnostics.map(d => d.code)).toEqual(Array.from({ length: 19 }, (_, i) => `M${String(i + 1).padStart(3, '0')}`))
   expect(p.namespace).toBe('M')
   expect(() => media({ formats: ['jxl'] })).toThrow(expect.objectContaining({ code: 'P115', path: 'formats.0' }))
   expect(() => media({ quality: { target: 120 } })).toThrow(expect.objectContaining({ code: 'P115', path: 'quality.target' }))
