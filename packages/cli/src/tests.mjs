@@ -126,6 +126,8 @@ export function testCall(call) {
   if (!ts.isIdentifier(n) || !testRoots.has(n.text)) return null
   const root = n.text
   const fn = [...call.arguments].reverse().find(a => ts.isArrowFunction(a) || ts.isFunctionExpression(a))
+  // `fit` with no test body is someone's function (weft/text's), not a focused test
+  if (root === 'fit' && !fn) return null
   return { root, rootNode: n, mods, fn, suite: suiteRoots.has(root), call }
 }
 
