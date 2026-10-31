@@ -333,7 +333,7 @@ function MonthGrid({ c }: { c: Ctx }) {
   const moreOpen = state(false)
   const moreAt = state<HTMLElement | undefined>(undefined)
   let panel: HTMLDivElement | undefined
-  use(popover, () => panel, () => ({ open: moreOpen.value, trigger: moreAt.value!, side: 'bottom', align: 'start', onClose: () => (moreOpen.value = false) }))
+  use(popover, () => panel, () => ({ open: moreOpen.value, trigger: moreAt.value!, side: 'bottom' as const, align: 'start' as const, onClose: () => (moreOpen.value = false) }))
   const openDay = (iso: string) => { c.date.set(iso); c.view.set('day'); c.say(`Day view, ${fmt(iso, { dateStyle: 'full' }, c.env.locale.value)}`) }
   const onKey = (e: KeyboardEvent) => {
     const cell = (e.target as Element).closest<HTMLElement>('[role="gridcell"]')
@@ -508,7 +508,7 @@ function ZoneChip({ c }: { c: Ctx }) {
   const built = state(false)
   let chip: HTMLButtonElement | undefined
   let panel: HTMLDivElement | undefined
-  use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom', align: 'end', onClose: () => (open.value = false) }))
+  use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <>
       <button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} title={`Times shown in ${c.zone.value}`} onClick={() => { built.value = true; open.value = !open.value }}><Icon name="globe" />{c.zoneLabel.value}</button>

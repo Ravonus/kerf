@@ -195,7 +195,9 @@ async function pixelContrast(page, i) {
     return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
   }, sel)
   if (!info || info.a < 0.05) return null
-  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } [data-scope="calendar"] [data-part="now"] { visibility: hidden !important; }` })
+  // what passes over or beside text without being behind it: the now line, peers' cursors and flags, a plan's radio dot
+  const passing = `[data-scope="calendar"] [data-part="now"], [data-scope="cursor"]:not(:has(${sel})), [data-peer-selection]::before, [data-scope="plan-card"] [data-part="radio"] { visibility: hidden !important; } [data-peer-selection] { outline-color: transparent !important; }`
+  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } ${passing}` })
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })

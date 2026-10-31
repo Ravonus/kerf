@@ -82,7 +82,7 @@ function QuickAdd({ column, onAdd }: { column: KanbanColumn; onAdd: (title: stri
 export function Kanban({ columns, onMove, onAdd, label = 'Board' }: { columns: State<KanbanColumn[]> | KanbanColumn[]; onMove?: (id: string, column: string, index: number) => void; onAdd?: (column: string, title: string) => void; label?: string }) {
   const hint = uid('kanban')
   const own = state(untrack(() => (columns instanceof Box ? [] : columns)))
-  const board = derived(() => (columns instanceof Box ? columns.value : own.value))
+  const board = derived<KanbanColumn[]>(() => (columns instanceof Box ? columns.value : own.value))
   const adds = derived(() => onAdd !== undefined)
   const moving = state<KanbanCardData | null>(null)
   const sheetOpen = state(false)
