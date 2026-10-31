@@ -118,6 +118,44 @@ function dropKeyframes(css, rest, has) {
   return print(walk(parse(css)))
 }
 
+/**
+ * `:where(A B)` to `:where(A) :where(B)`: the same selector at the same specificity, but a browser files a rule by its last
+ * compound and can't see into a complex `:where()`, so every element on the page is tested against it. warp wraps all of
+ * its rules, and that was most of its style time. Each piece stays wrapped: `:where()` forgives an unknown pseudo-class
+ * and a plain selector list doesn't.
+ */
+export function unnest(selector) {
+  return split(selector, ',').flatMap(one => {
+    const s = one.trim()
+    if (!s.startsWith(':where(')) return [s]
+    const end = closing(s, 6), tail = s.slice(end + 1)
+    return split(s.slice(7, end), ',').map(c => compounds(c.trim()).map(p => (/^[ >+~]$/.test(p) ? p : `:where(${p})`)).join('') + tail)
+  }).join(',')
+}
+
+/** A complex selector as compounds and combinators, in order. */
+function compounds(selector) {
+  const out = []
+  let depth = 0, quote = '', cur = ''
+  for (const c of selector.replace(/\s*([>+~])\s*/g, '$1')) {
+    if (quote) { cur += c; if (c === quote) quote = ''; continue }
+    if (c === '"' || c === "'") quote = c
+    else if (c === '(' || c === '[') depth++
+    else if (c === ')' || c === ']') depth--
+    if (depth === 0 && ' >+~'.includes(c) && cur) { out.push(cur, c); cur = '' } else cur += c
+  }
+  return cur ? [...out, cur] : out
+}
+
+function flatten(css) {
+  const walk = nodes => print(nodes.map(n => {
+    if (n.body === undefined) return n
+    if (GROUPING.test(n.head)) return { head: n.head, body: walk(parse(n.body)) }
+    return n.head.startsWith('@') ? n : { head: unnest(n.head), body: n.body }
+  }))
+  return walk(parse(css))
+}
+
 const ANIMATED = /^@(?:-\w+-)?keyframes\b/
 
 /** The words of built JS or HTML, in the form `purge` reads. A word ending in `-` came from a template: it covers a prefix. */
@@ -143,5 +181,5 @@ export function purge(sheets, found) {
     out = next
   }
   const rest = out.map(css => print(parse(css).filter(n => !ANIMATED.test(n.head)))).join('')
-  return out.map(css => dropKeyframes(css, rest, has))
+  return out.map(css => flatten(dropKeyframes(css, rest, has)))
 }

@@ -38,8 +38,8 @@ export function shell(root: HTMLElement, opts: ShellOptions) {
     if (now !== wide) o.onWide((wide = now))
   }
   const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(measure) : undefined
-  sizes?.observe(root)
-  measure()
+  sizes?.observe(root) // reports before first paint, without forcing a layout of its own
+  if (!sizes) measure()
 
   // the browser shrank only the visual viewport (Safari ignores interactive-widget): the keyboard is up
   const vv = win.visualViewport

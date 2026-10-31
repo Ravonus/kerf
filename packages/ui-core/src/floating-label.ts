@@ -111,14 +111,17 @@ export function floatingLabel(field: HTMLElement) {
   label.addEventListener('transitionend', onSize)
   input?.addEventListener('input', fill)
   input?.addEventListener('change', fill)
-  let frame = win.requestAnimationFrame(measure)
-  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) }) : null
+  // only felt once the label moves, so the first read waits until after paint rather than force a layout before it
+  let wait = 0
+  let frame = win.requestAnimationFrame(() => { wait = win.setTimeout(measure) })
+  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { win.clearTimeout(wait); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) }) : null
   resize?.observe(box)
   return {
     /** Re-measure (after a dial change) and re-read the value (after a programmatic write). */
-    update() { fill(); measure() },
+    update() { fill(); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) },
     destroy() {
       win.cancelAnimationFrame(frame)
+      win.clearTimeout(wait)
       resize?.disconnect()
       label.removeEventListener('transitionend', onSize)
       input?.removeEventListener('input', fill)

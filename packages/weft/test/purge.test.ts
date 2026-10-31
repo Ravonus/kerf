@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { parse, purge, reachable, words } from '../node/purge.mjs'
+import { parse, purge, reachable, unnest, words } from '../node/purge.mjs'
 
 const has = (...w: string[]) => words([w.join(' ')])
 const out = (css: string, ...w: string[]) => purge([css], has(...w))[0]
@@ -9,6 +9,7 @@ test('a rule keyed on a value no build file mentions goes; one it mentions stays
 })
 
 test('a selector list loses only its dead members', () => {
+  expect(out(':where([data-scope="a"],[data-scope="b"]){color:red}', 'b')).toBe(':where([data-scope="a"]),:where([data-scope="b"]){color:red}')
   expect(out('[data-scope="a"],[data-scope="b"]{color:red}', 'b')).toBe('[data-scope="b"]{color:red}')
 })
 
@@ -60,4 +61,17 @@ test('braces and semicolons inside strings and url() do not split a rule', () =>
   const css = 'a[title="}{;"]{background:url(data:image/svg+xml;base64,AAA)}'
   expect(parse(css)).toHaveLength(1)
   expect(out(css)).toBe(css)
+})
+
+test('unnest moves each compound into its own :where, so a browser can file the rule by its last one', () => {
+  expect(unnest(':where([a] [b]>c+d~e)')).toBe(':where([a]) :where([b])>:where(c)+:where(d)~:where(e)')
+  expect(unnest(':where(a,b c)')).toBe(':where(a),:where(b) :where(c)')
+})
+
+test('unnest keeps pseudo-elements, brackets and anything else it does not understand', () => {
+  expect(unnest(':where(a b)::before')).toBe(':where(a) :where(b)::before')
+  expect(unnest(':where([t="x y"]:not(a b) c)')).toBe(':where([t="x y"]:not(a b)) :where(c)')
+  expect(unnest(':where(a b):hover')).toBe(':where(a) :where(b):hover')
+  expect(unnest(':where(a,b):has(c) d')).toBe(':where(a):has(c) d,:where(b):has(c) d')
+  expect(unnest('a b')).toBe('a b')
 })

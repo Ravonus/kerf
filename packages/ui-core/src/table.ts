@@ -75,8 +75,10 @@ export function table(root: HTMLElement, opts: TableOptions) {
   const hide = (ids: readonly string[]) => { sheet.textContent = ids.map(id => `#${root.id} [data-col="${id}"]{display:none}`).join('') }
   // the pinned column sits after the select column, whose width only the browser knows
   const pin = () => {
+    const cells = root.querySelectorAll<HTMLElement>('[data-pinned="last"]')
+    if (!cells.length) return // the width read forces a style and layout pass
     const w = root.querySelector<HTMLElement>('thead [data-part="select"]')?.offsetWidth ?? 0
-    for (const c of root.querySelectorAll<HTMLElement>('[data-pinned="last"]')) c.style.setProperty('--_pin-x', `${w}px`)
+    for (const c of cells) c.style.setProperty('--_pin-x', `${w}px`)
   }
   const value = (handle: Element) => handle.setAttribute('aria-valuenow', String((handle.closest('th') as HTMLElement).offsetWidth))
   const sync = () => { pin(); for (const h of root.querySelectorAll('[data-part="resize"]')) value(h) }
