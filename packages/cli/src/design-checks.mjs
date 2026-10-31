@@ -1,7 +1,7 @@
 // The design D-codes in `weft check` (PLAN §6, research 36). Two families:
 //
 //   D001–D005  off-system values and hand-rolled layout. Only where the app has warp's tokens to use instead (`@weft/warp`
-//              or `@weft/ui-core` in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
+//              in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
 //   D011, D030–D039  contrast and accessibility, in every app.
 //
 // An autofix is offered only when it keeps the meaning: a length that is exactly a scale step, a tag swap, a Tailwind
@@ -190,7 +190,7 @@ export function hasTokens(root) {
   if (!existsSync(file)) return false
   try {
     const { dependencies, devDependencies } = JSON.parse(readFileSync(file, 'utf8'))
-    return ['@weft/warp', '@weft/ui-core'].some(n => n in { ...dependencies, ...devDependencies })
+    return '@weft/warp' in { ...dependencies, ...devDependencies }
   } catch {
     return false
   }

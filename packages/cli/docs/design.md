@@ -55,7 +55,7 @@ own, use a style group (`weft docs style`), not a class list.
 `weft check` reports them. `weft fix` applies the safe autofixes. A fix that changes an element is a suggested edit in
 `fix.edits`; a raw colour has none, since a token follows the theme and the raw value didn't.
 
-Where the app has warp's tokens (`@weft/warp` or `@weft/ui-core` in package.json):
+Where the app has warp's tokens (`@weft/warp` in package.json; headless `@weft/ui-core` ships none):
 
 | Code | Catches | Fix |
 |---|---|---|
