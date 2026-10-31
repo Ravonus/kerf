@@ -1,0 +1,161 @@
+/*
+ * Lemon motion. CSS only, so the rig stays a Server Component.
+ * Rules (research brief): idle breathing ≈3% over 4s, blink every ~5s,
+ * squash & stretch on the hop, gestures < 600ms, ease-out-back.
+ * Never put a CSS-animated class on an element that also has a transform attribute.
+ */
+
+.lemon {
+  overflow: visible;
+  display: block;
+}
+
+.lemon-breathe {
+  transform-box: view-box;
+  transform-origin: 100px 200px;
+  animation: lemon-breathe 4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.lemon-bob {
+  transform-box: view-box;
+  transform-origin: 100px 160px;
+  animation: lemon-bob 4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: -0.35s;
+}
+.lemon-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lemon-blink var(--lemon-blink-dur, 5200ms) linear infinite;
+  animation-delay: var(--lemon-blink-delay, 0ms);
+}
+.lemon-wave {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  animation: lemon-wave 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+.lemon-hop {
+  transform-box: view-box;
+  transform-origin: 100px 247px;
+  animation: lemon-hop 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.lemon-shadow-hop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lemon-shadow-hop 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.lemon-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lemon-twinkle 1.6s ease-in-out infinite;
+}
+.lemon-face {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  animation: lemon-face 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes lemon-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.012, 1.03);
+  }
+}
+@keyframes lemon-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-1.6px) rotate(-0.8deg);
+  }
+}
+@keyframes lemon-blink {
+  0%,
+  91%,
+  95%,
+  100% {
+    transform: scaleY(1);
+  }
+  93% {
+    transform: scaleY(0.08);
+  }
+}
+@keyframes lemon-wave {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+@keyframes lemon-hop {
+  0%,
+  62%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  10% {
+    transform: translateY(0) scale(1.07, 0.9); /* anticipation squash */
+  }
+  24% {
+    transform: translateY(-20px) scale(0.95, 1.07); /* stretch */
+  }
+  34% {
+    transform: translateY(-24px) scale(1, 1);
+  }
+  46% {
+    transform: translateY(0) scale(1.06, 0.92); /* land squash */
+  }
+  54% {
+    transform: translateY(0) scale(0.98, 1.03);
+  }
+}
+@keyframes lemon-shadow-hop {
+  0%,
+  62%,
+  100% {
+    transform: scale(1);
+    opacity: 0.13;
+  }
+  10% {
+    transform: scale(1.08);
+  }
+  34% {
+    transform: scale(0.7);
+    opacity: 0.07;
+  }
+  46% {
+    transform: scale(1.1);
+  }
+}
+@keyframes lemon-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(0.7) rotate(20deg);
+  }
+}
+@keyframes lemon-face {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.lemon[data-animated="false"] *,
+.lemon[data-animated="false"] {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lemon,
+  .lemon * {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "label": "Lemonstand",
+  "note": "A real marketing site: animated hero, audience tabs, coach demo, two forms, two legal pages. No page reads the database while rendering.",
+  "pages": [
+    { "path": "/", "probe": { "click": "[role=tab]:nth-of-type(2)", "watch": "[role=tablist]" } },
+    "/privacy",
+    "/terms"
+  ],
+  "variants": {
+    "next": { "path": "~/dev/lemonstand-landing" },
+    "weft": { "path": "~/dev/lemonstand-weft" },
+    "solid": { "path": "solid" }
+  }
+}

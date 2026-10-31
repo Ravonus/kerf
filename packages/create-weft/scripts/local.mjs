@@ -4,7 +4,8 @@
 //
 //   node packages/create-weft/scripts/local.mjs pack                       build what's stale and pack
 //   node packages/create-weft/scripts/local.mjs new <dir> [create-weft flags]    that, then an app wired to the tarballs
-//   node packages/create-weft/scripts/local.mjs refresh [dir]              that, then put the new tarballs in an app
+//   node packages/create-weft/scripts/local.mjs refresh [dir] [--packed]   that, then put the new tarballs in an app
+//                                                                          (--packed: the store's as they are, no pack)
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -63,7 +64,7 @@ function forget(app, tarballs) {
   for (const stale of ['.package-lock.json', '.vite']) rmSync(join(app, 'node_modules', stale), { recursive: true, force: true })
 }
 
-function refresh(dir) {
+function refresh(dir, packed) {
   const app = resolve(dir)
   const file = join(app, 'package.json')
   if (!existsSync(file)) throw new Error(`${app} has no package.json`)
@@ -71,7 +72,7 @@ function refresh(dir) {
   if (other) throw new Error(`${app} has ${other}; this works with npm only`)
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   if (!pkg.dependencies?.weft && !pkg.devDependencies?.weft) throw new Error(`${app} doesn't depend on weft; start one with \`local.mjs new\``)
-  const tarballs = pack()
+  const tarballs = packed ? JSON.parse(readFileSync(join(store, 'tarballs.json'), 'utf8')) : pack()
   forget(app, tarballs)
   writeFileSync(file, JSON.stringify(pin(pkg, tarballs), null, 2))
   run('npm', ['install', '--silent'], app)
@@ -83,13 +84,13 @@ try {
   if (Number(process.versions.node.split('.')[0]) < 26) throw new Error(`weft needs Node 26; this is ${process.version}`)
   mkdirSync(store, { recursive: true })
   if (command === 'pack') pack()
-  else if (command === 'refresh') refresh(rest[0] ?? '.')
+  else if (command === 'refresh') refresh(rest.find(a => !a.startsWith('-')) ?? '.', rest.includes('--packed'))
   else if (command === 'new' && rest[0] && !rest[0].startsWith('-')) {
     pack()
     // Last, so they win: the tarballs are wired up through npm's overrides, and the app is no use uninstalled.
     run(process.execPath, [fileURLToPath(new URL('../bin/create-weft.mjs', import.meta.url)), ...rest, '--tarballs', store, '--pm', 'npm', '--install'])
   } else {
-    console.error('usage: local.mjs pack | new <dir> [create-weft flags] | refresh [dir]')
+    console.error('usage: local.mjs pack | new <dir> [create-weft flags] | refresh [dir] [--packed]')
     process.exit(1)
   }
 } catch (e) {
