@@ -315,6 +315,9 @@
  "knob-row": [
   "inputs/pickers.css"
  ],
+ "kv": [
+  "rich/key-value.css"
+ ],
  "layers": [
   "data/layers.css"
  ],
@@ -368,6 +371,7 @@
   "components/highlight.css"
  ],
  "markdown": [
+  "rich/md-editor.css",
   "rich/markdown.css"
  ],
  "masonry": [
@@ -375,6 +379,9 @@
  ],
  "master-detail": [
   "layout/master-detail.css"
+ ],
+ "md-editor": [
+  "rich/md-editor.css"
  ],
  "menu": [
   "components/base.css",

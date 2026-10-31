@@ -819,6 +819,8 @@
 :where(mark[data-part="hit"]) { background: color-mix(in oklab, var(--warp-color-caution-solid) 28%, transparent); color: inherit; border-radius: 2px; padding-inline: 1px; }
 
 /* grid: header drag-reorder, group rows, aggregate rows, filter row ---------- */
+:where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(td, th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="table"] tbody [aria-selected="true"]) { --_cell-bg: var(--warp-color-accent-soft); background: var(--warp-color-accent-soft); }
 :where([data-scope="table"] th[draggable="true"]) { cursor: grab; }
 :where([data-scope="table"] th[data-drop-before])::before,
 :where([data-scope="table"] th[data-drop-after])::before {
@@ -882,7 +884,7 @@
 }
 
 /* pagination bar -------------------------------------------------------------- */
-:where([data-scope="pagination"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="pagination"]) { container-type: inline-size; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="pagination"] ol) { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; }
 :where([data-scope="pagination"] [data-part="page"]) {
   all: unset; position: relative; box-sizing: border-box; display: grid; place-items: center; min-inline-size: var(--warp-control-sm); block-size: var(--warp-control-sm);
@@ -895,6 +897,18 @@
 :where([data-scope="pagination"] [data-part="page"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
 :where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
 :where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
+:where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; }
+/* sm native controls: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
+:where([data-scope="pagination"] :is(select, [data-part="jump"])) {
+  --_band: max(0px, calc((var(--warp-hit-min) - var(--warp-control-sm)) / 2));
+  block-size: calc(var(--warp-control-sm) + 2 * var(--_band)); margin-block: calc(-1 * var(--_band));
+  border: 0 solid transparent; border-block-width: var(--_band); background-clip: padding-box;
+  box-shadow: inset 0 0 0 1px var(--warp-color-border-control); border-radius: var(--warp-radius-control) / calc(var(--warp-radius-control) + var(--_band));
+  background-color: var(--warp-color-surface-raised); color: var(--warp-color-text); font: 500 max(12px, var(--warp-input-font-min)) var(--warp-text-body-font);
+}
+:where([data-scope="pagination"] select) { padding-inline: 9px; }
+:where([data-scope="pagination"] [data-part="jump"]) { inline-size: 56px; padding-inline: 9px; box-sizing: border-box; }
+:where([data-scope="pagination"] :is(select, [data-part="jump"]):focus-visible) { outline: 2px solid var(--warp-color-focus); }
 @container (max-width: 520px) { :where([data-scope="pagination"] [data-part="page"]:not([aria-current], [data-edge])) { display: none; } :where([data-scope="pagination"] [data-part="gap"]) { display: none; } }
 :where([data-scope="load-more"]) { display: grid; justify-items: center; gap: 6px; padding-block: 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 

@@ -464,3 +464,5 @@ render in the same frame height.
   (`--warp-color-sweep-base: border`), so the "sweep vs resting border" pair drops to 1.5–2.96. The sweep is still ≥ 3:1
   against the surface it draws on. Static panels need no boundary under WCAG 1.4.11, and interactive cards also carry
   a surface fill. If foundations wants the pair kept, delete that one rule and panels rest on the ink border.
+
+**As built, DataGrid and pagination** (`packages/ui-core/src/grid.ts`, `packages/warp/src/{DataGrid,Pagination}.tsx`). Where the build differs from this spec: a tree is `tree={{ kids, load, branch, rollup }}`, not one `children` key, so eager and lazy rows share a prop. There is no row virtualisation yet. A tree's footer aggregates leaves once each, open or not. `Table` takes `hiddenColumns` and writes the rule into the server HTML, so a column never flashes; its own footer keeps Previous and Next to stay small, while `PaginationBar` is the full bar.

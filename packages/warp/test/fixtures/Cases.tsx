@@ -156,3 +156,4 @@ const shellNav = [{ label: 'Workspace', items: [{ id: 'orders', label: 'Orders',
 export function ShellCase() {
   return <Shell brand={{ name: 'Loom' }} title="Orders" crumbs={[{ label: 'Home', href: '#' }, { label: 'Orders' }]} nav={shellNav} current="orders" island label="Orders" account={{ name: 'Ana Ruiz', initials: 'AR', items: [{ label: 'Profile', href: '#' }, 'separator', { label: 'Sign out', tone: 'critical' }] }}><h1>Orders</h1></Shell>
 }
+export { PagesCase, PaletteCase, CodeCase, GridCase, MarkdownEditorCase } from './Surfaces'

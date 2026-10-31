@@ -31,6 +31,9 @@ export interface FieldProps {
   [attr: string]: any
 }
 
+/** FieldProps for a component with its own value type: Omit alone would also drop what the index signature hides. */
+export type FieldShell = Omit<FieldProps, 'value' | 'defaultValue'> & { label: string }
+
 // `invalid` is a getter and `rest` the live props: the control is made once and its attributes update in place
 type Control = (p: { id: string; describedby?: string; readonly invalid: boolean; rest: Record<string, any> }) => any
 
@@ -123,7 +126,7 @@ export function Textarea({ placeholder, rows = 3, ...props }: FieldProps & { pla
     <Field
       {...props}
       control={({ id, describedby, invalid, rest }) => (
-        <textarea data-part="input" id={id} rows={rows} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} {...rest} />
+        <textarea data-part="input" id={id} rows={rows} enterkeyhint="enter" placeholder={placeholder ?? ' '} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} {...rest}>{untrack(() => rest.value)}</textarea>
       )}
     />
   )
