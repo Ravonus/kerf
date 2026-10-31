@@ -1,6 +1,6 @@
 import { state } from 'weft'
 import { Badge, Button, Table, type Column } from '@weft/warp'
-import { money, projects, type Project } from '../../shared/data'
+import { money, pageSize, projects, type Project } from '../../shared/data'
 
 const LABEL = 'Projects'
 const tones = { Live: 'positive', Paused: 'caution', Draft: 'neutral' } as const
@@ -19,7 +19,7 @@ export function Screen() {
   return (
     <>
       <h1>{LABEL}</h1>
-      <Table caption={LABEL} rows={rows} columns={columns} filter="Filter projects" selection details="inline" page={{ size: 20 }}
+      <Table caption={LABEL} rows={rows} columns={columns} filter="Filter projects" selection details="inline" page={{ size: pageSize }}
         bulk={keys => <Button emphasis="ghost">Archive {keys.length}</Button>} />
     </>
   )

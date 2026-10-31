@@ -6,7 +6,7 @@ import {
   filterFn_includesString, globalFilteringFeature, columnFilteringFeature, rowExpandingFeature, rowPaginationFeature, rowSelectionFeature, rowSortingFeature,
   sortFn_alphanumeric, tableFeatures, useTable,
 } from '@tanstack/react-table'
-import { money, projects, type Project } from '../../shared/data'
+import { money, pageSize, projects, type Project } from '../../shared/data'
 
 const features = tableFeatures({
   columnFilteringFeature, columnVisibilityFeature, globalFilteringFeature, rowExpandingFeature, rowPaginationFeature, rowSelectionFeature, rowSortingFeature,
@@ -26,7 +26,7 @@ function Detail({ row, open, span }: { row: Project; open: boolean; span: number
 export function DataTable({ label, columns }: { label: string; columns: any }) {
   const [data, setData] = useState(projects)
   ;(window as any).__tick = () => setData(d => d.map(r => (r.id === 'p0' ? { ...r, budget: r.budget + 1 } : r)))
-  const table = useTable({ features, columns, data, getRowId: (r: Project) => r.id, getRowCanExpand: () => true, globalFilterFn: 'includesString', initialState: { pagination: { pageIndex: 0, pageSize: 20 } } } as any) as any
+  const table = useTable({ features, columns, data, getRowId: (r: Project) => r.id, getRowCanExpand: () => true, globalFilterFn: 'includesString', initialState: { pagination: { pageIndex: 0, pageSize } } } as any) as any
   const picked = Object.keys(table.state.rowSelection ?? {}).length
   const pag = table.state.pagination
   const count = table.getFilteredRowModel().rows.length

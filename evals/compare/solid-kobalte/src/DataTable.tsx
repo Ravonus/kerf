@@ -6,7 +6,7 @@ import {
   filterFn_includesString, flexRender, globalFilteringFeature, rowExpandingFeature, rowPaginationFeature, rowSelectionFeature, rowSortingFeature,
   sortFn_alphanumeric, tableFeatures,
 } from '@tanstack/solid-table'
-import { money, projects, type Project } from '../../shared/data'
+import { money, pageSize, projects, type Project } from '../../shared/data'
 
 const features = tableFeatures({
   columnFilteringFeature, columnVisibilityFeature, globalFilteringFeature, rowExpandingFeature, rowPaginationFeature, rowSelectionFeature, rowSortingFeature,
@@ -28,7 +28,7 @@ const Box = (p: { label: string; checked: boolean; onChange: (v: boolean) => voi
 export function DataTable(props: { label: string; columns: any }) {
   const [data, setData] = createSignal(projects)
   ;(window as any).__tick = () => setData(d => d.map(r => (r.id === 'p0' ? { ...r, budget: r.budget + 1 } : r)))
-  const table = createTable({ features, columns: props.columns, get data() { return data() }, getRowId: (r: Project) => r.id, getRowCanExpand: () => true, globalFilterFn: 'includesString', initialState: { pagination: { pageIndex: 0, pageSize: 20 } } } as any) as any
+  const table = createTable({ features, columns: props.columns, get data() { return data() }, getRowId: (r: Project) => r.id, getRowCanExpand: () => true, globalFilterFn: 'includesString', initialState: { pagination: { pageIndex: 0, pageSize } } } as any) as any
   const picked = () => Object.keys(table.atoms.rowSelection.get() ?? {}).length
   const count = () => table.getFilteredRowModel().rows.length
   const pag = () => table.atoms.pagination.get()

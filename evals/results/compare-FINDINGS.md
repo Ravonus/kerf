@@ -1,4 +1,7 @@
-# Same dashboard, four stacks (2026-10-30)
+# Stack comparison (2026-10-30)
+
+The tables below cover the first four stacks. `compare.html` charts all of them from the latest run; the section on rows and
+first paint adds React + Zustand and scale.
 
 From `evals/compare` (see its README; raw numbers in `results.json`). One screen, a shell and a 200-row table, one data set,
 latest stable versions, plain `vite build`. The same nine-step script passed on all four. Timing is headless Chromium under 4x
@@ -45,8 +48,8 @@ JS + CSS br as the app grows (each screen has its own columns, words, state and 
 - Size gap is fixed, not proportional: every stack adds about 0.1 KB br per screen, and weft is slightly the most (0.104 vs
   0.089–0.099). The ratio narrows with app size; the KB saved does not.
 - Solid is the close one: 20% larger on the wire, and it paints faster here. warp's CSS is the difference.
-- warp costs more DOM: 615 elements and 292 comment anchors against Radix's 295 elements. That is why weft does the most
-  main-thread work among the three small stacks despite running the least script.
+- warp costs more DOM: 615 elements and 292 comment anchors against Radix's 295 elements. See the section below for what
+  that does and doesn't cost.
 - A live cell is where the MUI and the Solid + TanStack builds pay: TanStack's row model hands Solid new rows, so `For` rebuilds them.
 
 ## Limits
@@ -62,3 +65,25 @@ JS + CSS br as the app grows (each screen has its own columns, words, state and 
 `weft/vite` now drops CSS no build file can reach (`packages/weft/node/purge.mjs`). This dashboard: 23.3 → 19.2 KB br (18%).
 v3 shop: 15.6 → 12.7 KB. All 27 components on a page: 26.8 → 23.4 KB, which brings JS + CSS under the 50 KB ceiling at 49.7 KB.
 Most of warp's CSS was already tree-shaken per component, so what remains is mainly tokens and rules the page uses.
+
+## Rows, first paint and Zustand
+
+Per row: weft 22 elements and 8 comment anchors, Solid 14, React 12, MUI 18. Ten of warp's 22 are the selection checkbox
+(input, control, two sweep layers, an svg with two paths, label), so the signature animation is most of the difference.
+
+| Rows on the page | weft + warp | Solid + Kobalte | React + Radix | React + Zustand | React + MUI |
+|---:|---:|---:|---:|---:|---:|
+| Elements, 20 → 200 | 697 → 4657 | 337 → 2857 | 295 → 2455 | 295 → 2455 | 569 → 2009 at 100 |
+| Load CPU ms, 20 → 200 | 148 → 357 | 106 → 220 | 155 → 234 | 147 → 230 | 479 → 551 at 100 |
+| Live cell ms, 20 → 200 | 5 → 9 | 4 → 30 | 10 → 37 | 11 → 35 | 85 → 261 at 100 |
+| Live cell DOM, 20 → 200 | 3 → 3 | 40 → 400 | 3 → 3 | 3 → 3 | 131 → 611 at 100 |
+| Select ms, 20 → 200 | 22 → 30 | 5 → 14 | 14 → 37 | 12 → 32 | 124 → 287 at 100 |
+| Sort ms, 20 → 200 | 35 → 205 | 21 → 38 | 20 → 58 | 20 → 63 | 67 → 145 at 100 |
+
+- More nodes pay off in one place: fine-grained updates. A live cell stays flat as rows grow, where React walks the list and
+  Solid + TanStack rebuilds rows. Load and sort do not scale better: they are the slowest of the small stacks at 200 rows.
+- First paint: Solid wins on style recalculation alone, 4 ms against 49. With warp's CSS removed weft paints at 124 ms to
+  Solid's 136. Tokens alone cost nothing measurable (124 ms); the component rules do, and the 29 `:has()` rules alone are
+  about 20 ms of first paint.
+- Zustand adds 0.3 KB and changes no DOM count: TanStack still owns the table state, so its value isn't visible on this screen.
+  It would show across many subscribers, which this dashboard doesn't have.

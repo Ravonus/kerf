@@ -128,3 +128,8 @@ v4 (12 sessions: 2 ticket sets × Haiku/Sonnet × React/Solid/weft, n=1; `result
 - 11 of 12 sessions end at 47/47.
 - The one miss is Solid Haiku on the quiet tickets, which didn't batch quote bursts (46/47).
 - Bundle sizes: weft 6.8–6.9 KB gz, Solid 10.4–11.8, React about 70.
+
+## Comparing stacks
+
+`compare/` builds one dashboard in every stack and charts the numbers. New scenarios, benchmarks and size or speed claims go
+through it; see [its rule](compare/README.md#the-rule).

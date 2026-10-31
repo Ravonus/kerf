@@ -5,7 +5,7 @@ import Collapse from '@mui/material/Collapse'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import { DataGrid, type GridColDef, type GridRowSelectionModel } from '@mui/x-data-grid'
-import { money, projects, type Project } from '../../shared/data'
+import { money, pageSize, projects, type Project } from '../../shared/data'
 
 // The community DataGrid has no detail panel (it's a Pro feature), so details open in a Collapse under the grid.
 export function DataTable(props: { label: string; columns: GridColDef<Project>[] }) {
@@ -24,7 +24,7 @@ export function DataTable(props: { label: string; columns: GridColDef<Project>[]
       <Box>
         <DataGrid label={props.label} rows={rows} columns={columns} checkboxSelection disableRowSelectionOnClick showToolbar autoHeight
           rowSelectionModel={picked} onRowSelectionModelChange={setPicked}
-          initialState={{ pagination: { paginationModel: { pageSize: 20, page: 0 } } }} pageSizeOptions={[20]}
+          initialState={{ pagination: { paginationModel: { pageSize, page: 0 } } }} pageSizeOptions={[pageSize]}
           slotProps={{ toolbar: { showQuickFilter: true } }} />
       </Box>
       <Collapse in={!!open} unmountOnExit><Box component="dl" sx={{ p: 2 }}><dt>Owner</dt><dd>{open?.owner}</dd><dt>Region</dt><dd>{open?.region}</dd><dt>Budget</dt><dd>{open && money(open.budget)}</dd></Box></Collapse>
