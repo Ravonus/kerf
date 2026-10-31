@@ -1,5 +1,0 @@
-@import "tailwindcss";
-.slide { display: grid; grid-template-rows: 1fr; animation: open .3s ease-out; transition: grid-template-rows .3s ease-out; }
-.slide[data-closing] { grid-template-rows: 0fr; }
-.slide > div { min-height: 0; overflow: hidden; }
-@keyframes open { from { grid-template-rows: 0fr; } }

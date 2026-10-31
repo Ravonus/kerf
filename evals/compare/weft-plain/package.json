@@ -1,0 +1,3 @@
+{ "name": "compare-weft-plain", "private": true, "type": "module",
+  "dependencies": { "weft": "file:../../../packages/weft" },
+  "devDependencies": { "vite": "8.3.5" } }

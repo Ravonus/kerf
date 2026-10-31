@@ -1,9 +1,19 @@
-# Same dashboard, four stacks
+# Same dashboard, every stack
 
-One screen built in weft + warp, Solid + Kobalte + TanStack Table + Tailwind, React + Radix + TanStack Table + Tailwind,
-the same with Zustand holding the data, and React + MUI + X DataGrid: a shell (sidebar, account menu, phone drawer) and a 200-row table (sort, filter, selection
-with a bulk action, paging, column picker, inline details, a live cell). One data set, latest stable versions, plain
-`vite build`.
+One screen: a shell (sidebar, account menu, phone drawer) and a 200-row table (sort, filter, selection with a bulk action,
+paging, column picker, inline details, a live cell). One data set, latest stable versions, plain `vite build`.
+
+| Stack | Table | Overlays | CSS |
+|---|---|---|---|
+| weft + warp | warp | warp | warp |
+| weft, no warp | hand-written | native `popover` | `shared/design.css` |
+| Solid + Kobalte | TanStack | Kobalte | `shared/design.css` |
+| React + Radix | TanStack | Radix | `shared/design.css` |
+| React + Zustand | TanStack, data in Zustand | Radix | `shared/design.css` |
+| React + MUI | X DataGrid | MUI | MUI's CSS-in-JS |
+
+`shared/design.css` is one hand-written sheet, so those four stacks ship the same rules: compare frameworks there. The same-CSS
+stacks are the fair framework test; warp and MUI each bring a design system, so compare them as kits.
 
     node measure.mjs     # size, load, parity script with DOM mutations and CPU, row scale, screen sweep
 
@@ -22,5 +32,6 @@ The count is a MutationObserver on the whole document: every node added or remov
 can't see property writes (`input.value`, `checked`), shadow roots or CSSOM, and one `<style>` edit counts once however many
 cells it restyles. So read it with the CPU ms beside it, and each step also asserts the page shows the right result. Run `npm install --legacy-peer-deps` in each stack first.
 
-The React and Solid tables are hand-written on headless parts, so they carry less design than warp: no dials, dark theme or
-phone card layout. MUI's community DataGrid has no detail panel, so details open under the grid.
+weft without warp has no menu keyboard handling (arrow keys, typeahead) or focus trap beyond what native `popover` gives, where
+Radix and Kobalte add them, and it has no headless table library in its bundle. warp also keeps a phone sort bar and closed
+menus mounted, which the others don't. MUI's community DataGrid has no detail panel, so details open under the grid.
