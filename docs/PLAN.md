@@ -141,7 +141,6 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W030 | Module-level `state` reachable from the server entry graph (leaks across requests) | `context`, or mark `state.global` |
 | W040 | Early `return` in a component body that depends on state (runs once, never re-checked) | Branch in JSX |
 | W041 | `let` variable mutated in a handler and read in JSX (never updates) | Make it `state` |
-| W042 | `onChange` on text inputs (React fires per keystroke, DOM on blur) | `onInput` (autofix) |
 | W014 | Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list (error in-file, warning when the list leaves the file) | Keep items stable and read the changing field live, or replace only the changed item |
 | W015 | A box rendered without `.value` in JSX (a child, or a native element's attribute) | `.value` (autofix) |
 | W017 | A keyed-list row reads one entry of a whole object (`cart[p.id]`, `cart.value[p.id]`, also passed to a child as a prop), or a component's JSX/`derived` reads `box.value[prop]` (a row component), so every write re-runs every row (v3 eval: 452 re-runs on add-one; v4: 601 formats per quote) | `cart.get(p.id)` (autofix for the box form; a suggestion when the box arrived as a prop); for a plain prop, pass the box |
@@ -151,7 +150,9 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W054 | `media(q)` without `ssr` in a server-rendered file (error; a warning when `weft check` can't tell, off in client-only builds) | `media(q, { ssr: false })` (suggested edit) |
 | W056 | `watch` that copies a live value (a `weft/browser` value, `.live()`) into `state` | Read `.value` directly, or `derived` |
 
-`class`/`className`, `for`/`htmlFor`, and `style` as object or string are all accepted.
+React's prop names work on native elements, in literals, dynamic values and spreads, on the client, on the server and in
+hydration: a compile-time table in `crates/weft-compiler/src/react.rs`, and `attrName` in `weft/dom` for spreads. `onChange`
+fires per edit as React's does, so W042 is retired (it never reached the compiler). Details: [react-props.md](react-props.md).
 
 ### 3.6 Compiler, runtime, tooling
 

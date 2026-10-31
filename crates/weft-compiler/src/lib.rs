@@ -12,6 +12,7 @@ mod emit;
 mod hmr;
 pub mod hydration;
 pub mod project;
+mod react;
 mod shape;
 mod srcmap;
 pub mod style;

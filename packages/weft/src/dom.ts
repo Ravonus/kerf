@@ -6,7 +6,7 @@ import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onClea
 import { keys, step, under } from './keys'
 
 export { memo }
-export { attr, bind, child, cls, component, css, delegate, on, spread, tpl } from './dom-next'
+export { attr, bind, change, child, cls, component, css, delegate, focus, kids, on, spread, tpl } from './dom-next'
 export { first, hchild, htpl, next } from './claim'
 export { hydrate, hydration } from './hydrate'
 export { enter, level } from './island'
@@ -136,9 +136,12 @@ export function insert(parent: Mountable, value: any, marker?: Node | null) {
 
 // ---- attributes and properties ---------------------------------------------------------------------------------
 
-/** `null`/`false` remove the attribute and `true` writes it empty, except ARIA's, whose states are the words `true`/`false`. */
+/** Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute. Prefixes keep it short. */
+export const WORDS = /^(?:aria-|contented|draggab|focusab|spellch)/i
+
+/** `null`/`false` remove the attribute and `true` writes it empty, except `WORDS`. */
 export function setAttribute(node: Element, name: string, value: any) {
-  if (typeof value === 'boolean' && name.startsWith('aria-')) value = String(value)
+  if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
   if (value == null || value === false) node.removeAttribute(name)
   else node.setAttribute(name, value === true ? '' : value)
 }
@@ -157,14 +160,37 @@ export function className(node: Element, value: any, prev?: any) {
   for (const k in value) if (value[k] && !p[k]) node.classList.add(k)
 }
 
+// The compiler resolves names it can see (crates/weft-compiler/src/react.rs); a spread's arrive here.
+const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for', acceptCharset: 'accept-charset', httpEquiv: 'http-equiv', tabIndex: 'tabindex', crossOrigin: 'crossorigin', hrefLang: 'hreflang', referrerPolicy: 'referrerpolicy' }
+const DASHED = /^(?:accentH|alignmentB|arabicF|baselineS|capH|clip(?:Path$|R)|color[IPR]|dominantB|enableB|fill[OR]|flood[CO]|font[FSVW]|glyph[NO]|horiz[AO]|imageR|letterS|lightingC|marker[EMS]|overline[PT]|paintO|panose1|pointerE|renderingI|shapeR|stop[CO]|strikethrough[PT]|stroke[DLMOW]|text(?:An|D|R)|transformO|underline[PT]|unicode[BR]|unitsP|v(?:Alp|[HIM])|vectorE|vert[AO]|wordS|writingM|xHeight)/
+
+/** The attribute a prop in a spread writes. HTML lowercases the rest itself. */
+export const attrName = (k: string) =>
+  NAMES[k] ?? (DASHED.test(k) ? k.replace(/[A-Z]|1$/g, c => '-' + c.toLowerCase()) : /^(?:xlink|xmlns|xml)[A-Z]/.test(k) ? k.replace(/[A-Z]/, c => ':' + c.toLowerCase()) : k)
+
+const UNITLESS = /^(?:--.*|(?:-\w+-)?(?:animation-iteration-count|aspect-ratio|border-image-(?:outset|slice|width)|box-(?:flex|flex-group|ordinal-group)|column-count|columns|flex(?:-grow|-shrink|-order|-positive|-negative)?|(?:fill|flood|stop|stroke)-opacity|font-weight|grid-(?:area|row|column)(?:-end|-span|-start)?|line-clamp|line-height|opacity|order|orphans|scale|stroke-(?:dasharray|dashoffset|miterlimit|width)|tab-size|widows|z-index|zoom))$/
+
+/** `fontSize` → `font-size`, `WebkitBoxShadow` → `-webkit-box-shadow`, `msTransform` → `-ms-transform`. */
+export const cssName = (k: string) => k === 'cssFloat' ? 'float' : k[1] === '-' ? k : k.replace(/^ms(?=[A-Z])/, '-ms').replace(/[A-Z]/g, c => '-' + c.toLowerCase())
+
+/** React's values: numbers are pixels unless the property is unitless; `null` and booleans mean no declaration. */
+export const cssValue = (name: string, v: any) =>
+  v == null || typeof v === 'boolean' ? null : typeof v === 'number' && v && !UNITLESS.test(name) ? `${v}px` : v
+
 export function style(node: HTMLElement, value: any, prev?: any) {
   if (typeof value === 'string' || value == null) {
     node.style.cssText = value ?? ''
     return
   }
   const p = prev && typeof prev === 'object' ? prev : {}
-  for (const k in p) if (value[k] == null) node.style.removeProperty(k)
-  for (const k in value) if (value[k] !== p[k]) node.style.setProperty(k, value[k])
+  for (const k in p) if (value[k] == null) node.style.removeProperty(cssName(k))
+  for (const k in value) {
+    if (value[k] === p[k]) continue
+    const name = cssName(k)
+    const v = cssValue(name, value[k])
+    if (v == null) node.style.removeProperty(name)
+    else node.style.setProperty(name, v)
+  }
 }
 
 /** `ref={fn}` or `ref={[fn, …]}` (nested arrays flatten): each is called with the element, untracked. */

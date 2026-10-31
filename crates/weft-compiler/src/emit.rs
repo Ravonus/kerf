@@ -31,7 +31,7 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use crate::hydration::{ISLAND, marked};
-use crate::srcmap;
+use crate::{react, srcmap};
 
 /// Bubbling events the runtime delegates to one document listener.
 const DELEGATED: &[&str] = &[
@@ -40,7 +40,7 @@ const DELEGATED: &[&str] = &[
     "pointerover", "pointerup", "touchend", "touchmove", "touchstart",
 ];
 /// Attributes written as DOM properties, because the attribute is only the initial value.
-const PROPERTIES: &[&str] = &["value", "checked", "selected", "muted", "indeterminate", "textContent", "innerHTML"];
+const PROPERTIES: &[&str] = &["value", "checked", "selected", "muted", "indeterminate", "textContent", "innerHTML", "defaultValue", "defaultChecked"];
 /// SVG elements that need an <svg> around them to parse as SVG (`a`, `script`, `style` and `title` are left out:
 /// HTML has them too).
 const SVG: &[&str] = &[
@@ -516,7 +516,9 @@ impl<'t> Emitter<'t> {
                 b.ops.push(format!("const {p} = {props}; {spread}({el_var}, () => ({{ ...{p} }}));"));
                 if !has_kids && !void {
                     Self::put(b, ">");
-                    self.hole_code(b, &path, format!("() => {p}.children"), false, None);
+                    // Hydrating, content the props wrote stays: the server rendered it into this hole.
+                    let kids = if self.hydratable { format!("{}({p}, {el_var})", self.helper("kids")) } else { format!("{p}.children") };
+                    self.hole_code(b, &path, format!("() => {kids}"), false, None);
                     Self::put(b, &format!("</{tag}>"));
                     return;
                 }
@@ -529,7 +531,8 @@ impl<'t> Emitter<'t> {
                 self.kids(el, b, &path);
             } else {
                 // The server reads the merged props again; a merged object reads its sources on every access anyway.
-                self.hole_code(b, &path, format!("() => {props}.children"), false, None);
+                let inner = self.helper("inner");
+                self.hole_code(b, &path, format!("() => {inner}({props}, {tag:?})"), false, None);
             }
             Self::put(b, &format!("</{tag}>"));
             return;
@@ -549,18 +552,24 @@ impl<'t> Emitter<'t> {
             if name == "key" {
                 continue;
             }
-            let name = match name.as_str() {
-                "className" => "class".to_string(),
-                "htmlFor" => "for".to_string(),
-                _ => name,
-            };
-            if let Some(event) = event_name(&name) {
+            let raw = name == "dangerouslySetInnerHTML";
+            let name = if raw { "innerHTML".to_string() } else { react::attribute(&name) };
+            if let Some((event, capture)) = react::event(&name) {
                 let Some(expr) = attr_expression(attr) else { continue };
                 if self.ssr {
                     continue;
                 }
                 let el_var = self.node(b, &path);
                 let h = self.expr(expr);
+                if capture {
+                    b.ops.push(format!("{el_var}.addEventListener({event:?}, {h}, true);"));
+                    continue;
+                }
+                if event == "change" {
+                    let change = self.helper("change");
+                    b.ops.push(format!("{change}({el_var}, {h});"));
+                    continue;
+                }
                 let delegated = DELEGATED.contains(&event.as_str());
                 if delegated {
                     self.delegated.insert(event.clone());
@@ -586,22 +595,57 @@ impl<'t> Emitter<'t> {
                 });
                 continue;
             }
+            // React focuses on mount; the attribute alone only works during page load.
+            if name == "autofocus" && !self.ssr {
+                let v = attr_expression(attr).map_or("true".to_string(), |e| self.expr(e));
+                let el_var = self.node(b, &path);
+                let focus = self.helper("focus");
+                b.ops.push(format!("{focus}({el_var}, {v});"));
+            }
+            // A <textarea> or <select> has no value attribute: the value is its content or its selected option.
+            if (tag == "textarea" || tag == "select") && (name == "value" || name == "defaultValue") {
+                let v = match &attr.value {
+                    Some(JSXAttributeValue::StringLiteral(s)) => serde_json::to_string(&decode_entities(s.value.as_str())).unwrap(),
+                    Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
+                        Some(e) => self.expr(e),
+                        None => continue,
+                    },
+                    _ => continue,
+                };
+                if !self.ssr {
+                    dynamic.push(("prop", if tag == "select" { "value".to_string() } else { name }, v));
+                } else if tag == "select" {
+                    let select = self.helper("select");
+                    Self::server(b, Piece::Code(format!("{select}({v})")));
+                } else {
+                    content = Some(format!("{}(String(({v}) ?? \"\"))", self.helper("escape")));
+                }
+                continue;
+            }
+            // In HTML the attribute is the default: `.value` and `.checked` start from it.
+            let html = match name.as_str() {
+                "defaultValue" => "value",
+                "defaultChecked" => "checked",
+                other => other,
+            }
+            .to_string();
             match &attr.value {
-                None => Self::put(b, &format!(" {name}")),
+                None if react::takes_words(&name) => Self::put(b, &format!(" {html}=\"true\"")),
+                None => Self::put(b, &format!(" {html}")),
                 Some(JSXAttributeValue::StringLiteral(s)) => {
-                    let raw = &self.text[s.span.start as usize + 1..s.span.end as usize - 1];
-                    Self::put(b, &format!(" {name}=\"{}\"", raw.replace('"', "&quot;")));
+                    let text = &self.text[s.span.start as usize + 1..s.span.end as usize - 1];
+                    Self::put(b, &format!(" {html}=\"{}\"", text.replace('"', "&quot;")));
                 }
                 Some(JSXAttributeValue::ExpressionContainer(c)) => {
                     let Some(expr) = c.expression.as_expression() else { continue };
-                    // ARIA states are the words `true`/`false` (`aria-pressed={false}` is not a missing attribute).
+                    // Some states are the words `true`/`false` (`aria-pressed={false}` is not a missing attribute).
                     let known = match expr.get_inner_expression() {
-                        Expression::BooleanLiteral(v) if name.starts_with("aria-") => Some(Static::Text(v.value.to_string())),
+                        Expression::BooleanLiteral(v) if react::takes_words(&name) => Some(Static::Text(v.value.to_string())),
                         _ => static_value(expr),
                     };
                     match known {
-                        Some(Static::Text(t)) => Self::put(b, &format!(" {name}=\"{}\"", escape_attr(&t))),
-                        Some(Static::True) => Self::put(b, &format!(" {name}")),
+                        Some(Static::Text(t)) => Self::put(b, &format!(" {html}=\"{}\"", escape_attr(&t))),
+                        Some(Static::True) => Self::put(b, &format!(" {html}")),
                         Some(Static::Absent) => {}
                         None => {
                             let kind = if name == "class" {
@@ -614,6 +658,7 @@ impl<'t> Emitter<'t> {
                                 "attr"
                             };
                             let e = self.expr(expr);
+                            let e = if raw { format!("({e})?.__html ?? \"\"") } else { e };
                             if (name == "textContent" || name == "innerHTML") && has_kids {
                                 self.fail(format!("weft back end: an element with `{name}` can't also have children (it replaces them)"), attr.span);
                                 continue;
@@ -628,7 +673,7 @@ impl<'t> Emitter<'t> {
                                     let call = if tag == "select" && name == "value" {
                                         format!("{}({e})", self.helper("select"))
                                     } else {
-                                        format!("{}({name:?}, {e})", self.helper("attr"))
+                                        format!("{}({html:?}, {e})", self.helper("attr"))
                                     };
                                     Self::server(b, Piece::Code(call));
                                 }
@@ -775,7 +820,7 @@ impl<'t> Emitter<'t> {
         match kind {
             "class" => format!("{}({el}, {v}, {p})", self.helper("cls")),
             "style" => format!("{}({el}, {v}, {p})", self.helper("css")),
-            "prop" if name == "value" => format!("({el}.value = {v} ?? \"\")"),
+            "prop" if name == "value" || name == "defaultValue" => format!("({el}.{name} = {v} ?? \"\")"),
             "prop" => format!("({el}.{name} = {v})"),
             _ => format!("{}({el}, {name:?}, {v})", self.helper("attr")),
         }
@@ -1122,13 +1167,6 @@ fn tag_read<'a>(el: &'a JSXElement<'a>) -> Option<&'a Expression<'a>> {
 
 fn is_component(el: &JSXElement<'_>, text: &str) -> bool {
     component_name(&el.opening_element.name, text).is_some()
-}
-
-/// `onClick` → `click`; `onkeydown`-style lowercase names aren't events (they're attributes).
-fn event_name(name: &str) -> Option<String> {
-    let rest = name.strip_prefix("on")?;
-    rest.chars().next().filter(|c| c.is_ascii_uppercase())?;
-    Some(rest.to_ascii_lowercase())
 }
 
 fn attr_expression<'a>(attr: &'a JSXAttribute<'a>) -> Option<&'a Expression<'a>> {
