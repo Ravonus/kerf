@@ -1,7 +1,8 @@
 // media.build@1 (research 15 §2–4, research 26 §2.4): one source file in, a MediaAsset and its files out.
 //   probe (sharp, EXIF orientation) → width ladder → per-format quality search at the largest width (SSIMULACRA2,
 //   the libjxl tool) → encode every width → dominant colour + 16 px WebP placeholder. SVG: refuse unsafe files
-//   (M012), then SVGO. Animated GIFs stay as they are (video conversion is @weft/plugin-media-ffmpeg, Phase 3c).
+//   (M012), then SVGO. With a media.encode@1 provider (@weft/plugin-media-ffmpeg), src/video.mjs takes video, audio
+//   and animated GIFs; without one, a GIF stays as it is and video is P101.
 // Cached by content hash under `cacheDir`, so dev restarts and rebuilds don't re-encode. With `encoder: 'server'` the
 // build only stores the original: the variants are media.server@1's to encode (research 29 §6).
 import { execFile, spawnSync } from 'node:child_process'
@@ -15,9 +16,10 @@ import { optimize } from 'svgo'
 import { probe } from 'weft/media-probe'
 import { createMediaServer } from './server.mjs'
 import { unsafeSvg } from './svg.mjs'
+import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
-const VERSION = 1 // bump when the output for the same input and options changes
+const VERSION = 2 // bump when the output for the same input and options changes
 
 export const DEFAULTS = {
   formats: ['avif'],
@@ -25,6 +27,7 @@ export const DEFAULTS = {
   quality: { target: 80, scorer: 'ssimulacra2' },
   placeholder: true,
   gifLimit: 256 * 1024,
+  video: { codecs: ['av1'], widths: [640, 960, 1280, 1920] },
 }
 /** Encoder settings without a scorer (research 26 §2.4), and the range the search walks. */
 export const FIXED = { avif: 50, webp: 75, jpeg: 78 }
@@ -76,31 +79,34 @@ export const isPhoto = meta => ['jpeg', 'jpg', 'avif', 'heif', 'tiff', 'webp'].i
 const short = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
 
 export function createMediaBuild(input = {}) {
-  const o = { ...DEFAULTS, ...input, quality: { ...DEFAULTS.quality, ...input.quality } }
+  const o = { ...DEFAULTS, ...input, quality: { ...DEFAULTS.quality, ...input.quality }, video: { ...DEFAULTS.video, ...input.video } }
   return {
     /**
      * @param {{ file: string, bytes: Uint8Array }} source
-     * @param {{ cacheDir: string, dev?: boolean }} ctx
+     * @param {{ cacheDir: string, dev?: boolean, encode?: Record<string, object> }} ctx
      */
-    async build({ file, bytes }, { cacheDir, root }) {
+    async build({ file, bytes, audio }, { cacheDir, root, encode = {} }) {
       const name = basename(file)
-      if (o.encoder === 'server') {
+      const timed = VIDEO.test(file) || AUDIO.test(file)
+      if (o.encoder === 'server' && !timed) {
         try {
-          return { asset: await createMediaServer(o).at(root).ingest(bytes, { name }), files: [] }
+          return { asset: await createMediaServer(o).at(root, encode).ingest(bytes, { name }), files: [] }
         } catch (e) {
           if (!e.code) throw e
           return { asset: null, files: [], diagnostics: [{ code: e.code, severity: 'error', message: e.message }] }
         }
       }
       const stem = basename(file, extname(file)).replace(/[^\w-]+/g, '-')
-      const key = createHash('sha256').update(bytes).update(JSON.stringify(o)).update(String(VERSION)).digest('hex').slice(0, 20)
+      const key = createHash('sha256').update(bytes).update(JSON.stringify(o)).update(String(VERSION)).update(audio ? readFileSync(audio) : '').update(JSON.stringify(await versions(encode))).digest('hex').slice(0, 20)
       const cached = join(cacheDir, `${key}.json`)
       if (existsSync(cached)) {
         const hit = JSON.parse(readFileSync(cached, 'utf8'))
         return { ...hit, files: hit.files.map(n => ({ name: n, bytes: new Uint8Array(readFileSync(join(cacheDir, key, n))) })) }
       }
 
-      const out = await (/\.svg$/i.test(file) ? vector(name, stem, bytes) : raster(name, stem, bytes, o))
+      const source = { bytes, name, stem, audio }
+      const scorer = findScorer(o.quality.scorer)
+      const out = await (/\.svg$/i.test(file) ? vector(name, stem, bytes) : VIDEO.test(file) ? video(source, o, encode, scorer) : AUDIO.test(file) ? audioFile(source, o, encode) : raster(source, o, encode))
       if (out.diagnostics?.some(d => d.severity === 'error')) return out
       mkdirSync(join(cacheDir, key), { recursive: true })
       for (const f of out.files) writeFileSync(join(cacheDir, key, f.name), f.bytes)
@@ -108,6 +114,13 @@ export function createMediaBuild(input = {}) {
       return out
     },
   }
+}
+
+/** What the encoders are: a new ffmpeg means new bytes. */
+async function versions(encode) {
+  const found = {}
+  for (const [key, enc] of Object.entries(encode)) found[key] = await enc.versions().catch(() => null)
+  return found
 }
 
 /** SVG: refuse what can run or fetch (M012), else SVGO's default preset (it keeps the viewBox). */
@@ -122,16 +135,17 @@ function vector(name, stem, bytes) {
   return { asset: { kind: 'vector', src: fileName, width: size.width, height: size.height, type: MIME.svg, sources: [], name, quality: 'original' }, files: [{ name: fileName, bytes: svg }] }
 }
 
-async function raster(name, stem, bytes, o) {
-  const meta = await sharp(bytes).metadata()
+async function raster({ bytes, name, stem, audio }, o, encode) {
+  const meta = await sharp(bytes, { animated: true }).metadata()
   const turned = (meta.orientation ?? 1) >= 5
   const width = turned ? meta.height : meta.width
-  const height = turned ? meta.width : meta.height
+  const height = turned ? (meta.pageHeight ?? meta.width) : (meta.pageHeight ?? meta.height)
   const diagnostics = []
 
   if (meta.format === 'gif' && (meta.pages ?? 1) > 1) {
-    // Animated: kept as is until the ffmpeg provider can turn it into video.
-    if (bytes.length > o.gifLimit) diagnostics.push({ code: 'M004', severity: 'warning', message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF; it ships as is (video conversion comes with @weft/plugin-media-ffmpeg).` })
+    const converted = await gif({ bytes, name, stem, audio, meta, width, height }, o, encode, findScorer(o.quality.scorer))
+    if (converted) return converted
+    if (bytes.length > o.gifLimit) diagnostics.push({ code: 'M004', severity: 'warning', message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft/plugin-media-ffmpeg to turn it into video'}.` })
     const fileName = `${stem}-${short(bytes)}.gif`
     return { asset: { kind: 'graphic', src: fileName, width, height, type: MIME.gif, sources: [], name, quality: 'original' }, files: [{ name: fileName, bytes }], diagnostics }
   }
@@ -170,6 +184,11 @@ async function raster(name, stem, bytes, o) {
   const src = sources.at(-1).srcset.split(', ').at(-1).split(' ')[0]
 
   const asset = { kind: photo ? 'photo' : 'graphic', src, width, height, type: MIME[fallback], sources, name, quality: scorer ? 'ssimulacra2' : 'fixed', qualities }
+  if (o.encoder === 'compatible') { // The fallback ladder is already built: a swap costs no extra files.
+    asset.copy = { src, type: MIME[fallback] }
+    asset.swap = o.swap ?? 'intent'
+    diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'compatible'\` adds 0 KB: the compatible copy is the fallback ladder.` })
+  }
   if (o.placeholder) {
     asset.dominant = hex((await base().stats()).dominant)
     const tiny = await base().resize(16, 16, { fit: 'inside' }).webp({ quality: 40 }).toBuffer()

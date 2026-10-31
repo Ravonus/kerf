@@ -250,7 +250,13 @@ export default { fetch }
 function mediaModule(root, dev) {
   const slot = join(root, '.weft', 'slots', 'media.server.ts')
   if (!existsSync(slot) || readFileSync(slot, 'utf8').includes('provider = null')) return 'export default undefined\n'
-  return `import { load } from 'weft:slot/media.server'\nexport default () => load().then(m => m.at(${dev ? JSON.stringify(root) : 'undefined'}))\n`
+  const at = dev ? JSON.stringify(root) : 'undefined'
+  if (!existsSync(join(root, '.weft', 'slots', 'media.encode.ts'))) return `import { load } from 'weft:slot/media.server'\nexport default () => load().then(m => m.at(${at}))\n`
+  return `import { load } from 'weft:slot/media.server'
+import { load as encoder, providers } from 'weft:slot/media.encode'
+const encode = async () => Object.fromEntries(await Promise.all(Object.keys(providers).filter(k => providers[k]).map(async k => [k, await encoder(k)])))
+export default () => Promise.all([load(), encode()]).then(([m, e]) => m.at(${at}, e))
+`
 }
 
 const busBound = root => {
