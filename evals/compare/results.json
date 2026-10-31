@@ -15,11 +15,11 @@
   },
   "lines": 44,
   "load": {
-   "scriptMs": 70,
-   "styleMs": 31,
-   "layoutMs": 35,
-   "taskMs": 196,
-   "fcpMs": 164,
+   "scriptMs": 92,
+   "styleMs": 39,
+   "layoutMs": 42,
+   "taskMs": 250,
+   "fcpMs": 208,
    "heapMB": 3.14,
    "nodes": 1479
   },
@@ -28,42 +28,42 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 4
+     "ms": 3
     },
     "sort": {
      "ok": true,
      "dom": 37,
-     "ms": 27
+     "ms": 23
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 34
+     "ms": 35
     },
     "filter": {
      "ok": true,
      "dom": 57,
-     "ms": 185
+     "ms": 128
     },
     "clear filter": {
      "ok": true,
      "dom": 59,
-     "ms": 54
+     "ms": 48
     },
     "select row": {
      "ok": true,
      "dom": 6,
-     "ms": 98
+     "ms": 110
     },
     "details open": {
      "ok": true,
      "dom": 19,
-     "ms": 56
+     "ms": 60
     },
     "column picker": {
      "ok": true,
      "dom": 11,
-     "ms": 48
+     "ms": 53
     },
     "account menu": {
      "ok": true,
@@ -75,13 +75,13 @@
   },
   "scale": {
    "20": {
-    "load": 150,
+    "load": 168,
     "elements": 528,
     "text": 161,
     "comments": 227,
     "rows": 20,
     "live": {
-     "ms": 2,
+     "ms": 3,
      "dom": 3
     },
     "select": {
@@ -89,12 +89,12 @@
      "dom": 5
     },
     "sort": {
-     "ms": 26,
+     "ms": 25,
      "dom": 37
     }
    },
    "100": {
-    "load": 191,
+    "load": 174,
     "elements": 1968,
     "text": 641,
     "comments": 707,
@@ -104,30 +104,30 @@
      "dom": 3
     },
     "select": {
-     "ms": 21,
+     "ms": 20,
      "dom": 5
     },
     "sort": {
-     "ms": 81,
+     "ms": 70,
      "dom": 183
     }
    },
    "200": {
-    "load": 269,
+    "load": 373,
     "elements": 3768,
     "text": 1241,
     "comments": 1307,
     "rows": 200,
     "live": {
-     "ms": 8,
+     "ms": 12,
      "dom": 3
     },
     "select": {
-     "ms": 26,
+     "ms": 39,
      "dom": 5
     },
     "sort": {
-     "ms": 108,
+     "ms": 221,
      "dom": 365
     }
    }
@@ -199,12 +199,12 @@
   },
   "lines": 118,
   "load": {
-   "scriptMs": 88,
-   "styleMs": 4,
-   "layoutMs": 23,
-   "taskMs": 173,
-   "fcpMs": 152,
-   "heapMB": 3.83,
+   "scriptMs": 123,
+   "styleMs": 6,
+   "layoutMs": 31,
+   "taskMs": 234,
+   "fcpMs": 204,
+   "heapMB": 3.85,
    "nodes": 617
   },
   "parity": {
@@ -212,27 +212,27 @@
     "live cell": {
      "ok": true,
      "dom": 40,
-     "ms": 7
+     "ms": 5
     },
     "sort": {
      "ok": true,
      "dom": 46,
-     "ms": 29
+     "ms": 33
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 20
+     "ms": 23
     },
     "filter": {
      "ok": true,
      "dom": 46,
-     "ms": 22
+     "ms": 24
     },
     "clear filter": {
      "ok": true,
      "dom": 43,
-     "ms": 20
+     "ms": 27
     },
     "select row": {
      "ok": true,
@@ -242,7 +242,7 @@
     "details open": {
      "ok": true,
      "dom": 3,
-     "ms": 27
+     "ms": 23
     },
     "column picker": {
      "ok": true,
@@ -251,67 +251,67 @@
     },
     "account menu": {
      "ok": true,
-     "dom": 24,
-     "ms": 17
+     "dom": 25,
+     "ms": 14
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 176,
+    "load": 206,
     "elements": 337,
     "text": 172,
     "comments": 2,
     "rows": 20,
     "live": {
-     "ms": 8,
+     "ms": 9,
      "dom": 40
     },
     "select": {
-     "ms": 7,
+     "ms": 17,
      "dom": 6
     },
     "sort": {
-     "ms": 42,
+     "ms": 46,
      "dom": 46
     }
    },
    "100": {
-    "load": 225,
+    "load": 337,
     "elements": 1457,
     "text": 732,
     "comments": 2,
     "rows": 100,
     "live": {
-     "ms": 15,
+     "ms": 30,
      "dom": 200
     },
     "select": {
-     "ms": 8,
+     "ms": 19,
      "dom": 6
     },
     "sort": {
-     "ms": 88,
+     "ms": 125,
      "dom": 206
     }
    },
    "200": {
-    "load": 310,
+    "load": 375,
     "elements": 2857,
     "text": 1432,
     "comments": 2,
     "rows": 200,
     "live": {
-     "ms": 30,
+     "ms": 52,
      "dom": 400
     },
     "select": {
-     "ms": 21,
+     "ms": 22,
      "dom": 6
     },
     "sort": {
-     "ms": 36,
+     "ms": 69,
      "dom": 402
     }
    }
@@ -383,12 +383,12 @@
   },
   "lines": 129,
   "load": {
-   "scriptMs": 196,
-   "styleMs": 3,
-   "layoutMs": 33,
-   "taskMs": 302,
-   "fcpMs": 364,
-   "heapMB": 4.38,
+   "scriptMs": 269,
+   "styleMs": 6,
+   "layoutMs": 41,
+   "taskMs": 414,
+   "fcpMs": 400,
+   "heapMB": 4.39,
    "nodes": 508
   },
   "parity": {
@@ -396,106 +396,106 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 17
+     "ms": 26
     },
     "sort": {
      "ok": true,
      "dom": 60,
-     "ms": 32
+     "ms": 55
     },
     "next page": {
      "ok": true,
      "dom": 65,
-     "ms": 24
+     "ms": 32
     },
     "filter": {
      "ok": true,
      "dom": 73,
-     "ms": 29
+     "ms": 44
     },
     "clear filter": {
      "ok": true,
      "dom": 62,
-     "ms": 24
+     "ms": 35
     },
     "select row": {
      "ok": true,
      "dom": 7,
-     "ms": 23
+     "ms": 20
     },
     "details open": {
      "ok": true,
      "dom": 5,
-     "ms": 24
+     "ms": 45
     },
     "column picker": {
      "ok": true,
      "dom": 54,
-     "ms": 60
+     "ms": 102
     },
     "account menu": {
      "ok": true,
      "dom": 26,
-     "ms": 21
+     "ms": 28
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 156,
+    "load": 290,
     "elements": 295,
     "text": 171,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 23,
+     "ms": 19,
      "dom": 3
     },
     "select": {
-     "ms": 22,
+     "ms": 33,
      "dom": 7
     },
     "sort": {
-     "ms": 42,
+     "ms": 46,
      "dom": 60
     }
    },
    "100": {
-    "load": 319,
+    "load": 403,
     "elements": 1255,
     "text": 731,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 38,
+     "ms": 45,
      "dom": 3
     },
     "select": {
-     "ms": 50,
+     "ms": 45,
      "dom": 7
     },
     "sort": {
-     "ms": 93,
+     "ms": 100,
      "dom": 244
     }
    },
    "200": {
-    "load": 398,
+    "load": 503,
     "elements": 2455,
     "text": 1431,
     "comments": 1,
     "rows": 200,
     "live": {
-     "ms": 29,
+     "ms": 79,
      "dom": 3
     },
     "select": {
-     "ms": 61,
+     "ms": 80,
      "dom": 7
     },
     "sort": {
-     "ms": 100,
+     "ms": 129,
      "dom": 395
     }
    }
@@ -567,12 +567,12 @@
   },
   "lines": 137,
   "load": {
-   "scriptMs": 279,
-   "styleMs": 6,
-   "layoutMs": 41,
-   "taskMs": 422,
-   "fcpMs": 396,
-   "heapMB": 4.39,
+   "scriptMs": 119,
+   "styleMs": 3,
+   "layoutMs": 20,
+   "taskMs": 189,
+   "fcpMs": 192,
+   "heapMB": 4.41,
    "nodes": 508
   },
   "parity": {
@@ -580,106 +580,106 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 20
+     "ms": 9
     },
     "sort": {
      "ok": true,
      "dom": 60,
-     "ms": 34
+     "ms": 25
     },
     "next page": {
      "ok": true,
      "dom": 65,
-     "ms": 23
+     "ms": 17
     },
     "filter": {
      "ok": true,
      "dom": 73,
-     "ms": 42
+     "ms": 21
     },
     "clear filter": {
      "ok": true,
      "dom": 62,
-     "ms": 17
+     "ms": 16
     },
     "select row": {
      "ok": true,
      "dom": 7,
-     "ms": 24
+     "ms": 13
     },
     "details open": {
      "ok": true,
      "dom": 5,
-     "ms": 24
+     "ms": 22
     },
     "column picker": {
      "ok": true,
      "dom": 54,
-     "ms": 92
+     "ms": 43
     },
     "account menu": {
      "ok": true,
      "dom": 26,
-     "ms": 22
+     "ms": 13
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 277,
+    "load": 137,
     "elements": 295,
     "text": 171,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 15,
+     "ms": 9,
      "dom": 3
     },
     "select": {
-     "ms": 30,
+     "ms": 14,
      "dom": 7
     },
     "sort": {
-     "ms": 25,
+     "ms": 20,
      "dom": 60
     }
    },
    "100": {
-    "load": 313,
+    "load": 184,
     "elements": 1255,
     "text": 731,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 29,
+     "ms": 22,
      "dom": 3
     },
     "select": {
-     "ms": 47,
+     "ms": 24,
      "dom": 7
     },
     "sort": {
-     "ms": 86,
+     "ms": 49,
      "dom": 244
     }
    },
    "200": {
-    "load": 282,
+    "load": 225,
     "elements": 2455,
     "text": 1431,
     "comments": 1,
     "rows": 200,
     "live": {
-     "ms": 43,
+     "ms": 39,
      "dom": 3
     },
     "select": {
-     "ms": 38,
+     "ms": 39,
      "dom": 7
     },
     "sort": {
-     "ms": 71,
+     "ms": 59,
      "dom": 395
     }
    }
@@ -751,12 +751,12 @@
   },
   "lines": 90,
   "load": {
-   "scriptMs": 627,
-   "styleMs": 30,
-   "layoutMs": 95,
-   "taskMs": 846,
-   "fcpMs": 1004,
-   "heapMB": 10.88,
+   "scriptMs": 441,
+   "styleMs": 16,
+   "layoutMs": 65,
+   "taskMs": 602,
+   "fcpMs": 588,
+   "heapMB": 10.95,
    "nodes": 765
   },
   "parity": {
@@ -764,87 +764,87 @@
     "live cell": {
      "ok": true,
      "dom": 131,
-     "ms": 84
+     "ms": 82
     },
     "sort": {
      "ok": true,
-     "dom": 58,
-     "ms": 90
+     "dom": 57,
+     "ms": 75
     },
     "next page": {
      "ok": true,
      "dom": 68,
-     "ms": 157
+     "ms": 83
     },
     "filter": {
      "ok": true,
-     "dom": 129,
-     "ms": 125
+     "dom": 132,
+     "ms": 115
     },
     "clear filter": {
      "ok": true,
      "dom": 66,
-     "ms": 69
+     "ms": 50
     },
     "select row": {
      "ok": true,
-     "dom": 172,
-     "ms": 159
+     "dom": 171,
+     "ms": 113
     },
     "details open": {
      "ok": true,
      "dom": 148,
-     "ms": 90
+     "ms": 104
     },
     "column picker": {
      "ok": true,
      "dom": 305,
-     "ms": 141
+     "ms": 101
     },
     "account menu": {
      "ok": true,
-     "dom": 215,
-     "ms": 135
+     "dom": 147,
+     "ms": 96
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 566,
+    "load": 429,
     "elements": 569,
     "text": 165,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 116,
+     "ms": 83,
      "dom": 131
     },
     "select": {
-     "ms": 225,
+     "ms": 120,
      "dom": 160
     },
     "sort": {
-     "ms": 151,
-     "dom": 77
+     "ms": 65,
+     "dom": 66
     }
    },
    "100": {
-    "load": 1035,
+    "load": 558,
     "elements": 2009,
     "text": 725,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 312,
+     "ms": 256,
      "dom": 611
     },
     "select": {
-     "ms": 503,
+     "ms": 281,
      "dom": 640
     },
     "sort": {
-     "ms": 251,
+     "ms": 163,
      "dom": 313
     }
    }
@@ -916,12 +916,12 @@
   },
   "lines": 120,
   "load": {
-   "scriptMs": 49,
-   "styleMs": 4,
-   "layoutMs": 21,
-   "taskMs": 146,
-   "fcpMs": 152,
-   "heapMB": 2.18,
+   "scriptMs": 35,
+   "styleMs": 3,
+   "layoutMs": 20,
+   "taskMs": 105,
+   "fcpMs": 88,
+   "heapMB": 2.19,
    "nodes": 678
   },
   "parity": {
@@ -934,101 +934,101 @@
     "sort": {
      "ok": true,
      "dom": 37,
-     "ms": 18
+     "ms": 8
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 10
+     "ms": 9
     },
     "filter": {
      "ok": true,
      "dom": 42,
-     "ms": 11
+     "ms": 12
     },
     "clear filter": {
      "ok": true,
      "dom": 41,
-     "ms": 15
+     "ms": 9
     },
     "select row": {
      "ok": true,
      "dom": 2,
-     "ms": 4
+     "ms": 5
     },
     "details open": {
      "ok": true,
      "dom": 3,
-     "ms": 20
+     "ms": 15
     },
     "column picker": {
      "ok": true,
      "dom": 22,
-     "ms": 11
+     "ms": 10
     },
     "account menu": {
      "ok": true,
      "dom": 0,
-     "ms": 1
+     "ms": 2
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 77,
+    "load": 65,
     "elements": 320,
     "text": 183,
     "comments": 36,
     "rows": 20,
     "live": {
-     "ms": 2,
+     "ms": 3,
      "dom": 3
     },
     "select": {
-     "ms": 3,
+     "ms": 2,
      "dom": 2
     },
     "sort": {
-     "ms": 13,
+     "ms": 10,
      "dom": 37
     }
    },
    "100": {
-    "load": 91,
+    "load": 79,
     "elements": 1280,
     "text": 743,
     "comments": 116,
     "rows": 100,
     "live": {
-     "ms": 4,
+     "ms": 3,
      "dom": 3
     },
     "select": {
-     "ms": 3,
+     "ms": 5,
      "dom": 2
     },
     "sort": {
-     "ms": 22,
+     "ms": 24,
      "dom": 183
     }
    },
    "200": {
-    "load": 103,
+    "load": 102,
     "elements": 2480,
     "text": 1443,
     "comments": 216,
     "rows": 200,
     "live": {
-     "ms": 10,
+     "ms": 5,
      "dom": 3
     },
     "select": {
-     "ms": 6,
+     "ms": 5,
      "dom": 2
     },
     "sort": {
-     "ms": 51,
+     "ms": 28,
      "dom": 365
     }
    }

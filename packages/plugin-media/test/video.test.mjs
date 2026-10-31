@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createMediaEncode } from '@weft/plugin-media-ffmpeg/build'
 import { KEYS } from '@weft/plugin-media-ffmpeg'
 import { createMediaBuild, findScorer } from '../src/build.mjs'
+import { createMediaServer } from '../src/server.mjs'
 
 const hasFfmpeg = !spawnSync('ffmpeg', ['-version']).error
 const encode = Object.fromEntries(KEYS.map(key => [key, createMediaEncode({ key })]))
@@ -76,7 +77,7 @@ describe.skipIf(!hasFfmpeg)('video', () => {
   })
 
   it('background: H.264 is the copy, and M014 says what it adds', async () => {
-    const { asset, diagnostics } = await build('clip.mov', { ...options, encoder: 'background', swap: 'idle' })
+    const { asset, diagnostics } = await build('clip.mov', { ...options, encoder: 'compatible', swap: 'idle' })
     if (asset.sources.length < 2) return // AV1 lost the 15% rule on this clip: nothing to swap
     expect(asset.copy).toMatchObject({ src: asset.src, type: 'video/mp4' })
     expect(asset.swap).toBe('idle')
@@ -100,7 +101,7 @@ describe.skipIf(!hasFfmpeg)('GIF', () => {
   })
 
   it('background: the original GIF is the copy', async () => {
-    const { asset, files } = await build('flat.gif', { ...options, encoder: 'background' })
+    const { asset, files } = await build('flat.gif', { ...options, encoder: 'compatible' })
     expect(asset.copy.type).toBe('image/gif')
     expect(files.find(f => f.name === asset.copy.src).bytes).toEqual(read('flat.gif'))
   })
@@ -153,5 +154,59 @@ describe.skipIf(!hasFfmpeg)('audio', () => {
     const opus = files.find(f => f.name.endsWith('.webm'))
     expect(asset.kind).toBe('audio')
     expect(Number(info('o.webm', opus.bytes).format.bit_rate)).toBeLessThan(90_000)
+  })
+})
+
+describe.skipIf(!hasFfmpeg)('uploads', () => {
+  const upload = opts => createMediaServer({ ...options, ...opts, server: { dir: mkdtempSync(join(dir, 's-')) } }).at('/unused', encode)
+  const want = (m, u) => {
+    const [, hash, width, format] = /\/m\/(\w+)\/(\d+)\.(\w+)/.exec(u.split(' ')[0])
+    return m.serve({ hash, width: Number(width), format, accept: '' })
+  }
+
+  it('answers with the record at once, stands in the playable original, then serves the rungs for good', async () => {
+    const m = upload()
+    const asset = await m.ingest(read('web.mp4'), { name: 'web.mp4' })
+    expect(asset).toMatchObject({ kind: 'video', width: 320, height: 180, audio: false })
+    expect(asset.poster).toMatch(/\/0\.webp$/)
+    expect((await want(m, asset.poster)).type).toBe('image/webp')
+    const small = asset.sources.at(-1).srcset.split(', ')[0]
+    const early = await want(m, small)
+    expect(early.temporary).toBe(true)
+    await m.settled()
+    const done = await want(m, small)
+    expect(done.temporary).toBeUndefined()
+    expect(info('rung.mp4', done.bytes).streams[0].width).toBe(160)
+    expect(await want(m, asset.src.replace('.mp4', '.webm'))).toBeNull() // kept H.264: nothing efficient to gain, no URL
+  })
+
+  it('waits for the encode when browsers can\'t play the original, and a restart loses nothing', async () => {
+    const s = mkdtempSync(join(dir, 's-'))
+    const first = createMediaServer({ ...options, server: { dir: s } }).at('/unused', encode)
+    const asset = await first.ingest(read('clip.mov'), { name: 'clip.mov' })
+    await first.settled()
+    const again = createMediaServer({ ...options, server: { dir: s } }).at('/unused', encode)
+    const out = await want(again, asset.src)
+    expect(out.temporary).toBeUndefined()
+    expect(info('up.mp4', out.bytes).streams.map(t => t.codec_name).sort()).toEqual(['aac', 'h264'])
+  })
+
+  it('takes audio, whatever the file is called', async () => {
+    const m = upload()
+    const asset = await m.ingest(read('tone.wav'), { name: 'renamed.bin' })
+    expect(asset).toMatchObject({ kind: 'audio', audio: true })
+    expect((await want(m, asset.src)).type).toBe('audio/mp4')
+  })
+
+  it('turns a GIF into video when that saves 15%, with the GIF as the compatible copy', async () => {
+    const m = upload({ encoder: 'compatible' })
+    const asset = await m.ingest(read('flat.gif'), { name: 'flat.gif' })
+    expect(asset).toMatchObject({ kind: 'video', animated: true, width: 320, height: 180 })
+    expect(new Uint8Array((await want(m, asset.copy.src)).bytes)).toEqual(read('flat.gif'))
+  })
+
+  it('refuses video with no provider, naming the fix', async () => {
+    const m = createMediaServer({ ...options, server: { dir: mkdtempSync(join(dir, 's-')) } }).at('/unused')
+    await expect(m.ingest(read('web.mp4'), { name: 'web.mp4' })).rejects.toMatchObject({ code: 'M018', message: expect.stringContaining('mediaFfmpeg()') })
   })
 })

@@ -108,7 +108,7 @@ describe('encoder: \'server\'', () => {
   })
 
   it('takes \'background\', and `swap` only with it', () => {
-    expect(media({ encoder: 'background', swap: 'idle' }).options).toEqual({ encoder: 'background', swap: 'idle' })
+    expect(media({ encoder: 'compatible', swap: 'idle' }).options).toEqual({ encoder: 'compatible', swap: 'idle' })
     expect(() => media({ swap: 'idle' })).toThrow(/swap/)
     expect(() => media({ encoder: 'always' })).toThrow(/encoder/)
   })

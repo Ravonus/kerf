@@ -1,4 +1,4 @@
-// The swap runtime of `encoder: 'background'` (research 15 §5), a lazy chunk nothing loads without a compatible copy.
+// The swap runtime of `encoder: 'compatible'` (research 15 §5), a lazy chunk nothing loads without a compatible copy.
 // The page shows the efficient file; a save has to get one that opens anywhere.
 //
 // Measured with real right-clicks in headed Chromium and Firefox (packages/plugin-media/test/save.headful.mjs): Chromium

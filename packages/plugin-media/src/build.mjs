@@ -90,7 +90,7 @@ export function createMediaBuild(input = {}) {
       const timed = VIDEO.test(file) || AUDIO.test(file)
       if (o.encoder === 'server' && !timed) {
         try {
-          return { asset: await createMediaServer(o).at(root).ingest(bytes, { name }), files: [] }
+          return { asset: await createMediaServer(o).at(root, encode).ingest(bytes, { name }), files: [] }
         } catch (e) {
           if (!e.code) throw e
           return { asset: null, files: [], diagnostics: [{ code: e.code, severity: 'error', message: e.message }] }
@@ -184,10 +184,10 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   const src = sources.at(-1).srcset.split(', ').at(-1).split(' ')[0]
 
   const asset = { kind: photo ? 'photo' : 'graphic', src, width, height, type: MIME[fallback], sources, name, quality: scorer ? 'ssimulacra2' : 'fixed', qualities }
-  if (o.encoder === 'background') { // The fallback ladder is already built: a swap costs no extra files.
+  if (o.encoder === 'compatible') { // The fallback ladder is already built: a swap costs no extra files.
     asset.copy = { src, type: MIME[fallback] }
     asset.swap = o.swap ?? 'intent'
-    diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'background'\` adds 0 KB: the compatible copy is the fallback ladder.` })
+    diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'compatible'\` adds 0 KB: the compatible copy is the fallback ladder.` })
   }
   if (o.placeholder) {
     asset.dominant = hex((await base().stats()).dominant)

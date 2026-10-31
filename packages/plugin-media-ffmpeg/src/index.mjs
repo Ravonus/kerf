@@ -4,7 +4,7 @@
 import { fileURLToPath } from 'node:url'
 import { definePlugin, defineSlot, provide } from 'weft/plugin'
 
-const mediaEncode = defineSlot({ id: 'media.encode', version: 1, cardinality: 'keyed', sides: ['build'] })
+const mediaEncode = defineSlot({ id: 'media.encode', version: 1, cardinality: 'keyed', sides: ['build', 'server'] })
 export const KEYS = ['video/av1', 'video/vp9', 'video/hevc', 'video/h264', 'audio/opus', 'audio/aac']
 
 const fail = (path, message) => {
@@ -30,7 +30,7 @@ export const mediaFfmpeg = definePlugin({
   options,
   permissions: { fs: { read: ['**/*.{gif,mp4,m4v,mov,webm,mkv,ogv,mp3,wav,flac,ogg,oga,opus,m4a,aac}'], write: ['$TMPDIR/weft-ffmpeg-*'] }, spawn: ['ffmpeg', 'ffprobe'] },
   contribute: o => ({
-    provides: KEYS.map(key => provide(mediaEncode, { key, sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaEncode', options: { ...o, key } } } })),
+    provides: KEYS.map(key => provide(mediaEncode, { key, sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaEncode', options: { ...o, key } }, server: { module: '@weft/plugin-media-ffmpeg/build', export: 'createMediaEncode', options: { ...o, key } } } })),
     agents: {
       title: 'Video and audio (@weft/plugin-media-ffmpeg)',
       text: [

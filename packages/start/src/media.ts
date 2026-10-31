@@ -20,6 +20,10 @@ const record = () =>
     poster: zod.string().optional(),
     duration: zod.number().optional(),
     audio: zod.boolean().optional(),
+    animated: zod.boolean().optional(),
+    loop: zod.number().optional(),
+    copy: zod.object({ src: zod.string(), type: zod.string(), bytes: zod.number().optional(), ratio: zod.number().optional() }).optional(),
+    swap: zod.enum(['intent', 'idle', 'never']).optional(),
   })
 
 export const z = { ...zod, media: record } as typeof zod & { media: typeof record }

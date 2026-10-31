@@ -39,7 +39,7 @@ export interface MediaAsset {
   animated?: boolean
   /** The GIF's loop count: 0 is forever. */
   loop?: number
-  /** `encoder: 'background'`: the file a save should give. */
+  /** `encoder: 'compatible'`: the file a save should give. */
   copy?: { src: string; type: string; bytes?: number; ratio?: number }
   swap?: 'intent' | 'idle' | 'never'
 }

@@ -4,10 +4,11 @@
 //
 //   node packages/create-weft/scripts/packed.mjs <empty-dir> [app]
 import { execFileSync, spawn } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseEnv } from 'node:util'
 import { scaffold } from '../src/index.mjs'
+import { fnId } from '../../start/src/vite.mjs'
 import { packAll, pin, pkgs } from './tarballs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
@@ -21,8 +22,9 @@ const tarballs = packAll(join(root, 'tgz'))
 function mediaApp(app, weft, log) {
   sh(weft, ['add', 'media'], app)
   sh(weft, ['add', 'media-ffmpeg'], app)
+  sh('npm', ['install', '--silent', 'sharp@0.35.5'], app) // the media route loads it at run time (M017)
   const config = join(app, 'weft.config.ts')
-  writeFileSync(config, readFileSync(config, 'utf8').replace(/media\(\)/, "media({ encoder: 'background', quality: { scorer: 'none' }, video: { widths: [160, 320] } })"))
+  writeFileSync(config, readFileSync(config, 'utf8').replace(/media\(\)/, "media({ encoder: 'compatible', quality: { scorer: 'none' }, video: { widths: [160, 320] } })"))
   sh(weft, ['plugins', 'approve', '--all'], app)
   log('weft add media, media-ffmpeg, approve: pass')
   const ff = (...args) => sh('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], app)
@@ -30,8 +32,18 @@ function mediaApp(app, weft, log) {
   ff('-f', 'lavfi', '-i', 'testsrc2=s=640x360:d=3:r=24', '-f', 'lavfi', '-i', 'sine=f=440:d=3', '-c:v', 'ffv1', '-c:a', 'pcm_s16le', 'src/routes/clip.mov')
   ff('-f', 'lavfi', '-i', 'sine=f=330:d=1', 'src/routes/tone.wav')
   ff('-f', 'lavfi', '-i', 'testsrc2=s=640x360:d=1', '-frames:v', '1', '-q:v', '2', 'src/routes/hero.jpg')
+  ff('-f', 'lavfi', '-i', 'testsrc2=s=320x180:d=1', '-frames:v', '1', 'src/routes/card.png')
+  mkdirSync(join(app, 'src/server'), { recursive: true })
+  writeFileSync(join(app, 'src/server/upload.ts'), `import { mutation, query } from '@weft/start'
+import { z } from '@weft/start/media'
+
+let last: unknown = null
+export const lastUpload = query({ tags: ['upload'], output: z.media().nullable(), run: () => last as any })
+export const upload = mutation({ input: z.object({ file: z.file() }), invalidates: ['upload'], run: async ({ input, ctx }) => (last = await ctx.media.ingest(input.file)) })
+`)
   writeFileSync(join(app, 'src/routes/media.tsx'), `import { Media, timeline } from 'weft/media'
 import hero from './hero.jpg?media'
+import card from './card.png?media'
 import loop from './loop.gif?media'
 import clip from './clip.mov?media'
 import tone from './tone.wav?media'
@@ -41,6 +53,7 @@ export default function Page() {
   return (
     <main style="display:grid;gap:8px;justify-items:start">
       <Media src={hero} alt="A test card" width="320px" data-save="still" />
+      <Media src={card} alt="A flat test card" width="320px" data-save="graphic" />
       <Media src={loop} alt="A test card moving" data-save="gif" />
       <Media src={clip} alt="A test card with a tone" timeline={t} data-save="video" />
       <Media src={tone} alt="A 330 Hz tone" />
@@ -72,6 +85,18 @@ async function mediaServed(app, port, log) {
     if (part.status !== 206 || (await part.arrayBuffer()).byteLength !== 100) throw new Error(`media: ${url} ignores ranges: ${part.status}`)
   }
   log(`${sources.length} encoded files served: pass`)
+
+  // An upload a build never saw: it answers straight away, and each rung comes off the media route by ranges.
+  const body = new FormData()
+  body.set('$fn', fnId('upload', 'src/server/upload.ts'))
+  body.set('file', new File([readFileSync(join(app, 'src/routes/clip.mov'))], 'clip.mov', { type: 'video/quicktime' }))
+  const posted = await fetch(`${base}/media`, { method: 'POST', redirect: 'manual', headers: { origin: base }, body })
+  if (posted.status !== 303) throw new Error(`media: the upload answered ${posted.status}`)
+  const record = (await (await fetch(`${base}/_weft/fn/${fnId('lastUpload', 'src/server/upload.ts')}`)).json()).v
+  if (record?.kind !== 'video' || !record.poster) throw new Error(`media: the upload's record is ${JSON.stringify(record)}`)
+  const part = await fetch(base + record.src, { headers: { range: 'bytes=0-99' } })
+  if (part.status !== 206) throw new Error(`media: the uploaded video ignores ranges: ${part.status}`)
+  log('video upload encoded and served: pass')
 }
 
 // Four apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, and one that adds

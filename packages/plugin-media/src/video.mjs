@@ -95,7 +95,7 @@ async function encodersFor(o, encode) {
 }
 
 /** The poster, its dominant colour and the placeholder, from one frame. */
-async function poster(enc, source, stem, width, duration, o) {
+export async function poster(enc, source, stem, width, duration, o) {
   const png = await enc.still(source, { at: Math.min(1, duration / 10), width })
   const bytes = await sharp(png).webp({ quality: 80 }).toBuffer()
   const name = `${stem}-poster-${short(bytes)}.webp`
@@ -108,7 +108,7 @@ async function poster(enc, source, stem, width, duration, o) {
   return { asset, file: { name, bytes: new Uint8Array(bytes) } }
 }
 
-const ladderOf = (o, width) => {
+export const ladderOf = (o, width) => {
   const top = Math.min(width, o.video.widths.at(-1))
   return [...new Set([...o.video.widths.filter(w => w < top), top])]
 }
@@ -149,13 +149,13 @@ function finish(asset, sets, poster, diagnostics) {
   return { asset: out, files, diagnostics }
 }
 
-/** The compatible copy `encoder: 'background'` swaps in, and M014 with what it adds. */
+/** The compatible copy `encoder: 'compatible'` swaps in, and M014 with what it adds. */
 function withCopy(out, o, name, copy) {
-  if (o.encoder !== 'background' || !copy) return out
+  if (o.encoder !== 'compatible' || !copy) return out
   const efficient = out.files.filter(f => f.name !== copy.src && /\.webm$/.test(f.name)).at(-1)?.bytes.length ?? copy.bytes
   out.asset.copy = { src: copy.src, type: copy.type, bytes: copy.bytes, ratio: Math.round((copy.bytes / efficient) * 100) / 100 }
   out.asset.swap = o.swap ?? 'intent'
-  out.diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'background'\` adds ${Math.round((copy.added ?? 0) / 1024)} KB for the compatible copy.` })
+  out.diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'compatible'\` adds ${Math.round((copy.added ?? 0) / 1024)} KB for the compatible copy.` })
   return out
 }
 
@@ -243,7 +243,7 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
       const cover = await poster(probe, source, stem, widths.at(-1), total, o)
       const asset = { kind: 'video', width, height, type: 'video/mp4', name, quality: scorer ? 'ssimulacra2' : 'fixed', qualities: built.qualities, duration: total, audio: !!audio, animated: !audio, loop: meta.loop ?? 0 }
       const out = finish(asset, served, cover, built.diagnostics)
-      if (o.encoder === 'background') {
+      if (o.encoder === 'compatible') {
         const original = `${stem}-${short(bytes)}.gif`
         out.files.push({ name: original, bytes })
         return withCopy(out, o, name, { src: original, type: 'image/gif', bytes: bytes.length, added: bytes.length })

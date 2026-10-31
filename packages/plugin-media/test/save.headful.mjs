@@ -1,4 +1,4 @@
-// The Phase 3c gate for `encoder: 'background'` (research 15 §5.3): a real right-click and "Save as" in headed Chromium
+// The Phase 3c gate for `encoder: 'compatible'` (research 15 §5.3): a real right-click and "Save as" in headed Chromium
 // and Firefox against a built app. Playwright's mouse can't reach the browser's own menu, so X11 input does (xdotool);
 // it needs Linux, Xvfb and a built app, the one `packed.mjs <dir> media` leaves:
 //
@@ -24,7 +24,7 @@ const kind = file => {
   const b = Buffer.alloc(16)
   readSync(openSync(file, 'r'), b, 0, 16, 0)
   const h = b.toString('latin1')
-  return h.startsWith('GIF') ? 'gif' : h.slice(8, 12) === 'avif' ? 'avif' : h.slice(4, 8) === 'ftyp' ? 'mp4' : b[0] === 0xff ? 'jpeg' : b[0] === 0x1a ? 'webm' : 'other'
+  return h.startsWith('GIF') ? 'gif' : h.slice(1, 4) === 'PNG' ? 'png' : h.slice(8, 12) === 'avif' ? 'avif' : h.slice(4, 8) === 'ftyp' ? 'mp4' : b[0] === 0xff ? 'jpeg' : b[0] === 0x1a ? 'webm' : 'other'
 }
 
 const server = spawn(process.execPath, ['.output/server/index.mjs'], { cwd: app, env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' })
@@ -42,7 +42,7 @@ const BROWSERS = [
   ['chromium', chromium, { args: ['--window-position=0,0', '--window-size=900,950', '--no-sandbox'] }],
   ['firefox', firefox, { firefoxUserPrefs: { 'media.autoplay.default': 0, 'browser.download.dir': dl, 'browser.download.folderList': 2 } }],
 ]
-const CASES = [['still', 'jpeg', /\.jpg/], ['gif', 'gif', /\.gif/], ['video', 'mp4', /\.mp4/]]
+const CASES = [['still', 'jpeg', /\.jpg/], ['graphic', 'png', /\.png/], ['gif', 'gif', /\.gif/], ['video', 'mp4', /\.mp4/]]
 
 try {
   for (const [name, type, options] of BROWSERS) {
@@ -56,11 +56,14 @@ try {
       await page.goto(`http://localhost:${PROXY}/media`)
       await sleep(1500)
       const at = await page.evaluate(t => {
-        const r = document.querySelector(`[data-save="${t}"]`).getBoundingClientRect()
+        const el = document.querySelector(`[data-save="${t}"]`)
+        el.scrollIntoView({ block: 'center' })
+        const r = el.getBoundingClientRect()
         const left = window.mozInnerScreenX ?? window.screenX
         const top = window.mozInnerScreenY ?? window.screenY + window.outerHeight - window.innerHeight
         return { x: left + r.x + r.width / 2, y: top + r.y + r.height / 3, left, top }
       }, target)
+      await sleep(200)
       x('mousemove', Math.round(at.x), Math.round(at.y))
       await sleep(900) // past the dwell, and the copy is in
       // Firefox writes no file for "Save Video As" under Playwright, swap or not, so that case reads what its menu saves.
@@ -90,14 +93,15 @@ try {
   const page = await (await browser.newContext()).newPage()
   await page.goto(`http://localhost:${PORT}/media`)
   await sleep(1000)
-  check(await page.evaluate(() => document.querySelectorAll('picture source').length) > 0, 'first visit: the efficient file, `<source>` still there')
+  const efficient = () => page.evaluate(() => document.querySelector('[data-save="still"]').parentElement.querySelectorAll('source').length)
+  check(await efficient() > 0, 'first visit: the efficient file, `<source>` still there')
   await page.hover('[data-save="still"]')
   await sleep(700)
   check((await page.evaluate(() => document.querySelector('[data-save="still"]').currentSrc)).endsWith('.jpg'), 'hover: the copy swapped in and loaded')
   await page.mouse.move(800, 900)
   await page.goto(`http://localhost:${PORT}/media`)
   await sleep(1000)
-  check(await page.evaluate(() => document.querySelectorAll('picture source').length) === 0, 'second visit: the cached copy is in at mount, no hover')
+  check(await efficient() === 0, 'second visit: the cached copy is in at mount, no hover')
 
   // timeline() on the real element: the cue box updates from presented frames.
   await page.getByRole('button', { name: 'Play' }).click()

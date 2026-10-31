@@ -649,6 +649,8 @@ Encode cost: ThumbHash 1.3–5.3 ms, BlurHash 2.8–4.3 ms.
 
 ## 5. The smart runtime encoder (optional, toggleable)
 
+*Shipped as `encoder: 'compatible'`: this document's `'background'` is the same option under its old name.*
+
 `media({ encoder: 'off' | 'background' | 'server' })`. **`'off'` is the default.**
 
 ### 5.1 Delivery: picking the variant for this client, view and network

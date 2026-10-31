@@ -18,12 +18,12 @@ function options(input) {
   for (const key of Object.keys(input)) if (!['formats', 'widths', 'quality', 'placeholder', 'gifLimit', 'encoder', 'swap', 'video', 'gif', 'server'].includes(key)) fail(key, 'unknown option')
   const out = {}
   if (input.encoder !== undefined) {
-    if (!['off', 'background', 'server'].includes(input.encoder)) fail('encoder', `\`${input.encoder}\`: 'off', 'background' or 'server'`)
+    if (!['off', 'compatible', 'server'].includes(input.encoder)) fail('encoder', `\`${input.encoder}\`: 'off', 'compatible' or 'server'`)
     out.encoder = input.encoder
   }
   if (input.swap !== undefined) {
     if (!['intent', 'idle', 'never'].includes(input.swap)) fail('swap', `\`${input.swap}\`: 'intent', 'idle' or 'never'`)
-    if (input.encoder !== 'background') fail('swap', "only means something with `encoder: 'background'`")
+    if (input.encoder !== 'compatible') fail('swap', "only means something with `encoder: 'compatible'`")
     out.swap = input.swap
   }
   if (input.video !== undefined) {
@@ -81,7 +81,7 @@ const CODES = [
   ['M011', 'Endless motion with no pause control'],
   ['M012', 'Unsafe SVG used as an image'],
   ['M013', 'public/ file referenced by string'],
-  ['M014', "What `encoder: 'background'` adds to the build"],
+  ['M014', "What `encoder: 'compatible'` adds to the build"],
   ['M015', 'An HDR or over-8-bit source that comes out 8-bit SDR'],
   ['M016', '<Media src> given a string: no dimensions before render'],
   ['M017', 'Media requested with no media.server provider'],
