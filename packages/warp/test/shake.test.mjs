@@ -34,3 +34,13 @@ test('an app pays for the flows it uses: SignIn brings no calendar, chat or chec
   for (const scope of ['"calendar"', '"thread"', '"checkout"', '"room"', '"tool-call"']) expect(signIn.js, scope).not.toContain(scope)
   for (const scope of ['data-scope="calendar"', 'data-scope="checkout"', 'data-scope="tool-call"']) expect(signIn.css, scope).not.toContain(scope)
 }, 90000)
+
+test('a Button pays nothing for the windows; a list brings its window, not chat, board or grid', async () => {
+  const plain = await bundle('<Button>Save</Button>', 'Button')
+  for (const word of ['overflowAnchor', 'aria-setsize', 'data-probe']) expect(plain.js, word).not.toContain(word)
+  for (const word of ['scroll-grid', 'data-scope="virtual"']) expect(plain.css, word).not.toContain(word)
+  const list = await bundle('<VirtualList items={[]} rowKey={r => r}>{r => <span />}</VirtualList>', 'VirtualList')
+  expect(list.js).toContain('overflowAnchor')
+  for (const word of ['Jump to latest', 'Page Up and Page Down', 'data-dragging']) expect(list.js, word).not.toContain(word)
+  for (const word of ['scroll-grid', 'column-head', 'data-scope="composer"']) expect(list.css, word).not.toContain(word)
+}, 60000)

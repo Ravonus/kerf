@@ -109,6 +109,21 @@ const SCENARIOS = {
     await settle(page)
     await audit('focus shell')
   },
+  async virtual(page, audit, url) {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${url}?part=virtual`)
+    await settle(page)
+    await audit('virtual collections')
+    await page.getByRole('button', { name: /^Move /, exact: false }).first().click()
+    await audit('kanban move menu')
+    await page.keyboard.press('Escape')
+    await page.getByRole('grid').focus()
+    await page.keyboard.press('ArrowDown')
+    await audit('grid active cell')
+    await page.getByRole('log').getByRole('article').first().focus()
+    await page.keyboard.press('End')
+    await audit('thread at the end')
+  },
   async charts(page, audit, url) {
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto(`${url}?part=charts`)

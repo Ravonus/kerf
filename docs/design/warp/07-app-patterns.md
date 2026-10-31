@@ -575,7 +575,8 @@ long-press a message for actions (Sheet). Tablet: list 300px + thread. Desktop: 
 
 ### 5.4 Accessibility and API
 
-Thread `role="log"` (polite region announces "New message from Mei" summarised); messages are `article`s; composer hint
+Thread `role="log"` with `aria-live="off"`: windowing adds rows on scroll, and those aren't news, so a separate polite
+status says "New message from Mei". Messages are `article`s with `aria-setsize="-1"` (history loads); composer hint
 "Enter sends, Shift+Enter adds a line". ConversationList is a listbox with `aria-selected` on the open channel.
 
 ```ts

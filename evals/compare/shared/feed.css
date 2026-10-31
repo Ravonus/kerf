@@ -1,0 +1,4 @@
+body { margin: 0; font: 14px/22px Inter, Arial, sans-serif; }
+#scroller { block-size: 600px; inline-size: 720px; overflow: auto; position: relative; }
+.row { box-sizing: border-box; padding: 8px 12px; border-block-end: 1px solid #ddd; }
+.row p { margin: 0; }

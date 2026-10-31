@@ -15,6 +15,7 @@ export { skeletonShape, isPart, type ShapeKind, type ShapeSpec, type SkeletonPar
 export { menu, type MenuOptions } from './menu'
 export { shell, type ShellOptions } from './shell'
 export { table, compareValues, sortRows, filterRows, pageSlice, rangeOf, checkState, type TableOptions, type SortDir } from './table'
+export { Sizes, virtualizer, slices, type Virtualizer, type VirtualOptions, type VirtualKey, type VirtualAlign } from './virtual'
 export * from './temporal'
 export * from './segments'
 export * from './calendar'

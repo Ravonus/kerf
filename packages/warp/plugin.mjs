@@ -181,6 +181,11 @@ export const dialCss = (dial, value) => rescoped(`[data-${dial}="${value}"]`, `:
 const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required: it is the accessible name), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. One solid Button per region. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; the spec contrast check runs at every stop and \`weft check\` fails with D010 if any pair can't pass.`
 
 const catalog = [
+  ['VirtualList', 'A long list with exact text heights: rows render only in view'],
+  ['Thread', 'A chat log on a window: stick to end, older messages, unread divider'],
+  ['Feed', 'APG feed on a window with Page Up/Down between articles'],
+  ['Kanban', 'A board whose columns are windows; drag, menu and Alt + arrows'],
+  ['ScrollGrid', 'Read-only two-axis grid, both axes virtual, wrapped columns optional'],
   ['DateField', 'Typed date segments with a calendar; ISO value'],
   ['DateRangeField', 'Two date segments, range calendar, presets, compare'],
   ['TimeField', 'Typed time with a slot list or wheels'],
