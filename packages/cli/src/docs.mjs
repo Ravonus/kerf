@@ -25,6 +25,7 @@ export const topics = {
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
   fonts: 'Fonts with @weft/plugin-text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
+  design: 'The design language: Stack, Row, Heading, Text, the closed vocabulary, `weft fix`, `weft tokens`; D001–D005, D011, D030–D039',
   style: 'Style groups (weft/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',
   diagnostics: 'Every W-, T-, P-, H- and D-code, and which ones the installed weft reports',
   commands: "This project's commands and tasks (from `weft tasks`)",

@@ -1,0 +1,17 @@
+{
+  "name": "weft-tailwind",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "weft": "file:../../../../packages/weft",
+    "@weft/cli": "file:../../../../packages/cli"
+  },
+  "devDependencies": {
+    "vite": "8.3.5",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/vite": "4.3.3"
+  }
+}

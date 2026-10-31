@@ -24,6 +24,14 @@
   --font-display: var(--warp-font-display);
   --font-mono: var(--warp-font-mono);
 
+  /* one scale for gap, padding and margin: `p-related`, `gap-group`. A numeric `p-3` that isn't on it is D002. */
+  --spacing-hair: var(--warp-space-hair);
+  --spacing-tight: var(--warp-space-tight);
+  --spacing-related: var(--warp-space-related);
+  --spacing-group: var(--warp-space-group);
+  --spacing-section: var(--warp-space-section);
+  --spacing-page: var(--warp-space-page);
+
   --radius-mark: var(--warp-radius-mark);
   --radius-control: var(--warp-radius-control);
   --radius-surface: var(--warp-radius-surface);

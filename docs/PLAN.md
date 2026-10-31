@@ -154,6 +154,8 @@ React's prop names work on native elements, in literals, dynamic values and spre
 hydration: a compile-time table in `crates/weft-compiler/src/react.rs`, and `attrName` in `weft/dom` for spreads. `onChange`
 fires per edit as React's does, so W042 is retired (it never reached the compiler). Details: [react-props.md](react-props.md).
 
+Design rules are D-codes in the same form: D001–D005 (off-system values, only in apps with `@weft/warp`), D010 (warp contrast), D011 and D030–D039 (contrast and accessibility, every app), D020–D025 (style groups). `weft fix` applies safe fixes; a raw colour never gets one ([36](research/36-ds.md)).
+
 ### 3.6 Compiler, runtime, tooling
 
 - **Compiler: Rust/Oxc, and weft owns all of it** ([08](research/08-builder-and-compiler.md), decided 2026-10-29).
@@ -562,6 +564,10 @@ agent can't drift outside of.
 - **Tokens:** a ~6-value seed, Zod-validated, expands to DTCG 2025.10 tokens, then plain CSS variables in cascade
   layers. Text colors are computed to pass contrast; the build fails if they can't. A Keel theme recipe
   (`{seed, culture, pins}`) is accepted as a seed.
+- **Built (Phase 4, [36](research/36-ds.md)):** the primitives are `Stack Row Grid Split Center Cover Frame Spacer Inset`,
+  `Heading` and `Text` in `@weft/warp`, since weft can't depend on ui-core. `Switch` below is `Row reflow` and `Surface` is
+  `Card`. `weft/ds` is names and types only. `weft tokens` writes DTCG 2025.10. Not built: a Keel recipe as a seed, a
+  `tokens(el)` reader, the Zod seed rework.
 - **Vocabulary:** 8 layout primitives (`Stack Row Split Switch Grid Center Surface Frame`), a small component set,
   intent props with closed values (`tone`, `emphasis`, `size`, `density`, `gap`/`pad` like `related`/`section`, text
   `role`). No raw pixel values.
@@ -894,7 +900,7 @@ packages/
   rust        weft/rust (native, remote) + the `weft` crate (codegen, Ctx, axum router), opt-in
 crates/
   weft-compiler   pre + diag + weft's own back end (Solid's crate until it's replaced); napi + WASI builds
-  ds          tokens, layout primitives, components, Tailwind adapter
+  (ds)        no package: `weft/ds` is a weft subpath (names and types); primitives and tokens are in warp (36)
   ui-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
   multiplayer presence, cursors, interaction relay (from Agorix)
@@ -926,7 +932,7 @@ evals/        agent eval harness
 | **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
 | **3x. Configuration** | A default stack that's one setting away from anything else ([34](research/34-configuration.md)). A: `weft.config.json` and `.yaml`, the config schema, the `create-weft` wizard, `weft add`, `weft map` (a generated matrix of what to call in this app). B: warp config options, the Tailwind adapter. C: `db.adapter@1`, Drizzle, Prisma and Native (no ORM) providers, MySQL. D: `auth.provider@1`. | The todo + auth app passes its hidden checks on every tested engine, data layer and runtime; a hand-written auth provider works with no change to weft. |
 | **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'compatible'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
-| **4. Design** | `weft/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | weft/ds vs raw Tailwind on consistency and a11y. |
+| **4. Design** | `weft/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | weft/ds vs raw Tailwind on consistency and a11y. **Not met 2026-10-31** ([36](research/36-ds.md), 36 sessions, n=6 per stack): a11y met (0 vs 5.3 axe nodes), brief met (10.8 vs 10.8), consistency missed (79 vs 62 distinct values, 17 vs 13 role drift). |
 | **5a. Rust: remote** | `remote()`, the `weft` crate (typify codegen, `Ctx`, envelope, `touch`, tracing, `weft::router()`), sidecar supervisor + dev reload, R101–R103. | A search sidecar replaces a TS `query` with no client change. |
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
 | **6a. Native spike (3 weeks)** | Hermes + op buffer + `weft-layout` + Swift/Kotlin hosts for `Stack Row Text Button Input Scroll`, `weft dev --ios/--android`, HMR. | The v3 list screen runs on both platforms; price push ≤ 1 host op; Node layout matches device within 1pt for non-text boxes. Stop and revisit if a mid-range Android can't hold 60 Hz. |
@@ -1283,3 +1289,8 @@ Also out of v0:
   `SharedCtx` has no `user()`, so a shared cache can't hold a user's data by accident. The supervisor stays in the CLI, out
   of the server bundle. `weft dev` waits for the first build, as a queue would outlive signatures and timeouts. Typed errors
   apply to TS bodies through `raise()` too, so a swap can't change what a client catches ([36](research/36-rust-remote.md)).
+- **Primitives in `@weft/warp`, `weft/ds` as names only; Phase 4's bar stands unmet** (2026-10-31). weft can't depend on
+  ui-core, so primitives sit with the tokens they use. Token D-codes need `@weft/warp`; a11y codes run in every app. The exit
+  check missed consistency: most extra values come from warp's own spec (fluid line-heights, tone channels, three families),
+  which Phase 4 doesn't redesign, and the bar isn't moved after the result. Role drift is a real miss, so `Heading` roles
+  and a link style come next ([36](research/36-ds.md)).

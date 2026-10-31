@@ -23,6 +23,7 @@
     "./sync": "./src/sync.ts",
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
+    "./ds": "./src/ds.ts",
     "./media": "./src/media.tsx",
     "./shape": "./src/shape.ts",
     "./text": "./src/text.tsx",

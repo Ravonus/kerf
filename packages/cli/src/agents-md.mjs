@@ -27,7 +27,7 @@ export function ranges(codes) {
 /** PLAN §3.1 primitives an agent may reach for; listed as missing when the installed weft doesn't export them. */
 const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount', 'onCleanup', 'context', 'defineState', 'flush', 'untrack', 'batch']
 /** Commands AGENTS.md leaves to `weft tasks --json`: rarely run by hand, or taught in their own section. */
-const elsewhere = new Set(['agents-md', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks'])
+const elsewhere = new Set(['agents-md', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks', 'tokens'])
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
 const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'], 'weft/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
 
@@ -48,7 +48,7 @@ export async function agentsMd(root) {
 
   // Style-group codes (D0xx, W060) and `weft style` belong to the Styling section, which only a weft with weft/style gets.
   const styled = info.exports['weft/style']?.includes('group')
-  const dcodes = catalog.filter(e => /^D0/.test(e.code) && (e.by === 'cli' || info.status[e.code]?.implemented)).map(e => e.code)
+  const dcodes = catalog.filter(e => /^D0/.test(e.code) && (e.by === 'cli' || info.status[e.code]?.implemented)).map(e => e.code).sort()
   const startApp = existsSync(join(root, 'src', 'routes'))
   const tcodes = catalog.filter(e => e.code.startsWith('T') && info.status[e.code]?.implemented).map(e => e.code)
 
@@ -98,7 +98,7 @@ export async function agentsMd(root) {
     ...(styled
       ? ['## Styling',
          '',
-         `**Run \`weft style find <what it is>\` first**, then reuse a group or add an axis value; never class lists. New: \`const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })\` from \`weft/style\`, \`<li {...card({ status })}>\`. Tokens only. ${ranges(dcodes)}, W060: \`weft docs style\`.`,
+         `**Run \`weft style find <what it is>\` first**, then reuse a group or add an axis value; never class lists. New: \`const card = group('card', { base: { pad: 'group' }, axes: { status: { late: { tone: 'critical' } } } })\` from \`weft/style\`, \`<li {...card({ status })}>\`. Tokens only. ${ranges(dcodes)}, W060: \`weft docs style\`, \`weft docs design\`; \`weft fix\` applies the safe fixes.`,
          '']
       : []),
     '## Commands',

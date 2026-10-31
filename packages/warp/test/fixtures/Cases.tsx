@@ -4,6 +4,8 @@ import { state } from 'weft'
 // each from its own file: the ?weft-ssr / ?weft-hydrate query follows .tsx imports (not the index.ts barrel)
 import { Alert } from '../../src/Alert'
 import { Badge } from '../../src/Badge'
+import { Stack, Row, Grid, Split, Center, Cover, Frame, Spacer, Inset } from '../../src/Layout'
+import { Heading, Text } from '../../src/Type'
 import { Button } from '../../src/Button'
 import { Card } from '../../src/Card'
 import { Checkbox, Segmented, Switch } from '../../src/Choice'
@@ -83,6 +85,25 @@ export function ChipCase() {
 export function CardCase() {
   const n = state(1)
   return <><Card eyebrow="Fruit" title={`Apple ×${n.value}`}>Crisp.</Card><Drive onClick={() => n.value++} /></>
+}
+export function LayoutCase() {
+  const gap = state<'related' | 'group'>('related')
+  return (
+    <Center max="narrow">
+      <Stack as="section" gap={gap.value} aria-label="Body">
+        <Row gap="tight" justify="between"><span>a</span><Spacer /><span>b</span></Row>
+        <Grid min="sm" cols={3}><Inset>c</Inset></Grid>
+        <Split width="list"><div>d</div><div>e</div></Split>
+        <Cover min="fill"><div data-part="center">f</div></Cover>
+        <Frame ratio="square"><span>g</span></Frame>
+      </Stack>
+      <Drive onClick={() => (gap.value = 'group')} />
+    </Center>
+  )
+}
+export function TypeCase() {
+  const n = state(1)
+  return <><Heading level={1} role="title">Page {n.value}</Heading><Text role="caption" subtle>note</Text><Drive onClick={() => n.value++} /></>
 }
 export function BadgeCase() {
   const n = state(3)

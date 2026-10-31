@@ -63,7 +63,12 @@ export interface WeftConfig {
   /** `include`: test files for the T-codes (default `**\/*.{test,spec}.*`). */
   test?: { include?: readonly string[]; lanes?: readonly ('fast' | 'browser' | 'e2e')[]; gate?: { mutationBudgetSec?: number; maxMutants?: number } }
   /** Files `weft check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .weft and `scope.forbid`. */
-  check?: { include?: readonly string[]; exclude?: readonly string[] }
+  check?: {
+    include?: readonly string[]
+    exclude?: readonly string[]
+    /** `false` turns the design D-codes (D001–D005, D011, D030–D039) off. Default on. */
+    design?: boolean
+  }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig
   /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */

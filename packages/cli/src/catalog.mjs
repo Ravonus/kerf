@@ -1,5 +1,5 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups),
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups), research 36 (D001–D039, the design language),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
 // research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
@@ -133,6 +133,24 @@ export const catalog = [
     fix: 'Inline the token name or literal; define groups as `export const x = group(\'x\', { … })`; raw CSS goes in `css: { … }`',
     example: "import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
   },
+
+  // The design language (PLAN §6, research 36): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
+  { code: 'D001', severity: 'error', by: 'cli', catches: 'A raw colour in `style`, app CSS, or a Tailwind arbitrary or palette class, in an app with warp\'s tokens: it won\'t follow the theme, the dials or dark mode', fix: 'Use a colour token or a `tone`. No autofix: a token follows the theme, the raw value didn\'t' },
+  { code: 'D002', severity: 'error', by: 'cli', catches: 'Spacing off the scale, or a scale step written by hand (`padding: 16px`, `p-[13px]`, `gap-3`)', fix: 'A step of `hair tight related group section page`; autofix when the value is exactly one' },
+  { code: 'D003', severity: 'warning', by: 'cli', catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)', fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius' },
+  { code: 'D004', severity: 'warning', by: 'cli', catches: 'Layout spelled out on an element (`display: flex`, `flex flex-col gap-4`) where a primitive says it', fix: '`<Stack>` or `<Row>`; a suggested edit when nothing else is on the element' },
+  { code: 'D005', severity: 'warning', by: 'cli', catches: 'A native `<button>`, `<select>` or `<textarea>` in a warp app', fix: 'The warp component: focus ring, sweep, tones and touch target come with it' },
+  { code: 'D011', severity: 'error', by: 'cli', catches: 'A literal text and background colour pair on one element below 4.5:1', fix: 'Use tokens: they pass at every dial stop' },
+  { code: 'D030', severity: 'error', by: 'cli', catches: 'An `<input>`, `<select>` or `<textarea>` with no label', fix: 'A wrapping `<label>`, `<label for>`, `aria-label`, or warp\'s `<Input label>`' },
+  { code: 'D031', severity: 'error', by: 'cli', catches: 'A button or link with no accessible name (icon only, or empty)', fix: 'Text, or `aria-label`; warp\'s Button takes `label`' },
+  { code: 'D032', severity: 'error', by: 'cli', catches: '`<img>` with no `alt`', fix: 'Describe the image; `alt=""` when it is decoration' },
+  { code: 'D033', severity: 'error', by: 'cli', catches: '`onClick` on a non-interactive element with no role: mouse only', fix: 'A real `<button type="button">` (suggested edit)' },
+  { code: 'D034', severity: 'error', by: 'cli', catches: 'A control inside a control (`<a><button>`)', fix: 'One control: move the other beside it' },
+  { code: 'D035', severity: 'warning', by: 'cli', catches: 'A heading level that jumps (h1 to h3)', fix: 'Use the next level; `<Heading level role>` keeps the look apart from the outline' },
+  { code: 'D036', severity: 'error', by: 'cli', catches: 'The focus ring removed with nothing in its place (`outline: none`, `outline-none`)', fix: 'Remove it: warp\'s `:focus-visible` is the ring. Or add a `focus-visible:` style' },
+  { code: 'D037', severity: 'error', by: 'cli', catches: 'A positive `tabindex`', fix: '`0`, and the order follows the DOM (autofix)' },
+  { code: 'D038', severity: 'warning', by: 'cli', catches: 'Two solid Buttons side by side', fix: 'One primary action per region: make the others `soft` or `ghost`' },
+  { code: 'D039', severity: 'warning', by: 'cli', catches: '`<html>` with no `lang`', fix: 'Set `lang`' },
 
   // Style groups (research 23 §3). D010 is warp's contrast gate (its own plugin); D040 and D081 are reserved by warp's docs.
   {

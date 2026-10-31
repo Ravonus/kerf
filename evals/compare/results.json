@@ -9,17 +9,17 @@
    },
    "css": {
     "raw": 171931,
-    "gz": 24110,
-    "br": 20054
+    "gz": 24117,
+    "br": 20063
    }
   },
   "lines": 44,
   "load": {
-   "scriptMs": 137,
-   "styleMs": 61,
-   "layoutMs": 64,
-   "taskMs": 377,
-   "fcpMs": 312,
+   "scriptMs": 89,
+   "styleMs": 39,
+   "layoutMs": 43,
+   "taskMs": 249,
+   "fcpMs": 208,
    "heapMB": 3.13,
    "nodes": 1481
   },
@@ -33,108 +33,108 @@
     "sort": {
      "ok": true,
      "dom": 37,
-     "ms": 45
+     "ms": 28
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 65
+     "ms": 39
     },
     "filter": {
      "ok": true,
      "dom": 57,
-     "ms": 222
+     "ms": 160
     },
     "clear filter": {
      "ok": true,
      "dom": 59,
-     "ms": 91
+     "ms": 56
     },
     "select row": {
      "ok": true,
      "dom": 6,
-     "ms": 170
+     "ms": 119
     },
     "details open": {
      "ok": true,
      "dom": 19,
-     "ms": 80
+     "ms": 55
     },
     "column picker": {
      "ok": true,
      "dom": 11,
-     "ms": 77
+     "ms": 59
     },
     "account menu": {
      "ok": true,
      "dom": 5,
-     "ms": 36
+     "ms": 27
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 265,
+    "load": 170,
     "elements": 528,
     "text": 161,
     "comments": 228,
     "rows": 20,
     "live": {
-     "ms": 5,
+     "ms": 3,
      "dom": 3
     },
     "select": {
-     "ms": 38,
+     "ms": 22,
      "dom": 5
     },
     "sort": {
-     "ms": 46,
+     "ms": 33,
      "dom": 37
     }
    },
    "100": {
-    "load": 380,
+    "load": 249,
     "elements": 1968,
     "text": 641,
     "comments": 708,
     "rows": 100,
     "live": {
-     "ms": 6,
+     "ms": 4,
      "dom": 3
     },
     "select": {
-     "ms": 35,
+     "ms": 23,
      "dom": 5
     },
     "sort": {
-     "ms": 138,
+     "ms": 83,
      "dom": 183
     }
    },
    "200": {
-    "load": 495,
+    "load": 344,
     "elements": 3768,
     "text": 1241,
     "comments": 1308,
     "rows": 200,
     "live": {
-     "ms": 8,
+     "ms": 7,
      "dom": 3
     },
     "select": {
-     "ms": 38,
+     "ms": 26,
      "dom": 5
     },
     "sort": {
-     "ms": 196,
+     "ms": 127,
      "dom": 365
     }
    }
   },
   "longList": {
-   "load": 708,
-   "scrollMs": 175,
+   "load": 490,
+   "scrollMs": 124,
    "heightMoved": 0,
    "downJump": 0,
    "upJump": 0,
@@ -153,8 +153,8 @@
     },
     "css": {
      "raw": 171931,
-     "gz": 24110,
-     "br": 20054
+     "gz": 24117,
+     "br": 20063
     }
    },
    "10": {
@@ -165,8 +165,8 @@
     },
     "css": {
      "raw": 171931,
-     "gz": 24110,
-     "br": 20054
+     "gz": 24117,
+     "br": 20063
     }
    },
    "50": {
@@ -177,8 +177,8 @@
     },
     "css": {
      "raw": 171931,
-     "gz": 24110,
-     "br": 20054
+     "gz": 24117,
+     "br": 20063
     }
    },
    "200": {
@@ -189,10 +189,21 @@
     },
     "css": {
      "raw": 171931,
-     "gz": 24110,
-     "br": 20054
+     "gz": 24117,
+     "br": 20063
     }
    }
+  },
+  "design": {
+   "axe": 0,
+   "contrast": 0,
+   "distinct": 75,
+   "drift": 15,
+   "focusLost": 0,
+   "overflow": 0,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 39719
   }
  },
  "solid-kobalte": {
@@ -211,11 +222,11 @@
   },
   "lines": 118,
   "load": {
-   "scriptMs": 156,
-   "styleMs": 6,
-   "layoutMs": 37,
-   "taskMs": 285,
-   "fcpMs": 248,
+   "scriptMs": 87,
+   "styleMs": 4,
+   "layoutMs": 23,
+   "taskMs": 171,
+   "fcpMs": 152,
    "heapMB": 3.84,
    "nodes": 617
   },
@@ -224,113 +235,113 @@
     "live cell": {
      "ok": true,
      "dom": 40,
-     "ms": 9
+     "ms": 5
     },
     "sort": {
      "ok": true,
      "dom": 46,
-     "ms": 42
+     "ms": 25
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 40
+     "ms": 19
     },
     "filter": {
      "ok": true,
      "dom": 46,
-     "ms": 48
+     "ms": 23
     },
     "clear filter": {
      "ok": true,
      "dom": 43,
-     "ms": 39
+     "ms": 27
     },
     "select row": {
      "ok": true,
      "dom": 6,
-     "ms": 14
+     "ms": 9
     },
     "details open": {
      "ok": true,
      "dom": 3,
-     "ms": 32
+     "ms": 23
     },
     "column picker": {
      "ok": true,
      "dom": 55,
-     "ms": 72
+     "ms": 33
     },
     "account menu": {
      "ok": true,
      "dom": 25,
-     "ms": 20
+     "ms": 11
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 190,
+    "load": 109,
     "elements": 337,
     "text": 172,
     "comments": 2,
     "rows": 20,
     "live": {
-     "ms": 7,
+     "ms": 6,
      "dom": 40
     },
     "select": {
-     "ms": 16,
+     "ms": 8,
      "dom": 6
     },
     "sort": {
-     "ms": 42,
+     "ms": 23,
      "dom": 46
     }
    },
    "100": {
-    "load": 331,
+    "load": 179,
     "elements": 1457,
     "text": 732,
     "comments": 2,
     "rows": 100,
     "live": {
-     "ms": 26,
+     "ms": 14,
      "dom": 200
     },
     "select": {
-     "ms": 20,
+     "ms": 13,
      "dom": 6
     },
     "sort": {
-     "ms": 89,
+     "ms": 50,
      "dom": 206
     }
    },
    "200": {
-    "load": 397,
+    "load": 219,
     "elements": 2857,
     "text": 1432,
     "comments": 2,
     "rows": 200,
     "live": {
-     "ms": 44,
+     "ms": 27,
      "dom": 400
     },
     "select": {
-     "ms": 26,
+     "ms": 13,
      "dom": 6
     },
     "sort": {
-     "ms": 79,
+     "ms": 37,
      "dom": 402
     }
    }
   },
   "longList": {
-   "load": 210,
-   "scrollMs": 273,
+   "load": 110,
+   "scrollMs": 155,
    "heightMoved": 6607,
    "downJump": 0,
    "upJump": 0,
@@ -389,6 +400,17 @@
      "br": 1428
     }
    }
+  },
+  "design": {
+   "axe": 14,
+   "contrast": 6,
+   "distinct": 69,
+   "drift": 14,
+   "focusLost": 1,
+   "overflow": 2,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 42612
   }
  },
  "react-radix": {
@@ -407,11 +429,11 @@
   },
   "lines": 129,
   "load": {
-   "scriptMs": 250,
-   "styleMs": 6,
-   "layoutMs": 39,
-   "taskMs": 393,
-   "fcpMs": 360,
+   "scriptMs": 167,
+   "styleMs": 4,
+   "layoutMs": 26,
+   "taskMs": 261,
+   "fcpMs": 240,
    "heapMB": 4.4,
    "nodes": 508
   },
@@ -420,60 +442,79 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 21
+     "ms": 19
     },
     "sort": {
      "ok": true,
      "dom": 60,
-     "ms": 45
+     "ms": 30
     },
     "next page": {
      "ok": true,
      "dom": 65,
-     "ms": 29
+     "ms": 20
     },
     "filter": {
      "ok": true,
      "dom": 73,
-     "ms": 39
+     "ms": 27
     },
     "clear filter": {
      "ok": true,
      "dom": 62,
-     "ms": 32
+     "ms": 20
     },
     "select row": {
      "ok": true,
      "dom": 7,
-     "ms": 24
+     "ms": 15
     },
     "details open": {
      "ok": true,
      "dom": 5,
-     "ms": 41
+     "ms": 27
     },
     "column picker": {
      "ok": true,
      "dom": 54,
-     "ms": 80
+     "ms": 57
     },
     "account menu": {
      "ok": true,
      "dom": 26,
-     "ms": 28
+     "ms": 18
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 269,
+    "load": 177,
     "elements": 295,
     "text": 171,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 22,
+     "ms": 13,
+     "dom": 3
+    },
+    "select": {
+     "ms": 16,
+     "dom": 7
+    },
+    "sort": {
+     "ms": 23,
+     "dom": 60
+    }
+   },
+   "100": {
+    "load": 210,
+    "elements": 1255,
+    "text": 731,
+    "comments": 1,
+    "rows": 100,
+    "live": {
+     "ms": 26,
      "dom": 3
     },
     "select": {
@@ -481,52 +522,33 @@
      "dom": 7
     },
     "sort": {
-     "ms": 45,
-     "dom": 60
-    }
-   },
-   "100": {
-    "load": 396,
-    "elements": 1255,
-    "text": 731,
-    "comments": 1,
-    "rows": 100,
-    "live": {
-     "ms": 50,
-     "dom": 3
-    },
-    "select": {
-     "ms": 51,
-     "dom": 7
-    },
-    "sort": {
-     "ms": 96,
+     "ms": 57,
      "dom": 244
     }
    },
    "200": {
-    "load": 484,
+    "load": 281,
     "elements": 2455,
     "text": 1431,
     "comments": 1,
     "rows": 200,
     "live": {
-     "ms": 79,
+     "ms": 43,
      "dom": 3
     },
     "select": {
-     "ms": 81,
+     "ms": 46,
      "dom": 7
     },
     "sort": {
-     "ms": 124,
+     "ms": 75,
      "dom": 395
     }
    }
   },
   "longList": {
-   "load": 260,
-   "scrollMs": 277,
+   "load": 171,
+   "scrollMs": 181,
    "heightMoved": 6607,
    "downJump": 0,
    "upJump": 0,
@@ -585,6 +607,17 @@
      "br": 1428
     }
    }
+  },
+  "design": {
+   "axe": 0,
+   "contrast": 0,
+   "distinct": 65,
+   "drift": 13,
+   "focusLost": 0,
+   "overflow": 2,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 94688
   }
  },
  "react-zustand": {
@@ -603,11 +636,11 @@
   },
   "lines": 137,
   "load": {
-   "scriptMs": 246,
-   "styleMs": 5,
-   "layoutMs": 39,
-   "taskMs": 386,
-   "fcpMs": 352,
+   "scriptMs": 147,
+   "styleMs": 4,
+   "layoutMs": 24,
+   "taskMs": 235,
+   "fcpMs": 236,
    "heapMB": 4.39,
    "nodes": 508
   },
@@ -616,113 +649,113 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 19
+     "ms": 13
     },
     "sort": {
      "ok": true,
      "dom": 60,
-     "ms": 46
+     "ms": 27
     },
     "next page": {
      "ok": true,
      "dom": 65,
-     "ms": 28
+     "ms": 18
     },
     "filter": {
      "ok": true,
      "dom": 73,
-     "ms": 40
+     "ms": 29
     },
     "clear filter": {
      "ok": true,
      "dom": 62,
-     "ms": 30
+     "ms": 20
     },
     "select row": {
      "ok": true,
      "dom": 7,
-     "ms": 20
+     "ms": 15
     },
     "details open": {
      "ok": true,
      "dom": 5,
-     "ms": 36
+     "ms": 27
     },
     "column picker": {
      "ok": true,
      "dom": 54,
-     "ms": 97
+     "ms": 55
     },
     "account menu": {
      "ok": true,
      "dom": 26,
-     "ms": 28
+     "ms": 15
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 312,
+    "load": 168,
     "elements": 295,
     "text": 171,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 21,
+     "ms": 14,
      "dom": 3
     },
     "select": {
-     "ms": 24,
+     "ms": 16,
      "dom": 7
     },
     "sort": {
-     "ms": 39,
+     "ms": 23,
      "dom": 60
     }
    },
    "100": {
-    "load": 388,
+    "load": 222,
     "elements": 1255,
     "text": 731,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 45,
+     "ms": 28,
      "dom": 3
     },
     "select": {
-     "ms": 52,
+     "ms": 28,
      "dom": 7
     },
     "sort": {
-     "ms": 99,
+     "ms": 56,
      "dom": 244
     }
    },
    "200": {
-    "load": 464,
+    "load": 274,
     "elements": 2455,
     "text": 1431,
     "comments": 1,
     "rows": 200,
     "live": {
-     "ms": 74,
+     "ms": 52,
      "dom": 3
     },
     "select": {
-     "ms": 76,
+     "ms": 46,
      "dom": 7
     },
     "sort": {
-     "ms": 117,
+     "ms": 71,
      "dom": 395
     }
    }
   },
   "longList": {
-   "load": 262,
-   "scrollMs": 258,
+   "load": 156,
+   "scrollMs": 180,
    "heightMoved": 6607,
    "downJump": 0,
    "upJump": 0,
@@ -781,6 +814,17 @@
      "br": 1428
     }
    }
+  },
+  "design": {
+   "axe": 32,
+   "contrast": 0,
+   "distinct": 62,
+   "drift": 14,
+   "focusLost": 0,
+   "overflow": 0,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 95211
   }
  },
  "react-mui": {
@@ -799,12 +843,12 @@
   },
   "lines": 90,
   "load": {
-   "scriptMs": 406,
-   "styleMs": 16,
-   "layoutMs": 59,
-   "taskMs": 535,
-   "fcpMs": 524,
-   "heapMB": 10.92,
+   "scriptMs": 486,
+   "styleMs": 19,
+   "layoutMs": 68,
+   "taskMs": 639,
+   "fcpMs": 624,
+   "heapMB": 10.94,
    "nodes": 765
   },
   "parity": {
@@ -812,94 +856,94 @@
     "live cell": {
      "ok": true,
      "dom": 131,
-     "ms": 90
+     "ms": 182
     },
     "sort": {
      "ok": true,
-     "dom": 57,
-     "ms": 92
+     "dom": 58,
+     "ms": 132
     },
     "next page": {
      "ok": true,
-     "dom": 68,
-     "ms": 91
+     "dom": 67,
+     "ms": 141
     },
     "filter": {
      "ok": true,
      "dom": 132,
-     "ms": 134
+     "ms": 211
     },
     "clear filter": {
      "ok": true,
      "dom": 66,
-     "ms": 54
+     "ms": 83
     },
     "select row": {
      "ok": true,
      "dom": 171,
-     "ms": 127
+     "ms": 164
     },
     "details open": {
      "ok": true,
      "dom": 148,
-     "ms": 105
+     "ms": 132
     },
     "column picker": {
      "ok": true,
      "dom": 305,
-     "ms": 115
+     "ms": 153
     },
     "account menu": {
      "ok": true,
      "dom": 147,
-     "ms": 119
+     "ms": 136
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 486,
+    "load": 617,
     "elements": 569,
     "text": 165,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 87,
+     "ms": 135,
      "dom": 131
     },
     "select": {
-     "ms": 126,
+     "ms": 179,
      "dom": 160
     },
     "sort": {
-     "ms": 74,
+     "ms": 102,
      "dom": 66
     }
    },
    "100": {
-    "load": 631,
+    "load": 793,
     "elements": 2009,
     "text": 725,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 263,
+     "ms": 360,
      "dom": 611
     },
     "select": {
-     "ms": 341,
+     "ms": 472,
      "dom": 640
     },
     "sort": {
-     "ms": 180,
+     "ms": 248,
      "dom": 313
     }
    }
   },
   "longList": {
-   "load": 152,
-   "scrollMs": 191,
+   "load": 171,
+   "scrollMs": 150,
    "heightMoved": 6610,
    "downJump": 0,
    "upJump": 0,
@@ -958,6 +1002,17 @@
      "br": 0
     }
    }
+  },
+  "design": {
+   "axe": 17,
+   "contrast": 17,
+   "distinct": 74,
+   "drift": 14,
+   "focusLost": 27,
+   "overflow": 0,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 127444
   }
  },
  "weft-plain": {
@@ -976,11 +1031,11 @@
   },
   "lines": 120,
   "load": {
-   "scriptMs": 71,
-   "styleMs": 6,
-   "layoutMs": 36,
-   "taskMs": 207,
-   "fcpMs": 164,
+   "scriptMs": 54,
+   "styleMs": 4,
+   "layoutMs": 29,
+   "taskMs": 165,
+   "fcpMs": 136,
    "heapMB": 2.19,
    "nodes": 678
   },
@@ -989,27 +1044,27 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 4
+     "ms": 3
     },
     "sort": {
      "ok": true,
      "dom": 37,
-     "ms": 17
+     "ms": 14
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 15
+     "ms": 13
     },
     "filter": {
      "ok": true,
      "dom": 42,
-     "ms": 20
+     "ms": 16
     },
     "clear filter": {
      "ok": true,
      "dom": 41,
-     "ms": 16
+     "ms": 12
     },
     "select row": {
      "ok": true,
@@ -1019,49 +1074,49 @@
     "details open": {
      "ok": true,
      "dom": 3,
-     "ms": 27
+     "ms": 24
     },
     "column picker": {
      "ok": true,
      "dom": 22,
-     "ms": 15
+     "ms": 11
     },
     "account menu": {
      "ok": true,
      "dom": 0,
-     "ms": 4
+     "ms": 3
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 111,
+    "load": 85,
     "elements": 320,
     "text": 183,
     "comments": 36,
     "rows": 20,
     "live": {
-     "ms": 3,
+     "ms": 4,
      "dom": 3
     },
     "select": {
-     "ms": 7,
+     "ms": 5,
      "dom": 2
     },
     "sort": {
-     "ms": 15,
+     "ms": 11,
      "dom": 37
     }
    },
    "100": {
-    "load": 145,
+    "load": 105,
     "elements": 1280,
     "text": 743,
     "comments": 116,
     "rows": 100,
     "live": {
-     "ms": 5,
+     "ms": 4,
      "dom": 3
     },
     "select": {
@@ -1069,33 +1124,33 @@
      "dom": 2
     },
     "sort": {
-     "ms": 42,
+     "ms": 37,
      "dom": 183
     }
    },
    "200": {
-    "load": 189,
+    "load": 148,
     "elements": 2480,
     "text": 1443,
     "comments": 216,
     "rows": 200,
     "live": {
-     "ms": 5,
+     "ms": 6,
      "dom": 3
     },
     "select": {
-     "ms": 6,
+     "ms": 8,
      "dom": 2
     },
     "sort": {
-     "ms": 54,
+     "ms": 42,
      "dom": 365
     }
    }
   },
   "longList": {
-   "load": 169,
-   "scrollMs": 160,
+   "load": 129,
+   "scrollMs": 114,
    "heightMoved": 6566,
    "downJump": 0,
    "upJump": 0,
@@ -1154,6 +1209,20 @@
      "br": 1424
     }
    }
+  }
+ },
+ "weft-tailwind": {
+  "label": "weft-tailwind",
+  "design": {
+   "axe": 6,
+   "contrast": 6,
+   "distinct": 63,
+   "drift": 15,
+   "focusLost": 0,
+   "overflow": 2,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 12033
   }
  }
 }

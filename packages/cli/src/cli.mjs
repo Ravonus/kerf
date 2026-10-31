@@ -1,6 +1,8 @@
 // Argument parsing and output for `weft`. JSON on stdout with --json, human text on stderr.
 // Exit codes: 0 ok, 1 diagnostics with errors (or a stale AGENTS.md under --check), 2 usage or internal error.
 
+import { fix } from './fix.mjs'
+import { writeTokens } from './tokens.mjs'
 import { resolve } from 'node:path'
 import { addCommand } from './add.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
@@ -21,7 +23,9 @@ import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writ
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
-  check [files…]      compile in check mode; W- and P-diagnostics with fixes
+  check [files…]      compile in check mode; W-, P- and D-diagnostics with fixes
+  fix [files…]        apply the safe autofixes
+  tokens              warp's resolved tokens as DTCG, in .weft/tokens/
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
   browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
@@ -209,6 +213,18 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           return result.ok ? 0 : 1
         }
         throw Object.assign(new Error(`unknown plugins subcommand ${sub}`), { code: 'E_USAGE' })
+      }
+      case 'fix': {
+        const result = await fix(args.root, { files: args.positional })
+        if (args.json) print(result)
+        else say(result.applied.length ? result.applied.map(a => `${a.file}:${a.span[0]}:${a.span[1]}  ${a.code}`).join('\n') : 'nothing to fix')
+        return 0
+      }
+      case 'tokens': {
+        const result = await writeTokens(args.root)
+        if (args.json) print(result)
+        else say(`${result.dir}: ${result.files.length} files`)
+        return 0
       }
       case 'style': {
         const sub = args.positional[0]

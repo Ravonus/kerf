@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The warp plugin: seed → tokens (gated by the spec's own contrast checker), classic fields, catalog and AGENTS text.
 import { readFileSync } from 'node:fs'
-import { warp } from '../plugin.mjs'
+import { dtcg, warp } from '../plugin.mjs'
 
 const run = opts => warp(opts).contribute({ command: 'build', mode: 'production', root: '' })
 const code = fn => { try { fn() } catch (e) { return e.code } }
@@ -98,4 +98,22 @@ test.each([
     error = e
   }
   expect(error).toMatchObject({ code: 'P115', path })
+})
+
+test('dtcg: every theme × expression, DTCG colours and dimensions, and a resolver over them', () => {
+  const files = dtcg()
+  expect(Object.keys(files)).toHaveLength(7)
+  const light = files['warp.light.quiet.tokens.json']
+  expect(light.color.$type).toBe('color')
+  expect(light.color.text.$value.colorSpace).toBe('srgb')
+  expect(light.color.text.$value.hex).toMatch(/^#[0-9a-f]{6}$/)
+  expect(light.space.group.$value).toEqual({ value: 16, unit: 'px' })
+  expect(light.radius.control.$value.value).toBe(8)
+  expect(files['warp.dark.vivid.tokens.json'].radius.control.$value.value).toBe(2)
+  expect(Object.keys(files['warp.resolver.json'].modifiers.mode.contexts)).toHaveLength(6)
+  expect(files['warp.dark.quiet.tokens.json'].color.text.$value.hex).not.toBe(light.color.text.$value.hex)
+})
+test('dtcg: the seed reaches the tokens', () => {
+  const css = run({ seed: { hue: 20, chroma: 0.12 } }).tokens.css
+  expect(dtcg(css)['warp.light.quiet.tokens.json'].color['accent-solid'].$value.hex).not.toBe(dtcg()['warp.light.quiet.tokens.json'].color['accent-solid'].$value.hex)
 })

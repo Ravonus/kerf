@@ -28,11 +28,12 @@ details { margin-top: 10px; font-size: 13px; color: var(--ink-2); } table { bord
 <section class="grid"><div><h2>Sort, as rows grow</h2><div class="note">CPU ms for one sort, 4x throttle.</div><div id="sort"></div></div>
 <div><h2>Live cell, as rows grow</h2><div class="note">CPU ms for one changed value, 4x throttle.</div><div id="live"></div></div></section>
 <section id="trend"><h2>Over time</h2><div class="note">JS + CSS brotli per measure.mjs run.</div><div id="time"></div></section>
+<section id="design" hidden><h2>One brief, built by a fresh agent</h2><div class="note">design/: the same three screens on each stack, re-audited in Chromium on every run. Light and dark, 1280 and 390. Lower is better. n=1 per stack here; evals/results/ds-exit.md has the whole sample.</div><h3>Accessibility: axe nodes</h3><div id="designAxe"></div><h3>Consistency: distinct computed values</h3><div id="designValues"></div></section>
 <section><h2>Every number</h2><details><summary>Show the table</summary><div class="scroll" id="table"></div></details></section>
 </main><div id="tip"></div>
 <script>
 const { results, history } = /*DATA*/null
-const keys = Object.keys(results), color = k => `var(--s${keys.indexOf(k) + 1})`, label = k => results[k].label
+const keys = Object.keys(results).filter(k => results[k].size), color = k => `var(--s${keys.indexOf(k) + 1})`, label = k => results[k].label
 const kb = n => (n / 1024).toFixed(1), $ = id => document.getElementById(id)
 const NS = 'http://www.w3.org/2000/svg'
 const el = (n, a = {}, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p?.append(e); return e }
@@ -85,6 +86,13 @@ lines('els', rowsOf, (k, n) => results[k].scale[n]?.elements, 'elements')
 lines('sort', rowsOf, (k, n) => results[k].scale[n]?.sort.ms, 'ms')
 lines('live', rowsOf, (k, n) => results[k].scale[n]?.live.ms, 'ms')
 if (history.length > 1) { const xs = history.map((h, i) => `${h.commit}${' '.repeat(i % 2)}`); const by = Object.fromEntries(xs.map((x, i) => [x, history[i]])); lines('time', xs, (k, x) => { const s = by[x].stacks[k]; return s ? (s.js + s.css) / 1024 : null }, 'KB') } else $('trend').querySelector('.note').textContent = 'Starts with the second measure.mjs run.'
+const designKeys = Object.keys(results).filter(k => results[k].design)
+if (designKeys.length) {
+  $('design').hidden = false
+  const paint = k => (keys.includes(k) ? color(k) : 'var(--ink)')
+  bars('designAxe', designKeys.map(k => ({ name: label(k), parts: [[results[k].design.axe, paint(k), `${results[k].design.contrast} contrast, ${results[k].design.brief}/${results[k].design.briefTotal} of the brief`]] })), 'nodes')
+  bars('designValues', designKeys.map(k => ({ name: label(k), parts: [[results[k].design.distinct, paint(k), `${results[k].design.drift} role looks`]] })), 'values')
+}
 const head = ['', ...keys.map(label)], cells = [['JS br KB', k => kb(results[k].size.js.br)], ['CSS br KB', k => kb(results[k].size.css.br)], ['JS gz KB', k => kb(results[k].size.js.gz)], ['CSS gz KB', k => kb(results[k].size.css.gz)], ['App lines', k => results[k].lines], ['FCP ms', k => results[k].load.fcpMs], ['Heap MB', k => results[k].load.heapMB],
   ...Object.keys(results[first].parity.steps).flatMap(s => [[`${s}: DOM`, k => results[k].parity.steps[s].dom ?? '—'], [`${s}: ms`, k => results[k].parity.steps[s].ms ?? '—']]),
   ...rowsOf.flatMap(n => [[`${n} rows: elements`, k => results[k].scale[n]?.elements ?? '—'], [`${n} rows: comments`, k => results[k].scale[n]?.comments ?? '—'], [`${n} rows: load ms`, k => results[k].scale[n]?.load ?? '—'], [`${n} rows: sort ms`, k => results[k].scale[n]?.sort.ms ?? '—'], [`${n} rows: live ms`, k => results[k].scale[n]?.live.ms ?? '—']])]
