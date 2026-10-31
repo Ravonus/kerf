@@ -165,7 +165,13 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const versions = cached ? await store.versions(entry.tags) : []
     const ctx = early ?? (await scope.ctx())
     const touched = tracker(scope)
-    const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx, touched)
+    const added: string[] = []
+    const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx, touched, added)
+    const fresh = [...new Set(added)].filter(t => !entry.tags.includes(t))
+    if (fresh.length) {
+      entry.tags.push(...fresh)
+      if (cached) versions.push(...(await store.versions(fresh)))
+    }
     if (scope.options.dev) await checked(v, fn, scope)
     if (touched) {
       missedTags(fn, 'read', touched.read, entry.tags, scope)
@@ -192,11 +198,19 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
 
 const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => x === b[i])
 
-async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?: Touched) {
+/** A body in another process (research 36): what it adds to the tags and reports it touched arrive with the value. */
+async function callImpl(fn: Fn, input: unknown, ctx: Context, scope: Scope, touched: Touched | undefined, added: string[]) {
+  const { value, tags, touched: tables } = await fn.def.impl!.call({ fn, input, ctx, request: scope.request })
+  added.push(...tags)
+  if (touched) for (const t of tables) touched[fn.kind === 'query' ? 'read' : 'write'].add(t)
+  return value
+}
+
+async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?: Touched, added: string[] = []) {
   guard(fn, ctx)
   const replaced = scope.options.handlers?.get(fn.$id)
   // Awaited inside the frame: a Drizzle query is a thenable, and only runs when something awaits it.
-  const run = async () => await (replaced ? replaced(input, ctx) : fn.def.run!({ input, ctx }))
+  const run = async () => await (replaced ? replaced(input, ctx) : fn.def.impl ? callImpl(fn, input, ctx, scope, touched, added) : fn.def.run!({ input, ctx }))
   let v: unknown
   try {
     v = await (touched ? enter(Object.create(scope, { touched: { value: touched } }), run) : run())
@@ -277,10 +291,11 @@ export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh:
     throw new StartError('Q004', `mutation \`${fn.$id}\` called while the server handles a GET (\`load\`, a page render or a query)`, 'call mutations from handlers or other mutations; GET handlers must be side-effect free', { status: 500 })
   const valid = await (form ? formInput(fn, input) : validate(fn, input))
   const touched = tracker(scope)
-  const v = await call(scope, fn, valid, await scope.ctx(), touched)
+  const added: string[] = []
+  const v = await call(scope, fn, valid, await scope.ctx(), touched, added)
   if (scope.options.dev) await checked(v, fn, scope)
   const declared = typeof fn.def.invalidates === 'function' ? fn.def.invalidates(valid, v) : fn.def.invalidates ?? []
-  await invalidate(scope, [...declared])
+  await invalidate(scope, [...declared, ...added])
   const tags = [...scope.invalidated]
   if (touched) {
     missedTags(fn, 'write', touched.write, tags, scope)
@@ -384,7 +399,7 @@ async function formInput(fn: Fn, input: any): Promise<unknown> {
 async function checked(v: unknown, fn: Fn, scope: Scope) {
   serializable(v, fn, scope)
   const schema = fn.def.output
-  if (!schema) return
+  if (!schema || fn.def.impl) return // `impl`: rust.ts checked what came back, on every call
   const r = await schema['~standard'].validate(v)
   if (r.issues) throw new StartError('C002', `\`${fn.$id}\` returned a value its \`output\` schema rejects: ${r.issues.map(i => `${i.path?.map(p => (typeof p === 'object' ? p.key : p)).join('.') ?? ''}: ${i.message}`).join('; ')}`, 'fix `run`, or the schema', { status: 500 })
 }

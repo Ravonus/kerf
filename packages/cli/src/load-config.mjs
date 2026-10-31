@@ -106,6 +106,10 @@ export const configSchema = z.strictObject({
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),
   runtime: z.enum(['node', 'bun', 'deno']).optional(),
+  rust: z.strictObject({
+    unions: z.literal('allow').optional(),
+    services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional() })).optional(),
+  }).optional(),
   trust: z.enum(['enforce', 'warn']).optional(),
 })
 

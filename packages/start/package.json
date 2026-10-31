@@ -68,7 +68,9 @@
     "./og": "./src/og/index.mjs",
     "./app": "./src/app.mjs",
     "./inspect": "./src/inspect.mjs",
-    "./contract": "./src/contract.mjs"
+    "./contract": "./src/contract.mjs",
+    "./rust": "./src/rust.ts",
+    "./sidecar": "./src/sidecar.mjs"
   },
   "sideEffects": false,
   "peerDependenciesMeta": {

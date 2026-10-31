@@ -20,7 +20,7 @@ import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
-import { dbLayer, schemaHash } from './start.mjs'
+import { dbLayer, schemaHash, start } from './start.mjs'
 
 const posix = p => p.split('\\').join('/')
 
@@ -107,6 +107,7 @@ export async function check(root, options = {}) {
     ...hygiene(root),
     ...(await socketChecks(root)),
     ...schemaDrift(root, await dbLayer(root, loaded)),
+    ...(await rustChecks(root, loaded)),
   ]
   sortDiagnostics(diagnostics)
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }
@@ -123,6 +124,41 @@ export async function check(root, options = {}) {
     files: rels,
     tests: testRels,
     ms: Math.round(performance.now() - started),
+  }
+}
+
+/**
+ * R101, R102 from the contract, and R103, R109 from `cargo check`, for an app with a sidecar: an agent gets the same
+ * answer here as from `weft build`, with the function's id on it.
+ */
+async function rustChecks(root, loaded) {
+  let sidecar
+  try { sidecar = await start(root, 'sidecar') } catch { return [] }
+  if (!sidecar.usesRemote(root)) return []
+  const rust = loaded.config?.rust
+  const held = process.env.WEFT_BUILD
+  process.env.WEFT_BUILD = '1'
+  try {
+    const { writeContract } = await start(root, 'contract')
+    const { contract, diagnostics } = await writeContract({ root, site: loaded.config?.site, rust })
+    const out = diagnostics.filter(d => /^R1/.test(d.code)).map(d => diagnostic({ ...d, file: '.weft/contract.json' }))
+    if (out.some(d => d.severity === 'error')) return out
+    for (const service of Object.keys(contract.services ?? {})) {
+      if (rust?.services?.[service]?.external) continue
+      const dir = sidecar.crateDir(root, rust, service)
+      if (!existsSync(dir)) {
+        out.push(diagnostic({ code: 'R109', file: '.weft/contract.json', why: `\`rust://${service}\` has no crate at \`${posix(relative(root, dir))}\`.` }))
+        continue
+      }
+      const checked = await sidecar.cargo('check', { root, dir, service, contract })
+      out.push(...checked.diagnostics.map(({ rendered, ...d }) => diagnostic({ ...d, help: rendered })))
+    }
+    return out
+  } catch (e) {
+    return [diagnostic({ code: 'R109', severity: 'warning', file: '.weft/contract.json', why: `the contract couldn't be written, so the sidecars weren't checked: ${e.message.split('\n')[0]}` })]
+  } finally {
+    if (held === undefined) delete process.env.WEFT_BUILD
+    else process.env.WEFT_BUILD = held
   }
 }
 

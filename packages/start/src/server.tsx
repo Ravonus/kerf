@@ -368,7 +368,7 @@ export function createHandler(options: HandlerOptions) {
       if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)
       // A wrong field in a form is an answer, not a fault: nothing to log.
       if (e instanceof StartError && fromForm && e.extra.issues) return out({ e: { code: e.code, message: e.message, issues: e.extra.issues } }, 422)
-      if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : {})
+      if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {})
       options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
       return out({ e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' } }, 500)
     }

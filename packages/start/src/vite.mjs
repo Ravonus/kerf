@@ -146,7 +146,7 @@ export default function weftStart(options = {}) {
       if (m) this.environment.moduleGraph.invalidateModule(m)
     },
     resolveId: {
-      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
+      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
       handler(source, importer) {
         // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
         if (source === 'sharp') {
