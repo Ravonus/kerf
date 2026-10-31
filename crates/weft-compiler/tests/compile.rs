@@ -944,3 +944,44 @@ fn a_rewritten_name_as_a_tag_is_read_live() {
     let dev = compile("export const C = (p) => <ul>{p.xs.map(g => <li key={g.id}><g.icon /></li>)}</ul>;", &Options { filename: "App.tsx".into(), dev: true, ..Default::default() });
     assert!(dev.code.unwrap().contains("_$component(g().icon, {}, \"g.icon\", \"App.tsx:1\")"));
 }
+
+// ---- React prop names ------------------------------------------------------------------------------------------
+
+#[test]
+fn react_names_compile_to_attributes() {
+    let (code, _) = run(r#"export const A = () => <svg tabIndex={0} viewBox="0 0 1 1" focusable={false}><path strokeWidth="2" clipPath="url(#a)" /><use xlinkHref="#a" /></svg>"#);
+    for out in ["tabindex=", "stroke-width=", "clip-path=", "xlink:href=", r#"focusable=\"false\""#] {
+        assert!(code.contains(out), "{out}: {code}");
+    }
+    // negative controls: a case-sensitive attribute keeps its case, and the React spelling is gone
+    assert!(code.contains("viewBox="), "{code}");
+    assert!(!code.contains("strokeWidth") && !code.contains("tabIndex"), "{code}");
+}
+
+#[test]
+fn react_names_compile_for_the_server_and_dynamic_values() {
+    let source = "export const A = (p) => <input tabIndex={p.i} defaultValue={p.v} defaultChecked={p.c} />";
+    let ssr = compile(source, &Options { filename: "App.tsx".into(), generate: "ssr".into(), ..Default::default() }).code.unwrap();
+    for out in [r#"("tabindex", "#, r#"("value", "#, r#"("checked", "#] {
+        assert!(ssr.contains(out), "{out}: {ssr}");
+    }
+    let (dom, _) = run(source);
+    assert!(dom.contains(".defaultValue = ") && dom.contains(".defaultChecked = "), "{dom}");
+}
+
+#[test]
+fn react_events_compile_to_their_dom_events() {
+    let (code, _) = run("export const A = (p) => <input onDoubleClick={p.a} onClickCapture={p.b} onChange={p.c} onGotPointerCapture={p.d} />");
+    assert!(code.contains(r#""dblclick""#), "{code}");
+    assert!(code.contains(r#".addEventListener("click", "#) && code.contains(", true);"), "{code}");
+    assert!(code.contains("_$change("), "{code}");
+    assert!(code.contains(r#""gotpointercapture""#), "{code}");
+}
+
+#[test]
+fn inner_html_and_form_values_compile_as_content() {
+    let (code, _) = run(r#"export const A = (p) => <div><p dangerouslySetInnerHTML={p.raw} /><textarea value="a" /></div>"#);
+    assert!(code.contains("?.__html"), "{code}");
+    assert!(!code.contains("dangerouslySetInnerHTML"), "{code}");
+    assert!(code.contains(r#".value = "a""#), "{code}");
+}

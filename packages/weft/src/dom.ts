@@ -135,8 +135,8 @@ export function insert(parent: Mountable, value: any, marker?: Node | null) {
 
 // ---- attributes and properties ---------------------------------------------------------------------------------
 
-/** Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute. */
-export const WORDS = /^(?:aria-|data-|(?:contenteditable|draggable|focusable|spellcheck)$)/i
+/** Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute. Prefixes keep it short. */
+export const WORDS = /^(?:aria-|contented|draggab|focusab|spellch)/i
 
 /** `null`/`false` remove the attribute and `true` writes it empty, except `WORDS`. */
 export function setAttribute(node: Element, name: string, value: any) {

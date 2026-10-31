@@ -64,9 +64,10 @@ pub fn attribute(name: &str) -> String {
     name.into()
 }
 
-/// Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute.
+/// Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute. `data-*` isn't
+/// one: weft's `data-x={flag}` is a presence flag, which `[data-x]` selectors depend on (docs/react-props.md).
 pub fn takes_words(name: &str) -> bool {
-    name.starts_with("aria-") || name.starts_with("data-") || matches!(name, "contenteditable" | "draggable" | "focusable" | "spellcheck")
+    name.starts_with("aria-") || matches!(name, "contenteditable" | "draggable" | "focusable" | "spellcheck")
 }
 
 /// `onClick` → (`click`, false); `onClickCapture` → (`click`, true); lowercase `onkeydown` is an attribute, not an

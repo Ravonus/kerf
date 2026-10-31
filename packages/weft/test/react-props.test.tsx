@@ -65,7 +65,9 @@ describe.each(['Literal', 'Dynamic', 'Spread'] as const)('HTML, %s', name => {
       expect(q(r, '[data-kind=text]').getAttribute('spellcheck')).toBe('false')
       expect(q(r, '[data-kind=edit]').getAttribute('contenteditable')).toBe('false')
       const b = q(r, 'button')
-      expect(['aria-pressed', 'aria-label', 'data-active', 'data-on', 'data-n'].map(a => b.getAttribute(a))).toEqual(['false', 'hi', 'false', 'true', '2'])
+      expect(['aria-pressed', 'aria-label', 'data-n'].map(a => b.getAttribute(a))).toEqual(['false', 'hi', '2'])
+      // Deliberately not React's: a data flag is present or absent (docs/react-props.md).
+      expect([b.getAttribute('data-active'), b.getAttribute('data-on')]).toEqual([null, ''])
     })
 
     test('defaults and values start the form', () => {

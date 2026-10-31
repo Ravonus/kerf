@@ -32,10 +32,16 @@ Three things differ from weft before this was added:
   and on a checkbox, radio, select or file input when the value changes. On a `<form>` it hears its fields per
   keystroke. A `change` event with no `input` before it, such as `fireEvent.change` in a test, still fires it. To act
   on commit, use `onBlur`, or `on(el, 'change', fn)` from `weft/browser`. `onInput` is unchanged, and W042 is retired.
-- **`false` is written as a word on `data-*`, `contentEditable`, `spellCheck`, `draggable` and `focusable`**, as `aria-*`
-  already was. `data-open={false}` writes `data-open="false"` and `data-open={true}` writes `data-open="true"`, so a
-  `[data-open]` selector now matches both. For a presence flag write `data-open={open ? '' : undefined}`.
+- **`false` is written as a word on `contentEditable`, `spellCheck`, `draggable` and `focusable`**, as `aria-*` already
+  was. Removing the attribute would inherit or fall back to the default instead of turning the state off.
 - **`select` with `defaultValue={x}` follows `x`**: it behaves as `value`. React reads it once.
+
+## Where weft differs from React
+
+**`data-*` booleans are presence flags.** `data-open={true}` writes `data-open=""` and `data-open={false}` removes it;
+React writes `"true"` and `"false"`. So `[data-open]` works in weft, and `[data-open="true"]` doesn't match. For React's
+output, pass a string: `data-open={String(open)}`. weft's own components and recorded output depend on the presence form,
+so this stays.
 
 ## Events
 
