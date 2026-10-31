@@ -1927,13 +1927,16 @@ exports[`Toggles: server HTML 1`] = `
 
 exports[`Type: client DOM after mount 1`] = `
 "<div>
-<h1 data-role="heading" data-scope="text">h</h1>
+<h1 data-role="title" data-scope="text">h</h1>
 <h2 data-role="heading" data-scope="text">h</h2>
 <h3 data-role="heading" data-scope="text">h</h3>
-<h4 data-role="heading" data-scope="text">h</h4>
-<h5 data-role="heading" data-scope="text">h</h5>
-<h6 data-role="heading" data-scope="text">h</h6>
+<h4 data-role="label" data-scope="text">h</h4>
+<h5 data-role="label" data-scope="text">h</h5>
+<h6 data-role="label" data-scope="text">h</h6>
 <h2 data-role="display" data-scope="text">Default level</h2>
+<a data-scope="link" href="/a">Link</a>
+<a data-scope="link" data-variant="subtle" href="/b" rel="noopener noreferrer" target="_blank">Away<span class="vh"> (opens in a new tab)</span>
+</a>
 <p data-scope="text">Body</p>
 <span data-role="eyebrow" data-scope="text">Eyebrow</span>
 <p data-ink="faint" data-scope="text" data-tone="critical">Tone</p>
@@ -1942,13 +1945,16 @@ exports[`Type: client DOM after mount 1`] = `
 
 exports[`Type: server HTML 1`] = `
 "<div>
-<h1 data-role="heading" data-scope="text">h</h1>
+<h1 data-role="title" data-scope="text">h</h1>
 <h2 data-role="heading" data-scope="text">h</h2>
 <h3 data-role="heading" data-scope="text">h</h3>
-<h4 data-role="heading" data-scope="text">h</h4>
-<h5 data-role="heading" data-scope="text">h</h5>
-<h6 data-role="heading" data-scope="text">h</h6>
+<h4 data-role="label" data-scope="text">h</h4>
+<h5 data-role="label" data-scope="text">h</h5>
+<h6 data-role="label" data-scope="text">h</h6>
 <h2 data-role="display" data-scope="text">Default level</h2>
+<a data-scope="link" href="/a">Link</a>
+<a data-scope="link" data-variant="subtle" href="/b" rel="noopener noreferrer" target="_blank">Away<span class="vh"> (opens in a new tab)</span>
+</a>
 <p data-scope="text">Body</p>
 <span data-role="eyebrow" data-scope="text">Eyebrow</span>
 <p data-ink="faint" data-scope="text" data-tone="critical">Tone</p>

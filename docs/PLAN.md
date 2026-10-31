@@ -154,7 +154,7 @@ React's prop names work on native elements, in literals, dynamic values and spre
 hydration: a compile-time table in `crates/weft-compiler/src/react.rs`, and `attrName` in `weft/dom` for spreads. `onChange`
 fires per edit as React's does, so W042 is retired (it never reached the compiler). Details: [react-props.md](react-props.md).
 
-Design rules are D-codes in the same form: D001–D005 (off-system values, only in apps with `@weft/warp`), D010 (warp contrast), D011 and D030–D039 (contrast and accessibility, every app), D020–D025 (style groups). `weft fix` applies safe fixes; a raw colour never gets one ([36](research/36-ds.md)).
+Design rules are D-codes in the same form: D001–D007 (off-system values, only in apps with `@weft/warp`), D010 (warp contrast), D011 and D030–D039 (contrast and accessibility, every app), D020–D025 (style groups). `weft fix` applies safe fixes; a raw colour never gets one ([36](research/36-ds.md)).
 
 ### 3.6 Compiler, runtime, tooling
 
@@ -565,7 +565,7 @@ agent can't drift outside of.
   layers. Text colors are computed to pass contrast; the build fails if they can't. A Keel theme recipe
   (`{seed, culture, pins}`) is accepted as a seed.
 - **Built (Phase 4, [36](research/36-ds.md)):** the primitives are `Stack Row Grid Split Center Cover Frame Spacer Inset`,
-  `Heading` and `Text` in `@weft/warp`, since weft can't depend on ui-core. `Switch` below is `Row reflow` and `Surface` is
+  `Heading`, `Text` and `Link` in `@weft/warp`, since weft can't depend on ui-core. `Switch` below is `Row reflow` and `Surface` is
   `Card`. `weft/ds` is names and types only. `weft tokens` writes DTCG 2025.10. Not built: a Keel recipe as a seed, a
   `tokens(el)` reader, the Zod seed rework.
 - **Vocabulary:** 8 layout primitives (`Stack Row Split Switch Grid Center Surface Frame`), a small component set,
@@ -1293,4 +1293,5 @@ Also out of v0:
   ui-core, so primitives sit with the tokens they use. Token D-codes need `@weft/warp`; a11y codes run in every app. The exit
   check missed consistency: most extra values come from warp's own spec (fluid line-heights, tone channels, three families),
   which Phase 4 doesn't redesign, and the bar isn't moved after the result. Role drift is a real miss, so `Heading` roles
-  and a link style come next ([36](research/36-ds.md)).
+  and a link style come next ([36](research/36-ds.md)). Those landed: `Heading` picks its role from `level`, warp has `Link`
+  and a base `a` colour, and D006 and D007 catch what's left.
