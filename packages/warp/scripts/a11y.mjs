@@ -119,6 +119,20 @@ const SCENARIOS = {
     await page.goto(`${url}?part=charts`)
     await settle(page)
     await audit('every form on a phone')
+    await page.goto(`${url}?part=rich`)
+    await settle(page)
+    await audit('rich inputs')
+    // each panel in turn: the date calendar, the range presets, a month grid, a search list
+    for (const name of [/^Open calendar|^Choose date|calendar/i, /^Billing month/, /^Time zone/, /^Fiscal period/, /^Sprint/]) {
+      const trigger = page.getByRole('button', { name }).first()
+      await trigger.click()
+      await settle(page)
+      await audit(`panel ${name}`)
+      await page.keyboard.press('Escape')
+    }
+    await page.getByRole('combobox', { name: 'Place of birth' }).fill('li')
+    await page.getByRole('option').first().waitFor()
+    await audit('combobox open')
   },
   async shop(page, audit, url) {
     await page.goto(url)
@@ -144,10 +158,12 @@ const hex = c => `#${c.map(v => Math.round(v).toString(16).padStart(2, '0')).joi
  */
 async function pixelContrast(page, i) {
   const sel = `[data-a11y-px="${i}"]`
-  const info = await page.evaluate(sel => {
+  const info = await page.evaluate(async sel => {
     const el = document.querySelector(sel)
     if (!el) return null
     el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })
+    // the scroll re-places an anchored panel on its next event: measure where the text ends up
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
     const range = document.createRange()
     range.selectNodeContents(el)
     // clipped to the element: a visually hidden child's text is measured at full width but never painted

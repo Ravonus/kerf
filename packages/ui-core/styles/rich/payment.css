@@ -1,0 +1,14 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- payment: a hosted iframe's footprint inside the shell */
+  :where([data-part="provider"]) { flex: 1; display: flex; align-items: center; gap: 14px; min-inline-size: 0; block-size: 100%; outline: none; cursor: text; font: 400 var(--warp-text-control-size) var(--warp-font-mono); }
+  :where([data-part="provider"] .pv-mock) { color: transparent; transition: color var(--warp-duration-fast); white-space: nowrap; }
+  :where([data-part="provider"] .pv-mock:first-child) { flex: 1; overflow: hidden; }
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled]) .pv-mock) { color: var(--warp-color-text-subtle); }
+  :where([data-part="provider"].typing .pv-mock:first-child) { color: var(--warp-color-text); }
+  :where([data-part="provider"] .pv-tag) { display: inline-flex; align-items: center; gap: 4px; font: 500 9px/1 var(--warp-font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+  :where([data-part="provider"] .pv-tag svg) { inline-size: 11px; block-size: 11px; }
+  :where(.card-shown) { display: grid; gap: 6px; font-size: var(--warp-text-body-size); }
+  :where(.card-shown div) { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-variant-numeric: tabular-nums; }
+  :where(.card-shown div span) { color: var(--warp-color-text-subtle); font: 400 12px var(--warp-font-mono); }
+}

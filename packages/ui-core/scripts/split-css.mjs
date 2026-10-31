@@ -47,10 +47,10 @@ const slug = text => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|
 
 // Top-level items inside the file's one @layer block: comments, whitespace and balanced rules, in order.
 function items(css) {
-  const open = css.search(/@layer [\w.]+ \{/)
+  const open = css.search(/@layer [\w.-]+ \{/)
   const start = css.indexOf('{', open) + 1
   const { list, end } = body(css, start)
-  return { layer: css.slice(open, start).match(/@layer ([\w.]+)/)[1], list, end }
+  return { layer: css.slice(open, start).match(/@layer ([\w.-]+)/)[1], list, end }
 }
 
 // Items of a block body from `start` up to its closing brace.
@@ -210,7 +210,7 @@ function render({ layer, family, files, shared }) {
 
 export function build() {
   const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
-  const parts = { components: split('warp-components.css', 'components'), inputs: split('warp-inputs.css', 'inputs') }
+  const parts = { components: split('warp-components.css', 'components'), inputs: split('warp-inputs.css', 'inputs'), rich: split('warp-inputs-rich.css', 'rich') }
   for (const p of Object.values(parts)) for (const [k, v] of render(p)) files.set(k, v)
   const routed = { data: route('warp-data.css', 'data'), layout: route('warp-layout.css', 'layout') }
   for (const p of Object.values(routed)) for (const [k, v] of renderRouted(p)) files.set(k, v)

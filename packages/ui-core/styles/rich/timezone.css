@@ -1,0 +1,12 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- timezone */
+  :where(.tz-pop) { inline-size: min(340px, 86vw); }
+  :where([data-presentation="sheet"] .tz-pop) { inline-size: auto; }
+  :where(.tz-pop [data-part="listbox"]) { max-block-size: 280px; }
+  :where([data-part="listbox"] [role="option"] small) { color: var(--warp-color-text-subtle); font-size: 11px; }
+  :where(.tz-pin) { font: 500 9px/1 var(--warp-font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 3px 5px; border-radius: var(--warp-radius-mark); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+  :where(.tz-count) { margin: 6px 2px 0; font-size: 11px; color: var(--warp-color-text-subtle); }
+  :where(.tz-empty) { padding: 12px; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+  :where([data-part="listbox"] [role="option"] > svg) { inline-size: 15px; block-size: 15px; color: var(--warp-color-text-subtle); flex: none; }
+}

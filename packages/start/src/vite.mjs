@@ -88,8 +88,8 @@ export default function weftStart(options = {}) {
           ssr: { build: { rollupOptions: { input: V.server } } },
         },
         // The router-core server bundle and Takumi's addon stay external to the SSR graph; Nitro traces them.
-        ssr: { noExternal: ['@weft/start', 'weft'], external: ['@takumi-rs/core'] },
-        optimizeDeps: { exclude: ['@weft/start', 'weft'] },
+        ssr: { noExternal: ['@weft/start', '@weft/warp', 'weft'], external: ['@takumi-rs/core'] },
+        optimizeDeps: { exclude: ['@weft/start', '@weft/warp', 'weft'] }, // they ship TSX for the weft plugin
         // The runtime files of @weft/start, weft and Nitro are served from wherever they're installed (a linked package
         // sits outside the app's root).
         server: { fs: { allow: [searchForWorkspaceRoot(root), join(here, '..'), ...packageDirs(root)] } },

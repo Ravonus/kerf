@@ -1,0 +1,68 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- calendar grid --------------------------------------------------- */
+  :where([data-scope="calendar"]) {
+    --_cell: var(--warp-control-md);
+    /* slide distance: 1× / 2× / 2× motion-distance → 4 / 16 / 24px; wipe only at vivid */
+    --_slide: calc(var(--warp-motion-distance) * (1 + min(1, var(--warp-x) * 2)));
+    --_wipe: calc(max(0, var(--warp-x) - 0.5) * 80% * var(--warp-motion-scale));
+    position: relative; display: grid; gap: var(--warp-space-related); user-select: none;
+  }
+  :where([data-scope="calendar"] [data-part="months"]) { display: flex; gap: var(--warp-space-group); overflow: hidden; }
+  :where([data-part="months"][data-anim="next"]) > * { animation: wir-month-next var(--warp-duration-base) var(--warp-ease-out) both; }
+  :where([data-part="months"][data-anim="prev"]) > * { animation: wir-month-prev var(--warp-duration-base) var(--warp-ease-out) both; }
+  @keyframes wir-month-next { from { opacity: 0; transform: translateX(var(--_slide)); clip-path: inset(0 0 0 var(--_wipe)); } }
+  @keyframes wir-month-prev { from { opacity: 0; transform: translateX(calc(var(--_slide) * -1)); clip-path: inset(0 var(--_wipe) 0 0); } }
+  :where([data-scope="calendar"] [data-part="month"]) { display: grid; gap: var(--warp-space-tight); }
+  :where([data-scope="calendar"] [data-part="caption"]) {
+    display: flex; align-items: center; justify-content: center; block-size: var(--warp-control-sm);
+    font-family: var(--warp-text-heading-font); font-weight: var(--warp-text-heading-weight); font-size: var(--warp-text-body-size); letter-spacing: -0.005em;
+  }
+  :where([data-scope="calendar"] [data-part="nav"]) { position: absolute; inset-block-start: 0; z-index: 1; }
+  :where([data-scope="calendar"] [data-part="nav"][data-dir="prev"]) { inset-inline-start: 0; }
+  :where([data-scope="calendar"] [data-part="nav"][data-dir="next"]) { inset-inline-end: 0; }
+  :where([data-scope="calendar"] table) { border-collapse: collapse; table-layout: fixed; }
+  :where([data-scope="calendar"] th) {
+    inline-size: var(--_cell); block-size: 24px; padding: 0; text-align: center;
+    font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); color: var(--warp-color-text-subtle);
+  }
+  :where([data-scope="calendar"] td) { padding: 0; block-size: var(--_cell); }
+  :where([data-scope="calendar"] td[data-range="mid"]) { background: var(--warp-color-accent-soft); }
+  :where([data-scope="calendar"] td[data-range="start"]) { background: linear-gradient(to right, transparent 50%, var(--warp-color-accent-soft) 50%); }
+  :where([data-scope="calendar"] td[data-range="end"]) { background: linear-gradient(to left, transparent 50%, var(--warp-color-accent-soft) 50%); }
+  :where([data-scope="calendar"] td[data-range="solo"]) { background: none; }
+  :where([data-scope="calendar"] td[data-preview]) { background-color: color-mix(in oklab, var(--warp-color-accent-soft) 60%, transparent); }
+  :where([data-scope="calendar"] [data-part="day"]) {
+    all: unset; position: relative; display: grid; place-items: center; box-sizing: border-box;
+    inline-size: var(--_cell); block-size: var(--_cell); border-radius: var(--warp-radius-control);
+    font-size: var(--warp-text-body-size); font-variant-numeric: tabular-nums; cursor: pointer; color: var(--warp-color-text);
+    transition: background-color var(--warp-duration-fast) var(--warp-ease-out), color var(--warp-duration-fast);
+  }
+  :where([data-scope="calendar"] [data-part="day"]:hover) { background: color-mix(in oklab, currentColor 8%, transparent); }
+  :where([data-scope="calendar"] [data-part="day"][data-weekend]) { color: var(--warp-color-text-subtle); }
+  /* today: the source's 1px accent ring (no dot) */
+  :where([data-scope="calendar"] [data-part="day"][aria-current="date"]) { color: var(--warp-color-accent-text); font-weight: 600; box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-accent-solid); }
+  :where([data-scope="calendar"] [data-part="day"][data-selected]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); font-weight: 500; }
+  :where([data-scope="calendar"] [data-part="day"][data-selected]:hover) { background: var(--warp-color-accent-solid-hover); }
+  :where([data-scope="calendar"] [data-part="day"][aria-disabled="true"]) { color: var(--warp-color-text-faint); cursor: not-allowed; }
+  :where([data-scope="calendar"] [data-part="day"][aria-disabled="true"][data-booked]) { text-decoration: line-through; text-decoration-thickness: 1px; }
+  :where([data-scope="calendar"] [data-part="day"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; z-index: 1; }
+  :where([data-scope="calendar"] [data-part="foot"]) { display: flex; justify-content: space-between; align-items: center; gap: var(--warp-space-related); padding-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+
+  /* range layout: preset rail + months */
+  :where([data-scope="range-panel"]) { display: flex; gap: var(--warp-space-group); }
+  :where([data-scope="range-panel"] [role="listbox"]) {
+    display: grid; align-content: start; gap: 1px; min-inline-size: 132px; padding-inline-end: var(--warp-space-related);
+    border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); margin: 0; padding-inline-start: 0; list-style: none;
+  }
+  :where([data-scope="range-panel"] [role="option"]) {
+    display: flex; align-items: center; min-block-size: var(--warp-control-sm); padding-inline: 10px; border-radius: var(--warp-radius-control);
+    font-size: var(--warp-text-body-size); color: var(--warp-color-text-subtle); cursor: pointer; white-space: nowrap; outline: none;
+  }
+  :where([data-scope="range-panel"] [role="option"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+  :where([data-scope="range-panel"] [role="option"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+  :where([data-scope="range-panel"] [role="option"][aria-selected="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
+  :where([data-scope="range-panel"][data-narrow]) { flex-direction: column; }
+  :where([data-scope="range-panel"][data-narrow] [role="listbox"]) { display: flex; overflow-x: auto; gap: 6px; border: 0; padding: 0 0 2px; scrollbar-width: none; }
+  :where([data-scope="range-panel"][data-narrow] [role="option"]) { border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: var(--warp-radius-round); font-size: var(--warp-text-caption-size); box-shadow: none; }
+}
