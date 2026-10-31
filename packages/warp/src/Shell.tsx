@@ -1,4 +1,4 @@
-import { IconLeft, IconMore, IconPanel, IconRight, IconX } from '@weft/icons'
+import { IconLeft, IconMore, IconPanel, IconRight, IconX, type IconComponent } from '@weft/icons'
 import { dialog, installSweep, menu, shell, uid } from '@weft/ui-core'
 import { derived, onMount, state, type State, untrack } from 'weft'
 import { Icon, type IconName } from './Icon'
@@ -183,7 +183,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
   use(menu, () => menuEl, () => ({ open: menuOpen.value, trigger: () => from, at, onClose: shut }))
   use(dialog, () => sheetEl, () => ({ open: moreOpen.value, onClose: () => (moreOpen.value = false) }))
 
-  const button = (d: { label: string; href?: string; onClick?: () => void }, part: string | undefined, icon: string) => (
+  const button = (d: { label: string; href?: string; onClick?: () => void }, part: string | undefined, icon: IconComponent) => (
     d.href
       ? <a href={d.href} data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label}>{icon({})}</a>
       : <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label} onClick={d.onClick}>{icon({})}</button>

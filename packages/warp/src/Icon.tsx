@@ -1,5 +1,6 @@
 // warp's icon names over @weft/icons (10-icons.md). A name is a lookup, so this list is what a component with an `icon`
 // prop pays for; a fixed glyph imports its own icon instead.
+import './styles'
 import { iconSet, IconAlert, IconAlertCircle, IconCalendar, IconCard, IconCheck, IconCheckCircle, IconClock, IconDown, IconGlobe, IconInfo, IconLeft, IconMore, IconPin, IconRight, IconSearch, IconTimer, IconUndo, IconX } from '@weft/icons'
 
 /** `<svg data-icon aria-hidden focusable=false>`: decorative, never named (03 §7); `label` names it. */
