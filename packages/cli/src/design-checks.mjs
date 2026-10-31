@@ -286,8 +286,10 @@ export function designChecks(root, { files, exclude = [], tokens }) {
       if (['input', 'select', 'textarea'].includes(el.name)) {
         const type = el.attr('type')?.value
         const skip = ['hidden', 'submit', 'button', 'reset', 'image'].includes(type)
-        const id = el.attr('id')?.value
-        if (!skip && !named(el) && !(id && labelled.has(id)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
+        const id = el.attr('id')
+        // A computed id can pair with a label anywhere, and an aria-hidden field (a honeypot) has no name to give.
+        const unseen = id?.kind === 'expr' || el.attr('aria-hidden')?.value === 'true'
+        if (!skip && !unseen && !named(el) && !(id?.value && labelled.has(id.value)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
       }
       if (['button', 'a', 'Button'].includes(el.name) && !el.attr('label') && !named(el) && !(el.name === 'a' && !el.attr('href')) && !hasName(el.children)) report('D031', el.start, el.tagEnd, `<${el.name}> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).`)
       if (el.name === 'img' && !el.attr('alt') && !el.attrs.some(a => a.kind === 'spread')) report('D032', el.start, el.tagEnd, '<img> has no `alt`: a screen reader reads out the file name (WCAG 1.1.1).')

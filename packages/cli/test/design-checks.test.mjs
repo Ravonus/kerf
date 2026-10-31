@@ -112,6 +112,8 @@ describe('contrast and accessibility (every app)', () => {
     `<input aria-label="Name" />`,
     `<input type="hidden" />`,
     `<input {...attrs} />`,
+    '<><label for={`${id}-a`}>Name</label><input id={`${id}-a`} /></>',
+    `<input aria-hidden="true" tabindex={-1} name="website" />`,
     `<button aria-label="Close"><svg /></button>`,
     `<button>Save</button>`,
     `<button>{label}</button>`,
