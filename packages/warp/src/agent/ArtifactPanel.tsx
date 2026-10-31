@@ -34,12 +34,12 @@ export function ArtifactPanel({ title, versions, version, onVersion, code, onOpe
     if (to < 0) return
     e.preventDefault()
     go(VIEWS[to])
-    root!.ownerDocument.getElementById(`${id}-t${to}`)?.focus()
+    list!.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
   }
   const choose = (v: ArtifactVersion) => {
     picked.set(v.id)
     announce(root!.ownerDocument, `Previewing ${v.label}`)
-    queueMicrotask(() => root!.ownerDocument.getElementById(`${id}-v-${v.id}`)?.focus())
+    queueMicrotask(() => root!.querySelectorAll<HTMLElement>('[role="option"]')[versions.findIndex(x => x.id === v.id)]?.focus())
   }
   const onList = (e: KeyboardEvent) => {
     const at = versions.findIndex(v => v.id === current.value?.id)

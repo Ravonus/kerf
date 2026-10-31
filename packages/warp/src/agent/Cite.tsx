@@ -15,8 +15,9 @@ export function Cite({ n, source, href }: { n: number; source?: AgentSource; hre
   let panel: HTMLElement | undefined
   use(citePreview, () => link, () => ({ panel: panel!, onOpen: (o: boolean) => (open.value = o) }))
   const jump = (e: MouseEvent) => {
-    const doc = (e.currentTarget as Element).ownerDocument
-    const card = doc.getElementById(href.slice(1))
+    const a = e.currentTarget as Element
+    const doc = a.ownerDocument
+    const card = doc.getElementById(a.getAttribute('href')!.slice(1)) // the page's id: a hydrated server id isn't this side's
     if (!card) return
     e.preventDefault()
     card.focus()

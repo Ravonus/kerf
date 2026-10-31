@@ -101,7 +101,7 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
     if (to < 0) return
     e.preventDefault()
     pick(tabs[to])
-    doc().getElementById(tabId(tabs[to]))?.focus()
+    tablist!.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
   }
   const dismiss = (n: Note, row: HTMLElement) => {
     const rest = [...list!.querySelectorAll<HTMLElement>('[data-scope="notification"]')].filter(r => r !== row && r.dataset.state !== 'dismissed')
