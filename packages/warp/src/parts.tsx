@@ -47,11 +47,12 @@ export function LiveStatus({ state, label, children }: { state: LiveState; label
 /** Page-level message inside main (02 §5). `live` announces it; a Banner that was there on load stays role=note. */
 export function Banner({ tone = 'info', live, actions, children, ...rest }: { tone?: Tone; live?: 'polite' | 'assertive'; actions?: any; children?: any; [attr: string]: any }) {
   const icon = derived(() => toneIcon[tone])
+  const acts = derived(() => actions) // one build, however often it is read
   return (
     <div data-scope="banner" data-tone={tone === 'info' ? undefined : tone} role={live === 'assertive' ? 'alert' : live ? 'status' : 'note'} {...rest}>
       <span data-part="icon"><Icon name={icon.value} /></span>
       <div data-part="body">{children}</div>
-      {actions !== undefined && <div data-part="actions">{actions}</div>}
+      {acts.value !== undefined && <div data-part="actions">{acts.value}</div>}
     </div>
   )
 }
@@ -77,14 +78,15 @@ export function Steps({ label, steps, current }: { label: string; steps: Step[];
 }
 
 /** Empty or error state (05 §5): the weave art, a title, one sentence, actions. */
-export function EmptyState({ title, tone, actions, as: heading = 'h2', children, ...rest }: { title: any; tone?: Tone; actions?: any; as?: 'h2' | 'h3' | 'h4'; children?: any; [attr: string]: any }) {
-  const H = untrack(() => heading) as any
+export function EmptyState({ title, tone, actions, children, ...rest }: { title: any; tone?: Tone; actions?: any; children?: any; [attr: string]: any }) {
+  const acts = derived(() => actions)
+  const body = derived(() => children)
   return (
     <div data-scope="empty-state" data-tone={tone} {...rest}>
       <svg data-part="art" viewBox="0 0 96 64" aria-hidden="true"><g class="w"><path d="M12 4v56M28 4v56M44 4v56M60 4v56M76 4v56" /></g><path class="f" d="M4 24H92" /><path class="f" d="M4 40H92" style="stroke:var(--warp-color-border-strong)" /></svg>
-      <H data-part="title">{title}</H>
-      {children !== undefined && <p data-part="description">{children}</p>}
-      {actions !== undefined && <div data-part="actions">{actions}</div>}
+      <h2 data-part="title">{title}</h2>
+      {body.value !== undefined && <p data-part="description">{body.value}</p>}
+      {acts.value !== undefined && <div data-part="actions">{acts.value}</div>}
     </div>
   )
 }

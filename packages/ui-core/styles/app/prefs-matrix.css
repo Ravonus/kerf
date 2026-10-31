@@ -6,6 +6,7 @@
   display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, minmax(60px, 84px)); min-inline-size: 0;
   border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border);
 }
+:where([data-scope="prefs-matrix"] [data-part="rows"]) { display: contents; }
 :where([data-scope="prefs-matrix"] [role="row"]) {
   display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center;
   border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);

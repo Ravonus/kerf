@@ -1,0 +1,188 @@
+// What the flow screens share (09 §1): the title, mark and rail parts, the step's form frame and its error surfaces.
+// Internal, except what the barrel names.
+import { announce, mapFlowError, secondsClock, type FlowError, type FlowErrorOptions } from '@weft/ui-core'
+import { derived, flush, onCleanup, onMount, state, untrack, watch } from 'weft'
+import { Alert } from '../Alert'
+import { Button, type ButtonProps } from '../Button'
+import { Banner } from '../parts'
+import { toast } from '../Toast'
+import '../styles'
+import '@weft/ui-core/styles/flows/tokens.css'
+import '@weft/ui-core/styles/flows/base.css'
+import '@weft/ui-core/styles/flows/meter.css' // the result mark
+import '@weft/ui-core/styles/layout/stack.css'
+
+/** The glyphs flows use on the 24 grid, for `<Glyph d={...} />`. */
+export const G = {
+  key: 'M8 11a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM11 12l8.5-8.5M16 6l2.5 2.5M14 8l2 2',
+  shield: 'M12 3 4.5 6v5.5c0 4.5 3.2 8 7.5 9.5 4.3-1.5 7.5-5 7.5-9.5V6zM9 12l2 2 4-4',
+  mail: 'M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM3.5 6.5l8.5 6.5 8.5-6.5',
+  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  download: 'M12 4v11M7 11l5 5 5-5M5 20h14',
+  refresh: 'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',
+  home: 'M4 11l8-7 8 7M6 10v10h12V10',
+  wifi: 'M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0M12 20h.01',
+  wifiOff: 'M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 5-2.8M19 12.5a10 10 0 0 0-3-2M12 20h.01',
+  spark: 'M12 3l2 6.5 6.5 2-6.5 2L12 20l-2-6.5-6.5-2 6.5-2z',
+  clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+}
+
+export type Heading = 'h1' | 'h2' | 'h3'
+
+/** A step's title: focus lands here on arrival (09 §1.1). */
+export function Title({ as, id, children }: { as?: Heading; id?: string; children?: any }) {
+  const level = derived(() => as ?? 'h1')
+  return (
+    <>
+      {level.value === 'h3' ? <h3 data-part="title" data-part-title="" tabindex="-1" id={id}>{children}</h3>
+        : level.value === 'h2' ? <h2 data-part="title" data-part-title="" tabindex="-1" id={id}>{children}</h2>
+        : <h1 data-part="title" data-part-title="" tabindex="-1" id={id}>{children}</h1>}
+    </>
+  )
+}
+
+/** The result mark; `draw` strokes a check in. */
+export function Mark({ tone, draw, children }: { tone?: 'positive' | 'caution' | 'critical'; draw?: boolean; children?: any }) {
+  return <span data-part="mark" data-tone={tone}>{draw ? <svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" /></svg> : children}</span>
+}
+
+/** The flows rail: `value` in percent. */
+export function Rail({ value, on = true, ...rest }: { value: number; on?: boolean; [attr: string]: any }) {
+  return <span data-part="rail" data-on={on ? '' : undefined} style={`--v:${value}%`} {...rest}><span data-part="rail-fill"></span></span>
+}
+
+/**
+ * Seconds counting down to zero while `seconds()` holds a number; a new number restarts it. Nothing runs on the server
+ * or before mount, so the first paint is the full count.
+ */
+export function useCooldown(seconds: () => number | undefined, onDone?: () => void) {
+  const left = state(untrack(seconds) ?? 0)
+  let stop: (() => void) | undefined
+  const start = (n: number | undefined) => {
+    stop?.()
+    stop = undefined
+    left.value = n ?? 0
+    if (n) stop = secondsClock(n, s => (left.value = s), onDone)
+  }
+  onMount(() => {
+    // a fresh object each run: a restart with the same seconds still restarts
+    watch(() => ({ n: seconds() }), v => start(v.n))
+    onCleanup(() => stop?.())
+  })
+  return left
+}
+
+/** What `<Form of={mutation}>` gives its children; a step reads it, so warp never imports the server's Form. */
+export interface FormLike {
+  readonly pending: { readonly value: boolean }
+  readonly errors: { readonly value: Record<string, string> }
+  readonly message: { readonly value: string | undefined }
+  value?(name: any): any
+}
+
+/** How a screen is driven: inside `<Form of>` (pass `form`), or on its own with `onSubmit` and `errors`. */
+export interface FlowForm<V> {
+  /** The `<Form of={mutation}>` render argument: the screen then renders no <form> of its own. */
+  form?: FormLike
+  /** Called with the form's values once its own checks pass. */
+  onSubmit?: (values: V, e: SubmitEvent) => void
+  /** Messages by field name. */
+  errors?: Record<string, string>
+  /** The failure: anything `mapFlowError` takes (a `FnError`, a typed error, a string). */
+  error?: unknown
+  /** Options for `mapFlowError`: copy by code, and `online`. */
+  errorOptions?: FlowErrorOptions
+  pending?: boolean
+  /** The Retry on a network failure's toast. */
+  onRetry?: () => void
+  /** The title's level (default h1: an auth step is the page). */
+  heading?: Heading
+}
+
+/** One step's form state: errors from all three sources, the mapped failure and its cooldown, its surfaces' side effects. */
+export function useStepForm<V>(p: FlowForm<V>, check?: (values: Record<string, string>) => Record<string, string | undefined>) {
+  const own = state<Record<string, string>>({})
+  const failure = derived(() => {
+    const e = p.form ? p.form.message.value : p.error
+    return e ? mapFlowError(e, untrack(() => p.errorOptions)) : undefined
+  })
+  const errors = derived<Record<string, string>>(() => ({ ...own.value, ...failure.value?.fields, ...(p.form ? p.form.errors.value : p.errors) }))
+  const pending = derived(() => !!(p.form ? p.form.pending.value : p.pending))
+  const cooling = useCooldown(() => failure.value?.retryAfter, () => announce(document, 'You can try again now.'))
+  let root: HTMLElement | undefined
+  const focusInvalid = (say?: string) => {
+    flush()
+    root?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+    if (say) announce(document, say)
+  }
+  onMount(() => {
+    watch(() => failure.value, (m: FlowError | undefined) => {
+      if (!m) return
+      if (m.surface === 'field') focusInvalid(m.summary)
+      if (m.surface === 'alert') { flush(); root?.querySelector<HTMLElement>('[data-part="formerr"]')?.focus() }
+      if (m.surface === 'rate-limit') announce(document, `${m.title} Try again in ${m.retryAfter}s.`)
+      if (m.surface === 'toast') toast.show({ title: m.title, description: m.description, tone: 'critical', action: p.onRetry && { label: 'Retry', onClick: () => p.onRetry!() } })
+    })
+    let sent = 0
+    watch(() => Object.keys(p.form ? p.form.errors.value : (p.errors ?? {})).length, n => {
+      if (n && n !== sent) focusInvalid()
+      sent = n
+    })
+  })
+  const submit = (e: SubmitEvent) => {
+    e.preventDefault()
+    const f = e.currentTarget as HTMLFormElement
+    const values = Object.fromEntries(new FormData(f)) as Record<string, string>
+    const bad = Object.fromEntries(Object.entries(check?.(values) ?? {}).filter(([, m]) => m)) as Record<string, string>
+    own.value = bad
+    const n = Object.keys(bad).length
+    if (n) return focusInvalid(n > 1 ? `${n} fields need attention` : undefined)
+    p.onSubmit?.(values as V, e)
+  }
+  return {
+    errors, failure, pending, cooling, submit,
+    /** Set one field's message from the client (format on blur), or clear it. */
+    flag(name: string, message: string | undefined) {
+      const { [name]: _, ...rest } = own.value
+      own.value = message ? { ...rest, [name]: message } : rest
+    },
+    bind(n: HTMLElement) { root = n },
+  }
+}
+export type StepForm = ReturnType<typeof useStepForm>
+
+/** The step's frame: a <form> of its own, or a plain stack inside `<Form of>`. */
+export function StepFrame({ ctl, embedded, labelledby, children }: { ctl: StepForm; embedded: boolean; labelledby?: string; children?: any }) {
+  const plain = derived(() => embedded)
+  return (
+    <>
+      {plain.value
+        ? <div ref={(n: any) => ctl.bind(n)} data-scope="stack" role="group" aria-labelledby={labelledby}>{children}</div>
+        : <form ref={(n: any) => ctl.bind(n)} data-scope="stack" novalidate aria-labelledby={labelledby} onSubmit={ctl.submit}>{children}</form>}
+    </>
+  )
+}
+
+/** The failure at the top of the step (09 §1.3): the Alert takes focus; a rate limit counts down; offline is a Banner. */
+export function FormError({ ctl, actions }: { ctl: StepForm; actions?: any }) {
+  const m = derived(() => ctl.failure.value)
+  return (
+    <div data-part="formerr" tabindex="-1">
+      {m.value?.surface === 'alert' && <Alert tone="critical" live title={m.value.title} actions={actions}>{m.value.description}</Alert>}
+      {m.value?.surface === 'rate-limit' && <Alert tone="caution" title={m.value.title}>{ctl.cooling.value > 0 ? `Try again in ${ctl.cooling.value}s.` : 'You can try again now.'}</Alert>}
+      {m.value?.surface === 'banner' && <Banner tone="caution" live={m.value.live}><b>{m.value.title}</b> {m.value.description}</Banner>}
+    </div>
+  )
+}
+
+/** The one solid: keeps its label while pending; a rate limit disables it and says why. */
+export function Submit({ ctl, disabled, children, ...rest }: { ctl: StepForm; disabled?: boolean; children?: any } & ButtonProps) {
+  const wait = derived(() => ctl.cooling.value)
+  return <Button type="submit" size="lg" full loading={ctl.pending.value} disabled={disabled || wait.value > 0} {...rest}>{wait.value > 0 ? `Try again in ${wait.value}s` : children}</Button>
+}
+
+/** A text button in a step's row. */
+export const TextLink = ({ children, ...rest }: ButtonProps) => <Button emphasis="link" data-hit="text" {...rest}>{children}</Button>

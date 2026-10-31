@@ -18,6 +18,9 @@
   font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 :where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
+:where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }
+:where([data-scope="tile"] [data-part="video"] > :is(video, img, canvas)) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+:where([data-scope="tile"] [data-part="level"]) { color: var(--warp-color-sweep); }
 :where([data-scope="tile"] [data-part="flags"]) { position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 2; display: flex; gap: 4px; }
 :where([data-scope="tile"] [data-part="flag"]) {
   display: inline-grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: var(--warp-radius-control);

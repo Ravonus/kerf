@@ -6,6 +6,9 @@
  "activity": [
   "app/activity.css"
  ],
+ "activity-feed": [
+  "app/activity-feed.css"
+ ],
  "agenda": [
   "app/agenda.css"
  ],

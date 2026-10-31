@@ -5,9 +5,10 @@
 :where([data-scope="transport"] [data-part="head"]) { display: flex; align-items: center; gap: var(--warp-space-related); flex-wrap: wrap; }
 :where([data-scope="transport"] [data-part="head"] h4) { margin: 0; margin-inline-end: auto; font: var(--warp-text-heading-weight) 15px/1.25 var(--warp-text-heading-font); }
 :where([data-scope="transport"] [data-part="config"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: minmax(0, 1fr); }
-:where([data-scope="transport"] [data-part="choices"]) { display: grid; gap: var(--warp-space-related); grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+:where([data-scope="transport"] [data-part="choices"]) { display: grid; gap: var(--warp-space-related); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
 :where([data-scope="transport"] [data-scope="choice-card"]) { position: relative; align-content: start; }
 :where([data-scope="transport"] [data-scope="choice-card"] [data-part="label"] code) { font: 500 12.5px/1.25 var(--warp-font-mono); }
+:where([data-scope="transport"] [data-scope="choice-card"] [data-part="hint"]) { grid-column: 1 / -1; }
 :where([data-scope="transport"] [data-scope="choice-card"]:has(input:disabled)) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
 :where([data-scope="transport"] [data-scope="choice-card"]:has(input:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
 :where([data-scope="transport"] fieldset[data-scope="group"][disabled] [data-part="choices"]) { opacity: var(--warp-opacity-disabled); }
@@ -42,6 +43,7 @@
   display: grid; gap: 1px; margin: 0; padding: 8px 10px; list-style: none; max-block-size: 140px; overflow: auto;
   border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font: 400 12px/1.55 var(--warp-font-mono); color: var(--warp-color-text-subtle);
 }
+:where([data-scope="transport"] [data-part="log"] ol) { display: contents; }
 :where([data-scope="transport"] [data-part="log"] li) { display: grid; grid-template-columns: 64px 72px minmax(0, 1fr); gap: 8px; }
 :where([data-scope="transport"] [data-part="log"] b) { font-weight: 500; color: var(--warp-color-text); }
 @container transport (max-width: 559.98px) {

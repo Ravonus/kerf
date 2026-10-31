@@ -14,7 +14,7 @@
 :where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep"]) { inset: -3px; border-width: 2px; }
 :where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep-base"]) { inset: -3px; }
 :where([data-scope="tour"] [data-part="card"]) {
-  position: absolute; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
+  position: absolute; box-sizing: border-box; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
   padding: 16px; background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border);
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3);
   transition: top var(--warp-duration-slow) var(--warp-ease-in-out), left var(--warp-duration-slow) var(--warp-ease-in-out);

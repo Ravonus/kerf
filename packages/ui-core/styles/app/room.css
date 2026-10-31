@@ -24,6 +24,7 @@
   background: var(--warp-color-surface); box-shadow: 0 0 0 1px var(--warp-color-border);
 }
 :where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); border-block-end: 1px solid var(--warp-color-border); }
+:where([data-scope="room"] [data-part="tiles"]) { display: contents; }
 @container room (max-width: 599.98px) {
 :where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) { --_cols: 2 !important; }
 }

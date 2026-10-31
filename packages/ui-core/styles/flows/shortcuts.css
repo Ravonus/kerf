@@ -1,6 +1,6 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.flows {
-:where([data-scope="shortcuts"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="shortcuts"]) { display: grid; gap: var(--warp-space-group); padding-block-start: 6px; }
 :where([data-scope="shortcuts"] [data-part="groups"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 :where([data-scope="shortcuts"] section h4) { margin: 0 0 6px; font: 500 var(--warp-text-eyebrow-size)/1 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: uppercase; color: var(--warp-color-text-subtle); }
 :where([data-scope="shortcuts"] dl) { margin: 0; display: grid; }

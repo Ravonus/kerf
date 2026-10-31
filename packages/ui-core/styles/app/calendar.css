@@ -111,7 +111,7 @@
   box-shadow: inset var(--warp-cal-bar) 0 0 color-mix(in oklab, var(--_c) 55%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--_c) 40%, transparent);
 }
 :where([data-scope="calendar"] [data-part="event"][data-declined] [data-part="event-title"]) { text-decoration: line-through; color: var(--warp-color-text-subtle); }
-:where([data-scope="calendar"] [data-part="event"][aria-selected="true"]) { z-index: 3; box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-2); }
+:where([data-scope="calendar"] [data-part="event"]:is([aria-selected="true"], [aria-expanded="true"])) { z-index: 3; box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-2); }
 :where([data-scope="calendar"] [data-part="event"][data-state="dragging"]) {
   z-index: 6; cursor: grabbing; opacity: 0.97; transition: none;
   box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-3);

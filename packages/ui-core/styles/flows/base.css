@@ -19,9 +19,6 @@
 }
 :where([data-part="weave"] path[data-broken]) { stroke: var(--warp-color-critical-solid); }
 :where([data-part="code-label"]) { display: block; margin-block-end: 8px; font: 500 var(--warp-text-label-size)/1.3 var(--warp-text-body-font); color: var(--warp-color-text); }
-:where([data-part="mark"][data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
-:where([data-part="mark"][data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
-:where([data-part="mark"][data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
 :where([data-part="mark"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
 :where([data-part="rail"] > [data-part="rail-fill"]) { inset: 0 auto 0 0; inline-size: var(--v, 100%); }
 :where([data-part="rail"][data-on] > [data-part="rail-fill"]) { clip-path: inset(0 round 99px); }

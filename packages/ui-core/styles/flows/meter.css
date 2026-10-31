@@ -6,6 +6,9 @@
   display: grid; flex: none; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--warp-radius-control);
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
 }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
 :where([data-part="mark"]:not([data-scope="meter"] *) svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 :where([data-scope="meter"]) { display: grid; gap: 7px; }
 :where([data-scope="meter"] [data-part="head"]) { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--warp-text-label-size); }

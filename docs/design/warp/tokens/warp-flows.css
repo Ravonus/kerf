@@ -162,9 +162,9 @@
   display: grid; flex: none; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--warp-radius-control);
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
 }
-:where([data-part="mark"][data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
-:where([data-part="mark"][data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
-:where([data-part="mark"][data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
 :where([data-part="mark"]:not([data-scope="meter"] *) svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 :where([data-part="mark"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
 
@@ -226,7 +226,7 @@
 :where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep"]) { inset: -3px; border-width: 2px; }
 :where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep-base"]) { inset: -3px; }
 :where([data-scope="tour"] [data-part="card"]) {
-  position: absolute; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
+  position: absolute; box-sizing: border-box; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
   padding: 16px; background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border);
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3);
   transition: top var(--warp-duration-slow) var(--warp-ease-in-out), left var(--warp-duration-slow) var(--warp-ease-in-out);
@@ -495,7 +495,7 @@
 /* ---------------------------------------------------------------------------
    7 · SHORTCUTS overlay (`?`): a Dialog with a filter and grouped kbd rows
    ------------------------------------------------------------------------ */
-:where([data-scope="shortcuts"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="shortcuts"]) { display: grid; gap: var(--warp-space-group); padding-block-start: 6px; }
 :where([data-scope="shortcuts"] [data-part="groups"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 :where([data-scope="shortcuts"] section h4) { margin: 0 0 6px; font: 500 var(--warp-text-eyebrow-size)/1 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: uppercase; color: var(--warp-color-text-subtle); }
 :where([data-scope="shortcuts"] dl) { margin: 0; display: grid; }

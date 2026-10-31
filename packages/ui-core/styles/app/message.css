@@ -22,6 +22,8 @@
 :where([data-scope="message"] [data-part="bubble"]) > :where([data-part="sweep-base"]) { color: transparent; }
 :where([data-scope="message"][data-mine] [data-part="bubble"]) > :where([data-part="sweep"]) { color: var(--warp-color-accent-on-solid); }
 :where([data-scope="message"][data-mine] [data-part="bubble"] a) { color: inherit; }
+/* @you: a highlight tint on the whole message (07 §5.2) */
+:where([data-scope="message"][data-mentions-me]:not([data-mine]) [data-part="bubble"]) { background: var(--warp-color-highlight-soft); }
 :where([data-scope="message"] [data-part="mention"]) { padding: 0 3px; border-radius: var(--warp-radius-mark); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-weight: 500; }
 :where([data-scope="message"][data-mine] [data-part="mention"]) { background: color-mix(in oklab, var(--warp-color-accent-on-solid) 20%, transparent); color: inherit; }
 :where([data-scope="message"][data-state="sending"] [data-part="bubble"]) { opacity: 0.6; }
