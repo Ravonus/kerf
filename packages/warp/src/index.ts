@@ -55,7 +55,7 @@ export { VirtualList, type VirtualListProps, type VirtualControl } from './Virtu
 export { Thread as VirtualThread, type ThreadProps as VirtualThreadProps, type ThreadMessage } from './Thread'
 export { Feed, type FeedProps, type FeedItem } from './Feed'
 export { Kanban as VirtualKanban, type KanbanProps as VirtualKanbanProps, type KanbanCard, type KanbanColumn as VirtualKanbanColumn } from './Kanban'
-export { ScrollGrid, type ScrollGridProps, type GridColumn } from './ScrollGrid'
+export { ScrollGrid, type ScrollGridProps, type GridColumn as ScrollGridColumn } from './ScrollGrid'
 export type { Address, MentionItem } from '@weft/ui-core'
 export type { IsoDate, IsoTime, IsoDateTime, IsoMonth, IsoWeek, IsoDuration, IsoZoned, TimeZoneId, DateRange, ChangeReason } from '@weft/ui-core'
 export { sweep, setDial, getDial } from '@weft/ui-core'
