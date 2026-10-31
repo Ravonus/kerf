@@ -58,7 +58,7 @@ Per variant and page, on production builds, `--samples` samples (3 by default, 5
 - JS, CSS, HTML and font bytes of everything the page fetched, recompressed to brotli 11 and gzip 9 for every variant, so a
   server's encoding can't flatter it; what the server actually sent is reported as well.
 - Hydration, script time, heap after a forced GC, DOM nodes split into elements, text and comments.
-- Server req/s and p95 at 10 keep-alive connections for 3 s, compressed as a browser would ask, and req/s uncompressed: the two
+- Server req/s and p95 at 10 keep-alive connections for 2 s, compressed as a browser would ask, and req/s uncompressed: the two
   together separate rendering from compression.
 - Cold build time (`--build-runs`), lines of app code, boot time, server memory.
 
@@ -69,9 +69,10 @@ its source files, lockfile, commands, Node and, for weft, those tarballs, and is
 the weft variants only, and an unchanged tree rebuilds nothing (`--rebuild` overrides; the output is re-fingerprinted either way).
 
 Measuring runs in phases that never overlap. Variants go side by side with each one's timing-sensitive passes in turn, then
-Lighthouse's simulated runs share a pool, shuffled, and last comes server load. `--jobs=N` and `WEFT_JOBS` set the width
+Lighthouse's simulated runs share a pool, shuffled, and last comes server load, one variant at a time. `--jobs=N` and `WEFT_JOBS` set the width
 (`scripts/jobs.mjs`); on a busy machine the default narrows by itself. `--jobs=1` runs everything in turn, which is the check that
-parallel numbers match a serial run: results agreed within spread when this was last tested, see the history lines' `jobs` field.
+parallel numbers match a serial run. Last checked on Lemonstand: every score, LCP and byte number agreed within spread; load reads
+about 25% low side by side, which is why it isn't.
 
 ## Running it on another machine
 

@@ -49,7 +49,9 @@ function findings(lhr) {
 }
 
 const { url, formFactor, keepTo, real, chrome: chromePath } = JSON.parse(process.argv[2])
+// chrome-launcher rewrites this path under WSL, which leaves a folder in the cwd: so the cwd is in here too.
 const userDataDir = mkdtempSync(join(tmpdir(), 'bench-lh-'))
+process.chdir(userDataDir)
 const chrome = await chromeLauncher.launch({ chromePath, userDataDir, chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu'] })
 try {
   const flags = { port: chrome.port, output: 'json', logLevel: 'silent', onlyCategories: ['performance'], ...(real ? { throttlingMethod: 'devtools' } : {}) }
@@ -62,5 +64,5 @@ try {
     bootupMs: lhr.audits['bootup-time']?.numericValue, mainThreadMs: lhr.audits['mainthread-work-breakdown']?.numericValue,
     scripts: (lhr.audits['network-requests']?.details?.items ?? []).filter(r => r.resourceType === 'Script' || r.resourceType === 'Stylesheet').map(r => r.url),
   }))
-} finally { await chrome.kill(); rmSync(userDataDir, { recursive: true, force: true }) }
+} finally { await chrome.kill(); process.chdir(tmpdir()); rmSync(userDataDir, { recursive: true, force: true }) }
 process.exit(0)

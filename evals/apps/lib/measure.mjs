@@ -108,7 +108,7 @@ export async function hydrationPass(browser, url, probe) {
 }
 
 /** `connections` keep-alive clients as fast as the server answers, for `seconds`, reading whole bodies. */
-export function loadPass(url, { connections = 10, seconds = 3, encoding = 'br, gzip' } = {}) {
+export function loadPass(url, { connections = 10, seconds = 2, encoding = 'br, gzip' } = {}) {
   const agent = new http.Agent({ keepAlive: true, maxSockets: connections }), { hostname, port, pathname, search } = new URL(url)
   const lat = [], end = performance.now() + seconds * 1000
   let bad = 0, bytes = 0, served = 'none'

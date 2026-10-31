@@ -189,7 +189,7 @@ async function buildWithMaps(v) {
     const keep = join(v.root, FOR_MAPS)
     rmSync(keep, { recursive: true, force: true }); mkdirSync(keep)
     const maps = []
-    for (const d of held) if (existsSync(join(v.root, d))) walk(join(v.root, d), f => { if (/\.m?js\.map$/.test(f)) { const js = f.replace(/\.map$/, ''); if (existsSync(js)) { const to = join(keep, basename(f)); copyFileSync(f, to); copyFileSync(js, to.replace(/\.map$/, '')); maps.push(to) } } })
+    for (const d of held) if (existsSync(join(v.root, d))) walk(join(v.root, d), f => { if (/\.m?js\.map$/.test(f)) { const js = f.replace(/\.map$/, ''); if (existsSync(js)) { const to = join(keep, `${basename(dirname(f))}__${basename(f)}`); copyFileSync(f, to); copyFileSync(js, to.replace(/\.map$/, '')); maps.push(to) } } })
     const same = [...fingerprint(v.root, v).hashes].filter(h => measured.has(h)).length
     return { maps, same, total: measured.size }
   } finally {

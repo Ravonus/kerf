@@ -27,13 +27,16 @@ const groupOf = (src, rules) => rules.find(([, re]) => re.test(src))?.[0] ?? 'ot
 /** Per page, the JS it loaded split by group, in brotli bytes shared out by each chunk's raw bytes. */
 export function attribute(v, { maps, same, total }, pages) {
   const rules = (stacks.find(s => s.id === v.stack.id)?.groups ?? v.stack.groups ?? []).map(([g, re]) => [g, new RegExp(re)])
-  const chunks = new Map(maps.map(m => [basename(m, '.map'), m]))
+  // Next's hashes change with maps on, so a chunk is looked up by folder and name, its content hash taken off if that fails.
+  const plain = n => n.replace(/-[0-9a-f]{8,20}(\.m?js)$/, '$1')
+  const chunks = new Map(maps.flatMap(m => { const n = basename(m, '.map'); return [[n, m], [plain(n), m]] }))
   const parsed = new Map()
   const out = { sourcesMatch: same === total, matched: `${same}/${total}`, pages: {} }
   for (const [path, page] of Object.entries(pages)) {
     const groups = {}, modules = {}
     for (const r of page.top.filter(t => t.type === 'js')) {
-      const name = basename(r.path.split('?')[0])
+      const file = decodeURIComponent(r.path.split('?')[0]).split('/').slice(-2).join('__')
+      const name = chunks.has(file) ? file : plain(file)
       if (!chunks.has(name)) { groups.unmapped = (groups.unmapped ?? 0) + r.br; continue }
       if (!parsed.has(name)) parsed.set(name, perSource(chunks.get(name)))
       const c = parsed.get(name)

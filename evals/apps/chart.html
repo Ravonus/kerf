@@ -107,7 +107,7 @@ function renderPage(body, name, app, path) {
   }
   const split = keys.filter(k => app.variants[k].split?.pages?.[path])
   if (split.length) {
-    const s = section('Whose JS it is', 'From sourcemaps of a build with the same output, brotli KB shared out by raw bytes. Approximate: code compresses unevenly.')
+    const s = section('Whose JS it is', 'From sourcemaps of a build with the same output, brotli KB shared out by raw bytes. Approximate: code compresses unevenly. wrapper is generated code no sourcemap covers.')
     const seen = [...new Set(split.flatMap(k => Object.keys(app.variants[k].split.pages[path].groups)))]
     s.insertAdjacentHTML('beforeend', `<div class="legend">${legendHtml(seen.map(g => [GROUP_COLOR(g), g]))}</div>`)
     bars(s, split.map(k => ({ name: label(k), parts: Object.entries(app.variants[k].split.pages[path].groups).map(([g, n]) => [n / 1024, GROUP_COLOR(g), g]) })), 'KB')

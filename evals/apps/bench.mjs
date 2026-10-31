@@ -112,11 +112,12 @@ async function benchApp(app) {
     phase(`Lighthouse, ${tasks.length} runs`, t); t = performance.now()
     for (const v of variants) for (const p of app.pages) out[v.name].pages[p.path] = summarise(p, samples[v.name][p.path])
     // Not a static build: its throughput would only be bench's own host.
-    if (!opt['no-load']) await pool(variants.filter(x => x.start), Math.ceil(jobs / 3), async v => {
+    // One variant at a time: side by side, the load generators compete and every req/s reads about 25% low.
+    if (!opt['no-load']) await pool(variants.filter(x => x.start), 1, async v => {
       for (const p of app.pages) {
         const s = [], plain = [], url = servers[v.name].url + p.path
         await loadPass(url, { seconds: 0.5 }) // warm, not counted
-        for (let i = 0; i < samplesWanted; i++) { s.push(await loadPass(url)); plain.push(await loadPass(url, { encoding: 'identity', seconds: 2 })) }
+        for (let i = 0; i < samplesWanted; i++) { s.push(await loadPass(url)); plain.push(await loadPass(url, { encoding: 'identity', seconds: 1 })) }
         const errors = [...s, ...plain].reduce((n, x) => n + x.errors, 0), m = out[v.name].pages[p.path].metrics
         if (errors) say(`  ${v.name} ${p.path}: ${errors} failed requests under load`)
         m['server.rps'] = spread(s.map(x => x.rps)); m['server.p95'] = spread(s.map(x => x.p95)); m['server.rpsPlain'] = spread(plain.map(x => x.rps))

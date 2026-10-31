@@ -24,7 +24,7 @@ function gapAgainstBest(run, name, path, key) {
 function diffRuns(run, prev) {
   const changed = Object.keys(run.variants).filter(n => prev.variants[n] && prev.variants[n].key !== run.variants[n].key), controls = Object.keys(run.variants).filter(n => prev.variants[n] && !changed.includes(n))
   const drift = (path, key) => {
-    if (METRICS[key].unit === 'bytes') return 1
+    if (METRICS[key].unit !== 'ms') return 1
     const r = controls.map(n => [run.variants[n].pages[path]?.metrics[key]?.med, prev.variants[n].pages?.[path]?.[key]?.med]).filter(([a, b]) => a && b).map(([a, b]) => a / b).sort((a, b) => a - b)
     return r.length ? r[r.length >> 1] : 1
   }
@@ -32,8 +32,9 @@ function diffRuns(run, prev) {
   for (const name of changed) for (const [path, page] of Object.entries(run.variants[name].pages)) for (const [key, now] of Object.entries(page.metrics)) {
     const old = prev.variants[name]?.pages?.[path]?.[key], d = drift(path, key)
     if (!old || !now) continue
-    const was = { ...old, med: old.med * d, min: old.min * d, max: old.max * d }, c = compare(key, now, was)
-    if (c && c.verdict !== 'tie') moved.push({ variant: name, page: path, key, was, now, delta: c.delta, verdict: c.verdict === 'win' ? 'better' : 'worse' })
+    // Drift only ever removes a claim: a move has to hold both as measured and net of the controls.
+    const c = compare(key, now, { ...old, med: old.med * d, min: old.min * d, max: old.max * d }), raw = compare(key, now, old)
+    if (c && c.verdict !== 'tie' && c.verdict === raw.verdict) moved.push({ variant: name, page: path, key, was: old, now, delta: raw.delta, verdict: c.verdict === 'win' ? 'better' : 'worse' })
   }
   return { changed, controls, moved }
 }
@@ -65,6 +66,8 @@ function tuneFor(run, name) {
         add(`lcp:${advice?.[2] ?? phase}`, { where: advice?.[1] ?? 'weft', title: `LCP: ${advice?.[2] ?? phase} is the largest phase`, why: `${l.points} mobile points lost to LCP on ${path}. Really throttled: ${phases.map(([k, n]) => `${k} ${n}ms`).join(', ')}. Lantern, which sets the score: ${Object.entries(p.lcp.simulated ?? {}).map(([k, n]) => `${k} ${Math.round(n)}ms`).join(', ')}. Element: ${p.lcp.element ?? 'unknown'}. ${advice?.[3] ?? ''}`, impact: l.points, pages: [path] })
       } else add(`lost:${l.metric}`, { where: 'weft', title: `${l.metric} costs mobile points`, why: `${l.points} mobile points on ${path}.`, impact: l.points, pages: [path] })
     }
+    const big = p.top[0]
+    if (big?.type === 'font' && big.br > p.metrics['bytes.js.br'].med) add('fonts', { where: 'weft', title: 'Fonts outweigh everything else on the page', why: `${kb(p.metrics['bytes.font.br'].med)} of fonts against ${kb(p.metrics['bytes.js.br'].med)} of JS on ${path}; largest ${big.path.split('/').pop()} at ${kb(big.br)}. Same in every variant, so a default to win, not a gap: subset harder, and check the LCP text isn't waiting on it.`, impact: (p.lost.mobile.find(l => l.metric === 'LCP')?.points ?? 0) + p.metrics['bytes.font.br'].med / 1024 * PER.kb * 0.25, pages: [path] })
     if (p.unused.js > 2048) {
       const biggest = Object.entries(split).filter(([g]) => g !== 'app').sort((a, b) => b[1] - a[1])[0]
       add('unused-js', { where: biggest?.[0] === 'warp' ? 'warp' : 'weft', title: 'JS shipped but not run at load', why: `${kb(p.unused.js)} br of ${kb(p.metrics['bytes.js.br'].med)} never ran on ${path}${biggest ? `; largest framework group: ${biggest[0]} (${kb(biggest[1])})` : ''}.`, impact: p.unused.js / 1024 * PER.kb, pages: [path] })
