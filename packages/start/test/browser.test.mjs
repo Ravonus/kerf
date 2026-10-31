@@ -1,8 +1,11 @@
 // The fixture app in Chrome (playwright-core, headless): hydration of a plain and a streamed page, and client
 // navigation, which keeps shared layouts and writes only what changed. The fixture's src/entry.client.ts records the
 // DOM writes and key misses around start() in `window.__weft`.
+import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { join } from 'node:path'
 import { inject } from 'vitest'
+import { fixture } from './dev-server.setup.mjs'
 
 const url = inject('url')
 const { chromium } = createRequire(import.meta.url)('playwright-core')
@@ -120,3 +123,47 @@ test('a streamed page reached by client navigation shows its deferred data', asy
   expect(errors).toEqual([])
   await page.close()
 })
+
+test('dev: with JS off the first paint has every stylesheet of the route, and only its own', async () => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  try {
+    const page = await context.newPage()
+    await page.goto(url + '/styled')
+    const color = selector => page.locator(selector).first().evaluate(e => getComputedStyle(e).color)
+    expect(await color('html')).toBe('rgb(13, 14, 15)') // src/entry.client.ts's import
+    expect(await color('.root')).toBe('rgb(7, 8, 9)')
+    expect(await color('.styled')).toBe('rgb(1, 2, 3)')
+    expect(await color('.badge')).toBe('rgb(4, 5, 6)')
+    for (const href of await page.locator('link[rel="stylesheet"]').evaluateAll(l => l.map(e => e.href))) {
+      const res = await fetch(href, { headers: { accept: 'text/css' } })
+      expect([href, res.status, res.headers.get('content-type')]).toEqual([href, 200, expect.stringContaining('text/css')])
+    }
+    expect(await page.locator('link[href^="/@weft-sheet/"]').count()).toBe(1) // a virtual sheet links too
+    await page.goto(url + '/about')
+    expect(await page.locator('link[href*="styled.css"]').count()).toBe(0)
+    await page.goto(url + '/nowhere')
+    expect(await color('.not-found')).toBe('rgb(10, 11, 12)')
+  } finally {
+    await context.close()
+  }
+})
+
+test('dev: the client adds no second copy of a linked sheet, and HMR updates the link', async () => {
+  const file = join(fixture, 'src/routes/styled.css')
+  const before = readFileSync(file, 'utf8')
+  const { page, errors } = await open('/styled')
+  const copies = () => page.evaluate(() => [...document.styleSheets].filter(s => { try { return [...s.cssRules].some(r => r.selectorText === '.styled') } catch { return false } }).length)
+  try {
+    expect(await copies()).toBe(1)
+    expect(await page.locator('style[data-vite-dev-id]').count()).toBe(0)
+    writeFileSync(file, before.replace('rgb(1, 2, 3)', 'rgb(21, 22, 23)'))
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.styled')).color === 'rgb(21, 22, 23)', null, { timeout: 10_000 })
+    await page.waitForFunction(() => document.querySelectorAll('link[href*="styled.css"]').length === 1)
+    expect(await copies()).toBe(1)
+    expect(errors).toEqual([])
+  } finally {
+    writeFileSync(file, before)
+    await page.close()
+  }
+})
+

@@ -29,6 +29,8 @@ function config({ root, site, preset, port, logLevel, command, nitro: nitroOptio
       weftStart({ root, site }),
       nitro({
         preset,
+        // Every app gets this: built assets ship as .br and .gz next to the file, and Nitro picks by Accept-Encoding.
+        compressPublicAssets: { gzip: true, brotli: true },
         ...(usesSockets(root) && { features: { websocket: true } }),
         // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.
         prerender: { routes: ['/_weft/og-routes'], failOnError: true },

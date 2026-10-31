@@ -1,17 +1,17 @@
 // MySQL for `@weft/start` (research 34 §4): Drizzle on mysql2, pure JS. The pool connects on the first statement, so
-// `weft build` needs no database. MySQL commits around DDL, so a failed migration can't roll back; a named lock keeps
+// `weft build` and a page with no queries need no database. MySQL commits around DDL, so a failed migration can't roll back; a named lock keeps
 // instances starting together from applying a file twice.
 
 import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2'
 import { createPool } from 'mysql2/promise'
 import { StartError } from '../data'
-import { register, statements, touch, type DbHandle, type Migration } from './core'
+import { gate, register, statements, touch, type DbHandle, type Migration } from './core'
 
 export interface MysqlOptions<S extends Record<string, unknown>> {
   schema: S
   /** `mysql://user:pass@host:3306/db`. */
   url: string
-  /** Apply `drizzle/` before the first request (default true). */
+  /** Apply `drizzle/` before the first statement a request runs (default true). */
   migrate?: boolean
   /** Pool size (default 10). */
   max?: number
@@ -48,6 +48,16 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
       }
     },
   }
-  const db = drizzle(pool, { schema, mode: 'default', logger: { logQuery: sql => touch(handle, sql) } })
-  return register(db, handle, migrate)
+  const ready = gate(handle, migrate)
+  // All Drizzle sends goes through these three, so holding them holds it; `handle.migrate` keeps the plain pool.
+  const held = new Proxy(pool, {
+    get(t, key) {
+      const v = Reflect.get(t, key)
+      if (typeof v !== 'function') return v
+      if (key !== 'query' && key !== 'execute' && key !== 'getConnection') return v.bind(t)
+      return async (...a: unknown[]) => (await ready(), v.apply(t, a))
+    },
+  })
+  const db = drizzle(held, { schema, mode: 'default', logger: { logQuery: sql => touch(handle, sql) } })
+  return register(db, handle)
 }

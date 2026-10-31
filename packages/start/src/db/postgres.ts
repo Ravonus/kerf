@@ -1,17 +1,17 @@
 // Postgres for `@weft/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
-// connects on the first statement, so `weft build` needs no database. Migrations hold an advisory lock, so instances
-// starting together apply each file once.
+// connects on the first statement, so `weft build` and a page with no queries need no database. Migrations hold an
+// advisory lock, so instances starting together apply each file once.
 
 import postgres from 'postgres'
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { StartError } from '../data'
-import { register, statements, touch, type DbHandle, type Migration } from './core'
+import { gate, register, statements, touch, type DbHandle, type Migration } from './core'
 
 export interface PostgresOptions<S extends Record<string, unknown>> {
   schema: S
   /** `postgres://user:pass@host:5432/db`. */
   url: string
-  /** Apply `drizzle/` before the first request (default true). */
+  /** Apply `drizzle/` before the first statement a request runs (default true). */
   migrate?: boolean
   /** Pool size (default 10). */
   max?: number
@@ -43,6 +43,18 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
       })
     },
   }
-  const db = drizzle(client, { schema, logger: { logQuery: sql => touch(handle, sql) } })
-  return register(db, handle, migrate)
+  const ready = gate(handle, migrate)
+  // All Drizzle sends goes through `unsafe` and `begin`, so holding those holds it; `handle.migrate` keeps the plain client.
+  const held = new Proxy(client, {
+    get(t, key) {
+      if (key === 'begin') return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
+      if (key !== 'unsafe') return Reflect.get(t, key)
+      return (...a: Parameters<typeof t.unsafe>) => {
+        const after = <T>(send: () => PromiseLike<T>) => Promise.resolve(ready()).then(send)
+        return { values: () => after(() => t.unsafe(...a).values()), then: (ok: any, no: any) => after(() => t.unsafe(...a)).then(ok, no) }
+      }
+    },
+  })
+  const db = drizzle(held, { schema, logger: { logQuery: sql => touch(handle, sql) } })
+  return register(db, handle)
 }

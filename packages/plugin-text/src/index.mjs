@@ -64,7 +64,7 @@ export const text = definePlugin({
       title: 'Fonts (@weft/plugin-text)',
       text: [
         '- Declare fonts once in `text({ fonts })` in weft.config.ts: `{ body: { family, src, fallback } }`. Never hand-write `@font-face` (X020).',
-        "- The build subsets each face by `unicode-range`, adds a metric-matched `\"<Family> Fallback\"` face and preloads `body` and `display`. `import 'weft:fonts'` once in the app entry or root layout.",
+        "- The build subsets each face by `unicode-range`, adds a metric-matched `\"<Family> Fallback\"` face and preloads `body` and `display`. `weft/vite` loads them: no import. `weft docs fonts`.",
         '- `text.measure` is lazy: it costs nothing until something measures, a canvas `s.text()`, `measure()`, `lines()` or `fit()` from weft/text, or a warp list given `text` (`measure: \'off\'` removes it).',
         "- Font stacks name the fallback second: `font-family: \"Inter\", \"Inter Fallback\", sans-serif`. `font-display` is `swap` or `optional`, never `block` (X021).",
       ].join('\n'),

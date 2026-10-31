@@ -37,9 +37,14 @@ describe('docs', () => {
   })
 
   it('explains the full-stack codes, and `start` carries them', async () => {
-    for (const code of ['Q011', 'Q012', 'Q013', 'Q014', 'Q015', 'A001', 'A002', 'A003', 'A004', 'C001', 'C002']) expect((await docs(fixture, code)).text, code).toMatch(new RegExp(`^# ${code} \\((error|warning)\\)`))
+    for (const code of ['Q011', 'Q012', 'Q013', 'Q014', 'Q015', 'Q016', 'A001', 'A002', 'A003', 'A004', 'C001', 'C002']) expect((await docs(fixture, code)).text, code).toMatch(new RegExp(`^# ${code} \\((error|warning)\\)`))
     const page = (await docs(fixture, 'start')).text
     for (const word of ['weft db generate', 'contract.json', "auth: 'user'"]) expect(page).toContain(word)
+  })
+
+  it('`fonts` covers the plugin and says nothing needs importing', async () => {
+    const page = (await docs(fixture, 'fonts')).text
+    for (const word of ['text({', 'weft add text', 'There is nothing to import', '"Inter Fallback"', 'X021']) expect(page).toContain(word)
   })
 
   it('explains a code with its status in the installed weft', async () => {

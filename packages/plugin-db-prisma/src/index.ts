@@ -1,8 +1,10 @@
 // Prisma on weft's seam (research 34 §4): `withWeft(client, dialect)` returns the same client with the handle the server
 // migrates and Q011 reads. Migrations are `prisma/migrations`, applied here because `prisma migrate deploy` isn't in a
-// production bundle. Interactive transactions keep the lock and the statements on one connection.
+// production bundle. Interactive transactions keep the lock and the statements on one connection. It stays Prisma's own
+// client, so weft can't hold a statement: the server runs the gate per request instead, and a failed run doesn't fail it.
 
-import { register, touch, type DbHandle, type Migration } from '@weft/start/db/core'
+import { gate, register, touch, type DbHandle, type Migration } from '@weft/start/db/core'
+import { runtime } from '@weft/start/data'
 
 type Dialect = DbHandle['dialect']
 interface Tx {
@@ -36,5 +38,6 @@ export function withWeft<C extends object>(client: C, dialect: Dialect, { migrat
     }, { maxWait: 60_000, timeout: 120_000 }),
   }
   c.$on?.('query', e => touch(handle, e.query))
-  return register(client, handle, migrate)
+  ;(runtime.dbs ??= new Set()).add(gate(handle, migrate))
+  return register(client, handle)
 }

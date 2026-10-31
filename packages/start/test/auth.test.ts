@@ -164,12 +164,6 @@ describe('the handler', () => {
   })
 })
 
-test('the server\'s first request migrates and checks; `runtime.dbs` holds what registered', () => {
-  const before = runtime.dbs?.size ?? 0
-  createDb({ schema, url: ':memory:' })
-  expect(runtime.dbs?.size).toBe(before + 1)
-})
-
 test('any provider that goes through forward counts as a session change, whatever its cookie is called', async () => {
   const headers = new Headers()
   await forward({ response: { headers } } as never, new Response('{}', { headers: { 'set-cookie': 'hand_session=x' } }))

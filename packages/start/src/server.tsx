@@ -133,18 +133,22 @@ export function createHandler(options: HandlerOptions) {
   let checked = !options.dev
   const authBase = (options.auth?.basePath ?? '/api/auth').replace(/\/$/, '')
   let applied = -1
-  let ready: Promise<void> | undefined
   configure({ ...options.realtime, build: options.build, dev: options.dev })
 
-  /** Before the first request (and in dev, when `drizzle/` grows): the auth secret, then the migrations. */
-  function boot(): Promise<void> | undefined {
+  /**
+   * Before the first request (and in dev, when `drizzle/` grows): the auth secret, and the list each database applies
+   * before its first statement (db/core.ts), so a page with no queries doesn't need one. A client whose statements can't
+   * be held is migrated here; if that fails the request goes on, and Q016 is what using the database then gives.
+   */
+  async function boot() {
     const list = options.migrations?.() ?? []
-    if (applied === list.length) return ready
-    applied = list.length
-    return (ready = (async () => {
+    if (applied !== list.length) {
       options.auth?.$weft?.check()
-      for (const db of runtime.dbs ?? []) await db.$weft.migrate(list)
-    })())
+      applied = list.length
+      const report = (e: unknown) => options.onDiagnostic?.({ code: 'Q016', severity: 'error', message: `Q016: ${(e as any)?.message ?? e}` })
+      runtime.migrations = { list, report }
+    }
+    if (runtime.dbs?.size) await Promise.all([...runtime.dbs].map(ready => ready()?.catch(() => {})))
   }
 
   async function resolve(path: string, request: Request): Promise<Resolved> {
@@ -187,7 +191,10 @@ export function createHandler(options: HandlerOptions) {
       return { status, path, levels, head, route, error }
     }
 
-    if (failed) return special('error', 500, failed.m.error)
+    if (failed) {
+      const e = exec.dbError(failed.m.error)
+      return special('error', (e as any)?.code === 'Q016' ? 503 : 500, e)
+    }
     if (missing) return special('404', 404)
     const levels = matches.filter(x => x.weft).map(levelOf)
     try {
@@ -423,7 +430,7 @@ export function createHandler(options: HandlerOptions) {
     if (url.pathname === '/_weft/og-routes') return prerenderList(request)
     return page(url, request, scope)
   }
-  const handler = (incoming: Request): Promise<Response> => {
+  const handler = async (incoming: Request): Promise<Response> => {
     const request = options.auth ? stamped(incoming) : incoming
     if (!checked) {
       checked = true
@@ -432,9 +439,49 @@ export function createHandler(options: HandlerOptions) {
     const scope = exec.createScope(request, scopeOptions)
     // The build's prerender only lists cards: it holds no secrets and may have no database.
     if (new URL(request.url).pathname === '/_weft/og-routes') return als.run(scope, () => route(request, scope))
-    return Promise.resolve(boot()).then(() => als.run(scope, () => route(request, scope)))
+    await boot()
+    return compressed(request, await als.run(scope, () => route(request, scope)))
   }
   return Object.assign(handler, { resolve })
+}
+
+/**
+ * HTML and data go out brotli or gzipped when the client takes it, flushed chunk by chunk so a streamed page still
+ * streams. A runtime with no node:zlib sits behind a platform that compresses.
+ */
+async function compressed(request: Request, response: Response): Promise<Response> {
+  if (!response.body || response.headers.has('content-encoding')) return response
+  if (!/^(text\/html|application\/json)/.test(response.headers.get('content-type') ?? '')) return response
+  const accepts = request.headers.get('accept-encoding') ?? ''
+  const encoding = /\bbr\b/.test(accepts) ? 'br' : /\bgzip\b/.test(accepts) ? 'gzip' : undefined
+  const zlib = encoding && (await import('node:zlib').catch(() => undefined))
+  if (!zlib) return response
+  const z = encoding === 'br' ? zlib.createBrotliCompress({ params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }) : zlib.createGzip()
+  const reader = response.body.getReader()
+  const body = new ReadableStream<Uint8Array>({
+    start(out) {
+      z.on('data', (d: Buffer) => out.enqueue(new Uint8Array(d)))
+      z.on('end', () => out.close())
+      z.on('error', e => out.error(e))
+      ;(async () => {
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) return void z.end()
+          z.write(value)
+          await new Promise(ok => z.flush(ok as () => void))
+        }
+      })().catch(e => out.error(e))
+    },
+    cancel(reason) {
+      z.destroy()
+      return reader.cancel(reason)
+    },
+  })
+  const headers = new Headers(response.headers)
+  headers.set('content-encoding', encoding)
+  headers.append('vary', 'Accept-Encoding')
+  headers.delete('content-length')
+  return new Response(body, { status: response.status, statusText: response.statusText, headers })
 }
 
 /**

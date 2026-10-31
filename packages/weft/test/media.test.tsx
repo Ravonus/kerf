@@ -267,4 +267,32 @@ describe('weft/vite assets', () => {
     expect(built.emitted.map(f => f.fileName)).toEqual(['assets/f-latin.woff2']) // built once for both modules
     expect(JSON.parse(readFileSync(join(root, '.weft', 'fonts.json'), 'utf8'))).toEqual({ plugin: '@test/p', metrics: { Inter: { capHeight: 0.7 } }, report: { preloadBytes: 3 } })
   })
+
+  test('with a font build the client imports weft:fonts itself: a Start entry, or an HTML page', () => {
+    const entry = (p: any, id: string, consumer = 'client') => (p.transform.filter.id.test(id) ? p.transform.handler.call({ environment: { config: { consumer } } }, 'start()\n') : undefined)
+    const before = plugin('build').p
+    expect(entry(before, '\0virtual:weft/entry-client')).toBeUndefined()
+    expect(before.transformIndexHtml.handler()).toBeUndefined()
+
+    bind('font.build', { export: 'createFontBuild', options: { family: 'Inter' } })
+    const { p } = plugin('build')
+    for (const id of ['\0virtual:weft/entry-client', join(root, 'src/entry.client.ts')]) expect(entry(p, id)).toEqual({ code: "import 'weft:fonts'\nstart()\n", map: null })
+    expect(entry(p, join(root, 'src/entry.client.ts'), 'server')).toBeUndefined()
+    expect(entry(p, join(root, 'src/app.ts'))).toBeUndefined()
+    expect(entry(p, '\0virtual:weft/entry-client?assets=client')).toBeUndefined()
+    expect(p.transformIndexHtml.order).toBe('pre')
+    expect(p.transformIndexHtml.handler()).toEqual([{ tag: 'script', attrs: { type: 'module' }, children: "import 'weft:fonts'", injectTo: 'head' }])
+  })
+
+  test('every environment emits the font files, whichever asked first', async () => {
+    bind('font.build', { export: 'createFontBuild', options: { family: 'Inter' } })
+    const { p } = plugin('build')
+    const emit = (out: any[], name: string) => ({ environment: { name }, emitFile: (f: any) => out.push(f.fileName) })
+    const ssr: string[] = [], client: string[] = []
+    await p.load.handler.call(emit(ssr, 'ssr'), '\0weft:fonts/preloads')
+    await p.load.handler.call(emit(client, 'client'), '\0weft:fonts.css')
+    await p.load.handler.call(emit(client, 'client'), '\0weft:fonts/preloads')
+    expect(ssr).toEqual(['assets/f-latin.woff2'])
+    expect(client).toEqual(['assets/f-latin.woff2'])
+  })
 })

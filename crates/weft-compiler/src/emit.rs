@@ -15,6 +15,7 @@
 //! | `{expr}` child                | `_$child(parent, () => expr, marker?)` (`<!>` marks mixed content)   |
 //! | `{c ? <A/> : <B/>}`, `&&`     | a `_$child` whose condition is read through `_$memo`                 |
 //! | `<Comp a={x} />`              | `_$component(Comp, { get a() { return x; } })`                       |
+//! | `<g.icon />` in a row         | `_$component(g().icon, {})`: the pre-pass's `_$tag={g().icon}` (`TAG`) replaces the tag |
 //! | `<>…</>`                      | the child, or an array of children                                   |
 //! | SVG root outside `<svg>`      | `_$tpl(html, true)`                                                  |
 //!
@@ -48,6 +49,8 @@ const SVG: &[&str] = &[
     "polygon", "polyline", "radialGradient", "rect", "stop", "switch", "symbol", "text", "textPath", "tspan", "use",
     "view",
 ];
+/// The attribute the pre-pass adds to a component tag it can't rewrite in place: its value is the live read of the tag.
+pub const TAG: &str = "_$tag";
 const VOID: &[&str] = &["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"];
 
 #[derive(Clone, Copy)]
@@ -908,12 +911,16 @@ impl<'t> Emitter<'t> {
         }
         let props = self.props(&el.opening_element.attributes, fields, false);
         let component = self.helper("component");
+        let callee = match tag_read(el) {
+            Some(read) => self.expr(read),
+            None => name.clone(),
+        };
         // Dev builds name the component, so a <Boundary> can say where an error was thrown.
         match self.origin.get(&el.span.start) {
             Some(&(line, _)) if self.dev && !self.ssr && name != "For" => {
-                format!("{component}({name}, {props}, {name:?}, {:?})", format!("{}:{line}", self.display))
+                format!("{component}({callee}, {props}, {name:?}, {:?})", format!("{}:{line}", self.display))
             }
-            _ => format!("{component}({name}, {props})"),
+            _ => format!("{component}({callee}, {props})"),
         }
     }
 
@@ -980,7 +987,7 @@ impl<'t> Emitter<'t> {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
                         JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
                     };
-                    if key == "key" {
+                    if key == "key" || key == TAG {
                         continue;
                     }
                     let k = prop_key(&key);
@@ -1077,6 +1084,14 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
     }
     path.reverse();
     Some(format!("{}().{}", p.name, path.join(".")))
+}
+
+/// The live read the pre-pass put beside a component's tag (`TAG`).
+fn tag_read<'a>(el: &'a JSXElement<'a>) -> Option<&'a Expression<'a>> {
+    el.opening_element.attributes.iter().find_map(|a| match a {
+        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == TAG) => attr_expression(a),
+        _ => None,
+    })
 }
 
 fn is_component(el: &JSXElement<'_>, text: &str) -> bool {

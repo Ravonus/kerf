@@ -24,6 +24,13 @@ describe('text() options', () => {
     expect(ref.sides.build.options.subsets).toEqual(['latin'])
   })
 
+  it('its agent notes say the fonts load on their own, and where the docs are', () => {
+    const { text: notes } = text().contribute({ command: 'check', mode: 'development', root: '' }).agents
+    expect(notes).toContain('no import')
+    expect(notes).toContain('weft docs fonts')
+    expect(notes).not.toContain("import 'weft:fonts'")
+  })
+
   it('rejects block display (X021), unknown subsets and measure, as P115 with the path', () => {
     const bad = [
       [{ fonts: { body: { family: 'Inter', src: 'a', fallback: 'Arial', display: 'block' } } }, 'fonts.body.display', /X021/],

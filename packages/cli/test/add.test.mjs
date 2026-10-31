@@ -1,5 +1,5 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -68,6 +68,30 @@ describe('weft add', () => {
     const b = project({ 'weft.config.yaml': 'site: { name: A }\n' })
     await expect(add(b, 'ghost')).rejects.toThrow('back as it was')
     expect(read(b, 'weft.config.yaml')).toBe('site: { name: A }\n')
+  })
+
+  // The app's own failure: a config written first, then `weft add`. Importing it before the install left the module
+  // resolver sure the package had no `exports`, so the load after a good install failed with a P007 about `index.js`.
+  it('installs a package the config already imports, and leaves the config alone', async () => {
+    const config = "import acme from 'acme/plugin'\nexport default { plugins: [acme()] }\n"
+    const dir = project({ 'weft.config.ts': config, 'package.json': '{"name":"app"}' })
+    const bin = join(dir, 'fake-bin')
+    mkdirSync(bin)
+    writeFileSync(join(bin, 'npm'), `#!/bin/sh\nmkdir -p node_modules/acme\ncp ${JSON.stringify(join(dir, 'pkg'))}/* node_modules/acme/\n`, { mode: 0o755 })
+    mkdirSync(join(dir, 'pkg'))
+    for (const [file, text] of Object.entries(acme)) writeFileSync(join(dir, 'pkg', file.split('/').at(-1)), text)
+    const path = process.env.PATH
+    process.env.PATH = `${bin}:${path}`
+    try {
+      const out = await addCommand(dir, 'acme')
+      expect(out.actions).toContain('install acme with npm')
+      expect(out.actions.join()).not.toContain('add acme to')
+    } finally {
+      process.env.PATH = path
+    }
+    expect(read(dir, 'weft.config.ts')).toBe(config)
+    expect(await names(dir)).toEqual(['acme'])
+    expect((await addCommand(dir, 'acme', { install: false })).already).toBe(true)
   })
 
   it('auth needs a database, and stops rather than replace a provider', async () => {
