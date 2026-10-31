@@ -1,0 +1,74 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="message"]) {
+  position: relative; display: grid; grid-template-columns: var(--warp-avatar-md) minmax(0, 1fr); gap: 0 10px; padding: 4px 0;
+  max-inline-size: 100%;
+}
+:where([data-scope="message"][data-continued]) { padding-block-start: 0; }
+:where([data-scope="message"][data-continued] > [data-scope="avatar"]) { visibility: hidden; block-size: 0; }
+:where([data-scope="message"] [data-part="by"]) { display: flex; align-items: baseline; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); margin-block-end: 3px; }
+:where([data-scope="message"] [data-part="by"] b) { color: var(--warp-color-text); font-weight: 600; font-size: var(--warp-text-body-size); }
+:where([data-scope="message"] [data-part="body"]) { display: grid; justify-items: start; gap: 4px; min-inline-size: 0; }
+:where([data-scope="message"] [data-part="bubble"]) {
+  position: relative; max-inline-size: min(560px, 100%); padding: 8px 12px; border-radius: var(--warp-bubble-radius);
+  background: var(--warp-color-surface-sunken); line-height: 1.5; overflow-wrap: anywhere;
+}
+:where([data-scope="message"][data-mine]) { grid-template-columns: minmax(0, 1fr); }
+:where([data-scope="message"][data-mine] > [data-scope="avatar"], [data-scope="message"][data-mine] [data-part="by"]) { display: none; }
+:where([data-scope="message"][data-mine] [data-part="body"]) { justify-items: end; }
+:where([data-scope="message"][data-mine] [data-part="bubble"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+/* review 01 M4: the bubble is the sweep host (hairline base, surface reach; confirm() always shows) */
+:where([data-scope="message"] [data-part="bubble"][data-sweep]) { --warp-sweep-radius: var(--warp-bubble-radius); --_on: var(--warp-sweep-surfaces); }
+:where([data-scope="message"] [data-part="bubble"]) > :where([data-part="sweep-base"]) { color: transparent; }
+:where([data-scope="message"][data-mine] [data-part="bubble"]) > :where([data-part="sweep"]) { color: var(--warp-color-accent-on-solid); }
+:where([data-scope="message"][data-mine] [data-part="bubble"] a) { color: inherit; }
+:where([data-scope="message"] [data-part="mention"]) { padding: 0 3px; border-radius: var(--warp-radius-mark); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-weight: 500; }
+:where([data-scope="message"][data-mine] [data-part="mention"]) { background: color-mix(in oklab, var(--warp-color-accent-on-solid) 20%, transparent); color: inherit; }
+:where([data-scope="message"][data-state="sending"] [data-part="bubble"]) { opacity: 0.6; }
+:where([data-scope="message"][data-state="failed"] [data-part="bubble"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-text); box-shadow: inset 0 0 0 1px var(--warp-color-critical-border); }
+:where([data-scope="message"] [data-part="status"]) { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--warp-color-text-subtle); }
+:where([data-scope="message"] [data-part="status"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
+:where([data-scope="message"][data-state="failed"] [data-part="status"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="message"] [data-part="attachment"]) {
+  display: grid; grid-template-columns: 36px 1fr; gap: 2px 10px; align-items: center; padding: 8px 12px 8px 8px; min-inline-size: 220px;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); box-shadow: 0 0 0 1px var(--warp-color-border);
+}
+:where([data-scope="message"] [data-part="attachment"] i) { grid-row: span 2; display: grid; place-items: center; block-size: 36px; border-radius: var(--warp-radius-mark); background: var(--warp-color-info-soft); color: var(--warp-color-info-text); font: 600 9.5px/1 var(--warp-font-mono); font-style: normal; }
+:where([data-scope="message"] [data-part="attachment"] small) { color: var(--warp-color-text-subtle); font-size: 12px; }
+:where([data-scope="message"] [data-part="bubble"][data-variant="prompt"]) { background: var(--warp-color-surface-sunken); color: var(--warp-color-text); box-shadow: inset 0 0 0 1px var(--warp-color-border); }
+/* the AI prompt bubble is a light surface even though it is "mine": its sweep is the full accent, over the hairline */
+:where([data-scope="message"] [data-part="bubble"][data-variant="prompt"]) > :where([data-part="sweep"]) { color: var(--warp-color-sweep); }
+:where([data-scope="message"] [data-part="status"] [data-scope="button"][data-emphasis="link"])::after { inset-inline: min(-6px, calc((100% - var(--warp-hit-min)) / 2)); }
+@media (forced-colors: active) {
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"], [aria-selected="true"]),
+         [data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b,
+         [data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b,
+         [data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"]),
+         [data-scope="run"] > li[data-state="done"] [data-part="dot"],
+         [data-scope="plan"] li[data-state="done"] [data-part="box"],
+         [data-scope="message"][data-mine] [data-part="bubble"],
+         [data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+/* -- Quote reply (07 §5.5) -------------------------------------------------- */
+:where([data-scope="message"]) { border-radius: var(--warp-radius-control); }
+:where([data-scope="message"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="message"] [data-part="actions"]) {
+  position: absolute; inset-block-start: -10px; inset-inline-end: 4px; z-index: 4; display: none; gap: 2px; padding: 2px;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-overlay); box-shadow: var(--warp-elevation-2), 0 0 0 1px var(--warp-color-border);
+}
+:where([data-scope="message"]:is(:hover, :focus-within, [data-actions]) [data-part="actions"]) { display: flex; }
+:where([data-scope="message"][data-mine] [data-part="actions"]) { inset-inline: 4px auto; }
+:where([data-scope="message"] [data-part="bubble"] [data-part="quote"]) {
+  display: grid; gap: 2px; margin: 2px 0 6px; padding: 4px 0 4px 10px; position: relative; z-index: 3;
+  border-inline-start: 2px solid var(--warp-color-sweep); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-by"]) { font-weight: 600; color: var(--warp-color-text); }
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+:where([data-scope="message"][data-mine] [data-part="bubble"] [data-part="quote"]) { border-inline-start-color: var(--warp-color-accent-on-solid); color: color-mix(in oklab, var(--warp-color-accent-on-solid) 85%, transparent); }
+:where([data-scope="message"][data-mine] [data-part="quote"] [data-part="quote-by"]) { color: var(--warp-color-accent-on-solid); }
+:where([data-scope="message"] [data-part="bubble"] > :not([data-part^="sweep"])) { position: relative; z-index: 3; }
+:where([data-scope="message"] [data-part="quote-jump"]) { font-size: var(--warp-text-caption-size); }
+@media (forced-colors: active) {
+:where([data-scope="message"] [data-part="quote"], [data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
+}
+}

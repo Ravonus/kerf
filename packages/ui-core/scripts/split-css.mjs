@@ -11,7 +11,7 @@
 // sections (reduced motion, forced colours, touch targets) restate rules for many components and must load after
 // them, so each of their rules moves to the end of the file that owns the [data-scope] it names.
 //
-// warp-data.css and warp-layout.css have several @layer blocks and many scopes in sections with no one header style,
+// warp-data.css, warp-layout.css and warp-app.css have several @layer blocks and many scopes in sections with no one header style,
 // so they split by rule, not by header: a rule goes to `data/<scope>.css` for each scope that opens one of its
 // selectors (`[data-scope="table"] [data-scope="field"]` is the table's), an @container or @media block is split the
 // same way, and a rule that names no scope goes to the family's base. @keyframes go to each file that animates with
@@ -185,7 +185,7 @@ function route(file, family) {
     const using = [...files].filter(([, list]) => list.some(e => new RegExp(`\\b${name}\\b`).test(e.text))).map(([h]) => h)
     for (const h of using.length ? using : ['base']) add(h, { text: f.text, inner: [f.text] })
   }
-  return { family, files, tokens: [`@layer warp.tokens {\n${tokens.join('\n')}\n}`, ...property ? [property.trim()] : []].join('\n'), layer: family === 'data' ? 'warp.data' : 'warp.layout' }
+  return { family, files, tokens: [`@layer warp.tokens {\n${tokens.join('\n')}\n}`, ...property ? [property.trim()] : []].join('\n'), layer: `warp.${family}` }
 }
 
 function renderRouted({ family, files, tokens, layer }) {
@@ -212,7 +212,7 @@ export function build() {
   const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
   const parts = { components: split('warp-components.css', 'components'), inputs: split('warp-inputs.css', 'inputs'), rich: split('warp-inputs-rich.css', 'rich') }
   for (const p of Object.values(parts)) for (const [k, v] of render(p)) files.set(k, v)
-  const routed = { data: route('warp-data.css', 'data'), layout: route('warp-layout.css', 'layout') }
+  const routed = { data: route('warp-data.css', 'data'), layout: route('warp-layout.css', 'layout'), app: route('warp-app.css', 'app') }
   for (const p of Object.values(routed)) for (const [k, v] of renderRouted(p)) files.set(k, v)
   const scopes = {}
   for (const p of Object.values(routed)) for (const name of p.files.keys()) if (name !== 'base') (scopes[name] ??= new Set()).add(`${p.family}/${name}.css`)

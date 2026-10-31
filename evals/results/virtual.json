@@ -1,0 +1,294 @@
+{
+ "n": 10000,
+ "browser": "chromium",
+ "at": "2026-10-31T03:09:23.631Z",
+ "list": {
+  "firstRowMs": 263,
+  "nodesAtRest": 51,
+  "down": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 81,
+   "slowFrames": 4,
+   "frames": 300,
+   "moved": 36000,
+   "shared": 10516,
+   "scrollTop": 36000,
+   "scrollHeight": 488054
+  },
+  "fling": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 81,
+   "slowFrames": 0,
+   "frames": 200,
+   "moved": 480000,
+   "shared": 0,
+   "scrollTop": 487454,
+   "scrollHeight": 488054
+  },
+  "up": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 83,
+   "slowFrames": 2,
+   "frames": 300,
+   "moved": -36000,
+   "shared": 10591,
+   "scrollTop": 451454,
+   "scrollHeight": 488054
+  },
+  "covered": {
+   "rows": 13,
+   "overlap": 0,
+   "gap": 0
+  },
+  "drift": 0,
+  "resize": {
+   "resizeMs": 8.7,
+   "top": -1,
+   "height": 647972,
+   "rows": 30
+  },
+  "afterResize": {
+   "rows": 9,
+   "overlap": 0,
+   "gap": 0
+  },
+  "driftAfterResize": 25,
+  "jump": {
+   "offBy": 0
+  }
+ },
+ "chat": {
+  "firstRowMs": 885,
+  "nodesAtRest": 98,
+  "down": {
+   "worstJump": 0.06,
+   "blankFrames": 0,
+   "nodes": 140,
+   "slowFrames": 3,
+   "frames": 300,
+   "moved": 36000,
+   "shared": 3448,
+   "scrollTop": 36000,
+   "scrollHeight": 1212924
+  },
+  "fling": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 140,
+   "slowFrames": 2,
+   "frames": 200,
+   "moved": 480000,
+   "shared": 0,
+   "scrollTop": 516000,
+   "scrollHeight": 1212920
+  },
+  "up": {
+   "worstJump": 0.06,
+   "blankFrames": 0,
+   "nodes": 140,
+   "slowFrames": 1,
+   "frames": 300,
+   "moved": -36000,
+   "shared": 3434,
+   "scrollTop": 480000,
+   "scrollHeight": 1212919
+  },
+  "covered": {
+   "rows": 4,
+   "overlap": 0,
+   "gap": 0
+  },
+  "drift": 0,
+  "live": {
+   "appendWrites": 251,
+   "atEnd": 0,
+   "streamUpward": 0,
+   "endGap": 0,
+   "prependShift": 0.25
+  }
+ },
+ "feed": {
+  "firstRowMs": 100,
+  "nodesAtRest": 106,
+  "down": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 166,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": 36000,
+   "shared": 8407,
+   "scrollTop": 36000,
+   "scrollHeight": 617829
+  },
+  "fling": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 166,
+   "slowFrames": 0,
+   "frames": 200,
+   "moved": 480000,
+   "shared": 0,
+   "scrollTop": 516000,
+   "scrollHeight": 617829
+  },
+  "up": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 166,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": -36000,
+   "shared": 8472,
+   "scrollTop": 480000,
+   "scrollHeight": 617829
+  },
+  "covered": {
+   "rows": 11,
+   "overlap": 0,
+   "gap": 0
+  },
+  "drift": 0
+ },
+ "kanban": {
+  "firstRowMs": 3087,
+  "nodesAtRest": 21684,
+  "down": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 21684,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": 36000,
+   "shared": 0,
+   "scrollTop": 0,
+   "scrollHeight": 209837
+  },
+  "fling": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 21684,
+   "slowFrames": 0,
+   "frames": 200,
+   "moved": 480000,
+   "shared": 0,
+   "scrollTop": 0,
+   "scrollHeight": 209837
+  },
+  "up": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 21684,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": -36000,
+   "shared": 0,
+   "scrollTop": 0,
+   "scrollHeight": 209837
+  },
+  "covered": {
+   "rows": 2500,
+   "overlap": 0,
+   "gap": 8
+  },
+  "drift": 0,
+  "move": {
+   "inColumn": true,
+   "focusIn": true
+  }
+ },
+ "grid": {
+  "firstRowMs": 42,
+  "nodesAtRest": 347,
+  "down": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 467,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": 36000,
+   "shared": 7709,
+   "scrollTop": 36000,
+   "scrollHeight": 340077
+  },
+  "fling": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 467,
+   "slowFrames": 0,
+   "frames": 200,
+   "moved": 480000,
+   "shared": 126,
+   "scrollTop": 339517,
+   "scrollHeight": 340077
+  },
+  "up": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 467,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": -36000,
+   "shared": 7707,
+   "scrollTop": 303517,
+   "scrollHeight": 340077
+  },
+  "covered": {
+   "rows": 18,
+   "overlap": 0,
+   "gap": 0
+  },
+  "drift": 0,
+  "keys": {
+   "id": "grid-0-r9999-c119",
+   "exists": true,
+   "cellsAtEnd": 286
+  }
+ },
+ "gridWrapped": {
+  "firstRowMs": 60,
+  "nodesAtRest": 170,
+  "down": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 240,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": 36000,
+   "shared": 3902,
+   "scrollTop": 36000,
+   "scrollHeight": 730052
+  },
+  "fling": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 240,
+   "slowFrames": 0,
+   "frames": 200,
+   "moved": 480000,
+   "shared": 200,
+   "scrollTop": 516000,
+   "scrollHeight": 730052
+  },
+  "up": {
+   "worstJump": 0,
+   "blankFrames": 0,
+   "nodes": 254,
+   "slowFrames": 0,
+   "frames": 300,
+   "moved": -36000,
+   "shared": 3934,
+   "scrollTop": 480000,
+   "scrollHeight": 730052
+  },
+  "covered": {
+   "rows": 10,
+   "overlap": 0,
+   "gap": 0.03
+  },
+  "drift": 0
+ }
+}

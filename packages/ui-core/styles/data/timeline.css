@@ -19,4 +19,6 @@
 :where([data-scope="timeline"] [data-part="detail"]) { grid-column: 2 / -1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="timeline"] [data-part="detail"] code) { display: inline-block; margin-block-start: 6px; padding: 5px 9px; background: var(--warp-color-surface-sunken); border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-mark); font-size: 11.5px; color: var(--warp-color-text); }
 :where([data-scope="timeline"] > li[data-new]) { animation: warp-enter var(--warp-duration-base) var(--warp-ease-out); }
+/* rows as tall as their text: the window positions them, so nothing here sets a height */
+:where([data-scope="virtual"], [data-scope="timeline"], [data-scope="kanban"]) :where([data-measure]) { text-wrap: wrap; text-rendering: auto; font-variant-numeric: normal; }
 }

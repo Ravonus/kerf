@@ -1,9 +1,9 @@
 // Shape variants and placeholders (research 31): <Boundary pending="shape"> renders the compiled variant of its
 // children from a resource's shape, in warp's SkeletonScope markup, and none of the component's behaviour runs.
 // weft-allow T004, T005: fake timers drive the Boundary's timing; the skeleton's structure is the behaviour under test
-import { flush, render } from 'weft/test'
+import { fakeMeasure, flush, render } from 'weft/test'
 import { fill, mask, placeholder, shapeAny, shapeText } from 'weft/shape'
-import { Text } from 'weft/text'
+import { streamBlocks, Text } from 'weft/text'
 import { Page } from './fixtures/shape/Page'
 import type { Post } from './fixtures/shape/Feed'
 
@@ -127,11 +127,67 @@ test('<Text stream>: the height only grows', async () => {
   const frame = () => new Promise(requestAnimationFrame)
   await flush()
   await frame()
-  const el = document.querySelector('p')!
+  const el = document.querySelector<HTMLElement>('[data-block]')!.parentElement!
   expect(el.style.minBlockSize).toBe('40px')
   height = 20
   text.value = 'Hi'
   await flush()
   await frame()
   expect(el.style.minBlockSize).toBe('40px')
+})
+
+test('<Text stream>: tokens land once a frame, in whole lines, and complete blocks are never rewritten', async () => {
+  vi.useRealTimers()
+  const { state } = await import('weft')
+  const text = state('# One')
+  let height = 25
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({ height, width: 300 }) as DOMRect)
+  const { container } = render(() => <Text stream style="line-height:20px">{text.value}</Text>)
+  const frame = () => new Promise(requestAnimationFrame)
+  await flush()
+  await frame()
+  const el = container.firstElementChild as HTMLElement
+  expect(el.style.minBlockSize).toBe('40px')
+  text.value = '# One\n\nTw'
+  text.value = '# One\n\nTwo'
+  await flush()
+  expect(el.textContent).toBe('# One')
+  await frame()
+  expect(el.textContent).toBe('# OneTwo')
+  const done = el.querySelector('[data-block="done"]')!
+  text.value = '# One\n\nTwo\n\nThree'
+  await flush()
+  await frame()
+  expect(el.querySelector('[data-block="done"]')).toBe(done)
+  expect(el.querySelectorAll('[data-block="done"]')).toHaveLength(2)
+  expect(el.querySelector('[data-block="tail"]')!.textContent).toBe('Three')
+  height = 50
+  vi.mocked(Element.prototype.getBoundingClientRect).mockImplementation(() => ({ height, width: 200 }) as DOMRect)
+  text.value += '!'
+  await flush()
+  await frame()
+  expect(el.style.minBlockSize).toBe('60px')
+})
+
+test('streamBlocks: a blank line inside a code fence does not end a block', () => {
+  expect(streamBlocks('a\n\n```\nb\n\nc')).toEqual({ done: ['a'], tail: '```\nb\n\nc' })
+  expect(streamBlocks('```\nb\n\nc\n```\n\nd')).toEqual({ done: ['```\nb\n\nc\n```'], tail: 'd' })
+})
+
+test('measure, lines and fit: exact boxes from the slot, null with none bound', async () => {
+  const { measure, lines, fit } = await import('weft/text')
+  const spec = { font: '16px Inter', lineHeight: 20, width: 80 }
+  let box: any, rows: any, size: any
+  function Probe() {
+    box = measure('one two three four', spec)
+    rows = lines('one two three four', spec)
+    size = fit('one two', { font: s => `${s}px Inter`, width: 400 })
+    return null
+  }
+  render(Probe, {}, { slots: { 'text.measure': fakeMeasure() } })
+  await flush()
+  await flush()
+  expect(box.value).toEqual({ height: 40, lineCount: 2 })
+  expect(rows.value.map((l: any) => l.text)).toEqual(['one two', 'three four'])
+  expect(size.value).toBe(200) // the fake's width doesn't depend on size
 })

@@ -270,8 +270,12 @@ pausing exposes the latest values in the summary.
   (`aria-label` on a generic span is ignored by AT.)
 - **Timeline / activity feed.** `ol` of knots, what, when and detail. A tone knot carries a shape, and new items get
   `data-new` and a polite announcement.
-- **Virtual list.** Fixed row height, `contain: strict`, a pooled window of about 16 nodes for 10,000 rows, with
-  `aria-setsize/posinset`.
+- **Virtual list.** A window of rows at known offsets, `contain: strict`, about 30 rows for 10,000, with
+  `aria-setsize/posinset`. Heights vary: give it `text` and they're exact before render (`text.measure`), and without an
+  engine rows are measured when they render. A size change above the viewport moves `scrollTop` by the same amount
+  before paint, so nothing on screen moves. Measured text wraps plainly (`text-wrap: wrap`, no numeric variants): those
+  are what an engine can't predict (X004). Ctrl+F finds rendered rows only. Scrolling is on the scroller, so a row
+  mounting isn't an arrival: nothing animates in.
 - **Description list.** `dl` grid with `dt` caption-sized and `dd` tabular. Long values wrap (`overflow-wrap: anywhere`).
 - **Avatar, group, presence.** The tint is a data colour at 24% on the surface; the text is the text colour (≥ 4.5:1).
   Presence is shape-coded: ● online, ▲ away, ■ busy. The group overlaps with a surface ring and a `+n` "more" item.
@@ -285,7 +289,8 @@ pausing exposes the latest values in the summary.
 ## 10. Kanban
 
 Columns are `section > ol`; cards are `li[data-part=card][data-sweep][tabindex=0]` and sweep on hover and focus.
-**Pointer:** HTML drag-and-drop with a 4px accent placeholder and a `data-drop` column tint. **Touch and keyboard:**
+Each column is a window, so a card moving between columns is a new node in the new column, and focus follows it there.
+**Pointer:** HTML drag-and-drop with a `data-drop` column tint; a drop lands at the column's end. **Touch and keyboard:**
 the card's Move button opens a menu (every column, plus up and down). Alt + ←/→ changes column and Alt + ↑/↓
 reorders. Each move is announced as "Moved X to Review, position 2 of 3". Cards move and are never re-created, so
 focus survives. **Phone:** columns scroll horizontally with snap, one column per screen.

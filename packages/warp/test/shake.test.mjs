@@ -26,3 +26,13 @@ test('one form brings its own layout, not the others', async () => {
   expect(js).toContain('donut chart')
   for (const kind of ['line chart', 'sankey diagram', 'treemap', 'candlestick chart', 'streaming line chart']) expect(js, kind).not.toContain(kind)
 }, 60000)
+
+test('a Button pays nothing for the windows; a list brings its window, not chat, board or grid', async () => {
+  const plain = await bundle('<Button>Save</Button>', 'Button')
+  for (const word of ['overflowAnchor', 'aria-setsize', 'data-probe']) expect(plain.js, word).not.toContain(word)
+  for (const word of ['scroll-grid', 'data-scope="virtual"']) expect(plain.css, word).not.toContain(word)
+  const list = await bundle('<VirtualList items={[]} rowKey={r => r}>{r => <span />}</VirtualList>', 'VirtualList')
+  expect(list.js).toContain('overflowAnchor')
+  for (const word of ['Jump to latest', 'Page Up and Page Down', 'data-dragging']) expect(list.js, word).not.toContain(word)
+  for (const word of ['scroll-grid', 'column-head', 'data-scope="composer"']) expect(list.css, word).not.toContain(word)
+}, 60000)

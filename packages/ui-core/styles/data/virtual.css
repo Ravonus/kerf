@@ -8,4 +8,8 @@
   block-size: var(--_rh, 36px); padding-inline: 14px; border-block-end: 1px solid var(--warp-color-border); font-size: var(--warp-text-caption-size);
 }
 :where([data-scope="virtual"] [data-part="row"] span:first-child) { font-family: var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+/* rows as tall as their text: the window positions them, so nothing here sets a height */
+:where([data-scope="virtual"], [data-scope="timeline"], [data-scope="kanban"]) :where([data-measure]) { text-wrap: wrap; text-rendering: auto; font-variant-numeric: normal; }
+:where([data-scope="virtual"][data-variable] [data-part="row"]) { display: block; block-size: auto; padding-block: 8px; }
+:where([data-scope="virtual"][data-variable] [data-part="row"] span:first-child) { font-family: inherit; color: inherit; }
 }

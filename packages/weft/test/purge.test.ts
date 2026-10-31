@@ -1,4 +1,7 @@
 // @vitest-environment node
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { parse, purge, reachable, unnest, words } from '../node/purge.mjs'
 
 const has = (...w: string[]) => words([w.join(' ')])
@@ -75,3 +78,21 @@ test('unnest keeps pseudo-elements, brackets and anything else it does not under
   expect(unnest(':where(a,b):has(c) d')).toBe(':where(a):has(c) d,:where(b):has(c) d')
   expect(unnest('a b')).toBe('a b')
 })
+
+test("with `base: './'`, a lazy chunk's preload list names the purged stylesheet, not the one it replaced", async () => {
+  const { build } = await import('vite')
+  const { default: weft } = await import('../vite.mjs')
+  const root = mkdtempSync(join(tmpdir(), 'weft-purge-'))
+  writeFileSync(join(root, 'index.html'), '<!doctype html><script type="module" src="/main.js"></script>')
+  writeFileSync(join(root, 'main.js'), `import './main.css'\nimport('./lazy.js')\n`)
+  writeFileSync(join(root, 'lazy.js'), `import './lazy.css'\nexport const lazy = 'used'\n`)
+  writeFileSync(join(root, 'main.css'), '.used{color:red}.gone-rule{color:blue}')
+  writeFileSync(join(root, 'lazy.css'), '.used{color:green}')
+  const out: any = await build({ root, base: './', configFile: false, logLevel: 'silent', plugins: [weft()], build: { write: false, cssCodeSplit: true } })
+  const files = (Array.isArray(out) ? out : [out]).flatMap((o: any) => o.output)
+  const sheets = files.filter((f: any) => f.fileName.endsWith('.css')).map((f: any) => f.fileName.split('/').pop())
+  const named = files.filter((f: any) => f.type === 'chunk').flatMap((f: any) => [...f.code.matchAll(/[\w-]+\.css/g)].map(m => m[0]))
+  expect(named.length).toBeGreaterThan(0)
+  for (const name of named) expect(sheets).toContain(name)
+  rmSync(root, { recursive: true, force: true })
+}, 30000)

@@ -8,6 +8,7 @@ const paths: Record<IconName, () => any> = {
   card: () => <><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h3" /></>,
   undo: () => <><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></>,
   check: () => <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  more: () => <path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="2.5" />,
   search: () => <><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>,
   down: () => <path d="M6 9l6 6 6-6" />,
   alert: () => <><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.2v.3" /></>,

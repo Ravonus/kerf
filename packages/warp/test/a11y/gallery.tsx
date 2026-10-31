@@ -1,6 +1,6 @@
 // Every warp component on one page for the a11y suite (scripts/a11y.mjs): fixtures/Variants.tsx's branches, plus the
 // three components it doesn't render. `?part=` picks what is mounted, since an open modal makes the rest inert:
-// static (everything in flow), overlays (Variants' open Modal and Drawer, a closed Popover), toasts, charts, rich (the rich inputs).
+// static (everything in flow), overlays (Variants' open Modal and Drawer, a closed Popover), toasts, charts, rich (the rich inputs), virtual.
 import { render } from 'weft/dom'
 import * as Rich from '../fixtures/Rich'
 import { Button } from '../../src/Button'
@@ -9,6 +9,7 @@ import { Spinner } from '../../src/Spinner'
 import { Tooltip } from '../../src/Tooltip'
 import * as Charts from '../fixtures/ChartCases'
 import { Dashboard, Tables } from '../fixtures/Data'
+import { Virtuals } from '../fixtures/Virtual'
 import { Alerts, Buttons, Choices, Fields, Icons, Overlays, Surfaces, Tabbed, Toasts, Toggles, seedToasts } from '../fixtures/Variants'
 // after the components: the first import fixes the order of warp's CSS layers
 import '@weft/ui-core/styles/data/panel.css'
@@ -60,7 +61,7 @@ function RichInputs() {
 
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
-const View = part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
+const View = part === 'virtual' ? Virtuals : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
 // the shell brings its own main
 const host = document.getElementById('root')!
 if (part === 'shell') host.replaceWith(Object.assign(document.createElement('div'), { id: 'root' }))

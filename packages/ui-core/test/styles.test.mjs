@@ -65,7 +65,7 @@ test('each file parses as CSS and keeps its layer', () => {
     if (!name.endsWith('.css')) continue
     const { warnings } = transform({ filename: name, code: Buffer.from(text), errorRecovery: true })
     expect(warnings.filter(w => !/Unknown at rule|Unexpected token/.test(w.message)), name).toEqual([])
-    if (name !== 'warp.css') expect(text).toMatch(/^\/\* generated[^\n]*\n@layer warp\.(components|inputs|inputs-rich|data|layout|tokens) \{/)
+    if (name !== 'warp.css') expect(text).toMatch(/^\/\* generated[^\n]*\n@layer warp\.(components|inputs|inputs-rich|data|layout|app|tokens) \{/)
   }
 })
 

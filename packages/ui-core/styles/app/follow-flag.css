@@ -1,0 +1,4 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="follow-flag"]) { position: absolute; inset-block-start: 0; inset-inline-start: 50%; translate: -50% 0; z-index: var(--warp-z-overlay); padding: 3px 10px; border-radius: 0 0 var(--warp-radius-control) var(--warp-radius-control); background: var(--_pc); color: var(--warp-color-surface); font: 500 11.5px/1.4 var(--warp-text-body-font); }
+}

@@ -70,7 +70,10 @@ function build(h: TextHandle, attempt = 0): void {
     }
     // Only layout reads the full walker, so a handle that needs it is complete already: it becomes
     // exact once the walker loads, without preparing again.
-    if (h.p && !(h.p as unknown as Internal).simpleLineWalkFastPath && !done.has('complex')) missing.push('complex')
+    if (h.p && !(h.p as unknown as Internal).simpleLineWalkFastPath && !done.has('complex')) {
+      missing.push('complex')
+      if (!done.has('spacing') && !missing.includes('spacing')) missing.push('spacing') // the complex walker asks it for a line's trailing gap, at any letter-spacing
+    }
   }
   if (missing.length === 0) { h.exact = true; h.ready = null; return }
   if (attempt > 4) throw new Error('text-engine: packs did not settle')
