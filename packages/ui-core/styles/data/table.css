@@ -222,6 +222,8 @@
 :where([data-scope="table"] [data-part="sheet"] > header) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-block-end: 1px solid var(--warp-color-border); }
 :where([data-scope="table"] [data-part="sheet"] > div) { overflow: auto; padding: 16px; }
 /* grid: header drag-reorder, group rows, aggregate rows, filter row ---------- */
+:where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(td, th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="table"] tbody [aria-selected="true"]) { --_cell-bg: var(--warp-color-accent-soft); background: var(--warp-color-accent-soft); }
 :where([data-scope="table"] th[draggable="true"]) { cursor: grab; }
 :where([data-scope="table"] th[data-drop-before])::before,
 :where([data-scope="table"] th[data-drop-after])::before {

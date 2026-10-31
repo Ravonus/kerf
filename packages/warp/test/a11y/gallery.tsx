@@ -2,6 +2,7 @@
 // three components it doesn't render. `?part=` picks what is mounted, since an open modal makes the rest inert:
 // static (everything in flow), overlays (Variants' open Modal and Drawer, a closed Popover), toasts, charts, rich (the rich inputs), virtual.
 import { render } from 'weft/dom'
+import * as Rest from '../fixtures/Surfaces'
 import * as Rich from '../fixtures/Rich'
 import { Button } from '../../src/Button'
 import { Kbd } from '../../src/Kbd'
@@ -53,6 +54,18 @@ const Gallery = () => (
   </>
 )
 
+function Remaining() {
+  return (
+    <>
+      <h1>warp grids and editors</h1>
+      <Rest.GridCase /><Rest.GridGroupedCase /><Rest.TreeGridCase /><Rest.PivotCase />
+      <Rest.PagesCase /><Rest.CursorCase /><Rest.LoadMoreCase /><Rest.HiddenColumnsCase />
+      <Rest.PaletteCase /><Rest.MentionsCase /><Rest.CodeCase /><Rest.JsonCase /><Rest.KeyValueCase />
+      <Rest.RteCase /><Rest.MarkdownCase /><Rest.MarkdownEditorCase />
+    </>
+  )
+}
+
 function RichInputs() {
   return (
     <>
@@ -68,7 +81,7 @@ function RichInputs() {
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
 const PACKS: Record<string, () => any> = { agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
-const View = PACKS[part] ? PACKS[part] : part === 'virtual' ? Virtuals : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
+const View = PACKS[part] ? PACKS[part] : part === 'virtual' ? Virtuals : part === 'surfaces' ? Remaining : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
 // the shell brings its own main
 const host = document.getElementById('root')!
 if (part === 'shell') host.replaceWith(Object.assign(document.createElement('div'), { id: 'root' }))

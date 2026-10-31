@@ -1,5 +1,6 @@
-import { isSheet, messages, pickerPanel, todayIso, uid, type ChangeReason, type Presentation } from '@weft/ui-core'
-import { Box, onMount, state, untrack, watch, type State } from 'weft'
+import { isSheet, messages, pickerPanel, todayIso, uid, type Presentation } from '@weft/ui-core'
+import { onMount, state, untrack, watch, type State } from 'weft'
+import { bindable, type Bindable, type Openable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldProps } from './Field'
 import type { IconName } from './Icon'
@@ -12,17 +13,7 @@ import '@weft/ui-core/styles/rich/pick.css'
 import '@weft/ui-core/styles/rich/segments.css'
 import '@weft/ui-core/styles/rich/popover.css'
 
-/** 04 §1.1: a State to bind, or a plain value (controlled) or defaultValue; `onValueChange` hears every change. */
-export interface Bindable<T> {
-  value?: State<T> | T
-  defaultValue?: T
-  onValueChange?: (v: T, reason: ChangeReason) => void
-}
-export interface Openable {
-  open?: State<boolean> | boolean
-  defaultOpen?: boolean
-  onOpenChange?: (o: boolean) => void
-}
+export { bindable, type Bindable, type Openable } from './bind'
 export type RichFieldProps = Omit<FieldProps, 'value' | 'defaultValue'> & {
   required?: boolean
   name?: string
@@ -30,25 +21,6 @@ export type RichFieldProps = Omit<FieldProps, 'value' | 'defaultValue'> & {
   /** Pins "today" (server render, tests); the browser's clock otherwise. */
   today?: string
   presentation?: Presentation
-}
-
-const isState = (v: any): v is State<any> => v instanceof Box
-
-/** One read/write over the three ways a value can be held. */
-export function bindable<T>(value: () => State<T> | T | undefined, initial: () => T | undefined, fallback: T, onChange?: () => ((v: T, r: ChangeReason) => void) | undefined) {
-  const own = state<T>(untrack(() => { const v = value(); return (isState(v) ? undefined : (v as T | undefined)) ?? initial() ?? fallback }))
-  return {
-    get value(): T {
-      const v = value()
-      return isState(v) ? v.value : v !== undefined ? (v as T) : own.value
-    },
-    set(next: T, reason: ChangeReason = 'programmatic') {
-      const v = untrack(value)
-      if (isState(v)) v.value = next
-      else own.value = next
-      untrack(onChange ?? (() => undefined))?.(next, reason)
-    },
-  }
 }
 
 /**

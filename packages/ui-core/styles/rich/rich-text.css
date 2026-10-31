@@ -1,6 +1,7 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.inputs-rich {
 /* -- rich text ------------------------------------------------------- */
+  :where([data-part="caret-anchor"]) { position: absolute; inline-size: 0; block-size: 0; pointer-events: none; }
   :where([data-scope="rte"]) { display: grid; gap: var(--warp-space-tight); }
   :where([data-scope="rte"] [data-part="frame"]) {
     position: relative; display: flex; flex-direction: column; background: var(--warp-color-surface-raised);
@@ -39,6 +40,8 @@
   :where([data-scope="rte"] [data-part="linkbar"] input) { all: unset; flex: 1; min-inline-size: 0; padding-inline: 8px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: var(--warp-text-control-size); }
   :where([data-scope="rte"] [data-part="slash"]) { position: absolute; z-index: var(--warp-z-menu); inline-size: 240px; }
   :where([data-scope="rte"] [data-part="slash"] [role="option"] small) { margin-inline-start: auto; color: var(--warp-color-text-subtle); font: 400 11px var(--warp-font-mono); }
+  :where([data-scope="rte"] [role="toolbar"][data-bubble]) { position: fixed; inset: auto; margin: 0; padding: 4px; border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); background: var(--warp-color-surface-overlay); box-shadow: var(--warp-elevation-2); }
+  :where([data-scope="rte"] [role="toolbar"][data-docked]) { position: fixed; inset-inline: 0; z-index: var(--warp-z-menu); display: flex; margin: 0; padding: 4px; border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: 0; background: var(--warp-color-surface-overlay); }
   /* phone: the toolbar docks above the keyboard (visualViewport in production) */
   :where([data-form="phone"] [data-scope="rte"] [role="toolbar"]) {
     order: 2; position: sticky; inset-block-end: 0; border-block-end: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);

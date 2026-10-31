@@ -44,3 +44,16 @@ test('a Button pays nothing for the windows; a list brings its window, not chat,
   for (const word of ['Jump to latest', 'Page Up and Page Down', 'data-dragging']) expect(list.js, word).not.toContain(word)
   for (const word of ['scroll-grid', 'column-head', 'data-scope="composer"']) expect(list.css, word).not.toContain(word)
 }, 60000)
+
+test('a button brings no grid, palette or editor', async () => {
+  const { js, css } = await bundle('<Button>Save</Button>', 'Button')
+  for (const word of ['treegrid', 'aria-activedescendant', 'contenteditable', 'warp-code-', 'Unexpected end']) expect(js, word).not.toContain(word)
+  for (const word of ['data-scope="rte"', 'code-in', 'data-scope="kv"', 'data-scope="pagination"']) expect(css, word).not.toContain(word)
+}, 60000)
+
+test('the palette brings no editor, and pagination no grid', async () => {
+  const palette = await bundle('<CommandPalette commands={[]} />', 'CommandPalette')
+  for (const word of ['contenteditable', 'treegrid', 'warp-code-']) expect(palette.js, word).not.toContain(word)
+  const pages = await bundle('<PaginationBar total={10} size={5} />', 'PaginationBar')
+  for (const word of ['treegrid', 'contenteditable']) expect(pages.js, word).not.toContain(word)
+}, 60000)
