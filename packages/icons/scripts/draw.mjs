@@ -2,7 +2,8 @@
 // centre of pixel u at 16px, so every straight stroke lands on one pixel row at warp's default size (10-icons §2).
 const X = u => +(1.5 * u + 0.75).toFixed(2)
 const R = u => +(1.5 * u).toFixed(2)
-export const TIERS = { quiet: { corner: 1.6, gap: 1.4 }, balanced: { corner: 0.7, gap: 2 } }
+// gap is measured between stroke ends, and the round caps eat one stroke width of it.
+export const TIERS = { quiet: { corner: 1.6, gap: 2.2 }, balanced: { corner: 0.7, gap: 2.8 } }
 const pts = s => s.map(p => p.split(',').map(Number))
 const n = v => String(+v.toFixed(2)).replace(/^(-?)0\./, '$1.')
 
@@ -65,7 +66,7 @@ function command(text, t) {
     }
     case 'ring': return v[2] >= 3 ? ring(v[0], v[1], v[2], t.gap) : circ(...v)
     case 'circ': return circ(...v)
-    case 'dot': return pts(w).map(([x, y]) => `M${n(X(x))} ${n(X(y))}h.01`).join('')
+    case 'dot': return pts(w).map(([x, y]) => `M${n(X(x) - 0.3)} ${n(X(y))}h.6`).join('')
     case 'p': return raw(w)
     default: throw new Error(`unknown draw op ${op} in "${text}"`)
   }

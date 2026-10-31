@@ -11,7 +11,7 @@ The tiers are the expression stops (00 §3). Same names, same meaning, same box.
 |---|---|---|---|
 | Drawing | outline | outline | pixel art, drawn by hand on 16×16 |
 | Corner radius | 2.4 (soft, follows radius 8) | 1 (tight, follows radius 5) | one stepped pixel |
-| Notch gap | 2.1 | 3 | 1 cell |
+| Notch gap, clear of the caps | 1.8 | 2.7 | 1 cell |
 | Weft stroke | 1.5 | 2 | ink, with shade behind it |
 | Caps, joins | round | round | square by nature |
 
