@@ -1,0 +1,28 @@
+// @vitest-environment node
+// An app that draws no chart pays nothing for charts (06 §2), and one form doesn't bring the others.
+import { build } from 'vite'
+import weft from 'weft/vite'
+
+async function bundle(jsx, names) {
+  const id = '\0shake-entry.tsx'
+  const code = `import { render } from 'weft/dom'\nimport { ${names} } from '@weft/warp'\nrender(() => ${jsx}, document.body)\n`
+  const out = await build({
+    configFile: false, logLevel: 'silent', root: new URL('..', import.meta.url).pathname,
+    plugins: [weft(), { name: 'entry', resolveId: s => (s === 'shake-entry.tsx' ? id : null), load: i => (i === id ? code : null) }],
+    build: { write: false, cssCodeSplit: false, modulePreload: false, rolldownOptions: { input: 'shake-entry.tsx' } },
+  })
+  const files = (Array.isArray(out) ? out : [out]).flatMap(o => o.output)
+  return { js: files.filter(f => f.type === 'chunk').map(f => f.code).join('\n'), css: files.filter(f => f.fileName.endsWith('.css')).map(f => String(f.source)).join('\n') }
+}
+
+test('no chart imported: no chart JS, no chart CSS', async () => {
+  const { js, css } = await bundle('<Button>Save</Button>', 'Button')
+  for (const word of ['chart-tip', 'aria-roledescription', 'tip-row', 'monotone', 'view-toggle']) expect(js, word).not.toContain(word)
+  for (const word of ['chart', 'legend', 'warp-draw', '--warp-data-line']) expect(css, word).not.toContain(word)
+}, 60000)
+
+test('one form brings its own layout, not the others', async () => {
+  const { js } = await bundle('<DonutChart title="T" data={[{ name: "A", value: 1 }]} />', 'DonutChart')
+  expect(js).toContain('donut chart')
+  for (const kind of ['line chart', 'sankey diagram', 'treemap', 'candlestick chart', 'streaming line chart']) expect(js, kind).not.toContain(kind)
+}, 60000)

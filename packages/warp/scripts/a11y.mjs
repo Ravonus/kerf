@@ -104,6 +104,22 @@ const SCENARIOS = {
     await settle(page)
     await audit('focus shell')
   },
+  async charts(page, audit, url) {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${url}?part=charts`)
+    await settle(page)
+    await audit('every form')
+    await page.locator('[data-mark]').first().focus()
+    await page.keyboard.press('ArrowRight')
+    await audit('tooltip on a focused mark')
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Table view' }).first().click()
+    await audit('table view')
+    await page.setViewportSize({ width: 390, height: 800 })
+    await page.goto(`${url}?part=charts`)
+    await settle(page)
+    await audit('every form on a phone')
+  },
   async shop(page, audit, url) {
     await page.goto(url)
     await page.getByRole('button', { name: /^Add/ }).first().waitFor()
@@ -146,7 +162,8 @@ async function pixelContrast(page, i) {
     let alpha = 1
     for (let e = el; e; e = e.parentElement) alpha *= Number(getComputedStyle(e).opacity)
     const cx = Object.assign(document.createElement('canvas'), { width: 1, height: 1 }).getContext('2d')
-    cx.fillStyle = cs.color
+    // SVG text paints with fill, not color
+    cx.fillStyle = el instanceof SVGElement ? cs.fill : cs.color
     cx.fillRect(0, 0, 1, 1)
     const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data
     const size = parseFloat(cs.fontSize), bold = Number(cs.fontWeight) >= 700
@@ -154,7 +171,7 @@ async function pixelContrast(page, i) {
     return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
   }, sel)
   if (!info || info.a < 0.05) return null
-  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; }` })
+  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; }` })
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
@@ -284,7 +301,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const json = process.argv.includes('--json')
   const extra = process.argv.slice(2).filter(a => a.includes('=') && !a.startsWith('--')).map(a => { const [name, dir] = a.split('='); return { name, dir } })
   const gallery = await buildGallery(mkdtempSync(join(tmpdir(), 'warp-a11y-')))
-  const r = await a11y([{ name: 'gallery', dir: gallery }, ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...extra], { log: json ? () => {} : l => console.error(l), only: process.argv.find(a => a.startsWith('--stop='))?.slice(7) })
   if (json) console.log(JSON.stringify(r, null, 2))
   else {
     for (const f of r.spec) console.error(`spec finding ${f.where} (${f.theme}, ${f.stops.length} runs): ${f.why}`)
