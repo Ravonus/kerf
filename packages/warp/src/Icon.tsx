@@ -1,7 +1,7 @@
 // The few warp icons the tier-1 components draw (05 §6: 24 grid, 1.5 stroke, svg[data-icon] styles them), inline
 // so a component needs no sprite on the page. Paths are the specimens' symbols.
 import { untrack } from 'weft'
-export type IconName = 'x' | 'check' | 'search' | 'down' | 'alert' | 'alert-circle' | 'info' | 'check-circle' | 'calendar' | 'clock' | 'left' | 'right' | 'globe' | 'timer' | 'pin' | 'card' | 'undo'
+export type IconName = 'x' | 'check' | 'search' | 'down' | 'alert' | 'alert-circle' | 'info' | 'check-circle' | 'calendar' | 'clock' | 'left' | 'right' | 'globe' | 'timer' | 'pin' | 'card' | 'undo' | 'more'
 
 const paths: Record<IconName, () => any> = {
   x: () => <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,

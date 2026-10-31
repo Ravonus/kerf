@@ -3,7 +3,6 @@
 // marks the placeholder for warp's SkeletonScope (05 §5) and has no CSS of its own. `stream` is X035's fix.
 
 import { derived, effect, flush, onCleanup, onMount, state, untrack } from 'weft'
-import { For } from 'weft/dom'
 import { placeholder } from './shape'
 
 export interface TextProps {
@@ -60,7 +59,7 @@ function Blocks(props: { text: () => string; format?: (block: string) => any }) 
   const list = derived(() => parts.value.done.map((text, i) => ({ text, i })))
   return (
     <>
-      <For each={list.value} by={b => b.i}>{b => <div data-block="done" style={props.format ? undefined : 'white-space:pre-wrap'}>{props.format ? props.format(b().text) : b().text}</div>}</For>
+      {list.value.map(b => <div key={b.i} data-block="done" style={props.format ? undefined : 'white-space:pre-wrap'}>{props.format ? props.format(b.text) : b.text}</div>)}
       <div data-block="tail" style="white-space:pre-wrap">{parts.value.tail}</div>
     </>
   )
@@ -113,4 +112,4 @@ export function Text(props: TextProps) {
   )
 }
 
-export { fit, lines, measure, measureEngine, type FitSpec, type MeasureSpec, type TextBox } from './measure'
+export { fit, lines, measure, measureEngine, type FitSpec, type MeasureHandle, type MeasureProvider, type MeasureSpec, type TextBox } from './measure'

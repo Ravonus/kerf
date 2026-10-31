@@ -1,5 +1,4 @@
 import { derived, DEV, effect, flush, onCleanup, onMount, state, untrack } from 'weft'
-import { For } from 'weft/dom'
 import { measureEngine, type MeasureHandle, type MeasureProvider } from 'weft/text'
 import { slices, virtualizer, type VirtualAlign, type VirtualKey, type Virtualizer } from '@weft/ui-core'
 import './styles'
@@ -188,7 +187,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
 
   const fontsDone = () => { engine?.clear(); prepared.clear(); start() }
   const root = () => el!.ownerDocument.documentElement
-  const dials = new MutationObserver(() => { calibrate(); prepareAll() })
+  let dials: MutationObserver | undefined
 
   /** Bring a row into view if it isn't. Before its key has arrived this does nothing, and the keys effect comes back. */
   function reveal(key: VirtualKey) {
@@ -282,20 +281,21 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
           queueMicrotask(() => { calibrate(); prepareAll() })
         })
         document.fonts?.addEventListener?.('loadingdone', fontsDone)
+        dials = new MutationObserver(() => { calibrate(); prepareAll() })
         dials.observe(root(), { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-expression', 'data-density'] })
       })
     })
     onCleanup(() => {
       stop?.()
-      dials.disconnect()
+      dials?.disconnect()
       document.fonts?.removeEventListener?.('loadingdone', fontsDone)
       v?.destroy()
     })
   })
 
-  function Row(p: { row: () => { item: T; i: number; key: VirtualKey } }) {
+  function Row(p: { row: { item: T; i: number; key: VirtualKey } }) {
     let node: HTMLElement | undefined
-    const key = untrack(() => p.row().key)
+    const key = untrack(() => p.row.key)
     onMount(() => {
       let undo: (() => void) | undefined
       const keep = (u: () => void) => (undo = u)
@@ -308,7 +308,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
         ;(node!.querySelector<HTMLElement>('[data-focus]') ?? node!).focus()
       })
     })
-    const index = () => p.row().i
+    const index = () => p.row.i
     const place = untrack(() => `position:absolute;inset-inline:0;inset-block-start:0;transform:translateY(${index() * (props.estimate ?? 48)}px)`) // the first paint; the virtualizer owns it after
     const attrs = () => ({
       ref: (n: HTMLElement) => (node = n),
@@ -320,7 +320,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       style: place,
       onFocusIn: () => { if (props.roving || props.rowRole === 'article') active.value = key },
     })
-    const body = props.children(() => p.row().item, index)
+    const body = props.children(() => p.row.item, index)
     return props.tag === 'ol' ? <li {...attrs()}>{body}</li> : <div {...attrs()}>{body}</div>
   }
 
@@ -334,15 +334,12 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     'aria-busy': inner && props.busy ? 'true' : undefined,
     style: 'position:relative;flex:none',
   })
-  const rowsOut = () => <For each={rows.value} by={r => r.key}>{r => <Row row={r} />}</For>
-  const probed = () => (probing.value
-    ? <For each={samples.value} by={s => s[0]}>{s => {
-      const name = untrack(() => s()[0])
-      const body = props.children(() => s()[1], () => 0)
-      const attrs = { ref: (n: HTMLElement) => probes.set(name, n), 'data-part': 'row', 'data-probe': '', 'aria-hidden': 'true', inert: true, style: 'position:absolute;inset-inline:0;inset-block-start:0;visibility:hidden;contain:layout' }
-      return untrack(() => props.tag) === 'ol' ? <li {...attrs}>{body}</li> : <div {...attrs}>{body}</div>
-    }}</For>
-    : null)
+  function Probe(p: { sample: [string, T] }) {
+    const name = untrack(() => p.sample[0])
+    const body = props.children(() => p.sample[1], () => 0)
+    const attrs = { ref: (n: HTMLElement) => probes.set(name, n), 'data-part': 'row', 'data-probe': '', 'aria-hidden': 'true', inert: true, style: 'position:absolute;inset-inline:0;inset-block-start:0;visibility:hidden;contain:layout' }
+    return untrack(() => props.tag) === 'ol' ? <li {...attrs}>{body}</li> : <div {...attrs}>{body}</div>
+  }
   return (
     <div
       ref={(n: any) => (el = n)}
@@ -359,8 +356,8 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       onKeyDown={onKeyDown}
     >
       {untrack(() => props.tag) === 'ol'
-        ? <ol {...listAttrs()}>{rowsOut()}{probed()}</ol>
-        : <div {...listAttrs()}>{rowsOut()}{probed()}</div>}
+        ? <ol {...listAttrs()}>{rows.value.map(r => <Row key={r.key} row={r} />)}{probing.value && samples.value.map(s => <Probe key={s[0]} sample={s} />)}</ol>
+        : <div {...listAttrs()}>{rows.value.map(r => <Row key={r.key} row={r} />)}{probing.value && samples.value.map(s => <Probe key={s[0]} sample={s} />)}</div>}
     </div>
   )
 }
