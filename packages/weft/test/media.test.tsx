@@ -5,7 +5,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { render } from 'weft/test'
-import { Media, mediaSizes, type MediaAsset } from 'weft/media'
+import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from 'weft/media'
+import { flush } from 'weft'
 import { probe } from '../media-probe.mjs'
 import { assets } from '../assets.mjs'
 
@@ -51,6 +52,128 @@ const hero: MediaAsset = {
   sources: [{ type: 'image/avif', srcset: '/a/hero-320.avif 320w, /a/hero-640.avif 640w' }, { type: 'image/jpeg', srcset: '/a/hero-320.jpg 320w, /a/hero-640.jpg 640w' }],
   dominant: '#336699', placeholder: 'data:image/webp;base64,AAAA',
 }
+
+const clip: MediaAsset = {
+  kind: 'video', src: '/a/c-640.mp4', width: 640, height: 360, type: 'video/mp4', name: 'c.mov', poster: '/a/c.webp', duration: 8, audio: true,
+  sources: [{ type: 'video/webm; codecs="av01.0.08M.08, opus"', srcset: '/a/c-320.webm 320w, /a/c-640.webm 640w' }, { type: 'video/mp4; codecs="avc1.64001e, mp4a.40.2"', srcset: '/a/c-320.mp4 320w, /a/c-640.mp4 640w' }],
+}
+
+test('timedSources(): efficient codec first, small widths behind a media query, the largest open', () => {
+  expect(timedSources(clip).map(s => [s.src, s.media])).toEqual([
+    ['/a/c-320.webm', '(max-width: 160px)'], ['/a/c-640.webm', undefined], ['/a/c-320.mp4', '(max-width: 160px)'], ['/a/c-640.mp4', undefined],
+  ])
+})
+
+test('<Media> video: poster, box, controls, no autoplay, nothing loaded until asked', () => {
+  render(() => <Media src={clip} alt="Storage tour" />)
+  const v = document.querySelector('video')!
+  expect(v.getAttribute('poster')).toBe('/a/c.webp')
+  expect(v.getAttribute('aria-label')).toBe('Storage tour')
+  expect(v.getAttribute('width')).toBe('640')
+  expect(v.getAttribute('preload')).toBe('none')
+  expect(v.hasAttribute('controls')).toBe(true)
+  expect(v.hasAttribute('autoplay')).toBe(false)
+  expect(v.querySelectorAll('source').length).toBe(4)
+})
+
+test('<Media> GIF as video: muted autoplay loop as an image; a pause control past 5 s', () => {
+  const gif = { ...clip, animated: true, audio: false, loop: 0, duration: 3 }
+  const { unmount } = render(() => <Media src={gif} alt="Spinner" />)
+  let v = document.querySelector('video')!
+  expect(v.getAttribute('role')).toBe('img')
+  expect(v.hasAttribute('autoplay') && v.hasAttribute('loop')).toBe(true)
+  expect((v as HTMLVideoElement).muted).toBe(true)
+  expect(v.hasAttribute('controls')).toBe(false)
+  unmount()
+  render(() => <Media src={{ ...gif, duration: 6 }} alt="Spinner" />)
+  v = document.querySelector('video')!
+  expect(v.hasAttribute('controls')).toBe(true)
+})
+
+test('<Media> audio: controls, sources, a label', () => {
+  render(() => <Media src={{ ...clip, kind: 'audio', width: 0, height: 0, sources: [{ type: 'audio/webm; codecs="opus"', srcset: '/a/t.webm 1w' }] }} alt="Theme" />)
+  const a = document.querySelector('audio')!
+  expect(a.getAttribute('aria-label')).toBe('Theme')
+  expect(a.querySelector('source')!.getAttribute('src')).toBe('/a/t.webm')
+})
+
+/** An element with just what a timeline drives. */
+class Fake extends EventTarget {
+  paused = true
+  ended = false
+  loop = false
+  duration = 8
+  currentTime = 0
+  plays = 0
+  block = false
+  async play() {
+    if (this.block) throw new Error('NotAllowedError')
+    this.paused = false
+    this.plays++
+    this.dispatchEvent(new Event('play'))
+  }
+  pause() {
+    this.paused = true
+    this.dispatchEvent(new Event('pause'))
+  }
+  frames: ((n: number, m: { mediaTime: number }) => void)[] = []
+  requestVideoFrameCallback(run: (n: number, m: { mediaTime: number }) => void) {
+    this.frames.push(run)
+    return 1
+  }
+  present(mediaTime: number) {
+    this.frames.splice(0).forEach(run => run(0, { mediaTime }))
+  }
+}
+
+test('timeline: writes are commands, frames write time, cues fire on crossing and not on a seek', async () => {
+  const t = timeline(clip, { cues: { drop: 1.2, chorus: 3 } })
+  const el = new Fake()
+  t.bind(el as any)
+  const fired: string[] = []
+  t.on('drop', () => fired.push('drop'))
+  t.on('chorus', () => fired.push('chorus'))
+
+  t.playing.value = true
+  flush()
+  await 0
+  expect(el.plays).toBe(1)
+  el.present(1)
+  expect(t.currentTime.value).toBe(1)
+  expect(el.currentTime).toBe(0) // a frame is not a seek
+  expect(t.cue.value).toBe(null)
+  el.present(1.25)
+  expect(fired).toEqual(['drop'])
+  expect(t.cue.value).toBe('drop')
+
+  el.currentTime = 5
+  t.currentTime.value = 5
+  flush()
+  el.dispatchEvent(new Event('seeked'))
+  expect(fired).toEqual(['drop']) // jumped over chorus
+  expect(t.cue.value).toBe('chorus')
+
+  t.currentTime.value = 2
+  flush()
+  expect(el.currentTime).toBe(2)
+  t.playing.value = false
+  flush()
+  expect(el.paused).toBe(true)
+})
+
+test('timeline: a blocked play() leaves it paused, with the error in a box', async () => {
+  const t = timeline(clip)
+  const el = new Fake()
+  el.block = true
+  t.bind(el as any)
+  t.playing.value = true
+  flush()
+  await 0
+  await 0
+  flush()
+  expect(t.playing.value).toBe(false)
+  expect(t.error.value?.message).toBe('NotAllowedError')
+})
 
 test('<Media>: a picture with AVIF first, the fallback img with dimensions, placeholder and lazy loading', () => {
   render(() => <Media src={hero} alt="Studio gallery at night" width="1/2" class="hero" />)

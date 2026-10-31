@@ -8,17 +8,38 @@ import { checkMedia } from './check.mjs'
 const mediaBuild = defineSlot({ id: 'media.build', version: 1, cardinality: 'one', sides: ['build'] })
 const mediaServer = defineSlot({ id: 'media.server', version: 1, cardinality: 'one', sides: ['server'] })
 const FORMATS = ['avif', 'webp']
+const CODECS = ['av1', 'vp9', 'hevc']
 
 const fail = (path, message) => {
   throw Object.assign(new Error(message), { path })
 }
 
 function options(input) {
-  for (const key of Object.keys(input)) if (!['formats', 'widths', 'quality', 'placeholder', 'gifLimit', 'encoder', 'server'].includes(key)) fail(key, 'unknown option')
+  for (const key of Object.keys(input)) if (!['formats', 'widths', 'quality', 'placeholder', 'gifLimit', 'encoder', 'swap', 'video', 'gif', 'server'].includes(key)) fail(key, 'unknown option')
   const out = {}
   if (input.encoder !== undefined) {
-    if (!['off', 'server'].includes(input.encoder)) fail('encoder', `\`${input.encoder}\`: 'off' or 'server' ('background' comes with the ffmpeg provider)`)
+    if (!['off', 'background', 'server'].includes(input.encoder)) fail('encoder', `\`${input.encoder}\`: 'off', 'background' or 'server'`)
     out.encoder = input.encoder
+  }
+  if (input.swap !== undefined) {
+    if (!['intent', 'idle', 'never'].includes(input.swap)) fail('swap', `\`${input.swap}\`: 'intent', 'idle' or 'never'`)
+    if (input.encoder !== 'background') fail('swap', "only means something with `encoder: 'background'`")
+    out.swap = input.swap
+  }
+  if (input.video !== undefined) {
+    const { codecs, widths } = input.video
+    if (codecs !== undefined) {
+      if (!Array.isArray(codecs)) fail('video.codecs', 'expected an array')
+      for (const [i, c] of codecs.entries()) if (!CODECS.includes(c)) fail(`video.codecs.${i}`, `\`${c}\`: ${CODECS.join(', ')} (H.264 is always there)`)
+    }
+    if (widths !== undefined && !(Array.isArray(widths) && widths.length && widths.every(w => Number.isInteger(w) && w > 0))) fail('video.widths', 'expected positive integers')
+    out.video = { ...input.video, ...(widths && { widths: [...widths].sort((a, b) => a - b) }) }
+  }
+  if (input.gif !== undefined) {
+    const { toVideo, keepUnder } = input.gif
+    if (toVideo !== undefined && !['auto', 'never'].includes(toVideo)) fail('gif.toVideo', "'auto' or 'never'")
+    if (keepUnder !== undefined && !(Number.isInteger(keepUnder) && keepUnder >= 0)) fail('gif.keepUnder', 'a number of bytes')
+    out.gif = input.gif
   }
   if (input.server !== undefined) {
     const { dir, maxBytes } = input.server
@@ -60,9 +81,12 @@ const CODES = [
   ['M011', 'Endless motion with no pause control'],
   ['M012', 'Unsafe SVG used as an image'],
   ['M013', 'public/ file referenced by string'],
+  ['M014', "What `encoder: 'background'` adds to the build"],
+  ['M015', 'An HDR or over-8-bit source that comes out 8-bit SDR'],
   ['M016', '<Media src> given a string: no dimensions before render'],
   ['M017', 'Media requested with no media.server provider'],
   ['M018', 'An upload refused: not an image, or over the size limit'],
+  ['M019', 'ffmpeg missing, not the pinned binary, or without an encoder'],
 ]
 
 export const media = definePlugin({
@@ -71,7 +95,7 @@ export const media = definePlugin({
   weft: '*',
   namespace: 'M',
   options,
-  permissions: { fs: { read: ['**/*.{png,jpg,jpeg,gif,webp,avif,svg}'] }, env: ['WEFT_MEDIA_DIR'], spawn: ['ssimulacra2'], native: true },
+  permissions: { fs: { read: ['**/*.{png,jpg,jpeg,gif,webp,avif,svg,mp4,m4v,mov,webm,mkv,ogv,mp3,wav,flac,ogg,oga,opus,m4a,aac}'] }, env: ['WEFT_MEDIA_DIR'], spawn: ['ssimulacra2'], native: true },
   contribute: o => ({
     provides: [provide(mediaBuild, { sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createMediaBuild', options: o } } }), provide(mediaServer, { sides: { server: { module: '@weft/plugin-media/server', export: 'createMediaServer', options: o } } })],
     check: { include: ['**/*.{tsx,jsx}'], run: ctx => checkMedia(ctx, { gifLimit: o.gifLimit }) },

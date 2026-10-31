@@ -737,10 +737,13 @@ export async function swapImage(img, url, srcset) {
     mousedown. So there is **no time to prefetch** before the menu.
   - The handler sets `src` synchronously. The old image stays painted (shown above), and `currentSrc` is the pending
     URL.
-  - **(Unverified:** that Chromium's "Save image as" uses the attribute URL set inside the `contextmenu` handler.
-    Blink builds the menu after dispatch, from the element's `src`, but a headful test is needed. Safari and Firefox
-    are unknown.**)** That test is a Phase 3c gate. If it fails, `'intent'` downgrades to a "Download original" item
-    in warp's media menu (below).
+  - **Measured in 3c (headed Chromium and Firefox 157, real X11 right-clicks, `packages/plugin-media/test/save.headful.mjs`):**
+    Chromium's "Save image as" uses the URL set inside `contextmenu`. Firefox does not: the menu reads the image's
+    current request, so even a swap at `pointerdown` saved the AVIF. `'intent'` therefore starts at a 150 ms hover,
+    which costs the fallback's bytes for mouse hovers. A fast right-click with no hover in Firefox still gets the
+    efficient file. Setting `video.src` inside `contextmenu` loses the save item in Chromium, and replacing the video
+    with an `<img>` there saved nothing; a near-transparent `<img>` over the video saves the GIF in both. Safari is
+    unverified.
 - **`'idle'`:** after `load` + `requestIdleCallback`, for visible media only, and only when the compatible copy is
   ≤ 1.5× the efficient file and Save-Data is off. This is the only mode where *every* save gets the compatible file
   with no unverified browser behaviour. It costs the extra bytes for every viewer.

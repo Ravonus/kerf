@@ -18,7 +18,7 @@ import { trustStatus } from './trust.mjs'
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
-const ALIASES = { warp: '@weft/warp', text: '@weft/plugin-text', media: '@weft/plugin-media', 'surface-keel': '@weft/plugin-surface-keel' }
+const ALIASES = { warp: '@weft/warp', text: '@weft/plugin-text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel' }
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -282,6 +282,7 @@ export async function addCommand(root, feature, { dryRun = false, install = true
     await writeAgentsMd(root)
     actions.push('regenerate AGENTS.md')
   }
+  actions.push(...(after.contributions?.find(c => c.name === pkg)?.manifest?.notes ?? []))
   if (trust?.blocked) actions.push(`${pkg} asks for ${[...trust.added, ...trust.hidden.map(n => `${n} (undeclared)`)].join(', ') || 'a code change'}; \`weft check\` stops until you run \`weft plugins approve ${pkg}\``)
   return { ok: true, package: pkg, config, actions, ...(trust?.blocked && { approve: { added: trust.added, undeclared: trust.hidden } }) }
 }

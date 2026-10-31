@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { basename, extname, isAbsolute, join } from 'node:path'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { probe } from './media-probe.mjs'
 
@@ -21,7 +21,19 @@ export async function buildSlot(root, id) {
   return { plugin: ref.plugin, impl: await make(ref.options ?? {}) }
 }
 
-const MEDIA = /\?media$/
+/** A `keyed` slot's build-side providers: `{ key: implementation }`. */
+export async function buildKeys(root, id) {
+  const file = join(root, '.weft', 'slots', `${id}.build.json`)
+  if (!existsSync(file)) return {}
+  const keys = {}
+  for (const [key, ref] of Object.entries(JSON.parse(readFileSync(file, 'utf8')).keys)) {
+    const spec = isAbsolute(ref.module) ? pathToFileURL(ref.module).href : pathToFileURL(createRequire(join(root, 'package.json')).resolve(ref.module)).href
+    keys[key] = (await import(spec))[ref.export](ref.options ?? {})
+  }
+  return keys
+}
+
+const MEDIA = /\?media(?:&audio=[^&]+)?$/
 const FONTS = 'weft:fonts'
 const PRELOADS = 'weft:fonts/preloads'
 const DEV_PREFIX = '/@weft-assets/'
@@ -48,17 +60,26 @@ function fileStore() {
       if (!bytes) return next()
       res.setHeader('content-type', TYPES[extname(name).slice(1)] ?? 'application/octet-stream')
       res.setHeader('cache-control', 'no-cache')
+      // Safari won't play a video from a server without ranges.
+      const range = /^(?:mp4|webm|m4a)$/.test(extname(name).slice(1)) && /^bytes=(\d+)-(\d*)$/.exec(req.headers?.range ?? '')
+      if (range) {
+        const start = Number(range[1])
+        const end = Math.min(range[2] ? Number(range[2]) : Infinity, bytes.length - 1)
+        res.statusCode = 206
+        res.setHeader('content-range', `bytes ${start}-${end}/${bytes.length}`)
+        return res.end(Buffer.from(bytes.subarray(start, end + 1)))
+      }
       res.end(Buffer.from(bytes))
     },
   }
 }
 
-const TYPES = { avif: 'image/avif', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', svg: 'image/svg+xml', woff2: 'font/woff2', woff: 'font/woff' }
+const TYPES = { avif: 'image/avif', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', svg: 'image/svg+xml', woff2: 'font/woff2', woff: 'font/woff', mp4: 'video/mp4', webm: 'video/webm', m4a: 'audio/mp4' }
 
 /** No provider: the original file, its header dimensions, nothing else. */
 function original(file, bytes) {
   const size = probe(bytes, file)
-  if (!size) throw new Error(`${file}: not an image weft can read the size of (PNG, JPEG, GIF, WebP, AVIF, SVG)`)
+  if (!size) throw new Error(`${file}: not an image weft can read the size of (PNG, JPEG, GIF, WebP, AVIF, SVG). Video and audio need \`media()\` and \`mediaFfmpeg()\` in \`plugins\` (P101).`)
   const ext = extname(file)
   const name = `${basename(file, ext)}-${createHash('sha256').update(bytes).digest('hex').slice(0, 8)}${ext}`
   const kind = size.type === 'image/svg+xml' ? 'vector' : size.type === 'image/jpeg' || size.type === 'image/avif' || size.type === 'image/heif' ? 'photo' : 'graphic'
@@ -75,6 +96,7 @@ export function assets() {
     return providers.get(id)
   }
   let fonts
+  let encode
 
   /** Run font.build once per process; writes `.weft/fonts.json` (metrics and the budget report X022 reads). */
   const buildFonts = ctx =>
@@ -110,18 +132,25 @@ export function assets() {
         if (id === '\0weft:fonts.css') return (await buildFonts(this)).css
         if (id === '\0' + PRELOADS) return `export const preloads = ${JSON.stringify((await buildFonts(this)).preloads)}\n`
         const file = id.replace(MEDIA, '')
+        const track = /&audio=([^&]+)$/.exec(id)?.[1]
+        const audio = track && resolve(dirname(file), decodeURIComponent(track))
         this.addWatchFile(file)
+        if (audio) this.addWatchFile(audio)
         const bytes = new Uint8Array(readFileSync(file))
         const p = await provider('media.build')
+        encode ??= buildKeys(root, 'media.encode')
         const out = p
-          ? await p.impl.build({ file, bytes }, { root, dev, cacheDir: join(root, '.weft', 'cache', 'media'), url: name => name })
+          ? await p.impl.build({ file, bytes, audio }, { root, dev, cacheDir: join(root, '.weft', 'cache', 'media'), url: name => name, encode: await encode })
           : original(file, bytes)
         for (const d of out.diagnostics ?? []) {
           if (d.severity === 'error') this.error(`${d.code} ${d.message}`)
+          else if (d.severity === 'info') this.info(`${d.code} ${d.message}`)
           else this.warn(`${d.code} ${d.message}`)
         }
         for (const f of out.files) store.add(this, f.name, f.bytes)
         const asset = { ...out.asset, src: store.url(out.asset.src), sources: out.asset.sources.map(s => ({ ...s, srcset: s.srcset.replace(/(^|,\s*)([^\s,]+)/g, (_, sep, n) => sep + store.url(n)) })) }
+        if (asset.poster) asset.poster = store.url(asset.poster)
+        if (asset.copy) asset.copy = { ...asset.copy, src: store.url(asset.copy.src) }
         return `export default ${JSON.stringify(asset)}\n`
       },
     },

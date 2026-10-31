@@ -728,8 +728,8 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
   libjxl's `ssimulacra2` tool when it is on `PATH`, and fixed qualities otherwise (the asset records which). GIFs
   ship unchanged, with M004 over 256 KB. `sizes` comes from `width` (`"1/3"`, `"240px"`) or `sizes="auto"`, not
   yet from layout. M001–M013 and M016–M018 are built; M014–M015 come with video.
-- **Unverified:** whether every browser's "Save as" honours a URL swapped inside `contextmenu` (a headful test gates
-  `background` in 3c), and Firefox.
+- **Save test (3c):** real right-clicks in headed Chromium and Firefox. Chromium saves a URL set inside `contextmenu`;
+  Firefox only saves one that has finished loading, so `swap: 'intent'` starts at a 150 ms hover. Safari is unverified.
 
 ## 7. Agent layer (ships with the core, not after)
 
@@ -1008,6 +1008,8 @@ renderer (25.9 KB br) are lazy. `measure()`, `lines()` and `fit()` move to 3c, t
 a fresh agent added an animated surface with a live slider from a one-line request, passing 8 hidden checks.
 
 **3c status (2026-10-30):** plugin trust tooling is built ([13](research/13-plugins.md) §2.9). `.weft/plugins.lock.json` records each plugin's permissions, slots, undeclared use and a hash of its package files. P109 (a new permission, or use the audit finds undeclared) and P110 (changed code, or an unreadable lock) stop `weft check`, `weft dev` and `weft build`. A plugin asking for permissions is blocked with no lock too; one asking for nothing that passes the audit isn't. `weft plugins audit` scans the plugin's own files from its entry and its build and server modules, and `approve <name…>` or `--all` writes the lock (no arguments only shows what's waiting). `weft add` reports and never approves, `create-weft` approves what it picks, and `trust: 'warn'` turns the block into warnings. The first audit found undeclared use in warp, Prisma, Native and media, all now declared. Not built: `weft build --sandbox`, `plugins verify` and the provenance report. The lock hashes installed files, not the tarball, and transitive dependencies stay with the package manager's lockfile. `.weft/` in a repository-root `.gitignore` above an app still hides the lock.
+
+**3c media (2026-10-30):** `@weft/plugin-media-ffmpeg` provides `media.encode@1` (keyed: AV1, VP9, HEVC, H.264, Opus, AAC) through an ffmpeg the app installs, optionally pinned by SHA-256, and declares `spawn: ffmpeg, ffprobe`. `media.build@1` stays one slot: the analyze, quality and CDN slots are not split out, since nothing provides a second one yet. `?media` now takes video and audio and GIFs become video under the 15% rule with their delays kept; `?media&audio=` muxes at build. `<Media>` renders `<video>` and `<audio>`, `timeline()` is in `weft/media`, and built video and audio answer byte ranges (a Nitro plugin; its static handler has none). `encoder: 'background'` swaps a compatible copy in: stills drop their `<source>`s (0 extra bytes), a GIF-turned-video gets a near-transparent `<img>` of the GIF on top, and video up to 2 MB uses the dual `<video>` flip. A copy already in the HTTP cache swaps in at mount (`only-if-cached`, no network). `packages/plugin-media/test/save.headful.mjs` is the gate, on Linux under Xvfb: stills and GIFs save the right file in Chromium and Firefox and video in Chromium; Firefox writes no file for "Save Video As" under Playwright, so its video case checks the `currentSrc` its menu reads. Not built: Safari in that gate, uploads of video or audio (the media route still stores images and serves GIFs as they are), a fast right-click with no hover in Firefox still saves the AVIF, `weft media plan`, ffmpeg-static pinning by version, VMAF.
 
 **3 exit check (2026-10-30): met** ([result](../evals/results/phase3-exit.md),
 [findings](../evals/results/phase3-exit-FINDINGS.md); rerun with `node evals/phase3-exit.mjs`). The check covers the

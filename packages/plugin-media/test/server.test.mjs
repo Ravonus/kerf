@@ -107,7 +107,9 @@ describe('encoder: \'server\'', () => {
     expect(await m.serve({ hash: hashOf(out.asset), width: 64, format: 'auto', accept: 'image/avif' })).toMatchObject({ type: 'image/avif' })
   })
 
-  it('refuses \'background\' until the ffmpeg provider exists', () => {
-    expect(() => media({ encoder: 'background' })).toThrow(/encoder/)
+  it('takes \'background\', and `swap` only with it', () => {
+    expect(media({ encoder: 'background', swap: 'idle' }).options).toEqual({ encoder: 'background', swap: 'idle' })
+    expect(() => media({ swap: 'idle' })).toThrow(/swap/)
+    expect(() => media({ encoder: 'always' })).toThrow(/encoder/)
   })
 })

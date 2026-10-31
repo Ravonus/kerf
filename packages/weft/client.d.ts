@@ -8,6 +8,12 @@ declare module '*?media' {
   export default asset
 }
 
+/** `./loop.gif?media&audio=./beat.opus`: the audio muxed into the video at build. */
+declare module '*?media&audio=*' {
+  const asset: import('weft/media').MediaAsset
+  export default asset
+}
+
 /** Design tokens the `weft:tokens/*` plugin virtual modules emit as CSS. */
 declare module 'weft:tokens/*' {}
 

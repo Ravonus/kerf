@@ -1,11 +1,17 @@
 // weft/media: <Media> and the record a `?media` import evaluates to (research 15 §7, research 26 §2). No encoder and
 // no IO here: weft/vite builds the record (with @weft/plugin-media's `media.build` provider, or a header probe
-// without one), and this renders it with dimensions, a placeholder, `srcset` and `sizes`, so nothing shifts.
+// without one), and this renders it with dimensions, a placeholder, `srcset` and `sizes`, so nothing shifts. Video and
+// audio records come from @weft/plugin-media-ffmpeg. The swap runtime is a chunk only a compatible copy loads.
+
+import { onMount, untrack } from './index'
+import type { Timeline } from './media-timeline'
+
+export { timeline, type Timeline, type TimelineOptions } from './media-timeline'
 
 /** What `import x from './x.jpg?media'` gives you. */
 export interface MediaAsset {
-  /** photo: lossy sources; graphic: PNG/GIF/WebP stills; vector: SVG. */
-  kind: 'photo' | 'graphic' | 'vector'
+  /** photo: lossy sources; graphic: PNG/GIF/WebP stills; vector: SVG; video also covers a GIF turned into video. */
+  kind: 'photo' | 'graphic' | 'vector' | 'video' | 'audio'
   /** The compatible fallback at the largest width. */
   src: string
   /** Intrinsic size, after EXIF orientation. */
@@ -23,6 +29,19 @@ export interface MediaAsset {
   name: string
   /** How the quality was chosen: an SSIMULACRA2 target, or fixed encoder settings when no scorer was available. */
   quality?: 'ssimulacra2' | 'fixed' | 'original'
+  /** Video: the still shown until it plays. */
+  poster?: string
+  /** Video and audio: seconds. */
+  duration?: number
+  /** Video: it has a sound track. */
+  audio?: boolean
+  /** Video made from a GIF: it autoplays muted, as the GIF did. */
+  animated?: boolean
+  /** The GIF's loop count: 0 is forever. */
+  loop?: number
+  /** `encoder: 'background'`: the file a save should give. */
+  copy?: { src: string; type: string; bytes?: number; ratio?: number }
+  swap?: 'intent' | 'idle' | 'never'
 }
 
 export interface MediaProps {
@@ -39,6 +58,10 @@ export interface MediaProps {
   /** Focal point, 0–1 from the top left: becomes `object-position`. */
   focus?: [number, number]
   fit?: 'cover' | 'contain'
+  /** Video and audio: sync code to it with `timeline()`. */
+  timeline?: Timeline<any>
+  /** Video: 'always' keeps a GIF moving under `prefers-reduced-motion`. */
+  motion?: 'auto' | 'always'
   [attr: string]: any
 }
 
@@ -72,12 +95,69 @@ export function mediaStyle(a: MediaAsset, focus?: [number, number], fit?: 'cover
 const fallbackSrcset = (a: MediaAsset) => a.sources.at(-1)?.srcset
 
 /**
+ * `<source>` has no `srcset` on `<video>`: one per codec and width, efficient codecs first, each width behind a `media`
+ * query at half its pixels (a 2× screen), the largest with none. The browser plays the first it can and that matches.
+ */
+export function timedSources(a: MediaAsset): { src: string; type: string; media?: string }[] {
+  return a.sources.flatMap(s => {
+    const rungs = s.srcset.split(', ').map(r => r.split(' '))
+    return rungs.map(([src, w], i) => (i < rungs.length - 1 ? { src, type: s.type, media: `(max-width: ${Math.round(parseInt(w) / 2)}px)` } : { src, type: s.type }))
+  })
+}
+
+function timed({ src, alt, decorative, priority, focus, fit, timeline, motion, controls, ...rest }: MediaProps) {
+  let el: any
+  onMount(() => {
+    if (timeline) timeline.bind(el)
+    if (src.animated && motion !== 'always' && matchMedia('(prefers-reduced-motion: reduce)').matches) el.pause()
+    if (src.loop && src.loop > 1) {
+      let left = src.loop - 1
+      el.addEventListener('ended', () => { if (left-- > 0) void el.play() })
+    }
+    if (src.copy) void import('./media-swap').then(m => m.attach(el, src))
+  })
+  const sources = timedSources(src).map(s => <source key={s.src} src={s.src} type={s.type} media={s.media} />)
+  if (src.kind === 'audio') return <audio ref={(n: any) => (el = n)} controls preload={priority ? 'auto' : 'metadata'} aria-label={decorative ? undefined : alt} {...rest}>{sources}</audio>
+  const moving = !!src.animated
+  const video = (
+    <video
+      ref={(n: any) => (el = n)}
+      poster={src.poster}
+      width={src.width}
+      height={src.height}
+      role={moving ? 'img' : undefined}
+      aria-label={decorative ? undefined : alt}
+      aria-hidden={decorative ? 'true' : undefined}
+      autoplay={moving}
+      muted={moving}
+      loop={moving && !src.loop}
+      playsinline
+      disablepictureinpicture={moving}
+      controls={controls ?? (!moving || (src.duration ?? 0) > 5)}
+      preload={priority || moving ? 'auto' : 'none'}
+      style={mediaStyle({ ...src, kind: 'photo' }, focus, fit)}
+      {...rest}
+    >
+      {sources}
+    </video>
+  )
+  return src.copy ? <span style="position:relative;display:inline-block;max-inline-size:100%">{video}</span> : video
+}
+
+/**
  * One source, everything automatic: `<Media src={hero} alt="…" />`. Renders `<picture>` with the efficient formats
  * when the asset has them (AVIF isn't in every engine weft targets: iOS 15), else one `<img>`.
  */
-export function Media({ src, alt, decorative, priority, width, sizes, focus, fit, ...rest }: MediaProps) {
+export function Media(props: MediaProps) {
+  return untrack(() => (props.src.kind === 'video' || props.src.kind === 'audio' ? timed(props) : still(props)))
+}
+
+function still({ src, alt, decorative, priority, width, sizes, focus, fit, ...rest }: MediaProps) {
+  let el: any
+  if (src.copy) onMount(() => void import('./media-swap').then(m => m.attach(el, src)))
   const img = () => (
     <img
+      ref={(n: any) => (el = n)}
       src={src.src}
       srcset={fallbackSrcset(src)}
       sizes={src.sources.length ? mediaSizes(width, sizes, !priority) : undefined}

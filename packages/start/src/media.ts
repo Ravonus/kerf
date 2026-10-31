@@ -7,16 +7,19 @@ import type { MediaAsset } from 'weft/media'
 
 const record = () =>
   zod.object({
-    kind: zod.enum(['photo', 'graphic', 'vector']),
+    kind: zod.enum(['photo', 'graphic', 'vector', 'video', 'audio']),
     src: zod.string(),
-    width: zod.number().int().positive(),
-    height: zod.number().int().positive(),
+    width: zod.number().int().nonnegative(),
+    height: zod.number().int().nonnegative(),
     type: zod.string(),
     sources: zod.array(zod.object({ type: zod.string(), srcset: zod.string() })),
     dominant: zod.string().optional(),
     placeholder: zod.string().optional(),
     name: zod.string(),
     quality: zod.enum(['ssimulacra2', 'fixed', 'original']).optional(),
+    poster: zod.string().optional(),
+    duration: zod.number().optional(),
+    audio: zod.boolean().optional(),
   })
 
 export const z = { ...zod, media: record } as typeof zod & { media: typeof record }
