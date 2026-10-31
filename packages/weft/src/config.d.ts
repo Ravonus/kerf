@@ -51,6 +51,8 @@ export interface SiteConfig {
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
   image?: 'auto' | string | { url: string; width?: number; height?: number; alt?: string }
   twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
+  /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
+  inlineCss?: boolean
 }
 
 export interface WeftConfig {

@@ -2,11 +2,13 @@
 // (pages, prerendered and on-demand cards, hydration in Chrome); Bun runs its build when `bun` is on PATH; Deno's
 // build is checked to complete (no deno here).
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fnId } from '../src/vite.mjs'
+import { fnId, inlineSheets } from '../src/vite.mjs'
+import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
@@ -91,7 +93,7 @@ describe('node preset, end to end', () => {
     const sheets = async path => {
       const html = await (await fetch(server.url + path)).text()
       const head = html.slice(0, html.indexOf('</head>'))
-      const hrefs = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m => m[1])
+      const hrefs = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1])
       expect(new Set(hrefs).size).toBe(hrefs.length)
       return (await Promise.all(hrefs.map(h => fetch(server.url + h).then(r => r.text())))).join('\n')
     }
@@ -102,6 +104,30 @@ describe('node preset, end to end', () => {
     expect(about).not.toContain('.styled{')
     expect(about).not.toContain('.badge{')
     expect(await sheets('/users/999')).toContain('.not-found{') // the 404 page is a level too
+  })
+
+  test('a page carries its stylesheets inline, each with a disabled link so it is neither fetched nor applied twice', async () => {
+    const html = await (await fetch(server.url + '/styled')).text()
+    const head = html.slice(0, html.indexOf('</head>'))
+    const styles = [...head.matchAll(/<style>([\s\S]*?)<\/style>\n<link rel="stylesheet" href="([^"]+)" disabled>/g)]
+    expect(styles.length).toBeGreaterThan(0)
+    for (const [, css, href] of styles) expect(css).toBe(await (await fetch(server.url + href)).text())
+    expect(head).not.toMatch(/<link rel="stylesheet" href="[^"]+">/)
+  })
+
+  test('inlineSheets leaves out what would break in a <style>, and what is too big to carry', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'weft-sheets-'))
+    mkdirSync(join(dir, 'assets'))
+    const sheets = { 'ok.css': 'a{background:url(/assets/x.png)}', 'data.css': 'a{background:url("data:image/svg+xml,%3Csvg filter=\'url(%23n)\'/%3E")}', 'rel.css': 'a{background:url(x.png)}', 'close.css': 'a{content:"</style>"}', 'big.css': 'a{}'.repeat(INLINE_CSS_MAX) }
+    for (const [name, css] of Object.entries(sheets)) writeFileSync(join(dir, 'assets', name), css)
+    expect(Object.keys(inlineSheets(dir, '/')).sort()).toEqual(['/assets/data.css', '/assets/ok.css'])
+    rmSync(dir, { recursive: true, force: true })
+  })
+
+  test('the entry has no modulepreload: its script tag fetches it', async () => {
+    const head = (await (await fetch(server.url + '/about')).text()).split('</head>')[0]
+    const entry = /<script type="module" src="([^"]+)"/.exec(head)[1]
+    expect(head).not.toContain(`<link rel="modulepreload" href="${entry}"`)
   })
 
   test('no chunk carries zod: a schema only `z.infer` reads stays on the server', () => {

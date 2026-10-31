@@ -7,6 +7,10 @@
 // a loader or `meta` throws, 307 (or the given status) when a loader calls `redirect()`. 404 and 500 render inside
 // the root layout when it loaded.
 //
+// A build's stylesheets go in the page, a round trip saved before the first paint. Each `<style>` keeps a disabled link
+// beside it: a disabled link is never fetched, and it is how Vite's preload helper, on importing a route's chunk, sees
+// the sheet is there and doesn't apply it twice.
+//
 // Server functions (research 27): each request gets a scope (AsyncLocalStorage), so `q.fetch()` in loaders and `q()`
 // in the render share one request cache; `/_weft/fn/<id>` answers the client's calls; the page ends with the
 // scope's resolved entries (`#weft-cache`) so the client cache starts seeded and hydration fetches nothing.
@@ -33,6 +37,8 @@ import { DefaultCard } from './og/DefaultCard'
 import { ErrorPage, NotFoundPage } from './builtin'
 // @ts-expect-error: plain JS module
 import { renderCard } from './og/index.mjs'
+// @ts-expect-error: plain JS module
+import { INLINE_CSS_MAX } from './inline.mjs'
 
 export interface RouteEntry { id: string; file: string; layouts: string[]; pattern: string; params: string[]; splat?: string; card?: string; kind: 'page' | '404' | 'error' }
 export interface LayoutEntry { id: string; file: string; dir: string; parent?: string }
@@ -54,7 +60,7 @@ export interface HandlerOptions {
   modules: Record<string, RouteModule>
   site?: Site
   /** The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`). */
-  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[] }
+  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[]; inline?: Record<string, string> }
   /** Changes with every build: part of each card's `?v=` hash. */
   build?: string
   dev?: boolean
@@ -230,8 +236,9 @@ export function createHandler(options: HandlerOptions) {
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
-      (assets.css ?? []).map(c => `<link rel="stylesheet" href="${esc(c.href)}">\n`).join('') +
-      (assets.js ?? []).map(c => `<link rel="modulepreload" href="${esc(c.href)}">\n`).join('') +
+      sheets(assets) +
+      // The entry's own script tag, just below, already fetches it.
+      (assets.js ?? []).filter(c => c.href !== assets.entry).map(c => `<link rel="modulepreload" href="${esc(c.href)}">\n`).join('') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
@@ -482,6 +489,17 @@ async function compressed(request: Request, response: Response): Promise<Respons
   headers.append('vary', 'Accept-Encoding')
   headers.delete('content-length')
   return new Response(body, { status: response.status, statusText: response.statusText, headers })
+}
+
+/** A page's stylesheets, in order: inline while they fit, then links. */
+function sheets(assets: NonNullable<HandlerOptions['assets']>) {
+  let left = INLINE_CSS_MAX as number
+  return (assets.css ?? []).map(c => {
+    const css = assets.inline?.[c.href]
+    if (css === undefined || css.length > left) return `<link rel="stylesheet" href="${esc(c.href)}">\n`
+    left -= css.length
+    return `<style>${css}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`
+  }).join('')
 }
 
 /**

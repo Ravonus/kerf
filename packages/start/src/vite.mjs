@@ -22,6 +22,8 @@
 // CSS. Each route and layout's own CSS comes from Nitro's assets manifest (build) or the client module graph (dev);
 // the server links the entry's and those of the levels it matched, so nothing paints before its styles and other
 // routes' CSS stays out of the page. In dev the links stand in for Vite's injected `<style>`s and HMR updates them.
+// In a build the sheets go in the HTML as well (`inlineSheets`): a round trip saved before the first paint. `site:
+// { inlineCss: false }` keeps the links.
 
 import { existsSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -32,6 +34,7 @@ import { isCSSRequest, parseSync, searchForWorkspaceRoot } from 'vite'
 import { realpathSync } from 'node:fs'
 import { scanRoutes, routeTypes } from './routes.mjs'
 import { readMigrations } from './migrations.mjs'
+import { INLINE_CSS_MAX } from './inline.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const V = {
@@ -49,6 +52,23 @@ const V = {
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
 const DEFAULT_FONTS = ['Inter:400,700']
 const SHEET = '/@weft-sheet/'
+const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
+
+/**
+ * The client build's stylesheets a page can carry, `{ href: css }`, read by the server build so every preset has them
+ * with no file system. Left out: a sheet over the page's limit, one a relative `url()` would break, and one that could
+ * close its `<style>`.
+ */
+export function inlineSheets(outDir, base) {
+  const dir = join(outDir, 'assets')
+  if (!existsSync(dir)) return {}
+  const sheets = {}
+  for (const name of readdirSync(dir).filter(f => f.endsWith('.css'))) {
+    const css = readFileSync(join(dir, name), 'utf8')
+    if (css.length <= INLINE_CSS_MAX && !/<\/style|<!--/i.test(css) && !/url\(\s*(?!["']?(?:\/|data:|https?:|#|%23))/.test(css)) sheets[`${base}assets/${name}`] = css
+  }
+  return sheets
+}
 
 /**
  * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[] }} [options]
@@ -103,6 +123,17 @@ export default function weftStart(options = {}) {
         // One copy of the router: the app's route files and the generated entries import the same module.
         resolve: { alias: [{ find: /^@weft\/start$/, replacement: join(here, 'index.ts') }, { find: /^@weft\/start\/(client|server)$/, replacement: join(here, '$1.tsx') }, { find: /^@weft\/start\/media$/, replacement: join(here, 'media.ts') }] },
       }
+    },
+    renderChunk: {
+      order: 'post',
+      handler(code) {
+        const token = new RegExp(`["'\`]${INLINE_SHEETS}["'\`]`)
+        if (!token.test(code)) return null
+        const top = this.environment.getTopLevelConfig()
+        const client = resolve(root, top.environments.client.build.outDir)
+        const sheets = options.site?.inlineCss === false ? {} : inlineSheets(client, top.base ?? '/')
+        return { code: code.replace(token, () => JSON.stringify(sheets)), map: null }
+      },
     },
     configResolved(config) {
       build = createHash('sha256').update(String(Date.now())).digest('hex').slice(0, 8)
@@ -174,7 +205,7 @@ export default function weftStart(options = {}) {
         const client = this.environment?.config.consumer === 'client'
         if (which === V.routes) return client ? clientRoutes(manifest, abs) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined)
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
-        if (which === V.server) return serverEntry(clientEntry())
+        if (which === V.server) return serverEntry(clientEntry(), dev)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
         if (which === V.context || which === V.auth || which === V.realtime) {
           const name = which.slice('virtual:weft/'.length)
@@ -306,7 +337,7 @@ function clientRoutes(manifest, abs) {
   return `export const table = ${JSON.stringify(table)}\nexport const load = { ${loads.join(', ')} }\n`
 }
 
-function serverEntry(clientEntry) {
+function serverEntry(clientEntry, dev) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
 import { manifest, modules, routeCss } from '${V.routes}'
 import '${V.fns}'
@@ -318,7 +349,7 @@ import realtime from '${V.realtime}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads },
+const fetch = createHandler({ manifest, modules, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQACFMRW]\\d{3}:? /, '')}\`) })
 export default { fetch }

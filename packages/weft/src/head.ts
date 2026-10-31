@@ -16,6 +16,8 @@ export interface Site {
   /** `'auto'` = the generated card (§4, not built yet: writes no image), or a path/URL. */
   image?: 'auto' | Image
   twitter?: Twitter
+  /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
+  inlineCss?: boolean
 }
 
 export type Image = string | { url: string; width?: number; height?: number; alt?: string }
