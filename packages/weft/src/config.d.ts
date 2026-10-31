@@ -68,6 +68,17 @@ export interface WeftConfig {
   site?: SiteConfig
   /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */
   runtime?: 'node' | 'bun' | 'deno'
+  /** Sidecars behind `remote('rust://<name>')`. A service's crate is `crates/<name>` unless it says otherwise. */
+  rust?: {
+    /** Let plain object unions through to a sidecar (R102). */
+    unions?: 'allow'
+    services?: Record<string, {
+      /** The crate, from the app's root. */
+      crate?: string
+      /** Built and run elsewhere: no cargo here, and `WEFT_RUST_<NAME>_URL` says where it is. */
+      external?: boolean
+    }>
+  }
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */

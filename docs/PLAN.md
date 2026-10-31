@@ -388,11 +388,13 @@ fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, 
 
 ### 4.3 Rust, opt-in and as far as you want
 
+Status: `remote()` is built ([36](research/36-rust-remote.md)); `native()` is Phase 5b.
+
 Zod stays the single source of truth. `.weft/contract.json` → typify generates Rust types in `build.rs`. Rust never
-defines the schema; schemars output from Rust is used only to detect drift. A server function swaps `run` for `impl`:
+defines the schema, and drift stops `cargo` at the function it broke. A server function swaps `run` for `impl`:
 
 ```ts
-// server/rust.ts: the only place Rust targets are named
+// server/rust.ts: the only place Rust targets are named (`@weft/start/rust`)
 export const media = native('media')            // napi-rs addon (+ WASM fallback): one hot function, in-process
 export const search = remote('rust://search')   // a Rust sidecar implementing many functions
 export const core = remote('rust://core')       // "mostly Rust": every function points at core
@@ -418,7 +420,8 @@ call costs:
 
 No native binary is ever required for a default app. On Deno and edge, `native()` falls back to WASM or `remote()`.
 R101–R105: unrepresentable schemas (add a codec), plain unions, impl/contract drift, `native()` on a preset without
-WASM, and a cached Rust query that reports no touched tables.
+WASM, and a cached Rust query that reports no touched tables. R106–R109 are a sidecar's runtime and build failures: no
+address or secret, unreachable, panicked, and a compile error unrelated to the contract.
 
 ### 4.4 Payments: `weft/pay`
 
@@ -930,6 +933,12 @@ evals/        agent eval harness
 | **6c. Payments** | `weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
 
+**5a status (2026-10-31):** built. `remote()` in `@weft/start/rust`, the `weft` crate, the supervisor in `weft dev`,
+`build` and `start`, typed errors with `raise()` for TS bodies too, and R101–R103 and R106–R109. Exit check:
+passed, 28 of 28 on Node, Bun and Deno with 20,000 documents: 29 client files byte-identical, the same HTML, answers and
+Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published and has no `weft add` or
+template, and `remote()` on `channel` isn't built. What was built and left out: [36](research/36-rust-remote.md).
+
 **1b status (2026-10-29):** name-keyed HMR and the 1k-component gates landed earlier (research 21, §3.7). The
 verify loop is built: the in-page agent bridge with the graph overlay, recorder, clock and network control; the
 dev-server relay, `weft browser` and the MCP browser tools; and the test gate (T010, T011, T020). The exit check is
@@ -1248,3 +1257,10 @@ Also out of v0:
   Tailwind and other auth arrive through `db.adapter`, `auth.provider`, config and a `create-weft` wizard, ahead of 3c
   because its packs build on those slots. weft doesn't wrap queries: `ctx.db` stays the real client. Aliases live in
   `tsconfig.json` `paths`, with `#/` only the scaffold's default ([34](research/34-configuration.md)).
+- **Sidecars: `fetch` on loopback TCP, a signed envelope, generated types** (2026-10-31). The spike found 37–71 µs a call
+  and no gain from a Unix socket worth a per-runtime path, so `remote()` is plain `fetch`, which also keeps it edge-safe.
+  It lives in `@weft/start/rust`, and its address in env. Schemars drift detection is dropped: with generated types it
+  would only compare typify with itself, so `cargo`, a contract hash and TS's output validation catch drift instead.
+  `SharedCtx` has no `user()`, so a shared cache can't hold a user's data by accident. The supervisor stays in the CLI, out
+  of the server bundle. `weft dev` waits for the first build, as a queue would outlive signatures and timeouts. Typed errors
+  apply to TS bodies through `raise()` too, so a swap can't change what a client catches ([36](research/36-rust-remote.md)).

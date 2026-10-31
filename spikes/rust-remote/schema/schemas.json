@@ -1,0 +1,596 @@
+{
+ "plain": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "q": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 200
+    },
+    "limit": {
+     "default": 20,
+     "type": "integer",
+     "minimum": -9007199254740991,
+     "maximum": 50
+    },
+    "tags": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "required": [
+    "q"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "q": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 200
+    },
+    "limit": {
+     "default": 20,
+     "type": "integer",
+     "minimum": -9007199254740991,
+     "maximum": 50
+    },
+    "tags": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "required": [
+    "q",
+    "limit"
+   ],
+   "additionalProperties": false
+  },
+  "encode": {
+   "q": "x",
+   "limit": 1
+  }
+ },
+ "nullable": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "b": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "a"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "b": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "a"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "enumeration": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "a",
+      "b"
+     ]
+    },
+    "lit": {
+     "type": "string",
+     "const": "x"
+    }
+   },
+   "required": [
+    "kind",
+    "lit"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "a",
+      "b"
+     ]
+    },
+    "lit": {
+     "type": "string",
+     "const": "x"
+    }
+   },
+   "required": [
+    "kind",
+    "lit"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "discriminated": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "oneOf": [
+    {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "type": "string",
+       "const": "a"
+      },
+      "x": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "kind",
+      "x"
+     ]
+    },
+    {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "type": "string",
+       "const": "b"
+      },
+      "y": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "kind",
+      "y"
+     ]
+    }
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "oneOf": [
+    {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "type": "string",
+       "const": "a"
+      },
+      "x": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "kind",
+      "x"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "type": "string",
+       "const": "b"
+      },
+      "y": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "kind",
+      "y"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  }
+ },
+ "union": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "anyOf": [
+    {
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ]
+    },
+    {
+     "type": "object",
+     "properties": {
+      "y": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "y"
+     ]
+    }
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "anyOf": [
+    {
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "y": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "y"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  }
+ },
+ "scalarUnion": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": [
+    "string",
+    "number"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": [
+    "string",
+    "number"
+   ]
+  }
+ },
+ "named": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/Hit"
+   },
+   "$defs": {
+    "Hit": {
+     "type": "object",
+     "properties": {
+      "id": {
+       "type": "string"
+      },
+      "score": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "id",
+      "score"
+     ]
+    }
+   }
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/Hit"
+   },
+   "$defs": {
+    "Hit": {
+     "type": "object",
+     "properties": {
+      "id": {
+       "type": "string"
+      },
+      "score": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "id",
+      "score"
+     ],
+     "additionalProperties": false
+    }
+   }
+  }
+ },
+ "record": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "type": "number"
+   }
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "type": "number"
+   }
+  }
+ },
+ "tuple": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "array",
+   "prefixItems": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "number"
+    }
+   ],
+   "items": false,
+   "minItems": 2,
+   "maxItems": 2
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "array",
+   "prefixItems": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "number"
+    }
+   ],
+   "items": false,
+   "minItems": 2,
+   "maxItems": 2
+  }
+ },
+ "uuid": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid",
+     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time",
+     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    }
+   },
+   "required": [
+    "id",
+    "at"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid",
+     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time",
+     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    }
+   },
+   "required": [
+    "id",
+    "at"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "codec": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "at": {
+     "type": "string",
+     "format": "date-time",
+     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    }
+   },
+   "required": [
+    "at"
+   ]
+  },
+  "outputError": "Date cannot be represented in JSON Schema",
+  "encode": {
+   "at": "1970-01-01T00:00:00.000Z"
+  }
+ },
+ "transform": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "a"
+   ]
+  },
+  "outputError": "Transforms cannot be represented in JSON Schema",
+  "encodeError": "$ZodEncodeError: Encountered unidirectional transform during encode: ZodTransform"
+ },
+ "trim": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": "string",
+     "maxLength": 9
+    }
+   },
+   "required": [
+    "a"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": "string",
+     "maxLength": 9
+    }
+   },
+   "required": [
+    "a"
+   ],
+   "additionalProperties": false
+  },
+  "encode": {
+   "a": "x"
+  }
+ },
+ "refine": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "a"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "a": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "a"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "date": {
+  "inputError": "Date cannot be represented in JSON Schema",
+  "outputError": "Date cannot be represented in JSON Schema"
+ },
+ "bigint": {
+  "inputError": "BigInt cannot be represented in JSON Schema",
+  "outputError": "BigInt cannot be represented in JSON Schema"
+ },
+ "unknown": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "meta": {},
+    "any": {}
+   },
+   "required": [
+    "meta",
+    "any"
+   ]
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "object",
+   "properties": {
+    "meta": {},
+    "any": {}
+   },
+   "required": [
+    "meta",
+    "any"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "voided": {
+  "inputError": "Void cannot be represented in JSON Schema",
+  "outputError": "Void cannot be represented in JSON Schema"
+ },
+ "nul": {
+  "input": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "null"
+  },
+  "output": {
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "type": "null"
+  }
+ }
+}

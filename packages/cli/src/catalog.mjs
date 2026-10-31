@@ -3,7 +3,7 @@
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
 // research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
-// 30 §8 (W052, W053, T013, R001–R011, realtime), plus the codes proposed in research 17 (marked `proposed`).
+// 30 §8 (W052, W053, T013, R001–R011, realtime), research 36 §8 (R101–R103, R106–R109, sidecars), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -288,6 +288,13 @@ export const catalog = [
   { code: 'R009', severity: 'error', by: 'start', catches: 'Over 100 subscriptions or joins on a connection, or 10 connections or sockets for a user', fix: 'Read fewer keys; `limits` raises it' },
   { code: 'R010', severity: 'error', by: 'start', catches: 'An origin that isn\'t the app\'s own or in `realtime({ origins })` tried to open a connection', fix: 'List it, scheme and port included' },
   { code: 'R011', severity: 'error', by: 'start', catches: 'A channel\'s `authorize` refused a join or a write (the status is `unauthorized`), at the join or a session re-check', fix: 'Sign in, or check `authorize`' },
+  { code: 'R101', severity: 'error', by: 'cli', catches: 'A function with `impl` has no `output`, a type JSON can\'t carry (`z.date()`, `z.bigint()`, `z.void()`, `z.custom()`), or a one-way `.transform()` on its input (`weft build`, `weft check`, `weft dev`)', fix: 'Use a codec: `z.codec(z.iso.datetime(), z.date(), { decode, encode })`. `z.null()` says a function returns nothing' },
+  { code: 'R102', severity: 'error', by: 'cli', catches: 'A plain `z.union` of objects in a function with `impl`: it has no tag, so Rust can\'t tell its arms apart reliably. Scalar unions and `.nullable()` are fine', fix: "Use `z.discriminatedUnion`, or set `rust: { unions: 'allow' }`" },
+  { code: 'R103', severity: 'error', by: 'cli', catches: 'A sidecar doesn\'t match the contract: cargo stops where a generated type or method no longer fits (with the function\'s id), a binary built from another contract, an output the `output` schema rejects, or input serde refuses', fix: 'Fix the Rust to fit the TS declaration, which is the source of truth; `.weft/rust/<service>.rs` shows what\'s generated' },
+  { code: 'R106', severity: 'error', by: 'start', catches: 'A `remote()` call can\'t be made: no address, no `WEFT_RUST_SECRET`, or the sidecar refused the signature (503)', fix: 'Set `WEFT_RUST_<NAME>_URL` and the same `WEFT_RUST_SECRET` on both sides. `weft dev` and `weft start` do it for what they supervise' },
+  { code: 'R107', severity: 'error', by: 'start', catches: 'A sidecar didn\'t answer, or ran past the deadline (503, 504). Only that function fails', fix: 'Check that it\'s running, or raise `timeout` on `remote()`' },
+  { code: 'R108', severity: 'error', by: 'start', catches: 'A sidecar function panicked or returned an undeclared error (500). The detail stays in the sidecar\'s log, under the request id', fix: 'Find the request id in the sidecar\'s log, or declare the failure in `errors`' },
+  { code: 'R109', severity: 'error', by: 'cli', catches: 'A sidecar doesn\'t build for a reason no contract function explains: a compile error, no crate, or no `cargo`', fix: 'Fix the crate, point `rust.services.<name>.crate` at it, or set `external: true` for one built elsewhere' },
 
   // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X001', severity: 'warning', by: 'runtime', catches: '`s.text()` predicted one height and its DOM mirror renders another: `font`, `lineHeight` or `width` differs from the CSS', fix: 'Drop `font` and `lineHeight` so they come from CSS, or make them match; the message names the values' },

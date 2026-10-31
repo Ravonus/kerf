@@ -2,6 +2,7 @@
 // scope. `weft build` writes it; the OpenAPI export, the MCP server and Rust codegen read it. The server modules are
 // loaded through Vite, never run: creating a database client connects to nothing.
 
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
@@ -30,7 +31,65 @@ function unbounded(s, path = 'input') {
   }
 }
 
-export function describe(fns) {
+/** A one-way `.transform()` or `preprocess` in a Zod schema: parsed input it touched can't be sent on (`encode` throws). */
+function oneWay(schema, seen = new Set()) {
+  if (!schema || typeof schema !== 'object' || seen.has(schema)) return false
+  seen.add(schema)
+  const def = schema._zod?.def
+  if (def?.type === 'transform') return true
+  return Object.values(def ?? schema).some(v => oneWay(v, seen)) // arrays and `shape` hold schemas too
+}
+
+/** The first union in a JSON Schema with two object or array arms, as a path: typify has no faithful type for one. */
+function plainUnion(s, path) {
+  if (!s || typeof s !== 'object') return
+  const arms = s.anyOf?.filter(x => x.type !== 'null')
+  if (arms?.length > 1 && arms.some(x => x.type === 'object' || x.type === 'array' || x.$ref)) return path
+  for (const [k, v] of Object.entries(s.properties ?? {})) {
+    const hit = plainUnion(v, `${path}.${k}`)
+    if (hit) return hit
+  }
+  for (const v of [s.items, ...(s.prefixItems ?? []), ...(s.anyOf ?? []), ...(s.oneOf ?? []), ...Object.values(s.$defs ?? {})]) {
+    const hit = plainUnion(v, path)
+    if (hit) return hit
+  }
+}
+
+const CODEC = '`z.codec(z.iso.datetime(), z.date(), { decode, encode })` for a date, `z.codec(z.string(), z.bigint(), …)` for a bigint'
+
+/**
+ * A function with `impl`, as a sidecar sees it (research 36 §3). The wire is the *input* side of every schema: TS sends
+ * parsed input encoded back, and parses what comes back, so codecs and transforms on an output are TS's business.
+ */
+function implOf(f, report) {
+  const { impl, input, output, errors = {} } = f.def
+  const r101 = why => report({ code: 'R101', severity: 'error', why: `\`${f.$id}\`: ${why}` })
+  const wire = (schema, what) => {
+    const json = toJson(schema, 'input')
+    if (!json) r101(`${what} has a type JSON can't carry, so no Rust type can be generated. Use ${CODEC}.`)
+    return json ?? {}
+  }
+  if (input) wire(input, '`input`')
+  if (input && oneWay(input)) r101('`input` has a one-way `.transform()`, so its parsed value can\'t be sent. Use `z.codec(…)`, or do it in Rust.')
+  if (!output) r101('a function with `impl` needs `output`: it\'s the contract for what comes back, and `z.null()` says "nothing".')
+  return {
+    kind: impl.kind, target: impl.target, service: impl.service,
+    ctx: f.def.cache && f.def.cache.scope !== 'user' ? 'shared' : f.def.auth === 'user' ? 'user' : 'ctx',
+    output: output ? wire(output, '`output`') : {},
+    errors: Object.fromEntries(Object.entries(errors).map(([code, schema]) => [code, wire(schema, `error \`${code}\``)])),
+  }
+}
+
+/** What a sidecar is built from, per service: a binary whose hash differs was built from another contract (R103). */
+function services(functions) {
+  const out = {}
+  for (const f of functions) if (f.impl) (out[f.impl.service] ??= { hash: createHash('sha256'), functions: [] }).functions.push(f.id)
+  for (const f of functions) if (f.impl) out[f.impl.service].hash.update(JSON.stringify([f.id, f.kind, f.input, f.impl]))
+  return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, { hash: v.hash.digest('hex').slice(0, 16), functions: v.functions }]))
+}
+
+/** @param {Map<string, any>} fns @param {{ unions?: 'allow' }} [rust] the config's `rust` */
+export function describe(fns, rust = {}) {
   const diagnostics = []
   const functions = [...fns.values()].sort((a, b) => a.$id.localeCompare(b.$id)).map(f => {
     const schema = (key, side) => {
@@ -40,8 +99,13 @@ export function describe(fns) {
       if (!json) diagnostics.push({ code: 'C001', severity: 'warning', why: `\`${f.$id}\`'s \`${key}\` schema can't become JSON Schema: the contract says \`{}\`.` })
       return json ?? {}
     }
-    const errors = [...(f.def.input ? ['Q002'] : []), ...(f.def.auth ? ['A002'] : []), ...(f.kind === 'mutation' ? ['Q010'] : [])]
-    const input = schema('input', 'input') ?? null
+    const errors = [...(f.def.input ? ['Q002'] : []), ...(f.def.auth ? ['A002'] : []), ...(f.kind === 'mutation' ? ['Q010'] : []), ...Object.keys(f.def.errors ?? {})]
+    const impl = f.def.impl && implOf(f, d => diagnostics.push(d))
+    const input = impl ? (f.def.input ? toJson(f.def.input, 'input') ?? {} : null) : schema('input', 'input') ?? null
+    if (impl && rust.unions !== 'allow') {
+      const hit = [['input', input], ['output', impl.output], ...Object.entries(impl.errors).map(([k, v]) => [`error ${k}`, v])].map(([name, s]) => plainUnion(s, name)).find(Boolean)
+      if (hit) diagnostics.push({ code: 'R102', severity: 'error', why: `\`${f.$id}\`'s \`${hit}\` is a plain \`z.union\` of objects: it has no tag, so Rust can't tell its arms apart reliably. Use \`z.discriminatedUnion\`, or set \`rust: { unions: 'allow' }\` in weft.config.ts.` })
+    }
     const bound = (json, path) => {
       const hit = unbounded(json, path)
       if (hit) diagnostics.push({ code: 'R005', severity: 'warning', why: `\`${f.$id}\`'s \`${hit}\` has no upper bound: a client decides how much the server holds. Add \`.max()\`.` })
@@ -57,12 +121,14 @@ export function describe(fns) {
     }
     return {
       id: f.$id, name: f.$id.replace(/\..*$/, ''), kind: f.kind,
-      input, output: schema(f.kind === 'stream' ? 'message' : 'output', 'output') ?? null,
+      input, output: impl ? impl.output : schema(f.kind === 'stream' ? 'message' : 'output', 'output') ?? null,
+      ...(impl && { impl }),
       ...(f.kind === 'query' ? { tags: tagsOf(f.def.tags), cache: f.def.cache ?? null } : f.kind === 'mutation' ? { invalidates: tagsOf(f.def.invalidates) } : {}),
       auth: f.def.auth ?? 'public', errors,
     }
   })
-  return { version: 1, functions, diagnostics }
+  const rusts = services(functions)
+  return { version: 1, ...(Object.keys(rusts).length && { services: rusts }), functions, diagnostics }
 }
 
 /** Presets that run many instances: a process-local bus reaches a fraction of the clients (R002). */
@@ -117,16 +183,16 @@ async function withFns({ root, site = {} }, fn) {
 export const readShapes = options => withFns({ ...options, root: resolve(options.root) }, shapeTable)
 
 /** Load every server module and write `.weft/contract.json`. */
-export function writeContract({ root, site = {}, preset }) {
+export function writeContract({ root, site = {}, preset, rust }) {
   root = resolve(root)
   return withFns({ root, site }, async (fns, server) => {
-    const { diagnostics, ...contract } = describe(fns)
+    const { diagnostics, ...contract } = describe(fns, rust)
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
     const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
     if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft/realtime-redis\` or \`@weft/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
     mkdirSync(join(root, '.weft'), { recursive: true })
     const path = join(root, '.weft', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')
-    return { path, functions: contract.functions.length, diagnostics }
+    return { path, functions: contract.functions.length, diagnostics, contract }
   })
 }

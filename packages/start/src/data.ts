@@ -58,6 +58,12 @@ type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
 type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
 
+/** A server function's body in another process: `remote('rust://search')` from `@weft/start/rust` (research 36). */
+export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
+
+/** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
+export type Errors = Record<string, StandardSchemaV1>
+
 export interface QueryDef<S, O, A = undefined> {
   input?: S
   /** The result's shape: checked in dev and tests (C002), and the contract's `output`. */
@@ -70,10 +76,17 @@ export interface QueryDef<S, O, A = undefined> {
   tags?: Tags<[input: Out<S>]>
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
+  /** Named failures, for the client as `FnError.code` and `.data`. */
+  errors?: Errors
   run: (args: { input: Out<S>; ctx: Ctx<A> }) => O | Promise<O>
+  impl?: undefined
   /** Set by the `weft:start` plugin: `<export>.<file hash>`. */
   $id?: string
 }
+
+/** The same declaration with its body elsewhere: `output` is required, because it's the whole contract for what comes back. */
+export type ImplQueryDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<QueryDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
+export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<MutationDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
 
 export interface MutationDef<S, O, A = undefined> {
   input?: S
@@ -83,7 +96,9 @@ export interface MutationDef<S, O, A = undefined> {
   invalidates?: Tags<[input: Out<S>, result: Awaited<O>]>
   /** Client only: predict the result. Each call's layers are re-applied on new values until it settles. */
   optimistic?: (args: { input: In<S> }, cache: OptimisticCache) => void
+  errors?: Errors
   run: (args: { input: Out<S>; ctx: Ctx<A> }) => O | Promise<O>
+  impl?: undefined
   $id?: string
 }
 
@@ -128,7 +143,7 @@ export interface Fn {
   kind: 'query' | 'mutation' | 'stream' | 'channel' | 'shared'
   $id: string
   def: {
-    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
+    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; impl?: Impl; errors?: Errors; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
     /** `channel` and `sharedState` (research 32). */
     params?: StandardSchemaV1; authorize?: any; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: any) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
   }
@@ -153,10 +168,12 @@ export class FnError extends Error {
   code?: string
   status: number
   issues?: SchemaIssue[]
-  constructor(e: { message?: string; code?: string; issues?: SchemaIssue[] }, status: number) {
+  /** What a declared error (`errors`) carries. */
+  data?: unknown
+  constructor(e: { message?: string; code?: string; issues?: SchemaIssue[]; data?: unknown }, status: number) {
     super(e.message ?? `server function failed (${status})`)
     this.status = status
-    Object.assign(this, { code: e.code, issues: e.issues })
+    Object.assign(this, { code: e.code, issues: e.issues, data: e.data })
   }
 }
 
@@ -177,6 +194,14 @@ export function redirect(href: string, status: 301 | 302 | 303 | 307 | 308 = 307
 }
 
 export const isRedirect = (v: unknown): v is Redirect => !!v && typeof v === 'object' && (v as any).isRedirect === true
+
+/**
+ * Fail with an error the function declares in `errors`. The client sees it as `FnError.code` and `.data`, whether `run`
+ * or a Rust `impl` raised it.
+ */
+export function raise(code: string, data?: unknown): never {
+  throw new StartError(code, `failed: ${code}`, undefined, { status: 400, data, typed: true })
+}
 
 /** Refuse a value the schema can't judge (`email` is taken): `<Form>` shows it next to the field, as a schema issue. */
 export function invalid(fields: Record<string, string>): never {
@@ -307,7 +332,14 @@ export interface NetControl {
 
 // ---- definitions --------------------------------------------------------------------------------------------------
 
-export function query<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: QueryDef<S, O, A>): Query<In<S>, Awaited<O>> {
+const oneBody = (def: { run?: unknown; impl?: unknown; $id?: string }) => {
+  if (def.run && def.impl) throw new StartError('R103', `\`${def.$id ?? 'a function'}\` has both \`run\` and \`impl\``, 'keep one: `impl` replaces the body')
+}
+
+export function query<OS extends StandardSchemaV1, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: ImplQueryDef<S, OS, A>): Query<In<S>, Out<OS>>
+export function query<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: QueryDef<S, O, A>): Query<In<S>, Awaited<O>>
+export function query(def: any): any {
+  oneBody(def)
   const id = def.$id ?? `q${++auto}`
   const fn: Fn = { kind: 'query', $id: id, def: def as Fn['def'] }
   fns.set(id, fn)
@@ -318,7 +350,10 @@ export function query<O, S extends StandardSchemaV1 | undefined = undefined, con
   return Object.assign(q, { kind: 'query', $id: id, [FN]: fn })
 }
 
-export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: MutationDef<S, O, A>): Mutation<In<S>, Awaited<O>> {
+export function mutation<OS extends StandardSchemaV1, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: ImplMutationDef<S, OS, A>): Mutation<In<S>, Out<OS>>
+export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: MutationDef<S, O, A>): Mutation<In<S>, Awaited<O>>
+export function mutation(def: any): any {
+  oneBody(def)
   const id = def.$id ?? `m${++auto}`
   const fn: Fn = { kind: 'mutation', $id: id, def: def as Fn['def'] }
   fns.set(id, fn)
@@ -674,7 +709,7 @@ async function fakeCall(n: NetControl, id: string, kind: string, input: unknown,
     return JSON.parse(JSON.stringify(await n.als.run(scope, () => call(exec, scope, fn))))
   } catch (e) {
     if (isRedirect(e)) return { r: e.href }
-    throw e instanceof StartError ? new FnError({ code: e.code, message: e.message, issues: (e as any).issues }, (e as any).status ?? 500) : e
+    throw e instanceof StartError ? new FnError({ code: e.code, message: e.message, issues: (e as any).issues, data: (e as any).data }, (e as any).status ?? 500) : e
   }
 }
 
