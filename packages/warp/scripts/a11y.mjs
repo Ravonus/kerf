@@ -17,6 +17,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { jobs, pool } from '../../../scripts/jobs.mjs'
 
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
@@ -236,79 +237,89 @@ const serve = dir => new Promise(ok => {
 })
 
 /** Run every site at every stop. `sites` is [{ name, dir }] with name a SCENARIOS key. */
-export async function a11y(sites, { log = () => {}, only } = {}) {
+export async function a11y(sites, { log = () => {}, only, workers = jobs() } = {}) {
   const { chromium } = require('playwright-core')
   const axe = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
-  const browser = await chromium.launch()
-  const runs = []
+  // A browser per worker: runs share nothing, and each measures its contrasts one screenshot at a time.
+  const browsers = []
+  const servers = []
   try {
+    const tasks = []
     for (const { name, dir } of sites) {
       const server = await serve(dir)
+      servers.push(server)
       const url = `http://127.0.0.1:${server.address().port}/`
-      for (const stop of only ? STOPS.filter(s => `${s.expression}/${s.theme}/${s.motion}` === only) : STOPS) {
-        const context = await browser.newContext({ colorScheme: stop.theme, reducedMotion: stop.motion === 'reduce' ? 'reduce' : 'no-preference' })
-        // the dials live on <html> before any script runs, as an app's server render puts them
-        await context.addInitScript(s => {
-          const set = () => Object.assign(document.documentElement.dataset, s)
-          if (document.documentElement) set()
-          else document.addEventListener('readystatechange', set, { once: true })
-        }, stop)
-        const page = await context.newPage()
-        const errors = []
-        page.on('pageerror', e => errors.push(String(e)))
-        const states = []
-        const audit = async label => {
-          await settle(page)
-          if (!(await page.evaluate(() => 'axe' in window))) await page.addScriptTag({ content: axe })
-          const res = await page.evaluate(async rules => {
-            document.querySelectorAll('[data-a11y-px]').forEach(e => e.removeAttribute('data-a11y-px'))
-            const r = await window.axe.run(document, { runOnly: rules, resultTypes: ['violations', 'incomplete'], elementRef: true })
-            const inactive = n => n.element?.closest('[data-disabled], :disabled, [aria-disabled="true"]')
-            const plain = v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => ({ target: n.target.join(' '), why: (n.any[0]?.message ?? n.failureSummary ?? '').slice(0, 200) })) })
-            for (const v of r.violations) if (v.id === 'color-contrast') v.nodes = v.nodes.filter(n => !inactive(n))
-            // the contrast axe couldn't decide (a pseudo-element or overlapping fill, short text): measured from pixels below
-            const review = r.incomplete.filter(v => v.id === 'color-contrast').flatMap(v => v.nodes).filter(n => n.element && !inactive(n))
-            review.forEach((n, i) => n.element.setAttribute('data-a11y-px', String(i)))
-            return { violations: r.violations.filter(v => v.nodes.length).map(plain), incomplete: r.incomplete.map(plain), review: review.map(n => n.target.join(' ')) }
-          }, RULES)
-          // the page has settled: freeze transitions so hiding one text for its screenshot can't fade another's colour
-          const frozen = await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; }' })
-          const measured = []
-          for (const [i, target] of res.review.entries()) {
-            const m = await pixelContrast(page, i)
-            if (m) measured.push({ target, ...m })
-          }
-          await frozen.evaluate(n => n.remove())
-          // at reduce, no loop may move anything but opacity
-          const moving = stop.motion === 'reduce'
-            ? await page.evaluate(() => document.getAnimations().filter(a => {
-              if (a.playState !== 'running' || a.effect?.getComputedTiming().iterations <= 1) return false
-              return a.effect.getKeyframes().some(k => Object.keys(k).some(p => !['offset', 'computedOffset', 'easing', 'composite', 'opacity'].includes(p)))
-            }).map(a => `${a.animationName ?? 'animation'} on ${a.effect?.target?.tagName?.toLowerCase()}${a.effect?.target?.dataset?.scope ? `[${a.effect.target.dataset.scope}]` : ''}`))
-            : []
-          const failing = measured.filter(m => !m.ok && !known(m, stop))
-          states.push({
-            label,
-            violations: [...res.violations, ...(failing.length ? [{ id: 'color-contrast (measured)', impact: 'serious', nodes: failing.map(m => ({ target: m.target, why: `${m.where} ${m.ratio}:1 (needs ${m.need}:1), text ${m.fg} on ${m.bg}` })) }] : [])],
-            spec: measured.filter(m => !m.ok && known(m, stop)).map(m => ({ ...m, finding: known(m, stop).why })),
-            measured,
-            moving,
-          })
-        }
-        try { await SCENARIOS[name](page, audit, url) } catch (e) { errors.push(`scenario: ${String(e).split('\n')[0]}`) }
-        const run = { site: name, ...stop, errors, states }
-        runs.push(run)
-        const bad = states.filter(s => s.violations.length || s.moving.length)
-        log(`${name} ${stop.expression}/${stop.theme}/${stop.motion}: ${states.length} audits${bad.length || errors.length ? `, FAIL ${[...bad.map(s => `[${s.label}] ${[...s.violations.map(v => `${v.id}×${v.nodes.length}`), ...s.moving.map(m => `moving: ${m}`)].join(', ')}`), ...errors].join('; ')}` : ', clean'}`)
-        await context.close()
-      }
-      server.close()
+      for (const stop of only ? STOPS.filter(s => `${s.expression}/${s.theme}/${s.motion}` === only) : STOPS) tasks.push({ name, url, stop })
     }
-  } finally { await browser.close() }
-  const audits = runs.reduce((n, r) => n + r.states.length, 0)
-  const failed = runs.filter(r => r.errors.length || r.states.some(s => s.violations.length || s.moving.length))
-  const spec = SPEC_FINDINGS.map(f => ({ ...f, stops: runs.filter(r => r.states.some(s => s.spec.some(m => m.where === f.where))).map(r => `${r.site}:${r.expression}/${r.theme}/${r.motion}`) })).filter(f => f.stops.length)
-  return { ok: failed.length === 0, stops: STOPS.length, runs: runs.length, audits, failed: failed.length, measured: runs.reduce((n, r) => n + r.states.reduce((k, s) => k + s.measured.length, 0), 0), spec, results: runs }
+    const pending = tasks.length
+    log(`${pending} runs, ${Math.min(workers, pending)} at a time (--jobs or WEFT_JOBS sets this)`)
+    const runs = await pool(tasks, workers, async ({ name, url, stop }) => {
+      const browser = browsers.pop() ?? await chromium.launch()
+      const context = await browser.newContext({ colorScheme: stop.theme, reducedMotion: stop.motion === 'reduce' ? 'reduce' : 'no-preference' })
+      // the dials live on <html> before any script runs, as an app's server render puts them
+      await context.addInitScript(s => {
+        const set = () => Object.assign(document.documentElement.dataset, s)
+        if (document.documentElement) set()
+        else document.addEventListener('readystatechange', set, { once: true })
+      }, stop)
+      const page = await context.newPage()
+      const errors = []
+      page.on('pageerror', e => errors.push(String(e)))
+      const states = []
+      const audit = async label => {
+        await settle(page)
+        if (!(await page.evaluate(() => 'axe' in window))) await page.addScriptTag({ content: axe })
+        const res = await page.evaluate(async rules => {
+          document.querySelectorAll('[data-a11y-px]').forEach(e => e.removeAttribute('data-a11y-px'))
+          const r = await window.axe.run(document, { runOnly: rules, resultTypes: ['violations', 'incomplete'], elementRef: true })
+          const inactive = n => n.element?.closest('[data-disabled], :disabled, [aria-disabled="true"]')
+          const plain = v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => ({ target: n.target.join(' '), why: (n.any[0]?.message ?? n.failureSummary ?? '').slice(0, 200) })) })
+          for (const v of r.violations) if (v.id === 'color-contrast') v.nodes = v.nodes.filter(n => !inactive(n))
+          // the contrast axe couldn't decide (a pseudo-element or overlapping fill, short text): measured from pixels below
+          const review = r.incomplete.filter(v => v.id === 'color-contrast').flatMap(v => v.nodes).filter(n => n.element && !inactive(n))
+          review.forEach((n, i) => n.element.setAttribute('data-a11y-px', String(i)))
+          return { violations: r.violations.filter(v => v.nodes.length).map(plain), incomplete: r.incomplete.map(plain), review: review.map(n => n.target.join(' ')) }
+        }, RULES)
+        // the page has settled: freeze transitions so hiding one text for its screenshot can't fade another's colour
+        const frozen = await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; }' })
+        const measured = []
+        for (const [i, target] of res.review.entries()) {
+          const m = await pixelContrast(page, i)
+          if (m) measured.push({ target, ...m })
+        }
+        await frozen.evaluate(n => n.remove())
+        // at reduce, no loop may move anything but opacity
+        const moving = stop.motion === 'reduce'
+          ? await page.evaluate(() => document.getAnimations().filter(a => {
+            if (a.playState !== 'running' || a.effect?.getComputedTiming().iterations <= 1) return false
+            return a.effect.getKeyframes().some(k => Object.keys(k).some(p => !['offset', 'computedOffset', 'easing', 'composite', 'opacity'].includes(p)))
+          }).map(a => `${a.animationName ?? 'animation'} on ${a.effect?.target?.tagName?.toLowerCase()}${a.effect?.target?.dataset?.scope ? `[${a.effect.target.dataset.scope}]` : ''}`))
+          : []
+        const failing = measured.filter(m => !m.ok && !known(m, stop))
+        states.push({
+          label,
+          violations: [...res.violations, ...(failing.length ? [{ id: 'color-contrast (measured)', impact: 'serious', nodes: failing.map(m => ({ target: m.target, why: `${m.where} ${m.ratio}:1 (needs ${m.need}:1), text ${m.fg} on ${m.bg}` })) }] : [])],
+          spec: measured.filter(m => !m.ok && known(m, stop)).map(m => ({ ...m, finding: known(m, stop).why })),
+          measured,
+          moving,
+        })
+      }
+      try { await SCENARIOS[name](page, audit, url) } catch (e) { errors.push(`scenario: ${String(e).split('\n')[0]}`) }
+      const run = { site: name, ...stop, errors, states }
+      const bad = states.filter(s => s.violations.length || s.moving.length)
+      log(`${name} ${stop.expression}/${stop.theme}/${stop.motion}: ${states.length} audits${bad.length || errors.length ? `, FAIL ${[...bad.map(s => `[${s.label}] ${[...s.violations.map(v => `${v.id}×${v.nodes.length}`), ...s.moving.map(m => `moving: ${m}`)].join(', ')}`), ...errors].join('; ')}` : ', clean'}`)
+      await context.close()
+      browsers.push(browser)
+      return run
+    })
+    const audits = runs.reduce((n, r) => n + r.states.length, 0)
+    const failed = runs.filter(r => r.errors.length || r.states.some(s => s.violations.length || s.moving.length))
+    const spec = SPEC_FINDINGS.map(f => ({ ...f, stops: runs.filter(r => r.states.some(s => s.spec.some(m => m.where === f.where))).map(r => `${r.site}:${r.expression}/${r.theme}/${r.motion}`) })).filter(f => f.stops.length)
+    return { ok: failed.length === 0, stops: STOPS.length, runs: runs.length, audits, failed: failed.length, measured: runs.reduce((n, r) => n + r.states.reduce((k, s) => k + s.measured.length, 0), 0), spec, results: runs }
+  } finally {
+    await Promise.all(browsers.map(b => b.close()))
+    for (const server of servers) server.close()
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
