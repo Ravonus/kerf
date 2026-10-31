@@ -1,0 +1,55 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* a step's heading takes focus on arrival; it must not show a ring for that */
+:where([data-part="step-title"], [data-part-title], [data-part="title"][tabindex="-1"]):focus { outline: none; }
+:where([data-part="rail"]:has(> [data-part="rail-fill"])) {   /* only flows' own rails, never marketing's story rail */
+  position: relative; flex: 1 1 24px; min-inline-size: 16px; block-size: var(--warp-flow-rail);
+  border-radius: 99px; background: var(--warp-color-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--warp-color-border);
+  --warp-sweep-radius: 99px; overflow: hidden;
+}
+/* the weave: warp threads + a few weft threads that draw in once on mount */
+:where([data-part="weave"]) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
+:where([data-part="weave"] line) { stroke: currentColor; stroke-width: 1; opacity: 0.16; vector-effect: non-scaling-stroke; }
+:where([data-part="weave"] path) {
+  fill: none; stroke: var(--warp-color-accent-solid); stroke-width: calc(1px + var(--warp-x) * 1px); vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: warp-weave-draw calc(var(--warp-sweep-duration) * 2) var(--warp-sweep-ease) forwards;
+  animation-delay: calc(var(--i, 0) * var(--warp-stagger) * 3);
+}
+:where([data-part="weave"] path[data-broken]) { stroke: var(--warp-color-critical-solid); }
+:where([data-part="code-label"]) { display: block; margin-block-end: 8px; font: 500 var(--warp-text-label-size)/1.3 var(--warp-text-body-font); color: var(--warp-color-text); }
+:where([data-part="mark"][data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+:where([data-part="mark"][data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+:where([data-part="mark"][data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
+:where([data-part="mark"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
+:where([data-part="rail"] > [data-part="rail-fill"]) { inset: 0 auto 0 0; inline-size: var(--v, 100%); }
+:where([data-part="rail"][data-on] > [data-part="rail-fill"]) { clip-path: inset(0 round 99px); }
+:where([data-part="rail"] > [data-part="rail-fill"]) {
+  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), inline-size var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+/* phone: the card docks to the bottom edge; the spotlight stays on the target */
+/* docking is positional: on phone the tour pins the card to the edge away from its target (inline top/left) */
+/* beacon: an unobtrusive dot on a target that has an unseen tip. No loop. */
+:where([data-part="beacon"]) { position: absolute; inset-block-start: 4px; inset-inline-end: 4px; inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--warp-color-accent-solid); box-shadow: 0 0 0 3px var(--warp-color-accent-soft); }
+/* rows waiting to sync while offline */
+:where([data-part="sync"]) { display: inline-flex; align-items: center; gap: 4px; font-size: var(--warp-text-caption-size); color: var(--warp-color-caution-text); }
+:where([data-part="sync"][data-state="synced"]) { color: var(--warp-color-positive-text); }
+:where([data-part="cols"]) { display: grid; gap: 14px; }
+@container checkout (min-width: 520px) {
+:where([data-part="cols"]) { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
+}
+/* backup codes: two columns of mono codes in a sunken well */
+:where([data-part="codes"]) {
+  list-style: none; margin: 0; padding: 12px 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: 1px solid var(--warp-color-border);
+  font: 500 13px/1.5 var(--warp-font-mono); font-variant-numeric: tabular-nums; counter-reset: code;
+}
+:where([data-part="codes"] li) { counter-increment: code; display: flex; gap: 8px; }
+:where([data-part="codes"] li)::before { content: counter(code, decimal-leading-zero); color: var(--warp-color-text-subtle); }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"])) :where([data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
+}
+:where([data-motion="reduce"]) :where([data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
+@keyframes warp-weave-draw { to { stroke-dashoffset: 0; } }
+}

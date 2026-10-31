@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* confirmation: the order tracker's rails fill in sequence (job 5) */
+:where([data-scope="confirmation"]) { display: grid; gap: var(--warp-space-group); justify-items: start; }
+}

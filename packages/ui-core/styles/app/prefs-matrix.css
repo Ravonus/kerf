@@ -1,0 +1,60 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* -- Notification preferences matrix (07 §4.6) ----------------------------- */
+:where([data-scope="prefs-matrix"]) { container: prefs / inline-size; display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
+:where([data-scope="prefs-matrix"] [data-part="grid"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, minmax(60px, 84px)); min-inline-size: 0;
+  border-radius: var(--warp-radius-surface); box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border);
+}
+:where([data-scope="prefs-matrix"] [role="row"]) {
+  display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center;
+  border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+}
+:where([data-scope="prefs-matrix"] [role="row"]:first-child) { border-block-start: 0; }
+:where([data-scope="prefs-matrix"] [role="row"][data-part="head"]) { background: var(--warp-color-surface-sunken); border-start-start-radius: var(--warp-radius-surface); border-start-end-radius: var(--warp-radius-surface); }
+:where([data-scope="prefs-matrix"] [role="row"][data-part="group"]) { background: color-mix(in oklab, var(--warp-color-surface-sunken) 55%, transparent); }
+:where([data-scope="prefs-matrix"] [role="rowheader"], [data-scope="prefs-matrix"] [data-part="corner"]) {
+  display: grid; gap: 2px; padding: calc(var(--warp-space-related) + 2px) var(--warp-space-group); min-inline-size: 0; text-align: start;
+}
+:where([data-scope="prefs-matrix"] [data-part="corner"], [data-scope="prefs-matrix"] [data-part="group"] [role="rowheader"]) {
+  font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500; letter-spacing: var(--warp-text-eyebrow-tracking);
+  text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="prefs-matrix"] [role="rowheader"] b) { font-weight: 500; }
+:where([data-scope="prefs-matrix"] [role="rowheader"] small) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); line-height: 1.35; }
+:where([data-scope="prefs-matrix"] [role="rowheader"] [data-scope="badge"]) { justify-self: start; }
+:where([data-scope="prefs-matrix"] :is([role="gridcell"], [role="columnheader"]:not([data-part="corner"]))) {
+  display: grid; place-items: center; min-block-size: max(44px, var(--warp-hit-min)); padding: 4px; min-inline-size: 0;
+}
+:where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { font: 500 var(--warp-text-caption-size)/1.2 var(--warp-text-body-font); color: var(--warp-color-text); }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]) { grid-template-columns: auto; justify-items: center; justify-self: center; row-gap: 3px; column-gap: 0; }
+/* the channel name under each box: hidden on wide grids (the column header names it), shown when the grid restacks */
+:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="prefs-matrix"] [data-part="na"]) { color: var(--warp-color-text-faint); font: 500 13px/1 var(--warp-font-mono); }
+:where([data-scope="prefs-matrix"] [data-part="na"]:focus-visible, [data-scope="prefs-matrix"] [data-part="na"]:focus) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -4px; border-radius: var(--warp-radius-control); }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 3px; border-radius: var(--warp-radius-control); }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input[aria-disabled="true"])) { cursor: not-allowed; }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input[aria-disabled="true"]) [data-part="control"]) { opacity: 0.72; }
+:where([data-scope="prefs-matrix"] [data-part="lock"]) { position: absolute; inset-block-start: 2px; inset-inline-end: -12px; inline-size: 11px; block-size: 11px; color: var(--warp-color-text-subtle); }
+:where([data-scope="prefs-matrix"] [data-part="footer"]) { display: flex; flex-wrap: wrap; align-items: end; gap: var(--warp-space-related) var(--warp-space-group); }
+:where([data-scope="prefs-matrix"] [data-part="footer"] > [data-scope="field"]) { inline-size: min(100%, 260px); }
+:where([data-scope="prefs-matrix"] [data-part="status"]) { margin-inline-start: auto; align-self: center; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="prefs-matrix"] [data-part="status"][data-state="error"]) { color: var(--warp-color-critical-text); }
+/* below 560px of container: rows restack, nothing scrolls sideways (07 §4.6) */
+@container prefs (max-width: 559.98px) {
+:where([data-scope="prefs-matrix"] [data-part="grid"]) { grid-template-columns: minmax(0, 1fr); }
+:where([data-scope="prefs-matrix"] [role="row"]) { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-block-end: 6px; }
+:where([data-scope="prefs-matrix"] :is([role="rowheader"], [data-part="corner"])) { grid-column: 1 / -1; padding-block-end: 2px; }
+:where([data-scope="prefs-matrix"] :is([role="gridcell"], [role="columnheader"]:not([data-part="corner"]))) { min-block-size: 0; padding-block: 2px; }
+:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: static; inline-size: auto; block-size: auto; overflow: visible; clip-path: none; font-size: 11.5px; color: var(--warp-color-text-subtle); }
+:where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="prefs-matrix"] [data-part="na"]) { display: grid; justify-items: center; gap: 3px; }
+:where([data-scope="prefs-matrix"] [data-part="status"]) { margin-inline-start: 0; flex-basis: 100%; }
+}
+@container prefs (max-width: 339.98px) {
+:where([data-scope="prefs-matrix"] [role="row"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (forced-colors: active) {
+:where([data-scope="prefs-matrix"] [data-part="lock"]) { color: GrayText; }
+}
+}

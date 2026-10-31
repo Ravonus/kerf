@@ -1052,7 +1052,7 @@ function demoPlans(app, scr) {
   app.innerHTML = shell(`
     <div class="ph"><div><p class="crumb">Fieldwork · Billing</p><h3>Plans and usage</h3></div>${segmented("Billing period", [["m", "Monthly"], ["y", "Annual · save 20%"]], 0, 'data-part="cycle"')}</div>
     <div data-scope="plans">
-      <div data-part="grid" role="radiogroup" aria-label="Plan">${PLANS.map((p) => `<label data-scope="plan" data-sweep data-k="${p.k}">${SW}<input type="radio" name="${GRP}" value="${p.k}" ${p.k === sel ? "checked" : ""}>
+      <div data-part="grid" role="radiogroup" aria-label="Plan">${PLANS.map((p) => `<label data-scope="plan-card" data-sweep data-k="${p.k}">${SW}<input type="radio" name="${GRP}" value="${p.k}" ${p.k === sel ? "checked" : ""}>
         <span data-part="name"><span class="row" style="gap:10px"><span data-part="radio" aria-hidden="true"></span>${p.n}</span><span data-slot="cur"></span></span>
         <span data-part="price"><b data-price>$${p.m}</b><span data-per>${p.m ? "per seat / month" : "free forever"}</span></span>
         <span class="cap muted">${p.d}</span><ul>${p.f.map((x) => `<li>${x}</li>`).join("")}</ul></label>`).join("")}</div>
@@ -1087,7 +1087,7 @@ function demoPlans(app, scr) {
     if (animate) requestAnimationFrame(() => requestAnimationFrame(() => $$('[data-slot="usage"] [data-part="rail"]', app).forEach((r) => r.setAttribute("data-on", ""))));
   }
   function render() {
-    for (const c of $$('[data-scope="plan"]', app)) {
+    for (const c of $$('[data-scope="plan-card"]', app)) {
       const p = plan(c.dataset.k);
       $("[data-price]", c).textContent = "$" + price(p);
       $("[data-per]", c).textContent = p.m ? (annual ? "per seat / month, billed yearly" : "per seat / month") : "free forever";
@@ -1100,7 +1100,7 @@ function demoPlans(app, scr) {
     else { pitch.innerHTML = `<b>${s.n}</b> has ${s.lim.seats} seats. ${USE.seats - s.lim.seats} people would become read-only.`; cta.innerHTML = btn(`Switch to ${s.n}`, { kind: "frame", attrs: 'data-act="change"' }); }
     wire(cta);
   }
-  app.addEventListener("change", (e) => { if (e.target.matches('[data-scope="plan"] input')) { sel = e.target.value; render(); } });
+  app.addEventListener("change", (e) => { if (e.target.matches('[data-scope="plan-card"] input')) { sel = e.target.value; render(); } });
   const PMS = [["Visa", "4242", "08/28", true], ["Mastercard", "5100", "02/27", false]];
   const pms = () => { $('[data-slot="pms"]', app).innerHTML = PMS.map(([b, l, x, def], i) => { const id = nid("pm"); return `<li><span class="row" style="flex:1;flex-wrap:nowrap">${ic("card")}<span><b style="font-weight:500" id="${id}">${b} ending ${l}</b><br><span class="cap muted">Expires ${x}</span></span></span>${def ? badge("Default", "neutral") : btn("Make default", { kind: "link", attrs: `data-def="${i}" aria-describedby="${id}"` }) + btn(`Remove ${b} ending ${l}`, { kind: "ghost", tone: "critical", size: "sm", only: true, icon: "trash", attrs: `data-rmpm="${i}"` })}</li>`; }).join(""); wire($('[data-slot="pms"]', app)); };
   app.addEventListener("change", (e) => { if (e.target.closest('[data-part="cycle"]')) { annual = e.target.value === "y"; render(); } });
@@ -1152,7 +1152,7 @@ function demoCheckout(app, scr) {
             <div class="row" style="gap:10px">${checkbox(BILL, true)}<span id="${BILL}">Use as billing address</span></div>
             <div data-part="nav">${btn("Back", { kind: "ghost", tone: "neutral", icon: "left", attrs: "data-prev" })}${btn("Continue to shipping", { type: "submit", after: "right" })}</div></form></section>
           <section data-part="step" data-step="shipping" data-label="Step 3 of 5, Shipping"><div data-part="step-body"><h3 data-part="step-title" tabindex="-1">How fast?</h3>
-            <fieldset data-scope="choice"><legend class="vh">Shipping speed</legend>${Object.entries(SHIP).map(([k, [n, d, p]]) => `<label data-scope="plan" data-sweep>${SW}<input type="radio" name="${SG}" value="${k}" ${k === ship ? "checked" : ""}><span data-part="radio" aria-hidden="true"></span><span><b style="font-weight:500">${n}</b><small>${d}</small></span><b style="font-variant-numeric:tabular-nums">${p ? money(p) : "Free"}</b></label>`).join("")}</fieldset>
+            <fieldset data-scope="choice"><legend class="vh">Shipping speed</legend>${Object.entries(SHIP).map(([k, [n, d, p]]) => `<label data-scope="plan-card" data-sweep>${SW}<input type="radio" name="${SG}" value="${k}" ${k === ship ? "checked" : ""}><span data-part="radio" aria-hidden="true"></span><span><b style="font-weight:500">${n}</b><small>${d}</small></span><b style="font-variant-numeric:tabular-nums">${p ? money(p) : "Free"}</b></label>`).join("")}</fieldset>
             <div data-part="nav">${btn("Back", { kind: "ghost", tone: "neutral", icon: "left", attrs: "data-prev" })}${btn("Continue to payment", { after: "right", attrs: "data-next" })}</div></div></section>
           <section data-part="step" data-step="payment" data-label="Step 4 of 5, Payment"><div data-part="step-body"><h3 data-part="step-title" tabindex="-1">Payment</h3>
             ${btn("Pay with saved wallet", { kind: "frame", block: true, icon: "card" })}

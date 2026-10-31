@@ -1,0 +1,8 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* shipping choice cards reuse the plan card's selection rule */
+:where([data-scope="choice"]) { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+:where([data-scope="choice"] legend) { padding: 0; margin-block-end: 10px; font-size: var(--warp-text-label-size); font-weight: 500; }
+:where([data-scope="choice"] [data-scope="plan-card"]) { grid-template-columns: auto 1fr auto; align-items: center; padding: 14px 16px; gap: 12px; }
+:where([data-scope="choice"] [data-scope="plan-card"] small) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+}

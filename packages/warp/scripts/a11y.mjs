@@ -18,6 +18,8 @@ import { createRequire } from 'node:module'
 import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { scenes } from '../test/a11y/scenes/index.mjs'
+
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
 
@@ -134,6 +136,7 @@ const SCENARIOS = {
     await page.getByRole('option').first().waitFor()
     await audit('combobox open')
   },
+  ...Object.fromEntries(Object.entries(scenes).map(([name, run]) => [name, (page, audit, url) => run(page, audit, url, settle)])),
   async shop(page, audit, url) {
     await page.goto(url)
     await page.getByRole('button', { name: /^Add/ }).first().waitFor()

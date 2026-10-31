@@ -1,0 +1,14 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+:where([data-scope="integration"]) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; gap: 10px 12px; align-items: start; padding: var(--warp-pad-surface);
+  background: var(--warp-color-surface-raised); border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  transition: border-color var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="integration"][data-state="error"]) { border-color: var(--warp-color-critical-border); }
+:where([data-scope="integration"] [data-part="logo"]) { display: grid; place-items: center; inline-size: 36px; block-size: 36px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: 1px solid var(--warp-color-border); font: 600 15px/1 var(--warp-text-heading-font); }
+:where([data-scope="integration"] [data-part="info"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-inline-size: 0; }
+:where([data-scope="integration"] [data-part="info"] > b) { font-weight: 500; }
+:where([data-scope="integration"] [data-part="info"] > .cap, [data-scope="integration"] [data-part="info"] > span:last-child) { flex-basis: 100%; }
+:where([data-scope="integration"] [data-part="actions"]) { grid-column: 2; display: flex; gap: 8px; }
+}

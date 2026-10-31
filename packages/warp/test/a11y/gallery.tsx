@@ -7,6 +7,12 @@ import { Button } from '../../src/Button'
 import { Kbd } from '../../src/Kbd'
 import { Spinner } from '../../src/Spinner'
 import { Tooltip } from '../../src/Tooltip'
+import { Part as Agent } from '../fixtures/pack-agent'
+import { Part as Schedule } from '../fixtures/pack-schedule'
+import { Part as Live } from '../fixtures/pack-live'
+import { Part as Collab } from '../fixtures/pack-collab'
+import { Part as Flow } from '../fixtures/pack-flow'
+import { Part as Admin } from '../fixtures/pack-admin'
 import * as Charts from '../fixtures/ChartCases'
 import { Dashboard, Tables } from '../fixtures/Data'
 import { Alerts, Buttons, Choices, Fields, Icons, Overlays, Surfaces, Tabbed, Toasts, Toggles, seedToasts } from '../fixtures/Variants'
@@ -60,7 +66,8 @@ function RichInputs() {
 
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
-const View = part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
+const PACKS: Record<string, () => any> = { agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
+const View = PACKS[part] ? PACKS[part] : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
 // the shell brings its own main
 const host = document.getElementById('root')!
 if (part === 'shell') host.replaceWith(Object.assign(document.createElement('div'), { id: 'root' }))
