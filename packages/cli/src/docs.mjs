@@ -23,6 +23,7 @@ export const topics = {
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
+  icons: '@weft/icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
   fonts: 'Fonts with @weft/plugin-text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   design: 'The design language: Stack, Row, Heading, Text, the closed vocabulary, `weft fix`, `weft tokens`; D001–D005, D011, D030–D039',

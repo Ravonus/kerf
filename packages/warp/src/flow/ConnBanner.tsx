@@ -1,8 +1,8 @@
+import { IconClock, IconRefresh, IconSparkle, IconWifi, IconWifiOff } from '@weft/icons'
 import { announce, connView } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
 import { Button, type ButtonProps } from '../Button'
-import { Glyph } from '../parts'
-import { G, useCooldown } from './kit'
+import { useCooldown } from './kit'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
 import '@weft/ui-core/styles/flows/base.css'
@@ -84,7 +84,7 @@ export function ConnBanner({ online = true, state: conn, stale, contractFailed, 
       {view.value && (
         <div data-scope="conn" data-state={view.value === 'stale' && contractFailed ? 'limited' : view.value}>
           {view.value === 'offline' && <>
-            <Glyph d={G.wifiOff} />
+            <IconWifiOff />
             <span data-part="msg"><b>You're offline.</b> Changes are saved on this device and sync when you reconnect.</span>
             {retryIn !== undefined && <span>Retrying in {retry.value}s</span>}
             {onRetry && <Button emphasis="ghost" size="sm" tone="neutral" onClick={onRetry}>Retry now</Button>}
@@ -94,15 +94,15 @@ export function ConnBanner({ online = true, state: conn, stale, contractFailed, 
             <span data-part="msg"><b>Reconnecting…</b> {changes > 0 ? `Sending ${plural(changes)}.` : retryIn !== undefined ? `Trying again in ${retry.value}s.` : ''}</span>
           </>}
           {view.value === 'online' && <>
-            <Glyph d={G.wifi} />
+            <IconWifi />
             <span data-part="msg"><b>Back online.</b> {changes > 0 ? `${plural(changes)} synced.` : ''}</span>
             <span data-part="rail" data-on="" aria-hidden="true"><span data-part="rail-fill" style={`--p:${backIn.value / RECOVERED_S}`}></span></span>
           </>}
           {view.value === 'stale' && <>
-            <Glyph d={G.spark} />
+            <IconSparkle />
             <span data-part="msg"><b>A new version of {name} is ready.</b> {contractFailed ? 'Reload to finish saving.' : 'Reload to update; your draft is kept.'}</span>
             <Button emphasis="ghost" size="sm" tone="neutral" onClick={postpone}>Later</Button>
-            <Button size="sm" tone="info" onClick={onReload}><Glyph d={G.refresh} />Reload</Button>
+            <Button size="sm" tone="info" onClick={onReload}><IconRefresh />Reload</Button>
           </>}
         </div>
       )}
@@ -132,7 +132,7 @@ export function RateLimited({ retryAfter, title = 'Limit reached.', description,
     <div data-scope="stack" style="--_gap:8px">
       {on.value && (
         <div data-scope="conn" data-state="limited">
-          <Glyph d={G.clock} />
+          <IconClock />
           <span data-part="msg"><b>{title}</b> {description} Try again in {left.value}s.</span>
           <span data-part="rail" data-on="" aria-hidden="true"><span data-part="rail-fill" style={`--p:${left.value / total.value}`}></span></span>
         </div>

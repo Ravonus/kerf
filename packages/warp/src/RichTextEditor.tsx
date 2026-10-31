@@ -1,3 +1,4 @@
+import { IconCode, IconCodeBlock, IconLink, IconList, IconListOrdered, IconQuote } from '@weft/icons'
 import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle } from '@weft/ui-core'
 import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
 import { bindable, type Bindable } from './bind'
@@ -29,7 +30,6 @@ export type RichTextEditorProps = FieldShell & Bindable<string> & {
   name?: string
 }
 
-const svg = (d: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={d} /></svg>
 type Tool = { cmd: string; label: string; tip: string; glyph: () => any; style?: string; toggles?: boolean }
 const TOOLS: Record<Mark | Block, Tool> = {
   h2: { cmd: 'h2', label: 'H2 heading', tip: 'Heading · # ', glyph: () => 'H2', toggles: true },
@@ -37,12 +37,12 @@ const TOOLS: Record<Mark | Block, Tool> = {
   bold: { cmd: 'bold', label: 'Bold', tip: 'Bold · ⌘B', glyph: () => 'B', style: 'font-weight:700', toggles: true },
   italic: { cmd: 'italic', label: 'Italic', tip: 'Italic · ⌘I', glyph: () => 'I', style: 'font-style:italic;font-family:Georgia,serif;font-weight:400;font-size:16px', toggles: true },
   strike: { cmd: 'strikeThrough', label: 'Strikethrough', tip: 'Strikethrough', glyph: () => 'S', style: 'text-decoration:line-through;font-weight:500', toggles: true },
-  code: { cmd: 'code', label: 'Inline code', tip: 'Code · `text`', glyph: () => svg('M8 8l-4 4 4 4M16 8l4 4-4 4'), toggles: true },
-  link: { cmd: 'link', label: 'Link', tip: 'Link · ⌘K', glyph: () => svg('M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'), toggles: true },
-  ul: { cmd: 'insertUnorderedList', label: 'Bulleted list', tip: 'Bullets · - ', glyph: () => svg('M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01'), toggles: true },
-  ol: { cmd: 'insertOrderedList', label: 'Numbered list', tip: 'Numbers · 1. ', glyph: () => svg('M10 6h10M10 12h10M10 18h10M4 5l1.5-1v5M4 14.5c0-1 2.5-1 2.5.5 0 1-2.5 2-2.5 3h2.6'), toggles: true },
-  quote: { cmd: 'blockquote', label: 'Quote', tip: 'Quote · > ', glyph: () => svg('M7 7h4v5H7zM13 7h4v5h-4zM8 12c0 2-1 3-2 4M14 12c0 2-1 3-2 4'), toggles: true },
-  codeblock: { cmd: 'pre', label: 'Code block', tip: 'Code block · ```', glyph: () => svg('M5 4h14v16H5zM10 10l-2 2 2 2M14 10l2 2-2 2'), toggles: true },
+  code: { cmd: 'code', label: 'Inline code', tip: 'Code · `text`', glyph: () => <IconCode />, toggles: true },
+  link: { cmd: 'link', label: 'Link', tip: 'Link · ⌘K', glyph: () => <IconLink />, toggles: true },
+  ul: { cmd: 'insertUnorderedList', label: 'Bulleted list', tip: 'Bullets · - ', glyph: () => <IconList />, toggles: true },
+  ol: { cmd: 'insertOrderedList', label: 'Numbered list', tip: 'Numbers · 1. ', glyph: () => <IconListOrdered />, toggles: true },
+  quote: { cmd: 'blockquote', label: 'Quote', tip: 'Quote · > ', glyph: () => <IconQuote />, toggles: true },
+  codeblock: { cmd: 'pre', label: 'Code block', tip: 'Code block · ```', glyph: () => <IconCodeBlock />, toggles: true },
 }
 const SLASH: SlashCommand[] = [
   { id: 'h2', label: 'Heading', hint: '#', run: e => e.run('h2') },

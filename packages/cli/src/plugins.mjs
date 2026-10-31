@@ -157,6 +157,7 @@ export function generated(root, loaded) {
   for (const c of loaded.contributions) {
     const t = c.manifest.tokens
     if (t?.css) files[`.weft/tokens/${t.namespace}.css`] = `/* Generated from weft.config.ts (${c.name}). Do not edit. */\n${t.css}`
+    if (t?.alias) files[`.weft/tokens/${t.namespace}.alias.json`] = `${JSON.stringify(t.alias, null, 2)}\n`
   }
   return files
 }

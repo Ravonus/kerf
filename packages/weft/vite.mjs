@@ -1,6 +1,6 @@
 // weft() for Vite 8: one filtered transform hook, so only .tsx/.jsx files cross into JS (§3.6).
 import { createHash } from 'node:crypto'
-import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, globSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { basename, dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './node/css.mjs'
@@ -65,18 +65,26 @@ function slots() {
 /**
  * `weft:tokens/<namespace>` → the generated `<root>/.weft/tokens/<namespace>.css` (a plugin's `tokens.css`), or an
  * empty module when the plugin left the defaults. A kit imports it once, so a seed in weft.config.ts needs no app wiring.
+ * A plugin's `tokens.alias` (`.weft/tokens/*.alias.json`) swaps one module id for another, so a config can compile one
+ * variant of a package in.
  */
 function tokens() {
   let root = process.cwd()
+  let aliases = {}
   const EMPTY = '\0weft:tokens-empty'
   return {
     name: 'weft:tokens',
+    enforce: 'pre',
     configResolved(config) {
       root = config.root
+      const dir = join(root, '.weft', 'tokens')
+      aliases = {}
+      if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.alias.json')) Object.assign(aliases, JSON.parse(readFileSync(join(dir, f), 'utf8')))
     },
     resolveId: {
-      filter: { id: /^weft:tokens\// },
-      handler(source) {
+      handler(source, importer) {
+        if (Object.hasOwn(aliases, source)) return this.resolve(aliases[source], importer, { skipSelf: true })
+        if (!source.startsWith('weft:tokens/')) return null
         const file = join(root, '.weft', 'tokens', `${source.slice('weft:tokens/'.length)}.css`)
         return existsSync(file) ? file : EMPTY
       },
@@ -311,7 +319,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     },
     async resolveId(source, importer) {
       const mode = importer && MODE.exec(importer)
-      if (!mode || !source.startsWith('.')) return null
+      if (!mode || !(source.startsWith('.') || source.startsWith('@weft/'))) return null // first-party packages ship TSX
       const r = await this.resolve(source, importer.slice(0, mode.index), { skipSelf: true })
       return r && /\.[jt]sx$/.test(r.id) ? r.id + mode[0] : r
     },

@@ -1,8 +1,9 @@
+import { IconPlus } from '@weft/icons'
 import { allDayBars, announce, at, calendarDrag, clock, clockRange, conflicts, countByDay, dateOf, daySegments, dayState, dow, dstShift, eventKey, eventName, eventsOn, fmt, gridKey, indicator, isoWeek, isWeekend, laneKey, layoutDay, longDuration, minuteOf, monthCells, monthStart, monthWeeks, moveKey, nextIndex, overflow, popover, shownIn, slotOf, slotTimes, stepDate, toZone, uid, viewDays, weekStart, weekdays, ymd, zoneCity, type CalEvent, type CalView, type DragPreview, type IsoDate, type DaySegment, type Slot } from '@weft/ui-core'
 import { derived, flush, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Modal } from '../Modal'
-import { Glyph, LiveStatus, type LiveState } from '../parts'
+import { LiveStatus, type LiveState } from '../parts'
 import { Icon } from '../Icon'
 import { bindable, usePickerEnv } from '../Picker'
 import { Popover } from '../Popover'
@@ -10,7 +11,7 @@ import { TimeZoneSelect } from '../RichSelect'
 import { Segmented } from '../Choice'
 import { use } from '../use'
 import { AgendaDay } from './Agenda'
-import { PATHS, RepeatGlyph, SweepParts, confirmSweep, tint, useNow, useWidth } from './bits'
+import { RepeatGlyph, SweepParts, confirmSweep, tint, useNow, useWidth } from './bits'
 import { EventEditor, type CalendarSource } from './EventEditor'
 import { EventPopover } from './EventPopover'
 import { MoveSheet } from './MoveSheet'
@@ -587,7 +588,7 @@ export function Calendar(p: CalendarProps) {
             <span data-part="indicator" aria-hidden="true" data-instant=""></span>
           </div>
         </div>
-        {!p.readOnly && p.onCreate && <Button size="sm" onClick={createNow}><Glyph d={PATHS.plus} />New event</Button>}
+        {!p.readOnly && p.onCreate && <Button size="sm" onClick={createNow}><IconPlus />New event</Button>}
       </div>
       <div data-part="layout" style="min-block-size:0">
         <aside data-part="rail" aria-label="Calendars">

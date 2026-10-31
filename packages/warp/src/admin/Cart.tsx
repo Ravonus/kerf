@@ -1,11 +1,11 @@
+import { IconBag, IconMinus, IconPlus } from '@weft/icons'
 import { cartCount, cartTotals, money, type CartLine } from '@weft/ui-core'
 import { derived, type State } from 'weft'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
-import { Glyph } from '../parts'
 import { toast } from '../Toast'
-import { GLYPH, afterFlush } from './atoms'
+import { afterFlush } from './atoms'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
 import '@weft/ui-core/styles/flows/base.css'
@@ -41,9 +41,9 @@ export function LineItem({ line, cart, currency, locale, problem }: { line: Cart
       <span data-part="price">
         {money(line.price * line.quantity, currency, locale)}
         <span data-scope="qty">
-          <button type="button" aria-label={line.quantity <= 1 ? `Remove ${line.name}` : `Fewer ${line.name}`} onClick={down}><Glyph d={GLYPH.minus} /></button>
+          <button type="button" aria-label={line.quantity <= 1 ? `Remove ${line.name}` : `Fewer ${line.name}`} onClick={down}><IconMinus /></button>
           <output aria-live="polite" aria-label={`Quantity of ${line.name}`}>{line.quantity}</output>
-          <button type="button" aria-label={`More ${line.name}`} onClick={() => setQuantity(cart, line.id, line.quantity + 1)}><Glyph d={GLYPH.plus} /></button>
+          <button type="button" aria-label={`More ${line.name}`} onClick={() => setQuantity(cart, line.id, line.quantity + 1)}><IconPlus /></button>
         </span>
       </span>
     </div>
@@ -54,7 +54,7 @@ export function LineItem({ line, cart, currency, locale, problem }: { line: Cart
 export function CartButton({ count, onClick }: { count: number; onClick: () => void }) {
   return (
     <Button emphasis="ghost" tone="neutral" data-icon-only="" label={`Cart, ${count} items`} style="position:relative" onClick={onClick}>
-      <Glyph d={GLYPH.bag} />
+      <IconBag />
       {/* keyed by the count, so a new number is a new node and the bump replays once */}
       {[count].filter(n => n > 0).map(n => <Badge key={n} count emphasis="solid" aria-hidden="true" data-bump="" style="position:absolute;inset:-2px -4px auto auto">{n}</Badge>)}
     </Button>

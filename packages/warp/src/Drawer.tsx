@@ -1,3 +1,4 @@
+import { IconX } from '@weft/icons'
 import { dialog, uid } from '@weft/ui-core'
 import { derived, type State, untrack } from 'weft'
 import { use } from './use'
@@ -28,7 +29,7 @@ export function Drawer({ open, title, description, footer, side = 'auto', childr
       <div data-part="header">
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>
         {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
-        <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></button>
+        <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><IconX /></button>
       </div>
       <div data-part="body">{children}</div>
       {foot.value !== undefined && <div data-part="footer">{foot.value}</div>}

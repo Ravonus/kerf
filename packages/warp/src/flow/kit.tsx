@@ -12,24 +12,6 @@ import '@weft/ui-core/styles/flows/base.css'
 import '@weft/ui-core/styles/flows/meter.css' // the result mark
 import '@weft/ui-core/styles/layout/stack.css'
 
-/** The glyphs flows use on the 24 grid, for `<Glyph d={...} />`. */
-export const G = {
-  key: 'M8 11a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM11 12l8.5-8.5M16 6l2.5 2.5M14 8l2 2',
-  shield: 'M12 3 4.5 6v5.5c0 4.5 3.2 8 7.5 9.5 4.3-1.5 7.5-5 7.5-9.5V6zM9 12l2 2 4-4',
-  mail: 'M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM3.5 6.5l8.5 6.5 8.5-6.5',
-  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
-  doc: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
-  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
-  download: 'M12 4v11M7 11l5 5 5-5M5 20h14',
-  refresh: 'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',
-  home: 'M4 11l8-7 8 7M6 10v10h12V10',
-  wifi: 'M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0M12 20h.01',
-  wifiOff: 'M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 5-2.8M19 12.5a10 10 0 0 0-3-2M12 20h.01',
-  spark: 'M12 3l2 6.5 6.5 2-6.5 2L12 20l-2-6.5-6.5-2 6.5-2z',
-  clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
-  check: 'M5 12.5l4.5 4.5L19 7.5',
-}
-
 export type Heading = 'h1' | 'h2' | 'h3'
 
 /** A step's title: focus lands here on arrival (09 §1.1). */

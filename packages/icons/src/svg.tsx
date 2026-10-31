@@ -12,9 +12,6 @@ export type IconComponent = (props: IconProps) => any
 
 const length = (size: number | string) => (typeof size === 'number' ? `${size}px` : size)
 
-function Svg({ label, size, draw, style, ...rest }: IconProps & { draw: () => any }) {
-  const box = size === undefined ? style : `inline-size:${length(size)};block-size:${length(size)}${style ? `;${style}` : ''}`
-  return <svg data-icon viewBox="0 0 24 24" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} focusable="false" style={box} {...rest}>{draw()}</svg>
+export function Svg({ label, size, draw, style, ...rest }: IconProps & { draw: () => any }) {
+  return <svg data-icon viewBox="0 0 24 24" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} focusable="false" style={size === undefined ? style : `width:${length(size)};height:${length(size)}${style ? `;${style}` : ''}`} {...rest}>{draw()}</svg>
 }
-
-export const icon = (props: IconProps, draw: () => any) => <Svg {...props} draw={draw} />

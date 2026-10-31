@@ -1,10 +1,11 @@
+import { IconBranch, IconCopy, IconRefresh, IconThumbsDown, IconThumbsUp } from '@weft/icons'
 import { announce, popover } from '@weft/ui-core'
 import { derived, state } from 'weft'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
 import { use } from '../use'
-import { G, IconButton } from './bits'
+import { IconButton } from './bits'
 import '../styles'
 import '@weft/ui-core/styles/components/popover.css'
 import '@weft/ui-core/styles/app/branch.css'
@@ -61,17 +62,17 @@ export function MessageActions({ onCopy, onFeedback, reasons = ['Wrong', 'Too lo
   return (
     <div data-part="actions">
       {stopped && <Badge tone="neutral">Stopped · kept what arrived</Badge>}
-      {onCopy && <IconButton d={G.copy} label="Copy" onClick={(e: Event) => onCopy(e.currentTarget as HTMLElement)} />}
-      {onFeedback && <IconButton d={G.up} label="Good answer" aria-pressed={value.value === 'up' ? 'true' : 'false'} onClick={(e: Event) => rate(e, 'up')} />}
-      {onFeedback && <IconButton d={G.down} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: any) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
+      {onCopy && <IconButton icon={IconCopy} label="Copy" onClick={(e: Event) => onCopy(e.currentTarget as HTMLElement)} />}
+      {onFeedback && <IconButton icon={IconThumbsUp} label="Good answer" aria-pressed={value.value === 'up' ? 'true' : 'false'} onClick={(e: Event) => rate(e, 'up')} />}
+      {onFeedback && <IconButton icon={IconThumbsDown} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: any) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
       {onFeedback && (
         <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" aria-label="What went wrong?">
           <p data-part="title">What went wrong?</p>
           <div>{reasons.map(r => <Button key={r} emphasis="ghost" tone="neutral" size="sm" data-close-popover="" onClick={(e: Event) => because(e, r)}>{r}</Button>)}</div>
         </div>
       )}
-      {onRegenerate && <IconButton d={G.refresh} label="Regenerate" onClick={onRegenerate} />}
-      {onBranch && <IconButton d={G.branch} label="Branch from here" onClick={onBranch} />}
+      {onRegenerate && <IconButton icon={IconRefresh} label="Regenerate" onClick={onRegenerate} />}
+      {onBranch && <IconButton icon={IconBranch} label="Branch from here" onClick={onBranch} />}
       {has.value && <BranchSwitcher index={has.value.index} count={has.value.count} onChange={has.value.onChange} />}
     </div>
   )

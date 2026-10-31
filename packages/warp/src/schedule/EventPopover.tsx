@@ -1,12 +1,11 @@
+import { IconRepeat, IconUsers, IconVideo } from '@weft/icons'
 import { clockRange, dateOf, fmt, longDuration, popover, ruleSentence, parseRule, slotOf, type Align, type CalEvent, type Side } from '@weft/ui-core'
 import { derived, type State } from 'weft'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
-import { Glyph } from '../parts'
 import { use } from '../use'
-import { PATHS } from './bits'
 import '@weft/ui-core/styles/components/popover.css'
 import '@weft/ui-core/styles/app/avatar-stack.css'
 import '@weft/ui-core/styles/app/event-card.css'
@@ -48,15 +47,15 @@ export function EventPopover(p: EventPopoverProps) {
           <dl>
             <dt><Icon name="clock" /></dt>
             <dd>{when.value!.date} · {when.value!.time}{(when.value!.length || p.zoneLabel) && <><br /><span class="muted">{[when.value!.length, p.zoneLabel].filter(Boolean).join(' · ')}</span></>}</dd>
-            {p.event.recurrence && <><dt><Glyph d={PATHS.repeat} /></dt><dd>{ruleSentence(parseRule(p.event.recurrence), dateOf(p.event.start), locale.value)}</dd></>}
+            {p.event.recurrence && <><dt><IconRepeat /></dt><dd>{ruleSentence(parseRule(p.event.recurrence), dateOf(p.event.start), locale.value)}</dd></>}
             {p.event.location && <><dt><Icon name="pin" /></dt><dd>{p.event.location}</dd></>}
-            {p.event.attendees?.length ? <><dt><Glyph d={PATHS.users} /></dt><dd><span data-scope="avatar-stack">{p.event.attendees.slice(0, 5).map(n => <Avatar key={n} name={n} size="sm" />)}</span> <span class="muted">{p.event.attendees.length} going</span></dd></> : null}
+            {p.event.attendees?.length ? <><dt><IconUsers /></dt><dd><span data-scope="avatar-stack">{p.event.attendees.slice(0, 5).map(n => <Avatar key={n} name={n} size="sm" />)}</span> <span class="muted">{p.event.attendees.length} going</span></dd></> : null}
             {p.event.tentative && <><dt><Icon name="info" /></dt><dd><Badge tone="caution">Tentative</Badge></dd></>}
           </dl>
           <div data-part="actions">
             {!p.event.locked && p.onDelete && <Button emphasis="ghost" tone="critical" size="sm" onClick={act(p.onDelete)}>Delete</Button>}
             {!p.event.locked && p.onEdit && <Button emphasis="outline" tone="neutral" size="sm" onClick={act(p.onEdit)}>Edit</Button>}
-            {p.event.video && <Button size="sm" onClick={act(p.onJoin)}><Glyph d={PATHS.video} />Join</Button>}
+            {p.event.video && <Button size="sm" onClick={act(p.onJoin)}><IconVideo />Join</Button>}
           </div>
         </div>
       )}

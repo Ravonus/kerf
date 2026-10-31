@@ -1,9 +1,9 @@
+import { IconMore } from '@weft/icons'
 import { announce, findCard, installSweep, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/ui-core'
 import { Box, derived, flush, onMount, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { Input } from '../Field'
-import { Glyph } from '../parts'
 import { use } from '../use'
 import { SWEEP } from './peer'
 import '../styles'
@@ -11,7 +11,6 @@ import '@weft/ui-core/styles/data/base.css'
 import '@weft/ui-core/styles/data/kanban.css'
 import '@weft/ui-core/styles/app/kanban.css'
 
-const MORE = 'M5 12h.01M12 12h.01M19 12h.01'
 
 export type KanbanCardData = BoardCard & { label?: string; color?: number; assignee?: string }
 export type KanbanColumn = BoardColumn<KanbanCardData>
@@ -47,7 +46,7 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
           {card.assignee !== undefined && <span data-scope="avatar" data-size="sm" aria-hidden="true">{card.assignee}</span>}
         </footer>
       )}
-      <button ref={(n: any) => (btn = n)} type="button" data-part="move" aria-haspopup="true" aria-expanded={open.value ? 'true' : 'false'} aria-label={`Move ${card.title}`} onClick={(e: MouseEvent) => { if (ctx.coarse(e.currentTarget as Element)) ctx.sheet(card); else open.value = !open.value }}><Glyph d={MORE} /></button>
+      <button ref={(n: any) => (btn = n)} type="button" data-part="move" aria-haspopup="true" aria-expanded={open.value ? 'true' : 'false'} aria-label={`Move ${card.title}`} onClick={(e: MouseEvent) => { if (ctx.coarse(e.currentTarget as Element)) ctx.sheet(card); else open.value = !open.value }}><IconMore /></button>
       <div ref={(n: any) => (panel = n)} data-part="menu" hidden={!open.value} role="menu" aria-label="Move to">
         {open.value && ctx.board().map(c => <button key={c.id} type="button" role="menuitem" tabindex="-1" aria-disabled={at()?.col === ctx.board().indexOf(c) ? 'true' : undefined} onClick={() => { const n = ctx.board().indexOf(c); if (at()?.col !== n) to(n, c.cards.length) }}>Move to {c.title}</button>)}
         {open.value && <button type="button" role="menuitem" tabindex="-1" onClick={() => { const a = at()!; to(a.col, a.index - 1) }}>Move up</button>}

@@ -1,8 +1,9 @@
+import { IconCopy, IconExternal } from '@weft/icons'
 import { announce, copyConfirm, indicator, nextIndex, uid } from '@weft/ui-core'
 import { derived, onMount, state, untrack } from 'weft'
 import { Badge } from '../Badge'
 import { use } from '../use'
-import { G, IconButton, held, Sweep, useSweep } from './bits'
+import { IconButton, held, Sweep, useSweep } from './bits'
 import '../styles'
 import '@weft/ui-core/styles/components/tabs.css'
 import '@weft/ui-core/styles/app/artifact.css'
@@ -54,8 +55,8 @@ export function ArtifactPanel({ title, versions, version, onVersion, code, onOpe
       <div data-part="head">
         <b id={`${id}-n`}>{title}</b>
         {badge.value !== undefined && <Badge tone="neutral">{badge.value}</Badge>}
-        <IconButton d={G.copy} label="Copy" onClick={(e: Event) => copyConfirm(e.currentTarget as Element, source.value, root)} />
-        {onOpen && <IconButton d={G.ext} label="Open in editor" onClick={onOpen} />}
+        <IconButton icon={IconCopy} label="Copy" onClick={(e: Event) => copyConfirm(e.currentTarget as Element, source.value, root)} />
+        {onOpen && <IconButton icon={IconExternal} label="Open in editor" onClick={onOpen} />}
       </div>
       <div data-scope="tabs" data-part="root" style="padding:8px 12px 0;gap:0">
         <div ref={(n: any) => (list = n)} data-part="list" role="tablist" aria-label="Artifact views" onKeyDown={onTab}>
