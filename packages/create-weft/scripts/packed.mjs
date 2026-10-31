@@ -69,4 +69,14 @@ for (const { name, options, theme, add, css } of apps) {
     server.kill()
   }
 }
+
+// A room on the packs' tarballs: two browsers, over the socket and then peer to peer. TypeScript in node_modules and the
+// packs' optional dependencies are what this adds.
+const room = join(root, 'room')
+const browsers = join(pkgs, 'multiplayer/scripts/e2e-browsers.mjs')
+writeFileSync(join(root, 'tgz/tarballs.json'), JSON.stringify(tarballs))
+sh('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
+sh('node', [browsers, 'run', room, '--runtimes', 'node'], root)
+sh('node', [browsers, 'run', room, '--runtimes', 'node', '--via', 'webrtc'], root)
+console.log('[packed] room: two browsers: pass')
 console.log('[packed] all pass')

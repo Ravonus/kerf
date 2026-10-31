@@ -448,3 +448,18 @@ describe('channels on the hub', () => {
     await resetHub()
   })
 })
+
+test('a plugin\'s bus waits for its first use, and only then loads', async () => {
+  const { slotBus, memoryBus } = await import('@weft/start/bus')
+  let loads = 0
+  const bus = slotBus('@weft/realtime-redis', async () => (loads++, memoryBus()))
+  expect(bus.name).toBe('redis')
+  await bus.close?.()
+  expect(loads).toBe(0)
+  const got: string[] = []
+  await bus.subscribe('c', m => got.push(m))
+  await bus.publish('c', 'x')
+  await new Promise(ok => setTimeout(ok))
+  expect(got).toEqual(['x'])
+  expect(loads).toBe(1)
+})

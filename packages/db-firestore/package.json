@@ -1,0 +1,31 @@
+{
+  "name": "@weft/db-firestore",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/db-firestore: a list source over a Firestore collection",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "weft": "*",
+    "firebase-admin": ">=12"
+  },
+  "peerDependenciesMeta": {
+    "firebase-admin": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft",
+    "firebase-admin": "14.5.0"
+  }
+}

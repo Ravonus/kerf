@@ -16,10 +16,19 @@ type Outputs<T extends Schemas> = { [K in keyof T]: Out<T[K]> }
 
 export type ChannelStatus = 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
 
+export interface PublishOptions {
+  /** Not back to the sender. */
+  exceptSelf?: boolean
+  /** Only to this connection, wherever it is: the `id` a handler was given. */
+  to?: string
+  /** Not kept for a resume: a cursor, a heartbeat, anything the next one replaces. */
+  volatile?: boolean
+}
+
 export interface Room<P, M> {
   params: P
-  /** To everyone in the room, on every instance. `exceptSelf`: not back to the sender. */
-  publish<K extends keyof M & string>(name: K, message: M[K], options?: { exceptSelf?: boolean }): Promise<void>
+  /** To everyone in the room, on every instance. */
+  publish<K extends keyof M & string>(name: K, message: M[K], options?: PublishOptions): Promise<void>
 }
 
 export interface ChannelDef<P extends StandardSchemaV1 | undefined, C extends Schemas, S extends Schemas> {
@@ -30,13 +39,18 @@ export interface ChannelDef<P extends StandardSchemaV1 | undefined, C extends Sc
   client?: C
   /** Server → client, validated in dev and tests. */
   server?: S
-  on?: { [K in keyof C]?: (args: { msg: Out<C[K]>; ctx: Context; params: Out<P>; room: Room<Out<P>, Inputs<S>> }) => unknown }
+  /** `id` is the sender's connection, the same one `left` gets. */
+  on?: { [K in keyof C]?: (args: { msg: Out<C[K]>; id: string; ctx: Context; params: Out<P>; room: Room<Out<P>, Inputs<S>> }) => unknown }
+  /** A connection stopped being in the room: it left, closed, or lost `authorize`. Not called if its instance dies. */
+  left?: (args: { id: string; ctx: Context; params: Out<P>; room: Room<Out<P>, Inputs<S>> }) => unknown
   limits?: { perSecond?: number }
   $id?: string
 }
 
 export interface Connection<C, S> {
   readonly status: Derived<ChannelStatus>
+  /** Which room this is. Changes when a function argument moves to another, even one already open. */
+  readonly room: Derived<string | undefined>
   /** The last refusal or failure. */
   readonly error: unknown
   /** Ticks when the server couldn't resume: messages may be missing, so refetch what the room's history is. */
@@ -229,13 +243,14 @@ function connect(fn: Fn, arg: unknown, options?: ConnectOptions): Connection<any
   owned(fn)
   if (currentScope()) {
     const closed = { value: 'connecting' as ChannelStatus }
-    return { status: closed, error: undefined, resets: { value: 0 }, collect: () => ({ value: NONE }), on: () => () => {}, onReset: () => () => {}, send: () => Promise.reject(new FnError({ message: 'a channel has no socket on the server' }, 500)), retry() {} }
+    return { status: closed, room: { value: undefined }, error: undefined, resets: { value: 0 }, collect: () => ({ value: NONE }), on: () => () => {}, onReset: () => () => {}, send: () => Promise.reject(new FnError({ message: 'a channel has no socket on the server' }, 500)), retry() {} }
   }
   const handle: Handle = { on: new Map(), resets: new Set() }
   const wanted: { name: string; max: number; key?: (m: any) => unknown }[] = []
   const view = follow(fn, arg, options, handle, j => { for (const w of wanted) listOf(j, w) })
   return {
     status: derived(() => view.value?.status.value ?? 'closed'),
+    room: derived(() => view.value?.key),
     get error() { return view.value?.error.value },
     resets: derived(() => view.value?.resets.value ?? 0),
     collect(name, { max = 200, key } = {}) {
@@ -366,7 +381,7 @@ function browser(frame: (d: any[]) => void, done: (code: number) => void): Socke
 }
 
 /** weft/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
-const FAKE = './channel-fake'
+const FAKE = './channel-fake.ts' // with its extension: nothing resolves this one for a linked package
 function fake(frame: (d: any[]) => void, done: (code: number) => void): SocketLink {
   let link: SocketLink | undefined
   let up!: () => void

@@ -1,5 +1,5 @@
 // The fan-out bus (research 30 §3): strings, at-most-once, ordered per publisher. Tags, topics, rings and cursors stay
-// in the hub, so a bus is three methods; Phase 3b's redis, nats and durable-object buses implement this interface.
+// in the hub, so a bus is three methods. `@weft/realtime-redis`, `-nats` and `-durable-object` implement this interface.
 
 export interface Bus {
   readonly name: string
@@ -10,6 +10,18 @@ export interface Bus {
    */
   subscribe(channel: string, on: (message: string) => void, gap?: () => void): Promise<() => void>
   close?(): Promise<void>
+}
+
+/** The bus a `realtime.bus` plugin provides, loaded on the first publish or subscribe: `weft build` reaches for neither. */
+export function slotBus(plugin: string, load: () => Promise<Bus>): Bus {
+  let bus: Promise<Bus> | undefined
+  const get = () => (bus ??= load())
+  return {
+    name: plugin.replace(/^.*realtime-/, ''),
+    publish: (channel, message) => get().then(b => b.publish(channel, message)),
+    subscribe: (channel, on, gap) => get().then(b => b.subscribe(channel, on, gap)),
+    close: () => (bus ? bus.then(b => b.close?.()) : Promise.resolve()),
+  }
 }
 
 /** One process (PLAN §4.2). Delivered in a microtask: no code may rely on a fan-out no other bus has. */

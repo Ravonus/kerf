@@ -5,7 +5,7 @@
 // A Worker's I/O belongs to the request that opened it, so a stateless Worker can't hold that socket: this needs a hub
 // that lives in a Durable Object, Nitro's `cloudflare_durable` preset (`weft build` refuses the others, R002).
 
-import type { Bus } from '../bus'
+import type { Bus } from '@weft/start/bus'
 
 /** The parts of Workers' API used here, so an app doesn't need `@cloudflare/workers-types` for this file. */
 interface Stub { fetch(url: string, init?: RequestInit): Promise<Response & { webSocket?: CfSocket | null }> }

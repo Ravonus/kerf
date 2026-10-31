@@ -166,9 +166,9 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), origins: 
 response limit in seconds: streams end 10 s earlier and resume. `stale` is true when the server runs a newer build
 than this tab: offer a reload.
 
-`redisBus({ url })` (`@weft/start/bus/redis`, needs `ioredis`), `natsBus({ servers })` (`@weft/start/bus/nats`, needs
-`@nats-io/transport-node`) and `durableObjectBus({ namespace })` (`@weft/start/bus/durable-object`, the
-`cloudflare_durable` preset only) plug in the same way.
+`weft add @weft/realtime-redis` or `@weft/realtime-nats` puts a bus in `plugins`, on `REDIS_URL` or `NATS_URL`; a `bus` set here
+still wins. `durableObjectBus({ namespace })` (`@weft/realtime-durable-object`, the `cloudflare_durable` preset only) needs a
+binding, so it's set here.
 
 **Testing** uses the real hub and client over `weft/test`'s fake transport: `await net.settle()`, then
 `await net.push(prices, message)`, `await net.poke('todos')`, `await net.drop()`, `net.offline()`, `net.reconnects()`,
