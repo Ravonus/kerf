@@ -1,0 +1,7 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* synced-state indicator: saved · saving · offline (queued) */
+:where([data-scope="sync"]) { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--warp-color-text-subtle); }
+:where([data-scope="sync"] svg[data-icon]) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="sync"][data-state="offline"]) { color: var(--warp-color-caution-text); }
+}

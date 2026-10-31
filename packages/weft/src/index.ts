@@ -148,7 +148,9 @@ function run(node: Computation) {
   try {
     const v = node.effect === 2 ? (node.fn as () => unknown)() : node.fn(node.v) // a hole's value takes no arguments
     if (node.effect === 2 && live(v)) {
-      settle(computation(() => unwrap(v), 1, node.a)) // its reads are its own, or a change here would rebuild what `fn` made
+      // its reads are its own, or a change here would rebuild what `fn` made; a function gets a level of its own, as it
+      // may build the very component whose fragment holds the live part
+      settle(typeof v === 'function' ? computation(v as () => unknown, 2, node.a) : computation(() => unwrap(v), 1, node.a))
     } else if (node.a) {
       listener = null
       node.a(v, node.v)

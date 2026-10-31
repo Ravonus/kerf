@@ -1,0 +1,21 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* OTP: 03's one input over six painted cells (warp-inputs.css) owns the layout, the
+   active-cell pin and the caret. Flows adds only the outcomes: a wrong code pins every
+   cell critical; an accepted one cascades the sweep L→R in positive (--n per cell). */
+:where([data-scope="otp"][data-invalid] [data-part="cell"]) { background: var(--warp-color-field-invalid); }
+:where([data-scope="otp"][data-invalid] [data-part="cell"] > [data-part="sweep"]) { clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-critical-solid); }
+:where([data-scope="otp"][data-state="success"] [data-part="cell"] > [data-part="sweep"]) {
+  clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-positive-solid); opacity: 1;
+  transition-delay: calc(var(--n, 0) * var(--warp-flow-cascade));
+}
+:where([data-scope="otp"][data-state="success"] [data-part="cell"] > [data-part="sweep-base"]) {
+  clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); transition-delay: calc(var(--n, 0) * var(--warp-flow-cascade));
+}
+:where([data-scope="otp"][data-state="success"] [data-part="char"]) { color: var(--warp-color-positive-text); transition: color var(--warp-duration-base) calc(var(--n, 0) * var(--warp-flow-cascade)); }
+:where([data-scope="otp"][data-state="pending"]) { opacity: 0.7; }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"])) :where([data-scope="otp"][data-state="success"] [data-part="cell"] > *) { transition-delay: 0ms; }
+}
+:where([data-motion="reduce"]) :where([data-scope="otp"][data-state="success"] [data-part="cell"] > *) { transition-delay: 0ms; }
+}

@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* activity feed: a quiet timeline with a hairline spine */
+:where([data-scope="activity-feed"] > header) { display: flex; justify-content: space-between; align-items: center; gap: var(--warp-space-related); }
+}

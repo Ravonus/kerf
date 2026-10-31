@@ -162,9 +162,9 @@
   display: grid; flex: none; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--warp-radius-control);
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
 }
-:where([data-part="mark"][data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
-:where([data-part="mark"][data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
-:where([data-part="mark"][data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
 :where([data-part="mark"]:not([data-scope="meter"] *) svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 :where([data-part="mark"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
 
@@ -226,7 +226,7 @@
 :where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep"]) { inset: -3px; border-width: 2px; }
 :where([data-scope="tour"] [data-part="spotlight"] > [data-part="sweep-base"]) { inset: -3px; }
 :where([data-scope="tour"] [data-part="card"]) {
-  position: absolute; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
+  position: absolute; box-sizing: border-box; pointer-events: auto; inline-size: min(300px, calc(100% - 32px)); display: grid; gap: 10px;
   padding: 16px; background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border);
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3);
   transition: top var(--warp-duration-slow) var(--warp-ease-in-out), left var(--warp-duration-slow) var(--warp-ease-in-out);
@@ -323,29 +323,29 @@
 :where([data-scope="plans"]) { container: plans / inline-size; display: grid; gap: var(--warp-space-group); }
 :where([data-scope="plans"] [data-part="grid"]) { display: grid; gap: 12px; }
 @container plans (min-width: 640px) { :where([data-scope="plans"] [data-part="grid"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-:where([data-scope="plan"]) {
+:where([data-scope="plan-card"]) {
   position: relative; display: grid; align-content: start; gap: 10px; padding: 18px; cursor: pointer;
   border-radius: var(--warp-radius-surface); --warp-sweep-radius: var(--warp-radius-surface);
   background: var(--warp-color-surface-raised); transition: background-color var(--warp-duration-base) var(--warp-ease-out), box-shadow var(--warp-duration-base);
 }
-:where([data-scope="plan"] > [data-part="sweep-base"]) { color: var(--warp-color-sweep-base); }   /* 01 m4: the resting edge is the sweep-base token, not border-strong */
-:where([data-scope="plan"]:has(input:checked)) { background: color-mix(in oklab, var(--warp-color-accent-soft) 45%, var(--warp-color-surface-raised)); box-shadow: var(--warp-elevation-2); }
-:where([data-scope="plan"]:has(input:checked) > [data-part="sweep"]) { clip-path: inset(0 round var(--warp-sweep-radius)); opacity: 1; }
-:where([data-scope="plan"]:has(input:checked) > [data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
-:where([data-scope="plan"] input) { position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; }
-:where([data-scope="plan"]:has(input:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
-:where([data-scope="plan"] [data-part="name"]) { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
-:where([data-scope="plan"] [data-part="price"]) { display: flex; align-items: baseline; gap: 6px; }
-:where([data-scope="plan"] [data-part="price"] b) { font: var(--warp-text-title-weight) calc(var(--warp-text-title-size) * 0.95)/1 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); font-variant-numeric: tabular-nums; }
-:where([data-scope="plan"] [data-part="price"] span) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
-:where([data-scope="plan"] ul) { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
-:where([data-scope="plan"] li) { display: flex; gap: 8px; align-items: baseline; }
-:where([data-scope="plan"] li)::before { content: ""; flex: none; inline-size: 8px; block-size: 4px; border: solid var(--warp-color-accent-text); border-width: 0 0 1.5px 1.5px; transform: translateY(-2px) rotate(-45deg); }
-:where([data-scope="plan"] [data-part="radio"]) {
+:where([data-scope="plan-card"] > [data-part="sweep-base"]) { color: var(--warp-color-sweep-base); }   /* 01 m4: the resting edge is the sweep-base token, not border-strong */
+:where([data-scope="plan-card"]:has(input:checked)) { background: color-mix(in oklab, var(--warp-color-accent-soft) 45%, var(--warp-color-surface-raised)); box-shadow: var(--warp-elevation-2); }
+:where([data-scope="plan-card"]:has(input:checked) > [data-part="sweep"]) { clip-path: inset(0 round var(--warp-sweep-radius)); opacity: 1; }
+:where([data-scope="plan-card"]:has(input:checked) > [data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+:where([data-scope="plan-card"] input) { position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; }
+:where([data-scope="plan-card"]:has(input:focus-visible)) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="plan-card"] [data-part="name"]) { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
+:where([data-scope="plan-card"] [data-part="price"]) { display: flex; align-items: baseline; gap: 6px; }
+:where([data-scope="plan-card"] [data-part="price"] b) { font: var(--warp-text-title-weight) calc(var(--warp-text-title-size) * 0.95)/1 var(--warp-text-title-font); letter-spacing: var(--warp-text-title-tracking); font-variant-numeric: tabular-nums; }
+:where([data-scope="plan-card"] [data-part="price"] span) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="plan-card"] ul) { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="plan-card"] li) { display: flex; gap: 8px; align-items: baseline; }
+:where([data-scope="plan-card"] li)::before { content: ""; flex: none; inline-size: 8px; block-size: 4px; border: solid var(--warp-color-accent-text); border-width: 0 0 1.5px 1.5px; transform: translateY(-2px) rotate(-45deg); }
+:where([data-scope="plan-card"] [data-part="radio"]) {
   inline-size: 18px; block-size: 18px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--warp-color-border-control);
   transition: box-shadow var(--warp-duration-base) var(--warp-ease-pop);
 }
-:where([data-scope="plan"]:has(input:checked) [data-part="radio"]) { box-shadow: inset 0 0 0 5px var(--warp-color-accent-solid); }
+:where([data-scope="plan-card"]:has(input:checked) [data-part="radio"]) { box-shadow: inset 0 0 0 5px var(--warp-color-accent-solid); }
 
 /* usage meters: the used part fills through the rail; tick at the warn line */
 :where([data-scope="usage"]) { display: grid; gap: 14px; }
@@ -463,8 +463,8 @@
 /* shipping choice cards reuse the plan card's selection rule */
 :where([data-scope="choice"]) { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; min-inline-size: 0; }
 :where([data-scope="choice"] legend) { padding: 0; margin-block-end: 10px; font-size: var(--warp-text-label-size); font-weight: 500; }
-:where([data-scope="choice"] [data-scope="plan"]) { grid-template-columns: auto 1fr auto; align-items: center; padding: 14px 16px; gap: 12px; }
-:where([data-scope="choice"] [data-scope="plan"] small) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="choice"] [data-scope="plan-card"]) { grid-template-columns: auto 1fr auto; align-items: center; padding: 14px 16px; gap: 12px; }
+:where([data-scope="choice"] [data-scope="plan-card"] small) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 
 /* payment: the provider's iframe lives in a fixed slot. warp styles the slot,
    never the provider's fields; it passes tokens to the provider's appearance API. */
@@ -495,7 +495,7 @@
 /* ---------------------------------------------------------------------------
    7 · SHORTCUTS overlay (`?`): a Dialog with a filter and grouped kbd rows
    ------------------------------------------------------------------------ */
-:where([data-scope="shortcuts"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="shortcuts"]) { display: grid; gap: var(--warp-space-group); padding-block-start: 6px; }
 :where([data-scope="shortcuts"] [data-part="groups"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 :where([data-scope="shortcuts"] section h4) { margin: 0 0 6px; font: 500 var(--warp-text-eyebrow-size)/1 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: uppercase; color: var(--warp-color-text-subtle); }
 :where([data-scope="shortcuts"] dl) { margin: 0; display: grid; }

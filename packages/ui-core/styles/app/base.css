@@ -1,0 +1,109 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* Sweep colours come from warp.css (the part's `color`): full accent over the ink base for fields and
+   controls, critical when invalid. App surfaces only override the base, and only with `color:`. */
+:where([data-scope="field"] [data-part="control"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: 0; }
+/* the arrival grammar: one enter for every real-time item, one sweep per item */
+:where([data-arrive]) {
+  position: relative;
+  animation: warp-arrive var(--warp-arrive-duration) var(--warp-ease-out) both;
+}
+:where([data-arrive])::after {
+  content: ""; position: absolute; inset: 0 0 auto; block-size: var(--warp-border-emphasis); pointer-events: none;
+  background: var(--warp-color-sweep); clip-path: inset(0 100% 0 0);
+  animation: warp-arrive-sweep calc(var(--warp-arrive-sweep) * 2) var(--warp-sweep-ease) var(--warp-duration-fast) both;
+}
+:where([data-expression="vivid"] [data-arrive], [data-flair="sweep"] [data-arrive])::after {
+  inset: 0; block-size: auto; background: none; border: var(--warp-sweep-width) solid var(--warp-color-sweep); border-radius: inherit;
+}
+/* a one-shot sweep on any host (drop commit, message sent, tool done): warpSweep.confirm() runs the
+   host through in → out (L→R both ways) and sets data-confirm for the pass, so it shows even on
+   hosts whose hover sweep is dial-gated (--_on: 0) */
+:where([data-sweep])[data-confirm] { --_on: 1; }
+/* app toolbar (shared by calendar, inbox, room, chat headers) */
+:where([data-part="app-bar"]) {
+  display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: 52px;
+  padding: var(--warp-space-related) var(--warp-space-group);
+  border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface);
+}
+:where([data-part="app-bar"] [data-part="app-title"]) {
+  margin: 0; font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight);
+  font-size: calc(var(--warp-text-heading-size) * (1 + 0.1 * var(--warp-x))); letter-spacing: var(--warp-text-title-tracking); line-height: 1.1;
+}
+:where([data-part="app-bar"] [data-part="spacer"]) { flex: 1; }
+:where([data-part="eyebrow"]) {
+  font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: 0; }
+/* category colours (data palette, never status) */
+:where([data-cal="1"]) { --_c: var(--warp-color-data-1); }
+:where([data-cal="2"]) { --_c: var(--warp-color-data-2); }
+:where([data-cal="3"]) { --_c: var(--warp-color-data-3); }
+:where([data-cal="4"]) { --_c: var(--warp-color-data-4); }
+:where([data-cal="5"]) { --_c: var(--warp-color-data-5); }
+:where([data-cal="6"]) { --_c: var(--warp-color-data-6); }
+:where([data-cal="7"]) { --_c: var(--warp-color-data-7); }
+:where([data-cal="8"]) { --_c: var(--warp-color-data-8); }
+/* audio level: 3 bars driven by a --level custom property (0..1), no loop */
+:where([data-part="level"]) { display: inline-flex; align-items: center; gap: 2px; block-size: 12px; }
+:where([data-part="level"] i) { inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 9px * var(--level, 0) * var(--k, 1)); transition: block-size 90ms linear; }
+:where([data-part="level"] i:nth-child(1), [data-part="level"] i:nth-child(3)) { --k: 0.6; }
+:where([data-part="countdown"]) { display: flex; gap: 6px; font: 500 28px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+:where([data-part="countdown"] span) { display: grid; justify-items: center; gap: 6px; min-inline-size: 52px; padding: 10px 6px 8px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); }
+:where([data-part="countdown"] small) { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+/* tool call card: running → done | failed | needs approval. The sweep host is the frame around the
+   <details> (review 01 M3: parts inside a closed <details> rendered as a 2px sliver) */
+:where([data-part="tool-frame"]) { position: relative; display: grid; border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); }
+:where([data-part="tool-frame"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: -1px; z-index: 4; }
+:where([data-part="tool-frame"]) > :where([data-part="sweep-base"]) { color: var(--warp-color-border); }
+:where([data-scope="tool-call"]) > :where([data-part="sweep"], [data-part="sweep-base"]) { inset: 0; }
+:where([data-presence-color="1"]) { --_pc: var(--warp-color-data-1); }
+:where([data-presence-color="2"]) { --_pc: var(--warp-color-data-2); }
+:where([data-presence-color="3"]) { --_pc: var(--warp-color-data-3); }
+:where([data-presence-color="4"]) { --_pc: var(--warp-color-data-4); }
+:where([data-presence-color="5"]) { --_pc: var(--warp-color-data-5); }
+:where([data-presence-color="7"]) { --_pc: var(--warp-color-data-7); }
+:where([data-presence-color="6"]) { --_pc: var(--warp-color-data-6); }
+:where([data-presence-color="8"]) { --_pc: var(--warp-color-data-8); }
+/* a peer's selection: their colour as a hairline outline + a name flag */
+:where([data-peer-selection]) { position: relative; outline: var(--warp-border-emphasis) solid var(--_pc); outline-offset: 2px; border-radius: var(--warp-radius-mark); }
+:where([data-peer-selection])::before {
+  content: attr(data-peer-selection); position: absolute; inset-inline-end: -2px; inset-block-start: -20px; padding: 2px 6px; border-radius: var(--warp-radius-mark) var(--warp-radius-mark) 0 0;
+  background: color-mix(in oklab, var(--_pc) 70%, var(--warp-color-text)); color: var(--warp-color-surface); font: 500 10.5px/1.3 var(--warp-text-body-font); white-space: nowrap;
+}
+:where(mark[data-peer-text]) { background: color-mix(in oklab, var(--_pc) 22%, transparent); color: inherit; border-inline-end: 2px solid var(--_pc); }
+/* edit lock: someone else holds this field */
+:where([data-locked-by]) { position: relative; }
+/* following: the followed peer's colour frames the whole viewport */
+:where([data-following]) { box-shadow: inset 0 0 0 calc(var(--warp-border-emphasis) + 1px) var(--_pc); }
+/* InteractionRelay: a peer's press/hover replayed with the component's own visuals + a colour ring */
+:where([data-relay]) { outline: var(--warp-border-emphasis) solid var(--_pc); outline-offset: 2px; transition: outline-color var(--warp-duration-base); }
+:where([data-motion="reduce"] [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+}
+/* `hidden` must beat component display rules */
+:where([data-scope][hidden], [data-part][hidden]) { display: none; }
+@media (forced-colors: active) {
+:where([data-arrive])::after,
+  :where([data-scope="calendar"] [data-part="now"])::before,
+  :where([data-scope="calendar"] [data-part="now-label"]),
+  :where([data-scope="agenda"] [data-part="now"] i, [data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
+  :where([data-scope="run"] > li[data-state="done"])::before,
+  :where([data-scope="tool-call"][data-state="running"])::before,
+  :where([data-scope="versions"] li[data-named] > i),
+  :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
+:where([data-scope="speech"] [data-part="wave"] i, [data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
+}
+@keyframes warp-arrive {
+  from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * -1); }
+}
+@keyframes warp-arrive-sweep {
+  0%   { clip-path: inset(0 100% 0 0); }
+  48%  { clip-path: inset(0 0 0 0); }
+  58%  { clip-path: inset(0 0 0 0); }
+  100% { clip-path: inset(0 0 0 100%); }
+}
+}

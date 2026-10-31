@@ -15,7 +15,7 @@ test('styles/ is the split of the current spec (node scripts/split-css.mjs)', ()
 })
 
 test('every rule of the rule-routed families ships verbatim, in spec order, and every rule ships somewhere', () => {
-  for (const [family, source] of [['data', 'warp-data.css'], ['layout', 'warp-layout.css']]) {
+  for (const [family, source] of [['data', 'warp-data.css'], ['layout', 'warp-layout.css'], ['app', 'warp-app.css'], ['flows', 'warp-flows.css']]) {
     const css = spec(source)
     const shipped = new Set()
     for (const [name, list] of routed[family].files) {
@@ -65,7 +65,7 @@ test('each file parses as CSS and keeps its layer', () => {
     if (!name.endsWith('.css')) continue
     const { warnings } = transform({ filename: name, code: Buffer.from(text), errorRecovery: true })
     expect(warnings.filter(w => !/Unknown at rule|Unexpected token/.test(w.message)), name).toEqual([])
-    if (name !== 'warp.css') expect(text).toMatch(/^\/\* generated[^\n]*\n@layer warp\.(components|inputs|inputs-rich|data|layout|tokens) \{/)
+    if (name !== 'warp.css') expect(text).toMatch(/^\/\* generated[^\n]*\n@layer warp\.(components|inputs|inputs-rich|data|layout|app|flows|tokens) \{/)
   }
 })
 

@@ -1,0 +1,29 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* sent / verified states: a mark, a heading, one sentence, one action */
+/* the result mark (auth sent/verified, alert dialogs, the gate): not 05 Meter's threshold mark */
+:where([data-part="mark"]:not([data-scope="meter"] *)) {
+  display: grid; flex: none; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--warp-radius-control);
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
+}
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
+:where([data-part="mark"]:not([data-scope="meter"] *) svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+:where([data-scope="meter"]) { display: grid; gap: 7px; }
+:where([data-scope="meter"] [data-part="head"]) { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--warp-text-label-size); }
+:where([data-scope="meter"] [data-part="head"] span) { font-family: var(--warp-font-mono); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="meter"] [data-part="rail"]) { flex: none; inline-size: 100%; block-size: calc(var(--warp-flow-rail) + 3px); overflow: visible; }
+:where([data-scope="meter"] [data-part="rail"] > [data-part="rail-fill"]) { border-radius: 99px; }
+:where([data-scope="meter"] [data-part="tick"]) { position: absolute; inset-block: -3px; inset-inline-start: var(--warn, 80%); inline-size: 1px; background: var(--warp-color-border-strong); }
+:where([data-scope="meter"] [data-part="over"]) {
+  position: absolute; inset-block: 0; inset-inline-end: 0; inline-size: var(--over, 0%); border-radius: 0 99px 99px 0;
+  background: repeating-linear-gradient(-45deg, var(--warp-color-critical-solid) 0 3px, var(--warp-color-critical-soft) 3px 6px);
+  box-shadow: inset 1px 0 0 var(--warp-color-surface-raised);
+}
+:where([data-scope="meter"][data-tone="caution"] [data-part="rail-fill"]) { background: var(--warp-color-caution-solid); }
+:where([data-scope="meter"][data-tone="critical"] [data-part="rail-fill"]) { background: var(--warp-color-critical-solid); }
+:where([data-scope="meter"] [data-part="note"]) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="meter"][data-tone="caution"] [data-part="note"]) { color: var(--warp-color-caution-text); }
+:where([data-scope="meter"][data-tone="critical"] [data-part="note"]) { color: var(--warp-color-critical-text); }
+}

@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* integrations: a grid of provider cards; status is a badge, the one action sits at the end */
+:where([data-scope="integrations"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--warp-space-related); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+}

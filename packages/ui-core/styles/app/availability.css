@@ -1,0 +1,25 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* AvailabilityEditor: weekly hours (a switch per day + time ranges) and date overrides */
+:where([data-scope="availability"]) { container: availability / inline-size; display: grid; gap: var(--warp-space-group); }
+:where([data-scope="availability"] [data-part="week"]) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="availability"] [data-part="day"]) {
+  display: grid; grid-template-columns: 156px minmax(0, 1fr); align-items: start; gap: 6px 12px; padding-block: 8px;
+  border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+}
+:where([data-scope="availability"] [data-part="ranges"]) { display: grid; gap: 6px; }
+:where([data-scope="availability"] [data-part="range"]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:where([data-scope="availability"] [data-part="range"] > [data-scope="field"]) { inline-size: 118px; flex: none; }
+:where([data-scope="availability"] [data-part="range"] > [data-part="error"]) { flex-basis: 100%; }
+:where([data-scope="availability"] [data-part="error"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-critical-text); }
+:where([data-scope="availability"] [data-part="off"]) { align-self: center; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="availability"] [data-part="overrides"]) { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="availability"] [data-part="overrides"] li) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 8px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: 13px; }
+:where([data-scope="availability"] [data-part="overrides"] small) { grid-column: 1; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+@container availability (max-width: 420px) {
+:where([data-scope="availability"] [data-part="day"]) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (forced-colors: active) {
+:where([data-scope="availability"] [aria-invalid="true"]) { outline: 3px double CanvasText; }
+}
+}
