@@ -1,0 +1,34 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* query builder ----------------------------------------------------------------- */
+:where([data-scope="query"]) { display: grid; gap: 8px; }
+:where([data-scope="query"] [data-part="group"]) {
+  display: grid; gap: 8px; padding: 10px 10px 10px 14px; border-radius: var(--warp-radius-control);
+  border: 1px solid var(--warp-color-border); border-inline-start: 3px solid var(--_dc, var(--warp-color-accent-solid)); background: var(--warp-color-surface);
+}
+:where([data-scope="query"] [data-part="group"] [data-part="group"]) { --_dc: var(--warp-color-data-7); background: var(--warp-color-surface-raised); }
+:where([data-scope="query"] [data-part="rule"]) { display: grid; grid-template-columns: 52px repeat(3, minmax(0, 1fr)) auto; gap: 6px; align-items: center; }
+:where([data-scope="query"] [data-part="join"]) { font: 500 10px/1.25 var(--warp-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warp-color-text-subtle); text-align: center; }
+:where([data-scope="query"] select, [data-scope="query"] input) {
+  min-inline-size: 0; block-size: var(--warp-control-sm); padding-inline: 8px; border: 1px solid var(--warp-color-border-control); border-radius: calc(var(--warp-radius-control) - 2px);
+  background: var(--warp-color-surface-raised); color: var(--warp-color-text); font: 400 max(12px, var(--warp-input-font-min))/var(--warp-text-control-leading) var(--warp-text-body-font);
+}
+:where([data-scope="query"] output) { display: block; padding: 10px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font: 400 12px/1.6 var(--warp-font-mono); color: var(--warp-color-text); overflow-wrap: anywhere; }
+@container (max-width: 520px) {
+:where([data-scope="query"] [data-part="rule"]) { grid-template-columns: 1fr 1fr auto; }
+:where([data-scope="query"] [data-part="join"]) { grid-column: 1 / -1; text-align: start; }
+:where([data-scope="query"] [data-part="rule"] > :is(select, input):last-of-type) { grid-column: 1 / 3; }
+}
+/* query builder: the row's remove button reaches into the group's free end padding to hit-min */
+:where([data-scope="query"] [data-rm])::after { inset-inline-end: min(0px, calc(100% - var(--warp-hit-min))); }
+/* query selects and inputs are sm (36px on touch): a transparent block band + negative margins make a 44px
+   area with no layout change; the visible edge is an inset ring. Rows are 6px apart, so stacked rows
+   share the gap: each control keeps ≥ 42px (the 24px floor + spacing case) */
+:where([data-scope="query"] select, [data-scope="query"] input) {
+  --_band: max(0px, calc((var(--warp-hit-min) - var(--warp-control-sm)) / 2));
+  block-size: calc(var(--warp-control-sm) + 2 * var(--_band)); margin-block: calc(-1 * var(--_band));
+  border: 0 solid transparent; border-block-width: var(--_band); background-clip: padding-box; padding-inline: 9px;
+  box-shadow: inset 0 0 0 1px var(--warp-color-border-control);
+  border-radius: calc(var(--warp-radius-control) - 2px) / calc(var(--warp-radius-control) - 2px + var(--_band));
+}
+}

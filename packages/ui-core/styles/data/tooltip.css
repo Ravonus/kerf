@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* tooltip: one per chart, follows pointer or focus; tap-and-drag on touch */
+:where([data-scope="tooltip"][data-part="chart-tip"]) {
+  position: absolute; z-index: var(--warp-z-tooltip); inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
+  min-inline-size: 140px; max-inline-size: 240px; padding: 8px 10px; border-radius: var(--warp-radius-control);
+  background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
+  box-shadow: var(--warp-elevation-2); font-size: var(--warp-text-caption-size); line-height: 1.4; font-variant-numeric: tabular-nums;
+  opacity: 0; transform: translate(var(--x, 0), var(--y, 0));
+  transition: opacity var(--warp-duration-fast) var(--warp-ease-out), transform calc(var(--warp-duration-fast) * var(--warp-motion-scale)) var(--warp-ease-out);
+}
+:where([data-scope="tooltip"][data-part="chart-tip"][data-open]) { opacity: 1; }
+:where([data-scope="tooltip"] [data-part="tip-title"]) { font-weight: 600; margin-block-end: 4px; }
+:where([data-scope="tooltip"] [data-part="tip-row"]) { display: flex; align-items: center; gap: 7px; }
+:where([data-scope="tooltip"] [data-part="tip-row"] i) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_dc); flex: none; }
+:where([data-scope="tooltip"] [data-part="tip-row"] b) { margin-inline-start: auto; font-weight: 600; padding-inline-start: 12px; }
+}

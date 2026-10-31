@@ -1,0 +1,120 @@
+import { isSheet, messages, pickerPanel, todayIso, uid, type ChangeReason, type Presentation } from '@weft/ui-core'
+import { Box, onMount, state, untrack, watch, type State } from 'weft'
+import { Button } from './Button'
+import { Field, type FieldProps } from './Field'
+import type { IconName } from './Icon'
+import { Icon } from './Icon'
+import { use } from './use'
+import './fields'
+import '@weft/ui-core/styles/rich/body.css'
+import '@weft/ui-core/styles/rich/helpers.css'
+import '@weft/ui-core/styles/rich/pick.css'
+import '@weft/ui-core/styles/rich/segments.css'
+import '@weft/ui-core/styles/rich/popover.css'
+
+/** 04 §1.1: a State to bind, or a plain value (controlled) or defaultValue; `onValueChange` hears every change. */
+export interface Bindable<T> {
+  value?: State<T> | T
+  defaultValue?: T
+  onValueChange?: (v: T, reason: ChangeReason) => void
+}
+export interface Openable {
+  open?: State<boolean> | boolean
+  defaultOpen?: boolean
+  onOpenChange?: (o: boolean) => void
+}
+export type RichFieldProps = Omit<FieldProps, 'value' | 'defaultValue'> & {
+  required?: boolean
+  name?: string
+  locale?: string
+  /** Pins "today" (server render, tests); the browser's clock otherwise. */
+  today?: string
+  presentation?: Presentation
+}
+
+const isState = (v: any): v is State<any> => v instanceof Box
+
+/** One read/write over the three ways a value can be held. */
+export function bindable<T>(value: () => State<T> | T | undefined, initial: () => T | undefined, fallback: T, onChange?: () => ((v: T, r: ChangeReason) => void) | undefined) {
+  const own = state<T>(untrack(() => { const v = value(); return (isState(v) ? undefined : (v as T | undefined)) ?? initial() ?? fallback }))
+  return {
+    get value(): T {
+      const v = value()
+      return isState(v) ? v.value : v !== undefined ? (v as T) : own.value
+    },
+    set(next: T, reason: ChangeReason = 'programmatic') {
+      const v = untrack(value)
+      if (isState(v)) v.value = next
+      else own.value = next
+      untrack(onChange ?? (() => undefined))?.(next, reason)
+    },
+  }
+}
+
+/**
+ * The locale and today a picker renders with. The server and the hydrating client must agree, so both start from the
+ * prop (or en-US and the server's clock, which weft carries over in the state payload); after mount the document's lang
+ * and the browser's clock take over, a microtask later so hydration itself writes nothing.
+ */
+export function usePickerEnv(locale: () => string | undefined, today: () => string | undefined) {
+  const loc = state(untrack(locale) ?? 'en-US')
+  const now = state(untrack(today) ?? todayIso())
+  onMount(() => {
+    queueMicrotask(() => {
+      if (!untrack(locale)) loc.value = document.documentElement.lang || navigator.language || 'en-US'
+      if (!untrack(today)) now.value = todayIso()
+    })
+    watch(locale, l => { if (l) loc.value = l })
+  })
+  return { locale: loc, today: now }
+}
+
+/** The open flag of a panel, from `open`, `defaultOpen` and the panel's first render: contents are built on first open. */
+export function useOpen(open: () => State<boolean> | boolean | undefined, defaultOpen: () => boolean | undefined, onChange: () => ((o: boolean) => void) | undefined) {
+  const flag = bindable<boolean>(open, defaultOpen, false, () => (o: boolean) => untrack(onChange)?.(o))
+  const built = state(untrack(() => flag.value))
+  return {
+    get value() { return flag.value },
+    get built() { return built.value },
+    set(v: boolean) { if (v) built.value = true; flag.set(v) },
+  }
+}
+
+/**
+ * The panel of a picker: a child of the control, so the label stays up and the sweep stays in while it is open (04
+ * "Popovers stay attached"). Anatomy from the specimen: sweep · handle · sheet-head (title, Done) · content.
+ */
+export function Panel({ label, open, trigger, presentation, align, kind, children }: { label: string; open: { value: boolean; built: boolean; set(v: boolean): void }; trigger: () => HTMLElement; presentation?: Presentation; align?: 'start' | 'end'; kind?: string; children: () => any }) {
+  let panel: HTMLDialogElement | undefined
+  const done = () => open.set(false)
+  use(pickerPanel, () => panel, () => ({ open: open.value, trigger: trigger(), presentation, align, onClose: done }))
+  return (
+    <dialog ref={(n: any) => (panel = n)} data-scope="popover" data-kind={kind} data-align={align} data-sweep="" data-phase="idle" popover="manual" aria-label={label}>
+      <span data-part="sweep" aria-hidden="true"></span>
+      <div data-part="handle" aria-hidden="true"></div>
+      <div data-part="sheet-head"><span>{label}</span><Button emphasis="soft" size="sm" data-part="done" onClick={done}>Done</Button></div>
+      {open.built && children()}
+    </dialog>
+  )
+}
+
+/** The trigger at the end of a composite: a calendar or clock icon button (aria-haspopup, aria-expanded). */
+export function Trigger({ el, icon, label, open, disabled, onToggle }: { el?: (el: HTMLButtonElement) => void; icon: IconName; label: string; open: boolean; disabled?: boolean; onToggle: () => void }) {
+  return (
+    <button ref={(n: any) => el?.(n)} type="button" data-part="trigger" aria-haspopup="dialog" aria-expanded={open ? 'true' : 'false'} aria-label={label} disabled={disabled} onClick={onToggle}>
+      <Icon name={icon} />
+    </button>
+  )
+}
+
+/** A hidden input with the ISO value, so a native form posts it. */
+export function Hidden({ name, value }: { name?: string; value: () => string }) {
+  return <>{name && <input type="hidden" name={name} value={value()} />}</>
+}
+
+/** A composite in the field shell: a body role=group named by the visible label; segments keep their short names. */
+export function Composite({ control, ...props }: any) {
+  return <Field {...props} group control={control} />
+}
+
+export { isSheet, messages, uid }

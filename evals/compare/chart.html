@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stack comparison</title>
+<style>
+:root { color-scheme: light; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #6f6e69; --line: #e4e3df;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #7a5bd0; --p1: #2a78d6; --p2: #eb6834; --p3: #1baf7a; --p4: #b9b8b1; }
+@media (prefers-color-scheme: dark) { :root { color-scheme: dark; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #9d9c92; --line: #33332f;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #8a6fe0; --p1: #3987e5; --p2: #d95926; --p3: #199e70; --p4: #5d5c56; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; } h2 { font-size: 17px; margin: 0 0 2px; } p { margin: 0; color: var(--ink-2); }
+section { margin-top: 36px; } .note { font-size: 13px; color: var(--ink-3); margin-bottom: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin: 8px 0; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; } svg text { fill: var(--ink-2); font-size: 12px; }
+#tip { position: fixed; pointer-events: none; display: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; box-shadow: 0 4px 16px #0003; z-index: 2; }
+details { margin-top: 10px; font-size: 13px; color: var(--ink-2); } table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.scroll { overflow-x: auto; } th, td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; } th:first-child, td:first-child { text-align: left; }
+</style></head><body><main>
+<h1>Stack comparison</h1><p id="sub"></p>
+<div class="legend" id="legend"></div>
+<section><h2>What the browser downloads</h2><div class="note">JS + CSS, brotli, KB. Lower is better.</div><div id="size"></div></section>
+<section><h2>Load, by phase</h2><div class="note">Main-thread ms under 4x CPU throttle. Lower is better.</div><div id="phaseLegend" class="legend"></div><div id="load"></div></section>
+<section class="grid"><div><h2>Download as screens grow</h2><div class="note">KB brotli against number of screens.</div><div id="grow"></div></div>
+<div><h2>DOM elements as rows grow</h2><div class="note">Elements on the page against rows on it.</div><div id="els"></div></div></section>
+<section class="grid"><div><h2>Sort, as rows grow</h2><div class="note">CPU ms for one sort, 4x throttle.</div><div id="sort"></div></div>
+<div><h2>Live cell, as rows grow</h2><div class="note">CPU ms for one changed value, 4x throttle.</div><div id="live"></div></div></section>
+<section id="trend"><h2>Over time</h2><div class="note">JS + CSS brotli per measure.mjs run.</div><div id="time"></div></section>
+<section><h2>Every number</h2><details><summary>Show the table</summary><div class="scroll" id="table"></div></details></section>
+</main><div id="tip"></div>
+<script>
+const { results, history } = /*DATA*/null
+const keys = Object.keys(results), color = k => `var(--s${keys.indexOf(k) + 1})`, label = k => results[k].label
+const kb = n => (n / 1024).toFixed(1), $ = id => document.getElementById(id)
+const NS = 'http://www.w3.org/2000/svg'
+const el = (n, a = {}, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p?.append(e); return e }
+const txt = (p, x, y, s, a = {}) => { const t = el('text', { x, y, ...a }, p); t.textContent = s; return t }
+const tip = $('tip')
+const hover = (e, html) => { e.addEventListener('pointermove', v => { tip.innerHTML = html; tip.style.display = 'block'; tip.style.left = Math.min(v.clientX + 12, innerWidth - 220) + 'px'; tip.style.top = v.clientY + 12 + 'px' }); e.addEventListener('pointerleave', () => (tip.style.display = 'none')) }
+const legend = (id, items) => { $(id).innerHTML = items.map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join('') }
+const nice = m => { const p = 10 ** Math.floor(Math.log10(m)), s = [1, 2, 5, 10].find(x => x * p >= m / 4); return s * p }
+
+function bars(id, rows, unit) { // [{ name, parts: [[value, colour, title]] }]
+  const W = 900, row = 34, left = 150, max = Math.max(...rows.map(r => r.parts.reduce((n, p) => n + p[0], 0))), svg = el('svg', { viewBox: `0 0 ${W} ${rows.length * row}`, role: 'img', 'aria-label': id }, $(id))
+  const x = v => v / max * (W - left - 90)
+  rows.forEach((r, i) => {
+    const y = i * row + 5; txt(svg, 0, y + 16, r.name); let at = left, total = 0
+    r.parts.forEach(([v, c, t], k) => { const w = Math.max(x(v) - 2, 1), last = k === r.parts.length - 1
+      const b = el('path', { d: last ? `M${at} ${y}h${w - 4}a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-${w - 4}z` : `M${at} ${y}h${w}v22h-${w}z`, fill: c }, svg); hover(b, `<b>${r.name}</b><br>${t}: ${v.toFixed?.(1) ?? v} ${unit}`); at += x(v); total += v })
+    txt(svg, at + 6, y + 16, `${Math.round(total * 10) / 10} ${unit}`, { style: 'fill:var(--ink)' })
+  })
+}
+function lines(id, xs, get, unit) { // one x per entry of xs, positioned evenly; a stack missing a point stops there
+  const W = 440, H = 240, L = 44, R = 96, T = 10, B = 26, svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': id }, $(id))
+  const vals = keys.flatMap(k => xs.map(x => get(k, x))).filter(v => v != null), max = Math.max(...vals) * 1.05, step = nice(max)
+  const X = i => L + i / (xs.length - 1) * (W - L - R), Y = v => H - B - v / max * (H - T - B)
+  for (let v = 0; v <= max; v += step) { el('line', { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: 'var(--line)' }, svg); txt(svg, L - 6, Y(v) + 4, v, { 'text-anchor': 'end' }) }
+  xs.forEach((x, i) => txt(svg, X(i), H - 8, x, { 'text-anchor': 'middle' }))
+  const ends = []
+  for (const k of keys) {
+    const pts = xs.map((x, i) => [i, get(k, x)]).filter(p => p[1] != null)
+    el('polyline', { points: pts.map(([i, v]) => `${X(i)},${Y(v)}`).join(' '), fill: 'none', stroke: color(k), 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg)
+    for (const [i, v] of pts) { el('circle', { cx: X(i), cy: Y(v), r: 4, fill: color(k), stroke: 'var(--surface)', 'stroke-width': 2 }, svg); hover(el('circle', { cx: X(i), cy: Y(v), r: 12, fill: 'transparent' }, svg), `<b>${label(k)}</b><br>${xs[i]}: ${Math.round(v * 10) / 10} ${unit}`) }
+    const [i, v] = pts.at(-1); ends.push({ k, x: X(i) + 8, y: Y(v) + 4, stops: i < xs.length - 1, px: X(i), py: Y(v) })
+  }
+  const short = k => label(k).replace(/ \+.*/, '') + (label(k).includes('Zustand') ? '+Z' : label(k).includes('MUI') ? '+MUI' : '')
+  for (const e of ends.filter(e => e.stops)) txt(svg, e.px, e.py - 10, short(e.k), { 'text-anchor': 'middle' }) // a series that stops early
+  const edge = ends.filter(e => !e.stops).sort((a, b) => a.y - b.y)
+  edge.forEach((e, i) => { if (i && e.y - edge[i - 1].y < 14) e.y = edge[i - 1].y + 14 })
+  for (let i = edge.length - 1, floor = H - B - 2; i >= 0; i--) { edge[i].y = Math.min(edge[i].y, floor); floor = edge[i].y - 14 }
+  edge.forEach(e => txt(svg, e.x, e.y, short(e.k)))
+}
+const first = keys[0], rowsOf = Object.keys(results[first].scale), screens = Object.keys(results[first].sweep)
+$('sub').textContent = `${keys.length} stacks, one dashboard, ${history.at(-1)?.commit ?? ''} on ${new Date(history.at(-1)?.at ?? Date.now()).toDateString()}. The same script passes on all of them.`
+legend('legend', keys.map(k => [color(k), label(k)]))
+bars('size', keys.map(k => ({ name: label(k), parts: [[(results[k].size.js.br + results[k].size.css.br) / 1024, color(k), 'JS + CSS']] })), 'KB')
+const PH = [['script', 'Script', '--p1'], ['style', 'Style', '--p2'], ['layout', 'Layout', '--p3'], ['other', 'Paint and other', '--p4']]
+legend('phaseLegend', PH.map(p => [`var(${p[2]})`, p[1]]))
+bars('load', keys.map(k => { const l = results[k].load, v = { script: l.scriptMs, style: l.styleMs, layout: l.layoutMs, other: Math.max(l.taskMs - l.scriptMs - l.styleMs - l.layoutMs, 0) }; return { name: label(k), parts: PH.map(p => [v[p[0]], `var(${p[2]})`, p[1]]) } }), 'ms')
+lines('grow', screens, (k, n) => (results[k].sweep[n].js.br + results[k].sweep[n].css.br) / 1024, 'KB')
+lines('els', rowsOf, (k, n) => results[k].scale[n]?.elements, 'elements')
+lines('sort', rowsOf, (k, n) => results[k].scale[n]?.sort.ms, 'ms')
+lines('live', rowsOf, (k, n) => results[k].scale[n]?.live.ms, 'ms')
+if (history.length > 1) { const xs = history.map((h, i) => `${h.commit}${' '.repeat(i % 2)}`); const by = Object.fromEntries(xs.map((x, i) => [x, history[i]])); lines('time', xs, (k, x) => { const s = by[x].stacks[k]; return s ? (s.js + s.css) / 1024 : null }, 'KB') } else $('trend').querySelector('.note').textContent = 'Starts with the second measure.mjs run.'
+const head = ['', ...keys.map(label)], cells = [['JS br KB', k => kb(results[k].size.js.br)], ['CSS br KB', k => kb(results[k].size.css.br)], ['JS gz KB', k => kb(results[k].size.js.gz)], ['CSS gz KB', k => kb(results[k].size.css.gz)], ['App lines', k => results[k].lines], ['FCP ms', k => results[k].load.fcpMs], ['Heap MB', k => results[k].load.heapMB],
+  ...Object.keys(results[first].parity.steps).flatMap(s => [[`${s}: DOM`, k => results[k].parity.steps[s].dom ?? '—'], [`${s}: ms`, k => results[k].parity.steps[s].ms ?? '—']]),
+  ...rowsOf.flatMap(n => [[`${n} rows: elements`, k => results[k].scale[n]?.elements ?? '—'], [`${n} rows: comments`, k => results[k].scale[n]?.comments ?? '—'], [`${n} rows: load ms`, k => results[k].scale[n]?.load ?? '—'], [`${n} rows: sort ms`, k => results[k].scale[n]?.sort.ms ?? '—'], [`${n} rows: live ms`, k => results[k].scale[n]?.live.ms ?? '—']])]
+$('table').innerHTML = `<table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${cells.map(([n, f]) => `<tr><td>${n}</td>${keys.map(k => `<td>${f(k)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+</script></body></html>

@@ -1,0 +1,22 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- codeblock */
+  :where([data-scope="code"]) { font: 400 0.88em var(--warp-font-mono); padding: 0.1em 0.38em; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border); white-space: nowrap; }
+  :where([data-scope="codeblock"]) { margin: 0; border-radius: var(--warp-radius-surface); border: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-surface-sunken); overflow: hidden; min-inline-size: 0; }
+  :where([data-scope="codeblock"] [data-part="head"]) { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); font-size: var(--warp-text-caption-size); }
+  :where([data-scope="codeblock"] [data-part="head"] .sp) { flex: 1; }
+  :where([data-scope="codeblock"] [data-part="file"]) { font-family: var(--warp-font-mono); color: var(--warp-color-text); }
+  :where([data-scope="codeblock"] [data-part="lang"]) { font: 500 10px/1 var(--warp-font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface); color: var(--warp-color-text-subtle); }
+  :where([data-scope="codeblock"] [data-act="copy"]) { gap: 6px; }
+  :where([data-scope="codeblock"] [data-act="copy"][data-done]) { color: var(--warp-color-accent-text); }
+  :where([data-scope="codeblock"] [data-act="wrap"][aria-pressed="true"]) { color: var(--warp-color-accent-text); }
+  :where([data-scope="codeblock"] pre) { margin: 0; padding: 12px 14px; overflow: auto; font: 400 var(--warp-text-code-size)/1.65 var(--warp-font-mono); counter-reset: ln; outline: none; }
+  :where([data-scope="codeblock"] pre:focus-visible) { box-shadow: inset 0 0 0 var(--warp-focus-width) var(--warp-color-focus); }
+  :where([data-scope="codeblock"] code) { display: grid; }
+  :where([data-scope="codeblock"] [data-part="line"]) { white-space: pre; min-block-size: 1.65em; }
+  :where([data-scope="codeblock"][data-wrap] [data-part="line"]) { white-space: pre-wrap; overflow-wrap: anywhere; }
+  :where([data-scope="codeblock"] pre[data-lines] [data-part="line"])::before { counter-increment: ln; content: counter(ln); display: inline-block; inline-size: 2ch; margin-inline-end: 14px; text-align: end; color: var(--warp-color-text-subtle); user-select: none; }
+  :where([data-scope="codeblock"] .c) { color: var(--warp-color-text-subtle); font-style: italic; }
+  :where([data-scope="codeblock"] .s) { color: var(--warp-color-accent-text); }
+  :where([data-scope="codeblock"] .k) { font-weight: 600; }
+}

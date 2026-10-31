@@ -1,0 +1,19 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Grid — intrinsic columns: as many as fit at `min`, never more than `cols` */
+:where([data-scope="grid"]) {
+  --_min: 16rem; --_cols: 12;
+  display: grid; gap: var(--_gap, var(--warp-space-group)); min-inline-size: 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--_min),
+    calc((100% - (var(--_cols) - 1) * var(--_gap, var(--warp-space-group))) / var(--_cols)))), 1fr));
+}
+:where([data-scope="grid"][data-min="xs"]) { --_min: 8rem; }
+:where([data-scope="grid"][data-min="sm"]) { --_min: 11rem; }
+:where([data-scope="grid"][data-min="md"]) { --_min: 16rem; }
+:where([data-scope="grid"][data-min="lg"]) { --_min: 22rem; }
+:where([data-scope="grid"][data-cols="2"]) { --_cols: 2; }
+:where([data-scope="grid"][data-cols="3"]) { --_cols: 3; }
+:where([data-scope="grid"][data-cols="4"]) { --_cols: 4; }
+:where([data-scope="grid"][data-cols="6"]) { --_cols: 6; }
+:where([data-scope="grid"] > [data-span="full"]) { grid-column: 1 / -1; }
+}

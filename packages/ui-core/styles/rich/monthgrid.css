@@ -1,0 +1,15 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- monthgrid */
+  :where([data-scope="monthgrid"]) { min-inline-size: 260px; }
+  :where([data-scope="monthgrid"] [data-part="head"]) { display: flex; align-items: center; justify-content: space-between; margin-block-end: 8px; font-family: var(--warp-text-title-font); font-size: var(--warp-text-heading-size); }
+  :where([data-scope="monthgrid"] [role="grid"]) { display: grid; gap: 4px; }
+  :where([data-scope="monthgrid"] [role="row"]) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  :where([data-scope="monthgrid"] [role="gridcell"]) { all: unset; box-sizing: border-box; display: grid; place-items: center; block-size: 40px; border-radius: var(--warp-radius-control); cursor: pointer; font-size: var(--warp-text-body-size); text-transform: capitalize; transition: background-color var(--warp-duration-fast); }
+  :where([data-pointer="coarse"] [data-scope="monthgrid"] [role="gridcell"]) { block-size: 48px; }
+  @media (pointer: coarse) { :where([data-scope="monthgrid"] [role="gridcell"]) { block-size: 48px; } }
+  :where([data-scope="monthgrid"] [role="gridcell"]:hover) { background: var(--warp-color-surface-hover); }
+  :where([data-scope="monthgrid"] [role="gridcell"][aria-current="date"]) { box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-accent-solid); }
+  :where([data-scope="monthgrid"] [role="gridcell"][aria-selected="true"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); font-weight: 500; }
+  :where([data-scope="monthgrid"] [role="gridcell"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+}

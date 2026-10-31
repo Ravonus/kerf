@@ -1,0 +1,7 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Spacer — takes the free space inside a Row or Stack, so what follows it sits at the far end.
+   No box of its own and no role; flex-basis 0 means it never forces a wrap. In a Grid or a block
+   parent it does nothing (it is a flex item only). */
+:where([data-scope="spacer"]) { flex: 1 1 0; min-inline-size: 0; min-block-size: 0; align-self: stretch; }
+}

@@ -1,0 +1,36 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* tabs-as-nav: links with aria-current, not role=tab (they change the URL) */
+:where([data-scope="tabnav"]) { min-inline-size: 0; }
+:where([data-scope="tabnav"]:not([data-sticky])) { position: relative; }
+:where([data-scope="tabnav"] ul) {
+  display: flex; gap: var(--warp-space-tight); margin: 0; padding: 0; list-style: none;
+  border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
+  overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+:where([data-scope="tabnav"] a) {
+  position: relative; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  block-size: var(--warp-control-md); padding-inline: var(--warp-pad-control);
+  color: var(--warp-color-text-subtle); text-decoration: none; font-weight: 500;
+  border-radius: var(--warp-radius-control) var(--warp-radius-control) 0 0;
+  transition: color var(--warp-duration-fast) var(--warp-ease-out), background-color var(--warp-duration-fast);
+}
+:where([data-scope="tabnav"] a:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
+:where([data-scope="tabnav"] a[aria-current]) { color: var(--warp-color-text); }
+:where([data-scope="tabnav"] a)::after {
+  content: ""; position: absolute; inset-inline: var(--warp-pad-control); inset-block-end: -1px;
+  block-size: var(--warp-border-emphasis); background: var(--warp-color-accent-solid);
+  transform: scaleX(0); transition: transform var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="tabnav"] a[aria-current])::after { transform: scaleX(1); }
+:where([data-scope="tabnav"] a:focus-visible) { outline-offset: -2px; }
+@container warp-page (min-width: 1000px) {
+:where([data-scope="tabnav"][data-orientation="auto"] ul) { flex-direction: column; gap: 2px; border: 0; }
+:where([data-scope="tabnav"][data-orientation="auto"] a) { inline-size: 100%; box-sizing: border-box; border-radius: var(--warp-radius-control); }
+:where([data-scope="tabnav"][data-orientation="auto"] a)::after {
+    inset: 6px auto 6px 0; inline-size: var(--warp-border-emphasis); block-size: auto; transform: scaleY(0);
+  }
+:where([data-scope="tabnav"][data-orientation="auto"] a[aria-current]) { background: var(--warp-color-surface-hover); }
+:where([data-scope="tabnav"][data-orientation="auto"] a[aria-current])::after { transform: scaleY(1); }
+}
+}

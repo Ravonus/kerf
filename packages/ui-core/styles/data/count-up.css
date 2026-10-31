@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* count-up + static stat row ---------------------------------------------------------------- */
+:where([data-scope="count-up"]) { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+}

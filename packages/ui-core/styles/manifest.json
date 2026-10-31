@@ -24,6 +24,12 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "anchor-nav": [
+  "layout/anchor-nav.css"
+ ],
+ "announcement": [
+  "layout/announcement.css"
+ ],
  "announcer": [
   "components/base.css"
  ],
@@ -31,11 +37,16 @@
   "inputs/pickers.css"
  ],
  "avatar": [
+  "data/avatar.css",
   "components/avatar.css",
   "components/persona.css"
  ],
  "avatar-group": [
+  "data/avatar-group.css",
   "components/avatar.css"
+ ],
+ "back-to-top": [
+  "layout/back-to-top.css"
  ],
  "backdrop": [
   "components/dialog.css"
@@ -45,7 +56,17 @@
   "components/badge.css"
  ],
  "banner": [
+  "layout/banner.css",
   "components/alert.css"
+ ],
+ "bar-list": [
+  "data/bar-list.css"
+ ],
+ "board": [
+  "layout/board.css"
+ ],
+ "breadcrumb": [
+  "layout/breadcrumb.css"
  ],
  "breadcrumbs": [
   "components/breadcrumbs.css"
@@ -56,31 +77,73 @@
   "components/button-group.css",
   "components/dialog.css",
   "components/alert.css",
-  "inputs/text.css"
+  "inputs/text.css",
+  "rich/sortable.css"
  ],
  "button-group": [
   "components/button-group.css"
  ],
+ "calendar": [
+  "rich/calendar-grid.css",
+  "rich/datetime.css",
+  "rich/gap-rows.css"
+ ],
  "callout": [
   "components/alert.css"
+ ],
+ "canvas": [
+  "layout/canvas.css"
+ ],
+ "card": [
+  "data/card.css"
+ ],
+ "card-grid": [
+  "data/card-grid.css"
+ ],
+ "center": [
+  "layout/center.css"
+ ],
+ "chart": [
+  "data/chart.css"
  ],
  "checkbox": [
   "inputs/field.css",
   "inputs/choice.css"
  ],
  "chip": [
+  "data/chip.css",
   "components/base.css",
   "components/toggle-button.css",
   "components/chip.css",
   "inputs/field.css",
-  "inputs/choice.css"
+  "inputs/choice.css",
+  "rich/recurrence.css"
+ ],
+ "chips": [
+  "data/chips.css"
  ],
  "choice-card": [
   "inputs/field.css",
   "inputs/choice.css"
  ],
+ "code": [
+  "rich/codeblock.css"
+ ],
+ "codeblock": [
+  "rich/codeblock.css",
+  "rich/code-tabs.css"
+ ],
+ "codetabs": [
+  "rich/code-tabs.css"
+ ],
  "color": [
   "inputs/range.css"
+ ],
+ "comparison": [
+  "data/comparison.css"
+ ],
+ "consent": [
+  "layout/consent.css"
  ],
  "context-menu": [
   "components/menu.css"
@@ -88,19 +151,43 @@
  "copy": [
   "components/copy.css"
  ],
+ "count-up": [
+  "data/count-up.css"
+ ],
  "countdown": [
   "components/number.css",
   "components/countdown.css"
  ],
+ "cover": [
+  "layout/cover.css"
+ ],
  "cropper": [
   "inputs/file.css"
+ ],
+ "delta": [
+  "data/delta.css"
+ ],
+ "desc": [
+  "data/desc.css"
  ],
  "dialog": [
   "components/dialog.css",
   "components/sheet.css"
  ],
+ "diff": [
+  "rich/diff.css"
+ ],
  "disclosure": [
   "components/accordion.css"
+ ],
+ "distribution": [
+  "data/distribution.css"
+ ],
+ "doc-tabs": [
+  "layout/doc-tabs.css"
+ ],
+ "docs": [
+  "layout/docs.css"
  ],
  "dropzone": [
   "inputs/field.css",
@@ -109,6 +196,13 @@
  "editable": [
   "inputs/field.css",
   "inputs/text.css"
+ ],
+ "embed": [
+  "rich/props.css"
+ ],
+ "emoji": [
+  "rich/gap-rows.css",
+  "rich/code-tabs.css"
  ],
  "empty-state": [
   "components/empty-state.css"
@@ -120,19 +214,47 @@
   "components/fab.css",
   "components/speed-dial.css"
  ],
+ "feedback": [
+  "rich/props.css"
+ ],
  "field": [
   "components/dialog.css",
   "inputs/field.css",
   "inputs/text.css",
   "inputs/choice.css",
   "inputs/range.css",
-  "inputs/pickers.css"
+  "inputs/pickers.css",
+  "rich/body.css",
+  "rich/segments.css",
+  "rich/filter-bar.css",
+  "rich/pick.css",
+  "rich/datetime.css",
+  "rich/payment.css",
+  "rich/markdown.css"
+ ],
+ "filter-panel": [
+  "data/filter-panel.css"
+ ],
+ "filterbar": [
+  "rich/filter-bar.css"
+ ],
+ "float-panel": [
+  "layout/float-panel.css"
+ ],
+ "flow": [
+  "data/flow.css"
  ],
  "form": [
   "inputs/form.css"
  ],
+ "frame": [
+  "layout/frame.css"
+ ],
  "gradient": [
   "inputs/pickers.css"
+ ],
+ "grid": [
+  "layout/grid.css"
  ],
  "group": [
   "inputs/choice.css",
@@ -164,11 +286,24 @@
  "input-group": [
   "inputs/text.css"
  ],
+ "inset": [
+  "layout/inset.css"
+ ],
+ "inspector": [
+  "layout/inspector.css"
+ ],
  "item": [
   "components/item-row.css"
  ],
  "item-list": [
   "components/item-row.css"
+ ],
+ "jsontree": [
+  "rich/code-tabs.css",
+  "rich/json-tree.css"
+ ],
+ "kanban": [
+  "data/kanban.css"
  ],
  "kbd": [
   "components/base.css"
@@ -180,6 +315,12 @@
  "knob-row": [
   "inputs/pickers.css"
  ],
+ "layers": [
+  "data/layers.css"
+ ],
+ "legend": [
+  "data/legend.css"
+ ],
  "link": [
   "components/link.css",
   "components/logo.css",
@@ -189,12 +330,27 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "linkcard": [
+  "rich/props.css"
+ ],
+ "list": [
+  "data/list.css"
+ ],
  "listbox": [
   "inputs/listbox.css",
   "inputs/pickers.css"
  ],
  "live-status": [
   "components/live-status.css"
+ ],
+ "load-more": [
+  "data/load-more.css"
+ ],
+ "locale": [
+  "layout/locale.css"
+ ],
+ "log": [
+  "rich/log.css"
  ],
  "logo": [
   "components/link.css",
@@ -205,8 +361,20 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "map": [
+  "data/map.css"
+ ],
  "mark": [
   "components/highlight.css"
+ ],
+ "markdown": [
+  "rich/markdown.css"
+ ],
+ "masonry": [
+  "layout/masonry.css"
+ ],
+ "master-detail": [
+  "layout/master-detail.css"
  ],
  "menu": [
   "components/base.css",
@@ -227,7 +395,15 @@
   "components/meta-list.css"
  ],
  "meter": [
+  "data/meter.css",
   "components/meter.css"
+ ],
+ "monthgrid": [
+  "rich/monthgrid.css",
+  "rich/gap-rows.css"
+ ],
+ "navlist": [
+  "layout/navlist.css"
  ],
  "number": [
   "components/number.css"
@@ -236,7 +412,14 @@
   "inputs/field.css",
   "inputs/text.css"
  ],
+ "page-header": [
+  "layout/page-header.css"
+ ],
+ "pager": [
+  "layout/pager.css"
+ ],
  "pagination": [
+  "data/pagination.css",
   "components/pagination.css"
  ],
  "palette": [
@@ -244,6 +427,9 @@
   "components/menu.css",
   "components/command-palette.css",
   "components/highlight.css"
+ ],
+ "panel": [
+  "data/panel.css"
  ],
  "persona": [
   "components/persona.css"
@@ -258,7 +444,11 @@
  ],
  "popover": [
   "components/base.css",
-  "components/popover.css"
+  "components/popover.css",
+  "rich/body.css",
+  "rich/popover.css",
+  "rich/filter-bar.css",
+  "rich/datetime.css"
  ],
  "popup": [
   "inputs/field.css",
@@ -271,12 +461,25 @@
  "progress": [
   "components/progress.css"
  ],
+ "props": [
+  "rich/props.css"
+ ],
+ "prose": [
+  "rich/prose.css",
+  "rich/code-tabs.css"
+ ],
+ "pull-refresh": [
+  "layout/pull-refresh.css"
+ ],
  "qr": [
   "components/qr-code.css"
  ],
  "quantity": [
   "inputs/field.css",
   "inputs/text.css"
+ ],
+ "query": [
+  "data/query.css"
  ],
  "quote": [
   "components/quote.css"
@@ -287,6 +490,9 @@
  ],
  "range-head": [
   "inputs/range.css"
+ ],
+ "range-panel": [
+  "rich/calendar-grid.css"
  ],
  "rating": [
   "inputs/range.css"
@@ -300,11 +506,35 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "results": [
+  "data/results.css"
+ ],
+ "ring": [
+  "data/ring.css"
+ ],
+ "route-progress": [
+  "layout/route-progress.css"
+ ],
+ "row": [
+  "layout/row.css"
+ ],
+ "rte": [
+  "rich/rich-text.css"
+ ],
  "rules": [
   "inputs/pickers.css"
  ],
  "save-bar": [
   "inputs/pickers.css"
+ ],
+ "scroll-area": [
+  "layout/scroll-area.css"
+ ],
+ "scroll-grid": [
+  "data/scroll-grid.css"
+ ],
+ "section": [
+  "layout/section.css"
  ],
  "section-message": [
   "components/section-message.css"
@@ -335,6 +565,13 @@
   "components/dialog.css",
   "components/sheet.css"
  ],
+ "shell": [
+  "layout/shell.css"
+ ],
+ "signature": [
+  "rich/signature.css",
+  "rich/markdown.css"
+ ],
  "skeleton": [
   "components/skeleton.css"
  ],
@@ -344,12 +581,41 @@
  "slider": [
   "inputs/range.css"
  ],
+ "snippet": [
+  "rich/code-tabs.css"
+ ],
+ "sortable": [
+  "data/sortable.css",
+  "rich/sortable.css"
+ ],
+ "spacer": [
+  "layout/spacer.css"
+ ],
  "speed-dial": [
   "components/speed-dial.css"
  ],
  "spinner": [
   "components/spinner.css",
   "components/live-status.css"
+ ],
+ "split": [
+  "layout/split.css"
+ ],
+ "split-pane": [
+  "layout/split-pane.css"
+ ],
+ "stack": [
+  "layout/stack.css",
+  "rich/log.css"
+ ],
+ "stat": [
+  "data/stat.css"
+ ],
+ "stat-row": [
+  "data/stat-row.css"
+ ],
+ "status-bar": [
+  "layout/status-bar.css"
  ],
  "status-dot": [
   "components/badge.css",
@@ -363,6 +629,9 @@
   "components/steps.css",
   "inputs/form.css"
  ],
+ "sticky-bar": [
+  "layout/sticky-bar.css"
+ ],
  "stopwatch": [
   "components/countdown.css"
  ],
@@ -370,6 +639,7 @@
   "inputs/text.css"
  ],
  "surface": [
+  "layout/surface.css",
   "components/base.css",
   "components/surface.css"
  ],
@@ -380,12 +650,24 @@
   "inputs/field.css",
   "inputs/choice.css"
  ],
+ "table": [
+  "data/table.css"
+ ],
+ "tabnav": [
+  "layout/tabnav.css"
+ ],
  "tabs": [
   "components/tabs.css"
  ],
  "tag": [
   "components/tag.css",
   "inputs/choice.css"
+ ],
+ "tests": [
+  "rich/log.css"
+ ],
+ "timeline": [
+  "data/timeline.css"
  ],
  "toast": [
   "components/toast.css"
@@ -404,15 +686,23 @@
   "components/toolbar.css"
  ],
  "tooltip": [
+  "data/tooltip.css",
   "components/tooltip.css"
+ ],
+ "topnav": [
+  "layout/topnav.css"
  ],
  "tour": [
   "components/tour.css"
+ ],
+ "tracker": [
+  "data/tracker.css"
  ],
  "transfer": [
   "inputs/listbox.css"
  ],
  "tree": [
+  "data/tree.css",
   "inputs/pickers.css"
  ],
  "truncate": [
@@ -427,8 +717,14 @@
  "uploads": [
   "inputs/file.css"
  ],
+ "virtual": [
+  "data/virtual.css"
+ ],
  "watermark": [
   "components/watermark.css"
+ ],
+ "wheels": [
+  "rich/listbox.css"
  ],
  "xy-pad": [
   "inputs/field.css",

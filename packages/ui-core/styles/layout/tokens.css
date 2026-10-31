@@ -1,0 +1,43 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.tokens {
+/* -- environment inputs (inherit; set once on :root, override per frame) */
+  :root {
+    --warp-safe-top: env(safe-area-inset-top, 0px);
+    --warp-safe-right: env(safe-area-inset-right, 0px);
+    --warp-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --warp-safe-left: env(safe-area-inset-left, 0px);
+    /* VirtualKeyboard API overlay height; the shell writes a measured value
+       only when the browser did NOT already shrink the layout viewport. */
+    --warp-keyboard: env(keyboard-inset-height, 0px);
+    /* the "screen" a shell fills; previews and embeds pin it in px */
+    --warp-viewport-block: 100dvh;
+  }
+  @supports not (height: 100dvh) { :root { --warp-viewport-block: 100vh; } }
+
+  /* -- per-stop inputs for navigation motion ----------------------------- */
+  :root, [data-expression="balanced"] { --warp-ref-push: 32%; }
+  [data-expression="quiet"]           { --warp-ref-push: 16%; }
+  [data-expression="vivid"]           { --warp-ref-push: 100%; }
+
+  /* -- layout sys tokens (re-derived on every scope root, like warp.css) - */
+  :root, [data-expression], [data-density], [data-form], [data-pointer],
+  [data-motion], [data-flair], [data-warp] {
+    --warp-layout-bar: calc(var(--warp-control-md) + 12px);          /* header / top bar: 48 · 56 coarse */
+    --warp-layout-tabbar: max(56px, calc(var(--warp-hit-min) + 12px)); /* bottom bar, before safe area */
+    --warp-layout-rail: 80px;                                         /* icon + 12px label, 64px item */
+    --warp-layout-sidebar: 248px;
+    --warp-layout-list: 340px;                                        /* master pane (300 below 1000) */
+    --warp-layout-aside: 300px;                                       /* split side, inspector */
+    --warp-layout-measure: var(--warp-measure);                       /* prose: the dial's measure, 72 · 66 · 60ch (01 §2 Type) */
+    --warp-layout-narrow: 440px;                                      /* auth, single forms */
+    --warp-layout-content: 1160px;                                    /* page content max */
+    --warp-layout-wide: 1440px;                                       /* marketing bands */
+    /* navigation motion: push distance × motion-scale (0 under reduced) */
+    --warp-motion-push: calc(var(--warp-ref-push) * var(--warp-motion-scale));
+    --warp-duration-route: var(--warp-duration-base);
+    --warp-duration-push: var(--warp-duration-slow);
+    --warp-duration-sheet: var(--warp-duration-slow);
+  }
+}
+@property --_warp-fs { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --_warp-fe { syntax: "<length>"; inherits: false; initial-value: 0px; }

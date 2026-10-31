@@ -1,0 +1,8 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- code-input */
+  :where(.code-in) { display: grid; grid-template-columns: auto 1fr; flex: 1; align-self: stretch; min-inline-size: 0; font: 400 var(--warp-text-code-size)/1.6 var(--warp-font-mono); }
+  :where(.code-in .ln) { margin: 0 10px 0 0; padding: 0 10px 0 0; list-style: none; text-align: end; color: var(--warp-color-text-subtle); overflow: hidden; user-select: none; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); }
+  :where(.code-in textarea) { all: unset; box-sizing: border-box; white-space: pre; overflow: auto; tab-size: 2; min-block-size: 11em; font: inherit; color: var(--warp-color-text); caret-color: var(--warp-color-accent-solid); }
+  @media (pointer: coarse) { :where(.code-in textarea) { font-size: 16px; } }
+}

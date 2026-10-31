@@ -26,7 +26,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
     opener = doc.activeElement as HTMLElement | null
     el.showModal?.() ?? el.setAttribute('open', '')
     remove = pushLayer({ el, modal: true, close: () => o.onClose() })
-    const first = el.querySelector<HTMLElement>('[autofocus]') ?? el.querySelector<HTMLElement>('[data-part="title"]')
+    const first = el.querySelector<HTMLElement>('[autofocus], [data-initial]') ?? el.querySelector<HTMLElement>('[data-part="title"]')
     if (first && !first.matches(focusable)) first.tabIndex = -1
     first?.focus({ preventScroll: true })
   }
@@ -91,7 +91,7 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
     el.showPopover?.()
     place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
     remove = pushLayer({ el, trigger: o.trigger, close: reason => { restore = reason === 'escape'; o.onClose() } })
-    const first = el.querySelector<HTMLElement>(focusable)
+    const first = el.querySelector<HTMLElement>('[data-initial]') ?? el.querySelector<HTMLElement>(focusable)
     if (first) first.focus({ preventScroll: true })
     else { el.tabIndex = -1; el.focus({ preventScroll: true }) }
     win.addEventListener('resize', reposition)
@@ -109,7 +109,8 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
   }
   const onFocusOut = (e: FocusEvent) => {
     const to = e.relatedTarget as Node | null
-    if (!remove || !to || el.contains(to) || o.trigger.contains(to)) return
+    // an ancestor taking focus isn't leaving: a press on plain text in the panel lands on a tabindex="-1" <main>
+    if (!remove || !to || el.contains(to) || to.contains(el) || o.trigger.contains(to)) return
     restore = false
     o.onClose()
   }

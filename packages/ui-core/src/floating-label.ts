@@ -74,7 +74,10 @@ function notch(field: Element) {
     const cs = getComputedStyle(anc)
     if ((cs.backgroundImage !== 'none' && !anc.classList.contains('diagram')) || alpha(cs.backgroundColor) >= 0.99) break
   }
-  if (!anc) return
+  if (!anc) {
+    for (const k of ['--_notch-color', '--_notch-image', '--_notch-size', '--_notch-pos']) label.style.removeProperty(k)
+    return
+  }
   const cs = getComputedStyle(anc)
   let base = cs.backgroundColor
   for (let n: HTMLElement | null = anc; n && alpha(base) < 0.99; n = n.parentElement) base = getComputedStyle(n).backgroundColor
@@ -91,9 +94,40 @@ function notch(field: Element) {
   label.style.setProperty('--_notch-pos', `${-lx}px ${-ly}px`)
 }
 
+// The notch is a measured colour, so a theme, dial or colour-scheme change outdates it. One watcher per document
+// re-measures every mounted field: on the next frame, then once more when a background transition has finished.
+const WATCHED = ['class', 'style', 'data-theme', 'data-expression', 'data-seed']
+const watchers = new WeakMap<Document, { fields: Set<() => void>; stop(): void }>()
+function onTheme(doc: Document, measure: () => void) {
+  let w = watchers.get(doc)
+  if (!w) {
+    const win = doc.defaultView!
+    const fields = new Set<() => void>()
+    let frame = 0
+    let late: ReturnType<typeof setTimeout> | undefined
+    const all = () => fields.forEach(f => f())
+    const changed = () => {
+      win.cancelAnimationFrame(frame)
+      clearTimeout(late)
+      frame = win.requestAnimationFrame(all)
+      late = setTimeout(all, 400)
+    }
+    const seen = new win.MutationObserver(changed)
+    seen.observe(doc.documentElement, { attributes: true, attributeFilter: WATCHED })
+    if (doc.body) seen.observe(doc.body, { attributes: true, attributeFilter: WATCHED })
+    const scheme = win.matchMedia?.('(prefers-color-scheme: dark)')
+    scheme?.addEventListener('change', changed)
+    w = { fields, stop() { seen.disconnect(); scheme?.removeEventListener('change', changed); win.cancelAnimationFrame(frame); clearTimeout(late); watchers.delete(doc) } }
+    watchers.set(doc, w)
+  }
+  const mine = w
+  mine.fields.add(measure)
+  return () => { mine.fields.delete(measure); if (!mine.fields.size) mine.stop() }
+}
+
 /**
  * Action on a `[data-scope="field"]`: measures the label's per-character delays and notch after layout, again when
- * the label's size settles (font swap, float) or the field resizes, and keeps `data-filled` on the control in step
+ * the label's size settles (font swap, float), the field resizes or the theme changes, and keeps `data-filled` on the control in step
  * with the input's value.
  */
 export function floatingLabel(field: HTMLElement) {
@@ -111,15 +145,20 @@ export function floatingLabel(field: HTMLElement) {
   label.addEventListener('transitionend', onSize)
   input?.addEventListener('input', fill)
   input?.addEventListener('change', fill)
-  let frame = win.requestAnimationFrame(measure)
-  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) }) : null
+  // only felt once the label moves, so the first read waits until after paint rather than force a layout before it
+  let wait = 0
+  let frame = win.requestAnimationFrame(() => { wait = win.setTimeout(measure) })
+  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { win.clearTimeout(wait); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) }) : null
   resize?.observe(box)
+  const unwatch = onTheme(field.ownerDocument, () => notch(field))
   return {
     /** Re-measure (after a dial change) and re-read the value (after a programmatic write). */
-    update() { fill(); measure() },
+    update() { fill(); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) },
     destroy() {
       win.cancelAnimationFrame(frame)
+      win.clearTimeout(wait)
       resize?.disconnect()
+      unwatch()
       label.removeEventListener('transitionend', onSize)
       input?.removeEventListener('input', fill)
       input?.removeEventListener('change', fill)
@@ -159,6 +198,12 @@ export function field(el: HTMLElement) {
   }
   const onDown = (e: PointerEvent) => {
     const t = e.target as Element
+    // a composite has no one input: a press on its label (no for) moves focus into the body (04, field shell)
+    if (!input && t.closest('[data-part="label"]')) {
+      e.preventDefault()
+      box?.querySelector<HTMLElement>('[data-part="body"] :is([tabindex="0"], button:not(:disabled), input:not(:disabled))')?.focus()
+      return
+    }
     if (!input || t.closest('input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]')) return
     e.preventDefault()
     input.focus()

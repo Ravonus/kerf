@@ -1,8 +1,10 @@
 // weft() for Vite 8: one filtered transform hook, so only .tsx/.jsx files cross into JS (§3.6).
+import { createHash } from 'node:crypto'
 import { existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './node/css.mjs'
+import { purge, words } from './node/purge.mjs'
 import { assets } from './assets.mjs'
 import { buildMatrix } from './node/matrix.mjs'
 
@@ -291,7 +293,7 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
  * their own updates (research 21). Never for SSR or hydratable output.
  */
-export default function weft({ dev, hydratable = false, hmr, style: styleOptions } = {}) {
+export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions } = {}) {
   let isDev = false
   let isHot = false
   const style = styleGroups(styleOptions)
@@ -333,7 +335,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
       },
     },
   }
-  return [main, features, style.plugin, agent(), slots(), tokens(), assets()]
+  return [main, features, style.plugin, agent(), slots(), tokens(), assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
 
 /**
@@ -406,6 +408,49 @@ function agent() {
           tab.client.send('weft:cmd', { id, tab: tab.tab, cmd: msg.cmd, args: msg.args ?? {} })
         })
       })
+    },
+  }
+}
+
+/**
+ * Removes CSS no built file can reach (node/purge.mjs). Runs last on the client build, and renames each stylesheet it
+ * changes: a name hashed before purging would stay the same when the app starts using a new component, and browsers
+ * would keep the old, smaller file. `weft({ purge: false })` turns it off; `purge: { keep: ['knob'] }` keeps names the
+ * app builds at run time.
+ */
+function purgeCss(keep = []) {
+  return {
+    name: 'weft:purge',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle: {
+      order: 'post',
+      handler(_, bundle) {
+        if (this.environment && this.environment.name !== 'client') return
+        const files = Object.values(bundle)
+        const text = f => (f.type === 'chunk' ? f.code : typeof f.source === 'string' ? f.source : Buffer.from(f.source).toString())
+        const sheets = files.filter(f => f.type === 'asset' && f.fileName.endsWith('.css'))
+        if (!sheets.length) return
+        const found = words(files.filter(f => /\.(js|mjs|html)$/.test(f.fileName)).map(text), keep)
+        const moved = []
+        const purged = purge(sheets.map(text), found)
+        for (const [i, sheet] of sheets.entries()) {
+          const css = purged[i]
+          const hash = createHash('sha256').update(css).digest('base64url').slice(0, 8)
+          const name = sheet.fileName.replace(/(-[\w-]{8})?\.css$/, `-${hash}.css`)
+          moved.push([sheet.fileName, name])
+          delete bundle[sheet.fileName]
+          this.emitFile({ type: 'asset', fileName: name, source: css })
+        }
+        for (const f of Object.values(bundle)) {
+          for (const [from, to] of moved) {
+            if (f.type === 'chunk') {
+              f.code = f.code.replaceAll(from, to)
+              if (f.viteMetadata?.importedCss.delete(from)) f.viteMetadata.importedCss.add(to)
+            } else if (/\.(html|json)$/.test(f.fileName)) f.source = text(f).replaceAll(from, to)
+          }
+        }
+      },
     },
   }
 }

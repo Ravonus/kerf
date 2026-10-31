@@ -116,10 +116,10 @@ with Retry). The frame keeps its height. Rows are idle, hover, `data-selected`, 
 - **Live cells** (§7).
 
 **Phone, tablet, desktop.** The table queries its own container.
-- **≥ 1000px:** every column shows, and rows expand in place.
-- **600–999px:** `data-priority="3"` columns hide, and a row opens a detail **sheet** (`role="dialog"`, Escape
-  closes it and returns focus).
-- **< 600px:** depends on the use case, which the author declares.
+- **≥ 1000px:** every column shows, and rows slide open in place (under reduced motion, at once).
+- **600–999px:** `data-priority="3"` columns hide, and rows slide open in place. `details="sheet"` opens a detail
+  **sheet** instead (`role="dialog"`, Escape closes it and returns focus).
+- **< 600px:** rows slide open under their card. The layout depends on the use case, which the author declares.
   - `data-phone="cards"` is for **entity lists**. The same `<table>` becomes stacked cards: cells are labelled by
     `data-label`, `data-card="title|badge|hide"` places them, a sort bar replaces the headers, and the explicit ARIA
     table roles survive the display change.
@@ -370,11 +370,21 @@ render in the same frame height.
 | Choropleth | **tile-grid** map (equal-area tiles, no projection bias, phone-safe); geo shapes via the map pack | 10 |
 
 ```ts
-<LineChart data={rev} x="month" series={["subs", "usage", "services"]} format={money}
-  summary={(d) => `Total grew ${pct(d)}…`} annotations={[{ x: "Sep", label: "Usage pricing" }]} />
-<BarChart data={seats} x="quarter" series={plans} layout="stacked" />   // Bindable layout
-<Chart.Table /> <Chart.Summary />  // compound parts, rendered by default
+<LineChart title="Revenue" data={rev} x="month" series={["subs", "usage", "services"]} format={money}
+  summary={(c) => `Total grew ${pct(c.data)}…`} annotations={[{ x: "Sep", label: "Usage pricing" }]} />
+<BarChart title="Seats" data={seats} x="quarter" series={plans} layout={layout.value} toolbar={<Segmented … />} />
 ```
+
+**As built** (`packages/ui-core/src/charts`, `packages/warp/src/Chart.tsx`, `Charts.tsx`).
+- A form is a pure layout in ui-core: config and width in, SVG scene out. The server renders the scene; `chart(figure, …)`
+  then patches it, so a resize or a data change rewrites attributes on the same nodes. Charts ship in `@weft/warp`, tree
+  shaken per form, rather than as a `@weft/charts` pack.
+- Table view and summary always render, so there are no `<Chart.Table />` or `<Chart.Summary />` parts, as `Table` takes
+  props rather than `Table.Column`. Every form takes `data`; a retry goes in `action`, a layout switch in `toolbar`.
+- In-cell labels (percent bars, treemap, tile map, Sankey) use `.ref-t`'s surface halo instead of `.lab-on`: white or ink
+  on the mid-lightness data colours misses 4.5:1 on several hues. A dimmed tooltip row is .62, not .6, for the same reason.
+- `data-enter="wait"` plays as soon as it renders and is lifted off screen until first view, so no-JS and pre-hydration
+  charts are never stuck at the start of their motion (the specimen's pause rule would leave them invisible).
 
 ## 13. Find, compare, build
 

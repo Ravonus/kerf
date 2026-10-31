@@ -10,6 +10,12 @@
 // plumbing) go to the family's base file, which every component in the family imports first. The cross-cutting tail
 // sections (reduced motion, forced colours, touch targets) restate rules for many components and must load after
 // them, so each of their rules moves to the end of the file that owns the [data-scope] it names.
+//
+// warp-data.css and warp-layout.css have several @layer blocks and many scopes in sections with no one header style,
+// so they split by rule, not by header: a rule goes to `data/<scope>.css` for each scope that opens one of its
+// selectors (`[data-scope="table"] [data-scope="field"]` is the table's), an @container or @media block is split the
+// same way, and a rule that names no scope goes to the family's base. @keyframes go to each file that animates with
+// them. Their tokens layer ships whole as `data/tokens.css`, with any @property the spec declares beside it.
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -41,10 +47,10 @@ const slug = text => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|
 
 // Top-level items inside the file's one @layer block: comments, whitespace and balanced rules, in order.
 function items(css) {
-  const open = css.search(/@layer [\w.]+ \{/)
+  const open = css.search(/@layer [\w.-]+ \{/)
   const start = css.indexOf('{', open) + 1
   const { list, end } = body(css, start)
-  return { layer: css.slice(open, start).match(/@layer ([\w.]+)/)[1], list, end }
+  return { layer: css.slice(open, start).match(/@layer ([\w.-]+)/)[1], list, end }
 }
 
 // Items of a block body from `start` up to its closing brace.
@@ -129,6 +135,66 @@ function split(file, family) {
   return { layer, family, files, shared }
 }
 
+// the scope that opens each selector in a rule's selector list (a compound's later [data-scope] is a descendant)
+function homes(rule) {
+  const prelude = rule.slice(0, rule.indexOf('{'))
+  const pieces = []
+  let depth = 0, from = 0
+  for (let i = 0; i < prelude.length; i++) {
+    const c = prelude[i]
+    if (c === '(') depth++
+    else if (c === ')') depth--
+    // a list inside the one outer :where() or :is() separates selectors just as a top-level one does
+    else if (c === ',' && depth <= 1) { pieces.push(prelude.slice(from, i)); from = i + 1 }
+  }
+  pieces.push(prelude.slice(from))
+  const scopes = new Set()
+  for (const p of pieces) { const m = p.match(/data-scope="([\w-]+)"/); scopes.add(m ? m[1] : 'base') }
+  return [...scopes]
+}
+
+/** One rule-routed family: `tokens` (the tokens blocks whole) and a file per scope. */
+function route(file, family) {
+  const css = readFileSync(join(spec, file), 'utf8')
+  const files = new Map(), tokens = [], frames = []
+  const add = (home, entry) => { if (!files.has(home)) files.set(home, []); files.get(home).push(entry) }
+  const property = [...css.matchAll(/^@property [^\n]*\n/gm)].map(m => m[0]).join('')
+  for (const m of css.matchAll(/^@layer ([\w.]+) \{/gm)) {
+    const { list } = body(css, m.index + m[0].length)
+    if (m[1] === 'warp.tokens') { tokens.push(list.map(i => i.text).join('').trim()); continue }
+    let notes = []
+    for (const item of list) {
+      if (item.kind !== 'rule') { if (item.kind === 'comment' && !/^\/\*\s*[-=]{6,}/.test(item.text)) notes.push(item.text); continue }
+      const before = notes
+      notes = []
+      if (item.text.startsWith('@keyframes')) { frames.push(item); continue }
+      if (/^@(media|container|supports)/.test(item.text)) {
+        const open = item.text.indexOf('{') + 1
+        const byHome = new Map()
+        for (const i of body(item.text, open).list) if (i.kind === 'rule') {
+          if (i.text.startsWith('@keyframes')) { frames.push(i); continue }
+          for (const h of homes(i.text.startsWith('@') ? i.text.slice(i.text.indexOf('{') + 1) : i.text)) (byHome.get(h) ?? byHome.set(h, []).get(h)).push(i.text)
+        }
+        for (const [h, inner] of byHome) add(h, { text: `${before.join('\n')}\n${item.text.slice(0, open)}\n${inner.join('\n')}\n}`.trimStart(), inner })
+      } else for (const h of homes(item.text)) add(h, { text: `${before.join('\n')}\n${item.text}`.trimStart(), inner: [item.text] })
+    }
+  }
+  // a keyframe rides with the files that name it; one nobody here names (warp.css or an app may) stays in base
+  for (const f of frames) {
+    const name = f.text.match(/@keyframes\s+([\w-]+)/)[1]
+    const using = [...files].filter(([, list]) => list.some(e => new RegExp(`\\b${name}\\b`).test(e.text))).map(([h]) => h)
+    for (const h of using.length ? using : ['base']) add(h, { text: f.text, inner: [f.text] })
+  }
+  return { family, files, tokens: [`@layer warp.tokens {\n${tokens.join('\n')}\n}`, ...property ? [property.trim()] : []].join('\n'), layer: family === 'data' ? 'warp.data' : 'warp.layout' }
+}
+
+function renderRouted({ family, files, tokens, layer }) {
+  const head = '/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */\n'
+  const result = new Map([[`${family}/tokens.css`, `${head}${tokens}\n`]])
+  for (const [name, list] of files) result.set(`${family}/${name}.css`, `${head}@layer ${layer} {\n${list.map(e => e.text).join('\n')}\n}\n`)
+  return result
+}
+
 function render({ layer, family, files, shared }) {
   const result = new Map()
   for (const [name, list] of files) {
@@ -144,12 +210,15 @@ function render({ layer, family, files, shared }) {
 
 export function build() {
   const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
-  const parts = { components: split('warp-components.css', 'components'), inputs: split('warp-inputs.css', 'inputs') }
+  const parts = { components: split('warp-components.css', 'components'), inputs: split('warp-inputs.css', 'inputs'), rich: split('warp-inputs-rich.css', 'rich') }
   for (const p of Object.values(parts)) for (const [k, v] of render(p)) files.set(k, v)
+  const routed = { data: route('warp-data.css', 'data'), layout: route('warp-layout.css', 'layout') }
+  for (const p of Object.values(routed)) for (const [k, v] of renderRouted(p)) files.set(k, v)
   const scopes = {}
+  for (const p of Object.values(routed)) for (const name of p.files.keys()) if (name !== 'base') (scopes[name] ??= new Set()).add(`${p.family}/${name}.css`)
   for (const p of Object.values(parts)) for (const [name, list] of p.files) for (const i of list) if (i.kind === 'rule') for (const s of scopesOf(i.text)) (scopes[s] ??= new Set()).add(`${p.family}/${name}.css`)
   files.set('manifest.json', JSON.stringify(Object.fromEntries(Object.entries(scopes).sort().map(([k, v]) => [k, [...v]])), null, 1) + '\n')
-  return { files, parts }
+  return { files, parts, routed }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
