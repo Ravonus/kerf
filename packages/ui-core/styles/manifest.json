@@ -56,10 +56,16 @@
   "components/button-group.css",
   "components/dialog.css",
   "components/alert.css",
-  "inputs/text.css"
+  "inputs/text.css",
+  "rich/sortable.css"
  ],
  "button-group": [
   "components/button-group.css"
+ ],
+ "calendar": [
+  "rich/calendar-grid.css",
+  "rich/datetime.css",
+  "rich/gap-rows.css"
  ],
  "callout": [
   "components/alert.css"
@@ -73,11 +79,22 @@
   "components/toggle-button.css",
   "components/chip.css",
   "inputs/field.css",
-  "inputs/choice.css"
+  "inputs/choice.css",
+  "rich/recurrence.css"
  ],
  "choice-card": [
   "inputs/field.css",
   "inputs/choice.css"
+ ],
+ "code": [
+  "rich/codeblock.css"
+ ],
+ "codeblock": [
+  "rich/codeblock.css",
+  "rich/code-tabs.css"
+ ],
+ "codetabs": [
+  "rich/code-tabs.css"
  ],
  "color": [
   "inputs/range.css"
@@ -99,6 +116,9 @@
   "components/dialog.css",
   "components/sheet.css"
  ],
+ "diff": [
+  "rich/diff.css"
+ ],
  "disclosure": [
   "components/accordion.css"
  ],
@@ -110,6 +130,13 @@
   "inputs/field.css",
   "inputs/text.css"
  ],
+ "embed": [
+  "rich/props.css"
+ ],
+ "emoji": [
+  "rich/gap-rows.css",
+  "rich/code-tabs.css"
+ ],
  "empty-state": [
   "components/empty-state.css"
  ],
@@ -120,13 +147,26 @@
   "components/fab.css",
   "components/speed-dial.css"
  ],
+ "feedback": [
+  "rich/props.css"
+ ],
  "field": [
   "components/dialog.css",
   "inputs/field.css",
   "inputs/text.css",
   "inputs/choice.css",
   "inputs/range.css",
-  "inputs/pickers.css"
+  "inputs/pickers.css",
+  "rich/body.css",
+  "rich/segments.css",
+  "rich/filter-bar.css",
+  "rich/pick.css",
+  "rich/datetime.css",
+  "rich/payment.css",
+  "rich/markdown.css"
+ ],
+ "filterbar": [
+  "rich/filter-bar.css"
  ],
  "form": [
   "inputs/form.css"
@@ -170,6 +210,10 @@
  "item-list": [
   "components/item-row.css"
  ],
+ "jsontree": [
+  "rich/code-tabs.css",
+  "rich/json-tree.css"
+ ],
  "kbd": [
   "components/base.css"
  ],
@@ -189,12 +233,18 @@
   "components/menubar.css",
   "components/ai-label.css"
  ],
+ "linkcard": [
+  "rich/props.css"
+ ],
  "listbox": [
   "inputs/listbox.css",
   "inputs/pickers.css"
  ],
  "live-status": [
   "components/live-status.css"
+ ],
+ "log": [
+  "rich/log.css"
  ],
  "logo": [
   "components/link.css",
@@ -207,6 +257,9 @@
  ],
  "mark": [
   "components/highlight.css"
+ ],
+ "markdown": [
+  "rich/markdown.css"
  ],
  "menu": [
   "components/base.css",
@@ -228,6 +281,10 @@
  ],
  "meter": [
   "components/meter.css"
+ ],
+ "monthgrid": [
+  "rich/monthgrid.css",
+  "rich/gap-rows.css"
  ],
  "number": [
   "components/number.css"
@@ -258,7 +315,11 @@
  ],
  "popover": [
   "components/base.css",
-  "components/popover.css"
+  "components/popover.css",
+  "rich/body.css",
+  "rich/popover.css",
+  "rich/filter-bar.css",
+  "rich/datetime.css"
  ],
  "popup": [
   "inputs/field.css",
@@ -270,6 +331,13 @@
  ],
  "progress": [
   "components/progress.css"
+ ],
+ "props": [
+  "rich/props.css"
+ ],
+ "prose": [
+  "rich/prose.css",
+  "rich/code-tabs.css"
  ],
  "qr": [
   "components/qr-code.css"
@@ -288,6 +356,9 @@
  "range-head": [
   "inputs/range.css"
  ],
+ "range-panel": [
+  "rich/calendar-grid.css"
+ ],
  "rating": [
   "inputs/range.css"
  ],
@@ -299,6 +370,9 @@
   "components/number.css",
   "components/menubar.css",
   "components/ai-label.css"
+ ],
+ "rte": [
+  "rich/rich-text.css"
  ],
  "rules": [
   "inputs/pickers.css"
@@ -335,6 +409,10 @@
   "components/dialog.css",
   "components/sheet.css"
  ],
+ "signature": [
+  "rich/signature.css",
+  "rich/markdown.css"
+ ],
  "skeleton": [
   "components/skeleton.css"
  ],
@@ -344,12 +422,21 @@
  "slider": [
   "inputs/range.css"
  ],
+ "snippet": [
+  "rich/code-tabs.css"
+ ],
+ "sortable": [
+  "rich/sortable.css"
+ ],
  "speed-dial": [
   "components/speed-dial.css"
  ],
  "spinner": [
   "components/spinner.css",
   "components/live-status.css"
+ ],
+ "stack": [
+  "rich/log.css"
  ],
  "status-dot": [
   "components/badge.css",
@@ -386,6 +473,9 @@
  "tag": [
   "components/tag.css",
   "inputs/choice.css"
+ ],
+ "tests": [
+  "rich/log.css"
  ],
  "toast": [
   "components/toast.css"
@@ -429,6 +519,9 @@
  ],
  "watermark": [
   "components/watermark.css"
+ ],
+ "wheels": [
+  "rich/listbox.css"
  ],
  "xy-pad": [
   "inputs/field.css",

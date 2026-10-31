@@ -39,7 +39,7 @@ type Control = (p: { id: string; describedby?: string; readonly invalid: boolean
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount ui-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any> }) {
+export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean }) {
   const id = untrack(() => given) ?? uid('field')
   const glyph = derived(() => icon)
   const message = untrack(() => hint !== undefined || error !== undefined || counter !== undefined)
@@ -64,15 +64,17 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       data-readonly={live.readonly ? '' : undefined}
       {...attrs}
     >
-      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? live.value ? '' : undefined}>
+      <div data-part="control" data-icon={glyph.value} data-sweep="" data-phase="idle" data-filled={filled ?? live.value ? '' : undefined} data-hold={hold ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         {glyph.value && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph.value} /></span><span data-part="sweep"><Icon name={glyph.value} /></span></span>}
-        <label data-part="label" for={id}>
+        <label data-part="label" for={group ? undefined : id} id={group ? `${id}-l` : undefined}>
           <span data-part="label-text">{label}</span>
           <span data-part="label-chars" aria-hidden="true">{chars.value.map(x => <span key={x.at} data-char data-c={x.c}></span>)}</span>
         </label>
         {prefix !== undefined && <span data-part="prefix">{prefix}</span>}
-        {untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}
+        {group
+          ? <div data-part="body" role="group" aria-labelledby={`${id}-l`} aria-describedby={msg} aria-invalid={error ? 'true' : undefined}>{untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}</div>
+          : untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}
         {suffix !== undefined && <span data-part="suffix">{suffix}</span>}
         {clearable && <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${label}`}><Icon name="x" /></button>}
         {end}

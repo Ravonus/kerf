@@ -38,7 +38,7 @@
    ../scripts/contrast-check.mjs.
    ========================================================================== */
 
-@layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.data, warp.app, warp.flows, warp.marketing;
+@layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.inputs-rich, warp.data, warp.app, warp.flows, warp.marketing;
 
 /* -- metric-matched fallback faces (01 §2 "Font loading"; research 11 §8.2) ------------------
    Each brand face gets a local system face scaled to the same advance widths and vertical metrics

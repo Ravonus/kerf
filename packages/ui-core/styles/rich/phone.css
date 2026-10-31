@@ -1,0 +1,20 @@
+/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- phone ----------------------------------------------------------- */
+  :where([data-part="country"]) {
+    all: unset; display: inline-flex; align-items: center; gap: 6px; align-self: stretch; cursor: pointer;
+    margin-inline-start: calc(var(--warp-pad-control) * -1); padding-inline: var(--warp-pad-control) 10px;
+    border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border);
+    border-start-start-radius: var(--warp-radius-control); border-end-start-radius: var(--warp-radius-control);
+    font: 500 var(--warp-text-body-size) / 1 var(--warp-text-body-font); color: var(--warp-color-text); white-space: nowrap;
+  }
+  :where([data-part="country"]:hover) { background: var(--warp-color-surface-hover); }
+  :where([data-part="country"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+  :where([data-part="country"] b) { font: 500 11px/1 var(--warp-font-mono); letter-spacing: 0.04em; padding: 3px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); color: var(--warp-color-text-subtle); }
+  :where([data-part="country"] svg) { inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); }
+  :where([data-part="search"]) { display: flex; align-items: center; gap: 8px; block-size: var(--warp-control-md); padding-inline: 10px; margin-block-end: 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border-control); }
+  :where([data-part="search"]:focus-within) { border-color: var(--warp-color-focus); box-shadow: 0 0 0 1px var(--warp-color-focus); }
+  :where([data-part="search"] input) { all: unset; flex: 1; min-inline-size: 0; font-size: var(--warp-text-control-size); }
+  :where([data-part="search"] input::placeholder) { color: var(--warp-color-text-subtle); }
+  :where([data-part="search"] svg) { inline-size: 16px; block-size: 16px; color: var(--warp-color-text-subtle); flex: none; }
+}
