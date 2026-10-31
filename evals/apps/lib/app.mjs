@@ -18,7 +18,7 @@ function manifestFile(target) {
   throw new Error(`no app "${target}": give a name under evals/apps, a folder holding app.json, or the path to one`)
 }
 
-const expand = (p, from) => { const q = p.replace(/^~(?=\/|$)/, homedir()); return isAbsolute(q) ? q : resolve(from, q) }
+const expand = (p, from) => { const q = p.replace(/^~(?=\/|$)/, process.env.BENCH_HOME ?? homedir()); return isAbsolute(q) ? q : resolve(from, q) }
 
 /** The first stack whose `detect` packages are all in package.json: stacks.json goes most specific first. */
 export function detect(pkg) {

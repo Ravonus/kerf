@@ -6,7 +6,7 @@ how weft compares and what to tune in weft or warp because of it. Run it after c
     npm install                                  # once, Node 26
     node bench.mjs lemonstand                    # one app
     node bench.mjs --all                         # every folder here with an app.json
-    node bench.mjs ~/dev/shop --runs 5           # any folder holding an app.json
+    node bench.mjs ~/dev/shop --samples=5        # any folder holding an app.json
     node bench.mjs lemonstand --only weft --no-record    # try a change, write nothing
     node bench.mjs lemonstand --detect           # what it worked out, without building
 
@@ -50,8 +50,7 @@ reports when its long tasks ended, and the chart says which method a number came
 
 ## What it measures
 
-Per variant and page, on production builds, `--runs` samples (3 by default, 5 before stating a claim), round-robin with a
-rotating first variant so drift on a shared machine lands on everyone:
+Per variant and page, on production builds, `--samples` samples (3 by default, 5 before stating a claim):
 
 - Lighthouse mobile and desktop: score, FCP, LCP, TBT, CLS, speed index, on its default simulated throttling.
 - The same page mobile with the network and CPU **really** throttled. The score's LCP comes from Lantern, a model; a trace of an
@@ -59,9 +58,25 @@ rotating first variant so drift on a shared machine lands on everyone:
 - JS, CSS, HTML and font bytes of everything the page fetched, recompressed to brotli 11 and gzip 9 for every variant, so a
   server's encoding can't flatter it; what the server actually sent is reported as well.
 - Hydration, script time, heap after a forced GC, DOM nodes split into elements, text and comments.
-- Server req/s and p95 at 10 keep-alive connections for 5 s, compressed as a browser would ask, and req/s uncompressed: the two
+- Server req/s and p95 at 10 keep-alive connections for 3 s, compressed as a browser would ask, and req/s uncompressed: the two
   together separate rendering from compression.
 - Cold build time (`--build-runs`), lines of app code, boot time, server memory.
+
+## Why it's quick
+
+It's meant to run after every tweak. Tarballs are packed once per state of `packages/` and `crates/`. A variant's build is keyed on
+its source files, lockfile, commands, Node and, for weft, those tarballs, and is reused while the key holds: a weft change rebuilds
+the weft variants only, and an unchanged tree rebuilds nothing (`--rebuild` overrides; the output is re-fingerprinted either way).
+
+Measuring runs in phases that never overlap. Variants go side by side with each one's timing-sensitive passes in turn, then
+Lighthouse's simulated runs share a pool, shuffled, and last comes server load. `--jobs=N` and `WEFT_JOBS` set the width
+(`scripts/jobs.mjs`); on a busy machine the default narrows by itself. `--jobs=1` runs everything in turn, which is the check that
+parallel numbers match a serial run: results agreed within spread when this was last tested, see the history lines' `jobs` field.
+
+## Running it on another machine
+
+`BENCH_WORK` moves the work area and `BENCH_HOME` is what `~` means in a manifest, so an external variant can be a copy elsewhere; `BENCH_COMMIT` names the commit when the checkout there is a snapshot.
+Bring only the files bench would copy; never a real env file.
 
 ## What it diagnoses
 

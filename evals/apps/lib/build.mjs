@@ -4,7 +4,7 @@ import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { copyFileSync, createWriteStream, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, relative } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { here } from './app.mjs'
 import { spread } from './stats.mjs'
 
@@ -96,13 +96,50 @@ function wrapNextConfig(root) {
   writeFileSync(join(root, name), `import base from './${moved}'\nexport default { ...base, productionBrowserSourceMaps: true }\n`)
 }
 
-/** Copy, env, canary and install: everything that happens once per run. */
-export async function prepare(app, v, { work, runId, store }) {
+/** Everything this checkout's tarballs are made from: HEAD's trees, plus whatever isn't committed. */
+function weftInputs() {
+  const git = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 })
+  const h = createHash('sha256').update(git('rev-parse', 'HEAD:packages', 'HEAD:crates')).update(git('diff', 'HEAD', '--', 'packages', 'crates'))
+  for (const f of git('ls-files', '-o', '--exclude-standard', '--', 'packages', 'crates').split('\n').filter(Boolean)) h.update(f).update(readFileSync(join(repo, f)))
+  return h.digest('hex')
+}
+
+/** One pack per checkout state, however many variants and runs: the tarballs only change when the packages do. */
+export async function packOnce(store, log) {
+  const inputs = weftInputs(), stamp = join(store, 'inputs')
+  mkdirSync(store, { recursive: true })
+  if (existsSync(stamp) && existsSync(join(store, 'tarballs.json')) && readFileSync(stamp, 'utf8') === inputs) return { inputs, packed: false }
+  await run(`${JSON.stringify(process.execPath)} ${JSON.stringify(localMjs)} pack`, { cwd: repo, env: { WEFT_LOCAL_DIR: store, npm_config_min_release_age: '0' }, log })
+  writeFileSync(stamp, inputs)
+  return { inputs, packed: true }
+}
+
+/** What decides a build's output. Same key, same build: it's reused rather than made again. */
+function buildKey(v, app, weft) {
+  const h = createHash('sha256').update(JSON.stringify([process.version, v.stack, v.install, v.build, v.env, app.env, app.setup, v.tarballs && weft]))
+  for (const f of files(v.path).filter(f => !SECRET.test(f) && !SKIP.test(f) && existsSync(join(v.path, f))).sort()) h.update(f).update(readFileSync(join(v.path, f)))
+  return h.digest('hex')
+}
+
+const FOR_MAPS = '.bench-maps'
+
+/** Copy, env, canary, install, cold builds and the sourcemap build, unless a build with the same key is already there. */
+export async function prepare(app, v, { work, runId, store, weft, buildRuns, rebuild }) {
   const dir = join(work, 'apps', app.name, v.name), root = join(dir, v.cwd), log = join(work, 'apps', app.name, `${v.name}.log`)
   mkdirSync(dirname(log), { recursive: true }); rmSync(log, { force: true })
   v.dir = dir; v.root = root; v.log = log
   v.buildEnv = { NEXT_TELEMETRY_DISABLED: '1', SKIP_ENV_VALIDATION: '1', ...app.env, ...v.env }
-  v.fileCount = copy(v, dir)
+  const key = buildKey(v, app, weft), stamp = join(work, 'apps', app.name, `${v.name}.build.json`)
+  if (!rebuild && existsSync(stamp)) {
+    const b = JSON.parse(readFileSync(stamp, 'utf8'))
+    if (b.key === key && existsSync(root)) {
+      v.canary = b.canary; v.weft = b.weft; v.maps = b.maps
+      v.fresh = fingerprint(root, v)
+      if (b.hashes === sha([...v.fresh.hashes].sort().join())) return { build: b.build, reused: true }
+    }
+  }
+  rmSync(stamp, { force: true })
+  copy(v, dir)
   if (existsSync(join(root, '.env.example'))) copyFileSync(join(root, '.env.example'), join(root, '.env'))
   mkdirSync(join(root, v.publicDir), { recursive: true })
   v.canary = `__bench-${runId}.txt`
@@ -111,16 +148,20 @@ export async function prepare(app, v, { work, runId, store }) {
   const env = { ...process.env, ...v.buildEnv, npm_config_min_release_age: '0', WEFT_LOCAL_DIR: store }
   delete env.NODE_ENV
   if (v.tarballs) {
-    await run(`${JSON.stringify(process.execPath)} ${JSON.stringify(localMjs)} refresh .`, { cwd: root, env, log })
+    await run(`${JSON.stringify(process.execPath)} ${JSON.stringify(localMjs)} refresh . --packed`, { cwd: root, env, log })
     v.weft = installedIsPacked(root, store)
   } else await run(v.install.join(' '), { cwd: root, env, log })
   if (app.setup) await run(app.setup, { cwd: root, env, log })
+  const build = await buildAll(v, buildRuns)
+  v.maps = await buildWithMaps(v)
+  writeFileSync(stamp, JSON.stringify({ key, canary: v.canary, weft: v.weft, maps: v.maps, build, hashes: sha([...v.fresh.hashes].sort().join()) }))
+  return { build, reused: false }
 }
 
 const clean = (root, v) => { for (const d of [...v.stack.out, 'node_modules/.vite', 'node_modules/.cache']) rmSync(join(root, d), { recursive: true, force: true }) }
 
 /** Cold builds: a run's first build isn't privileged by a cache the others lack. The last one is the build measured. */
-export async function buildAll(v, runs) {
+async function buildAll(v, runs) {
   const times = []
   for (let i = 0; i < runs; i++) {
     clean(v.root, v)
@@ -131,17 +172,33 @@ export async function buildAll(v, runs) {
   return spread(times)
 }
 
-/** One more build with hidden maps, for attribution only: same output names and hashes or it's reported as a mismatch. */
-export async function buildWithMaps(v) {
+/**
+ * One more build with hidden maps, for attribution only, with the measured output set aside and put back: same hashes or
+ * it's reported as a mismatch. Chunks and maps are kept in .bench-maps for later runs that reuse this build.
+ */
+async function buildWithMaps(v) {
   if (!v.stack.sourcemap) return null
-  const measured = v.fresh.hashes
-  ;({ vite: wrapViteConfig, next: wrapNextConfig })[v.stack.sourcemap](v.root)
-  clean(v.root, v)
-  await run(v.build, { cwd: v.root, env: { NODE_ENV: 'production', ...v.buildEnv }, log: v.log })
-  const maps = []
-  for (const d of v.stack.out) if (existsSync(join(v.root, d))) walk(join(v.root, d), f => { if (f.endsWith('.js.map') || f.endsWith('.mjs.map')) maps.push(f) })
-  const same = [...fingerprint(v.root, v).hashes].filter(h => measured.has(h)).length
-  return { maps, same, total: measured.size }
+  const measured = v.fresh.hashes, aside = join(v.root, '.bench-aside'), config = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs', 'next.config.js', 'next.config.mjs'].filter(f => existsSync(join(v.root, f)))
+  const originals = config.map(f => [f, readFileSync(join(v.root, f))])
+  rmSync(aside, { recursive: true, force: true }); mkdirSync(aside)
+  const held = v.stack.out.filter(d => existsSync(join(v.root, d)))
+  for (const d of held) renameSync(join(v.root, d), join(aside, d))
+  try {
+    ;({ vite: wrapViteConfig, next: wrapNextConfig })[v.stack.sourcemap](v.root)
+    await run(v.build, { cwd: v.root, env: { NODE_ENV: 'production', ...v.buildEnv }, log: v.log })
+    const keep = join(v.root, FOR_MAPS)
+    rmSync(keep, { recursive: true, force: true }); mkdirSync(keep)
+    const maps = []
+    for (const d of held) if (existsSync(join(v.root, d))) walk(join(v.root, d), f => { if (/\.m?js\.map$/.test(f)) { const js = f.replace(/\.map$/, ''); if (existsSync(js)) { const to = join(keep, basename(f)); copyFileSync(f, to); copyFileSync(js, to.replace(/\.map$/, '')); maps.push(to) } } })
+    const same = [...fingerprint(v.root, v).hashes].filter(h => measured.has(h)).length
+    return { maps, same, total: measured.size }
+  } finally {
+    for (const d of held) { rmSync(join(v.root, d), { recursive: true, force: true }); renameSync(join(aside, d), join(v.root, d)) }
+    rmSync(aside, { recursive: true, force: true })
+    for (const f of readdirSync(v.root)) if (f.includes('.bench-base')) rmSync(join(v.root, f), { force: true })
+    for (const f of ['vite.config.mjs']) if (!originals.some(([n]) => n === f)) rmSync(join(v.root, f), { force: true })
+    for (const [f, b] of originals) writeFileSync(join(v.root, f), b)
+  }
 }
 
 export function linesOfCode(v) {
@@ -153,5 +210,5 @@ export function linesOfCode(v) {
 
 export const repoState = () => {
   const git = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8' }).trim()
-  return { commit: git('rev-parse', '--short', 'HEAD'), dirty: !!git('status', '--porcelain', '--', 'packages', 'crates') }
+  return { commit: process.env.BENCH_COMMIT ?? git('rev-parse', '--short', 'HEAD'), dirty: !!git('status', '--porcelain', '--', 'packages', 'crates') }
 }
