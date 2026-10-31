@@ -1,5 +1,5 @@
 // `weft check`: compile every project file in check mode, add the project view, the X-codes (text-checks.mjs), plugin
-// `check` hooks, the test T-codes, the config P-codes and the style D-codes (style.mjs), and keep `.weft/styles.json`
+// `check` hooks, the test T-codes, the config P-codes, the style D-codes (style.mjs) and the design D-codes (design-checks.mjs), and keep `.weft/styles.json`
 // current when the project has style groups.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -12,6 +12,7 @@ import { isDataConfig, loadConfig, writeConfigSchema } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { writeMap } from './map.mjs'
 import { projectView } from './project.mjs'
+import { designChecks, hasTokens } from './design-checks.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, usesTailwind, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
@@ -99,6 +100,7 @@ export async function check(root, options = {}) {
     ...(loaded.diagnostics.some(d => d.code === 'P007') ? [] : trustDiagnostics(root, loaded)),
     ...files.flatMap(f => f.diagnostics),
     ...styles,
+    ...(config.check?.design === false ? [] : designChecks(root, { files, exclude, tokens: hasTokens(root) })),
     ...textChecks(root, { files, exclude, fontBuild }),
     ...stateChecks(root, { files, exclude }),
     ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),

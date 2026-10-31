@@ -110,6 +110,47 @@ export function checkSeed(seed, declarations = '') {
   }
 }
 
+/** The resolved tokens as DTCG 2025.10: one token file per theme × expression and a resolver over them. `css`: the app's seed and overrides. */
+export function dtcg(css = '') {
+  const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
+  let resolved
+  try {
+    const file = join(dir, 'warp.css')
+    writeFileSync(file, readFileSync(new URL('styles/warp.css', core), 'utf8') + `\n${css.replace(/@layer warp\.\w+\{([\s\S]*)\}\n?$/gm, '$1')}\n`)
+    let out
+    try {
+      out = execFileSync(process.execPath, [new URL('scripts/contrast-check.mjs', core).pathname, file, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+    } catch (e) {
+      out = e.stdout
+    }
+    resolved = JSON.parse(out).resolved
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+  const px = value => ({ $value: { value, unit: 'px' } })
+  const SPACE = { hair: 2, tight: 4, related: 8, group: 16 }
+  const X = { quiet: 0, balanced: 0.5, vivid: 1 }
+  const files = {}
+  for (const [combo, colours] of Object.entries(resolved)) {
+    const [theme, expression] = combo.split('/')
+    const x = X[expression]
+    const color = Object.fromEntries(Object.entries(colours).filter(([, v]) => /^#[0-9a-f]{6}$/i.test(v)).map(([name, hex]) => [name, { $value: { colorSpace: 'srgb', components: [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255), hex } }]))
+    files[`warp.${theme}.${expression}.tokens.json`] = {
+      color: { $type: 'color', ...color },
+      space: { $type: 'dimension', ...Object.fromEntries(Object.entries(SPACE).map(([k, v]) => [k, px(v)])) },
+      radius: { $type: 'dimension', mark: px(Math.round(4 - 2 * x)), control: px(Math.round(8 - 6 * x)), surface: px(Math.round(12 - 10 * x)) },
+    }
+  }
+  const context = pick => Object.keys(files).filter(pick).map(f => ({ $ref: f }))
+  const modifiers = (dial, values, at) => ({ contexts: Object.fromEntries(values.map(v => [v, context(f => f.split('.')[at] === v)])), default: values[at === 1 ? 0 : 1] })
+  files['warp.resolver.json'] = {
+    name: 'warp', version: '2025.10',
+    modifiers: { theme: modifiers('theme', DIALS.theme, 1), expression: modifiers('expression', DIALS.expression, 2) },
+    resolutionOrder: [{ $ref: '#/modifiers/theme' }, { $ref: '#/modifiers/expression' }],
+  }
+  return files
+}
+
 // A token's value in the spec, with `from` (its lightness for one theme) replaced by `to`.
 function relit(token, from, to) {
   const value = readFileSync(new URL('styles/warp.css', core), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').match(new RegExp(`${token}:\\s*([^;]+);`))[1]
@@ -178,9 +219,20 @@ function rescoped(key, scope) {
 export const classicCss = () => rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
 export const dialCss = (dial, value) => rescoped(`[data-${dial}="${value}"]`, `:root:not([data-${dial}])`)
 
-const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required: it is the accessible name), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. One solid Button per region. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; the spec contrast check runs at every stop and \`weft check\` fails with D010 if any pair can't pass.`
+const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D005). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
 
 const catalog = [
+  ['Stack', 'Vertical flow; `gap` is the relationship'],
+  ['Row', 'Horizontal cluster that wraps; `justify`, `reflow` to stack below a step'],
+  ['Grid', 'Intrinsic columns by `min`, capped by `cols`'],
+  ['Split', 'Fixed side and fluid main, stacked below its step'],
+  ['Center', 'Measured column, centred; `max`, `gutter`'],
+  ['Cover', 'Fills the screen with one centred child (auth, errors)'],
+  ['Frame', 'Fixed-ratio media box'],
+  ['Spacer', 'Takes the free space in a Row or Stack'],
+  ['Inset', 'Sunken padded region'],
+  ['Heading', 'Real heading: `level` for the outline, `role` for the look'],
+  ['Text', 'Text in a role: `role`, `tone`, `subtle`, `faint`'],
   ['VirtualList', 'A long list with exact text heights: rows render only in view'],
   ['Thread', 'A chat log on a window: stick to end, older messages, unread divider'],
   ['Feed', 'APG feed on a window with Page Up/Down between articles'],

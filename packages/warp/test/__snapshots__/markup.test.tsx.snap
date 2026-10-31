@@ -1237,6 +1237,56 @@ exports[`Icons: server HTML 1`] = `
 </div>"
 `;
 
+exports[`Layouts: client DOM after mount 1`] = `
+"<div>
+<div data-scope="stack">default</div>
+<ul data-align="center" data-divided="" data-gap="tight" data-scope="stack">
+<li>a</li>
+</ul>
+<div data-scope="row">default</div>
+<nav aria-label="Pages" data-align="baseline" data-gap="group" data-justify="between" data-reflow="tablet" data-scope="row" data-wrap="none">
+<div data-scope="spacer">
+</div>
+</nav>
+<div data-cols="4" data-gap="section" data-min="xs" data-scope="grid">x</div>
+<div data-at="desktop" data-scope="split" data-side="end" data-width="half">
+<div>
+</div>
+<div>
+</div>
+</div>
+<div data-gutter="" data-intrinsic="" data-max="measure" data-scope="center">x</div>
+<div data-gap="tight" data-min="fill" data-scope="cover">x</div>
+<div data-ratio="21:9" data-scope="frame">x</div>
+<div data-pad="section" data-scope="inset">x</div>
+</div>"
+`;
+
+exports[`Layouts: server HTML 1`] = `
+"<div>
+<div data-scope="stack">default</div>
+<ul data-align="center" data-divided="" data-gap="tight" data-scope="stack">
+<li>a</li>
+</ul>
+<div data-scope="row">default</div>
+<nav aria-label="Pages" data-align="baseline" data-gap="group" data-justify="between" data-reflow="tablet" data-scope="row" data-wrap="none">
+<div data-scope="spacer">
+</div>
+</nav>
+<div data-cols="4" data-gap="section" data-min="xs" data-scope="grid">x</div>
+<div data-at="desktop" data-scope="split" data-side="end" data-width="half">
+<div>
+</div>
+<div>
+</div>
+</div>
+<div data-gutter="" data-intrinsic="" data-max="measure" data-scope="center">x</div>
+<div data-gap="tight" data-min="fill" data-scope="cover">x</div>
+<div data-ratio="21:9" data-scope="frame">x</div>
+<div data-pad="section" data-scope="inset">x</div>
+</div>"
+`;
+
 exports[`Overlays: client DOM after mount 1`] = `
 "<div>
 <button aria-controls="pop-0" aria-expanded="false" aria-haspopup="dialog" data-emphasis="outline" data-phase="idle" data-scope="button" data-sweep="" data-tone="neutral" id="pop-0-b" type="button">Plain<span aria-hidden="true" data-part="sweep">
@@ -1872,5 +1922,35 @@ exports[`Toggles: server HTML 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 </button>
+</div>"
+`;
+
+exports[`Type: client DOM after mount 1`] = `
+"<div>
+<h1 data-role="heading" data-scope="text">h</h1>
+<h2 data-role="heading" data-scope="text">h</h2>
+<h3 data-role="heading" data-scope="text">h</h3>
+<h4 data-role="heading" data-scope="text">h</h4>
+<h5 data-role="heading" data-scope="text">h</h5>
+<h6 data-role="heading" data-scope="text">h</h6>
+<h2 data-role="display" data-scope="text">Default level</h2>
+<p data-scope="text">Body</p>
+<span data-role="eyebrow" data-scope="text">Eyebrow</span>
+<p data-ink="faint" data-scope="text" data-tone="critical">Tone</p>
+</div>"
+`;
+
+exports[`Type: server HTML 1`] = `
+"<div>
+<h1 data-role="heading" data-scope="text">h</h1>
+<h2 data-role="heading" data-scope="text">h</h2>
+<h3 data-role="heading" data-scope="text">h</h3>
+<h4 data-role="heading" data-scope="text">h</h4>
+<h5 data-role="heading" data-scope="text">h</h5>
+<h6 data-role="heading" data-scope="text">h</h6>
+<h2 data-role="display" data-scope="text">Default level</h2>
+<p data-scope="text">Body</p>
+<span data-role="eyebrow" data-scope="text">Eyebrow</span>
+<p data-ink="faint" data-scope="text" data-tone="critical">Tone</p>
 </div>"
 `;
