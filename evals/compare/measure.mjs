@@ -246,16 +246,30 @@ for (const stack of STACKS) {
   for (const n of SWEEP) r.sweep[n] = sweep(stack, dir, n)
   build(dir)
 }
+// The design scenario (design/, PLAN Phase 4): the apps a fresh agent built from one brief, re-audited on every run.
+const kept = readdirSync(join(here, 'design'), { withFileTypes: true }).filter(d => d.isDirectory() && existsSync(join(here, 'design', d.name, 'node_modules')))
+if (kept.length) {
+  const { audit } = await import('./design/audit.mjs')
+  for (const d of kept) {
+    const dir = join(here, 'design', d.name)
+    process.stderr.write(`design/${d.name}\n`)
+    build(dir)
+    const a = await audit(browser, join(dir, 'dist'))
+    ;(results[d.name === 'weft-ds' ? 'weft-warp' : d.name] ??= { label: d.name }).design = { axe: a.axe, contrast: a.contrast, distinct: a.distinctTotal, drift: a.driftTotal, focusLost: a.focusInvisible, overflow: a.overflow, brief: a.briefPassed, briefTotal: a.briefTotal, jsCssBr: a.bytes.js + a.bytes.css }
+  }
+}
 await browser.close()
 writeFileSync(join(here, 'results.json'), JSON.stringify(results, null, 1) + '\n')
 // One line per run, so a chart can follow each stack over time.
 const history = join(here, '../results/compare-history.jsonl')
 const git = (...a) => execFileSync('git', a, { cwd: here, encoding: 'utf8' }).trim()
 appendFileSync(history, JSON.stringify({ at: new Date().toISOString(), commit: git('rev-parse', '--short', 'HEAD'), dirty: !!git('status', '--porcelain', '--', '../../packages'),
-  stacks: Object.fromEntries(Object.entries(results).map(([k, r]) => [k, { label: r.label, js: r.size.js.br, css: r.size.css.br, taskMs: r.load.taskMs, fcpMs: r.load.fcpMs, longListBr: r.longList.loadedBr, longListJump: r.longList.upJump }])) }) + '\n')
+  stacks: Object.fromEntries(Object.entries(results).map(([k, r]) => [k, { label: r.label, ...(r.size && { js: r.size.js.br, css: r.size.css.br, taskMs: r.load.taskMs, fcpMs: r.load.fcpMs, longListBr: r.longList.loadedBr, longListJump: r.longList.upJump }), ...(r.design && { designAxe: r.design.axe, designDistinct: r.design.distinct, designDrift: r.design.drift }) }])) }) + '\n')
 execFileSync('node', [join(here, 'chart.mjs')], { stdio: 'inherit' })
 const kb = n => (n / 1024).toFixed(1)
 for (const [k, r] of Object.entries(results)) {
+  if (r.design) console.log(`\n${k} design: ${JSON.stringify(r.design)}`)
+  if (!r.size) continue
   console.log(`\n${k}: JS ${kb(r.size.js.gz)} gz / ${kb(r.size.js.br)} br, CSS ${kb(r.size.css.gz)} gz / ${kb(r.size.css.br)} br, ${r.lines} lines`)
   console.log(`  load ${JSON.stringify(r.load)}`)
   console.log(`  rows ${Object.entries(r.scale).map(([n, v]) => `${n}: ${v.elements}el ${v.comments}c load ${v.load} live ${v.live.ms}ms/${v.live.dom} select ${v.select.ms}ms/${v.select.dom} sort ${v.sort.ms}ms/${v.sort.dom}`).join(' | ')}`)

@@ -216,7 +216,7 @@ export async function audit(browser, dist) {
   const drift = Object.fromEntries(Object.entries(collected.roles).map(([k, v]) => [k, new Set(v).size]))
   const a = {
     axe: out.axe, contrast: out.contrast, serious: out.serious, byRule: out.byRule, focusStops: out.focusStops, focusInvisible: out.focusInvisible, overflow: out.overflow,
-    darkFollows: out.darkFollows, distinct, distinctTotal: Object.values(distinct).reduce((a, b) => a + b, 0), drift, driftTotal: Object.values(drift).reduce((a, b) => a + b, 0),
+    darkFollows: out.darkFollows, distinct, distinctTotal: Object.values(distinct).reduce((a, b) => a + b, 0), drift, driftTotal: Object.values(drift).reduce((a, b) => a + b, 0), looks: Object.fromEntries(Object.entries(collected.roles).map(([k, v]) => [k, [...new Set(v)]])),
     brief: out.brief, briefPassed: Object.values(out.brief).filter(Boolean).length, briefTotal: Object.keys(out.brief).length, errors: [...new Set(out.errors)].slice(0, 5), bytes: bytes(dist),
   }
   return a

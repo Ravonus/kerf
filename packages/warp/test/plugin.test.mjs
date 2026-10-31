@@ -110,7 +110,7 @@ test('dtcg: every theme × expression, DTCG colours and dimensions, and a resolv
   expect(light.space.group.$value).toEqual({ value: 16, unit: 'px' })
   expect(light.radius.control.$value.value).toBe(8)
   expect(files['warp.dark.vivid.tokens.json'].radius.control.$value.value).toBe(2)
-  expect(files['warp.resolver.json'].modifiers.theme.contexts.dark).toHaveLength(3)
+  expect(Object.keys(files['warp.resolver.json'].modifiers.mode.contexts)).toHaveLength(6)
   expect(files['warp.dark.quiet.tokens.json'].color.text.$value.hex).not.toBe(light.color.text.$value.hex)
 })
 test('dtcg: the seed reaches the tokens', () => {

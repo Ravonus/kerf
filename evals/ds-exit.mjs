@@ -2,7 +2,7 @@
 // Phase 4's exit check (PLAN §9, "4. Design"; research 36): weft/ds against raw Tailwind on consistency and a11y, from
 // one brief given to a fresh agent, and repeated on every stack in evals/compare (CLAUDE.md).
 //
-//   node evals/ds-exit.mjs prepare <dir> [--models sonnet,haiku]    one workspace per stack × model under <dir>
+//   node evals/ds-exit.mjs prepare <dir> [--models sonnet,haiku] [--samples 3]    one workspace per stack × model under <dir>
 //   node evals/ds-exit.mjs agent <dir> [--concurrency 3] [--budget 4]   run headless `claude -p` in each
 //   node evals/ds-exit.mjs verify <dir>   build, audit (compare/design/audit.mjs) and write results/ds-exit.{json,md}
 //   node evals/ds-exit.mjs keep <dir>     copy the Sonnet apps to compare/design, which measure.mjs re-audits on every run
@@ -42,7 +42,7 @@ export const STACKS = {
       'src/main.tsx': WEFT_MAIN, 'src/App.tsx': WEFT_APP, 'tsconfig.json': JSON.stringify(TSX, null, 2),
     },
     note: 'This is a weft app using warp. Read AGENTS.md first, then `npx weft docs design`. Run `npx weft check --json` after changes and `npx weft fix` for the safe fixes.',
-    after: dir => execFileSync('npx', ['weft', 'agents-md'], { cwd: dir, stdio: 'ignore' }),
+    after: dir => { execFileSync('npx', ['weft', 'plugins', 'approve', '--all'], { cwd: dir, stdio: 'ignore' }); execFileSync('npx', ['weft', 'agents-md'], { cwd: dir, stdio: 'ignore' }) },
   },
   'weft-tailwind': {
     label: 'Raw Tailwind (weft + Tailwind)', tool: 'weft + Tailwind',
@@ -119,12 +119,12 @@ const sessions = dir => readdirSync(dir).filter(d => existsSync(join(dir, d, 'PR
 function prepare(dir) {
   const models = (opt('models') ?? 'sonnet,haiku').split(',')
   for (const [id, stack] of Object.entries(STACKS)) {
-    for (const model of models) {
-      const w = join(dir, `${id}.${model}`)
+    for (const model of models) for (let n = 1; n <= Number(opt('samples') ?? 1); n++) {
+      const w = join(dir, `${id}.${model}.${n}`)
       mkdirSync(join(w, 'src'), { recursive: true })
       const out = { 'package.json': JSON.stringify({ name: id, private: true, type: 'module', scripts: { build: 'vite build' }, dependencies: stack.deps, devDependencies: stack.dev }, null, 2), 'index.html': page('/src/main.tsx'), 'PROMPT.md': BRIEF(stack), ...stack.files }
       for (const [f, text] of Object.entries(out)) writeFileSync(join(w, f), text)
-      console.error(`install ${id}.${model}`)
+      console.error(`install ${id}.${model}.${n}`)
       execFileSync('npm', ['install', '--legacy-peer-deps', '--no-audit', '--no-fund'], { cwd: w, stdio: 'ignore', env: { ...process.env, npm_config_min_release_age: '0' } })
       stack.after?.(w)
     }
@@ -168,6 +168,13 @@ async function source(dir) {
   return { lines, raw, a11yStatic: a11y }
 }
 
+/** Reported, not part of the bar: how alike two sessions' role looks are (mean pairwise Jaccard), the drift between runs of research 23 §1.3. Added after the pilot. */
+function agreement(runs) {
+  const sets = runs.map(r => new Set(Object.entries(r.audit.looks).flatMap(([k, v]) => v.map(x => `${k} ${x}`))))
+  const pairs = sets.flatMap((a, i) => sets.slice(i + 1).map(b => { const both = [...a].filter(x => b.has(x)).length; return both / (a.size + b.size - both) }))
+  return mean(pairs)
+}
+
 const mean = xs => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null)
 
 export async function auditAll(dirs) {
@@ -187,8 +194,8 @@ export async function auditAll(dirs) {
 function table(results) {
   const by = Object.keys(STACKS).map(id => ({ id, label: STACKS[id].label, runs: Object.entries(results).filter(([k, v]) => k.startsWith(`${id}.`) && v.audit).map(([k, v]) => ({ k, ...v })) }))
   const row = (s, get, digits = 0) => { const v = mean(s.runs.map(get)); return v === null ? '—' : v.toFixed(digits) }
-  const lines = ['| Stack | Runs | Brief | axe nodes | contrast | serious | focus lost | overflow | dark screens | distinct values | role drift | raw values /100 lines | JS + CSS KB br |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|']
-  for (const s of by) lines.push(`| ${s.label} | ${s.runs.length} | ${row(s, r => r.audit.briefPassed, 1)}/${s.runs[0]?.audit.briefTotal ?? '—'} | ${row(s, r => r.audit.axe)} | ${row(s, r => r.audit.contrast)} | ${row(s, r => r.audit.serious)} | ${row(s, r => r.audit.focusInvisible)} | ${row(s, r => r.audit.overflow, 1)} | ${row(s, r => r.audit.darkFollows, 1)}/3 | ${row(s, r => r.audit.distinctTotal)} | ${row(s, r => r.audit.driftTotal)} | ${row(s, r => r.source.raw / r.source.lines * 100, 1)} | ${row(s, r => (r.audit.bytes.js + r.audit.bytes.css) / 1024, 1)} |`)
+  const lines = ['| Stack | Runs | Brief | axe nodes | contrast | serious | focus lost | overflow | dark screens | distinct values | role drift | agreement between sessions | raw values /100 lines | JS + CSS KB br |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+  for (const s of by) lines.push(`| ${s.label} | ${s.runs.length} | ${row(s, r => r.audit.briefPassed, 1)}/${s.runs[0]?.audit.briefTotal ?? '—'} | ${row(s, r => r.audit.axe)} | ${row(s, r => r.audit.contrast)} | ${row(s, r => r.audit.serious)} | ${row(s, r => r.audit.focusInvisible)} | ${row(s, r => r.audit.overflow, 1)} | ${row(s, r => r.audit.darkFollows, 1)}/3 | ${row(s, r => r.audit.distinctTotal)} | ${row(s, r => r.audit.driftTotal)} | ${s.runs.length > 1 ? `${Math.round(agreement(s.runs) * 100)}%` : '—'} | ${row(s, r => r.source.raw / r.source.lines * 100, 1)} | ${row(s, r => (r.audit.bytes.js + r.audit.bytes.css) / 1024, 1)} |`)
   return lines.join('\n')
 }
 
@@ -227,7 +234,7 @@ async function verify(dir) {
 
 function keep(dir) {
   for (const id of Object.keys(STACKS)) {
-    const from = join(dir, `${id}.sonnet`), to = join(here, 'compare/design', id)
+    const from = join(dir, `${id}.sonnet.1`), to = join(here, 'compare/design', id)
     mkdirSync(to, { recursive: true })
     for (const f of ['src', 'index.html', 'package.json', 'vite.config.ts', 'tsconfig.json', 'weft.config.ts']) if (existsSync(join(from, f))) cpSync(join(from, f), join(to, f), { recursive: true })
     const p = JSON.parse(readFileSync(join(to, 'package.json'), 'utf8'))

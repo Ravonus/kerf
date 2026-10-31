@@ -141,13 +141,9 @@ export function dtcg(css = '') {
       radius: { $type: 'dimension', mark: px(Math.round(4 - 2 * x)), control: px(Math.round(8 - 6 * x)), surface: px(Math.round(12 - 10 * x)) },
     }
   }
-  const context = pick => Object.keys(files).filter(pick).map(f => ({ $ref: f }))
-  const modifiers = (dial, values, at) => ({ contexts: Object.fromEntries(values.map(v => [v, context(f => f.split('.')[at] === v)])), default: values[at === 1 ? 0 : 1] })
-  files['warp.resolver.json'] = {
-    name: 'warp', version: '2025.10',
-    modifiers: { theme: modifiers('theme', DIALS.theme, 1), expression: modifiers('expression', DIALS.expression, 2) },
-    resolutionOrder: [{ $ref: '#/modifiers/theme' }, { $ref: '#/modifiers/expression' }],
-  }
+  // Each file is whole, so one modifier picks one file: the dials don't layer in DTCG terms.
+  const contexts = Object.fromEntries(Object.keys(files).map(f => [f.split('.').slice(1, 3).join('-'), [{ $ref: f }]]))
+  files['warp.resolver.json'] = { name: 'warp', version: '2025.10', modifiers: { mode: { contexts, default: 'light-balanced' } }, resolutionOrder: [{ $ref: '#/modifiers/mode' }] }
   return files
 }
 
