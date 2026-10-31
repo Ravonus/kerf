@@ -6,6 +6,7 @@
 import { DEV, hole, untrack } from './index'
 import { insert, place } from './dom'
 import { keys, nextKey, under } from './keys'
+import { marks } from './island'
 import { hydration } from './hydrate'
 
 /**
@@ -31,6 +32,7 @@ export function htpl(html: string, svg?: boolean, place?: string): () => Node {
       const el = hydration.registry.get(key)
       if (el && el.localName === tag.toLowerCase()) {
         hydration.registry.delete(key)
+        hydration.trash.push(el)
         ;(el as any).$k = key
         return el
       }
@@ -70,14 +72,23 @@ export const next = (n: Node) => over(n.nextSibling)
  * it. A marker that isn't a template's `<!>` (hydrate's data script) takes everything before it.
  */
 function range(parent: Node, marker: Node | undefined): Node[] {
-  if (!marker) return [...parent.childNodes]
+  if (!marker) return [...parent.childNodes].filter(n => !marks(n))
   const nodes: Node[] = []
   let depth = 0
   for (let n = marker.previousSibling; n; n = n.previousSibling) {
     if (n.nodeType === 8) {
       const d = (n as Comment).data
+      if (marks(n)) {
+        // Partial hydration's own markers bound a hole that holds a level, and are nobody's nodes.
+        if (d[0] === '/') depth++
+        else if (d.startsWith('wl:') && depth-- === 0) return nodes.reverse()
+        continue
+      }
       if (d === ']') depth++
-      else if (d === '[' && depth-- === 0) return nodes.reverse()
+      else if (d === '[' && depth-- === 0) {
+        hydration.trash.push(n as ChildNode)
+        return nodes.reverse()
+      }
     }
     nodes.push(n)
   }
@@ -98,14 +109,14 @@ function adopt(value: any, server: Node[], at: { i: number }, out: Node[]): Node
   if (value instanceof Node) {
     const i = server.indexOf(value, at.i)
     if (i >= 0) {
-      for (let j = at.i; j < i; j++) if (isSeparator(server[j])) out.push(server[j])
+      for (let j = at.i; j < i; j++) if (isSeparator(server[j])) keepUntilSwept(server[j], out)
       at.i = i + 1
     }
     out.push(value)
     return out
   }
   const text = String(value)
-  while (at.i < server.length && isSeparator(server[at.i])) out.push(server[at.i++])
+  while (at.i < server.length && isSeparator(server[at.i])) keepUntilSwept(server[at.i++], out)
   const n = server[at.i]
   if (n && n.nodeType === 3) {
     at.i++
@@ -115,23 +126,36 @@ function adopt(value: any, server: Node[], at: { i: number }, out: Node[]): Node
   return out
 }
 
+const keepUntilSwept = (n: Node, out: Node[]) => {
+  out.push(n)
+  hydration.trash.push(n as ChildNode)
+}
+
 const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
 
 /**
  * `child` for hydratable output. `marker`: the `<!>` it goes before, or none when the hole is the element's only content. `root` and
  * `slot` name the hole's scope (its template's key and its index). `once`: `value` builds static content (a
- * component, an element) and runs once, untracked; otherwise a function value is read reactively.
+ * component, an element) and runs once, untracked (`2`: `marker` is the page's data script, not a hole); otherwise a function value is read reactively.
  */
-export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: any, slot?: number, once?: 1) {
+export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: any, slot?: number, once?: 1 | 2) {
   const claim = () => {
     let v = once ? untrack(value as () => unknown) : value
     if (!keys.hydrating) return insert(parent, v, marker)
+    // One element where a range would be (ssr.ts `hole`): the walk stopped on it, and building it claims it.
+    if (once === 1 && marker?.nodeType === 1) {
+      if (v !== marker && v instanceof Node) parent.replaceChild(v, marker)
+      return
+    }
     // Claim the server's nodes on the first run; later runs place values as usual.
     let current = range(parent, marker ?? undefined)
     const at = marker ?? null
     // a fragment's holes must stay live: read flat here, a root `<>{cond && …}</>` would never update
     if (Array.isArray(v) && v.flat(Infinity).some(x => typeof x === 'function')) { const list = v; v = () => list }
-    if (typeof v !== 'function') return void place(parent, adopt(v, current, { i: 0 }, []), current, at)
+    if (typeof v !== 'function') {
+      if (marker?.nodeType === 8 && (marker as Comment).data === ']') hydration.trash.push(marker as ChildNode) // nothing comes back here
+      return void place(parent, adopt(v, current, { i: 0 }, []), current, at)
+    }
     let claimed = false
     hole(v as () => unknown, x => {
       current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)

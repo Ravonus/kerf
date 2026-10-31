@@ -20,7 +20,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, isNotFound } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
 import { rt } from 'weft'
-import { headTags, mergeMeta, metaTags, renderToStream, renderToString, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
+import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
 import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
@@ -59,6 +59,8 @@ export interface HandlerOptions {
   build?: string
   dev?: boolean
   fonts?: Font[]
+  /** Route and layout ids with no client code (PLAN §11): the server sends their HTML. */
+  statics?: string[]
   /** Stream timeout for Boundaries (ms). */
   timeout?: number
   /** The app's context for `load` and server functions (`src/context.server.ts`'s default export). */
@@ -126,6 +128,13 @@ export function createHandler(options: HandlerOptions) {
   const comps: Record<string, Component> = { 404: NotFoundPage, error: ErrorPage }
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
+  const statics = new Set(options.statics)
+  /** The route state of a server render: where a static level is in it, it marks where each level starts (`region`). */
+  const stateOf = (r: Resolved, payload: RoutePayload) => {
+    const route = createRouteState({ ...payload, m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
+    if (r.levels.some(l => statics.has(l.id))) route.around = (d, id, body) => region(statics.has(id), d, statics.has(r.levels[d - 1]?.id), body)
+    return route
+  }
   const tree = routeTree(manifest, modules)
   let provider: Promise<MediaServer> | undefined
   const mediaServer = () => (provider ??= options.media?.())
@@ -221,9 +230,10 @@ export function createHandler(options: HandlerOptions) {
     scope.started = true // from here a redirect can't change the status (Q007)
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.
-    const route = createRouteState({ ...payloadOf(r, false), m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
+    const route = stateOf(r, payloadOf(r, false))
     const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, app: { cookies: cookieJar(request) } })
     await s.settle() // queries read outside a Boundary have nowhere to stream to
+    const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
     const assets = options.assets ?? {}
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
     const head =
@@ -235,7 +245,7 @@ export function createHandler(options: HandlerOptions) {
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
-      `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payloadOf(r, false))}</script>\n` +
+      `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
       (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '')
     const enc = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
@@ -327,7 +337,14 @@ export function createHandler(options: HandlerOptions) {
     if (r.redirect) return withHeaders(Response.json({ m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload, { headers: { 'cache-control': 'no-cache' } }), scope)
     for (const lv of r.levels) if (lv.d?.length) lv.data = { ...(lv.data as object), ...Object.fromEntries(await Promise.all(lv.d.map(async k => [k, await (lv.raw as any)[k]]))) }
     const c = wire(scope)
-    return withHeaders(Response.json({ ...payloadOf(r, true), ...(c.length && { c }) }, { status: 200, headers: { 'cache-control': 'no-cache' } }), scope)
+    let payload = payloadOf(r, true)
+    if (r.levels.some(lv => statics.has(lv.id))) {
+      const route = stateOf(r, payload)
+      const out = await renderToStringAsync(() => <App route={route} />, { app: { cookies: cookieJar(request) } })
+      const at = out.lastIndexOf('<script type="application/json" data-weft>')
+      payload = { ...withLevels(payload, at < 0 ? out : out.slice(0, at), statics, true), ...(at >= 0 && { b: JSON.parse(out.slice(at).replace(/^<[^>]*>/, '').replace(/<\/script>$/, '')) }) }
+    }
+    return withHeaders(Response.json({ ...payload, ...(c.length && { c }) }, { status: 200, headers: { 'cache-control': 'no-cache' } }), scope)
   }
 
   /** `/_weft/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
@@ -585,6 +602,32 @@ function settledView(raw: unknown, deferred: string[] | undefined, id: string, o
 
 function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
   return { m: r.levels.map(({ id, params, data, d, t }) => ({ id, params, data, ...(d && { d }), ...(t && { t }) })), p: r.path, s: r.status, ...(withHead && { h: r.head }) }
+}
+
+/**
+ * The payload with its static levels marked: their hash, without their data (the HTML holds it), and with `html` their
+ * HTML, each level's next one cut down to its markers. The `aria-current` a navigation moves doesn't count as a change.
+ */
+function withLevels(payload: RoutePayload, html: string, statics: Set<string>, sendHtml: boolean): RoutePayload {
+  if (!payload.m.some(m => statics.has(m.id))) return payload
+  const slice = (d: number) => {
+    const open = html.indexOf(`<!--wl:${d}:`)
+    const end = `<!--/wl:${d}-->`
+    const close = html.indexOf(end)
+    if (open < 0 || close < 0) return ''
+    const body = html.slice(html.indexOf('-->', open) + 3, close)
+    const kid = body.indexOf(`<!--wl:${d + 1}:`)
+    const tail = body.indexOf(`<!--/wl:${d + 1}-->`)
+    return kid < 0 || tail < 0 ? body : body.slice(0, body.indexOf('-->', kid) + 3) + body.slice(tail)
+  }
+  const m = payload.m.map((lv, d) => {
+    if (!statics.has(lv.id)) return lv
+    const { data: _, ...rest } = lv
+    const h = slice(d)
+    return { ...rest, s: 1 as const, x: hash(h.replaceAll(' aria-current="page"', '')), ...(sendHtml && { h }) }
+  })
+  const i = [...new Set([...html.matchAll(/<!--wi:\["([^"]+)"/g)].map(x => x[1]))]
+  return { ...payload, m, ...(i.length && { i }) }
 }
 
 /** The request's resolved queries, as the client cache seeds them (failures are left for the client to retry). */

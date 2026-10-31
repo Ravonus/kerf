@@ -32,6 +32,7 @@
       "types": "./client.d.ts"
     },
     "./style/matrix": "./node/matrix.mjs",
+    "./hydration": "./node/hydration.mjs",
     "./hmr": "./src/hmr.ts",
     "./plugin": {
       "types": "./src/plugin.d.ts",

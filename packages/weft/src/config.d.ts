@@ -66,6 +66,8 @@ export interface WeftConfig {
   site?: SiteConfig
   /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */
   runtime?: 'node' | 'bun' | 'deno'
+  /** `'full'` hydrates every route whole. Default `'partial'`: code that needs no client ships none (PLAN §11). */
+  hydration?: 'partial' | 'full'
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */

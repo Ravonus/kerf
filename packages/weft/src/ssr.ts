@@ -17,7 +17,8 @@ import { withHead, type HeadOptions } from './head'
 
 export { memo }
 export { For, mergeProps } from './dom'
-export { component } from './dom-next'
+import { component } from './dom-next'
+export { component }
 export { mergeMeta, metaTags, headTags } from './head'
 export type { HeadOptions, Merged, Meta, Og, Site, Tag, Twitter, Extra, Image } from './head'
 
@@ -25,6 +26,9 @@ type Node = { t: string }
 
 let selects = false // set by modules that bind a <select> value (`select`)
 let writeKeys = true
+// A static region (partial hydration, PLAN §11): nothing will claim it, so it gets no keys and no markers. Off again
+// inside an island, on again in the island's slot.
+let quiet = false
 
 export interface RenderOptions {
   /** Emit hydration keys for `hydrate()` (default true). */
@@ -155,6 +159,8 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
   const prev = { ...rt }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys
+  const prevQuiet = quiet
+  quiet = false
   const data: SsrData = { r: cache, b: {} }
   Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream, top })
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
@@ -172,6 +178,7 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
     Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream })
     Object.assign(keys, prevKeys)
     writeKeys = prevWrite
+    quiet = prevQuiet
   }
   if (selects) html = resolveSelects(html)
   const s = dehydrate(app) // this pass's: every pass re-runs the setups, and the last one is what the page shows
@@ -190,12 +197,91 @@ export function ssr(fn: (k: string) => string): Node {
 
 /** The root's key attribute, when the output is hydratable. */
 export function key(k: string): string {
-  return writeKeys ? ` wk="${k}"` : ''
+  return writeKeys && !quiet ? ` wk="${k}"` : ''
 }
 
-/** Hole `slot` of the template keyed `k`: its value, escaped, rendered in the hole's own scope. */
-export function hole(k: string, slot: number, value: unknown): string {
-  return under(`${k}.${slot}/`, () => text(value))
+/**
+ * Hole `slot` of the template keyed `k`: its value, escaped, rendered in the hole's own scope. `mixed`: it shares its
+ * parent, so it needs a range: `1` always, `2` unless static structure came out as one element, which the client's walk
+ * takes for the hole itself.
+ */
+export function hole(k: string, slot: number, value: unknown, mixed?: 1 | 2): string {
+  return under(`${k}.${slot}/`, () => {
+    if (!mixed || quiet) return text(value)
+    if (mixed === 2) {
+      const v: any = (value as () => unknown)()
+      if (v && typeof v.t === 'string' && /^<[a-z]/i.test(v.t)) return v.t as string
+      return `<!--[-->${text(v)}<!--]-->`
+    }
+    return `<!--[-->${text(value)}<!--]-->`
+  })
+}
+
+let open: { read: boolean } | undefined
+
+const notWire = (v: any): string | undefined => {
+  if (v == null || typeof v === 'string' || typeof v === 'boolean') return undefined
+  if (typeof v === 'number') return Number.isFinite(v) ? undefined : String(v)
+  if (Array.isArray(v)) return v.map(notWire).find(Boolean)
+  if (typeof v !== 'object' || (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null)) return typeof v === 'function' ? 'a function' : `a ${v?.constructor?.name ?? typeof v}`
+  return Object.values(v).map(notWire).find(Boolean)
+}
+
+/**
+ * A component the compiler made an island: in a static region, its nodes with what the client needs to adopt them.
+ * `names`: the props that go as JSON. Anywhere else it's the component.
+ */
+export function island(id: string, names: string[], Comp: (props: any) => unknown, props: Record<string, unknown>, slotted?: 1): unknown {
+  if (!quiet) return component(Comp, props)
+  const k = nextKey()
+  const v = names.map(n => {
+    const bad = notWire(props[n])
+    if (bad) throw Object.assign(new Error(`H009 prop \`${n}\` of an island (${id}) is ${bad}, which can't go from the server to the client. Pass plain data, or put \`/* @weft client */\` on the component that renders it.`), { code: 'H009' })
+    return props[n]
+  })
+  const frame = { read: false }
+  const outer = open
+  open = frame
+  quiet = false
+  let html: string
+  try {
+    html = under(k + '/', () => text(component(Comp, props)))
+  } finally {
+    quiet = true
+    open = outer
+  }
+  const data = JSON.stringify([id, k, v]).replace(/--/g, '-\\u002d')
+  const rest = slotted && !frame.read ? `<template>${(props.children as { h: string }).h}</template>` : ''
+  return { t: `<!--wi:${data}--><!--[-->${html}<!--]-->${rest}` }
+}
+
+/** An island's children, which stay the server's. */
+export function slot(fn: () => unknown): unknown {
+  if (open) open.read = true
+  const was = quiet
+  quiet = true
+  try {
+    const h = text(fn)
+    return { t: `<!--ws-->${h}<!--/ws-->`, h }
+  } finally {
+    quiet = was
+  }
+}
+
+/**
+ * Route level `d`: `on` for a static one, whose islands are all that runs. `held`: the level above is static, and has
+ * to find this one. Nothing needs the markers between two client levels.
+ */
+export function region(on: boolean, d: number, held: boolean, fn: () => unknown): unknown {
+  if (!on && !held) return fn()
+  const was = quiet
+  const at = `<!--wl:${d}:${JSON.stringify([keys.p, keys.n]).replace(/--/g, '-\\u002d')}-->`
+  quiet = on
+  try {
+    return { t: `${at}${text(fn)}<!--/wl:${d}-->` }
+  } finally {
+    quiet = was
+  }
 }
 
 /**
@@ -214,7 +300,7 @@ function text(v: unknown): string {
       lastText = false
       return
     }
-    if (lastText) out.push('<!--,-->')
+    if (lastText && !quiet) out.push('<!--,-->')
     out.push(escape(String(v)))
     lastText = true
   }
