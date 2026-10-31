@@ -949,7 +949,7 @@ fn a_rewritten_name_as_a_tag_is_read_live() {
 
 #[test]
 fn react_names_compile_to_attributes() {
-    let (code, _) = run(r#"export const A = () => <svg tabIndex={0} viewBox="0 0 1 1" focusable={false}><path strokeWidth="2" clipPath="url(#a)" /><use xlinkHref="#a" /></svg>"#);
+    let (code, _) = run(r##"export const A = () => <svg tabIndex={0} viewBox="0 0 1 1" focusable={false}><path strokeWidth="2" clipPath="url(#a)" /><use xlinkHref="#a" /></svg>"##);
     for out in ["tabindex=", "stroke-width=", "clip-path=", "xlink:href=", r#"focusable=\"false\""#] {
         assert!(code.contains(out), "{out}: {code}");
     }
@@ -983,5 +983,5 @@ fn inner_html_and_form_values_compile_as_content() {
     let (code, _) = run(r#"export const A = (p) => <div><p dangerouslySetInnerHTML={p.raw} /><textarea value="a" /></div>"#);
     assert!(code.contains("?.__html"), "{code}");
     assert!(!code.contains("dangerouslySetInnerHTML"), "{code}");
-    assert!(code.contains(r#".value = "a""#), "{code}");
+    assert!(code.contains(r#"_$bind(() => ("a")"#) && code.contains(".value = v"), "{code}");
 }

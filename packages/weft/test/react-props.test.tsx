@@ -11,7 +11,7 @@ import { hydration } from '../src/hydrate'
 import * as Dom from './fixtures/react-props/Props.tsx'
 import * as Server from './fixtures/react-props/Props.tsx?weft-ssr'
 import * as Client from './fixtures/react-props/Props.tsx?weft-hydrate'
-import { Control, Direct, Focused, Spread as SpreadEvents, Swapped } from './fixtures/react-props/Events.tsx'
+import { Control, Defaults, Direct, Focused, Spread as SpreadEvents, Swapped } from './fixtures/react-props/Events.tsx'
 
 type Name = keyof typeof Dom
 
@@ -186,6 +186,15 @@ test('a spread onChange that changes replaces the old handler', async () => {
   await flush()
   fireEvent.input(q(root, 'input'))
   expect(log).toEqual(['v1', 'v2'])
+})
+
+test('defaultValue never overwrites what the user typed', async () => {
+  const root = mount()
+  render(() => Defaults({}), root)
+  for (const t of ['dflt', 'area', 'spread']) fireEvent.input(q(root, `[data-t=${t}]`), { target: { value: 'typed' } })
+  q(root, 'button').click()
+  await flush()
+  for (const t of ['dflt', 'area', 'spread']) expect(q(root, `[data-t=${t}]`).value).toBe('typed')
 })
 
 describe('autoFocus focuses on mount, as React does', () => {

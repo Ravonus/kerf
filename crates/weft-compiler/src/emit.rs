@@ -818,7 +818,7 @@ impl<'t> Emitter<'t> {
         match kind {
             "class" => format!("{}({el}, {v}, {p})", self.helper("cls")),
             "style" => format!("{}({el}, {v}, {p})", self.helper("css")),
-            "prop" if name == "value" || name == "defaultValue" => format!("({el}.value = {v} ?? \"\")"),
+            "prop" if name == "value" || name == "defaultValue" => format!("({el}.{name} = {v} ?? \"\")"),
             "prop" => format!("({el}.{name} = {v})"),
             _ => format!("{}({el}, {name:?}, {v})", self.helper("attr")),
         }

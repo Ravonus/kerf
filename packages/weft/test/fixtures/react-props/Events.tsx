@@ -42,6 +42,19 @@ export const Focused = ({ show, spread }: { show: () => boolean; spread?: boolea
   <div>{show() && (spread ? <input {...s({ autoFocus: true })} /> : <input autoFocus />)}</div>
 )
 
+/** `defaultValue` follows until the field is edited; `value` always does. */
+export const Defaults = () => {
+  const v = state('a')
+  return (
+    <div>
+      <input data-t="dflt" defaultValue={v.value} />
+      <textarea data-t="area" defaultValue={v.value}></textarea>
+      <input data-t="spread" {...{ defaultValue: v.value } as any} />
+      <button onClick={() => (v.value = 'b')}>next</button>
+    </div>
+  )
+}
+
 /** The negative control: what React habits must not change. */
 export const Control = ({ log }: P) => (
   <div>
