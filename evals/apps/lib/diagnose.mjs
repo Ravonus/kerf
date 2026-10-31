@@ -16,16 +16,26 @@ function gapAgainstBest(run, name, path, key) {
   return { key, best, mine, theirs, delta: c.delta, verdict: c.verdict }
 }
 
-/** Metric medians that moved between two runs, past what either run's own spread explains. */
+/**
+ * Metric medians that moved between two runs, past what either run's own spread explains. A variant whose build key didn't
+ * change can't have really moved, so it isn't reported: it's the control, and how far the controls drifted on a timing metric
+ * is taken off the variants that did change before they're judged.
+ */
 function diffRuns(run, prev) {
+  const changed = Object.keys(run.variants).filter(n => prev.variants[n] && prev.variants[n].key !== run.variants[n].key), controls = Object.keys(run.variants).filter(n => prev.variants[n] && !changed.includes(n))
+  const drift = (path, key) => {
+    if (METRICS[key].unit === 'bytes') return 1
+    const r = controls.map(n => [run.variants[n].pages[path]?.metrics[key]?.med, prev.variants[n].pages?.[path]?.[key]?.med]).filter(([a, b]) => a && b).map(([a, b]) => a / b).sort((a, b) => a - b)
+    return r.length ? r[r.length >> 1] : 1
+  }
   const moved = []
-  for (const [name, v] of Object.entries(run.variants)) for (const [path, page] of Object.entries(v.pages)) for (const [key, now] of Object.entries(page.metrics)) {
-    const was = prev.variants[name]?.pages?.[path]?.[key]
-    if (!was || !now) continue
-    const c = compare(key, now, was)
+  for (const name of changed) for (const [path, page] of Object.entries(run.variants[name].pages)) for (const [key, now] of Object.entries(page.metrics)) {
+    const old = prev.variants[name]?.pages?.[path]?.[key], d = drift(path, key)
+    if (!old || !now) continue
+    const was = { ...old, med: old.med * d, min: old.min * d, max: old.max * d }, c = compare(key, now, was)
     if (c && c.verdict !== 'tie') moved.push({ variant: name, page: path, key, was, now, delta: c.delta, verdict: c.verdict === 'win' ? 'better' : 'worse' })
   }
-  return moved
+  return { changed, controls, moved }
 }
 
 const pct = (n, of) => `${Math.round(100 * n / of)}%`
@@ -81,7 +91,7 @@ function tuneFor(run, name) {
 
 export function diagnose(run, prev) {
   const weft = Object.entries(run.variants).filter(([, v]) => v.family === 'weft').map(([k]) => k)
-  const out = { diff: prev ? { since: prev.at, commit: prev.commit, moved: diffRuns(run, prev) } : null, variants: {}, tune: [] }
+  const out = { diff: prev ? { since: prev.at, commit: prev.commit, ...diffRuns(run, prev) } : null, variants: {}, tune: [] }
   for (const name of weft) {
     const gaps = {}
     for (const path of Object.keys(run.variants[name].pages)) gaps[path] = GAPS.map(k => gapAgainstBest(run, name, path, k)).filter(Boolean).map(({ key, best, mine, theirs, delta, verdict }) => ({ key, best, mine: mine.med, theirs: theirs.med, delta, verdict }))
@@ -109,7 +119,7 @@ export function report(run) {
     out.push(`${name} ${path} against the best other: ahead on ${wins.join(', ') || 'nothing'}; behind on ${losses.join(', ') || 'nothing'}; within spread on ${ties.join(', ') || 'nothing'}.`)
   }
   const diff = run.diagnosis.diff
-  if (diff) out.push(`\nSince ${diff.commit} (${diff.since}): ${diff.moved.length ? '' : 'nothing moved past the spread.'}`, ...diff.moved.slice(0, 30).map(m => `  ${m.variant} ${m.page} ${METRICS[m.key].label}: ${fmt(m.key, m.was)} -> ${fmt(m.key, m.now)} (${m.verdict})`))
+  if (diff) out.push(`\nSince ${diff.commit} (${diff.since}): rebuilt ${diff.changed.join(', ') || 'nothing'}, controls ${diff.controls.join(', ') || 'none'}. ${diff.moved.length ? '' : 'Nothing moved past the spread.'}`, ...diff.moved.slice(0, 30).map(m => `  ${m.variant} ${m.page} ${METRICS[m.key].label}: ${fmt(m.key, m.was)} -> ${fmt(m.key, m.now)} (${m.verdict})`))
   if (run.diagnosis.tune.length) out.push('\nWhat to tune, most first:', ...run.diagnosis.tune.slice(0, 12).map((t, i) => `${i + 1}. [${t.where}] ${t.title} (~${t.impact} pts, ${t.variant}). ${t.why}`))
   return out.join('\n')
 }

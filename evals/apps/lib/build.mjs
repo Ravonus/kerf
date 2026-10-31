@@ -13,7 +13,7 @@ export const localMjs = join(repo, 'packages/create-weft/scripts/local.mjs')
 
 // Never copied: a real env file or anything else that can hold a credential, and any build or dependency folder.
 const SECRET = /(^|\/)(\.env(\.(?!example$)[^/]*)?|netlify\.env|\.neon|\.mcp\.json|[^/]*\.pem)$/
-const SKIP = /(^|\/)(node_modules|\.git|\.next|\.output|\.vinxi|\.nitro|\.netlify|\.vercel|\.claude|dist)(\/|$)/
+const SKIP = /(^|\/)(\._[^/]*|node_modules|\.git|\.next|\.output|\.vinxi|\.nitro|\.netlify|\.vercel|\.claude|dist)(\/|$)/
 
 function files(dir) {
   try {
@@ -135,7 +135,7 @@ export async function prepare(app, v, { work, runId, store, weft, buildRuns, reb
     if (b.key === key && existsSync(root)) {
       v.canary = b.canary; v.weft = b.weft; v.maps = b.maps
       v.fresh = fingerprint(root, v)
-      if (b.hashes === sha([...v.fresh.hashes].sort().join())) return { build: b.build, reused: true }
+      if (b.hashes === sha([...v.fresh.hashes].sort().join())) return { build: b.build, reused: true, key }
     }
   }
   rmSync(stamp, { force: true })
@@ -155,7 +155,7 @@ export async function prepare(app, v, { work, runId, store, weft, buildRuns, reb
   const build = await buildAll(v, buildRuns)
   v.maps = await buildWithMaps(v)
   writeFileSync(stamp, JSON.stringify({ key, canary: v.canary, weft: v.weft, maps: v.maps, build, hashes: sha([...v.fresh.hashes].sort().join()) }))
-  return { build, reused: false }
+  return { build, reused: false, key }
 }
 
 const clean = (root, v) => { for (const d of [...v.stack.out, 'node_modules/.vite', 'node_modules/.cache']) rmSync(join(root, d), { recursive: true, force: true }) }

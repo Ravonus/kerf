@@ -91,8 +91,8 @@ async function benchApp(app) {
   if (weft?.packed) say('  packed this checkout')
   let t = performance.now()
   await pool(variants, jobs, async v => {
-    const { build, reused } = await prepare(app, v, { work, runId, store, weft: weft?.inputs, buildRuns, rebuild: opt.rebuild })
-    out[v.name] = { label: v.label, stack: v.stack.id, family: v.stack.family, pm: v.pm, build, buildReused: reused, lines: linesOfCode(v), weft: v.weft, pages: {} }
+    const { build, reused, key } = await prepare(app, v, { work, runId, store, weft: weft?.inputs, buildRuns, rebuild: opt.rebuild })
+    out[v.name] = { label: v.label, stack: v.stack.id, family: v.stack.family, pm: v.pm, build, buildReused: reused, key: key.slice(0, 16), lines: linesOfCode(v), weft: v.weft, pages: {} }
     say(`  ${v.name}: ${reused ? 'build reused' : `built in ${Math.round(build.med)} ms`}, ${out[v.name].lines} lines, ${v.fresh.hashes.size} assets fingerprinted`)
   })
   phase('builds', t)
@@ -136,7 +136,7 @@ async function benchApp(app) {
   const prev = existsSync(history) ? readFileSync(history, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)).findLast(l => l.app === app.name && Object.keys(l.variants).some(k => k in out)) : null
   const run = { ...line, label: app.label, note: app.note, pages: app.pages.map(p => p.path), baseline: app.baseline, variants: out }
   run.diagnosis = diagnose(run, prev)
-  return { run, line: { ...line, variants: Object.fromEntries(Object.entries(out).map(([k, r]) => [k, { label: r.label, stack: r.stack, build: r.build, lines: r.lines, weft: r.weft?.tgz, pages: Object.fromEntries(Object.entries(r.pages).map(([p, x]) => [p, x.metrics])) }])) } }
+  return { run, line: { ...line, variants: Object.fromEntries(Object.entries(out).map(([k, r]) => [k, { label: r.label, stack: r.stack, key: r.key, build: r.build, lines: r.lines, weft: r.weft?.tgz, pages: Object.fromEntries(Object.entries(r.pages).map(([p, x]) => [p, x.metrics])) }])) } }
 }
 
 for (const app of apps) {

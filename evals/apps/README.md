@@ -94,6 +94,8 @@ app's last run; and a ranked list, where bytes and milliseconds are converted to
   and CSS file a sample touched has to hash to a file the build wrote. Any miss stops the run.
 - Weft variants go through `local.mjs refresh` into a private store, so each run measures this checkout, and the installed `weft`
   is compared to the tarball byte for byte. Servers run on ports checked to be free, each in its own process group.
+- A diff only reports variants that were rebuilt. Ones that weren't are controls: machine drift shows up in them, and is taken off
+  timing metrics before anything is called a change.
 - Peak load is recorded per run. Over 40 at start it refuses: use another machine, with `BENCH_WORK` set.
 
 The stack rule still holds: a claim about weft gets measured across the other variants, here and in `evals/compare`.
