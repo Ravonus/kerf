@@ -1,5 +1,7 @@
 // One Lighthouse run in its own process, Chrome and profile. Takes its arguments as JSON and prints a digest of the report.
-import { writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import * as chromeLauncher from 'chrome-launcher'
 import lighthouse from 'lighthouse'
 import desktopConfig from 'lighthouse/core/config/desktop-config.js'
@@ -47,7 +49,8 @@ function findings(lhr) {
 }
 
 const { url, formFactor, keepTo, real, chrome: chromePath } = JSON.parse(process.argv[2])
-const chrome = await chromeLauncher.launch({ chromePath, chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu'] })
+const userDataDir = mkdtempSync(join(tmpdir(), 'bench-lh-'))
+const chrome = await chromeLauncher.launch({ chromePath, userDataDir, chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu'] })
 try {
   const flags = { port: chrome.port, output: 'json', logLevel: 'silent', onlyCategories: ['performance'], ...(real ? { throttlingMethod: 'devtools' } : {}) }
   const { lhr } = await lighthouse(url, flags, formFactor === 'desktop' ? desktopConfig : undefined)
@@ -59,5 +62,5 @@ try {
     bootupMs: lhr.audits['bootup-time']?.numericValue, mainThreadMs: lhr.audits['mainthread-work-breakdown']?.numericValue,
     scripts: (lhr.audits['network-requests']?.details?.items ?? []).filter(r => r.resourceType === 'Script' || r.resourceType === 'Stylesheet').map(r => r.url),
   }))
-} finally { await chrome.kill() }
+} finally { await chrome.kill(); rmSync(userDataDir, { recursive: true, force: true }) }
 process.exit(0)

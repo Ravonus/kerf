@@ -8,7 +8,7 @@ export const here = fileURLToPath(new URL('..', import.meta.url))
 export const stacks = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))
 
 const LOCKS = [['pnpm-lock.yaml', 'pnpm'], ['bun.lock', 'bun'], ['bun.lockb', 'bun'], ['yarn.lock', 'yarn'], ['package-lock.json', 'npm']]
-const INSTALL = { npm: ['npm', 'ci'], pnpm: ['pnpm', 'install', '--frozen-lockfile'], bun: ['bun', 'install', '--frozen-lockfile'], yarn: ['yarn', 'install', '--frozen-lockfile'] }
+const INSTALL = { npm: ['ci'], pnpm: ['install', '--frozen-lockfile'], bun: ['install', '--frozen-lockfile'], yarn: ['install', '--frozen-lockfile'] }
 
 /** The apps `--all` means: every folder beside this file with an app.json. */
 export const allApps = () => readdirSync(here).filter(d => existsSync(join(here, d, 'app.json')))
@@ -36,9 +36,10 @@ function resolveVariant(name, spec, app, dir) {
   const pm = spec.pm ?? (pkg.packageManager?.split('@')[0]) ?? LOCKS.find(([f]) => existsSync(join(root, f)))?.[1] ?? 'npm'
   return {
     name, label: spec.label ?? stack.label, path, cwd, pkg, stack, pm, env: spec.env ?? {},
-    install: spec.install ?? INSTALL[pm], build: spec.build ?? (pkg.scripts?.build ? `${pm} run build` : 'npx vite build'),
+    // A pinned package manager is used at that version whatever this machine has; `npm run` starts anyone's scripts.
+    install: spec.install ?? [...(pkg.packageManager ? ['npx', '-y', pkg.packageManager] : [pm]), ...INSTALL[pm]], build: spec.build ?? (pkg.scripts?.build ? 'npm run build' : 'npx vite build'),
     // A variant with no start script is a static build: bench serves its output, compressed the way a CDN would.
-    start: spec.start ?? (pkg.scripts?.start ? `${pm} run start` : null),
+    start: spec.start ?? (pkg.scripts?.start ? 'npm run start' : null),
     src: spec.src ?? ['src'], publicDir: spec.publicDir ?? 'public', tarballs: stack.family === 'weft',
   }
 }
