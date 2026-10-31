@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>App benchmark</title>
+<style>
+:root { color-scheme: light; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #6f6e69; --line: #e4e3df;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #7a5bd0; --p1: #2a78d6; --p2: #eb6834; --p3: #1baf7a; --p4: #b9b8b1; }
+@media (prefers-color-scheme: dark) { :root { color-scheme: dark; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #9d9c92; --line: #33332f;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #8a6fe0; --p1: #3987e5; --p2: #d95926; --p3: #199e70; --p4: #5d5c56; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; } h2 { font-size: 22px; margin: 48px 0 2px; border-top: 1px solid var(--line); padding-top: 24px; } h3 { font-size: 17px; margin: 0 0 2px; } p { margin: 0; color: var(--ink-2); }
+section { margin-top: 32px; } .note { font-size: 13px; color: var(--ink-3); margin-bottom: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin: 8px 0; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; } svg text { fill: var(--ink-2); font-size: 12px; }
+#tip { position: fixed; pointer-events: none; display: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; box-shadow: 0 4px 16px #0003; z-index: 2; }
+details { margin-top: 10px; font-size: 13px; color: var(--ink-2); } table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.scroll { overflow-x: auto; } th, td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; } th:first-child, td:first-child { text-align: left; }
+ol { padding-left: 22px; margin: 8px 0 0; } li { margin-bottom: 8px; font-size: 14px; color: var(--ink-2); } li b { color: var(--ink); } .where { font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; margin-right: 4px; color: var(--ink-2); }
+select { font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; margin-left: 8px; }
+</style></head><body><main>
+<h1>App benchmark</h1><p id="sub"></p>
+<div id="apps"></div>
+</main><div id="tip"></div>
+<script>
+const { results, history, METRICS } = /*DATA*/null
+const kb = n => (n / 1024).toFixed(1), $ = id => document.getElementById(id)
+const NS = 'http://www.w3.org/2000/svg'
+const el = (n, a = {}, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p?.append(e); return e }
+const txt = (p, x, y, s, a = {}) => { const t = el('text', { x, y, ...a }, p); t.textContent = s; return t }
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
+const tip = $('tip')
+const hover = (e, html) => { e.addEventListener('pointermove', v => { tip.innerHTML = html; tip.style.display = 'block'; tip.style.left = Math.min(v.clientX + 12, innerWidth - 240) + 'px'; tip.style.top = v.clientY + 12 + 'px' }); e.addEventListener('pointerleave', () => (tip.style.display = 'none')) }
+const legendHtml = items => items.map(([c, t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join('')
+const nice = m => { const p = 10 ** Math.floor(Math.log10(m || 1)), s = [1, 2, 5, 10].find(x => x * p >= m / 4); return s * p }
+const fmt = (key, v) => { const u = METRICS[key].unit; return u === 'bytes' ? `${kb(v)} KB` : u === 'MB' ? `${v.toFixed(2)} MB` : key.endsWith('.cls') ? v.toFixed(3) : `${Math.round(v)}${u ? ` ${u}` : ''}` }
+
+function bars(host, rows, unit) { // [{ name, parts: [[value, colour, title]] }]
+  const W = 900, row = 34, left = 150, max = Math.max(...rows.map(r => r.parts.reduce((n, p) => n + p[0], 0)), 1e-6), svg = el('svg', { viewBox: `0 0 ${W} ${rows.length * row}`, role: 'img' }, host)
+  const x = v => v / max * (W - left - 110)
+  rows.forEach((r, i) => {
+    const y = i * row + 5; txt(svg, 0, y + 16, r.name); let at = left, total = 0
+    const parts = r.parts.filter(p => p[0] > 0)
+    parts.forEach(([v, c, t], k) => { const w = Math.max(x(v) - 2, 1), last = k === parts.length - 1
+      const b = el('path', { d: last && w > 4 ? `M${at} ${y}h${w - 4}a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-${w - 4}z` : `M${at} ${y}h${w}v22h-${w}z`, fill: c }, svg); hover(b, `<b>${esc(r.name)}</b><br>${esc(t)}: ${Math.round(v * 10) / 10} ${unit}`); at += x(v); total += v })
+    txt(svg, at + 6, y + 16, `${Math.round(total * 10) / 10} ${unit}`, { style: 'fill:var(--ink)' })
+  })
+}
+
+/** Median dot with its min–max whisker per variant. The whisker is the point: overlapping ones are a tie. */
+function ranges(host, keys, app, path, key, color) {
+  const W = 440, row = 26, left = 104, right = 96, m = METRICS[key], vals = keys.map(k => app.variants[k].pages[path]?.metrics[key]).filter(Boolean)
+  if (!vals.length) return
+  const lo = Math.min(...vals.map(v => v.min)), hi = Math.max(...vals.map(v => v.max)), pad = (hi - lo || Math.abs(hi) || 1) * 0.12
+  const from = m.unit === '' && key.endsWith('.score') ? Math.min(lo - pad, 100) : Math.max(0, lo - pad), to = key.endsWith('.score') ? Math.min(100, hi + pad) : hi + pad
+  const X = v => left + (v - from) / (to - from || 1) * (W - left - right), svg = el('svg', { viewBox: `0 0 ${W} ${keys.length * row + 4}`, role: 'img', 'aria-label': m.label }, host)
+  keys.forEach((k, i) => {
+    const s = app.variants[k].pages[path]?.metrics[key], y = i * row + 13
+    txt(svg, 0, y + 4, app.variants[k].label)
+    el('line', { x1: left, x2: W - right, y1: y, y2: y, stroke: 'var(--line)' }, svg)
+    if (!s) return
+    el('line', { x1: X(s.min), x2: X(s.max), y1: y, y2: y, stroke: color(k), 'stroke-width': 2, 'stroke-linecap': 'round' }, svg)
+    el('circle', { cx: X(s.med), cy: y, r: 5, fill: color(k), stroke: 'var(--surface)', 'stroke-width': 2 }, svg)
+    txt(svg, W - right + 8, y + 4, fmt(key, s.med), { style: 'fill:var(--ink)' })
+    hover(el('rect', { x: 0, y: y - 12, width: W, height: 24, fill: 'transparent' }, svg), `<b>${esc(app.variants[k].label)}</b><br>median ${fmt(key, s.med)}<br>range ${fmt(key, s.min)} – ${fmt(key, s.max)}, n=${s.n}`)
+  })
+}
+
+function trend(host, keys, lines, get, unit, color, app) {
+  const W = 900, H = 220, L = 44, R = 110, T = 10, B = 26, xs = lines.map(l => l.commit), svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' }, host)
+  const vals = keys.flatMap(k => lines.map(l => get(l, k))).filter(v => v != null), max = Math.max(...vals) * 1.05, step = nice(max)
+  const X = i => L + i / Math.max(xs.length - 1, 1) * (W - L - R), Y = v => H - B - v / max * (H - T - B)
+  for (let v = 0; v <= max; v += step) { el('line', { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: 'var(--line)' }, svg); txt(svg, L - 6, Y(v) + 4, v, { 'text-anchor': 'end' }) }
+  xs.forEach((x, i) => txt(svg, X(i), H - 8, x, { 'text-anchor': 'middle' }))
+  for (const k of keys) {
+    const pts = lines.map((l, i) => [i, get(l, k), l]).filter(p => p[1] != null)
+    if (!pts.length) continue
+    el('polyline', { points: pts.map(([i, v]) => `${X(i)},${Y(v)}`).join(' '), fill: 'none', stroke: color(k), 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg)
+    for (const [i, v, l] of pts) { el('circle', { cx: X(i), cy: Y(v), r: 4, fill: color(k), stroke: 'var(--surface)', 'stroke-width': 2 }, svg); hover(el('circle', { cx: X(i), cy: Y(v), r: 12, fill: 'transparent' }, svg), `<b>${esc(app.variants[k]?.label ?? k)}</b><br>${l.commit}, ${new Date(l.at).toDateString()}: ${Math.round(v * 10) / 10} ${unit}`) }
+    const [i, v] = pts.at(-1); txt(svg, X(i) + 8, Y(v) + 4, app.variants[k]?.label ?? k)
+  }
+}
+
+const TYPES = [['js', 'JS', '--p1'], ['css', 'CSS', '--p2'], ['html', 'HTML', '--p3'], ['font', 'Fonts', '--p4']]
+const GROUPS = ['runtime', 'router', 'data', 'warp', 'kit', 'app', 'other', 'wrapper', 'unmapped'], GROUP_COLOR = g => (GROUPS.indexOf(g) > 5 ? 'var(--p4)' : `var(--s${GROUPS.indexOf(g) + 1})`)
+const PANELS = ['mobile.score', 'desktop.score', 'mobile.lcp', 'throttled.lcp', 'mobile.fcp', 'mobile.tbt', 'mobile.cls', 'mobile.si', 'browser.hydrate', 'browser.heap', 'browser.nodes', 'server.rps', 'server.rpsPlain', 'server.p95']
+
+function renderPage(body, name, app, path) {
+  const keys = Object.keys(app.variants), color = k => `var(--s${keys.indexOf(k) % 6 + 1})`, label = k => app.variants[k].label, pg = k => app.variants[k].pages[path]
+  body.innerHTML = ''
+  const section = (title, note) => { const s = document.createElement('section'); s.innerHTML = `<h3>${esc(title)}</h3>${note ? `<div class="note">${esc(note)}</div>` : ''}`; body.append(s); return s }
+  const panel = section('Score, time and server', `Dot is the median of ${app.runs} runs, the line is min to max. Lines that overlap are a tie, whatever the medians say.`)
+  panel.insertAdjacentHTML('beforeend', `<div class="legend">${legendHtml(keys.map(k => [color(k), label(k)]))}</div>`)
+  const grid = document.createElement('div'); grid.className = 'grid'; panel.append(grid)
+  for (const key of PANELS) { const d = document.createElement('div'); d.innerHTML = `<div class="note" style="margin:0"><b>${METRICS[key].label}</b>, ${METRICS[key].better === 'low' ? 'lower' : 'higher'} is better</div>`; ranges(d, keys, app, path, key, color); grid.append(d) }
+
+  const b = section('What the browser downloads', 'Everything the page fetched, brotli 11 for every variant so servers compare fairly, KB. Hover for a type.')
+  b.insertAdjacentHTML('beforeend', `<div class="legend">${legendHtml(TYPES.map(t => [`var(${t[2]})`, t[1]]))}</div>`)
+  bars(b, keys.map(k => ({ name: label(k), parts: TYPES.map(([t, n, c]) => [pg(k).metrics[`bytes.${t}.br`].med / 1024, `var(${c})`, n]) })), 'KB')
+
+  const phases = keys.map(k => ({ k, p: pg(k).lcp?.phases ?? {} })).filter(x => Object.keys(x.p).length)
+  if (phases.length) {
+    const names = [...new Set(phases.flatMap(x => Object.keys(x.p)))], s = section('Where LCP goes', 'Lighthouse mobile with the network and CPU really throttled, ms, from the run nearest the median. The score itself comes from Lantern, a model; its phases are in results.json.'), c = i => `var(--p${i % 4 + 1})`
+    s.insertAdjacentHTML('beforeend', `<div class="legend">${legendHtml(names.map((n, i) => [c(i), n]))}</div>`)
+    bars(s, phases.map(x => ({ name: label(x.k), parts: names.map((n, i) => [x.p[n] ?? 0, c(i), n]) })), 'ms')
+  }
+  const split = keys.filter(k => app.variants[k].split?.pages?.[path])
+  if (split.length) {
+    const s = section('Whose JS it is', 'From sourcemaps of a build with the same output, brotli KB shared out by raw bytes. Approximate: code compresses unevenly.')
+    const seen = [...new Set(split.flatMap(k => Object.keys(app.variants[k].split.pages[path].groups)))]
+    s.insertAdjacentHTML('beforeend', `<div class="legend">${legendHtml(seen.map(g => [GROUP_COLOR(g), g]))}</div>`)
+    bars(s, split.map(k => ({ name: label(k), parts: Object.entries(app.variants[k].split.pages[path].groups).map(([g, n]) => [n / 1024, GROUP_COLOR(g), g]) })), 'KB')
+  }
+  const top = section('Largest resources', 'Per variant, br KB, with the share that did not run at load.')
+  top.insertAdjacentHTML('beforeend', `<div class="scroll"><table><thead><tr><th>Resource</th><th>Variant</th><th>Type</th><th>br KB</th><th>Unused</th><th>Served as</th></tr></thead><tbody>${keys.flatMap(k => pg(k).top.slice(0, 5).map(r => `<tr><td>${esc(r.path.slice(-48))}</td><td>${esc(label(k))}</td><td>${r.type}</td><td>${kb(r.br)}</td><td>${r.unusedPct == null ? '–' : `${r.unusedPct}%`}</td><td>${r.encoding}</td></tr>`)).join('')}</tbody></table></div>`)
+  const all = section('Every number')
+  const rows = Object.keys(METRICS).map(m => `<tr><td>${METRICS[m].label}</td>${keys.map(k => { const s = pg(k).metrics[m]; return `<td>${s ? `${fmt(m, s.med)}${s.max > s.min ? ` (${fmt(m, s.min)}–${fmt(m, s.max)})` : ''}` : '—'}</td>` }).join('')}</tr>`)
+  all.insertAdjacentHTML('beforeend', `<details><summary>Show the table</summary><div class="scroll"><table><thead><tr><th></th>${keys.map(k => `<th>${esc(label(k))}</th>`).join('')}</tr></thead><tbody>${rows.join('')}<tr><td>Hydration measured by</td>${keys.map(k => `<td>${pg(k).method}</td>`).join('')}</tr><tr><td>Fresh build confirmed</td>${keys.map(k => `<td>${pg(k).fresh.canary ? `yes, ${pg(k).fresh.samples} samples` : 'NO'}</td>`).join('')}</tr></tbody></table></div></details>`)
+}
+
+function renderApp(host, name, app) {
+  const keys = Object.keys(app.variants), color = k => `var(--s${keys.indexOf(k) % 6 + 1})`, d = app.diagnosis
+  const wrap = document.createElement('div'); host.append(wrap)
+  wrap.innerHTML = `<h2>${esc(app.label)}</h2><p>${esc(app.note ?? '')}</p><div class="note">${keys.length} variants on ${app.commit}${app.dirty ? ' (dirty)' : ''}, ${new Date(app.at).toDateString()}, ${app.runs} runs, peak load ${app.loadMax?.toFixed(1)} on ${app.cores} cores.</div>
+    <section><h3>Build and code</h3><div class="scroll"><table><thead><tr><th></th>${keys.map(k => `<th>${esc(app.variants[k].label)}</th>`).join('')}</tr></thead><tbody>
+    <tr><td>Build, median</td>${keys.map(k => `<td>${(app.variants[k].build.med / 1000).toFixed(1)} s</td>`).join('')}</tr>
+    <tr><td>Lines of app code</td>${keys.map(k => `<td>${app.variants[k].lines}</td>`).join('')}</tr>
+    <tr><td>Server memory after load</td>${keys.map(k => `<td>${app.variants[k].rssMB ? `${Math.round(app.variants[k].rssMB)} MB` : '–'}</td>`).join('')}</tr></tbody></table></div></section>`
+  if (d.tune.length) wrap.insertAdjacentHTML('beforeend', `<section><h3>What to tune, most first</h3><div class="note">Estimated mobile score points; size and time are converted at the rates in lib/diagnose.mjs, so read the order, not the digits.</div><ol>${d.tune.slice(0, 12).map(t => `<li><span class="where">${t.where}</span><b>${esc(t.title)}</b> ~${t.impact} pts on ${esc(t.variant)}. ${esc(t.why)}</li>`).join('')}</ol></section>`)
+  if (d.diff) wrap.insertAdjacentHTML('beforeend', `<section><h3>Since ${esc(d.diff.commit)}</h3><div class="note">Only changes past the spread of both runs.</div>${d.diff.moved.length ? `<div class="scroll"><table><thead><tr><th>Metric</th><th>Variant</th><th>Page</th><th>Was</th><th>Now</th><th>Change</th></tr></thead><tbody>${d.diff.moved.slice(0, 30).map(m => `<tr><td>${METRICS[m.key].label}</td><td>${esc(m.variant)}</td><td>${esc(m.page)}</td><td>${fmt(m.key, m.was.med)}</td><td>${fmt(m.key, m.now.med)}</td><td>${m.verdict}</td></tr>`).join('')}</tbody></table></div>` : '<p>Nothing moved past the spread.</p>'}</section>`)
+  const lines = history.filter(l => l.app === name)
+  if (lines.length > 1) {
+    const s = document.createElement('section'); s.innerHTML = `<h3>Over time</h3><div class="note">Mobile score of ${esc(app.pages[0])} per run.</div>`; wrap.append(s)
+    trend(s, keys, lines, (l, k) => l.variants[k]?.pages?.[app.pages[0]]?.['mobile.score']?.med ?? null, '', color, app)
+  }
+  const pick = document.createElement('section'); pick.innerHTML = `<label class="note">Page<select>${app.pages.map(p => `<option>${esc(p)}</option>`).join('')}</select></label>`; wrap.append(pick)
+  const body = document.createElement('div'); wrap.append(body)
+  const sel = pick.querySelector('select'); sel.onchange = () => renderPage(body, name, app, sel.value); renderPage(body, name, app, app.pages[0])
+}
+const names = Object.keys(results)
+$('sub').textContent = `${names.length} app${names.length === 1 ? '' : 's'}: production builds on one machine. A win is only called when the samples don't overlap.`
+for (const n of names) renderApp($('apps'), n, results[n])
+</script></body></html>
