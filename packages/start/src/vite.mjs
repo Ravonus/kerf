@@ -321,7 +321,8 @@ function serverRoutes(manifest, abs, dev, plan) {
   // A file with no default export renders nothing, and may leave no chunk for the manifest to find.
   const renders = f => levels.has(f) && /\bdefault\b/.test(readFileSync(abs(f), 'utf8'))
   const isStatic = f => plan?.statics.has(abs(f))
-  const css = f => dev ? JSON.stringify(dev.files[f] ?? []) : `import.meta.vite.assets(${JSON.stringify({ import: abs(f) + (isStatic(f) ? ASSETS : ''), environment: 'client' }).replaceAll(')', '\\u0029')}).css`
+  const clientAssets = file => `import.meta.vite.assets(${JSON.stringify({ import: file, environment: 'client' }).replaceAll(')', '\\u0029')})`
+  const css = f => dev ? JSON.stringify(dev.files[f] ?? []) : `${clientAssets(abs(f) + (isStatic(f) ? ASSETS : ''))}.css`
   return [
     ...unique.map((f, i) => `import * as m${i} from ${JSON.stringify(abs(f))}`),
     `import { runtime } from ${JSON.stringify(join(here, 'data.ts'))}`,
@@ -335,6 +336,8 @@ export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? []
     `export const manifest = ${JSON.stringify({ dir: manifest.dir, routes: manifest.routes, layouts: manifest.layouts, defaultCard: manifest.defaultCard })}`,
     // The built-in 404 and error pages have no state, and stand in only when the app has no route file for them.
     `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter(r => isStatic(r.file)).map(r => r.id), ...['404', 'error'].filter(id => !manifest.routes.some(r => r.id === id))])}`,
+    // The chunks a page's levels and islands will import, for the document's modulepreloads. Dev has no chunks.
+    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file])].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
     `export const modules = { ${unique.map((f, i) => `${JSON.stringify(f)}: ${renders(f) ? `styled(m${i}, ${css(f)})` : `m${i}`}`).join(', ')} }`,
   ].join('\n')
 }
@@ -385,7 +388,8 @@ function clientRoutes(manifest, abs, plan) {
   const isStatic = r => plan?.statics.has(abs(r.file))
   // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
   const loads = levels.map(r => `${JSON.stringify(r.id)}: () => import(${JSON.stringify(abs(r.file) + (isStatic(r) ? ASSETS : ''))})`)
-  const islands = (plan?.islands ?? []).map((i, n) => `${JSON.stringify(i.id)}: () => import(${JSON.stringify(ISLAND + n)})`)
+  // Straight from the file: a module of its own per island would be a chunk that only re-exports.
+  const islands = (plan?.islands ?? []).map(i => `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`)
   return `export const table = ${JSON.stringify(table)}\nexport const load = { ${loads.join(', ')} }\nexport const islands = { ${islands.join(', ')} }\n`
 }
 
@@ -414,7 +418,7 @@ async function assetsOnly(ctx, code, path, root, words) {
 
 function serverEntry(clientEntry, dev) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
-import { manifest, modules, routeCss, statics } from '${V.routes}'
+import { chunks, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
 import context from '${V.context}'
 import auth from '${V.auth}'
@@ -424,7 +428,7 @@ import realtime from '${V.realtime}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, statics, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
+const fetch = createHandler({ manifest, modules, statics, chunks, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQACFMRW]\\d{3}:? /, '')}\`) })
 export default { fetch }

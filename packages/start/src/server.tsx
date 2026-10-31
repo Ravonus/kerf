@@ -67,6 +67,8 @@ export interface HandlerOptions {
   fonts?: Font[]
   /** Route and layout ids with no client code (PLAN §11): the server sends their HTML. */
   statics?: string[]
+  /** Client chunks by level or island id: the page's own are preloaded, so they don't wait for the entry to ask. */
+  chunks?: Record<string, { js?: { href: string }[] }>
   /** Stream timeout for Boundaries (ms). */
   timeout?: number
   /** The app's context for `load` and server functions (`src/context.server.ts`'s default export). */
@@ -248,7 +250,7 @@ export function createHandler(options: HandlerOptions) {
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
       sheets(assets) +
       // The entry's own script tag, just below, already fetches it.
-      (assets.js ?? []).filter(c => c.href !== assets.entry).map(c => `<link rel="modulepreload" href="${esc(c.href)}">\n`).join('') +
+      modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks)], assets) +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
@@ -626,6 +628,16 @@ function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
  * The payload with its static levels marked: their hash, without their data (the HTML holds it), and with `html` their
  * HTML, each level's next one cut down to its markers. The `aria-current` a navigation moves doesn't count as a change.
  */
+/** The chunks `payload`'s page imports on load: its non-static levels and its islands. */
+const pageChunks = (payload: RoutePayload, chunks: HandlerOptions['chunks'] = {}) =>
+  [...payload.m.filter(m => !m.s).map(m => m.id), ...(payload.i ?? [])].flatMap(id => chunks[id]?.js ?? [])
+
+function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerOptions['assets']>) {
+  const hrefs = new Set(chunks.map(c => c.href))
+  hrefs.delete(assets.entry!)
+  return [...hrefs].map(href => `<link rel="modulepreload" href="${esc(href)}">\n`).join('')
+}
+
 function withLevels(payload: RoutePayload, html: string, statics: Set<string>, sendHtml: boolean): RoutePayload {
   if (!payload.m.some(m => statics.has(m.id))) return payload
   const slice = (d: number) => {
