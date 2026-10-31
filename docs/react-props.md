@@ -41,7 +41,8 @@ Three things differ from weft before this was added:
 **`data-*` booleans are presence flags.** `data-open={true}` writes `data-open=""` and `data-open={false}` removes it;
 React writes `"true"` and `"false"`. So `[data-open]` works in weft, and `[data-open="true"]` doesn't match. For React's
 output, pass a string: `data-open={String(open)}`. weft's own components and recorded output depend on the presence form,
-so this stays.
+so this stays. `weft check` reports a literal `{true}` or `{false}` here as W043, and `weft fix` rewrites it to what it
+already renders: `data-open`, or nothing.
 
 ## Events
 
