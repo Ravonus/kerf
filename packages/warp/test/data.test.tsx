@@ -146,6 +146,13 @@ test('Columns: a disclosure of checkboxes hides a column by stylesheet, without 
   expect(open.getAttribute('aria-expanded')).toBe('true')
   c.querySelectorAll<HTMLElement>('[role="group"] input')[1].click(); await flush()
   expect(c.querySelector('style')!.textContent).toContain('[data-col="budget"]{display:none}')
+  // a mouse press on a label sends focus to the nearest focusable ancestor, such as the shell's <main tabindex="-1">
+  fireEvent.focusOut(c.querySelector('[role="group"] input')!, { relatedTarget: c })
+  await flush()
+  expect(open.getAttribute('aria-expanded')).toBe('true')
+  fireEvent.focusOut(c.querySelector('[role="group"] input')!, { relatedTarget: document.body.appendChild(document.createElement('button')) })
+  await flush()
+  expect(open.getAttribute('aria-expanded')).toBe('false')
 })
 
 const nav = [{ label: 'Workspace', items: ['a', 'b', 'c', 'd', 'e'].map(id => ({ id, label: id.toUpperCase(), href: `#${id}` })) }, { label: 'Views', items: [{ id: 'v', label: 'V', href: '#v' }] }]

@@ -1,0 +1,458 @@
+{
+ "weft-warp": {
+  "size": {
+   "js": {
+    "raw": 75974,
+    "gz": 23429,
+    "br": 21100
+   },
+   "css": {
+    "raw": 161588,
+    "gz": 23497,
+    "br": 19640
+   }
+  },
+  "lines": 44,
+  "version": {},
+  "load": {
+   "scriptMs": 68,
+   "taskMs": 199,
+   "fcpMs": 176,
+   "heapMB": 3.32,
+   "nodes": 1865
+  },
+  "parity": {
+   "steps": {
+    "live cell": {
+     "ok": true,
+     "dom": 3
+    },
+    "sort": {
+     "ok": true,
+     "dom": 39
+    },
+    "next page": {
+     "ok": true,
+     "dom": 43
+    },
+    "filter": {
+     "ok": true,
+     "dom": 57
+    },
+    "clear filter": {
+     "ok": true,
+     "dom": 59
+    },
+    "select row": {
+     "ok": true,
+     "dom": 8
+    },
+    "details open": {
+     "ok": true,
+     "dom": 20
+    },
+    "column picker": {
+     "ok": true,
+     "dom": 11
+    },
+    "account menu": {
+     "ok": true,
+     "dom": 5
+    }
+   },
+   "errors": []
+  },
+  "sweep": {
+   "1": {
+    "js": {
+     "raw": 77201,
+     "gz": 23886,
+     "br": 21500
+    },
+    "css": {
+     "raw": 161588,
+     "gz": 23497,
+     "br": 19640
+    }
+   },
+   "10": {
+    "js": {
+     "raw": 96276,
+     "gz": 26055,
+     "br": 23316
+    },
+    "css": {
+     "raw": 161588,
+     "gz": 23497,
+     "br": 19640
+    }
+   },
+   "50": {
+    "js": {
+     "raw": 181620,
+     "gz": 35063,
+     "br": 28708
+    },
+    "css": {
+     "raw": 161588,
+     "gz": 23497,
+     "br": 19640
+    }
+   },
+   "200": {
+    "js": {
+     "raw": 503974,
+     "gz": 69672,
+     "br": 42697
+    },
+    "css": {
+     "raw": 161588,
+     "gz": 23497,
+     "br": 19640
+    }
+   }
+  }
+ },
+ "solid-kobalte": {
+  "size": {
+   "js": {
+    "raw": 179661,
+    "gz": 54988,
+    "br": 48696
+   },
+   "css": {
+    "raw": 10054,
+    "gz": 2959,
+    "br": 2558
+   }
+  },
+  "lines": 124,
+  "version": {},
+  "load": {
+   "scriptMs": 73,
+   "taskMs": 148,
+   "fcpMs": 132,
+   "heapMB": 3.81,
+   "nodes": 617
+  },
+  "parity": {
+   "steps": {
+    "live cell": {
+     "ok": true,
+     "dom": 40
+    },
+    "sort": {
+     "ok": true,
+     "dom": 46
+    },
+    "next page": {
+     "ok": true,
+     "dom": 43
+    },
+    "filter": {
+     "ok": true,
+     "dom": 46
+    },
+    "clear filter": {
+     "ok": true,
+     "dom": 43
+    },
+    "select row": {
+     "ok": true,
+     "dom": 5
+    },
+    "details open": {
+     "ok": true,
+     "dom": 3
+    },
+    "column picker": {
+     "ok": true,
+     "dom": 69
+    },
+    "account menu": {
+     "ok": true,
+     "dom": 25
+    }
+   },
+   "errors": []
+  },
+  "sweep": {
+   "1": {
+    "js": {
+     "raw": 180765,
+     "gz": 55392,
+     "br": 49092
+    },
+    "css": {
+     "raw": 10054,
+     "gz": 2959,
+     "br": 2558
+    }
+   },
+   "10": {
+    "js": {
+     "raw": 196233,
+     "gz": 57567,
+     "br": 50934
+    },
+    "css": {
+     "raw": 10054,
+     "gz": 2959,
+     "br": 2558
+    }
+   },
+   "50": {
+    "js": {
+     "raw": 265467,
+     "gz": 66425,
+     "br": 56122
+    },
+    "css": {
+     "raw": 10054,
+     "gz": 2959,
+     "br": 2558
+    }
+   },
+   "200": {
+    "js": {
+     "raw": 527371,
+     "gz": 99335,
+     "br": 69320
+    },
+    "css": {
+     "raw": 10054,
+     "gz": 2959,
+     "br": 2558
+    }
+   }
+  }
+ },
+ "react-radix": {
+  "size": {
+   "js": {
+    "raw": 378993,
+    "gz": 116592,
+    "br": 100847
+   },
+   "css": {
+    "raw": 10099,
+    "gz": 2951,
+    "br": 2552
+   }
+  },
+  "lines": 135,
+  "version": {},
+  "load": {
+   "scriptMs": 119,
+   "taskMs": 191,
+   "fcpMs": 192,
+   "heapMB": 4.39,
+   "nodes": 508
+  },
+  "parity": {
+   "steps": {
+    "live cell": {
+     "ok": true,
+     "dom": 3
+    },
+    "sort": {
+     "ok": true,
+     "dom": 60
+    },
+    "next page": {
+     "ok": true,
+     "dom": 65
+    },
+    "filter": {
+     "ok": true,
+     "dom": 73
+    },
+    "clear filter": {
+     "ok": true,
+     "dom": 62
+    },
+    "select row": {
+     "ok": true,
+     "dom": 6
+    },
+    "details open": {
+     "ok": true,
+     "dom": 5
+    },
+    "column picker": {
+     "ok": true,
+     "dom": 72
+    },
+    "account menu": {
+     "ok": true,
+     "dom": 26
+    }
+   },
+   "errors": []
+  },
+  "sweep": {
+   "1": {
+    "js": {
+     "raw": 380257,
+     "gz": 116944,
+     "br": 101212
+    },
+    "css": {
+     "raw": 10099,
+     "gz": 2951,
+     "br": 2552
+    }
+   },
+   "10": {
+    "js": {
+     "raw": 397005,
+     "gz": 118988,
+     "br": 102918
+    },
+    "css": {
+     "raw": 10099,
+     "gz": 2951,
+     "br": 2552
+    }
+   },
+   "50": {
+    "js": {
+     "raw": 471990,
+     "gz": 127190,
+     "br": 107625
+    },
+    "css": {
+     "raw": 10099,
+     "gz": 2951,
+     "br": 2552
+    }
+   },
+   "200": {
+    "js": {
+     "raw": 755344,
+     "gz": 156996,
+     "br": 119938
+    },
+    "css": {
+     "raw": 10099,
+     "gz": 2951,
+     "br": 2552
+    }
+   }
+  }
+ },
+ "react-mui": {
+  "size": {
+   "js": {
+    "raw": 996931,
+    "gz": 297450,
+    "br": 245347
+   },
+   "css": {
+    "raw": 0,
+    "gz": 0,
+    "br": 0
+   }
+  },
+  "lines": 90,
+  "version": {},
+  "load": {
+   "scriptMs": 341,
+   "taskMs": 450,
+   "fcpMs": 440,
+   "heapMB": 10.91,
+   "nodes": 765
+  },
+  "parity": {
+   "steps": {
+    "live cell": {
+     "ok": true,
+     "dom": 131
+    },
+    "sort": {
+     "ok": true,
+     "dom": 57
+    },
+    "next page": {
+     "ok": true,
+     "dom": 68
+    },
+    "filter": {
+     "ok": true,
+     "dom": 130
+    },
+    "clear filter": {
+     "ok": true,
+     "dom": 66
+    },
+    "select row": {
+     "ok": true,
+     "dom": 171
+    },
+    "details open": {
+     "ok": true,
+     "dom": 148
+    },
+    "column picker": {
+     "ok": true,
+     "dom": 323
+    },
+    "account menu": {
+     "ok": true,
+     "dom": 147
+    }
+   },
+   "errors": []
+  },
+  "sweep": {
+   "1": {
+    "js": {
+     "raw": 998195,
+     "gz": 297846,
+     "br": 245889
+    },
+    "css": {
+     "raw": 0,
+     "gz": 0,
+     "br": 0
+    }
+   },
+   "10": {
+    "js": {
+     "raw": 1014660,
+     "gz": 299852,
+     "br": 247501
+    },
+    "css": {
+     "raw": 0,
+     "gz": 0,
+     "br": 0
+    }
+   },
+   "50": {
+    "js": {
+     "raw": 1088565,
+     "gz": 307860,
+     "br": 251938
+    },
+    "css": {
+     "raw": 0,
+     "gz": 0,
+     "br": 0
+    }
+   },
+   "200": {
+    "js": {
+     "raw": 1367587,
+     "gz": 337802,
+     "br": 264101
+    },
+    "css": {
+     "raw": 0,
+     "gz": 0,
+     "br": 0
+    }
+   }
+  }
+ }
+}

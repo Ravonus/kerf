@@ -109,7 +109,8 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
   }
   const onFocusOut = (e: FocusEvent) => {
     const to = e.relatedTarget as Node | null
-    if (!remove || !to || el.contains(to) || o.trigger.contains(to)) return
+    // an ancestor taking focus isn't leaving: a press on plain text in the panel lands on a tabindex="-1" <main>
+    if (!remove || !to || el.contains(to) || to.contains(el) || o.trigger.contains(to)) return
     restore = false
     o.onClose()
   }

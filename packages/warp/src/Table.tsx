@@ -152,7 +152,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
   const editing = state(false)
   const problem = state('')
   const delta = state<string | undefined>(undefined)
-  const message = untrack(() => `${ctx.id}-${ctx.keyOf(row)}-${c.id}-e`)
+  const message = () => `${ctx.id}-${ctx.keyOf(row)}-${c.id}-e`
   const value = () => ctx.read(c, row)
   let td: HTMLElement | undefined
   if (c.live) watch(value, (now, was) => {
@@ -160,7 +160,8 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
     const dir = now > was ? 'up' : 'down'
     delta.value = delta.value === dir ? `${dir}2` : dir // two names per direction, so the flash replays
   })
-  const begin = () => { if (c.edit && !editing.value) { problem.value = ''; editing.value = true } }
+  let seed = ''
+  const begin = () => { if (c.edit && !editing.value) { seed = String(untrack(value) ?? ''); problem.value = ''; editing.value = true } }
   const done = (save: boolean, text: string) => {
     if (!editing.value) return
     if (save) {
@@ -193,7 +194,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
       onKeyDown={c.edit ? (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === 'F2')) { e.preventDefault(); begin() } } : undefined}
     >
       {editing.value
-        ? <><Editor label={`${c.header} for ${ctx.title(row)}`} start={String(value() ?? '')} onDone={done} />{problem.value && <span data-part="sr-only" id={message} role="alert">{problem.value}</span>}</>
+        ? <><Editor label={`${c.header} for ${ctx.title(row)}`} start={seed} onDone={done} />{problem.value && <span data-part="sr-only" id={message()} role="alert">{problem.value}</span>}</>
         : <Shown row={row} col={c} value={value} />}
     </td>
   )
@@ -224,7 +225,7 @@ function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
   return (
     <>
       <tr ref={(n: any) => (tr = n)} role="row" data-id={key()} data-selected={on() ? '' : undefined} data-clickable={ctx.details ? '' : undefined} onClick={ctx.details ? click : undefined}>
-        {ctx.sel && <td role="cell" data-part="select" data-pinned="first"><Checkbox checked={on()} aria-label={`Select ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.pick(key(), e)} /></td>}
+        {ctx.sel && <td role="cell" data-part="select" data-pinned="first"><Checkbox checked={ctx.sel.get(key())} aria-label={`Select ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.pick(key(), e)} /></td>}
         {ctx.details && <td role="cell" style="padding-inline:4px"><button type="button" data-part="expand" aria-expanded={opened() ? 'true' : 'false'} aria-controls={mounted.value ? detail() : undefined} aria-label={`Details for ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.toggle(row, e.currentTarget as HTMLElement)}>{chevron()}</button></td>}
         {ctx.cols().map(c => <Cell key={c.id} row={row} col={c} ctx={ctx} />)}
       </tr>
@@ -241,14 +242,14 @@ function Sheet<T>({ row, ctx, onClose }: { row: T; ctx: Ctx<T>; onClose: (restor
     close?.focus()
     onCleanup(pushLayer({ el: el!, close: reason => onClose(reason === 'escape') }))
   })
-  const id = untrack(() => `${ctx.id}-sh`)
+  const id = () => `${ctx.id}-sh`
   return (
-    <div ref={(n: any) => (el = n)} data-part="sheet" role="dialog" aria-modal="false" aria-labelledby={id}>
+    <div ref={(n: any) => (el = n)} data-part="sheet" role="dialog" aria-modal="false" aria-labelledby={id()}>
       <header>
-        <h4 id={id} aria-level={ctx.level} style="margin:0">{ctx.title(row)}</h4>
+        <h4 id={id()} aria-level={ctx.level} style="margin:0">{ctx.title(row)}</h4>
         <Button emphasis="ghost" tone="neutral" ref={(n: any) => (close = n)} onClick={() => onClose(true)}>Close</Button>
       </header>
-      <div tabindex="0" role="group" aria-labelledby={id}>{ctx.body(row)}</div>
+      <div tabindex="0" role="group" aria-labelledby={id()}>{ctx.body(row)}</div>
     </div>
   )
 }

@@ -133,7 +133,7 @@ function Entry({ entry, onPick }: { entry: MenuEntry; onPick: () => void }) {
 export function Shell({ variant = 'app', brand, title, crumbs, depth, back, close, step, command, actions, account, switcher, nav, foot, current, navLabel = 'Main', collapsed, label, island, dock, overlays, children }: ShellProps) {
   const base = uid('shell')
   const main = `${base}-main`, navId = `${base}-nav`, menuId = `${base}-menu`, sheetId = `${base}-sheet`
-  const focus = untrack(() => variant === 'focus')
+  const focus = derived(() => variant === 'focus')
   const folded = untrack(() => collapsed) ?? state<boolean | 'hidden'>(false)
   const navOpen = state(false)
   const wide = state(false)
@@ -193,19 +193,19 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
   )
   const page = <div data-part="page">{children}</div>
   return (
-    <div ref={(n: any) => (root = n)} data-scope="shell" data-part="root" data-variant={focus ? 'focus' : undefined} data-depth={depth} data-collapsed={folded.value === 'hidden' ? 'hidden' : folded.value ? '' : undefined} data-nav-open={navOpen.value ? '' : undefined}>
+    <div ref={(n: any) => (root = n)} data-scope="shell" data-part="root" data-variant={focus.value ? 'focus' : undefined} data-depth={depth} data-collapsed={folded.value === 'hidden' ? 'hidden' : folded.value ? '' : undefined} data-nav-open={navOpen.value ? '' : undefined}>
       <a data-part="skip" href={`#${main}`}>Skip to content</a>
       {folded.value === 'hidden' && <button type="button" data-part="edge-tab" aria-controls={navId} aria-expanded={navOpen.value ? 'true' : 'false'} aria-label={navOpen.value ? 'Hide navigation' : 'Show navigation'} onClick={() => (navOpen.value = !navOpen.value)}>{svg(RIGHT)}</button>}
       <div data-part="layout">
         <header data-part="header">
-          {focus && close && button(close, undefined, CLOSE)}
-          {!focus && back && button(back, 'back', LEFT)}
-          {!focus && brand && <a href={brand.href ?? '/'} data-part="brand" aria-label={`${brand.name}, home`}>{brand.mark}<span data-part="brand-name">{brand.name}</span></a>}
+          {focus.value && close && button(close, undefined, CLOSE)}
+          {!focus.value && back && button(back, 'back', LEFT)}
+          {!focus.value && brand && <a href={brand.href ?? '/'} data-part="brand" aria-label={`${brand.name}, home`}>{brand.mark}<span data-part="brand-name">{brand.name}</span></a>}
           {title !== undefined && <p data-part="title">{title}</p>}
-          {!focus && crumbs && <Crumbs items={crumbs} />}
+          {!focus.value && crumbs && <Crumbs items={crumbs} />}
           <div data-part="actions">
-            {focus && step !== undefined && <span style="white-space:nowrap;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">{step}</span>}
-            {!focus && command && (
+            {focus.value && step !== undefined && <span style="white-space:nowrap;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">{step}</span>}
+            {!focus.value && command && (
               <button type="button" data-part="command" data-sweep="" data-phase="idle" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" onClick={command.onOpen}>
                 {sweepParts()}<Icon name="search" />
                 <span data-part="command-label">{command.label ?? 'Search'}</span>
@@ -213,15 +213,15 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
                 <kbd aria-hidden="true">{command.shortcut ?? '⌘K'}</kbd>
               </button>
             )}
-            {!focus && actions}
-            {!focus && account && (
+            {!focus.value && actions}
+            {!focus.value && account && (
               <button type="button" style="display:inline-grid;place-items:center;inline-size:var(--warp-control-md);block-size:var(--warp-control-md);border:0;background:none;padding:0;cursor:pointer;border-radius:var(--warp-radius-round)" aria-haspopup="menu" aria-expanded={menuOpen.value ? 'true' : 'false'} aria-controls={menuId} onClick={(e: Event) => openMenu(e)} onKeyDown={menuKey}>
                 <span data-scope="avatar" aria-hidden="true">{account.initials}</span><span data-part="sr-only">Account: {account.name}</span>
               </button>
             )}
           </div>
         </header>
-        {!focus && (
+        {!focus.value && (
           <nav data-part="nav" aria-label={navLabel} id={navId} onClick={(e: MouseEvent) => { if ((e.target as Element).closest('a')) closeNav() }}>
             {groups.value[0]?.label !== undefined && <p data-part="nav-group" id={`${navId}-g`}>{groups.value[0].label}</p>}
             {switcher && (
@@ -259,7 +259,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
           : <main data-part="main" id={main} tabindex="-1">{page}{dock !== undefined && <div data-part="dock">{dock}</div>}</main>}
       </div>
       <div data-part="scrim" data-for="nav" hidden={!navOpen.value} onClick={closeNav}></div>
-      {!focus && account && (
+      {!focus.value && account && (
         <aside aria-label="Account" hidden={!menuOpen.value}>
         <div ref={(n: any) => (menuEl = n)} data-scope="menu" data-part="menu" role="menu" id={menuId} aria-label={`Account: ${account.name}${account.email ? `, ${account.email}` : ''}`} hidden={!menuOpen.value}>
           <div aria-hidden="true" style="display:flex;gap:10px;align-items:center;padding:10px">
@@ -285,7 +285,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
         </div>
         </aside>
       )}
-      {!focus && (
+      {!focus.value && (
         <dialog ref={(n: any) => (sheetEl = n)} data-part="sheet" aria-labelledby={sheetId} hidden={!moreOpen.value} style="margin:0;max-inline-size:none">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <p data-part="title" id={sheetId} style="margin:0;font-weight:600">More</p>

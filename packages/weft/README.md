@@ -10,7 +10,7 @@ and what Phase 1 proper should change: [docs/research/16-compiler-spike.md](../.
 | `weft/dom` | `render`, `hydrate`, plus the helpers compiled templates call and the keyed `For` |
 | `weft/ssr` | `renderToString`, `renderToStringAsync` (resources awaited), plus the helpers SSR output calls |
 | `weft/test` | `render` (a fresh app per call: `{ state, storage }` seed scopes and share storage), `scope()`, `memoryStorage()`, `flush`, `touches()`, and `expect(fn).toTouchAtMost(n, { runs })` |
-| `weft/vite` | `weft({ hydratable })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms; `?weft-ssr`/`?weft-hydrate` imports for tests), and one adding the `persist`/`history` imports |
+| `weft/vite` | `weft({ hydratable })`: a filtered transform hook calling the native compiler (SSR output for Vite's SSR transforms; `?weft-ssr`/`?weft-hydrate` imports for tests), and one adding the `persist`/`history` imports. Production builds also drop CSS nothing can reach: a `data-scope`, `data-part`, `data-variant`, `data-tone` or `data-emphasis` value no built file mentions, then the tokens and keyframes left unused. `weft({ purge: { keep: ['knob'] } })` keeps a name built at run time; `purge: false` turns it off. |
 | `weft/compiler` | `transform(source, options)` → `{ code, map, diagnostics }` |
 
 ```bash
