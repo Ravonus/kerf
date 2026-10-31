@@ -20,6 +20,8 @@ import { fileURLToPath } from 'node:url'
 
 import { scenes } from '../test/a11y/scenes/index.mjs'
 
+export { scenes }
+
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
 
@@ -175,8 +177,10 @@ async function pixelContrast(page, i) {
     const box = own.width ? { x: left, y: all.y, width: right - left, height: all.height } : all
     if (box.width < 1 || box.height < 1) return null
     // covered by an overlay in the top layer (an open tooltip over the text above its trigger): not this text's contrast
-    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog, [data-part="scrim"]')
+    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog, [data-part="scrim"], [data-scope="save-bar"]')
     if (top && !top.contains(el)) return null
+    // mid-sweep the label's sweep-content twin paints the same text over it: that twin is what's read
+    if (el.matches('[data-phase="in"] > [data-part="sweep-label"]')) return null
     const cs = getComputedStyle(el)
     let alpha = 1
     for (let e = el; e; e = e.parentElement) alpha *= Number(getComputedStyle(e).opacity)
@@ -190,7 +194,7 @@ async function pixelContrast(page, i) {
     return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
   }, sel)
   if (!info || info.a < 0.05) return null
-  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; }` })
+  const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } [data-scope="calendar"] [data-part="now"] { visibility: hidden !important; }` })
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })

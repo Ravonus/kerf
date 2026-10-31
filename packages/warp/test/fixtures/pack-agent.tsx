@@ -152,7 +152,7 @@ const search = () => typeof location === 'undefined' ? new URLSearchParams() : n
 export function Part() {
   const q = search()
   return (
-    <main style="display:grid;gap:28px;padding:16px;max-inline-size:1240px;margin-inline:auto">
+    <div style="display:grid;gap:28px;padding:16px;max-inline-size:1240px;margin-inline:auto">
       <Toaster />
       <h1>warp agent</h1>
       <Desk answer={q.has('approval') ? answers.approving : answers.finished} phone={typeof innerWidth === 'number' && innerWidth < 600} />
@@ -163,6 +163,6 @@ export function Part() {
       <Card title="Plan and queue"><PlanCase /></Card>
       <Card title="Artifact panel"><ArtifactCase /></Card>
       <Card title="Offline prompt"><BusyPromptCase /></Card>
-    </main>
+    </div>
   )
 }

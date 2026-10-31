@@ -113,7 +113,7 @@ const builds = {}
 // -- a11y at every dial stop
 if (!process.argv.includes('--skip-a11y')) {
   log('== a11y (axe + measured contrast, 12 stops)')
-  const { a11y, buildGallery } = await import(join(repo, 'packages', 'warp', 'scripts', 'a11y.mjs'))
+  const { a11y, buildGallery, scenes } = await import(join(repo, 'packages', 'warp', 'scripts', 'a11y.mjs'))
   const gallery = await buildGallery(join(results.size.work, 'gallery'))
   const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: builds.warp.dist }], { log: l => log(`   ${l}`) })
   const failures = r.results.flatMap(run => [

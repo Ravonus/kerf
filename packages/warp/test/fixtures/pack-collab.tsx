@@ -149,7 +149,8 @@ export const Part = () => {
             <LockedField peer={kofi} label="Owner" value="Kofi Mensah" />
             <ConflictAlert field="Ship date" peer={ana} time="10:31" theirs="Nov 25" yours="Nov 18" onUseTheirs={send} onKeepMine={send} onCompare={send} />
           </article>
-          <Cursors peers={cursors} />
+          {/* the audits outlast the idle fade, which is decorative and 40% by design: they read the active label */}
+          <Cursors peers={cursors} idle={3600000} />
         </div>
         <CommentRail threads={[threadOne, threadTwo]} active={active} />
       </Following>
