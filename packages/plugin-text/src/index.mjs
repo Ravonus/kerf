@@ -34,17 +34,19 @@ function face(role, f) {
 }
 
 function options(input) {
-  for (const key of Object.keys(input)) if (!['fonts', 'subsets', 'measure', 'engine'].includes(key)) fail(key, 'unknown option')
+  for (const key of Object.keys(input)) if (!['fonts', 'subsets', 'measure', 'engine', 'trim'].includes(key)) fail(key, 'unknown option')
   const measure = input.measure ?? 'auto'
   if (measure !== 'auto' && measure !== 'off') fail('measure', "must be 'auto' or 'off'")
   const engine = input.engine ?? 'slim'
   if (!ENGINES.includes(engine)) fail('engine', `must be ${ENGINES.map(e => `'${e}'`).join(' | ')}`)
+  const trim = input.trim ?? true
+  if (typeof trim !== 'boolean') fail('trim', 'must be true or false')
   const subsets = input.subsets ?? ['latin']
   if (!Array.isArray(subsets) || !subsets.length) fail('subsets', 'expected a non-empty array')
   for (const [i, s] of subsets.entries()) if (!SUBSETS.includes(s)) fail(`subsets.${i}`, `unknown subset \`${s}\` (${SUBSETS.join(', ')})`)
   const fonts = {}
   for (const [role, f] of Object.entries(input.fonts ?? {})) fonts[role] = face(role, f)
-  return { fonts, subsets, measure, engine }
+  return { fonts, subsets, measure, engine, trim }
 }
 
 export const text = definePlugin({
@@ -56,7 +58,7 @@ export const text = definePlugin({
   contribute: o => ({
     provides: [
       provide(fontBuild, {
-        sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createFontBuild', options: { fonts: o.fonts, subsets: o.subsets } } },
+        sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createFontBuild', options: { fonts: o.fonts, subsets: o.subsets, trim: o.trim } } },
       }),
       ...(o.measure === 'off' ? [] : [provide(textMeasure, { sides: { client: { module: '@weft/plugin-text/measure', export: 'createMeasure', options: { engine: o.engine } } } })]),
     ],
@@ -65,6 +67,7 @@ export const text = definePlugin({
       text: [
         '- Declare fonts once in `text({ fonts })` in weft.config.ts: `{ body: { family, src, fallback } }`. Never hand-write `@font-face` (X020).',
         "- The build subsets each face by `unicode-range`, adds a metric-matched `\"<Family> Fallback\"` face and preloads `body` and `display`. `weft/vite` loads them: no import. `weft docs fonts`.",
+        "- A build trims faces on its own: custom axes the source never varies are pinned, and uncommon latin characters load on demand. An axis set at runtime needs declaring in `axes`; `trim: false` turns it all off.",
         '- `text.measure` is lazy: it costs nothing until something measures, a canvas `s.text()`, `measure()`, `lines()` or `fit()` from weft/text, or a warp list given `text` (`measure: \'off\'` removes it).',
         "- Font stacks name the fallback second: `font-family: \"Inter\", \"Inter Fallback\", sans-serif`. `font-display` is `swap` or `optional`, never `block` (X021).",
       ].join('\n'),

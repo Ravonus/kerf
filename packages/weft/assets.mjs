@@ -4,7 +4,7 @@
 // gives dimensions (a header probe) and the fonts modules are empty. With a font build the client imports `weft:fonts`
 // on its own: the entry a Start app boots from, or a script in an HTML app's page.
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -32,6 +32,21 @@ export async function buildKeys(root, id) {
     keys[key] = (await import(spec))[ref.export](ref.options ?? {})
   }
   return keys
+}
+
+const SOURCE = /\.(?:css|scss|sass|less|html|mdx?|[cm]?[jt]sx?|vue|svelte|astro)$/
+const NOT_SOURCE = new Set(['node_modules', 'dist', 'build'])
+
+/** The app's own text, for the font build: which characters and variation settings it uses. A plugin only reads fonts. */
+export function readSources(root) {
+  let out = ''
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const path = join(root, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name[0] !== '.' && !NOT_SOURCE.has(entry.name)) out += readSources(path)
+    } else if (SOURCE.test(entry.name) && statSync(path).size < 1 << 20) out += `${readFileSync(path, 'utf8')}\n`
+  }
+  return out
 }
 
 const MEDIA = /\?media(?:&audio=[^&]+)?$/
@@ -108,7 +123,7 @@ export function assets() {
     const out = await (fonts ??= (async () => {
       const p = await provider('font.build')
       if (!p) return { css: '', preloads: [], files: [] }
-      const out = await p.impl.build({ root, cacheDir: join(root, '.weft', 'cache', 'fonts'), url: name => store.url(name) })
+      const out = await p.impl.build({ root, cacheDir: join(root, '.weft', 'cache', 'fonts'), url: name => store.url(name), dev, source: dev ? '' : readSources(root) })
       mkdirSync(join(root, '.weft'), { recursive: true })
       writeFileSync(join(root, '.weft', 'fonts.json'), `${JSON.stringify({ plugin: p.plugin, metrics: out.metrics ?? {}, report: out.report ?? {} }, null, 2)}\n`)
       return out

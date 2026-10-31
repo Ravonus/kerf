@@ -1,0 +1,115 @@
+{
+  "ok": true,
+  "date": "2026-10-31T22:05:49.715Z",
+  "hidden": {
+    "ok": true,
+    "warp": "23/23",
+    "weft": "23/23",
+    "probe": {
+      "warp": {
+        "add-one": {
+          "domMutations": 2,
+          "commits": 5,
+          "renderMs": 0,
+          "wallMs": 195.24
+        },
+        "price-push": {
+          "domMutations": 1,
+          "commits": 9,
+          "renderMs": 0,
+          "wallMs": 1.65
+        },
+        "type-3-chars": {
+          "domMutations": 158,
+          "commits": 33,
+          "renderMs": 0,
+          "wallMs": 88.3
+        }
+      },
+      "weft": {
+        "add-one": {
+          "domMutations": 1,
+          "commits": 5,
+          "renderMs": 0,
+          "wallMs": 258.05
+        },
+        "price-push": {
+          "domMutations": 1,
+          "commits": 9,
+          "renderMs": 0,
+          "wallMs": 0.63
+        },
+        "type-3-chars": {
+          "domMutations": 152,
+          "commits": 21,
+          "renderMs": 0,
+          "wallMs": 48.6
+        }
+      }
+    },
+    "budgets": {
+      "price-push DOM ≤ 1": true,
+      "price-push re-runs ≤ 10": true,
+      "add-one DOM ≤ 3": true
+    },
+    "failures": []
+  },
+  "size": {
+    "ok": true,
+    "warp": {
+      "js": 11961,
+      "css": 13305
+    },
+    "weft": {
+      "js": 4831,
+      "css": 0
+    },
+    "kit": 7130,
+    "budget": {
+      "app": 10240,
+      "kitAllowance": 7168,
+      "js": 17408,
+      "ceiling": 51200
+    },
+    "weftWithinAppBudget": true
+  },
+  "contrast": {
+    "ok": true,
+    "checks": 858,
+    "combos": {
+      "light/quiet": {
+        "pass": 143,
+        "fail": 0
+      },
+      "light/balanced": {
+        "pass": 143,
+        "fail": 0
+      },
+      "light/vivid": {
+        "pass": 143,
+        "fail": 0
+      },
+      "dark/quiet": {
+        "pass": 143,
+        "fail": 0
+      },
+      "dark/balanced": {
+        "pass": 143,
+        "fail": 0
+      },
+      "dark/vivid": {
+        "pass": 143,
+        "fail": 0
+      }
+    },
+    "failures": []
+  },
+  "a11y": {
+    "ok": true,
+    "runs": 108,
+    "audits": 1404,
+    "measured": 45967,
+    "specFindings": [],
+    "failures": []
+  }
+}

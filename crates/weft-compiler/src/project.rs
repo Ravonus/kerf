@@ -20,6 +20,9 @@ pub struct Facts {
     /// Exports with a shape variant (shape.rs), for the Vite plugin's `options.shapes`.
     #[serde(default)]
     pub shapes: Vec<String>,
+    /// What the project's view needs to place islands (hydration.rs).
+    #[serde(default)]
+    pub hydration: crate::hydration::HydrationFacts,
 }
 
 /// A W014 warning's box passed as `<component prop={box…}>`.

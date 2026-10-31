@@ -66,8 +66,8 @@ test('navigating between users keeps both layouts and writes only what changed',
   const take = await record(page)
   await page.click('a[href="/users/2"]')
   await page.waitForFunction(() => document.querySelector('h2')?.textContent === 'Grace Hopper')
-  // The name, bio and id texts, and aria-current moving from one link to the other: nothing else.
-  expect((await take()).sort()).toEqual(['attributes:A.aria-current', 'attributes:A.aria-current', 'characterData:#text', 'characterData:#text', 'characterData:#text'])
+  // The detail route is static, so the server's HTML replaces it; aria-current moves from one link to the other; nothing else.
+  expect((await take()).sort()).toEqual(['attributes:A.aria-current', 'attributes:A.aria-current', 'childList:DIV', 'childList:DIV'])
   expect(await section.evaluate(e => e.isConnected)).toBe(true)
   expect(await mounts()).toBe(1)
   expect(page.url()).toBe(url + '/users/2')

@@ -53,7 +53,7 @@ import tone from './tone.wav?media'
 export default function Page() {
   const t = timeline(clip, { cues: { half: 1.5 } })
   return (
-    <main style="display:grid;gap:8px;justify-items:start">
+    <main style="display:grid;gap:var(--warp-space-related);justify-items:start">
       <Media src={hero} alt="A test card" width="320px" data-save="still" />
       <Media src={card} alt="A flat test card" width="320px" data-save="graphic" />
       <Media src={loop} alt="A test card moving" data-save="gif" />
@@ -108,7 +108,7 @@ const only = process.argv.slice(2).filter(a => !a.startsWith('--'))[1]
 const apps = [
   { name: 'default', options: { ui: 'warp', db: 'sqlite', auth: true } },
   { name: 'tailwind', options: { ui: 'tailwind', db: 'sqlite', auth: true }, css: ['.flex{', '.rounded-lg{'] },
-  { name: 'themed', options: { ui: 'warp', db: 'none' }, theme, add: 'tailwind', css: ['--warp-radius-control:14px', '.mx-3{'] },
+  { name: 'themed', options: { ui: 'warp', db: 'none' }, theme, add: 'tailwind', css: ['--warp-radius-control:14px', '.mx-related{'] },
   { name: 'media', options: { ui: 'warp', db: 'none' }, media: true },
 ]
 
@@ -128,7 +128,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     await sh(weft, ['add', add], app)
     // Something only Tailwind can have built, in the app's own markup.
     const home = join(app, 'src/routes/index.tsx')
-    writeFileSync(home, readFileSync(home, 'utf8').replace('<Badge', '<Badge class="mx-3"'))
+    writeFileSync(home, readFileSync(home, 'utf8').replace('<Badge', '<Badge class="mx-related"'))
     log(`weft add ${add}: pass`)
   }
   if (media) await mediaApp(app, weft, log)

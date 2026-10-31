@@ -1,5 +1,7 @@
 # 06 — Runtimes (Node, Bun, Deno) and the optional Rust path
 
+> `remote()` as built, with the decisions that refine this: [36](36-rust-remote.md).
+
 Research date: 2026-10-28. Versions come from `npm view` and the crates.io API on that date unless a source is cited.
 Statements marked **(unverified)** could not be confirmed from a primary source. Numbers marked **(measured)** were
 run for this doc on an M4 Max (Node 22.22.1, Bun 1.3.14, napi 3.15, Rust 1.93, release + LTO). The scripts were

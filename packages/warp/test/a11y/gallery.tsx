@@ -6,6 +6,8 @@ import * as Rest from '../fixtures/Surfaces'
 import * as Rich from '../fixtures/Rich'
 import { Button } from '../../src/Button'
 import { Kbd } from '../../src/Kbd'
+import { Stack } from '../../src/Layout'
+import { Heading, Text } from '../../src/Type'
 import { Spinner } from '../../src/Spinner'
 import { Tooltip } from '../../src/Tooltip'
 import { Part as Agent } from '../fixtures/pack-agent'
@@ -28,6 +30,7 @@ function Static() {
       <Buttons />
       {/* Buttons' submit passes aria-controls="x" through: give it its target */}
       <p id="x">Submit controls this.</p>
+      <Stack gap="related"><Heading level={2} role="title">Title</Heading><Text role="caption" subtle>Caption</Text><Text tone="critical">Critical</Text><Text role="code" faint>code</Text></Stack>
       <Icons />
       <Toggles />
       <Fields />

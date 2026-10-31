@@ -8,7 +8,7 @@ import { render } from 'weft/test'
 import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from 'weft/media'
 import { flush } from 'weft'
 import { probe } from '../media-probe.mjs'
-import { assets } from '../assets.mjs'
+import { assets, readSources } from '../assets.mjs'
 
 const u32 = (n: number) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]
 const bytes = (...parts: (number[] | string)[]) => new Uint8Array(parts.flatMap(p => (typeof p === 'string' ? [...p].map(c => c.charCodeAt(0)) : p)))
@@ -232,6 +232,20 @@ describe('weft/vite assets', () => {
     writeFileSync(join(root, '.weft', 'slots', `${id}.build.json`), JSON.stringify({ plugin: '@test/p', version: '0.0.0', module: provider, ...ref }))
   }
   const record = (code: string) => JSON.parse(code.replace(/^export default /, ''))
+
+  test('readSources: the app\'s own text, without dependencies, build output or dot folders', () => {
+    for (const dir of ['src/routes', 'node_modules/x', 'dist', '.weft']) mkdirSync(join(root, dir), { recursive: true })
+    writeFileSync(join(root, 'src/routes/a.tsx'), 'in-tsx')
+    writeFileSync(join(root, 'src/a.css'), 'in-css')
+    writeFileSync(join(root, 'src/a.png'), 'in-png')
+    writeFileSync(join(root, 'node_modules/x/a.css'), 'in-dep')
+    writeFileSync(join(root, 'dist/a.js'), 'in-dist')
+    writeFileSync(join(root, '.weft/a.ts'), 'in-weft')
+    const text = readSources(root)
+    expect(text).toContain('in-tsx')
+    expect(text).toContain('in-css')
+    expect(text).not.toMatch(/in-(png|dep|dist|weft)/)
+  })
 
   test('`?media` with no provider: the original file, its header size, emitted under assets/', async () => {
     const { load, emitted } = plugin('build')

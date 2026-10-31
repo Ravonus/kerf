@@ -13,7 +13,7 @@ import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { requireTrust } from './trust.mjs'
 
-async function start(root, sub) {
+export async function start(root, sub) {
   let file
   try {
     file = createRequire(join(root, 'package.json')).resolve(`@weft/start/${sub}`)
@@ -30,7 +30,7 @@ async function start(root, sub) {
 async function site(root) {
   const loaded = await loadConfig(root)
   if (!loaded.diagnostics.some(d => d.code === 'P007') && loaded.config?.plugins?.length) sync(root, loaded)
-  return { site: loaded.config?.site ?? {}, diagnostics: loaded.diagnostics }
+  return { site: loaded.config?.site ?? {}, hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
 }
 
 /** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
@@ -42,7 +42,17 @@ export async function devCommand(root, { port } = {}) {
   requireTrust(root, await loadConfig(root))
   const { dev } = await start(root, 'app')
   await writeMap(root)
-  const server = await dev({ root, ...(await site(root)), port })
+  const config = await site(root)
+  const rust = (await loadConfig(root)).config?.rust
+  const { devSidecars, usesRemote } = await start(root, 'sidecar')
+  // Before the dev server: its worker inherits the addresses, and a request can't reach a sidecar that's still building.
+  const sidecars = usesRemote(root) ? await devSidecars({ root, site: config.site, rust }) : undefined
+  const server = await dev({ root, ...config, port })
+  if (sidecars) {
+    sidecars.attach(server)
+    const close = server.close.bind(server)
+    server.close = async () => (await sidecars.close(), close())
+  }
   return server
 }
 
@@ -59,10 +69,32 @@ export async function buildCommand(root, { preset, runtime } = {}) {
   const held = process.env.WEFT_BUILD
   process.env.WEFT_BUILD = '1'
   try {
-    const { output } = await build({ root, ...config, preset, logLevel: 'warn' })
-    const contract = await writeContract({ root, site: config.site, preset })
+    const rust = (await loadConfig(root)).config?.rust
+    const refuse = d => { throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`), { code: 'E_USAGE' }) }
+    const { buildSidecars, shipSidecars, startSidecars, usesRemote } = await start(root, 'sidecar')
+    const contracted = () => writeContract({ root, site: config.site, preset, rust })
+    // Sidecars first: prerendering a share card runs its route's `load`, which may read one.
+    const running = usesRemote(root) ? await contracted().then(async c => {
+      const stop = c.diagnostics.find(d => d.severity === 'error')
+      if (stop) refuse(stop)
+      const built = await buildSidecars({ root, contract: c.contract, rust })
+      const failed = built.diagnostics.find(d => d.severity === 'error')
+      if (failed) refuse(failed)
+      return startSidecars({ root, built: true, log: () => {} })
+    }) : undefined
+    const before = { ...process.env }
+    Object.assign(process.env, running?.env)
+    let output
+    try {
+      ({ output } = await build({ root, ...config, preset, logLevel: 'warn' }))
+    } finally {
+      running?.close()
+      for (const k of Object.keys(running?.env ?? {})) before[k] === undefined ? delete process.env[k] : (process.env[k] = before[k])
+    }
+    const contract = await contracted()
     const refused = contract.diagnostics.find(d => d.severity === 'error')
-    if (refused) throw Object.assign(new Error(`${refused.code}: ${refused.why}`), { code: 'E_USAGE' })
+    if (refused) refuse(refused)
+    if (running) shipSidecars(root)
     await writeMap(root)
     return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: contract.diagnostics.map(d => diagnostic({ ...d, file: '.weft/contract.json' })), ms: Math.round(performance.now() - t) }
   } finally {
@@ -80,9 +112,13 @@ export async function startCommand(root, { runtime } = {}) {
   if (!SERVERS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(SERVERS).join(', ')}`), { code: 'E_USAGE' })
   if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
   const [cmd, flags] = SERVERS[chosen]
-  const child = spawn(cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit' })
+  // Sidecars first: the server's environment has their addresses, and they outlive a crash of either side.
+  const { startSidecars } = await start(root, 'sidecar')
+  const sidecars = await startSidecars({ root })
+  const child = spawn(cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
   process.once('SIGINT', () => child.kill('SIGINT'))
-  return new Promise(ok => child.on('close', code => ok(code ?? 0)))
+  process.once('SIGTERM', () => child.kill('SIGTERM'))
+  return new Promise(ok => child.on('close', code => (sidecars.close(), ok(code ?? 0))))
 }
 
 /** The hash `weft db generate` records and Q015 compares. */

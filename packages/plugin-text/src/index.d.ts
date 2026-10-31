@@ -10,7 +10,7 @@ export interface Face {
   display?: 'swap' | 'optional' | 'fallback'
   weight?: number
   style?: 'normal' | 'italic'
-  /** Variable axes kept in the subset: `{ wght: [400, 700] }` sets the face's weight range. */
+  /** `{ wght: [400, 700] }` sets the face's weight range. A custom axis named here is kept whatever the source sets. */
   axes?: Record<string, [number, number]>
   /** Preload the latin subset. Default: true for `body` and `display`. */
   preload?: boolean
@@ -27,6 +27,8 @@ export interface TextOptions {
   measure?: 'auto' | 'off'
   /** `'slim'` is @weft/text-engine; `'pretext'` is pinned upstream (33.9 KB br). */
   engine?: 'slim' | 'pretext'
+  /** Pin the custom axes the source never varies and load uncommon latin characters on demand. Builds only. Default `true`. */
+  trim?: boolean
 }
 
 export declare const SUBSETS: Subset[]

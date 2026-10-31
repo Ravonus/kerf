@@ -22,8 +22,10 @@
 // CSS. Each route and layout's own CSS comes from Nitro's assets manifest (build) or the client module graph (dev);
 // the server links the entry's and those of the levels it matched, so nothing paints before its styles and other
 // routes' CSS stays out of the page. In dev the links stand in for Vite's injected `<style>`s and HMR updates them.
+// In a build the sheets go in the HTML as well (`inlineSheets`): a round trip saved before the first paint. `site:
+// { inlineCss: false }` keeps the links.
 
-import { existsSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -31,7 +33,9 @@ import { createHash } from 'node:crypto'
 import { isCSSRequest, parseSync, searchForWorkspaceRoot } from 'vite'
 import { realpathSync } from 'node:fs'
 import { scanRoutes, routeTypes } from './routes.mjs'
+import { solve } from 'weft/hydration'
 import { readMigrations } from './migrations.mjs'
+import { INLINE_CSS_MAX } from './inline.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const V = {
@@ -49,9 +53,29 @@ const V = {
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
 const DEFAULT_FONTS = ['Inter:400,700']
 const SHEET = '/@weft-sheet/'
+const ASSETS = '?weft-assets'
+const ISLAND = 'virtual:weft/island/'
+const NOT_ASSET = /\.[cm]?[jt]sx?$/
+const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
 
 /**
- * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[] }} [options]
+ * The client build's stylesheets a page can carry, `{ href: css }`, read by the server build so every preset has them
+ * with no file system. Left out: a sheet over the page's limit, one a relative `url()` would break, and one that could
+ * close its `<style>`.
+ */
+export function inlineSheets(outDir, base) {
+  const dir = join(outDir, 'assets')
+  if (!existsSync(dir)) return {}
+  const sheets = {}
+  for (const name of readdirSync(dir).filter(f => f.endsWith('.css'))) {
+    const css = readFileSync(join(dir, name), 'utf8')
+    if (css.length <= INLINE_CSS_MAX && !/<\/style|<!--/i.test(css) && !/url\(\s*(?!["']?(?:\/|data:|https?:|#|%23))/.test(css)) sheets[`${base}assets/${name}`] = css
+  }
+  return sheets
+}
+
+/**
+ * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[], hydration?: 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   let root = options.root ?? process.cwd()
@@ -60,6 +84,30 @@ export default function weftStart(options = {}) {
   let build = ''
   let serverModules = []
   let vite
+  let compile
+  let plan
+  let planned = 0
+  const facts = new Map()
+  /** Partial hydration's view of the project (PLAN §11), redone in dev when a file it read changed. */
+  const hydration = async ctx => {
+    if (options.hydration === 'full' || !compile) return undefined
+    if (plan && !dev) return plan
+    if (plan && Date.now() - planned < 200) return plan
+    planned = Date.now()
+    if (plan) {
+      const p = await plan
+      if (!p.stamps.some(f => statSync(f, { throwIfNoEntry: false })?.mtimeMs !== facts.get(f)?.mtime)) return p
+    }
+    const entries = [...manifest.routes, ...manifest.layouts].map(r => abs(r.file))
+    plan = solve({ entries, transform: compile, rel: f => relative(root, f).split('\\').join('/'), cache: facts, resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id })
+    const done = await plan
+    try {
+      mkdirSync(join(root, '.weft'), { recursive: true })
+      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), files: done.report }, null, 2)}\n`)
+    } catch {}
+    return done
+  }
+  let words
   const scan = () => {
     serverModules = scanServerModules(root)
     return (manifest = scanRoutes(root, options.routesDir ? resolve(root, options.routesDir) : undefined))
@@ -104,10 +152,27 @@ export default function weftStart(options = {}) {
         resolve: { alias: [{ find: /^@weft\/start$/, replacement: join(here, 'index.ts') }, { find: /^@weft\/start\/(client|server)$/, replacement: join(here, '$1.tsx') }, { find: /^@weft\/start\/media$/, replacement: join(here, 'media.ts') }] },
       }
     },
+    renderChunk: {
+      order: 'post',
+      handler(code) {
+        const token = new RegExp(`["'\`]${INLINE_SHEETS}["'\`]`)
+        if (!token.test(code)) return null
+        const top = this.environment.getTopLevelConfig()
+        const client = resolve(root, top.environments.client.build.outDir)
+        const sheets = options.site?.inlineCss === false ? {} : inlineSheets(client, top.base ?? '/')
+        return { code: code.replace(token, () => JSON.stringify(sheets)), map: null }
+      },
+    },
     configResolved(config) {
       build = createHash('sha256').update(String(Date.now())).digest('hex').slice(0, 8)
       if (dev) build = 'dev'
       root = config.root
+      const main = config.plugins.find(p => p.name === 'weft')
+      words = config.plugins.find(p => p.name === 'weft:purge')?.api
+      if (main?.api) {
+        compile = createRequire(join(here, 'vite.mjs'))('weft/compiler').transform
+        main.api.islands = async (ctx, id) => (await hydration(ctx))?.files.get(id.replace(/\?.*$/, ''))
+      }
     },
     configureServer(server) {
       vite = server
@@ -140,13 +205,15 @@ export default function weftStart(options = {}) {
       server.close = () => (w.close(), close())
     },
     /** An edit can add or drop a stylesheet import: the next server load of the routes walks the graph again. */
-    hotUpdate() {
+    hotUpdate({ file }) {
       if (this.environment.config.consumer !== 'server') return
       const m = this.environment.moduleGraph.getModuleById('\0' + V.routes)
       if (m) this.environment.moduleGraph.invalidateModule(m)
+      // A static component is in no browser's module graph, so nothing else would tell the tab it changed.
+      if (!vite?.environments.client.moduleGraph.getModulesByFile(file)?.size && this.environment.moduleGraph.getModulesByFile(file)?.size) vite?.ws.send({ type: 'full-reload' })
     },
     resolveId: {
-      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
+      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
       handler(source, importer) {
         // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
         if (source === 'sharp') {
@@ -162,7 +229,7 @@ export default function weftStart(options = {}) {
           return
         }
         const base = source.replace(/\?.*$/, '')
-        if (Object.values(V).includes(base)) return id(source)
+        if (Object.values(V).includes(base) || base.startsWith(ISLAND)) return id(source)
       },
     },
     load: {
@@ -172,9 +239,17 @@ export default function weftStart(options = {}) {
         if (/[?&]assets\b/.test(raw)) return
         const which = raw.slice(1).replace(/\?.*$/, '')
         const client = this.environment?.config.consumer === 'client'
-        if (which === V.routes) return client ? clientRoutes(manifest, abs) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined)
+        if (which.startsWith(ISLAND)) {
+          const { islands } = await hydration(this)
+          const i = islands[Number(which.slice(ISLAND.length))]
+          return `export { $i${i.index} as default } from ${JSON.stringify(i.file)}\n`
+        }
+        if (which === V.routes) {
+          const p = await hydration(this)
+          return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
+        }
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
-        if (which === V.server) return serverEntry(clientEntry())
+        if (which === V.server) return serverEntry(clientEntry(), dev)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
         if (which === V.context || which === V.auth || which === V.realtime) {
           const name = which.slice('virtual:weft/'.length)
@@ -188,9 +263,10 @@ export default function weftStart(options = {}) {
       },
     },
     transform: {
-      filter: { id: /\.[jt]sx?$|\/vite\/dist\/client\/client\.mjs$/ },
+      filter: { id: /\.[jt]sx?(\?weft-assets)?$|\/vite\/dist\/client\/client\.mjs$/ },
       async handler(code, file) {
         const path = file.replace(/\?.*$/, '')
+        if (file.endsWith(ASSETS)) return { code: await assetsOnly(this, code, path, root, words), map: null }
         if (path.endsWith('/client.mjs')) return dev ? markLinks(root) + code : undefined
         if (path.includes('/node_modules/')) return
         const client = this.environment?.config.consumer === 'client'
@@ -238,13 +314,14 @@ function usesShapes(root) {
  * the first `)`, which a path can hold). `meta` is read once per level that renders, before the first byte: that's
  * how the entry learns the request's levels (`routeCss`), outermost first, 404 and error pages included.
  */
-function serverRoutes(manifest, abs, dev) {
+function serverRoutes(manifest, abs, dev, plan) {
   const files = [...manifest.layouts.map(l => l.file), ...manifest.routes.map(r => r.file), ...manifest.routes.map(r => r.card).filter(Boolean), manifest.defaultCard].filter(Boolean)
   const unique = [...new Set(files)]
   const levels = new Set([...manifest.layouts, ...manifest.routes].map(r => r.file))
   // A file with no default export renders nothing, and may leave no chunk for the manifest to find.
   const renders = f => levels.has(f) && /\bdefault\b/.test(readFileSync(abs(f), 'utf8'))
-  const css = f => dev ? JSON.stringify(dev.files[f] ?? []) : `import.meta.vite.assets(${JSON.stringify({ import: abs(f), environment: 'client' }).replaceAll(')', '\\u0029')}).css`
+  const isStatic = f => plan?.statics.has(abs(f))
+  const css = f => dev ? JSON.stringify(dev.files[f] ?? []) : `import.meta.vite.assets(${JSON.stringify({ import: abs(f) + (isStatic(f) ? ASSETS : ''), environment: 'client' }).replaceAll(')', '\\u0029')}).css`
   return [
     ...unique.map((f, i) => `import * as m${i} from ${JSON.stringify(abs(f))}`),
     `import { runtime } from ${JSON.stringify(join(here, 'data.ts'))}`,
@@ -256,6 +333,8 @@ const styled = (m, css) => !css.length ? m : { ...m, get meta() {
 } }
 export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? [])}, ...css, ...(matched.get(runtime.scope?.()) ?? [])].map(c => [c.href, c])).values()]`,
     `export const manifest = ${JSON.stringify({ dir: manifest.dir, routes: manifest.routes, layouts: manifest.layouts, defaultCard: manifest.defaultCard })}`,
+    // The built-in 404 and error pages have no state, and stand in only when the app has no route file for them.
+    `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter(r => isStatic(r.file)).map(r => r.id), ...['404', 'error'].filter(id => !manifest.routes.some(r => r.id === id))])}`,
     `export const modules = { ${unique.map((f, i) => `${JSON.stringify(f)}: ${renders(f) ? `styled(m${i}, ${css(f)})` : `m${i}`}`).join(', ')} }`,
   ].join('\n')
 }
@@ -300,15 +379,42 @@ const markLinks = root => `document.querySelectorAll('link[rel="stylesheet"]:not
 })
 `
 
-function clientRoutes(manifest, abs) {
+function clientRoutes(manifest, abs, plan) {
   const table = manifest.routes.filter(r => r.kind === 'page').map(r => ({ id: r.id, pattern: r.pattern, layouts: r.layouts }))
-  const loads = [...manifest.layouts, ...manifest.routes].map(r => `${JSON.stringify(r.id)}: () => import(${JSON.stringify(abs(r.file))})`)
-  return `export const table = ${JSON.stringify(table)}\nexport const load = { ${loads.join(', ')} }\n`
+  const levels = [...manifest.layouts, ...manifest.routes]
+  const isStatic = r => plan?.statics.has(abs(r.file))
+  // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
+  const loads = levels.map(r => `${JSON.stringify(r.id)}: () => import(${JSON.stringify(abs(r.file) + (isStatic(r) ? ASSETS : ''))})`)
+  const islands = (plan?.islands ?? []).map((i, n) => `${JSON.stringify(i.id)}: () => import(${JSON.stringify(ISLAND + n)})`)
+  return `export const table = ${JSON.stringify(table)}\nexport const load = { ${loads.join(', ')} }\nexport const islands = { ${islands.join(', ')} }\n`
 }
 
-function serverEntry(clientEntry) {
+/**
+ * A static module in the client build: what it imports that isn't code (stylesheets, images), and the same of the
+ * modules it imports. Its class names go to the purge, which only sees client files.
+ */
+async function assetsOnly(ctx, code, path, root, words) {
+  words?.add(code)
+  const ast = parse(path, code)
+  const out = []
+  for (const n of ast.program.body) {
+    if (!/^(ImportDeclaration|ExportNamedDeclaration|ExportAllDeclaration)$/.test(n.type) || !n.source || n.importKind === 'type' || n.exportKind === 'type') continue
+    const spec = n.source.value
+    if (/^(weft|@weft\/start)($|\/)/.test(spec)) continue
+    const file = (await ctx.resolve(spec, path, { skipSelf: true }))?.id
+    if (!file) continue
+    const bare = file.replace(/\?.*$/, '')
+    if (!NOT_ASSET.test(bare)) out.push(`import ${JSON.stringify(spec)}`)
+    else if (!bare.includes('/node_modules/') && !isServerModule(relative(root, bare).split('\\').join('/'))) out.push(`import ${JSON.stringify(bare + ASSETS)}`)
+  }
+  if (code.includes('weft/style')) out.push(`import 'virtual:weft/groups.css'`)
+  out.push('export default null') // a chunk of only CSS is dropped, and the server looks this one up
+  return out.join('\n') + '\n'
+}
+
+function serverEntry(clientEntry, dev) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
-import { manifest, modules, routeCss } from '${V.routes}'
+import { manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
 import context from '${V.context}'
 import auth from '${V.auth}'
@@ -318,7 +424,7 @@ import realtime from '${V.realtime}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads },
+const fetch = createHandler({ manifest, modules, statics, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQACFMRW]\\d{3}:? /, '')}\`) })
 export default { fetch }

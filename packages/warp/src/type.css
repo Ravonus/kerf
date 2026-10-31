@@ -1,0 +1,15 @@
+/* Type roles: each role reads the spec's own text tokens (warp.css §Type), in warp.layout so app CSS still wins. */
+@layer warp.layout {
+:where([data-scope="text"]) { margin: 0; }
+:where([data-scope="text"][data-role="display"]) { font-family: var(--warp-text-display-font); font-size: var(--warp-text-display-size); line-height: var(--warp-text-display-leading); font-weight: var(--warp-text-display-weight); letter-spacing: var(--warp-text-display-tracking); }
+:where([data-scope="text"][data-role="title"]) { font-family: var(--warp-text-title-font); font-size: var(--warp-text-title-size); line-height: var(--warp-text-title-leading); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); }
+:where([data-scope="text"][data-role="heading"]) { font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size); line-height: var(--warp-text-heading-leading); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); }
+:where([data-scope="text"][data-role="body"]) { font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading); }
+:where([data-scope="text"][data-role="label"]) { font-family: var(--warp-text-label-font); font-size: var(--warp-text-label-size); line-height: var(--warp-text-label-leading); font-weight: var(--warp-text-label-weight); letter-spacing: var(--warp-text-label-tracking); text-transform: var(--warp-text-label-case); }
+:where([data-scope="text"][data-role="caption"]) { font-family: var(--warp-text-caption-font); font-size: var(--warp-text-caption-size); line-height: var(--warp-text-caption-leading); }
+:where([data-scope="text"][data-role="eyebrow"]) { font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); line-height: var(--warp-text-eyebrow-leading); font-weight: var(--warp-text-eyebrow-weight); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); }
+:where([data-scope="text"][data-role="code"]) { font-family: var(--warp-text-code-font); font-size: var(--warp-text-code-size); }
+:where([data-scope="text"][data-ink="subtle"]) { color: var(--warp-color-text-subtle); }
+:where([data-scope="text"][data-ink="faint"]) { color: var(--warp-color-text-faint); }
+:where([data-scope="text"][data-tone]) { color: var(--_text); }
+}

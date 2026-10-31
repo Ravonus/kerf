@@ -51,6 +51,8 @@ export interface SiteConfig {
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
   image?: 'auto' | string | { url: string; width?: number; height?: number; alt?: string }
   twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
+  /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
+  inlineCss?: boolean
 }
 
 export interface WeftConfig {
@@ -61,11 +63,29 @@ export interface WeftConfig {
   /** `include`: test files for the T-codes (default `**\/*.{test,spec}.*`). */
   test?: { include?: readonly string[]; lanes?: readonly ('fast' | 'browser' | 'e2e')[]; gate?: { mutationBudgetSec?: number; maxMutants?: number } }
   /** Files `weft check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .weft and `scope.forbid`. */
-  check?: { include?: readonly string[]; exclude?: readonly string[] }
+  check?: {
+    include?: readonly string[]
+    exclude?: readonly string[]
+    /** `false` turns the design D-codes (D001–D005, D011, D030–D039) off. Default on. */
+    design?: boolean
+  }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig
   /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */
   runtime?: 'node' | 'bun' | 'deno'
+  /** Sidecars behind `remote('rust://<name>')`. A service's crate is `crates/<name>` unless it says otherwise. */
+  rust?: {
+    /** Let plain object unions through to a sidecar (R102). */
+    unions?: 'allow'
+    services?: Record<string, {
+      /** The crate, from the app's root. */
+      crate?: string
+      /** Built and run elsewhere: no cargo here, and `WEFT_RUST_<NAME>_URL` says where it is. */
+      external?: boolean
+    }>
+  }
+  /** `'full'` hydrates every route whole. Default `'partial'`: code that needs no client ships none (PLAN §11). */
+  hydration?: 'partial' | 'full'
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */

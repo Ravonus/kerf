@@ -1,0 +1,275 @@
+{
+  "date": "2026-10-31",
+  "ok": true,
+  "docs": 20000,
+  "runtimes": [
+    "node",
+    "bun",
+    "deno"
+  ],
+  "changed": [
+    "src/server/docs.ts",
+    "src/server/rank.ts",
+    "src/server/rust.ts"
+  ],
+  "speed": {
+    "node": {
+      "ts": {
+        "p50": 5.9,
+        "p99": 14.44,
+        "perSecond": 214
+      },
+      "rust": {
+        "p50": 8.87,
+        "p99": 35.44,
+        "perSecond": 851
+      }
+    },
+    "bun": {
+      "ts": {
+        "p50": 5.66,
+        "p99": 25.88,
+        "perSecond": 211
+      },
+      "rust": {
+        "p50": 3.55,
+        "p99": 6.86,
+        "perSecond": 1755
+      }
+    },
+    "deno": {
+      "ts": {
+        "p50": 12.28,
+        "p99": 35.31,
+        "perSecond": 96
+      },
+      "rust": {
+        "p50": 3.59,
+        "p99": 5.69,
+        "perSecond": 1922
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "the swap touches server modules only",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "changed": [
+          "src/server/docs.ts",
+          "src/server/rank.ts",
+          "src/server/rust.ts"
+        ]
+      }
+    },
+    {
+      "name": "the app type-checks before and after, with the same client types",
+      "ok": true,
+      "ms": 35589
+    },
+    {
+      "name": "node: the client is byte-identical",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "files": 29
+      }
+    },
+    {
+      "name": "node: /search serves the same HTML",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "name": "node: every request gets the same answer",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "requests": 12
+      }
+    },
+    {
+      "name": "node: the same e2e passes in Chromium",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "compassTop": "w1kw wup wdp 5.770738",
+        "added": "Zebra lantern 19.807175"
+      }
+    },
+    {
+      "name": "bun: the client is byte-identical",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "files": 29
+      }
+    },
+    {
+      "name": "bun: /search serves the same HTML",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "name": "bun: every request gets the same answer",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "requests": 12
+      }
+    },
+    {
+      "name": "bun: the same e2e passes in Chromium",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "compassTop": "w1kw wup wdp 5.770738",
+        "added": "Zebra lantern 19.807175"
+      }
+    },
+    {
+      "name": "deno: the client is byte-identical",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "files": 29
+      }
+    },
+    {
+      "name": "deno: /search serves the same HTML",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "name": "deno: every request gets the same answer",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "requests": 12
+      }
+    },
+    {
+      "name": "deno: the same e2e passes in Chromium",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "compassTop": "w1kw wup wdp 5.770738",
+        "added": "Zebra lantern 19.807175"
+      }
+    },
+    {
+      "name": "a tag Rust adds reaches the response",
+      "ok": true,
+      "ms": 15,
+      "detail": {
+        "tags": [
+          "docs",
+          "doc:doc-7"
+        ]
+      }
+    },
+    {
+      "name": "a forged or unsigned call to the sidecar is refused",
+      "ok": true,
+      "ms": 3
+    },
+    {
+      "name": "a killed sidecar costs that function, not the server, and comes back",
+      "ok": true,
+      "ms": 434,
+      "detail": {
+        "backMs": 428
+      }
+    },
+    {
+      "name": "stopping `weft start` stops the sidecar",
+      "ok": true,
+      "ms": 1
+    },
+    {
+      "name": "`weft check` passes the clean sidecar app",
+      "ok": true,
+      "ms": 1216,
+      "detail": {
+        "files": 4,
+        "tests": 0,
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      }
+    },
+    {
+      "name": "R101: a date, a void and a one-way transform",
+      "ok": true,
+      "ms": 513,
+      "detail": [
+        "`nothing.60957a`: `output` has a type JSON can't carry, so n",
+        "`shout.60957a`: `input` has a one-way `.transform()`, so its",
+        "`when.60957a`: `output` has a type JSON can't carry, so no R"
+      ]
+    },
+    {
+      "name": "R102: a plain union of objects, and not a nullable or a scalar union",
+      "ok": true,
+      "ms": 530
+    },
+    {
+      "name": "R103: an edited schema stops cargo at the function it broke, named by id",
+      "ok": true,
+      "ms": 1221,
+      "detail": {
+        "file": "crates/search/src/main.rs",
+        "line": 70,
+        "why": "`searchDocs.60957a`: the Rust no longer matches the contract: missing field `lang` in initializer of `contract::SearchDo"
+      }
+    },
+    {
+      "name": "R109: a compile error no function explains is told apart",
+      "ok": true,
+      "ms": 1128
+    },
+    {
+      "name": "dev: the first request works, after one build",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "firstMs": 12634
+      }
+    },
+    {
+      "name": "dev: a crate edit reloads with no failed request",
+      "ok": true,
+      "ms": 3546,
+      "detail": {
+        "reloadMs": 3246,
+        "requests": 78
+      }
+    },
+    {
+      "name": "dev: a schema edit is reported as R103 with the id, and fixing the Rust recovers",
+      "ok": true,
+      "ms": 4311,
+      "detail": {
+        "noted": "R103 error: `searchDocs.60957a`: the Rust no longer matches the contract: missing field `lang` in initializer of `contract::SearchDocsOutput"
+      }
+    },
+    {
+      "name": "dev: a crash restarts the sidecar",
+      "ok": true,
+      "ms": 2419
+    },
+    {
+      "name": "stopping `weft dev` stops the sidecar",
+      "ok": true,
+      "ms": 0
+    }
+  ],
+  "sizes": {
+    "search": {
+      "bin": "search",
+      "hash": "1ef212142baeafa5",
+      "bytes": 30216304
+    }
+  }
+}

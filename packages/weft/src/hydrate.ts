@@ -11,7 +11,24 @@ import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
 import { hchild } from './claim'
 import { keys } from './keys'
 
-export const hydration = { misses: 0, registry: new Map<string, Element>() }
+export const hydration = { misses: 0, registry: new Map<string, Element>(), /** What only the claim needed. */ trash: [] as (ChildNode | Element)[] }
+
+/**
+ * After the claim: drop the markers and keys nothing reads again. Later than the pass itself, so hydrating still writes
+ * nothing to the DOM, and a page's reads of its nodes don't pay for a tree that holds hundreds of them.
+ */
+export function sweep() {
+  const list = hydration.trash
+  hydration.trash = []
+  if (list.length) setTimeout(() => {
+    for (const n of list) {
+      if (n.nodeType === 1) {
+        ;(n as Element).removeAttribute('wk')
+        delete (n as any).$k
+      } else n.remove()
+    }
+  })
+}
 
 /**
  * Hydrate `container`'s server HTML with `code` (the same `() => <App />` the server rendered). The page data is the
@@ -30,13 +47,14 @@ export function hydrate(code: () => any, container: Element, options: { data?: S
   try {
     createRoot(d => {
       dispose = d
-      hchild(container, code, script ?? undefined, undefined, undefined, 1) // the app's nodes are those before the data script
+      hchild(container, code, script ?? undefined, undefined, undefined, 2) // the app's nodes are those before the data script
     }, null)
   } finally {
     Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
     rt.data = undefined
     if (DEV && registry.size) console.warn(`weft: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`)
     registry.clear()
+    sweep()
   }
   runMounts()
   return () => {

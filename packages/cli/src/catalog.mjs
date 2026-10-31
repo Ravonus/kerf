@@ -1,9 +1,9 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups),
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), research 23 §3 (D020–D025, style groups), research 36 (D001–D039, the design language),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
 // research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
-// 30 §8 (W052, W053, T013, R001–R011, realtime), plus the codes proposed in research 17 (marked `proposed`).
+// 30 §8 (W052, W053, T013, R001–R011, realtime), research 36 §8 (R101–R103, R106–R109, sidecars), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -99,10 +99,6 @@ export const catalog = [
     example: 'export function A() { let n = 0; return <button onClick={() => { n++ }}>{n}</button> }',
   },
   {
-    code: 'W042', severity: 'warning', by: 'compiler', catches: '`onChange` on a text input (the DOM fires it on blur, not per keystroke)', fix: '`onInput`',
-    example: 'export function A() { return <input onChange={() => {}} /> }',
-  },
-  {
     code: 'W050', severity: 'error', by: 'compiler',
     catches: 'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
     fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser, or clean it up in `onCleanup`',
@@ -137,6 +133,24 @@ export const catalog = [
     fix: 'Inline the token name or literal; define groups as `export const x = group(\'x\', { … })`; raw CSS goes in `css: { … }`',
     example: "import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
   },
+
+  // The design language (PLAN §6, research 36): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
+  { code: 'D001', severity: 'error', by: 'cli', catches: 'A raw colour in `style`, app CSS, or a Tailwind arbitrary or palette class, in an app with warp\'s tokens: it won\'t follow the theme, the dials or dark mode', fix: 'Use a colour token or a `tone`. No autofix: a token follows the theme, the raw value didn\'t' },
+  { code: 'D002', severity: 'error', by: 'cli', catches: 'Spacing off the scale, or a scale step written by hand (`padding: 16px`, `p-[13px]`, `gap-3`)', fix: 'A step of `hair tight related group section page`; autofix when the value is exactly one' },
+  { code: 'D003', severity: 'warning', by: 'cli', catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)', fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius' },
+  { code: 'D004', severity: 'warning', by: 'cli', catches: 'Layout spelled out on an element (`display: flex`, `flex flex-col gap-4`) where a primitive says it', fix: '`<Stack>` or `<Row>`; a suggested edit when nothing else is on the element' },
+  { code: 'D005', severity: 'warning', by: 'cli', catches: 'A native `<button>`, `<select>` or `<textarea>` in a warp app', fix: 'The warp component: focus ring, sweep, tones and touch target come with it' },
+  { code: 'D011', severity: 'error', by: 'cli', catches: 'A literal text and background colour pair on one element below 4.5:1', fix: 'Use tokens: they pass at every dial stop' },
+  { code: 'D030', severity: 'error', by: 'cli', catches: 'An `<input>`, `<select>` or `<textarea>` with no label', fix: 'A wrapping `<label>`, `<label for>`, `aria-label`, or warp\'s `<Input label>`' },
+  { code: 'D031', severity: 'error', by: 'cli', catches: 'A button or link with no accessible name (icon only, or empty)', fix: 'Text, or `aria-label`; warp\'s Button takes `label`' },
+  { code: 'D032', severity: 'error', by: 'cli', catches: '`<img>` with no `alt`', fix: 'Describe the image; `alt=""` when it is decoration' },
+  { code: 'D033', severity: 'error', by: 'cli', catches: '`onClick` on a non-interactive element with no role: mouse only', fix: 'A real `<button type="button">` (suggested edit)' },
+  { code: 'D034', severity: 'error', by: 'cli', catches: 'A control inside a control (`<a><button>`)', fix: 'One control: move the other beside it' },
+  { code: 'D035', severity: 'warning', by: 'cli', catches: 'A heading level that jumps (h1 to h3)', fix: 'Use the next level; `<Heading level role>` keeps the look apart from the outline' },
+  { code: 'D036', severity: 'error', by: 'cli', catches: 'The focus ring removed with nothing in its place (`outline: none`, `outline-none`)', fix: 'Remove it: warp\'s `:focus-visible` is the ring. Or add a `focus-visible:` style' },
+  { code: 'D037', severity: 'error', by: 'cli', catches: 'A positive `tabindex`', fix: '`0`, and the order follows the DOM (autofix)' },
+  { code: 'D038', severity: 'warning', by: 'cli', catches: 'Two solid Buttons side by side', fix: 'One primary action per region: make the others `soft` or `ghost`' },
+  { code: 'D039', severity: 'warning', by: 'cli', catches: '`<html>` with no `lang`', fix: 'Set `lang`' },
 
   // Style groups (research 23 §3). D010 is warp's contrast gate (its own plugin); D040 and D081 are reserved by warp's docs.
   {
@@ -288,6 +302,13 @@ export const catalog = [
   { code: 'R009', severity: 'error', by: 'start', catches: 'Over 100 subscriptions or joins on a connection, or 10 connections or sockets for a user', fix: 'Read fewer keys; `limits` raises it' },
   { code: 'R010', severity: 'error', by: 'start', catches: 'An origin that isn\'t the app\'s own or in `realtime({ origins })` tried to open a connection', fix: 'List it, scheme and port included' },
   { code: 'R011', severity: 'error', by: 'start', catches: 'A channel\'s `authorize` refused a join or a write (the status is `unauthorized`), at the join or a session re-check', fix: 'Sign in, or check `authorize`' },
+  { code: 'R101', severity: 'error', by: 'cli', catches: 'A function with `impl` has no `output`, a type JSON can\'t carry (`z.date()`, `z.bigint()`, `z.void()`, `z.custom()`), or a one-way `.transform()` on its input (`weft build`, `weft check`, `weft dev`)', fix: 'Use a codec: `z.codec(z.iso.datetime(), z.date(), { decode, encode })`. `z.null()` says a function returns nothing' },
+  { code: 'R102', severity: 'error', by: 'cli', catches: 'A plain `z.union` of objects in a function with `impl`: it has no tag, so Rust can\'t tell its arms apart reliably. Scalar unions and `.nullable()` are fine', fix: "Use `z.discriminatedUnion`, or set `rust: { unions: 'allow' }`" },
+  { code: 'R103', severity: 'error', by: 'cli', catches: 'A sidecar doesn\'t match the contract: cargo stops where a generated type or method no longer fits (with the function\'s id), a binary built from another contract, an output the `output` schema rejects, or input serde refuses', fix: 'Fix the Rust to fit the TS declaration, which is the source of truth; `.weft/rust/<service>.rs` shows what\'s generated' },
+  { code: 'R106', severity: 'error', by: 'start', catches: 'A `remote()` call can\'t be made: no address, no `WEFT_RUST_SECRET`, or the sidecar refused the signature (503)', fix: 'Set `WEFT_RUST_<NAME>_URL` and the same `WEFT_RUST_SECRET` on both sides. `weft dev` and `weft start` do it for what they supervise' },
+  { code: 'R107', severity: 'error', by: 'start', catches: 'A sidecar didn\'t answer, or ran past the deadline (503, 504). Only that function fails', fix: 'Check that it\'s running, or raise `timeout` on `remote()`' },
+  { code: 'R108', severity: 'error', by: 'start', catches: 'A sidecar function panicked or returned an undeclared error (500). The detail stays in the sidecar\'s log, under the request id', fix: 'Find the request id in the sidecar\'s log, or declare the failure in `errors`' },
+  { code: 'R109', severity: 'error', by: 'cli', catches: 'A sidecar doesn\'t build for a reason no contract function explains: a compile error, no crate, or no `cargo`', fix: 'Fix the crate, point `rust.services.<name>.crate` at it, or set `external: true` for one built elsewhere' },
 
   // Text, type and skeletons (research 11 §8.5; research 26 §7; research 31 §7). `cli`: weft check (text-checks.mjs).
   { code: 'X001', severity: 'warning', by: 'runtime', catches: '`s.text()` predicted one height and its DOM mirror renders another: `font`, `lineHeight` or `width` differs from the CSS', fix: 'Drop `font` and `lineHeight` so they come from CSS, or make them match; the message names the values' },

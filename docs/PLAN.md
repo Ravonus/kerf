@@ -141,7 +141,6 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W030 | Module-level `state` reachable from the server entry graph (leaks across requests) | `context`, or mark `state.global` |
 | W040 | Early `return` in a component body that depends on state (runs once, never re-checked) | Branch in JSX |
 | W041 | `let` variable mutated in a handler and read in JSX (never updates) | Make it `state` |
-| W042 | `onChange` on text inputs (React fires per keystroke, DOM on blur) | `onInput` (autofix) |
 | W014 | Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list (error in-file, warning when the list leaves the file) | Keep items stable and read the changing field live, or replace only the changed item |
 | W015 | A box rendered without `.value` in JSX (a child, or a native element's attribute) | `.value` (autofix) |
 | W017 | A keyed-list row reads one entry of a whole object (`cart[p.id]`, `cart.value[p.id]`, also passed to a child as a prop), or a component's JSX/`derived` reads `box.value[prop]` (a row component), so every write re-runs every row (v3 eval: 452 re-runs on add-one; v4: 601 formats per quote) | `cart.get(p.id)` (autofix for the box form; a suggestion when the box arrived as a prop); for a plain prop, pass the box |
@@ -151,7 +150,11 @@ expected, is a type error mapped to **W008** with the fix ("pass `count.value`" 
 | W054 | `media(q)` without `ssr` in a server-rendered file (error; a warning when `weft check` can't tell, off in client-only builds) | `media(q, { ssr: false })` (suggested edit) |
 | W056 | `watch` that copies a live value (a `weft/browser` value, `.live()`) into `state` | Read `.value` directly, or `derived` |
 
-`class`/`className`, `for`/`htmlFor`, and `style` as object or string are all accepted.
+React's prop names work on native elements, in literals, dynamic values and spreads, on the client, on the server and in
+hydration: a compile-time table in `crates/weft-compiler/src/react.rs`, and `attrName` in `weft/dom` for spreads. `onChange`
+fires per edit as React's does, so W042 is retired (it never reached the compiler). Details: [react-props.md](react-props.md).
+
+Design rules are D-codes in the same form: D001–D005 (off-system values, only in apps with `@weft/warp`), D010 (warp contrast), D011 and D030–D039 (contrast and accessibility, every app), D020–D025 (style groups). `weft fix` applies safe fixes; a raw colour never gets one ([36](research/36-ds.md)).
 
 ### 3.6 Compiler, runtime, tooling
 
@@ -388,11 +391,13 @@ fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, 
 
 ### 4.3 Rust, opt-in and as far as you want
 
+Status: `remote()` is built ([36](research/36-rust-remote.md)); `native()` is Phase 5b.
+
 Zod stays the single source of truth. `.weft/contract.json` → typify generates Rust types in `build.rs`. Rust never
-defines the schema; schemars output from Rust is used only to detect drift. A server function swaps `run` for `impl`:
+defines the schema, and drift stops `cargo` at the function it broke. A server function swaps `run` for `impl`:
 
 ```ts
-// server/rust.ts: the only place Rust targets are named
+// server/rust.ts: the only place Rust targets are named (`@weft/start/rust`)
 export const media = native('media')            // napi-rs addon (+ WASM fallback): one hot function, in-process
 export const search = remote('rust://search')   // a Rust sidecar implementing many functions
 export const core = remote('rust://core')       // "mostly Rust": every function points at core
@@ -418,7 +423,8 @@ call costs:
 
 No native binary is ever required for a default app. On Deno and edge, `native()` falls back to WASM or `remote()`.
 R101–R105: unrepresentable schemas (add a codec), plain unions, impl/contract drift, `native()` on a preset without
-WASM, and a cached Rust query that reports no touched tables.
+WASM, and a cached Rust query that reports no touched tables. R106–R109 are a sidecar's runtime and build failures: no
+address or secret, unreachable, panicked, and a compile error unrelated to the contract.
 
 ### 4.4 Payments: `weft/pay`
 
@@ -558,6 +564,10 @@ agent can't drift outside of.
 - **Tokens:** a ~6-value seed, Zod-validated, expands to DTCG 2025.10 tokens, then plain CSS variables in cascade
   layers. Text colors are computed to pass contrast; the build fails if they can't. A Keel theme recipe
   (`{seed, culture, pins}`) is accepted as a seed.
+- **Built (Phase 4, [36](research/36-ds.md)):** the primitives are `Stack Row Grid Split Center Cover Frame Spacer Inset`,
+  `Heading` and `Text` in `@weft/warp`, since weft can't depend on ui-core. `Switch` below is `Row reflow` and `Surface` is
+  `Card`. `weft/ds` is names and types only. `weft tokens` writes DTCG 2025.10. Not built: a Keel recipe as a seed, a
+  `tokens(el)` reader, the Zod seed rework.
 - **Vocabulary:** 8 layout primitives (`Stack Row Split Switch Grid Center Surface Frame`), a small component set,
   intent props with closed values (`tone`, `emphasis`, `size`, `density`, `gap`/`pad` like `related`/`section`, text
   `role`). No raw pixel values.
@@ -890,7 +900,7 @@ packages/
   rust        weft/rust (native, remote) + the `weft` crate (codegen, Ctx, axum router), opt-in
 crates/
   weft-compiler   pre + diag + weft's own back end (Solid's crate until it's replaced); napi + WASI builds
-  ds          tokens, layout primitives, components, Tailwind adapter
+  (ds)        no package: `weft/ds` is a weft subpath (names and types); primitives and tokens are in warp (36)
   ui-core     headless behaviours + prop getters, /motion (Presence, presets → WAAPI), @weft/zag binding
   warp        the default skin: tokens, sweep()/floatingLabel(), components, styles.css, tailwind.css, registry
   multiplayer presence, cursors, interaction relay (from Agorix)
@@ -922,13 +932,19 @@ evals/        agent eval harness
 | **3b. Channels** | `sync: 'tabs'` and `sharedState.connect()` as a box. `channel` over crossws, Origin + `authorize` + session re-check, `redis`/`nats`/`durable-object` buses, `tabs.channel`. | A chat room built by an agent passes the R-code checks and a reconnect/resume test. |
 | **3x. Configuration** | A default stack that's one setting away from anything else ([34](research/34-configuration.md)). A: `weft.config.json` and `.yaml`, the config schema, the `create-weft` wizard, `weft add`, `weft map` (a generated matrix of what to call in this app). B: warp config options, the Tailwind adapter. C: `db.adapter@1`, Drizzle, Prisma and Native (no ORM) providers, MySQL. D: `auth.provider@1`. | The todo + auth app passes its hidden checks on every tested engine, data layer and runtime; a hand-written auth provider works with no change to weft. |
 | **3c. warp tier 2 + Agorix packs** | Plugin trust tooling first (permissions audit, lockfile, `approve`), then `@weft/plugin-media-ffmpeg` (GIF → video, ladders, audio, `timeline()`) and `encoder: 'compatible'` behind a headful save test, Virtualised chat, feed, kanban and grid on exact text heights, `<Text stream>`. Rich inputs, date/time pickers, calendars, data table, charts, app shells, flows, `@weft/multiplayer`, `@weft/realtime-*` and `@weft/db-*` packs, `@weft/agorix-compat`, codemods. | A Velatis page slice and its live sessions run on weft + warp, passing the conformance and security suites. |
-| **4. Design** | `weft/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | weft/ds vs raw Tailwind on consistency and a11y. |
+| **4. Design** | `weft/ds` tokens, primitives, D-checks (the Tailwind adapter moved to 3x). | weft/ds vs raw Tailwind on consistency and a11y. **Not met 2026-10-31** ([36](research/36-ds.md), 36 sessions, n=6 per stack): a11y met (0 vs 5.3 axe nodes), brief met (10.8 vs 10.8), consistency missed (79 vs 62 distinct values, 17 vs 13 role drift). |
 | **5a. Rust: remote** | `remote()`, the `weft` crate (typify codegen, `Ctx`, envelope, `touch`, tracing, `weft::router()`), sidecar supervisor + dev reload, R101–R103. | A search sidecar replaces a TS `query` with no client change. |
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
 | **6a. Native spike (3 weeks)** | Hermes + op buffer + `weft-layout` + Swift/Kotlin hosts for `Stack Row Text Button Input Scroll`, `weft dev --ios/--android`, HMR. | The v3 list screen runs on both platforms; price push ≤ 1 host op; Node layout matches device within 1pt for non-text boxes. Stop and revisit if a mid-range Android can't hold 60 Hz. |
 | **6b. warp native + device** | Tier-1 resolution table, `idiom`, `weft/device` core, generated projects, `weft device`, N-codes, split tooling. | An agent takes a shared web app to TestFlight and the Play internal track with ≤ 3 variant files. |
 | **6c. Payments** | `weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
+
+**5a status (2026-10-31):** built. `remote()` in `@weft/start/rust`, the `weft` crate, the supervisor in `weft dev`,
+`build` and `start`, typed errors with `raise()` for TS bodies too, and R101–R103 and R106–R109. Exit check:
+passed, 28 of 28 on Node, Bun and Deno with 20,000 documents: 29 client files byte-identical, the same HTML, answers and
+Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published and has no `weft add` or
+template, and `remote()` on `channel` isn't built. What was built and left out: [36](research/36-rust-remote.md).
 
 **1b status (2026-10-29):** name-keyed HMR and the 1k-component gates landed earlier (research 21, §3.7). The
 verify loop is built: the in-page agent bridge with the graph overlay, recorder, clock and network control; the
@@ -1144,7 +1160,10 @@ Also out of v0:
 - **Compiler spike outcome: settled, then superseded.** The spike passed on Solid 2's crate; weft now owns its back
   end and removes the crate once its own passes the same checks (§3.6, §12).
 - **Event replay before hydration:** a capture script like Solid's `_$HY`, or nothing?
-- **Partial hydration** (`<NoHydration>`, islands): needed before Phase 3's routing?
+- **Partial hydration: settled, inferred, on by default** (§12). Nothing to annotate: the compiler reports what each
+  top-level binding reads and every project-level pass follows it, so a component with no handler, effect or state
+  ships no JS. `@weft client` and `@weft static` above a declaration overrule the inference; `hydration: 'full'` in
+  `weft.config.ts` turns it off. Each decision and its reason is in `.weft/hydration.json`.
 - **Hydrated resources:** trust the server's value (today), or revalidate in the background?
 - **Style groups:** spread (`{...orderCard()}`) or a `g=` prop, and CSS-file groups as a second input format? The [23 §4](research/23-style-groups.md) spike decides.
 - **OG renderer:** Takumi (Rust, HTML in, native + wasm) or Satori + resvg? The [20 §7](research/20-metadata-and-og.md) spike decides.
@@ -1164,6 +1183,21 @@ Also out of v0:
 
 ## 12. Decision log
 
+- **Partial hydration is inferred, not annotated (2026-10-31).** Agents write components; `<NoHydration>` and island
+  markers would be one more thing to get right, and getting it wrong in the cheap direction (never annotating) costs
+  the whole budget. So `crates/weft-compiler/src/hydration.rs` reports facts per file and `packages/weft/node/hydration.mjs`
+  solves them across the project. What it can't see through (a package's component, a spread, a function prop over
+  local names) keeps its caller on the client: the failure mode is bytes, never a dead button. A route whose component
+  is proved static is a *static level*: its HTML comes from the server, on navigation too, and no route code loads.
+  Each island is a hoisted `$iN` export of its call site, so props that are literals stay in the code and the rest go
+  as JSON (H009 at render when they can't). Children of an island stay the server's. On the
+  Lemonstand home this took 34.1 KB of JS to 26.3 KB, DOM comments from 996 to 73, `wk` attributes from 1192 to 0.
+  Static regions get no keys or markers at all, and `hole` writes a range only where a walk needs one; what the claim
+  did need is swept a macrotask after hydration, so the pass itself still writes nothing. Trade-off: a param change on a static route
+  swaps its HTML instead of patching text, and an island remounts when its level does. **10 KB is not reachable by
+  this alone**: a page with no islands is 8.2 KB (the router and runtime), and Lemonstand's home adds 18 KB of
+  interactive app code it runs at load. Reaching it needs islands hydrated on interaction or visibility, which puts
+  about 4.7 KB up front by the spike's estimate, plus event replay for what happens before they arrive. Not built.
 - **Getter props over Ripple-style plain props.** Research 01 recommended Ripple 0.4's plain props with `Live<T>`
   types. We chose compiler-made live props because agents will write `count={count.value}`, and only live props make
   that correct without type-directed compilation. The holes this opens are closed by §3.3 and W001/W005/W006.
@@ -1248,3 +1282,15 @@ Also out of v0:
   Tailwind and other auth arrive through `db.adapter`, `auth.provider`, config and a `create-weft` wizard, ahead of 3c
   because its packs build on those slots. weft doesn't wrap queries: `ctx.db` stays the real client. Aliases live in
   `tsconfig.json` `paths`, with `#/` only the scaffold's default ([34](research/34-configuration.md)).
+- **Sidecars: `fetch` on loopback TCP, a signed envelope, generated types** (2026-10-31). The spike found 37–71 µs a call
+  and no gain from a Unix socket worth a per-runtime path, so `remote()` is plain `fetch`, which also keeps it edge-safe.
+  It lives in `@weft/start/rust`, and its address in env. Schemars drift detection is dropped: with generated types it
+  would only compare typify with itself, so `cargo`, a contract hash and TS's output validation catch drift instead.
+  `SharedCtx` has no `user()`, so a shared cache can't hold a user's data by accident. The supervisor stays in the CLI, out
+  of the server bundle. `weft dev` waits for the first build, as a queue would outlive signatures and timeouts. Typed errors
+  apply to TS bodies through `raise()` too, so a swap can't change what a client catches ([36](research/36-rust-remote.md)).
+- **Primitives in `@weft/warp`, `weft/ds` as names only; Phase 4's bar stands unmet** (2026-10-31). weft can't depend on
+  ui-core, so primitives sit with the tokens they use. Token D-codes need `@weft/warp`; a11y codes run in every app. The exit
+  check missed consistency: most extra values come from warp's own spec (fluid line-heights, tone channels, three families),
+  which Phase 4 doesn't redesign, and the bar isn't moved after the result. Role drift is a real miss, so `Heading` roles
+  and a link style come next ([36](research/36-ds.md)).

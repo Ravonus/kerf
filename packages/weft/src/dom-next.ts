@@ -3,7 +3,7 @@
 // Bindings here skip their first write while hydrating (the server wrote it).
 
 import { DEV, effect } from './index'
-import { addEvent, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
+import { addEvent, attrName, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
 import { keys } from './keys'
 
 /** A module-level template: `tpl(html)()` clones it. `svg`: the root is an SVG element outside an <svg>. */
@@ -56,6 +56,32 @@ export function on(el: Element, name: string, handler: (e: Event) => void, deleg
 export const delegate = delegateEvents
 
 /**
+ * `onChange`, as React means it: on every edit, not on commit. Text inputs fire `input` per keystroke and `change` on
+ * blur; a checkbox or select fires both at once. The `change` after an `input` is the same edit, so it's dropped;
+ * a `change` alone (a script's, a test's `fireEvent.change`) still counts.
+ */
+export function change(el: Element, handler: any) {
+  let edited = false
+  const fire = (e: Event) => {
+    if (e.type === 'input') edited = true
+    else if (edited) return void (edited = false)
+    Array.isArray(handler) ? handler[0](handler[1], e) : handler(e)
+  }
+  el.addEventListener('input', fire)
+  el.addEventListener('change', fire)
+}
+
+/** `autoFocus`, as React means it: focus on mount. Hydrating, the browser already acted on the server's attribute. */
+export function focus(el: HTMLElement, on: unknown) {
+  if (on && !keys.hydrating) queueMicrotask(() => el.focus())
+}
+
+/** A spread element's hole, hydrating: content the server rendered from its props stays. */
+export function kids(props: Record<string, any>, el: Element) {
+  return keys.hydrating && (props.dangerouslySetInnerHTML || props.innerHTML != null || props.textContent != null || el.localName === 'textarea') ? [...el.childNodes] : props.children
+}
+
+/**
  * `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. A component weft/hmr
  * registered (`$$h`) mounts through it, so a new module version can swap it in place.
  */
@@ -64,9 +90,9 @@ export function component<P>(Comp: (props: P) => unknown, props: P, name?: strin
   return hot ? hot(props, name, loc) : createComponent(Comp as any, props, name, loc)
 }
 
-const PROPERTIES = new Set(['value', 'checked', 'selected', 'muted', 'indeterminate', 'textContent', 'innerHTML'])
-const NAMES: Record<string, string> = { htmlFor: 'for' }
+const PROPERTIES = new Set(['value', 'checked', 'selected', 'muted', 'indeterminate', 'textContent', 'innerHTML', 'defaultValue', 'defaultChecked'])
 const ON = /^on[A-Z]/
+const CAPTURE = /(?<!Pointer)Capture$/
 
 /**
  * `<div {...rest} a={x}>`: `props` reads the element's attributes as one plain object (`{ a: x, ...rest }`, later
@@ -88,18 +114,30 @@ export function spread(el: Element, props: () => Record<string, any>) {
   })
 
   function write(key: string, value: any, prev: any) {
+    if (key === 'defaultValue' && el.localName === 'select') key = 'value'
     if (key === 'ref') {
       if (!refDone && value) ref(() => value, el) // apply runs untracked
       refDone = true
     } else if (ON.test(key)) {
-      const name = key.slice(2).toLowerCase()
-      if (listeners[name]) el.removeEventListener(name, listeners[name])
-      if (typeof value === 'function') el.addEventListener(name, (listeners[name] = value))
-      else delete listeners[name]
-    } else if (key === 'class' || key === 'className') className(el, value, prev)
+      const fn = typeof value === 'function' ? value : undefined
+      if (key === 'onChange') {
+        if (!(key in listeners)) change(el, (e: Event) => listeners.onChange?.(e))
+        listeners.onChange = fn as EventListener
+        return
+      }
+      const capture = CAPTURE.test(key)
+      let name = (capture ? key.slice(2, -7) : key.slice(2)).toLowerCase()
+      if (name === 'doubleclick') name = 'dblclick'
+      if (capture && name === 'change') name = 'input'
+      if (listeners[key]) el.removeEventListener(name, listeners[key], capture)
+      if (fn) el.addEventListener(name, (listeners[key] = fn), capture)
+      else delete listeners[key]
+    } else if (key === 'dangerouslySetInnerHTML') el.innerHTML = value?.__html ?? ''
+    else if (key === 'autoFocus') focus(el as HTMLElement, value)
+    else if (key === 'class' || key === 'className') className(el, value, prev)
     else if (key === 'style') style(el as HTMLElement, value, prev)
     else if (PROPERTIES.has(key)) {
-      const v = key === 'value' ? value ?? '' : value
+      const v = key === 'value' || key === 'defaultValue' ? value ?? '' : value
       ;(el as any)[key] = v
       // A spread runs before the children are inserted, and a <select> can only pick an option that exists: set the
       // value again once they are (the latest one wins).
@@ -107,6 +145,6 @@ export function spread(el: Element, props: () => Record<string, any>) {
         latest = v
         queueMicrotask(() => latest === v && ((el as HTMLSelectElement).value = v))
       }
-    } else attr(el, NAMES[key] ?? key, value)
+    } else attr(el, attrName(key), value)
   }
 }

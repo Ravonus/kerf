@@ -16,7 +16,7 @@ function usesSockets(root) {
   return readdirSync(src, { recursive: true, withFileTypes: true }).some(f => f.isFile() && /\.[cm]?[jt]sx?$/.test(f.name) && /\b(channel|sharedState)\s*[(<]/.test(readFileSync(join(f.parentPath, f.name), 'utf8')))
 }
 
-function config({ root, site, preset, port, logLevel, command, nitro: nitroOptions = {} }) {
+function config({ root, site, hydration, preset, port, logLevel, command, nitro: nitroOptions = {} }) {
   root = resolve(root)
   const user = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs'].map(f => join(root, f)).find(existsSync)
   return {
@@ -26,7 +26,7 @@ function config({ root, site, preset, port, logLevel, command, nitro: nitroOptio
     server: { port: port ?? 5173, strictPort: port !== undefined },
     plugins: [
       weft({ hydratable: true }),
-      weftStart({ root, site }),
+      weftStart({ root, site, hydration }),
       nitro({
         preset,
         // Every app gets this: built assets ship as .br and .gz next to the file, and Nitro picks by Accept-Encoding.

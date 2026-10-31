@@ -33,6 +33,8 @@ export const cases: Record<keyof typeof C, Case> = {
   },
   ChipCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-pressed')).toBe('true'), budget: 3, runs: 3 },
   CardCase: { act: drive, see: r => expect(q(r, '[data-part="title"]').textContent).toBe('Apple ×2'), budget: 1, runs: 2 },
+  LayoutCase: { act: drive, see: r => expect(q(r, 'section[data-scope="stack"]').getAttribute('data-gap')).toBe('group'), budget: 1, runs: 2 },
+  TypeCase: { act: drive, see: r => expect(q(r, 'h1').textContent).toBe('Page 2'), budget: 1, runs: 1 },
   BadgeCase: { act: drive, see: r => expect(q(r, '[data-scope="badge"]').textContent).toBe('4'), budget: 1, runs: 1 },
   TagCase: { act: r => q(r, '[data-part="remove"]').click(), see: r => expect(r.querySelectorAll('[data-scope="tag"]')).toHaveLength(1), budget: 1, runs: 2 },
   KbdCase: { act: drive, see: r => expect(r.textContent).toContain('opened 1'), budget: 1, runs: 1 },

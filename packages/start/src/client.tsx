@@ -9,7 +9,8 @@
 // the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
-import { hydrate } from 'weft/dom'
+import { enter, hydrate, level as staticLevel } from 'weft/dom'
+import { flush } from 'weft'
 import { setHead } from 'weft/head'
 import { applyMatches, client, createRouteState, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
 import { App } from './view'
@@ -19,6 +20,8 @@ import { ErrorPage, NotFoundPage } from './builtin'
 export interface ClientRoutes {
   table: { id: string; pattern: string; layouts: string[] }[]
   load: Record<string, () => Promise<{ default?: Component }>>
+  /** Each island's code, by id: all a static level loads (PLAN §11). */
+  islands?: Record<string, () => Promise<{ default: (props: any) => unknown }>>
 }
 
 /** Hydrate the page in `#app` and take over its links. Resolves once hydrated. */
@@ -34,8 +37,13 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     comps[id] ? Promise.resolve()
     : routes.load[id] ? routes.load[id]().then(m => { if (m.default) comps[id] = m.default })
     : Promise.resolve(builtin[id] && (comps[id] = builtin[id]))
-  await Promise.all(page.m.map(m => chunk(m.id)))
+  const islands: Record<string, (props: any) => unknown> = {}
+  const island = (id: string) => islands[id] ? undefined : routes.islands![id]().then(m => { islands[id] = m.default })
+  await Promise.all([...page.m.filter(m => !m.s).map(m => chunk(m.id)), ...(page.i ?? []).map(island)])
   const route = createRouteState(page, comps)
+  let bag: RoutePayload['b']
+  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined)
+  route.around = (_d, _id, body) => enter(body)
   hydrate(() => <App route={route} />, container, { data })
   client.route = route
 
@@ -59,12 +67,14 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       const hops = (opts.hops ?? 0) + 1
       return hops > 5 ? location.assign(next.r) : go(next.r, { replace: opts.pop || opts.replace, hops }) // a back/forward to a moved URL replaces its entry
     }
-    await Promise.all(next.m.map(m => chunk(m.id)))
+    await Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
     if (ctrl.signal.aborted) return
     if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
     if (next.c) client.seed ? client.seed(next.c) : (client.seeds ??= []).push(...next.c)
     tags = next.m.map(m => m.t ?? [])
+    bag = next.b
     applyMatches(route, next.m.map(revive), path, next.s)
+    if (next.m.some(m => m.s)) current_(url.pathname)
     if (next.h) setHead(next.h, url.pathname)
     if (opts.scroll !== false && !opts.pop) {
       const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
@@ -89,6 +99,13 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   })
   addEventListener('popstate', () => go(location.href, { pop: true }))
   return route
+}
+
+/** A kept static level has no binding for its links' current-page state: the same rule as `Link`, after the swap. */
+function current_(path: string) {
+  flush()
+  for (const a of document.querySelectorAll('a[aria-current="page"]')) if (a.getAttribute('href') !== path) a.removeAttribute('aria-current')
+  for (const a of document.querySelectorAll(`a[href="${CSS.escape(path)}"]:not([aria-current])`)) a.setAttribute('aria-current', 'page')
 }
 
 /** Deferred fields arrive resolved on navigation: they become settled promises again, so resources read them alike. */

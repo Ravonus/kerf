@@ -1,0 +1,17 @@
+{
+  "name": "weft-ds",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "weft": "file:../../../../packages/weft",
+    "@weft/warp": "file:../../../../packages/warp",
+    "@weft/ui-core": "file:../../../../packages/ui-core",
+    "@weft/cli": "file:../../../../packages/cli"
+  },
+  "devDependencies": {
+    "vite": "8.3.5"
+  }
+}

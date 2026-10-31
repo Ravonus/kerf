@@ -23,6 +23,7 @@
     "./sync": "./src/sync.ts",
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
+    "./ds": "./src/ds.ts",
     "./media": "./src/media.tsx",
     "./shape": "./src/shape.ts",
     "./text": "./src/text.tsx",
@@ -32,6 +33,7 @@
       "types": "./client.d.ts"
     },
     "./style/matrix": "./node/matrix.mjs",
+    "./hydration": "./node/hydration.mjs",
     "./hmr": "./src/hmr.ts",
     "./plugin": {
       "types": "./src/plugin.d.ts",

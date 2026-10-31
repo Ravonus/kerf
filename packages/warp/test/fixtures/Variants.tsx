@@ -4,6 +4,8 @@
 import { state } from 'weft'
 import { Alert } from '../../src/Alert'
 import { Badge } from '../../src/Badge'
+import { Center, Cover, Frame, Grid, Inset, Row, Spacer, Split, Stack } from '../../src/Layout'
+import { Heading, Text } from '../../src/Type'
 import { Button } from '../../src/Button'
 import { Card } from '../../src/Card'
 import { Checkbox, Segmented, Switch } from '../../src/Choice'
@@ -21,6 +23,34 @@ import { Tabs } from '../../src/Tabs'
 import { Tag } from '../../src/Tag'
 import { Toaster, toast } from '../../src/Toast'
 import { Toggle } from '../../src/Toggle'
+
+export function Layouts() {
+  return (
+    <div>
+      <Stack>default</Stack>
+      <Stack as="ul" gap="tight" align="center" divided><li>a</li></Stack>
+      <Row>default</Row>
+      <Row as="nav" gap="group" justify="between" align="baseline" wrap={false} reflow="tablet" aria-label="Pages"><Spacer /></Row>
+      <Grid min="xs" cols={4} gap="section">x</Grid>
+      <Split side="end" width="half" at="desktop"><div /><div /></Split>
+      <Center max="measure" gutter intrinsic>x</Center>
+      <Cover gap="tight" min="fill">x</Cover>
+      <Frame ratio="21:9">x</Frame>
+      <Inset pad="section">x</Inset>
+    </div>
+  )
+}
+export function Type() {
+  return (
+    <div>
+      {([1, 2, 3, 4, 5, 6] as const).map(level => <Heading key={level} level={level}>h</Heading>)}
+      <Heading role="display">Default level</Heading>
+      <Text>Body</Text>
+      <Text role="eyebrow" inline>Eyebrow</Text>
+      <Text tone="critical" faint>Tone</Text>
+    </div>
+  )
+}
 
 export function Buttons() {
   return (

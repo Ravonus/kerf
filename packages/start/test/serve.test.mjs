@@ -55,7 +55,7 @@ describe('a crawler fetching a param route sees every tag in the first response'
 describe('routing', () => {
   test('params and nested layouts render on the server', async () => {
     const { text } = await html('/users/2')
-    expect(text).toMatch(/<div wk="0" class="root"><nav>.*<section wk="[^"]+" class="users"><ul>.*<div class="detail"><article[^>]*><h2>Grace Hopper<\/h2>/s)
+    expect(text).toMatch(/<div class="root"><nav>.*<section wk="[^"]+" class="users"><ul>.*<div class="detail"><!--wl:2:[^>]*--><article><h2>Grace Hopper<\/h2>/s)
     expect(text).toMatch(/<a wk="[^"]+" href="\/users\/2" aria-current="page">Grace Hopper<\/a>/)
   })
 
@@ -72,7 +72,7 @@ describe('routing', () => {
     expect(r.status).toBe(404)
     expect(tags(r.text).slice(0, 2)).toEqual(['title Page not found · Acme', 'meta name=description content=There is nothing here.'])
     expect(r.text).not.toContain('og:image') // no card for a page that isn't there
-    expect(r.text).toMatch(/<nav>.*<h1[^>]*class="not-found">Lost\? <!--\[-->\/nowhere\/at\/all<!--\]--><\/h1>/s)
+    expect(r.text).toMatch(/<nav>.*<h1[^>]*class="not-found">Lost\? \/nowhere\/at\/all<\/h1>/s)
   })
 
   test('`load` returning notFound(): 404, and the route\'s meta never runs', async () => {
@@ -85,7 +85,7 @@ describe('routing', () => {
     const r = await html('/boom')
     expect(r.status).toBe(500)
     expect(tags(r.text)[0]).toBe('title Something broke · Acme')
-    expect(r.text).toMatch(/class="error">Error <!--\[-->500<!--\]-->: <!--\[-->loader exploded/)
+    expect(r.text).toMatch(/class="error">Error 500: loader exploded/)
   })
 
   test('H007: meta reading a deferred field is an error, not a page with a missing title', async () => {
@@ -132,7 +132,9 @@ describe('the navigation endpoint', () => {
     const res = await get('/_weft/data/users/1')
     const body = await res.json()
     expect(body.m.map(m => m.id)).toEqual(['layout:', 'layout:users', '/users/$id'])
-    expect(body.m[2]).toMatchObject({ params: { id: '1' }, data: { name: 'Ada Lovelace' } })
+    expect(body.m[1]).toMatchObject({ data: { users: expect.any(Array) } })
+    expect(body.m[2]).toMatchObject({ params: { id: '1' }, s: 1, h: expect.stringContaining('Ada Lovelace') }) // static: its HTML, not its data
+    expect(body.m[2].data).toBeUndefined()
     expect(body.h.title).toBe('Ada Lovelace · Acme')
     expect(body.s).toBe(200)
   })

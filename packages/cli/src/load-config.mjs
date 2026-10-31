@@ -13,7 +13,7 @@ import { contributions } from './plugins.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
-export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'fix', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
+export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
 
 const configModule = pathToFileURL(join(fileURLToPath(new URL('.', import.meta.url)), 'config.mjs')).href
 const nativeRequire = createRequire(import.meta.url)
@@ -101,11 +101,15 @@ export const configSchema = z.strictObject({
       gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional(), maxMutants: z.number().int().positive().optional() }).optional(),
     })
     .optional(),
-  check: z.strictObject({ include: globs.optional(), exclude: globs.optional() }).optional(),
+  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional() }).optional(),
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),
   runtime: z.enum(['node', 'bun', 'deno']).optional(),
+  rust: z.strictObject({
+    unions: z.literal('allow').optional(),
+    services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional() })).optional(),
+  }).optional(),
   trust: z.enum(['enforce', 'warn']).optional(),
 })
 

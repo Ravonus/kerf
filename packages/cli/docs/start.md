@@ -4,7 +4,7 @@
 
 ```
 src/routes/**            file routes: _layout.tsx, index.tsx, [id].tsx, [...rest].tsx, 404.tsx, _error.tsx
-src/server/**            server modules: queries and mutations (the client gets stubs)
+src/server/**            server modules: queries and mutations (the client gets stubs); a Rust body: `weft docs rust`
 src/db/schema.ts         Drizzle tables; safe to import anywhere
 src/db/index.server.ts   the database client
 src/auth.server.ts       the auth provider (Better Auth by default), mounted at /api/auth/*

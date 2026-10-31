@@ -47,7 +47,7 @@ describe.each([
       const html = await res.text()
       expect(html).toMatch(card)
       expect(html).toMatch(button)
-      expect(html).toContain('<a wk')
+      expect(html).toMatch(/<a\s/) // static by default, so no hydration key
       expect(html).toMatch(/<title[^>]*>App \w+<\/title>/)
     } finally {
       await server.close()
