@@ -1,5 +1,6 @@
 // React prop names on native elements: the same DOM from a literal, a dynamic value and a spread, in a client render,
 // a server render and hydration. Docs: docs/react-props.md.
+// weft-allow T005, T008: framework test of attribute names; markup is the subject, and each loop walks a fixed list of props
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fireEvent } from '@testing-library/dom'
