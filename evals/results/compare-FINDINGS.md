@@ -9,17 +9,17 @@ bring a design system, so compare them as kits.
 
 | | weft, no warp | Solid + Kobalte | React + Radix | React + Zustand | weft + warp | React + MUI |
 |---|---:|---:|---:|---:|---:|---:|
-| JS br | 5.3 KB | 47.4 KB | 98.3 KB | 98.4 KB | 20.7 KB | 239.6 KB |
-| CSS br | 1.4 KB | 1.4 KB | 1.4 KB | 1.4 KB | 19.6 KB | in the JS |
-| **JS + CSS br** | **6.6 KB** | **48.8 KB** | **99.7 KB** | **99.8 KB** | **40.2 KB** | **239.6 KB** |
+| JS br | 5.3 KB | 47.4 KB | 98.3 KB | 98.4 KB | 20.8 KB | 239.6 KB |
+| CSS br | 1.4 KB | 1.4 KB | 1.4 KB | 1.4 KB | 19.5 KB | in the JS |
+| **JS + CSS br** | **6.6 KB** | **48.8 KB** | **99.7 KB** | **99.8 KB** | **40.3 KB** | **239.6 KB** |
 | JS raw (what the CPU parses) | 15 KB | 175 KB | 369 KB | 370 KB | 75 KB | 974 KB |
-| Script on load | 35 ms | 72 ms | 112 ms | 113 ms | 66 ms | 343 ms |
-| Style on load | 3 ms | 3 ms | 3 ms | 3 ms | 28 ms | 13 ms |
-| Layout on load | 18 ms | 18 ms | 18 ms | 18 ms | 29 ms | 49 ms |
-| All main-thread work on load | 102 ms | 141 ms | 177 ms | 178 ms | 175 ms | 459 ms |
-| First contentful paint | 88 ms | 128 ms | 180 ms | 180 ms | 148 ms | 448 ms |
-| JS heap | 2.2 MB | 3.8 MB | 4.4 MB | 4.4 MB | 3.2 MB | 11.0 MB |
-| DOM nodes (CDP) | 678 | 617 | 508 | 508 | 1710 | 765 |
+| Script on load | 35 ms | 77 ms | 113 ms | 117 ms | 64 ms | 324 ms |
+| Style on load | 4 ms | 4 ms | 3 ms | 3 ms | 28 ms | 12 ms |
+| Layout on load | 18 ms | 20 ms | 18 ms | 19 ms | 30 ms | 47 ms |
+| All main-thread work on load | 104 ms | 150 ms | 177 ms | 184 ms | 176 ms | 430 ms |
+| First contentful paint | 84 ms | 132 ms | 164 ms | 184 ms | 152 ms | 420 ms |
+| JS heap | 2.2 MB | 3.8 MB | 4.4 MB | 4.4 MB | 3.1 MB | 10.9 MB |
+| DOM nodes (CDP) | 678 | 617 | 508 | 508 | 1479 | 765 |
 | App source lines | 120 | 118 | 129 | 137 | 44 | 90 |
 
 DOM mutations per interaction:
@@ -27,42 +27,47 @@ DOM mutations per interaction:
 | | weft, no warp | Solid + Kobalte | React + Radix | React + Zustand | weft + warp | React + MUI |
 |---|---:|---:|---:|---:|---:|---:|
 | Live cell | 3 | 40 | 3 | 3 | 3 | 131 |
-| Sort | 37 | 46 | 60 | 60 | 39 | 57 |
+| Sort | 37 | 46 | 60 | 60 | 37 | 57 |
 | Next page | 43 | 43 | 65 | 65 | 43 | 68 |
-| Filter | 42 | 46 | 73 | 73 | 57 | 130 |
+| Filter | 42 | 46 | 73 | 73 | 57 | 132 |
 | Select row | 2 | 6 | 7 | 7 | 6 | 171 |
 | Details open | 3 | 3 | 5 | 5 | 19 | 148 |
-| Column picker | 22 | 55 | 54 | 54 | 9 | 305 |
+| Column picker | 22 | 55 | 54 | 54 | 11 | 305 |
 | Account menu | 0 | 25 | 26 | 26 | 5 | 147 |
 
 JS + CSS br as the app grows (each screen has its own columns, words, state and markup):
 
 | Screens | weft, no warp | Solid + Kobalte | React + Radix | React + Zustand | weft + warp | React + MUI |
 |---:|---:|---:|---:|---:|---:|---:|
-| 1 | 7.0 KB | 49.1 KB | 100.0 KB | 100.2 KB | 40.6 KB | 240.0 KB |
-| 10 | 8.8 KB | 50.8 KB | 101.6 KB | 101.7 KB | 42.4 KB | 241.6 KB |
-| 50 | 13.8 KB | 55.9 KB | 105.9 KB | 106.1 KB | 47.6 KB | 246.1 KB |
-| 200 | 27.1 KB | 68.7 KB | 117.0 KB | 117.3 KB | 61.4 KB | 258.4 KB |
+| 1 | 7.0 KB | 49.1 KB | 100.0 KB | 100.2 KB | 40.7 KB | 240.0 KB |
+| 10 | 8.8 KB | 50.8 KB | 101.6 KB | 101.7 KB | 42.5 KB | 241.6 KB |
+| 50 | 13.8 KB | 55.9 KB | 105.9 KB | 106.1 KB | 47.8 KB | 246.1 KB |
+| 200 | 27.1 KB | 68.7 KB | 117.0 KB | 117.3 KB | 61.6 KB | 258.4 KB |
 
 ## Reading it
 
-- With the CSS equal, weft leads on every load measure and on every timed step here: 6.7 KB, 88 ms first paint, Solid 48.8 KB and 128 ms.
+- With the CSS equal, weft leads on every load measure and on every timed step here: 6.6 KB, 84 ms first paint, Solid 48.8 KB and 132 ms.
 - That size gap is not only the framework. Solid and React carry TanStack Table and Kobalte or Radix; weft's table is 120 hand-written
   lines and its menus are native `popover`, with no arrow keys or typeahead.
-- Style is equal once the CSS is: 3 ms everywhere. warp's 28 ms is warp, not weft.
-- warp costs weft 34 KB, 60 ms of first paint and 297 elements at 20 rows.
+- Style is equal once the CSS is: 3–4 ms in all four. warp's 28 ms is warp, not weft.
+- warp costs weft 34 KB, 68 ms of first paint and 208 elements at 20 rows.
 - Size gaps stay fixed as the app grows: each stack adds about 0.1 KB br per screen.
 
 ## Why warp has more elements
 
-At 20 rows warp has 617 elements and weft without warp 320. Outside the table body warp has 256, React 54.
+At 20 rows warp has 528 elements and weft without warp 320.
+
+The Columns panel now mounts on first open and the phone sort bar only below 600 px of table width, which took warp from 617 to
+528 elements, 252 to 227 comments and 1710 to 1479 CDP nodes. Style on load stayed at 28 ms and first paint at about 150 ms: those
+elements were `display: none`, so they cost almost no style work. The closed account menu remains, about 15 elements.
 
 | Elements | Where | Why |
 |---:|---|---|
-| 63 | Column picker | Seven checkboxes mounted while closed. Radix and Kobalte create menus on open |
-| 60 | Fields | The filter, and a phone-only "Sort by" bar that stays mounted and hidden on desktop |
-| about 80 | Rest of the chrome | Icon svgs, sort icons, buttons with wrappers, account menu, skip link |
+| about 110 | Chrome | Icon svgs, sort icons, buttons with wrappers, account menu, skip link |
 | 6 per row | Rows | Styled checkbox (5 against 1) and svg chevron (3 against 1) |
+
+warp's phone sort bar had never shown: its `display: none` came after the `@container` rule at equal specificity. It shows now.
+warp's remaining style cost is its rule count and the elements on screen, so cutting more hidden nodes won't reduce it.
 
 ## Limits
 
@@ -83,12 +88,12 @@ Most of warp's CSS was already tree-shaken per component, so what remains is mai
 
 | Rows on the page | weft, no warp | Solid + Kobalte | React + Radix | React + Zustand | weft + warp | React + MUI |
 |---:|---:|---:|---:|---:|---:|---:|
-| Elements, 20 → 200 | 320 → 2480 | 337 → 2857 | 295 → 2455 | 295 → 2455 | 617 → 3857 | 569 → 2009 at 100 |
-| Load CPU ms, 20 → 200 | 56 → 93 | 106 → 193 | 131 → 214 | 139 → 217 | 134 → 235 | 405 → 519 at 100 |
-| Live cell ms, 20 → 200 | 2 → 4 | 3 → 23 | 9 → 36 | 10 → 35 | 2 → 7 | 70 → 237 at 100 |
+| Elements, 20 → 200 | 320 → 2480 | 337 → 2857 | 295 → 2455 | 295 → 2455 | 528 → 3768 | 569 → 2009 at 100 |
+| Load CPU ms, 20 → 200 | 55 → 98 | 96 → 198 | 131 → 209 | 145 → 211 | 117 → 227 | 411 → 570 at 100 |
+| Live cell ms, 20 → 200 | 2 → 5 | 4 → 27 | 9 → 33 | 9 → 34 | 4 → 6 | 74 → 235 at 100 |
 | Live cell DOM, 20 → 200 | 3 → 3 | 40 → 400 | 3 → 3 | 3 → 3 | 3 → 3 | 131 → 611 at 100 |
-| Select ms, 20 → 200 | 3 → 2 | 7 → 13 | 13 → 38 | 12 → 35 | 16 → 17 | 112 → 261 at 100 |
-| Sort ms, 20 → 200 | 8 → 27 | 19 → 34 | 18 → 54 | 20 → 53 | 19 → 89 | 60 → 127 at 100 |
+| Select ms, 20 → 200 | 3 → 3 | 8 → 15 | 16 → 35 | 13 → 32 | 13 → 18 | 110 → 274 at 100 |
+| Sort ms, 20 → 200 | 9 → 25 | 20 → 34 | 19 → 56 | 19 → 56 | 21 → 91 | 56 → 131 at 100 |
 
 - Fine-grained updates hold: live cell stays flat in both weft stacks as rows grow, and select does too.
 - warp's 18 elements per row against 12 means load and sort cost more per row; weft without warp has the same 12 as React and

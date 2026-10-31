@@ -91,6 +91,7 @@ const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="0 0 16 
 const sortIcon = () => <svg data-part="sort-icon" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M2 5.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
 const columnsIcon = () => <svg data-icon aria-hidden="true" focusable="false" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M15 4v16" /></svg>
 const SKELETON_ROWS = 6
+const CARDS_BELOW = 600 // table width: the phone cards' @container query, so the sort bar exists only there
 const DETAILS_FROM = 1000 // table width: below it `details="sheet"` opens the sheet (06 §5)
 
 const isResource = (r: any): r is Resource<any> => typeof r?.refresh === 'function'
@@ -254,6 +255,16 @@ function Sheet<T>({ row, ctx, onClose }: { row: T; ctx: Ctx<T>; onClose: (restor
   )
 }
 
+function ColumnsPanel<T>({ id, open, trigger, items, flip }: { id: string; open: State<boolean>; trigger: () => HTMLElement; items: Column<T>[]; flip: (c: Column<T>, shown: boolean) => void }) {
+  let panel: HTMLDivElement | undefined
+  use(popover, () => panel, () => ({ open: open.value, trigger: trigger(), side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
+  return (
+    <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" id={id} role="group" aria-label="Visible columns">
+      {items.map(c => <div key={c.id}><Checkbox checked onChange={(e: any) => flip(c, e.currentTarget.checked)}>{c.header}</Checkbox></div>)}
+    </div>
+  )
+}
+
 /**
  * A data table (06 §5; data.html:1095-1124): a semantic <table> with explicit ARIA roles, so they survive the phone
  * cards' display change. Sort, filter, Columns, resize, pin, selection with a bulk bar, details, inline edit and live
@@ -282,8 +293,10 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   let anchor: string | undefined
   let el: HTMLDivElement | undefined
   let columnsButton: HTMLElement | undefined
-  let columnsPanel: HTMLDivElement | undefined
   const picking = state(false)
+  // the panel is built on first open and kept, so a closed table carries none of its checkboxes
+  const picked = state(false)
+  const small = state(false)
 
   const source = () => { const r: any = rows; return isResource(r) ? r.value : isState(r) ? r.value : r }
   const remote = derived(() => !!server || isResource(rows))
@@ -385,8 +398,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   })
 
   onMount(() => installSweep())
-  use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value }))
-  use(popover, () => columnsPanel, () => ({ open: picking.value, trigger: columnsButton!, side: 'bottom' as const, align: 'end' as const, onClose: () => (picking.value = false) }))
+  use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value, onWidth: w => (small.value = w < CARDS_BELOW) }))
   onCleanup(() => (sheet.value = undefined))
 
   const toolbar = derived(() => filter !== undefined || actions !== undefined || !!picker)
@@ -402,10 +414,8 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
           {actions}
           {picker && (
             <div>
-              <Button emphasis="outline" tone="neutral" ref={(n: any) => (columnsButton = n)} aria-expanded={picking.value ? 'true' : 'false'} aria-controls={`${id}-cols`} onClick={() => (picking.value = !picking.value)}>{columnsIcon()}Columns</Button>
-              <div ref={(n: any) => (columnsPanel = n)} data-scope="popover" data-part="content" popover="manual" id={`${id}-cols`} role="group" aria-label="Visible columns">
-                {hideable.value.map(c => <div key={c.id}><Checkbox checked onChange={(e: any) => flip(c, e.currentTarget.checked)}>{c.header}</Checkbox></div>)}
-              </div>
+              <Button emphasis="outline" tone="neutral" ref={(n: any) => (columnsButton = n)} aria-expanded={picking.value ? 'true' : 'false'} aria-controls={picked.value ? `${id}-cols` : undefined} onClick={() => { picked.value = true; picking.value = !picking.value }}>{columnsIcon()}Columns</Button>
+              {picked.value && <ColumnsPanel id={`${id}-cols`} open={picking} trigger={() => columnsButton!} items={hideable.value} flip={flip} />}
             </div>
           )}
         </div>
@@ -417,7 +427,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
           <Button emphasis="ghost" onClick={() => write({})}>Clear</Button>
         </div>
       )}
-      {phone === 'cards' && sortable.value.length > 0 && (
+      {phone === 'cards' && small.value && sortable.value.length > 0 && (
         <div data-part="sortbar">
           <Select label="Sort by" size="sm" value={order.value?.id ?? ''} placeholder="None" options={sortable.value.map(c => ({ value: c.id, label: c.header }))} onChange={(e: any) => { const c = cols.value.find(x => x.id === e.currentTarget.value); if (c) askSort(c, order.value?.dir ?? 'ascending') }} />
           <Button emphasis="outline" tone="neutral" size="sm" aria-label="Toggle sort direction" disabled={!order.value} onClick={() => { const c = cols.value.find(x => x.id === order.value?.id); if (c) askSort(c, order.value!.dir === 'ascending' ? 'descending' : 'ascending') }}>{order.value?.dir === 'ascending' ? '↑' : '↓'}</Button>

@@ -62,10 +62,13 @@ export interface TableOptions {
   hidden: readonly string[]
   /** Anything that changes the rows, so pin offsets are measured again. */
   rows?: unknown
+  /** Told the table's width whenever it changes, so a binding can mount what only a size needs. */
+  onWidth?: (width: number) => void
 }
 
 /** Attach to `[data-scope="table"]`, which needs an id: the hide rule is scoped by it. */
 export function table(root: HTMLElement, opts: TableOptions) {
+  let o = opts
   const doc = root.ownerDocument
   const win = doc.defaultView!
   const viewport = () => root.querySelector<HTMLElement>('[data-part="viewport"]')
@@ -119,12 +122,12 @@ export function table(root: HTMLElement, opts: TableOptions) {
   viewport()?.addEventListener('scroll', onScroll, { passive: true })
   root.addEventListener('keydown', onKey)
   root.addEventListener('pointerdown', onDown)
-  const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(sync) : undefined
+  const sizes = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { o.onWidth?.(root.clientWidth); sync() }) : undefined
   sizes?.observe(root)
   hide(opts.hidden)
   sync()
   return {
-    update(next: TableOptions) { hide(next.hidden); sync() },
+    update(next: TableOptions) { o = next; hide(next.hidden); sync() },
     destroy() {
       viewport()?.removeEventListener('scroll', onScroll)
       root.removeEventListener('keydown', onKey)
