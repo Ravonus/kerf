@@ -99,10 +99,6 @@ export const catalog = [
     example: 'export function A() { let n = 0; return <button onClick={() => { n++ }}>{n}</button> }',
   },
   {
-    code: 'W042', severity: 'warning', by: 'compiler', catches: '`onChange` on a text input (the DOM fires it on blur, not per keystroke)', fix: '`onInput`',
-    example: 'export function A() { return <input onChange={() => {}} /> }',
-  },
-  {
     code: 'W050', severity: 'error', by: 'compiler',
     catches: 'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
     fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser, or clean it up in `onCleanup`',

@@ -14,6 +14,7 @@ import { createRoot, memo, rt, type SsrData } from './index'
 import { keys, nextKey, under } from './keys'
 import { createApp, dehydrate, useApp, type AppOptions } from './scope'
 import { withHead, type HeadOptions } from './head'
+import { attrName, cssName, cssValue, WORDS } from './dom'
 
 export { memo }
 export { For, mergeProps } from './dom'
@@ -237,15 +238,13 @@ export function escape(s: string, attr?: boolean): string {
 
 // ---- attributes -----------------------------------------------------------------------------------------------
 
-const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for' }
-
 /**
- * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. ARIA
+ * ` name="value"` for a dynamic attribute or property: `null`/`false` drop it, `true` writes the bare name. `WORDS`
  * attributes write booleans as the words (`aria-pressed="false"`), as weft/dom does.
  */
 export function attr(name: string, value: any): string {
-  name = NAMES[name] ?? name
-  if (typeof value === 'boolean' && name.startsWith('aria-')) value = String(value)
+  name = attrName(name)
+  if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
   if (name === 'class') value = classes(value)
   else if (name === 'style') value = styles(value)
   if (value == null || value === false || value === '' && (name === 'class' || name === 'style')) return ''
@@ -262,7 +261,11 @@ function classes(v: any): string {
 function styles(v: any): string {
   if (v == null || typeof v !== 'object') return v ?? ''
   let out = ''
-  for (const k of Object.keys(v)) if (v[k] != null) out += `${out ? ';' : ''}${k}:${v[k]}`
+  for (const k of Object.keys(v)) {
+    const name = cssName(k)
+    const value = cssValue(name, v[k])
+    if (value != null) out += `${out ? ';' : ''}${name}:${value}`
+  }
   return out
 }
 
@@ -276,10 +279,17 @@ export function select(value: any): string {
 export function spread(props: Record<string, any>): string {
   let out = ''
   for (const k of Reflect.ownKeys(props) as string[]) {
-    if (k === 'children' || k === 'ref' || k === 'key' || /^on[A-Z]/.test(k)) continue
-    out += attr(k, props[k])
+    if (k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || /^on[A-Z]/.test(k)) continue
+    out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, props[k])
   }
   return out
+}
+
+/** What a spread element without JSX children holds: content its props set, or `children`. */
+export function inner(props: Record<string, any>, tag: string): unknown {
+  const raw = props.dangerouslySetInnerHTML?.__html ?? props.innerHTML
+  if (raw != null) return { t: String(raw) }
+  return props.textContent ?? (tag === 'textarea' ? props.value ?? props.defaultValue : undefined) ?? props.children
 }
 
 // ---- <select value> -------------------------------------------------------------------------------------------

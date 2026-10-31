@@ -11,6 +11,7 @@ mod diag;
 mod emit;
 mod hmr;
 pub mod project;
+mod react;
 mod shape;
 mod srcmap;
 pub mod style;
