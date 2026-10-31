@@ -323,7 +323,8 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
         const hydrating = hydratable || !!mode
         const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
         const shapes = await importedShapes(this, code, id.replace(/\?.*$/, ''))
-        const out = transform(code, { filename: id.replace(/\?.*$/, ''), dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups, shapes, taggedParts: !!styleOptions?.taggedParts })
+        const islands = hydrating && !mode ? await main.api.islands?.(this, id) : undefined
+        const out = transform(code, { filename: id.replace(/\?.*$/, ''), islands, dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups, shapes, taggedParts: !!styleOptions?.taggedParts })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }
@@ -334,6 +335,8 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
         return { code: style.record(this, id, out.facts, out.code, ssr), map: out.map }
       },
     },
+    /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
+    api: {},
   }
   return [main, features, style.plugin, agent(), slots(), tokens(), assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
@@ -419,8 +422,11 @@ function agent() {
  * app builds at run time.
  */
 function purgeCss(keep = []) {
+  const sources = []
   return {
     name: 'weft:purge',
+    /** `add(text)`: source that renders on the server only, whose class names the client's files don't hold. */
+    api: { add: text => sources.push(text) },
     apply: 'build',
     enforce: 'post',
     generateBundle: {
@@ -431,7 +437,7 @@ function purgeCss(keep = []) {
         const text = f => (f.type === 'chunk' ? f.code : typeof f.source === 'string' ? f.source : Buffer.from(f.source).toString())
         const sheets = files.filter(f => f.type === 'asset' && f.fileName.endsWith('.css'))
         if (!sheets.length) return
-        const found = words(files.filter(f => /\.(js|mjs|html)$/.test(f.fileName)).map(text), keep)
+        const found = words([...files.filter(f => /\.(js|mjs|html)$/.test(f.fileName)).map(text), ...sources], keep)
         const moved = []
         const purged = purge(sheets.map(text), found)
         for (const [i, sheet] of sheets.entries()) {

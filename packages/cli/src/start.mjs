@@ -30,7 +30,7 @@ export async function start(root, sub) {
 async function site(root) {
   const loaded = await loadConfig(root)
   if (!loaded.diagnostics.some(d => d.code === 'P007') && loaded.config?.plugins?.length) sync(root, loaded)
-  return { site: loaded.config?.site ?? {}, diagnostics: loaded.diagnostics }
+  return { site: loaded.config?.site ?? {}, hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
 }
 
 /** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */

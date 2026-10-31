@@ -10,6 +10,7 @@ mod browser;
 mod diag;
 mod emit;
 mod hmr;
+pub mod hydration;
 pub mod project;
 mod shape;
 mod srcmap;
@@ -54,6 +55,8 @@ pub struct Options {
     /// Emit a shape variant of each component (research 31 §5). The value lists imported components that have one,
     /// keyed `"<absolute path without extension>#<export>"`. `None`: only what this file's `pending="shape"` needs.
     pub shapes: Option<std::collections::HashMap<String, bool>>,
+    /// The sites the project's view made islands (hydration.rs). `None`: every component hydrates.
+    pub islands: Option<hydration::Islands>,
 }
 
 impl Default for Options {
@@ -71,6 +74,7 @@ impl Default for Options {
             groups: Default::default(),
             tagged_parts: false,
             shapes: None,
+            islands: None,
         }
     }
 }
@@ -90,6 +94,15 @@ pub struct Output {
 }
 
 pub fn compile(source: &str, options: &Options) -> Output {
+    let source_type = SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
+    // DOM output keeps each island's call site as an export, appended so every pass reads it as authored code.
+    let islands = options.islands.as_ref().filter(|i| !i.sites.is_empty() && !options.check_only);
+    let hoisted = islands.filter(|_| options.generate != "ssr").and_then(|i| hydration::hoisted(source, source_type, i));
+    let Some(hoisted) = hoisted else { return compile_source(source, source.len(), options) };
+    compile_source(&format!("{source}{hoisted}"), source.len(), options)
+}
+
+fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, source, source_type).parse();
@@ -107,13 +120,16 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let plan = analyze::analyze(&program, semantic.scoping(), source);
     let scoping = semantic.into_scoping();
     let mut diagnostics = plan.diagnostics.clone();
+    let hydration_facts = hydration::facts(&program, &scoping, source);
     // weft/browser checks; W054 needs to know whether this file is server-rendered (`None`: only checking).
     let ssr = if options.generate == "ssr" || options.hydratable { Some(true) } else if options.check_only { None } else { Some(false) };
     diagnostics.extend(browser::check(&program, &scoping, source, ssr));
     // Style groups: evaluate definitions and lower call sites to attributes before the pre-pass (style.rs).
     let (groups, group_uses) = style::apply(&allocator, &mut program, &scoping, source, &options.filename, &options.groups, options.tagged_parts, &mut diagnostics);
+    diagnostics.retain(|d| (d.start as usize) <= authored);
     diagnostics.sort_by_key(|d| d.start);
     let mut facts = plan.facts.clone();
+    facts.hydration = hydration_facts;
     facts.groups = groups;
     facts.group_uses = group_uses;
     if options.check_only {
@@ -125,6 +141,12 @@ pub fn compile(source: &str, options: &Options) -> Output {
     let shapes = shape::apply(&allocator, &mut program, &scoping, source, &options.filename, options.shapes.as_ref());
     facts.shapes = shapes.exports;
 
+    if options.generate == "ssr"
+        && options.hydratable
+        && let Some(islands) = &options.islands
+    {
+        hydration::mark(&allocator, &mut program, &scoping, islands);
+    }
     transform::apply(&allocator, &mut program, &scoping, &plan);
 
     let ssr = options.generate == "ssr";

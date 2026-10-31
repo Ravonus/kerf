@@ -20,15 +20,22 @@ export function Level(props: { route: RouteState; depth: number }) {
   const view = () => {
     const id = lv.id.value
     if (id === undefined) return null
+    const html = route.mount ? lv.html.value : undefined
+    if (html !== undefined) return route.mount!(html, untrack(() => props.depth), () => <Level route={route} depth={next} />)
     const Route = route.comps[id]
-    return Route ? <Route params={lv.params.value} data={lv.data.value}><Level route={route} depth={next} /></Route> : null
+    if (!Route) return null
+    const body = () => <Route params={lv.params.value} data={lv.data.value}><Level route={route} depth={next} /></Route>
+    return route.around ? route.around(untrack(() => props.depth), id, body) : body()
   }
   return <>{view()}</>
 }
 
 /**
  * `<a>` with `aria-current="page"` while its path is the current one. Any same-origin `<a href>` navigates on the
- * client (start() listens for clicks); Link only adds the current-page state.
+ * client (start() listens for clicks); Link only adds the current-page state. In a static level the server writes it
+ * and start() updates it after a navigation, so a Link needs no code there.
+ *
+ * @weft static
  */
 export function Link(props: { href: string; class?: string; children?: unknown }) {
   const route = active.route

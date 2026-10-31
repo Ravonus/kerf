@@ -6,6 +6,7 @@
 // prop), one per tab on the client.
 
 import { state, untrack, type State } from 'weft'
+import type { SsrData } from 'weft'
 import type { Merged } from 'weft/ssr'
 import type { Wire } from './data'
 
@@ -19,12 +20,19 @@ export interface Match {
   data?: unknown
   d?: string[]
   t?: string[]
+  /** A static level: no client code (PLAN §11). `h`: its HTML (a navigation), `x`: a hash of it, to skip an unchanged one. */
+  s?: 1
+  h?: string
+  x?: string
 }
 
 export interface Level {
   id: State<string | undefined>
   params: State<Record<string, string>>
   data: State<any>
+  /** A static level's HTML: empty for the page's own; undefined for a level with client code. */
+  html: State<string | undefined>
+  x?: string
 }
 
 export type Component = (props: any) => unknown
@@ -36,6 +44,10 @@ export interface RouteState {
   status: State<number>
   /** Loaded route components by id. */
   comps: Record<string, Component>
+  /** Client: shows a static level's HTML, with the next level inside it. */
+  mount?: (html: string, depth: number, next: () => unknown) => unknown
+  /** Around a level's component, at the same point on both sides: the server's markers, the client's key scope. */
+  around?: (depth: number, id: string, body: () => unknown) => unknown
 }
 
 /** What `/_weft/data/<path>` answers and what the page carries in `#weft-route`: the matches, the head, the status. */
@@ -48,6 +60,10 @@ export interface RoutePayload {
   r?: string
   /** The queries the loaders resolved, for the client cache (navigation only; a page carries `#weft-cache`). */
   c?: Wire[]
+  /** The islands in the static levels, whose code has to be there first. */
+  i?: string[]
+  /** A navigation's page data, for those islands. */
+  b?: SsrData | null
 }
 
 /** The route state of the render in progress: a server pass sets it as it starts (passes are synchronous). */
@@ -60,13 +76,15 @@ export function createRouteState(payload: RoutePayload, comps: Record<string, Co
     lv.id.value = m.id
     lv.params.value = m.params
     lv.data.value = m.data
+    lv.html.value = m.s ? m.h ?? '' : undefined
+    lv.x = m.x
   })
   return r
 }
 
 /** Level `d`, made on first use (an empty level renders nothing). */
 export function level(r: RouteState, d: number): Level {
-  return (r.levels[d] ??= { id: state<string | undefined>(undefined), params: state({}), data: state<any>(undefined) })
+  return (r.levels[d] ??= { id: state<string | undefined>(undefined), params: state({}), data: state<any>(undefined), html: state<string | undefined>(undefined) })
 }
 
 const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b)
@@ -85,6 +103,9 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
       if (m) {
         if (!same(lv.params.value, m.params)) lv.params.value = m.params
         if (!same(lv.data.value, m.data)) lv.data.value = m.data
+        if (!m.s) lv.html.value = undefined
+        else if (lv.x !== m.x || lv.id.value !== m.id) lv.html.value = m.h
+        lv.x = m.x
       }
       if (lv.id.value !== m?.id) lv.id.value = m?.id
     }

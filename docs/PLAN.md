@@ -1153,7 +1153,10 @@ Also out of v0:
 - **Compiler spike outcome: settled, then superseded.** The spike passed on Solid 2's crate; weft now owns its back
   end and removes the crate once its own passes the same checks (§3.6, §12).
 - **Event replay before hydration:** a capture script like Solid's `_$HY`, or nothing?
-- **Partial hydration** (`<NoHydration>`, islands): needed before Phase 3's routing?
+- **Partial hydration: settled, inferred, on by default** (§12). Nothing to annotate: the compiler reports what each
+  top-level binding reads and every project-level pass follows it, so a component with no handler, effect or state
+  ships no JS. `@weft client` and `@weft static` above a declaration overrule the inference; `hydration: 'full'` in
+  `weft.config.ts` turns it off. Each decision and its reason is in `.weft/hydration.json`.
 - **Hydrated resources:** trust the server's value (today), or revalidate in the background?
 - **Style groups:** spread (`{...orderCard()}`) or a `g=` prop, and CSS-file groups as a second input format? The [23 §4](research/23-style-groups.md) spike decides.
 - **OG renderer:** Takumi (Rust, HTML in, native + wasm) or Satori + resvg? The [20 §7](research/20-metadata-and-og.md) spike decides.
@@ -1173,6 +1176,21 @@ Also out of v0:
 
 ## 12. Decision log
 
+- **Partial hydration is inferred, not annotated (2026-10-31).** Agents write components; `<NoHydration>` and island
+  markers would be one more thing to get right, and getting it wrong in the cheap direction (never annotating) costs
+  the whole budget. So `crates/weft-compiler/src/hydration.rs` reports facts per file and `packages/weft/node/hydration.mjs`
+  solves them across the project. What it can't see through (a package's component, a spread, a function prop over
+  local names) keeps its caller on the client: the failure mode is bytes, never a dead button. A route whose component
+  is proved static is a *static level*: its HTML comes from the server, on navigation too, and no route code loads.
+  Each island is a hoisted `$iN` export of its call site, so props that are literals stay in the code and the rest go
+  as JSON (H009 at render when they can't). Children of an island stay the server's. On the
+  Lemonstand home this took 34.1 KB of JS to 26.3 KB, DOM comments from 996 to 73, `wk` attributes from 1192 to 0.
+  Static regions get no keys or markers at all, and `hole` writes a range only where a walk needs one; what the claim
+  did need is swept a macrotask after hydration, so the pass itself still writes nothing. Trade-off: a param change on a static route
+  swaps its HTML instead of patching text, and an island remounts when its level does. **10 KB is not reachable by
+  this alone**: a page with no islands is 8.2 KB (the router and runtime), and Lemonstand's home adds 18 KB of
+  interactive app code it runs at load. Reaching it needs islands hydrated on interaction or visibility, which puts
+  about 4.7 KB up front by the spike's estimate, plus event replay for what happens before they arrive. Not built.
 - **Getter props over Ripple-style plain props.** Research 01 recommended Ripple 0.4's plain props with `Live<T>`
   types. We chose compiler-made live props because agents will write `count={count.value}`, and only live props make
   that correct without type-directed compilation. The holes this opens are closed by §3.3 and W001/W005/W006.

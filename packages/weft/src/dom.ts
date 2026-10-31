@@ -9,6 +9,7 @@ export { memo }
 export { attr, bind, child, cls, component, css, delegate, on, spread, tpl } from './dom-next'
 export { first, hchild, htpl, next } from './claim'
 export { hydrate, hydration } from './hydrate'
+export { enter, level } from './island'
 
 type Mountable = Element | DocumentFragment
 

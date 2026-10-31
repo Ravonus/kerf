@@ -30,6 +30,7 @@ use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
+use crate::hydration::{ISLAND, marked};
 use crate::srcmap;
 
 /// Bubbling events the runtime delegates to one document listener.
@@ -724,14 +725,15 @@ impl<'t> Emitter<'t> {
         let slot = b.slots;
         b.slots += 1;
         if self.ssr {
+            // Mixed content needs a range, except static structure that turns out to be one element (`2`): the server
+            // knows, and the client's walk and `hchild` read the element as the hole. `hole` writes the markers.
             let hole = self.helper("hole");
-            if marker.is_some() {
-                Self::server(b, Piece::Static("<!--[-->".into()));
-            }
-            Self::server(b, Piece::Code(format!("{hole}(_k, {slot}, {v})")));
-            if marker.is_some() {
-                Self::server(b, Piece::Static("<!--]-->".into()));
-            }
+            let mixed = match (marker.is_some(), once) {
+                (false, _) => "",
+                (true, true) => ", 2",
+                (true, false) => ", 1",
+            };
+            Self::server(b, Piece::Code(format!("{hole}(_k, {slot}, {v}{mixed})")));
             return;
         }
         let marker = marker.map(|p| self.node(b, &p));
@@ -888,10 +890,17 @@ impl<'t> Emitter<'t> {
         };
         let keyed = key.is_some();
         self.keys.extend(key);
+        let island = if self.ssr { island_mark(el) } else { None };
         let mut fields = Vec::new();
         let kids = children(&el.children, self.text);
         match kids.as_slice() {
             [] => {}
+            many if island.as_ref().is_some_and(|i| i.2) => {
+                // The island's children stay the server's: a slot, rendered where the island reads it.
+                let vs: Vec<String> = many.iter().map(|k| self.kid_value(k)).collect();
+                let slot = self.helper("slot");
+                fields.push(format!("get children() {{ return {slot}(() => [{}]); }}", vs.join(", ")));
+            }
             [Kid::Text(t)] => fields.push(format!("children: {}", serde_json::to_string(&decode_entities(t)).unwrap())),
             [Kid::Expr(e)] if passes_as_value(e) => {
                 let v = self.expr(e);
@@ -915,6 +924,12 @@ impl<'t> Emitter<'t> {
             Some(read) => self.expr(read),
             None => name.clone(),
         };
+        if let Some((id, values, slotted)) = island {
+            let call = self.helper("island");
+            let names = serde_json::to_string(&values).unwrap();
+            let slotted = if slotted && !kids.is_empty() { ", 1" } else { "" };
+            return format!("{call}({id:?}, {names}, {callee}, {props}{slotted})");
+        }
         // Dev builds name the component, so a <Boundary> can say where an error was thrown.
         match self.origin.get(&el.span.start) {
             Some(&(line, _)) if self.dev && !self.ssr && name != "For" => {
@@ -987,7 +1002,7 @@ impl<'t> Emitter<'t> {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
                         JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
                     };
-                    if key == "key" || key == TAG {
+                    if key == "key" || key == TAG || key == ISLAND {
                         continue;
                     }
                     let k = prop_key(&key);
@@ -1084,6 +1099,17 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
     }
     path.reverse();
     Some(format!("{}().{}", p.name, path.join(".")))
+}
+
+/// The island mark on a component's tag (`hydration::mark`).
+fn island_mark(el: &JSXElement<'_>) -> Option<(String, Vec<String>, bool)> {
+    el.opening_element.attributes.iter().find_map(|a| match a {
+        JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == ISLAND) => match &a.value {
+            Some(JSXAttributeValue::StringLiteral(s)) => marked(s.value.as_str()),
+            _ => None,
+        },
+        _ => None,
+    })
 }
 
 /// The live read the pre-pass put beside a component's tag (`TAG`).
