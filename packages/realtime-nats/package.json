@@ -1,0 +1,27 @@
+{
+  "name": "@weft/realtime-nats",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/realtime-nats: the realtime.bus provider for core NATS",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nats-io/transport-node": "3.4.0"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "weft": "*"
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  }
+}

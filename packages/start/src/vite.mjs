@@ -125,7 +125,7 @@ export default function weftStart(options = {}) {
       server.close = () => (w.close(), close())
     },
     resolveId: {
-      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus)(\/|$)|sharp$)/ },
+      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
       handler(source, importer) {
         // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
         if (source === 'sharp') {
@@ -158,6 +158,7 @@ export default function weftStart(options = {}) {
         if (which === V.context || which === V.auth || which === V.realtime) {
           const name = which.slice('virtual:weft/'.length)
           const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/${name}.server.${x}`).find(x => existsSync(abs(x)))
+          if (which === V.realtime && busBound(root)) return busModule(f && abs(f), here)
           return f ? `export { default } from ${JSON.stringify(abs(f))}\n` : 'export default undefined\n'
         }
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
@@ -251,6 +252,18 @@ function mediaModule(root, dev) {
   if (!existsSync(slot) || readFileSync(slot, 'utf8').includes('provider = null')) return 'export default undefined\n'
   return `import { load } from 'weft:slot/media.server'\nexport default () => load().then(m => m.at(${dev ? JSON.stringify(root) : 'undefined'}))\n`
 }
+
+const busBound = root => {
+  const slot = join(root, '.weft', 'slots', 'realtime.bus.ts')
+  return existsSync(slot) && readFileSync(slot, 'utf8').includes('provider = {')
+}
+
+/** A bus in `src/realtime.server.ts` wins over the plugin's, like any explicit choice. */
+const busModule = (file, here) => `import { load, provider } from 'weft:slot/realtime.bus'
+import { slotBus } from ${JSON.stringify(join(here, 'bus.ts'))}
+${file ? `import own from ${JSON.stringify(file)}` : 'const own = undefined'}
+export default { ...own, bus: own?.bus ?? slotBus(provider.plugin, load) }
+`
 
 function appModule({ site, build, dev, fonts, timeout }) {
   return `export const site = ${JSON.stringify(site)}

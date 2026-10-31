@@ -39,6 +39,7 @@ export interface Limits {
 
 const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40 }
 const HIGH = 64 * 1024
+const VOLATILE = '{"v":1'
 
 export interface RealtimeOptions {
   /** Default: `memoryBus()`, one instance only (R002). */
@@ -189,8 +190,11 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
     channels.set(name, made)
     made.ready = bus.subscribe(name, raw => {
       const ev = { seq: ++seq, at: Date.now(), raw }
-      made.ring.push(ev)
-      trim(made)
+      // Cursors and presence beats are only worth having now: in the ring they'd push out what a resume needs.
+      if (!raw.startsWith(VOLATILE)) {
+        made.ring.push(ev)
+        trim(made)
+      }
       for (const on of made.listeners) on(ev)
     }, () => {
       made.ring.length = 0

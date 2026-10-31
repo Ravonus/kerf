@@ -18,7 +18,7 @@ jobs:
       - name: Install the packages
         run: |
           (cd packages/weft && npm ci && npm run build:native)
-          for p in start cli create-weft ui-core warp; do (cd packages/$p && npm ci); done
+          for p in start cli create-weft ui-core warp multiplayer; do (cd packages/$p && npm ci); done
           (cd packages/start && npx playwright-core install --with-deps chromium)
       - name: Scaffold the todo + auth app
         run: |

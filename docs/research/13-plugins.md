@@ -233,8 +233,8 @@ A slot is defined once, in core or in a package that owns a domain:
 | `font.build@1` | one | build | `null`: fonts ship as written in CSS (CSS-only). X020 warns on faces without a matched fallback | `@weft/plugin-text` | 2 |
 | `text.measure@1` | one | client, worker | `null`: CSS-only text. Measured contexts are P101 | `@weft/plugin-text` (`slim` or `pretext` engine) | 2 (Surfaces) |
 | `surface.renderer@1` | keyed by `kind` | client | built in: `canvas2d`, `webgl2` | `@weft/plugin-surface-keel` (`keel-pixel`) | 2 (Surfaces) |
-| `realtime.bus@1` | one | server | built in: `memory` (R002 on multi-instance presets) | `@weft/plugin-bus-postgres`, `-redis`, `-nats`, `-durable-object` | 3 / 3b |
-| `db.adapter@1` | keyed by name | server | built in: `drizzle` | `@weft/plugin-db-kysely`, `-prisma`, `-sql`, `-mongo` … (agorix 03) | 3c |
+| `realtime.bus@1` | one | server | built in: `memory` (R002 on multi-instance presets) | `@weft/realtime-redis`, `-nats` ([35](35-multiplayer-and-packs.md)) | 3 / 3b |
+| `db.adapter@1` | keyed by name | server | built in: `drizzle` | `@weft/db-sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb` ([35](35-multiplayer-and-packs.md)) | 3c |
 | `pay.rail@1` | keyed by rail | server, client, native | `null`; `weft/pay` without a rail is PAY-coded | `@weft/plugin-pay-stripe`, `-storekit`, `-play` | 6c |
 | `device.<capability>@1` | keyed by target | native, client | `null`; unguarded use is N031 | `@weft/plugin-device-*` (native-module codegen) | 6b |
 

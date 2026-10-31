@@ -1,0 +1,30 @@
+{
+  "name": "@weft/realtime-livekit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "livekit-client": "2.23.0"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "weft": "*",
+    "@weft/multiplayer": "*"
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft",
+    "@weft/multiplayer": "file:../multiplayer"
+  }
+}

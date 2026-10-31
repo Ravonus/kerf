@@ -123,7 +123,7 @@ export function writeContract({ root, site = {}, preset }) {
     const { diagnostics, ...contract } = describe(fns)
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
     const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
-    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Set a bus in \`src/realtime.server.ts\`: \`postgresBus\`, \`redisBus\` or \`natsBus\`.` })
+    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft/realtime-redis\` or \`@weft/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
     mkdirSync(join(root, '.weft'), { recursive: true })
     const path = join(root, '.weft', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')

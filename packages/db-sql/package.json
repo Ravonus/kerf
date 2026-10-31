@@ -1,0 +1,25 @@
+{
+  "name": "@weft/db-sql",
+  "version": "0.0.0",
+  "private": true,
+  "description": "@weft/db-sql: a list source from bound SQL on any driver, and a Postgres trigger that pokes tags",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin": "./plugin.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@weft/start": "*",
+    "weft": "*"
+  },
+  "devDependencies": {
+    "@weft/start": "file:../start",
+    "vitest": "5.0.5",
+    "weft": "file:../weft",
+    "postgres": "4.0.0"
+  }
+}

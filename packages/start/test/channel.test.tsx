@@ -384,3 +384,77 @@ describe('sharedState', () => {
     expect(meeting.$snapshot().value).toBe(0)
   })
 })
+
+describe('what multiplayer needs of a room', () => {
+  const log: unknown[] = []
+  const lively = channel({
+    $id: 'chat.lively',
+    params: any as StandardSchemaV1<any, { roomId: string }>,
+    authorize: ({ ctx }) => (ctx as any).user?.id !== 'out',
+    client: { me: any, only: any, gone: any },
+    server: { hi: any, tick: any },
+    on: {
+      me: async ({ id, room }) => { await room.publish('hi', { id }, { to: id }) },
+      only: async ({ msg, room }) => { await room.publish('hi', { id: 'nobody' }, { to: msg }) },
+      gone: async ({ room }) => { await room.publish('tick', { n: 1 }, { volatile: true }) },
+    },
+    left: ({ id, params }) => void log.push({ id, params }),
+  })
+  function Lively(props: { on: boolean }) {
+    const chat = lively.connect(() => (props.on ? { roomId: 'a' } : skip))
+    const hi = chat.collect('hi')
+    return (
+      <>
+        <p aria-label="status">{chat.status.value}</p>
+        <p aria-label="room">{chat.room.value ?? 'none'}</p>
+        <ul>{hi.value.map(m => <li key={m.id}>{m.id}</li>)}</ul>
+        <button onClick={() => chat.send('me', {})}>me</button>
+        <button onClick={() => chat.send('only', 'someone-else')}>only</button>
+        <button onClick={() => chat.send('gone', {})}>tick</button>
+      </>
+    )
+  }
+  const click = async (name: string) => {
+    screen.getByRole('button', { name }).click()
+    await net.settle()
+  }
+  beforeEach(() => { log.length = 0 })
+
+  test('a handler has the connection, `to` reaches only it, and `left` gets the same id', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Lively, { on: true })
+    await net.settle()
+    expect(screen.getByLabelText('room').textContent).toContain('chat.lively')
+    await click('me')
+    const id = items()[0]
+    expect(id).toMatch(/\w{8}/)
+    await click('only')
+    expect(items()).toEqual([id])
+    await net.drop()
+    expect(log).toEqual([{ id, params: { roomId: 'a' } }])
+  })
+
+  test('`left` runs when `authorize` stops holding', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Lively, { on: true })
+    await net.settle()
+    await net.session({ user: { id: 'out' } }).catch(() => {})
+    expect(log).toHaveLength(1)
+  })
+
+  test('a volatile message is delivered and kept out of the resume window', async () => {
+    net.context({ user: { id: 'ann' } })
+    const seen: unknown[] = []
+    function Ticks() {
+      const chat = lively.connect({ roomId: 'a' })
+      chat.on('tick', m => seen.push(m))
+      return <button onClick={() => chat.send('gone', {})}>tick</button>
+    }
+    render(Ticks, {})
+    await net.settle()
+    await click('tick')
+    expect(seen).toEqual([{ n: 1 }])
+    const ch = hub().channel('weft:c:chat.lively:{"roomId":"a"}')
+    expect(ch.ring).toHaveLength(0)
+  })
+})

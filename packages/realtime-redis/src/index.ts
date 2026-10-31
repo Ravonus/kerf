@@ -2,8 +2,8 @@
 // reconnect, and whatever was published meanwhile is gone: every `ready` after the first is the `gap`.
 
 import { Redis } from 'ioredis'
-import type { Bus } from '../bus'
-import { StartError } from '../data'
+import type { Bus } from '@weft/start/bus'
+import { StartError } from '@weft/start/data'
 
 export interface RedisBusOptions {
   /** `redis://…` or `rediss://…`. */
@@ -68,3 +68,6 @@ export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
     },
   }
 }
+
+/** The `realtime.bus` provider: `REDIS_URL` unless the plugin was given a `url`. */
+export const bus = (options: Partial<RedisBusOptions> = {}) => redisBus({ ...options, url: options.url ?? process.env.REDIS_URL ?? '' })
