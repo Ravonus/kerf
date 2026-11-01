@@ -1,6 +1,6 @@
 /* The site's own layout, on warp's tokens. Every value is a token or a layout measure: colour never appears raw here. */
   html { scroll-padding-block-start: 88px; }
-  body { margin: 0; background: var(--warp-color-page); color: var(--warp-color-text); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: oklch(0.1 0.012 150); color: var(--warp-color-text); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading); -webkit-font-smoothing: antialiased; }
   #app { display: grid; grid-template-rows: auto 1fr auto; min-block-size: 100dvh; }
   main { min-inline-size: 0; }
   h1, h2, h3 { margin: 0; font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); text-wrap: balance; }
@@ -51,7 +51,7 @@
   [data-part="install"] { display: grid; gap: 6px; font-size: 0.8125rem; color: oklch(0.72 0.03 150); }
   [data-part="install"] code { justify-self: start; max-inline-size: 100%; overflow-x: auto; padding: 8px 12px; border: 1px solid oklch(0.3 0.02 150); background: oklch(0.1 0.012 150 / 0.8); font-family: var(--warp-font-mono); font-size: 0.875rem; color: oklch(0.96 0.03 130); }
 
-  [data-site="story"] { display: grid; gap: clamp(3.5rem, 7vw, 6.5rem); background: oklch(0.1 0.012 150); padding: clamp(3rem, 6vw, 5rem) clamp(1.25rem, 5vw, 5rem) clamp(4rem, 8vw, 7rem); }
+  [data-site="story"] { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(3.5rem, 7vw, 6.5rem); background: oklch(0.1 0.012 150); padding: clamp(3rem, 6vw, 5rem) clamp(1.25rem, 5vw, 5rem) clamp(4rem, 8vw, 7rem); }
   [data-site="story"] > section, [data-part="reading"] { box-sizing: border-box; inline-size: 100%; max-inline-size: 1120px; margin-inline: auto; }
   [data-site="story"] h2 { font-family: var(--warp-font-sans); font-weight: 700; font-size: clamp(2rem, 1.3rem + 2.4vw, 3.25rem); line-height: 1.08; letter-spacing: -0.03em; color: oklch(0.97 0.03 130); }
   [data-part="intro"] { max-inline-size: 65ch; margin-block: var(--warp-space-group); font-size: 1.125rem; line-height: 1.6; color: oklch(0.85 0.02 130); }
@@ -116,6 +116,7 @@
   [data-site="icon-sheet"] svg { inline-size: 48px; block-size: 48px; }
 
   @media (max-width: 719.98px) {
+    [data-site="hero"]::after { background: oklch(0.1 0.012 150 / 0.78); }
     [data-site="top-nav"] { display: none; }
     [data-site="menu"] { display: inline-flex; }
     [data-site="sheet-nav"] { display: grid; }

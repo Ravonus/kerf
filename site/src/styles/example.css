@@ -1,4 +1,4 @@
-[data-site="example"] { display: grid; gap: var(--warp-space-related); margin-block: var(--warp-space-group) var(--warp-space-section); }
+[data-site="example"] { display: grid; gap: var(--warp-space-related); margin-block: var(--warp-space-group) clamp(3rem, 6vw, 5rem); }
 [data-site="example"] > p { max-inline-size: 65ch; font-size: 1.0625rem; line-height: 1.6; color: oklch(0.82 0.02 130); }
 [data-site="example"] h3 { font-family: var(--warp-font-sans); font-size: 1.5rem; letter-spacing: -0.02em; color: oklch(0.96 0.03 130); }
 [data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid oklch(0.3 0.02 150); background: oklch(0.14 0.015 150); }
