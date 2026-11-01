@@ -43,7 +43,6 @@ const V = {
   app: 'virtual:weft/app',
   server: 'virtual:weft/entry-server',
   client: 'virtual:weft/entry-client',
-  full: 'virtual:weft/client-full',
   fns: 'virtual:weft/fns',
   context: 'virtual:weft/context',
   auth: 'virtual:weft/auth',
@@ -130,8 +129,6 @@ export default function weftStart(options = {}) {
     }
   }
   const clientEntry = () => (existsSync(join(root, 'src', 'entry.client.ts')) ? join(root, 'src', 'entry.client.ts') : V.client)
-  /** The default entry, split so a page that's only read loads next to nothing. */
-  const split = () => clientEntry() === V.client && (options.hydration ?? 'lazy') === 'lazy'
 
   return {
     name: 'weft:start',
@@ -249,7 +246,7 @@ export default function weftStart(options = {}) {
         }
         if (which === V.routes) {
           const p = await hydration(this)
-          return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p, split())
+          return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
         }
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
         if (which === V.server) return serverEntry(clientEntry(), dev)
@@ -262,10 +259,7 @@ export default function weftStart(options = {}) {
         }
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
         if (which === V.media) return mediaModule(root, dev)
-        const app = `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
-        if (which === V.full) return app
-        // With lazy islands a page that's only read runs none of it: PLAN §11.
-        if (which === V.client) return !split() ? app : `import { boot } from ${JSON.stringify(join(here, 'boot.ts'))}\nboot(() => import('${V.full}'))\n`
+        if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
       },
     },
     transform: {
@@ -320,7 +314,7 @@ function usesShapes(root) {
  * the first `)`, which a path can hold). `meta` is read once per level that renders, before the first byte: that's
  * how the entry learns the request's levels (`routeCss`), outermost first, 404 and error pages included.
  */
-function serverRoutes(manifest, abs, dev, plan, full) {
+function serverRoutes(manifest, abs, dev, plan) {
   const files = [...manifest.layouts.map(l => l.file), ...manifest.routes.map(r => r.file), ...manifest.routes.map(r => r.card).filter(Boolean), manifest.defaultCard].filter(Boolean)
   const unique = [...new Set(files)]
   const levels = new Set([...manifest.layouts, ...manifest.routes].map(r => r.file))
@@ -344,7 +338,7 @@ export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? []
     `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter(r => isStatic(r.file)).map(r => r.id), ...['404', 'error'].filter(id => !manifest.routes.some(r => r.id === id))])}`,
     `export const lazy = ${!!plan?.loads.some(l => l.when !== 'load')}`,
     // The chunks a page's levels and islands will import, for the document's modulepreloads. Dev has no chunks.
-    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file]), ...(full ? [['$client', V.full]] : [])].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
+    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file]), ['$client', join(here, 'run.tsx')]].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
     `export const modules = { ${unique.map((f, i) => `${JSON.stringify(f)}: ${renders(f) ? `styled(m${i}, ${css(f)})` : `m${i}`}`).join(', ')} }`,
   ].join('\n')
 }

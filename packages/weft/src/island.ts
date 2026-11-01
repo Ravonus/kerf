@@ -7,11 +7,11 @@
 // everything here is owned by the hole that shows the level.
 //
 // An island whose comment ends in `"v"` or `"i"` waits. Its nodes keep their `wk` and it stays in `later`, with the owner
-// and page data of its level, until `wake` (an event on it, through `@weft/start`'s capture script) or the viewport: `v`
+// and page data of its level, until `wake` (an event on it, through capture.mjs) or the viewport: `v`
 // runs when it's near, `i` only fetches then. Claiming it is a pass of its own, and then `drain` replays what the script
 // held, in order: an event on an island still loading holds up those behind it, so a click can't pass the typing before.
 
-import { flush, getOwner, onCleanup, rt, runMounts, within, type Owner, type SsrData } from './index'
+import { DEV, flush, getOwner, onCleanup, rt, runMounts, within, type Owner, type SsrData } from './index'
 import { hchild } from './claim'
 import { hydration, sweep } from './hydrate'
 import { keys, under } from './keys'
@@ -219,6 +219,8 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
       if (top) drop(c, close!)
     })
     if (!held()?.d) watch(r, c)
+    // Not part of this pass: `hydrate` would call them unclaimed.
+    if (DEV) for (const n of siblings(open, close)) if (n.nodeType === 1) for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')]) hydration.registry.delete(el.getAttribute('wk')!)
   }
 }
 

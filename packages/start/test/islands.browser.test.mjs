@@ -186,6 +186,42 @@ async function stalled(path = '/lazy', options) {
 }
 const claimed = (page, sel) => page.$eval(sel, e => !!e.$k || !e.hasAttribute('wk'))
 
+test('a page that\'s only read runs no client at all; the first click brings it, and counts', async () => {
+  const page = await browser.newPage()
+  const errors = []
+  page.on('pageerror', e => errors.push(e.message))
+  const asked = []
+  page.on('request', r => asked.push(new URL(r.url()).pathname))
+  await page.goto(url + '/lazy?boot')
+  await page.waitForTimeout(300)
+  expect(asked.filter(p => /\/run\.tsx|components\/lazy\.tsx/.test(p))).toEqual([])
+  expect(await page.evaluate(() => window.__weft)).toBeUndefined()
+  await page.click('.tap[data-id=one]')
+  await page.click('.tap[data-id=one]')
+  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 2')
+  expect(asked.filter(p => /\/run\.tsx/.test(p)).length).toBe(1)
+  expect(errors).toEqual([])
+  await page.close()
+})
+
+test('scrolling to an island that wants to run brings the client, and a link is a plain link until then', async () => {
+  const page = await browser.newPage()
+  await page.goto(url + '/lazy?boot')
+  await page.$eval('.seen', e => e.scrollIntoView())
+  await page.waitForFunction(() => document.querySelector('.seen').textContent === 'ran')
+  await page.close()
+  const other = await browser.newPage()
+  await other.goto(url + '/lazy?boot')
+  await other.evaluate(() => {
+    window.stayed = true
+    document.body.append(Object.assign(document.createElement('a'), { href: '/about', id: 'plain', textContent: 'plain' }))
+  })
+  await other.click('#plain')
+  await other.waitForURL('**/about')
+  expect(await other.evaluate(() => window.stayed)).toBeUndefined()
+  await other.close()
+})
+
 test('hydration.json says when each island loads and why, and H010 what would let it wait', async () => {
   await fetch(url + '/lazy')
   const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
@@ -199,6 +235,14 @@ test('hydration.json says when each island loads and why, and H010 what would le
   expect(plan.loads.find(l => l.tag === 'Counter')).toMatchObject({ when: 'load', why: expect.stringMatching(/@weft client/) })
   expect(plan.diagnostics.find(d => d.line && d.why.includes('Titled'))).toMatchObject({ code: 'H010', file: 'src/routes/lazy-early.tsx', fix: expect.stringMatching(/@weft visible/) })
   expect(plan.diagnostics.some(d => d.why.includes('Auto'))).toBe(false)
+})
+
+test('a page of lazy islands hydrates with no complaints about the ones that wait', async () => {
+  const { page, errors } = await open('/lazy')
+  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await claimed(page, '.tap')).toBe(false)
+  expect(errors).toEqual([])
+  await page.close()
 })
 
 test('a click before the code arrives counts, once, in order', async () => {

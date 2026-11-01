@@ -700,7 +700,7 @@ function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
 /**
  * The chunks `payload`'s page will want: its non-static levels and the islands that load with it, and `fold`, the lazy
  * ones in the first view. Those stay preloaded, fetched but not run, so a first click on them doesn't wait; the rest
- * load when they're needed. `$client`: the router and runtime, when there's a split entry and something here needs it.
+ * load when they're needed. `$client`: the router and runtime, whenever any of that will run.
  */
 const pageChunks = (payload: RoutePayload, chunks: HandlerOptions['chunks'] = {}, fold: string[] = [], now = true) => {
   const ids = [...payload.m.filter(m => !m.s).map(m => m.id), ...(payload.i ?? []), ...fold]
