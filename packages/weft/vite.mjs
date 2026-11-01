@@ -21,9 +21,9 @@ const FEATURES = [
 const SRC = join(dirname(fileURLToPath(import.meta.url)), 'src')
 
 /**
- * A module that mentions `.get`, `.set` or `.linked`, or the same with brackets (`box['get']`), brings in weft/keyed, so a
- * page with none doesn't carry them. A word match costs at worst those bytes (`map.get`). A name only known when it runs
- * (`box[name]`) can't be seen: that module imports 'weft/keyed' itself. Past this plugin, `weft` is the core alone. In a
+ * A module that mentions `.get`, `.set` or `.linked`, the same with brackets (`box['get']`), or `const { linked } = state`
+ * brings in weft/keyed, so a page with none doesn't carry them. A word match costs at worst those bytes (`map.get`). A name
+ * only known when it runs (`box[name]`) or a renamed `state` can't be seen: that module imports 'weft/keyed' itself. Past this plugin, `weft` is the core alone. In a
  * dependency it takes naming weft as well, or every package with a Map would count.
  */
 const keyed = {
@@ -31,7 +31,7 @@ const keyed = {
   enforce: 'pre',
   resolveId: { filter: { id: /^weft$/ }, handler: () => join(SRC, 'index.ts') },
   transform: {
-    filter: { id: { include: /\.[cm]?[jt]sx?(\?|$)/, exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]weft[\\/]/ }, code: /\.(?:get|set|linked)\b|\[\s*['"`](?:get|set|linked)['"`]\s*\]/ },
+    filter: { id: { include: /\.[cm]?[jt]sx?(\?|$)/, exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]weft[\\/]/ }, code: /\.(?:get|set|linked)\b|\[\s*['"`](?:get|set|linked)['"`]\s*\]|\{[^{}]*\blinked\b[^{}]*\}\s*=\s*state\b/ },
     handler(code, id) {
       if (id.includes('node_modules') && !code.includes('weft')) return
       return { code: `import ${JSON.stringify(join(SRC, 'keyed.ts'))};${code}`, map: null }
