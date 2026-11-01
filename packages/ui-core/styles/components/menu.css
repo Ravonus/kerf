@@ -14,8 +14,7 @@
        [data-scope="select"] [data-part="item"][data-highlighted], [data-scope="palette"] [data-part="item"][aria-selected="true"]) {
   background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent);
 }
-:where([data-scope="menu"] [data-part="item"]:focus-visible, [data-scope="select"] [data-part="item"][data-highlighted][data-keyboard],
-       [data-scope="palette"] [data-part="item"][aria-selected="true"]) {
+:where([data-scope="menu"] [data-part="item"]:focus-visible, [data-scope="select"] [data-part="item"][data-highlighted][data-keyboard]) {
   box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-focus);
 }
 :where([data-scope="menu"][data-part="content"]:has(> [data-part="shuttle"])) { isolation: isolate; }

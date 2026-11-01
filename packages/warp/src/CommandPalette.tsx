@@ -1,5 +1,5 @@
 import { SearchIcon } from '@weft/icons'
-import { dialog, listKey, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
+import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
 import { derived, flush, state, untrack, watch } from 'weft'
 import { bindable, type Openable } from './bind'
 import { Icon, type IconRef } from './Icon'
@@ -152,6 +152,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   const flag = bindable<boolean>(() => open, () => defaultOpen, false, () => o => onOpenChange?.(o))
   const typed = state('')
   const active = state(0)
+  let face: HTMLElement | undefined
   const rows = state<Row[]>([])
   const size = state(0)
   const drill = state<Command[] | undefined>(undefined)
@@ -275,6 +276,15 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     answer(e.currentTarget.value)
   }
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
+  // one highlight that travels (redesign §3): it reads the row after the render that moved it
+  watch(() => [active.value, rows.value, flag.value] as const, ([, , on]) => queueMicrotask(() => {
+    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!face) return
+    face.toggleAttribute('data-on', !!(on && row))
+    if (!on) { face.setAttribute('data-instant', ''); face.style.removeProperty('--warp-a'); return }
+    if (row) moveShuttle(face, row.offsetTop, row.offsetTop + row.offsetHeight)
+    requestAnimationFrame(() => face?.removeAttribute('data-instant'))
+  }))
   return (
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="" data-hold={flag.value ? '' : undefined}>
@@ -285,6 +295,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
         {mode.value ? <span data-part="mode">{mode.value.label}</span> : <Kbd>esc</Kbd>}
       </div>
       <div ref={(n: any) => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
+        <span ref={(n: any) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {slots.value.map(i => <Slot key={i} id={id} row={() => rows.value[i]} active={() => active.value} onPick={at => run(at, 'pointer')} onHover={at => (active.value = at)} />)}
       </div>
       {flag.value && !items.value.length && !pending.value && <div data-part="empty">{`Nothing matches “${typed.value}”.`}</div>}

@@ -121,7 +121,7 @@ function App() {
         <Modal open={modal} title="Invite a teammate" description="They get access to this workspace right away." footer={<><Button emphasis="ghost" tone="neutral" data-close="">Cancel</Button><Button data-close="">Send invite</Button></>}><Input label="Email" /></Modal>
         <Modal open={alert} alert tone="critical" size="sm" title="Delete project?" description="This cannot be undone." footer={<><Button emphasis="ghost" tone="neutral" data-close="" autofocus>Cancel</Button><Button tone="critical" data-close="">Delete</Button></>}></Modal>
         <Drawer open={drawer} title="Filters" description="Narrow the list." footer={<Button>Apply</Button>}><Input label="Owner" /></Drawer>
-        <CommandPalette open={palette} commands={[{ id: 'a', label: 'Open settings', group: 'Go' }, { id: 'b', label: 'Invite teammate', group: 'Team' }, { id: 'c', label: 'Toggle theme', group: 'View' }]} />
+        <CommandPalette open={palette} commands={[{ id: 'a', label: 'Open settings', group: 'Go', icon: 'settings', shortcut: '⌘,' }, { id: 'd', label: 'Search docs', group: 'Go', icon: 'search', hint: 'warp and weft' }, { id: 'b', label: 'Invite teammate', group: 'Team', icon: 'user', shortcut: '⌘I' }, { id: 'c', label: 'Toggle theme', group: 'View', icon: 'moon', shortcut: '⌘T' }]} />
       </Tile>
       <Tile name="Nav">
         <Nav label="Site"><Link href="#a" aria-current="page">Docs</Link><Link href="#b">Toolkit</Link><Link href="#c">Examples</Link></Nav>

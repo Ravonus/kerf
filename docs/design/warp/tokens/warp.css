@@ -900,8 +900,7 @@
 
 /* ===========================================================================
    SIGNATURE · the sweep border + the floating border label.  Every stop.
-   Source of truth: ../SIGNATURE.md. Behaviour (weft `sweep()`, or ~30 lines
-   of vanilla JS — see the specimen) writes ONE attribute per change:
+   Source of truth: ../SIGNATURE.md.
      --_a is 1 while a host is active; two registered edges do the rest, so a part has no states. It draws L→R, leaves L→R,
      and never reverses. Duration 0 (reduced motion) makes every change instant, with the same end states.
    Hosts: [data-sweep]. Set --warp-sweep-radius to the host's corner radius
