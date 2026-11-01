@@ -1,4 +1,4 @@
-// Production bundle sizes (§3.7 budgets are brotli). Usage: node scripts/size.mjs [--json out.json]
+// Production bundle sizes (§3.7 budgets are brotli). Usage: [ONLY=a,b] node scripts/size.mjs [--json out.json]
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 import { writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -31,7 +31,9 @@ const hydratable = new Set(['v3 shop app (hydrate)'])
 const budgets = { 'hello world': 3072, 'runtime (every export)': 10240, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
 
 const rows = {}
+const only = process.env.ONLY?.split(',')
 for (const [name, entry] of Object.entries(fixtures)) {
+  if (only && !only.includes(name)) continue
   const out = await build({
     root: dirname(entry),
     configFile: false,

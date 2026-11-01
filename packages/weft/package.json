@@ -8,8 +8,7 @@
   "sideEffects": [
     "./src/persist.ts",
     "./src/history.ts",
-    "./src/sync.ts",
-    "./src/linked.ts"
+    "./src/sync.ts"
   ],
   "exports": {
     ".": "./src/index.ts",
@@ -22,7 +21,6 @@
     "./persist": "./src/persist.ts",
     "./history": "./src/history.ts",
     "./sync": "./src/sync.ts",
-    "./linked": "./src/linked.ts",
     "./browser": "./src/browser.ts",
     "./style": "./src/style.ts",
     "./ds": "./src/ds.ts",

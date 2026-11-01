@@ -3,6 +3,8 @@
 // Push-pull graph: a write marks observers DIRTY/CHECK; derived values recompute lazily when read;
 // effects are queued and flushed in creation order (parents before children) on a microtask or by `flush()`.
 
+import { LITERAL, MICRO, OWNKEYS, POP, REUSE } from './flags'
+
 const CLEAN = 0, CHECK = 1, DIRTY = 2
 /** `effect` of a disposed node: it never runs again, and there's no field for it on the live ones. */
 const DEAD = 3
@@ -45,8 +47,6 @@ let nextId = 0
 /** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
 let at = 0
 let queue: Computation[] = []
-/** Queued out of id order, so `flush` has to sort: rare, as writes mostly reach bindings in creation order. */
-let shuffled = false
 /** A flush is on the microtask queue. */
 let scheduled = false
 /** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
@@ -80,7 +80,7 @@ export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Recor
 export const stats = { runs: 0 }
 
 /** The empty list every graph list starts as (never written: `add` replaces it). */
-const NONE: any[] = []
+export const NONE: any[] = []
 
 /**
  * `list` with `x` appended. Graph lists are mostly 1–3 long, and V8's first `push` reserves 17 slots, so short
@@ -88,8 +88,8 @@ const NONE: any[] = []
  */
 function add<T>(list: T[], x: T): T[] {
   const n = list.length
-  if (!n) return [x]
-  if (n === 1) return [list[0], x]
+  if (LITERAL && !n) return [x]
+  if (LITERAL && n === 1) return [list[0], x]
   if (n < 8) return list.concat([x])
   list.push(x)
   return list
@@ -103,7 +103,7 @@ function read(node: Source) {
   const l = listener
   if (l) {
     const s = l.s
-    if (s[at] === node) at++
+    if (REUSE && s[at] === node) at++
     else if (!at || at > 8 || s.lastIndexOf(node, at - 1) < 0) { // short lists don't hold one box twice
       if (at < s.length) unlink(l, at)
       l.s = add(l.s, node)
@@ -115,25 +115,19 @@ function read(node: Source) {
 
 function mark(node: Computation, state: number) {
   if (node.state >= state) return
-  if (node.state === CLEAN && node.effect) {
-    if (node.id < queue[queue.length - 1]?.id) shuffled = true
-    queue.push(node)
-  }
+  if (node.state === CLEAN && node.effect) queue.push(node)
   node.state = state
-  marks(node.o, CHECK)
-}
-
-function marks(list: Computation[], state: number) {
-  for (let i = 0; i < list.length; i++) mark(list[i], state)
+  const o = node.o
+  for (let i = 0; i < o.length; i++) mark(o[i], CHECK)
 }
 
 function schedule() {
   if (!scheduled && (queue.length || mounts.length)) {
     scheduled = true
-    queueMicrotask(() => {
+    queueMicrotask(MICRO ? () => {
       scheduled = false
       flush()
-    })
+    } : flush)
   }
 }
 
@@ -142,10 +136,12 @@ function unlink(node: Computation, from: number) {
   const s = node.s
   for (let i = s.length - 1; i >= from; i--) {
     const c = s[i], o = c.o, j = o.indexOf(node)
-    if (j >= 0) o.splice(j, 1)
+    if (POP && j === o.length - 1) o.pop()
+    else if (j >= 0) o.splice(j, 1)
     if (c.b && !o.length) c.b.k!.delete(c.key!) // its last reader went
   }
-  s.length = from
+  if (POP && !from) node.s = NONE
+  else s.length = from
 }
 
 /** Dispose everything `node` owns and run its cleanups (a root's `dispose`). */
@@ -167,7 +163,8 @@ function dispose(node: Computation) {
 }
 
 function run(node: Computation) {
-  clean(node)
+  if (node.owned || node.cleanups) clean(node)
+  if (!REUSE) unlink(node, 0)
   const prevListener = listener, prevOwner = owner, prevAt = at
   listener = owner = node
   at = 0
@@ -183,7 +180,8 @@ function run(node: Computation) {
       node.v = v
     } else if (!Object.is(v, node.v)) {
       node.v = v
-      for (const o of node.o) o.state = DIRTY
+      const o = node.o
+      for (let i = 0; i < o.length; i++) o[i].state = DIRTY
     }
   } catch (e) {
     if (DEV && node.n && e && typeof e === 'object' && !(e as any).weft) (e as any).weft = node.n // where it threw
@@ -222,7 +220,11 @@ function unwrap(v: any): any {
   return Array.isArray(v) ? v.map(unwrap) : v
 }
 
-const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) && v.some(live))
+const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
+
+/** The last row list made of single elements (weft/dom `For`): nothing in it is live, and `place` can take it as it is. */
+export let flat: unknown = NONE
+export const setFlat = (list: unknown) => { flat = list }
 
 function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {
   const node: Computation = {
@@ -236,11 +238,11 @@ function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation[
 
 /** Apply pending effects and DOM updates now. */
 export function flush() {
+  if (!MICRO) scheduled = false
   do {
     while (queue.length) {
-      const batch = shuffled ? queue.sort((a, b) => a.id - b.id) : queue
+      const batch = queue.sort((a, b) => a.id - b.id)
       queue = []
-      shuffled = false
       for (let i = 0; i < batch.length; i++) update(batch[i])
     }
     runMounts() // the DOM is placed now; a callback's writes queue more work, applied in this same flush
@@ -315,6 +317,8 @@ export class Box<T> implements State<T> {
   // Rarely set, so not own fields of every box (memory).
   /** Per-entry sources for `get(key)`. */
   declare k?: Map<PropertyKey, Source>
+  /** How many keys the last two values had, when they were compared key by key. */
+  declare c?: number
   /** Write hook: a scope's history, persistence and transactions. */
   declare h?: (box: Box<T>, prev: T) => void
   /** Dev name (`cart.note`). */
@@ -348,13 +352,17 @@ export class Box<T> implements State<T> {
     this.v = v
     const k = this.k
     if (k) {
-      // Entry readers only: they re-run when their entry changed. Between plain objects only their own keys can differ.
-      for (const key of plain(prev) && plain(v) ? [...own(prev), ...own(v)] : (k.keys() as Iterable<PropertyKey>)) {
+      // Entry readers only: they re-run when their entry changed. Between plain objects only their own keys can differ,
+      // so those are compared instead of every reader's, unless the objects have been far larger than the readers.
+      const many = OWNKEYS && k.size > 8 && (this.c ?? 0) < k.size * 8 && plain(prev) && plain(v) && [...own(prev), ...own(v)]
+      if (many) this.c = many.length
+      for (const key of many || (k.keys() as Iterable<PropertyKey>)) {
         const s = k.get(key)
-        if (s && !Object.is(prev?.[key], (v as any)?.[key])) marks(s.o, DIRTY)
+        if (s && !Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
       }
     }
-    marks(this.o, DIRTY)
+    const o = this.o
+    for (let i = 0; i < o.length; i++) mark(o[i], DIRTY)
     schedule()
     if (this.h) this.h(this, prev)
   }
@@ -364,14 +372,47 @@ export function state<T>(init: T, options?: StateOptions<T>): State<T> {
   return new Box(init, options)
 }
 
-/** weft/linked adds this; the weft() plugin imports it where an app uses it. */
-export declare namespace state {
-  const linked: <T>(source: () => T, options?: { key: () => unknown }) => Linked<T>
-}
-
 export interface Linked<T> extends State<T> {
   /** With `key`: the source moved under a local edit. `theirs` is its value now, `base` the one the edit started from. */
   readonly conflict: Derived<{ theirs: T; base: T } | undefined>
+}
+
+/**
+ * A writable box that resets whenever `source` changes (a local copy of a prop). With `key`, it resets when the key
+ * changes; while the key stays, it follows the source until a local edit, then keeps the edit and reports `conflict`
+ * (a refetch or a push never clobbers what someone is typing, research 14 §3.4).
+ */
+state.linked = <T>(source: () => T, options?: { key: () => unknown }): Linked<T> => {
+  const src = derived(source)
+  // A fresh object per key, so a write belongs to one key even if the key later returns to it. No `key`: the source.
+  const from = derived<{ k: unknown }>(((prev?: { k: unknown }) => {
+    const k = options ? options.key() : src.value
+    return prev && Object.is(prev.k, k) ? prev : { k }
+  }) as () => { k: unknown })
+  const local = new Box<{ v: T; from: { k: unknown }; base: T } | undefined>(undefined)
+  const edit = () => {
+    const f = from.value
+    const l = local.value
+    return l && l.from === f ? l : undefined
+  }
+  return {
+    get value() {
+      const l = edit()
+      return l ? l.v : src.value
+    },
+    set value(v: T) {
+      const f = from.value
+      const l = local.v
+      local.value = { v, from: f, base: l && l.from === f ? l.base : untrack(() => src.value) }
+    },
+    set(update) { const d: any = this.value; update(d); this.value = d },
+    get(key) { return (this.value as any)?.[key] },
+    conflict: derived(() => {
+      const l = edit()
+      const theirs = src.value
+      return l && !Object.is(theirs, l.base) ? { theirs, base: l.base } : undefined
+    }),
+  }
 }
 
 export class Memo<T> implements Derived<T> {
@@ -438,7 +479,7 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
 /** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
 function settle(node: Computation) {
   run(node)
-  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.at(-1) === node) owner.owned.pop()
+  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
 }
 
 /** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
@@ -465,7 +506,15 @@ export function onMount(fn: () => void) {
   schedule()
 }
 
-export const untrack = <T>(fn: () => T): T => within(owner!, fn)
+export function untrack<T>(fn: () => T): T {
+  const prev = listener
+  listener = null
+  try {
+    return fn()
+  } finally {
+    listener = prev
+  }
+}
 
 export function batch<T>(fn: () => T): T {
   return fn()

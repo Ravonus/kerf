@@ -11,25 +11,39 @@ import { buildMatrix } from './node/matrix.mjs'
 
 const { transform } = createRequire(import.meta.url)('./compiler.cjs')
 
-// Scope options and `state.linked` are backed by their own modules: an app pays for them only where it uses them.
+// Scope options backed by their own module: an app pays for weft/persist, weft/history and weft/sync only where it uses them.
 const FEATURES = [
   [/\bpersist\s*:/, 'weft/persist'],
   [/\bhistory\s*:\s*\{/, 'weft/history'],
   [/\bsync\s*:\s*['"]tabs['"]/, 'weft/sync'],
-  [/\blinked\b/, 'weft/linked'],
 ]
 
 /** Adds `import 'weft/<feature>'` to app modules that use the option (filtered on id and code, §7c). */
 const features = {
   name: 'weft:features',
   transform: {
-    filter: { id: { include: /\.[cm]?[jt]sx?$/, exclude: /node_modules|[\\/]packages[\\/]weft[\\/]src[\\/]/ }, code: /\b(?:(?:persist|history|sync)\s*:|linked\b)/ },
+    filter: { id: { include: /\.[cm]?[jt]sx?$/, exclude: /node_modules|[\\/]packages[\\/]weft[\\/]src[\\/]/ }, code: /\b(persist|history|sync)\s*:/ },
     handler(code) {
       const add = FEATURES.filter(([re]) => re.test(code)).map(([, mod]) => `import '${mod}';`)
       return add.length ? { code: `${add.join('')}${code}`, map: null } : undefined
     },
   },
 }
+
+/** `weft({ off })`: the speed paths in src/flags.ts to leave out. `WEFT_OFF` does it for a whole run. */
+const flags = off => ({
+  name: 'weft:flags',
+  enforce: 'pre',
+  transform: {
+    filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ },
+    handler(code) {
+      const names = [...(off ?? []), ...(process.env.WEFT_OFF?.split(',').filter(Boolean) ?? [])]
+      if (!names.length) return
+      const every = names.includes('all')
+      return { code: code.replace(/const (\w+) = true/g, (line, name) => (every || names.includes(name) ? `const ${name} = false` : line)), map: null }
+    },
+  },
+})
 
 // Slots weft/surface imports dynamically: it has to build in an app that never ran `weft plugins sync` (research 33 §5).
 const CORE_SLOTS = new Set(['text.measure', 'surface.renderer', 'pay.rail'])
@@ -382,7 +396,7 @@ function icons() {
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
  * their own updates (research 21). Never for SSR or hydratable output.
  */
-export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions } = {}) {
+export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions, off } = {}) {
   let isDev = false
   let isHot = false
   const style = styleGroups(styleOptions)
@@ -428,7 +442,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     api: {},
   }
   const icon = icons()
-  return [icon.rewrite, main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
+  return [icon.rewrite, flags(off), main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
 
 /**

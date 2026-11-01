@@ -2,7 +2,8 @@
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
-import { Box, DEV, clean, createRoot, devComponent, getOwner, hole, memo, onCleanup, runMounts, untrack, view, within, type Owner } from './index'
+import { Box, DEV, clean, createRoot, devComponent, getOwner, flat, hole, memo, NONE, onCleanup, rt, runMounts, setFlat, untrack, view, within, type Owner } from './index'
+import { DEFER, ENDS, FLAT, LINEAR, ROWBOX, SCAN, SWAP, TEXT, WIPE } from './flags'
 import { keys, step, under } from './keys'
 
 export { memo }
@@ -69,6 +70,29 @@ function resolve(value: any, out: Node[], reuse?: { from: Node[]; texts?: Text[]
   return out
 }
 
+// Set by `For`, so an app without one doesn't ship them: only long lists have ends to trade or to empty at a stroke.
+let trade: typeof swap | undefined
+let wipe: typeof empty | undefined
+
+/** The two ends of what's left traded places: moves them, and says so. */
+function swap(parent: Node, current: Node[], next: Node[], start: number, was: number, now: number) {
+  const a = current[start], b = current[was - 1]
+  if (was - start < 2 || was !== now || next[start] !== b || next[now - 1] !== a || a.parentNode !== parent || b.parentNode !== parent) return false
+  const after = b.nextSibling
+  parent.insertBefore(b, a)
+  parent.insertBefore(a, after)
+  current[start] = b
+  current[was - 1] = a
+  return true
+}
+
+/** None stay, and this hole is all that's in there. */
+function empty(parent: Node, current: Node[], before: Node[], marker: Node | null) {
+  if (marker || before.length !== current.length || parent.firstChild !== current[0] || parent.lastChild !== current[current.length - 1]) return false
+  parent.textContent = ''
+  return true
+}
+
 export function place(parent: Node, value: any, current: Node[], marker: Node | null): Node[] {
   if (typeof value === 'string' || typeof value === 'number') {
     // Fast paths: one text node in, one primitive out → update in place (one characterData write at most); none in
@@ -78,23 +102,37 @@ export function place(parent: Node, value: any, current: Node[], marker: Node | 
       if ((current[0] as Text).data !== text) (current[0] as Text).data = text
       return current
     }
-    if (!current.length) return [parent.insertBefore(document.createTextNode(value as string), marker)] // the DOM converts a number
+    if (!current.length) {
+      if (TEXT && value !== '' && !parent.firstChild) {
+        parent.textContent = value as string
+        return [parent.firstChild!]
+      }
+      return [parent.insertBefore(document.createTextNode(value as string), marker)] // the DOM converts a number
+    }
   }
-  const next = resolve(value, [], { from: current, at: 0 })
+  const next: Node[] = FLAT && value === flat ? value : resolve(value, [], { from: current, at: 0 })
   // Nodes that stayed at either end, and ends that traded places, cost no lookups. The middle is what's left.
   let start = 0, was = current.length, now = next.length
-  while (start < was && start < now && next[start] === current[start]) start++
-  while (was > start && now > start && next[now - 1] === current[was - 1]) was--, now--
+  for (;;) {
+    while (start < was && start < now && next[start] === current[start]) start++
+    while (was > start && now > start && next[now - 1] === current[was - 1]) was--, now--
+    if (!SWAP || !trade?.(parent, current, next, start, was, now)) break
+  }
+  if (start === was && start === now) return current
   const before = current.slice(start, was), after = next.slice(start, now)
-  if (!before.length && !after.length) return current
-  const keep = new Set(after)
-  for (const n of before) if (!keep.has(n) && n.parentNode === parent) parent.removeChild(n)
-  // Nodes on the longest run that is already in order stay put; every other node moves once.
-  const stable = inOrder(after, before)
+  let stable: Set<Node> | undefined
+  if ((!SCAN || before.length) && after.some(n => n.parentNode === parent)) {
+    const keep = new Set(after)
+    for (const n of before) if (!keep.has(n) && n.parentNode === parent) parent.removeChild(n)
+    // Nodes on the longest run that is already in order stay put; every other node moves once.
+    stable = inOrder(after, before)
+  } else if (!WIPE || !wipe?.(parent, current, before, marker)) {
+    for (const n of before) if (n.parentNode === parent) parent.removeChild(n)
+  }
   let last = next[now] ?? marker
   for (let i = after.length - 1; i >= 0; i--) {
     const n = after[i]
-    if (!stable.has(n) || n.parentNode !== parent) parent.insertBefore(n, last)
+    if (!stable?.has(n) || n.parentNode !== parent) parent.insertBefore(n, last)
     last = n
   }
   return next
@@ -251,8 +289,29 @@ export function addEvent(node: any, name: string, handler: any, delegate?: boole
 
 // ---- keyed list (§3.4) ----------------------------------------------------------------------------------------
 
-/** A row is its own root (no closure to dispose it) and the box of its item. `index` exists only when `children` takes one. */
-interface Row extends Owner { item: Box<any>; index: Box<number> | undefined; nodes: any; pass: number }
+/**
+ * A row is its own root (no closure to dispose it) and the box of its item. `index` exists only when `children` takes
+ * one. It sets a box's fields itself: built through `extends Box`, every row costs a derived constructor.
+ */
+class Row {
+  v: unknown
+  o: Box<any>['o'] = NONE
+  owned: Owner['owned'] = null
+  cleanups: Owner['cleanups'] = null
+  nodes: any = undefined
+  constructor(item: unknown, public key: unknown, public owner: Owner | null, public index: Box<number> | undefined) {
+    this.v = item
+  }
+}
+interface Row extends Box<any>, Owner {}
+
+/** The row under `k` between `from` and `end`, taken out. */
+function find(order: Row[], from: number, end: number, k: unknown) {
+  for (let i = from; i < end; i++) {
+    const r = order[i]
+    if (r && (r.key === k || (k !== k && r.key !== r.key))) return (order[i] = undefined!), r
+  }
+}
 
 const reader = (box: Box<any>) => () => box.value
 const zero = () => 0
@@ -263,13 +322,27 @@ const zero = () => 0
  */
 export function For<T>(props: { each: readonly T[] | null | undefined; by?: (item: T, index: number) => unknown; children: (item: () => T, index: () => number) => any }) {
   const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
-  const rows = new Map<unknown, Row>()
   let order: Row[] = []
   let out: any[] = []
-  let pass = 0
+  let fresh = false // rows were made since the last pass
+  let single = true // every row is one element
+  let r: Row // the row being made
+  const make = () => props.children(reader(ROWBOX ? r : (r as any).box), r.index ? reader(r.index) : zero)
+  Object.setPrototypeOf(Row.prototype, Box.prototype) // here, so an app without a list keeps no Row
+  if (SWAP) trade = swap
+  if (WIPE) wipe = empty
+  // Only the first row of a key is kept: a repeat is built anew each pass.
+  const repeats = () => {
+    const seen = new Set<unknown>()
+    for (const r of order) {
+      if (seen.has(r.key)) r.key = { duplicate: r.key }
+      seen.add(r.key)
+    }
+    fresh = false
+  }
   onCleanup(() => {
-    for (const r of rows.values()) clean(r)
-    rows.clear()
+    for (const r of order) clean(r)
+    order = []
   })
   return memo(() => {
     const list = props.each || []
@@ -277,38 +350,67 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
     // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
     const indexed = props.children.length !== 1
     return untrack(() => {
-      const next = new Array<Row>(list.length)
-      let moved = list.length !== order.length
-      pass++
+      const by = props.by
+      const key = (i: number) => (by ? by(list[i], i) : list[i])
+      const paths = keys.on ? new Set<unknown>() : undefined // two rows with one key can't share a hydration scope
+      if (DEFER && fresh && list.length) repeats() // not as they're made: making a row costs no lookup that way
+      fresh = false
+      // Rows that stayed at either end are found by position, ends that traded places by each other, the rest by key.
+      let from = 0, end = order.length, stop = list.length, traded = false
+      if (ENDS) for (;;) {
+        while (from < end && from < stop && order[from].key === key(from)) from++
+        while (from < end && from < stop && order[end - 1].key === key(stop - 1)) end--, stop--
+        const a = order[from], b = order[end - 1]
+        if (!SWAP || end - from < 2 || end !== stop || a.key !== key(stop - 1) || b.key !== key(from)) break
+        order[from] = b
+        order[end - 1] = a
+        traded = true
+      }
+      let left: Map<unknown, Row> | undefined
+      if (from < stop) {
+        if (from < end && (!LINEAR || end - from > 8)) left = new Map()
+        if (left) for (let i = from; i < end; i++) left.set(order[i].key, order[i])
+      } else for (let i = from; i < end; i++) clean(order[i])
+      const next = new Array<Row>(list.length), nodes = new Array(list.length)
       for (let i = 0; i < list.length; i++) {
         const item = list[i]
-        let key = props.by ? props.by(item, i) : item
-        let row = rows.get(key)
-        if (row?.pass === pass) { // only the first row of a key is kept: a repeat is built anew each time
-          key = { duplicate: key }
-          row = undefined
+        let row = i < from ? order[i] : i >= stop ? order[i + end - stop] : undefined
+        if (!row) {
+          let k = key(i)
+          if ((row = left?.get(k))) left!.delete(k)
+          else if (LINEAR && !left && from < end && (row = find(order, from, end, k))) {} // taken out of `order`
+          else {
+            if (paths) {
+              if (paths.has(k)) k = { duplicate: k }
+              paths.add(k)
+            }
+            r = row = new Row(item, k, parent, indexed ? new Box(i) : undefined)
+            if (!ROWBOX) (r as any).box = new Box(item)
+            r.nodes = within(r, keys.on ? () => under(base + step(k) + '/', make) : make)
+            if (FLAT) single &&= !rt.server && r.nodes instanceof Node && r.nodes.nodeType !== 11
+            fresh = true
+            next[i] = row
+            nodes[i] = r.nodes
+            continue
+          }
         }
-        if (row) {
-          row.item.value = item
-          if (row.index) row.index.value = i
-        } else {
-          const r: Row = (row = { owned: null, cleanups: null, owner: parent, item: new Box(item), index: indexed ? new Box(i) : undefined, nodes: undefined, pass })
-          const make = () => props.children(reader(r.item), r.index ? reader(r.index) : zero)
-          r.nodes = within(r, keys.on ? () => under(base + step(key) + '/', make) : make)
-          rows.set(key, r)
-        }
-        row.pass = pass
-        moved ||= row !== order[i]
+        if (!ROWBOX) (row as any).box.value = item
+        else if (row.v !== item) row.value = item
+        if (row.index) row.index.value = i
         next[i] = row
+        nodes[i] = row.nodes
       }
-      for (const [key, r] of rows) {
-        if (r.pass !== pass) {
-          rows.delete(key)
-          clean(r)
+      if (left) for (const r of left.values()) clean(r)
+      else if (LINEAR && from < stop) for (let i = from; i < end; i++) if (order[i]) clean(order[i])
+      order = next
+      if (!DEFER && fresh) repeats()
+      if (!ENDS || traded || from < end || from < stop) {
+        out = nodes
+        if (FLAT) {
+          if (!out.length) single = true
+          else if (single) setFlat(out)
         }
       }
-      if (moved) out = next.map(r => r.nodes)
-      order = next
       return out
     })
   })
