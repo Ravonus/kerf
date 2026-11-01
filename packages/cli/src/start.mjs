@@ -73,7 +73,12 @@ export async function buildCommand(root, { preset, runtime } = {}) {
   process.env.WEFT_BUILD = '1'
   try {
     const rust = (await loadConfig(root)).config?.rust
-    const refuse = d => { throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`), { code: 'E_USAGE' }) }
+    const refuse = d => { throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`), { code: /^R0[12]\d$/.test(d.code) ? 'E_LIVE' : 'E_USAGE' }) }
+    // What the preset can't do fails now, not after a build: a verify runs at the end, against a target that's up.
+    const { readLivePlan } = await start(root, 'contract')
+    const plan = await readLivePlan({ root, site: config.site, preset, live: (await loadConfig(root)).config?.live, verify: false })
+    const unlive = plan.diagnostics.find(d => d.severity === 'error')
+    if (unlive) refuse(unlive)
     const { buildSidecars, shipSidecars, startSidecars, usesRemote } = await start(root, 'sidecar')
     const contracted = () => writeContract({ root, site: config.site, preset, rust })
     let warned = []

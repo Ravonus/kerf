@@ -291,6 +291,6 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     const code = error.code ?? 'E_INTERNAL'
     if (args?.json || argv.includes('--json')) print({ ok: false, error: { code, message: error.message } })
     say(`weft: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
-    return 2
+    return code === 'E_LIVE' ? 1 : 2
   }
 }

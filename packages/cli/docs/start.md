@@ -123,7 +123,7 @@ on any tab, refetches it for every reader. Unchanged rows keep their identity, s
 
 ```tsx
 const todos = listTodos.live()             // the same Resource as listTodos(), plus todos.live.value
-<p>{todos.live.value}</p>                  // 'connecting' | 'live' | 'reconnecting' | 'offline'
+<p>{todos.live.value}</p>                  // 'connecting' | 'live' | 'degraded' | 'reconnecting' | 'offline'
 ```
 
 A live query needs `tags` (W053), and its mutations need one of them in `invalidates` (R003 in dev).
@@ -178,6 +178,92 @@ can take `ctx`, for one user's tag: `tags: (_, ctx) => [`orders:${ctx.user.id}`]
 **Testing** uses the real hub and client over `weft/test`'s fake transport: `await net.settle()`, then
 `await net.push(prices, message)`, `await net.poke('todos')`, `await net.drop()`, `net.offline()`, `net.reconnects()`,
 `net.subscriptions()`.
+
+## Writes from outside the app
+
+`.live()` already follows mutations. A cron job, `psql`, a worker or another service writes nowhere near them: give the database's writes to `realtime` and they reach the same queries, the same way.
+
+```ts
+// src/realtime.server.ts
+import { realtime } from '@weft/start'
+import { dbChanges } from '@weft/start/changes'
+import { db } from './server/db'
+import { notes } from './server/schema'
+
+export default realtime({ changes: dbChanges(db, [notes]) })
+```
+
+```ts
+export const myNotes = query({
+  tags: ['notes'],                               // table name, or `notes:${id}` for one row
+  live: { required: true, verify: 'staging' },   // both optional
+  run: (_, { ctx }) => db.select().from(notes).where(eq(notes.owner, ctx.user.id)),
+})
+```
+
+Then `weft db live` writes the migration (triggers for SQLite, MySQL and Postgres), and you apply it. Tags are `notes` and `notes:<pk>`; a compound key joins with `:`. `dbChanges(db, tables, { tagged })` maps a change to your own tags, and for MongoDB it's `mongoChanges(db, collections)` from `@weft/db-mongo`.
+
+A notification carries a table and primary keys, never a column. Each client refetches through its own `query`, so `auth` and every filter run for that user: someone who can't see a row gets the same answer as before. An app's own write is not poked twice, and a bulk write is one refetch: over 32 ids in a statement it's a table-level change, which reaches `notes` and every `notes:…`. Limits: at most one flush per 250 ms; a dropped feed pokes every table when it's back.
+
+**What you get depends on where it runs**, so ask: `weft doctor` (`--preset vercel`) says what works for a target, and `weft check` warns about it. At startup the server tries the real thing, settles on a mode, and logs it once. The same answer is on the page:
+
+```tsx
+const notes = myNotes.live()
+notes.live.value       // … | 'degraded': connected, and outside writes arrive late or not at all
+notes.liveMode.value   // 'feed' | 'external' | 'poll' | 'app' | 'off'
+```
+
+| Mode | Means |
+|---|---|
+| `feed` | This server hears every change. |
+| `external` | A separate listener hears them, and publishes to the bus. |
+| `poll` | A fallback: late, and by table only. `degraded`. |
+| `app` | No `changes`: mutations only. Not degraded; it's what you asked for. |
+| `off` | There's nothing to read: mutations only. `degraded`. |
+
+| Database | How | Limits |
+|---|---|---|
+| Postgres | Triggers and NOTIFY, on one held connection | A pooler in transaction mode loses it: the probe finds that out by trying, and falls to `postgres-stats`. Give it a direct connection with `{ listenUrl }`. Applying the migration needs TRIGGER; NOTIFY is limited to 8000 bytes, so big keys are table-level. Row-level security is yours: triggers fire regardless, and the refetch applies it. |
+| SQLite | `PRAGMA data_version` every 100 ms on a second connection, then the triggers' log. This is polling, of the cheapest read there is | Same host only: a network file system turns it `off`. The log holds 4096 rows; a reader past that pokes every table. With no triggers, any commit pokes every listed table. Instances on other machines can't share the file anyway. |
+| MySQL | The triggers' log, read every 500 ms | Polling, with a row in the log per row written. No in-order commit guarantee, so it reads a window of 512 back. Each server prunes old rows from `__weft_changes`. |
+| MongoDB | A change stream | Needs a replica set: a standalone is `off`. Barriers use a capped `__weft_barrier`, about 120 ms slower per change. |
+
+Polling here is the framework's watcher, in one place on the server. R007 and T013 still hold for your code: never poll in it.
+
+**On Vercel, Netlify, Lambda, Azure Functions, Firebase, Cloudflare and Deno Deploy** a process ends with its request, so nothing can hold a connection. Mutations still work, and `.live()` shows `degraded` (R014). Two ways to get the feed: deploy to a server preset, or run one always-on listener anywhere, with a bus both can reach:
+
+```ts
+// listener.ts: on a VPS, Fly or Railway. `weft db listen` runs it.
+export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: dbChanges(db, [notes]) })
+// the app, on Vercel
+export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: dbChanges(db, [notes], { listener: 'external' }) })
+```
+
+A listener that stops is noticed: its heartbeat ends, and within a minute `.live()` shows `reconnecting`.
+
+**`live: { required: true }`** (or `q.live(input, { required: true })`) refuses to ship a page that only looks live. `weft check` and `weft build` fail with R013 when the target can't do it. What only a running server can know fails at startup with R015: the process stops rather than serve stale data, and in dev it says so instead. For a health route, `liveHealth()` from `@weft/start` answers `ok: false` while a required query has no working feed. An outage after a good start reports there too, and doesn't stop the server: restarting wouldn't bring the database back, and the feed recovers by itself.
+
+**`verify`** proves the chain end to end on every `weft check` and `weft build`, cached by query and contract:
+
+```ts
+live: { required: true, verify: 'staging' }                                  // a name in weft.config.ts
+live: { verify: { url: 'https://staging.example.dev' } }                     // a running app
+live: { verify: { db: process.env.STAGING_DATABASE_URL } }                   // a database, as an outside writer
+live: { verify: true }                                                       // finds WEFT_STAGING_URL, STAGING_DATABASE_URL
+```
+
+Setup, once:
+
+```ts
+// weft.config.ts
+live: { targets: { staging: { url: 'https://staging.example.dev', db: 'STAGING_DATABASE_URL', production: false } } }
+```
+
+Set `STAGING_DATABASE_URL`, and `WEFT_STAGING_COOKIE` and `WEFT_STAGING_OTHER_COOKIE` for a signed-in user and one who shouldn't see the row. If the query's table has a required column, say what to write: `verify: { target: 'staging', row: { owner: 'alice' } }`.
+
+It writes one marked row through a separate connection, then checks each link: `trigger`, `write`, `notify`, `app`, `poke`, `refetch`, `denied`, `cleanup`. It reports each one's time, and a failure names the link. Both `url` and `db` test the whole chain; with one, it says which links it didn't (R023). Postgres only for now.
+
+A target must be named with `production: false`, or have a host that says staging, and anything that looks like production is refused either way (R022). It touches only its own row, marked uniquely so builds don't collide, and removes it even on failure. The row can't sit in a transaction, because NOTIFY only fires on commit. A password in source is an error (R020): read it from the environment. A target that isn't available fails `weft build`, and warns and skips in `weft check` and dev (R021).
 
 ## Channels
 

@@ -62,3 +62,32 @@ describe('weft (bin)', () => {
     expect(weft('check', '--wat').code).toBe(2)
   })
 })
+
+describe('live data on a deploy target', () => {
+  const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
+  const codes = out => JSON.parse(out).diagnostics.map(d => d.code)
+
+  it.each(['vercel', 'netlify', 'aws_lambda', 'azure_functions', 'firebase', 'cloudflare_module', 'deno_deploy'])('%s: a required query fails check, doctor and build, naming the query', preset => {
+    const check = weft('check', '--json', '--root', app, '--preset', preset)
+    expect(check.code).toBe(1)
+    expect(codes(check.stdout)).toContain('R013')
+    expect(check.stdout).toMatch(/`myNotes` requires a live feed/)
+    expect(check.stdout).toContain(preset)
+    const doctor = weft('doctor', '--root', app, '--preset', preset)
+    expect(doctor.code).toBe(1)
+    expect(doctor.stderr).toMatch(/weft db listen/)
+  }, 60_000)
+
+  it.each(['node_server', 'bun', 'deno_server'])('%s: the feed is fine', preset => {
+    const check = weft('check', '--json', '--root', app, '--preset', preset)
+    expect(codes(check.stdout)).not.toContain('R013')
+    expect(check.code).toBe(0)
+  }, 60_000)
+
+  it('`weft build` refuses before it builds', () => {
+    const r = weft('build', '--root', app, '--preset', 'vercel')
+    expect(r.code).toBe(1)
+    expect(r.stderr).toMatch(/R013.*myNotes/)
+    expect(r.stderr).not.toMatch(/usage:|Building/)
+  }, 180_000)
+})
