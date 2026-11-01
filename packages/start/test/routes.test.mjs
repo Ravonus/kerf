@@ -16,6 +16,10 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
   ])
   // Most specific first: static segments before params, longer before shorter, `/` last.
   expect(m.routes.map(r => [r.id, r.kind, r.params, r.layouts, r.card ?? null])).toEqual([
+    ['/meta/badcard', 'page', [], ['layout:'], 'src/routes/meta/badcard.og.tsx'],
+    ['/meta/changing', 'page', [], ['layout:'], null],
+    ['/meta/plain', 'page', [], ['layout:'], null],
+    ['/meta/$name', 'page', ['name'], ['layout:'], null],
     ['/tags/$tag', 'page', ['tag'], ['layout:'], null],
     ['/users/$id', 'page', ['id'], ['layout:', 'layout:users'], 'src/routes/users/[id].og.tsx'],
     ['/about', 'page', [], ['layout:'], null],

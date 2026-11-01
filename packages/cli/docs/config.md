@@ -35,7 +35,9 @@ export default defineConfig({
 | `scope` | `forbid` globs are never compiled or written. `write` is the boundary for `weft fix` (P005, planned) |
 | `tasks` | P003 duplicate name or command, P004 missing `description` or `sideEffects` |
 | `plugins` | P116 duplicate name; P100 two entries `provides` one `one` slot; P115 bad options; P117 impure `contribute()`; P111 code outside the plugin's namespace; P112 AGENTS section over 1 KB; P113 token-namespace or catalog collision; a code a plugin throws from `contribute()` (e.g. warp's D010) |
-| `site` | P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 relative image (or `auto`) without `url`; H003 no `description`; H004 title over 60 or description over 160 (warnings) |
+| `site` | P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 no `url` with a relative image; H003 no `description`; H004 title over 60 or description over 160 (warnings) |
+| `site.card` | P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `weft docs meta` has the rest |
+| `check.routes` | `false` skips the route pass of `weft check`: H001–H007, H011–H016, which run the app's loaders once |
 | `trust` | `'enforce'` (default) or `'warn'`: see P109 and P110 under Plugins |
 | `slots` | P008 unknown slot id, P009 winner not in `plugins` or not providing the slot |
 | anything else | P007: unknown key or wrong type, with the path |

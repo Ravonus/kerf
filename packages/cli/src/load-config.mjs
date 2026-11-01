@@ -78,13 +78,19 @@ const pluginEntry = z.looseObject({
 
 const image = z.strictObject({ url: z.string().min(1), width: z.int().positive().optional(), height: z.int().positive().optional(), alt: z.string().optional() })
 
+const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: 'must be #rrggbb' })
+const colors = { background: hex.optional(), text: hex.optional(), subtle: hex.optional(), accent: hex.optional() }
+const cardFont = z.strictObject({ family: z.string().regex(/^[\w -]+$/, { error: 'must be a font family name' }), src: z.string().min(1), weight: z.number().optional() })
+const card = z.strictObject({ ...colors, scheme: z.enum(['dark', 'light']).optional(), dark: z.strictObject(colors).optional(), light: z.strictObject(colors).optional(), fonts: z.strictObject({ display: cardFont.optional(), body: cardFont.optional() }).optional() })
+
 const site = z.strictObject({
   name: z.string().min(1).optional(),
   url: z.url({ protocol: /^https?$/, error: 'must be an absolute http(s) URL' }).optional(),
   title: z.string().includes('%s', { error: 'must contain `%s` (the page title)' }).optional(),
   description: z.string().optional(),
   locale: z.string().regex(/^[a-z]{2,3}(_[A-Z]{2})?$/, { error: 'must look like `en_US`' }).optional(),
-  image: z.union([z.literal('auto'), z.string().min(1), image]).optional(),
+  image: z.union([z.literal('auto'), z.literal(false), z.string().min(1), image]).optional(),
+  card: card.optional(),
   head: z.string().optional(),
   twitter: z
     .strictObject({ card: z.enum(['summary', 'summary_large_image', 'app', 'player']).optional(), site: z.string().optional(), creator: z.string().optional() })
@@ -102,7 +108,7 @@ export const configSchema = z.strictObject({
       gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional(), maxMutants: z.number().int().positive().optional() }).optional(),
     })
     .optional(),
-  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional() }).optional(),
+  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional(), routes: z.boolean().optional() }).optional(),
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),

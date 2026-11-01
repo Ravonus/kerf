@@ -251,7 +251,7 @@ export default function weftStart(options = {}) {
           const p = await hydration(this)
           return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
         }
-        if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
+        if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root, options.site?.card?.fonts), timeout: options.timeout })
         if (which === V.server) return serverEntry(clientEntry(), dev)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
         if (which === V.context || which === V.auth || which === V.realtime) {
@@ -498,7 +498,7 @@ export function fonts() {
  * The fonts every card can use, resolved at build and shipped inside the server bundle (research 20 §4.2: a render
  * never fetches fonts). `Inter:400,700` → `@fontsource/inter`'s latin WOFF2 files, from the app or from @weft/start.
  */
-function cardFonts(manifest, abs, defaults, root) {
+function cardFonts(manifest, abs, defaults, root, own = {}) {
   const specs = new Set(defaults)
   for (const f of [...manifest.routes.map(r => r.card), manifest.defaultCard].filter(Boolean)) {
     const m = /export\s+const\s+fonts\s*=\s*\[([^\]]*)\]/.exec(readFileSync(abs(f), 'utf8'))
@@ -506,6 +506,11 @@ function cardFonts(manifest, abs, defaults, root) {
   }
   const requires = [createRequire(join(root, 'package.json')), createRequire(import.meta.url)]
   const out = []
+  // The app's own faces (`site.card.fonts`, filled in by the text plugin): the card's title and text look like the app.
+  for (const f of [own.display, own.body].filter(Boolean)) {
+    const path = join(root, f.src)
+    if (existsSync(path) && !out.some(x => x.name === f.family)) out.push({ name: f.family, weight: f.weight ?? 400, style: 'normal', data: readFileSync(path).toString('base64') })
+  }
   for (const spec of specs) {
     const [family, weights = '400'] = spec.split(':')
     const pkg = family.toLowerCase().replace(/\s+/g, '-')

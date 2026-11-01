@@ -106,11 +106,18 @@ describe('site (research 20 §2, §6)', () => {
     expect(r.diagnostics.map(d => d.why).join('\n')).toMatch(/site\.url[\s\S]*site\.title[\s\S]*site\.locale[\s\S]*descripton/)
   })
 
+  it('P007: `site.card` takes hex colours and a font family, nothing that could reach a style attribute', async () => {
+    const bad = await loadConfig(withConfig("export default defineConfig({ site: { card: { accent: 'red;background:url(x)' } } })\n"))
+    expect(bad.diagnostics.map(d => d.code)).toEqual(['P007'])
+    const good = await loadConfig(withConfig("export default defineConfig({ site: { name: 'Acme', description: 'Tools.', image: false, card: { scheme: 'light', accent: '#ff3300', light: { text: '#111111' } } } })\n"))
+    expect(good.diagnostics).toEqual([])
+  })
+
   it('H001: a relative image (or auto) with no site.url', async () => {
     for (const image of ["'/og.png'", "'auto'", "{ url: 'og.png', width: 1200, height: 630 }"]) {
       const r = await loadConfig(withConfig(`export default defineConfig({ site: { name: 'Acme', description: 'Tools.', image: ${image} } })\n`))
       expect(codes(r)).toEqual([['H001', 2]])
-      expect(r.diagnostics[0].severity).toBe('error')
+      expect(r.diagnostics[0].severity).toBe('warning') // a server falls back to the request's origin
     }
     const abs = await loadConfig(withConfig("export default defineConfig({ site: { name: 'Acme', description: 'Tools.', image: 'https://cdn.acme.dev/og.png' } })\n"))
     expect(abs.diagnostics).toEqual([])

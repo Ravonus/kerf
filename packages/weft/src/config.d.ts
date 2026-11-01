@@ -50,7 +50,10 @@ export interface SiteConfig {
   /** `en_US` style: og:locale and `<html lang>`. */
   locale?: string
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
-  image?: 'auto' | string | { url: string; width?: number; height?: number; alt?: string }
+  /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
+  image?: 'auto' | false | string | { url: string; width?: number; height?: number; alt?: string }
+  /** The generated card's look, over what warp and the text plugin give it. */
+  card?: import('./head').CardTheme
   twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
   /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
   inlineCss?: boolean
@@ -71,6 +74,8 @@ export interface WeftConfig {
     exclude?: readonly string[]
     /** `false` turns the design D-codes (D001–D007, D011, D030–D039) off. Default on. */
     design?: boolean
+    /** `false` turns the route pass off: H001–H007 and H011–H016 per route, which runs the app's loaders once. Default on. */
+    routes?: boolean
   }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig

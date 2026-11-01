@@ -55,6 +55,8 @@ export interface Contributions {
   }
   /** One AGENTS.md section, at most 1 KB (P112). */
   agents?: { title: string; text: string }
+  /** The generated share card's defaults (`site.card`): colours and faces, under whatever the config sets. */
+  card?: import('./head').CardTheme
   /** Components/APIs for the MCP catalog. Names collide across plugins as P113. */
   catalog?: { name: string; import: string; summary: string }[]
   /** Codes in the plugin's namespace (P111 otherwise). */

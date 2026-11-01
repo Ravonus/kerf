@@ -18,8 +18,32 @@ describe('weft (bin)', () => {
     expect(r.code).toBe(1) // the fixture's /deferred-meta route is an H007 on purpose
     const meta = JSON.parse(r.stdout)
     expect(meta.routes.find(x => x.path === '/about').meta.title).toBe('About · Acme')
-    expect(meta.diagnostics).toMatchObject([{ code: 'H007', file: 'src/routes/deferred-meta.tsx', span: [expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number)], docs: 'weft docs H007' }])
+    expect(meta.diagnostics.filter(d => d.code === 'H007')).toMatchObject([{ code: 'H007', file: 'src/routes/deferred-meta.tsx', span: [expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number)], docs: 'weft docs H007' }])
     expect(r.stderr).toMatch(/^src\/routes\/deferred-meta\.tsx:\d+:\d+ {2}H007 error/m)
+  }, 60_000)
+
+  it('routes --meta prints a table: each page, its text, its image and where they came from', () => {
+    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const { stdout, stderr } = weft('routes', '--meta', '--root', app)
+    const line = name => (stdout + stderr).split('\n').find(l => l.startsWith(name))
+    expect(line('/meta/plain')).toMatch(/Harvest & storage notes · Acme\s+Harvest when 5 < 7.*\/_weft\/og\/meta\/plain\.png\s+auto\/auto\/auto/)
+    expect(line('/about')).toMatch(/About · Acme.*route\/route\/auto/)
+    expect(line('/users/1')).toMatch(/Ada Lovelace · Acme.*route\/route\/card/)
+  }, 60_000)
+
+  it('check reports metadata per route, with the fix an agent can apply', () => {
+    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const { diagnostics } = JSON.parse(weft('check', '--json', '--root', app, 'src/routes/meta/plain.tsx').stdout)
+    const d = diagnostics.find(x => x.code === 'H011' && x.route === '/meta/plain')
+    expect(d).toMatchObject({ severity: 'warning', file: 'src/routes/meta/plain.tsx', fix: { safe: false, edits: [{ file: 'src/routes/meta/plain.tsx' }] } })
+    expect(d.fix.edits[0].text).toMatch(/^export const meta: Meta = \{ title: "Harvest & storage notes"/)
+    expect(diagnostics.map(x => x.code)).toEqual(expect.arrayContaining(['H007', 'H012', 'H013']))
+  }, 60_000)
+
+  it('check leaves the routes alone when told to, and when no route is among the files', () => {
+    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const { diagnostics } = JSON.parse(weft('check', '--json', '--root', app, 'src/db.ts').stdout)
+    expect(diagnostics.filter(d => /^H0(0[1-8]|1[1-6])$/.test(d.code))).toEqual([])
   }, 60_000)
 
   it('check --json: JSON on stdout, human text on stderr, exit 0 on the reference', () => {

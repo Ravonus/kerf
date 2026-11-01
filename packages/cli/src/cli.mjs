@@ -20,6 +20,7 @@ import { listSurfaces } from './surface-checks.mjs'
 import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
+import { metaTable } from './meta-table.mjs'
 import { buildCommand, dbCommand, devCommand, routesCommand, startCommand } from './start.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
@@ -134,7 +135,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'routes': {
         const result = await routesCommand(args.root, { meta: !!args.flags.meta, preset: args.flags.preset })
         if (args.json) print(result)
-        else say(result.routes.map(r => `${r.path.padEnd(24)} ${r.file}${r.meta ? `  ${r.meta.title}${r.image ? `  [card: ${r.image}]` : ''}` : ''}`).join('\n'))
+        else say(args.flags.meta ? metaTable(result) : result.routes.map(r => `${r.path.padEnd(24)} ${r.file}`).join('\n'))
         say(formatHuman(result.diagnostics))
         return result.ok ? 0 : 1
       }

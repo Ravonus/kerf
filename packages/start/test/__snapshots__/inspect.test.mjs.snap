@@ -4,15 +4,870 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
 {
   "diagnostics": [
     {
+      "code": "H016",
+      "file": "src/routes/boom.tsx",
+      "route": "/boom",
+      "severity": "info",
+      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.",
+    },
+    {
       "code": "H007",
       "file": "src/routes/deferred-meta.tsx",
       "route": "/deferred-meta",
       "severity": "error",
       "why": "\`meta\` (or a card) of route /deferred-meta reads \`data.late\`, a deferred field that is still streaming. Await it in \`load\`, or leave it out of \`meta\`.",
     },
+    {
+      "code": "H016",
+      "file": "src/routes/deferred-meta.tsx",
+      "route": "/deferred-meta",
+      "severity": "info",
+      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.",
+    },
+    {
+      "code": "H016",
+      "file": "src/routes/leak.tsx",
+      "route": "/leak",
+      "severity": "info",
+      "why": "This page answered 500 here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.",
+    },
+    {
+      "code": "H016",
+      "file": "src/routes/meta/[name].tsx",
+      "route": "/meta/[name]",
+      "severity": "info",
+      "why": "No real page of this route to look at, so only its source was checked. Export \`prerender\`, or link to one from a page.",
+    },
+    {
+      "code": "H016",
+      "file": "src/routes/tags/[tag].tsx",
+      "route": "/tags/[tag]",
+      "severity": "info",
+      "why": "No real page of this route to look at, so only its source was checked. Export \`prerender\`, or link to one from a page.",
+    },
+    {
+      "code": "H005",
+      "file": "src/routes/meta/badcard.tsx",
+      "route": "/meta/badcard",
+      "severity": "error",
+      "why": "\`color: not-a-color\` isn't a value the card renderer accepts; the declaration is dropped.",
+    },
+    {
+      "code": "H008",
+      "file": "src/routes/meta/badcard.tsx",
+      "route": "/meta/badcard",
+      "severity": "warning",
+      "why": "Card image http://127.0.0.1:9/nope.png didn't load (not allowed); the card renders without it.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/meta/plain.tsx",
+      "help": "export const meta: Meta = { title: "Harvest & storage notes", description: "Harvest when 5 < 7 and the \\"tonnes\\" & crates are in: every mark here is escaped wherever it lands." }",
+      "route": "/meta/plain",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Harvest & storage notes · Acme"), and the description comes from the page ("Harvest when 5 < 7 and the \\"tonnes\\" & crates are in: every mark here …"). That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/boom.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "One sentence on what this page gives the reader." }",
+      "route": "/boom",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`, so its title and description come from what it renders. Words written for the page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/chat.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/chat",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/cover.tsx",
+      "help": "export const meta: Meta = { title: "Cover", description: "Tools for builders." }",
+      "route": "/cover",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Cover · Acme"), and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/island-bad.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/island-bad",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/islands.tsx",
+      "help": "export const meta: Meta = { title: "Mostly static", description: "Tools for builders." }",
+      "route": "/islands",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Mostly static · Acme"), and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/islands-top.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/islands-top",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/lazy.tsx",
+      "help": "export const meta: Meta = { title: "Lazy", description: "Tools for builders." }",
+      "route": "/lazy",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Lazy · Acme"), and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/lazy-early.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/lazy-early",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/leak.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "One sentence on what this page gives the reader." }",
+      "route": "/leak",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`, so its title and description come from what it renders. Words written for the page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/live.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/live",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/mixed.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/mixed",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/notes.tsx",
+      "help": "export const meta: Meta = { title: "Notes", description: "Tools for builders." }",
+      "route": "/notes",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Notes · Acme"), and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/prefs.tsx",
+      "help": "export const meta: Meta = { title: "Preferences", description: "Tools for builders." }",
+      "route": "/prefs",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title comes from the page ("Preferences · Acme"), and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/slow.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/slow",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/styled.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/styled",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/tabs.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/tabs",
+      "severity": "warning",
+      "why": "This page sets no \`meta\`: the title is the site default, and the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/todos.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/todos",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/users/index.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/users",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H011",
+      "file": "src/routes/index.tsx",
+      "help": "export const meta: Meta = { title: "What this page is", description: "Tools for builders." }",
+      "route": "/",
+      "severity": "warning",
+      "why": "\`meta\` sets no description: the description is the site default. That works, but words written for this page are better.",
+    },
+    {
+      "code": "H015",
+      "file": "src/routes/users/[id].tsx",
+      "help": "Write one plain sentence on what the page gives the reader. Never slice raw markdown or code into \`description\`.",
+      "route": "/users/[id]",
+      "severity": "warning",
+      "why": "The description of /users/1 isn't a sentence: it holds code or markup: "First programmer & \\"analyst\\" <of engines>.".",
+    },
+    {
+      "code": "H012",
+      "file": "src/routes/chat.tsx",
+      "help": "Give each page its own title in \`meta\`, from what is on it.",
+      "route": "/chat",
+      "severity": "warning",
+      "why": "8 routes share this title: /chat, /island-bad, /islands-top, /lazy-early, and 4 more ("Acme").",
+    },
+    {
+      "code": "H013",
+      "file": "src/routes/chat.tsx",
+      "help": "Give each page its own description in \`meta\`, from what is on it.",
+      "route": "/chat",
+      "severity": "warning",
+      "why": "17 routes share this description (the site default): /chat, /cover, /island-bad, /islands, and 13 more ("Tools for builders.").",
+    },
   ],
   "ok": false,
   "routes": [
+    {
+      "card": "src/routes/meta/badcard.og.tsx",
+      "data": "loaded",
+      "file": "src/routes/meta/badcard.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "A page with a card that has a bad colour and an image that cannot load.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Bad card · Acme",
+            "height": 630,
+            "url": "/_weft/og/meta/badcard.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Bad card · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/meta/badcard",
+      "source": {
+        "description": "route",
+        "image": "card",
+        "title": "route",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Bad card · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "A page with a card that has a bad colour and an image that cannot load.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/meta/badcard",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Bad card · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "A page with a card that has a bad colour and an image that cannot load.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/meta/badcard",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/meta/badcard.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Bad card · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/meta/badcard",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/meta/changing.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "The same words on every request, whatever the loader returned.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Changing · Acme",
+            "height": 630,
+            "url": "/_weft/og/meta/changing.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Changing · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/meta/changing",
+      "source": {
+        "description": "route",
+        "image": "auto",
+        "title": "route",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Changing · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "The same words on every request, whatever the loader returned.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/meta/changing",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Changing · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "The same words on every request, whatever the loader returned.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/meta/changing",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/meta/changing.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Changing · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/meta/changing",
+    },
+    {
+      "card": "built-in",
+      "data": "loaded",
+      "file": "src/routes/meta/plain.tsx",
+      "image": "build",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": "Harvest when 5 < 7 and the "tonnes" & crates are in: every mark here is escaped wherever it lands.",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "og": {
+          "image": {
+            "alt": "Harvest & storage notes · Acme",
+            "height": 630,
+            "url": "/_weft/og/meta/plain.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "Harvest & storage notes · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [],
+      "path": "/meta/plain",
+      "source": {
+        "description": "auto",
+        "image": "auto",
+        "title": "auto",
+      },
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "Harvest & storage notes · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": "Harvest when 5 < 7 and the "tonnes" & crates are in: every mark here is escaped wherever it lands.",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/meta/plain",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Harvest & storage notes · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Harvest when 5 < 7 and the "tonnes" & crates are in: every mark here is escaped wherever it lands.",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/meta/plain",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/meta/plain.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Harvest & storage notes · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/meta/plain",
+    },
+    {
+      "card": "built-in",
+      "data": "placeholder",
+      "file": "src/routes/meta/[name].tsx",
+      "image": "on-demand",
+      "kind": "page",
+      "layouts": [
+        "src/routes/_layout.tsx",
+      ],
+      "meta": {
+        "description": ""><img src=x onerror=alert(1)> <data.name> & co",
+        "extra": [
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+        "jsonLd": {
+          "@type": "Thing",
+          "name": "</script><script>alert(2)</script><data.name>",
+        },
+        "og": {
+          "image": {
+            "height": 630,
+            "url": "/_weft/og/meta/<name>.png?v=<hash>",
+            "width": 1200,
+          },
+          "locale": "en_US",
+          "siteName": "Acme",
+          "type": "website",
+        },
+        "title": "</title><script>alert("<data.name>")</script> · Acme",
+        "twitter": {
+          "card": "summary_large_image",
+          "site": "@acme",
+        },
+        "url": "https://acme.dev",
+      },
+      "params": [
+        "name",
+      ],
+      "path": "/meta/[name]",
+      "samples": [],
+      "status": 200,
+      "tags": [
+        [
+          "title",
+          {},
+          "</title><script>alert("<data.name>")</script> · Acme",
+        ],
+        [
+          "meta",
+          {
+            "content": ""><img src=x onerror=alert(1)> <data.name> & co",
+            "name": "description",
+          },
+        ],
+        [
+          "link",
+          {
+            "href": "https://acme.dev/meta/<name>",
+            "rel": "canonical",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "website",
+            "property": "og:type",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:site_name",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "</title><script>alert("<data.name>")</script> · Acme",
+            "property": "og:title",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": ""><img src=x onerror=alert(1)> <data.name> & co",
+            "property": "og:description",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/meta/<name>",
+            "property": "og:url",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "en_US",
+            "property": "og:locale",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "https://acme.dev/_weft/og/meta/<name>.png?v=<hash>",
+            "property": "og:image",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "1200",
+            "property": "og:image:width",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "630",
+            "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "@acme",
+            "name": "twitter:site",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "#0b0b0f",
+            "name": "theme-color",
+          },
+        ],
+      ],
+      "url": "/meta/<name>",
+    },
     {
       "card": "built-in",
       "data": "placeholder",
@@ -51,6 +906,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         "tag",
       ],
       "path": "/tags/[tag]",
+      "samples": [],
       "status": 200,
       "tags": [
         [
@@ -198,6 +1054,46 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         "id",
       ],
       "path": "/users/[id]",
+      "samples": [
+        {
+          "description": "First programmer & "analyst" <of engines>.",
+          "image": "/_weft/og/users/1.png?v=<hash>",
+          "source": {
+            "description": "route",
+            "image": "card",
+            "title": "route",
+          },
+          "title": "Ada Lovelace · Acme",
+          "url": "/users/1",
+        },
+        {
+          "description": "Compilers, COBOL and nanoseconds.",
+          "image": "/_weft/og/users/2.png?v=<hash>",
+          "source": {
+            "description": "route",
+            "image": "card",
+            "title": "route",
+          },
+          "title": "Grace Hopper · Acme",
+          "url": "/users/2",
+        },
+        {
+          "description": "Computable numbers.",
+          "image": "/_weft/og/users/42.png?v=<hash>",
+          "source": {
+            "description": "route",
+            "image": "card",
+            "title": "route",
+          },
+          "title": "Alan Turing · Acme",
+          "url": "/users/42",
+        },
+      ],
+      "source": {
+        "description": "route",
+        "image": "card",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -325,6 +1221,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "About · Acme",
             "height": 630,
             "url": "/_weft/og/about.png?v=<hash>",
             "width": 1200,
@@ -342,6 +1239,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/about",
+      "source": {
+        "description": "route",
+        "image": "auto",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -429,6 +1331,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "About · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -481,6 +1390,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/boom",
+      "source": {
+        "description": "config",
+        "image": "none",
+        "title": "route",
+      },
       "status": 500,
       "tags": [
         [
@@ -587,6 +1501,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/chat.png?v=<hash>",
             "width": 1200,
@@ -604,6 +1519,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/chat",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -691,6 +1611,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -731,6 +1658,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Cover · Acme",
             "height": 630,
             "url": "/_weft/og/cover.png?v=<hash>",
             "width": 1200,
@@ -739,7 +1667,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "siteName": "Acme",
           "type": "website",
         },
-        "title": "Acme",
+        "title": "Cover · Acme",
         "twitter": {
           "card": "summary_large_image",
           "site": "@acme",
@@ -748,12 +1676,17 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/cover",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "auto",
+      },
       "status": 200,
       "tags": [
         [
           "title",
           {},
-          "Acme",
+          "Cover · Acme",
         ],
         [
           "meta",
@@ -786,7 +1719,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "Acme",
+            "content": "Cover · Acme",
             "property": "og:title",
           },
         ],
@@ -830,6 +1763,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "630",
             "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Cover · Acme",
+            "property": "og:image:alt",
           },
         ],
         [
@@ -887,6 +1827,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/deferred-meta",
+      "source": {
+        "description": "config",
+        "image": "none",
+        "title": "route",
+      },
       "status": 500,
       "tags": [
         [
@@ -993,6 +1938,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/island-bad.png?v=<hash>",
             "width": 1200,
@@ -1010,6 +1956,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/island-bad",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -1097,6 +2048,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -1137,6 +2095,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Mostly static · Acme",
             "height": 630,
             "url": "/_weft/og/islands.png?v=<hash>",
             "width": 1200,
@@ -1145,7 +2104,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "siteName": "Acme",
           "type": "website",
         },
-        "title": "Acme",
+        "title": "Mostly static · Acme",
         "twitter": {
           "card": "summary_large_image",
           "site": "@acme",
@@ -1154,12 +2113,17 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/islands",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "auto",
+      },
       "status": 200,
       "tags": [
         [
           "title",
           {},
-          "Acme",
+          "Mostly static · Acme",
         ],
         [
           "meta",
@@ -1192,7 +2156,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "Acme",
+            "content": "Mostly static · Acme",
             "property": "og:title",
           },
         ],
@@ -1241,6 +2205,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Mostly static · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -1281,6 +2252,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/islands-top.png?v=<hash>",
             "width": 1200,
@@ -1298,6 +2270,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/islands-top",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -1385,6 +2362,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -1425,6 +2409,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Lazy · Acme",
             "height": 630,
             "url": "/_weft/og/lazy.png?v=<hash>",
             "width": 1200,
@@ -1433,7 +2418,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "siteName": "Acme",
           "type": "website",
         },
-        "title": "Acme",
+        "title": "Lazy · Acme",
         "twitter": {
           "card": "summary_large_image",
           "site": "@acme",
@@ -1442,12 +2427,17 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/lazy",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "auto",
+      },
       "status": 200,
       "tags": [
         [
           "title",
           {},
-          "Acme",
+          "Lazy · Acme",
         ],
         [
           "meta",
@@ -1480,7 +2470,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "Acme",
+            "content": "Lazy · Acme",
             "property": "og:title",
           },
         ],
@@ -1529,6 +2519,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Lazy · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -1569,6 +2566,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/lazy-early.png?v=<hash>",
             "width": 1200,
@@ -1586,6 +2584,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/lazy-early",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -1673,6 +2676,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -1725,6 +2735,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/leak",
+      "source": {
+        "description": "config",
+        "image": "none",
+        "title": "route",
+      },
       "status": 500,
       "tags": [
         [
@@ -1831,6 +2846,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/live.png?v=<hash>",
             "width": 1200,
@@ -1848,6 +2864,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/live",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -1935,6 +2956,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -1975,6 +3003,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/mixed.png?v=<hash>",
             "width": 1200,
@@ -1992,6 +3021,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/mixed",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -2079,6 +3113,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -2119,6 +3160,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Notes · Acme",
             "height": 630,
             "url": "/_weft/og/notes.png?v=<hash>",
             "width": 1200,
@@ -2127,7 +3169,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "siteName": "Acme",
           "type": "website",
         },
-        "title": "Acme",
+        "title": "Notes · Acme",
         "twitter": {
           "card": "summary_large_image",
           "site": "@acme",
@@ -2136,12 +3178,17 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/notes",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "auto",
+      },
       "status": 200,
       "tags": [
         [
           "title",
           {},
-          "Acme",
+          "Notes · Acme",
         ],
         [
           "meta",
@@ -2174,7 +3221,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "Acme",
+            "content": "Notes · Acme",
             "property": "og:title",
           },
         ],
@@ -2218,6 +3265,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "630",
             "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Notes · Acme",
+            "property": "og:image:alt",
           },
         ],
         [
@@ -2280,6 +3334,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Preferences · Acme",
             "height": 630,
             "url": "/_weft/og/prefs.png?v=<hash>",
             "width": 1200,
@@ -2288,7 +3343,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           "siteName": "Acme",
           "type": "website",
         },
-        "title": "Acme",
+        "title": "Preferences · Acme",
         "twitter": {
           "card": "summary_large_image",
           "site": "@acme",
@@ -2297,12 +3352,17 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/prefs",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "auto",
+      },
       "status": 200,
       "tags": [
         [
           "title",
           {},
-          "Acme",
+          "Preferences · Acme",
         ],
         [
           "meta",
@@ -2335,7 +3395,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
-            "content": "Acme",
+            "content": "Preferences · Acme",
             "property": "og:title",
           },
         ],
@@ -2384,6 +3444,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Preferences · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -2424,6 +3491,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Slow page · Acme",
             "height": 630,
             "url": "/_weft/og/slow.png?v=<hash>",
             "width": 1200,
@@ -2441,6 +3509,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/slow",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -2528,6 +3601,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Slow page · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -2568,6 +3648,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Styled · Acme",
             "height": 630,
             "url": "/_weft/og/styled.png?v=<hash>",
             "width": 1200,
@@ -2585,6 +3666,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/styled",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -2672,6 +3758,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Styled · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -2712,6 +3805,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/tabs.png?v=<hash>",
             "width": 1200,
@@ -2729,6 +3823,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/tabs",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "config",
+      },
       "status": 200,
       "tags": [
         [
@@ -2816,6 +3915,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -2856,6 +3962,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Todos (3) · Acme",
             "height": 630,
             "url": "/_weft/og/todos.png?v=<hash>",
             "width": 1200,
@@ -2873,6 +3980,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/todos",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -2960,6 +4072,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Todos (3) · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -3001,6 +4120,7 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         ],
         "og": {
           "image": {
+            "alt": "Users · Acme",
             "height": 630,
             "url": "/_weft/og/users.png?v=<hash>",
             "width": 1200,
@@ -3018,6 +4138,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/users",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -3105,6 +4230,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
         [
           "meta",
           {
+            "content": "Users · Acme",
+            "property": "og:image:alt",
+          },
+        ],
+        [
+          "meta",
+          {
             "content": "summary_large_image",
             "name": "twitter:card",
           },
@@ -3143,8 +4275,16 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
             "name": "theme-color",
           },
         ],
+        "jsonLd": {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "description": "Tools for builders.",
+          "name": "Acme",
+          "url": "https://acme.dev",
+        },
         "og": {
           "image": {
+            "alt": "Acme",
             "height": 630,
             "url": "/_weft/og/index.png?v=<hash>",
             "width": 1200,
@@ -3162,6 +4302,11 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
       },
       "params": [],
       "path": "/",
+      "source": {
+        "description": "config",
+        "image": "auto",
+        "title": "route",
+      },
       "status": 200,
       "tags": [
         [
@@ -3244,6 +4389,13 @@ exports[`the fixture: merged meta, tags, card mode and diagnostics for every rou
           {
             "content": "630",
             "property": "og:image:height",
+          },
+        ],
+        [
+          "meta",
+          {
+            "content": "Acme",
+            "property": "og:image:alt",
           },
         ],
         [

@@ -5,3 +5,4 @@
 - **Database:** Drizzle; `await` every statement. Schema change: `weft db generate` (Q015). Inputs: `schemas.todos.insert.pick({ title: true })`.
 - **Auth:** `ctx.user` is the user or `null`; `auth: 'user'` refuses anyone else (A002). A guard is `redirect('/login')` in a layout's `load`. `run` must still check who owns a row.
 - **Never** copy query results into `state`, import `db` from a component (Q012), `fetch` `/_weft/*`, or poll (`todos.live()`; rooms: `channel`).
+- **Every page sets `meta` as you build it**, from `data` and `params`: `weft docs meta`.

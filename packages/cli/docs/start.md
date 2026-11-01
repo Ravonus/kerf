@@ -29,6 +29,8 @@ Read `props.data` in JSX or `derived`, not in the component body (W001).
 Import your own code as `#/server/todos`, which is `src/server/todos`. That alias is `paths` in `tsconfig.json`: change it or add your own there, and Vite and `weft check` follow. Generated files have their own prefix: `weft:slot/<id>` and `weft:tokens/<name>`.
 
 `load` and `meta` never ship to the client. A layout's `load` runs before its children's, so it's where a guard goes.
+Set `meta` on every page as part of building it: a title and one plain sentence from what is on the page. On a param
+route build it from `data` and `params`. `weft docs meta` has the rest.
 Links are `<Link href>`; code navigates with `navigate(href)`.
 
 ## Server functions

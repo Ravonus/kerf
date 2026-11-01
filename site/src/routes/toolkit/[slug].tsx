@@ -3,11 +3,11 @@ import { Preview } from '../../components/Preview'
 import { TierPicker } from '../../components/TierPicker'
 import pages from '../../generated/toolkit.json'
 
-type Page = { name: string; slug: string; group: string; file: string; lede: string; use: string; props: { name: string; type: string; required: boolean; default?: string; doc: string }[]; cases: { file: string; name: string; label: string; html: string }[] }
+type Page = { name: string; slug: string; group: string; file: string; lede: string; description: string; use: string; props: { name: string; type: string; required: boolean; default?: string; doc: string }[]; cases: { file: string; name: string; label: string; html: string }[] }
 const all = pages as unknown as Record<string, Page>
 
 export const load = ({ params }: LoadArgs<'/toolkit/[slug]'>) => all[params.slug] ?? notFound()
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.lede.slice(0, 155) || `${data.name}, from warp.` })
+export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.description })
 export const prerender = () => Object.keys(all).map(slug => ({ slug }))
 
 export default function ComponentPage(props: RouteProps<typeof load, '/toolkit/[slug]'>) {

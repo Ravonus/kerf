@@ -94,6 +94,10 @@ export interface OgProps<L = undefined, P extends string = string> {
   data: Settled<DataOf<L>>
   meta: Merged
   site: Site
+  /** The page's path, and the title and description the built-in card would show. */
+  path: string
+  title: string
+  description: string
 }
 
 /** The params of a param route whose cards `weft build` renders (static routes always are). */

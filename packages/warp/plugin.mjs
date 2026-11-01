@@ -15,7 +15,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { definePlugin } from 'weft/plugin'
-import { fromHex, luminance, toLinear } from './tokens/color.mjs'
+import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 
 const core = new URL('../ui-core/', import.meta.url)
 const DEFAULT = { hue: 152, chroma: 0.115 }
@@ -221,6 +221,20 @@ export const dialScript = `<script>try{Object.assign(document.documentElement.da
 export const classicCss = () => rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
 export const dialCss = (dial, value) => rescoped(`[data-${dial}="${value}"]`, `:root:not([data-${dial}])`)
 
+/**
+ * The app's colours for its generated share cards (`site.card`, research 20 §10): the page, text and accent tokens of
+ * warp.css as sRGB, since a card is an image and has no stylesheet.
+ */
+function cardColors(seed, dials) {
+  const color = (L, C, H) => hex(toLinear({ L, C, H }))
+  const [h, c] = [85, 0.012] // --warp-ref-neutral: warm paper and ink
+  return {
+    scheme: dials?.theme ?? 'dark',
+    dark: { background: color(0.155, c, h), text: color(0.935, c, h), subtle: color(0.735, c, h), accent: color(0.76, seed.chroma * 1.15, seed.hue) },
+    light: { background: color(0.972, c / 2, h), text: color(0.235, c, h), subtle: color(0.475, c, h), accent: color(0.5, Math.min(seed.chroma, 0.13), seed.hue) },
+  }
+}
+
 const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D007). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
 
 const catalog = [
@@ -330,6 +344,7 @@ export const warp = definePlugin({
     return {
       tokens: { namespace: 'warp', ...(css && { css }), values: { seed, fields: o.fields ?? 'floating', ...(o.dials && { dials: o.dials }) } },
       agents: { title: 'warp (UI kit)', text: agents },
+      card: cardColors(seed, o.dials),
       catalog,
       map: [{ want: 'UI components', call: 'Import from `@weft/warp`; `weft plugins` has the catalog', have: `${catalog.length} components` }],
       diagnostics: [

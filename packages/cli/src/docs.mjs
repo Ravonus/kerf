@@ -27,6 +27,7 @@ export const topics = {
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
   icons: '@weft/icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
   fonts: 'Fonts with @weft/plugin-text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
+  meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `weft routes --meta`; H001–H008, H011–H016',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   design: 'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `weft fix`, `weft tokens`; D001–D007, D011, D030–D039',
   style: 'Style groups (weft/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',
@@ -51,8 +52,8 @@ function status(code, info) {
   if (e.by === 'test') return 'reported by weft/test after each test'
   if (e.by === 'gate') return 'reported by `weft test --gate` on a diff'
   if (/^T/.test(e.code)) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
-  if (e.by === 'start') return 'reported by @weft/start when it serves or renders the route, and by `weft routes --meta`'
-  if (e.by === 'cli' && e.code.startsWith('H')) return e.code === 'H001' || e.code === 'H003' || e.code === 'H004' ? 'reported by weft check (from `site`) and by `weft routes --meta` (per route)' : 'reported by `weft routes --meta`'
+  if (e.by === 'start') return 'reported by @weft/start when it serves or renders the route, and by weft check and `weft routes --meta`'
+  if (e.by === 'cli' && e.code.startsWith('H')) return 'reported by weft check and by `weft routes --meta`, per route, on what the routes produce'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
   if (e.by === 'runtime') return 'reported in dev by the runtime (a console warning)'
   if (e.by === 'plugin') return `reported by weft check when \`${e.owner}\` is in \`plugins\``

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
 import weft from 'weft/vite'
-import weftStart from './vite.mjs'
+import weftStart, { startDir } from './vite.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
 function usesSockets(root) {
@@ -69,6 +69,7 @@ export async function dev(options) {
 
 /** Build client and server into `.output/` for `preset` (node by default; bun, deno_server…). */
 export async function build(options) {
+  process.env.WEFT_START_DIR ??= startDir // for the share cards a build draws (og/native.mjs)
   const builder = await createBuilder(config({ ...options, command: 'build' }))
   await builder.buildApp()
   return { output: join(resolve(options.root), '.output') }

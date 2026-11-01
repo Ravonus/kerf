@@ -148,3 +148,18 @@ describe('a plugin in the docs', () => {
     expect((await docs(dir, 'diagnostics')).text).toContain('KIT001')
   })
 })
+
+describe('page metadata reaches every agent surface', () => {
+  const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+  it('AGENTS.md says every page sets `meta`, and stays under its limit', async () => {
+    const { text, overLimit } = await agentsMd(app)
+    expect(text).toMatch(/Every page sets `meta` as you build it/)
+    expect(overLimit).toBe(false)
+  })
+  it('`weft docs meta` is a topic, and every H-code is real', async () => {
+    expect((await docs(fixture, 'meta')).text).toMatch(/Set `meta` as you build the page/)
+    expect(topics.meta).toContain('H011')
+    expect(catalog.filter(e => /^H0/.test(e.code) && e.proposed)).toEqual([])
+    expect((await docs(fixture, 'H001')).text).toContain('reported by weft check')
+  })
+})

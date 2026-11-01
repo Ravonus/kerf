@@ -13,13 +13,38 @@ export interface Site {
   description?: string
   /** `en_US` style (og:locale). */
   locale?: string
-  /** `'auto'` = the generated card (§4, not built yet: writes no image), or a path/URL. */
-  image?: 'auto' | Image
+  /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
+  image?: 'auto' | Image | false
   twitter?: Twitter
+  /** The generated card's look. Colours come from warp and fonts from the text plugin when the app has them. */
+  card?: CardTheme
   /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
   inlineCss?: boolean
   /** Raw HTML for every page's head, before the stylesheets: what has to run before the first paint. Not escaped. */
   head?: string
+}
+
+/** One colour scheme of the generated card. */
+export interface CardColors {
+  background?: string
+  text?: string
+  subtle?: string
+  accent?: string
+}
+
+export interface CardTheme extends CardColors {
+  /** Which colours the card uses: one image is shown on every feed, so it picks. Default `dark`. */
+  scheme?: 'dark' | 'light'
+  light?: CardColors
+  dark?: CardColors
+  /** Faces for the card's title and text: a family, the font file (from the app root) and its weight. */
+  fonts?: { display?: CardFont; body?: CardFont }
+}
+
+export interface CardFont {
+  family: string
+  src: string
+  weight?: number
 }
 
 export type Image = string | { url: string; width?: number; height?: number; alt?: string }
@@ -37,7 +62,7 @@ export interface Og {
   type?: string
   title?: string
   description?: string
-  image?: 'auto' | Image
+  image?: 'auto' | Image | false
   siteName?: string
   locale?: string
 }
@@ -53,6 +78,8 @@ export interface Meta {
   twitter?: Twitter
   /** Tags weft doesn't model (theme-color, hreflang alternates, verification). */
   extra?: readonly Extra[]
+  /** Structured data, written as `application/ld+json`. `false` drops what a layout or weft set. */
+  jsonLd?: object | readonly object[] | false
 }
 
 /** The merged result: what one page writes. */
@@ -63,6 +90,7 @@ export interface Merged {
   og: Og
   twitter: Twitter
   extra: Extra[]
+  jsonLd?: object | readonly object[] | false
 }
 
 /** `[tag, attributes, text?]`: `title` carries text, `meta` and `link` attributes only. */
@@ -72,9 +100,10 @@ export type Tag = [tag: 'title' | 'meta' | 'link', attrs: Record<string, string>
 export function mergeMeta(site: Site = {}, ...metas: readonly (Meta | null | undefined)[]): Merged {
   let title: string | { absolute: string } | undefined
   let description = site.description
-  const og: Og = { type: 'website', siteName: site.name, locale: site.locale, image: site.image }
+  const og: Og = { type: 'website', siteName: site.name, locale: site.locale, image: site.image ?? 'auto' }
   const twitter: Twitter = { ...site.twitter }
   const extra: Extra[] = []
+  let jsonLd: Merged['jsonLd']
   for (const m of metas) {
     if (!m) continue
     if (m.title != null) title = m.title
@@ -82,13 +111,14 @@ export function mergeMeta(site: Site = {}, ...metas: readonly (Meta | null | und
     assign(og, m.og)
     assign(twitter, m.twitter)
     if (m.extra) extra.push(...m.extra)
+    if (m.jsonLd != null) jsonLd = m.jsonLd
   }
   const text =
     title == null ? site.name ?? ''
     : typeof title === 'object' ? title.absolute
     : site.title?.includes('%s') ? site.title.replace('%s', title)
     : title
-  return { title: text, description, url: site.url, og, twitter, extra }
+  return { title: text, description, url: site.url, og, twitter, extra, ...(jsonLd != null && { jsonLd }) }
 }
 
 /** Defined keys only, so `{ title: undefined }` doesn't erase an outer layout's title. */
@@ -139,14 +169,18 @@ const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c ===
 
 /** The tags as HTML, one per line, each marked `data-wm` (weft-managed) for client navigation. */
 export function metaTags(m: Merged, path: string): string {
-  return headTags(m, path)
-    .map(([tag, attrs, text]) => {
-      let a = ''
-      for (const k in attrs) a += ` ${k}="${esc(attrs[k])}"`
-      return tag === 'title' ? `<title data-wm>${esc(text!)}</title>` : `<${tag}${a} data-wm>`
-    })
-    .join('\n')
+  const tags = headTags(m, path).map(([tag, attrs, text]) => {
+    let a = ''
+    for (const k in attrs) a += ` ${k}="${esc(attrs[k])}"`
+    return tag === 'title' ? `<title data-wm>${esc(text!)}</title>` : `<${tag}${a} data-wm>`
+  })
+  // Crawlers read this from the first response only, so it's here and not in `headTags`, which the client shares.
+  if (m.jsonLd) tags.push(`<script type="application/ld+json" data-wm>${jsonText(m.jsonLd)}</script>`)
+  return tags.join('\n')
 }
+
+/** JSON that can't end its `<script>` or an HTML comment: everything that could is written as an escape. */
+const jsonText = (v: unknown) => JSON.stringify(v).replace(/[<>&\u2028\u2029]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)
 
 export interface HeadOptions {
   site?: Site

@@ -1,6 +1,6 @@
 # 20 — Page metadata and OG images (design)
 
-Research date: 2026-10-29. Status: **design; §7.1 built** (note under §7), **§7.3 spike done** (§9). Depends on Phase 3 routing (PLAN §4, §9); §2's
+Research date: 2026-10-29. Status: **built** (§7, §10), **§7.3 spike done** (§9). Depends on Phase 3 routing (PLAN §4, §9); §2's
 defaults and the `<head>` writer can land before it. Statements about other frameworks are from their docs as I
 know them and marked **(unverified)** where a version or detail matters.
 
@@ -452,6 +452,16 @@ The Worker is 4,070 KiB raw and 1,831 KiB gzipped, 14 KiB more than plain Takumi
 
 H008 is new: **warning**, a card image failed to load (timeout, HTTP error, not an image, too large, or host not
 allowed), and the card rendered without it.
+
+## 10. Automatic metadata, enforced (2026-11-01)
+
+What §1–§9 left to chance: `image` defaulted to nothing, so no app without `image: 'auto'` got a card; canonical and `og:url` needed `site.url`, which most apps didn't set; a page with no `meta` had the site's title; and H011–H016 didn't exist, so nothing said so.
+
+- **Order:** `site` → what the page rendered → layouts → the route. `derive.mjs` reads the rendered shell for the `h1` and the first paragraph of prose. This doesn't break §1: the shell is rendered and settled before the first byte, so the head still comes first, and it's the same pass that a page, its navigation and its card read, so all three agree. A Boundary's streamed content isn't in the shell, so it can't change a page's tags from one request to the next. A request that doesn't otherwise render (a card, a navigation) only renders when a level left words to the page.
+- **`site.image` defaults to `'auto'`.** The hash covers the head and `site.card`, plus `data` only for an `.og.tsx`, so a loader's timestamp can't change a built-in card's URL. A request with a cookie never gets `immutable`.
+- **The origin** comes from config, then deploy env (a server reads it at runtime), then the request. The request's is `Host`, which an attacker can set, so production warns once. It's never used for a prerender, which would write `localhost` into a file.
+- **`weft check` runs the routes** (`inspect.mjs`). Loaders run once with no boot step, so a page that needs a database answers 500 and reports H016 info. Set `check: { routes: false }` to skip it. Param routes are sampled from `prerender` and links on rendered pages, 50 at most.
+- **Open:** a card is drawn with the first file of each face, so a variable font draws at its default instance unless Takumi is told otherwise; `meta.canonical` for a page whose query matters isn't built; `.og.tsx` still has no static check of its source, only a render.
 
 ## Sources
 

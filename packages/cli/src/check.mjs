@@ -22,7 +22,7 @@ import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
-import { dbLayer, schemaHash, start } from './start.mjs'
+import { dbLayer, routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
 
 const posix = p => p.split('\\').join('/')
 
@@ -56,6 +56,23 @@ function hydrationChecks(root) {
     return JSON.parse(readFileSync(file, 'utf8')).diagnostics.filter(d => existsSync(join(root, d.file))).map(d => diagnostic({ code: d.code, file: d.file, span: [d.line, 1, d.line, 1], why: d.why, help: d.fix }))
   } catch {
     return []
+  }
+}
+
+/**
+ * H001–H007, H011–H016: page metadata, per route, on what the routes really produce (`inspect.mjs`). With `files`, only
+ * when a route is among them. An app that can't run here is still read: a check never fails for what it couldn't start.
+ */
+async function routeChecks(root, loaded, given, reported) {
+  if (!existsSync(join(root, 'src', 'routes')) || loaded.config?.check?.routes === false || loaded.diagnostics.some(d => d.code === 'P007')) return []
+  if (given?.length && !given.some(f => f.startsWith('src/routes/'))) return []
+  let inspect
+  try { inspect = await start(root, 'inspect') } catch { return [] }
+  const keep = list => routeDiagnostics(root, list).filter(d => !(d.code === 'H001' && reported.has('H001')))
+  try {
+    return keep((await inspect.routesMeta({ root, site: siteOf(loaded) })).diagnostics)
+  } catch (error) {
+    return keep([...inspect.staticRouteChecks(root), { code: 'H016', severity: 'info', file: 'src/routes', route: '*', why: `The routes didn't load here, so only their source was checked: ${String(error?.message ?? error).split('\n')[0]}` }])
   }
 }
 
@@ -139,6 +156,7 @@ export async function check(root, options = {}) {
     ...schemaDrift(root, await dbLayer(root, loaded)),
     ...(await rustChecks(root, loaded)),
   ]
+  diagnostics.push(...await routeChecks(root, loaded, given, new Set(loaded.diagnostics.map(d => d.code))))
   sortDiagnostics(diagnostics)
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }
   return {

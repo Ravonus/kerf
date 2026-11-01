@@ -177,7 +177,7 @@ function home(ui, label) {
 import { state } from 'weft'
 import { Badge, Button, Card } from '@weft/warp'
 
-export const meta: Meta = { title: { absolute: ${JSON.stringify(label)} } }
+export const meta: Meta = { title: { absolute: ${JSON.stringify(label)} }, description: ${JSON.stringify(`${label}, made with weft.`)} }
 
 export default function Home() {
   const count = state(0)
@@ -195,7 +195,7 @@ export default function Home() {
   return `import type { Meta } from '@weft/start'
 import { state } from 'weft'
 
-export const meta: Meta = { title: { absolute: ${JSON.stringify(label)} } }
+export const meta: Meta = { title: { absolute: ${JSON.stringify(label)} }, description: ${JSON.stringify(`${label}, made with weft.`)} }
 
 export default function Home() {
   const count = state(0)
