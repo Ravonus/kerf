@@ -14,6 +14,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { definePlugin } from 'weft/plugin'
 import { fromHex, luminance, toLinear } from './tokens/color.mjs'
 
@@ -97,7 +98,7 @@ export function checkSeed(seed, declarations = '') {
     writeFileSync(css, readFileSync(new URL('styles/warp.css', core), 'utf8') + `\n:root{--warp-seed-accent-h:${seed.hue};--warp-seed-accent-c:${seed.chroma}}\n${declarations && `${SCOPES}{${declarations}}\n`}`)
     let out
     try {
-      out = execFileSync(process.execPath, [new URL('scripts/contrast-check.mjs', core).pathname, css, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+      out = execFileSync(process.execPath, [fileURLToPath(new URL('scripts/contrast-check.mjs', core)), css, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
     } catch (e) {
       out = e.stdout // exit 1 on failures; the JSON is still on stdout
     }
@@ -119,7 +120,7 @@ export function dtcg(css = '') {
     writeFileSync(file, readFileSync(new URL('styles/warp.css', core), 'utf8') + `\n${css.replace(/@layer warp\.\w+\{([\s\S]*)\}\n?$/gm, '$1')}\n`)
     let out
     try {
-      out = execFileSync(process.execPath, [new URL('scripts/contrast-check.mjs', core).pathname, file, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+      out = execFileSync(process.execPath, [fileURLToPath(new URL('scripts/contrast-check.mjs', core)), file, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
     } catch (e) {
       out = e.stdout
     }
