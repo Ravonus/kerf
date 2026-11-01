@@ -2,6 +2,7 @@
 // one function from a cell to a palette index. A caller decides how a cell reaches the screen. Liftable as it stands.
 import { level, PALETTE } from './field'
 
+const STEPS = PALETTE.length
 const TEAL = [[10, 46, 52], [14, 92, 100], [28, 150, 160], [90, 220, 225], [220, 255, 250]]
 const CORAL = [[48, 22, 18], [110, 40, 30], [190, 70, 50], [250, 120, 90], [255, 225, 200]]
 const ramp = (r: number[][]) => [PALETTE[0], ...r.map(c => [...c, 255])]
