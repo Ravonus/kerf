@@ -74,6 +74,21 @@ function resolve(value: any, out: Node[], reuse?: { from: Node[]; texts?: Text[]
 // Set by `For`, so an app without one doesn't ship them: only long lists have ends to trade or to empty at a stroke.
 let trade: typeof swap | undefined
 let wipe: typeof empty | undefined
+let longest: typeof inOrder | undefined
+
+/** Without `For`: the nodes already in order, first come. Only a list ever needs the longest run. */
+function kept(next: Node[], current: Node[]) {
+  const out = new Set<Node>()
+  let at = -1
+  for (const n of next) {
+    const i = current.indexOf(n)
+    if (i > at) {
+      at = i
+      out.add(n)
+    }
+  }
+  return out
+}
 
 /** The two ends of what's left traded places: moves them, and says so. */
 function swap(parent: Node, current: Node[], next: Node[], start: number, was: number, now: number) {
@@ -126,7 +141,7 @@ export function place(parent: Node, value: any, current: Node[], marker: Node | 
     const keep = new Set(after)
     for (const n of before) if (!keep.has(n) && n.parentNode === parent) parent.removeChild(n)
     // Nodes on the longest run that is already in order stay put; every other node moves once.
-    stable = inOrder(after, before)
+    stable = (longest ?? kept)(after, before)
   } else if (!WIPE || !wipe?.(parent, current, before, marker)) {
     for (const n of before) if (n.parentNode === parent) parent.removeChild(n)
   }
@@ -360,6 +375,7 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
   Object.setPrototypeOf(Row.prototype, Box.prototype) // here, so an app without a list keeps no Row
   if (SWAP) trade = swap
   if (WIPE) wipe = empty
+  longest = inOrder
   // Only the first row of a key is kept: a repeat is built anew each pass.
   const repeats = () => {
     fresh = false

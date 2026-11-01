@@ -35,6 +35,12 @@ while (lo < hi) {
   if (measure(mid) <= target) lo = mid
   else hi = mid - 1
 }
-const got = measure(lo)
+// Brotli isn't quite steady, so the search can stop a few bytes short: try the lengths around it.
+let got = measure(lo)
+for (let n = lo - 40; n <= lo + 40 && got !== target; n++) {
+  const b = measure(n)
+  if (b <= target && b > got) { got = b; lo = n }
+}
+got = measure(lo)
 rmSync(json, { force: true })
 console.log(`egg: ${lo} characters, runtime ${got} B, ${(got / 1024).toFixed(2)} KB`)
