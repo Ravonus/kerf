@@ -73,13 +73,15 @@ export async function buildCommand(root, { preset, runtime } = {}) {
     const refuse = d => { throw Object.assign(new Error(`${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}`), { code: 'E_USAGE' }) }
     const { buildSidecars, shipSidecars, startSidecars, usesRemote } = await start(root, 'sidecar')
     const contracted = () => writeContract({ root, site: config.site, preset, rust })
+    let warned = []
     // Sidecars first: prerendering a share card runs its route's `load`, which may read one.
     const running = usesRemote(root) ? await contracted().then(async c => {
       const stop = c.diagnostics.find(d => d.severity === 'error')
       if (stop) refuse(stop)
-      const built = await buildSidecars({ root, contract: c.contract, rust })
+      const built = await buildSidecars({ root, contract: c.contract, rust, preset })
       const failed = built.diagnostics.find(d => d.severity === 'error')
       if (failed) refuse(failed)
+      warned = built.diagnostics
       return startSidecars({ root, built: true, log: () => {} })
     }) : undefined
     const before = { ...process.env }
@@ -96,7 +98,7 @@ export async function buildCommand(root, { preset, runtime } = {}) {
     if (refused) refuse(refused)
     if (running) shipSidecars(root)
     await writeMap(root)
-    return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: contract.diagnostics.map(d => diagnostic({ ...d, file: '.weft/contract.json' })), ms: Math.round(performance.now() - t) }
+    return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: [...contract.diagnostics, ...warned].map(d => diagnostic({ file: '.weft/contract.json', ...d })), ms: Math.round(performance.now() - t) }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held

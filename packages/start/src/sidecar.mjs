@@ -1,6 +1,7 @@
 // The sidecar supervisor (research 36 §5): what `weft dev`, `weft build`, `weft start` and `weft check` do for the Rust
-// behind `remote()`. It runs in the CLI, never in the server bundle: `remote()` is only `fetch`, so a built server runs
-// anywhere, and a sidecar deployed on its own is one environment variable away.
+// behind `remote()`, and for `native()`'s libraries (research 37). It runs in the CLI, never in the server bundle:
+// `remote()` is only `fetch`, so a built server runs anywhere, and a sidecar deployed on its own is one environment
+// variable away.
 //
 //   dev     cargo build, then a stable local proxy in front of the current child. A change under the crate, or a contract
 //           change from a server module, builds a new binary, starts it, health-checks it and swaps the proxy; the old
@@ -10,9 +11,13 @@
 //   start   each binary on a fixed local port, restarted with backoff if it dies. The web server keeps serving; calls in
 //           the gap fail as R107.
 //   check   cargo check, with errors mapped to the function they belong to (R103).
+//
+// `native()` has no child and no proxy. dev: each build is a new file under `.weft/native/`, and the manifest beside it
+// says which, so the next call loads it in place: an addon can't be unloaded, and needn't be. build: an addon and a
+// `.wasm` next to the server, in `.output/server/rust/`, so whatever moves the server moves them too.
 
 import { spawn } from 'node:child_process'
-import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from 'node:fs'
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from 'node:fs'
 import { createServer, request as httpRequest, Agent } from 'node:http'
 import { randomBytes } from 'node:crypto'
 import { basename, join, relative, resolve } from 'node:path'
@@ -34,6 +39,8 @@ export const crateDir = (root, rust, service) => resolve(root, rust?.services?.[
 
 /** The services in a contract that have a crate here. */
 const buildable = (contract, rust) => Object.keys(contract.services ?? {}).filter(s => !external(rust, s))
+const isNative = (contract, service) => contract.services?.[service]?.kind === 'native'
+const WASM = 'wasm32-unknown-unknown'
 
 // ---- cargo --------------------------------------------------------------------------------------------------------
 
@@ -67,12 +74,13 @@ export function readCargo(stdout, { contract, service, root, dir }) {
   const fns = (contract?.functions ?? []).filter(f => f.impl?.service === service)
   const names = fns.map(f => ({ id: f.id, re: new RegExp(`\\b(${pascal(f.name)}\\w*|${snake(f.name)})\\b`) }))
   const diagnostics = []
-  let exe, ok = false
+  let exe, lib, ok = false
   for (const line of stdout.split('\n')) {
     if (!line.startsWith('{')) continue
     let m
     try { m = JSON.parse(line) } catch { continue }
     if (m.reason === 'compiler-artifact' && m.executable && m.target?.kind?.includes('bin')) exe = m.executable
+    if (m.reason === 'compiler-artifact' && m.target?.kind?.includes('cdylib')) lib = m.filenames?.find(f => /\.(dylib|so|dll|wasm)$/.test(f))
     if (m.reason === 'build-finished') ok = m.success
     if (m.reason !== 'compiler-message' || m.message?.level !== 'error' || !m.message.code) continue
     const text = m.message.rendered ?? m.message.message
@@ -86,13 +94,13 @@ export function readCargo(stdout, { contract, service, root, dir }) {
       rendered: text,
     })
   }
-  return { ok, exe, diagnostics }
+  return { ok, exe, lib, diagnostics }
 }
 
 /** `verb`: `build` or `check`. Failure names what to fix: a build script's panic is already R103 with the fix. */
-export async function cargo(verb, { root, dir, service, contract, release, onLine }) {
-  const args = [verb, '--message-format=json', ...(release ? ['--release'] : [])]
-  const env = { WEFT_CONTRACT: join(root, '.weft', 'contract.json') }
+export async function cargo(verb, { root, dir, service, contract, release, target, onLine }) {
+  const args = [verb, '--message-format=json', ...(release ? ['--release'] : []), ...(target ? ['--target', target] : [])]
+  const env = { WEFT_CONTRACT: join(root, '.weft', 'contract.json'), ...(target === WASM && { CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: '-C target-feature=+simd128' }) }
   const r = await run('cargo', args, { cwd: dir, env, onLine })
   if (r.missing) return { ok: false, diagnostics: [{ code: 'R109', severity: 'error', file: 'package.json', span: [1, 1, 1, 1], why: `\`${service}\` needs Rust: \`cargo\` isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere.` }] }
   const read = readCargo(r.stdout, { contract, service, root, dir })
@@ -102,6 +110,25 @@ export async function cargo(verb, { root, dir, service, contract, release, onLin
     read.diagnostics.push({ code: panic ? 'R103' : 'R109', severity: 'error', file: relative(root, dir).replaceAll('\\', '/') + '/Cargo.toml', span: [1, 1, 1, 1], why: panic ?? `cargo ${verb} failed in \`${service}\`:\n${r.stderr.trim().split('\n').slice(-12).join('\n')}` })
   }
   return { ...read, ok: false }
+}
+
+/** R104 for a `.wasm` that won't build: a warning unless the build needs it. `error`: the preset has no other way to run. */
+export async function checkWasm({ root, dir, service, contract, preset, rust, build }) {
+  if (rust?.services?.[service]?.wasm === false) return { diagnostics: [] }
+  const r = await cargo(build ? 'build' : 'check', { root, dir, service, contract, target: WASM, release: build })
+  if (r.ok) return { lib: r.lib, diagnostics: [] }
+  const missing = r.diagnostics.find(d => /can't find crate for `(std|core)`|target may not be installed/.test(`${d.why}${d.rendered ?? ''}`))
+  const why = missing ? `\`rustup target add ${WASM}\`: this toolchain can't build \`${service}\`'s WASM fallback` : `\`${service}\` has no WASM fallback: ${r.diagnostics[0]?.why ?? 'the build failed'}`
+  const needed = preset && !/^(node|bun|deno[-_]server)/.test(preset)
+  return { diagnostics: [{ code: 'R104', severity: needed ? 'error' : 'warning', file: relative(root, dir).replaceAll('\\', '/') + '/Cargo.toml', span: [1, 1, 1, 1], why: `${why}. An addon loads on this machine, and nothing else can run it. Fix it, or set \`rust.services.${service}.wasm: false\` to say so` }] }
+}
+
+const stem = service => service.replaceAll('-', '_')
+
+/** Copy, then rename: macOS kills a process that loads a signed binary overwritten in place. */
+function place(from, to) {
+  copyFileSync(from, `${to}.tmp`)
+  renameSync(`${to}.tmp`, to)
 }
 
 // ---- children -----------------------------------------------------------------------------------------------------
@@ -207,6 +234,18 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
   const first = await refresh()
   let contract = first.contract
   const states = new Map()
+  const nativeDir = join(root, '.weft', 'native')
+  /** What the server's `native()` reads on each call: one rename, so it never sees half of it. */
+  const publish = () => {
+    const manifest = Object.fromEntries([...states].filter(([k]) => isNative(contract, k)).map(([k, s]) => [k, s.loaded ?? { hash: '', failure: s.failure ?? `\`${k}\` hasn't built` }]))
+    writeFileSync(join(nativeDir, 'manifest.tmp'), JSON.stringify(manifest))
+    renameSync(join(nativeDir, 'manifest.tmp'), join(nativeDir, 'manifest.json'))
+  }
+  if (buildable(contract, rust).some(k => isNative(contract, k))) {
+    rmSync(nativeDir, { recursive: true, force: true })
+    mkdirSync(nativeDir, { recursive: true })
+    process.env.WEFT_NATIVE_DIR = nativeDir
+  }
 
   async function rebuild(service) {
     const s = states.get(service)
@@ -228,13 +267,21 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
     const dir = crateDir(root, rust, service)
     const t = performance.now()
     const built = await cargo('build', { root, dir, service, contract })
-    if (!built.ok || !built.exe) {
+    if (!built.ok || !(built.exe || built.lib)) {
       built.diagnostics.forEach(say)
       s.failure = built.diagnostics.map(d => d.why).join('\n') || `\`${service}\` didn't build`
       overlay(s.failure)
+      if (isNative(contract, service) && !s.loaded) publish()
       return
     }
     log(`[weft] ${service}: built in ${Math.round(performance.now() - t)} ms`)
+    if (isNative(contract, service)) {
+      s.generation = (s.generation ?? 0) + 1
+      s.loaded = { hash, addon: `${stem(service)}-${s.generation}.node` }
+      s.failure = undefined
+      place(built.lib, join(nativeDir, s.loaded.addon))
+      return publish()
+    }
     let next
     try {
       next = await launch({ exe: built.exe, service, hash, listen: '127.0.0.1:0', secret, log, onExit: (code, signal) => exited(service, s, next, code, signal) })
@@ -276,11 +323,14 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
     const dir = crateDir(root, rust, service)
     const s = { current: undefined, failure: existsSync(dir) ? undefined : `\`crates/${service}\` doesn't exist`, building: false }
     states.set(service, s)
-    const p = await proxy(s)
-    s.proxy = p
-    process.env[urlVariable(service)] = `http://127.0.0.1:${p.port}`
+    if (!isNative(contract, service)) {
+      const p = await proxy(s)
+      s.proxy = p
+      process.env[urlVariable(service)] = `http://127.0.0.1:${p.port}`
+    }
     if (!existsSync(dir)) {
       log(`[weft] R109 error: ${s.failure}. Point \`rust.services.${service}.crate\` at it, or set \`external: true\``)
+      if (isNative(contract, service)) publish()
       continue
     }
     if (!first.blocked) await rebuild(service)
@@ -316,7 +366,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
   }
   process.once('exit', killAll)
   return {
-    ready: Object.fromEntries([...states].map(([k, s]) => [k, !!s.current])),
+    ready: Object.fromEntries([...states].map(([k, s]) => [k, !!(s.current || s.loaded)])),
     attach(server) { vite = server },
     async close() {
       process.removeListener('exit', killAll)
@@ -335,9 +385,10 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
 
 const BUILT = ['.weft', 'sidecars'] // a build empties `.output`, and these have to run during it
 const SHIPPED = ['.output', 'rust']
+const SHIPPED_NATIVE = ['.output', 'server', 'rust'] // with the server, so a host that moves it moves these
 
 /** Release binaries into `.weft/sidecars/`, and what `weft start` needs to run them. */
-export async function buildSidecars({ root, contract, rust, log = () => {} }) {
+export async function buildSidecars({ root, contract, rust, preset, log = () => {} }) {
   root = resolve(root)
   const out = join(root, ...BUILT)
   const services = buildable(contract, rust)
@@ -354,8 +405,20 @@ export async function buildSidecars({ root, contract, rust, log = () => {} }) {
     }
     log(`building ${service}…`)
     const built = await cargo('build', { root, dir, service, contract, release: true })
-    if (!built.ok || !built.exe) {
+    if (!built.ok || !(built.exe || built.lib)) {
       diagnostics.push(...built.diagnostics)
+      continue
+    }
+    if (isNative(contract, service)) {
+      const addon = `${stem(service)}.${process.platform}-${process.arch}.node`
+      copyFileSync(built.lib, join(out, addon))
+      manifest[service] = { kind: 'native', addon, hash: contract.services[service].hash, bytes: statSync(built.lib).size }
+      const wasm = await checkWasm({ root, dir, service, contract, preset, rust, build: true })
+      diagnostics.push(...wasm.diagnostics)
+      if (wasm.lib) {
+        copyFileSync(wasm.lib, join(out, `${stem(service)}.wasm`))
+        Object.assign(manifest[service], { wasm: `${stem(service)}.wasm`, wasmBytes: statSync(wasm.lib).size })
+      }
       continue
     }
     const bin = basename(built.exe)
@@ -369,7 +432,18 @@ export async function buildSidecars({ root, contract, rust, log = () => {} }) {
 /** Into the output, once the server is built. */
 export function shipSidecars(root) {
   const from = join(resolve(root), ...BUILT)
-  if (existsSync(from)) cpSync(from, join(resolve(root), ...SHIPPED), { recursive: true })
+  if (!existsSync(from)) return
+  const manifest = JSON.parse(readFileSync(join(from, 'manifest.json'), 'utf8'))
+  const natives = Object.entries(manifest).filter(([, m]) => m.kind === 'native')
+  const sidecars = Object.entries(manifest).filter(([, m]) => m.kind !== 'native')
+  const copy = (list, to, names) => {
+    if (!list.length) return
+    mkdirSync(to, { recursive: true })
+    for (const [, m] of list) for (const f of names(m)) cpSync(join(from, f), join(to, f))
+    writeFileSync(join(to, 'manifest.json'), JSON.stringify(Object.fromEntries(list), null, 2) + '\n')
+  }
+  copy(sidecars, join(resolve(root), ...SHIPPED), m => [m.bin])
+  copy(natives, join(resolve(root), ...SHIPPED_NATIVE), m => [m.addon, m.wasm].filter(Boolean))
 }
 
 // ---- start --------------------------------------------------------------------------------------------------------
@@ -384,10 +458,12 @@ export async function startSidecars({ root, built = false, log = console.log }) 
   const file = join(dir, 'manifest.json')
   if (!existsSync(file)) return { env: {}, close() {} }
   const manifest = JSON.parse(readFileSync(file, 'utf8'))
-  const names = Object.keys(manifest).filter(s => !process.env[urlVariable(s)])
-  if (!names.length) return { env: {}, close() {} }
+  const names = Object.keys(manifest).filter(s => manifest[s].kind !== 'native' && !process.env[urlVariable(s)])
+  // While a build prerenders, the libraries aren't next to a server yet.
+  const paths = built && Object.values(manifest).some(m => m.kind === 'native') ? { WEFT_NATIVE_DIR: dir } : {}
+  if (!names.length) return { env: paths, close() {} }
   const secret = process.env.WEFT_RUST_SECRET || randomBytes(32).toString('hex')
-  const env = { WEFT_RUST_SECRET: secret }
+  const env = { ...paths, WEFT_RUST_SECRET: secret }
   let closed = false
   const live = new Map()
 

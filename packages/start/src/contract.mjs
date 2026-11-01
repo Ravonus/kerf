@@ -83,9 +83,20 @@ function implOf(f, report) {
 /** What a sidecar is built from, per service: a binary whose hash differs was built from another contract (R103). */
 function services(functions) {
   const out = {}
-  for (const f of functions) if (f.impl) (out[f.impl.service] ??= { hash: createHash('sha256'), functions: [] }).functions.push(f.id)
+  for (const f of functions) if (f.impl) (out[f.impl.service] ??= { kind: f.impl.kind, hash: createHash('sha256'), functions: [] }).functions.push(f.id)
   for (const f of functions) if (f.impl) out[f.impl.service].hash.update(JSON.stringify([f.id, f.kind, f.input, f.impl]))
-  return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, { hash: v.hash.digest('hex').slice(0, 16), functions: v.functions }]))
+  return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, { kind: v.kind, hash: v.hash.digest('hex').slice(0, 16), functions: v.functions }]))
+}
+
+/** Presets with no file for an addon or a `.wasm` to be read from. */
+const NO_FILES = /^(cloudflare|vercel[-_]edge|netlify[-_]edge|deno[-_]deploy|bunny|fastly)/
+/** Presets that run where they were built, so the addon from this machine is the right one. */
+const LOCAL = /^(node|bun|deno[-_]server)/
+
+/** R104 for a build: `native()` on a preset that has no way to run it. */
+export function nativeProblem({ service, preset, wasm }) {
+  if (preset && NO_FILES.test(preset)) return `\`native('${service}')\` can't load on the \`${preset}\` preset: it has no file system, so neither an addon nor a \`.wasm\` file reaches it. Use \`remote('rust://${service}')\`, which is the same crate behind \`weft::router\``
+  if (wasm === false && preset && !LOCAL.test(preset)) return `\`native('${service}')\` has no WASM, and an addon built here may not fit the \`${preset}\` preset's machines. Drop \`wasm: false\` from \`rust.services.${service}\`, or use \`remote()\``
 }
 
 /** @param {Map<string, any>} fns @param {{ unions?: 'allow' }} [rust] the config's `rust` */
@@ -128,6 +139,7 @@ export function describe(fns, rust = {}) {
     }
   })
   const rusts = services(functions)
+  for (const f of functions) if (f.impl && f.impl.kind !== rusts[f.impl.service].kind) diagnostics.push({ code: 'R109', severity: 'error', why: `\`${f.impl.service}\` is named by both \`remote()\` and \`native()\`: a crate is one or the other. Rename one.` })
   return { version: 1, ...(Object.keys(rusts).length && { services: rusts }), functions, diagnostics }
 }
 
@@ -190,6 +202,10 @@ export function writeContract({ root, site = {}, preset, rust }) {
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
     const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
     if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft/realtime-redis\` or \`@weft/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
+    for (const [service, s] of Object.entries(contract.services ?? {})) {
+      const why = s.kind === 'native' && nativeProblem({ service, preset, wasm: rust?.services?.[service]?.wasm })
+      if (why) diagnostics.push({ code: 'R104', severity: 'error', why })
+    }
     mkdirSync(join(root, '.weft'), { recursive: true })
     const path = join(root, '.weft', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')

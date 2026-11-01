@@ -58,7 +58,7 @@ type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
 type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
 
-/** A server function's body in another process: `remote('rust://search')` from `@weft/start/rust` (research 36). */
+/** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft/start/rust` (research 36, 37). */
 export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
 
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
