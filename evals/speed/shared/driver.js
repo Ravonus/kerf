@@ -83,8 +83,10 @@ export function expose(stack) {
       }[name]
       const step = {
         create: () => r.run(), replace: () => r.run(), update: () => r.update(), select: k => r.select(k % 1000),
-        swap: () => r.swap(), remove: k => r.remove(k % 100 + 4), runLots: () => r.runLots(), append: () => r.add(), clear: () => r.clear(),
+        swap: () => r.swap(), remove: () => r.remove(4), runLots: () => r.runLots(), append: () => r.add(), clear: () => r.clear(),
       }[name]
+      // Too short for the timer one at a time: the same step, several times over, per sample.
+      const block = { select: 50, update: 10, swap: 20, remove: 20 }[name] ?? 1
       const again = name === 'select' || name === 'update' || name === 'swap' // these leave the page ready to repeat
       const script = [], total = []
       if (again) before()
@@ -92,8 +94,8 @@ export function expose(stack) {
         if (!again) before()
         document.body.offsetHeight
         gc()
-        const [s, t] = timed(() => step(i))
-        if (i >= warm) script.push(s), total.push(t)
+        const [s, t] = timed(() => { for (let j = 0; j < block; j++) step(i * block + j) })
+        if (i >= warm) script.push(s / block), total.push(t / block)
       }
       const shown = pick().length
       r.clear()

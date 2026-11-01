@@ -33,12 +33,26 @@ route, which gives the same DOM.
 package in `node_modules` using `state.linked` isn't transformed by the plugin in a dev prebundle, so the method wasn't
 there and it threw. Absence must mean slower, never broken, and that's worth its 169 B.
 
+## Compiled paths
+
+`KEYREAD` and `EVENT` live in the compiler and read `WEFT_OFF` directly. `KEYREAD`: a row's key can't change, so reads
+of it (`selected.get(row.id)`) use one read as the row is made and need no link to the item. This is the proof of a
+static value the benchmark does hit. `EVENT`: a delegated handler that's a function is a property write.
+
+## Measuring
+
+Select, update, swap and remove are timed in blocks, so they're clear of the 5 microsecond timer. Each page is one
+run, and a gap counts only if the 95% interval of the ratio across runs (bootstrap of medians) is all on one side.
+
 ## What was tried and refused
 
 - **`BATCH`, a fragment for long runs of new rows.** Slower: create 9% and 10k rows 8% worse than `insertBefore` one by
   one, measured in the lab. Removed.
 - **`SORT`, skipping the queue's sort when it's already in order.** 14 B on the shop for nothing past the noise in the
   lab: V8 sorts a sorted list quickly. Removed.
+- **Closure-free bindings.** A hand-built prototype hoisted the bindings' functions and gave each row a data object
+  (one per binding): create went from +9% to +14% against Solid and 10k rows from +10% to +16%. A closure sharing the
+  row's context is cheap, and shared functions make their call sites megamorphic. Not built into the compiler.
 - **Plain arrays without the longest-run search.** Would save bytes in apps without `For`, but a node that needn't move
   could move, and a moved node loses focus. That's a change of behaviour, so `inOrder` stays in every app.
 - **Hot code after first paint.** What could be deferred is the code `For` installs, 218 B brotli. Split out, the
@@ -56,5 +70,6 @@ there and it threw. Absence must mean slower, never broken, and that's worth its
 | Keyed write | over 8 readers and objects not far larger: compare the object's keys, else the readers' | one write costs the smaller side |
 | `For` middle | up to 8 rows: scan; past it: a Map | `LINEAR`: 15% on a list of 8, for 81 B |
 | `For` repeats | checked only once a pass could keep rows | a first render costs no hashing |
+| `For` repeats | keys that only rise aren't hashed | one comparison a row, for what most keys are |
 
 The current prices, per path, per bundle and per benchmark, are in `evals/speed/lab.html`.
