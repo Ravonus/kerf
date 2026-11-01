@@ -8,11 +8,46 @@ import kit from './ui-kit'
 import search from './search'
 import shared from './shared'
 import habit from './habit'
+import shop1 from './shop-1'
+import shop2 from './shop-2'
+import shop3 from './shop-3'
+import shop4 from './shop-4'
+import shop5 from './shop-5'
 
 export type Demo = { run: () => any; title: string; look: string; tryIt: string; why: string; page?: string }
 
 /** Every live example, with the words that say what it is. The landing, the examples page and the docs read this. */
 export const demos: Record<string, Demo> = {
+  'shop-1': {
+    run: shop1, title: 'The shop, step 1',
+    look: 'One product and an add-to-cart button. count is state: a value the page shows and can change.',
+    tryIt: 'Press Add to cart. The badge counts up.',
+    why: 'This is a plain function returning TSX, so what you know from React carries over. Shop runs once, so there are no hook rules or dependency lists.',
+  },
+  'shop-2': {
+    run: shop2, title: 'The shop, step 2',
+    look: 'The total and shipping are new, marked in the code. Neither is set by hand: derived works each one out from count.',
+    tryIt: 'Add three coffees and watch shipping drop to $0 as the total passes $36.',
+    why: 'You state a rule once and it can never go stale. Carts and forms get most of their bugs from keeping values like these in sync by hand.',
+  },
+  'shop-3': {
+    run: shop3, title: 'The shop, step 3',
+    look: 'Now three products, each with its own count. The list is an ordinary .map, and the total adds them up.',
+    tryIt: 'Add a grinder, then a filter. Only that row and the total change.',
+    why: 'A click updates the one badge and the total, not the list around them, however long it gets. You write no memo or optimisation to get that.',
+  },
+  'shop-4': {
+    run: shop4, title: 'The shop, step 4',
+    look: 'A search box. shown is derived from what you type, in one line of ordinary JavaScript.',
+    tryIt: 'Add a coffee, type gr, then clear the box. Your count is still there.',
+    why: 'There is nothing to wire up: no effect, no event bus. Rows keep their state when they leave the list and come back.',
+  },
+  'shop-5': {
+    run: shop5, title: 'The shop, step 5',
+    look: 'A checkout form from warp, so the shop now has a labelled field, a switch and a submit button.',
+    tryIt: 'Press Tab to move through the controls, then place the order.',
+    why: 'Forms, dialogs, tables and menus are in the box with keyboard support, so you do not pick and wire up a component library.',
+  },
   'getting-started': {
     run: started, page: 'getting-started', title: 'An add-to-cart button',
     look: 'A product card. inCart is a piece of state: a value the page shows and can change.',

@@ -350,7 +350,16 @@ export function Counter() {
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
   const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
-  write('showcase.json', { habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+  const server = `// src/server/shop.ts
+export const products = query({
+  tags: ['products'],
+  run: ({ ctx }) => ctx.db.select().from(schema.products),
+})
+
+// in Shop: the list now comes from the database
+const list = products()
+{(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
+  write('showcase.json', { server: block(server, 'tsx'), habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
 }
 
 // ------------------------------------------------------------------ agents
@@ -371,7 +380,18 @@ const docs = await buildDocs()
 const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
-write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), `<pre tabindex="0"><code>${highlight(readFileSync(join(site, 'src/demos', f), 'utf8').trim(), 'tsx')}</code></pre>`])))
+// The shop's steps mark the lines each one added, so the code on the page shows the app growing.
+const demoText = f => readFileSync(join(site, 'src/demos', f), 'utf8').trim()
+const demoHtml = f => {
+  const text = demoText(f)
+  const step = /^shop-(\d)\.tsx$/.exec(f)
+  const before = step && step[1] !== '1' ? new Set(demoText(`shop-${step[1] - 1}.tsx`).split('\n')) : undefined
+  let n = -1
+  const lines = text.split('\n')
+  const html = highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => (before && lines[++n].trim() && !before.has(lines[n]) ? '<span data-part="line" data-new="">' : tag))
+  return `<pre tabindex="0"><code>${html}</code></pre>`
+}
+write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), demoHtml(f)])))
 write('numbers.json', numbers())
 write('docs-nav.json', docs.nav)
 write('docs.json', docs.pages)
