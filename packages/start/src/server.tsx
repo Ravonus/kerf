@@ -24,7 +24,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { BaseRootRoute, BaseRoute, RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, isNotFound } from '@tanstack/router-core'
 import { createMemoryHistory } from '@tanstack/history'
 import { rt } from 'weft'
-import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
+import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site, type Stream } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
 import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
@@ -119,6 +119,9 @@ const stores = () => ({ createMutableStore: createNonReactiveMutableStore, creat
 const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
 const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
 const thenable = (v: any): v is PromiseLike<unknown> => v != null && typeof v.then === 'function'
+
+/** Render passes a page may take: `timeout` is what ends a stream, and a Boundary out of passes would keep its fallback. */
+const PASSES = 1024
 
 /** `/` → `index`, `/users/42` → `users/42`: the card path under `/_weft/og/`. */
 export const cardPath = (path: string) => (path.replace(/[?#].*/, '').replace(/^\/+|\/+$/g, '') || 'index')
@@ -252,7 +255,7 @@ export function createHandler(options: HandlerOptions) {
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.
     const route = stateOf(r, payloadOf(r, false))
-    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, app: { cookies: cookieJar(request) } })
+    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, app: { cookies: cookieJar(request) } })
     await s.settle() // queries read outside a Boundary have nowhere to stream to
     const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
     const assets = options.assets ?? {}
@@ -265,9 +268,9 @@ export function createHandler(options: HandlerOptions) {
       metaTags(r.head, url.pathname) + '\n' +
       (site.head ? site.head + '\n' : '') +
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
-      styles.head +
-      // The entry's own script tag, just below, already fetches it.
+      // The entry's own script tag, just below, already fetches it. Above the styles: a preload found past 50 KB of CSS starts late.
       modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
+      styles.head +
       (options.lazy ? `<script>${capture(now)}</script>\n` : '') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
@@ -279,7 +282,7 @@ export function createHandler(options: HandlerOptions) {
       // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
       if (scope.live) await hub().ready()
       const rt = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
-      return `<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'
+      return `<script type="application/json" id="weft-data">${json(pageData(s.data(), scope))}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'
     }
     const status = r.status === 200 && scope.form ? scope.form.status : r.status
     const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
@@ -337,7 +340,7 @@ export function createHandler(options: HandlerOptions) {
       const key = data.get('$form')
       scope.form = {
         id, ...(typeof key === 'string' && { key }), values: echoed(input), errors,
-        message: issues ? message : known || options.dev ? e.message : 'Server function failed.',
+        message: issues ? message : (exec.shown(e, scope) as Error).message,
         status: issues ? 422 : (e?.status as number) ?? 500,
       }
       return page(url, request, scope)
@@ -377,7 +380,7 @@ export function createHandler(options: HandlerOptions) {
     let payload = payloadOf(r, true)
     if (r.levels.some(lv => statics.has(lv.id))) {
       const route = stateOf(r, payload)
-      const out = await renderToStringAsync(() => <App route={route} />, { app: { cookies: cookieJar(request) } })
+      const out = await renderToStringAsync(() => <App route={route} />, { passes: PASSES, app: { cookies: cookieJar(request) } })
       const at = out.lastIndexOf('<script type="application/json" data-weft>')
       payload = { ...withLevels(payload, at < 0 ? out : out.slice(0, at), statics, true), ...(at >= 0 && { b: JSON.parse(out.slice(at).replace(/^<[^>]*>/, '').replace(/<\/script>$/, '')) }) }
     }
@@ -389,9 +392,9 @@ export function createHandler(options: HandlerOptions) {
     const id = decodeURIComponent(url.pathname.slice('/_weft/fn/'.length))
     const f = fns.get(id)
     const out = (body: unknown, status = 200) => withHeaders(Response.json(body, { status, headers: { 'cache-control': 'no-store' } }), scope)
-    const fail = (code: string, message: string, status: number, extra: object = {}) => {
+    const fail = (code: string, message: string, status: number, extra: object = {}, sent?: unknown) => {
       options.onDiagnostic?.({ code, severity: 'error', message })
-      return out({ e: { code, message, ...extra } }, status)
+      return out({ e: { code, message: sent instanceof Error ? sent.message : message, ...extra } }, status)
     }
     if (!f) return fail('Q009', `Q009: no server function \`${id}\` (the page is older than the server, or the module isn't a server module): reload`, 404)
     let fromForm = false
@@ -422,7 +425,7 @@ export function createHandler(options: HandlerOptions) {
       if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)
       // A wrong field in a form is an answer, not a fault: nothing to log.
       if (e instanceof StartError && fromForm && e.extra.issues) return out({ e: { code: e.code, message: e.message, issues: e.extra.issues } }, 422)
-      if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {})
+      if (e instanceof StartError) return fail(e.code, e.message, (e.extra.status as number) ?? 500, e.extra.issues ? { issues: e.extra.issues } : e.extra.typed ? { data: e.extra.data } : {}, exec.shown(e, scope))
       options.onDiagnostic?.({ code: 'E_FN', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
       return out({ e: { message: options.dev && e instanceof Error ? e.message : 'Server function failed.' } }, 500)
     }
@@ -799,6 +802,13 @@ function withLevels(payload: RoutePayload, html: string, statics: Set<string>, s
   })
   const i = islandsOf(html).now
   return { ...payload, m, ...(i.length && { i }) }
+}
+
+/** A render's data as a page may carry it: what failed says only what `exec.shown` let through. */
+function pageData(data: ReturnType<Stream['data']>, scope: Scope) {
+  if (!data) return data
+  const r = Object.fromEntries(Object.entries(data.r).map(([k, v]) => [k, v.e === undefined ? v : { e: exec.said(v.e, scope) }]))
+  return { ...data, r }
 }
 
 /** The request's resolved queries, as the client cache seeds them (failures are left for the client to retry). */

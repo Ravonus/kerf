@@ -15,13 +15,18 @@ export interface PostgresOptions<S extends Record<string, unknown>> {
   migrate?: boolean
   /** Pool size (default 10). */
   max?: number
+  /**
+   * Keep each statement prepared on its connection (default true). Drizzle asks for neither, and an unprepared statement
+   * with parameters is two round trips, a describe before every bind. Off behind a pooler in transaction mode.
+   */
+  prepare?: boolean
 }
 
 export type PostgresDb<S extends Record<string, unknown>> = PostgresJsDatabase<S> & { $weft: DbHandle }
 
 const LOCK = 7_301_986
 
-export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10 }: PostgresOptions<S>): PostgresDb<S> {
+export function createDb<S extends Record<string, unknown>>({ schema, url, migrate = true, max = 10, prepare = true }: PostgresOptions<S>): PostgresDb<S> {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
     throw new StartError('Q013', `\`@weft/start/db/postgres\` needs a \`postgres://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or `createDb` from `@weft/start/db/sqlite` for a file')
@@ -49,9 +54,10 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
     get(t, key) {
       if (key === 'begin') return async (...a: Parameters<typeof t.begin>) => (await ready(), t.begin(...a))
       if (key !== 'unsafe') return Reflect.get(t, key)
-      return (...a: Parameters<typeof t.unsafe>) => {
-        const after = <T>(send: () => PromiseLike<T>) => Promise.resolve(ready()).then(send)
-        return { values: () => after(() => t.unsafe(...a).values()), then: (ok: any, no: any) => after(() => t.unsafe(...a)).then(ok, no) }
+      return (text: string, params?: any[], options?: object) => {
+        const send = () => t.unsafe(text, params, { ...options, prepare })
+        const after = <T>(go: () => PromiseLike<T>) => Promise.resolve(ready()).then(go)
+        return { values: () => after(() => send().values()), then: (ok: any, no: any) => after(send).then(ok, no) }
       }
     },
   })

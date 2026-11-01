@@ -18,6 +18,8 @@ export interface ScopeEntry {
   id: string
   input: unknown
   p: Promise<ScopeEntry>
+  /** A render's read of it (`landed`). */
+  read?: Promise<unknown>
   done?: boolean
   v?: unknown
   e?: unknown
@@ -39,6 +41,8 @@ export interface Scope {
   touched?: Touched
   /** A no-JS form POST that failed: `<Form>` renders it into the page (research 29 §5). */
   form?: FormFailure
+  /** Failure messages meant for the visitor, the only ones a production page may carry (`shown`). */
+  said: Set<string>
   /** The render read a live query or a stream: the page carries the realtime cursor (research 30 §1). */
   live?: boolean
   ctx(): Promise<Context>
@@ -72,7 +76,7 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   const headers = new Headers()
   let ctx: Promise<Context> | undefined
   return {
-    request, entries: new Map(), invalidated: new Set(), headers, options,
+    request, entries: new Map(), invalidated: new Set(), headers, options, said: new Set(),
     ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => extended({ ...app, request, response: { headers }, media: mediaApi(options) } as Context, options), e => { throw dbError(e) })),
   }
 }
@@ -133,10 +137,60 @@ const storeOf = (scope: Scope) => scope.options.store ?? defaultStore
 /** The value now if this request already has it, else the promise: what a query resource's fetcher returns in SSR. */
 export function readQuery(scope: Scope, fn: Fn, input: unknown): unknown {
   const e = fetchEntry(scope, fn, input)
-  if (!e.done) return e.p.then(x => x.v)
-  if (e.e !== undefined) throw e.e
+  if (!e.done) return landed(scope, e)
+  if (e.e !== undefined) throw shown(e.e, scope)
   return e.v
 }
+
+/** How long a landed read waits for the others in flight, in ms: long enough for a pool's worth of replies. */
+const GATHER = 4
+
+interface Landing { flying: number; held: (() => void)[]; timer?: ReturnType<typeof setTimeout> }
+const landings = new WeakMap<object, Landing>()
+
+/**
+ * A read as a render sees it. Each landing costs a pass over the whole page, so reads land together: all of them once
+ * none is in flight, or `GATHER` after the first, so a slow query never holds a fast one for longer than that.
+ */
+function landed(scope: Scope, e: ScopeEntry): Promise<unknown> {
+  if (e.read) return e.read
+  let l = landings.get(scope.entries)
+  if (!l) landings.set(scope.entries, (l = { flying: 0, held: [] }))
+  const at = l
+  at.flying++
+  const release = () => {
+    clearTimeout(at.timer)
+    at.timer = undefined
+    for (const go of at.held.splice(0)) go()
+  }
+  e.read = new Promise((ok, no) => {
+    const land = () => {
+      at.held.push(() => (e.e !== undefined ? no(shown(e.e, scope)) : ok(e.v)))
+      if (!--at.flying) release()
+      else at.timer ??= setTimeout(release, GATHER)
+    }
+    e.p.then(land, land)
+  })
+  e.read.catch(() => {}) // a failure surfaces where the value is read
+  return e.read
+}
+
+const FAILED = 'Server function failed.'
+
+/** A failure as the page may show it. In production a fault's text stays in the diagnostics: a driver's error names tables. */
+export function shown(e: unknown, scope: Scope): unknown {
+  const { dev, onDiagnostic } = scope.options
+  const fault = !(e instanceof FnError || isRedirect(e) || (e instanceof StartError && Number(e.extra.status ?? 500) < 500))
+  if (dev || !fault) {
+    scope.said.add((e as any)?.message)
+    return e
+  }
+  onDiagnostic?.({ code: (e as any)?.code ?? 'E_FN', severity: 'error', message: `a render read a failed query: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
+  return new Error(FAILED)
+}
+
+/** The message for a value that's going in a page: its own when `shown` passed it, else the plain one. */
+export const said = (message: string, scope: Scope) => (scope.options.dev || scope.said.has(message) ? message : FAILED)
 
 const trees = new WeakMap<Fn, { tree: unknown }>()
 /** A query's shape tree, once per definition. */

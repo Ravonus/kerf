@@ -282,11 +282,13 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   return memo(() => {
     const e = failure.value
     if (e !== undefined) {
-      if (!props.error) {
-        if (DEV) console.error('weft: <Boundary> without `error` caught', e)
-        return null
-      }
-      return sideView('e', () => props.error!(e, retry))
+      if (DEV && !props.error) console.error('weft: <Boundary> without `error` caught', e)
+      const view = props.error ? sideView('e', () => props.error!(e, retry)) : null
+      if (!rt.stream || key === undefined) return view
+      // The fallback may be out already: what replaces it is this, not the content that never came.
+      const html = rt.resolve!(view)
+      rt.stream.set(key, html)
+      return { t: html }
     }
     const s = show.value
     if (s === 'fallback' && rt.stream && key !== undefined) {

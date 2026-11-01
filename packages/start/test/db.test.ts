@@ -188,6 +188,17 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
   const url = process.env.WEFT_TEST_POSTGRES!
   const table = [{ tag: `pg_${Date.now()}`, sql: 'drop table if exists weft_test_rows;\n--> statement-breakpoint\ncreate table weft_test_rows (id text primary key, n integer not null);' }]
 
+  test('a statement with parameters stays prepared, so a repeat is one round trip; `prepare: false` for a pooler', async () => {
+    const { createDb: createPg } = await import('../src/db/postgres')
+    const count = async (db: any) => {
+      await db.$weft.migrate(table)
+      for (let i = 0; i < 2; i++) await db.select().from(rows).where(eq(rows.id, 'x'))
+      return (await db.execute(sql`select count(*)::int as n from pg_prepared_statements where statement like '%weft_test_rows%' and from_sql = false`))[0].n
+    }
+    expect(await count(createPg({ schema: { rows }, url, migrate: false, max: 1 }))).toBeGreaterThan(0)
+    expect(await count(createPg({ schema: { rows }, url, migrate: false, max: 1, prepare: false }))).toBe(0)
+  })
+
   test('same API, migrations, Q011 and Q014; Q013 on a file URL', async () => {
     const { createDb: createPg } = await import('../src/db/postgres')
     expect(() => createPg({ schema: { rows }, url: 'file:x.db' })).toThrow(/Q013|postgres/)
