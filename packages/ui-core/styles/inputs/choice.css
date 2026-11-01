@@ -192,4 +192,36 @@
   align-self: stretch; min-block-size: 0; line-height: 1.5; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
 }
 :where([data-scope="field"] select[data-part="input"] option) { color: initial; }
+/* warp's list on a real select, with no script (redesign §5): the browser owns open, keyboard, typeahead, top layer and
+   flipping. Where base-select isn't supported, and on touch, the OS control stays. */
+@supports (appearance: base-select) { @media (pointer: fine) {
+  :where([data-scope="field"] select[data-part="input"]), :where([data-scope="field"] select[data-part="input"])::picker(select) { appearance: base-select; }
+  :where([data-scope="field"] select[data-part="input"])::picker-icon { display: none; }
+  :where([data-scope="field"] > [data-part="control"]:has(> select)) { anchor-name: --warp-select; anchor-scope: --warp-select; }
+  :where([data-scope="field"] select[data-part="input"])::picker(select) {
+    box-sizing: border-box; position-anchor: --warp-select; inset: auto; position-area: block-end span-inline-end; position-try-fallbacks: flip-block;
+    min-inline-size: anchor-size(inline); max-block-size: min(320px, calc(100dvh - 16px)); margin-block: 6px; padding: var(--warp-space-tight);
+    color: var(--warp-color-text); background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
+    border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-2); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size);
+    opacity: 0; scale: var(--warp-motion-scale-from);
+    transition: opacity calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in), scale calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+                overlay calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete, display calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete;
+  }
+  :where([data-scope="field"] select[data-part="input"]:open)::picker(select) {
+    opacity: 1; scale: 1;
+    transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring),
+                overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
+  }
+  @starting-style { :where([data-scope="field"] select[data-part="input"]:open)::picker(select) { opacity: 0; scale: var(--warp-motion-scale-from); } }
+  :where([data-scope="field"] select[data-part="input"] option) {
+    display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: max(32px, var(--warp-target-min)); padding-inline: var(--warp-space-related);
+    border: 0; border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); color: var(--warp-color-text); background: none; cursor: default; font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; text-transform: none;
+  }
+  :where([data-scope="field"] select[data-part="input"] option:is(:hover, :focus)) { outline: 0; background: var(--warp-color-accent-soft); }
+  :where([data-scope="field"] select[data-part="input"] option:checked) { font-weight: 500; }
+  :where([data-scope="field"] select[data-part="input"] option:disabled) { opacity: var(--warp-opacity-disabled); }
+  :where([data-scope="field"] select[data-part="input"] option)::checkmark { order: 1; margin-inline-start: auto; color: var(--warp-color-accent-text); }
+  :where([data-scope="field"] select[data-part="input"] optgroup) { padding-block-start: var(--warp-space-related); color: var(--warp-color-text-subtle); font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500; letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); }
+  :where([data-scope="field"] > [data-part="control"]:has(select:open) [data-part="indicator"]) { rotate: 180deg; }
+} }
 }

@@ -1,9 +1,7 @@
 import { DownIcon } from '@weft/icons'
-import { selectMenu } from '@weft/ui-core'
 import { Field, type FieldProps } from './Field'
 import { use } from './use'
 import '@weft/ui-core/styles/inputs/choice.css' // the select and the field's chevron
-import '@weft/ui-core/styles/components/listbox.css'
 
 export type Option = { value: string; label: string; disabled?: boolean }
 export type OptionGroup = { group: string; options: Option[] }
@@ -15,16 +13,15 @@ function Choice({ o }: { o: Option | OptionGroup }) {
 }
 
 /**
- * A select in the field shell. It stays a real <select>: the value, the form control, the name and the `change` event,
- * so no consumer knows the difference. On fine pointers selectMenu() opens warp's list instead of the OS popup; on
- * coarse pointers the OS sheet stays (03 §4, redesign §5).
+ * A select in the field shell, always a real <select>. On fine pointers, CSS gives it warp's list through base-select, with
+ * no script; on touch and where that isn't supported the OS popup stays (03 §4, redesign §5). selectMenu() in @weft/ui-core
+ * is the scripted list for an app that wants warp's list in every browser.
  */
 export function Select({ options, placeholder, ...props }: FieldProps & { options: (Option | OptionGroup)[]; placeholder?: string; onChange?: (e: Event) => void }) {
   let el: HTMLSelectElement | undefined
   use((sel: HTMLSelectElement) => {
     // with no value the first option shows, however the options were inserted
     if (props.value === undefined && placeholder === undefined) sel.selectedIndex = 0
-    return selectMenu(sel)
   }, () => el)
   return (
     <Field
