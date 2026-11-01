@@ -11,6 +11,21 @@
 :where([data-scope="split"][data-width="nav"])    { --_side: 220px; }
 :where([data-scope="split"][data-width="list"])   { --_side: var(--warp-layout-list); }
 :where([data-scope="split"][data-width="half"])   { --_side: minmax(0, 1fr); }
+/* outside any container the viewport decides; a container narrower than the step puts it back */
+@media (min-width: 600px) {
+:where([data-scope="split"]:not([data-at="desktop"])) { grid-template-columns: var(--_side) minmax(0, 1fr); }
+:where([data-scope="split"]:not([data-at="desktop"])[data-side="end"]) { grid-template-columns: minmax(0, 1fr) var(--_side); }
+}
+@media (min-width: 1000px) {
+:where([data-scope="split"][data-at="desktop"]) { grid-template-columns: var(--_side) minmax(0, 1fr); }
+:where([data-scope="split"][data-at="desktop"][data-side="end"]) { grid-template-columns: minmax(0, 1fr) var(--_side); }
+}
+@container (max-width: 599.98px) {
+:where([data-scope="split"]) { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 999.98px) {
+:where([data-scope="split"][data-at="desktop"]) { grid-template-columns: minmax(0, 1fr); }
+}
 @container (min-width: 600px) {
 :where([data-scope="split"]:not([data-at="desktop"])) { grid-template-columns: var(--_side) minmax(0, 1fr); }
 :where([data-scope="split"]:not([data-at="desktop"])[data-side="end"]) { grid-template-columns: minmax(0, 1fr) var(--_side); }

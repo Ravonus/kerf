@@ -7,8 +7,8 @@
   position: relative; isolation: isolate;
   display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
   block-size: var(--warp-control-md); padding-inline: calc(var(--warp-pad-control) + 2px); margin: 0;
-  border: var(--warp-border-hairline) solid var(--_edge); border-radius: var(--warp-radius-control);
-  background: var(--_fill); color: var(--_ink);
+  border: var(--warp-border-hairline) solid var(--warp-tone-edge, var(--_edge)); border-radius: var(--warp-radius-control);
+  background: var(--warp-tone-fill, var(--_fill)); color: var(--warp-tone-ink, var(--_ink));
   font-family: var(--warp-text-button-font); font-size: var(--warp-text-button-size);
   font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
@@ -22,7 +22,7 @@
 /* the touch clock's fill: the hover layer wipes in L→R at once and leaves through the right, so it never reverses */
 :where([data-scope="button"])::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
-  background: var(--_layer); opacity: var(--_layer-a);
+  background: var(--warp-tone-layer, var(--_layer)); opacity: var(--_layer-a);
   transform: scaleX(0); transform-origin: right center;
   transition: transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out);
 }

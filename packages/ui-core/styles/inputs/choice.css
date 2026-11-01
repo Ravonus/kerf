@@ -9,7 +9,8 @@
   -webkit-tap-highlight-color: transparent; justify-self: start;
 }
 :where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > input {
-  position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; margin: 0; pointer-events: none;
+  /* over the whole control: the real input is what a click, a screen reader's touch and a test all reach */
+  position: absolute; inset: 0; z-index: 5; opacity: 0; inline-size: 100%; block-size: 100%; margin: 0; cursor: inherit;
 }
 :where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
   grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); line-height: var(--warp-text-caption-leading); margin-block-start: -2px;
