@@ -145,6 +145,7 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 ## 4. In weft
 
 - The sweep is CSS: `--_a` plus two registered edges (§1.4). `installSweep()` keeps only `confirm()`, `pin()` and `duration()`.
+- A tap draws one whole sweep, then exits. `:active` ends too soon to do that, so each part keeps its `--_a` for 1.25 sweeps past it: still no script.
 - A held sweep never stacks two copies of its text: the resting label wipes away ahead of the copy and returns the moment the host lets go.
 - The per-character delays come from one layout read after mount, re-read on resize.
 - The notch window is a `derived` value that reads the layout once.
