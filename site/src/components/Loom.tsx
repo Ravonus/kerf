@@ -1,32 +1,38 @@
 import { flush, onCleanup, onMount, state, stats, watch } from 'weft'
-import { level, PALETTE } from '../lib/field'
+import { COLOURS, threads, weaver } from '../lib/loom'
 
 const fmt = (n: number) => n.toLocaleString('en-US')
 
-/** The word, drawn once in cells: 1 inside a letter. */
-function glyphs(word: HTMLElement, cols: number, rows: number, cell: number, field: DOMRect) {
-  const out = new Uint8Array(cols * rows)
+/** The word, drawn once at four times the cell grid and averaged: 0–1 coverage per cell, so its edges dither clean. */
+function coverage(word: HTMLElement, cols: number, rows: number, cell: number, field: DOMRect) {
+  const SS = 4
   const c = document.createElement('canvas')
-  c.width = cols
-  c.height = rows
+  c.width = cols * SS
+  c.height = rows * SS
   const g = c.getContext('2d', { willReadFrequently: true })!
   const s = getComputedStyle(word)
-  g.font = `${s.fontStyle} ${s.fontWeight} ${parseFloat(s.fontSize) / cell}px ${s.fontFamily}`
+  const scale = SS / cell
+  g.font = `${s.fontStyle} ${s.fontWeight} ${parseFloat(s.fontSize) * scale}px ${s.fontFamily}`
+  g.letterSpacing = `${parseFloat(s.letterSpacing) * scale}px`
   g.textBaseline = 'alphabetic'
   g.fillStyle = '#fff'
   const r = document.createRange()
   r.selectNodeContents(word)
   const box = r.getBoundingClientRect()
   const m = g.measureText(word.textContent!)
-  const y = (box.top - field.top) / cell + (box.height / cell + m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2
-  g.fillText(word.textContent!, (box.left - field.left) / cell, y)
-  const px = g.getImageData(0, 0, cols, rows).data
-  for (let i = 0; i < out.length; i++) out[i] = px[i * 4 + 3] > 110 ? 1 : 0
+  const y = (box.top - field.top) * scale + (box.height * scale + m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2
+  g.fillText(word.textContent!, (box.left - field.left) * scale, y)
+  const px = g.getImageData(0, 0, c.width, c.height).data
+  const out = new Float32Array(cols * rows)
+  for (let i = 3; i < px.length; i += 4) {
+    const p = (i - 3) / 4
+    out[(((p / c.width) | 0) >> 2) * cols + ((p % c.width) >> 2)] += px[i] / (255 * SS * SS)
+  }
   return out
 }
 
 /* @weft visible */
-/** Each cell is a `state` with a `watch` that paints one pixel. The readout counts what actually ran. */
+/** Each cell is a `state` with a `watch` that paints one pixel. The engine is `lib/loom.ts`; the readout counts what actually ran. */
 export function Loom() {
   let canvas!: HTMLCanvasElement
   const signals = state(0)
@@ -38,51 +44,46 @@ export function Loom() {
     const run = () => {
       const paint = canvas.getContext('2d')!
       const rect = canvas.getBoundingClientRect()
-      const CELL = rect.width < 700 ? 8 : 11
-      const colour = PALETTE.map(([r, g, b, a]) => `rgba(${r},${g},${b},${a / 255})`)
+      const CELL = rect.width < 700 ? 7 : 9
       const cols = Math.ceil(rect.width / CELL)
       const rows = Math.ceil(rect.height / CELL)
       canvas.width = cols
       canvas.height = rows
-      const word = document.querySelector<HTMLElement>('[data-site="hero"] h1')!
-      const mask = glyphs(word, cols, rows, CELL, rect)
-      const light = (x: number, y: number, ox = 0, oy = 0) => mask[Math.round(y + oy) * cols + Math.round(x + ox)] ? 0.9 : 0
+      const hero = canvas.parentElement!
+      const word = hero.querySelector('h1') as HTMLElement
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+      const cloth = weaver(cols, rows, coverage(word, cols, rows, CELL, rect), threads(cols, rows, CELL, still ? -9 : 0.25))
       const cells = Array.from({ length: cols * rows }, (_, i) => {
         const x = i % cols, y = (i / cols) | 0
-        const cell = state(level(x, y, cols, rows, 0, light(x, y)))
-        paint.fillStyle = colour[cell.value]
+        const cell = state(cloth.at(x, y, 0, still ? 9 : 0))
+        paint.fillStyle = COLOURS[cell.value]
         paint.fillRect(x, y, 1, 1)
-        watch(() => cell.value, v => { paint.clearRect(x, y, 1, 1); paint.fillStyle = colour[v]; paint.fillRect(x, y, 1, 1) })
+        watch(() => cell.value, v => { paint.clearRect(x, y, 1, 1); paint.fillStyle = COLOURS[v]; paint.fillRect(x, y, 1, 1) })
         return cell
       })
       signals.value = cells.length
       canvas.dataset.live = ''
       word.dataset.woven = ''
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return () => {}
-      let px = -99, py = -99, heat = 0, raf = 0, row = 0, last = 0, shown = performance.now(), count = 0, base = stats.runs
+      if (still) return () => {}
+      const begun = performance.now()
+      let raf = 0, row = 0, last = 0, shown = begun, count = 0, base = stats.runs, lx = -1, ly = -1
+      const spot = (e: PointerEvent) => [((e.clientX - rect.left) / rect.width) * cols, ((e.clientY - canvas.getBoundingClientRect().top) / rect.height) * rows]
       const point = (e: PointerEvent) => {
-        px = ((e.clientX - rect.left) / rect.width) * cols
-        py = ((e.clientY - rect.top + scrollY) / rect.height) * rows
-        heat = 1
+        const [x, y] = spot(e)
+        if (lx >= 0) cloth.pull(x, y, Math.max(-3, Math.min(3, x - lx)), Math.max(-3, Math.min(3, y - ly)))
+        lx = x
+        ly = y
       }
+      const press = (e: PointerEvent) => { const [x, y] = spot(e); cloth.shock(x, y) }
       const frame = (now: number) => {
         raf = requestAnimationFrame(frame)
         if (now - last < 30) return
         last = now
-        const t = now / 2200
-        heat *= 0.965
+        const t = now / 2200, clock = (now - begun) / 1000
+        cloth.step()
         for (let y = row; y < rows; y += 2) {
           for (let x = 0; x < cols; x++) {
-            let lift = 0, ox = 0, oy = 0
-            const dx = x - px, dy = y - py
-            const d = dx * dx + dy * dy
-            if (heat > 0.03 && d < 900) {
-              const f = heat * Math.exp(-d / 320)
-              lift = f * 0.95
-              ox = -dx * f * 1.1
-              oy = -dy * f * 1.1
-            }
-            const v = level(x, y, cols, rows, t, lift + (light(x, y, ox, oy) || 0))
+            const v = cloth.at(x, y, t, clock)
             const cell = cells[y * cols + x]
             if (cell.value !== v) { cell.value = v; count++ }
           }
@@ -100,8 +101,9 @@ export function Loom() {
       }
       const seen = new IntersectionObserver(([e]) => { cancelAnimationFrame(raf); if (e.isIntersecting) raf = requestAnimationFrame(frame) })
       seen.observe(canvas)
-      addEventListener('pointermove', point, { passive: true })
-      return () => { cancelAnimationFrame(raf); seen.disconnect(); removeEventListener('pointermove', point) }
+      hero.addEventListener('pointermove', point, { passive: true })
+      hero.addEventListener('pointerdown', press, { passive: true })
+      return () => { cancelAnimationFrame(raf); seen.disconnect(); hero.removeEventListener('pointermove', point); hero.removeEventListener('pointerdown', press) }
     }
     onCleanup(() => stop())
   })

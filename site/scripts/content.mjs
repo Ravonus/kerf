@@ -2,7 +2,7 @@
 // own pages plus a few files; numbers are evals/. Output is gitignored: src/generated for the routes, public for files
 // served as they are (`.md` twins, llms.txt, search indexes).
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -135,6 +135,16 @@ function linkify(html, slugs) {
   }).join('')
 }
 
+/** The first thing on a page stays out. Long pages fold their other sections; `weft docs` prints the same source in full. */
+function fold(html) {
+  const [lead, ...rest] = html.split(/(?=<h2[ >])/)
+  if (rest.length < 2 || html.replace(/<[^>]+>/g, ' ').split(/\s+/).length < 220) return html
+  return lead + rest.map(part => {
+    const end = part.indexOf('</h2>') + 5
+    return `<details data-part="fold"><summary>${part.slice(0, end)}</summary>${part.slice(end)}</details>`
+  }).join('')
+}
+
 async function buildDocs() {
   const nav = []
   const pages = {}
@@ -157,7 +167,9 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, html, toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
+    const file = join(site, 'src/demos', `${slug}.tsx`)
+    const demo = existsSync(file) ? `<pre tabindex="0"><code>${highlight(readFileSync(file, 'utf8').trim(), 'tsx')}</code></pre>` : undefined
+    return { slug, title, section, html: fold(html), demo, toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }

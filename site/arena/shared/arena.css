@@ -1,0 +1,8 @@
+html { color-scheme: dark; }
+html, body { background: oklch(0.1 0.012 150); color: #e9e6df; font: 400 12px ui-monospace, Menlo, monospace; margin: 0; }
+button { background: #0000; border: 1px solid #fff3; border-radius: 2px; color: inherit; cursor: pointer; display: block; font: 600 30px/46px ui-monospace, Menlo, monospace; height: 48px; padding: 0; width: 100%; }
+button:hover { border-color: #5eead4; }
+button:focus-visible { outline: 2px solid #5eead4; outline-offset: -2px; }
+main { display: grid; gap: 6px; }
+[data-grid] { color: #5eead4; display: grid; font-size: 7px; grid-template-columns: repeat(40, 1fr); line-height: 7px; text-align: center; }
+[data-grid] i { font-style: normal; }

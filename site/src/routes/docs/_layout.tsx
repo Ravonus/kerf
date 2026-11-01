@@ -1,26 +1,30 @@
 import { Link, type RouteProps } from '@weft/start'
+import { Nav } from '@weft/warp'
 import '@weft/ui-core/styles/rich/prose.css'
 import '@weft/ui-core/styles/rich/codeblock.css'
 import '@weft/ui-core/styles/components/copy.css'
+import { SearchTrigger } from '../../components/SearchTrigger'
+import { Spotlight } from '../../components/Spotlight'
 import nav from '../../generated/docs-nav.json'
 import '../../styles/docs.css'
 
-/** The docs' side nav: links only, so it ships nothing. On a phone it folds into a disclosure. */
 export default function DocsLayout(props: RouteProps) {
   return (
     <div data-site="docs">
-      <details data-site="doc-nav" open>
+      <details data-site="doc-nav" data-vt="side" open>
         <summary>Menu</summary>
-        <nav aria-label="Docs">
+        <SearchTrigger />
+        <Nav label="Docs" axis="y">
           {nav.map(group => (
             <div key={group.section}>
               <h2>{group.section}</h2>
-              <ul>{group.items.map(i => <li key={i.slug}><Link href={`/docs/${i.slug}`}>{i.title}</Link></li>)}</ul>
+              {group.items.map(i => <Link key={i.slug} href={`/docs/${i.slug}`}>{i.title}</Link>)}
             </div>
           ))}
-        </nav>
+        </Nav>
       </details>
       {props.children}
+      <Spotlight />
     </div>
   )
 }
