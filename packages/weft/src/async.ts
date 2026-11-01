@@ -156,6 +156,18 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
  * `<Boundary pending={<Skeleton />} error={(e, retry) => …}>…</Boundary>`. Without `error`, a failure renders
  * nothing (dev builds log it).
  */
+/** Content's own holes, which a client reads after `scoped` has ended and the server read inside it: same scope, same keys. */
+function inScope(c: unknown) {
+  const late = (v: unknown): boolean => typeof v === 'function' || (Array.isArray(v) && v.some(late))
+  if (!late(c)) return c
+  const { p, n } = keys
+  const read = (v: unknown): unknown => {
+    while (typeof v === 'function') v = v()
+    return Array.isArray(v) ? v.map(read) : v
+  }
+  return () => (keys.on ? under(p, () => ((keys.n = n), read(c))) : c)
+}
+
 export function Boundary(props: { pending?: any; /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => any; error?: (e: unknown, retry: () => void) => any; children?: any }) {
   const parent = getOwner()
   const list: Tracked[] = []
@@ -189,7 +201,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
         return boundaries.provide(track, () => {
           try {
             const c = props.children
-            return rt.server ? { t: rt.resolve!(c) } : c // resolve now: lazily created resources register here
+            return rt.server ? { t: rt.resolve!(c) } : keys.on ? inScope(c) : c // resolve now: lazily created resources register here
           } catch (e) {
             if (DEV && e && typeof e === 'object' && (e as any).weft) console.error(`weft: <Boundary> caught an error in ${(e as any).weft}`)
             thrown.value = e
@@ -244,6 +256,11 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   }
 
   let side: { kind: 'p' | 'e'; node: any; dispose: () => void } | undefined
+  // `parent` is only where they look things up, so nothing else disposes these two. What they read may outlive the page.
+  onCleanup(() => {
+    disposeContent?.()
+    side?.dispose()
+  })
   // `parent` is only where they look things up, so nothing else disposes these two. What they read may outlive the page.
   onCleanup(() => {
     disposeContent?.()

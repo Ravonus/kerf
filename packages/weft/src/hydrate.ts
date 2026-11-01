@@ -11,6 +11,7 @@ import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
 import { hchild } from './claim'
 import { keys } from './keys'
 
+let told = 0
 export const hydration = { misses: 0, registry: new Map<string, Element>(), /** What only the claim needed. */ trash: [] as (ChildNode | Element)[] }
 
 /**
@@ -18,6 +19,7 @@ export const hydration = { misses: 0, registry: new Map<string, Element>(), /** 
  * nothing to the DOM, and a page's reads of its nodes don't pay for a tree that holds hundreds of them.
  */
 export function sweep() {
+  if (hydration.misses > told) console.warn(`weft: ${(told = hydration.misses)} element(s) had no server node to claim and were rendered fresh (\`hydration.misses\`). The server and the client disagree about the page.`)
   const list = hydration.trash
   hydration.trash = []
   if (list.length) setTimeout(() => {
@@ -37,7 +39,7 @@ export function sweep() {
 export function hydrate(code: () => any, container: Element, options: { data?: SsrData | null } = {}): () => void {
   const registry = hydration.registry
   for (const el of container.querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
-  hydration.misses = 0
+  hydration.misses = told = 0
   // The server's data (resources, boundary states) stays where it is: the app hydrates the nodes before it.
   const script = container.querySelector(':scope > script[data-weft]')
   rt.data = options.data ?? (script ? JSON.parse(script.textContent!) : undefined)

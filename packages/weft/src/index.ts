@@ -406,7 +406,7 @@ export class Memo<T> implements Derived<T> {
   constructor(public node: Computation) {}
   get value(): T {
     update(this.node)
-    read(this.node)
+    if (this.node.s !== NONE) read(this.node) // read nothing, so nothing can change it
     return this.node.v
   }
 }
@@ -469,10 +469,12 @@ function settle(node: Computation) {
   if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
 }
 
-/** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
+/** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. True: it read nothing, so it's done. */
 export function hole(value: () => unknown, apply: (value: any) => void) {
-  if (rt.server) return
-  settle(computation(value, 2, apply))
+  if (rt.server) return false
+  const node = computation(value, 2, apply)
+  settle(node)
+  return node.s === NONE && !node.owned
 }
 
 export function onCleanup(fn: () => void) {
@@ -553,11 +555,18 @@ export function context<T>(fallback?: T) {
   }
 }
 
+function once<T>(fn: () => T) {
+  let done = false, v: T
+  return () => (done ? v : ((done = true), (v = fn())))
+}
+
 /**
  * A live view of `sources` merged (later wins), without the `skip` keys. A source is an object, or a getter for one
  * (a spread of a prop), which may be undefined (`{...rest.attrs}`). `mergeProps` and `omit` are both views.
  */
 export function view(sources: any[], skip: string[] = []): any {
+  // A server renders once and nothing it reads can move: a getter (a `restOf` copy, so every prop) runs once, not per read.
+  if (rt.server) sources = sources.map(s => (typeof s === 'function' ? once(s) : s))
   const at = (s: any) => Object(typeof s === 'function' ? s() : s)
   const kept = (k: any) => !skip.includes(k)
   return new Proxy({}, {

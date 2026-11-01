@@ -3,9 +3,11 @@
 //
 //   <scope><n>     the n-th template (or Boundary, or resource) created directly in a scope
 //   <key>.<slot>/  the scope of hole `slot` (a compile-time index) in the template with that key
-//   <scope><row>/  the scope of a list row, by the row's own key
+//   <scope><row>/  the scope of a list row: its place in the list, then three characters of its key
 //
-// e.g. `0.1/0.5/apple/0`: the first template of row `apple`, in hole 5 of the template in hole 1 of the root.
+// e.g. `0.1/0.5/3k2f/0`: the first template of the fourth row, in hole 5 of the template in hole 1 of the root. A row's key
+// can be a UUID, repeated in every `wk` under it: the place is short and unique, and the check keeps a list that moved
+// on from claiming another row's nodes. Keys only have to agree for one claim, so a row's place may change later.
 // The server and the client compute the same keys because they run the same holes in the same order. Keys are
 // computed only while `on`: during a server render, and while `hydrate()` claims the server's nodes.
 
@@ -36,5 +38,10 @@ export function under<T>(path: string, fn: () => T): T {
   }
 }
 
-/** A row key as a path step: `/`, `.` and `%` are escaped so steps can't run together. */
-export const step = (k: unknown) => String(k).replace(/[%/.]/g, encodeURIComponent)
+/** A row as a path step: base-36 only, so steps can't run together. */
+export function step(k: unknown, i: number) {
+  const s = String(k)
+  let h = 0
+  for (let n = 0; n < s.length; n++) h = (h * 31 + s.charCodeAt(n)) | 0
+  return i.toString(36) + (46656 + (h >>> 0) % 46656).toString(36).slice(1)
+}

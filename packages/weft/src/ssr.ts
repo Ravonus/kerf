@@ -213,9 +213,10 @@ export function hole(k: string, slot: number, value: unknown, mixed?: 1 | 2): st
     if (mixed === 2) {
       const v: any = (value as () => unknown)()
       if (v && typeof v.t === 'string' && /^<[a-z]/i.test(v.t)) return v.t as string
-      return `<!--[-->${text(v)}<!--]-->`
+      value = v
     }
-    return `<!--[-->${text(value)}<!--]-->`
+    const h = text(value)
+    return h ? `<!--[-->${h}<!--]-->` : '<!---->' // nothing to bound: one marker holds the place
   })
 }
 

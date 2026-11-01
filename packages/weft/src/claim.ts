@@ -37,6 +37,8 @@ export function htpl(html: string, svg?: boolean, place?: string): () => Node {
         return el
       }
       hydration.misses++
+      // No server nodes under this template: its bindings write, and the holes below it build, until the hole it's in ends.
+      keys.hydrating = false
       if (DEV) {
         const at = place ?? html.slice(0, 60)
         console.warn(el ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh` : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`)
@@ -73,6 +75,7 @@ export const next = (n: Node) => over(n.nextSibling)
  */
 function range(parent: Node, marker: Node | undefined): Node[] {
   if (!marker) return [...parent.childNodes].filter(n => !marks(n))
+  if (marker.nodeType === 8 && !(marker as Comment).data) return [] // an empty hole (ssr.ts), or a fresh template's `<!>`
   const nodes: Node[] = []
   let depth = 0
   for (let n = marker.previousSibling; n; n = n.previousSibling) {
@@ -140,11 +143,13 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  */
 export function hchild(parent: Element, value: unknown, marker?: Node | null, root?: any, slot?: number, once?: 1 | 2) {
   const claim = () => {
+    const hydrating = keys.hydrating
     let v = once ? untrack(value as () => unknown) : value
-    if (!keys.hydrating) return insert(parent, v, marker)
+    if (!hydrating) return insert(parent, v, marker)
     // One element where a range would be (ssr.ts `hole`): the walk stopped on it, and building it claims it.
     if (once === 1 && marker?.nodeType === 1) {
       if (v !== marker && v instanceof Node) parent.replaceChild(v, marker)
+      keys.hydrating = true
       return
     }
     // Claim the server's nodes on the first run; later runs place values as usual.
@@ -152,15 +157,17 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     const at = marker ?? null
     // a fragment's holes must stay live: read flat here, a root `<>{cond && …}</>` would never update
     if (Array.isArray(v) && v.flat(Infinity).some(x => typeof x === 'function')) { const list = v; v = () => list }
-    if (typeof v !== 'function') {
-      if (marker?.nodeType === 8 && (marker as Comment).data === ']') hydration.trash.push(marker as ChildNode) // nothing comes back here
-      return void place(parent, adopt(v, current, { i: 0 }, []), current, at)
+    let done = typeof v !== 'function'
+    if (done) current = place(parent, adopt(v, current, { i: 0 }, []), current, at)
+    else {
+      let claimed = false
+      done = hole(v as () => unknown, x => {
+        current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
+        claimed = true
+      })
     }
-    let claimed = false
-    hole(v as () => unknown, x => {
-      current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
-      claimed = true
-    })
+    keys.hydrating = true
+    if (done && marker?.nodeType === 8) hydration.trash.push(marker as ChildNode) // nothing comes back here
   }
   if (keys.on && root?.$k !== undefined) under(`${root.$k}.${slot}/`, claim)
   else claim()

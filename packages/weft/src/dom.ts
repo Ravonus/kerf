@@ -322,7 +322,7 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
         } else {
           const r = (row = new Row(item, key, parent, indexed ? new Box(i) : undefined))
           const make = () => props.children(reader(r), r.index ? reader(r.index) : zero)
-          r.nodes = within(r, keys.on ? () => under(base + step(key) + '/', make) : make)
+          r.nodes = within(r, keys.on ? () => under(base + step(key, i) + '/', make) : make)
         }
         next[i] = row
       }
