@@ -1,7 +1,7 @@
 // weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { createRoot, onMount, state } from 'weft'
+import { createRoot, onCleanup, onMount, state } from 'weft'
 import { flush, render, touches } from 'weft/test'
 
 function Counter({ step = 1 }: { step?: number }) {
@@ -52,6 +52,53 @@ test('keyed list: reorder moves rows instead of rebuilding them', async () => {
   expect(after.map(li => li.textContent)).toEqual(['c', 'a', 'b'])
   expect(new Set(after)).toEqual(new Set(before))
   expect(t.added).toBe(1)
+})
+
+test('keyed list: rows keep their nodes through removal at any place, insertion, and the two ends trading places', async () => {
+  const items = state(['a', 'b', 'c', 'd', 'e'])
+  render(() => <ul>{items.value.map(x => <li>{x}</li>)}</ul>)
+  const [a, b, c, d, e] = screen.getAllByRole('listitem')
+  const shown = () => screen.getAllByRole('listitem')
+  const t = await touches(() => { items.value = ['a', 'b', 'd', 'e'] })
+  expect(shown()).toEqual([a, b, d, e])
+  expect(t.added + t.removed).toBe(1)
+  items.value = ['e', 'b', 'd', 'a']
+  await flush()
+  expect(shown()).toEqual([e, b, d, a])
+  items.value = ['x', 'e', 'b', 'y', 'd', 'a', 'z']
+  await flush()
+  expect(shown().map(n => n.textContent)).toEqual(['x', 'e', 'b', 'y', 'd', 'a', 'z'])
+  expect(shown()[1]).toBe(e)
+  items.value = ['c']
+  await flush()
+  expect(shown().map(n => n.textContent)).toEqual(['c'])
+  expect(shown()[0]).not.toBe(c)
+})
+
+test('keyed list: keys that repeat stay shown, and rows that went run their cleanups once', async () => {
+  const items = state([1, 1, 2, 1])
+  const gone: number[] = []
+  function Row(props: { n: number }) {
+    onCleanup(() => gone.push(props.n))
+    return <li>{props.n}</li>
+  }
+  render(() => <ul>{items.value.map(n => <Row n={n} />)}</ul>)
+  const shown = () => screen.getAllByRole('listitem').map(n => n.textContent)
+  expect(shown()).toEqual(['1', '1', '2', '1'])
+  items.value = [2, 1, 1]
+  await flush()
+  expect(shown()).toEqual(['2', '1', '1'])
+  items.value = [3]
+  await flush()
+  expect(shown()).toEqual(['3'])
+  expect(gone).toHaveLength(5)
+})
+
+test('keyed list: nothing is re-placed when a new array has the same rows', async () => {
+  const items = state([{ id: 1 }, { id: 2 }])
+  render(() => <ul>{items.value.map(i => <li key={i.id}>{i.id}</li>)}</ul>)
+  const t = await touches(() => { items.value = [...items.value] })
+  expect(t.mutations).toBe(0)
 })
 
 test('conditional branches are built once per switch', async () => {
