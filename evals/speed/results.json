@@ -1,0 +1,474 @@
+{
+ "when": "2026-11-01T12:47:54.121Z",
+ "machine": "Apple M3 Pro",
+ "node": "v22.23.2",
+ "solid": "1.9.18",
+ "loads": [
+  4.65,
+  5.08,
+  4.67,
+  4.57,
+  4.6,
+  4.16,
+  6.02,
+  6.2,
+  5.36,
+  5.73,
+  7.61,
+  8.26,
+  8.46,
+  9.21,
+  8.84,
+  8.14,
+  9.73,
+  9.38,
+  9.69,
+  9.1
+ ],
+ "maxLoad": 9.73,
+ "valid": true,
+ "grid": {
+  "weft": {
+   "create 1000": {
+    "script": 2.075,
+    "total": 6.92,
+    "js bytes per cell": 735.9,
+    "native bytes per cell": 1517,
+    "dispose": 0.5
+   },
+   "update 1000": {
+    "every 10th, ms per tick": 0.02376,
+    "every cell, ms per tick": 0.2019,
+    "one cell, ms per tick": 0.0002636
+   },
+   "create 10000": {
+    "script": 11.63,
+    "total": 40.39,
+    "js bytes per cell": 646.4,
+    "native bytes per cell": 1465,
+    "dispose": 2.86
+   },
+   "update 10000": {
+    "every 10th, ms per tick": 0.3218,
+    "every cell, ms per tick": 2.034,
+    "one cell, ms per tick": 0.0002896
+   },
+   "create 100000": {
+    "script": 91.59,
+    "total": 319.4,
+    "js bytes per cell": 637.8,
+    "native bytes per cell": 1370,
+    "dispose": 23.55
+   },
+   "update 100000": {
+    "every 10th, ms per tick": 8.481,
+    "every cell, ms per tick": 22.32,
+    "one cell, ms per tick": 0.0002626
+   },
+   "rows script": {
+    "create": 2.82,
+    "replace": 4.685,
+    "update": 0.12,
+    "select": 0.06,
+    "swap": 0.275,
+    "remove": 0.355,
+    "runLots": 25.28,
+    "append": 2.27,
+    "clear": 1.85
+   },
+   "rows total": {
+    "create": 16.73,
+    "replace": 18.76,
+    "update": 4.395,
+    "select": 0.095,
+    "swap": 1.225,
+    "remove": 1.6,
+    "runLots": 168.9,
+    "append": 18.68,
+    "clear": 1.89
+   },
+   "rows memory": {
+    "js bytes per row, 1000 rows": 1027,
+    "native bytes per row, 1000 rows": 8866
+   }
+  },
+  "weft-base": {
+   "create 1000": {
+    "script": 2.56,
+    "total": 7.195,
+    "js bytes per cell": 767.4,
+    "native bytes per cell": 1517,
+    "dispose": 0.575
+   },
+   "update 1000": {
+    "every 10th, ms per tick": 0.04687,
+    "every cell, ms per tick": 0.3604,
+    "one cell, ms per tick": 0.0007495
+   },
+   "create 10000": {
+    "script": 12.72,
+    "total": 41.22,
+    "js bytes per cell": 689.5,
+    "native bytes per cell": 1426,
+    "dispose": 3.37
+   },
+   "update 10000": {
+    "every 10th, ms per tick": 0.5454,
+    "every cell, ms per tick": 4.02,
+    "one cell, ms per tick": 0.0008443
+   },
+   "create 100000": {
+    "script": 109.3,
+    "total": 337.6,
+    "js bytes per cell": 676.6,
+    "native bytes per cell": 1370,
+    "dispose": 28.6
+   },
+   "update 100000": {
+    "every 10th, ms per tick": 12.84,
+    "every cell, ms per tick": 50.62,
+    "one cell, ms per tick": 0.0008434
+   },
+   "rows script": {
+    "create": 3.105,
+    "replace": 5.455,
+    "update": 0.165,
+    "select": 0.075,
+    "swap": 0.575,
+    "remove": 0.66,
+    "runLots": 28.68,
+    "append": 3.335,
+    "clear": 2.4
+   },
+   "rows total": {
+    "create": 18.4,
+    "replace": 19.74,
+    "update": 4.295,
+    "select": 0.11,
+    "swap": 1.54,
+    "remove": 1.97,
+    "runLots": 185.7,
+    "append": 19.64,
+    "clear": 2.44
+   },
+   "rows memory": {
+    "js bytes per row, 1000 rows": 1067,
+    "native bytes per row, 1000 rows": 9116
+   }
+  },
+  "solid-batch": {
+   "create 1000": {
+    "script": 2.1,
+    "total": 7.005,
+    "js bytes per cell": 896.3,
+    "native bytes per cell": 1517,
+    "dispose": 0.47
+   },
+   "update 1000": {
+    "every 10th, ms per tick": 0.04044,
+    "every cell, ms per tick": 0.299,
+    "one cell, ms per tick": 0.0003642
+   },
+   "create 10000": {
+    "script": 10.77,
+    "total": 39.53,
+    "js bytes per cell": 809.5,
+    "native bytes per cell": 1467,
+    "dispose": 2.745
+   },
+   "update 10000": {
+    "every 10th, ms per tick": 0.4735,
+    "every cell, ms per tick": 3.299,
+    "one cell, ms per tick": 0.0004064
+   },
+   "create 100000": {
+    "script": 83.47,
+    "total": 313,
+    "js bytes per cell": 803.4,
+    "native bytes per cell": 1370,
+    "dispose": 25.93
+   },
+   "update 100000": {
+    "every 10th, ms per tick": 12.74,
+    "every cell, ms per tick": 36.76,
+    "one cell, ms per tick": 0.0004484
+   },
+   "rows script": {
+    "create": 2.11,
+    "replace": 4.23,
+    "update": 0.135,
+    "select": 0.035,
+    "swap": 0.2,
+    "remove": 0.195,
+    "runLots": 20.51,
+    "append": 2.07,
+    "clear": 2.02
+   },
+   "rows total": {
+    "create": 17.43,
+    "replace": 18.53,
+    "update": 4.23,
+    "select": 0.07,
+    "swap": 1.12,
+    "remove": 1.475,
+    "runLots": 172.9,
+    "append": 18.87,
+    "clear": 2.065
+   },
+   "rows memory": {
+    "js bytes per row, 1000 rows": 1044,
+    "native bytes per row, 1000 rows": 9070
+   }
+  },
+  "react": {
+   "create 1000": {
+    "script": 2.68,
+    "total": 7.52,
+    "js bytes per cell": 601.8,
+    "native bytes per cell": 1534,
+    "dispose": 1.145
+   },
+   "update 1000": {
+    "every 10th, ms per tick": 0.1443,
+    "every cell, ms per tick": 0.3661,
+    "one cell, ms per tick": 0.1046
+   },
+   "create 10000": {
+    "script": 10.23,
+    "total": 37.9,
+    "js bytes per cell": 360.2,
+    "native bytes per cell": 1395,
+    "dispose": 5.495
+   },
+   "update 10000": {
+    "every 10th, ms per tick": 1.629,
+    "every cell, ms per tick": 3.65,
+    "one cell, ms per tick": 1.08
+   },
+   "create 100000": {
+    "script": 67.78,
+    "total": 293.5,
+    "js bytes per cell": 338.5,
+    "native bytes per cell": 1370,
+    "dispose": 48.79
+   },
+   "update 100000": {
+    "every 10th, ms per tick": 23.08,
+    "every cell, ms per tick": 39.71,
+    "one cell, ms per tick": 12.39
+   },
+   "rows script": {
+    "create": 5.56,
+    "replace": 9.66,
+    "update": 0.645,
+    "select": 0.29,
+    "swap": 3.775,
+    "remove": 0.69,
+    "runLots": 168.2,
+    "append": 5.315,
+    "clear": 3.835
+   },
+   "rows total": {
+    "create": 20.22,
+    "replace": 24.25,
+    "update": 5.015,
+    "select": 0.33,
+    "swap": 15.83,
+    "remove": 2.195,
+    "runLots": 333,
+    "append": 22.23,
+    "clear": 3.87
+   },
+   "rows memory": {
+    "js bytes per row, 1000 rows": 2236,
+    "native bytes per row, 1000 rows": 10080
+   }
+  },
+  "solid": {
+   "create 1000": {
+    "script": 2.055,
+    "total": 6.845,
+    "js bytes per cell": 896.3,
+    "native bytes per cell": 1517,
+    "dispose": 0.49
+   },
+   "update 1000": {
+    "every 10th, ms per tick": 0.04239,
+    "every cell, ms per tick": 0.3277,
+    "one cell, ms per tick": 0.0003614
+   },
+   "create 10000": {
+    "script": 10.35,
+    "total": 37.59,
+    "js bytes per cell": 809.5,
+    "native bytes per cell": 1467,
+    "dispose": 2.795
+   },
+   "update 10000": {
+    "every 10th, ms per tick": 0.6591,
+    "every cell, ms per tick": 3.718,
+    "one cell, ms per tick": 0.0004137
+   },
+   "create 100000": {
+    "script": 83.74,
+    "total": 310.3,
+    "js bytes per cell": 803.4,
+    "native bytes per cell": 1370,
+    "dispose": 28.18
+   },
+   "update 100000": {
+    "every 10th, ms per tick": 14.02,
+    "every cell, ms per tick": 43.16,
+    "one cell, ms per tick": 0.0004712
+   },
+   "rows script": {
+    "create": 2.14,
+    "replace": 4.335,
+    "update": 0.165,
+    "select": 0.045,
+    "swap": 0.225,
+    "remove": 0.205,
+    "runLots": 19.67,
+    "append": 1.945,
+    "clear": 1.935
+   },
+   "rows total": {
+    "create": 17.16,
+    "replace": 18.66,
+    "update": 4.825,
+    "select": 0.09,
+    "swap": 1.33,
+    "remove": 1.56,
+    "runLots": 167.8,
+    "append": 18.56,
+    "clear": 1.98
+   },
+   "rows memory": {
+    "js bytes per row, 1000 rows": 1044,
+    "native bytes per row, 1000 rows": 8860
+   }
+  }
+ },
+ "reactive": {
+  "weft-base": {
+   "lib": "weft-base",
+   "ms": {
+    "avoidable": 0.598778733990148,
+    "broad": 1.2300773775510208,
+    "deep": 0.4296928571428582,
+    "diamond": 1.2582444795918342,
+    "mux": 0.8022130533333378,
+    "repeated": 0.4085840408163237,
+    "triangle": 0.49707486178862365,
+    "unstable": 0.45743742264150467,
+    "cellx 1000": 7.164985294117607,
+    "dynamic (small, half static)": 0.3460583813559352,
+    "dynamic (wide, mostly static)": 2.08140184745762
+   },
+   "creation": {
+    "signal": {
+     "nsEach": 118.00209000000905,
+     "bytesEach": 240.00664
+    },
+    "computed, one source, read": {
+     "nsEach": 505.2049999999872,
+     "bytesEach": 739.33656
+    },
+    "effect, one source": {
+     "nsEach": 461.1408300000039,
+     "bytesEach": 635.33584
+    }
+   }
+  },
+  "weft": {
+   "lib": "weft",
+   "ms": {
+    "avoidable": 0.1695665028248586,
+    "broad": 0.23533169803921578,
+    "deep": 0.12454032676348523,
+    "diamond": 0.15261748284625204,
+    "mux": 0.1684990659186543,
+    "repeated": 0.040963552559726946,
+    "triangle": 0.049056242337556046,
+    "unstable": 0.046318313392512335,
+    "cellx 1000": 2.2369320925925895,
+    "dynamic (small, half static)": 0.04693022409073097,
+    "dynamic (wide, mostly static)": 0.23267910271318024
+   },
+   "creation": {
+    "signal": {
+     "nsEach": 127.5654199999917,
+     "bytesEach": 240.00128
+    },
+    "computed, one source, read": {
+     "nsEach": 195.89540999999372,
+     "bytesEach": 731.33656
+    },
+    "effect, one source": {
+     "nsEach": 267.65666999999667,
+     "bytesEach": 627.33576
+    }
+   }
+  },
+  "solid": {
+   "lib": "solid",
+   "ms": {
+    "avoidable": 0.3106444883720931,
+    "broad": 0.8312120689655189,
+    "deep": 0.31549606299212524,
+    "diamond": 0.42923764642857154,
+    "mux": 0.41997931118881254,
+    "repeated": 0.055987193097014845,
+    "triangle": 0.1446517072289154,
+    "unstable": 0.06905305408515565,
+    "cellx 1000": 2.40460750000002,
+    "dynamic (small, half static)": 0.2064263316151201,
+    "dynamic (wide, mostly static)": 0.6608292142857133
+   },
+   "creation": {
+    "signal": {
+     "nsEach": 130.03375000000233,
+     "bytesEach": 248.00576
+    },
+    "computed, one source, read": {
+     "nsEach": 492.7549999999974,
+     "bytesEach": 800.0008
+    },
+    "effect, one source": {
+     "nsEach": 655.6945799999994,
+     "bytesEach": 720.00016
+    }
+   }
+  },
+  "alien": {
+   "lib": "alien",
+   "ms": {
+    "avoidable": 0.0902499060150376,
+    "broad": 0.16536370976616266,
+    "deep": 0.06597821605277611,
+    "diamond": 0.10396486320346314,
+    "mux": 0.10453880243690168,
+    "repeated": 0.011691888347622748,
+    "triangle": 0.04092263314012947,
+    "unstable": 0.030946192367199667,
+    "cellx 1000": 0.7596334367088597,
+    "dynamic (small, half static)": 0.046307323688271354,
+    "dynamic (wide, mostly static)": 0.20034849749582784
+   },
+   "creation": {
+    "signal": {
+     "nsEach": 137.78166000000056,
+     "bytesEach": 312.00384
+    },
+    "computed, one source, read": {
+     "nsEach": 315.4833399999916,
+     "bytesEach": 648.00048
+    },
+    "effect, one source": {
+     "nsEach": 235.02833000000464,
+     "bytesEach": 568.00048
+    }
+   }
+  }
+ }
+}
