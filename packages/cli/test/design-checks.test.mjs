@@ -151,6 +151,18 @@ describe('values (an app with warp)', () => {
     const { root, result } = await run(`export const P = () => <button onClick={() => {}}>Save</button>\n`)
     expect(apply(root, result.diagnostics.find(d => d.code === 'D005'))).toContain(`<Button onClick={() => {}}>Save</Button>`)
   })
+  test('!important is not part of a value: zero stays zero, and a raw value is still caught', async () => {
+    const root = project({ ...warpPkg, 'src/app.css': `.a { margin: 0 !important; }\n.b { gap: 7px !important; }\n` })
+    const r = await check(root)
+    expect(r.diagnostics.filter(d => d.file === 'src/app.css').map(d => d.message)).toEqual([expect.stringContaining('7px')])
+  })
+
+  test('static files in public/ are not the app', async () => {
+    const root = project({ ...warpPkg, 'public/built.css': `.a { color: #123456; }\n` })
+    const r = await check(root)
+    expect(r.diagnostics.filter(d => d.file === 'public/built.css')).toEqual([])
+  })
+
   test('in app CSS, but not a token definition', async () => {
     const root = project({ ...warpPkg, 'src/app.css': `:root { --brand: #123456; }\n.a { color: #123456; padding: 16px; }\n` })
     const r = await check(root)
