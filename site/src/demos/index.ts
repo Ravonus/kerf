@@ -75,6 +75,12 @@ export const demos: Record<string, Demo> = {
     tryIt: 'Press Go live, then scroll the table or use the rest of this page.',
     why: 'A live dashboard usually forces a framework to compare the whole table on each tick. Here each number has its own update, so one change costs one text write.',
   },
+  'ui-state': {
+    page: 'ui-state', title: 'Hover shared across tabs',
+    look: 'Two panes showing one list, like Two views of one list below, but what they share here is hover. Each row is one interaction, drawn by warp. Nothing here adds a listener.',
+    tryIt: 'Hover a row: both panes light. Open this page in a second tab and hover there: this tab lights too and says who is elsewhere.',
+    why: 'Hover stops being a pile of handlers and becomes a value you can read, draw and share. Your own hover never fires for someone else, so logic on it cannot echo.',
+  },
   shared: {
     title: 'Two views of one list',
     look: 'Ana and Ben see the same list. Here both panes are in your browser and share the same state, so nothing crosses a network.',

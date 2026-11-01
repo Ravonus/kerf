@@ -1,7 +1,8 @@
 import { indicator, uid } from '@weft/ui-core'
 import { untrack } from 'weft'
+import type { Interaction } from 'weft/interaction'
 import { Icon, type IconRef } from './Icon'
-import { use } from './use'
+import { use, useUi } from './use'
 import './fields'
 import '@weft/ui-core/styles/inputs/choice.css'
 
@@ -11,9 +12,11 @@ const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></spa
  * A native checkbox with role="switch" (03 §4; SIGNATURE §1c): the rail fills through the sweep as the thumb slides.
  * The whole label is the hover target. Applies at once: never inside a form with Save (03 §8).
  */
-export function Switch({ children, hint, size, placement = 'end', ...rest }: { checked?: boolean; hint?: any; size?: 'sm' | 'md'; placement?: 'start' | 'end'; children?: any; [attr: string]: any }) {
+export function Switch({ children, hint, size, placement = 'end', ui, ...rest }: { checked?: boolean; hint?: any; size?: 'sm' | 'md'; placement?: 'start' | 'end'; ui?: Interaction; children?: any; [attr: string]: any }) {
+  let host: HTMLLabelElement | undefined
+  useUi(() => ui, () => host)
   return (
-    <label data-scope="switch" data-placement={placement} data-size={size === 'sm' ? 'sm' : undefined}>
+    <label ref={(n: any) => (host = n)} data-scope="switch" data-placement={placement} data-size={size === 'sm' ? 'sm' : undefined}>
       <input type="checkbox" role="switch" {...rest} />
       <span data-part="track" data-sweep="">
         <span data-part="rail-fill" aria-hidden="true"><span data-part="rail-hover"></span></span>
@@ -27,14 +30,16 @@ export function Switch({ children, hint, size, placement = 'end', ...rest }: { c
 }
 
 /** A native checkbox (03 §4): the box never fills, the check draws in; `indeterminate` is the real property. */
-export function Checkbox({ children, hint, error, indeterminate, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: any; error?: any; children?: any; [attr: string]: any }) {
+export function Checkbox({ children, hint, error, indeterminate, ui, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: any; error?: any; ui?: Interaction; children?: any; [attr: string]: any }) {
   let input: HTMLInputElement | undefined
+  let host: HTMLLabelElement | undefined
+  useUi(() => ui, () => host)
   use((el: HTMLInputElement, on: boolean | undefined) => {
     el.indeterminate = !!on
     return { update: v => void (el.indeterminate = !!v), destroy() {} }
   }, () => input, () => indeterminate)
   return (
-    <label data-scope="checkbox" data-invalid={error ? '' : undefined}>
+    <label ref={(n: any) => (host = n)} data-scope="checkbox" data-invalid={error ? '' : undefined}>
       <input ref={(n: any) => (input = n)} type="checkbox" aria-invalid={error ? 'true' : undefined} {...rest} />
       <span data-part="control" data-sweep="">
         {sweepParts()}
@@ -47,9 +52,11 @@ export function Checkbox({ children, hint, error, indeterminate, ...rest }: { ch
 }
 
 /** One radio (03 §4): the native input, the sweep ring, a dot that springs in. Use RadioGroup for a set. */
-export function Radio({ children, hint, ...rest }: { hint?: any; children?: any; [attr: string]: any }) {
+export function Radio({ children, hint, ui, ...rest }: { hint?: any; ui?: Interaction; children?: any; [attr: string]: any }) {
+  let host: HTMLLabelElement | undefined
+  useUi(() => ui, () => host)
   return (
-    <label data-scope="radio">
+    <label ref={(n: any) => (host = n)} data-scope="radio">
       <input type="radio" {...rest} />
       <span data-part="control" data-sweep="">{sweepParts()}</span>
       <span data-part="label">{children}</span>

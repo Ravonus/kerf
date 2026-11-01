@@ -87,6 +87,7 @@ const SECTIONS = [
     ['icons', 'Icons', topic('icons')],
     ['fonts', 'Fonts', topic('fonts')],
     ['browser', 'Browser APIs', topic('browser')],
+    ['ui-state', 'Shared UI state', topic('ui-state')],
     ['surface', 'Surfaces', topic('surface')],
     ['testing', 'Testing', topic('testing')],
   ]],

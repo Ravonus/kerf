@@ -82,6 +82,36 @@ await behaves('Two views of one list', '/examples', async page => {
   await pane(1).locator('label').nth(2).click()
   await until(() => boxes(0).nth(2).isChecked(), 'a tick on the new task shows in Ana')
 })
+await behaves('Hover shared across tabs', '/docs/ui-state', async probe => {
+  const box = 'section[data-site="example"] [data-part="run"]'
+  const row = (p, pane, i) => p.locator(`${box} [data-scope="surface"]`).nth(pane).locator('label').nth(i)
+  const browser = await b.newContext({ viewport: { width: 1280, height: 900 } })
+  const page = await browser.newPage()
+  try {
+    await page.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await page.locator(box).scrollIntoViewIfNeeded()
+    await page.waitForTimeout(500)
+    await row(page, 0, 0).hover()
+    await until(() => row(page, 1, 0).evaluate(el => el.hasAttribute('data-hold')), 'hovering one pane lights the other')
+    same(await row(page, 1, 0).evaluate(el => el.hasAttribute('data-remote')), false, 'that is this page, not someone else')
+    same(await row(page, 1, 1).evaluate(el => el.hasAttribute('data-hold')), false, 'the other row stays dark')
+    const other = await browser.newPage()
+    await other.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await other.locator(box).scrollIntoViewIfNeeded()
+    await until(() => row(other, 0, 0).evaluate(el => el.hasAttribute('data-remote')), 'a second tab sees the hover, marked remote')
+    await until(async () => /1 elsewhere/.test(await text(other, box)), 'and says so')
+    await page.mouse.move(2, 2)
+    await until(async () => !(await row(other, 0, 0).evaluate(el => el.hasAttribute('data-hold'))), 'it clears when the pointer leaves')
+    // Another browser, across the socket: it may share `demo:` keys and nothing else (src/realtime.server.ts).
+    const elsewhere = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage()
+    await elsewhere.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await elsewhere.locator(box).scrollIntoViewIfNeeded()
+    await elsewhere.waitForTimeout(800)
+    await row(page, 0, 1).hover()
+    await until(() => row(elsewhere, 0, 1).evaluate(el => el.hasAttribute('data-remote')), 'a second browser sees it too')
+    await elsewhere.context().close()
+  } finally { await browser.close() }
+})
 await behaves('A list that keeps its rows', '/examples', async page => {
   const box = run('A list that keeps its rows')
   await page.locator(box).scrollIntoViewIfNeeded()

@@ -61,6 +61,7 @@
     "./list": "./src/list.ts",
     "./list/drizzle": "./src/list-drizzle.ts",
     "./channel": "./src/channel.ts",
+    "./share": "./src/share.ts",
     "./db": "./src/db/index.ts",
     "./db/core": "./src/db/core.ts",
     "./db/sqlite": "./src/db/sqlite.ts",
@@ -81,7 +82,7 @@
     "./rust": "./src/rust.ts",
     "./sidecar": "./src/sidecar.mjs"
   },
-  "sideEffects": ["**/*.css"],
+  "sideEffects": ["**/*.css", "./src/share.ts"],
   "peerDependenciesMeta": {
     "better-auth": {
       "optional": true

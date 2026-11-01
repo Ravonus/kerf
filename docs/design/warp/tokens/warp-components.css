@@ -176,7 +176,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   transform: scaleX(0); transform-origin: right center;
   transition: transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out);
 }
-:where([data-scope="button"]:hover, [data-scope="button"]:focus-visible, [data-scope="button"][data-state="open"], [data-scope="button"][aria-expanded="true"])::before {
+:where([data-scope="button"]:hover, [data-scope="button"]:focus-visible, [data-scope="button"][data-hold], [data-scope="button"][data-state="open"], [data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center; transition-duration: var(--warp-duration-base);
 }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */

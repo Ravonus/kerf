@@ -19,6 +19,7 @@ import { pluginChecks } from './plugin-checks.mjs'
 import { propChecks } from './props-checks.mjs'
 import { reactChecks } from './react-checks.mjs'
 import { trustDiagnostics } from './trust.mjs'
+import { shareChecks } from './share-checks.mjs'
 import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
@@ -146,6 +147,7 @@ export async function check(root, options = {}) {
     ...(config.check?.design === false ? [] : designChecks(root, { files, exclude, tokens: hasTokens(root) })),
     ...textChecks(root, { files, exclude, fontBuild }),
     ...stateChecks(root, { files, exclude }),
+    ...shareChecks(root, { files }),
     ...reactChecks({ files }),
     ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),
     ...(await pluginChecks(root, loaded, { files, exclude })),

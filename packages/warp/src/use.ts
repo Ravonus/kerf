@@ -1,4 +1,5 @@
 import { onCleanup, onMount, untrack, watch } from 'weft'
+import type { Interaction } from 'weft/interaction'
 
 type Action<O> = { update(o: O): void; destroy(): void }
 
@@ -19,4 +20,10 @@ export function use<E extends Element, O>(make: (el: E, o: O) => Action<O>, el: 
     watch(opts, (o, prev) => { if (prev !== undefined) action?.update(o) })
     onCleanup(() => { live = false; action?.destroy() })
   })
+}
+
+/** `ui={row}`: a row's `attach` on the host. Read once, like every prop that picks what a component is. */
+export function useUi(ui: () => Interaction | undefined, host: () => HTMLElement | undefined) {
+  const row = untrack(ui)
+  if (row) use(row.attach, host)
 }

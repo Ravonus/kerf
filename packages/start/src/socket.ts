@@ -11,6 +11,7 @@ import type { PublishOptions } from './channel'
 import { enter, fns, FnError, isRedirect, runtime, stable, StartError, type Context, type Fn, type StandardSchemaV1 } from './data'
 import { createScope, type Scope, type ScopeOptions } from './exec'
 import { checkOrigins, hub, type Channel, type Ev, type Hub } from './hub'
+import { SHARE, shareChannel } from './share-server'
 
 /** A socket as this file needs it. `send` takes a whole frame. */
 export interface Peer {
@@ -141,7 +142,7 @@ function store(st: Hubbed, name: string, v: Value) {
 async function join(h: Hub, c: Sock, n: number, id: string, params: unknown, cursor?: string) {
   const st = stateOf(h)
   if (c.joins.has(n) || typeof n !== 'number') return
-  const fn = fns.get(id)
+  const fn = id === SHARE ? shareChannel(h) : fns.get(id)
   if (fn?.kind !== 'channel' && fn?.kind !== 'shared') return refuse(c, n, new StartError('Q009', `no channel \`${id}\` (the page is older than the server): reload`))
   if (c.joins.size >= h.limits.subscriptions) return refuse(c, n, new StartError('R009', `this socket already has ${h.limits.subscriptions} joins`, 'join fewer rooms, or raise `limits.subscriptions`'))
   const j: Join = { n, fn, params, bucket: { tokens: h.limits.burst, at: Date.now() }, chain: Promise.resolve() }
@@ -198,6 +199,9 @@ function leave(h: Hub, c: Sock, j: Join) {
 
 const bound = (c: Sock, j: Join) => ({ params: j.params, publish: (n: string, m: unknown, o?: PublishOptions) => publish(j.fn, j.params, n, m, { ...o, from: c.k }) })
 
+/** To this connection, past the bus: only `share` uses it, and it has already picked who hears what. */
+const reply = (h: Hub, c: Sock, j: Join) => (name: string, msg: unknown) => { if (!j.gone) send(c, ['m', j.n, h.position(), name, msg]) }
+
 /** `def.left`, once per join that got in, however it ended. Nothing is listening for a failure, so it's reported. */
 async function left(c: Sock, j: Join) {
   const scope: Scope = { ...createScope(c.request, c.options), ctx: async () => c.ctx }
@@ -232,7 +236,7 @@ async function run(h: Hub, c: Sock, j: Join, ack: number, name: string, msg: unk
       if (!schema || !handler) throw new StartError('Q002', `\`${fn.$id}\` takes no message \`${name}\``, 'name one of `client`, with a handler in `on`')
       const valid = await check(schema, msg, `\`${fn.$id}.${name}\``)
       const scope: Scope = { ...createScope(c.request, c.options), ctx: async () => c.ctx }
-      await enter(scope, () => handler({ msg: valid, id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j) }))
+      await enter(scope, () => handler({ msg: valid, id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j), reply: reply(h, c, j) }))
     }
     if (!j.gone) send(c, ['a', j.n, ack])
   } catch (e) {
@@ -284,7 +288,10 @@ async function recheck(h: Hub, c: Sock) {
   if (c.user !== undefined && (ctx as { user?: { id?: string } }).user?.id !== c.user) return gone(h, c, 4401, 'session')
   c.ctx = ctx
   for (const j of [...c.joins.values()]) {
-    if (await allowed(j.fn, ctx, j.params).catch(() => false)) continue
+    if (await allowed(j.fn, ctx, j.params).catch(() => false)) {
+      await j.fn.def.recheck?.({ id: c.k, ctx, reply: reply(h, c, j) })
+      continue
+    }
     leave(h, c, j)
     refuse(c, j.n, denied(j.fn))
   }

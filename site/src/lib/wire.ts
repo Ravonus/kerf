@@ -11,8 +11,10 @@ class Wire extends Real {
   }
 }
 
+// From the start: a page's one socket can be open before anyone presses Join.
+if (typeof window !== 'undefined') globalThis.WebSocket = Wire
+
 export function wire(on: boolean) {
-  globalThis.WebSocket = Wire
   cut = !on
   if (cut) for (const s of open) s.close()
 }

@@ -12,6 +12,7 @@ import type { Bus } from './bus'
 import { memoryBus } from './bus'
 import { createFeed, functionHost, type Feed, type Poke, type Probe, type Source } from './changes'
 import { currentScope, enter, fns, StartError, type Context, type Fn, type LiveMode, type StandardSchemaV1 } from './data'
+import type { ShareRule } from './share-server'
 import { createScope, defaultStore, guard, liveQueries, missedFeed, tagsOf, validate, type Scope, type ScopeOptions, type Store } from './exec'
 
 export interface Limits {
@@ -36,9 +37,11 @@ export interface Limits {
   perSecond: number
   /** The burst `perSecond` allows. */
   burst: number
+  /** Keys one socket may `share`. They cost no joins: a 200-row list is one. */
+  shareKeys: number
 }
 
-const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40 }
+const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40, shareKeys: 1000 }
 const HIGH = 64 * 1024
 const VOLATILE = '{"v":1'
 
@@ -52,6 +55,8 @@ export interface RealtimeOptions {
   maxDuration?: number
   /** Writes from outside the app: `changes: dbChanges(db, [todos])`, or a source of your own. */
   changes?: Source
+  /** Who may share or see a key of `interaction({ share })` with other clients. Left out, nobody: tabs still work. */
+  share?: ShareRule
 }
 
 /** What the app gets from `configure`, beside `src/realtime.server.ts`. */
@@ -148,6 +153,8 @@ interface Conn {
 export interface Hub {
   readonly bus: Bus
   readonly limits: Limits
+  /** `realtime({ share })`. */
+  readonly share?: ShareRule
   poke(tags: string[], origin?: string | null): Promise<void>
   cursor(): string | undefined
   /** Listening for pokes, or 250 ms: a page waits this long for a cursor, and goes without one. */
@@ -191,7 +198,7 @@ export interface Hub {
 
 const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
 
-function createHub(options: HubOptions): Hub {
+export function createHub(options: HubOptions): Hub {
   const bus = options.bus ?? memoryBus()
   const limits = { ...LIMITS, ...options.limits }
   const epoch = crypto.randomUUID().slice(0, 8)
@@ -556,7 +563,7 @@ function createHub(options: HubOptions): Hub {
   }
 
   return {
-    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close, closing, epoch, dev: options.dev, maxDuration: options.maxDuration, build: options.build,
+    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close, closing, epoch, dev: options.dev, maxDuration: options.maxDuration, build: options.build, share: options.share,
     position: () => cursorOf(seq),
     watch(fn) {
       watchers.add(fn)

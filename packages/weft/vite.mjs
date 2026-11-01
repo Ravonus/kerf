@@ -50,6 +50,29 @@ const features = {
   },
 }
 
+/**
+ * `ui=` and `interaction({ share })` need a module that only a package beyond weft has: warp draws `ui`, and
+ * `@weft/start` carries `share` past the page. Where the app has that package, it's imported where it's used; where it
+ * doesn't, `interaction()` still works, on this page.
+ */
+const INTERACTION = [
+  [/\bui=\{/, '@weft/warp/ui'],
+  [/\bshare\s*:/, '@weft/start/share'],
+]
+const interactionFeatures = {
+  name: 'weft:interaction',
+  enforce: 'pre',
+  transform: {
+    filter: { id: { include: /\.[cm]?[jt]sx?$/, exclude: /node_modules|[\\/]packages[\\/](weft|warp|ui-core|start)[\\/]src[\\/]/ }, code: /\bui=\{|\bshare\s*:/ },
+    async handler(code, id) {
+      if (!/\bui=\{/.test(code) && !code.includes('weft/interaction')) return
+      const add = []
+      for (const [re, mod] of INTERACTION) if (re.test(code) && (await this.resolve(mod, id))) add.push(`import '${mod}';`)
+      return add.length ? { code: `${add.join('')}${code}`, map: null } : undefined
+    },
+  },
+}
+
 /** `weft({ off })`: the speed paths in src/flags.ts to leave out. `WEFT_OFF` does it for a whole run. */
 const flags = off => ({
   name: 'weft:flags',
@@ -474,7 +497,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     api: {},
   }
   const icon = icons()
-  return [icon.rewrite, flags(off), keyed, main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
+  return [icon.rewrite, flags(off), keyed, interactionFeatures, main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
 
 /**
