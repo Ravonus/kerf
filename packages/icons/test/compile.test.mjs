@@ -62,15 +62,26 @@ test('stops: balanced alone unless the app asks', () => {
 
 test('the names module holds those names, and the pack only when a name escaped', () => {
   const plain = namesModule(['check']), lazy = namesModule(['check'], { lazy: true })
-  expect(plain).toContain('IconCheck'); expect(plain).not.toContain('import(')
+  expect(plain).toContain('CheckIcon'); expect(plain).not.toContain('import(')
   expect(lazy).toContain("import('@weft/icons/all')")
 })
 test('<Icon name> becomes the same element a named import gives', () => {
   const out = rewrite(`import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="arrow-right" label="Next" />`, 'a.tsx', catalog)
-  expect(out).toContain('<IconArrowRight  label="Next" />'); expect(out).toContain("import { IconArrowRight } from '@weft/icons'")
+  expect(out).toContain('<ArrowRightIcon  label="Next" />'); expect(out).toContain("import { ArrowRightIcon } from '@weft/icons'")
 })
 test('rewrite refuses an unknown literal, in dev too', () => {
   expect(() => rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="chekc" />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'chekc', did you mean 'check'/)
+})
+test('a variant flag picks the export', () => {
+  const out = rewrite(`import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="bell" hollow />`, 'a.tsx', catalog)
+  expect(out).toContain('<BellIconHollow'); expect(out).not.toContain('hollow />')
+})
+test('a variant ships only itself', () => expect(names(scan(app(`export const A = () => <Icon name="bell" hollow />`)))).toEqual(['bell:hollow']))
+test('a variant flag it cannot read may be either', () => expect(names(scan(app(`export const A = ({ h }) => <Icon name="bell" hollow={h} />`)))).toEqual(['bell', 'bell:hollow']))
+test('a tier prop keeps that stop', () => expect([...scan(app(`export const A = () => <Icon name="bell" tier="vivid" />`)).stops].sort()).toEqual(['balanced', 'vivid']))
+test('one stop drops the switch and the other drawings', () => {
+  const src = `import '../tiers.css'\nicon('<path data-t="o" d="M1"/><path data-t="v" data-p="" d="M4"/>')`
+  expect(trimTiers(src, new Set(['balanced']))).toBe(`icon('<path d="M1"/>')`)
 })
 test('a dynamic name is left alone', () => expect(rewrite(`import { Icon } from '@weft/warp'\nconst a = n => <Icon name={n} />`, 'a.tsx', catalog)).toBeNull())
 test('trimTiers keeps what the stops show', () => {

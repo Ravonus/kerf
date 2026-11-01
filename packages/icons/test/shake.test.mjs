@@ -26,7 +26,6 @@ async function run(code, root) {
   const out = await build({
     configFile: false, logLevel: 'silent', root,
     plugins: [weft(), { name: 'entry', resolveId: s => (s === 'shake-entry.tsx' ? id : null), load: i => (i === id ? code : null) }],
-    resolve: { alias: [{ find: /^@weft\/icons\/(quiet|balanced|vivid)$/, replacement: `${pkg}src/gen/$1.tsx` }] },
     build: { write: false, cssCodeSplit: false, modulePreload: false, rolldownOptions: { input: 'shake-entry.tsx' } },
   })
   const files = (Array.isArray(out) ? out : [out]).flatMap(o => o.output)
@@ -36,8 +35,7 @@ const page = (names, from = '@weft/icons') => `import { render } from 'weft/dom'
 
 test('one icon imported: its drawing ships, and no other', async () => {
   const one = await bundle(page(['IconCheck']))
-  const paths = one.js.match(/shape-rendering/g)?.length ?? 0
-  expect(paths).toBeLessThanOrEqual(2)
+  expect(one.js.match(/data-p=/g)?.length ?? 0).toBeLessThanOrEqual(2)
   for (const other of ['M1 3h13v2h-13z']) expect(one.js).not.toContain(other)
   const two = await bundle(page(['IconCheck', 'IconBell']))
   const added = br(two.js) - br(one.js)
@@ -48,13 +46,13 @@ test('one icon imported: its drawing ships, and no other', async () => {
 
 test('importing iconSet alone brings no drawing', async () => {
   const { js } = await bundle(`import { render } from 'weft/dom'\nimport { iconSet } from '@weft/icons'\nconst Icon = iconSet({})\nrender(() => <div>{typeof Icon}</div>, document.body)\n`)
-  expect(js).not.toContain('crispEdges')
+  expect(js).not.toContain('data-p')
 }, 60000)
 
 test('a static tier compiles one tier in: no switch attributes, no switch CSS, no other tier', async () => {
   {
     const { js, css } = await bundle(page(['IconCheck', 'IconAlert']), { alias: { '@weft/icons': '@weft/icons/vivid' } })
-    expect(js).toContain('crispEdges')
+    expect(js).toContain('data-p')
     expect(js).not.toContain('data-t')
     expect(js).not.toContain('stroke-linecap')
     expect(css).not.toContain('--warp-icon-v')

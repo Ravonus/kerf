@@ -82,6 +82,7 @@ export function outline(spec, tier) {
 
 /** Rows of `.`, `#` (ink) and `+` (shade), on 16×16: { ink, shade } as merged rect paths on the pixel grid. */
 export function pixel(art, name) {
+  if (Array.isArray(art)) return cells(art)
   const rows = art.replace(/^\s*\n/, '').replace(/\s+$/, '').split('\n').map(r => r.trim())
   if (rows.length > 16) throw new Error(`${name}: ${rows.length} rows`)
   while (rows.length < 16) rows.push('')
@@ -89,15 +90,19 @@ export function pixel(art, name) {
     if (r.length > 16 || /[^.#+]/.test(r)) throw new Error(`${name}: bad row ${y}: ${r}`)
     return r.padEnd(16, '.').split('')
   })
-  const path = ch => {
+  return cells(grid)
+}
+
+export function cells(grid) {
+  const path = (...chars) => {
     const open = new Map() // "x:w" → rect still growing down
     const done = []
     for (let y = 0; y <= 16; y++) {
       const here = new Set()
       if (y < 16) for (let x = 0; x < 16;) {
-        if (grid[y][x] !== ch) { x++; continue }
+        if (!chars.includes(grid[y][x])) { x++; continue }
         let w = 1
-        while (x + w < 16 && grid[y][x + w] === ch) w++
+        while (x + w < 16 && chars.includes(grid[y][x + w])) w++
         const k = `${x}:${w}`
         here.add(k)
         if (open.has(k)) open.get(k).h++
@@ -108,5 +113,5 @@ export function pixel(art, name) {
     }
     return done.sort((a, b) => a.y - b.y || a.x - b.x).map(r => `M${r.x} ${r.y}h${r.w}v${r.h}h-${r.w}z`).join('')
   }
-  return { ink: path('#'), shade: path('+'), grid }
+  return { ink: path('#'), shade: path('+'), both: path('#', '+'), grid }
 }

@@ -11,9 +11,9 @@
   "exports": {
     ".": "./src/gen/all.tsx",
     "./all": "./src/all.tsx",
-    "./quiet": "./src/gen/quiet.tsx",
-    "./balanced": "./src/gen/balanced.tsx",
-    "./vivid": "./src/gen/vivid.tsx",
+    "./quiet": "./src/gen/all.tsx",
+    "./balanced": "./src/gen/all.tsx",
+    "./vivid": "./src/gen/all.tsx",
     "./names": "./src/names.tsx",
     "./late": "./src/late.tsx",
     "./compile": "./compile.mjs",

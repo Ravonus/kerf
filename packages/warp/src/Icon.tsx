@@ -9,9 +9,8 @@ export type { IconName }
 export type IconRef = IconName | IconComponent
 
 /** `<svg data-icon aria-hidden focusable=false>`: decorative, never named (03 §7); `label` names it. */
-export function Icon({ name, ...rest }: { name: IconRef } & IconProps) {
-  const icon = untrack(() => name)
-  const Draw = typeof icon === 'function' ? icon : resolve(icon)
+export function Icon({ name, hollow, solid, dither, ...rest }: { name: IconRef; hollow?: boolean; solid?: boolean; dither?: boolean } & IconProps) {
+  const Draw = untrack(() => (typeof name === 'function' ? name : resolve(name, hollow ? 'hollow' : solid ? 'solid' : dither ? 'dither' : undefined)))
   return Draw ? <Draw {...rest} /> : null
 }
 

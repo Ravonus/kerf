@@ -10,9 +10,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">info</div>
@@ -26,9 +26,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">neutral</div>
@@ -42,9 +42,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">accent</div>
@@ -58,9 +58,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">positive</div>
@@ -74,9 +74,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
 </path>
-<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-p="" data-t="v">
 </path>
-<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">caution</div>
@@ -90,9 +90,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">critical</div>
@@ -106,9 +106,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -120,7 +120,7 @@ exports[`Alerts: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -133,9 +133,9 @@ exports[`Alerts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="description">Only body</div>
@@ -153,9 +153,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">info</div>
@@ -169,9 +169,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">neutral</div>
@@ -185,9 +185,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">accent</div>
@@ -201,9 +201,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">positive</div>
@@ -217,9 +217,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
 </path>
-<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-p="" data-t="v">
 </path>
-<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">caution</div>
@@ -233,9 +233,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">critical</div>
@@ -249,9 +249,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -263,7 +263,7 @@ exports[`Alerts: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -276,9 +276,9 @@ exports[`Alerts: server HTML 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="description">Only body</div>
@@ -376,14 +376,14 @@ exports[`Buttons: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Frame fill</span>
 <span aria-hidden="true" data-part="sweep-content">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Frame fill</span>
 </button>
@@ -395,16 +395,16 @@ exports[`Buttons: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>With icon</button>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -416,7 +416,7 @@ exports[`Buttons: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
@@ -523,14 +523,14 @@ exports[`Buttons: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Frame fill</span>
 <span aria-hidden="true" data-part="sweep-content">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Frame fill</span>
 </button>
@@ -542,16 +542,16 @@ exports[`Buttons: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>With icon</button>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -563,7 +563,7 @@ exports[`Buttons: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
@@ -643,7 +643,7 @@ exports[`Choices: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>A<span data-part="count">3</span>
 </span>
@@ -668,7 +668,7 @@ exports[`Choices: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Pressed<span data-part="count">4</span>
 </button>
@@ -684,9 +684,9 @@ exports[`Choices: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>Icon</button>
 </div>"
@@ -755,7 +755,7 @@ exports[`Choices: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>A<span data-part="count">3</span>
 </span>
@@ -780,7 +780,7 @@ exports[`Choices: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>Pressed<span data-part="count">4</span>
 </button>
@@ -796,9 +796,9 @@ exports[`Choices: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>Icon</button>
 </div>"
@@ -843,9 +843,9 @@ exports[`Fields: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -857,9 +857,9 @@ exports[`Fields: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -902,7 +902,7 @@ exports[`Fields: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -941,9 +941,9 @@ exports[`Fields: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
 </path>
-<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-p="" data-t="v">
 </path>
-<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-p="s" data-t="v">
 </path>
 </svg>
 <span>Required</span>
@@ -965,9 +965,9 @@ exports[`Fields: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -979,9 +979,9 @@ exports[`Fields: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -1008,7 +1008,7 @@ exports[`Fields: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1070,7 +1070,7 @@ exports[`Fields: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
 </path>
-<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-p="" data-t="v">
 </path>
 </svg>
 </span>
@@ -1118,9 +1118,9 @@ exports[`Fields: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -1132,9 +1132,9 @@ exports[`Fields: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -1177,7 +1177,7 @@ exports[`Fields: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1216,9 +1216,9 @@ exports[`Fields: server HTML 1`] = `
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
 </path>
-<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-p="" data-t="v">
 </path>
-<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-p="s" data-t="v">
 </path>
 </svg>
 <span>Required</span>
@@ -1240,9 +1240,9 @@ exports[`Fields: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -1254,9 +1254,9 @@ exports[`Fields: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 </span>
@@ -1283,7 +1283,7 @@ exports[`Fields: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1346,7 +1346,7 @@ exports[`Fields: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
 </path>
-<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-p="" data-t="v">
 </path>
 </svg>
 </span>
@@ -1360,13 +1360,13 @@ exports[`Icons: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1376,15 +1376,15 @@ exports[`Icons: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
 </path>
-<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-p="" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1394,9 +1394,9 @@ exports[`Icons: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
 </path>
-<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-p="" data-t="v">
 </path>
-<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1406,9 +1406,9 @@ exports[`Icons: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1418,9 +1418,9 @@ exports[`Icons: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1430,15 +1430,15 @@ exports[`Icons: client DOM after mount 1`] = `
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </div>"
@@ -1449,13 +1449,13 @@ exports[`Icons: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1465,15 +1465,15 @@ exports[`Icons: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
 </path>
-<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-p="" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1483,9 +1483,9 @@ exports[`Icons: server HTML 1`] = `
 </path>
 <path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
 </path>
-<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-p="" data-t="v">
 </path>
-<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1495,9 +1495,9 @@ exports[`Icons: server HTML 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1507,9 +1507,9 @@ exports[`Icons: server HTML 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
@@ -1519,15 +1519,15 @@ exports[`Icons: server HTML 1`] = `
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </div>"
@@ -1597,9 +1597,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>Titled<span aria-hidden="true" data-part="sweep">
 </span>
@@ -1615,7 +1615,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1632,7 +1632,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1649,7 +1649,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1668,7 +1668,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1684,7 +1684,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1708,9 +1708,9 @@ exports[`Overlays: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>Titled<span aria-hidden="true" data-part="sweep">
 </span>
@@ -1726,7 +1726,7 @@ exports[`Overlays: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1743,7 +1743,7 @@ exports[`Overlays: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1760,7 +1760,7 @@ exports[`Overlays: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1779,7 +1779,7 @@ exports[`Overlays: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1795,7 +1795,7 @@ exports[`Overlays: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1834,7 +1834,7 @@ exports[`Surfaces: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -1942,7 +1942,7 @@ exports[`Surfaces: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2091,9 +2091,9 @@ exports[`Toasts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Plain</div>
@@ -2102,7 +2102,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2116,9 +2116,9 @@ exports[`Toasts: client DOM after mount 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -2129,7 +2129,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2143,9 +2143,9 @@ exports[`Toasts: client DOM after mount 1`] = `
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Saved</div>
@@ -2154,7 +2154,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2177,9 +2177,9 @@ exports[`Toasts: server HTML 1`] = `
 </path>
 <path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Plain</div>
@@ -2188,7 +2188,7 @@ exports[`Toasts: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2202,9 +2202,9 @@ exports[`Toasts: server HTML 1`] = `
 </path>
 <path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -2215,7 +2215,7 @@ exports[`Toasts: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2229,9 +2229,9 @@ exports[`Toasts: server HTML 1`] = `
 </path>
 <path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
 </path>
-<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-p="" data-t="v">
 </path>
-<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-p="s" data-t="v">
 </path>
 </svg>
 <div data-part="title">Saved</div>
@@ -2240,7 +2240,7 @@ exports[`Toasts: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
 </path>
-<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>
 </button>
@@ -2264,7 +2264,7 @@ exports[`Toggles: client DOM after mount 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>On<span aria-hidden="true" data-part="sweep">
 </span>
@@ -2277,9 +2277,9 @@ exports[`Toggles: client DOM after mount 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 <span aria-hidden="true" data-part="sweep">
@@ -2297,7 +2297,7 @@ exports[`Toggles: server HTML 1`] = `
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
 <path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
 </path>
-<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-p="" data-t="v">
 </path>
 </svg>On<span aria-hidden="true" data-part="sweep">
 </span>
@@ -2310,9 +2310,9 @@ exports[`Toggles: server HTML 1`] = `
 </path>
 <path d="M15.75 15.75L21 21" data-t="o" data-w="">
 </path>
-<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-p="" data-t="v">
 </path>
-<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-p="s" data-t="v">
 </path>
 </svg>
 <span aria-hidden="true" data-part="sweep">

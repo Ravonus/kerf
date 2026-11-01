@@ -14,7 +14,21 @@ const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullE
 const ITERATORS = new Set(['map', 'flatMap', 'filter', 'forEach', 'find', 'some', 'every', 'sort', 'toSorted'])
 const ICON_SOURCES = new Set(['@weft/icons/all', '@weft/warp'])
 
-export const pascal = name => 'Icon' + name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
+const title = name => name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
+export const pascal = (name, variant = '') => `${title(name)}Icon${variant ? variant[0].toUpperCase() + variant.slice(1) : ''}`
+export const VARIANTS = ['hollow', 'solid', 'dither']
+/** Which variants an element asks for: '' is the plain icon. A flag it can't read may be either. */
+function variants(element) {
+  const out = new Set(), flags = element.attributes.filter(a => a.type === 'JSXAttribute' && VARIANTS.includes(a.name.name))
+  for (const a of flags) {
+    const v = a.value?.type === 'JSXExpressionContainer' ? unwrap(a.value.expression) : null
+    if (!a.value || v?.value === true) return { set: new Set([a.name.name]), fixed: flags.length === 1 }
+    if (v?.value === false) continue
+    out.add(a.name.name); out.add('')
+  }
+  if (!out.size) out.add('')
+  return { set: out, fixed: out.size === 1 }
+}
 
 const line = (code, at) => { const before = code.slice(0, at).split('\n'); return { line: before.length, column: before.at(-1).length + 1 } }
 
@@ -295,10 +309,11 @@ export function analyze(root, { catalog }) {
   const names = new Set(), unknown = [], dynamic = [], stops = new Set([DEFAULT_STOP]), stopsDynamic = []
   const known = new Set(catalog)
   const where = (unit, at) => ({ file: relative(root, unit.file), abs: unit.file, ...line(unit.code, at) })
-  const site = (unit, expr, at, soft) => {
+  const site = (unit, expr, at, soft, element) => {
     const r = expression(unit, expr)
+    const kinds = element ? variants(element).set : new Set([''])
     for (const v of r.values) {
-      if (known.has(v)) names.add(v)
+      if (known.has(v)) for (const k of kinds) names.add(k ? `${v}:${k}` : v)
       else if (!soft) unknown.push({ name: v, suggest: closest(v, catalog), ...where(unit, unwrap(expr).start ?? at) })
     }
     if (r.dynamic) dynamic.push({ why: r.dynamic, ...where(unit, at) })
@@ -307,8 +322,9 @@ export function analyze(root, { catalog }) {
   const warpLocal = (unit, comp) => { const imp = unit.imports.get(comp.split('.')[0]); return imp && (imp.source === '@weft/warp' || imp.source.startsWith('@weft/warp/')) }
   for (const unit of units.values()) {
     for (const use of unit.uses) {
-      if (use.prop === 'name' && iconLocal(unit, use.comp)) site(unit, use.expr, use.at, false)
+      if (use.prop === 'name' && iconLocal(unit, use.comp)) site(unit, use.expr, use.at, false, use.element)
       else if (use.prop === 'icon' && warpLocal(unit, use.comp)) site(unit, use.expr, use.at, false)
+      if (use.prop === 'tier') { for (const v of expression(unit, use.expr).values) if (STOPS.includes(v)) stops.add(v) }
     }
     if (unit.warp) for (const s of unit.sites) site(unit, s.expr, s.at, true)
     for (const s of unit.stops) {
@@ -325,17 +341,22 @@ export function analyze(root, { catalog }) {
 /** The module warp's name lookup becomes in a build: these names and no others, and the pack only if a name escaped. */
 export function namesModule(names, { lazy = false } = {}) {
   const list = [...names].sort()
-  const imports = list.length ? `import { ${list.map(n => pascal(n)).join(', ')} } from '@weft/icons'\n` : ''
-  const table = `const names = { ${list.map(n => `${JSON.stringify(n)}: ${pascal(n)}`).join(', ')} }\n`
-  if (lazy) return `${imports}import { late } from '@weft/icons/late'\n${table}const pack = () => import('@weft/icons/all').then(m => m.icons)\nexport const resolve = name => names[name] ?? late(name, pack)\n`
-  return `${imports}${table}export const resolve = name => names[name]\n`
+  const id = key => pascal(...key.split(':'))
+  const imports = list.length ? `import { ${list.map(id).join(', ')} } from '@weft/icons'\n` : ''
+  const table = `const names = { ${list.map(n => `${JSON.stringify(n)}: ${id(n)}`).join(', ')} }\nconst key = (name, variant) => (variant ? name + ':' + variant : name)\n`
+  if (lazy) return `${imports}import { late } from '@weft/icons/late'\n${table}const pack = () => import('@weft/icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, pack)\n`
+  return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n`
 }
 
 const VISIBLE = { quiet: 'oq', balanced: 'ob', vivid: 'v' }
-/** Drop the drawings no shipped stop can show, from the all-tiers source. */
-export function trimTiers(code, stops) {
+/** Drop the drawings no shipped stop can show. With one stop left there is nothing to switch, so the switch goes too. */
+export function trimTiers(source, stops) {
+  // a build imports the pack as a namespace (rewrite), and this default would keep every icon alive
+  const code = source.replace("import * as self from './all'\n", '').replace('export default self\n', '')
+  if (stops.size === 3) return code
   const keep = [...stops].map(s => VISIBLE[s]).join('')
-  return code.replace(/<path data-t="([oqbv])"[^>]*?\/>/g, (m, t) => (keep.includes(t) ? m : ''))
+  const out = code.replace(/<path data-t="([oqbv])"[^>]*?\/>/g, (m, t) => (keep.includes(t) ? m : ''))
+  return stops.size === 1 ? out.replaceAll(/ data-t="[oqbv]"/g, '').replace("import '../tiers.css'\n", '') : out
 }
 
 /** `<Icon name="check">` becomes `<IconCheck>`, the same output a named import gives. */
@@ -352,9 +373,12 @@ export function rewrite(code, file, catalog) {
     if ((v.type !== 'Literal' && v.type !== 'StringLiteral') || typeof v.value !== 'string') continue
     if (catalog && !catalog.includes(v.value)) throw Object.assign(new Error(unknownMessage(v.value, catalog)), { loc: { file, ...line(code, v.start) } })
     if (!use.element.selfClosing) continue
-    const name = pascal(v.value)
+    const wanted = variants(use.element)
+    if (!wanted.fixed) continue
+    const name = pascal(v.value, [...wanted.set][0])
     added.add(name)
     edits.push({ start: use.element.start, end: use.element.name.end, text: `<${name}` }, { start: use.at, end: use.end, text: '' })
+    for (const a of use.element.attributes) if (a.type === 'JSXAttribute' && VARIANTS.includes(a.name.name)) edits.push({ start: a.start, end: a.end, text: '' })
   }
   if (!edits.length) return null
   let out = code
@@ -364,14 +388,14 @@ export function rewrite(code, file, catalog) {
 
 export const unknownMessage = (name, catalog) => `I001 no icon '${name}', did you mean '${closest(name, catalog)}'?`
 
-export const list = () => [...new Set([...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1]))]
+export const list = () => [...new Set([...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').split('\n')[1].matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1]))]
 
 /** The vite side, loaded by weft/vite when @weft/icons is in the build. */
-export function pass({ root, command, explicit }) {
+export function pass({ root, command, tier }) {
   const build = command === 'build'
   const catalog = list()
   const result = build ? analyze(root, { catalog }) : null
   const lazy = !!result?.dynamic.length
-  const stops = result && !explicit ? result.stops : new Set(STOPS)
-  return { catalog, result, lazy, stops, single: stops.size === 1 ? [...stops][0] : null, module: () => namesModule(result.names, { lazy }) }
+  const stops = tier && tier !== 'all' ? new Set([tier]) : result && !tier ? result.stops : new Set(STOPS)
+  return { catalog, result, lazy, stops, module: () => namesModule(result.names, { lazy }) }
 }
