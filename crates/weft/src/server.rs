@@ -6,9 +6,6 @@
 //! { "ok": false, "error": { "code": "NotFound", "data": … } }
 //! ```
 
-use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -18,110 +15,12 @@ use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
-use serde::Serialize;
-use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use tracing::Instrument;
 
-use crate::ctx::{Base, FromBase};
+use crate::ctx::Base;
 use crate::envelope::{Envelope, verify};
-
-type Boxed = Pin<Box<dyn Future<Output = Answer> + Send>>;
-type Handler = Arc<dyn Fn(Base, Bytes) -> Boxed + Send + Sync>;
-
-/// How a call ended, before the reports are added.
-enum Answer {
-    Value(Value),
-    Failed(Failed),
-    /// serde refused what TS sent: the two sides were built from different contracts.
-    Drift(String),
-}
-
-/// What a function's error becomes on the wire.
-pub enum Failed {
-    /// A declared error: `{ "code": …, "data": … }`, which TS checks against the declaration.
-    Typed(Value),
-    /// Anything else. The detail stays in this log: the client gets a request id.
-    Internal(String),
-}
-
-/// An error type a function can return. Generated for each function that declares `errors`.
-pub trait Failure {
-    fn failed(self) -> Failed;
-}
-
-/// The error of a function that declares none. Any `std::error::Error` converts into it, so `?` works.
-#[derive(Debug)]
-pub struct Error(pub String);
-
-impl Error {
-    pub fn msg(message: impl Into<String>) -> Self {
-        Error(message.into())
-    }
-}
-
-impl<E: std::error::Error> From<E> for Error {
-    fn from(e: E) -> Self {
-        Error(e.to_string())
-    }
-}
-
-impl Failure for Error {
-    fn failed(self) -> Failed {
-        Failed::Internal(self.0)
-    }
-}
-
-/// A service's functions, by contract id. `contract::functions(service)` builds it; [`router`] serves it.
-pub struct Functions {
-    service: &'static str,
-    hash: &'static str,
-    table: HashMap<&'static str, Handler>,
-}
-
-impl Functions {
-    pub fn new(service: &'static str, hash: &'static str) -> Self {
-        Functions { service, hash, table: HashMap::new() }
-    }
-
-    /// One function. Called by generated code.
-    pub fn add<C, I, O, E, F, Fut>(mut self, id: &'static str, f: F) -> Self
-    where
-        C: FromBase + Send + 'static,
-        I: DeserializeOwned + Send + 'static,
-        O: Serialize,
-        E: Failure,
-        F: Fn(C, I) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<O, E>> + Send + 'static,
-    {
-        #[derive(serde::Deserialize)]
-        struct Body<I> {
-            input: I,
-        }
-        let f = Arc::new(f);
-        let handler: Handler = Arc::new(move |base, body| {
-            let f = f.clone();
-            Box::pin(async move {
-                let input = match serde_json::from_slice::<Body<I>>(&body) {
-                    Ok(b) => b.input,
-                    Err(e) => return Answer::Drift(e.to_string()),
-                };
-                let Some(ctx) = C::from_base(base) else {
-                    return Answer::Drift("the claims don't fit this function's declaration".into());
-                };
-                match f(ctx, input).await {
-                    Ok(v) => match serde_json::to_value(v) {
-                        Ok(v) => Answer::Value(v),
-                        Err(e) => Answer::Failed(Failed::Internal(format!("the result didn't serialize: {e}"))),
-                    },
-                    Err(e) => Answer::Failed(e.failed()),
-                }
-            })
-        });
-        self.table.insert(id, handler);
-        self
-    }
-}
+use crate::functions::{Answer, Failed, Functions, drift_body, internal_body, ok_body};
 
 struct Shared {
     functions: Functions,
@@ -147,13 +46,15 @@ pub fn router_with(functions: Functions, secret: Vec<u8>) -> Router {
 }
 
 async fn health(State(s): State<Arc<Shared>>) -> Response {
-    let mut functions: Vec<_> = s.functions.table.keys().collect();
-    functions.sort();
-    json_response(StatusCode::OK, &json!({ "ok": true, "service": s.functions.service, "contract": s.functions.hash, "functions": functions, "pid": std::process::id() }))
+    json_response(StatusCode::OK, &json!({ "ok": true, "service": s.functions.service(), "contract": s.functions.hash(), "functions": s.functions.ids(), "pid": std::process::id() }))
 }
 
 fn json_response(status: StatusCode, body: &Value) -> Response {
-    (status, [(header::CONTENT_TYPE, "application/json")], body.to_string()).into_response()
+    text_response(status, body.to_string())
+}
+
+fn text_response(status: StatusCode, body: String) -> Response {
+    (status, [(header::CONTENT_TYPE, "application/json")], body).into_response()
 }
 
 fn refused(status: StatusCode, code: &str, message: impl std::fmt::Display) -> Response {
@@ -190,7 +91,7 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
         Ok(e) => e,
         Err(e) => return refused(StatusCode::UNAUTHORIZED, "Refused", e),
     };
-    let Some(handler) = s.functions.table.get(id.as_str()).cloned() else {
+    let Some(handler) = s.functions.handler(&id) else {
         return refused(StatusCode::NOT_FOUND, "Drift", format!("this sidecar has no function `{id}`: rebuild it from the current contract"));
     };
     let budget = Duration::from_millis(envelope.deadline_ms);
@@ -201,36 +102,31 @@ async fn call(State(s): State<Arc<Shared>>, Path(id): Path<String>, headers: Hea
     crate::otel::link(&span, base.traceparent());
 
     // A task of its own, so a panic is one failed call and not a dropped connection.
-    let task = tokio::spawn(handler(base.clone(), body).instrument(span.clone()));
+    let task = tokio::spawn(handler(base.clone(), Vec::from(body)).instrument(span.clone()));
     let _abort = AbortOnDrop(task.abort_handle());
     let outcome = tokio::time::timeout(budget, task).await;
     let _enter = span.enter();
     let answer = match outcome {
         Ok(Ok(answer)) => answer,
-        Ok(Err(e)) if e.is_panic() => Answer::Failed(Failed::Internal(format!("panicked: {}", panic_text(e.into_panic())))),
+        Ok(Err(e)) if e.is_panic() => Answer::Failed(Failed::Internal(format!("panicked: {}", crate::functions::panic_text(e.into_panic())))),
         Ok(Err(e)) => Answer::Failed(Failed::Internal(e.to_string())),
         Err(_) => {
             tracing::warn!(budget_ms = budget.as_millis() as u64, "deadline passed");
             return refused(StatusCode::GATEWAY_TIMEOUT, "Deadline", format!("`{id}` ran past its deadline"));
         }
     };
-    let (status, body) = match answer {
-        Answer::Value(value) => (StatusCode::OK, json!({ "ok": true, "value": value, "tags": base.tags(), "touched": base.touched() })),
-        Answer::Failed(Failed::Typed(error)) => (StatusCode::OK, json!({ "ok": false, "error": error })),
+    match answer {
+        Answer::Value(value) => text_response(StatusCode::OK, ok_body(&value, &base)),
+        Answer::Failed(Failed::Typed(error)) => json_response(StatusCode::OK, &json!({ "ok": false, "error": error })),
         Answer::Failed(Failed::Internal(detail)) => {
             tracing::error!(detail, "failed");
-            (StatusCode::INTERNAL_SERVER_ERROR, json!({ "ok": false, "error": { "code": "Internal", "requestId": base.request_id() } }))
+            json_response(StatusCode::INTERNAL_SERVER_ERROR, &internal_body(&base, None))
         }
         Answer::Drift(detail) => {
             tracing::error!(detail, "drift");
-            (StatusCode::UNPROCESSABLE_ENTITY, json!({ "ok": false, "error": { "code": "Drift", "message": detail } }))
+            json_response(StatusCode::UNPROCESSABLE_ENTITY, &drift_body(&detail))
         }
-    };
-    json_response(status, &body)
-}
-
-fn panic_text(p: Box<dyn std::any::Any + Send>) -> String {
-    p.downcast_ref::<&str>().map(|s| s.to_string()).or_else(|| p.downcast_ref::<String>().cloned()).unwrap_or_else(|| "no message".into())
+    }
 }
 
 /// Serve on `WEFT_LISTEN` (`127.0.0.1:0` when unset), print `weft-listening <addr>` for the supervisor, and drain on

@@ -11,11 +11,9 @@
 
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use serde::Deserialize;
-
-use crate::envelope::Envelope;
 
 /// The claims TS sends: never the session, and only what `remote({ claims })` chose to send.
 #[derive(Debug, Clone, Deserialize)]
@@ -36,13 +34,38 @@ impl User {
     }
 }
 
+/// What TS tells a sidecar or an addon about the call. Claims only: never a cookie or a session token.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Envelope {
+    pub user: Option<User>,
+    pub request_id: String,
+    pub deadline_ms: u64,
+    pub traceparent: Option<String>,
+    /// Milliseconds since the epoch when TS signed it. Nothing signs an in-process call.
+    #[serde(default)]
+    pub iat: u64,
+}
+
+/// A monotonic clock. `Instant::now()` panics on wasm32-unknown-unknown, so there the host tells the time.
+#[cfg(not(target_family = "wasm"))]
+fn clock() -> Duration {
+    static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    START.get_or_init(std::time::Instant::now).elapsed()
+}
+
+#[cfg(target_family = "wasm")]
+fn clock() -> Duration {
+    Duration::from_secs_f64(crate::native::now_ms() / 1000.0)
+}
+
 #[derive(Debug)]
 struct Inner {
     function: String,
     user: Option<User>,
     request_id: String,
     traceparent: Option<String>,
-    deadline: Instant,
+    deadline: Duration,
     tags: Mutex<Vec<String>>,
     touched: Mutex<Vec<String>>,
 }
@@ -58,7 +81,7 @@ impl Base {
             user: envelope.user,
             request_id: envelope.request_id,
             traceparent: envelope.traceparent,
-            deadline: Instant::now() + Duration::from_millis(envelope.deadline_ms),
+            deadline: clock() + Duration::from_millis(envelope.deadline_ms),
             tags: Mutex::default(),
             touched: Mutex::default(),
         }))
@@ -92,7 +115,7 @@ impl Base {
 
     /// What's left of the deadline. weft stops waiting at zero; long CPU loops should check [`Base::cancelled`].
     pub fn remaining(&self) -> Duration {
-        self.0.deadline.saturating_duration_since(Instant::now())
+        self.0.deadline.saturating_sub(clock())
     }
 
     /// The deadline passed, so no one is waiting for this answer.
