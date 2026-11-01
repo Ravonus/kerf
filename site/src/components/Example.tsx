@@ -24,3 +24,8 @@ export function Example(props: { id: string; plain?: boolean }) {
     </section>
   )
 }
+
+/** The example a docs page opens with, if it has one. */
+export function PageExample(props: { slug: string }) {
+  return <>{Object.keys(demos).filter(id => demos[id].page === props.slug).map(id => <Example key={id} id={id} plain />)}</>
+}

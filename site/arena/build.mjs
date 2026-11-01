@@ -27,6 +27,13 @@ for (const name of ['react', 'solid', 'weft']) {
     .reduce((sum, f) => sum + brotliCompressSync(readFileSync(join(dir, f))).length, 0)
   copyFileSync(join(here, name, 'main.tsx'), join(dir, 'source.txt'))
 }
+// A development build, because the graph's real names are in those only.
+await build({
+  root: join(here, 'graph'), base: '/arena/graph/', logLevel: 'warn', configFile: false, mode: 'development',
+  plugins: [(await import('../node_modules/weft/vite.mjs')).default({ dev: true, hmr: false })],
+  define: { 'process.env.NODE_ENV': '"development"', 'import.meta.env.DEV': 'true' },
+  build: { outDir: join(out, 'graph'), emptyOutDir: true, assetsDir: '.', minify: false },
+})
 mkdirSync(join(out, 'shared'), { recursive: true })
 copyFileSync(join(here, 'shared/harness.js'), join(out, 'shared/harness.txt'))
 writeFileSync(join(here, '../src/generated/arena.json'), JSON.stringify(bytes) + '\n')

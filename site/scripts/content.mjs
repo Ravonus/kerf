@@ -53,10 +53,23 @@ function numbers() {
 const file = path => () => readFileSync(join(repo, path), 'utf8')
 const topic = name => async () => (await weftDocs(site, name)).text
 
+/**
+ * The opening line of a page that starts straight in. `weft docs` is read by agents, whose context pays for every word, so
+ * these say what a page is for to someone arriving here, and stay out of that source.
+ */
+const LEADS = {
+  rules: 'Nine rules cover how every weft component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
+  lists: 'Lists and conditionals work as they do in React: `.map` with a `key`, `&&` and ternaries. This page covers the mistakes to avoid and the few habits that keep a long list fast.',
+  async: 'Load data with `resource`, and say what to show while it loads with `Boundary`. On the server, weft can wait for that data so the first page arrives filled in.',
+  start: '`@weft/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
+  browser: "`weft/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
+  testing: '`weft/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
+}
+
 /** The nav. A page's source is `weft docs <topic>` wherever one exists, so the site and the CLI read one file. */
 const SECTIONS = [
   ['Start', [
-    ['getting-started', 'Getting started', file('docs/getting-started.md')],
+    ['getting-started', 'Getting started', file('site/content/getting-started.md')],
     ['rules', 'The rules', topic('rules')],
     ['props', 'Props', topic('props')],
     ['lists', 'Lists', topic('lists')],
@@ -136,7 +149,8 @@ function linkify(html, slugs) {
 }
 
 /** The first thing on a page stays out. Long pages fold their other sections; `weft docs` prints the same source in full. */
-function fold(html) {
+function fold(html, slug) {
+  if (slug === 'getting-started') return html // steps: all of them are the page
   const [lead, ...rest] = html.split(/(?=<h2[ >])/)
   if (rest.length < 2 || html.replace(/<[^>]+>/g, ' ').split(/\s+/).length < 220) return html
   return lead + rest.map(part => {
@@ -167,7 +181,7 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, html: fold(html), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
+    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: fold(html, slug), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
@@ -350,7 +364,18 @@ export function Counter() {
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
   const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
-  write('showcase.json', { habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+  const server = `// src/server/shop.ts
+export const products = query({
+  tags: ['products'],
+  run: ({ ctx }) => ctx.db.select().from(schema.products),
+})
+
+// in Shop: the list now comes from the database
+const list = products()
+{(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
+  const size = JSON.parse(readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8')).size
+  const kb = n => +(n / 1024).toFixed(2)
+  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
 }
 
 // ------------------------------------------------------------------ agents
@@ -371,7 +396,20 @@ const docs = await buildDocs()
 const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
-write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), `<pre tabindex="0"><code>${highlight(readFileSync(join(site, 'src/demos', f), 'utf8').trim(), 'tsx')}</code></pre>`])))
+// The shop's steps mark the lines each one added, so the code on the page shows the app growing.
+// `ask` is a frame, so what it shows is the app inside it. `slow` shows the page it loads.
+const SHOWN = { 'ask.tsx': 'arena/graph/main.tsx', 'slow.tsx': 'src/routes/examples/slow.tsx' }
+const demoText = f => readFileSync(join(site, SHOWN[f] ?? `src/demos/${f}`), 'utf8').trim()
+const demoHtml = f => {
+  const text = demoText(f)
+  const step = /^shop-(\d)\.tsx$/.exec(f)
+  const before = step && step[1] !== '1' ? new Set(demoText(`shop-${step[1] - 1}.tsx`).split('\n')) : undefined
+  let n = -1
+  const lines = text.split('\n')
+  const html = highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => (before && lines[++n].trim() && !before.has(lines[n]) ? '<span data-part="line" data-new="">' : tag))
+  return `<pre tabindex="0"><code>${html}</code></pre>`
+}
+write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), demoHtml(f)])))
 write('numbers.json', numbers())
 write('docs-nav.json', docs.nav)
 write('docs.json', docs.pages)

@@ -1,0 +1,3 @@
+/* This page is shown in a frame by the slow page example. */
+[data-site="header"], [data-site="footer"], footer { display: none; }
+#content { padding: 12px; }

@@ -40,3 +40,5 @@
     }
 
 [data-scope="prose"] :is(h2, h3), [data-part="fold"] { scroll-margin-block-start: 96px; }
+
+[data-site="doc"] > [data-part="lead"] { max-inline-size: 65ch; margin: 0 0 var(--warp-space-group); font-size: 1.1875rem; line-height: 1.5; color: oklch(0.88 0.02 130); }

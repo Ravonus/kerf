@@ -220,6 +220,7 @@ export function hole(k: string, slot: number, value: unknown, mixed?: 1 | 2): st
 }
 
 let open: { read: boolean } | undefined
+let plain = false
 
 const notWire = (v: any): string | undefined => {
   if (v == null || typeof v === 'string' || typeof v === 'boolean') return undefined
@@ -235,7 +236,7 @@ const notWire = (v: any): string | undefined => {
  * the component.
  */
 export function island(id: string, names: string[], Comp: (props: any) => unknown, props: Record<string, unknown>, slotted?: 1, when?: string): unknown {
-  if (!quiet) return component(Comp, props)
+  if (!quiet) return component(Comp, slotted ? authored(props) : props)
   const k = nextKey()
   const v = names.map(n => {
     const bad = notWire(props[n])
@@ -258,8 +259,32 @@ export function island(id: string, names: string[], Comp: (props: any) => unknow
   return { t: `<!--wi:${data}--><!--[-->${html}<!--]-->${rest}` }
 }
 
-/** An island's children, which stay the server's. */
+/** Props whose children are the page's own after all: the compiler wrote a slot, but this island sits in client code. */
+function authored(props: Record<string, unknown>) {
+  const read = Object.getOwnPropertyDescriptor(props, 'children')?.get
+  return Object.defineProperty(props, 'children', {
+    enumerable: true,
+    get() {
+      plain = true
+      try {
+        return read?.call(props)
+      } finally {
+        plain = false
+      }
+    },
+  })
+}
+
+/**
+ * An island's children, which stay the server's. Where the island is only a component (`island` above, in client code)
+ * the client renders them too, so they're ordinary output with keys to claim, with the shape a client call gives them.
+ */
 export function slot(fn: () => unknown): unknown {
+  if (plain) {
+    plain = false
+    const kids = fn() as unknown[]
+    return kids.length === 1 ? kids[0] : kids
+  }
   if (open) open.read = true
   const was = quiet
   quiet = true
