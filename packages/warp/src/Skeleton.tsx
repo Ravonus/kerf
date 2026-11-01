@@ -1,6 +1,6 @@
 import { untrack } from 'weft'
 import './styles'
-import '@weft/ui-core/styles/components/skeleton.css'
+import '@weft/warp-core/styles/components/skeleton.css'
 
 /**
  * A skeleton (05 §5): the shimmer is the sweep, left to right; still under reduced motion. `lines` stacks text

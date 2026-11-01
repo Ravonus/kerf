@@ -1,10 +1,10 @@
 import { derived } from 'weft'
 import type { Interaction } from 'weft/interaction'
 import { Icon, type IconRef } from './Icon'
-import { useUi } from './use'
+import { useUi } from './use-ui'
 import './styles'
-import '@weft/ui-core/styles/components/toggle-button.css'
-import '@weft/ui-core/styles/components/chip.css' // the pressed toggle's forced-colours rule lives with the chip
+import '@weft/warp-core/styles/components/toggle-button.css'
+import '@weft/warp-core/styles/components/chip.css' // the pressed toggle's forced-colours rule lives with the chip
 
 /** A toggle button (05 §2): `aria-pressed`, the sweep held while pressed. */
 export function Toggle({ pressed, icon, label, size, ui, ref, children, ...rest }: { pressed: boolean; icon?: IconRef; label?: string; size?: 'sm' | 'md' | 'lg'; ui?: Interaction; children?: any; [attr: string]: any }) {

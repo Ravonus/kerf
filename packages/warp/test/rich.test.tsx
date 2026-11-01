@@ -1,5 +1,5 @@
 // The rich inputs: keyboard behaviour against 04 §1.3–1.4, ARIA wiring, and SSR + hydration with the locale pinned.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
 import { flush, render } from 'weft/test'

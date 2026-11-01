@@ -136,13 +136,13 @@ Overlays don't reach the shop's bundle, so most of the savings above don't show 
 
 ## 5. Guarantees, as checked
 
-- **ui-core stays framework-free:** `test/agnostic.test.mjs` passes. The new code is a regex and string handling.
+- **warp-core stays framework-free:** `test/agnostic.test.mjs` passes. The new code is a regex and string handling.
 - **Markup and states unchanged:**
   - New `warp/test/markup.test.tsx` covers every markup branch in `fixtures/Variants.tsx`: every Button emphasis, icon and loading state, every Icon, the Toggles, field variants, choices, surfaces, alerts at all six tones, tabs, overlays open and closed, and toasts.
   - It snapshots the server HTML and the client DOM once actions have attached. Attributes are sorted; weft's hole markers and `wk` keys are dropped.
   - The snapshots were written from the original sources, and the new code matches them.
 - **The sweep and field shell are pinned by behaviour too:**
-  - New `ui-core/test/trace.test.ts` runs one scripted session for each, on fake timers.
+  - New `warp-core/test/trace.test.ts` runs one scripted session for each, on fake timers.
   - The sweep session covers 12 host kinds: hover, leave, backstop, transitionend, re-hover while out, held states, trigger labels, field focus and `data-open`, touch, confirm, pin, static hosts, hosts added later, and the duration cache per expression stop.
   - The field session covers delays, notch colour and the gradient window, the counter, clear, filled, select, press-to-focus, update and destroy.
   - These snapshots were also written from the original sources.
@@ -151,7 +151,7 @@ Overlays don't reach the shop's bundle, so most of the savings above don't show 
 - **SSR + hydration:** 0 misses and 0 writes for all 25 cases.
 - **Shop:** 23/23 hidden tests. Add-one is 2 DOM mutations and price-push 1, both unchanged.
 - **axe:** the shop has 0 violations over 24 audits (3 stops × 2 themes × 2 motion settings). The spec gallery shows only the known spec finding: the pressed-chip count at 3.23:1 in light mode.
-- **Suites:** ui-core 20, warp 74, weft 219, CLI 89, cargo (weft-compiler 86, weft-layout 7), all passing.
+- **Suites:** warp-core 20, warp 74, weft 219, CLI 89, cargo (weft-compiler 86, weft-layout 7), all passing.
 
 ## 6. Findings for later (all five fixed in §7)
 
@@ -165,7 +165,7 @@ Overlays don't reach the shop's bundle, so most of the savings above don't show 
 
 ## 7. weft pass: cheaper pass-through, and the §6 findings fixed
 
-Same day, in weft (compiler `crates/weft-compiler`, runtime `packages/weft/src`) and ui-core. Sizes as above, plus
+Same day, in weft (compiler `crates/weft-compiler`, runtime `packages/weft/src`) and warp-core. Sizes as above, plus
 the shop (`evals/reference-v3/warp`, production build, all JS chunks, brotli q11).
 
 ### 7.1 What changed in the lowering
@@ -249,14 +249,14 @@ In the shop, stubbing the pieces out shows what is left of weft's pass-through: 
    "key={index} keys rows by position". (A helper call inside `key`, e.g. `key={k(x.id)}`, already compiled right;
    the miscompile was the index.)
 
-**`sweep.pin(el, false)` (ui-core).** `step()` cleared the backstop timer on every call, so the observer's re-step
+**`sweep.pin(el, false)` (warp-core).** `step()` cleared the backstop timer on every call, so the observer's re-step
 after the unpin dropped the timer the unpin had just set. Only going back "in" cancels it now. New test
 `unpinning a host falls back to the backstop timer`; the sweep trace changed in exactly that place (`soft` reaches
 `idle` 451 ms after the unpin instead of staying `out`).
 
 ### 7.5 Checked
 
-weft 222 (219 + 3), CLI 89, ui-core 21 (20 + 1), warp 74 (markup snapshots unchanged), cargo weft-compiler 93 (86 +
+weft 222 (219 + 3), CLI 89, warp-core 21 (20 + 1), warp 74 (markup snapshots unchanged), cargo weft-compiler 93 (86 +
 7) and weft-layout 7; the hydration oracle passes (0 misses, 0 writes); v3 weft shop 23/23; warp shop 23/23, add-one
 2 DOM mutations and price-push 1 (unchanged), axe 0 violations over 24 audits. No `toTouchAtMost` budget changed.
 

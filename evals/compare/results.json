@@ -3,24 +3,24 @@
   "label": "weft + warp",
   "size": {
    "js": {
-    "raw": 82078,
-    "gz": 26207,
-    "br": 23647
+    "raw": 81931,
+    "gz": 26105,
+    "br": 23612
    },
    "css": {
-    "raw": 158065,
-    "gz": 23631,
-    "br": 19803
+    "raw": 158007,
+    "gz": 23621,
+    "br": 19794
    }
   },
   "lines": 44,
   "load": {
-   "scriptMs": 104,
-   "styleMs": 55,
-   "layoutMs": 44,
-   "taskMs": 325,
-   "fcpMs": 264,
-   "heapMB": 2.87,
+   "scriptMs": 112,
+   "styleMs": 62,
+   "layoutMs": 43,
+   "taskMs": 326,
+   "fcpMs": 272,
+   "heapMB": 2.88,
    "nodes": 1454
   },
   "parity": {
@@ -28,64 +28,64 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 8
+     "ms": 7
     },
     "sort": {
      "ok": true,
      "dom": 37,
-     "ms": 45
+     "ms": 49
     },
     "next page": {
      "ok": true,
      "dom": 42,
-     "ms": 91
+     "ms": 90
     },
     "filter": {
      "ok": true,
      "dom": 55,
-     "ms": 310
+     "ms": 293
     },
     "clear filter": {
      "ok": true,
      "dom": 58,
-     "ms": 89
+     "ms": 94
     },
     "select row": {
      "ok": true,
      "dom": 5,
-     "ms": 205
+     "ms": 217
     },
     "details open": {
      "ok": true,
      "dom": 18,
-     "ms": 96
+     "ms": 122
     },
     "column picker": {
      "ok": true,
      "dom": 10,
-     "ms": 177
+     "ms": 174
     },
     "account menu": {
      "ok": true,
      "dom": 3,
-     "ms": 72
+     "ms": 54
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 198,
+    "load": 196,
     "elements": 528,
     "text": 161,
     "comments": 228,
     "rows": 20,
     "live": {
-     "ms": 7,
+     "ms": 6,
      "dom": 3
     },
     "select": {
-     "ms": 24,
+     "ms": 31,
      "dom": 5
     },
     "sort": {
@@ -94,47 +94,47 @@
     }
    },
    "100": {
-    "load": 364,
+    "load": 359,
     "elements": 1968,
     "text": 641,
     "comments": 708,
     "rows": 100,
     "live": {
-     "ms": 11,
+     "ms": 12,
      "dom": 3
     },
     "select": {
-     "ms": 37,
+     "ms": 30,
      "dom": 5
     },
     "sort": {
-     "ms": 128,
+     "ms": 135,
      "dom": 183
     }
    },
    "200": {
-    "load": 459,
+    "load": 468,
     "elements": 3768,
     "text": 1241,
     "comments": 1308,
     "rows": 200,
     "live": {
-     "ms": 14,
+     "ms": 15,
      "dom": 3
     },
     "select": {
-     "ms": 35,
+     "ms": 33,
      "dom": 5
     },
     "sort": {
-     "ms": 181,
+     "ms": 218,
      "dom": 365
     }
    }
   },
   "longList": {
-   "load": 513,
-   "scrollMs": 282,
+   "load": 499,
+   "scrollMs": 271,
    "heightMoved": 0,
    "downJump": 0,
    "upJump": 0,
@@ -142,57 +142,68 @@
    "elements": 107,
    "jumpOffBy": 0,
    "errors": [],
-   "loadedBr": 24995
+   "loadedBr": 24990
   },
   "sweep": {
    "1": {
     "js": {
-     "raw": 83300,
-     "gz": 26642,
-     "br": 24068
+     "raw": 83153,
+     "gz": 26543,
+     "br": 24014
     },
     "css": {
-     "raw": 158065,
-     "gz": 23631,
-     "br": 19803
+     "raw": 158007,
+     "gz": 23621,
+     "br": 19794
     }
    },
    "10": {
     "js": {
-     "raw": 102330,
-     "gz": 28901,
-     "br": 25891
+     "raw": 102181,
+     "gz": 28811,
+     "br": 25816
     },
     "css": {
-     "raw": 158065,
-     "gz": 23631,
-     "br": 19803
+     "raw": 158007,
+     "gz": 23621,
+     "br": 19794
     }
    },
    "50": {
     "js": {
-     "raw": 187395,
-     "gz": 38022,
-     "br": 31315
+     "raw": 187246,
+     "gz": 37927,
+     "br": 31173
     },
     "css": {
-     "raw": 158065,
-     "gz": 23631,
-     "br": 19803
+     "raw": 158007,
+     "gz": 23621,
+     "br": 19794
     }
    },
    "200": {
     "js": {
-     "raw": 508699,
-     "gz": 72796,
-     "br": 45110
+     "raw": 508550,
+     "gz": 72690,
+     "br": 45203
     },
     "css": {
-     "raw": 158782,
-     "gz": 23725,
-     "br": 19899
+     "raw": 158724,
+     "gz": 23716,
+     "br": 19858
     }
    }
+  },
+  "design": {
+   "axe": 0,
+   "contrast": 0,
+   "distinct": 77,
+   "drift": 16,
+   "focusLost": 0,
+   "overflow": 0,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 41157
   }
  },
  "solid-kobalte": {
@@ -211,12 +222,12 @@
   },
   "lines": 118,
   "load": {
-   "scriptMs": 141,
-   "styleMs": 5,
-   "layoutMs": 28,
-   "taskMs": 258,
-   "fcpMs": 220,
-   "heapMB": 3.85,
+   "scriptMs": 152,
+   "styleMs": 4,
+   "layoutMs": 23,
+   "taskMs": 261,
+   "fcpMs": 224,
+   "heapMB": 3.86,
    "nodes": 617
   },
   "parity": {
@@ -224,54 +235,54 @@
     "live cell": {
      "ok": true,
      "dom": 40,
-     "ms": 8
+     "ms": 7
     },
     "sort": {
      "ok": true,
      "dom": 46,
-     "ms": 54
+     "ms": 46
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 48
+     "ms": 41
     },
     "filter": {
      "ok": true,
      "dom": 46,
-     "ms": 45
+     "ms": 50
     },
     "clear filter": {
      "ok": true,
      "dom": 43,
-     "ms": 42
+     "ms": 40
     },
     "select row": {
      "ok": true,
      "dom": 6,
-     "ms": 16
+     "ms": 12
     },
     "details open": {
      "ok": true,
      "dom": 3,
-     "ms": 37
+     "ms": 38
     },
     "column picker": {
      "ok": true,
      "dom": 55,
-     "ms": 83
+     "ms": 58
     },
     "account menu": {
      "ok": true,
      "dom": 25,
-     "ms": 22
+     "ms": 23
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 171,
+    "load": 170,
     "elements": 337,
     "text": 172,
     "comments": 2,
@@ -281,56 +292,56 @@
      "dom": 40
     },
     "select": {
-     "ms": 14,
+     "ms": 15,
      "dom": 6
     },
     "sort": {
-     "ms": 47,
+     "ms": 48,
      "dom": 46
     }
    },
    "100": {
-    "load": 326,
+    "load": 313,
     "elements": 1457,
     "text": 732,
     "comments": 2,
     "rows": 100,
     "live": {
-     "ms": 26,
+     "ms": 25,
      "dom": 200
     },
     "select": {
-     "ms": 21,
+     "ms": 20,
      "dom": 6
     },
     "sort": {
-     "ms": 94,
+     "ms": 92,
      "dom": 206
     }
    },
    "200": {
-    "load": 404,
+    "load": 479,
     "elements": 2857,
     "text": 1432,
     "comments": 2,
     "rows": 200,
     "live": {
-     "ms": 50,
+     "ms": 52,
      "dom": 400
     },
     "select": {
-     "ms": 28,
+     "ms": 27,
      "dom": 6
     },
     "sort": {
-     "ms": 80,
+     "ms": 73,
      "dom": 402
     }
    }
   },
   "longList": {
-   "load": 102,
-   "scrollMs": 259,
+   "load": 137,
+   "scrollMs": 264,
    "heightMoved": 6607,
    "downJump": 0,
    "upJump": 0,
@@ -389,6 +400,17 @@
      "br": 1428
     }
    }
+  },
+  "design": {
+   "axe": 14,
+   "contrast": 6,
+   "distinct": 69,
+   "drift": 14,
+   "focusLost": 1,
+   "overflow": 2,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 42612
   }
  },
  "react-radix": {
@@ -407,11 +429,11 @@
   },
   "lines": 129,
   "load": {
-   "scriptMs": 216,
-   "styleMs": 6,
-   "layoutMs": 22,
-   "taskMs": 319,
-   "fcpMs": 284,
+   "scriptMs": 221,
+   "styleMs": 5,
+   "layoutMs": 25,
+   "taskMs": 334,
+   "fcpMs": 296,
    "heapMB": 4.43,
    "nodes": 508
   },
@@ -420,27 +442,27 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 20
+     "ms": 30
     },
     "sort": {
      "ok": true,
      "dom": 60,
-     "ms": 43
+     "ms": 44
     },
     "next page": {
      "ok": true,
      "dom": 65,
-     "ms": 26
+     "ms": 34
     },
     "filter": {
      "ok": true,
      "dom": 73,
-     "ms": 38
+     "ms": 46
     },
     "clear filter": {
      "ok": true,
      "dom": 62,
-     "ms": 34
+     "ms": 33
     },
     "select row": {
      "ok": true,
@@ -450,83 +472,83 @@
     "details open": {
      "ok": true,
      "dom": 5,
-     "ms": 42
+     "ms": 48
     },
     "column picker": {
      "ok": true,
      "dom": 54,
-     "ms": 99
+     "ms": 91
     },
     "account menu": {
      "ok": true,
      "dom": 26,
-     "ms": 37
+     "ms": 28
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 214,
+    "load": 266,
     "elements": 295,
     "text": 171,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 22,
+     "ms": 23,
      "dom": 3
     },
     "select": {
-     "ms": 26,
+     "ms": 30,
      "dom": 7
     },
     "sort": {
-     "ms": 38,
+     "ms": 40,
      "dom": 60
     }
    },
    "100": {
-    "load": 304,
+    "load": 365,
     "elements": 1255,
     "text": 731,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 47,
+     "ms": 55,
      "dom": 3
     },
     "select": {
-     "ms": 39,
+     "ms": 43,
      "dom": 7
     },
     "sort": {
-     "ms": 94,
+     "ms": 111,
      "dom": 244
     }
    },
    "200": {
-    "load": 460,
+    "load": 482,
     "elements": 2455,
     "text": 1431,
     "comments": 1,
     "rows": 200,
     "live": {
-     "ms": 70,
+     "ms": 71,
      "dom": 3
     },
     "select": {
-     "ms": 65,
+     "ms": 82,
      "dom": 7
     },
     "sort": {
-     "ms": 102,
+     "ms": 118,
      "dom": 395
     }
    }
   },
   "longList": {
-   "load": 164,
-   "scrollMs": 312,
+   "load": 165,
+   "scrollMs": 352,
    "heightMoved": 6607,
    "downJump": 0,
    "upJump": 0,
@@ -585,6 +607,17 @@
      "br": 1428
     }
    }
+  },
+  "design": {
+   "axe": 0,
+   "contrast": 0,
+   "distinct": 65,
+   "drift": 13,
+   "focusLost": 0,
+   "overflow": 2,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 94688
   }
  },
  "react-zustand": {
@@ -603,11 +636,11 @@
   },
   "lines": 137,
   "load": {
-   "scriptMs": 198,
-   "styleMs": 5,
-   "layoutMs": 21,
-   "taskMs": 302,
-   "fcpMs": 268,
+   "scriptMs": 217,
+   "styleMs": 4,
+   "layoutMs": 24,
+   "taskMs": 334,
+   "fcpMs": 296,
    "heapMB": 4.43,
    "nodes": 508
   },
@@ -616,79 +649,79 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 19
+     "ms": 23
     },
     "sort": {
      "ok": true,
      "dom": 60,
-     "ms": 44
+     "ms": 42
     },
     "next page": {
      "ok": true,
      "dom": 65,
-     "ms": 32
+     "ms": 30
     },
     "filter": {
      "ok": true,
      "dom": 73,
-     "ms": 45
+     "ms": 44
     },
     "clear filter": {
      "ok": true,
      "dom": 62,
-     "ms": 28
+     "ms": 32
     },
     "select row": {
      "ok": true,
      "dom": 7,
-     "ms": 25
+     "ms": 22
     },
     "details open": {
      "ok": true,
      "dom": 5,
-     "ms": 46
+     "ms": 44
     },
     "column picker": {
      "ok": true,
      "dom": 54,
-     "ms": 89
+     "ms": 80
     },
     "account menu": {
      "ok": true,
      "dom": 26,
-     "ms": 34
+     "ms": 24
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 240,
+    "load": 267,
     "elements": 295,
     "text": 171,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 19,
+     "ms": 18,
      "dom": 3
     },
     "select": {
-     "ms": 23,
+     "ms": 28,
      "dom": 7
     },
     "sort": {
-     "ms": 39,
+     "ms": 45,
      "dom": 60
     }
    },
    "100": {
-    "load": 353,
+    "load": 357,
     "elements": 1255,
     "text": 731,
     "comments": 1,
     "rows": 100,
     "live": {
-     "ms": 75,
+     "ms": 63,
      "dom": 3
     },
     "select": {
@@ -701,28 +734,28 @@
     }
    },
    "200": {
-    "load": 450,
+    "load": 467,
     "elements": 2455,
     "text": 1431,
     "comments": 1,
     "rows": 200,
     "live": {
-     "ms": 60,
+     "ms": 77,
      "dom": 3
     },
     "select": {
-     "ms": 63,
+     "ms": 74,
      "dom": 7
     },
     "sort": {
-     "ms": 130,
+     "ms": 122,
      "dom": 395
     }
    }
   },
   "longList": {
-   "load": 185,
-   "scrollMs": 341,
+   "load": 184,
+   "scrollMs": 347,
    "heightMoved": 6607,
    "downJump": 0,
    "upJump": 0,
@@ -781,6 +814,17 @@
      "br": 1428
     }
    }
+  },
+  "design": {
+   "axe": 32,
+   "contrast": 0,
+   "distinct": 62,
+   "drift": 14,
+   "focusLost": 0,
+   "overflow": 0,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 95211
   }
  },
  "react-mui": {
@@ -799,11 +843,11 @@
   },
   "lines": 90,
   "load": {
-   "scriptMs": 786,
-   "styleMs": 29,
-   "layoutMs": 30,
-   "taskMs": 946,
-   "fcpMs": 916,
+   "scriptMs": 756,
+   "styleMs": 26,
+   "layoutMs": 36,
+   "taskMs": 917,
+   "fcpMs": 892,
    "heapMB": 10.97,
    "nodes": 765
   },
@@ -812,73 +856,73 @@
     "live cell": {
      "ok": true,
      "dom": 131,
-     "ms": 224
+     "ms": 199
     },
     "sort": {
      "ok": true,
-     "dom": 57,
-     "ms": 182
+     "dom": 58,
+     "ms": 199
     },
     "next page": {
      "ok": true,
-     "dom": 68,
-     "ms": 155
+     "dom": 67,
+     "ms": 180
     },
     "filter": {
      "ok": true,
-     "dom": 132,
-     "ms": 283
+     "dom": 130,
+     "ms": 251
     },
     "clear filter": {
      "ok": true,
      "dom": 66,
-     "ms": 102
+     "ms": 128
     },
     "select row": {
      "ok": true,
      "dom": 172,
-     "ms": 218
+     "ms": 266
     },
     "details open": {
      "ok": true,
      "dom": 148,
-     "ms": 213
+     "ms": 227
     },
     "column picker": {
      "ok": true,
      "dom": 304,
-     "ms": 229
+     "ms": 206
     },
     "account menu": {
      "ok": true,
      "dom": 149,
-     "ms": 239
+     "ms": 201
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 816,
+    "load": 820,
     "elements": 569,
     "text": 165,
     "comments": 1,
     "rows": 20,
     "live": {
-     "ms": 178,
+     "ms": 201,
      "dom": 131
     },
     "select": {
-     "ms": 265,
+     "ms": 289,
      "dom": 160
     },
     "sort": {
-     "ms": 144,
+     "ms": 149,
      "dom": 66
     }
    },
    "100": {
-    "load": 1105,
+    "load": 1206,
     "elements": 2009,
     "text": 725,
     "comments": 1,
@@ -888,18 +932,18 @@
      "dom": 611
     },
     "select": {
-     "ms": 677,
+     "ms": 669,
      "dom": 640
     },
     "sort": {
-     "ms": 413,
+     "ms": 406,
      "dom": 313
     }
    }
   },
   "longList": {
-   "load": 200,
-   "scrollMs": 294,
+   "load": 190,
+   "scrollMs": 271,
    "heightMoved": 6610,
    "downJump": 0,
    "upJump": 0,
@@ -958,6 +1002,17 @@
      "br": 0
     }
    }
+  },
+  "design": {
+   "axe": 17,
+   "contrast": 17,
+   "distinct": 74,
+   "drift": 14,
+   "focusLost": 27,
+   "overflow": 0,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 127444
   }
  },
  "weft-plain": {
@@ -976,11 +1031,11 @@
   },
   "lines": 120,
   "load": {
-   "scriptMs": 49,
+   "scriptMs": 52,
    "styleMs": 4,
-   "layoutMs": 23,
-   "taskMs": 159,
-   "fcpMs": 120,
+   "layoutMs": 24,
+   "taskMs": 171,
+   "fcpMs": 128,
    "heapMB": 2.6,
    "nodes": 678
   },
@@ -989,60 +1044,60 @@
     "live cell": {
      "ok": true,
      "dom": 3,
-     "ms": 5
+     "ms": 6
     },
     "sort": {
      "ok": true,
      "dom": 37,
-     "ms": 16
+     "ms": 20
     },
     "next page": {
      "ok": true,
      "dom": 43,
-     "ms": 15
+     "ms": 20
     },
     "filter": {
      "ok": true,
      "dom": 42,
-     "ms": 19
+     "ms": 21
     },
     "clear filter": {
      "ok": true,
      "dom": 41,
-     "ms": 16
+     "ms": 15
     },
     "select row": {
      "ok": true,
      "dom": 2,
-     "ms": 10
+     "ms": 8
     },
     "details open": {
      "ok": true,
      "dom": 3,
-     "ms": 36
+     "ms": 38
     },
     "column picker": {
      "ok": true,
      "dom": 22,
-     "ms": 12
+     "ms": 16
     },
     "account menu": {
      "ok": true,
      "dom": 0,
-     "ms": 6
+     "ms": 3
     }
    },
    "errors": []
   },
   "scale": {
    "20": {
-    "load": 71,
+    "load": 88,
     "elements": 320,
     "text": 183,
     "comments": 36,
     "rows": 20,
     "live": {
-     "ms": 4,
+     "ms": 7,
      "dom": 3
     },
     "select": {
@@ -1055,7 +1110,7 @@
     }
    },
    "100": {
-    "load": 126,
+    "load": 151,
     "elements": 1280,
     "text": 743,
     "comments": 116,
@@ -1065,37 +1120,37 @@
      "dom": 3
     },
     "select": {
-     "ms": 6,
+     "ms": 5,
      "dom": 2
     },
     "sort": {
-     "ms": 39,
+     "ms": 51,
      "dom": 183
     }
    },
    "200": {
-    "load": 169,
+    "load": 198,
     "elements": 2480,
     "text": 1443,
     "comments": 216,
     "rows": 200,
     "live": {
-     "ms": 7,
+     "ms": 9,
      "dom": 3
     },
     "select": {
-     "ms": 12,
+     "ms": 6,
      "dom": 2
     },
     "sort": {
-     "ms": 56,
+     "ms": 57,
      "dom": 365
     }
    }
   },
   "longList": {
-   "load": 101,
-   "scrollMs": 177,
+   "load": 128,
+   "scrollMs": 182,
    "heightMoved": 6566,
    "downJump": 0,
    "upJump": 0,
@@ -1154,6 +1209,20 @@
      "br": 1424
     }
    }
+  }
+ },
+ "weft-tailwind": {
+  "label": "weft-tailwind",
+  "design": {
+   "axe": 6,
+   "contrast": 6,
+   "distinct": 63,
+   "drift": 15,
+   "focusLost": 0,
+   "overflow": 2,
+   "brief": 11,
+   "briefTotal": 11,
+   "jsCssBr": 13085
   }
  }
 }

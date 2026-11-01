@@ -330,11 +330,11 @@
          "br": 3253
         },
         {
-         "m": "node_modules/@weft/ui-core/src/floating-label.ts",
+         "m": "node_modules/@weft/warp-core/src/floating-label.ts",
          "br": 1529
         },
         {
-         "m": "node_modules/@weft/ui-core/src/sweep.ts",
+         "m": "node_modules/@weft/warp-core/src/sweep.ts",
          "br": 1425
         },
         {
@@ -346,7 +346,7 @@
          "br": 953
         },
         {
-         "m": "node_modules/@weft/ui-core/src/table.ts",
+         "m": "node_modules/@weft/warp-core/src/table.ts",
          "br": 852
         },
         {
@@ -354,11 +354,11 @@
          "br": 852
         },
         {
-         "m": "node_modules/@weft/ui-core/src/overlays.ts",
+         "m": "node_modules/@weft/warp-core/src/overlays.ts",
          "br": 629
         },
         {
-         "m": "node_modules/@weft/ui-core/src/shell.ts",
+         "m": "node_modules/@weft/warp-core/src/shell.ts",
          "br": 429
         },
         {
@@ -370,11 +370,11 @@
          "br": 386
         },
         {
-         "m": "node_modules/@weft/ui-core/src/layers.ts",
+         "m": "node_modules/@weft/warp-core/src/layers.ts",
          "br": 368
         },
         {
-         "m": "node_modules/@weft/ui-core/src/menu.ts",
+         "m": "node_modules/@weft/warp-core/src/menu.ts",
          "br": 334
         },
         {

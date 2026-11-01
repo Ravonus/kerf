@@ -181,7 +181,7 @@ browser never loads. Hydration stays 0 misses, 0 writes, and the e2e checks no f
   Node), and `weft dev`/`weft start` load `.env`.
 - `Stream.settle()` in weft's SSR: a resource created outside every Boundary has nowhere to stream to, so the shell
   now waits for it. Without this a query read outside a Boundary refetched on hydration.
-- `uid()` in ui-core has separate server and client spaces (`field-s0`, `field-0`). A client id made after hydration
+- `uid()` in warp-core has separate server and client spaces (`field-s0`, `field-0`). A client id made after hydration
   could equal a server one, and the sign-up form's labels pointed at the wrong input.
 - The server stamps the socket's address in a private header, stripped from anything the client sent, so Better Auth's
   rate limit isn't one shared bucket.

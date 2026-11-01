@@ -1,0 +1,5 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* usage meters: the used part fills through the rail; tick at the warn line */
+:where([data-scope="usage"]) { display: grid; gap: 14px; }
+}

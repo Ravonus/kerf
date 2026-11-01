@@ -1,7 +1,7 @@
 import { untrack } from 'weft'
 import type { Tone } from './Button'
 import './styles'
-import '@weft/ui-core/styles/components/progress.css'
+import '@weft/warp-core/styles/components/progress.css'
 
 /**
  * Progress (05 §5): linear, or `shape="circle"`. Without a `value` it is indeterminate. The range moves through

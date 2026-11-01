@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Chip (filter / toggle chip): sweeps on hover, holds while pressed -------------- */
+:where([data-scope="chip"]) {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--warp-space-tight);
+  block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); margin: 0;
+  border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: var(--warp-radius-round);
+  background: var(--warp-color-surface-raised); color: var(--warp-color-text-subtle);
+  font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color var(--warp-touch-out), background-color var(--warp-touch-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
+}
+:where([data-scope="chip"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-scope="chip"]:hover) { color: var(--warp-color-text); }
+:where([data-scope="chip"] > svg[data-icon]) { inline-size: 12px; block-size: 12px; stroke-width: 2; display: none; }
+:where([data-scope="chip"][aria-pressed="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([data-scope="chip"][aria-pressed="true"] > svg[data-icon]) { display: block; }
+}

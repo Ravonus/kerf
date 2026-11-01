@@ -4,13 +4,13 @@
 //
 //   node warp-exit.mjs [--name v3-warp-exit] [--skip-a11y]
 //
-// Needs `npm install` in frameworks/warp, frameworks/weft, packages/warp and packages/ui-core, and a fresh native
+// Needs `npm install` in frameworks/warp, frameworks/weft, packages/warp and packages/warp-core, and a fresh native
 // compiler (packages/weft: npm run build:native). Parts, each pass/fail:
 //   hidden    run-app.mjs reference + grade + measure on reference-v3/{warp,weft}: every hidden test, and the §3.7
 //             work budgets on the probe (price-push ≤ 1 DOM and ≤ 10 re-runs, add-one ≤ 3 DOM)
 //   size      both shops built for production, brotli q11: warp's JS ≤ the §3.7 app budget + KIT_ALLOWANCE, and JS + CSS
 //             under the 50 KB ceiling. The kit is warp's JS minus the weft shop's.
-//   contrast  ui-core's copy of the spec checker on the resolved tokens: every text/UI/focus pair at light/dark ×
+//   contrast  warp-core's copy of the spec checker on the resolved tokens: every text/UI/focus pair at light/dark ×
 //             quiet/balanced/vivid (motion doesn't touch colour tokens; the a11y part covers it in the page)
 //   a11y      packages/warp/scripts/a11y.mjs on the warp gallery (every component) and the built shop: axe plus
 //             pixel-measured contrast at all 12 stops, expression × theme × motion
@@ -98,8 +98,8 @@ const builds = {}
 // -- token contrast
 {
   log('== contrast (resolved tokens, spec checker)')
-  const checker = join(repo, 'packages', 'ui-core', 'scripts', 'contrast-check.mjs')
-  const css = join(repo, 'packages', 'ui-core', 'styles', 'warp.css')
+  const checker = join(repo, 'packages', 'warp-core', 'scripts', 'contrast-check.mjs')
+  const css = join(repo, 'packages', 'warp-core', 'styles', 'warp.css')
   let stdout
   try { ({ stdout } = await exec('node', [checker, css, '--json'], { maxBuffer: 1 << 26 })) } catch (e) { stdout = e.stdout }
   const { results: pairs } = JSON.parse(stdout)

@@ -1,7 +1,7 @@
 // The markup every component renders, pinned (fixtures/Variants.tsx): the server HTML, and the client DOM once its
 // actions have attached. Attributes are sorted (their order means nothing) and weft's hole markers and hydration keys dropped, so a refactor for size passes only if no
 // part, attribute, ARIA wire or state moved.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { renderToString } from 'weft/ssr'
 import { flush, render } from 'weft/test'
 import * as client from './fixtures/Variants'

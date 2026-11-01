@@ -1,6 +1,0 @@
-/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
-@layer warp.app {
-/* checkpoint: a hairline across the conversation with a restore action */
-:where([data-scope="checkpoint"]) { display: flex; align-items: center; gap: 10px; margin-block: 6px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
-:where([data-scope="checkpoint"])::before, :where([data-scope="checkpoint"])::after { content: ""; flex: 1; border-block-start: 1px dashed var(--warp-color-border-strong); }
-}

@@ -1,11 +1,11 @@
 import { KeyIcon } from '@weft/icons'
-import { isPasskeyCancel } from '@weft/ui-core'
+import { isPasskeyCancel } from '@weft/warp-core'
 import { derived, state } from 'weft'
 import { Button } from '../Button'
 import { Glyph } from '../parts'
 import '../styles'
-import '@weft/ui-core/styles/flows/sso.css'
-import '@weft/ui-core/styles/layout/grid.css'
+import '@weft/warp-core/styles/flows/sso.css'
+import '@weft/warp-core/styles/layout/grid.css'
 
 // a frame draws its content twice: a function child builds each copy (an element would move from one to the other)
 

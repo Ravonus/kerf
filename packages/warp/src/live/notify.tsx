@@ -1,4 +1,4 @@
-import { announce, notifyPolicy, type NotifyItem } from '@weft/ui-core'
+import { announce, notifyPolicy, type NotifyItem } from '@weft/warp-core'
 import { toast } from '../Toast'
 
 /**

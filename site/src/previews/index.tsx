@@ -2,7 +2,7 @@
 // shows the component alone, so its toolkit page has one preview of its own.
 import { state } from 'weft'
 import { InviteDialog, Conversation, PeerMark, PeerSelection, ShareDialog, AgendaDay, BranchSwitcher, Cite, Code, CodeBlock, ControlBar, EventEditor, EventPopover, Field, LineItem, LockIndicator, ModelPicker, MoveSheet, OrderTracker, PasskeyButton, PasswordMeter, Prose, Snippet, Sources, SsoButtons, TagsInput, Tile, UserMessage, Button } from '@weft/warp'
-import type { CalEvent } from '@weft/ui-core'
+import type { CalEvent } from '@weft/warp-core'
 
 const day = '2026-11-03'
 const standup: CalEvent = { id: 'a', title: 'Weekly standup', start: `${day}T09:30`, end: `${day}T10:00` }

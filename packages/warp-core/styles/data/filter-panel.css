@@ -1,0 +1,23 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* filter panel + facets -------------------------------------------------------- */
+:where([data-scope="filter-panel"]) { display: grid; gap: 4px; align-content: start; }
+:where([data-scope="filter-panel"] > header) { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-block-end: 8px; border-block-end: 1px solid var(--warp-color-border); }
+:where([data-scope="filter-panel"] > header h4) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 600; }
+:where([data-scope="filter-panel"] details) { border-block-end: 1px solid var(--warp-color-border); }
+:where([data-scope="filter-panel"] summary) {
+  display: flex; align-items: center; justify-content: space-between; min-block-size: var(--warp-target-min); cursor: pointer; list-style: none;
+  font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="filter-panel"] summary::-webkit-details-marker) { display: none; }
+:where([data-scope="filter-panel"] summary)::after { content: "+"; font: 400 16px/1 var(--warp-text-body-font); }
+:where([data-scope="filter-panel"] details[open] summary)::after { content: "−"; }
+:where([data-scope="filter-panel"] summary:focus-visible) { outline: 2px solid var(--warp-color-focus); border-radius: 4px; }
+:where([data-scope="filter-panel"] [data-part="facet"]) {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-block-size: max(32px, var(--warp-hit-min)); cursor: pointer; font-size: var(--warp-text-caption-size);
+}
+:where([data-scope="filter-panel"] [data-part="facet"] small) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="filter-panel"] [data-part="facet"][data-empty]) { opacity: var(--warp-opacity-disabled); }
+:where([data-scope="filter-panel"] [data-part="facet"] input) { accent-color: var(--warp-color-accent-solid); inline-size: 16px; block-size: 16px; margin: 0; }
+:where([data-scope="filter-panel"] [data-part="body"]) { display: grid; padding-block-end: 10px; }
+}

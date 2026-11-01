@@ -569,7 +569,7 @@ reference:
 | `weft/start` (router, server functions, cache) | **No** | It is the framework. Two routers or two caches would break "one way" |
 | `native()` / `remote()` | **No** | Already explicit per server function (`impl: media`). A slot would add indirection with no gain |
 | `@weft/multiplayer` | **No** | A library users import. It consumes `realtime.bus` like any other code |
-| `ui-core`, `weft/text` API, `weft/skeleton` | **No** | Consumer APIs that read slots. They must exist without any plugin installed |
+| `warp-core`, `weft/text` API, `weft/skeleton` | **No** | Consumer APIs that read slots. They must exist without any plugin installed |
 
 ---
 

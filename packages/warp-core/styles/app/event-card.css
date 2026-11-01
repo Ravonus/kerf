@@ -1,0 +1,11 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* event popover body (rides comp's popover content) */
+:where([data-scope="event-card"]) { display: grid; gap: var(--warp-space-related); inline-size: min(320px, calc(100vw - 32px)); }
+:where([data-scope="event-card"] [data-part="title"]) { --warp-trim-k: 0; display: flex; align-items: flex-start; gap: 10px; margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); }
+:where([data-scope="event-card"] [data-part="title"])::before { content: ""; flex: none; margin-block-start: 0.35em; inline-size: 10px; block-size: 10px; border-radius: var(--warp-radius-mark); background: var(--_c, var(--warp-color-data-1)); }
+:where([data-scope="event-card"] dl) { display: grid; grid-template-columns: 18px 1fr; gap: 6px 10px; margin: 0; font-size: var(--warp-text-body-size); }
+:where([data-scope="event-card"] dt) { color: var(--warp-color-text-subtle); padding-block-start: 2px; }
+:where([data-scope="event-card"] dd) { margin: 0; }
+:where([data-scope="event-card"] [data-part="actions"]) { display: flex; gap: var(--warp-space-related); justify-content: flex-end; flex-wrap: wrap; padding-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+}

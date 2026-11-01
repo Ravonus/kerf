@@ -1,0 +1,30 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Menubar: a row of menu buttons; once one is open, hover moves between them */
+:where([data-scope="menubar"]) {
+  display: flex; gap: 2px; padding: 3px; border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 3px);
+  background: var(--warp-color-surface-raised); inline-size: fit-content;
+}
+:where([data-scope="menubar"] > [role="menuitem"]) {
+  block-size: calc(var(--warp-control-md) - 6px); padding-inline: 10px; border: 0; border-radius: var(--warp-radius-control); background: transparent;
+  color: var(--warp-color-text); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); cursor: default;
+}
+:where([data-scope="menubar"] > [role="menuitem"]:hover, [data-scope="menubar"] > [role="menuitem"][aria-expanded="true"]) { background: color-mix(in oklab, currentColor 7%, transparent); }
+
+
+
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS (00 §1.5; 01 §2 "Touch floor"). Every target reaches hit-min (44px on a coarse
+   pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
+   never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
+   ------------------------------------------------------------------------ */
+:where(a[data-scope="link"], [data-scope="logo"], [data-scope="anchor-heading"] > a[data-part="anchor"],
+       [data-scope="relative-time"], [data-scope="truncate"] > [data-part="toggle"], [data-scope="menubar"] > [role="menuitem"],
+       [data-scope="ai-label"]) { position: relative; }
+
+/* pills and menubar items sit in a row with room above and below: block axis only */
+:where([data-scope="pill"], [data-scope="menubar"] > [role="menuitem"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2));
+}
+}

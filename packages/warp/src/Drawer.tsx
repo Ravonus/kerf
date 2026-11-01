@@ -1,11 +1,11 @@
 import { XIcon } from '@weft/icons'
-import { dialog, uid } from '@weft/ui-core'
+import { dialog, uid } from '@weft/warp-core'
 import { derived, type State, untrack } from 'weft'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/button.css' // the close button's markup
-import '@weft/ui-core/styles/components/sheet.css'
-import '@weft/ui-core/styles/components/dialog.css' // the backdrop and the parts a sheet shares with the dialog
+import '@weft/warp-core/styles/components/button.css' // the close button's markup
+import '@weft/warp-core/styles/components/sheet.css'
+import '@weft/warp-core/styles/components/dialog.css' // the backdrop and the parts a sheet shares with the dialog
 
 /**
  * A sheet (05 §3 Drawer/Sheet; components.html:1092-1106): on a native <dialog>, at the side on wide screens and from

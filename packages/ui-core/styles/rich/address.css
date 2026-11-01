@@ -1,7 +1,0 @@
-/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
-@layer warp.inputs-rich {
-/* -- address */
-  :where(.addr-grid) { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--warp-space-group) var(--warp-space-related); }
-  .addr-grid > * { grid-column: span 6; } :where(.addr-grid > [data-span="3"]) { grid-column: span 3; } :where(.addr-grid > [data-span="2"]) { grid-column: span 2; } :where(.addr-grid > [data-span="4"]) { grid-column: span 4; }
-  @media (max-width: 520px) { :where(.addr-grid > [data-span]) { grid-column: span 6; } }
-}

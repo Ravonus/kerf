@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Button group (attached) -------------------------------------------- */
+:where([data-scope="button-group"]) { display: inline-flex; align-items: center; gap: var(--warp-space-related); flex-wrap: wrap; }
+:where([data-scope="button-group"][data-attached]) { gap: 0; flex-wrap: nowrap; }
+:where([data-scope="button-group"][data-attached] > [data-scope="button"]:not(:first-child)) {
+  border-start-start-radius: 0; border-end-start-radius: 0; margin-inline-start: calc(var(--warp-border-hairline) * -1);
+}
+:where([data-scope="button-group"][data-attached] > [data-scope="button"]:not(:last-child)) { border-start-end-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="button-group"][data-attached] > [data-scope="button"]:focus-visible) { z-index: 1; }
+/* solid segments are split by a hairline in their own ink */
+:where([data-scope="button-group"][data-attached] > [data-scope="button"]:not([data-emphasis]) + [data-scope="button"]:not([data-emphasis])) {
+  box-shadow: inset var(--warp-border-hairline) 0 0 color-mix(in oklab, var(--_ink-on) 35%, transparent);
+}
+/* split button: the menu half is a square */
+:where([data-scope="button-group"][data-split] > [data-scope="button"]:last-child) { inline-size: var(--warp-control-md); padding: 0; }
+}

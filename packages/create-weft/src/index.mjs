@@ -1,5 +1,5 @@
 // create-weft: write a new app's files (research 26 §6, research 28 §6). `--ui`: `warp` adds @weft/warp and `warp()` in
-// weft.config.ts, `headless` adds @weft/ui-core's spec CSS under the app's own markup, `tailwind` adds Tailwind and its Vite plugin,
+// weft.config.ts, `headless` adds @weft/warp-core's spec CSS under the app's own markup, `tailwind` adds Tailwind and its Vite plugin,
 // `none` adds nothing. `--db`, `--layer`
 // and `--auth` add a database, a todo app and a sign-in flow (stack.mjs); `--runtime` is what `weft build` targets.
 // AGENTS.md needs the installed weft, so bin/create-weft.mjs runs `weft agents-md` right after the install. Everything
@@ -29,7 +29,7 @@ const appPlugins = ({ ui, layer }) => [...(ui === 'warp' ? [{ pkg: '@weft/warp',
 
 /** What each plugin a scaffold picks declares. `weft check` fails a scaffold where these fall behind the plugin. */
 const GRANTS = {
-  '@weft/warp': ['fs.read:node_modules/@weft/ui-core/**', 'fs.write:$TMPDIR/warp-seed-*', 'spawn:node'],
+  '@weft/warp': ['fs.read:node_modules/@weft/warp-core/**', 'fs.write:$TMPDIR/warp-seed-*', 'spawn:node'],
   '@weft/plugin-db-prisma': ['fs.read:prisma/**', 'fs.write:prisma/migrations/**', 'spawn:node'],
   '@weft/plugin-db-native': ['fs.read:migrations/**', 'fs.write:migrations/**'],
 }
@@ -80,7 +80,7 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
   const stack = stackDeps({ db, auth: auth === true, layer, version })
   const deps = { weft: version, '@weft/start': version }
   if (ui === 'warp') deps['@weft/warp'] = version
-  if (ui === 'headless') deps['@weft/ui-core'] = version
+  if (ui === 'headless') deps['@weft/warp-core'] = version
   if (ui === 'tailwind') Object.assign(stack.dev, tailwindPackages)
 
   const files = {
@@ -136,7 +136,7 @@ function layout(ui, options) {
 
 function shell(ui, { db, auth: which }) {
   const auth = which === true
-  const imports = ui === 'warp' ? '' : (ui === 'headless' ? `import '@weft/ui-core/styles/warp.css'\n` : '') + `import '../app.css'\n`
+  const imports = ui === 'warp' ? '' : (ui === 'headless' ? `import '@weft/warp-core/styles/warp.css'\n` : '') + `import '../app.css'\n`
   const links = db === 'none' ? '' : `\n        <Link href="/todos">Todos</Link>`
   if (!auth) {
     return `${imports}import { Link, type RouteProps } from '@weft/start'
@@ -218,7 +218,7 @@ const named = (ui, part) => (classes(ui, part) ? ` class="${classes(ui, part)}"`
 
 function css(ui) {
   if (ui === 'tailwind') return TAILWIND_CSS
-  // headless rides warp's tokens (ui-core's warp.css, the fluid title size included); none brings its own.
+  // headless rides warp's tokens (warp-core's warp.css, the fluid title size included); none brings its own.
   const v = ui === 'headless'
     ? { bg: 'var(--warp-color-page)', fg: 'var(--warp-color-text)', accent: 'var(--warp-color-accent-solid)', radius: 'var(--warp-radius-surface)', title: 'var(--warp-text-title-size)' }
     : { bg: 'Canvas', fg: 'CanvasText', accent: 'LinkText', radius: '8px', title: 'clamp(1.5rem, 1.2rem + 2cqi, 2.5rem)' }

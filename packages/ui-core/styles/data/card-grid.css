@@ -1,5 +1,0 @@
-/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
-@layer warp.data {
-/* card + card grid (interactive cards sweep) */
-:where([data-scope="card-grid"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); list-style: none; margin: 0; padding: 0; }
-}

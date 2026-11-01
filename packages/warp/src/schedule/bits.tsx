@@ -1,11 +1,11 @@
 // What the schedule pack's components share: sweep parts, glyphs, the clock.
 import { RepeatIcon } from '@weft/icons'
-import { installSweep, nowIn } from '@weft/ui-core'
+import { installSweep, nowIn } from '@weft/warp-core'
 import { onCleanup, onMount, state, untrack, watch } from 'weft'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/base.css'
+import '@weft/warp-core/styles/rich/helpers.css'
 
 export const SweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 

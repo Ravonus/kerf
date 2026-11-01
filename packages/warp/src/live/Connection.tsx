@@ -1,4 +1,4 @@
-import { announce, connectionAnnouncement, liveState, type LiveState } from '@weft/ui-core'
+import { announce, connectionAnnouncement, liveState, type LiveState } from '@weft/warp-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
 import { Banner, LiveStatus } from '../parts'
 import { Button } from '../Button'

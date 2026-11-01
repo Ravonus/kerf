@@ -244,8 +244,8 @@ describe('contrast and accessibility (every app)', () => {
 })
 
 describe('which apps get the token codes', () => {
-  test('headless @weft/ui-core has no tokens, so a fix would point at variables that do not exist', async () => {
-    const { result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`, { 'package.json': JSON.stringify({ name: 'a', dependencies: { weft: '*', '@weft/ui-core': '*' } }) })
+  test('headless @weft/warp-core has no tokens, so a fix would point at variables that do not exist', async () => {
+    const { result } = await run(`export const P = () => <p style={{ padding: '16px' }}>x</p>`, { 'package.json': JSON.stringify({ name: 'a', dependencies: { weft: '*', '@weft/warp-core': '*' } }) })
     expect(codes(result)).toEqual([])
   })
 })

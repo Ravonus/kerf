@@ -3,7 +3,7 @@
 //
 // A lit row is `data-hold`, warp's existing word for "drawn active with no pointer on it", so no component needs a new
 // rule. `data-remote` says only someone else has it, for whoever wants to tint that.
-import { interact } from '@weft/ui-core'
+import { interact } from '@weft/warp-core'
 import { createRoot, effect } from 'weft'
 import { seams } from 'weft/interaction'
 

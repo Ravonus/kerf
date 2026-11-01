@@ -1,5 +1,5 @@
 import { BagIcon, MinusIcon, PlusIcon } from '@weft/icons'
-import { cartCount, cartTotals, money, type CartLine } from '@weft/ui-core'
+import { cartCount, cartTotals, money, type CartLine } from '@weft/warp-core'
 import { derived, type State } from 'weft'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -7,16 +7,16 @@ import { Drawer } from '../Drawer'
 import { toast } from '../Toast'
 import { afterFlush } from './atoms'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/app/badge.css' // the count's bump
-import '@weft/ui-core/styles/flows/line-item.css'
-import '@weft/ui-core/styles/flows/lines.css'
-import '@weft/ui-core/styles/flows/qty.css'
+import '@weft/warp-core/styles/flows/tokens.css'
+import '@weft/warp-core/styles/flows/base.css'
+import '@weft/warp-core/styles/rich/helpers.css'
+import '@weft/warp-core/styles/layout/tokens.css'
+import '@weft/warp-core/styles/layout/row.css'
+import '@weft/warp-core/styles/layout/stack.css'
+import '@weft/warp-core/styles/app/badge.css' // the count's bump
+import '@weft/warp-core/styles/flows/line-item.css'
+import '@weft/warp-core/styles/flows/lines.css'
+import '@weft/warp-core/styles/flows/qty.css'
 
 export const setQuantity = (cart: State<CartLine[]>, id: string, quantity: number) => (cart.value = cart.value.map(l => (l.id === id ? { ...l, quantity } : l)))
 

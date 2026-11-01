@@ -1,0 +1,21 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Empty / error state ------------------------------------------------------------ */
+:where([data-scope="empty-state"]) {
+  display: grid; justify-items: center; text-align: center; gap: var(--warp-space-related);
+  padding: var(--warp-space-section) var(--warp-space-group); max-inline-size: 44ch; margin-inline: auto;
+}
+:where([data-scope="empty-state"] [data-part="art"]) { inline-size: 96px; block-size: 64px; margin-block-end: var(--warp-space-related); overflow: visible; }
+:where([data-scope="empty-state"] [data-part="art"] .w) { stroke: var(--warp-color-border-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+:where([data-scope="empty-state"] [data-part="art"] .f) { stroke: var(--warp-color-accent-solid); stroke-width: 2; vector-effect: non-scaling-stroke; fill: none; }
+:where([data-scope="empty-state"][data-tone="critical"] [data-part="art"] .f) { stroke: var(--warp-color-critical-text); }
+:where([data-scope="empty-state"] [data-part="title"]) {
+  margin: 0; font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size);
+  font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking);
+}
+:where([data-expression="vivid"] [data-scope="empty-state"] [data-part="title"] em) { font-family: var(--warp-text-display-font); font-weight: 400; font-size: 1.2em; }
+:where([data-scope="empty-state"] [data-part="title"] em) { font-style: italic; }
+:where([data-expression="quiet"] [data-scope="empty-state"] [data-part="title"] em, [data-expression="balanced"] [data-scope="empty-state"] [data-part="title"] em) { font-style: normal; }
+:where([data-scope="empty-state"] [data-part="description"]) { margin: 0; color: var(--warp-color-text-subtle); }
+:where([data-scope="empty-state"] [data-part="actions"]) { display: flex; gap: var(--warp-space-related); flex-wrap: wrap; justify-content: center; margin-block-start: var(--warp-space-related); }
+}

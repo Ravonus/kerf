@@ -1,5 +1,5 @@
 // The collections on the server: first rows as HTML, nothing touching a browser API, and hydration adopting them.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
 import { flush } from 'weft/test'

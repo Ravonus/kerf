@@ -1,12 +1,12 @@
-import { cursorsLayer, firstName, peerColor, type CursorPeer, type Peer } from '@weft/ui-core'
+import { cursorsLayer, firstName, peerColor, type CursorPeer, type Peer } from '@weft/warp-core'
 import { derived } from 'weft'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { read, type Live } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/cursors.css'
-import '@weft/ui-core/styles/app/cursor.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/base.css'
+import '@weft/warp-core/styles/app/cursors.css'
+import '@weft/warp-core/styles/app/cursor.css'
 
 /**
  * Peer cursors (07 §6.1): arrow and name chip in the peer's colour, anchored to `[data-anchor]` elements in the

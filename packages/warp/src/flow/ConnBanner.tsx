@@ -1,13 +1,13 @@
 import { ClockIcon, RefreshIcon, SparkleIcon, WifiIcon, WifiOffIcon } from '@weft/icons'
-import { announce, connView } from '@weft/ui-core'
+import { announce, connView } from '@weft/warp-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
 import { Button, type ButtonProps } from '../Button'
 import { useCooldown } from './kit'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/flows/conn.css'
-import '@weft/ui-core/styles/components/spinner.css'
+import '@weft/warp-core/styles/flows/tokens.css'
+import '@weft/warp-core/styles/flows/base.css'
+import '@weft/warp-core/styles/flows/conn.css'
+import '@weft/warp-core/styles/components/spinner.css'
 
 type Live<T> = T | { readonly value: T } | (() => { readonly value: T } | T)
 

@@ -1,13 +1,13 @@
-import { announce, burst, firstName, followViewport, peerColor, popover, presenceDelta, uid, type Peer } from '@weft/ui-core'
+import { announce, burst, firstName, followViewport, peerColor, popover, presenceDelta, uid, type Peer } from '@weft/warp-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { PeerAvatar, read, type Live } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/components/popover.css'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/avatar-stack.css'
-import '@weft/ui-core/styles/app/follow-flag.css'
+import '@weft/warp-core/styles/components/popover.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/base.css'
+import '@weft/warp-core/styles/app/avatar-stack.css'
+import '@weft/warp-core/styles/app/follow-flag.css'
 
 /**
  * Who is here (07 §6.1): avatars with a ring in each peer's colour, `+n` overflow opening the list, joins and leaves

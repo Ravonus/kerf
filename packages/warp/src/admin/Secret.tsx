@@ -4,12 +4,12 @@ import { Checkbox } from '../Choice'
 import { Input } from '../Field'
 import { toast } from '../Toast'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
+import '@weft/warp-core/styles/flows/tokens.css'
+import '@weft/warp-core/styles/flows/base.css'
+import '@weft/warp-core/styles/rich/helpers.css'
+import '@weft/warp-core/styles/layout/tokens.css'
+import '@weft/warp-core/styles/layout/row.css'
+import '@weft/warp-core/styles/layout/stack.css'
 
 /**
  * A secret shown once (09 §4.2, §4.6): a read-only field with Copy, and a checkbox the Done button waits on. Shared by

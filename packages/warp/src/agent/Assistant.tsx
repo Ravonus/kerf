@@ -1,5 +1,5 @@
 import { SparkleIcon } from '@weft/icons'
-import { announce, answerText, copyConfirm, uid, type AgentTool, type Answer, type AnswerBlock } from '@weft/ui-core'
+import { announce, answerText, copyConfirm, uid, type AgentTool, type Answer, type AnswerBlock } from '@weft/warp-core'
 import { derived, onMount, untrack, watch } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
@@ -10,7 +10,7 @@ import { Reasoning } from './Reasoning'
 import { Sources } from './Sources'
 import { ToolCall } from './ToolCall'
 import '../styles'
-import '@weft/ui-core/styles/app/assistant.css'
+import '@weft/warp-core/styles/app/assistant.css'
 
 export interface AssistantProps {
   /** The folded value: `foldAnswer(events)`, or what a stream folds to. */

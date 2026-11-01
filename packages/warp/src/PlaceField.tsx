@@ -1,13 +1,13 @@
 import { PinIcon } from '@weft/icons'
-import { addressFormat, addressPart, formReset, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft/ui-core'
+import { addressFormat, addressPart, formReset, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft/warp-core'
 import { derived, state, untrack } from 'weft'
 import { Chip } from './Chip'
 import { ComboField } from './Combobox'
 import { Input } from './Field'
 import { bindable, type Bindable, type RichFieldProps } from './Picker'
 import { CountrySelect } from './RichSelect'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/address.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/address.css'
 
 export type Place = { displayName: string; lat: number; lng: number; timezone?: TimeZoneId; category?: string; id?: string }
 export type PlaceBias = { id: string; label: string; default?: boolean }

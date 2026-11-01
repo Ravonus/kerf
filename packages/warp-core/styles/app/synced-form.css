@@ -1,0 +1,12 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* SyncedForm (all-inputs sync): every field of a form mirrored between peers; a remote edit tints the field in
+   the peer's colour for a moment and the peer's name rides the label line */
+:where([data-scope="synced-form"]) { display: grid; gap: 14px; }
+:where([data-scope="synced-form"] [data-scope="field"][data-remote]) > :where([data-part="control"]) { box-shadow: 0 0 0 var(--warp-border-emphasis) var(--_pc); border-radius: var(--warp-radius-control); transition: box-shadow var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="synced-form"] [data-part="peer-tag"]) { justify-self: end; margin-block-start: -10px; padding: 1px 6px; border-radius: var(--warp-radius-mark); background: color-mix(in oklab, var(--_pc) 70%, var(--warp-color-text)); color: var(--warp-color-surface); font: 600 10.5px/1.5 var(--warp-text-body-font); }
+:where([data-scope="synced-form"] [data-part="peer-tag"][hidden]) { display: none; }
+@media (forced-colors: active) {
+:where([data-scope="synced-form"] [data-remote]) { outline: 2px dashed Highlight; outline-offset: 2px; }
+}
+}

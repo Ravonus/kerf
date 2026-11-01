@@ -23,7 +23,7 @@
       "version": "0.0.0",
       "integrity": null,
       "permissions": [
-        "fs.read:node_modules/@weft/ui-core/**",
+        "fs.read:node_modules/@weft/warp-core/**",
         "fs.write:$TMPDIR/warp-seed-*",
         "spawn:node"
       ],

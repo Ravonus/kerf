@@ -1,12 +1,12 @@
-import { firstName, joinNames, peerColor, type Peer } from '@weft/ui-core'
+import { firstName, joinNames, peerColor, type Peer } from '@weft/warp-core'
 import { derived } from 'weft'
 import { PeerAvatar, read, type Live } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/avatar.css'
-import '@weft/ui-core/styles/app/viewport-rail.css'
-import '@weft/ui-core/styles/app/section-peers.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/base.css'
+import '@weft/warp-core/styles/app/avatar.css'
+import '@weft/warp-core/styles/app/viewport-rail.css'
+import '@weft/warp-core/styles/app/section-peers.css'
 
 export type ViewportPeer = Peer & { /** Viewport top and height, 0–1 of the document. */ top: number; height: number }
 

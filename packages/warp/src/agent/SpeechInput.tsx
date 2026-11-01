@@ -1,13 +1,13 @@
 import { MicIcon } from '@weft/icons'
-import { announce, dictation, formatClock, listMics, speechWave, type DictationEngine, type DictationEvents, type DictationState } from '@weft/ui-core'
+import { announce, dictation, formatClock, listMics, speechWave, type DictationEngine, type DictationEvents, type DictationState } from '@weft/warp-core'
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Select } from '../Select'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { Sweep, useSweep } from './bits'
 import '../styles'
-import '@weft/ui-core/styles/app/speech.css'
+import '@weft/warp-core/styles/app/speech.css'
 
 const BARS = Array.from({ length: 40 }, (_, i) => i)
 const DEFAULT_MIC = [{ value: '', label: 'Default microphone' }]

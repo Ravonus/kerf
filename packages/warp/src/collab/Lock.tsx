@@ -1,10 +1,10 @@
-import { firstName, peerColor, uid, type Peer } from '@weft/ui-core'
+import { firstName, peerColor, uid, type Peer } from '@weft/warp-core'
 import { Input } from '../Field'
 import { PeerAvatar } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/lock.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/base.css'
+import '@weft/warp-core/styles/app/lock.css'
 
 /** The chip on a field another peer holds (07 §6.1): "Kofi is editing". */
 export function LockIndicator({ peer, ...rest }: { peer: Peer; [attr: string]: any }) {

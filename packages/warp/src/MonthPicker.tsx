@@ -1,11 +1,11 @@
 import { DownIcon, LeftIcon, RightIcon } from '@weft/icons'
-import { addDays, dow, fmt, fmtRange, isoWeek, isoWeekStart, pad, toIso, weekOf, ymd, type ChangeReason, type IsoDate, type IsoMonth, type IsoWeek } from '@weft/ui-core'
+import { addDays, dow, fmt, fmtRange, isoWeek, isoWeekStart, pad, toIso, weekOf, ymd, type ChangeReason, type IsoDate, type IsoMonth, type IsoWeek } from '@weft/warp-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from './Button'
 import { CalendarGrid } from './Calendar'
 import { bindable, Composite, Hidden, Panel, useOpen, usePickerEnv, type Bindable, type Openable, type RichFieldProps } from './Picker'
-import '@weft/ui-core/styles/rich/monthgrid.css'
-import '@weft/ui-core/styles/rich/gap-rows.css'
+import '@weft/warp-core/styles/rich/monthgrid.css'
+import '@weft/warp-core/styles/rich/gap-rows.css'
 
 export type Cell = { v: string; text: string; name: string }
 

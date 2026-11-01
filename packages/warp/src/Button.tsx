@@ -1,10 +1,10 @@
 import { derived } from 'weft'
 import type { Interaction } from 'weft/interaction'
 import { Icon, type IconRef } from './Icon'
-import { useUi } from './use'
+import { useUi } from './use-ui'
 import './styles'
-import '@weft/ui-core/styles/components/button.css'
-import '@weft/ui-core/styles/components/spinner.css'
+import '@weft/warp-core/styles/components/button.css'
+import '@weft/warp-core/styles/components/spinner.css'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
 export type Emphasis = 'solid' | 'soft' | 'outline' | 'ghost' | 'frame' | 'link'

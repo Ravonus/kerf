@@ -1,7 +1,7 @@
 import { onTestFinished } from 'vitest'
 // The collab pack driven as a user would (07 §5, §6; 06 §10).
 import { fireEvent } from '@testing-library/dom'
-import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft/ui-core'
+import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft/warp-core'
 import { state } from 'weft'
 import { flush, render } from 'weft/test'
 import { Toaster } from '../src/Toast'

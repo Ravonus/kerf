@@ -1,9 +1,9 @@
 // warp() for weft.config.ts: warp's config, tokens, catalog and AGENTS section (PLAN §7c, research 13 §2.13).
 // Components stay ordinary imports; this only contributes data.
 //
-// - seed: the brand accent. The spec tokens (ui-core/styles/warp.css) derive every colour from
+// - seed: the brand accent. The spec tokens (warp-core/styles/warp.css) derive every colour from
 //   --warp-seed-accent-h/-c, so a seed is those two values. It is checked with the spec's own contrast checker
-//   (ui-core/scripts/contrast-check.mjs: every sys pair, both themes, every dial stop). A hue that fails is fitted (see
+//   (warp-core/scripts/contrast-check.mjs: every sys pair, both themes, every dial stop). A hue that fails is fitted (see
 //   fitted()), so every hue passes; what can still fail is a token override, which is D010.
 // - fields: 'classic' makes classic fields the default with no attribute in the app: the spec's classic rules
 //   (keyed on [data-fields="classic"]) are copied, re-scoped to :root unless an ancestor says data-fields="floating".
@@ -17,7 +17,7 @@ import { join } from 'node:path'
 import { definePlugin } from 'weft/plugin'
 import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 
-const core = new URL('../ui-core/', import.meta.url)
+const core = new URL('../warp-core/', import.meta.url)
 const DEFAULT = { hue: 152, chroma: 0.115 }
 const DIALS = { expression: ['quiet', 'balanced', 'vivid'], density: ['compact', 'cozy', 'comfortable'], flair: ['sweep', 'none'], theme: ['light', 'dark'] }
 const RADII = { sharp: [2, 2, 2], soft: [8, 12, 4], round: [14, 20, 6] }
@@ -235,7 +235,7 @@ function cardColors(seed, dials) {
   }
 }
 
-const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D007). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
+const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D007). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/warp-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
 
 const catalog = [
   ['Stack', 'Vertical flow; `gap` is the relationship'],
@@ -331,8 +331,8 @@ export const warp = definePlugin({
   weft: '*',
   namespace: 'D',
   options,
-  // A custom seed runs ui-core's contrast checker over a temporary copy of its stylesheet (checkSeed).
-  permissions: { fs: { read: ['node_modules/@weft/ui-core/**'], write: ['$TMPDIR/warp-seed-*'] }, spawn: ['node'] },
+  // A custom seed runs warp-core's contrast checker over a temporary copy of its stylesheet (checkSeed).
+  permissions: { fs: { read: ['node_modules/@weft/warp-core/**'], write: ['$TMPDIR/warp-seed-*'] }, spawn: ['node'] },
   contribute(o) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma

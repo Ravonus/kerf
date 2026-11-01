@@ -3,8 +3,8 @@ import { derived } from 'weft'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
 import './styles'
-import '@weft/ui-core/styles/components/button.css' // the close button's markup
-import '@weft/ui-core/styles/components/alert.css'
+import '@weft/warp-core/styles/components/button.css' // the close button's markup
+import '@weft/warp-core/styles/components/alert.css'
 
 /**
  * An inline alert (05 §5): icon, title, description, actions, close. Status is never colour alone: the icon and the

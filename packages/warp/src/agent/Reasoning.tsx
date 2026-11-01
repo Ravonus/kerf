@@ -2,7 +2,7 @@ import { RightIcon } from '@weft/icons'
 import { derived } from 'weft'
 import { Shimmer } from './Shimmer'
 import '../styles'
-import '@weft/ui-core/styles/app/reasoning.css'
+import '@weft/warp-core/styles/app/reasoning.css'
 
 /** Reasoning (07 §1.2): a native details. "Thinking…" while it streams, open; it folds itself and keeps the duration. */
 export function Reasoning({ text, streaming, seconds }: { text: string; streaming?: boolean; seconds?: number }) {

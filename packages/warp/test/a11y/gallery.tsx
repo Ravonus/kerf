@@ -31,7 +31,7 @@ import { Dashboard, Tables } from '../fixtures/Data'
 import { Virtuals } from '../fixtures/Virtual'
 import { Alerts, Buttons, Choices, Fields, Icons, Overlays, Surfaces, Tabbed, Toasts, Toggles, seedToasts } from '../fixtures/Variants'
 // after the components: the first import fixes the order of warp's CSS layers
-import '@weft/ui-core/styles/data/panel.css'
+import '@weft/warp-core/styles/data/panel.css'
 
 // The redesign's components and the canvas pack. Menu's and Select's open states are audited from a11y.mjs.
 function Added() {

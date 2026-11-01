@@ -1,0 +1,1341 @@
+/* =============================================================================
+   warp · foundations — tokens + base                         v0.2 · 2026-10-28
+   Spec: ../01-foundations.md        Direction: ../00-direction.md
+
+   Scope attributes (any element; nest freely):
+     data-theme       light | dark            (none = follow prefers-color-scheme)
+     data-expression  quiet | balanced | vivid (none = balanced)
+     data-density     compact | cozy | comfortable (none = cozy)
+     data-flair       sweep | none            sweep on buttons + surfaces too / inputs only
+     data-fields      floating | classic      the one field switch: on :root (app), a form, any ancestor;
+                                              nearest wins; data-variant on a field overrides. Pure CSS.
+     data-motion      reduce | full           (none = follow prefers-reduced-motion)
+     data-pointer     coarse | fine           (none = follow (pointer: coarse))
+     data-form        phone | tablet | desktop (none = follow viewport width)
+     data-warp        re-derive tokens here after overriding a seed inline
+
+   Contracts read by warp.base (01-foundations §2):
+     data-loop        an idle loop: stopped under reduced motion (spinners pulse instead)
+     data-hit         a bespoke tap target: hit-min (44px coarse) floor; ="text" for a standalone text link;
+                      ="area" keeps the visual box and adds a centred hit-min expander (::after)
+     data-prose       reading text: prose size + leading, the dial's measure, text-wrap: pretty
+     data-text-canvas a canvas host: re-resolves the px role strings (--warp-text-*-canvas) against
+                      its own container, for weft/text and Surfaces (01-foundations §2, Type)
+     data-numeric     figures on a face with tnum at every stop (vivid's serif has none)
+     data-trim        ="display": non-heading text that sets text-box: var(--warp-text-display-trim) keeps
+                      its trimmed box through the font swap (h1–h6 and the hero title do this already)
+   Forced colours: @layer warp.signature §5 redraws every signature part in system colours (01 §12).
+
+   Signature (SIGNATURE.md): the sweep border and the floating border label
+   live in @layer warp.signature at every dial stop; the dial sets intensity.
+
+   Layering: everything is inside `@layer warp.*`. Declare `@layer warp, theme,
+   base, components, utilities;` first in your app CSS (Tailwind v4) and every
+   utility, CSS module or unlayered rule beats warp without !important.
+
+   Generated-by-hand for v0; `weft tokens build` will emit this file from the
+   DTCG source. Colours are OKLCH. Every text/fill pair is verified by
+   ../scripts/contrast-check.mjs.
+   ========================================================================== */
+
+@layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.inputs-rich, warp.data, warp.app, warp.flows, warp.marketing, warp.canvas;
+
+/* -- metric-matched fallback faces (01 §2 "Font loading"; research 11 §8.2) ------------------
+   Each brand face gets a local system face scaled to the same advance widths and vertical metrics
+   (Capsize metrics, computed by `weft tokens build`). The stacks list "<Family> Fallback" right after the
+   brand face, so the page lays out on it and the font-display: swap of the real file shifts nothing.
+   Safari has size-adjust (17+) but not the *-override descriptors; every role sets an explicit unitless
+   line-height, so line boxes never depend on ascent/descent there either. Regular and bold system
+   faces are both declared so weights 600+ match bold widths instead of a synthesised bold. */
+@font-face { font-family: "Inter Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 100 549;
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Inter Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 550 900;
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 100 549;
+  size-adjust: 109.69%; ascent-override: 89.71%; descent-override: 26.62%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 550 900;
+  size-adjust: 109.69%; ascent-override: 89.71%; descent-override: 26.62%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Instrument Serif Fallback"; src: local("Times New Roman"), local("TimesNewRomanPSMT"); font-style: normal;
+  size-adjust: 83.94%; ascent-override: 117.94%; descent-override: 36.93%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Instrument Serif Fallback"; src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"); font-style: italic;
+  size-adjust: 83.94%; ascent-override: 117.94%; descent-override: 36.93%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono Fallback"; src: local("Courier New"), local("CourierNewPSMT"); font-weight: 100 549;
+  size-adjust: 99.98%; ascent-override: 102.52%; descent-override: 27.5%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono Fallback"; src: local("Courier New Bold"), local("CourierNewPS-BoldMT"); font-weight: 550 900;
+  size-adjust: 99.98%; ascent-override: 102.52%; descent-override: 27.5%; line-gap-override: 0%; font-display: swap; }
+
+/* px-resolved role sizes (registered, so they compute to absolute px) feed the canvas role strings */
+@property --warp-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-body-px    { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-prose-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-label-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-eyebrow-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-caption-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-code-px    { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-button-px  { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --warp-text-control-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+
+/* cap-trim font-swap fix (01 §2 Type): registered, so it resolves to px on the trimmed element itself */
+@property --warp-trim-fix { syntax: "<length>"; inherits: true; initial-value: 0px; }
+
+/* the shuttle's two edges: registered so they interpolate, and on their own timings */
+@property --warp-a { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --warp-b { syntax: "<length>"; inherits: false; initial-value: 0px; }
+/* frame outline head/tail (§1b): registered so they interpolate */
+@property --warp-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --warp-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
+
+/* the sweep's two edges, one per transition (warp.signature) */
+@property --_a { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+@property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+@property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 620ms; }
+@layer warp.tokens {
+
+/* ---------------------------------------------------------------------------
+   1 · INPUTS. Seeds, the dial, density, form factor, pointer, motion.
+   Inputs inherit. Only §2 derives from them.
+   ------------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light dark;
+  /* seed: the brand accent as hue + base chroma (default: the field green) */
+  --warp-seed-accent-h: 152;
+  --warp-seed-accent-c: 0.115;
+  /* environment inputs (overridden by media / attributes below) */
+  --warp-target-min: 0px;          /* 44px on coarse pointers */
+  --warp-input-font-min: 0px;      /* 16px on coarse pointers (no iOS zoom) */
+  --warp-motion-scale: 1;          /* 0 under reduced motion */
+  --warp-loop-play: running;       /* paused under reduced motion. Anything that loops while idle
+                                      (spinner, shimmer, dash, marquee) sets animation-play-state from it */
+}
+[data-theme="light"] { color-scheme: light; }
+[data-theme="dark"]  { color-scheme: dark; }
+
+/* -- the expression dial ------------------------------------------------- */
+:root, [data-expression="balanced"] {
+  --warp-x: 0.5;
+  --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; --warp-icon-weft: 2; /* @weft/icons' tier, 10 §8 */
+  --warp-ref-neutral-h: 80;  --warp-ref-neutral-c: 0.005;   /* graphite, a hint warm */
+  --warp-ref-accent-k: 1;    --warp-ref-tone-k: 1;
+  --warp-ref-depth: 0.7;
+  --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --warp-font-display: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-ref-title-font: var(--warp-font-display);
+  --warp-ref-display-weight: 500;
+  /* fluid display + title (research 11 §8.3): clamp(min, b + m·cqi, max), 34 → 52px from 375 to 1280 */
+  --warp-ref-display-min: 2.125; --warp-ref-display-b: 1.659; --warp-ref-display-m: 1.989; --warp-ref-display-max: 3.25;
+  --warp-ref-title-min: 1.5;     --warp-ref-title-b: 1.345;   --warp-ref-title-m: 0.663;   --warp-ref-title-max: 1.875;
+  --warp-ref-measure: 66;        /* prose line length, in --warp-ch */
+  --warp-ref-ch: 0.613em;        /* Inter's "0" advance: 1ch of the brand face, steady across the font swap */
+  --warp-ref-trim-heading: trim-both cap alphabetic; --warp-ref-trim-display: normal;
+  --warp-ref-trim-heading-k: 1;  --warp-ref-trim-display-k: 0;          /* the same switches as numbers */
+  --warp-ref-prose-wrap: pretty; --warp-ref-editable-wrap: auto;
+  --warp-ref-display-variation: normal;
+  /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
+  --warp-ref-hm-k1: 1.21; --warp-ref-hm-k2: 0.2415; --warp-ref-hm-k3: 0.241;   /* Inter */
+  --warp-ref-em-k1: 1.3;  --warp-ref-em-k2: 0.327;  --warp-ref-em-k3: 0.275;   /* IBM Plex Mono */
+  --warp-ref-display-tracking: -0.03em; --warp-ref-title-weight: 500;
+  --warp-ref-heading-weight: 600;
+  --warp-ref-label-font: var(--warp-font-sans);
+  --warp-ref-label-case: none; --warp-ref-label-tracking: 0em; --warp-ref-label-adjust: 1px;
+  --warp-ref-eyebrow-font: var(--warp-font-mono);
+  --warp-ref-eyebrow-case: uppercase; --warp-ref-eyebrow-tracking: 0.08em; --warp-ref-eyebrow-adjust: -1px;
+  --warp-ref-button-font: var(--warp-font-sans);
+  --warp-ref-button-case: none; --warp-ref-button-tracking: 0em;
+  --warp-ref-button-weight: 500; --warp-ref-button-adjust: 0px;
+  --warp-ref-radius-round: 999px;
+  --warp-ref-motion-k: 1;  --warp-ref-distance: 8px; --warp-ref-scale-from: 0.97;
+  --warp-ref-stagger: 32ms;
+  --warp-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --warp-ref-ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
+  /* signature: the original sweep, 620ms; buttons sweep, surfaces don't */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --warp-ref-spring: linear(0, 0.186, 0.483, 0.718, 0.866, 0.945, 0.983, 0.998, 1.002, 1.003, 1.002, 1.001, 1);
+  --warp-ref-spring-ms: 380ms; --warp-ref-press: 0.97; --warp-ref-touch-out: 160ms;
+  --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 300ms; --warp-ref-offset: 0px;
+  --warp-ref-sweep: 620ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 760ms;     /* frame button: the original's --btn-sweep-duration */
+  --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
+  --warp-ref-sweep-base: var(--warp-color-text);
+  /* fields rest neutral at every stop; the accent tint arrives with the sweep (hover, focus) */
+  --warp-ref-field-fill: var(--warp-color-surface-raised);
+  --warp-ref-field-fill-active: var(--warp-color-accent-soft);
+  --warp-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-ref-numeric-font: var(--warp-font-display);   /* Space Grotesk has tnum */
+  --warp-ref-emphasis-style: normal;                   /* no italic face: upright + accent */
+}
+[data-expression="quiet"] {
+  --warp-x: 0;
+  --warp-icon-o: inline; --warp-icon-q: inline; --warp-icon-b: none; --warp-icon-v: none; --warp-icon-weft: 1.5;
+  --warp-ref-neutral-h: 255; --warp-ref-neutral-c: 0.011;   /* slate */
+  --warp-ref-accent-k: 0.8;  --warp-ref-tone-k: 0.85;
+  --warp-ref-depth: 1;
+  --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --warp-font-display: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-ref-title-font: var(--warp-font-display);
+  --warp-ref-display-weight: 600;
+  /* fluid display, calmer range (research 11 §3.4: max/min 1.3): 34 → 44px from 375 to 1280 */
+  --warp-ref-display-min: 2.125; --warp-ref-display-b: 1.861; --warp-ref-display-m: 1.127; --warp-ref-display-max: 2.7625;
+  --warp-ref-title-min: 1.5;     --warp-ref-title-b: 1.345;   --warp-ref-title-m: 0.663;   --warp-ref-title-max: 1.875;
+  --warp-ref-measure: 72;
+  --warp-ref-ch: 0.613em;        /* Inter */
+  --warp-ref-trim-heading: normal; --warp-ref-trim-display: normal;   /* quiet trims controls only */
+  --warp-ref-trim-heading-k: 0;  --warp-ref-trim-display-k: 0;
+  --warp-ref-prose-wrap: auto;   --warp-ref-editable-wrap: auto;      /* headings balance; prose wraps as usual */
+  --warp-ref-display-variation: normal;
+  /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
+  --warp-ref-hm-k1: 1.21; --warp-ref-hm-k2: 0.2415; --warp-ref-hm-k3: 0.241;   /* Inter */
+  --warp-ref-em-k1: 1.21; --warp-ref-em-k2: 0.2415; --warp-ref-em-k3: 0.241;   /* Inter (quiet eyebrows are sans) */
+  --warp-ref-display-tracking: -0.035em; --warp-ref-title-weight: 600;
+  --warp-ref-heading-weight: 600;
+  --warp-ref-label-font: var(--warp-font-sans);
+  --warp-ref-label-case: none; --warp-ref-label-tracking: 0em; --warp-ref-label-adjust: 1px;
+  --warp-ref-eyebrow-font: var(--warp-font-sans);
+  --warp-ref-eyebrow-case: none; --warp-ref-eyebrow-tracking: 0.005em; --warp-ref-eyebrow-adjust: 0px;
+  --warp-ref-button-font: var(--warp-font-sans);
+  --warp-ref-button-case: none; --warp-ref-button-tracking: 0em;
+  --warp-ref-button-weight: 500; --warp-ref-button-adjust: 0px;
+  --warp-ref-radius-round: 999px;
+  --warp-ref-motion-k: 0.85; --warp-ref-distance: 4px; --warp-ref-scale-from: 0.985;
+  --warp-ref-stagger: 16ms;
+  --warp-ref-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --warp-ref-ease-pop: cubic-bezier(0.2, 0, 0, 1);
+  /* signature, quieter: faster, neutral field; inputs, controls, buttons sweep (same full-accent stroke) */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --warp-ref-spring: cubic-bezier(0.2, 0, 0, 1);
+  --warp-ref-spring-ms: 240ms; --warp-ref-press: 0.985; --warp-ref-touch-out: 120ms;
+  --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 180ms; --warp-ref-offset: 0px;
+  --warp-ref-sweep: 480ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 590ms;     /* frame, quieter: 760 at the same 480/620 ratio */
+  --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
+  --warp-ref-sweep-base: var(--warp-color-text);
+  --warp-ref-field-fill: var(--warp-color-surface-raised);
+  --warp-ref-field-fill-active: var(--warp-color-surface-raised);
+  --warp-ref-float-font: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --warp-ref-numeric-font: var(--warp-font-display);   /* Inter has tnum */
+  --warp-ref-emphasis-style: normal;                   /* quiet never italicises */
+}
+[data-expression="vivid"] {
+  --warp-x: 1;
+  --warp-icon-o: none; --warp-icon-q: none; --warp-icon-b: none; --warp-icon-v: inline; --warp-icon-fine: inline; --warp-icon-weft: 2;
+  --warp-ref-neutral-h: 85;  --warp-ref-neutral-c: 0.012;   /* warm paper / ink */
+  --warp-ref-accent-k: 1.2;  --warp-ref-tone-k: 1.1;
+  --warp-ref-depth: 0.35;
+  --warp-font-sans: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --warp-font-display: "Instrument Serif", "Instrument Serif Fallback", "Fraunces", Georgia, serif;
+  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-ref-title-font: var(--warp-font-display);
+  --warp-ref-display-weight: 400;
+  /* fluid display + title × 1.18 / × 1.144 (research 11 §8.3): 40 → 61px display, 27 → 34px title */
+  --warp-ref-display-min: 2.507; --warp-ref-display-b: 1.958; --warp-ref-display-m: 2.347; --warp-ref-display-max: 3.835;
+  --warp-ref-title-min: 1.716;   --warp-ref-title-b: 1.539;   --warp-ref-title-m: 0.7585;  --warp-ref-title-max: 2.145;
+  --warp-ref-measure: 60;        /* larger, more expressive type: a shorter line */
+  --warp-ref-ch: 0.641em;        /* Space Grotesk */
+  --warp-ref-trim-heading: trim-both cap alphabetic; --warp-ref-trim-display: trim-both cap alphabetic;
+  --warp-ref-trim-heading-k: 1;  --warp-ref-trim-display-k: 1;
+  --warp-ref-prose-wrap: pretty; --warp-ref-editable-wrap: stable;
+  /* display pinned to its optical-size maximum (values clamp to each face's axis: Inter 32, Fraunces 144;
+     Instrument Serif is static, so this only matters for the fallbacks) */
+  --warp-ref-display-variation: "opsz" 144;
+  --warp-ref-hm-k1: 1.276; --warp-ref-hm-k2: 0.284; --warp-ref-hm-k3: 0.292;  /* Space Grotesk */
+  --warp-ref-em-k1: 1.3;   --warp-ref-em-k2: 0.327; --warp-ref-em-k3: 0.275;  /* IBM Plex Mono */
+  --warp-ref-display-tracking: -0.015em; --warp-ref-title-weight: 400;
+  --warp-ref-heading-weight: 500;
+  --warp-ref-label-font: var(--warp-font-mono);
+  --warp-ref-label-case: uppercase; --warp-ref-label-tracking: 0.1em; --warp-ref-label-adjust: -1px;
+  --warp-ref-eyebrow-font: var(--warp-font-mono);
+  --warp-ref-eyebrow-case: uppercase; --warp-ref-eyebrow-tracking: 0.14em; --warp-ref-eyebrow-adjust: -1px;
+  --warp-ref-button-font: var(--warp-font-mono);
+  --warp-ref-button-case: uppercase; --warp-ref-button-tracking: 0.1em;
+  --warp-ref-button-weight: 600; --warp-ref-button-adjust: -2px;
+  --warp-ref-radius-round: 2px;
+  --warp-ref-motion-k: 1.2; --warp-ref-distance: 12px; --warp-ref-scale-from: 0.95;
+  --warp-ref-stagger: 48ms;
+  --warp-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* spring k=380 c=20 m=0.5 (ζ≈0.73, 3.5% overshoot) sampled to linear() */
+  --warp-ref-ease-pop: linear(0, 0.095, 0.291, 0.505, 0.692, 0.839, 0.936, 0.994, 1.024,
+    1.034, 1.034, 1.028, 1.021, 1.014, 1.008, 1.004, 1.001, 1);
+  /* signature, louder: longer travel; cards, panels, stat rows sweep too */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --warp-ref-spring: linear(0, 0.154, 0.44, 0.701, 0.883, 0.985, 1.029, 1.038, 1.032, 1.021, 1.011, 1.004, 1, 0.999, 1);
+  --warp-ref-spring-ms: 520ms; --warp-ref-press: 0.96; --warp-ref-touch-out: 200ms;
+  --warp-ref-shuttle-head: 150ms; --warp-ref-shuttle-tail: 420ms; --warp-ref-offset: 3px;
+  --warp-ref-sweep: 700ms;     --warp-ref-sweep-k: 1;
+  --warp-ref-frame: 760ms;     /* frame: the original 760, top of the vivid range */
+  --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 1;
+  --warp-ref-sweep-base: var(--warp-color-text);
+  /* neutral at rest (00 §10); accent-soft arrives with the sweep */
+  --warp-ref-field-fill: var(--warp-color-surface-raised);
+  --warp-ref-field-fill-active: var(--warp-color-accent-soft);
+  --warp-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Instrument Serif has no tnum: figures that update or align use the sans */
+  --warp-ref-numeric-font: var(--warp-font-sans);
+  --warp-ref-emphasis-style: italic;                   /* Instrument Serif ships a real italic */
+}
+/* flair widens or narrows WHERE the sweep runs; inputs and controls always sweep */
+[data-flair="sweep"] { --warp-sweep-buttons: 1; --warp-sweep-surfaces: 1; }
+[data-flair="none"]  { --warp-sweep-buttons: 0; --warp-sweep-surfaces: 0; }
+
+/* -- density ------------------------------------------------------------- */
+:root, [data-density="cozy"] {
+  --warp-density-k: 1;
+  --warp-ref-control-sm: 28px; --warp-ref-control-md: 36px; --warp-ref-control-lg: 44px;
+}
+[data-density="compact"] {
+  --warp-density-k: 0.75;
+  --warp-ref-control-sm: 24px; --warp-ref-control-md: 32px; --warp-ref-control-lg: 40px;
+}
+[data-density="comfortable"] {
+  --warp-density-k: 1.25;
+  --warp-ref-control-sm: 32px; --warp-ref-control-md: 40px; --warp-ref-control-lg: 48px;
+}
+
+/* -- form factor: fixed reading sizes + page rhythm (desktop ≥1024 / tablet / phone <600) ------
+   Reading roles (heading, body, prose, label, caption, code) are fixed per form factor, in the user's
+   rem (--warp-rem), so they follow the browser's default font size. Display and title are fluid
+   (§2 SYS TOKENS); under an explicit data-form they resolve at that form's reference width.
+   --warp-rem: the root's font-size is the body size (14/15/16px), so plain `rem` is not the user's
+   default inside the page. --warp-ref-rem-k (16 / root body px) converts back; the root alone reads
+   --warp-ref-root-size (in real rem: on the root element, rem is the initial 16px × user setting). */
+:root {
+  --warp-rem: calc(1rem * var(--warp-ref-rem-k));
+  --warp-ref-rem-k: 1.142857; --warp-ref-root-size: 0.875rem;          /* desktop root: body 14 */
+  --warp-ref-fluid-unit: 1vw;                                          /* iOS 15: no container units */
+}
+@supports (width: 1cqi) { :root { --warp-ref-fluid-unit: 1cqi; } }   /* the nearest inline-size container */
+@media (max-width: 1023.98px) { :root:not([data-form]) { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; } }
+@media (max-width: 599.98px)  { :root:not([data-form]) { --warp-ref-rem-k: 1; --warp-ref-root-size: 1rem; } }
+:root[data-form="tablet"] { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; }
+:root[data-form="phone"]  { --warp-ref-rem-k: 1; --warp-ref-root-size: 1rem; }
+/* a forced form factor pins the fluid roles at its reference width (375 / 834 / 1280) */
+[data-form="phone"] { --warp-ref-fluid-unit: 3.75px; }
+[data-form="tablet"] { --warp-ref-fluid-unit: 8.34px; }
+[data-form="desktop"] { --warp-ref-fluid-unit: 12.8px; }
+
+:root, [data-form="desktop"] {
+  --warp-ref-type-heading: calc(1.25 * var(--warp-rem));
+  --warp-ref-type-body: calc(0.875 * var(--warp-rem)); --warp-ref-type-prose: calc(1 * var(--warp-rem));
+  --warp-ref-type-label: calc(0.75 * var(--warp-rem)); --warp-ref-type-caption: calc(0.75 * var(--warp-rem));
+  --warp-ref-type-code: calc(0.8125 * var(--warp-rem));
+  --warp-ref-section: 48px; --warp-ref-gutter: 32px;
+}
+@media (max-width: 1023.98px) {
+  :root:not([data-form]) {
+    --warp-ref-type-heading: calc(1.1875 * var(--warp-rem));
+    --warp-ref-type-body: calc(0.9375 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+    --warp-ref-type-caption: calc(0.75 * var(--warp-rem)); --warp-ref-type-code: calc(0.8125 * var(--warp-rem));
+    --warp-ref-section: 40px; --warp-ref-gutter: 24px;
+  }
+}
+@media (max-width: 599.98px) {
+  :root:not([data-form]) {
+    --warp-ref-type-heading: calc(1.125 * var(--warp-rem));
+    --warp-ref-type-body: calc(1 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+    --warp-ref-type-caption: calc(0.8125 * var(--warp-rem)); --warp-ref-type-code: calc(0.875 * var(--warp-rem));
+    --warp-ref-section: 32px; --warp-ref-gutter: 16px;
+  }
+}
+[data-form="tablet"] {
+  --warp-ref-type-heading: calc(1.1875 * var(--warp-rem));
+  --warp-ref-type-body: calc(0.9375 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+  --warp-ref-type-label: calc(0.75 * var(--warp-rem)); --warp-ref-type-caption: calc(0.75 * var(--warp-rem));
+  --warp-ref-type-code: calc(0.8125 * var(--warp-rem));
+  --warp-ref-section: 40px; --warp-ref-gutter: 24px;
+}
+[data-form="phone"] {
+  --warp-ref-type-heading: calc(1.125 * var(--warp-rem));
+  --warp-ref-type-body: calc(1 * var(--warp-rem)); --warp-ref-type-prose: calc(1.0625 * var(--warp-rem));
+  --warp-ref-type-label: calc(0.75 * var(--warp-rem)); --warp-ref-type-caption: calc(0.8125 * var(--warp-rem));
+  --warp-ref-type-code: calc(0.875 * var(--warp-rem));
+  --warp-ref-section: 32px; --warp-ref-gutter: 16px;
+}
+
+/* -- pointer + motion environment ---------------------------------------- */
+@media (pointer: coarse) {
+  :root:not([data-pointer]) { --warp-target-min: 44px; --warp-input-font-min: 16px; }
+}
+[data-pointer="coarse"] { --warp-target-min: 44px; --warp-input-font-min: 16px; }
+[data-pointer="fine"]   { --warp-target-min: 0px;  --warp-input-font-min: 0px; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion]) { --warp-motion-scale: 0; --warp-loop-play: paused; }
+}
+[data-motion="reduce"] { --warp-motion-scale: 0; --warp-loop-play: paused; }
+[data-motion="full"]   { --warp-motion-scale: 1; --warp-loop-play: running; }
+
+/* ---------------------------------------------------------------------------
+   2 · SYS TOKENS. Re-declared on every scope root so nested islands
+   recompute from their own inputs. Components read only these.
+   ------------------------------------------------------------------------ */
+
+:root, [data-expression], [data-density], [data-form], [data-pointer],
+[data-motion], [data-flair], [data-warp] {
+  /* private shorthands */
+  --_h: var(--warp-ref-neutral-h);
+  --_c: var(--warp-ref-neutral-c);
+  --_cl: calc(var(--warp-ref-neutral-c) * 0.45);          /* light neutrals are calmer */
+  --_ah: var(--warp-seed-accent-h);
+  --_ac: calc(var(--warp-seed-accent-c) * var(--warp-ref-accent-k));
+  --_tk: var(--warp-ref-tone-k);
+
+  /* -- colour · page + surfaces (light | dark) -------------------------- */
+  --warp-color-page:            light-dark(oklch(0.972 var(--_cl) var(--_h)), oklch(0.155 var(--_c) var(--_h)));
+  --warp-color-surface:         light-dark(oklch(0.993 var(--_cl) var(--_h)), oklch(0.188 var(--_c) var(--_h)));
+  --warp-color-surface-raised:  light-dark(oklch(0.998 calc(var(--_cl) * 0.5) var(--_h)), oklch(0.215 var(--_c) var(--_h)));
+  --warp-color-surface-overlay: light-dark(oklch(1 0 0), oklch(0.235 var(--_c) var(--_h)));
+  --warp-color-surface-sunken:  light-dark(oklch(0.955 var(--_cl) var(--_h)), oklch(0.135 var(--_c) var(--_h)));
+  --warp-color-surface-hover:   light-dark(oklch(0.948 var(--_cl) var(--_h)), oklch(0.255 var(--_c) var(--_h)));
+  --warp-color-surface-active:  light-dark(oklch(0.922 var(--_cl) var(--_h)), oklch(0.285 var(--_c) var(--_h)));
+  --warp-color-surface-inverse: light-dark(oklch(0.245 var(--_c) var(--_h)), oklch(0.93 var(--_c) var(--_h)));
+  --warp-color-on-inverse:      light-dark(oklch(0.975 var(--_cl) var(--_h)), oklch(0.19 var(--_c) var(--_h)));
+  --warp-color-scrim:           light-dark(oklch(0.2 var(--_c) var(--_h) / 0.36), oklch(0.05 0 0 / 0.62));
+
+  /* -- colour · text, borders, focus ----------------------------------- */
+  --warp-color-text:            light-dark(oklch(0.235 var(--_c) var(--_h)), oklch(0.935 var(--_c) var(--_h)));
+  --warp-color-text-subtle:     light-dark(oklch(0.475 var(--_c) var(--_h)), oklch(0.735 var(--_c) var(--_h)));
+  --warp-color-text-faint:      light-dark(oklch(0.53 var(--_c) var(--_h)), oklch(0.625 var(--_c) var(--_h)));  /* meta ink: AA (≥ 4.5:1) on every surface, still lighter than subtle */
+  --warp-color-border:          light-dark(oklch(0.905 var(--_cl) var(--_h)), oklch(0.29 var(--_c) var(--_h)));
+  --warp-color-border-strong:   light-dark(oklch(0.84 var(--_c) var(--_h)), oklch(0.38 var(--_c) var(--_h)));
+  --warp-color-border-control:  light-dark(oklch(0.625 var(--_c) var(--_h)), oklch(0.545 var(--_c) var(--_h)));
+  --warp-color-focus:           light-dark(oklch(0.52 min(calc(var(--_ac) * 1.1), 0.135) var(--_ah)), oklch(0.8 calc(var(--_ac) * 1.15) var(--_ah)));
+
+  /* -- colour · tones: solid, solid-hover, on-solid, soft, text, border --
+     on-solid is solved per theme so it passes 4.5:1 on solid AND solid-hover;
+     text passes 4.5:1 on page, surface, raised, sunken and its own soft.
+     min(…, cap) = the sRGB chroma ceiling at that lightness for the default
+     hues; `weft tokens build` computes the cap per seed hue. */
+  --warp-color-neutral-solid:       var(--warp-color-surface-inverse);
+  --warp-color-neutral-solid-hover: light-dark(oklch(0.33 var(--_c) var(--_h)), oklch(0.86 var(--_c) var(--_h)));
+  --warp-color-neutral-on-solid:    var(--warp-color-on-inverse);
+  --warp-color-neutral-soft:        var(--warp-color-surface-hover);
+  --warp-color-neutral-text:        var(--warp-color-text);
+  --warp-color-neutral-border:      var(--warp-color-border-strong);
+
+  --warp-color-accent-solid:        light-dark(oklch(0.5 min(var(--_ac), 0.13) var(--_ah)), oklch(0.76 calc(var(--_ac) * 1.15) var(--_ah)));
+  --warp-color-accent-solid-hover:  light-dark(oklch(0.44 min(var(--_ac), 0.115) var(--_ah)), oklch(0.81 calc(var(--_ac) * 1.15) var(--_ah)));
+  --warp-color-accent-on-solid:     light-dark(oklch(0.985 0.012 var(--_ah)), oklch(0.18 0.03 var(--_ah)));
+  --warp-color-accent-soft:         light-dark(oklch(0.952 calc(var(--_ac) * 0.3) var(--_ah)), oklch(0.27 calc(var(--_ac) * 0.45) var(--_ah)));
+  --warp-color-accent-text:         light-dark(oklch(0.46 min(var(--_ac), 0.12) var(--_ah)), oklch(0.8 var(--_ac) var(--_ah)));
+  --warp-color-accent-border:       light-dark(oklch(0.78 calc(var(--_ac) * 0.6) var(--_ah)), oklch(0.43 calc(var(--_ac) * 0.7) var(--_ah)));
+
+  --warp-color-positive-solid:       light-dark(oklch(0.52 calc(0.12 * var(--_tk)) 148), oklch(0.74 calc(0.14 * var(--_tk)) 148));
+  --warp-color-positive-solid-hover: light-dark(oklch(0.46 calc(0.12 * var(--_tk)) 148), oklch(0.79 calc(0.14 * var(--_tk)) 148));
+  --warp-color-positive-on-solid:    light-dark(oklch(0.985 0.012 148), oklch(0.18 0.03 148));
+  --warp-color-positive-soft:        light-dark(oklch(0.955 calc(0.035 * var(--_tk)) 148), oklch(0.27 calc(0.05 * var(--_tk)) 148));
+  --warp-color-positive-text:        light-dark(oklch(0.46 calc(0.12 * var(--_tk)) 148), oklch(0.79 calc(0.13 * var(--_tk)) 148));
+  --warp-color-positive-border:      light-dark(oklch(0.8 calc(0.07 * var(--_tk)) 148), oklch(0.43 calc(0.08 * var(--_tk)) 148));
+
+  --warp-color-caution-solid:        light-dark(oklch(0.8 calc(0.15 * var(--_tk)) 78), oklch(0.8 calc(0.14 * var(--_tk)) 78));
+  --warp-color-caution-solid-hover:  light-dark(oklch(0.75 min(calc(0.15 * var(--_tk)), 0.155) 78), oklch(0.85 min(calc(0.13 * var(--_tk)), 0.137) 78));
+  --warp-color-caution-on-solid:     light-dark(oklch(0.25 0.04 78), oklch(0.2 0.03 78));
+  --warp-color-caution-soft:         light-dark(oklch(0.96 calc(0.04 * var(--_tk)) 85), oklch(0.28 calc(0.05 * var(--_tk)) 78));
+  --warp-color-caution-text:         light-dark(oklch(0.5 min(calc(0.1 * var(--_tk)), 0.107) 70), oklch(0.82 calc(0.13 * var(--_tk)) 80));
+  --warp-color-caution-border:       light-dark(oklch(0.82 calc(0.1 * var(--_tk)) 80), oklch(0.45 calc(0.08 * var(--_tk)) 78));
+
+  --warp-color-critical-solid:       light-dark(oklch(0.54 calc(0.19 * var(--_tk)) 27), oklch(0.7 calc(0.16 * var(--_tk)) 25));
+  --warp-color-critical-solid-hover: light-dark(oklch(0.49 calc(0.18 * var(--_tk)) 27), oklch(0.75 calc(0.14 * var(--_tk)) 25));
+  --warp-color-critical-on-solid:    light-dark(oklch(0.985 0.01 27), oklch(0.17 0.03 25));
+  --warp-color-critical-soft:        light-dark(oklch(0.955 min(calc(0.02 * var(--_tk)), 0.022) 27), oklch(0.26 calc(0.055 * var(--_tk)) 25));
+  --warp-color-critical-text:        light-dark(oklch(0.51 calc(0.18 * var(--_tk)) 27), oklch(0.8 min(calc(0.11 * var(--_tk)), 0.112) 25));
+  --warp-color-critical-border:      light-dark(oklch(0.8 calc(0.08 * var(--_tk)) 27), oklch(0.45 calc(0.1 * var(--_tk)) 25));
+
+  --warp-color-info-solid:           light-dark(oklch(0.53 calc(0.14 * var(--_tk)) 252), oklch(0.74 calc(0.11 * var(--_tk)) 250));
+  --warp-color-info-solid-hover:     light-dark(oklch(0.48 min(calc(0.14 * var(--_tk)), 0.143) 252), oklch(0.79 calc(0.1 * var(--_tk)) 250));
+  --warp-color-info-on-solid:        light-dark(oklch(0.985 0.01 252), oklch(0.18 0.03 250));
+  --warp-color-info-soft:            light-dark(oklch(0.955 min(calc(0.02 * var(--_tk)), 0.022) 252), oklch(0.27 calc(0.05 * var(--_tk)) 250));
+  --warp-color-info-text:            light-dark(oklch(0.49 min(calc(0.14 * var(--_tk)), 0.146) 252), oklch(0.81 calc(0.09 * var(--_tk)) 250));
+  --warp-color-info-border:          light-dark(oklch(0.8 calc(0.07 * var(--_tk)) 252), oklch(0.43 calc(0.08 * var(--_tk)) 250));
+
+  /* highlight: the old "gold" (a lime). Optional, never a status. */
+  --warp-color-highlight-solid:       light-dark(oklch(0.87 calc(0.17 * var(--_tk)) 128), oklch(0.86 calc(0.18 * var(--_tk)) 132));
+  --warp-color-highlight-solid-hover: light-dark(oklch(0.83 calc(0.17 * var(--_tk)) 128), oklch(0.9 calc(0.16 * var(--_tk)) 132));
+  --warp-color-highlight-on-solid:    light-dark(oklch(0.25 0.05 128), oklch(0.2 0.04 132));
+  --warp-color-highlight-soft:        light-dark(oklch(0.96 calc(0.05 * var(--_tk)) 128), oklch(0.29 calc(0.06 * var(--_tk)) 132));
+  --warp-color-highlight-text:        light-dark(oklch(0.48 calc(0.12 * var(--_tk)) 132), oklch(0.86 calc(0.17 * var(--_tk)) 132));
+  --warp-color-highlight-border:      light-dark(oklch(0.84 calc(0.12 * var(--_tk)) 128), oklch(0.47 calc(0.1 * var(--_tk)) 132));
+
+  /* -- colour · data viz (categorical; ≥3:1 vs surface, ordered for CVD) - */
+  --warp-color-data-1: light-dark(oklch(0.55 calc(0.14 * var(--_tk)) 252), oklch(0.74 calc(0.12 * var(--_tk)) 252));
+  --warp-color-data-2: light-dark(oklch(0.62 min(calc(0.14 * var(--_tk)), 0.144) 60),  oklch(0.78 calc(0.14 * var(--_tk)) 65));
+  --warp-color-data-3: light-dark(oklch(0.56 calc(0.11 * var(--_tk)) 165), oklch(0.76 calc(0.12 * var(--_tk)) 165));
+  --warp-color-data-4: light-dark(oklch(0.56 calc(0.17 * var(--_tk)) 350), oklch(0.74 calc(0.14 * var(--_tk)) 350));
+  --warp-color-data-5: light-dark(oklch(0.58 min(calc(0.1 * var(--_tk)), 0.102) 215),  oklch(0.8 calc(0.1 * var(--_tk)) 215));
+  --warp-color-data-6: light-dark(oklch(0.55 calc(0.16 * var(--_tk)) 30),  oklch(0.72 calc(0.15 * var(--_tk)) 30));
+  --warp-color-data-7: light-dark(oklch(0.52 calc(0.14 * var(--_tk)) 295), oklch(0.74 calc(0.12 * var(--_tk)) 295));
+  --warp-color-data-8: light-dark(oklch(0.6 calc(0.11 * var(--_tk)) 115),  oklch(0.8 calc(0.13 * var(--_tk)) 115));
+  --warp-color-data-grid: var(--warp-color-border);
+  --warp-color-data-axis: var(--warp-color-text-subtle);
+
+  /* -- shape ------------------------------------------------------------ */
+  --warp-radius-control: calc(8px - 6px * var(--warp-x));     /* 8 · 5 · 2 */
+  --warp-radius-surface: calc(12px - 10px * var(--warp-x));   /* 12 · 7 · 2 */
+  --warp-radius-mark:    calc(4px - 2px * var(--warp-x));     /* checkbox, kbd: 4 · 3 · 2 */
+  --warp-radius-round:   var(--warp-ref-radius-round);        /* chip, switch, avatar */
+  --warp-border-hairline: 1px;
+  --warp-border-emphasis: calc(1px + 1px * var(--warp-x));    /* selected, tabs, sweep: 1 · 1.5 · 2 */
+  --warp-focus-width: 2px;
+  --warp-focus-offset: 2px;
+
+  /* -- elevation (alpha × depth; vivid is near-flat and leans on borders) -- */
+  --_sa: var(--warp-ref-depth);
+  --warp-elevation-0: none;
+  --warp-elevation-1:
+    0 1px 2px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_sa))), oklch(0 0 0 / calc(0.4 * var(--_sa))));
+  --warp-elevation-2:
+    0 1px 3px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.06 * var(--_sa))), oklch(0 0 0 / calc(0.35 * var(--_sa)))),
+    0 6px 16px -4px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.1 * var(--_sa))), oklch(0 0 0 / calc(0.5 * var(--_sa))));
+  --warp-elevation-3:
+    0 2px 6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_sa))), oklch(0 0 0 / calc(0.4 * var(--_sa)))),
+    0 18px 40px -8px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.16 * var(--_sa))), oklch(0 0 0 / calc(0.6 * var(--_sa))));
+  --warp-blur-overlay: calc(12px * (1 - var(--warp-x)));      /* 12 · 6 · 0 */
+
+  /* -- space (relationships; density-scaled except section/page) -------- */
+  --warp-space-hair:    calc(2px * var(--warp-density-k));
+  --warp-space-tight:   calc(4px * var(--warp-density-k));
+  --warp-space-related: calc(8px * var(--warp-density-k));
+  --warp-space-group:   calc(16px * var(--warp-density-k));
+  --warp-space-section: var(--warp-ref-section);
+  --warp-space-page:    var(--warp-ref-gutter);
+  --warp-pad-control:   calc(12px * var(--warp-density-k));
+  --warp-pad-surface:   calc(20px * var(--warp-density-k));     /* 15 · 20 · 25 */
+
+  /* -- size ------------------------------------------------------------- */
+  --warp-control-sm: max(var(--warp-ref-control-sm), calc(var(--warp-target-min) - 8px));
+  --warp-control-md: max(var(--warp-ref-control-md), var(--warp-target-min));
+  --warp-control-lg: max(var(--warp-ref-control-lg), calc(var(--warp-target-min) + 4px));
+  --warp-hit-min:    max(24px, var(--warp-target-min));
+  --warp-icon-sm: 14px; --warp-icon-md: 16px; --warp-icon-lg: 20px;
+  --warp-icon-stroke: 1.5;                       /* on a 24 grid → 1px at 16px */
+
+  /* -- type (role tokens) ----------------------------------------------
+     Every role has an explicit unitless leading (zero CLS on the font swap, Safari included).
+     display + title are fluid: clamp(rem floor, rem + container units, rem ceiling), the container
+     being the nearest inline-size query container (none: the small viewport; iOS 15: vw). max/min
+     ≤ 2.5 so 200% zoom still doubles them (WCAG 1.4.4): 1.53 · 1.3 (quiet) · 1.25 (title). */
+  --_fu: var(--warp-ref-fluid-unit);
+  --warp-text-display-font: var(--warp-font-display);
+  --warp-text-display-size: clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
+    calc(var(--warp-ref-display-b) * var(--warp-rem) + var(--warp-ref-display-m) * var(--_fu)),
+    calc(var(--warp-ref-display-max) * var(--warp-rem)));
+  --warp-text-display-leading: 1.04;
+  --warp-text-display-weight: var(--warp-ref-display-weight);
+  --warp-text-display-tracking: var(--warp-ref-display-tracking);
+  --warp-text-display-variation: var(--warp-ref-display-variation);   /* vivid: "opsz" pinned to max */
+  --warp-text-display-trim: var(--warp-ref-trim-display);
+  --warp-text-display-trim-k: var(--warp-ref-trim-display-k);         /* 1 where display trims (vivid) */
+  --warp-text-title-font: var(--warp-ref-title-font);
+  --warp-text-title-size: clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
+    calc(var(--warp-ref-title-b) * var(--warp-rem) + var(--warp-ref-title-m) * var(--_fu)),
+    calc(var(--warp-ref-title-max) * var(--warp-rem)));
+  --warp-text-title-leading: 1.15;
+  --warp-text-title-weight: var(--warp-ref-title-weight);
+  --warp-text-title-tracking: calc(var(--warp-ref-display-tracking) * 0.6);
+  --warp-text-heading-font: var(--warp-font-sans);
+  --warp-text-heading-size: var(--warp-ref-type-heading);
+  --warp-text-heading-leading: 1.3;
+  --warp-text-heading-weight: var(--warp-ref-heading-weight);
+  --warp-text-heading-tracking: -0.01em;
+  --warp-text-heading-trim: var(--warp-ref-trim-heading);              /* quiet: normal */
+  --warp-text-heading-trim-k: var(--warp-ref-trim-heading-k);          /* quiet: 0 */
+  --warp-text-heading-wrap: balance;
+  --warp-text-body-font: var(--warp-font-sans);
+  --warp-text-body-size: var(--warp-ref-type-body);
+  --warp-text-body-leading: 1.55;
+  --warp-text-body-weight: 400;
+  --warp-text-prose-size: var(--warp-ref-type-prose);
+  --warp-text-prose-leading: 1.65;
+  --warp-text-prose-wrap: var(--warp-ref-prose-wrap);                  /* quiet: wrap; else pretty */
+  --warp-text-editable-wrap: var(--warp-ref-editable-wrap);            /* vivid: stable */
+  /* measure: 72 · 66 · 60ch of the brand face. Plain `ch` follows whichever face is rendering, so a
+     ch width moves when the fallback swaps for the brand font (Arial's "0" is 3% narrower than
+     Inter's at the matched size); --warp-ch is the brand face's ch as em, which doesn't */
+  --warp-ch: var(--warp-ref-ch);
+  --warp-measure: calc(var(--warp-ref-measure) * var(--warp-ch));
+  --warp-text-label-font: var(--warp-ref-label-font);
+  --warp-text-label-size: calc(var(--warp-ref-type-label) + var(--warp-ref-label-adjust));
+  --warp-text-label-leading: 1.25;
+  --warp-text-label-weight: 500;
+  --warp-text-label-tracking: var(--warp-ref-label-tracking);
+  --warp-text-label-case: var(--warp-ref-label-case);
+  --warp-text-eyebrow-font: var(--warp-ref-eyebrow-font);
+  --warp-text-eyebrow-size: calc(var(--warp-ref-type-label) + var(--warp-ref-eyebrow-adjust));
+  --warp-text-eyebrow-leading: 1.25;
+  --warp-text-eyebrow-weight: 500;
+  --warp-text-eyebrow-tracking: var(--warp-ref-eyebrow-tracking);
+  --warp-text-eyebrow-case: var(--warp-ref-eyebrow-case);
+  --warp-text-caption-size: var(--warp-ref-type-caption);
+  --warp-text-caption-leading: 1.45;
+  --warp-text-code-font: var(--warp-font-mono);
+  --warp-text-code-size: var(--warp-ref-type-code);
+  --warp-text-code-leading: 1.55;
+  --warp-text-control-size: max(var(--warp-ref-type-body), var(--warp-input-font-min));
+  --warp-text-control-leading: 1.25;
+  --warp-text-button-font: var(--warp-ref-button-font);
+  --warp-text-button-size: calc(var(--warp-ref-type-body) + var(--warp-ref-button-adjust));
+  --warp-text-button-leading: 1;
+  --warp-text-button-weight: var(--warp-ref-button-weight);
+  --warp-text-button-tracking: var(--warp-ref-button-tracking);
+  --warp-text-button-case: var(--warp-ref-button-case);
+  /* trimmed text boxes: controls, badges, chips, eyebrows at every stop; headings from balanced;
+     display at vivid (research 11 §3.4). The fallback (no text-box) is in warp.base */
+  --warp-text-box-trim: trim-both cap alphabetic;
+  /* font-swap fix for trimmed block text (headings, display). A cap-trimmed box is (lines − 1) × lh + 1cap,
+     and 1cap is the cap height of the face that is rendering: the metric-matched fallback until the web font
+     swaps in. This resolves, on the element, to (brand cap − fallback cap) em while one of the four fallback
+     faces renders and to 0 for any other face (brand, system, unknown), so the box is always (lines − 1) × lh
+     + the brand's cap and the swap moves nothing. Each term is a window on 1cap / 1em around a fallback's cap
+     (Capsize cap heights: Inter 0.7275 vs Arial × 1.0712 = 0.767, Space Grotesk 0.700 vs Arial × 1.0969 =
+     0.786, Instrument Serif 0.720 vs Times × 0.8394 = 0.556, Plex Mono 0.698 vs Courier New 0.571 and Courier
+     New Bold 0.591); clamp(0, (1cap − a·1em) × 1000, d·1em) steps from 0 to d just above a. The windows are
+     ±0.005 em; the measured spread across weights and sizes is ±0.001 em. Generated with the fallback faces. */
+  --_tw: calc(1cap * 1000);
+  --warp-ref-trim-swap: calc(
+      clamp(0px, var(--_tw) - 550em, 0.1642em) - clamp(0px, var(--_tw) - 562em, 0.1642em)    /* Instrument Serif */
+    + clamp(0px, var(--_tw) - 566em, 0.1268em) - clamp(0px, var(--_tw) - 576em, 0.1268em)    /* Plex Mono 400–549 */
+    + clamp(0px, var(--_tw) - 586em, 0.1067em) - clamp(0px, var(--_tw) - 596em, 0.1067em)    /* Plex Mono 550+ */
+    - clamp(0px, var(--_tw) - 762em, 0.0395em) + clamp(0px, var(--_tw) - 772em, 0.0395em)    /* Inter */
+    - clamp(0px, var(--_tw) - 780em, 0.0855em) + clamp(0px, var(--_tw) - 791em, 0.0855em));  /* Space Grotesk */
+  /* figures: tabular at every stop. numeric-font is a face that HAS tnum (vivid's serif doesn't) */
+  --warp-text-numeric-font: var(--warp-ref-numeric-font);
+  --warp-text-numeric-variant: tabular-nums lining-nums;
+  /* <em> inside display / title / headings: a real italic or none (font-synthesis-style: none) */
+  --warp-text-emphasis-style: var(--warp-ref-emphasis-style);
+  --warp-text-emphasis-color: var(--warp-color-accent-text);
+
+  /* -- type · canvas role strings (weft/text, Surfaces) ------------------
+     A canvas `font` can't read var() or calc(): these resolve to "weight Npx family-stack" (read them
+     with getComputedStyle(host).getPropertyValue). Line height, tracking and case aren't part of a canvas
+     font: read the matching -leading / -tracking / -case tokens. The fluid roles resolve here, at the scope
+     root; a [data-text-canvas] host re-resolves them against its own container (warp.base). */
+  --warp-text-display-px: var(--warp-text-display-size);
+  --warp-text-title-px:   var(--warp-text-title-size);
+  --warp-text-heading-px: var(--warp-text-heading-size);
+  --warp-text-body-px:    var(--warp-text-body-size);
+  --warp-text-prose-px:   var(--warp-text-prose-size);
+  --warp-text-label-px:   var(--warp-text-label-size);
+  --warp-text-eyebrow-px: var(--warp-text-eyebrow-size);
+  --warp-text-caption-px: var(--warp-text-caption-size);
+  --warp-text-code-px:    var(--warp-text-code-size);
+  --warp-text-button-px:  var(--warp-text-button-size);
+  --warp-text-control-px: var(--warp-text-control-size);
+  --warp-text-display-canvas: var(--warp-text-display-weight) var(--warp-text-display-px) var(--warp-text-display-font);
+  --warp-text-title-canvas:   var(--warp-text-title-weight) var(--warp-text-title-px) var(--warp-text-title-font);
+  --warp-text-heading-canvas: var(--warp-text-heading-weight) var(--warp-text-heading-px) var(--warp-text-heading-font);
+  --warp-text-body-canvas:    var(--warp-text-body-weight) var(--warp-text-body-px) var(--warp-text-body-font);
+  --warp-text-prose-canvas:   var(--warp-text-body-weight) var(--warp-text-prose-px) var(--warp-text-body-font);
+  --warp-text-label-canvas:   var(--warp-text-label-weight) var(--warp-text-label-px) var(--warp-text-label-font);
+  --warp-text-eyebrow-canvas: var(--warp-text-eyebrow-weight) var(--warp-text-eyebrow-px) var(--warp-text-eyebrow-font);
+  --warp-text-caption-canvas: var(--warp-text-body-weight) var(--warp-text-caption-px) var(--warp-text-body-font);
+  --warp-text-code-canvas:    var(--warp-text-body-weight) var(--warp-text-code-px) var(--warp-text-code-font);
+  --warp-text-button-canvas:  var(--warp-text-button-weight) var(--warp-text-button-px) var(--warp-text-button-font);
+  --warp-text-control-canvas: var(--warp-text-body-weight) var(--warp-text-control-px) var(--warp-text-body-font);
+
+  /* -- motion ---------------------------------------------------------- */
+  --_mk: calc(var(--warp-ref-motion-k) * (0.6 + 0.4 * var(--warp-motion-scale)));
+  --warp-duration-instant: 80ms;                                 /* press */
+  --warp-duration-fast:    calc(120ms * var(--_mk));             /* hover, colour */
+  --warp-duration-base:    calc(200ms * var(--_mk));             /* popover, menu, toast */
+  --warp-duration-slow:    calc(320ms * var(--_mk));             /* sheet, dialog, page */
+  --warp-duration-exit-k:  0.5;                                  /* exits are half of enters (redesign §3) */
+  --warp-ease-out:    var(--warp-ref-ease-out);                  /* enter, settle */
+  --warp-ease-in:     cubic-bezier(0.4, 0, 1, 1);                /* exit, leave */
+  --warp-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);            /* move, sweep */
+  --warp-ease-pop:    var(--warp-ref-ease-pop);                  /* scale-in accents */
+  --warp-ease-sheet:  cubic-bezier(0.32, 0.72, 0, 1);            /* drawers: long, rare, heavy */
+  --warp-ease-spring: var(--warp-ref-spring);                    /* release, arrivals: the stop's tension */
+  --warp-spring-duration: calc(var(--warp-ref-spring-ms) * var(--warp-motion-scale));
+  --warp-touch-out: calc(var(--warp-ref-touch-out) * var(--_mk));/* hover: instant in, this long out */
+  --warp-press: calc(1 - (1 - var(--warp-ref-press)) * var(--warp-motion-scale));
+  --warp-offset: calc(var(--warp-ref-offset) * 1);               /* vivid's hard ink shadow; it is depth, so it stays under reduced motion */
+  --warp-shuttle-head: calc(var(--warp-ref-shuttle-head) * var(--warp-motion-scale));
+  --warp-shuttle-tail: calc(var(--warp-ref-shuttle-tail) * var(--warp-motion-scale));
+  --warp-motion-distance:   calc(var(--warp-ref-distance) * var(--warp-motion-scale));
+  --warp-motion-scale-from: calc(1 - (1 - var(--warp-ref-scale-from)) * var(--warp-motion-scale));
+  --warp-stagger:           calc(var(--warp-ref-stagger) * var(--warp-motion-scale));
+  --warp-stagger-max: 6;                                         /* items; later ones share the last delay */
+
+  /* -- signature: sweep + floating border label ------------------------- */
+  --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 480 · 620 · 700; 0 = instant */
+  --warp-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --warp-sweep-ease-in: cubic-bezier(0.3, 0.55, 0.15, 1);        /* in leaves at once (redesign §2); out keeps the original curve */
+  --warp-sweep-width: calc(1px + 0.5px * min(1, var(--warp-x) * 2));   /* stroke 1 · 1.5 · 1.5 */
+  --warp-sweep-base-width: var(--warp-border-hairline);                  /* resting border stays 1px */
+  /* the full accent at every stop: the dial never makes the stroke faint.
+     Pinned between the ink base and the surface so both edges read (≥ 3:1 each). */
+  --warp-color-sweep: light-dark(
+    oklch(0.515 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)),
+    oklch(0.6 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
+  --warp-color-sweep-base: var(--warp-ref-sweep-base);
+  /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
+  --warp-frame-track: light-dark(var(--warp-color-text), color-mix(in oklab, var(--warp-color-text) 62%, transparent));
+  --warp-frame-corner: 10px; --warp-frame-weight: 2px; --warp-frame-stroke: 2.6;
+  --warp-frame-duration: calc(var(--warp-ref-frame) * var(--warp-motion-scale)); /* 590 · 760 · 760; 0 = instant */
+  --warp-color-sweep-critical: var(--warp-color-critical-solid);
+  --warp-color-field: var(--warp-ref-field-fill);                  /* at rest */
+  --warp-color-field-active: var(--warp-ref-field-fill-active);    /* hover / focus, with the sweep */
+  --warp-color-field-invalid: var(--warp-color-critical-soft);
+  --warp-field-height: max(calc(var(--warp-ref-control-md) + 4px), var(--warp-target-min)); /* 40 cozy */
+  --warp-label-font: var(--warp-ref-float-font);
+  /* the one sub-11px caps exception (00 §4): 10px on fine pointers, 11px on coarse (16px × 0.6875).
+     The label is the field's real <label for>; its name comes from the hidden label-text copy. */
+  --warp-label-float-size: max(10px, calc(var(--warp-input-font-min) * 0.6875));
+  --warp-label-float-weight: 600;
+  --warp-label-float-tracking: 0.12em;
+  --warp-label-float-offset: -7px;        /* top of the floated label vs the top border */
+  --warp-label-float-duration: calc(520ms * var(--warp-motion-scale));
+  --warp-label-float-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --warp-label-fade: calc(120ms * (1 - var(--warp-motion-scale)));   /* reduced-motion substitute */
+  --warp-label-char-duration: 120ms;
+  --warp-label-stagger: var(--warp-motion-scale);                    /* 0 = no per-char delay */
+  --warp-color-label: var(--warp-color-text-subtle);                 /* resting inside the field */
+  --warp-color-label-rest: light-dark(                               /* floated, idle: accent + 40% black */
+    oklch(0.4 min(calc(var(--_ac) * 0.85), 0.1) var(--_ah)),
+    oklch(0.72 calc(var(--_ac) * 0.55) var(--_ah)));
+  --warp-color-label-active: light-dark(                              /* hover/focus: the sweep's own accent, */
+    var(--warp-color-sweep),                                         /* lifted in dark to stay ≥ 4.5:1 as text */
+    oklch(0.7 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
+  --warp-message-duration: calc(180ms * var(--warp-motion-scale));
+
+  /* -- layers, opacity --------------------------------------------------- */
+  --warp-z-base: 0; --warp-z-raised: 1; --warp-z-sticky: 100; --warp-z-dock: 200;
+  --warp-z-overlay: 300; --warp-z-menu: 400; --warp-z-modal: 500; --warp-z-toast: 600;
+  --warp-z-tooltip: 700;
+  --warp-opacity-disabled: 0.45;
+  --warp-state-hover: 0.07;    /* currentColor layer over any non-solid fill */
+  --warp-state-press: 0.11;
+}
+
+} /* @layer warp.tokens */
+
+/* ===========================================================================
+   BASE · page defaults, scope painting, focus, keyframes. Zero-specificity.
+   ======================================================================== */
+@layer warp.base {
+  :where(:root) {
+    background: var(--warp-color-page);
+    color: var(--warp-color-text);
+    font-family: var(--warp-text-body-font);
+    font-size: var(--warp-ref-root-size);          /* the body size, in real rem (user default font size) */
+    line-height: var(--warp-text-body-leading);
+    font-optical-sizing: auto;                     /* Inter's opsz axis follows the size (14–32) */
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    accent-color: var(--warp-color-accent-solid);
+  }
+  /* a scope that changes theme or expression repaints its own ink and font */
+  :where([data-theme], [data-expression]) {
+    color: var(--warp-color-text);
+    font-family: var(--warp-text-body-font);
+  }
+  :where([data-theme]) { background-color: var(--warp-color-page); }
+
+  :where(:focus-visible) {
+    outline: var(--warp-focus-width) solid var(--warp-color-focus);
+    outline-offset: var(--warp-focus-offset);
+    animation: warp-ring calc(120ms * var(--warp-motion-scale)) var(--warp-ease-out);   /* the ring is drawn out from the edge */
+  }
+  @keyframes warp-ring { from { outline-offset: 0px; outline-color: transparent; } }
+  :where(::selection) {
+    background: var(--warp-color-accent-soft);
+    color: var(--warp-color-text);
+  }
+  :where(code, kbd, samp, pre) { font-family: var(--warp-text-code-font); font-size: var(--warp-text-code-size); }
+  :where(pre) { line-height: var(--warp-text-code-leading); }
+
+  /* -- type roles (01 §2 Type; research 11 §3) ------------------------------------------
+     wrap: headings balance at every stop; prose is pretty from balanced; vivid keeps editable text stable
+     (text-wrap-style only, so a component's white-space: nowrap still wins). */
+  :where(h1, h2, h3, h4, h5, h6) { text-wrap-style: var(--warp-text-heading-wrap); }
+  :where(p, li, dd, blockquote, figcaption) { text-wrap-style: var(--warp-text-prose-wrap); }
+  :where(textarea, [contenteditable]:not([contenteditable="false"])) { text-wrap-style: var(--warp-text-editable-wrap); }
+  /* prose: reading size, leading and the dial's measure (72 · 66 · 60ch) */
+  :where([data-prose]) {
+    font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading);
+    max-inline-size: var(--warp-measure); text-wrap-style: var(--warp-text-prose-wrap); overflow-wrap: break-word;
+  }
+  /* trimmed text boxes: the box is cap height to baseline, so spacing and centring are optical.
+     Controls (button, badge, chip, pill, tag) and eyebrows at every stop; headings from balanced.
+     A flex host's own text-box doesn't reach its text (it isn't a block container), so its direct
+     label spans are trimmed too; heights stay fixed (block-size), only the glyphs centre on the cap. */
+  @supports (text-box: trim-both cap alphabetic) {
+    :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"], [data-part="eyebrow"]),
+    :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"]) > :where(span:not([data-part])) {
+      text-box: var(--warp-text-box-trim);
+    }
+    :where(h1, h2, h3, h4, h5, h6) { text-box: var(--warp-text-heading-trim); }
+    /* trimmed block text keeps the brand's box through the font swap: a fixed-height part (control, badge)
+       can't move, but a heading's height is its cap, which differs between the fallback and the web font.
+       --warp-trim-k says whether the element is trimmed (it mirrors the text-box token it uses); the fix is
+       0 once the web font renders, so the loaded layout is exactly the text-box one. Display text trims at
+       vivid only: the hero title, and any element marked data-trim="display", reads the display switch.
+       An element that sets text-box: var(--warp-text-display-trim) itself sets data-trim="display" too, and a
+       heading laid out as flex or grid (text-box only trims block containers) sets --warp-trim-k: 0. */
+    :where(h1, h2, h3, h4, h5, h6) { --warp-trim-k: var(--warp-text-heading-trim-k); }
+    :where([data-scope="hero"] [data-part="title"], [data-trim="display"]) { --warp-trim-k: var(--warp-text-display-trim-k); }
+    /* an accordion / disclosure heading holds a block button, not lines of its own: nothing to trim */
+    :where(h1, h2, h3, h4, h5, h6):where(:has(> button[aria-expanded])) { --warp-trim-k: 0; }
+    :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+      --warp-trim-fix: calc(var(--warp-trim-k, 0) * var(--warp-ref-trim-swap));
+    }
+    /* where the fix goes. Above the first line it keeps the baseline where the web font will put it, so
+       neither the box nor the glyphs move at the swap. A positive fix (serif, mono) is top padding. A
+       negative one (Inter, Space Grotesk) can't be: in WebKit a zero-height table before the first line
+       carries the whole fix as a margin, either sign, and keeps the cap trim; Chromium and Firefox drop the
+       start trim when a block starts with a table, so Chromium takes a negative fix off the auto height with
+       calc-size() (the box holds; its glyphs still rise by the fix at the swap). Firefox's 1cap doesn't see
+       the fallback during the swap, so the fix reads 0 there: unchanged. hanging-punctuation picks out WebKit
+       (no other engine ships it). With the web font
+       loaded every term is 0: padding 0, calc-size(auto, size + 0px), which lays out as auto, stretch included. */
+    @supports not ((hanging-punctuation: first) and (not (block-size: calc-size(auto, size)))) {
+      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+        padding-block-start: max(0px, var(--warp-trim-fix));
+      }
+    }
+    @supports (block-size: calc-size(auto, size)) {
+      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim]) {
+        block-size: calc-size(auto, size + min(0px, var(--warp-trim-fix)));
+      }
+    }
+    @supports (hanging-punctuation: first) and (not (block-size: calc-size(auto, size))) {
+      :where(h1, h2, h3, h4, h5, h6, [data-scope="hero"] [data-part="title"], [data-trim])::before {
+        /* the box exists only while the fix is non-zero: after the swap it is gone, so it never becomes a
+           flex item (with gap) in a flex heading. An engine without if() drops the pseudo (no fix). */
+        content: if(style(--warp-trim-fix: 0px): none; else: "");
+        display: table; margin-block-end: var(--warp-trim-fix);
+      }
+    }
+  }
+  /* fallback (iOS < 18.2, Firefox < 154): Capsize-style negative margins from the face's metrics,
+     using the line's own height (lh). Without lh (iOS 15) the declarations are dropped: untrimmed, harmless. */
+  @supports not (text-box: trim-both cap alphabetic) {
+    :where(h1, h2, h3, h4, h5, h6)::before, :where(h1, h2, h3, h4, h5, h6)::after,
+    :where([data-part="eyebrow"])::before, :where([data-part="eyebrow"])::after { content: ""; display: table; }
+    :where(h1, h2, h3, h4, h5, h6) { --_t: 1; }
+    :where([data-expression="quiet"] :is(h1, h2, h3, h4, h5, h6), [data-expression="quiet"]:is(h1, h2, h3, h4, h5, h6)) { --_t: 0; }
+    :where(h1, h2, h3, h4, h5, h6)::before { margin-block-end: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k2) * 1em)); }
+    :where(h1, h2, h3, h4, h5, h6)::after { margin-block-start: calc(-1 * var(--_t) * ((1lh - var(--warp-ref-hm-k1) * 1em) / 2 + var(--warp-ref-hm-k3) * 1em)); }
+    :where([data-part="eyebrow"])::before { margin-block-end: calc(-1 * ((1lh - var(--warp-ref-em-k1) * 1em) / 2 + var(--warp-ref-em-k2) * 1em)); }
+    :where([data-part="eyebrow"])::after { margin-block-start: calc(-1 * ((1lh - var(--warp-ref-em-k1) * 1em) / 2 + var(--warp-ref-em-k3) * 1em)); }
+  }
+  /* a canvas host re-resolves the px role strings against its own container (fluid display / title) */
+  :where([data-text-canvas]) {
+    --warp-text-display-px: var(--warp-text-display-size); --warp-text-title-px: var(--warp-text-title-size);
+  }
+
+  /* no faux italics in headlines: Space Grotesk and Inter-as-display ship no italic, so the browser
+     would slant the roman. Emphasis there is upright + accent; vivid's serif uses its real italic. */
+  :where(h1, h2, h3, h4, h5, h6) { font-synthesis-style: none; }
+  :where(h1, h2, h3, h4, h5, h6) :where(em) { font-style: var(--warp-text-emphasis-style); color: var(--warp-text-emphasis-color); }
+  /* figures that update or align: a face with tnum at every stop (vivid's serif has none) */
+  :where([data-numeric]) { font-family: var(--warp-text-numeric-font); font-variant-numeric: var(--warp-text-numeric-variant); }
+  :where(table, time) { font-variant-numeric: var(--warp-text-numeric-variant); }
+
+  /* touch: every target reaches hit-min (24px fine, 44px coarse) from tokens alone (00 §1.5).
+     The floor is a min-size, so a component's own block-size still sets the visual size on a mouse. */
+  :where([data-scope="button"]:not([data-emphasis="link"]), [data-scope="toggle"], [data-part="close"],
+         [data-scope="status-bar"] > button, [role="tab"], [data-hit]:not([data-hit="area"])) { min-block-size: var(--warp-hit-min); }
+  :where([data-scope="button"][data-icon-only], [data-part="close"], [data-scope="toggle"], [data-hit]:not([data-hit="area"])) { min-inline-size: var(--warp-hit-min); }
+  /* expander: a target that must keep a smaller visual box (a chart toggle, a pin, a drag handle) gets a
+     centred hit-min area from ::after; it never shrinks the box. Components use the same formula on their
+     own parts; where two expanders would overlap, the part takes its share of the gap instead (24px
+     floor + spacing, WCAG 2.5.8) and says so in its file. */
+  :where([data-hit="area"]) { position: relative; }
+  :where([data-hit="area"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  /* a standalone text link (not inside running text) gets the same row height */
+  :where([data-scope="button"][data-emphasis="link"]:not(:is(p, li, dd, td, figcaption, blockquote, label) *), [data-hit="text"]) {
+    display: inline-flex; align-items: center; min-block-size: var(--warp-hit-min);
+  }
+
+  /* a loading button keeps its accessible name: the label hides by opacity (stays in the a11y tree),
+     never by visibility. !important because hiding the name is an a11y failure, not a style choice. */
+  :where([data-scope="button"][data-loading]) > :where(:not([data-part="spinner"], [data-scope="spinner"])) { visibility: visible !important; opacity: 0; }
+  :where(hr) { border: 0; border-top: var(--warp-border-hairline) solid var(--warp-color-border); }
+
+  /* motion primitives (components set animation-duration/-timing) */
+  @keyframes warp-enter {
+    from { opacity: 0; transform: translateY(var(--warp-motion-distance)) scale(var(--warp-motion-scale-from)); }
+  }
+  @keyframes warp-exit {
+    to { opacity: 0; transform: translateY(calc(var(--warp-motion-distance) * -0.5)) scale(var(--warp-motion-scale-from)); }
+  }
+  @keyframes warp-fade-in  { from { opacity: 0; } }
+  @keyframes warp-fade-out { to { opacity: 0; } }
+  @keyframes warp-msg-in   { from { opacity: 0; transform: translateY(calc(-4px * var(--warp-motion-scale))); } }
+  @keyframes warp-label-a  { from { opacity: 0; } }   /* reduced-motion label crossfades; */
+  @keyframes warp-label-b  { from { opacity: 0; } }   /* two names so each state change replays */
+  @keyframes warp-shimmer  { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+  @keyframes warp-pulse    { from { opacity: 1; } to { opacity: 0.45; } }   /* reduced-motion status signal */
+
+  /* Nothing loops while idle under reduced motion (00 §8). Applies to the OS setting (unless the app
+     chose data-motion="full") and to data-motion="reduce" on any scope. !important in warp.base beats
+     every later layer's !important, so a component's own reduced-motion shortening (e.g. a 120ms
+     duration) can't turn a loop into a strobe.
+       1. every animation runs at most once;
+       2. idle loops (shimmer, skeleton, marching dashes, [data-loop]) stop;
+       3. spinners and indeterminate bars keep a status signal: an opacity pulse, no rotation or travel. */
+  @media (prefers-reduced-motion: reduce) {
+    :where(:root:not([data-motion="full"]) *) { scroll-behavior: auto !important; }
+    :where(:root:not([data-motion="full"]) *, :root:not([data-motion="full"]) *::before, :root:not([data-motion="full"]) *::after) { animation-iteration-count: 1 !important; }
+    :where(:root:not([data-motion="full"])) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], .edge[data-live], [data-loop]) { animation: none !important; }
+    :where(:root:not([data-motion="full"])) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::before,
+    :where(:root:not([data-motion="full"])) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::after { animation: none !important; }
+    :where(:root:not([data-motion="full"])) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
+      animation: warp-pulse 1.2s ease-in-out infinite alternate !important;
+    }
+  }
+  :where([data-motion="reduce"] *, [data-motion="reduce"] *::before, [data-motion="reduce"] *::after) { animation-iteration-count: 1 !important; }
+  :where([data-motion="reduce"]) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], .edge[data-live], [data-loop]) { animation: none !important; }
+  :where([data-motion="reduce"]) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::before,
+  :where([data-motion="reduce"]) :where([data-shimmer], [data-scope="skeleton"], [data-part="skeleton"], [data-skeleton], [data-scope="shimmer"], [data-part="shimmer"], [data-loop])::after { animation: none !important; }
+  :where([data-motion="reduce"]) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
+    animation: warp-pulse 1.2s ease-in-out infinite alternate !important;
+  }
+}
+
+/* ===========================================================================
+   SIGNATURE · the sweep border + the floating border label.  Every stop.
+   Source of truth: ../SIGNATURE.md.
+     --_a is 1 while a host is active; two registered edges do the rest, so a part has no states. It draws L→R, leaves L→R,
+     and never reverses. Duration 0 (reduced motion) makes every change instant, with the same end states.
+   Hosts: [data-sweep]. Set --warp-sweep-radius to the host's corner radius
+   (clip-path `round` must match it). --_on gates decorative hosts (0 = fade).
+   ======================================================================== */
+@layer warp.signature {
+  :where([data-sweep]) { position: relative; --warp-sweep-radius: var(--warp-radius-control); --_on: 1; --_a: 0; }
+
+  /* -- the switch: --_a is 1 while a host is active. Hover (not touch), focus, a held state, a pass. The only state.
+     Hover and focus are the browser's, so the sweep runs with no script and no write to the DOM. */
+  @media (hover: hover) { :where([data-sweep]:hover, [data-sweep-trigger]:hover [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):hover [data-sweep]) { --_a: 1; } }
+  @media (hover: none) { :where([data-sweep]:active, [data-sweep-trigger]:active [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):active [data-sweep]) { --_a: 1; } }
+  :where([data-sweep]:is(:focus-visible, :has(:focus-visible), [data-pin], [data-hold], [data-confirm], [data-invalid], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"], :popover-open),
+         [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
+         :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [data-hold], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
+         :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
+         dialog[data-scope="palette"][open] > [data-sweep], [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
+
+  /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
+     while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
+     then resets out of sight. It never reverses, and leaving part way only means the left edge catches up sooner. */
+  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-label"], [data-part="sweep-content"], [data-part="rail-hover"]) {
+    --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
+    --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
+              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+              --_a 0s linear var(--_latch, 0s);
+    transition: var(--_edges);
+  }
+  /* A tap's :active is over in a blink. Each part keeps its --_a for one sweep past it, so a tap draws in whole, then exits. */
+  @media (hover: none) {
+    :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-outline"], [data-part="sweep-label"], [data-part="sweep-content"]) {
+      --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration));
+    }
+  }
+  /* two stacked 1px borders (or any content, e.g. an icon) */
+  :where([data-part="sweep"], [data-part="sweep-base"]) {
+    position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
+    border-radius: inherit;
+  }
+  :where([data-part="sweep"]:empty) { border: var(--warp-sweep-width) solid currentColor; }
+  :where([data-part="sweep-base"]:empty) { border: var(--warp-sweep-base-width) solid currentColor; }
+  /* the base wipes away ahead of the stroke and is back the moment the host lets go */
+  :where([data-part="sweep-base"]) {
+    z-index: 1; color: var(--warp-color-sweep-base);
+    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+  }
+  :where([data-part="sweep"]) {
+    z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+  }
+  /* error: pinned in by the switch, painted critical */
+  :where([data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-color-sweep-critical); opacity: 1; }
+
+  /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
+     own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
+     back to width. warp-core writes --warp-a, --warp-b and data-dir. */
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]) {
+    transition: --warp-a var(--warp-shuttle-tail) var(--warp-ease-spring), --warp-b var(--warp-shuttle-head) var(--warp-ease-spring);
+  }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-dir="back"]) {
+    transition: --warp-a var(--warp-shuttle-head) var(--warp-ease-spring), --warp-b var(--warp-shuttle-tail) var(--warp-ease-spring);
+  }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-instant]) { transition: none; }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"]) {
+    translate: var(--warp-a) 0; inline-size: calc(var(--warp-b) - var(--warp-a));
+  }
+  /* the shuttle in a list: frequent, so short and without overshoot */
+  :where([data-part="shuttle"]) {
+    position: absolute; inset-inline: var(--_inset, 4px); inset-block-start: 0; z-index: -1; pointer-events: none;
+    translate: 0 var(--warp-a); block-size: calc(var(--warp-b) - var(--warp-a));
+    border-radius: max(2px, calc(var(--warp-radius-control) - 2px)); background: var(--warp-color-accent-soft); opacity: 0;
+    --warp-shuttle-head: calc(70ms * var(--warp-motion-scale)); --warp-shuttle-tail: calc(120ms * var(--warp-motion-scale)); --warp-ease-spring: var(--warp-ease-out);
+  }
+  :where([data-part="shuttle"][data-on], [data-part="list"]:has([aria-selected="true"]) > [data-part="shuttle"]) { opacity: 1; }
+
+  /* -- sweep fill: solid buttons; slides in L→R, leaves to the right ----- */
+  :where([data-part="sweep-fill"]) {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+    background: var(--warp-sweep-fill, var(--warp-color-accent-solid-hover));
+    transform: translateX(calc((var(--_sl) - var(--_sr)) * 1.01 * var(--_on))); opacity: max(var(--_on), var(--_a, 0));
+    transition: var(--_edges), opacity var(--warp-duration-fast) var(--warp-ease-out);
+  }
+
+  /* -- 1b · frame button (SIGNATURE §1b; old: theme/tokens.css:317-493) ---
+     rest: four 10px/2px bracket corners in the track colour, no border.
+     in:   active corners clip in L→R + the outline draws itself (two routes
+           from the left middle, over the top / under the bottom, meeting at the
+           right) + a tone copy of the label wipes in.
+     out:  everything keeps travelling right: the outline's tail follows its head.
+     The outline is CSS, not SVG: an SVG dash with pathLength + non-scaling-stroke
+     is measured in screen px in Chrome and leaves gaps past ~200px wide. Here two
+     registered numbers, --warp-frame-head (head) and --warp-frame-tail (tail), run 0 → 1 on the
+     frame's own 760ms curve (the original --btn-sweep-duration; --warp-frame-duration); each of six
+     2.6px segments sizes itself from them with container units, so the drawn length is exact at any size.
+     Label: at rest in the tone (the original .btn-idle-accent); the copy wipes in L→R in the text colour.
+     This is the only frame implementation: pages supply the button's fill, ink and shape, nothing else.
+     <span data-part="frame-corners"><i></i><i></i><i></i><i></i></span>
+     <span data-part="sweep-corners"><i></i><i></i><i></i><i></i></span>
+     <span data-part="sweep-outline"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+     <span data-part="sweep-label">…</span><span data-part="sweep-content" aria-hidden="true">…</span>  */
+  /* the frame host runs on the frame's duration, so every part (and sweep()) reads 760ms */
+  :where([data-sweep]:has(> [data-part="sweep-outline"])) { --warp-sweep-duration: var(--warp-frame-duration); }
+  :where([data-part="frame-corners"], [data-part="sweep-corners"]) {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-frame-track);
+  }
+  :where([data-part="frame-corners"], [data-part="sweep-corners"]) > i {
+    position: absolute; inline-size: var(--warp-frame-corner); block-size: var(--warp-frame-corner);
+    box-sizing: border-box; border: 0 solid currentColor;
+  }
+  :where([data-part$="corners"]) > i:nth-child(1) { inset-block-start: 0; inset-inline-start: 0; border-block-start-width: var(--warp-frame-weight); border-inline-start-width: var(--warp-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(2) { inset-block-start: 0; inset-inline-end: 0;   border-block-start-width: var(--warp-frame-weight); border-inline-end-width: var(--warp-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(3) { inset-block-end: 0;   inset-inline-start: 0; border-block-end-width: var(--warp-frame-weight);   border-inline-start-width: var(--warp-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--warp-frame-weight);   border-inline-end-width: var(--warp-frame-weight); }
+  :where([data-part="sweep-corners"], [data-part="sweep-content"]) {
+    color: var(--_tone, var(--warp-color-sweep)); opacity: var(--_on);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl));
+  }
+  :where([data-part="sweep-outline"]) {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    container-type: size;               /* its children measure it: 100cqw × 100cqh */
+    --warp-frame-tail: calc(1 - var(--_a, 0)); --warp-frame-head: var(--_a, 0); opacity: var(--_on);
+    transition: --warp-frame-tail calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
+                --warp-frame-head calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+                --_a 0s linear var(--_latch, 0s);
+  }
+  /* each segment: offset o along the route, length n; route length L = w + h
+     (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
+  :where([data-part="sweep-outline"]) > i {
+    --_L: calc(100cqw + 100cqh); --_s: calc(var(--warp-frame-stroke) * 1px);
+    --_u0: clamp(0px, calc(var(--warp-frame-tail) * var(--_L) - var(--_o)), var(--_n));
+    --_u1: clamp(0px, calc(var(--warp-frame-head) * var(--_L) - var(--_o)), var(--_n));
+    position: absolute; background: var(--_tone, var(--warp-color-sweep));
+  }
+  :where([data-part="sweep-outline"]) > i:nth-child(-n+3) { --_o: 0px; --_n: 50cqh; }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(2), :nth-child(5)) { --_o: 50cqh; --_n: 100cqw; }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(3), :nth-child(6)) { --_o: calc(50cqh + 100cqw); --_n: 50cqh; }
+  :where([data-part="sweep-outline"]) > i:nth-child(4) { --_o: 0px; --_n: 50cqh; }
+  /* vertical: left half-edges from the middle; right half-edges toward the middle */
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(1), :nth-child(3), :nth-child(4), :nth-child(6)) {
+    inline-size: var(--_s); block-size: calc(var(--_u1) - var(--_u0));
+  }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(2), :nth-child(5)) {
+    block-size: var(--_s); inline-size: calc(var(--_u1) - var(--_u0)); inset-inline-start: var(--_u0);
+  }
+  :where([data-part="sweep-outline"]) > i:nth-child(1) { inset-inline-start: 0; inset-block-end: calc(50cqh + var(--_u0)); }
+  :where([data-part="sweep-outline"]) > i:nth-child(2) { inset-block-start: 0; }
+  :where([data-part="sweep-outline"]) > i:nth-child(3) { inset-inline-end: 0; inset-block-start: var(--_u0); }
+  :where([data-part="sweep-outline"]) > i:nth-child(4) { inset-inline-start: 0; inset-block-start: calc(50cqh + var(--_u0)); }
+  :where([data-part="sweep-outline"]) > i:nth-child(5) { inset-block-end: 0; }
+  :where([data-part="sweep-outline"]) > i:nth-child(6) { inset-inline-end: 0; inset-block-end: var(--_u0); }
+  :where([data-part="sweep-label"]) { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: inherit; }
+  /* the resting label gives way ahead of the copy that wipes over it, so a held sweep never stacks two copies of the text.
+     It is back the moment the host lets go. The margins keep descenders whole at rest; ×3 clears it however narrow it is. */
+  :where([data-part="sweep-label"]) { clip-path: inset(-1em -1em -1em calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1) * 3 - 1em)); }
+  /* idle accent: the resting label is in the tone; the copy that wipes over it is the text colour */
+  :where([data-sweep]:has(> [data-part="sweep-outline"]) > [data-part="sweep-label"]) { color: var(--_tone, var(--warp-color-accent-text)); }
+  :where([data-part="sweep-content"]) {
+    position: absolute; inset: 0; z-index: 2; display: inline-flex; align-items: center; justify-content: center;
+    gap: inherit; padding: inherit; pointer-events: none; color: var(--warp-color-text);
+  }
+  /* filled frame: the tone fill slides in under it (sweep-fill), the content copy reads on it */
+  :where([data-sweep]:has(> [data-part="sweep-fill"]) > [data-part="sweep-content"]) { color: var(--_tone-ink, var(--warp-color-accent-on-solid)); }
+
+  /* -- 1c · rails (SIGNATURE §1c; old: inputs/choice/Switch.tsx) ---------
+     The fill moves THROUGH the rail. [data-part="rail-fill"] clips in L→R
+     when on and back when off (620ms); the thumb slides (420ms, same ease).
+     Hover/focus while on: [data-part="rail-hover"] (accent-hover) sweeps
+     through the inside of the rail. While off: the ring (sweep/sweep-base)
+     sweeps around it. Same parts on slider fills, progress, segmented. */
+  :where([data-part="rail-fill"], [data-part="rail-hover"]) {
+    position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  }
+  :where([data-part="rail-fill"]) {
+    background: var(--warp-color-accent-solid); clip-path: inset(0 100% 0 0 round var(--warp-sweep-radius));
+    transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+  }
+  :where([data-on] > [data-part="rail-fill"], :checked + [data-part="track"] > [data-part="rail-fill"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
+  :where([data-part="rail-hover"]) {
+    background: var(--warp-color-accent-solid-hover);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+  }
+  /* the ring only sweeps while off; while on the inside sweeps instead */
+  :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: hidden; }
+  :where([data-part="track"]:not([data-on], :checked + *)) [data-part="rail-hover"] { visibility: hidden; }
+  :where([data-part="thumb"]) {
+    transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease),
+                background-color calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+  }
+
+  /* -- 2 · the floating border field ------------------------------------ */
+  :where([data-scope="field"]) { display: grid; gap: 0; min-inline-size: 0; }
+  :where([data-scope="field"] > [data-part="control"]) {
+    --_lead: var(--warp-pad-control);
+    position: relative; display: block; min-inline-size: 0;
+    block-size: var(--warp-field-height);
+    border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control);
+    background: var(--warp-color-field);
+    font-family: var(--warp-label-font);
+    transition: background-color var(--warp-duration-base) var(--warp-ease-out);
+  }
+  :where([data-scope="field"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: calc(var(--warp-pad-control) + 28px); }
+  /* the accent tint arrives with the sweep: hover, focus, or an open picker */
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within), [data-scope="field"][data-open] > [data-part="control"]) { background: var(--warp-color-field-active); }
+  :where([data-scope="field"][data-invalid] > [data-part="control"]) { background: var(--warp-color-field-invalid); }
+  :where([data-scope="field"] [data-part="input"]) {
+    all: unset; box-sizing: border-box; position: relative; z-index: 3;
+    inline-size: 100%; block-size: 100%; padding-inline: var(--_lead) var(--warp-pad-control);
+    border-radius: inherit; font: inherit; font-size: var(--warp-text-control-size);
+    color: var(--warp-color-text);
+  }
+  :where([data-scope="field"] [data-part="input"])::placeholder { color: transparent; transition: color var(--warp-duration-fast); }
+  :where([data-scope="field"] [data-part="icon"]) {
+    position: absolute; z-index: 4; inset-block-start: 50%; inset-inline-start: var(--warp-pad-control);
+    inline-size: 16px; block-size: 16px; margin-block-start: -8px; --warp-sweep-radius: 0px; pointer-events: none;
+  }
+  :where([data-scope="field"] [data-part="icon"] svg) { inline-size: 16px; block-size: 16px; display: block; }
+  :where([data-scope="field"] [data-part="icon"] > [data-part="sweep-base"]) { color: var(--warp-color-text-subtle); }
+
+  /* label at rest: inside, at the field's own text size */
+  :where([data-scope="field"] [data-part="label"]) {
+    /* block, not flex: flex items are blockified, which spells the accessible name letter by letter */
+    position: absolute; z-index: 5; display: block; pointer-events: none; user-select: none; white-space: nowrap;
+    inset-block-start: 50%; inset-inline-start: var(--_lead); transform: translateY(-50%);
+    padding-inline: 0; line-height: 1;
+    font-family: var(--warp-label-font); font-size: var(--warp-text-control-size); font-weight: 400; letter-spacing: 0;
+    background: transparent;
+    transition-property: inset-block-start, inset-inline-start, transform, padding, font-size, letter-spacing, background-color;
+    transition-duration: var(--warp-label-float-duration);
+    transition-timing-function: var(--warp-label-float-ease);
+    animation: warp-label-a var(--warp-label-fade) linear;
+  }
+  /* floated: on hover, focus or value — or always, in fixed mode */
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="label"],
+         [data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
+    inset-block-start: var(--warp-label-float-offset); inset-inline-start: calc(var(--warp-pad-control) - 4px);
+    transform: none; padding-inline: 4px;
+    font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
+    letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase;
+    /* the notch: a pixel-aligned window onto whatever is behind the field.
+       floatingLabel() writes --_notch-*; --warp-field-notch is the static override. */
+    background-color: var(--_notch-color, var(--warp-field-notch, var(--warp-color-surface)));
+    background-image: var(--_notch-image, none);
+    background-size: var(--_notch-size, auto); background-position: var(--_notch-pos, 0 0);
+    background-repeat: no-repeat;
+    animation-name: warp-label-b;
+  }
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="input"])::placeholder,
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="input"])::placeholder {
+    color: var(--warp-color-text-subtle);
+  }
+  /* Label anatomy (shared; 01 §2 "Label anatomy"). floatingLabel() renders, inside the real <label for>:
+       <span data-part="label-text">Alt text</span>                       name source, visually hidden
+       <span data-part="label-chars" aria-hidden="true"><span data-char data-c="A"></span>…</span>
+     The letters are generated content (::before from data-c), so the accessible name AND textContent are
+     the plain "Alt text": not spelled out, and not the floated uppercase "ALT TEXT" (Chrome applies
+     text-transform to names). The older form (bare inline <span data-char>A</span>) still works. */
+  :where([data-scope="field"] [data-part="label"] [data-part="label-text"], [data-part="label-text"]:has(+ [data-part="label-chars"])) {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
+    white-space: nowrap; text-transform: none; letter-spacing: normal;
+  }
+  :where([data-scope="field"] [data-part="label"] [data-char][data-c], [data-part="label-chars"] > [data-char][data-c])::before { content: attr(data-c); }
+  /* the same anatomy names any caps-styled name source outside a field (a range head, a pane head, a knob caption):
+     warpSweep.label(el) on it keeps the visible caps and gives AT the sentence-case words. No tint outside fields. */
+  :where([data-part="label-chars"] > [data-char]) { white-space: pre; }
+  /* per-character tint that travels with the sweep: --d = x / sweep speed.
+     The spans are INLINE: an inline-block per letter makes Chrome compute the label's accessible name
+     (and innerText, copy, find) as "F I R S T  N A M E". Colour transitions need no box. */
+  :where([data-scope="field"] [data-part="label"] [data-char]) {
+    display: inline; white-space: pre; color: var(--warp-color-label);
+    transition: color var(--warp-label-char-duration) linear;
+    transition-delay: calc(var(--d, 0ms) * var(--warp-label-stagger));
+  }
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-char],
+         [data-scope="field"] > [data-part="control"]:is([data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-char]) {
+    color: var(--warp-color-label-rest);
+  }
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--warp-color-label-active); }
+  :where([data-scope="field"][data-invalid] [data-char]) { color: var(--warp-color-critical-text); }
+  /* -- classic fields (SIGNATURE §2.5): data-fields="classic" on any ancestor,
+     or data-variant="classic" on the field. Label above the box as plain text:
+     no float, no notch, no overlap. The sweep border and icon sweep stay;
+     the label still tints with the sweep. Same markup as floating. */
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) { padding-block-start: calc(var(--warp-text-label-size) * 1.25 + var(--warp-space-tight)); }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"] {
+    inset-block-start: auto; inset-block-end: calc(100% + var(--warp-space-tight));
+    inset-inline-start: 0; transform: none; padding: 0; background: none;
+    font-family: var(--warp-text-label-font); font-size: var(--warp-text-label-size);
+    font-weight: var(--warp-text-label-weight); letter-spacing: 0; text-transform: none;
+    transition: none; animation: none;
+    pointer-events: auto; cursor: default;   /* above the box, a <label for> click focuses the input */
+  }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-part="input"]::placeholder { color: var(--warp-color-text-subtle); }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-char] { color: var(--warp-color-text); }
+  :where([data-scope="field"][data-variant="classic"] > [data-part="control"]:is(:hover, :focus-within),
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *) > [data-part="control"]:is(:hover, :focus-within)) [data-char] { color: var(--warp-color-label-active); }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *))[data-invalid] [data-char] { color: var(--warp-color-critical-text); }
+
+  /* hint / error slide in under the field */
+  :where([data-scope="field"] > [data-part="message"]) {
+    display: block; margin-block-start: var(--warp-space-tight);
+    font-size: max(11px, calc(var(--warp-text-caption-size) - 1px)); line-height: 1.3;
+    color: var(--warp-color-text-subtle);
+    animation: warp-msg-in var(--warp-message-duration) var(--warp-label-float-ease);
+  }
+  :where([data-scope="field"][data-invalid] > [data-part="message"]) { color: var(--warp-color-critical-text); }
+  :where([data-scope="field"][data-disabled]) { opacity: var(--warp-opacity-disabled); pointer-events: none; }
+
+  /* -- 3 · sweep checkbox: two borders + an accent check that draws ------ */
+  :where([data-scope="checkbox"][data-part="control"]) {
+    all: unset; position: relative; display: inline-grid; place-items: center; flex: none; cursor: pointer;
+    inline-size: 20px; block-size: 20px; border-radius: var(--warp-radius-mark);
+    --warp-sweep-radius: var(--warp-radius-mark);
+  }
+  :where([data-scope="checkbox"][data-part="control"] svg) {
+    position: relative; z-index: 3; inline-size: 70%; block-size: 70%; fill: none; overflow: visible;
+    stroke: var(--warp-color-accent-solid); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  :where([data-scope="checkbox"][data-part="control"] path) {
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    transition: stroke-dashoffset calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+  }
+  :where([data-scope="checkbox"][data-part="control"][aria-checked="true"] path) { stroke-dashoffset: 0; }
+  /* hit area: hit-min (44px on coarse) around the 20px box, even without a label row */
+  :where([data-scope="checkbox"][data-part="control"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+
+  /* -- 4 · decorative hosts gated by the dial ---------------------------- */
+  :where([data-scope="button"][data-sweep]) { --_on: var(--warp-sweep-buttons); }
+  :where([data-scope="surface"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
+
+  /* focus: the sweep is the indicator for fields; everything else keeps the ring */
+  :where([data-scope="field"] [data-part="input"]:focus-visible, [data-scope="palette"] [data-part="input"]:focus-visible) { outline: none; }
+
+  /* -- 5 · forced colours (Windows High Contrast and friends) ------------
+     The UA repaints every colour with a few system colours, so "accent over ink" collapses to
+     CanvasText over CanvasText and background-drawn parts (frame segments, rail fill, sweep fill)
+     vanish. Here every signature part opts out (forced-color-adjust: none) and is redrawn with
+     system colours, so each state stays distinct:
+       rest   1px CanvasText base               in/focus  2px Highlight sweep (colour AND width)
+       field focus  + 2px Highlight outline     invalid   3px double CanvasText, pinned
+       frame  corners CanvasText, outline + active corners Highlight
+       rails  fill Highlight, thumb CanvasText → HighlightText when on; hover rings in Highlight */
+  @media (forced-colors: active) {
+    :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-corners"], [data-part="frame-corners"],
+           [data-part="sweep-outline"], [data-part="sweep-fill"], [data-part="rail-fill"], [data-part="rail-hover"],
+           [data-part="thumb"], [data-part="indicator"]) { forced-color-adjust: none; }
+    :where([data-part="sweep-base"]) { color: CanvasText; }
+    :where([data-part="sweep"]) { color: Highlight; opacity: 1; }
+    :where([data-part="sweep"]:empty) { border-width: 2px; }
+    :where([data-part="icon"] > [data-part="sweep-base"]) { color: CanvasText; }
+    /* dial-gated hosts (--_on: 0) still show the state change in forced colours */
+    :where([data-sweep]) { --_on: 1; }
+    /* fields: the sweep alone is a 1→2px change, so focus also gets the system ring */
+    :where([data-scope="field"] > [data-part="control"]:focus-within) { outline: 2px solid Highlight; outline-offset: 2px; }
+    :where([data-scope="field"][data-invalid] > [data-part="control"] > [data-part="sweep"],
+           [data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) { color: CanvasText; border-style: double; border-width: 3px; }
+    :where([data-scope="field"] [data-part="label"]) { forced-color-adjust: none; color: CanvasText; background-color: Canvas; background-image: none; }
+    :where([data-scope="field"] [data-part="label"] [data-char]) { color: inherit; }
+    /* the UA would force the transparent resting placeholder to GrayText, under the resting label */
+    :where([data-scope="field"] [data-part="input"])::placeholder { forced-color-adjust: none; color: transparent; }
+    :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="input"])::placeholder,
+    :where([data-fields="classic"] [data-scope="field"], [data-scope="field"][data-variant="classic"]) [data-part="input"]::placeholder { color: GrayText; }
+    :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="label"]) { color: Highlight; }
+    /* frame button: corners at rest, outline + active corners in Highlight; the label copy is redundant */
+    :where([data-part="frame-corners"]) { color: CanvasText; }
+    :where([data-part="sweep-corners"]) { color: Highlight; opacity: 1; }
+    :where([data-part="sweep-outline"]) > i { background: Highlight; }
+    :where([data-part="sweep-outline"]) { opacity: 1; }
+    :where([data-part="sweep-content"]) { display: none; }
+    :where([data-part="sweep-label"]) { clip-path: none; }
+    /* solid buttons: a sweep fill would sit under ButtonText; show the state as an inset Highlight ring */
+    :where([data-part="sweep-fill"]) { background: transparent; box-shadow: inset 0 0 0 2px Highlight; border-radius: inherit; }
+    /* rails */
+    :where([data-part="rail-fill"]) { background: Highlight; }
+    :where([data-part="rail-hover"]) { display: none; }
+    :where([data-part="thumb"]) { background: CanvasText; box-shadow: none; }
+    :where(:checked + [data-part="track"] [data-part="thumb"], [data-on] > [data-part="thumb"]) { background: HighlightText; }
+    :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: visible; color: CanvasText; }
+    :where([data-part="indicator"]) ~ :where([aria-checked="true"], [aria-selected="true"], [aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
+    /* checkbox mark */
+    :where([data-scope="checkbox"][data-part="control"] svg) { forced-color-adjust: none; stroke: CanvasText; }
+  }
+}
+
+/* forced colours, base: one system focus ring everywhere */
+@layer warp.base {
+  @media (forced-colors: active) {
+    :where(:focus-visible) { outline-color: Highlight; }
+  }
+}
+
+/* ===========================================================================
+   Motion defaults: what every warp app gets with no code. CSS only, compositor
+   only, scaled by --warp-motion-scale through the duration and distance tokens.
+   ======================================================================== */
+@layer warp.base {
+  :root { interpolate-size: allow-keywords; }
+
+  /* Route changes: same-document (start's router) and cross-document alike. The page's chrome stays put. */
+  @view-transition { navigation: auto; }
+  ::view-transition-group(*) { animation-duration: var(--warp-duration-slow); animation-timing-function: var(--warp-ease-out); }
+  ::view-transition-old(root) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+  ::view-transition-new(root) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  @keyframes warp-page-out { to { opacity: 0; } }
+  @keyframes warp-page-in { from { opacity: 0; transform: translateY(var(--warp-motion-distance)); } }
+  [data-vt="bar"] { view-transition-name: warp-bar; }
+  [data-vt="side"] { view-transition-name: warp-side; }
+  [data-vt="main"] { view-transition-name: warp-main; }
+  ::view-transition-old(warp-main) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+  ::view-transition-new(warp-main) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  ::view-transition-group(warp-bar), ::view-transition-group(warp-side) { z-index: 2; }
+
+  /* A block arriving: fade and rise as it enters the view, off the main thread. `--_d` staggers within a group. */
+  @supports (animation-timeline: view()) {
+    [data-reveal] {
+      animation: warp-reveal linear both; animation-timeline: view();
+      animation-range: entry calc(var(--_d, 0) * 4%) entry calc(60% + var(--_d, 0) * 4%);
+    }
+    @media (prefers-reduced-motion: reduce) { [data-reveal] { animation: none; } }
+    [data-motion="reduce"] [data-reveal] { animation: none; }
+  }
+  @keyframes warp-reveal { from { opacity: 0; transform: translateY(calc(var(--warp-motion-distance) * 3)); } }
+
+  /* Disclosures open by height; content that replaces a placeholder fades in. */
+  ::details-content { block-size: 0; overflow: clip; transition: block-size var(--warp-duration-slow) var(--warp-ease-out), content-visibility var(--warp-duration-slow) allow-discrete; }
+  [open]::details-content { block-size: auto; }
+  [role="tabpanel"]:not([hidden]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out); @starting-style { opacity: 0; translate: 0 var(--warp-motion-distance); } }
+  [data-fade-in] { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
+  [data-scope="skeleton"] + *, [data-scope="skeleton"] ~ * { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
+
+  /* Press feels instant at every stop. */
+  :where(a, button, [role="button"]):active { transition-duration: var(--warp-duration-instant); }
+}

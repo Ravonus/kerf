@@ -1,0 +1,15 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="cursor"]) {
+  position: absolute; inset: 0 auto auto 0; translate: var(--_x) var(--_y);
+  transition: translate calc(120ms * var(--warp-motion-scale)) linear;
+  color: var(--_pc, var(--warp-color-data-2));
+}
+:where([data-scope="cursor"] svg) { display: block; inline-size: 16px; block-size: 16px; fill: currentColor; stroke: var(--warp-color-surface); stroke-width: 1.5; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18)); }
+:where([data-scope="cursor"] span) {
+  position: absolute; inset-inline-start: 12px; inset-block-start: 14px; padding: 3px 7px; border-radius: var(--warp-radius-control);
+  background: color-mix(in oklab, currentColor 70%, var(--warp-color-text)); font: 500 11.5px/1.2 var(--warp-text-body-font); white-space: nowrap;
+}
+:where([data-scope="cursor"] span b) { color: var(--warp-color-surface); font-weight: 500; }
+:where([data-scope="cursor"][data-idle]) { opacity: 0.4; transition: opacity var(--warp-duration-slow), translate 0s; }
+}

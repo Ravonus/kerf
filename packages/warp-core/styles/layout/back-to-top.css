@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* Back to top — appears after a screen of scroll; clears the dock and the bottom bar */
+:where([data-scope="back-to-top"]) {
+  position: sticky; inset-block-end: calc(var(--_dock, 0px) + var(--warp-space-group)); margin-inline-start: auto; margin-inline-end: var(--warp-space-group);
+  display: grid; place-items: center; inline-size: max(40px, var(--warp-hit-min)); block-size: max(40px, var(--warp-hit-min));
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: 999px; background: var(--warp-color-surface-overlay);
+  box-shadow: var(--warp-elevation-2); color: var(--warp-color-text); cursor: pointer; animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both;
+}
+:where([data-scope="back-to-top"][hidden]) { display: none; }
+@media print {
+:where([data-scope="shell"] [data-part="dock"], [data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"],
+         [data-scope="shell"] [data-part="palette"], [data-scope="consent"], [data-scope="announcement"], [data-scope="topnav"],
+         [data-scope="float-panel"], [data-scope="back-to-top"], [data-scope="route-progress"], [data-scope="docs"] [data-part="sidenav"],
+         [data-scope="anchor-nav"]) { display: none !important; }
+}
+}

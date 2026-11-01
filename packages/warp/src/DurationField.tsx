@@ -1,5 +1,5 @@
 import { TimerIcon } from '@weft/icons'
-import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft/ui-core'
+import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft/warp-core'
 import { derived, state, untrack } from 'weft'
 import { bindable, Composite, Hidden, usePickerEnv, type Bindable, type RichFieldProps } from './Picker'
 

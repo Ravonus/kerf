@@ -1,0 +1,46 @@
+{
+  "name": "@weft/warp-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "warp without a framework: the spec CSS split per component, and behaviour as plain TS over the DOM (the sweep, the floating label, the dials, motion, and small machines for stateful widgets). @weft/warp sits on it; use it directly when you want your own markup.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "src",
+    "bindings",
+    "styles",
+    "scripts/contrast-check.mjs",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./weft": "./bindings/weft.ts",
+    "./motion": "./src/motion.ts",
+    "./charts": "./src/charts/index.ts",
+    "./canvas": "./src/canvas.ts",
+    "./dither": "./src/dither/index.ts",
+    "./search": "./src/search.ts",
+    "./styles/*": "./styles/*"
+  },
+  "peerDependencies": {
+    "weft": "*"
+  },
+  "peerDependenciesMeta": {
+    "weft": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "lightningcss": "1.33.0",
+    "vitest": "5.0.5",
+    "weft": "file:../weft"
+  },
+  "scripts": {
+    "build:css": "node scripts/split-css.mjs",
+    "test": "node scripts/split-css.mjs --check && vitest run"
+  }
+}

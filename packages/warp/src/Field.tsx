@@ -1,10 +1,10 @@
 import { AlertIcon, SearchIcon, XIcon } from '@weft/icons'
-import { field, formReset, labelChars, uid } from '@weft/ui-core'
+import { field, formReset, labelChars, uid } from '@weft/warp-core'
 import { derived, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './fields'
-import '@weft/ui-core/styles/inputs/text.css'
+import '@weft/warp-core/styles/inputs/text.css'
 
 export interface FieldProps {
   /** The accessible name, drawn as the floating border label (or above, classic). Required. */
@@ -41,7 +41,7 @@ type Control = (p: { id: string; readonly describedby?: string; readonly invalid
 /**
  * The field shell (03 §1 anatomy, verbatim order): control (sweep-base, sweep, icon, label, prefix, input, suffix,
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
- * after mount ui-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
+ * after mount warp-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
 export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
   const id = untrack(() => given) ?? uid('field')

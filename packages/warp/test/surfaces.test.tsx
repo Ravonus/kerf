@@ -1,5 +1,5 @@
 // DataGrid, the pagination bar, the palette, mentions, code and the editors: keyboard, ARIA, SSR + hydration.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
 import { flush, render } from 'weft/test'

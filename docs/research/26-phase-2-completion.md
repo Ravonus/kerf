@@ -4,7 +4,7 @@ Status: **design 2026-10-29, built in the same change.** Inputs: PLAN §6.1–6.
 11 (text and type, §7–8), 13 (plugins, §2–3), 15 (assets, §7–8) and 25 (routing; H-codes took research 20's M
 numbers back, so `M0xx` is free for media).
 
-Phase 2 already had the plugin API, ui-core, warp tier 1 and the `<Boundary>` timing. This note covers what was
+Phase 2 already had the plugin API, warp-core, warp tier 1 and the `<Boundary>` timing. This note covers what was
 left in the Phase 2 row, and records each place where the build differs from the research it comes from.
 
 ## 1. What's in scope
@@ -13,8 +13,8 @@ left in the Phase 2 row, and records each place where the build differs from the
 |---|---|---|
 | Media | `<Media>` for stills, `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013 | `weft/media` (the component and the `?media` record type), `@weft/plugin-media` (the `media.build` provider and the M-code check), `?media` in `weft/vite` (§2) |
 | Fonts | the font build step (subsets, matched fallbacks, preloads) | `@weft/plugin-text` providing `font.build@1`, consumed by `weft/vite` as `weft:fonts` (§3) |
-| Skeletons | skeleton shapes for `<Boundary pending>` | `skeletonShape()` geometry in ui-core, `<Shape>` in warp over the spec's Skeleton CSS, and X031 measured in dev (§4) |
-| Type | fluid `cqi` type tokens | the spec CSS already has them. ui-core gets the typed token layer: `fluid()`, `TYPE_SCALE`, and a test that ties both to the CSS (§5) |
+| Skeletons | skeleton shapes for `<Boundary pending>` | `skeletonShape()` geometry in warp-core, `<Shape>` in warp over the spec's Skeleton CSS, and X031 measured in dev (§4) |
+| Type | fluid `cqi` type tokens | the spec CSS already has them. warp-core gets the typed token layer: `fluid()`, `TYPE_SCALE`, and a test that ties both to the CSS (§5) |
 | Scaffold | `create-weft --ui` | `packages/create-weft`: `create-weft <dir> --ui warp\|headless\|none` (§6) |
 | Diagnostics | X005–X008, X020–X031 | the codes research 11 §8.6 assigns to Phase 2: X005, X006, X008, X020–X023, X030, X031, X034 (§7). X007 and X024–X029 are not defined anywhere, so they stay unassigned |
 
@@ -226,7 +226,7 @@ import { Shape } from '@weft/warp'
 <Boundary pending={<Shape kind="text" lines={4} />}>…</Boundary>
 ```
 
-- **ui-core `skeletonShape(spec)`** is pure geometry. It turns a spec into rows of parts (`{ shape: 'text' |
+- **warp-core `skeletonShape(spec)`** is pure geometry. It turns a spec into rows of parts (`{ shape: 'text' |
   'circle' | 'block', inline, block }`). Text bars use the role's line height (the body leading, 1.5em), so the
   shape is as tall as the text that replaces it. The last line of a paragraph is 60%, matching warp's
   `Skeleton lines`.
@@ -239,10 +239,10 @@ import { Shape } from '@weft/warp'
   after inserting it, and warns `X031` when they differ by more than 1 px, with the delta. It costs nothing in
   production (`DEV`-gated) or on the server.
 
-## 5. Fluid type tokens in ui-core
+## 5. Fluid type tokens in warp-core
 
 The spec CSS (`styles/warp.css`, copied verbatim) already defines display and title as
-`clamp(min·rem, b·rem + m·cqi, max·rem)`, with `--warp-ref-fluid-unit` falling back to `1vw` on iOS 15. ui-core's
+`clamp(min·rem, b·rem + m·cqi, max·rem)`, with `--warp-ref-fluid-unit` falling back to `1vw` on iOS 15. warp-core's
 TS side had no view of them, so a binding, the CLI or a Surface had to re-derive the numbers. Added:
 
 - **`fluid(minPx, maxPx, { from = 375, to = 1280, unit = 'cqi' })`** returns `{ min, b, m, max }` in rem and the
@@ -269,7 +269,7 @@ create-weft my-app [--ui warp|headless|none] [--name <name>]
 
 - **`warp`:** `@weft/warp`, wired through `warp()`. The index page is a `Card` with a `Badge` counter and a
   `Button`.
-- **`headless`:** `@weft/ui-core` only. The layout imports ui-core's `warp.css` (tokens, base, signature) and the
+- **`headless`:** `@weft/warp-core` only. The layout imports warp-core's `warp.css` (tokens, base, signature) and the
   app's own markup uses the tokens, including the fluid title size.
 - **`none`:** weft and start only, with a small stylesheet.
 - **Nothing generated is written.** AGENTS.md, `.weft/` and the slot modules come from `weft` on the first

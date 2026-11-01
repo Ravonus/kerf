@@ -105,7 +105,7 @@ shape with weft's compiler and graph on top.
 
 The UI thread must never block on app logic, and some interactions can't take a JS round trip.
 
-- **Animations and gestures:** `ui-core/motion` presets are declarative (spring, duration, curve), so they lower to
+- **Animations and gestures:** `warp-core/motion` presets are declarative (spring, duration, curve), so they lower to
   Core Animation and Android animators running on the UI thread. JS only starts them and hears when they end.
   Drag-to-dismiss, swipe actions and pull-to-refresh are host behaviours with declarative props, not JS-driven
   frames. No worklets in v0.
@@ -176,7 +176,7 @@ The UI thread must never block on app logic, and some interactions can't take a 
 
 - Layout primitives: `Stack Row Split Switch Grid Center Surface Frame`, plus `Scroll`, `List` and `Screen`.
 - Text through `Text role=…`, `Image`, `Icon`.
-- warp components and `ui-core` behaviours.
+- warp components and `warp-core` behaviours.
 - HTML intrinsics (`div`, `span`, `input`…) only in files that resolve to web. Elsewhere they are **N001**: "`<div>`
   has no native equivalent. Use `<Stack>`," with an autofix for the common cases.
 - CSS files and Tailwind classes are web-only. On native, styling comes from tokens and intent props, which is what

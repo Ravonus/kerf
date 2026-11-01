@@ -1,7 +1,7 @@
 import '../styles'
-import '@weft/ui-core/styles/data/tokens.css'
-import '@weft/ui-core/styles/data/base.css'
-import '@weft/ui-core/styles/data/table.css'
+import '@weft/warp-core/styles/data/tokens.css'
+import '@weft/warp-core/styles/data/base.css'
+import '@weft/warp-core/styles/data/table.css'
 
 /**
  * The look of 06's table for a fixed matrix that isn't a DataTable (a roles matrix, CSV mapping and preview): no sort,

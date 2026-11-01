@@ -1,7 +1,7 @@
 // The schedule pack driven as a user would: views, keyboard move, the card, dialogs, rollback, and the fields paths (07 §2, §6.4).
 import { state } from 'weft'
 import { flush, render } from 'weft/test'
-import type { CalEvent } from '@weft/ui-core'
+import type { CalEvent } from '@weft/warp-core'
 import { Agenda } from '../src/schedule/Agenda'
 import { AvailabilityEditor } from '../src/schedule/AvailabilityEditor'
 import { BookingCalendar } from '../src/schedule/BookingCalendar'

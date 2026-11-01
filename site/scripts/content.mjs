@@ -13,7 +13,7 @@ import { exportsOf, loadCompiler, resolveWeft } from '../../packages/cli/src/wef
 import { cleanText, decode, descriptionProblem, truncate } from '../../packages/start/src/derive.mjs'
 import { readFixtures, readToolkit } from './toolkit.mjs'
 
-// ui-core's source imports without extensions, for bundlers; here Node reads it directly.
+// warp-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
   resolve(spec, context, next) {
     try {
@@ -24,7 +24,7 @@ registerHooks({
     }
   },
 })
-const { buildIndex, highlight, markdownToHtml } = await import('../../packages/ui-core/src/index.ts')
+const { buildIndex, highlight, markdownToHtml } = await import('../../packages/warp-core/src/index.ts')
 const { level, PALETTE } = await import('../src/lib/field.ts')
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -42,7 +42,7 @@ const write = (file, value) => writeFileSync(join(out, file), JSON.stringify(val
 function numbers() {
   const results = JSON.parse(readFileSync(join(repo, 'evals/compare/results.json'), 'utf8'))
   const run = readFileSync(join(repo, 'evals/results/compare-history.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).sort((a, b) => a.at.localeCompare(b.at)).at(-1)
-  const stacks = Object.entries(results).map(([id, s]) => ({
+  const stacks = Object.entries(results).filter(([, s]) => s.size).map(([id, s]) => ({ // a design-only entry has no build to measure
     id, label: s.label, js: s.size.js.br, css: s.size.css.br, lines: s.lines, nodes: s.load.nodes, heap: s.load.heapMB, fcp: s.load.fcpMs,
     steps: Object.fromEntries(Object.entries(s.parity.steps).map(([k, v]) => [k, v.dom])),
   }))

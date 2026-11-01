@@ -3,7 +3,7 @@
 import { untrack } from 'weft'
 import type { TextRole, Tone } from 'weft/ds'
 import './styles'
-import '@weft/ui-core/styles/components/link.css'
+import '@weft/warp-core/styles/components/link.css'
 import './type.css'
 
 type Open = { children?: any; [attr: string]: any }

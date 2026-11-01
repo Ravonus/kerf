@@ -1,6 +1,6 @@
 // Every chart form through SSR + hydrate (0 misses, 0 writes), then the one interaction model on the adopted markup.
 import { fireEvent } from '@testing-library/dom'
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { state } from 'weft'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'

@@ -1,7 +1,7 @@
 // Every component, server-rendered (`?weft-ssr`) and hydrated (`?weft-hydrate`): hydration claims every node (0
 // misses) and writes nothing to the DOM, ids included (resetIds before each render, as an app's server and client
 // entries do). The hydrated component then works: its interaction shows the same result as a client render.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
 import { flush } from 'weft/test'

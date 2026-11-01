@@ -668,9 +668,9 @@ by more than 2px. Quiet and reduced motion: shadow and colour only.
 
 ### 6.7 Canvas and dither
 
-The site's hero loom and the icons' shaded depth, as a family. `@weft/ui-core/canvas` is a surface (`surface(canvas, { draw })`):
+The site's hero loom and the icons' shaded depth, as a family. `@weft/warp-core/canvas` is a surface (`surface(canvas, { draw })`):
 pixel ratio, resize, a pause off screen and in a hidden tab, one still frame under reduced motion, and one shared
-`requestAnimationFrame`. With nothing to paint no frame is scheduled. `@weft/ui-core/dither` is the engine: tiles (Bayer 2/4/8,
+`requestAnimationFrame`. With nothing to paint no frame is scheduled. `@weft/warp-core/dither` is the engine: tiles (Bayer 2/4/8,
 blue noise, halftone), error diffusion (Floyd-Steinberg, Atkinson) for stills, fields, masks and a spring lattice for the pointer.
 
 ```tsx

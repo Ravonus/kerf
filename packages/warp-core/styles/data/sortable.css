@@ -1,0 +1,21 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* sortable list + layers ---------------------------------------------------------- */
+:where([data-scope="sortable"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+:where([data-scope="sortable"] > li) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-block-size: max(40px, var(--warp-target-min)); padding-inline: 4px 12px;
+  border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
+  transition: translate var(--warp-duration-base) var(--warp-ease-out), box-shadow var(--warp-duration-fast);
+}
+:where([data-scope="sortable"] > li[data-grabbed]) { box-shadow: 0 0 0 2px var(--warp-color-accent-solid), var(--warp-elevation-2); position: relative; z-index: 2; transition: none; }
+:where([data-scope="sortable"] [data-part="handle"]) {
+  all: unset; display: grid; place-items: center; inline-size: 28px; block-size: max(32px, var(--warp-hit-min)); cursor: grab; touch-action: none; color: var(--warp-color-text-subtle); border-radius: 4px;
+}
+:where([data-scope="sortable"] [data-part="handle"]:focus-visible) { outline: 2px solid var(--warp-color-focus); }
+:where([data-scope="sortable"] [data-part="handle"][aria-pressed="true"]) { color: var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
+:where([data-scope="sortable"] [data-part="rank"]) { font: 500 11px/1.25 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+/* drag handles in sortable lists and layers: 28px wide, hit-min tall; the expander adds the inline axis
+   (the neighbours are the rank and the name, which aren't targets) */
+:where([data-scope="sortable"] [data-part="handle"]) { position: relative; }
+:where([data-scope="sortable"] [data-part="handle"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+}

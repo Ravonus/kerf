@@ -1,7 +1,7 @@
 import { untrack } from 'weft'
 import { VirtualList, type VirtualControl } from './VirtualList'
 import './styles'
-import '@weft/ui-core/styles/data/timeline.css'
+import '@weft/warp-core/styles/data/timeline.css'
 
 export interface FeedItem {
   id: string | number

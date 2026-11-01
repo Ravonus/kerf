@@ -1,13 +1,13 @@
 import { BranchIcon, CopyIcon, LeftIcon, RefreshIcon, RightIcon, ThumbsDownIcon, ThumbsUpIcon } from '@weft/icons'
-import { announce, popover } from '@weft/ui-core'
+import { announce, popover } from '@weft/warp-core'
 import { derived, state } from 'weft'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { IconButton } from './bits'
 import '../styles'
-import '@weft/ui-core/styles/components/popover.css'
-import '@weft/ui-core/styles/app/branch.css'
+import '@weft/warp-core/styles/components/popover.css'
+import '@weft/warp-core/styles/app/branch.css'
 
 const say = (e: Event, text: string) => announce((e.currentTarget as Element).ownerDocument, text)
 

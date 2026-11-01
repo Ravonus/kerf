@@ -1,0 +1,26 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Badge + status dot ------------------------------------------------------------- */
+:where([data-scope="badge"]) {
+  display: inline-flex; align-items: center; gap: 5px; block-size: 20px; padding-inline: 7px; flex: none;
+  border: var(--warp-border-hairline) solid transparent; border-radius: var(--warp-radius-round);
+  background: var(--_soft); color: var(--_text); line-height: 1;
+  font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); white-space: nowrap;
+}
+:where([data-scope="badge"][data-emphasis="solid"]) { background: var(--_solid); color: var(--_ink-on); }
+:where([data-scope="badge"][data-emphasis="outline"]) { background: transparent; border-color: var(--_border); }
+:where([data-scope="badge"][data-count]) { min-inline-size: 20px; justify-content: center; padding-inline: 5px; font-family: var(--warp-font-mono); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+:where([data-scope="status-dot"]) {
+  position: relative; display: inline-block; inline-size: 8px; block-size: 8px; flex: none; border-radius: 999px;
+  background: var(--_text); box-shadow: 0 0 0 2px var(--warp-color-surface-raised);
+}
+:where([data-scope="status-dot"][data-tone="neutral"]) { background: var(--warp-color-text-faint); }
+/* one ping when the status changes (not a loop) */
+:where([data-scope="status-dot"][data-ping])::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit;
+  animation: warp-ping calc(900ms * var(--warp-motion-scale)) var(--warp-ease-out) 1 both;
+}
+@keyframes warp-ping { from { opacity: 0.6; scale: 1; } to { opacity: 0; scale: calc(1 + 1.6 * var(--warp-motion-scale)); } }
+:where([data-scope="badge"] [data-scope="status-dot"]) { inline-size: 6px; block-size: 6px; box-shadow: none; }
+}

@@ -548,7 +548,7 @@ Things to carry into step 2:
 
 ## 7. Step 2: the matrix, `weft style`, MCP tools, D020–D025
 
-Built 2026-10-29 on the spike's code. Nothing in `packages/warp` or `packages/ui-core` changed.
+Built 2026-10-29 on the spike's code. Nothing in `packages/warp` or `packages/warp-core` changed.
 
 ### 7.1 What shipped
 
@@ -590,7 +590,7 @@ D025 from their catalog examples.
 ### 7.3 Numbers and checks
 
 - **Tests:** weft 239 (new: `test/style-matrix.test.ts`, 9; `test/style.test.tsx` +4; 2 new type cases), CLI 101
-  (new: `test/style.test.mjs`, 11), warp 74, ui-core 21, compiler (Rust) 93. All pass.
+  (new: `test/style.test.mjs`, 11), warp 74, warp-core 21, compiler (Rust) 93. All pass.
 - **The spike's shop through the CLI:** `weft style find row` → `product-row` first (doc and name), then `action`
   (its doc says "row"); groups that only use `layout: row` drop under the score cut. The matrix lists 10 groups and
   one diagnostic, D023 on `cart-line`'s `qty` part (`minInlineSize`, `textAlign`: no intent sets them).

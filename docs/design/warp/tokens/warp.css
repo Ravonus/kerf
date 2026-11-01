@@ -957,7 +957,7 @@
 
   /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
      own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
-     back to width. ui-core writes --warp-a, --warp-b and data-dir. */
+     back to width. warp-core writes --warp-a, --warp-b and data-dir. */
   :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]) {
     transition: --warp-a var(--warp-shuttle-tail) var(--warp-ease-spring), --warp-b var(--warp-shuttle-head) var(--warp-ease-spring);
   }

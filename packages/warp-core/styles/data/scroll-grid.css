@@ -1,0 +1,37 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* scroll grid: two-axis sticky, both axes virtualised ------------------------ */
+:where([data-scope="scroll-grid"]) {
+  --_cw: 104px; --_rh: 34px; --_hw: 132px;
+  position: relative; overflow: auto; block-size: 340px; contain: strict; overscroll-behavior: contain;
+  border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface-raised);
+  font-size: var(--warp-text-caption-size); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="scroll-grid"] [data-part="canvas"]) { position: relative; }
+/* rows are real role="row" boxes (APG grid): each is positioned on y, its cells on x.
+   Only the rows in view (plus the active one) exist; aria-rowindex / aria-colindex keep
+   their place in the 2,001 × 121 whole. */
+:where([data-scope="scroll-grid"] [data-part="row"], [data-scope="scroll-grid"] [data-part="head-row"]) {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: 100%; block-size: var(--_rh);
+}
+:where([data-scope="scroll-grid"] [data-part="head-row"]) { z-index: 2; }
+:where([data-scope="scroll-grid"] [data-part="row-head"]) { z-index: 1; }
+:where([data-scope="scroll-grid"] [data-part="corner"]) { z-index: 3; }
+:where([data-scope="scroll-grid"]:focus-visible) { outline: var(--warp-focus-width, 2px) solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="scroll-grid"] [data-part="cell"], [data-scope="scroll-grid"] [data-part="col-head"], [data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: var(--_cw); block-size: var(--_rh);
+  display: flex; align-items: center; justify-content: end; padding-inline: 10px; border-inline-end: 1px solid var(--warp-color-border); border-block-end: 1px solid var(--warp-color-border);
+  white-space: nowrap; overflow: hidden;
+}
+:where([data-scope="scroll-grid"] [data-part="col-head"], [data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) {
+  background: var(--warp-color-surface); color: var(--warp-color-text-subtle); font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case);
+}
+:where([data-scope="scroll-grid"] [data-part="row-head"], [data-scope="scroll-grid"] [data-part="corner"]) { inline-size: var(--_hw); justify-content: start; }
+:where([data-scope="scroll-grid"] [data-part="cell"][data-neg]) { color: var(--warp-color-critical-text); }
+/* the active cell (aria-activedescendant): soft fill always, a 2px ring while the grid has focus */
+:where([data-scope="scroll-grid"] [data-part="cell"][data-active]) { background: var(--warp-color-accent-soft); }
+:where([data-scope="scroll-grid"]:focus [data-part="cell"][data-active]) { box-shadow: inset 0 0 0 2px var(--warp-color-accent-solid); }
+@media (forced-colors: active) {
+:where([data-scope="scroll-grid"]:focus [data-part="cell"][data-active]) { outline: 2px solid Highlight; outline-offset: -2px; }
+}
+}

@@ -1,0 +1,17 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* avatar (comp owns Avatar; this is the app-side stack + presence ring) */
+:where([data-scope="avatar"]) {
+  --_s: var(--warp-avatar-md);
+  position: relative; display: inline-grid; place-items: center; flex: none;
+  inline-size: var(--_s); block-size: var(--_s); border-radius: var(--warp-radius-round);
+  background: var(--_bg, var(--warp-color-surface-active)); color: var(--_fg, var(--warp-color-text));
+  font: 600 calc(var(--_s) * 0.38)/1 var(--warp-text-body-font); letter-spacing: 0;
+  box-shadow: 0 0 0 var(--warp-border-hairline) color-mix(in oklab, var(--warp-color-text) 10%, transparent) inset;
+  user-select: none;
+}
+:where([data-scope="avatar"][data-size="sm"]) { --_s: var(--warp-avatar-sm); }
+:where([data-scope="avatar"][data-size="lg"]) { --_s: var(--warp-avatar-lg); }
+:where([data-scope="avatar"][data-size="xl"]) { --_s: 72px; }
+:where([data-scope="avatar"] > [data-scope="status-dot"]) { position: absolute; inset-block-end: -1px; inset-inline-end: -1px; }
+}

@@ -55,7 +55,7 @@ Both shops are built for production and measured with brotli q11.
 
 ## Contrast on the resolved tokens
 
-`packages/ui-core/scripts/contrast-check.mjs` checks `ui-core/styles/warp.css`. The script is the spec checker,
+`packages/warp-core/scripts/contrast-check.mjs` checks `warp-core/styles/warp.css`. The script is the spec checker,
 unchanged (a test keeps it equal). It resolves every sys colour at light/dark × quiet/balanced/vivid and checks each
 text/fill, UI and focus pair against WCAG 2.x.
 - **Result:** 858 checks (143 pairs × 6), 0 failures.
@@ -126,9 +126,9 @@ segmented count. Both come from an `opacity` dimming small text that already use
 
 The spec's own a11y review already names this class: reviews/03 m12, "Small text under 4.5:1 … subtle or text
 tokens". Following it means dropping the two opacities, which leaves text-subtle at 6.6:1 and the accent text at
-about 6:1. That edits `docs/design/warp/tokens/warp-inputs.css` and re-splits `ui-core/styles` (`split-css.mjs`
+about 6:1. That edits `docs/design/warp/tokens/warp-inputs.css` and re-splits `warp-core/styles` (`split-css.mjs`
 keeps them verbatim). The user approved it on 2026-10-30: both opacities are gone (with a `review 03 m12` comment,
-as on Pill), `ui-core/styles` is re-split, `SPEC_FINDINGS` is empty, and the rerun is 0 failures over 1,024 measured
+as on Pill), `warp-core/styles` is re-split, `SPEC_FINDINGS` is empty, and the rerun is 0 failures over 1,024 measured
 contrasts.
 
 ## Files

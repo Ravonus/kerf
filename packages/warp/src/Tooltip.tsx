@@ -1,7 +1,7 @@
-import { tooltip, uid, type Side } from '@weft/ui-core'
-import { use } from './use'
+import { tooltip, uid, type Side } from '@weft/warp-core'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/tooltip.css'
+import '@weft/warp-core/styles/components/tooltip.css'
 
 /**
  * A hint on hover and keyboard focus, never essential (05 §3, §10 H1): `children` is the trigger (one focusable
