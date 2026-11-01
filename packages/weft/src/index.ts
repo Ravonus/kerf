@@ -3,9 +3,10 @@
 // Push-pull graph: a write marks observers DIRTY/CHECK; derived values recompute lazily when read;
 // effects are queued and flushed in creation order (parents before children) on a microtask or by `flush()`.
 
-import { CHAIN, INLINE, LITERAL, MICRO, ORDERED, OWNKEYS, POP, REUSE } from './flags'
+import { CHAIN, INLINE, LITERAL, MICRO, ORDERED, POP, REUSE } from './flags'
 
-const CLEAN = 0, CHECK = 1, DIRTY = 2
+const CLEAN = 0, CHECK = 1
+export const DIRTY = 2
 /** `effect` of a disposed node: it never runs again, and there's no field for it on the live ones. */
 const DEAD = 3
 
@@ -50,12 +51,15 @@ export interface EffectOptions { name?: string; loc?: string }
 /** Dev only: the component being created (`createComponent(Comp, props, name, loc)`), for binding names. */
 export const devComponent: { label?: string; id?: number } = {}
 
-let listener: Computation | null = null
+export let listener: Computation | null = null
 let owner: Owner | null = null
 let nextId = 0
 /** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
 let at = 0
 let queue: Computation[] = []
+/** weft/keyed: tells a box's entry readers about a write. */
+let keyed: ((box: Box<any>, prev: any, v: any) => void) | undefined
+export const setKeyed = (f: typeof keyed) => { keyed = f }
 /** The newest queued effect's id, and whether one came out of creation order. */
 let last = 0
 let mixed = false
@@ -111,7 +115,7 @@ function add<T>(list: T[], x: T): T[] {
  * A run reads what the run before it read, nearly always, so a read that matches the list by position only moves on.
  * From the first that doesn't, the rest of the list is dropped and rebuilt as reads come in.
  */
-function read(node: Source) {
+export function read(node: Source) {
   const l = listener
   if (l) {
     if (INLINE && !at) {
@@ -140,7 +144,7 @@ function link(node: Source, reader: Computation) {
 }
 
 /** Mark everything that reads `node`. */
-function reach(node: Source, state: number) {
+export function reach(node: Source, state: number) {
   if (INLINE && node.f) mark(node.f, state)
   const o = node.o
   for (let i = 0; i < o.length; i++) mark(o[i], state)
@@ -377,10 +381,9 @@ export function collect<T>(fn: () => T): [T, Box<any>[]] {
   try { return [fn(), boxes] } finally { collecting = prev }
 }
 
-const plain = (x: any) => Object.getPrototypeOf(x ?? 0) === Object.prototype
+export const plain = (x: any) => Object.getPrototypeOf(x ?? 0) === Object.prototype
 
 /** An object's keys, and each as a number too: `get(1)` reads the key the object calls '1'. */
-const own = (x: any) => Reflect.ownKeys(x).flatMap((k): PropertyKey | PropertyKey[] => (typeof k === 'string' ? [k, +k] : k))
 
 export class Box<T> implements State<T> {
   v: T
@@ -389,6 +392,8 @@ export class Box<T> implements State<T> {
   // Rarely set, so not own fields of every box (memory).
   /** Per-entry sources for `get(key)`. */
   declare k?: Map<PropertyKey, Source>
+  declare get: State<T>['get']
+  declare set: State<T>['set']
   /** How many keys the last two values had, when they were compared key by key. */
   declare c?: number
   /** Write hook: a scope's history, persistence and transactions. */
@@ -403,44 +408,15 @@ export class Box<T> implements State<T> {
   }
   get value() { read(this); return this.v }
   set value(v: T) { this.w(v) }
-  set(update: (draft: T) => void) {
-    const v: any = this.v
-    const draft = Array.isArray(v) ? v.slice() : v && typeof v === 'object' ? { ...v } : v
-    update(draft)
-    this.w(draft)
-  }
-  get<K extends keyof T>(key: K): T[K] {
-    if (listener) {
-      const k = (this.k ??= new Map())
-      let s = k.get(key)
-      if (!s) k.set(key, (s = { v: undefined, f: undefined, o: NONE, b: this, key }))
-      read(s)
-    }
-    return (this.v as any)?.[key]
-  }
   w(v: T) {
     const prev: any = this.v
     if (Object.is(prev, v)) return
     this.v = v
-    const k = this.k
-    if (k) {
-      // Entry readers only: they re-run when their entry changed. Between plain objects only their own keys can differ,
-      // so those are compared instead of every reader's, unless the objects have been far larger than the readers.
-      const many = OWNKEYS && k.size > 8 && (this.c ?? 0) < k.size * 8 && plain(prev) && plain(v) && [...own(prev), ...own(v)]
-      if (many) this.c = many.length
-      for (const key of many || (k.keys() as Iterable<PropertyKey>)) {
-        const s = k.get(key)
-        if (s && !Object.is(prev?.[key], (v as any)?.[key])) reach(s, DIRTY)
-      }
-    }
+    if (this.k) keyed!(this, prev, v)
     reach(this, DIRTY)
     schedule()
     if (this.h) this.h(this, prev)
   }
-}
-
-export function state<T>(init: T, options?: StateOptions<T>): State<T> {
-  return new Box(init, options)
 }
 
 export interface Linked<T> extends State<T> {
@@ -448,43 +424,11 @@ export interface Linked<T> extends State<T> {
   readonly conflict: Derived<{ theirs: T; base: T } | undefined>
 }
 
-/**
- * A writable box that resets whenever `source` changes (a local copy of a prop). With `key`, it resets when the key
- * changes; while the key stays, it follows the source until a local edit, then keeps the edit and reports `conflict`
- * (a refetch or a push never clobbers what someone is typing, research 14 §3.4).
- */
-state.linked = <T>(source: () => T, options?: { key: () => unknown }): Linked<T> => {
-  const src = derived(source)
-  // A fresh object per key, so a write belongs to one key even if the key later returns to it. No `key`: the source.
-  const from = derived<{ k: unknown }>(((prev?: { k: unknown }) => {
-    const k = options ? options.key() : src.value
-    return prev && Object.is(prev.k, k) ? prev : { k }
-  }) as () => { k: unknown })
-  const local = new Box<{ v: T; from: { k: unknown }; base: T } | undefined>(undefined)
-  const edit = () => {
-    const f = from.value
-    const l = local.value
-    return l && l.from === f ? l : undefined
-  }
-  return {
-    get value() {
-      const l = edit()
-      return l ? l.v : src.value
-    },
-    set value(v: T) {
-      const f = from.value
-      const l = local.v
-      local.value = { v, from: f, base: l && l.from === f ? l.base : untrack(() => src.value) }
-    },
-    set(update) { const d: any = this.value; update(d); this.value = d },
-    get(key) { return (this.value as any)?.[key] },
-    conflict: derived(() => {
-      const l = edit()
-      const theirs = src.value
-      return l && !Object.is(theirs, l.base) ? { theirs, base: l.base } : undefined
-    }),
-  }
-}
+/** A box. `.linked`, `.get` and `.set` come with weft/keyed, which the `weft` entry and the Vite plugin bring in. */
+export const state: {
+  <T>(init: T, options?: StateOptions<T>): State<T>
+  linked<T>(source: () => T, options?: { key: () => unknown }): Linked<T>
+} = ((init: unknown, options?: StateOptions<unknown>) => new Box(init, options)) as any
 
 export class Memo<T> implements Derived<T> {
   constructor(public node: Computation) {}
@@ -665,30 +609,7 @@ export function view(sources: any[], skip: string[] = []): any {
   })
 }
 
-/**
- * Compiled from a component that assigns to a prop's local (`let amount = props.amount; amount = 5`). Each written prop
- * reads through a linked state, so a write holds in this component until the parent's value next changes, and only a
- * prop given with `bind(box)` has a setter that takes it further. `written`: each key, then its default or 0.
- */
-export function localProps(props: any, written: unknown[]) {
-  const boxes = new Map<PropertyKey, Linked<unknown>>()
-  for (let i = 0; i < written.length; i += 2) {
-    const k = written[i] as string, fallback = written[i + 1] as (() => unknown) | 0
-    boxes.set(k, state.linked(() => (props[k] === undefined && fallback ? fallback() : props[k])))
-  }
-  return new Proxy(props, {
-    get: (t, k) => (boxes.has(k) ? boxes.get(k)!.value : t[k]),
-    set(t, k, v) {
-      const box = boxes.get(k)
-      if (box) box.value = v
-      Reflect.set(t, k, v) // a setter, if the parent bound this prop; a getter alone ignores it
-      return true
-    },
-    has: (t, k) => boxes.has(k) || k in t,
-    ownKeys: t => [...new Set([...Reflect.ownKeys(t), ...boxes.keys()])] as (string | symbol)[],
-    getOwnPropertyDescriptor: (t, k) => (boxes.has(k) || k in t ? { configurable: true, enumerable: true } : undefined),
-  })
-}
+export { localProps } from './linked'
 
 /**
  * `<Card person={bind(name)} />`: `person` reads the box, and a write in `Card` reaches it. Without this, a child's

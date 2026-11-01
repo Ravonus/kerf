@@ -1244,3 +1244,25 @@ fn a_fragment_of_one_expression_can_follow_a_logical_operator() {
     assert!(code.contains("_c() && (() => (p.x))"), "{code}");
     assert!(code.contains("_c() || (() => (p.y))"), "{code}");
 }
+
+#[test]
+fn a_list_nothing_can_rerun_is_a_plain_map() {
+    for made in ["[1, 2]", "Array.from({ length: 2 }, (_, i) => i)", "new Array(2)"] {
+        let (code, d) = run(&format!("const xs = {made}\nexport const A = () => <p>{{xs.map(x => <i>{{x}}</i>)}}</p>"));
+        assert!(!d.iter().any(|d| d.severity == Severity::Error), "{d:?}");
+        assert!(!code.contains("For"), "{made}: {code}");
+    }
+}
+
+#[test]
+fn a_list_that_could_rerun_stays_a_list() {
+    for source in [
+        "let xs = [1]\nexport const A = () => <p>{xs.map(x => <i>{x}</i>)}</p>",
+        "export const A = () => { const xs = [1]; return <p>{xs.map(x => <i>{x}</i>)}</p> }",
+        "const xs = [1]\nexport const A = () => <p>{xs.map(x => <i key={x}>{x}</i>)}</p>",
+        "const xs = make()\nexport const A = () => <p>{xs.map(x => <i>{x}</i>)}</p>",
+    ] {
+        let (code, _) = run(source);
+        assert!(code.contains("For"), "{source}: {code}");
+    }
+}

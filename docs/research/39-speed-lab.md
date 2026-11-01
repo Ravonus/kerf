@@ -71,6 +71,14 @@ Muted runs are only good flat out: at 60 Hz the muted figure came out above the 
 
 `STEADY`, `ORDERED`, `RECORD`, `INLINE` and `CHAIN` came from this work. A queue kept between flushes (no array growth) did nothing for the arena and cost one-cell updates 11 to 13%, so it was refused.
 
+## What an app pays for
+
+Speed paths cost bytes only where they run. Three things keep them out of a page that doesn't use them:
+
+- **A list that can't re-run isn't a `For`.** Over a top-level `const` made here as an array, with no `key`, the compiler keeps the plain `.map`. That took `For`, its rows, keys and list hooks out of the arena: 1,025 B.
+- **`.get`, `.set` and `state.linked` are `weft/keyed`.** A module that mentions them brings it in (vite.mjs `keyed`); the plugin resolves `weft` to the core alone. A word match costs at worst those bytes, as `map.get` does. `box['get']` isn't seen. Without the plugin, the `weft` entry has them always.
+- **The longest-run search installs with `For`,** like `trade` and `wipe`. Elsewhere, nodes already in order stay and the rest move.
+
 ## Adaptive thresholds
 
 | Where | Rule | Why this number |

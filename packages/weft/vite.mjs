@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, globSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { basename, dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './node/css.mjs'
 import { purge, words } from './node/purge.mjs'
@@ -17,6 +17,26 @@ const FEATURES = [
   [/\bhistory\s*:\s*\{/, 'weft/history'],
   [/\bsync\s*:\s*['"]tabs['"]/, 'weft/sync'],
 ]
+
+const SRC = join(dirname(fileURLToPath(import.meta.url)), 'src')
+
+/**
+ * A module that mentions `.get`, `.set` or `.linked` brings in weft/keyed, so a page with none doesn't carry them. A word
+ * match costs at worst those bytes (`map.get`). Past this plugin, `weft` is the core alone. In a dependency it takes
+ * naming weft as well, or every package with a Map would count.
+ */
+const keyed = {
+  name: 'weft:keyed',
+  enforce: 'pre',
+  resolveId: { filter: { id: /^weft$/ }, handler: () => join(SRC, 'index.ts') },
+  transform: {
+    filter: { id: { include: /\.[cm]?[jt]sx?(\?|$)/, exclude: /[\\/]packages[\\/]weft[\\/]src[\\/]|[\\/]node_modules[\\/]weft[\\/]/ }, code: /\.(?:get|set|linked)\b/ },
+    handler(code, id) {
+      if (id.includes('node_modules') && !code.includes('weft')) return
+      return { code: `import ${JSON.stringify(join(SRC, 'keyed.ts'))};${code}`, map: null }
+    },
+  },
+}
 
 /** Adds `import 'weft/<feature>'` to app modules that use the option (filtered on id and code, §7c). */
 const features = {
@@ -454,7 +474,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     api: {},
   }
   const icon = icons()
-  return [icon.rewrite, flags(off), main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
+  return [icon.rewrite, flags(off), keyed, main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
 
 /**

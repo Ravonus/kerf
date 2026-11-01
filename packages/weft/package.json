@@ -6,6 +6,8 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": [
+    "./src/full.ts",
+    "./src/keyed.ts",
     "./src/persist.ts",
     "./src/history.ts",
     "./src/sync.ts"
@@ -24,7 +26,8 @@
     "vite.mjs"
   ],
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./src/full.ts",
+    "./keyed": "./src/keyed.ts",
     "./jsx-runtime": "./src/jsx-runtime.ts",
     "./dom": "./src/dom.ts",
     "./ssr": "./src/ssr.ts",

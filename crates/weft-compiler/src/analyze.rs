@@ -89,13 +89,14 @@ pub struct ChildrenPlan {
 }
 
 pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
-    let mut boxes = Boxes { scoping, set: HashSet::new(), browser: crate::browser::value_imports(program) };
+    let mut boxes = Boxes { scoping, set: HashSet::new(), browser: crate::browser::value_imports(program), arrays: HashSet::new() };
     boxes.visit_program(program);
     let mut a = Analyzer {
         scoping,
         source,
         plan: Plan::default(),
         boxes: boxes.set,
+        arrays: boxes.arrays,
         comps: Vec::new(),
         jsx_depth: 0,
         pending_name: None,
@@ -314,6 +315,8 @@ struct Analyzer<'s> {
     source: &'s str,
     plan: Plan,
     boxes: HashSet<SymbolId>,
+    /// See `Boxes::arrays`.
+    arrays: HashSet<SymbolId>,
     comps: Vec<CompCtx>,
     jsx_depth: u32,
     pending_name: Option<String>,
@@ -970,6 +973,9 @@ impl<'s> Analyzer<'s> {
     }
 
     fn analyze_list(&mut self, call: &CallExpression<'_>, cb: &Expression<'_>) {
+        if self.fixed_list(call, cb) {
+            return;
+        }
         let (ret, early) = returned(cb);
         let mut plan = ListPlan::default();
         let params = params_of(cb);
@@ -1068,6 +1074,23 @@ impl<'s> Analyzer<'s> {
             self.keyed_prop(sym, member, call.span);
         }
         self.plan.lists.insert(key(call.span), plan);
+    }
+
+    /// A list over a top-level `const` made here as an array (`[…]`, `Array.from(…)`, `new Array(…)`) with no keys:
+    /// nothing re-reads it, so `For` could never run twice and the plain `.map` is the same page.
+    fn fixed_list(&self, call: &CallExpression<'_>, cb: &Expression<'_>) -> bool {
+        let Expression::StaticMemberExpression(m) = &call.callee else { return false };
+        let Expression::Identifier(id) = m.object.without_parentheses() else { return false };
+        let Some(sym) = symbol_of(self.scoping, id) else { return false };
+        let (ret, _) = returned(cb);
+        let mut roots = Vec::new();
+        if let Some(ret) = ret {
+            row_roots(ret, &mut roots);
+        }
+        self.scoping.symbol_scope_id(sym) == self.scoping.root_scope_id()
+            && !self.scoping.get_resolved_references(sym).any(|r| r.is_write())
+            && self.arrays.contains(&sym)
+            && !roots.iter().any(|el| el.opening_element.attributes.iter().any(is_key_attr))
     }
 
     /// W017: `cart[p.id]` or `cart.value[p.id]` in a row reads one entry of a whole object, so every write to it
@@ -1727,9 +1750,35 @@ struct Boxes<'s> {
     set: HashSet<SymbolId>,
     /// weft/browser value imports.
     browser: HashSet<SymbolId>,
+    /// `const`s made as arrays here: `[…]`, `Array.from(…)`, `new Array(…)`.
+    arrays: HashSet<SymbolId>,
+}
+
+fn makes_array(e: &Expression<'_>) -> bool {
+    match e {
+        Expression::ArrayExpression(_) => true,
+        Expression::NewExpression(n) => matches!(&n.callee, Expression::Identifier(c) if c.name == "Array"),
+        Expression::CallExpression(c) => matches!(&c.callee, Expression::StaticMemberExpression(m)
+            if m.property.name == "from" && matches!(&m.object, Expression::Identifier(o) if o.name == "Array")),
+        _ => false,
+    }
 }
 
 impl<'a, 's> Visit<'a> for Boxes<'s> {
+    fn visit_variable_declaration(&mut self, it: &VariableDeclaration<'a>) {
+        if it.kind.is_const() {
+            for d in &it.declarations {
+                if let (BindingPattern::BindingIdentifier(id), Some(init)) = (&d.id, d.init.as_ref())
+                    && makes_array(init.without_parentheses())
+                    && let Some(sym) = binding_symbol(id)
+                {
+                    self.arrays.insert(sym);
+                }
+            }
+        }
+        walk::walk_variable_declaration(self, it);
+    }
+
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
         if let (BindingPattern::BindingIdentifier(id), Some(Expression::CallExpression(call))) =
             (&it.id, it.init.as_ref().map(|e| e.without_parentheses()))
