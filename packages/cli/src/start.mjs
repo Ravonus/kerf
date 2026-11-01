@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { diagnostic, locate } from './diag.mjs'
+import { diagnostic, locate, positions } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { requireTrust } from './trust.mjs'
@@ -33,7 +33,16 @@ async function site(root) {
   // A build on a config that doesn't load would quietly drop every plugin: fonts, tokens and slots.
   const bad = loaded.diagnostics.find(d => d.code === 'P007')
   if (bad) throw Object.assign(new Error(`P007: ${bad.message ?? bad.why}`), { code: 'E_USAGE' })
-  return { site: loaded.config?.site ?? {}, hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
+  return { site: siteOf(loaded), hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
+}
+
+/** `site` with what plugins know about the app's look (`card` in a manifest): warp's colours, the text plugin's faces. */
+export function siteOf(loaded) {
+  const site = loaded.config?.site ?? {}
+  const given = (loaded.contributions ?? []).map(c => c.manifest.card).filter(Boolean)
+  if (!given.length) return site
+  const card = Object.assign({}, ...given)
+  return { ...site, card: { ...card, ...site.card, fonts: { ...card.fonts, ...site.card?.fonts } } }
 }
 
 /** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
@@ -168,16 +177,28 @@ export async function dbCommand(root, sub, name) {
   return { ok: true, output }
 }
 
+/**
+ * Route findings as diagnostics, pointing at the `meta` export, or at where one goes. H011's fix is that export, as an
+ * edit an agent can apply: not safe, since the words are a start and not the page's best.
+ */
+export function routeDiagnostics(root, found) {
+  const text = f => { try { return readFileSync(join(root, f), 'utf8') } catch { return '' } }
+  return found.map(({ code, severity, file, route, why, help }) => {
+    const source = text(file)
+    const at = code === 'H011' && help?.startsWith('export const') && !/\bexport\s+(?:const|function|async function)\s+meta\b/.test(source) ? source.indexOf('export default') : -1
+    const place = positions(source)
+    const fix = at >= 0 && { fix: { safe: false, description: 'Add `meta`', edits: [{ file, span: place.span(at, at), offset: [at, at], text: `${help}\n\n` }] } }
+    return { ...diagnostic({ code, severity, file, why, help, ...locate(source, 'meta'), ...fix }), route }
+  })
+}
+
 /** Every route's merged metadata, tags and card mode (`--meta`), or just the route table. */
 export async function routesCommand(root, { meta, preset } = {}) {
   const config = await site(root)
   if (meta) {
     const { routesMeta } = await start(root, 'inspect')
     const result = await routesMeta({ root, site: config.site, preset })
-    const text = f => { try { return readFileSync(join(root, f), 'utf8') } catch { return '' } }
-    const own = result.diagnostics.map(({ code, severity, file, route, why }) =>
-      ({ ...diagnostic({ code, severity, file, why, ...locate(text(file), 'meta') }), route }))
-    return { ...result, diagnostics: [...config.diagnostics, ...own] }
+    return { ...result, diagnostics: [...config.diagnostics, ...routeDiagnostics(root, result.diagnostics)] }
   }
   const { scanRoutes, filePath } = await start(root, 'routes')
   const manifest = scanRoutes(root)

@@ -28,6 +28,7 @@ import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, 
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
 import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
+import { deployUrl, pageText, pathPages } from './derive.mjs'
 import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
@@ -91,11 +92,20 @@ export interface HandlerOptions {
   media?: () => Promise<MediaServer>
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
+  /** `false`: never build URLs on the request's origin (`weft routes --meta`, whose requests aren't real). */
+  requestOrigin?: false
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
   onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
 }
 
 export interface Level extends Match { mod?: RouteModule; raw: unknown }
+
+/** Where the words on a page came from, and its image: what `weft routes --meta` and `weft check` report. */
+export interface MetaSource {
+  title: 'route' | 'layout' | 'auto' | 'config' | 'none'
+  description: 'route' | 'layout' | 'auto' | 'config' | 'none'
+  image: 'explicit' | 'card' | 'auto' | 'none'
+}
 
 export interface Resolved {
   status: number
@@ -107,6 +117,11 @@ export interface Resolved {
   error?: unknown
   /** A loader called `redirect()`: nothing renders. */
   redirect?: Redirect
+  /** The metas the head is merged from, until `complete` has finished it. */
+  metas?: MetaObject[]
+  source?: MetaSource
+  /** The origin URLs are built on, when one is known. */
+  origin?: string
 }
 
 const als = new AsyncLocalStorage<Scope>()
@@ -145,6 +160,22 @@ export function createHandler(options: HandlerOptions) {
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
   const statics = new Set(options.statics)
+  const publicUrl = deployUrl(site, (globalThis as any).process?.env)
+  let warned = false
+  /**
+   * The origin canonical, og:url and og:image are built on. Without a configured one, the request's: right for what
+   * a browser asked, but it's whatever `Host` said, so a production server says so once. A prerender has no public
+   * request at all (it would write `localhost` into a file), so its pages stay relative and H001 reports them.
+   */
+  const originOf = (request: Request) => {
+    if (publicUrl) return publicUrl
+    if (request.headers.has('x-nitro-prerender') || options.requestOrigin === false) return undefined
+    if (!options.dev && !warned) {
+      warned = true
+      options.onDiagnostic?.({ code: 'H001', severity: 'warning', message: 'H001 `site.url` is not set, so canonical, og:url and og:image use the request\'s Host header. Set `site.url`, or `WEFT_SITE_URL` in the deploy environment.' })
+    }
+    return new URL(request.url).origin
+  }
   /** The route state of a server render: where a static level is in it, it marks where each level starts (`region`). */
   const stateOf = (r: Resolved, payload: RoutePayload) => {
     const route = createRouteState({ ...payload, m: r.levels.map(lv => ({ id: lv.id, params: lv.params, data: lv.raw })) }, comps)
@@ -213,14 +244,19 @@ export function createHandler(options: HandlerOptions) {
     }
     const finish = async (levels: Level[], status: number, route?: RouteEntry, error?: unknown): Promise<Resolved> => {
       const metas: MetaObject[] = []
+      const source: MetaSource = { title: site.name ? 'config' : 'none', description: site.description ? 'config' : 'none', image: 'none' }
       for (const lv of levels) {
         const m = lv.mod?.meta ?? (lv.id === '404' ? { title: 'Not found' } : lv.id === 'error' ? { title: 'Error' } : undefined)
         if (!m) continue
-        metas.push(typeof m === 'function' ? await m({ params: lv.params, data: settledView(lv.raw, lv.d, lv.id, options) }) : m)
+        const value = typeof m === 'function' ? await m({ params: lv.params, data: settledView(lv.raw, lv.d, lv.id, options) }) : m
+        metas.push(value)
+        const who = lv === levels.at(-1) ? 'route' : 'layout'
+        if (value?.title != null) source.title = who
+        if (value?.description != null) source.description = who
       }
-      const head = mergeMeta(site, ...metas)
-      if (head.og.image === 'auto') head.og.image = status === 200 && route ? { url: cardUrl(route, levels, head, path), ...CARD } : undefined
-      return { status, path, levels, head, route, error }
+      const resolved: Resolved = { status, path, levels, head: mergeMeta(site, ...metas), route, error, metas, source, origin: originOf(request) }
+      resolved.head.url = resolved.origin
+      return resolved
     }
 
     if (failed) {
@@ -237,14 +273,72 @@ export function createHandler(options: HandlerOptions) {
     }
   }
 
+  const leftToPage = (s: MetaSource['title']) => s === 'config' || s === 'none'
+
+  /**
+   * The content hash of a generated card: what it draws. The built-in card reads the head and the site's look and
+   * nothing else, so a loader's timestamp can't change its URL; an `.og.tsx` also gets the page's data.
+   */
   function cardUrl(route: RouteEntry, levels: Level[], head: Merged, path: string) {
-    const card = route.card ?? manifest.defaultCard ?? 'builtin'
-    const size = mod(route.card)?.size ?? CARD
-    const leaf = levels.at(-1)!
+    const card = route.card ?? manifest.defaultCard
+    const size = mod(card)?.size ?? CARD
     const { image: _, ...og } = head.og
-    const v = hash([options.build ?? '', card, JSON.stringify(size), JSON.stringify({ ...head, og }), JSON.stringify(leaf.data ?? null)].join('\0'))
+    const leaf = levels.at(-1)!
+    const v = hash([options.build ?? '', card ?? 'builtin', JSON.stringify(size), JSON.stringify({ ...head, og }), JSON.stringify(site.card ?? null), card ? JSON.stringify(leaf.data ?? null) : ''].join('\0'))
     return `/_weft/og/${cardPath(path)}.png?v=${v}`
   }
+
+  /**
+   * The rest of the head, once the page's HTML can speak for it (research 20 §10): a level that set no title or
+   * description gets the page's own, under anything a layout or the route wrote, and `image: 'auto'` becomes the
+   * card, whose URL hashes the text it shows. Called once per request, before anything is written.
+   */
+  function complete(r: Resolved, html?: string) {
+    if (!r.metas) return r.head
+    const { metas, source } = r
+    r.metas = undefined
+    const left = leftToPage(source.title) || leftToPage(source.description)
+    const page = left && r.status === 200 && html ? pageText(html) : {}
+    const title = leftToPage(source.title) ? page.title : undefined
+    const description = leftToPage(source.description) ? page.description : undefined
+    if (title) source.title = 'auto'
+    if (description) source.description = 'auto'
+    const head = (r.head = mergeMeta(site, { title, description }, ...metas))
+    head.url = r.origin
+    if (head.jsonLd === undefined && r.route?.pattern === '/' && r.status === 200 && r.origin && site.name) head.jsonLd = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: r.origin, ...(site.description && { description: site.description }) }
+    if (head.og.image === 'auto') {
+      const showing = r.status === 200 && r.route
+      head.og.image = showing ? { url: cardUrl(r.route!, r.levels, head, r.path), ...CARD, alt: head.og.title ?? head.title } : undefined
+      if (showing) source.image = r.route!.card || manifest.defaultCard ? 'card' : 'auto'
+    } else if (head.og.image) source.image = 'explicit'
+    return head
+  }
+
+  /** What `page` shows a reader, without the streaming: the same pass, so a page, its navigation and its card agree. */
+  async function shell(r: Resolved, request: Request) {
+    const route = stateOf(r, payloadOf(r, false))
+    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, app: { cookies: cookieJar(request) } })
+    await s.settle()
+    return s.shell
+  }
+
+  /**
+   * The finished head of a request that doesn't otherwise render: it renders only when a level left words to the page.
+   * A render that fails here (a build with no database) leaves the words to the config; the page still shows its own.
+   */
+  const finished = async (r: Resolved, request: Request) => {
+    if (!r.metas || r.status !== 200 || !(leftToPage(r.source!.title) || leftToPage(r.source!.description))) return complete(r)
+    return complete(r, await shell(r, request).catch(() => undefined))
+  }
+
+  /** `weft routes --meta`: one page's finished head, its HTML and where its words came from, in a request scope. */
+  const inspect = (path: string, request: Request) => als.run(exec.createScope(request, scopeOptions), async () => {
+    const r = await resolve(path, request)
+    if (r.redirect) return { ...r, html: '' }
+    const html = await shell(r, request).catch(() => '')
+    complete(r, html)
+    return { ...r, html }
+  })
 
   async function page(url: URL, request: Request, scope: Scope): Promise<Response> {
     const path = url.pathname + url.search
@@ -256,6 +350,7 @@ export function createHandler(options: HandlerOptions) {
     const route = stateOf(r, payloadOf(r, false))
     const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, app: { cookies: cookieJar(request) } })
     await s.settle() // queries read outside a Boundary have nowhere to stream to
+    complete(r, s.shell)
     const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
     const assets = options.assets ?? {}
     const parts = islandsOf(s.shell)
@@ -383,6 +478,7 @@ export function createHandler(options: HandlerOptions) {
     const r = await resolve(path, request)
     if (r.redirect) return withHeaders(Response.json({ m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload, { headers: { 'cache-control': 'no-cache' } }), scope)
     for (const lv of r.levels) if (lv.d?.length) lv.data = { ...(lv.data as object), ...Object.fromEntries(await Promise.all(lv.d.map(async k => [k, await (lv.raw as any)[k]]))) }
+    await finished(r, request)
     const c = wire(scope)
     let payload = payloadOf(r, true)
     if (r.levels.some(lv => statics.has(lv.id))) {
@@ -442,24 +538,27 @@ export function createHandler(options: HandlerOptions) {
     const path = '/' + url.pathname.slice('/_weft/og/'.length).replace(/\.png$/, '').replace(/^index$/, '')
     const r = await resolve(path, request)
     if (r.status !== 200 || !r.route) return new Response('Not found', { status: 404 }) // only params the route's own load accepts
-    const image = r.head.og.image
-    const want = typeof image === 'object' ? new URL(image.url, url).searchParams.get('v') : null
+    const head = await finished(r, request)
+    const image = head.og.image
+    if (typeof image !== 'object' || !image.url.startsWith('/_weft/og/')) return new Response('Not found', { status: 404 }) // this page has no generated card
+    const want = new URL(image.url, url).searchParams.get('v')
     const cardMod = mod(r.route.card ?? manifest.defaultCard)
     const Card = (cardMod?.default ?? DefaultCard) as Component
     const leaf = r.levels.at(-1)!
-    const props = { params: leaf.params, data: settledView(leaf.raw, leaf.d, leaf.id, options), meta: r.head, site, title: r.head.og.title ?? r.head.title, description: r.head.og.description ?? r.head.description ?? '' }
+    const props = { params: leaf.params, data: settledView(leaf.raw, leaf.d, leaf.id, options), meta: head, site: { ...site, url: r.origin }, path: r.path, title: head.og.title ?? head.title, description: head.og.description ?? head.description ?? '' }
     const html = renderToString(() => <Card {...props} />, { hydratable: false })
     const png = await renderCard(html, cardMod?.size ?? CARD, options.fonts ?? [], {
       strict: false,
       onDiagnostic: (d: any) => options.onDiagnostic?.({ ...d, route: r.route!.id }),
     })
-    const fresh = want !== null && url.searchParams.get('v') === want
+    // A signed-in request can see what a public cache must not keep.
+    const fresh = url.searchParams.get('v') === want && !request.headers.has('cookie')
     const cache = options.dev ? 'no-store' : fresh ? 'public, max-age=31536000, immutable' : 'no-cache'
     return new Response(png, { headers: { 'content-type': 'image/png', 'cache-control': cache } })
   }
 
-  /** Build mode (research 20 §4.3): the card URLs `weft build` prerenders, queued through Nitro's `x-nitro-prerender`. */
-  async function prerenderList(request: Request): Promise<Response> {
+  /** Every path `weft build` prerenders: pages from `prerender`, and the card of each page that has a generated one. */
+  async function prerenderPaths(request: Request): Promise<string[]> {
     const paths: string[] = []
     for (const route of manifest.routes) {
       if (route.kind !== 'page') continue
@@ -470,10 +569,23 @@ export function createHandler(options: HandlerOptions) {
         const path = fill(route.pattern, params, route.splat)
         const r = await resolve(path, request)
         if (given && r.status === 200) paths.push(path)
-        const image = r.head.og.image
-        if (r.status === 200 && typeof image === 'object' && image.url.startsWith('/_weft/og/')) paths.push(image.url.replace(/\?.*/, ''))
+        const image = (await finished(r, request)).og.image
+        if (r.status === 200 && typeof image === 'object' && image && image.url.startsWith('/_weft/og/')) paths.push(image.url.replace(/\?.*/, ''))
       }
     }
+    return paths
+  }
+
+  /**
+   * Build mode (research 20 §4.3): the card URLs `weft build` prerenders, queued through Nitro's `x-nitro-prerender`.
+   * It's a header, so a big site's list comes a page at a time: too long a header is an error that Nitro's client
+   * logs and carries on from, and the build ends with no cards.
+   */
+  let listing: Promise<string[][]> | undefined
+  async function prerenderList(request: Request, url: URL): Promise<Response> {
+    const pages = await (listing ??= prerenderPaths(request).then(p => pathPages(p)))
+    const n = Number(url.searchParams.get('page') ?? 0)
+    const paths = [...(pages[n] ?? []), ...(n + 1 < pages.length ? [`/_weft/og-routes?page=${n + 1}`] : [])]
     // HTML, because Nitro's prerenderer only follows links (and this header) from HTML responses.
     const list = paths.map(p => `<a href="${esc(p)}">${esc(p)}</a>`).join('\n')
     return new Response(`<!doctype html>\n<meta name="robots" content="noindex">\n${list}\n`, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-nitro-prerender': paths.join(',') } })
@@ -499,7 +611,7 @@ export function createHandler(options: HandlerOptions) {
     if (url.pathname.startsWith('/_weft/m/')) return media(url, request)
     if (url.pathname.startsWith('/_weft/og/') && url.pathname.endsWith('.png')) return og(url, request)
     if (url.pathname.startsWith('/_weft/data/') || url.pathname === '/_weft/data') return data((url.pathname.slice('/_weft/data'.length) || '/') + url.search, request, scope)
-    if (url.pathname === '/_weft/og-routes') return prerenderList(request)
+    if (url.pathname === '/_weft/og-routes') return prerenderList(request, url)
     return page(url, request, scope)
   }
   const handler = async (incoming: Request): Promise<Response> => {
@@ -515,7 +627,7 @@ export function createHandler(options: HandlerOptions) {
     await boot()
     return compressed(request, await als.run(scope, () => route(request, scope)))
   }
-  return Object.assign(handler, { resolve })
+  return Object.assign(handler, { resolve, inspect })
 }
 
 /** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
@@ -722,7 +834,8 @@ function settledView(raw: unknown, deferred: string[] | undefined, id: string, o
 }
 
 function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
-  return { m: r.levels.map(({ id, params, data, d, t }) => ({ id, params, data, ...(d && { d }), ...(t && { t }) })), p: r.path, s: r.status, ...(withHead && { h: r.head }) }
+  const { jsonLd: _, ...head } = r.head // only a first response carries it (`metaTags`)
+  return { m: r.levels.map(({ id, params, data, d, t }) => ({ id, params, data, ...(d && { d }), ...(t && { t }) })), p: r.path, s: r.status, ...(withHead && { h: head }) }
 }
 
 /**

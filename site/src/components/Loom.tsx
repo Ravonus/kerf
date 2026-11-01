@@ -26,7 +26,12 @@ export function Loom() {
       canvas.width = cols
       canvas.height = rows
       const hero = canvas.parentElement!
-      const cloth = weaver(cols, rows, null, threads(cols, rows, 0.2, rect.width < 900 ? 0.5 : 0.74))
+      // In the room right of the words; on a narrow page it sits behind them, under a veil.
+      const words = hero.querySelector('[data-part="say"]')!.getBoundingClientRect()
+      const room = (rect.right - words.right) / rect.width
+      const wide = rect.width >= 900
+      const size = wide ? Math.min(0.96, (room * cols * 0.86) / rows) : 0.96
+      const cloth = weaver(cols, rows, null, threads(cols, rows, 0.2, wide ? 1 - room / 2 : 0.5, size))
       const total = cols * rows
       const cells: ReturnType<typeof state<number>>[] = []
       const slice = (deadline?: IdleDeadline) => {

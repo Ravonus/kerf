@@ -1,4 +1,4 @@
-// `weft mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `tasks`,
+// `weft mcp`: an MCP server over stdio (newline-delimited JSON-RPC 2.0) with the tools `docs`, `check`, `routes_meta`, `tasks`,
 // `style_find`, `style_explain`, `test_gate` and the `browser_*` tools.
 // Every tool returns the same JSON as the CLI's `--json`, as text and as structuredContent.
 
@@ -7,6 +7,7 @@ import { createInterface } from 'node:readline'
 import { check } from './check.mjs'
 import { docs, topics } from './docs.mjs'
 import { listSurfaces } from './surface-checks.mjs'
+import { routesCommand } from './start.mjs'
 import { tasks } from './tasks.mjs'
 import { browser, expectations, actions as browserActions } from './browser/commands.mjs'
 import { gate } from './gate.mjs'
@@ -59,6 +60,11 @@ export const tools = [
     name: 'check',
     description: 'Run `weft check`: every W- and P-diagnostic with code, file, span, why and fix (edits when an autofix exists), plus slot bindings.',
     inputSchema: { type: 'object', properties: { files: { type: 'array', items: { type: 'string' }, description: 'Files relative to the project root; default: all' } } },
+  },
+  {
+    name: 'routes_meta',
+    description: "Every route's metadata as a crawler gets it (`weft routes --meta --json`): title, description, image, every tag, where each came from (`route`, `layout`, `config`, `auto`, `card`), real samples of param routes, and H-diagnostics with text to apply. Every page sets `meta` from its own context as part of building it: call this after adding or changing a route.",
+    inputSchema: { type: 'object', properties: { preset: { type: 'string', description: "`static`: no server at runtime, so a param route's card needs `prerender`" } } },
   },
   {
     name: 'map',
@@ -123,7 +129,7 @@ export async function handle(root, msg) {
         protocolVersion: versions.includes(asked) ? asked : versions[0],
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: 'weft', version: '0.0.0' },
-        instructions: 'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Style with groups from weft/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
+        instructions: 'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Every page sets `meta` from its own context as part of building it (`docs` topic `meta`). Style with groups from weft/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
       })
     }
     case 'ping':
@@ -140,6 +146,7 @@ export async function handle(root, msg) {
         }
         if (name === 'check') data = await check(root, { files: args.files })
         else if (name === 'tasks') data = await tasks(root)
+        else if (name === 'routes_meta') data = await routesCommand(root, { meta: true, preset: args.preset })
         else if (name === 'map') data = await agentMap(root)
         else if (name === 'style_find') data = findGroups((await styleMatrix(root)).matrix, args.query)
         else if (name === 'style_explain') data = explainTarget(await styleMatrix(root), args.target, { axes: args.axes, states: args.states, accent: args.accent, part: args.part })

@@ -4,7 +4,7 @@ import '@weft/ui-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
 const START = 10
-const STEPS = ['Your agent wrote this', 'weft stops the build', 'The fix is one line', 'Now it works']
+const STEPS = ['Your agent wrote this', 'weft stops the build', 'The fix', 'Now it works']
 const SAY = [
   'The component copies its price once, so the number on the page can never change.',
   'The compiler explains what is wrong and refuses to build, so this never reaches a browser.',

@@ -38,7 +38,8 @@ describe.each([
     const dir = app(ui)
     const r = await check(dir)
     expect(r.diagnostics.filter(d => d.severity === 'error')).toEqual([])
-    expect(r.diagnostics).toEqual([])
+    // Each page has its own `meta`; what's left is the one thing only its owner knows: where it will live.
+    expect(r.diagnostics.map(d => d.code)).toEqual(['H001'])
 
     const server = await devCommand(dir, { port: await freePort() })
     try {
@@ -89,7 +90,7 @@ it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections in
 it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async format => {
   const dir = app('warp', { config: format })
   const r = await check(dir)
-  expect(r.diagnostics).toEqual([])
+  expect(r.diagnostics.map(d => d.code)).toEqual(['H001'])
   expect(spawnSync(join(pkgs, 'weft/node_modules/.bin/tsc'), ['--noEmit'], { cwd: dir, encoding: 'utf8' }).stdout).toBe('')
   const server = await devCommand(dir, { port: await freePort() })
   try {

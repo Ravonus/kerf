@@ -17,11 +17,11 @@ const WARPS = [5, 10, 15, 20]
 const WEFTS = [9, 15]
 
 /** The mark, large and centred. Each thread records when it reaches each cell, so the logo draws itself on. */
-export function threads(cols: number, rows: number, delay = 0.2, centre = 0.5): Threads {
+export function threads(cols: number, rows: number, delay = 0.2, centre = 0.5, size = 0.96): Threads {
   const cover = new Float32Array(cols * rows)
   const born = new Float32Array(cols * rows).fill(1e9)
   const band = new Uint8Array(cols * rows)
-  const unit = (rows * 0.96) / 24
+  const unit = (rows * size) / 24
   const ox = cols * centre - 12 * unit, oy = rows / 2 - 12 * unit
   const half = Math.max(1.4, (0.62 * unit))
   const put = (x: number, y: number, a: number, at: number, b: number) => {

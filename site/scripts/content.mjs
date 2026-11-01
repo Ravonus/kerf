@@ -10,6 +10,7 @@ import { brotliCompressSync, deflateSync } from 'node:zlib'
 import { docs as weftDocs } from '../../packages/cli/src/docs.mjs'
 import { catalog } from '../../packages/cli/src/catalog.mjs'
 import { exportsOf, loadCompiler, resolveWeft } from '../../packages/cli/src/weft.mjs'
+import { cleanText, decode, descriptionProblem, truncate } from '../../packages/start/src/derive.mjs'
 import { readFixtures, readToolkit } from './toolkit.mjs'
 
 // ui-core's source imports without extensions, for bundlers; here Node reads it directly.
@@ -57,6 +58,9 @@ const topic = name => async () => (await weftDocs(site, name)).text
  * The opening line of a page that starts straight in. `weft docs` is read by agents, whose context pays for every word, so
  * these say what a page is for to someone arriving here, and stay out of that source.
  */
+/** Pages whose first paragraph is mostly code, so their `meta` is written here. */
+const SUMMARIES = { props: 'How a component reads its props: why they stay live, how to destructure them, and when to pass a box instead.' }
+
 const LEADS = {
   rules: 'Nine rules cover how every weft component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
   lists: 'Lists and conditionals work as they do in React: `.map` with a `key`, `&&` and ternaries. This page covers the mistakes to avoid and the few habits that keep a long list fast.',
@@ -77,6 +81,7 @@ const SECTIONS = [
   ]],
   ['Learn', [
     ['start', 'Full stack', topic('start')],
+    ['meta', 'Metadata and cards', topic('meta')],
     ['style', 'Style groups', topic('style')],
     ['design', 'Design language', topic('design')],
     ['icons', 'Icons', topic('icons')],
@@ -118,6 +123,34 @@ function diagnosticsIndex() {
 
 const slugify = t => t.toLowerCase().replace(/`/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const plain = md => md.replace(/```[\s\S]*?```/g, ' ').replace(/[`*_#>|]/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim()
+/** Plain text from a block of markdown. */
+const unmark = b => cleanText(decode(b.replace(/<[^>]+>/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '')))
+
+/** The sentences a page's `meta` can open with: from the start, up to the first that a reader wouldn't want. */
+function opening(text, skip) {
+  const out = []
+  for (const s of text.match(/\S.*?[.!?](?=\s+[A-Z"“`]|\s*$)/g) ?? []) {
+    if (skip?.test(s) || descriptionProblem(s) || s.length < 25) break
+    out.push(s)
+  }
+  const said = truncate(out.join(' '))
+  return descriptionProblem(said) ? '' : said
+}
+
+/** A component's `meta`: how its doc comment opens, up to where it starts on how the thing was built. */
+function blurb(name, doc) {
+  return opening(unmark(doc).replace(/\bAPG /g, ''), /\b(?:specimen|the spec\b|markup exactly|tokens?\b)/i) || `${name}, a warp component with live previews, its props and how to use it.`
+}
+
+/** A docs page's `meta`: the opening of its first paragraph of prose that has one. */
+function summary(md) {
+  const blocks = md.replace(/```[\s\S]*?```/g, '\n\n').split(/\n\s*\n/).map(b => b.trim())
+  for (const b of blocks.filter(b => b && !/^(?:#|[-*+] |\d+[.)] |\||>|<|:::)/.test(b))) {
+    const text = opening(unmark(b))
+    if (text.length >= 40) return text
+  }
+  return ''
+}
 const CODE = /\b[WDTPHQSFIACRXM]\d{3}\b/g
 const known = new Set(catalog.map(e => e.code))
 const REPO = 'https://github.com/Ravonus/weft/blob/main/'
@@ -181,14 +214,14 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: fold(html, slug), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
+    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: fold(html, slug), toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft docs.` }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
   })
   for (const e of catalog) {
     const { text } = await weftDocs(site, e.code)
-    pages[`codes/${e.code}`] = { ...render(`codes/${e.code}`, e.code, 'Reference', text), parent: { slug: 'diagnostics', title: 'Diagnostics' } }
+    pages[`codes/${e.code}`] = { ...render(`codes/${e.code}`, e.code, 'Reference', text), description: opening(unmark(`${e.catches}.`)) || `${e.code}: what this weft diagnostic means and how to fix it.`, parent: { slug: 'diagnostics', title: 'Diagnostics' } }
   }
   for (const [section, items] of SECTIONS) nav.push({ section, items: items.map(([slug, title]) => ({ slug, title })) })
   return { nav, pages, flat }
@@ -282,7 +315,7 @@ function buildToolkit() {
       const code = `import { ${names.join(', ')} } from '@weft/warp'\n\n${f.source}`
       return { file: f.file, name: f.name, label: i ? `Variant ${i}` : 'Preview', html: codeBlock(code, 'tsx') }
     })
-    pages[c.slug] = { ...c, lede: cleanDoc(c.doc), cases, use: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx') }
+    pages[c.slug] = { ...c, lede: cleanDoc(c.doc), description: blurb(c.name, cleanDoc(c.doc)), cases, use: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx') }
   }
   const order = ['Layout', 'Type', 'Actions', 'Inputs', 'Dates and time', 'Overlays', 'Feedback', 'Surfaces', 'Data', 'Charts', 'Agent', 'Schedule', 'Live', 'Collaboration', 'Flow', 'Admin', 'More']
   const nav = order.map(group => ({ group, items: components.filter(c => c.group === group).map(({ name, slug }) => ({ name, slug })) })).filter(g => g.items.length)
@@ -317,6 +350,23 @@ function buildIcons() {
 // ------------------------------------------------------------------ art
 
 /** A palette PNG, by hand: the poster is a few KB of cells, sized up with `image-rendering: pixelated`. */
+/** The share card's picture: the hero's field, fading out towards the words, with the mark woven on it. 10 px cells. */
+function cardArt() {
+  const cols = 120, rows = 63, CELL = 10
+  const unit = 2.4, ox = 62, oy = 3
+  const warps = [5, 10, 15, 20].map(u => ox + u * unit), wefts = [9, 15].map(u => oy + u * unit)
+  const near = (v, at) => Math.abs(v + 0.5 - at) <= 1.5
+  const cell = (x, y) => {
+    const warp = warps.findIndex(at => near(x, at)), weft = wefts.findIndex(at => near(y, at))
+    const inWarp = warp >= 0 && y >= oy + 3 * unit && y < oy + 21 * unit
+    const inWeft = weft >= 0 && x >= ox + 2 * unit && x < ox + 22 * unit
+    if (inWarp && (!inWeft || (warp + weft) % 2 === 1)) return 4
+    if (inWeft) return 6
+    return level(x, y, cols, rows, 0, -0.75 * (1 - Math.min(1, x / cols / 0.72)) ** 1.2 * 1.4)
+  }
+  return png(cols * CELL, rows * CELL, (x, y) => Math.max(0, cell((x / CELL) | 0, (y / CELL) | 0)), [...PALETTE, [250, 120, 90, 255]])
+}
+
 function png(width, height, pixel, palette) {
   const crcTable = Int32Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c })
   const crc = buf => { let c = -1; for (const b of buf) c = crcTable[(c ^ b) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0 }
@@ -337,6 +387,7 @@ const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 function buildArt() {
   mkdirSync(join(pub, 'art'), { recursive: true })
   writeFileSync(join(pub, 'art/field.png'), png(160, 100, (x, y) => level(x, y, 160, 100, 0), PALETTE))
+  write('card-art.json', { src: `data:image/png;base64,${cardArt().toString('base64')}` })
   // A band that dissolves from solid to nothing: the site's divider.
   writeFileSync(join(pub, 'art/band.png'), png(64, 12, (x, y) => (y / 12 < BAYER4[(y & 3) * 4 + (x & 3)] / 16 ? 1 : 0), [[0, 0, 0, 0], [46, 176, 104, 255]]))
 }

@@ -37,9 +37,13 @@
   [data-site="hero"] { position: relative; isolation: isolate; display: grid; align-items: center; min-block-size: min(calc(100svh - 73px), 820px); overflow: clip; background: var(--warp-color-page); padding: var(--warp-space-section) var(--warp-space-page); box-sizing: border-box; touch-action: pan-y; }
   [data-site="hero"] [data-part="poster"], [data-site="loom"] { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; image-rendering: pixelated; z-index: -2; }
   [data-site="hero"] [data-part="poster"] { background: url(/art/field.png) center / cover; opacity: 0.5; }
-  [data-site="hero"]::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg, var(--warp-color-page) 0 38%, color-mix(in oklch, var(--warp-color-page) 72%, transparent) 58%, color-mix(in oklch, var(--warp-color-page) 10%, transparent)), linear-gradient(0deg, var(--warp-color-page), transparent 22%); }
+  [data-site="hero"]::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg, var(--warp-color-page) 0 min(52%, 720px), transparent min(60%, 860px)), linear-gradient(0deg, var(--warp-color-page), transparent 22%); }
   [data-site="loom"] { opacity: 0; transition: opacity var(--warp-duration-slow) var(--warp-ease-out); }
   [data-site="loom"][data-live] { opacity: 0.85; }
+  /* The mark's ramp runs to near white, for a dark page. Inverted, it runs to near black and keeps its hues. */
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) [data-site="loom"] { filter: invert(1) hue-rotate(180deg) saturate(1.4); } :root:not([data-theme="dark"]) [data-site="loom"][data-live] { opacity: 1; } }
+  :root[data-theme="light"] [data-site="loom"] { filter: invert(1) hue-rotate(180deg) saturate(1.4); }
+  :root[data-theme="light"] [data-site="loom"][data-live] { opacity: 1; }
   [data-site="hero"] [data-part="say"] { display: grid; gap: var(--warp-space-group); max-inline-size: 660px; }
   [data-site="hero"] h1 { font-family: var(--warp-font-sans); font-weight: 700; font-size: clamp(2.75rem, 1.4rem + 4.4vw, 5rem); line-height: 1.02; letter-spacing: -0.04em; color: var(--warp-color-text); }
   [data-site="hero"] [data-part="say"] > p:not([data-part]) { font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); line-height: 1.5; color: var(--warp-color-text-subtle); }

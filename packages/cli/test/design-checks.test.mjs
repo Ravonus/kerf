@@ -281,3 +281,8 @@ describe('weft fix', () => {
     expect(readFileSync(join(root, 'src/Page.tsx'), 'utf8')).toContain('{n.value}')
   })
 })
+
+test('a share card is an image: its raw colours and sizes are fine', async () => {
+  const root = project({ ...warpPkg, 'src/routes/_default.og.tsx': 'export default function Card() { return <div style="color:#123456;padding:13px"><img src="/a.png" /></div> }' })
+  expect((await check(root)).diagnostics.filter(d => d.code.startsWith('D0') && d.file.endsWith('.og.tsx'))).toEqual([])
+})

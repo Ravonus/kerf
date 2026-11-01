@@ -56,6 +56,8 @@ export const text = definePlugin({
   options,
   permissions: { fs: { read: ['**/*.{woff2,woff,ttf,otf}'] } },
   contribute: o => ({
+    // Generated share cards set their title and text in the app's faces.
+    card: { fonts: Object.fromEntries(['display', 'body'].filter(r => o.fonts?.[r]?.src).map(r => [r, { family: o.fonts[r].family, src: o.fonts[r].src, weight: o.fonts[r].weight }])) },
     provides: [
       provide(fontBuild, {
         sides: { build: { module: fileURLToPath(new URL('./build.mjs', import.meta.url)), export: 'createFontBuild', options: { fonts: o.fonts, subsets: o.subsets, trim: o.trim } } },

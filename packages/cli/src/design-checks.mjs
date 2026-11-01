@@ -202,7 +202,8 @@ export function hasTokens(root) {
  * @param {string} root
  * @param {{ files: { rel: string, text: string }[], exclude?: string[], tokens: boolean }} options
  */
-export function designChecks(root, { files, exclude = [], tokens }) {
+export function designChecks(root, { files: all, exclude = [], tokens }) {
+  const files = all.filter(f => !/\.og\.[jt]sx$/.test(f.rel)) // a share card is drawn to a PNG: no theme, no tokens, no reader
   const out = []
   const looks = new Map() // heading level → every site that renders it, across the app, for D006
   const reporter = file => {

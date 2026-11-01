@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "date": "2026-11-01T14:28:08.668Z",
+  "date": "2026-11-01T15:57:09.741Z",
   "hidden": {
     "ok": true,
     "warp": "23/23",
@@ -11,19 +11,19 @@
           "domMutations": 1,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 61.22
+          "wallMs": 62.52
         },
         "price-push": {
           "domMutations": 1,
           "commits": 9,
           "renderMs": 0,
-          "wallMs": 0.5
+          "wallMs": 0.41
         },
         "type-3-chars": {
           "domMutations": 154,
           "commits": 33,
           "renderMs": 0,
-          "wallMs": 24.63
+          "wallMs": 20.22
         }
       },
       "weft": {
@@ -31,19 +31,19 @@
           "domMutations": 1,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 56.61
+          "wallMs": 51.96
         },
         "price-push": {
           "domMutations": 1,
           "commits": 9,
           "renderMs": 0,
-          "wallMs": 0.37
+          "wallMs": 0.46
         },
         "type-3-chars": {
           "domMutations": 152,
           "commits": 21,
           "renderMs": 0,
-          "wallMs": 16.8
+          "wallMs": 17.2
         }
       }
     },
@@ -108,7 +108,7 @@
     "ok": true,
     "runs": 108,
     "audits": 1440,
-    "measured": 45854,
+    "measured": 45849,
     "specFindings": [],
     "failures": []
   }
