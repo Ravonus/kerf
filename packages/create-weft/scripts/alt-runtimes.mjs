@@ -2,15 +2,16 @@
 // served, and `weft dev` works with its HMR and sockets. Tarballs reach the app through a local registry, as if
 // published. The driver itself runs on any of the three, so it can run where Node isn't installed at all:
 //
-//   node packages/create-weft/scripts/alt-runtimes.mjs <empty-dir> [bun,deno] [--tarballs <dir>]
+//   node packages/create-weft/scripts/alt-runtimes.mjs <empty-dir> [bun,deno,node] [--tarballs <dir>]
 //
 // Without `--tarballs` it packs them, which takes Node. A runtime that isn't installed is reported and skipped.
 import { execFile, spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
-import { connect } from 'node:net'
+import { connect, createServer } from 'node:net'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs, promisify } from 'node:util'
+import { hotChecks, prepare } from './hot-checks.mjs'
 
 const { values, positionals } = parseArgs({ allowPositionals: true, options: { tarballs: { type: 'string' } } })
 if (!positionals[0]) throw new Error('usage: alt-runtimes.mjs <empty-dir> [bun,deno] [--tarballs <dir>]')
@@ -34,6 +35,12 @@ const server = spawn(process.execPath, [...(process.versions.deno ? ['run', '-A'
 const registry = await new Promise(ok => server.stdout.once('data', d => ok(d.toString().trim())))
 
 const FLOWS = {
+  // Not what this gate is for, but the hot reload checks hold for all three.
+  node: {
+    create: [windows ? 'npx.cmd' : 'npx', '--yes', `create-weft@${version}`, 'demo', '--yes', '--no-git', '--install'],
+    install: [],
+    weft: ['node', join('node_modules', '@weft', 'cli', 'bin', 'weft.mjs')],
+  },
   bun: {
     create: ['bun', 'x', '--bun', `create-weft@${version}`, 'demo', '--yes', '--no-git', '--install'],
     install: [],
@@ -66,15 +73,16 @@ function scrubbed(runtime, dir) {
   const bin = join(dir, 'bin')
   mkdirSync(bin, { recursive: true })
   if (!windows) symlinkSync(found, join(bin, runtime))
-  const PATH = (windows ? [dirname(found), join(process.env.SystemRoot, 'System32')] : [bin, '/usr/bin', '/bin']).join(delimiter)
+  const own = runtime === 'node' ? [dirname(found)] : windows ? [dirname(found)] : [bin]
+  const PATH = [...own, ...(windows ? [join(process.env.SystemRoot, 'System32')] : ['/usr/bin', '/bin'])].join(delimiter)
   const home = join(dir, 'home')
   mkdirSync(home)
   const env = {
     PATH, HOME: home, USERPROFILE: home, DENO_DIR: join(home, 'deno'), BUN_INSTALL_CACHE_DIR: join(home, 'bun'),
-    NPM_CONFIG_REGISTRY: registry, BUN_CONFIG_REGISTRY: registry, NO_COLOR: '1', CI: '1',
+    NPM_CONFIG_REGISTRY: registry, npm_config_registry: registry, npm_config_ignore_scripts: 'false', BUN_CONFIG_REGISTRY: registry, NO_COLOR: '1', CI: '1',
     ...(windows && { SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP }),
   }
-  for (const tool of ['node', 'cargo']) {
+  for (const tool of runtime === 'node' ? ['cargo'] : ['node', 'cargo']) {
     const there = spawnSync(tool, ['--version'], { env })
     if (!there.error) throw new Error(`${tool} is on the scrubbed PATH: this gate proves nothing here`)
   }
@@ -130,7 +138,7 @@ async function socketUpgrades(base, hosts = ['127.0.0.1', '::1']) {
 
 async function run(env, cwd, [cmd, ...args]) {
   try {
-    await promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26 })
+    await promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26, shell: cmd.endsWith('.cmd') })
   } catch (e) {
     throw new Error(`${cmd} ${args.join(' ')}: ${e.message}\n${e.stdout}\n${e.stderr}`.slice(-1500))
   }
@@ -142,7 +150,10 @@ async function serving(env, cwd, cmd, port, body) {
   child.stdout.on('data', d => { log += d })
   child.stderr.on('data', d => { log += d })
   try {
-    await body(`http://localhost:${port}`)
+    // `localhost` is one address or the other depending on the machine, and a client may try only the wrong one.
+    const answers = host => fetch(`http://${host}:${port}/`, { redirect: 'manual' }).then(() => host, () => false)
+    const host = await until('a server', 120000, async () => (await answers('localhost')) || answers('[::1]'))
+    await body(`http://${host}:${port}`, () => log)
   } catch (e) {
     e.message += `\n${log.slice(-1200)}`
     throw e
@@ -151,6 +162,16 @@ async function serving(env, cwd, cmd, port, body) {
     await wait(300)
     child.kill('SIGKILL')
   }
+}
+
+/** The lower of two free ports in a row. */
+function freePorts() {
+  return new Promise(ok => {
+    const probe = createServer().listen(0, () => {
+      const { port } = probe.address()
+      const next = createServer().once('error', () => probe.close(() => ok(freePorts()))).listen(port + 1, () => next.close(() => probe.close(() => ok(port))))
+    })
+  })
 }
 
 async function flow(runtime, port) {
@@ -187,8 +208,9 @@ async function flow(runtime, port) {
     pass('start: a page, a sign-up and a socket')
   })
 
+  prepare(app) // plain elements, on purpose: they aren't an app `weft check` would pass
   const dev = port + 1
-  await serving({ ...served, BETTER_AUTH_URL: `http://localhost:${dev}` }, app, [...flows.weft, 'dev', '--port', String(dev)], dev, async base => {
+  await serving({ ...served, BETTER_AUTH_URL: `http://localhost:${dev}` }, app, [...flows.weft, 'dev', '--port', String(dev)], dev, async (base, log) => {
     await until('dev', 120000, async () => (await fetch(`${base}/live`)).status === 200)
     pass('dev: SSR')
     const client = await (await fetch(`${base}/@vite/client`)).text()
@@ -207,17 +229,15 @@ async function flow(runtime, port) {
     writeFileSync(route, LIVE.replace('<main>', '<main'))
     await until('syntax error shown', 15000, async () => (await fetch(`${base}/live`)).status >= 500)
     writeFileSync(route, LIVE)
-    // Off macOS some runs stay on the error page, on Node too, so it isn't this runtime's.
-    const recovered = await until('recovery', 20000, async () => (await (await fetch(`${base}/live`)).text()).includes('first')).catch(() => false)
-    if (recovered) pass('dev: recovers from a syntax error')
-    else if (process.platform !== 'darwin') console.log(`[${runtime}] dev: still on the error page after 20s (seen on Node on Linux too)`)
-    else throw new Error('dev: stuck on a syntax error')
+    await until('recovery', 15000, async () => (await (await fetch(`${base}/live`)).text()).includes('first'))
+    pass('dev: recovers from a syntax error')
     hmr.close()
+    await hotChecks(app, base, log, pass)
   })
 }
 
 let failed = false
-await Promise.all(runtimes.map((runtime, i) => flow(runtime, 5470 + i * 2).catch(e => {
+await Promise.all(runtimes.map(async runtime => flow(runtime, await freePorts()).catch(e => {
   failed = true
   console.log(`[${runtime}] FAIL ${e.message}`)
 })))

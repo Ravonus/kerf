@@ -13,6 +13,7 @@ import { parseEnv } from 'node:util'
 import { scaffold } from '../src/index.mjs'
 import { fnId } from '../../start/src/vite.mjs'
 import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
+import { hotChecks, prepare } from './hot-checks.mjs'
 import { packWithAddon } from './pack-all.mjs'
 import { pin, pkgs } from './tarballs.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
@@ -229,7 +230,10 @@ const noRust = withoutRust()
 
 /** `weft dev` on an app, one page served. */
 async function devServed(app, weft, port, env, log) {
-  const server = spawn(weft, ['dev', '--port', String(port)], { cwd: app, env, stdio: 'ignore' })
+  prepare(app)
+  const server = spawn(weft, ['dev', '--port', String(port)], { cwd: app, env, stdio: ['ignore', 'pipe', 'pipe'] })
+  let output = ''
+  for (const stream of [server.stdout, server.stderr]) stream.on('data', d => { output += d })
   try {
     let status
     for (let i = 0; i < 120 && status !== 200; i++) {
@@ -238,8 +242,10 @@ async function devServed(app, weft, port, env, log) {
     }
     if (status !== 200) throw new Error(`weft dev answered ${status}`)
     log('weft dev: pass')
+    await hotChecks(app, `http://localhost:${port}`, () => output, what => log(`${what}: pass`))
   } finally {
     server.kill()
+    for (const file of ['src/components/HotCounter.tsx', 'src/server/hot.ts', 'src/routes/hot.css', 'src/routes/hot.tsx', 'src/routes/hot2.tsx']) rmSync(join(app, file), { force: true })
   }
 }
 
