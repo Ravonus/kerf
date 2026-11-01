@@ -4,7 +4,8 @@ import '../../../plugin-text/node_modules/@fontsource/inter/latin-500.css'
 import '../../../plugin-text/node_modules/@fontsource/inter/latin-600.css'
 import { state } from 'weft'
 import { render } from 'weft/dom'
-import { Feed, Kanban, ScrollGrid, Thread, Toaster, VirtualList, type KanbanCard, type ThreadMessage, type VirtualControl } from '../../src/index'
+import type { ChatMessage } from '@weft/ui-core'
+import { Feed, Kanban, ScrollGrid, Thread, Toaster, VirtualList, type KanbanCardData, type KanbanColumn, type VirtualControl } from '../../src/index'
 
 const q = new URLSearchParams(location.search)
 const view = q.get('view') ?? 'list', n = Number(q.get('n') ?? 10000)
@@ -29,17 +30,18 @@ function List() {
 }
 
 const people = ['Mei', 'Ana', 'Kofi', 'Sam']
-const message = (i: number): ThreadMessage => ({ id: `m${i}`, author: i % 5 === 0 ? 'Me' : people[rand(i, 0) % 4], text: sentence(i), time: '09:41', at: i * 200000, day: `Day ${Math.floor(i / 400)}`, state: i % 5 === 0 ? 'sent' : undefined })
+const peer = (name: string) => ({ id: name, name })
+const message = (i: number): ChatMessage => ({ id: `m${i}`, author: peer(i % 5 === 0 ? 'Me' : people[rand(i, 0) % 4]), mine: i % 5 === 0, text: sentence(i), time: '09:41', at: i * 200000, day: `Day ${Math.floor(i / 400)}`, state: i % 5 === 0 ? 'sent' : undefined })
 
 function Chat() {
   let low = 0
   const all = state(Array.from({ length: n }, (_, i) => message(i)))
   w.messages = all
   w.older = (k: number) => { const add = Array.from({ length: k }, (_, i) => message(--low + n * 2 + i * 0)); all.value = [...add.reverse().map((m, i) => ({ ...m, id: `o${low}-${i}` })), ...all.value] }
-  w.stream = () => { all.value = [...all.value, { id: 's', author: 'Mei', text: '', time: '09:42', at: n * 200000, streaming: true }] }
+  w.stream = () => { all.value = [...all.value, { id: 's', author: peer('Mei'), text: '', time: '09:42', at: n * 200000, streaming: true }] }
   w.append = (text: string, author = 'Mei') => { all.value = all.value.map(m => (m.id === 's' ? { ...m, text: m.text + text } : m)) ; void author }
-  w.say = (text: string, author = 'Mei') => { all.value = [...all.value, { id: `x${all.value.length}`, author, text, time: '09:43', at: Date.now() * 2 }] }
-  return <div style="block-size:640px"><Thread label="# calendar-engine" subtitle="6 members" me="Me" messages={all.value} onSend={t => w.say(t, 'Me')} onDrift={onDrift} control={take} /></div>
+  w.say = (text: string, author = 'Mei') => { all.value = [...all.value, { id: `x${all.value.length}`, author: peer(author), mine: author === 'Me', text, time: '09:43', at: Date.now() * 2 }] }
+  return <div style="block-size:640px"><Thread label="# calendar-engine" header={<b># calendar-engine</b>} messages={all} onSend={m => w.say(m.text, 'Me')} onDrift={onDrift} control={take} /></div>
 }
 
 function FeedView() {
@@ -49,15 +51,8 @@ function FeedView() {
 
 function Board() {
   const cols = ['Backlog', 'Doing', 'Review', 'Done']
-  const lists = state(cols.map((title, c) => ({ id: title.toLowerCase(), title, limit: c === 1 ? 100 : undefined, cards: Array.from({ length: Math.floor(n / 4) }, (_, i): KanbanCard => ({ id: `c${c}-${i}`, title: sentence(i + c * n, 14), meta: i % 3 ? 'Ana · Friday' : undefined })) })))
-  const move = (card: KanbanCard, to: string, index: number) => {
-    lists.value = lists.value.map(c => {
-      const rest = c.cards.filter(x => x.id !== card.id)
-      if (c.id !== to) return rest.length === c.cards.length ? c : { ...c, cards: rest }
-      return { ...c, cards: [...rest.slice(0, index), card, ...rest.slice(index)] }
-    })
-  }
-  return <Kanban label="Sprint" columns={lists.value} onMove={move} onDrift={onDrift} />
+  const lists = state<KanbanColumn[]>(cols.map((title, c) => ({ id: title.toLowerCase(), title, limit: c === 1 ? 100 : undefined, cards: Array.from({ length: Math.floor(n / 4) }, (_, i): KanbanCardData => ({ id: `c${c}-${i}`, title: sentence(i + c * n, 14), meta: i % 3 ? 'Ana · Friday' : undefined })) })))
+  return <Kanban label="Sprint" columns={lists} onDrift={onDrift} />
 }
 
 function Grid() {

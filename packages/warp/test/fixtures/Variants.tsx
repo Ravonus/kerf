@@ -5,7 +5,7 @@ import { state } from 'weft'
 import { Alert } from '../../src/Alert'
 import { Badge } from '../../src/Badge'
 import { Center, Cover, Frame, Grid, Inset, Row, Spacer, Split, Stack } from '../../src/Layout'
-import { Heading, Text } from '../../src/Type'
+import { Heading, Link, Text } from '../../src/Type'
 import { Button } from '../../src/Button'
 import { Card } from '../../src/Card'
 import { Checkbox, Segmented, Switch } from '../../src/Choice'
@@ -45,6 +45,8 @@ export function Type() {
     <div>
       {([1, 2, 3, 4, 5, 6] as const).map(level => <Heading key={level} level={level}>h</Heading>)}
       <Heading role="display">Default level</Heading>
+      <Link href="/a">Link</Link>
+      <Link href="/b" subtle external>Away</Link>
       <Text>Body</Text>
       <Text role="eyebrow" inline>Eyebrow</Text>
       <Text tone="critical" faint>Tone</Text>

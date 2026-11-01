@@ -1,7 +1,7 @@
 // @weft/warp: the weft binding of warp. Each component renders the spec's specimen markup with weft's compiled
 // templates and attaches ui-core's behaviour; each imports only its own CSS (ui-core/styles, split per component).
 export { Stack, Row, Grid, Split, Center, Cover, Frame, Spacer, Inset, type Step } from './Layout'
-export { Heading, Text } from './Type'
+export { Heading, Text, Link } from './Type'
 export { Button, type ButtonProps, type Tone, type Emphasis } from './Button'
 export { Toggle } from './Toggle'
 export { Field, Input, Search, Textarea, type FieldProps } from './Field'
@@ -51,12 +51,11 @@ export * from './agent/index'
 export * from './schedule/index'
 export * from './live/index'
 export * from './collab/index'
+export { Thread, Kanban } from './collab/index' // the one chat and the one board: both are windows (VirtualList)
 export * from './flow/index'
 export * from './admin/index'
 export { VirtualList, type VirtualListProps, type VirtualControl } from './VirtualList'
-export { Thread as VirtualThread, type ThreadProps as VirtualThreadProps, type ThreadMessage } from './Thread'
 export { Feed, type FeedProps, type FeedItem } from './Feed'
-export { Kanban as VirtualKanban, type KanbanProps as VirtualKanbanProps, type KanbanCard, type KanbanColumn as VirtualKanbanColumn } from './Kanban'
 export { ScrollGrid, type ScrollGridProps, type GridColumn as ScrollGridColumn } from './ScrollGrid'
 export type { Address, MentionItem } from '@weft/ui-core'
 export type { IsoDate, IsoTime, IsoDateTime, IsoMonth, IsoWeek, IsoDuration, IsoZoned, TimeZoneId, DateRange, ChangeReason } from '@weft/ui-core'

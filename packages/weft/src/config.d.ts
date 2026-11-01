@@ -66,7 +66,7 @@ export interface WeftConfig {
   check?: {
     include?: readonly string[]
     exclude?: readonly string[]
-    /** `false` turns the design D-codes (D001–D005, D011, D030–D039) off. Default on. */
+    /** `false` turns the design D-codes (D001–D007, D011, D030–D039) off. Default on. */
     design?: boolean
   }
   plugins?: readonly PluginEntry[]
