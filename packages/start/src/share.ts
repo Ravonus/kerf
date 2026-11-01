@@ -276,7 +276,7 @@ function onFrame(d: any[]) {
 }
 
 function connect() {
-  if (!leading() || ws) return
+  if (!leading() || ws || navigator.onLine === false) return // `online` calls this
   stats.opened++
   const socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws`)
   ws = socket

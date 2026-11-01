@@ -375,19 +375,20 @@ onlyChromium('bfcache: back to a page that left comes back live', async () => {
 
 // ---- measurements: `UI_STATE_MEASURE=<file>` -----------------------------------------------------------------------
 
+// Date.now on both sides: it is the one clock two renderers share, to 1 ms. `timeOrigin` differs per process.
 const arm = (from, to, name = 'Ana') => Promise.all([
   from.evaluate(() => {
     window.__t0 = []
     if (window.__armed) return
     window.__armed = true
-    document.addEventListener('pointerover', e => { if (e.target.closest?.('[data-testid="left-Ana"] label')) window.__t0.push(performance.timeOrigin + performance.now()) }, { capture: true })
+    document.addEventListener('pointerover', e => { if (e.target.closest?.('[data-testid="left-Ana"] label')) window.__t0.push(Date.now()) }, { capture: true })
   }),
   to.evaluate(n => {
     window.__t1 = []
     if (window.__watching) return
     window.__watching = true
     const el = document.querySelector(`[data-testid="right-${n}"] label`)
-    new MutationObserver(() => { if (el.hasAttribute('data-hold')) window.__t1.push(performance.timeOrigin + performance.now()) }).observe(el, { attributes: true, attributeFilter: ['data-hold'] })
+    new MutationObserver(() => { if (el.hasAttribute('data-hold')) window.__t1.push(Date.now()) }).observe(el, { attributes: true, attributeFilter: ['data-hold'] })
   }, name),
 ])
 
