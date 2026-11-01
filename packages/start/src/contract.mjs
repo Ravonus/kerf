@@ -242,7 +242,7 @@ export const readLivePlan = ({ root, site, preset, live, verify = true }) => {
 }
 
 /** `src/realtime.server.ts` loaded, for `weft db live` and `weft db listen`. `fn` holds it open as long as it needs. */
-export const withRealtime = ({ root, site }, fn) => withFns({ root: resolve(root), site }, async (_, server) => fn((await server.ssrLoadModule('virtual:weft/realtime')).default ?? {}))
+export const withRealtime = ({ root, site }, fn) => withFns({ root: resolve(root), site }, async (_, server) => fn((await server.ssrLoadModule('virtual:weft/realtime')).default ?? {}, server))
 
 /** Every query's shape tree (research 31 §3), by id. */
 export function shapeTable(fns) {

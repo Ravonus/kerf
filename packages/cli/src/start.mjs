@@ -210,9 +210,9 @@ async function dbListen(root) {
   if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
   const config = await site(root)
   const { withRealtime } = await start(root, 'contract')
-  const { listen } = await start(root, 'listen')
-  await withRealtime({ root, site: config.site }, async ({ changes, bus }) => {
+  await withRealtime({ root, site: config.site }, async ({ changes, bus }, server) => {
     if (!changes) throw Object.assign(new Error('`src/realtime.server.ts` has no `changes`'), { code: 'E_USAGE' })
+    const { listen } = await server.ssrLoadModule('@weft/start/listen')
     const stop = await listen({ changes, bus: bus ?? { name: 'memory' } })
     await new Promise(ok => { process.once('SIGINT', ok); process.once('SIGTERM', ok) })
     await stop()
