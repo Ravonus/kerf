@@ -4,6 +4,7 @@
 
 import { pageOf, plan, rowOf, written, type DbAdapter, type ListParams, type ListSource, type SourceSpec } from '@weft/start/list'
 import { hub } from '@weft/start/hub'
+import type { Source } from '@weft/start/changes'
 
 export interface MongoCollection {
   collectionName?: string
@@ -53,6 +54,68 @@ export function mongoSource<Row = Record<string, unknown>>(collection: MongoColl
 }
 
 export const adapter: DbAdapter<MongoCollection> = { name: 'mongo', source: (t, spec) => mongoSource(t, spec) }
+
+export interface MongoDb {
+  command(doc: object): Promise<any>
+  watch(pipeline?: any[], options?: any): AsyncIterable<any> & { close?(): Promise<unknown> }
+  collection(name: string): { insertOne(doc: any): Promise<unknown> }
+  createCollection?(name: string, options?: any): Promise<unknown>
+}
+
+const BARRIER = '__weft_barrier'
+
+/**
+ * `realtime({ changes: mongoChanges(db, ['todos']) })`: one change stream, ids only, read by every instance. A mutation's
+ * barrier is a capped collection's insert, so the oplog puts it after the writes it covers. After a lost stream every
+ * collection is poked: the resume token is not kept, because a poke is cheaper than a stale page.
+ */
+export function mongoChanges(db: MongoDb, collections: string[], options: { retry?: number; external?: boolean } = {}): Source {
+  const retry = options.retry ?? 1000
+  return {
+    name: 'mongodb',
+    tables: collections,
+    external: options.external,
+    async probe() {
+      try {
+        const hello = await db.command({ hello: 1 })
+        if (hello.setName || hello.msg === 'isdbgrid') return { mode: 'feed', via: 'mongo-change-stream' }
+        return { mode: 'off', via: 'none', why: 'a standalone mongod has no oplog, so no change streams', fix: 'run it as a replica set: a single member is enough (`mongod --replSet rs0`, then `rs.initiate()`)' }
+      } catch (e: any) {
+        return { mode: 'off', via: 'none', why: `MongoDB didn't answer: ${e?.message ?? e}`, fix: 'check the connection string' }
+      }
+    },
+    async start(sink, how) {
+      if (how.mode === 'off') return () => {}
+      await db.createCollection?.(BARRIER, { capped: true, size: 1 << 20 }).catch(() => {})
+      let stream: ReturnType<MongoDb['watch']> | undefined, stopped = false, timer: ReturnType<typeof setTimeout> | undefined, again = false
+      const pipeline = [{ $match: { 'ns.coll': { $in: [...collections, BARRIER] } } }, { $project: { operationType: 1, documentKey: 1, 'ns.coll': 1, 'fullDocument.tags': 1 } }]
+      const run = async () => {
+        if (stopped) return
+        try {
+          stream = db.watch(pipeline)
+          if (again) sink.lost()
+          sink.up()
+          again = true
+          for await (const c of stream) {
+            if (c.ns?.coll === BARRIER) { if (c.fullDocument?.tags) sink.settled(c.fullDocument.tags); continue }
+            if (!['insert', 'update', 'replace', 'delete'].includes(c.operationType)) continue
+            sink.changes([{ table: c.ns.coll, ...(c.documentKey?._id !== undefined && { id: String(c.documentKey._id) }) }])
+          }
+        } catch (e: any) {
+          if (!stopped) sink.down(`change stream: ${e?.message ?? e}`)
+        }
+        if (!stopped) timer = setTimeout(() => void run(), retry)
+      }
+      void run()
+      return async () => {
+        stopped = true
+        clearTimeout(timer)
+        await stream?.close?.()
+      }
+    },
+    settle: async tags => void (await db.collection(BARRIER).insertOne({ tags })),
+  }
+}
 
 export interface MongoChange { operationType: string; documentKey?: { _id?: unknown } }
 

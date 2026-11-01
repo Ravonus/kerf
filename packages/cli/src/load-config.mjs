@@ -13,7 +13,7 @@ import { contributions } from './plugins.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
-export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test', 'check', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
+export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'doctor', 'test', 'check', 'fix', 'tokens', 'browser', 'mcp', 'tasks', 'run', 'create', 'docs', 'agents-md', 'plugins']
 
 const configModule = pathToFileURL(join(fileURLToPath(new URL('.', import.meta.url)), 'config.mjs')).href
 const nativeRequire = createRequire(import.meta.url)

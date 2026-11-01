@@ -38,6 +38,7 @@ import { realpathSync } from 'node:fs'
 import { scanRoutes, routeTypes } from './routes.mjs'
 import { solve } from 'weft/hydration'
 import { readMigrations } from './migrations.mjs'
+import { scanRequired } from './live-target.mjs'
 import { pieces } from 'weft/node-purge'
 import { planSheets, reach } from './sheets.mjs'
 import { INLINE_CSS_MAX } from './inline.mjs'
@@ -315,7 +316,7 @@ export default function weftStart(options = {}) {
           return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
         }
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
-        if (which === V.server) return serverEntry(clientEntry(), dev)
+        if (which === V.server) return serverEntry(clientEntry(), dev, root)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
         if (which === V.context || which === V.auth || which === V.realtime) {
           const name = which.slice('virtual:weft/'.length)
@@ -484,7 +485,7 @@ async function assetsOnly(ctx, code, path, root, words) {
   return out.join('\n') + '\n'
 }
 
-function serverEntry(clientEntry, dev) {
+function serverEntry(clientEntry, dev, root) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
 import { chunks, lazy, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
@@ -497,7 +498,7 @@ import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`} },
+const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, liveRequired: ${JSON.stringify(scanRequired(root).map(r => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }

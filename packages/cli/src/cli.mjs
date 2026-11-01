@@ -20,12 +20,12 @@ import { listSurfaces } from './surface-checks.mjs'
 import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
-import { buildCommand, dbCommand, devCommand, routesCommand, startCommand } from './start.mjs'
+import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand } from './start.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
-  check [files…]      compile in check mode; W-, P- and D-diagnostics with fixes
+  check [files…] [--preset <p>]  compile in check mode; W-, P- and D-diagnostics with fixes
   fix [files…]        apply the safe autofixes
   tokens              warp's resolved tokens as DTCG, in .weft/tokens/
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
@@ -35,6 +35,9 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
   db generate [name]  a migration for the schema's changes (it applies on the next request)
+  db live             a migration with change triggers for the tables in \`changes\`
+  db listen           the change feed as its own process, for an app on functions
+  doctor [--preset <p>]  what live data does on this deploy target, and the options
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
   run <task>          run a project task from weft.config.ts
@@ -88,7 +91,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     args = parse(argv)
     switch (args.command) {
       case 'check': {
-        const result = await check(args.root, { files: args.positional })
+        const result = await check(args.root, { files: args.positional, preset: args.flags.preset })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
         say(`weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
@@ -125,6 +128,13 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       }
       case 'start':
         return await startCommand(args.root, { runtime: args.flags.runtime })
+      case 'doctor': {
+        const plan = await doctorCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime })
+        if (args.json) print(plan)
+        say(`weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map(o => `    - ${o}`).join('\n')}` : ''}`)
+        say(formatHuman(plan.diagnostics))
+        return plan.diagnostics.some(d => d.severity === 'error') ? 1 : 0
+      }
       case 'db': {
         const result = await dbCommand(args.root, args.positional[0], args.positional[1])
         if (args.json) print(result)

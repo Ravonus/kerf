@@ -91,6 +91,8 @@ export interface HandlerOptions {
   media?: () => Promise<MediaServer>
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
+  /** Queries marked `live: { required: true }` (`scanRequired`, at build). */
+  liveRequired?: string[]
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
   onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
 }
@@ -164,7 +166,7 @@ export function createHandler(options: HandlerOptions) {
     scopeOptions.extensions = [...extensions.values()]
   })())
   let applied = -1
-  configure({ ...options.realtime, build: options.build, dev: options.dev })
+  configure({ ...options.realtime, build: options.build, dev: options.dev, store: options.store, required: options.liveRequired, onDiagnostic: options.onDiagnostic })
 
   /**
    * Before the first request (and in dev, when `drizzle/` grows): the auth secret, and the list each database applies
@@ -513,6 +515,8 @@ export function createHandler(options: HandlerOptions) {
     // The build's prerender only lists cards: it holds no secrets and may have no database.
     if (new URL(request.url).pathname === '/_weft/og-routes') return als.run(scope, () => route(request, scope))
     await boot()
+    if (options.liveRequired?.length) await hub().probed
+    if (hub().refused) return Response.json({ e: { code: 'R015', message: options.dev ? hub().refused!.message : 'Live data is unavailable.' } }, { status: 503, headers: { 'cache-control': 'no-store' } })
     return compressed(request, await als.run(scope, () => route(request, scope)))
   }
   return Object.assign(handler, { resolve })

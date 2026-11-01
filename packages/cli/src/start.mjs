@@ -159,13 +159,76 @@ const DRIZZLE = {
 
 /** `weft db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
 export async function dbCommand(root, sub, name) {
-  if (sub !== 'generate') throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request)`), { code: 'E_USAGE' })
+  if (sub === 'live') return dbLive(root)
+  if (sub === 'listen') return dbListen(root)
+  if (sub !== 'generate') throw Object.assign(new Error(`weft db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`), { code: 'E_USAGE' })
   const layer = await dbLayer(root)
   if (!layer) throw Object.assign(new Error('this app has no database: `weft add db` adds one'), { code: 'E_USAGE' })
   const output = layer.generate(root, name)
   const schema = layer.schema && join(root, layer.schema)
   if (schema && existsSync(schema)) writeFileSync(join(root, layer.migrations, '.schema-hash'), schemaHash(readFileSync(schema)) + '\n')
   return { ok: true, output }
+}
+
+/** `weft db live`: a migration that adds change triggers to the tables in `changes` (Postgres, SQLite, MySQL). */
+async function dbLive(root) {
+  const held = process.env.WEFT_BUILD
+  process.env.WEFT_BUILD = '1'
+  const config = await site(root)
+  const { withRealtime } = await start(root, 'contract')
+  const { changeSql } = await start(root, 'changes-sql')
+  let sql, tables
+  try {
+    ({ sql, tables } = await withRealtime({ root, site: config.site }, async ({ changes }) => {
+      if (!changes?.defs) throw Object.assign(new Error('`src/realtime.server.ts` has no `changes: dbChanges(db, [tables])`'), { code: 'E_USAGE' })
+      const defs = await changes.defs()
+      return { sql: changeSql(changes.dialect, defs), tables: defs.map(t => t.name) }
+    }))
+  } finally {
+    if (held === undefined) delete process.env.WEFT_BUILD
+    else process.env.WEFT_BUILD = held
+  }
+  const layer = await dbLayer(root)
+  if (layer?.layer !== 'drizzle') return { ok: true, output: `${sql}\n-- add this to a migration of your data layer` }
+  const req = createRequire(join(root, 'package.json'))
+  const bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
+  const r = spawnSync(process.execPath, [bin, 'generate', '--custom', '--name=weft_live'], { cwd: root, encoding: 'utf8' })
+  if (r.status !== 0) throw Object.assign(new Error(`drizzle-kit generate failed:\n${r.stdout}${r.stderr}`), { code: 'E_INTERNAL' })
+  const { entries } = JSON.parse(readFileSync(join(root, layer.migrations, 'meta', '_journal.json'), 'utf8'))
+  const file = join(layer.migrations, `${entries.at(-1).tag}.sql`)
+  writeFileSync(join(root, file), sql)
+  return { ok: true, output: `${file}: change triggers for ${tables.join(', ')}. They apply on the next request.` }
+}
+
+/** `weft db listen`: the change feed as its own process, for an app on functions. Runs until SIGINT or SIGTERM. */
+async function dbListen(root) {
+  if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
+  const config = await site(root)
+  const { withRealtime } = await start(root, 'contract')
+  const { listen } = await start(root, 'listen')
+  await withRealtime({ root, site: config.site }, async ({ changes, bus }) => {
+    if (!changes) throw Object.assign(new Error('`src/realtime.server.ts` has no `changes`'), { code: 'E_USAGE' })
+    const stop = await listen({ changes, bus: bus ?? { name: 'memory' } })
+    await new Promise(ok => { process.once('SIGINT', ok); process.once('SIGTERM', ok) })
+    await stop()
+  })
+  return { ok: true, output: 'weft db listen: stopped' }
+}
+
+/** `weft doctor`: what live data does on this deploy target, and what to do about what it can't. */
+export async function doctorCommand(root, { preset, runtime } = {}) {
+  const config = await site(root)
+  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? 'node'
+  const held = process.env.WEFT_BUILD
+  process.env.WEFT_BUILD = '1'
+  try {
+    const { readLivePlan } = await start(root, 'contract')
+    const plan = await readLivePlan({ root, site: config.site, preset: preset ?? PRESETS[chosen] })
+    return { ...plan, diagnostics: plan.diagnostics.map(d => diagnostic({ file: 'src/realtime.server.ts', ...d })) }
+  } finally {
+    if (held === undefined) delete process.env.WEFT_BUILD
+    else process.env.WEFT_BUILD = held
+  }
 }
 
 /** Every route's merged metadata, tags and card mode (`--meta`), or just the route table. */

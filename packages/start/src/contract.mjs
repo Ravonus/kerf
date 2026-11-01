@@ -7,6 +7,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
 import weft from 'weft/vite'
+import { livePlan, scanRequired } from './live-target.mjs'
+import { readMigrations } from './migrations.mjs'
 import { shapeTree, toJson } from './shape.mjs'
 import weftStart, { startDir } from './vite.mjs'
 
@@ -165,6 +167,27 @@ export const busProblem = ({ preset, bus, streams, root }) =>
     ? `the \`${preset}\` preset runs many instances, and the memory bus only reaches clients on its own: pokes and messages would be lost`
     : undefined
 
+/** What this deploy gets from live data, with the config loaded. R018 is a table `changes` lists and no migration covers. */
+function planOf({ root, preset, realtime }) {
+  const source = realtime?.changes
+  const plan = livePlan({ preset, source: source && { name: source.name, external: source.external, tables: source.tables }, required: scanRequired(root) })
+  if (source?.dialect) {
+    const sql = readMigrations(root).map(m => m.sql).join('\n')
+    const missing = source.tables.filter(t => !new RegExp(`weft_changes_(${t.replace(/\W/g, '_')}_)?upd\\b[^;]*["\`\\s]${t}["\`\\s]`).test(sql))
+    if (missing.length) plan.diagnostics.push({ code: 'R018', severity: 'warning', why: `no migration adds change triggers to ${missing.map(t => `\`${t}\``).join(', ')}: run \`weft db live\`. Until then the server falls back to polling.` })
+  }
+  return plan
+}
+
+/** The deploy's live plan on its own, for `weft check` and `weft doctor`: no contract is written. */
+export const readLivePlan = ({ root, site, preset }) => {
+  root = resolve(root)
+  return withFns({ root, site }, async (_, server) => planOf({ root, preset, realtime: (await server.ssrLoadModule('virtual:weft/realtime')).default }))
+}
+
+/** `src/realtime.server.ts` loaded, for `weft db live` and `weft db listen`. `fn` holds it open as long as it needs. */
+export const withRealtime = ({ root, site }, fn) => withFns({ root: resolve(root), site }, async (_, server) => fn((await server.ssrLoadModule('virtual:weft/realtime')).default ?? {}))
+
 /** Every query's shape tree (research 31 §3), by id. */
 export function shapeTable(fns) {
   const table = {}
@@ -202,6 +225,7 @@ export function writeContract({ root, site = {}, preset, rust }) {
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
     const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
     if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft/realtime-redis\` or \`@weft/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
+    diagnostics.push(...planOf({ root, preset, realtime: mod.default }).diagnostics)
     for (const [service, s] of Object.entries(contract.services ?? {})) {
       const why = s.kind === 'native' && nativeProblem({ service, preset, wasm: rust?.services?.[service]?.wasm })
       if (why) diagnostics.push({ code: 'R104', severity: 'error', why })
