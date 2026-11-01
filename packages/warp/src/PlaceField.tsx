@@ -88,7 +88,7 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
         {format.value.fields.map(([part, title, span, auto]) => (
           <div key={`${country.value}:${part}`} data-span={span}>
             {part === 'line1' && provider && !manual.value
-              ? <ComboField icon={IconPin} label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: IconPin as const })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
+              ? <ComboField icon={IconPin} label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: IconPin })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
               : <Input label={title} autocomplete={auto} icon={part === 'line1' ? 'pin' : undefined} value={addressPart(v.value, part)} error={errors?.[part] ?? (part === 'postalCode' ? postal.value : undefined) ?? (errors ? '' : undefined)} onInput={e => write(part, e.currentTarget.value)} onBlur={part === 'postalCode' ? () => (touched.value = { ...touched.value, postal: true }) : undefined} />}
           </div>
         ))}

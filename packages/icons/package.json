@@ -9,7 +9,7 @@
     "*.css"
   ],
   "exports": {
-    ".": "./src/gen/all.tsx",
+    ".": "./src/gen/index.tsx",
     "./all": "./src/all.tsx",
     "./quiet": "./src/gen/all.tsx",
     "./balanced": "./src/gen/all.tsx",

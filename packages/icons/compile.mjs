@@ -396,7 +396,7 @@ const VISIBLE = { quiet: 'oq', balanced: 'ob', vivid: 'v' }
 /** Drop the drawings no shipped stop can show. With one stop left there is nothing to switch, so the switch goes too. */
 export function trimTiers(source, stops) {
   // a build imports the pack as a namespace (rewrite), and this default would keep every icon alive
-  const code = source.replace("import * as self from './all'\n", '').replace('export default self\n', '')
+  const code = source
   if (stops.size === 3) return code
   const keep = [...stops].map(s => VISIBLE[s]).join('')
   const out = code.replace(/<path data-t="([oqbv])"[^>]*?\/>/g, (m, t) => (keep.includes(t) ? m : ''))

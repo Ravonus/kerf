@@ -75,7 +75,7 @@ Five icons have a built-in animation: `trash` (the lid lifts), `bell` (it rings)
 <TrashIconAction action="press" />    // 'hover' | 'focus' | 'press' | 'on'
 ```
 
-It's CSS alone, and each one's stylesheet ships only if that icon is used (about 245 B). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
+It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 140 B of JS). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
 
 ## Tiers
 

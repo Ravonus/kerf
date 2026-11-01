@@ -68,7 +68,7 @@ export interface ShellProps {
 }
 
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
-const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i() : i ? <Icon name={i} /> : null)
+const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i({}) : i ? <Icon name={i} /> : null)
 const TABS = 4
 
 function Item({ item, current, quiet, onPick }: { item: NavItem; current?: string; quiet?: boolean; onPick: () => void }) {
