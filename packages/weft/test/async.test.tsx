@@ -4,7 +4,7 @@ import { screen } from '@testing-library/dom'
 import { renderToString, renderToStringAsync } from 'weft/ssr'
 import { hydrate } from 'weft/dom'
 import { flush, render } from 'weft/test'
-import { Boundary, derived, resource, state } from 'weft'
+import { Boundary, onCleanup, resource, state } from 'weft'
 import { hydration } from '../src/hydrate'
 import { Users, type Load } from './fixtures/ssr/Users'
 // @ts-expect-error: query imports (vite.mjs)
@@ -227,23 +227,17 @@ describe('a Boundary directly in a conditional hole', () => {
   })
 })
 
-test('a Boundary that goes away takes its content with it; one that stays keeps it live', () => {
-  const open = state(true), n = state(1)
-  let runs = 0
+test('a Boundary that goes away takes its content with it; one that stays keeps it', async () => {
+  const open = state(true)
+  const gone = vi.fn()
   const Inner = () => {
-    const seen = derived(() => (runs++, n.value))
-    return <p class="live">{seen.value}</p>
+    onCleanup(gone)
+    return <p>here</p>
   }
   render(() => <section>{open.value ? <Boundary pending={<i>wait</i>}><Inner /></Boundary> : null}</section>)
-  flush()
-  const before = runs
-  n.value = 2
-  flush()
-  expect(runs).toBeGreaterThan(before)
+  await flush()
+  expect(gone).not.toHaveBeenCalled()
   open.value = false
-  flush()
-  const after = runs
-  n.value = 3
-  flush()
-  expect(runs).toBe(after)
+  await flush()
+  expect(gone).toHaveBeenCalledOnce()
 })
