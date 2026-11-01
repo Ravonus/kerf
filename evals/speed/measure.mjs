@@ -18,7 +18,7 @@ const out = arg('out', join(here, 'results.json'))
 const want = arg('stacks', 'weft-base,weft,solid,solid-batch,react').split(',').filter(s => existsSync(join(here, 'dist', s.replace('-batch', ''))))
 const load = () => Number(execSync('uptime').toString().match(/load averages?:\s*([\d.]+)/)[1])
 const rounds = quick ? 1 : 3
-const sizes = quick ? [1000, 10000] : [1000, 10000, 100000]
+const sizes = process.argv.includes("--rows") ? [] : quick ? [1000, 10000] : [1000, 10000, 100000]
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
 const server = createServer((req, res) => {
