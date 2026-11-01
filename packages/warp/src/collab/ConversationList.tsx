@@ -1,7 +1,7 @@
+import { IconPin } from '@weft/icons'
 import { peerColor, roving, type Peer } from '@weft/ui-core'
 import { Box, derived, state, untrack, type State } from 'weft'
 import { Badge } from '../Badge'
-import { Icon } from '../Icon'
 import { Avatar } from '../parts'
 import { use } from '../use'
 import { tint } from './peer'
@@ -62,7 +62,7 @@ export function ConversationList({ label = 'Conversations', title, actions, item
             <small>{c.preview}</small>
             <span data-part="side">
               <span>{c.time}</span>
-              {c.unread ? <Badge emphasis="solid" count srText={`${c.unread} unread`}>{c.unread}</Badge> : c.pinned ? <Icon name="pin" /> : null}
+              {c.unread ? <Badge emphasis="solid" count srText={`${c.unread} unread`}>{c.unread}</Badge> : c.pinned ? <IconPin /> : null}
             </span>
           </a>
         ))}

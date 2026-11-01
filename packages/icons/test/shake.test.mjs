@@ -1,7 +1,6 @@
 // @vitest-environment node
 // An unused icon costs zero bytes, and a static tier ships that tier alone. These bundles are real production builds.
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { brotliCompressSync, constants } from 'node:zlib'
 import { build } from 'vite'
@@ -10,7 +9,19 @@ import weft from 'weft/vite'
 const br = text => brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 const pkg = new URL('..', import.meta.url).pathname
 
-async function bundle(code, { root = pkg } = {}) {
+// A project inside the package, so it resolves weft. Its alias file picks the tiers; '@weft/icons' to itself means all of them.
+function project(alias) {
+  const dir = mkdtempSync(join(pkg, '.tmp-'))
+  mkdirSync(join(dir, '.weft', 'tokens'), { recursive: true })
+  writeFileSync(join(dir, '.weft', 'tokens', 'icons.alias.json'), JSON.stringify(alias))
+  return dir
+}
+const ALL = { '@weft/icons': '@weft/icons' }
+async function bundle(code, { alias = ALL } = {}) {
+  const root = project(alias)
+  try { return await run(code, root) } finally { rmSync(root, { recursive: true, force: true }) }
+}
+async function run(code, root) {
   const id = '\0shake-entry.tsx'
   const out = await build({
     configFile: false, logLevel: 'silent', root,
@@ -41,11 +52,8 @@ test('importing iconSet alone brings no drawing', async () => {
 }, 60000)
 
 test('a static tier compiles one tier in: no switch attributes, no switch CSS, no other tier', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'icons-tier-'))
-  try {
-    mkdirSync(join(dir, '.weft', 'tokens'), { recursive: true })
-    writeFileSync(join(dir, '.weft', 'tokens', 'icons.alias.json'), JSON.stringify({ '@weft/icons': '@weft/icons/vivid' }))
-    const { js, css } = await bundle(page(['IconCheck', 'IconAlert']), { root: dir })
+  {
+    const { js, css } = await bundle(page(['IconCheck', 'IconAlert']), { alias: { '@weft/icons': '@weft/icons/vivid' } })
     expect(js).toContain('crispEdges')
     expect(js).not.toContain('data-t')
     expect(js).not.toContain('stroke-linecap')
@@ -55,8 +63,6 @@ test('a static tier compiles one tier in: no switch attributes, no switch CSS, n
     expect(all.css).toContain('--warp-icon-v')
     expect(br(js)).toBeLessThan(br(all.js))
     process.stderr.write(`BYTES two icons: runtime js ${br(all.js)}, vivid js ${br(js)}\n`)
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
   }
 }, 90000)
 

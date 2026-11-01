@@ -1,10 +1,9 @@
-import { IconCode, IconCodeBlock, IconLink, IconList, IconListOrdered, IconQuote } from '@weft/icons'
+import { IconCode, IconCodeBlock, IconLink, IconList, IconListOrdered, IconQuote, IconUndo } from '@weft/icons'
 import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle } from '@weft/ui-core'
 import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
-import { Icon } from './Icon'
 import { use } from './use'
 import '@weft/ui-core/styles/rich/body.css'
 import '@weft/ui-core/styles/rich/rich-text.css'
@@ -172,7 +171,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
               <div ref={(n: any) => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest('[data-part="tool"]')) e.preventDefault() }}>
                 {tools.value.map((g, i) => <span key={g[0].cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
                 <span data-part="sep"></span>
-                <button type="button" data-part="tool" tabindex="-1" aria-label="Undo" title="Undo · ⌘Z" onClick={() => handle!.run('undo')}><Icon name="undo" /></button>
+                <button type="button" data-part="tool" tabindex="-1" aria-label="Undo" title="Undo · ⌘Z" onClick={() => handle!.run('undo')}><IconUndo /></button>
               </div>
             )}
             {linking.value && (

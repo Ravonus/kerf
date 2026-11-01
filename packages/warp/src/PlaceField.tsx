@@ -1,3 +1,4 @@
+import { IconPin } from '@weft/icons'
 import { addressFormat, addressPart, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft/ui-core'
 import { derived, state, untrack } from 'weft'
 import { Chip } from './Chip'
@@ -26,7 +27,7 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
   return (
     <div class="stack">
       <ComboField
-        icon="pin"
+        icon={IconPin}
         {...rest}
         label={label}
         hint={hint}
@@ -87,7 +88,7 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
         {format.value.fields.map(([part, title, span, auto]) => (
           <div key={`${country.value}:${part}`} data-span={span}>
             {part === 'line1' && provider && !manual.value
-              ? <ComboField icon="pin" label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: 'pin' as const })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
+              ? <ComboField icon={IconPin} label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: IconPin as const })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
               : <Input label={title} autocomplete={auto} icon={part === 'line1' ? 'pin' : undefined} value={addressPart(v.value, part)} error={errors?.[part] ?? (part === 'postalCode' ? postal.value : undefined) ?? (errors ? '' : undefined)} onInput={e => write(part, e.currentTarget.value)} onBlur={part === 'postalCode' ? () => (touched.value = { ...touched.value, postal: true }) : undefined} />}
           </div>
         ))}

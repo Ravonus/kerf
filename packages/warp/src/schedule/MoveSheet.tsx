@@ -1,3 +1,4 @@
+import { IconLeft, IconRight } from '@weft/icons'
 import { clock, clockRange, dateOf, fmt, longDuration, moveSlots, slotOf, weekDates, type CalEvent, type Slot } from '@weft/ui-core'
 import { derived, state, untrack, type State } from 'weft'
 import { Alert } from '../Alert'
@@ -64,9 +65,9 @@ function Body({ event, props: p, bind }: { event: CalEvent; props: MoveSheetProp
         </div>
       </div>
       <div class="row" role="group" aria-label="Duration">
-        <Button emphasis="outline" tone="neutral" size="sm" label="Shorter" icon="left" disabled={len.value <= stepBy} onClick={() => (len.value = Math.max(stepBy, len.value - stepBy))} />
+        <Button emphasis="outline" tone="neutral" size="sm" label="Shorter" icon={IconLeft} disabled={len.value <= stepBy} onClick={() => (len.value = Math.max(stepBy, len.value - stepBy))} />
         <output aria-live="polite">{longDuration(len.value)}</output>
-        <Button emphasis="outline" tone="neutral" size="sm" label="Longer" icon="right" onClick={() => (len.value += stepBy)} />
+        <Button emphasis="outline" tone="neutral" size="sm" label="Longer" icon={IconRight} onClick={() => (len.value += stepBy)} />
       </div>
       {e.recurrence && <Alert tone="info" title="This event repeats">Moving changes this one only. Use Edit for the series.</Alert>}
     </div>

@@ -1,11 +1,10 @@
-import { IconBag, IconLock } from '@weft/icons'
+import { IconBag, IconDown, IconLeft, IconLock } from '@weft/icons'
 import { addressProblems, announce, cartCount, cartTotals, errorStep, money, newOrderKey, openWhenWide, uid, type Address, type AddressPart, type CartLine, type CheckoutError } from '@weft/ui-core'
 import { derived, state, type State, untrack } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Input } from '../Field'
-import { Icon } from '../Icon'
 import { AddressField, type AddressProvider } from '../PlaceField'
 import { Tag } from '../Tag'
 import { toast } from '../Toast'
@@ -178,7 +177,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
   ])
   const count = derived(() => cartCount(lines.value))
   const Nav = ({ back, children }: { back: CheckoutStep; children: any }) => (
-    <div data-part="nav"><Button emphasis="ghost" tone="neutral" icon="left" onClick={() => prev(back)}>Back</Button>{children}</div>
+    <div data-part="nav"><Button emphasis="ghost" tone="neutral" icon={IconLeft} onClick={() => prev(back)}>Back</Button>{children}</div>
   )
   return (
     <div ref={(n: any) => (root = n)} data-scope="checkout">
@@ -265,7 +264,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
           </div>
         </div>
         <details ref={(n: any) => (summary = n)} data-part="summary">
-          <summary><span class="row"><IconBag />Order summary</span><span class="row"><b>{cost(total.value)}</b><Icon name="down" /></span></summary>
+          <summary><span class="row"><IconBag />Order summary</span><span class="row"><b>{cost(total.value)}</b><IconDown /></span></summary>
           {lines.value.map(l => (
             <div key={l.id} data-scope="line-item">
               <span data-part="thumb">{l.art && <img src={l.art} alt="" />}</span>

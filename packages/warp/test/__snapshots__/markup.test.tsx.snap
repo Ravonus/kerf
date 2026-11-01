@@ -951,7 +951,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </div>
 </div>
 <div data-scope="field" role="search">
-<div data-icon="search" data-part="control" data-phase="idle" data-sweep="">
+<div data-icon="" data-part="control" data-phase="idle" data-sweep="">
 <span aria-hidden="true" data-part="sweep-base">
 </span>
 <span aria-hidden="true" data-part="sweep">
@@ -1226,7 +1226,7 @@ exports[`Fields: server HTML 1`] = `
 </div>
 </div>
 <div data-scope="field" role="search">
-<div data-icon="search" data-part="control" data-phase="idle" data-sweep="">
+<div data-icon="" data-part="control" data-phase="idle" data-sweep="">
 <span aria-hidden="true" data-part="sweep-base">
 </span>
 <span aria-hidden="true" data-part="sweep">

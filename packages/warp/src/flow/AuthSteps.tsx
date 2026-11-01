@@ -1,4 +1,4 @@
-import { IconKey, IconMail } from '@weft/icons'
+import { IconKey, IconLeft, IconMail } from '@weft/icons'
 import { clockLabel, emailError, passwordRules, uid } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
 import { Avatar } from '../parts'
@@ -11,7 +11,7 @@ import '../styles'
 import '@weft/ui-core/styles/flows/auth.css'
 import '@weft/ui-core/styles/layout/row.css'
 
-const Back = ({ onBack }: { onBack: () => void }) => <div><Button emphasis="ghost" tone="neutral" size="sm" icon="left" onClick={onBack}>Back</Button></div>
+const Back = ({ onBack }: { onBack: () => void }) => <div><Button emphasis="ghost" tone="neutral" size="sm" icon={IconLeft} onClick={onBack}>Back</Button></div>
 
 /** "Check your inbox" (09 §2.1): waiting, so no solid; the address, Open mail app, resend on a countdown, change email. */
 export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mailHref, onResend, onChangeEmail, onBack }: { email: any; title?: any; lede?: any; heading?: Heading; resendIn?: number; /** Shows Open email app (phones). */ mailHref?: string; onResend?: () => void; onChangeEmail?: () => void; onBack?: () => void }) {

@@ -1,7 +1,6 @@
-import { IconHand, IconX } from '@weft/icons'
+import { IconCheck, IconClock, IconHand, IconX } from '@weft/icons'
 import type { PlanStep } from '@weft/ui-core'
 import { derived } from 'weft'
-import { Icon } from '../Icon'
 import { Bar, IconButton } from './bits'
 import '../styles'
 import '@weft/ui-core/styles/components/spinner.css'
@@ -25,7 +24,7 @@ export function AgentPlan({ steps, queue, title = 'Plan', onRemoveQueued }: { st
         {steps.map(s => (
           <li key={s.id} data-state={s.state}>
             <span data-part="box">
-              {s.state === 'done' && <Icon name="check" style="inline-size:12px;block-size:12px;stroke-width:2.2" />}
+              {s.state === 'done' && <IconCheck style="inline-size:12px;block-size:12px;stroke-width:2.2" />}
               {s.state === 'running' && <span data-scope="spinner" style="--_size:10px;color:var(--warp-color-accent-text)"></span>}
               {s.state === 'blocked' && <IconHand style="inline-size:11px;block-size:11px" />}
             </span>
@@ -38,7 +37,7 @@ export function AgentPlan({ steps, queue, title = 'Plan', onRemoveQueued }: { st
         {waiting.value.length === 0 && <small>Messages you send while a run is busy wait here, in order.</small>}
         {waiting.value.map(q => (
           <div key={q.id}>
-            <Icon name="clock" style="inline-size:14px;block-size:14px;color:var(--warp-color-text-subtle)" />
+            <IconClock style="inline-size:14px;block-size:14px;color:var(--warp-color-text-subtle)" />
             <span>{q.text}</span>
             <IconButton icon={IconX} label={`Remove from queue: ${q.text}`} onClick={() => onRemoveQueued?.(q.id)} />
           </div>

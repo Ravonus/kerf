@@ -1,13 +1,18 @@
-// warp's icon names over @weft/icons (10-icons.md). A name is a lookup, so this list is what a component with an `icon`
-// prop pays for; a fixed glyph imports its own icon instead.
+// warp's `icon` props: a name, or an icon from @weft/icons. A name is looked up in @weft/icons/names, which a build swaps
+// for exactly the names the app uses (packages/icons/compile.mjs); warp's own fixed glyphs import their icon directly.
 import './styles'
-import { iconSet, IconAlert, IconAlertCircle, IconCalendar, IconCard, IconCheck, IconCheckCircle, IconClock, IconDown, IconGlobe, IconInfo, IconLeft, IconMore, IconPin, IconRight, IconSearch, IconTimer, IconUndo, IconX } from '@weft/icons'
+import { IconAlert, IconAlertCircle, IconCheckCircle, IconInfo, type IconComponent, type IconProps } from '@weft/icons'
+import { resolve, type IconName } from '@weft/icons/names'
+import { untrack } from 'weft'
+
+export type { IconName }
+export type IconRef = IconName | IconComponent
 
 /** `<svg data-icon aria-hidden focusable=false>`: decorative, never named (03 §7); `label` names it. */
-export const Icon = iconSet({
-  x: IconX, check: IconCheck, search: IconSearch, down: IconDown, alert: IconAlert, 'alert-circle': IconAlertCircle, info: IconInfo, 'check-circle': IconCheckCircle,
-  calendar: IconCalendar, clock: IconClock, left: IconLeft, right: IconRight, globe: IconGlobe, timer: IconTimer, pin: IconPin, card: IconCard, undo: IconUndo, more: IconMore,
-})
-export type IconName = 'x' | 'check' | 'search' | 'down' | 'alert' | 'alert-circle' | 'info' | 'check-circle' | 'calendar' | 'clock' | 'left' | 'right' | 'globe' | 'timer' | 'pin' | 'card' | 'undo' | 'more'
+export function Icon({ name, ...rest }: { name: IconRef } & IconProps) {
+  const icon = untrack(() => name)
+  const Draw = typeof icon === 'function' ? icon : resolve(icon)
+  return Draw ? <Draw {...rest} /> : null
+}
 
-export const toneIcon = { info: 'info', neutral: 'info', accent: 'info', positive: 'check-circle', caution: 'alert', critical: 'alert-circle' } as const
+export const toneIcon = { info: IconInfo, neutral: IconInfo, accent: IconInfo, positive: IconCheckCircle, caution: IconAlert, critical: IconAlertCircle } as const

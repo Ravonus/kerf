@@ -1,12 +1,12 @@
 import { comboPopup, uid } from '@weft/ui-core'
 import { derived, flush, onCleanup, state, untrack } from 'weft'
 import { Field, type FieldProps } from './Field'
-import { Icon, type IconName } from './Icon'
+import { Icon, type IconRef } from './Icon'
 import { use } from './use'
 import '@weft/ui-core/styles/rich/listbox.css'
 import '@weft/ui-core/styles/rich/popover.css'
 
-export type ComboRow = { main: string; sub?: string; meta?: string; icon?: IconName }
+export type ComboRow = { main: string; sub?: string; meta?: string; icon?: IconRef }
 
 export type ComboFieldProps<T> = FieldProps & {
   /** The app's search. Superseded calls are aborted. */
