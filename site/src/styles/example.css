@@ -1,6 +1,6 @@
 [data-site="example"] { display: grid; gap: var(--warp-space-related); margin-block: var(--warp-space-group) clamp(3rem, 6vw, 5rem); }
 [data-site="example"] > p { max-inline-size: 65ch; font-size: 1.0625rem; line-height: 1.6; color: var(--warp-color-text-subtle); }
-[data-site="example"] h3 { font-family: var(--warp-font-sans); font-size: 1.5rem; letter-spacing: -0.02em; color: var(--warp-color-text); }
+[data-site="example"] h2 { font-family: var(--warp-font-sans); font-size: 1.5rem; letter-spacing: -0.02em; color: var(--warp-color-text); }
 [data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid var(--warp-color-border); background: var(--warp-color-surface-sunken); }
 [data-site="example"] [data-part="run"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-related); min-inline-size: 0; min-block-size: 260px; background: radial-gradient(circle at 50% 30%, var(--warp-color-accent-soft), transparent 70%); padding: var(--warp-space-group); font-family: var(--warp-font-mono); border-inline-end: 1px solid var(--warp-color-border); }
 [data-site="example"] [data-part="run"] > * { inline-size: min(100%, 340px); }

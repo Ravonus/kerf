@@ -16,7 +16,7 @@ export default defineConfig({
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',
-    head: `<script>document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
+    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><script>document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
   },
   plugins: [
     warp(),
@@ -24,7 +24,7 @@ export default defineConfig({
     text({
       measure: 'off',
       fonts: {
-        body: { family: 'Inter', src: `${FILES}-variable/inter/files/inter-latin-wght-normal.woff2`, fallback: 'Arial', axes: { wght: [100, 900] } },
+        body: { family: 'Inter', src: `${FILES}-variable/inter/files/inter-latin-wght-normal.woff2`, fallback: 'Arial', preload: false, axes: { wght: [100, 900] } },
         display: { family: 'Space Grotesk', src: `${FILES}-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2`, fallback: 'Arial', axes: { wght: [300, 700] } },
         mono: { family: 'IBM Plex Mono', src: `${FILES}/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2`, fallback: 'Courier New', weight: 400, preload: false },
         serif: { family: 'Instrument Serif', src: `${FILES}/instrument-serif/files/instrument-serif-latin-400-normal.woff2`, fallback: 'Times New Roman', weight: 400, preload: false },

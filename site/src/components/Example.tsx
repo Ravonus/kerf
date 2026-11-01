@@ -7,7 +7,7 @@ import '../styles/example.css'
 export function Example(props: { id: string; plain?: boolean; children?: unknown }) {
   return (
     <section data-site="example">
-      {!props.plain && <h3>{demos[props.id].title}</h3>}
+      {!props.plain && <h2>{demos[props.id].title}</h2>}
       <p>{demos[props.id].look}</p>
       <div data-part="pair">
         <div data-part="run">{props.children}</div>
