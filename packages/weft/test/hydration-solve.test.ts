@@ -214,3 +214,79 @@ test('an import that only brings CSS keeps an island waiting; one that runs code
   expect(when(css.plan)).toBe('interaction')
   expect(when(code.plan)).toBe('load')
 })
+
+const layout = `import { untrack } from 'weft'
+function Div({ children, ...rest }) { return <div {...rest}>{children}</div> }
+const TAGS = { div: Div }
+function Element({ as, ...rest }) { const Tag = TAGS[untrack(() => as) ?? 'div']; return <Tag {...rest} /> }
+export function Stack({ gap, ...rest }) { return <Element data-gap={gap} {...rest} /> }
+export function Card({ href, onClick, children, ...rest }) {
+  if (untrack(() => href)) return <a href={href} onClick={onClick} {...rest}>{children}</a>
+  return <div onClick={onClick} {...rest}>{children}</div>
+}`
+
+test('primitives that only read `untrack`, spread their props and pass a handler on stay static', async () => {
+  const { plan, routeStatic, why } = await project({
+    'layout.tsx': layout,
+    'route.tsx': `import { Stack, Card } from './layout'\nexport default function R() { return <Stack gap="group"><Card>hi</Card></Stack> }`,
+  })
+  expect(why('Stack')).toBeNull()
+  expect(why('Card')).toBeNull()
+  expect(routeStatic).toBe(true)
+  expect(plan.islands).toEqual([])
+})
+
+test('a call site that gives a passed-on handler is the island, and only that one', async () => {
+  const { plan } = await project({
+    'layout.tsx': layout,
+    'route.tsx': `import { Stack, Card } from './layout'\nconst go = () => {}\nexport default function R() { return <Stack><Card>plain</Card><Card onClick={go}>press</Card></Stack> }`,
+  })
+  expect(plan.islands.map(i => i.id)).toEqual(['route.tsx#2'])
+})
+
+test('a handler under another name, or a spread of anything but the props, could hold a handler', async () => {
+  const renamed = await project({
+    'route.tsx': `function Press({ go }) { return <button onClick={go}>x</button> }\nexport default function R() { return <Press /> }`,
+  })
+  expect(renamed.why('Press')).toMatch(/onClick/)
+  const spread = await project({
+    'layout.tsx': layout,
+    'route.tsx': `import { Stack } from './layout'\nexport default function R() { const a = pick(); return <Stack {...a}>hi</Stack> }`,
+  })
+  expect(spread.why('R')).toMatch(/spread/)
+})
+
+test('an island waits by what its hoisted children read, not only its own tag', async () => {
+  const { plan } = await project({
+    'route.tsx': `import { Boundary, state } from 'weft'
+function Box({ children }) { const s = state(0); return <div onClick={() => s.value++}>{children}</div> }
+function Inner() { const n = state(1); return <Boundary fallback="…">{n.value}</Boundary> }
+export default function R() { return <main><Box><Inner /></Box></main> }`,
+  })
+  expect(plan.loads).toMatchObject([{ tag: 'Box', when: 'visible' }])
+})
+
+test('@weft visible on a hoisted child is reached', async () => {
+  const { plan } = await project({
+    'route.tsx': `import { onMount, state } from 'weft'
+function Box({ children }) { const s = state(0); return <div onClick={() => s.value++}>{children}</div> }
+/* @weft visible */
+function Inner() { onMount(() => document.title); return <span>t</span> }
+export default function R() { return <main><Box><Inner /></Box></main> }`,
+  })
+  expect(plan.loads).toMatchObject([{ tag: 'Box', when: 'visible', why: expect.stringMatching(/@weft visible/) }])
+})
+
+test('H011: a closure on a handler is why a route hydrates whole', async () => {
+  const { plan, routeStatic } = await project({
+    'button.tsx': button,
+    'route.tsx': `import { Button } from './button'\nexport default function R() { const n = read(); const save = () => n + 1; return <main><Button onClick={save} /></main> }`,
+  })
+  expect(routeStatic).toBe(false)
+  expect(plan.diagnostics).toMatchObject([{ code: 'H011', file: 'route.tsx', why: expect.stringMatching(/onClick/), fix: expect.any(String) }])
+})
+
+test('Media waits to be seen, whatever else is on the page', async () => {
+  const { plan } = await project({ 'route.tsx': `import { Media } from 'weft/media'\nconst hero = { src: 'a.jpg' }\nexport default function R() { return <main><Media src={hero} alt="" /></main> }` })
+  expect(plan.loads).toMatchObject([{ tag: 'Media', when: 'visible' }])
+})

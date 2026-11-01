@@ -270,6 +270,7 @@ export function ColumnsPanel<T>({ id, open, trigger, items, shown, flip }: { id:
   )
 }
 
+/* @weft visible: what it does by itself is fetch and measure, and focus only moves once someone is using it */
 /**
  * A data table (06 §5; data.html:1095-1124): a semantic <table> with explicit ARIA roles, so they survive the phone
  * cards' display change. Sort, filter, Columns, resize, pin, selection with a bulk bar, details, inline edit and live

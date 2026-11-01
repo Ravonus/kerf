@@ -30,6 +30,7 @@ use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
 use oxc_semantic::{Scoping, SemanticBuilder};
 use oxc_span::{GetSpan, SPAN, SourceType, Span};
+use oxc_syntax::symbol::SymbolId;
 use serde::{Deserialize, Serialize};
 
 use crate::diag::line_col;
@@ -81,7 +82,7 @@ pub struct Site {
     pub tag: String,
     /// `<ns.Tag />`: `Tag`.
     pub member: Option<String>,
-    /// The tag gets a handler or `ref`, so this site needs the client whatever the tag is.
+    /// The tag gets a handler or `ref`, or a spread that could hold one, so this site needs the client whatever the tag is.
     pub handler: bool,
     pub attrs: Vec<Attr>,
     pub kids: Kids,
@@ -298,9 +299,63 @@ struct Collect<'s> {
     count: u32,
     /// Inside a handler's value: it runs on an event, which replays.
     handler: u32,
+    /// Functions entered, and the outermost one's parameters: a binding's props.
+    depth: u32,
+    params: Vec<SymbolId>,
+}
+
+fn pattern_symbols(p: &BindingPattern<'_>, out: &mut Vec<SymbolId>) {
+    match p {
+        BindingPattern::BindingIdentifier(id) => out.push(id.symbol_id()),
+        BindingPattern::ObjectPattern(o) => {
+            o.properties.iter().for_each(|x| pattern_symbols(&x.value, out));
+            if let Some(r) = &o.rest {
+                pattern_symbols(&r.argument, out);
+            }
+        }
+        BindingPattern::ArrayPattern(a) => {
+            a.elements.iter().flatten().for_each(|x| pattern_symbols(x, out));
+            if let Some(r) = &a.rest {
+                pattern_symbols(&r.argument, out);
+            }
+        }
+        BindingPattern::AssignmentPattern(a) => pattern_symbols(&a.left, out),
+    }
 }
 
 impl Collect<'_> {
+    fn entered(&mut self, params: &FormalParameters<'_>) {
+        if self.depth == 0 {
+            self.params.clear();
+            params.items.iter().for_each(|p| pattern_symbols(&p.pattern, &mut self.params));
+            if let Some(r) = &params.rest {
+                pattern_symbols(&r.rest.argument, &mut self.params);
+            }
+        }
+        self.depth += 1;
+    }
+
+    fn is_param(&self, id: &IdentifierReference<'_>) -> bool {
+        id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| self.params.contains(&s))
+    }
+
+    /// `onClick={onClick}`, `onClick={props.onClick}`: a handler only if the caller gives one, and a caller that does
+    /// has a handler at its call site, so it's that site that needs the client. The name has to say so: `onClick={go}`
+    /// could hide behind any prop.
+    fn passes_on(&self, a: &JSXAttribute<'_>) -> bool {
+        let Some(JSXAttributeValue::ExpressionContainer(c)) = &a.value else { return false };
+        match c.expression.as_expression().map(Expression::get_inner_expression) {
+            Some(Expression::Identifier(id)) => is_handler(&id.name) && self.is_param(id),
+            Some(Expression::StaticMemberExpression(m)) => is_handler(&m.property.name) && matches!(m.object.get_inner_expression(), Expression::Identifier(id) if self.is_param(id)),
+            _ => false,
+        }
+    }
+
+    /// `{...rest}` of a binding's own props: what's in it was written at a call site, which is where it counts.
+    fn spreads_props(&self, e: &Expression<'_>) -> bool {
+        matches!(e.get_inner_expression(), Expression::Identifier(id) if self.is_param(id))
+    }
+
     fn own(&mut self, reason: String) {
         let f = self.frames.last_mut().unwrap();
         f.own.get_or_insert(reason);
@@ -400,6 +455,18 @@ impl<'a> Visit<'a> for Collect<'_> {
 
     fn visit_ts_type(&mut self, _: &TSType<'a>) {}
 
+    fn visit_function(&mut self, it: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
+        self.entered(&it.params);
+        walk::walk_function(self, it, flags);
+        self.depth -= 1;
+    }
+
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        self.entered(&it.params);
+        walk::walk_arrow_function_expression(self, it);
+        self.depth -= 1;
+    }
+
     fn visit_jsx_element(&mut self, it: &JSXElement<'a>) {
         let open = &it.opening_element;
         if !component_tag(&open.name) {
@@ -407,7 +474,7 @@ impl<'a> Visit<'a> for Collect<'_> {
                 let JSXAttributeItem::Attribute(a) = a else { continue };
                 let name = attr_name(a);
                 let line = line_col(self.source, a.span.start).0;
-                if is_handler(&name) {
+                if is_handler(&name) && !self.passes_on(a) {
                     self.own(format!("`{name}` on an element (line {line})"));
                 }
                 if name.eq_ignore_ascii_case("autofocus") {
@@ -432,6 +499,7 @@ impl<'a> Visit<'a> for Collect<'_> {
         for item in &open.attributes {
             match item {
                 JSXAttributeItem::SpreadAttribute(s) => {
+                    handler |= !self.spreads_props(&s.argument);
                     let f = self.framed(|c| c.visit_expression(&s.argument));
                     attrs.push(Attr { name: "...".into(), kind: "spread".into(), uses: f.uses, own: f.own });
                 }
@@ -504,7 +572,7 @@ const NOT_CODE: &[&str] = &[".css", ".scss", ".sass", ".less", ".styl", ".pcss"]
 
 pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> HydrationFacts {
     let mut out = HydrationFacts::default();
-    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0, handler: 0 };
+    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0, handler: 0, depth: 0, params: Vec::new() };
     let mut gap = 0u32;
     for stmt in &program.body {
         let span = stmt.span();

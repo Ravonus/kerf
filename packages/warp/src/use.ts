@@ -2,6 +2,7 @@ import { onCleanup, onMount, untrack, watch } from 'weft'
 
 type Action<O> = { update(o: O): void; destroy(): void }
 
+/* @weft visible */
 /**
  * Attach a ui-core action to an element once it is in the document (never on the server), feed it `opts` whenever
  * they change, and destroy it with the component. `el` is read after mount, so a `ref` variable works. The action is

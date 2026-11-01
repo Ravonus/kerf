@@ -4,8 +4,9 @@
 // ships, which costs bytes, and nothing it calls static was seen doing anything a client would have to repeat.
 //
 //   client   a handler or `ref` on an element, a top-level side effect, `@weft client`, or a read of anything that is:
-//            weft's reactive API, a query, a binding that made a box
-//   island   a call site of a client component (or one given a handler) from code that isn't
+//            weft's reactive API, a query, a binding that made a box. A handler that's only the prop of that name passed
+//            on, and a spread of the props, don't count: they hold nothing unless a call site puts it there
+//   island   a call site of a client component (or one given a handler, or a spread of something else) from code that isn't
 //
 // A caller stays on the client when a site's prop is a function over its local names, or a spread: `$iN` can't hold it
 // and JSON can't carry it. That is how a route falls back to hydrating whole, as every route did before.
@@ -21,7 +22,7 @@
 
 import { readFileSync, statSync } from 'node:fs'
 
-const PURE = { weft: new Set(['For', 'mergeProps']), '@weft/start': new Set(['Link']) }
+const PURE = { weft: new Set(['For', 'mergeProps', 'untrack']), '@weft/start': new Set(['Link']) }
 const OPAQUE = /^(weft|@weft\/start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
 /** weft API that needs nothing from the page and starts nothing by itself. */
@@ -203,7 +204,8 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
           else if (i.source === 'weft' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
           else if (i.source === 'weft' && BOXES.has(i.imported)) {
             if (owner.value) halt(`\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`, `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`)
-          } else if (!QUIET[i.source]?.has(i.imported)) halt(`\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
+          } else if (i.source === 'weft/media' && i.imported === 'Media') start ??= `\`Media\` in ${at(owner)}` // a video's motion, a swap for a better copy
+          else if (!QUIET[i.source]?.has(i.imported)) halt(`\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
           continue
         }
         const file = i && owner.mod.resolved.get(i.source)
@@ -222,6 +224,11 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       look(owner, x.kids.uses)
       if (x.tag) look(owner, [x.tag])
     }
+    /** The island's own site and the ones hoisted with it: `$iN` runs them, and a tag isn't among `kids.uses`. */
+    const nested = (owner, x) => {
+      site(owner, x)
+      for (const i of x.kids.sites) site(owner, owner.sites.find(o => o.index === i))
+    }
     const visit = o => {
       if (seen.has(o)) return
       seen.add(o)
@@ -233,7 +240,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       look(o, o.uses)
       for (const x of o.sites) site(o, x)
     }
-    site(n, s)
+    nested(n, s)
     if (stop) return stop
     const away = [...seen].flatMap(o => o.globals).filter(g => !SAFE.has(g))
     if (start && away.length) return { why: `${start} can reach \`${away[0]}\`, past the island`, fix: `\`/* @weft visible */\` above the component, when that only matters once it's on screen` }
@@ -265,6 +272,11 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       }
     }
     if (sites.length) files.set(mod.file, { id: rel(mod.file), sites })
+  }
+  // A closure can't reach an island, so all of its caller runs in the browser, and nothing but the report says so.
+  for (const n of all) {
+    const w = client.get(n)
+    if (w?.includes('is a function over local names') && !n.mod.file.includes('/node_modules/')) diagnostics.push({ code: 'H011', file: rel(n.mod.file), line: n.line, why: `${n.name} has to hydrate whole: ${w}`, fix: `move what the function reads to module level, or the control and its function into a component of their own, which then becomes the island` })
   }
   const defaultOf = file => {
     const m = mods.get(file)
