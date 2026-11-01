@@ -217,7 +217,7 @@
 }
 [data-expression="vivid"] {
   --warp-x: 1;
-  --warp-icon-o: none; --warp-icon-q: none; --warp-icon-b: none; --warp-icon-v: inline; --warp-icon-weft: 2;
+  --warp-icon-o: none; --warp-icon-q: none; --warp-icon-b: none; --warp-icon-v: inline; --warp-icon-fine: inline; --warp-icon-weft: 2;
   --warp-ref-neutral-h: 85;  --warp-ref-neutral-c: 0.012;   /* warm paper / ink */
   --warp-ref-accent-k: 1.2;  --warp-ref-tone-k: 1.1;
   --warp-ref-depth: 0.35;

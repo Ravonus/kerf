@@ -14,10 +14,12 @@ import { auto, block, crescent, fromHand, hollow, litCells, master, open, solid 
 const path = (grid, attr) => { const d = cells(grid).ink; return d ? `<path ${attr} d="${d}"/>` : '' }
 const only = (g, ...want) => g.map(r => r.map(c => (want.includes(c) ? '#' : '.')))
 const stroke = (d, a) => (d ? `<path ${a} d="${d}"/>` : '')
-const pixels = (g, t = 'data-t="v" ') => path(only(g, '#'), `${t}data-p=""`) + path(only(g, 'w'), `${t}data-p="" data-w=""`)
+const pixels = (g, t = 'data-t="v" ') => path(only(g, '#'), `${t}data-p=""`) + path(only(g, 'w'), `${t}data-p="" data-w=""`) + path(only(g, '+'), `${t}data-p="" data-d=""`)
 const BADGE = { quiet: 'circ 7 7 6.5', balanced: 'pg 0.5,0.5 13.5,0.5 13.5,13.5 0.5,13.5' }
 /** Corner brackets sit on a badge's edge and vanish into it, so in quiet they stay ink, round a small disc. */
 const BRACKETS = new Set(['expand', 'scan'])
+/** Straight marks: the same pixels as their outline at 16, so the thrown shadow is all that makes them vivid. */
+const PLAIN = new Set(['align-center', 'align-left', 'align-right', 'divide', 'door', 'drag', 'equals', 'exclamation', 'expand', 'scan', 'shrink', 'tornado'])
 const count = g => g.flat().filter(Boolean).length
 
 /** A body that is all weft, like a play triangle, is still a body. */
@@ -50,7 +52,7 @@ export function forms(name, entry) {
   if (isOpen) {
     const mq = q.weft + q.body, mb = b.weft + b.body, qb = outline(BADGE.quiet, 'quiet').body, bb = outline(BADGE.balanced, 'balanced').body
     return {
-      hollow: { line: stroke(mq, 'data-t="q" data-qs="" data-w=""') + stroke(mb, 'data-t="b" data-bw="" data-w=""'), pixels: pixels(hollow(g, true)) },
+      hollow: { line: stroke(mq, 'data-t="q" data-qs="" data-w=""') + stroke(mb, 'data-t="b" data-bw="" data-w=""'), pixels: pixels(hollow(g, true, PLAIN.has(name) ? '#' : '+')) },
       solid: {
         line: (BRACKETS.has(name) ? stroke(outline('circ 7 7 3.5', 'quiet').body, 'data-t="q" data-s=""') + stroke(mq, 'data-t="q" data-qs="" data-w=""') : stroke(qb, 'data-t="q" data-s=""') + stroke(mq, 'data-t="q" data-k="" data-qs=""'))
           + stroke(bb, 'data-t="b" data-so="" transform="translate(1 1)"') + stroke(bb, 'data-t="b" data-s=""') + stroke(mb, 'data-t="b" data-k=""') + path(litCells(0), 'data-t="b" data-c=""'),
@@ -68,8 +70,8 @@ export function forms(name, entry) {
   return {
     hollow: {
       line: stroke(q.body, 'data-t="q" data-qs=""') + stroke(q.weft, 'data-t="q" data-qs="" data-w=""')
-        + stroke(b.body, 'data-t="b" data-bs=""') + stroke(b.weft, `data-t="b" ${split.length > 3 ? 'data-bs' : 'data-bw'}="" data-w=""`) + path(crescent(fine), 'data-t="b" data-p=""'),
-      pixels: pixels(hollow(g)),
+        + stroke(b.body, 'data-t="b" data-bs=""') + stroke(b.weft, `data-t="b" ${split.length > 3 ? 'data-bs' : 'data-bw'}="" data-w=""`) + path(crescent(fine), 'data-t="b" data-p="" data-d=""'),
+      pixels: pixels(hollow(g, false, PLAIN.has(name) ? '#' : '+')),
     },
     solid: {
       line: fill('quiet') + stroke(q.body, 'data-t="q" data-s=""') + stroke(marks('quiet', false), 'data-t="q" data-qs="" data-w=""') + stroke(marks('quiet', true), 'data-t="q" data-k="" data-qs=""')

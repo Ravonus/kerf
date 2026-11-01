@@ -5,4 +5,9 @@
   :where(svg[data-icon] [data-t="q"]) { display: var(--warp-icon-q, none); }
   :where(svg[data-icon] [data-t="b"]) { display: var(--warp-icon-b, inline); }
   :where(svg[data-icon] [data-t="v"]) { display: var(--warp-icon-v, none); }
+  /* Pixels need whole cells: under 16 px they lose rows, so the pixel tier shows the balanced line there (--warp-icon-fine). */
+  @container (max-width: 15.5px) {
+    :where(svg[data-icon] [data-t="b"]) { display: var(--warp-icon-fine, var(--warp-icon-b, inline)); }
+    :where(svg[data-icon] [data-t="v"]) { display: none; }
+  }
 }

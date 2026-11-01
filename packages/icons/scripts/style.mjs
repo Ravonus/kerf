@@ -78,12 +78,12 @@ const sparse = g => g.flat().filter(c => c === '#' || c === 'w').length < 52
 const drop = (g, x, y) => { const on = (a, b) => g[b]?.[a] === 'w' || g[b]?.[a] === '#'; return !on(x, y) && (on(x - 1, y - 1) || on(x - 2, y - 2)) && checker(x, y) }
 
 /** Hollow in pixels: the edge and the mark, the shadow side shaded. An open mark throws a dithered shadow. */
-export const hollow = (g, openMark) => each(g, (c, x, y) => {
+export const hollow = (g, openMark, dither = '#') => each(g, (c, x, y) => {
   if (c === '#' || c === 'w') return c
-  if (openMark) return sparse(g) && drop(g, x, y) ? '#' : '.'
+  if (openMark) return sparse(g) && drop(g, x, y) ? dither : '.'
   if (!INSIDE.includes(c) || halo(g, x, y)) return '.'
   const t = tone(g, x, y, c)
-  return t > .86 ? '#' : t > .6 && checker(x, y) ? '#' : '.'
+  return t > .86 ? '#' : t > .6 && checker(x, y) ? dither : '.'
 })
 
 const walled = (g, x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([i, j]) => { for (let k = 1; k < 16; k++) { const c = g[y + j * k]?.[x + i * k]; if (c === undefined) return false; if (c === '#') return true } return false })

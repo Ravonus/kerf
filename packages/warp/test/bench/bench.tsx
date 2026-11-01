@@ -87,7 +87,7 @@ function App() {
       </Tile>
       <Tile name="Menu">
         <Row gap="tight">
-          <Menu label="Actions" items={[{ group: 'Project' }, { label: 'Rename', icon: 'search', shortcut: '⌘R' }, { label: 'Duplicate', shortcut: '⌘D' }, { label: 'Archived', disabled: true }, { separator: true }, { label: 'Delete', tone: 'critical', icon: 'x', shortcut: '⌫' }]} />
+          <Menu label="Actions" items={[{ group: 'Project' }, { label: 'Rename', icon: 'pencil', shortcut: '⌘R' }, { label: 'Duplicate', shortcut: '⌘D' }, { label: 'Archived', disabled: true }, { separator: true }, { label: 'Delete', tone: 'critical', icon: 'x', shortcut: '⌫' }]} />
         </Row>
       </Tile>
       <Tile name="Ticker">
