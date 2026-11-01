@@ -27,8 +27,8 @@ const fixtures = {
   'same page, no surface': join(pkg, 'bench/fixtures/surface-none.tsx'),
 }
 const hydratable = new Set(['v3 shop app (hydrate)'])
-// Runtime: 10 KB is the gate, 6 KB the target (PLAN §3.7).
-const budgets = { 'hello world': 3072, 'runtime (every export)': 10240, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
+// Runtime: 10.5 KB is the gate, 6 KB the target (PLAN §3.7). Raised from 10 KB for the speed paths: docs/research/39-speed-lab.md.
+const budgets = { 'hello world': 3072, 'runtime (every export)': 10752, 'v3 shop app': 10240, 'v3 shop app (defineState)': 10240, 'v3 shop app (hydrate)': 10240 }
 
 const rows = {}
 const only = process.env.ONLY?.split(',')
