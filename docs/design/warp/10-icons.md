@@ -59,10 +59,13 @@ light from the top left.
   one cell at a time, circles use the midpoint rule, and shade stays clear of detail. A hand bitmap overrides that wherever
   the landing reads worse.
 
-Variants come from the same grid: hollow keeps the outer edge, solid fills the inside, and dither shades the inside in a
-checker. Checker won the comparison in `dither-sheet.html`: it holds an even mid-tone at 16 and 24 px, where ordered dither
-goes blotchy and crosshatch reads as noise against the shape. All three are plain ink, so forced colours keep the pattern. An
-icon with no inside has nothing to dither.
+An icon has two forms, hollow (the default) and solid, and each is its own drawing in every tier. Solid is never hollow with a
+fill switched on. Dither is depth, not a form: checker cells on the shadow side of a form, walked along the light from the top
+left, in clear, checker and solid steps snapped to cells. Checker holds an even mid-tone at 16 and 24 px. Quiet is thin and
+unshaded. Balanced is heavier, with a shaded crescent in hollow and, in solid, a broken lit side, a cut highlight and an
+offset shade. Vivid is the pixel set. A mark with little inside to fill, like an arrow, has a notched badge as its solid with
+the mark cut out, and throws a dithered shadow in vivid hollow. `scripts/distinct.mjs` scores every icon on rendered pixels at
+16 and 24 px, and a test holds it. Forced colours drop only the offset shade: everything else is ink.
 
 ## 6. Optical sizes
 

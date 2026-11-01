@@ -1,10 +1,9 @@
 // Do the forms and tiers look different? Renders each icon in Chromium at 16 and 24 px and compares what actually paints.
 // The score is the share of inked pixels whose brightness moves by more than a quarter of the range. Markup can differ and
 // still look the same, so nothing but the rendered pixels counts.
-//   node scripts/distinct.mjs study    the 24 of the style study, in the new forms
-//   node scripts/distinct.mjs current  all 651, as they ship today
+//   node scripts/distinct.mjs          every icon, with the stylesheet it ships with
 import { createRequire } from 'node:module'
-import { realpathSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 export const THRESHOLD = { form: .3, tier: .15 }
@@ -27,7 +26,7 @@ export async function measure(items, css) {
     for (const size of SIZES) {
       const gap = size + 4
       await page.setViewportSize({ width: gap * keys.length, height: gap * batch.length })
-      await page.setContent(`<!doctype html><style>:root{--knock:#fff}body{margin:0;background:#fff;color:#000}${css}svg{position:absolute;width:${size}px;height:${size}px}</style>` + batch.map((b, y) => keys.map((k, x) => `<svg data-icon viewBox="0 0 24 24" style="left:${x * gap}px;top:${y * gap}px">${b.cells[k]}</svg>`).join('')).join(''))
+      await page.setContent(`<!doctype html><style>body{margin:0;background:#fff;color:#000}${css}svg{position:absolute;width:${size}px;height:${size}px}</style>` + batch.map((b, y) => keys.map((k, x) => `<svg data-icon viewBox="0 0 24 24" style="left:${x * gap}px;top:${y * gap}px">${b.cells[k]}</svg>`).join('')).join(''))
       const png = await page.screenshot()
       res[size] = await page.evaluate(async ({ b64, n, cols, size, gap }) => {
         const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode()
@@ -65,27 +64,23 @@ export function summary(results) {
   return lines.join('\n')
 }
 
+/** Every icon in every form and tier, cut down the way a build does, with the shipped stylesheet. */
+export async function shipped() {
+  const { load } = await import('./build.mjs'), { forms } = await import('./forms.mjs')
+  const css = readFileSync(new URL('../src/icons.css', import.meta.url), 'utf8').replace(/@layer[^{]*\{/, '').replace(/\}\s*$/, '')
+  const tier = (html, keep) => html.replace(/<path data-t="([oqbv])"[^>]*\/>/g, (m, t) => (m.includes(`data-t="${keep}"`) ? m : ''))
+  const items = Object.entries(await load()).map(([name, entry]) => {
+    const f = forms(name, entry), cell = (t, v) => tier(f[v].line + f[v].pixels, t[0])
+    return { name, cells: Object.fromEntries(['quiet', 'balanced', 'vivid'].flatMap(t => ['hollow', 'solid'].map(v => [`${t} ${v}`, cell(t, v)]))) }
+  })
+  return { items, css }
+}
+
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const which = process.argv[2] ?? 'study'
-  let items, css
-  if (which === 'current') {
-    const { fragments, load } = await import('./build.mjs')
-    const { readFileSync } = await import('node:fs')
-    const icons = await load()
-    css = readFileSync(new URL('../src/icons.css', import.meta.url), 'utf8').replace(/@layer[^{]*\{/, '').replace(/\}\s*$/, '')
-    const tier = (html, keep) => html.replace(/<path data-t="([oqbv])"[^>]*\/>/g, (m, t) => (keep.includes(t) ? m : ''))
-    items = Object.entries(icons).map(([name, e]) => {
-      const f = fragments(name, e), H = f.line + f.hollow, S = f.solid
-      return { name, cells: { 'quiet hollow': tier(H, 'oq'), 'quiet solid': tier(S, 'oq'), 'balanced hollow': tier(H, 'ob'), 'balanced solid': tier(S, 'ob'), 'vivid hollow': tier(H, 'v'), 'vivid solid': tier(S, 'v') } }
-    })
-  } else {
-    const { CSS, STUDY, forms } = await import('./study.mjs')
-    css = CSS
-    items = STUDY.map(name => { const f = forms(name); return { name, cells: Object.fromEntries(['quiet', 'balanced', 'vivid'].flatMap(t => ['hollow', 'solid'].map(v => [`${t} ${v}`, f[t][v]]))) } })
-  }
+  const { items, css } = await shipped()
   const results = await measure(items, css)
   console.log(summary(results))
-  const bad = results.filter(r => !r.ok).slice(0, 24)
-  for (const r of bad) console.log(r.name.padEnd(16), r.pairs.filter(p => !p.ok).map(p => `${p.A}/${p.B} ${p.score.toFixed(2)}`).join('; ').slice(0, 150))
-  if (which === 'study' && bad.length) process.exitCode = 1
+  const bad = results.filter(r => !r.ok)
+  for (const r of bad.slice(0, 60)) console.log(r.name.padEnd(16), r.pairs.filter(p => !p.ok).map(p => `${p.A}/${p.B} ${p.score.toFixed(2)}`).join('; ').slice(0, 150))
+  if (bad.length) process.exitCode = 1
 }

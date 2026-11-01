@@ -1,6 +1,7 @@
-// Style study: the highlight cut into each solid outline, upper left, in the drawing language. Hand placed per silhouette.
+// The highlight cut into each solid outline, upper left, in the drawing language. Hand placed per silhouette.
 /** Parts that fill too, in solid: a roof or a fin the body spec leaves as a mark. */
 export const FILL = {
+  flag: 'pg 2,1.5 12,1.5 10,5 12,8.5 2,8.5',
   home: 'sg 0.5,7 7,1 13.5,7',
   rocket: 'pg 4,6.5 1.5,9.5 1.5,11.5 4,10; pg 10,6.5 12.5,9.5 12.5,11.5 10,10',
 }

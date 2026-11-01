@@ -1,7 +1,8 @@
-// Style study: dithering is the depth. Every inside cell gets a depth from how far it sits between the lit edge and the
+// Dithering is the depth. Every inside cell gets a depth from how far it sits between the lit edge and the
 // shadow edge of that form, so tone follows the object instead of filling it. Light is top left. The ramp snaps to cells:
 // clear, checker, solid. Hand clusters override it: ^ stays clear, % stays solid.
-import { enclosed, rasterize } from './raster.mjs'
+import { pixel } from './draw.mjs'
+import { enclosed, interior, rasterize } from './raster.mjs'
 
 const SIZE = 16
 export function master(text) {
@@ -9,6 +10,32 @@ export function master(text) {
   const g = rows.map(r => r.padEnd(SIZE, '.').slice(0, SIZE).split(''))
   while (g.length < SIZE) g.push(Array(SIZE).fill('.'))
   return g
+}
+
+/** A hand bitmap as a master: its biggest connected ink is the edge, ink walled inside it is the mark, its shade is a cluster. */
+export function fromHand(art, name, spec) {
+  const src = pixel(art, name).grid, seen = src.map(r => r.map(() => 0))
+  let id = 0, best = 0, bestId = 0
+  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
+    if (src[y][x] !== '#' || seen[y][x]) continue
+    id++; let n = 0; const stack = [[x, y]]
+    while (stack.length) {
+      const [a, b] = stack.pop()
+      if (src[b]?.[a] !== '#' || seen[b][a]) continue
+      seen[b][a] = id; n++
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) stack.push([a + i, b + j])
+    }
+    if (n > best) { best = n; bestId = id }
+  }
+  const edge = src.map((r, y) => r.map((c, x) => (seen[y][x] === bestId ? '#' : '.')))
+  const inner = interior(edge)
+  const hasBody = inner.flat().filter(Boolean).length >= 6
+  return src.map((r, y) => r.map((c, x) => {
+    if (seen[y][x] === bestId) return hasBody ? '#' : 'w'
+    if (c === '#') return 'w'
+    if (!inner[y][x]) return '.'
+    return c === '+' ? '%' : ':'
+  }))
 }
 
 /** The same legend from an outline spec, for the icons with no hand master. */
@@ -45,11 +72,11 @@ const tone = (g, x, y, c) => (c === '^' ? 0 : c === '%' ? 1 : depth(g, x, y))
 const halo = (g, x, y) => near(g, x, y, 'w')
 
 /** No inside to shade: an arrow, a check. */
-export const open = g => g.flat().filter(c => INSIDE.includes(c)).length < 6
+export const open = g => { const f = g.flat(), inner = f.filter(c => INSIDE.includes(c)).length; return inner < 6 || inner < 1.25 * f.filter(c => c === '#' || c === 'w').length }
 const drop = (g, x, y) => { const on = (a, b) => g[b]?.[a] === 'w' || g[b]?.[a] === '#'; return !on(x, y) && (on(x - 1, y - 1) || on(x - 2, y - 2)) && checker(x, y) }
 
 /** Hollow in pixels: the edge and the mark, the shadow side shaded. An open mark throws a dithered shadow. */
-export const vivid = (g, openMark) => each(g, (c, x, y) => {
+export const hollow = (g, openMark) => each(g, (c, x, y) => {
   if (c === '#' || c === 'w') return c
   if (openMark) return drop(g, x, y) ? '#' : '.'
   if (!INSIDE.includes(c) || halo(g, x, y)) return '.'
@@ -78,8 +105,14 @@ export const block = g => each(g, (c, x, y) => {
   return '#'
 })
 
-/** The balanced hollow's depth: checker cells on the shadow side only. */
-export const crescent = g => each(g, (c, x, y) => (INSIDE.includes(c) && !halo(g, x, y) && tone(g, x, y, c) > .7 && checker(x, y) ? '#' : '.'))
+/** The balanced hollow's depth: checker on the shadow side, in one body. Loose cells read as dirt at 16 px, so a cell has to
+ *  join others on the diagonal, and a crescent too small to read as shade is left out. */
+export function crescent(g) {
+  const raw = each(g, (c, x, y) => (INSIDE.includes(c) && !halo(g, x, y) && tone(g, x, y, c) > .62 && checker(x, y) ? '#' : '.'))
+  const ties = (x, y) => [[1, 1], [-1, 1], [1, -1], [-1, -1]].filter(([i, j]) => raw[y + j]?.[x + i] === '#').length
+  const kept = each(raw, (c, x, y) => (c === '#' && ties(x, y) >= 1 ? '#' : '.'))
+  return kept.flat().filter(c => c === '#').length >= 6 ? kept : each(raw, () => '.')
+}
 
 /** Cells to knock out of a balanced solid, breaking up the lit side. A badge takes a fixed corner. */
 export const litCells = g => (g === 0

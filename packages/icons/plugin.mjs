@@ -11,7 +11,7 @@ function options(input) {
   return { ...(input.tier && { tier: input.tier }), ...(input.source && { source: input.source }) }
 }
 
-const agents = "Import icons from `@weft/icons`: `CheckIcon`, `CheckIconHollow`, `CheckIconSolid`, `CheckIconDither`; `<Icons.Check />` and warp's `<Icon name=\"check\" />` build to the same bytes. Tiers are a prop, `tier`, or the page's `data-expression`. Decorative by default; `label` gives one a name. An unknown literal name is I001 at the build and in `weft check`. A name only known at runtime is legal and loads the pack lazily (I002 reports it), or single files with `icons({ source })` and `weft icons publish <dir>`. `trash`, `bell`, `check`, `refresh` and `copy` animate with `action`. `weft docs icons` has the rest."
+const agents = "Import icons from `@weft/icons`: `CheckIcon` is hollow, the default, `CheckIconSolid` the other form (`<Icon name=\"check\" solid />`); `<Icons.Check />` and warp's `<Icon name=\"check\" />` build to the same bytes. Tiers are a prop, `tier`, or the page's `data-expression`. Decorative by default; `label` gives one a name. An unknown literal name is I001 at the build and in `weft check`. A name only known at runtime is legal and loads the pack lazily (I002 reports it), or single files with `icons({ source })` and `weft icons publish <dir>`. `trash`, `bell`, `check`, `refresh` and `copy` animate with `action`. `weft docs icons` has the rest."
 
 export const icons = definePlugin({
   name: '@weft/icons',
