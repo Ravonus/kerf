@@ -62,6 +62,7 @@ export async function agentsMd(root) {
     `React hooks don't exist. Run \`weft check --json\` after every change; each diagnostic has a code, a location, why, and a fix.`,
     '',
     'Start with `.weft/map.md` (`weft map` writes it): what this app has, and what to call for each part.',
+    ...(existsSync(join(root, 'src', 'theme.css')) ? ['', '`src/theme.css` is this app\'s CSS; `weft docs theme` is how to change the look.'] : []),
     '',
     '## Rules',
     '',

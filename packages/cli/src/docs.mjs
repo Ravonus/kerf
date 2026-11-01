@@ -21,6 +21,7 @@ export const topics = {
   start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A004, C001–C002, F001–F003, R001–R011',
   rust: 'Rust bodies: native() addons with a WASM fallback, remote() sidecars, weft add rust, impl, the weft crate, build.rs, Ctx, touch, weft dev reload, deployment; R101–R109',
   plugins: 'Build a plugin: slots, server extensions, check hooks, docs, `weft add`, conformance. Walks through how @weft/pay is built',
+  theme: 'Change the look: warp() options, three worked looks, button tone channels, D010',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',

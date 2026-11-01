@@ -4,8 +4,11 @@ import type { PluginInstance } from 'weft/plugin'
 export const dialScript: string
 
 export interface WarpOptions {
-  /** The brand accent: `{ accent: '#rrggbb' }`, or a hue and chroma. Checked against every dial stop (D010). */
-  seed?: { accent: string } | { hue: number; chroma: number }
+  /**
+   * The brand's hue family: `{ accent: '#rrggbb' }`, or a hue and chroma. Each theme solves its own lightness, and the build
+   * prints where it landed. `neutral` tints pages, surfaces and text the same way. Checked at the stops `dials` leave (D010).
+   */
+  seed?: ({ accent: string } | { hue: number; chroma: number } | {}) & { neutral?: string | { hue: number; chroma: number } }
   /** `'classic'` makes classic fields the default. */
   fields?: 'floating' | 'classic'
   /** The app's default dials. A `data-*` on `<html>` or any scope still wins. */
@@ -19,7 +22,7 @@ export interface WarpOptions {
   radius?: 'sharp' | 'soft' | 'round'
   /** A family name, or a full CSS font stack. */
   fonts?: { body?: string; display?: string; mono?: string }
-  /** Any spec token, like `{ '--warp-color-page': '#fafafa' }`. Checked at every dial stop (D010). */
+  /** Any spec token, like `{ '--warp-color-page': '#fafafa' }`. Checked at the stops `dials` leave (D010). */
   tokens?: Record<`--warp-${string}`, string>
 }
 

@@ -27,6 +27,25 @@ const app = async pages => {
 }
 const IMPORT = `import { Heading } from '@weft/warp'\n`
 
+describe('what isn\'t off-system', () => {
+  const sheet = (css, path = 'src/app.css') => app({ [path]: css, 'src/Page.tsx': 'export const P = () => <p>x</p>' })
+  test('a url, a zero radius, and sizes that follow the text or the container pass', async () => {
+    const { result } = await sheet(`.a { background: url(/img/black.png); border-radius: 0; margin-block: 1lh; padding: clamp(1rem, 2vw, 2rem); gap: 2ch; border-radius: 50%; }`)
+    expect(codes(result)).toEqual([])
+  })
+  test('px off the scale and a real colour still fail', async () => {
+    const { result } = await sheet(`.a { background: black; padding: 13px; }`)
+    expect(codes(result)).toEqual(['D001', 'D002'])
+    expect(result.diagnostics.find(d => d.code === 'D001').why).toContain('warp({ tokens })')
+  })
+  test('restyling a warp part, and the theme file, warn rather than stop', async () => {
+    const a = await sheet(`[data-scope="button"] { background: black; }`)
+    expect(a.result.diagnostics.find(d => d.code === 'D001').severity).toBe('warning')
+    const b = await sheet(`.a { background: black; }`, 'src/theme.css')
+    expect(b.result.diagnostics.find(d => d.code === 'D001').severity).toBe('warning')
+  })
+})
+
 describe('role drift', () => {
   test('D006 one level at two roles across files; the common role wins and the fix matches it', async () => {
     const { root, result } = await app({

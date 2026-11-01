@@ -117,3 +117,32 @@ test('dtcg: the seed reaches the tokens', () => {
   const css = run({ seed: { hue: 20, chroma: 0.12 } }).tokens.css
   expect(dtcg(css)['warp.light.quiet.tokens.json'].color['accent-solid'].$value.hex).not.toBe(dtcg()['warp.light.quiet.tokens.json'].color['accent-solid'].$value.hex)
 })
+
+test('D010 checks only the stops the dials leave, and still fails on those', () => {
+  const page = { '--warp-color-page': '#f6f0e4' }
+  expect(code(() => run({ tokens: page }))).toBe('D010')
+  expect(code(() => run({ dials: { theme: 'light' }, tokens: page }))).toBeUndefined()
+  expect(code(() => run({ dials: { theme: 'dark' }, tokens: page }))).toBe('D010')
+}, 30_000)
+
+test('a D010 says what to do, and the neutral seed lands on every scope', () => {
+  let error
+  try { run({ tokens: { '--warp-color-page': '#fafafa' } }) } catch (e) { error = e }
+  expect(error.help).toContain('weft docs theme')
+  const css = run({ seed: { neutral: { hue: 60, chroma: 0.03 } } }).tokens.css
+  expect(css).toMatch(/\[data-warp\]\{--warp-ref-neutral-h:60;--warp-ref-neutral-c:0\.03/)
+  expect(run({ seed: { accent: '#0a7d4f', neutral: '#f5efe0' } }).tokens.css).toContain('--warp-ref-neutral-h')
+  expect(code(() => warp({ seed: { neutral: 'beige' } }))).toBeDefined()
+}, 30_000)
+
+test('a brand colour says where it landed', () => {
+  expect(run({ seed: { accent: '#c8102e' } }).notes[0]).toMatch(/accent #c8102e landed as #[0-9a-f]{6} light, #[0-9a-f]{6} dark/)
+  expect(run({ seed: { hue: 180, chroma: 0.1 } }).notes).toBeUndefined()
+}, 30_000)
+
+test('every config in `weft docs theme` passes D010', () => {
+  const doc = readFileSync(new URL('../../cli/docs/theme.md', import.meta.url), 'utf8')
+  const looks = [...doc.matchAll(/```ts\nwarp\((\{[\s\S]*?\})\)\n```/g)].map(m => new Function(`return ${m[1]}`)())
+  expect(looks).toHaveLength(3)
+  for (const look of looks) expect(code(() => run(look)), JSON.stringify(look)).toBeUndefined()
+}, 60_000)

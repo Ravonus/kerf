@@ -1,7 +1,7 @@
 // warp() for weft.config.ts: warp's config, tokens, catalog and AGENTS section (PLAN §7c, research 13 §2.13).
 // Components stay ordinary imports; this only contributes data.
 //
-// - seed: the brand accent. The spec tokens (ui-core/styles/warp.css) derive every colour from
+// - seed: the brand's hue family, and optionally the neutral's. The spec tokens (ui-core/styles/warp.css) derive every colour from
 //   --warp-seed-accent-h/-c, so a seed is those two values. It is checked with the spec's own contrast checker
 //   (ui-core/scripts/contrast-check.mjs: every sys pair, both themes, every dial stop). A hue that fails is fitted (see
 //   fitted()), so every hue passes; what can still fail is a token override, which is D010.
@@ -28,15 +28,21 @@ const SCOPES = ':root,[data-expression],[data-density],[data-form],[data-pointer
 const safe = value => typeof value === 'string' && value !== '' && !/[;{}<]/.test(value)
 const bad = (path, message) => Object.assign(new Error(message), { path })
 
-function normalizeSeed(seed) {
-  if (seed && typeof seed.accent === 'string') {
-    if (!/^#[0-9a-f]{6}$/i.test(seed.accent)) throw new Error('accent must be #rrggbb')
-    const { C, H } = fromHex(seed.accent)
+function hueOf(value, name) {
+  if (typeof value === 'string') {
+    if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${name} must be #rrggbb`)
+    const { C, H } = fromHex(value)
     return { hue: Math.round(H * 10) / 10, chroma: Math.round(C * 1000) / 1000 }
   }
-  const { hue, chroma } = seed ?? {}
-  if (!(hue >= 0 && hue < 360) || !(chroma >= 0 && chroma <= 0.37)) throw new Error('seed is { hue: 0–360, chroma: 0–0.37 } or { accent: "#rrggbb" }') // weft reports it as P115
+  const { hue, chroma } = value ?? {}
+  if (!(hue >= 0 && hue < 360) || !(chroma >= 0 && chroma <= 0.37)) throw new Error(`${name === 'accent' ? 'seed' : name} is { hue: 0–360, chroma: 0–0.37 } or ${name === 'accent' ? '{ accent: "#rrggbb" }' : '"#rrggbb"'}`) // weft reports it as P115
   return { hue, chroma }
+}
+
+function normalizeSeed(seed) {
+  const { accent, neutral, ...rest } = seed ?? {}
+  const out = hueOf(accent ?? (Object.keys(rest).length || neutral === undefined ? rest : DEFAULT), 'accent')
+  return neutral === undefined ? out : { ...out, neutral: hueOf(neutral, 'neutral') }
 }
 
 function options(input) {
@@ -46,6 +52,7 @@ function options(input) {
   if (input.seed !== undefined) {
     try {
       out.seed = normalizeSeed(input.seed)
+      if (input.seed?.accent) out.asked = input.seed.accent.toLowerCase()
     } catch (error) {
       throw Object.assign(error, { path: 'seed' })
     }
@@ -77,8 +84,10 @@ function options(input) {
 const fontStack = (value, fallback) => (value.includes(',') ? value : `${JSON.stringify(value)}, ${fallback}`)
 
 /** The radius, fonts and tokens as declarations, or '' with none set. */
-function overrides({ radius, fonts = {}, tokens = {} }) {
+function overrides({ seed, radius, fonts = {}, tokens = {} }) {
   const out = {}
+  // The neutral's refs are redeclared at each expression stop, so it lands on every scope, as a token does.
+  if (seed?.neutral) Object.assign(out, { '--warp-ref-neutral-h': seed.neutral.hue, '--warp-ref-neutral-c': seed.neutral.chroma })
   if (radius) [out['--warp-radius-control'], out['--warp-radius-surface'], out['--warp-radius-mark']] = RADII[radius].map(px => `${px}px`)
   for (const [font, value] of Object.entries(fonts)) out[`--warp-font-${FONTS[font][0]}`] = fontStack(value, FONTS[font][1])
   Object.assign(out, tokens)
@@ -90,8 +99,8 @@ const overrideCss = declarations => (declarations ? `@layer warp.base{${SCOPES}{
 
 const seedCss = s => `@layer warp.tokens{:root{--warp-seed-accent-h:${s.hue};--warp-seed-accent-c:${s.chroma}}}\n`
 
-/** Run the spec checker on warp.css with the seed and any token overrides applied; D010 with every failing pair. */
-export function checkSeed(seed, declarations = '') {
+/** The spec checker's report on warp.css with the seed and any token overrides applied. */
+function contrast(seed, declarations) {
   const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
   try {
     const css = join(dir, 'warp.css')
@@ -102,13 +111,29 @@ export function checkSeed(seed, declarations = '') {
     } catch (e) {
       out = e.stdout // exit 1 on failures; the JSON is still on stdout
     }
-    const { results } = JSON.parse(out)
-    const failures = results.filter(r => !r.pass).map(r => `${r.combo}: ${r.fg} on ${r.bg} is ${r.ratio.toFixed(2)}:1, needs ${r.min}:1`)
-    if (failures.length) throw Object.assign(new Error(`warp colours fail contrast (${failures.length} pairs): ${failures.slice(0, 5).join('; ')}${failures.length > 5 ? '; …' : ''}`), { code: 'D010', failures })
-    return results.length
+    return JSON.parse(out)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+}
+
+/** The theme and expression stops an app's `dials` can render by default. Markup that sets another stop is the app's to check. */
+const renders = (dials = {}) => r => (!dials.theme || r.theme === dials.theme) && (!dials.expression || r.expression === dials.expression)
+
+/** D010 with every failing pair, at the stops `dials` leave. Returns how many pairs passed. */
+export function checkSeed(seed, declarations = '', dials) {
+  const results = contrast(seed, declarations).results.filter(renders(dials))
+  const failed = results.filter(r => !r.pass)
+  const failures = failed.map(r => `${r.combo}: ${r.fg} on ${r.bg} is ${r.ratio.toFixed(2)}:1, needs ${r.min}:1`)
+  if (failures.length) throw Object.assign(new Error(`warp colours fail contrast (${failures.length} pairs): ${failures.slice(0, 5).join('; ')}${failures.length > 5 ? '; …' : ''}`), { code: 'D010', failures, help: 'Change the seed or token named in each pair, or limit the stops with `dials`. `weft docs theme` has worked looks.' })
+  return results.length
+}
+
+/** Where a seed's accent lands: a seed sets the hue family, and each theme solves its own lightness for contrast. */
+function landed(seed, declarations, asked) {
+  const { resolved } = contrast(seed, declarations)
+  const light = resolved['light/balanced']?.['accent-solid'], dark = resolved['dark/balanced']?.['accent-solid']
+  return light === asked && dark === asked ? undefined : `warp: accent ${asked} landed as ${light} light, ${dark} dark. A seed sets the hue family; pin an exact brand with \`--warp-color-accent-solid\` (\`weft docs theme\`).`
 }
 
 /** The resolved tokens as DTCG 2025.10: one token file per theme × expression and a resolver over them. `css`: the app's seed and overrides. */
@@ -176,16 +201,16 @@ function fitted(seed) {
 }
 
 /** `declarations` plus whatever a custom seed needs to pass, or D010. A token set in the config beats a fitted one. */
-function fitSeed(seed, declarations) {
+function fitSeed(seed, declarations, dials) {
   try {
-    checkSeed(seed, declarations)
+    checkSeed(seed, declarations, dials)
     return declarations
   } catch (error) {
     if (error.code !== 'D010') throw error
   }
   const fit = Object.entries(fitted(seed)).filter(([token]) => !declarations.includes(`${token}:`)).map(([k, v]) => `${k}:${v}`)
   const merged = [...fit, ...(declarations ? [declarations] : [])].join(';')
-  checkSeed(seed, merged)
+  checkSeed(seed, merged, dials)
   return merged
 }
 
@@ -324,13 +349,15 @@ export const warp = definePlugin({
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
     let declarations = overrides(o)
-    if (custom) declarations = fitSeed(seed, declarations) // throws { code: 'D010' }
-    else if (declarations) checkSeed(seed, declarations)
+    if (custom) declarations = fitSeed(seed, declarations, o.dials) // throws { code: 'D010' }
+    else if (declarations) checkSeed(seed, declarations, o.dials)
+    const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {}).map(([dial, value]) => dialCss(dial, value)).join('')
     const css = (custom ? seedCss(seed) : '') + (o.fields === 'classic' ? classicCss() : '') + dials + overrideCss(declarations)
     return {
-      tokens: { namespace: 'warp', ...(css && { css }), values: { seed, fields: o.fields ?? 'floating', ...(o.dials && { dials: o.dials }) } },
+      tokens: { namespace: 'warp', ...(css && { css }), values: { seed: { hue: seed.hue, chroma: seed.chroma }, fields: o.fields ?? 'floating', ...(o.dials && { dials: o.dials }) } },
       agents: { title: 'warp (UI kit)', text: agents },
+      ...(note && { notes: [note] }),
       catalog,
       map: [{ want: 'UI components', call: 'Import from `@weft/warp`; `weft plugins` has the catalog', have: `${catalog.length} components` }],
       diagnostics: [

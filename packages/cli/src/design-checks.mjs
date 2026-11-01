@@ -29,6 +29,8 @@ const COLOR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb)\(|(?<!
 const COLOR_PROPS = /^(color|background|background-color|border-color|border(-(top|right|bottom|left|block|inline)(-(start|end))?)?|outline-color|fill|stroke|box-shadow|caret-color|accent-color)$/
 const SPACE_PROPS = /^(gap|row-gap|column-gap|padding|margin)(-(top|right|bottom|left|block|inline)(-(start|end))?)?$/
 const TYPE_PROPS = /^(font-size|font-weight|line-height|letter-spacing)$/
+/** Sizes that scale with the text, the container or the viewport: nothing on a fixed scale is what they mean. */
+const FLUID = /\b(?:clamp|calc|min|max)\(|\d(?:em|ex|lh|rlh|ch|cap|ic|vw|vh|vi|vb|vmin|vmax|[dsl]v[wh]|cq[iwhb]|cqmin|cqmax)\b|%/
 
 const kebab = s => s.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)
 
@@ -68,15 +70,16 @@ function styleDecls(attr) {
 function declaration({ prop, value, numeric, start, end, quote }, report) {
   const css = (numeric && SPACE_PROPS.test(prop) ? `${value}px` : value).replace(/\s*!important\s*$/i, '')
   if (/var\(|^(inherit|initial|unset|transparent|currentcolor|none)$/i.test(css.trim())) return
-  if (COLOR_PROPS.test(prop) && COLOR.test(css)) return report('D001', start, end, `Raw colour \`${prop}: ${css}\`: it won't follow the theme, the dials or dark mode. Use ${COLOR_EXPECTED}.`)
+  if (COLOR_PROPS.test(prop) && COLOR.test(css.replace(/url\([^)]*\)/gi, ''))) return report('D001', start, end, `Raw colour \`${prop}: ${css}\`: it won't follow the theme, the dials or dark mode. Use ${COLOR_EXPECTED}, or promote it to a token in \`warp({ tokens })\`.`)
   if (SPACE_PROPS.test(prop)) {
-    if (/^(0(px)?|auto)$/.test(css.trim())) return
+    if (/^(0(px)?|auto)$/.test(css.trim()) || FLUID.test(css)) return
     const token = scaled(css)
     const text = token && (quote ? `${quote}${token}${quote}` : numeric ? `'${token}'` : token)
     return report('D002', start, end, `\`${prop}: ${css}\` is ${token ? 'a scale step written by hand' : 'off the spacing scale'}: gaps are relationships (${SPACE_NAMES.join(', ')}).`, token ? { description: `Use ${token}`, safe: true, text } : undefined)
   }
   if (TYPE_PROPS.test(prop)) return report('D003', start, end, `Raw \`${prop}: ${css}\`: type comes from roles, not sizes. Use \`<Heading role>\` or \`<Text role>\` (display title heading body label caption eyebrow code).`)
   if (prop === 'border-radius') {
+    if (/^(0(px)?|\d+%)$/.test(css.trim())) return
     const m = /^(\d+)(?:px)?$/.exec(css.trim())
     const name = m && RADIUS.get(Number(m[1]))
     const text = name && `var(--warp-radius-${name})`
@@ -361,7 +364,11 @@ export function designChecks(root, { files, exclude = [], tokens }) {
       const prop = m[1].toLowerCase()
       if (prop.startsWith('--')) continue
       const start = m.index + m[0].indexOf(m[2], m[1].length + 1)
-      if (tokens) declaration({ prop, value: m[2].trim(), start, end: start + m[2].trimEnd().length }, report)
+      // Restyling warp's parts and the app's theme file are the supported ways past tokens: worth a look, not a stop.
+      const opening = css.lastIndexOf('{', m.index)
+      const selector = css.slice(Math.max(css.lastIndexOf('}', opening), css.lastIndexOf(';', opening)) + 1, opening)
+      const theming = rel === 'src/theme.css' || /\[data-(?:scope|part)\b/.test(selector)
+      if (tokens) declaration({ prop, value: m[2].trim(), start, end: start + m[2].trimEnd().length }, theming ? (code, from, to, why, fix) => report(code, from, to, why, fix, 'warning') : report)
       if ((prop === 'outline' || prop === 'outline-width') && /^(none|0(px)?)\s*$/.test(m[2])) {
         const rule = css.lastIndexOf('}', m.index)
         const selector = css.slice(rule + 1, css.indexOf('{', rule + 1))
