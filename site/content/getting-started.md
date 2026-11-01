@@ -1,6 +1,8 @@
 # Getting started
 
 This page takes you from an empty folder to a running weft app, then has you change it. You'll need Node 26 and npm.
+Once weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one, with no
+Node installed.
 
 Rust isn't needed to use weft. The compiler comes with it as WebAssembly, which runs anywhere, and a native addon for your
 platform installs by itself and makes builds faster. Rust only comes in if you choose to write [Rust sidecars](/docs/rust).

@@ -1,6 +1,6 @@
 # Full stack: `@weft/start`
 
-Needs Node and no Rust (`weft docs rust` is opt-in). An app builds for and runs on Node, Bun or Deno.
+Needs one of Node, Bun or Deno, and no Rust (`weft docs rust` is opt-in). An app builds for and runs on all three.
 
 ## Files
 
@@ -111,8 +111,12 @@ A guard: `export const load = ({ ctx }: LoadArgs) => ctx.user ?? redirect('/logi
 
 ## Runtimes
 
-`weft dev` runs on Node. `weft build` targets `runtime` in weft.config.ts (`node`, `bun`, `deno`; `--runtime` overrides)
-and writes `.output/` and `.weft/contract.json`. Runtime-specific APIs (`Bun.*`, `Deno.*`, `better-sqlite3`) in server
+The CLI runs on whichever of the three starts it, with none of the others installed: `bun --bun`, or `deno run -A
+npm:@weft/cli`. `npm create weft`, `bun create weft` and `deno run -A npm:create-weft` each scaffold for their own runtime
+and package manager. HMR and sockets in `weft dev` work on all three.
+
+`weft build` targets `runtime` in weft.config.ts (`node`, `bun`, `deno`; `--runtime` overrides), which is the runtime
+that ran it if unset, and writes `.output/` and `.weft/contract.json`. Runtime-specific APIs (`Bun.*`, `Deno.*`, `better-sqlite3`) in server
 code break the other targets; `node:` modules and web APIs work on all three.
 
 ## Realtime
