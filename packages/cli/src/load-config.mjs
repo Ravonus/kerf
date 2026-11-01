@@ -105,6 +105,7 @@ const cardFont = z.strictObject({ family: z.string().regex(/^[\w -]+$/, { error:
 const card = z.strictObject({ ...colors, scheme: z.enum(['dark', 'light']).optional(), dark: z.strictObject(colors).optional(), light: z.strictObject(colors).optional(), fonts: z.strictObject({ display: cardFont.optional(), body: cardFont.optional() }).optional() })
 
 const site = z.strictObject({
+  headers: z.record(z.string(), z.record(z.string(), z.string())).optional(),
   name: z.string().min(1).optional(),
   url: z.url({ protocol: /^https?$/, error: 'must be an absolute http(s) URL' }).optional(),
   title: z.string().includes('%s', { error: 'must contain `%s` (the page title)' }).optional(),
