@@ -38,6 +38,9 @@ export type FieldShell = Omit<FieldProps, 'value' | 'defaultValue'> & { label: s
 // `invalid` is a getter and `rest` the live props: the control is made once and its attributes update in place
 type Control = (p: { id: string; describedby?: string; readonly invalid: boolean; rest: Record<string, any> }) => any
 
+/** `labelChars`, which only needs `Intl.Segmenter` past ASCII: making one is most of the work of mounting a field. */
+export const letters = (s: string) => (/^[ -~]*$/.test(s) ? [...s.trim().replace(/ +/g, ' ')] : labelChars(s))
+
 /**
  * The field shell (03 §1 anatomy, verbatim order): control (sweep-base, sweep, icon, label, prefix, input, suffix,
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
@@ -49,7 +52,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
   const message = untrack(() => hint !== undefined || error !== undefined || counter !== undefined)
   const msg = message ? `${id}-msg` : undefined
   // keyed by position: a label repeats letters
-  const chars = derived(() => labelChars(String(label ?? '')).map((c, at) => ({ c, at })))
+  const chars = derived(() => letters(String(label ?? '')).map((c, at) => ({ c, at })))
   // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
   const live = untrack(() => rest)
   let root: HTMLDivElement | undefined

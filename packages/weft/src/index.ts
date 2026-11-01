@@ -578,7 +578,11 @@ export function view(sources: any[], skip: string[] = []): any {
         }
     },
     has: (_, k) => kept(k) && sources.some(s => k in at(s)),
-    ownKeys: () => [...new Set(sources.flatMap(s => Reflect.ownKeys(at(s))))].filter(kept),
+    ownKeys: () => {
+      const out: (string | symbol)[] = []
+      for (const s of sources) for (const k of Reflect.ownKeys(at(s))) if (kept(k) && !out.includes(k)) out.push(k)
+      return out
+    },
     getOwnPropertyDescriptor: (_, k) => (kept(k) ? { configurable: true, enumerable: true } : undefined),
   })
 }
