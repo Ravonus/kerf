@@ -64,3 +64,5 @@ export const Control = ({ log }: P) => (
     <button data-t="plain" onClick={() => log('click')}>b</button>
   </div>
 )
+
+export const InClosedDialog = () => <dialog><button autoFocus>Close</button></dialog>
