@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     nitro({
       // Nothing here reads per-request data, so these are built once and served as files.
-      prerender: { routes: ["/", "/pricing", "/privacy"], crawlLinks: false },
+      prerender: { routes: ["/", "/pricing", "/privacy", "/joined"], crawlLinks: false },
       compressPublicAssets: { gzip: true, brotli: true },
     }),
   ],

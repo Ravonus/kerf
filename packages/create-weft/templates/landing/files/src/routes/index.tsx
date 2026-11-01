@@ -5,6 +5,7 @@ import hero from '../../assets/hero.webp?media'
 import { WaitlistForm } from '#/components/WaitlistForm'
 
 export const meta: Meta = { title: { absolute: 'Emberline: hear what customers keep asking for' } }
+export const prerender = true
 
 const features = [
   { title: 'Every call, heard', body: 'Emberline reads your sales and support calls and pulls out each request, in the customer\'s own words.' },

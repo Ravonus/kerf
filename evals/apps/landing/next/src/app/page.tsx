@@ -1,9 +1,10 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import hero from '@/assets/hero.webp'
 import { WaitlistForm } from '@/components/waitlist-form'
 
 const features = [
-  { title: 'Every call, heard', body: 'Emberline reads your sales and support calls and pulls out each request, in the customer’s own words.' },
+  { title: 'Every call, heard', body: 'Emberline reads your sales and support calls and pulls out each request, in the customer\'s own words.' },
   { title: 'Ranked, not guessed', body: 'Requests are grouped and weighted by how often they come up and which accounts asked.' },
   { title: 'Proof beside every card', body: 'Each item links back to the quotes behind it, so the roadmap argument ends quickly.' },
 ]
@@ -63,6 +64,11 @@ export default function Home() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-labelledby="closing" className="mx-auto mt-24 max-w-2xl px-4 text-center sm:px-6">
+        <h2 id="closing" className="text-3xl font-bold tracking-tight text-balance">Your customers already told you what to build.</h2>
+        <Link href="#join" className="mt-6 inline-block rounded-xl bg-accent px-5 py-3 font-semibold text-on-accent transition-colors hover:bg-accent-strong">Get early access</Link>
       </section>
     </>
   )

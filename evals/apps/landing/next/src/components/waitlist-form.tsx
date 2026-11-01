@@ -4,7 +4,7 @@ import { useActionState } from 'react'
 import { joinWaitlist } from '@/server/waitlist'
 
 export function WaitlistForm() {
-  const [state, action, pending] = useActionState(joinWaitlist, { joined: false })
+  const [state, action, pending] = useActionState(joinWaitlist, {})
 
   return (
     <form action={action} id="join" className="scroll-mt-24">
@@ -23,15 +23,14 @@ export function WaitlistForm() {
         />
         <button
           type="submit"
-          aria-disabled={pending}
-          className="h-12 cursor-pointer rounded-xl bg-accent px-7 font-semibold text-on-accent transition-[background-color,opacity] hover:bg-accent-strong focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent aria-disabled:cursor-progress aria-disabled:opacity-70"
+          disabled={pending}
+          className="h-12 cursor-pointer rounded-xl bg-accent px-7 font-semibold text-on-accent transition-[background-color,opacity] hover:bg-accent-strong focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-progress disabled:opacity-70"
         >
           Join
         </button>
       </div>
       <p id="join-status" role="status" className="mt-3 min-h-6 text-sm">
-        {state.joined && <span className="font-medium text-success">You're on the list</span>}
-        {state.error && <span className="font-medium text-danger">{state.error}</span>}
+        {state.error ? <span className="font-medium text-danger">{state.error}</span> : <span className="text-muted">We'll write when your place comes up, and not before.</span>}
       </p>
     </form>
   )

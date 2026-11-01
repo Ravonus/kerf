@@ -12,7 +12,7 @@ const plans = [
 const questions = [
   { q: 'When does it open?', a: 'The first teams start this winter. Everyone on the waitlist hears from us in the order they joined.' },
   { q: 'Is the early price locked in?', a: 'Yes. Teams that join during early access keep their per-seat price for as long as they stay.' },
-  { q: 'What happens to my data if I leave?', a: 'It’s yours. Export every signal and quote as CSV at any time, on any plan.' },
+  { q: 'What happens to my data if I leave?', a: 'It\'s yours. Export every signal and quote as CSV at any time, on any plan.' },
 ]
 
 export default function Pricing() {
@@ -26,7 +26,10 @@ export default function Pricing() {
       <div className="mt-10 grid gap-4 lg:grid-cols-3">
         {plans.map(p => (
           <section key={p.name} aria-labelledby={p.name} className={`flex flex-col rounded-2xl border bg-raised p-7 ${p.featured ? 'border-accent ring-1 ring-accent' : 'border-line'}`}>
-            <h2 id={p.name} className="text-lg font-semibold">{p.name}</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 id={p.name} className="text-lg font-semibold">{p.name}</h2>
+              {p.featured && <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-on-accent">Most popular</span>}
+            </div>
             <p className="mt-1 text-muted">{p.blurb}</p>
             <p className="mt-6 text-4xl font-bold tracking-tight">{p.price}</p>
             <p className="mt-1 text-sm text-muted">{p.unit}</p>

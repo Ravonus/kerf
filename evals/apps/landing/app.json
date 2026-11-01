@@ -30,11 +30,11 @@
       }
     },
     "solid": {
-      "label": "SolidStart 2.1 + Kobalte + Tailwind 4",
+      "label": "SolidStart 2.1 + Tailwind 4",
       "path": "solid"
     },
     "next": {
-      "label": "Next 16.4 + Radix + Tailwind 4",
+      "label": "Next 16.4 + Tailwind 4",
       "path": "next"
     }
   }

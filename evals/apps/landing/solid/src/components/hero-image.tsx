@@ -18,7 +18,7 @@ export const HeroImage = () => (
       width="1600"
       height="1040"
       fetchpriority="high"
-      alt="The Emberline board: customer requests grouped into now, next and later, with a quote from a renewal call."
+      alt="The Emberline board: customer requests grouped into Now, Next and Later, with a quote from a renewal call"
       class="h-auto w-full rounded-2xl shadow-card ring-1 ring-line"
     />
   </picture>

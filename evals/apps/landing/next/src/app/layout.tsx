@@ -12,7 +12,7 @@ const figtree = localFont({
 })
 
 export const metadata: Metadata = {
-  title: { default: 'Emberline: hear what customers keep asking for', template: '%s | Emberline' },
+  title: { default: 'Emberline: hear what customers keep asking for', template: '%s · Emberline' },
   description: 'Emberline listens to your customer calls and turns them into a ranked list of what to build next.',
 }
 

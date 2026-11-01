@@ -5,17 +5,20 @@ import { z } from "zod";
 
 import { db } from "~/db/index.server";
 import { waitlist } from "~/db/schema";
+import { errors } from "~/lib/errors";
 
-const Email = z.email();
+const Email = z.string().trim().toLowerCase().pipe(z.email());
 
 export async function joinWaitlist(form: FormData) {
-  const email = Email.safeParse(String(form.get("email") ?? "").trim());
+  const email = Email.safeParse(form.get("email"));
   // A post the router didn't take. The home page is a file, so the flash cookie has nothing to render it; `/waitlist` does.
-  const native = form.has("native");
-  if (!email.success) {
-    if (native) return redirect("/waitlist?status=invalid");
-    return { error: "That doesn't look like an email address." };
+  const fail = (status: keyof typeof errors) => (form.has("native") ? redirect(`/waitlist?status=${status}`) : { error: errors[status] });
+  if (!email.success) return fail("invalid");
+  try {
+    await db().insert(waitlist).values({ email: email.data }).onConflictDoNothing();
+  } catch (e) {
+    console.error(e);
+    return fail("failed");
   }
-  await db().insert(waitlist).values({ email: email.data }).onConflictDoNothing();
-  return native ? redirect("/waitlist?status=joined") : { joined: true };
+  return redirect("/joined");
 }
