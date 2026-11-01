@@ -244,6 +244,11 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   }
 
   let side: { kind: 'p' | 'e'; node: any; dispose: () => void } | undefined
+  // `parent` is only where they look things up, so nothing else disposes these two. What they read may outlive the page.
+  onCleanup(() => {
+    disposeContent?.()
+    side?.dispose()
+  })
   const pendingView = () => waiting.provide(list, () => {
     const v = props.shape ? props.shape() : props.pending
     return rt.server ? { t: rt.resolve!(v) } : v
