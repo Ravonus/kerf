@@ -140,7 +140,8 @@
   "components/alert.css"
  ],
  "canvas": [
-  "layout/canvas.css"
+  "layout/canvas.css",
+  "canvas/canvas.css"
  ],
  "card": [
   "data/card.css"
@@ -287,6 +288,9 @@
  ],
  "distribution": [
   "data/distribution.css"
+ ],
+ "dither": [
+  "canvas/dither.css"
  ],
  "doc-tabs": [
   "layout/doc-tabs.css"
