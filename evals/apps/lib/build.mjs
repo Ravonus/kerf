@@ -116,7 +116,7 @@ export async function packOnce(store, log) {
 
 /** What decides a build's output. Same key, same build: it's reused rather than made again. */
 function buildKey(v, app, weft) {
-  const h = createHash('sha256').update(JSON.stringify([process.version, v.stack, v.install, v.build, v.env, app.env, app.setup, v.tarballs && weft]))
+  const h = createHash('sha256').update(JSON.stringify([process.version, v.stack, v.install, v.build, v.env, app.env, app.setup, v.tarballs && weft, ...(app.db ? [app.db.hash] : [])]))
   for (const f of files(v.path).filter(f => !SECRET.test(f) && !SKIP.test(f) && existsSync(join(v.path, f))).sort()) h.update(f).update(readFileSync(join(v.path, f)))
   return h.digest('hex')
 }
@@ -124,15 +124,16 @@ function buildKey(v, app, weft) {
 const FOR_MAPS = '.bench-maps'
 
 /** Copy, env, canary, install, cold builds and the sourcemap build, unless a build with the same key is already there. */
-export async function prepare(app, v, { work, runId, store, weft, buildRuns, rebuild }) {
+export async function prepare(app, v, { work, runId, store, weft, buildRuns, rebuild, quick = false }) {
   const dir = join(work, 'apps', app.name, v.name), root = join(dir, v.cwd), log = join(work, 'apps', app.name, `${v.name}.log`)
   mkdirSync(dirname(log), { recursive: true }); rmSync(log, { force: true })
   v.dir = dir; v.root = root; v.log = log
-  v.buildEnv = { NEXT_TELEMETRY_DISABLED: '1', SKIP_ENV_VALIDATION: '1', ...app.env, ...v.env }
+  v.buildEnv = { NEXT_TELEMETRY_DISABLED: '1', SKIP_ENV_VALIDATION: '1', ...app.env, ...v.env, ...v.dbEnv }
   const key = buildKey(v, app, weft), stamp = join(work, 'apps', app.name, `${v.name}.build.json`)
   if (!rebuild && existsSync(stamp)) {
     const b = JSON.parse(readFileSync(stamp, 'utf8'))
-    if (b.key === key && existsSync(root)) {
+    // A quick build (one, no maps, from e2e.mjs) serves another quick use and never a bench run.
+    if (b.key === key && existsSync(root) && (quick || !b.quick)) {
       v.canary = b.canary; v.weft = b.weft; v.maps = b.maps
       v.fresh = fingerprint(root, v)
       if (b.hashes === sha([...v.fresh.hashes].sort().join())) return { build: b.build, reused: true, key }
@@ -152,10 +153,20 @@ export async function prepare(app, v, { work, runId, store, weft, buildRuns, reb
     v.weft = installedIsPacked(root, store)
   } else await run(v.install.join(' '), { cwd: root, env, log })
   if (app.setup) await run(app.setup, { cwd: root, env, log })
-  const build = await buildAll(v, buildRuns)
-  v.maps = await buildWithMaps(v)
-  writeFileSync(stamp, JSON.stringify({ key, canary: v.canary, weft: v.weft, maps: v.maps, build, hashes: sha([...v.fresh.hashes].sort().join()) }))
+  const build = await buildAll(v, quick ? 1 : buildRuns)
+  v.maps = quick ? null : await buildWithMaps(v)
+  writeFileSync(stamp, JSON.stringify({ key, quick, canary: v.canary, weft: v.weft, maps: v.maps, build, hashes: sha([...v.fresh.hashes].sort().join()) }))
   return { build, reused: false, key }
+}
+
+/** The last build of a variant as it stands, whatever its key: for `e2e.mjs --no-build`. */
+export function lastBuild(app, v, { work }) {
+  const dir = join(work, 'apps', app.name, v.name), stamp = join(work, 'apps', app.name, `${v.name}.build.json`)
+  if (!existsSync(stamp)) throw new Error(`${app.name}/${v.name} has no build in ${work}: leave out --no-build`)
+  const b = JSON.parse(readFileSync(stamp, 'utf8'))
+  v.dir = dir; v.root = join(dir, v.cwd); v.log = join(work, 'apps', app.name, `${v.name}.log`); v.canary = b.canary
+  v.buildEnv = { ...app.env, ...v.env, ...v.dbEnv }
+  v.fresh = fingerprint(v.root, v)
 }
 
 const clean = (root, v) => { for (const d of [...v.stack.out, 'node_modules/.vite', 'node_modules/.cache']) rmSync(join(root, d), { recursive: true, force: true }) }

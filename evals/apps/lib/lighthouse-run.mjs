@@ -48,13 +48,13 @@ function findings(lhr) {
   return hits
 }
 
-const { url, formFactor, keepTo, real, chrome: chromePath } = JSON.parse(process.argv[2])
+const { url, formFactor, keepTo, real, cookie, chrome: chromePath } = JSON.parse(process.argv[2])
 // chrome-launcher rewrites this path under WSL, which leaves a folder in the cwd: so the cwd is in here too.
 const userDataDir = mkdtempSync(join(tmpdir(), 'bench-lh-'))
 process.chdir(userDataDir)
 const chrome = await chromeLauncher.launch({ chromePath, userDataDir, chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu'] })
 try {
-  const flags = { port: chrome.port, output: 'json', logLevel: 'silent', onlyCategories: ['performance'], ...(real ? { throttlingMethod: 'devtools' } : {}) }
+  const flags = { port: chrome.port, output: 'json', logLevel: 'silent', onlyCategories: ['performance'], ...(real ? { throttlingMethod: 'devtools' } : {}), ...(cookie ? { extraHeaders: { Cookie: cookie } } : {}) }
   const { lhr } = await lighthouse(url, flags, formFactor === 'desktop' ? desktopConfig : undefined)
   if (lhr.runtimeError) throw new Error(`Lighthouse: ${lhr.runtimeError.code} on ${url}`)
   if (keepTo) writeFileSync(keepTo, JSON.stringify(lhr))

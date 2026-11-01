@@ -1,0 +1,41 @@
+{
+  "label": "Landing",
+  "note": "A marketing site: no page reads the database, one form writes to it, and it works with JavaScript off.",
+  "db": {},
+  "pages": [
+    {
+      "path": "/",
+      "interact": [
+        "textbox:Email",
+        "button:Join"
+      ],
+      "mutate": {
+        "fill": {
+          "textbox:Email": "$value@bench.test"
+        },
+        "click": "button:Join",
+        "see": "You're on the list"
+      }
+    },
+    "/pricing",
+    "/privacy"
+  ],
+  "variants": {
+    "weft": {
+      "label": "weft + warp",
+      "scaffold": {
+        "template": "landing",
+        "db": "postgres",
+        "auth": false
+      }
+    },
+    "solid": {
+      "label": "SolidStart 2.1 + Kobalte + Tailwind 4",
+      "path": "solid"
+    },
+    "next": {
+      "label": "Next 16.4 + Radix + Tailwind 4",
+      "path": "next"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 // The point of the benchmark: per weft variant, what cost it score and bytes, how far it is from the best other variant, what
 // moved since the last run of this app, and a ranked list of what to tune.
-import { METRICS, compare, fmt } from './stats.mjs'
+import { METRICS, SITE_METRICS, compare, fmt } from './stats.mjs'
 
 const GAPS = ['mobile.score', 'mobile.lcp', 'mobile.fcp', 'mobile.tbt', 'mobile.si', 'desktop.score', 'throttled.lcp', 'bytes.js.br', 'bytes.css.br', 'bytes.html.br', 'bytes.font.br', 'browser.hydrate', 'browser.script', 'browser.heap', 'browser.nodes', 'browser.comments', 'server.rps', 'server.rpsPlain', 'server.p95']
 
@@ -111,9 +111,18 @@ const cell = (k, s) => (s ? (k.startsWith('bytes.') || s.max === s.min ? fmt(k, 
 /** The run as markdown, for the terminal. */
 export function report(run) {
   const names = Object.keys(run.variants), out = [`\n## ${run.label}, ${run.commit}${run.dirty ? ' (dirty)' : ''}, ${run.runs} runs, peak load ${run.loadMax?.toFixed(1)}\n`]
+  // A race failure outranks any millisecond, so it comes first.
+  const races = [...new Set(names.flatMap(n => Object.keys(run.variants[n].race ?? {})))]
+  if (races.length) {
+    out.push('### Races (final DOM equals the database)\n', `| | ${names.map(n => run.variants[n].label).join(' | ')} |`, `|---|${names.map(() => '---').join('|')}|`)
+    for (const r of races) out.push(`| ${r} | ${names.map(n => { const x = run.variants[n].race?.[r]; return x ? `${x.pass ? 'pass' : 'FAIL'} ${x.passes}/${x.of}` : '–' }).join(' | ')} |`)
+    out.push('')
+  }
   for (const path of run.pages) {
     out.push(`### ${path}\n`, `| | ${names.map(n => run.variants[n].label).join(' | ')} |`, `|---|${names.map(() => '---').join('|')}|`)
     for (const k of MAIN) out.push(`| ${METRICS[k].label} | ${names.map(n => cell(k, run.variants[n].pages[path].metrics[k])).join(' | ')} |`)
+    for (const k of SITE_METRICS) if (names.some(n => run.variants[n].pages[path].metrics[k])) out.push(`| ${METRICS[k].label} | ${names.map(n => cell(k, run.variants[n].pages[path].metrics[k])).join(' | ')} |`)
+    if (names.some(n => run.variants[n].pages[path].canary)) out.push(`| Freshness | ${names.map(n => { const c = run.variants[n].pages[path].canary; return c ? `${c.label}${c.checked ? ` (${c.checked} canaries)` : ''}` : '–' }).join(' | ')} |`)
     out.push('')
   }
   out.push(`| Build / lines | ${names.map(n => `${(run.variants[n].build.med / 1000).toFixed(1)}s / ${run.variants[n].lines}`).join(' | ')} |\n`)

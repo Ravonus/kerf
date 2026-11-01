@@ -44,6 +44,10 @@ say in the variant: `stack`, `label`, `cwd` (build a subfolder of a copied tree,
 To add a stack, add a line to `stacks.json`: its `detect` packages, its `out` folders, and regexes that sort sourcemap paths
 into `groups`. `sourcemap` is `vite` or `next`; leave it out and that stack gets totals with no split.
 
+A `scaffold` variant has no folder: `"scaffold": {"template": "todo", "db": "postgres", "auth": true}` is passed to create-weft's real
+`scaffold()`, into `$BENCH_WORK/gen/<app>/<variant>`, on every load, and it's then a variant like any other. So no weft source lives
+here. Give each variant a `label` that declares its component kit.
+
 `probe` is how hydration is timed: bench clicks `click` every frame from the first frame until `watch`'s markup changes, under a
 4x CPU throttle. The same DOM event for every framework, so pick a control that exists in every variant. A page with no probe
 reports when its long tasks ended, and the chart says which method a number came from.
@@ -61,6 +65,57 @@ Per variant and page, on production builds, `--samples` samples (3 by default, 5
 - Server req/s and p95 at 10 keep-alive connections for 2 s, compressed as a browser would ask, and req/s uncompressed: the two
   together separate rendering from compression.
 - Cold build time (`--build-runs`), lines of app code, boot time, server memory.
+
+## Database-driven sites
+
+`landing`, `todo`, `admin` and `catalog` follow [the contract](../../docs/research/40-site-benchmarks.md). Their weft variant is the
+template; `solid` and `next` are folders here. `--all` skips a site whose folders aren't written yet, and says so.
+
+    node e2e.mjs todo weft                  # build if needed, database, proxy, production server, tests, stop it all
+    node e2e.mjs todo weft --no-build       # the last build as it stands
+    node e2e.mjs todo --dir ./my-build      # a local build, by its start script
+    node e2e.mjs todo --dir http://localhost:3000 --db weft_bench_x    # a server already running
+
+`<app>/e2e.test.mjs` is node:test on `lib/e2e-kit.mjs`, roles and names only, each test on a fresh copy of the seed. It has to pass on
+a variant before that variant's numbers count.
+
+Keys on top of the ones above:
+
+| Key | Where | Meaning |
+|---|---|---|
+| `db` | app | `{}`, or `{ "rtt": [2, 40], "pool": 10 }`, the defaults. Gives each variant a clone and a proxy; the seed hash joins the build key |
+| `login` | app | `{}`, or `path`, `email`, `password`, `submit` to rename the contract's. Signs in through the form as the bench user; the cookie goes to Lighthouse, Playwright and the load client |
+| `race` | app | `path`, `list`, `input`, `submit`, `toggle` (a row), `state` (SQL giving `title`, `done`), `away` (`link`, and `keep`, the rows that view shows) |
+| `canary` | page | `{ "sql": "update ... set x = $1", "text": true }`: a random value goes in a row the page already shows, and the page has to show it, or the run stops |
+| `freshness` | page | `live` needs a canary; `cached` is skipped and labelled. Or a map, `{ "next": "cached", "*": "live" }`. No key and no canary reads `unchecked` |
+| `nav` | page | `click`, `url` (a substring), and `see` (text) or `canary` (SQL writing the text to wait for) |
+| `interact` | page | targets to click at 4x CPU |
+| `streaming` | page | `click`, `status`: clicks from navigation start until the role status with that text changes |
+| `mutate` | page | `fill` (target to text), `click`, `see`; `$value` is a random value |
+| `rows` | page | `{ "50": sql, "500": sql }`: SQL that gives the page that many rows, after a reset |
+
+A target is `"role:name"`, exact. What a page doesn't declare, or can't do, is `null` in the results, never 0.
+
+| Probe | How |
+|---|---|
+| `db.queries`, `db.rows` | per HTML request, from `pg_stat_statements` deltas for that database (read from `weft_bench_stats`, skipping BEGIN, COMMIT, SET and the like). Where the server doesn't load it, the proxy counts Query and Execute messages, which includes those, `db.rows` is null, and `db.queries` in the run says which |
+| `db.roundTrips` | (TTFB at 40 ms − at 2 ms) ÷ 38, one connection |
+| `server.ttfb.p50/p95/p99`, `server.flush.head` | 10 connections, closed loop, uncompressed so the `</head>` byte can be found |
+| `flow.nav.url/.paint/.data` `.cold/.second` | a real click to the URL, first frame with a DOM change, the text. Second is after going back |
+| `flow.interaction.worst/.p75` | Event Timing at 4x CPU. It reports nothing under 16 ms, so an unreported click counts as 8. Not INP |
+| `flow.interaction.streaming` | navigation start to the first click that works |
+| `flow.mutate.optimistic/.confirmed/.requests` | input to `see` in the DOM, to the last reply, requests sent |
+| `race.*` | `doubleSubmit`, `toggles`, `rollback`, `navigateDuring`, `invalidateDuring`, `twoTabs`: replies held or shuffled by route interception (seeded, the seed is in a failure), then the list on screen against Postgres. Reported above speed |
+| `bytes.html.<rows>.raw/.br`, `bytes.data.<rows>.raw/.br` | embedded data is every inline script's body; markup is the rest |
+
+Input is CDP `Input.dispatchMouseEvent`, so it's trusted. `twoTabs` tells the other tab it got focus, because Playwright keeps every
+page focused. `toggles` holds an even reply last, as an odd one matches the end state, and timing can still miss it on one sample.
+
+`shared/pg/env.mjs` keeps `weft_bench_seed_<hash>` from `schema.sql` and `seed.sql`, clones it per variant with `CREATE DATABASE ...
+TEMPLATE`, and resets by dropping and cloning, which cuts the server's connections for its pool to reopen. It touches only
+`weft_bench_*`, needs `psql`, and takes `BENCH_PG_HOST` and `BENCH_PG_PORT`. `shared/pg/latency-proxy.mjs` is its own process,
+delays each direction by RTT/2 and counts turns, and each `sitePass` checks the RTT with `SELECT 1` (`db.rtt` in the run, about 1 ms
+over at 2 ms on a loaded Mac). `shared/pg/bench-user.json` is a throwaway local account; the hash in the seed is Better Auth's own.
 
 ## Why it's quick
 
@@ -101,4 +156,5 @@ app's last run; and a ranked list, where bytes and milliseconds are converted to
 
 The stack rule still holds: a claim about weft gets measured across the other variants, here and in `evals/compare`.
 
-`node --test lib` covers the win logic, the freshness checks and stack detection.
+`node --test lib` covers the win logic, the freshness checks and stack detection; with Postgres up, it also runs the database, proxy
+and race probes for real against `lib/fixture`, the todo contract with no framework.

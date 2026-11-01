@@ -11,7 +11,7 @@ import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 const freePort = () => new Promise((ok, no) => { const s = createServer(); s.on('error', no); s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => ok(port)) }) })
 const wait = ms => new Promise(r => setTimeout(r, ms))
 
-export async function startServer(v, firstPage) {
+export async function startServer(v, firstPage, { proveBuild = true } = {}) {
   const port = await freePort(), url = `http://127.0.0.1:${port}`
   let answered = true
   try { await fetch(url, { signal: AbortSignal.timeout(500) }) } catch { answered = false }
@@ -21,7 +21,7 @@ export async function startServer(v, firstPage) {
   const cmd = v.start ?? `${JSON.stringify(process.execPath)} ${JSON.stringify(fileURLToPath(import.meta.url))} ${JSON.stringify(join(v.root, out))}`
   const log = createWriteStream(v.log, { flags: 'a' })
   // Its own process group: `npm run start` wraps the server, and only killing the group takes both down.
-  const child = spawn(cmd, { cwd: v.root, shell: true, detached: true, env: { ...process.env, NODE_ENV: 'production', ...v.buildEnv, PORT: String(port), HOST: '127.0.0.1', NITRO_HOST: '127.0.0.1', NITRO_PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] })
+  const child = spawn(cmd, { cwd: v.root, shell: true, detached: true, env: { ...process.env, NODE_ENV: 'production', ...v.buildEnv, PORT: String(port), HOST: '127.0.0.1', NITRO_HOST: '127.0.0.1', NITRO_PORT: String(port), ...(v.dbEnv && { BETTER_AUTH_URL: url }) }, stdio: ['ignore', 'pipe', 'pipe'] })
   child.stdout.pipe(log, { end: false }); child.stderr.pipe(log, { end: false })
   // Whatever ends the run, the server ends with it.
   process.on('exit', () => { try { process.kill(-child.pid, 'SIGKILL') } catch {} })
@@ -35,7 +35,7 @@ export async function startServer(v, firstPage) {
     await wait(50)
   }
   const server = { url, port, pid: child.pid, bootMs: performance.now() - t0, seen: new Map(), alive: () => exited === null, stop: async () => { try { process.kill(-child.pid, 'SIGTERM') } catch {} await wait(200); try { process.kill(-child.pid, 'SIGKILL') } catch {} log.end() } }
-  await assertFresh(v, server)
+  if (proveBuild) await assertFresh(v, server)
   return server
 }
 

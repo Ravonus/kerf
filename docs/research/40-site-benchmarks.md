@@ -55,7 +55,7 @@ Bench user for signed-in pages: `bench@weft.dev`, a throwaway local test account
 
 | Probe | Definition |
 |---|---|
-| `db.canary` | a random `canary.value` written before each sample must appear in the page's `data-canary` element, else the sample fails |
+| `db.canary` | before each sample, a random value is written to a row the page already shows (the page's `canary` in `app.json`); the page must show it, else the sample fails. Pages labelled `cached` are skipped and labelled. No benchmark code in a shipped template |
 | `db.queries`, `db.rows` | per request, from `pg_stat_statements` deltas |
 | `db.roundTrips` | (TTFB at 40 ms − TTFB at 2 ms) ÷ 38 ms |
 | `server.ttfb.p50/p95/p99`, `server.flush.head` | server load client: time to first byte and to the `</head>` byte |

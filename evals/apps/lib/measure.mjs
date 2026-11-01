@@ -21,9 +21,9 @@ async function retried(args) {
     try { return await once(args) } catch (e) { if (i === 3) throw e }
   }
 }
-export const lighthouseRun = (url, formFactor, keepTo) => retried({ url, formFactor, keepTo, chrome: chromePath() })
+export const lighthouseRun = (url, formFactor, keepTo, cookie) => retried({ url, formFactor, keepTo, cookie, chrome: chromePath() })
 /** Mobile Lighthouse with the network and CPU really slowed, so LCP and its phases come from one trace of one load. */
-export const lighthouseThrottled = url => retried({ url, real: true, chrome: chromePath() })
+export const lighthouseThrottled = (url, cookie) => retried({ url, cookie, real: true, chrome: chromePath() })
 
 const br = b => brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 const sizeCache = new Map()
@@ -42,8 +42,9 @@ function unusedJs(entry) {
 }
 
 /** Fresh context, no throttle: what crossed the wire, sized the same way for everyone, and what of it ran. */
-export async function bytesPass(browser, url) {
+export async function bytesPass(browser, url, { cookies = [] } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 412, height: 823 } }), page = await ctx.newPage()
+  await ctx.addCookies(cookies)
   const seen = [], origin = new URL(url).origin, wait = []
   page.on('response', r => wait.push((async () => {
     if (r.status() >= 300 || r.url().startsWith('data:')) return
@@ -86,8 +87,9 @@ const PROBE = ({ click, watch }) => {
 }
 
 /** 4x CPU throttle on a phone-sized context: time until interactive, main-thread script, and what's left in memory. */
-export async function hydrationPass(browser, url, probe) {
+export async function hydrationPass(browser, url, probe, { cookies = [] } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 412, height: 823 }, isMobile: true, hasTouch: true }), page = await ctx.newPage()
+  await ctx.addCookies(cookies)
   const cdp = await ctx.newCDPSession(page), errors = []
   page.on('pageerror', e => errors.push(String(e).slice(0, 200)))
   await cdp.send('Performance.enable'); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 })
@@ -108,14 +110,14 @@ export async function hydrationPass(browser, url, probe) {
 }
 
 /** `connections` keep-alive clients as fast as the server answers, for `seconds`, reading whole bodies. */
-export function loadPass(url, { connections = 10, seconds = 2, encoding = 'br, gzip' } = {}) {
+export function loadPass(url, { connections = 10, seconds = 2, encoding = 'br, gzip', cookie } = {}) {
   const agent = new http.Agent({ keepAlive: true, maxSockets: connections }), { hostname, port, pathname, search } = new URL(url)
   const lat = [], end = performance.now() + seconds * 1000
   let bad = 0, bytes = 0, served = 'none'
   const one = () => new Promise(ok => {
     if (performance.now() > end) return ok()
     const t = performance.now()
-    http.get({ agent, hostname, port, path: pathname + search, headers: { 'accept-encoding': encoding, accept: 'text/html' } }, r => {
+    http.get({ agent, hostname, port, path: pathname + search, headers: { 'accept-encoding': encoding, accept: 'text/html', ...(cookie && { cookie }) } }, r => {
       served = r.headers['content-encoding'] ?? 'none'
       r.on('data', d => (bytes += d.length))
       r.on('end', () => { lat.push(performance.now() - t); if (r.statusCode >= 400) bad++; ok(one()) })

@@ -42,7 +42,24 @@ export const METRICS = {
   'server.rps': { label: 'Server req/s', unit: 'rps', better: 'high', floor: 50 },
   'server.rpsPlain': { label: 'Server req/s, uncompressed', unit: 'rps', better: 'high', floor: 50 },
   'server.p95': { label: 'Server p95', unit: 'ms', better: 'low', floor: 1 },
+  'db.queries': { label: 'Queries per request', unit: '', better: 'low', floor: 1 },
+  'db.rows': { label: 'Rows per request', unit: '', better: 'low', floor: 1 },
+  'db.roundTrips': { label: 'DB round trips before first byte', unit: '', better: 'low', floor: 0.5 },
+  'server.ttfb.p50': { label: 'TTFB p50', unit: 'ms', better: 'low', floor: 1 },
+  'server.ttfb.p95': { label: 'TTFB p95', unit: 'ms', better: 'low', floor: 1 },
+  'server.ttfb.p99': { label: 'TTFB p99', unit: 'ms', better: 'low', floor: 1 },
+  'server.flush.head': { label: '</head> byte', unit: 'ms', better: 'low', floor: 1 },
+  'flow.interaction.worst': { label: 'Worst interaction, 4x', unit: 'ms', better: 'low', floor: 8 },
+  'flow.interaction.p75': { label: 'p75 interaction, 4x', unit: 'ms', better: 'low', floor: 8 },
+  'flow.interaction.streaming': { label: 'First working click while streaming', unit: 'ms', better: 'low', floor: 15 },
+  'flow.mutate.optimistic': { label: 'Input to optimistic DOM', unit: 'ms', better: 'low', floor: 8 },
+  'flow.mutate.confirmed': { label: 'Input to confirmed DOM', unit: 'ms', better: 'low', floor: 8 },
+  'flow.mutate.requests': { label: 'Requests per mutation', unit: '', better: 'low', floor: 1 },
 }
+for (const visit of ['cold', 'second']) for (const [k, label] of [['url', 'URL'], ['paint', 'paint'], ['data', 'data']]) METRICS[`flow.nav.${k}.${visit}`] = { label: `Click to ${label}, ${visit}`, unit: 'ms', better: 'low', floor: 8 }
+for (const rows of [50, 500]) for (const part of ['html', 'data']) for (const c of ['raw', 'br']) METRICS[`bytes.${part}.${rows}.${c}`] = { label: `${part === 'html' ? 'Markup' : 'Embedded data'} at ${rows} rows, ${c}`, unit: 'bytes', better: 'low', floor: 128 }
+/** Everything a database-driven app reports; a probe that can't apply to a page stays null, never 0. */
+export const SITE_METRICS = Object.keys(METRICS).filter(k => /^(db|flow)\.|^server\.(ttfb|flush)|^bytes\.(html|data)\.\d/.test(k))
 
 /**
  * `win` when a beats b by more than the metric's floor and no sample of the two overlaps; otherwise `tie`. With n = 3 that

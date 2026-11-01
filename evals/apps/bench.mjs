@@ -16,14 +16,16 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileS
 import { cpus, homedir, hostname, loadavg } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
-import { allApps, here, loadApp } from './lib/app.mjs'
+import { allApps, freshness, here, loadApp } from './lib/app.mjs'
 import { jobs as defaultJobs, pool } from '../../scripts/jobs.mjs'
 import { attribute } from './lib/attribute.mjs'
 import { linesOfCode, packOnce, prepare, repoState } from './lib/build.mjs'
 import { diagnose, report } from './lib/diagnose.mjs'
+import { canaryPass, cookieHeader, signIn, sitePass } from './lib/flow.mjs'
 import { bytesPass, hydrationPass, launchBrowser, lighthouseRun, lighthouseThrottled, loadPass } from './lib/measure.mjs'
 import { assertFresh, rssMB, startServer } from './lib/serve.mjs'
 import { spread } from './lib/stats.mjs'
+import { provision, serverInfo } from './shared/pg/env.mjs'
 
 const { values: opt, positionals } = parseArgs({ allowPositionals: true, options: {
   all: { type: 'boolean' }, samples: { type: 'string', default: '3' }, jobs: { type: 'string' }, 'build-runs': { type: 'string', default: '3' }, only: { type: 'string' },
@@ -38,7 +40,8 @@ const samplesWanted = +opt.samples, buildRuns = +opt['build-runs'], jobs = defau
 
 const targets = opt.all ? allApps() : positionals
 if (!targets.length) { console.error('usage: node bench.mjs <app>... | --all   (see the top of this file)'); process.exit(1) }
-const apps = targets.map(loadApp)
+// `--all` runs what's there: a site whose variants aren't written yet is skipped, and named on the way.
+const apps = targets.flatMap(t => { try { return [loadApp(t, { only: opt.only?.split(',') })] } catch (e) { if (!opt.all) throw e; say(`skipping ${t}: ${e.message}`); return [] } })
 if (opt.detect) {
   for (const a of apps) for (const v of a.variants) console.log(`${a.name}/${v.name}: ${v.stack.id} (${v.pm}), build \`${v.build}\`, start \`${v.start ?? 'static'}\`, from ${v.path}${v.cwd === '.' ? '' : `/${v.cwd}`}`)
   process.exit(0)
@@ -50,20 +53,22 @@ if (loadavg()[0] > BUSY) { console.error(`1-minute load is ${loadavg()[0].toFixe
 const middle = (samples, key) => [...samples].sort((a, b) => a[key] - b[key])[samples.length >> 1]
 
 /** The timing-sensitive half of a sample, in turn per variant: a pass here never shares a variant with another. */
-async function timed(v, server, page, browser) {
-  const url = server.url + page.path
+async function timed(v, server, page, browser, site) {
+  const url = server.url + page.path, cookies = site?.cookies()
   const first = await assertFresh(v, server)
-  const bytes = await bytesPass(browser, url)
+  // The row a live page shows, changed now: a page that doesn't show it wasn't read for this sample.
+  if (site && freshness(page, v.name) === 'live') await canaryPass(browser, url, page.canary, { db: site.db, cookies })
+  const bytes = await bytesPass(browser, url, { cookies })
   await assertFresh(v, server, bytes.assets)
-  const hyd = await hydrationPass(browser, url, page.probe)
-  const real = await lighthouseThrottled(url)
+  const hyd = await hydrationPass(browser, url, page.probe, { cookies })
+  const real = await lighthouseThrottled(url, cookieHeader(cookies))
   await assertFresh(v, server)
   return { bytes, hyd, real, lh: {}, fresh: first.canary, load: loadavg()[0] }
 }
 
 /** Lighthouse's simulated throttling models the network and CPU, so these can overlap: see README, and --jobs=1 to compare. */
-async function simulated(v, server, sample, url, form, keepTo) {
-  const lh = sample.lh[form] = await lighthouseRun(url, form, keepTo)
+async function simulated(v, server, sample, url, form, keepTo, cookie) {
+  const lh = sample.lh[form] = await lighthouseRun(url, form, keepTo, cookie)
   await assertFresh(v, server, lh.scripts.filter(u => u.startsWith(server.url)).map(u => u.slice(server.url.length)).filter(p => sample.bytes.assets.includes(p) || !/[?]/.test(p)))
   sample.load = Math.max(sample.load, loadavg()[0])
 }
@@ -87,7 +92,9 @@ async function benchApp(app) {
   const t0 = performance.now(), runId = Date.now().toString(36), only = opt.only?.split(','), variants = app.variants.filter(v => !only || only.includes(v.name))
   const phase = (name, since) => say(`  ${name}: ${((performance.now() - since) / 1000).toFixed(0)} s`)
   say(`\n${app.name}: ${variants.map(v => `${v.name} (${v.stack.id})`).join(', ')}; ${app.pages.length} pages, ${samplesWanted} samples, ${jobs} jobs`)
-  const out = {}, weft = variants.some(v => v.tarballs) ? await packOnce(store, join(work, 'pack.log')) : null
+  const out = {}, dbs = {}, sites = {}
+  if (app.db) for (const v of variants) { dbs[v.name] = await provision(app.name, v.name, { rtt: app.db.rtt[0] }); v.dbEnv = dbs[v.name].env }
+  const weft = variants.some(v => v.tarballs) ? await packOnce(store, join(work, 'pack.log')) : null
   if (weft?.packed) say('  packed this checkout')
   let t = performance.now()
   await pool(variants, jobs, async v => {
@@ -98,26 +105,32 @@ async function benchApp(app) {
   phase('builds', t)
   const browser = await launchBrowser(), servers = {}, samples = {}
   try {
-    for (const v of variants) { servers[v.name] = await startServer(v, app.pages[0].path); samples[v.name] = Object.fromEntries(app.pages.map(p => [p.path, []])); out[v.name].bootMs = servers[v.name].bootMs }
+    for (const v of variants) {
+      servers[v.name] = await startServer(v, app.pages[0].path); samples[v.name] = Object.fromEntries(app.pages.map(p => [p.path, []])); out[v.name].bootMs = servers[v.name].bootMs
+      if (app.db) {
+        const site = sites[v.name] = { db: dbs[v.name], url: servers[v.name].url, jar: [], cookies: () => site.jar, login: async () => { if (app.login) site.jar = await signIn(browser, site.url, app.login) } }
+        await site.login()
+      }
+    }
     t = performance.now()
     // Variants side by side, each one's own passes in turn. Lighthouse waits for these, so nothing it does skews their timings.
     await pool(variants, jobs, async v => {
-      for (let i = 0; i < samplesWanted; i++) for (const p of app.pages) samples[v.name][p.path].push(await timed(v, servers[v.name], p, browser))
+      for (let i = 0; i < samplesWanted; i++) for (const p of app.pages) samples[v.name][p.path].push(await timed(v, servers[v.name], p, browser, sites[v.name]))
     })
     phase('hydration, bytes, throttled LCP', t); t = performance.now()
     const tasks = variants.flatMap(v => app.pages.flatMap(p => samples[v.name][p.path].flatMap((s, i) => ['mobile', 'desktop'].map(form => ({ v, p, s, form, keep: i ? null : join(v.dir, `lighthouse${p.path.replace(/\W/g, '_')}-${form}.json`) })))))
     // Shuffled so that no variant always runs at the pool's busiest.
     tasks.sort(() => Math.random() - 0.5)
-    await pool(tasks, jobs, ({ v, p, s, form, keep }) => simulated(v, servers[v.name], s, servers[v.name].url + p.path, form, keep))
+    await pool(tasks, jobs, ({ v, p, s, form, keep }) => simulated(v, servers[v.name], s, servers[v.name].url + p.path, form, keep, cookieHeader(sites[v.name]?.cookies())))
     phase(`Lighthouse, ${tasks.length} runs`, t); t = performance.now()
     for (const v of variants) for (const p of app.pages) out[v.name].pages[p.path] = summarise(p, samples[v.name][p.path])
     // Not a static build: its throughput would only be bench's own host.
     // One variant at a time: side by side, the load generators compete and every req/s reads about 25% low.
     if (!opt['no-load']) await pool(variants.filter(x => x.start), 1, async v => {
       for (const p of app.pages) {
-        const s = [], plain = [], url = servers[v.name].url + p.path
-        await loadPass(url, { seconds: 0.5 }) // warm, not counted
-        for (let i = 0; i < samplesWanted; i++) { s.push(await loadPass(url)); plain.push(await loadPass(url, { encoding: 'identity', seconds: 1 })) }
+        const s = [], plain = [], url = servers[v.name].url + p.path, cookie = cookieHeader(sites[v.name]?.cookies())
+        await loadPass(url, { seconds: 0.5, cookie }) // warm, not counted
+        for (let i = 0; i < samplesWanted; i++) { s.push(await loadPass(url, { cookie })); plain.push(await loadPass(url, { encoding: 'identity', seconds: 1, cookie })) }
         const errors = [...s, ...plain].reduce((n, x) => n + x.errors, 0), m = out[v.name].pages[p.path].metrics
         if (errors) say(`  ${v.name} ${p.path}: ${errors} failed requests under load`)
         m['server.rps'] = spread(s.map(x => x.rps)); m['server.p95'] = spread(s.map(x => x.p95)); m['server.rpsPlain'] = spread(plain.map(x => x.rps))
@@ -126,16 +139,23 @@ async function benchApp(app) {
       await assertFresh(v, servers[v.name])
       out[v.name].rssMB = rssMB(servers[v.name])
     })
-    phase('server load', t)
+    phase('server load', t); t = performance.now()
+    // Last, and one variant at a time: these reset the database and set the proxy's RTT.
+    if (app.db) {
+      await pool(variants, 1, v => sitePass({ app, v, site: sites[v.name], server: servers[v.name], browser, samples: samplesWanted, out: out[v.name], say }))
+      for (const v of variants) await assertFresh(v, servers[v.name])
+      phase('database, flows, races', t)
+    }
   } finally {
     await browser.close()
     for (const s of Object.values(servers)) await s.stop()
+    for (const d of Object.values(dbs)) await d.stop()
   }
   for (const v of variants) if (v.maps) out[v.name].split = attribute(v, v.maps, out[v.name].pages)
   say(`  ${app.name}: ${((performance.now() - t0) / 1000).toFixed(0)} s in all`)
   const state = repoState(), line = { at: new Date().toISOString(), app: app.name, ...state, runs: samplesWanted, jobs, seconds: Math.round((performance.now() - t0) / 1000), cores: cpus().length, host: hostname(), loadMax: Math.max(...Object.values(samples).flatMap(p => Object.values(p).flatMap(l => l.map(s => s.load)))) }
   const prev = existsSync(history) ? readFileSync(history, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)).findLast(l => l.app === app.name && Object.keys(l.variants).some(k => k in out)) : null
-  const run = { ...line, label: app.label, note: app.note, pages: app.pages.map(p => p.path), baseline: app.baseline, variants: out }
+  const run = { ...line, label: app.label, note: app.note, pages: app.pages.map(p => p.path), baseline: app.baseline, variants: out, ...(app.db && { db: await serverInfo() }) }
   run.diagnosis = diagnose(run, prev)
   return { run, line: { ...line, variants: Object.fromEntries(Object.entries(out).map(([k, r]) => [k, { label: r.label, stack: r.stack, key: r.key, build: r.build, lines: r.lines, weft: r.weft?.tgz, pages: Object.fromEntries(Object.entries(r.pages).map(([p, x]) => [p, x.metrics])) }])) } }
 }

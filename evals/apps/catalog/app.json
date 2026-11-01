@@ -1,0 +1,52 @@
+{
+  "label": "Catalog",
+  "note": "The holdout: 5,000 public products, a cart behind Suspense. Built like the others, and no change to weft or warp comes from its numbers.",
+  "db": {},
+  "pages": [
+    {
+      "path": "/",
+      "freshness": "live",
+      "canary": {
+        "sql": "update products set name = $1 where id = (select id from products where featured order by id limit 1)",
+        "text": true
+      }
+    },
+    {
+      "path": "/c/kitchen",
+      "freshness": "live",
+      "canary": {
+        "sql": "update categories set name = $1 where slug = 'kitchen'",
+        "text": true
+      }
+    },
+    {
+      "path": "/p/product-1",
+      "freshness": "live",
+      "canary": {
+        "sql": "update products set name = $1 where slug = 'product-1'",
+        "text": true
+      },
+      "interact": [
+        "button:Add to cart"
+      ]
+    }
+  ],
+  "variants": {
+    "weft": {
+      "label": "weft + warp",
+      "scaffold": {
+        "template": "catalog",
+        "db": "postgres",
+        "auth": false
+      }
+    },
+    "solid": {
+      "label": "SolidStart 2.1 + Kobalte + Tailwind 4",
+      "path": "solid"
+    },
+    "next": {
+      "label": "Next 16.4 + Radix + Tailwind 4",
+      "path": "next"
+    }
+  }
+}

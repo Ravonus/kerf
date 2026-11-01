@@ -1,0 +1,71 @@
+{
+  "label": "Todo",
+  "note": "The race flagship: per-user rows, optimistic where the stack has it.",
+  "db": {},
+  "login": {},
+  "pages": [
+    "/login",
+    {
+      "path": "/todos",
+      "freshness": "live",
+      "canary": {
+        "sql": "update todos set title = $1 where id = (select id from todos where user_id = 'bench-user' order by created_at, id limit 1)",
+        "text": true
+      },
+      "nav": {
+        "click": "link:Active",
+        "url": "filter=active",
+        "canary": "update todos set title = $1 where id = (select id from todos where user_id = 'bench-user' and not done order by created_at, id limit 1)"
+      },
+      "interact": [
+        "checkbox:Seeded todo 1",
+        "checkbox:Seeded todo 2",
+        "checkbox:Seeded todo 4",
+        "checkbox:Seeded todo 5"
+      ],
+      "mutate": {
+        "fill": {
+          "textbox:New todo": "$value"
+        },
+        "click": "button:Add",
+        "see": "$value"
+      },
+      "rows": {
+        "50": "delete from todos where user_id = 'bench-user' and created_at > timestamptz '2026-10-01 00:50:00+00'",
+        "500": "insert into todos (user_id, title, created_at) select 'bench-user', 'Extra todo ' || g, timestamptz '2026-10-02 00:00:00+00' + (g * interval '1 minute') from generate_series(1, 300) g"
+      }
+    }
+  ],
+  "race": {
+    "path": "/todos",
+    "list": "Todos",
+    "input": "New todo",
+    "submit": "Add",
+    "toggle": "Seeded todo 1",
+    "state": "select title, done from todos where user_id = 'bench-user'",
+    "away": {
+      "link": "Active",
+      "keep": {
+        "done": false
+      }
+    }
+  },
+  "variants": {
+    "weft": {
+      "label": "weft + warp",
+      "scaffold": {
+        "template": "todo",
+        "db": "postgres",
+        "auth": true
+      }
+    },
+    "solid": {
+      "label": "SolidStart 2.1 + Kobalte + Tailwind 4",
+      "path": "solid"
+    },
+    "next": {
+      "label": "Next 16.4 + Radix + Tailwind 4",
+      "path": "next"
+    }
+  }
+}

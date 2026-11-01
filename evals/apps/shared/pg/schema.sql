@@ -56,7 +56,3 @@ create table cart_items (
   cart_id uuid not null references carts (id) on delete cascade, product_id integer not null references products (id),
   quantity integer not null, primary key (cart_id, product_id)
 );
-
--- Written before each sample; a page has to render it or the sample fails, so a cached page can't pass as a live one.
-create table canary (id integer primary key default 1, value text not null);
-insert into canary values (1, 'seed');

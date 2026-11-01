@@ -1,0 +1,80 @@
+{
+  "label": "Admin",
+  "note": "10k orders behind a sign-in, sorted and filtered on the server, plus the shapes agents really write: nested loads, per-row loads, a slow panel. Canaries assume a page shows the customer name of the orders it lists.",
+  "db": {},
+  "login": {},
+  "pages": [
+    {
+      "path": "/admin",
+      "freshness": "live",
+      "canary": {
+        "sql": "update customers set name = $1 where id = (select customer_id from orders order by created_at desc, id desc limit 1)",
+        "text": true
+      }
+    },
+    {
+      "path": "/admin/orders",
+      "freshness": "live",
+      "canary": {
+        "sql": "update customers set name = $1 where id = (select customer_id from orders order by created_at desc, id desc limit 1)",
+        "text": true
+      },
+      "nav": {
+        "click": "link:Next",
+        "url": "page=2",
+        "canary": "update customers set name = $1 where id = (select customer_id from orders order by created_at desc, id desc offset 50 limit 1)"
+      },
+      "interact": [
+        "textbox:Search",
+        "link:Next"
+      ]
+    },
+    {
+      "path": "/admin/orders/1",
+      "freshness": "live",
+      "canary": {
+        "sql": "update customers set name = $1 where id = (select customer_id from orders where id = 1)",
+        "text": true
+      }
+    },
+    "/admin/nested",
+    {
+      "path": "/admin/per-row",
+      "freshness": "live",
+      "canary": {
+        "sql": "update customers set name = $1 where id = (select customer_id from orders order by created_at desc, id desc limit 1)",
+        "text": true
+      }
+    },
+    {
+      "path": "/admin/slow",
+      "streaming": {
+        "click": "button:Count",
+        "status": "Count: "
+      },
+      "interact": [
+        "button:Count",
+        "button:Count",
+        "button:Count"
+      ]
+    }
+  ],
+  "variants": {
+    "weft": {
+      "label": "weft + warp",
+      "scaffold": {
+        "template": "admin",
+        "db": "postgres",
+        "auth": true
+      }
+    },
+    "solid": {
+      "label": "SolidStart 2.1 + Kobalte + Tailwind 4",
+      "path": "solid"
+    },
+    "next": {
+      "label": "Next 16.4 + Radix + Tailwind 4",
+      "path": "next"
+    }
+  }
+}
