@@ -48,7 +48,7 @@ export default function PerRow() {
   return (
     <div className="flex flex-col gap-5">
       <PageTitle note="The last 50 orders, each with who placed it.">Order feed</PageTitle>
-      <Suspense fallback={<TableSkeleton rows={50} />}><Rows /></Suspense>
+      <Suspense fallback={<TableSkeleton rows={24} />}><Rows /></Suspense>
     </div>
   )
 }

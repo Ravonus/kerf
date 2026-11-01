@@ -1,6 +1,7 @@
 import 'server-only'
 import { asc, eq, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { connection } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/db'
 import { cartItems, products } from '@/db/schema'
@@ -9,6 +10,7 @@ export const cartCookie = 'cart'
 
 /** The visitor's cart id, if the cookie holds one. */
 export async function cartId() {
+  await connection()
   const id = z.uuid().safeParse((await cookies()).get(cartCookie)?.value)
   return id.success ? id.data : null
 }

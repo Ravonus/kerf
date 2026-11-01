@@ -4,6 +4,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { connection } from 'next/server'
 import { cache } from 'react'
 import { db } from '@/db'
 import { account, session, user, verification } from '@/db/schema'
@@ -14,7 +15,11 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
 })
 
-export const currentSession = cache(async () => auth.api.getSession({ headers: await headers() }))
+// connection(): an uncached page's prefetch render stops here, before any query, rather than repeating them all beside the real one.
+export const currentSession = cache(async () => {
+  await connection()
+  return auth.api.getSession({ headers: await headers() })
+})
 
 /** The signed-in user, or off to /login. Proxy only looks for the cookie; this is the real check, once per request. */
 export const currentUser = cache(async () => {

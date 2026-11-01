@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={figtree.variable}>
+    <html lang="en" data-scroll-behavior="smooth" className={figtree.variable}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
         <SiteHeader />
         <main className="flex-1">{children}</main>

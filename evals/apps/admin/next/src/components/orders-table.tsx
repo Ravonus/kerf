@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { startTransition, useEffect, useOptimistic, useRef, useState } from 'react'
+import { memo, startTransition, useCallback, useEffect, useOptimistic, useRef, useState } from 'react'
 import { type Dir, type OrderRow, type SortKey } from '@/lib/orders'
 import { markShipped } from '@/server/orders'
 import { bodyCell, headCell, OrderCells, tableRow } from './order-cells'
@@ -30,6 +30,17 @@ function SelectAll({ all, some, onChange }: { all: boolean; some: boolean; onCha
 
 const check = 'tick block size-4 cursor-pointer rounded border border-faint transition-colors checked:border-accent focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
+const Row = memo(function Row({ order, checked, onToggle }: { order: OrderRow; checked: boolean; onToggle: (id: number, on: boolean) => void }) {
+  return (
+    <tr className={tableRow}>
+      <td className={`${bodyCell} w-10`}>
+        <input type="checkbox" aria-label={`Select order ${order.id}`} checked={checked} onChange={e => onToggle(order.id, e.target.checked)} className={check} />
+      </td>
+      <OrderCells order={order} />
+    </tr>
+  )
+})
+
 export function OrdersTable({ rows, columns, sort, dir }: { rows: OrderRow[]; columns: SortColumn[]; sort: SortKey; dir: Dir }) {
   const [shown, ship] = useOptimistic(rows, (state, ids: number[]) => state.map(r => (ids.includes(r.id) ? { ...r, status: 'shipped' } : r)))
   const [selected, setSelected] = useState<number[]>([])
@@ -51,7 +62,7 @@ export function OrdersTable({ rows, columns, sort, dir }: { rows: OrderRow[]; co
     })
   }
 
-  const toggle = (id: number, on: boolean) => setSelected(now => (on ? [...now, id] : now.filter(other => other !== id)))
+  const toggle = useCallback((id: number, on: boolean) => setSelected(now => (on ? [...now, id] : now.filter(other => other !== id))), [])
 
   return (
     <>
@@ -87,14 +98,7 @@ export function OrdersTable({ rows, columns, sort, dir }: { rows: OrderRow[]; co
             </tr>
           </thead>
           <tbody>
-            {shown.map(order => (
-              <tr key={order.id} className={tableRow}>
-                <td className={`${bodyCell} w-10`}>
-                  <input type="checkbox" aria-label={`Select order ${order.id}`} checked={selected.includes(order.id)} onChange={e => toggle(order.id, e.target.checked)} className={check} />
-                </td>
-                <OrderCells order={order} />
-              </tr>
-            ))}
+            {shown.map(order => <Row key={order.id} order={order} checked={selected.includes(order.id)} onToggle={toggle} />)}
           </tbody>
         </table>
       </div>

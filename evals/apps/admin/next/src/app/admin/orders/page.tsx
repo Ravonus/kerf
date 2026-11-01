@@ -66,7 +66,7 @@ export default function OrdersPage({ searchParams }: { searchParams: Search }) {
       <Suspense fallback={<FiltersSkeleton />}>
         <OrderFilters />
       </Suspense>
-      <Suspense fallback={<div className="mt-12"><TableSkeleton rows={50} /></div>}>
+      <Suspense fallback={<div className="mt-12"><TableSkeleton rows={24} /></div>}>
         <Orders searchParams={searchParams} />
       </Suspense>
     </div>
