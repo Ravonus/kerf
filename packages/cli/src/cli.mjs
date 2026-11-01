@@ -40,7 +40,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
-  add <feature>       install a plugin and wire it into the config; also tailwind, auth, and db [engine] [--layer drizzle|prisma|native] [--dry-run] [--no-install]
+  add <feature>       install a plugin and wire it into the config; also tailwind, auth, db [engine] [--layer drizzle|prisma|native], and rust [name] [--remote] [--dry-run] [--no-install]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
   plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*
@@ -179,7 +179,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return 0
       }
       case 'add': {
-        const result = await addCommand(args.root, args.positional[0], { dryRun: args.flags['dry-run'], install: !args.flags['no-install'], engine: args.positional[1], layer: args.flags.layer })
+        const result = await addCommand(args.root, args.positional[0], { dryRun: args.flags['dry-run'], install: !args.flags['no-install'], engine: args.positional[1], layer: args.flags.layer, remote: args.flags.remote })
         if (args.json) print(result)
         else say(result.already ? `${result.package} is already in ${result.config}` : result.actions.map(a => `${args.flags['dry-run'] ? 'would ' : ''}${a}`).join('\n'))
         return 0

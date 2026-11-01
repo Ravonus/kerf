@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import ts from 'typescript'
+import { addRust } from './add-rust.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
 import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config.mjs'
 import { sync } from './plugins.mjs'
@@ -247,9 +248,13 @@ async function addAuth(root, { dryRun, install }) {
   return { ok: true, package: `Better Auth on ${layer.layer}`, actions, ...(dryRun && { dryRun: true }) }
 }
 
-export async function addCommand(root, feature, { dryRun = false, install = true, engine, layer } = {}) {
+export async function addCommand(root, feature, { dryRun = false, install = true, engine, layer, remote = false } = {}) {
   root = resolve(root)
-  if (!feature) throw usageError(`weft add needs a feature: db, auth, tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
+  if (!feature) throw usageError(`weft add needs a feature: db, auth, tailwind, rust, ${Object.keys(ALIASES).join(', ')}, or a package name`)
+  if (feature === 'rust') {
+    const [manager, verb] = installer(root)
+    return addRust(root, engine, { remote, dryRun, install, installSpecs: specs => installSpecs(root, manager, verb, specs) })
+  }
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })

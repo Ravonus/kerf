@@ -67,6 +67,23 @@ export default function Page() {
 `)
 }
 
+/** `weft add rust` on a packed install: the crate comes with @weft/start, and `weft check` passes without an edit. */
+async function rustApp(app, weft, log) {
+  await sh(weft, ['add', 'rust', 'hasher'], app)
+  const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
+  if (!cargo.includes('path = "../../node_modules/@weft/start/crate"')) throw new Error(`rust: the crate isn't the one @weft/start shipped:\n${cargo}`)
+  const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
+  if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
+  log('weft add rust, check: pass')
+}
+
+async function rustServed(port, log) {
+  const r = await fetch(`http://localhost:${port}/_weft/fn/${fnId('digest', 'src/server/hasher.ts')}?i=${encodeURIComponent('{"text":"hello"}')}`)
+  const body = await r.json()
+  if (r.status !== 200 || body.v?.hash !== '4f9f2cab') throw new Error(`rust: the addon answered ${r.status}: ${JSON.stringify(body)}`)
+  log('the addon answered: pass')
+}
+
 /** What a browser would fetch: each file there, in the codec it says, by ranges, and cacheable for good. */
 async function mediaServed(app, port, log) {
   const base = `http://localhost:${port}`
@@ -101,8 +118,9 @@ async function mediaServed(app, port, log) {
   log('video upload encoded and served: pass')
 }
 
-// Four apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, and one that adds
-// media and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one).
+// Five apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, one that adds media
+// and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one), and one that
+// adds Rust (cargo has to be).
 const theme = `{ seed: { hue: 220, chroma: 0.12 }, dials: { expression: 'quiet', density: 'compact' }, radius: 'round', fonts: { body: 'Georgia, serif' } }`
 const only = process.argv.slice(2).filter(a => !a.startsWith('--'))[1]
 const apps = [
@@ -110,9 +128,10 @@ const apps = [
   { name: 'tailwind', options: { ui: 'tailwind', db: 'sqlite', auth: true }, css: ['.flex{', '.rounded-lg{'] },
   { name: 'themed', options: { ui: 'warp', db: 'none' }, theme, add: 'tailwind', css: ['--warp-radius-control:14px', '.mx-related{'] },
   { name: 'media', options: { ui: 'warp', db: 'none' }, media: true },
+  { name: 'rust', options: { ui: 'warp', db: 'none' }, rust: true },
 ]
 
-await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media }, i) => {
+await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media, rust }, i) => {
   const app = join(root, name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
   scaffold(app, options)
@@ -132,6 +151,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     log(`weft add ${add}: pass`)
   }
   if (media) await mediaApp(app, weft, log)
+  if (rust) await rustApp(app, weft, log)
   for (const [cmd, ...args] of [...(options.db === 'none' ? [] : [['weft', 'db', 'generate']]), ['tsc', '--noEmit'], ['weft', 'check'], ['weft', 'build']]) {
     await sh(join(app, 'node_modules/.bin', cmd), args, app)
     log(`${cmd} ${args.join(' ')}: pass`)
@@ -153,6 +173,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     if (status !== 200) throw new Error(`${name}: the built server answered ${status}`)
     log('built server: pass')
     if (media) await mediaServed(app, port, log)
+    if (rust) await rustServed(port, log)
   } finally {
     server.kill()
   }

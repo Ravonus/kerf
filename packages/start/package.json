@@ -6,7 +6,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "node scripts/crate.mjs",
+    "postpack": "node scripts/crate.mjs --clean"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
