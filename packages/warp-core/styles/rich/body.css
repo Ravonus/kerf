@@ -1,0 +1,31 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- body: the composite part of the field shell (segments, prefix buttons, editors, canvases) */
+  :where([data-scope="field"] > [data-part="control"] > [data-part="body"]) {
+    position: relative; z-index: 3; display: flex; align-items: center; gap: var(--warp-space-related);
+    block-size: 100%; min-inline-size: 0; box-sizing: border-box;
+    padding-inline: var(--_inset, var(--_lead)) calc(var(--warp-pad-control) * 0.5);
+    font-family: var(--warp-text-body-font); font-size: var(--warp-text-control-size); color: var(--warp-color-text);
+  }
+  /* the body carries the lead itself, and fills the control */
+  :where([data-scope="field"] > [data-part="control"]:has(> [data-part="body"])) { padding-inline: 0; }
+  :where([data-scope="field"] > [data-part="control"] > [data-part="body"]) { flex: 1; inline-size: 100%; }
+  :where([data-scope="field"] [data-part="body"] > [data-part="input"]) { flex: 1; inline-size: auto; min-inline-size: 0; padding-inline: 0; font-family: var(--warp-text-body-font); }
+  :where([data-scope="field"][data-multiline] > [data-part="control"]) { block-size: auto; }
+  :where([data-scope="field"][data-multiline] > [data-part="control"] > [data-part="body"]) { flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
+  /* typed-entry placeholders wait for the label to rise (float mode) */
+  :where([data-scope="field"] > [data-part="control"] [data-part="segments"]) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out); }
+  :where([data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-part="segments"]) { opacity: 0; }
+  :where([data-scope="field"] > [data-part="message"] svg) { inline-size: 13px; block-size: 13px; vertical-align: -2px; margin-inline-end: 4px; }
+  :where([data-scope="field"] > [data-part="message"][hidden]) { display: none; }
+  /* panels that sweep at vivid (--warp-sweep-surfaces) */
+  :where([data-scope="popover"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
+  :where([data-scope="popover"][data-presentation="sheet"][data-sweep]) { --_on: 0; }
+  /* the popover is a <dialog popover>, in the top layer: placed by warp-core's place(), or opened modal as the sheet */
+  :where(dialog[data-scope="popover"]:not([data-part])) { position: fixed; inset: auto; margin: 0; max-inline-size: calc(100vw - 16px); max-block-size: calc(100dvh - 16px); overflow: auto; }
+  :where(dialog[data-scope="popover"][data-presentation="sheet"]:not([data-part])) { box-sizing: border-box; inset: auto 0 0 0; inline-size: 100%; max-inline-size: none; max-block-size: 86dvh; }
+  :where(dialog[data-scope="popover"]:not([data-part]))::backdrop { background: transparent; }
+  :where(dialog[data-scope="popover"][data-presentation="sheet"]:not([data-part]))::backdrop { background: var(--warp-color-scrim); }
+  :where(.ico) { fill: none; stroke: currentColor; stroke-width: var(--warp-icon-stroke); stroke-linecap: round; stroke-linejoin: round; }
+  :where([data-expression="vivid"] .ico) { stroke-linecap: square; stroke-linejoin: miter; }
+}

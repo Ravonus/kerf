@@ -1,12 +1,12 @@
 import { AlertIcon, CheckIcon, ClockIcon } from '@weft/icons'
-import { announce, firstName, type Peer } from '@weft/ui-core'
+import { announce, firstName, type Peer } from '@weft/warp-core'
 import { derived } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/sync.css'
-import '@weft/ui-core/styles/app/conflict.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/sync.css'
+import '@weft/warp-core/styles/app/conflict.css'
 
 export type SyncState = 'saved' | 'saving' | 'offline'
 const SYNC = { saved: 'Saved', saving: 'Saving…', offline: 'Offline · changes kept' } as const

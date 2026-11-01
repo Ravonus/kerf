@@ -1,0 +1,16 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* count bump on badges that update live */
+:where([data-scope="badge"][data-count][data-bump]) { animation: warp-bump var(--warp-duration-slow) var(--warp-ease-pop); }
+@media (forced-colors: active) {
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"], [aria-selected="true"]),
+         [data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b,
+         [data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b,
+         [data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"]),
+         [data-scope="run"] > li[data-state="done"] [data-part="dot"],
+         [data-scope="plan"] li[data-state="done"] [data-part="box"],
+         [data-scope="message"][data-mine] [data-part="bubble"],
+         [data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+@keyframes warp-bump { 40% { scale: calc(1 + 0.18 * var(--warp-motion-scale)); } }
+}

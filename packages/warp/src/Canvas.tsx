@@ -1,9 +1,9 @@
-import { surface, type Frame } from '@weft/ui-core/canvas'
-import { use } from './use'
+import { surface, type Frame } from '@weft/warp-core/canvas'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/canvas/canvas.css'
+import '@weft/warp-core/styles/canvas/canvas.css'
 
-export type { Frame } from '@weft/ui-core/canvas'
+export type { Frame } from '@weft/warp-core/canvas'
 
 export interface CanvasProps {
   /** Paints one frame: `ctx` is already scaled to CSS pixels. Return true to be called again without `animate`. */

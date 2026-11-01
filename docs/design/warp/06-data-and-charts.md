@@ -380,8 +380,8 @@ render in the same frame height.
 <BarChart title="Seats" data={seats} x="quarter" series={plans} layout={layout.value} toolbar={<Segmented … />} />
 ```
 
-**As built** (`packages/ui-core/src/charts`, `packages/warp/src/Chart.tsx`, `Charts.tsx`).
-- A form is a pure layout in ui-core: config and width in, SVG scene out. The server renders the scene; `chart(figure, …)`
+**As built** (`packages/warp-core/src/charts`, `packages/warp/src/Chart.tsx`, `Charts.tsx`).
+- A form is a pure layout in warp-core: config and width in, SVG scene out. The server renders the scene; `chart(figure, …)`
   then patches it, so a resize or a data change rewrites attributes on the same nodes. Charts ship in `@weft/warp`, tree
   shaken per form, rather than as a `@weft/charts` pack.
 - Table view and summary always render, so there are no `<Chart.Table />` or `<Chart.Summary />` parts, as `Table` takes
@@ -470,4 +470,4 @@ render in the same frame height.
   against the surface it draws on. Static panels need no boundary under WCAG 1.4.11, and interactive cards also carry
   a surface fill. If foundations wants the pair kept, delete that one rule and panels rest on the ink border.
 
-**As built, DataGrid and pagination** (`packages/ui-core/src/grid.ts`, `packages/warp/src/{DataGrid,Pagination}.tsx`). Where the build differs from this spec: a tree is `tree={{ kids, load, branch, rollup }}`, not one `children` key, so eager and lazy rows share a prop. There is no row virtualisation yet. A tree's footer aggregates leaves once each, open or not. `Table` takes `hiddenColumns` and writes the rule into the server HTML, so a column never flashes; its own footer keeps Previous and Next to stay small, while `PaginationBar` is the full bar.
+**As built, DataGrid and pagination** (`packages/warp-core/src/grid.ts`, `packages/warp/src/{DataGrid,Pagination}.tsx`). Where the build differs from this spec: a tree is `tree={{ kids, load, branch, rollup }}`, not one `children` key, so eager and lazy rows share a prop. There is no row virtualisation yet. A tree's footer aggregates leaves once each, open or not. `Table` takes `hiddenColumns` and writes the rule into the server HTML, so a column never flashes; its own footer keeps Previous and Next to stay small, while `PaginationBar` is the full bar.

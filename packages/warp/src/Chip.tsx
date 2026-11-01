@@ -2,10 +2,10 @@ import { CheckIcon } from '@weft/icons'
 import { derived } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import './fields'
-import '@weft/ui-core/styles/inputs/choice.css'
+import '@weft/warp-core/styles/inputs/choice.css'
 // the inputs form sits on the components chip (inputs.html loads both): pressed fill, forced colours
-import '@weft/ui-core/styles/components/chip.css'
-import '@weft/ui-core/styles/components/toggle-button.css'
+import '@weft/warp-core/styles/components/chip.css'
+import '@weft/warp-core/styles/components/toggle-button.css'
 
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 

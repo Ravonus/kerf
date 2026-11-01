@@ -1,11 +1,11 @@
 import { CheckIcon } from '@weft/icons'
 import { derived } from 'weft'
 import '../parts'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/components/progress.css'
+import '@weft/warp-core/styles/rich/helpers.css'
+import '@weft/warp-core/styles/layout/tokens.css'
+import '@weft/warp-core/styles/layout/row.css'
+import '@weft/warp-core/styles/layout/stack.css'
+import '@weft/warp-core/styles/components/progress.css'
 
 /**
  * Steps (05 §4) with the compact form 09 §6.2 asks for: steps.css hides the list under 520px and shows

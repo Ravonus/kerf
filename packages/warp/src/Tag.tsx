@@ -1,7 +1,7 @@
 import { XIcon } from '@weft/icons'
 import type { Tone } from './Button'
 import './styles'
-import '@weft/ui-core/styles/components/tag.css'
+import '@weft/warp-core/styles/components/tag.css'
 
 /** A tag: user content (05 §6). `onRemove` adds the remove button, named "Remove {label}". */
 export function Tag({ tone, swatch, onRemove, label, children, ...rest }: { tone?: Tone; swatch?: boolean; onRemove?: () => void; /** The name for the remove button, when `children` is an expression (the compiler hands those over as a thunk). */ label?: string; children: any; [attr: string]: any }) {

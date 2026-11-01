@@ -1,11 +1,11 @@
-import { uid, type IntegrityStats } from '@weft/ui-core'
+import { uid, type IntegrityStats } from '@weft/warp-core'
 import { derived } from 'weft'
 import { Button } from '../Button'
 import { LiveStatus, type LiveState } from '../parts'
 import { read, type Live } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/integrity.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/integrity.css'
 
 export interface IntegrityEvent { id: string; seq: number; kind: string; route: string; note?: string; lag: number }
 

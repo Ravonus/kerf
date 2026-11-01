@@ -1,6 +1,6 @@
 // The live pack on the a11y gallery (?part=live): rendered by test/a11y/gallery.tsx. Named cases for hydration.
 import { state } from 'weft'
-import type { PrefGroup } from '@weft/ui-core'
+import type { PrefGroup } from '@weft/warp-core'
 import { ActivityFeed } from '../../src/live/ActivityFeed'
 import { Bell } from '../../src/live/Bell'
 import { ConnectionBanner, ConnectionPill } from '../../src/live/Connection'

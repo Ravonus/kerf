@@ -1,12 +1,12 @@
 import { XIcon } from '@weft/icons'
-import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft/ui-core'
+import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft/warp-core'
 import { onCleanup, state } from 'weft'
 import { Icon, toneIcon } from './Icon'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/button.css' // the action and dismiss buttons' markup
-import '@weft/ui-core/styles/components/spinner.css'
-import '@weft/ui-core/styles/components/toast.css'
+import '@weft/warp-core/styles/components/button.css' // the action and dismiss buttons' markup
+import '@weft/warp-core/styles/components/spinner.css'
+import '@weft/warp-core/styles/components/toast.css'
 
 let store: ReturnType<typeof toastStore> | undefined
 const toasts = () => (store ??= toastStore())

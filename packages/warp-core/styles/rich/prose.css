@@ -1,0 +1,35 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- prose */
+  :where([data-scope="prose"]) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.05em; text-wrap: pretty; font-size: var(--warp-text-prose-size, 16px); line-height: var(--warp-text-prose-leading, 1.65); max-inline-size: 68ch; }
+  :where([data-scope="prose"] > *) { margin: 0; }
+  :where([data-scope="prose"] :is(h2, h3)) { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); line-height: 1.2; margin-block-start: 8px; scroll-margin-block-start: 80px; }
+  :where([data-scope="prose"] h2) { font-size: calc(var(--warp-text-heading-size) + 8px); line-height: 1.2; margin-block-start: 1.6em; padding-block-start: 1.2em; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); scroll-margin-block-start: 72px; }
+  :where([data-scope="prose"] > h2:first-child) { margin-block-start: 0; padding-block-start: 0; border: 0; }
+  :where([data-scope="prose"] h3) { font-size: calc(var(--warp-text-heading-size) + 2px); line-height: 1.3; margin-block-start: 0.8em; scroll-margin-block-start: 72px; }
+  :where([data-scope="prose"] :is(ul, ol)) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.45em; padding-inline-start: 1.25em; }
+  :where([data-scope="prose"] li::marker) { color: var(--warp-color-text-subtle); }
+  :where([data-scope="prose"] strong) { font-weight: 600; color: var(--warp-color-text); }
+  :where([data-scope="prose"] [data-part="anchor"]) { margin-inline-start: 8px; color: var(--warp-color-text-subtle); text-decoration: none; opacity: 0; transition: opacity var(--warp-duration-fast); }
+  :where([data-scope="prose"] :is(h2, h3):hover [data-part="anchor"], [data-scope="prose"] [data-part="anchor"]:focus-visible) { opacity: 1; }
+  :where([data-pointer="coarse"] [data-scope="prose"] [data-part="anchor"]) { opacity: .6; }
+  :where([data-scope="prose"] [data-part="anchor"][data-done])::after { content: " copied"; font: 400 11px var(--warp-font-mono); color: var(--warp-color-accent-text); }
+  :where([data-scope="prose"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
+  :where([data-scope="prose"] blockquote) { padding: 12px 16px; border-radius: var(--warp-radius-control); background: var(--warp-color-accent-soft); border-inline-start: 2px solid var(--warp-color-accent-solid); color: var(--warp-color-text-subtle); }
+  :where([data-scope="prose"] table) { display: block; overflow-x: auto; border-collapse: separate; border-spacing: 0; font-size: var(--warp-text-label-size); inline-size: 100%; border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); }
+  :where([data-scope="prose"] tbody tr) { transition: background var(--warp-duration-fast); }
+  :where([data-scope="prose"] tbody tr:hover) { background: var(--warp-color-surface-hover); }
+  :where([data-scope="prose"] tbody tr:last-child :is(th, td)) { border-block-end: 0; }
+  :where([data-scope="prose"] thead :is(th)) { background: var(--warp-color-surface-sunken); }
+  :where([data-scope="prose"] caption) { text-align: start; padding-block-end: 6px; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+  :where([data-scope="prose"] :is(th, td)) { padding: 9px 14px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); text-align: start; }
+  :where([data-scope="prose"] thead th) { font-weight: 600; border-block-end-color: var(--warp-color-border-strong); }
+  :where([data-scope="prose"] math) { font-size: 1.05em; }
+  :where([data-scope="prose"] hr) { border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+  :where([data-scope="prose"] [data-part="footnotes"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); padding-inline-start: 1.2em; }
+  :where([data-scope="prose"] sup a) { text-decoration: none; font-weight: 600; }
+  :where([data-part="diagram"]) { margin: 0; border: var(--warp-border-hairline) dashed var(--warp-color-border-control); border-radius: var(--warp-radius-surface); overflow: hidden; }
+  :where([data-part="diagram"] figcaption) { padding: 6px 12px; font-size: 11px; color: var(--warp-color-text-subtle); border-block-end: var(--warp-border-hairline) dashed var(--warp-color-border); }
+  :where([data-part="diagram"] figcaption span) { font: 500 10px/1 var(--warp-font-mono); text-transform: uppercase; letter-spacing: .08em; padding: 2px 5px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); margin-inline-end: 6px; }
+  :where([data-part="diagram"] pre) { margin: 0; padding: 10px 12px; font: 400 var(--warp-text-code-size)/1.6 var(--warp-font-mono); }
+}

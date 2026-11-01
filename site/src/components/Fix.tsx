@@ -1,6 +1,6 @@
 import { derived, onMount, state } from 'weft'
 import { Button } from '@weft/warp'
-import '@weft/ui-core/styles/rich/codeblock.css'
+import '@weft/warp-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
 const START = 2

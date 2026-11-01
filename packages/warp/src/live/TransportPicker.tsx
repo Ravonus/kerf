@@ -1,14 +1,14 @@
-import { announce, formatMs, installSweep, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft/ui-core'
+import { announce, formatMs, installSweep, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft/warp-core'
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
 import { LiveStatus } from '../parts'
 import { Button } from '../Button'
 import { Select } from '../Select'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { G, val } from './shared'
 import '../fields'
-import '@weft/ui-core/styles/inputs/choice.css'
-import '@weft/ui-core/styles/components/alert.css'
-import '@weft/ui-core/styles/app/transport.css'
+import '@weft/warp-core/styles/inputs/choice.css'
+import '@weft/warp-core/styles/components/alert.css'
+import '@weft/warp-core/styles/app/transport.css'
 
 const WIRES: [TransportWire, string, string, string][] = [['default', 'weft default', 'SSE + WebSocket', 'One SSE (.live, stream) and one WebSocket (channel) per tab'], ['tabs', 'Tabs only', 'BroadcastChannel', "tabs.channel: this browser's tabs, no server"], ['fake', 'Fake', 'weft/test', 'In-memory pair with a network model']]
 const BUSES: [TransportBus, string, string][] = [['memory', '+0 ms', 'One process. The default'], ['postgres', '+4 ms', 'LISTEN / NOTIFY'], ['redis', '+2 ms', 'Pub/sub'], ['nats', '+1 ms', 'Subjects'], ['durable-object', '+8 ms', 'Cloudflare preset only']]

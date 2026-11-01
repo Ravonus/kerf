@@ -1,0 +1,69 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Menu (dropdown, context, submenu; also the action sheet on phones) ----- */
+:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; }
+/* the panel's border draws in L→R as it opens and holds while open (sweep child, inset over the hairline) */
+:where([data-scope="menu"] [data-part="item"], [data-scope="select"] [data-part="item"], [data-scope="palette"] [data-part="item"]) {
+  position: relative; display: flex; align-items: center; gap: var(--warp-space-related);
+  min-block-size: max(32px, var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-space-related) var(--warp-pad-control);
+  border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); outline: none;
+  color: var(--warp-color-text); text-decoration: none; cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
+  transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="menu"] [data-part="item"]:focus, [data-scope="menu"] [data-part="item"][data-state="open"],
+       [data-scope="select"] [data-part="item"][data-highlighted], [data-scope="palette"] [data-part="item"][aria-selected="true"]) {
+  background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent);
+}
+:where([data-scope="menu"] [data-part="item"]:focus-visible, [data-scope="select"] [data-part="item"][data-highlighted][data-keyboard]) {
+  box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-focus);
+}
+:where([data-scope="menu"][data-part="content"]:has(> [data-part="shuttle"])) { isolation: isolate; }
+/* with a shuttle the highlight travels: the item itself draws nothing */
+:where([data-scope="menu"]:has(> [data-part="shuttle"]) [data-part="item"]:focus) { background: none; box-shadow: none; }
+:where([data-scope="menu"][data-part="content"] > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 130%), transparent); }
+:where([data-scope="menu"] [data-part="item"][aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); }
+:where([data-scope="menu"] [data-part="item"][data-tone="critical"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="menu"] [data-part="item"] > svg[data-icon], [data-scope="palette"] [data-part="item"] > svg[data-icon]) { color: var(--warp-color-text-subtle); }
+:where([data-scope="menu"] [data-part="item"][data-tone="critical"] > svg[data-icon]) { color: inherit; }
+:where([data-scope="menu"] [data-part="item-label"]) { flex: 1; min-inline-size: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:where([data-scope="menu"] [data-part="shortcut"], [data-scope="palette"] [data-part="shortcut"]) {
+  margin-inline-start: auto; padding-inline-start: var(--warp-space-group);
+  font: 400 11.5px/1 var(--warp-font-mono); letter-spacing: 0.02em; color: var(--warp-color-text-subtle);
+}
+:where([data-scope="menu"] [data-part="indicator"]) { inline-size: var(--warp-icon-md); display: grid; place-items: center; color: var(--warp-color-accent-text); }
+:where([data-scope="menu"] [role="menuitemcheckbox"]:not([aria-checked="true"]) [data-part="indicator"] > *,
+       [data-scope="menu"] [role="menuitemradio"]:not([aria-checked="true"]) [data-part="indicator"] > *) { visibility: hidden; }
+:where([data-scope="menu"] [role="menuitemradio"] [data-part="indicator"] > i) { inline-size: 6px; block-size: 6px; border-radius: 999px; background: currentColor; }
+:where([data-scope="menu"] [data-part="separator"]) { block-size: var(--warp-border-hairline); margin: var(--warp-space-tight) calc(var(--warp-space-tight) * -1); background: var(--warp-color-border); border: 0; }
+:where([data-scope="menu"] [data-part="group-label"], [data-scope="palette"] [data-part="group-label"], [data-scope="select"] [data-part="group-label"]) {
+  padding: var(--warp-space-related) var(--warp-space-related) var(--warp-space-tight);
+  font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
+}
+:where([data-scope="menu"] [data-part="item"] > [data-part="chevron"]) { margin-inline-start: auto; color: var(--warp-color-text-subtle); inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
+/* phone: the same menu as a bottom action sheet */
+:where([data-scope="menu"][data-part="content"][data-placement="sheet"]) {
+  inset: auto 8px calc(8px + env(safe-area-inset-bottom, 0px)) 8px; inline-size: auto; max-inline-size: none; min-inline-size: 0;
+  max-block-size: 70dvh; padding: var(--warp-space-related); border-radius: max(var(--warp-radius-surface), 10px);
+  --_side-x: 0; --_side-y: 3;
+}
+:where([data-scope="menu"][data-placement="sheet"] [data-part="item"]) { min-block-size: 48px; font-size: var(--warp-text-control-size); }
+
+/* -- Context menu target -------------------------------------------------------- */
+:where([data-scope="context-menu"][data-part="trigger"]) { -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
+
+
+
+
+/* ---------------------------------------------------------------- forced colours (01-foundations §12)
+   Every state this file draws with a background opts out of the UA repaint and is redrawn with system
+   colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
+@media (forced-colors: active) {
+/* list items: the active option or item reads as the system selection */
+  :where([data-scope="menu"] [data-part="item"]:is(:focus, [data-state="open"]), [data-scope="select"] [data-part="item"][data-highlighted],
+         [data-scope="palette"] [data-part="item"][aria-selected="true"], [role="listbox"] [role="option"][data-highlighted]) {
+    forced-color-adjust: none; background: Highlight; color: HighlightText; box-shadow: none;
+  }
+  :where([data-scope="menu"], [data-scope="select"], [role="listbox"]) :where([data-part="indicator"]) { color: inherit; }
+}
+}

@@ -13,7 +13,7 @@ import { exportsOf, loadCompiler, resolveWeft } from '../../packages/cli/src/wef
 import { cleanText, decode, descriptionProblem, truncate } from '../../packages/start/src/derive.mjs'
 import { readFixtures, readToolkit } from './toolkit.mjs'
 
-// ui-core's source imports without extensions, for bundlers; here Node reads it directly.
+// warp-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
   resolve(spec, context, next) {
     try {
@@ -24,7 +24,7 @@ registerHooks({
     }
   },
 })
-const { buildIndex, highlight, markdownToHtml } = await import('../../packages/ui-core/src/index.ts')
+const { buildIndex, highlight, markdownToHtml } = await import('../../packages/warp-core/src/index.ts')
 const { level, PALETTE } = await import('../src/lib/field.ts')
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..')

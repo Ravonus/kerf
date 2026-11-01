@@ -1,4 +1,4 @@
-import type { ChangeReason } from '@weft/ui-core'
+import type { ChangeReason } from '@weft/warp-core'
 import { Box, state, untrack, type State } from 'weft'
 
 /** 04 §1.1: a State to bind, or a plain value (controlled) or defaultValue; `onValueChange` hears every change. */

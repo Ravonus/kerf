@@ -1,0 +1,13 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- datetime: calendar beside slots; stacked in a sheet */
+  :where(.dt-pop) { display: flex; gap: var(--warp-space-group); align-items: stretch; }
+  :where(.dt-pop > [data-scope="calendar"]) { flex: none; }
+  :where([data-scope="field"]:has([data-scope="popover"]:not([data-part])[data-state="open"])) { position: relative; z-index: 30; }
+  :where(.dt-side) { display: grid; grid-template-rows: auto 1fr; min-inline-size: 132px; border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-inline-start: var(--warp-space-related); }
+  :where(.dt-side [data-part="listbox"]) { max-block-size: 290px; }
+  :where([data-presentation="sheet"] .dt-pop) { flex-direction: column; }
+  :where([data-presentation="sheet"] .dt-side) { border: 0; padding: 0; }
+  :where([data-presentation="sheet"] .dt-side [data-part="listbox"]) { display: flex; gap: 6px; overflow-x: auto; max-block-size: none; }
+  :where([data-presentation="sheet"] .dt-side [role="option"]) { flex: none; border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: var(--warp-radius-round); }
+}

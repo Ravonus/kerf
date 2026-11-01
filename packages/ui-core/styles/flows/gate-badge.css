@@ -1,6 +1,0 @@
-/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
-@layer warp.flows {
-:where([data-scope="gate-badge"]) { --_t: var(--warp-color-caution-text); --_s: var(--warp-color-caution-soft); }
-:where([data-scope="gate-badge"][data-state="signed"]) { --_t: var(--warp-color-positive-text); --_s: var(--warp-color-positive-soft); }
-:where([data-scope="gate-badge"]:is([data-state="expired"], [data-state="declined"], [data-state="error"])) { --_t: var(--warp-color-critical-text); --_s: var(--warp-color-critical-soft); }
-}

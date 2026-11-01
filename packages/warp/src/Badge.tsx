@@ -1,6 +1,6 @@
 import type { Tone } from './Button'
 import './styles'
-import '@weft/ui-core/styles/components/badge.css'
+import '@weft/warp-core/styles/components/badge.css'
 
 /**
  * A status or count badge (05 §5). `dot` adds a status dot; a count badge says its unit to screen readers in

@@ -1,5 +1,5 @@
 // What the collab pack shares: a peer's avatar in their presence colour, and the props that may be a State or a value.
-import { peerColor, type Peer } from '@weft/ui-core'
+import { peerColor, type Peer } from '@weft/warp-core'
 import { Box, type State } from 'weft'
 import { Avatar } from '../parts'
 

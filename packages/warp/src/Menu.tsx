@@ -1,10 +1,10 @@
-import { menu, moveShuttle, uid, type Align, type Side } from '@weft/ui-core'
+import { menu, moveShuttle, uid, type Align, type Side } from '@weft/warp-core'
 import { onCleanup, onMount, state } from 'weft'
 import { Button, type ButtonProps } from './Button'
 import { Icon, type IconRef } from './Icon'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/menu.css'
+import '@weft/warp-core/styles/components/menu.css'
 
 export type MenuEntry =
   | { label: string; onSelect?: () => void; icon?: IconRef; shortcut?: string; tone?: 'critical'; disabled?: boolean; href?: string }
@@ -29,7 +29,7 @@ export interface MenuProps {
 }
 
 /**
- * A menu button (05 §3, APG): the trigger holds its sweep while open and the panel opens from it. ui-core's menu() owns
+ * A menu button (05 §3, APG): the trigger holds its sweep while open and the panel opens from it. warp-core's menu() owns
  * focus, ↑/↓, Home/End, typeahead, Escape and Tab; the highlight is one shuttle that follows focus and the pointer.
  */
 export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }: MenuProps) {

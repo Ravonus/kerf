@@ -2,7 +2,7 @@
   "name": "@weft/warp",
   "version": "0.0.0",
   "private": true,
-  "description": "warp for weft: the spec components as weft TSX over @weft/ui-core (the CSS split per component, and the behaviour)",
+  "description": "warp for weft: the spec components as weft TSX over @weft/warp-core (the CSS split per component, and the behaviour)",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -24,8 +24,8 @@
     "dither": "node scripts/dither.mjs"
   },
   "dependencies": {
-    "@weft/ui-core": "file:../ui-core",
-    "@weft/icons": "file:../icons"
+    "@weft/icons": "file:../icons",
+    "@weft/warp-core": "file:../warp-core"
   },
   "peerDependencies": {
     "weft": "*"

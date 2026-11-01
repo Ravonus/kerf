@@ -1,8 +1,8 @@
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
 import { measureEngine, type MeasureHandle, type MeasureProvider } from 'weft/text'
-import { slices, uid, virtualizer, type Virtualizer } from '@weft/ui-core'
+import { slices, uid, virtualizer, type Virtualizer } from '@weft/warp-core'
 import './styles'
-import '@weft/ui-core/styles/data/scroll-grid.css'
+import '@weft/warp-core/styles/data/scroll-grid.css'
 
 export interface GridColumn {
   id: string

@@ -1,6 +1,6 @@
 // The agent pack on one page (?part=agent), with the specimen's sample data. `XCase` exports are what agent-hydrate
 // renders. Imports are per file: the ssr and hydrate query imports follow .tsx only.
-import { foldAnswer, type AgentEvent, type Answer, type TraceSpan } from '@weft/ui-core'
+import { foldAnswer, type AgentEvent, type Answer, type TraceSpan } from '@weft/warp-core'
 import { state } from 'weft'
 import { Button } from '../../src/Button'
 import { Tabs } from '../../src/Tabs'

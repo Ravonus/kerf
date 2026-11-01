@@ -1,15 +1,15 @@
 import { CodeIcon, CodeBlockIcon, LinkIcon, ListIcon, ListOrderedIcon, QuoteIcon, UndoIcon } from '@weft/icons'
-import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle } from '@weft/ui-core'
+import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle } from '@weft/warp-core'
 import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/body.css'
-import '@weft/ui-core/styles/rich/rich-text.css'
-import '@weft/ui-core/styles/rich/listbox.css'
-import '@weft/ui-core/styles/rich/popover.css'
-import '@weft/ui-core/styles/rich/helpers.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/body.css'
+import '@weft/warp-core/styles/rich/rich-text.css'
+import '@weft/warp-core/styles/rich/listbox.css'
+import '@weft/warp-core/styles/rich/popover.css'
+import '@weft/warp-core/styles/rich/helpers.css'
 
 export type SlashCommand = { id: string; label: string; hint?: string; shortcut?: string; run: (editor: RichTextHandle) => void }
 type Mark = 'bold' | 'italic' | 'strike' | 'code' | 'link'
@@ -57,7 +57,7 @@ type MenuRow = { id: string; main: string; meta?: string; run: () => void }
 /**
  * A rich text field (04 RichTextEditor; inputs-rich.html:1522): the editor frame is the field. The toolbar is an APG
  * Toolbar, one tab stop with ←/→ inside. Markdown shortcuts open a block at the start of a line; `/` on an empty line and
- * `@` open a list at the caret. Everything that enters the editor, a value or a paste, goes through ui-core's allow-list.
+ * `@` open a list at the caret. Everything that enters the editor, a value or a paste, goes through warp-core's allow-list.
  */
 export function RichTextEditor({ value, defaultValue, onValueChange, format = 'html', toolbar = 'fixed', marks = ['bold', 'italic', 'strike', 'code', 'link'], blocks = ['h2', 'ul', 'ol', 'quote'], commands = SLASH, mentions, placeholder = 'Write, or type / for blocks…', minRows, maxRows, name, hint, ...rest }: RichTextEditorProps) {
   const id = uid('rte')

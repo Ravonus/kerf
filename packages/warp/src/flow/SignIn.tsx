@@ -1,4 +1,4 @@
-import { emailError, uid } from '@weft/ui-core'
+import { emailError, uid } from '@weft/warp-core'
 import { derived, untrack } from 'weft'
 import { Input } from '../Field'
 import { Switch } from '../Choice'
@@ -6,8 +6,8 @@ import { AuthLogo } from './AuthScreen'
 import { FormError, StepFrame, Submit, TextLink, Title, useStepForm, type FlowForm } from './kit'
 import { PasskeyButton, SsoButtons, type SsoProvider } from './Sso'
 import '../styles'
-import '@weft/ui-core/styles/flows/auth.css'
-import '@weft/ui-core/styles/flows/sso.css'
+import '@weft/warp-core/styles/flows/auth.css'
+import '@weft/warp-core/styles/flows/sso.css'
 
 export interface SignInValues { email: string; password: string; remember?: string }
 

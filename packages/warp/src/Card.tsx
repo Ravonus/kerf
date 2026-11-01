@@ -1,6 +1,6 @@
 import { untrack } from 'weft'
 import './styles'
-import '@weft/ui-core/styles/components/surface.css'
+import '@weft/warp-core/styles/components/surface.css'
 
 /**
  * A surface (05 §1, §6: Card, Panel). Interactive cards (`href` or `onClick`) are links or buttons and always carry

@@ -1,14 +1,14 @@
 import { XIcon } from '@weft/icons'
 import { flush, onCleanup, state, untrack } from 'weft'
-import { formReset } from '@weft/ui-core'
+import { formReset } from '@weft/warp-core'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Segmented } from './Choice'
 import { JsonEditor } from './CodeInput'
 import { Field, type FieldShell } from './Field'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/body.css'
-import '@weft/ui-core/styles/rich/key-value.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/body.css'
+import '@weft/warp-core/styles/rich/key-value.css'
 
 export type KeyValue = { key: string; value: string }
 

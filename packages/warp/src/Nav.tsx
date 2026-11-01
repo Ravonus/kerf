@@ -1,7 +1,7 @@
-import { navIndicator } from '@weft/ui-core'
-import { use } from './use'
+import { navIndicator } from '@weft/warp-core'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/nav.css'
+import '@weft/warp-core/styles/components/nav.css'
 
 /**
  * Links with warp's sliding bar. It grows in from an item's edge, slides as the route or the pointer moves, and grows

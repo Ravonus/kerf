@@ -1,5 +1,5 @@
 import { onCleanup, onMount, watch } from 'weft'
-import { copyButtons } from '@weft/ui-core'
+import { copyButtons } from '@weft/warp-core'
 import { render } from 'weft/dom'
 import { spotlightOpen } from '../lib/spotlight'
 

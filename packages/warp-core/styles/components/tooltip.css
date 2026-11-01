@@ -1,0 +1,30 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Tooltip (hint: never essential) ------------------------------------------ */
+:where([data-scope="tooltip"][data-part="content"]) {
+  --_side-x: 0; --_side-y: 1;
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box; max-inline-size: 240px;
+  padding: 5px 8px; border: 0; border-radius: var(--warp-radius-mark);
+  background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse);
+  font: 500 var(--warp-text-caption-size)/1.35 var(--warp-text-body-font); letter-spacing: 0; text-transform: none;
+  pointer-events: auto; overflow: visible;
+  transform-origin: var(--warp-origin, 50% 100%);
+  opacity: 0; scale: var(--warp-motion-scale-from); translate: 0 0;
+  transition: opacity calc(var(--warp-duration-fast) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+              scale calc(var(--warp-duration-fast) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+              translate calc(var(--warp-duration-fast) * var(--warp-duration-exit-k)) var(--warp-ease-in),
+              overlay calc(var(--warp-duration-fast) * var(--warp-duration-exit-k)) allow-discrete,
+              display calc(var(--warp-duration-fast) * var(--warp-duration-exit-k)) allow-discrete;
+}
+:where([data-scope="tooltip"][data-part="content"]:popover-open) {
+  opacity: 1; translate: 0 0; scale: 1;
+  transition: opacity var(--warp-duration-fast) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-out),
+              overlay var(--warp-duration-fast) allow-discrete, display var(--warp-duration-fast) allow-discrete;
+}
+@starting-style {
+  :where([data-scope="tooltip"][data-part="content"]:popover-open) { opacity: 0; scale: var(--warp-motion-scale-from); translate: calc(var(--_side-x) * var(--warp-motion-distance) * 0.4) calc(var(--_side-y) * var(--warp-motion-distance) * 0.4); }
+/* the next tip in a run arrives at once: the first waited, these are already trusted */
+:where([data-scope="tooltip"][data-part="content"][data-warm]:popover-open) { transition-duration: 0ms; }
+}
+:where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px/1.25 var(--warp-font-mono); opacity: 0.75; }
+}

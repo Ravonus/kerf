@@ -1,10 +1,10 @@
-import { markdownToHtml, nextIndex, uid } from '@weft/ui-core'
+import { markdownToHtml, nextIndex, uid } from '@weft/warp-core'
 import { derived, flush, state, untrack } from 'weft'
 import { bindable, type Bindable } from './bind'
 import { Textarea, type FieldShell } from './Field'
 import './styles'
-import '@weft/ui-core/styles/rich/markdown.css'
-import '@weft/ui-core/styles/rich/md-editor.css'
+import '@weft/warp-core/styles/rich/markdown.css'
+import '@weft/warp-core/styles/rich/md-editor.css'
 
 /** Markdown, rendered (04 Markdown): a small, safe renderer. Raw HTML is escaped and shows as text. */
 export function Markdown({ source, linkTarget, ...rest }: { source: string; linkTarget?: '_self' | '_blank'; [attr: string]: any }) {

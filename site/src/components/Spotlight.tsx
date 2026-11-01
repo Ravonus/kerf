@@ -1,5 +1,5 @@
 import { navigate } from '@weft/start'
-import type { SearchHit } from '@weft/ui-core'
+import type { SearchHit } from '@weft/warp-core'
 import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft/icons'
 import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource } from '@weft/warp'
 import { onMount } from 'weft'

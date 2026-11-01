@@ -1,0 +1,28 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+/* AnnouncementBar — one line above the header; dismissible; site-wide. */
+:where([data-scope="announcement"]) {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
+  min-block-size: 36px; padding: calc(var(--warp-safe-top) * var(--_first, 0)) 44px 0;
+  background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); font-size: var(--warp-text-caption-size); text-align: center;
+}
+:where([data-scope="announcement"] a) { color: inherit; font-weight: 600; text-underline-offset: 3px; white-space: nowrap; }
+/* touch: the link is a line of text in a ≥40px bar; a block-axis expander gives it hit-min (the dismiss
+   button beside it is inline, so the axes don't meet) */
+:where([data-scope="announcement"] a) { position: relative; }
+:where([data-scope="announcement"] a)::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-scope="announcement"] [data-part="text"]) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+:where([data-scope="announcement"] [data-part="dismiss"]) {
+  position: absolute; inset-inline-end: 4px; inset-block-end: 0; display: grid; place-items: center;
+  inline-size: max(36px, var(--warp-hit-min)); block-size: max(36px, var(--warp-hit-min)); border: 0; background: none; color: inherit; opacity: 0.75; cursor: pointer;
+}
+/* the first announcement owns the top safe area; the TopNav right after it doesn't repeat it */
+:where([data-scope="announcement"]:not([hidden]) + [data-scope="topnav"]) { padding-block-start: 0; }
+:where([data-scope="announcement"][data-tone="accent"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+@media print {
+:where([data-scope="shell"] [data-part="dock"], [data-scope="shell"] [data-part="menu"], [data-scope="shell"] [data-part="sheet"],
+         [data-scope="shell"] [data-part="palette"], [data-scope="consent"], [data-scope="announcement"], [data-scope="topnav"],
+         [data-scope="float-panel"], [data-scope="back-to-top"], [data-scope="route-progress"], [data-scope="docs"] [data-part="sidenav"],
+         [data-scope="anchor-nav"]) { display: none !important; }
+}
+}

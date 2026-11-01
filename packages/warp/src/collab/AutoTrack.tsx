@@ -1,12 +1,12 @@
-import { announce, autoTrack, firstName, type Peer } from '@weft/ui-core'
+import { announce, autoTrack, firstName, type Peer } from '@weft/warp-core'
 import { derived, state } from 'weft'
 import { Button } from '../Button'
 import { Switch } from '../Choice'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { PeerAvatar } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/auto-track.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/auto-track.css'
 
 type Track = 'following' | 'paused' | 'off'
 

@@ -352,7 +352,7 @@ export async function pixelContrast(page, i, tries = 4) {
 }
 
 /**
- * Contrast failures that are in the spec's own CSS (docs/design/warp/tokens, split verbatim into ui-core/styles), so
+ * Contrast failures that are in the spec's own CSS (docs/design/warp/tokens, split verbatim into warp-core/styles), so
  * warp can't fix them without changing the spec. They are reported, not failed; anything else fails. The spec's a11y
  * review names the class (reviews/03 m12: small text under 4.5:1, fix with the subtle or text tokens). The chip and
  * segmented counts (opacity .7/.8, 3.2:1 and 4.0:1 in light) were fixed in the spec on 2026-10-30.

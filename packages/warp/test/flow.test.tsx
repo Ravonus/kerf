@@ -1,6 +1,6 @@
 // The flow pack driven as a user: keyboard paths, states, error paths, focus moves, announcements.
 import { fireEvent } from '@testing-library/dom'
-import { shortcuts } from '@weft/ui-core'
+import { shortcuts } from '@weft/warp-core'
 import { state } from 'weft'
 import { flush, render } from 'weft/test'
 import { AuthDone, InviteAccept, MagicLinkSent, ResetPassword } from '../src/flow/AuthSteps'

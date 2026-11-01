@@ -2,7 +2,7 @@
 // scripts/shots.mjs photographs it at every dial stop. ?expression=quiet|balanced|vivid ?theme=light|dark
 import { render } from 'weft/dom'
 import { state } from 'weft'
-import { dialsFromUrl } from '@weft/ui-core'
+import { dialsFromUrl } from '@weft/warp-core'
 import { Accordion, Menu, RadioGroup, Slider, Ticker, Alert, Badge, Button, Card, Checkbox, Chip, CommandPalette, Drawer, Grid, Input, Kbd, Modal, Popover, Progress, Row, Search, Segmented, Select, Skeleton, Spinner, Stack, Switch, Table, Tabs, Tag, Textarea, Toaster, Toggle, Tooltip, toast, Heading, Text, Nav, Link } from '../../src/index'
 
 const TONES = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const

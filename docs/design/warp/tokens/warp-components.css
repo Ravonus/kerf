@@ -1646,7 +1646,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where(dialog[data-scope="palette"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-pop), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; opacity: 0; scale: var(--warp-motion-scale-from); }
 :where(dialog[data-scope="palette"][open]) { opacity: 1; scale: 1; @starting-style { opacity: 0; scale: var(--warp-motion-scale-from); } }
 
-/* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (ui-core nav.ts) grows it in
+/* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
 :where([data-scope="nav"]) { position: relative; --_bar: var(--warp-sweep-width); display: flex; gap: var(--warp-space-group); align-self: start; inline-size: fit-content; }
 :where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-space-tight); }

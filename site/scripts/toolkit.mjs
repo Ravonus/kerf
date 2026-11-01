@@ -26,7 +26,7 @@ const oneLine = text => text.replace(/\s+/g, ' ').trim()
 
 export function readToolkit(repo) {
   const warp = join(repo, 'packages/warp')
-  const parsed = ts.parseJsonConfigFileContent({ compilerOptions: { jsx: 'preserve', target: 'esnext', module: 'esnext', moduleResolution: 'bundler', skipLibCheck: true, noEmit: true, strict: true, types: [], allowImportingTsExtensions: true, paths: { weft: ['../weft/src/index.ts'], 'weft/*': ['../weft/src/*'], '@weft/ui-core': ['../ui-core/src/index.ts'], '@weft/icons': ['../icons/src/gen/index.tsx'] } }, files: ['src/index.ts'] }, ts.sys, warp)
+  const parsed = ts.parseJsonConfigFileContent({ compilerOptions: { jsx: 'preserve', target: 'esnext', module: 'esnext', moduleResolution: 'bundler', skipLibCheck: true, noEmit: true, strict: true, types: [], allowImportingTsExtensions: true, paths: { weft: ['../weft/src/index.ts'], 'weft/*': ['../weft/src/*'], '@weft/warp-core': ['../warp-core/src/index.ts'], '@weft/icons': ['../icons/src/gen/index.tsx'] } }, files: ['src/index.ts'] }, ts.sys, warp)
   const program = ts.createProgram(parsed.fileNames, parsed.options)
   const checker = program.getTypeChecker()
   const entry = program.getSourceFile(join(warp, 'src/index.ts'))

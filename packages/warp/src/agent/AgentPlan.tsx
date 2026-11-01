@@ -1,10 +1,10 @@
 import { CheckIcon, ClockIcon, HandIcon, XIcon } from '@weft/icons'
-import type { PlanStep } from '@weft/ui-core'
+import type { PlanStep } from '@weft/warp-core'
 import { derived } from 'weft'
 import { Bar, IconButton } from './bits'
 import '../styles'
-import '@weft/ui-core/styles/components/spinner.css'
-import '@weft/ui-core/styles/app/plan.css'
+import '@weft/warp-core/styles/components/spinner.css'
+import '@weft/warp-core/styles/app/plan.css'
 
 export type QueuedMessage = { id: string; text: string }
 

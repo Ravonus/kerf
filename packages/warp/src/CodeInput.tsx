@@ -1,11 +1,11 @@
-import { codeLayer, indented, jsonProblem } from '@weft/ui-core'
+import { codeLayer, indented, jsonProblem } from '@weft/warp-core'
 import { derived, onCleanup, state, untrack, type State } from 'weft'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/body.css'
-import '@weft/ui-core/styles/rich/code-input.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/body.css'
+import '@weft/warp-core/styles/rich/code-input.css'
 
 export type CodeInputProps = FieldShell & Bindable<string> & {
   /** After a form's reset put the value back. */

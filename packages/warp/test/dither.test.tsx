@@ -1,5 +1,5 @@
 // Canvas and the dither family: markup, a11y, the server's output, and that one app's bytes aren't another's.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
 import { flush, render } from 'weft/test'

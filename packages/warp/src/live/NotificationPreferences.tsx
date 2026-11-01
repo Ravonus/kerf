@@ -1,13 +1,13 @@
-import { announce, applyPrefs, gridNav, prefCell, toggleChanges, triState, uid, type PrefChange, type PrefEvent, type PrefGroup, type PrefRules, type PrefValues } from '@weft/ui-core'
+import { announce, applyPrefs, gridNav, prefCell, toggleChanges, triState, uid, type PrefChange, type PrefEvent, type PrefGroup, type PrefRules, type PrefValues } from '@weft/warp-core'
 import { derived, onMount, state, untrack, watch } from 'weft'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Select } from '../Select'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { G, val } from './shared'
 import '../fields'
-import '@weft/ui-core/styles/app/prefs-matrix.css'
+import '@weft/warp-core/styles/app/prefs-matrix.css'
 
 export interface PrefChannel { id: string; label: string }
 export interface NotificationPreferencesProps {

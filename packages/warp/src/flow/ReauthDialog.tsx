@@ -1,4 +1,4 @@
-import { uid } from '@weft/ui-core'
+import { uid } from '@weft/warp-core'
 import { derived, untrack, type State } from 'weft'
 import { Button } from '../Button'
 import { Input } from '../Field'

@@ -1,5 +1,5 @@
 import { XIcon } from '@weft/icons'
-import { aggregate, grid, groupRows, leaves, matchFilter, moved, pageSlice, pivotTable, sortRows, table, toCSV, treeRows, uid, type Aggregate, type GridFilter, type TreeEntry } from '@weft/ui-core'
+import { aggregate, grid, groupRows, leaves, matchFilter, moved, pageSlice, pivotTable, sortRows, table, toCSV, treeRows, uid, type Aggregate, type GridFilter, type TreeEntry } from '@weft/warp-core'
 import { derived, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from './Button'
 import { Segmented } from './Choice'
@@ -7,9 +7,9 @@ import { Search } from './Field'
 import { PaginationBar } from './Pagination'
 import { Select } from './Select'
 import { chevron, ColumnsPanel, columnsIcon, Editor, sortIcon, type Column, type TableSort } from './Table'
-import { use } from './use'
-import '@weft/ui-core/styles/data/chips.css'
-import '@weft/ui-core/styles/data/chip.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/data/chips.css'
+import '@weft/warp-core/styles/data/chip.css'
 
 export interface GridColumn<T> extends Column<T> {
   /** A control in the filter row: contains, one of `options`, or at least. */

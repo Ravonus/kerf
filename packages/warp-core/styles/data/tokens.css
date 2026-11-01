@@ -1,0 +1,86 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.tokens {
+/* per-stop data inputs (numbers; they inherit cleanly) */
+:root, [data-expression="balanced"] {
+  --warp-ref-data-draw: 0;     /* line/arc draw-in (stroke-dashoffset) */
+  --warp-ref-data-rise: 0.35;  /* bars start at 65% height and settle */
+  --warp-ref-data-fade: 1;     /* marks fade in */
+  --warp-ref-data-area: 0.14;  /* area wash alpha */
+  --warp-ref-data-line: 1.75px;
+  --warp-ref-data-num-font: var(--warp-font-display);
+  --warp-ref-tree-guides: 1;   /* tree data (06 §6): hairline level guides */
+  --warp-ref-tree-tint: 0;     /* guides + leading edge in the top-level branch's series colour */
+}
+[data-expression="quiet"] {
+  --warp-ref-data-draw: 0; --warp-ref-data-rise: 0; --warp-ref-data-fade: 0;
+  --warp-ref-data-area: 0; --warp-ref-data-line: 1.5px;
+  --warp-ref-data-num-font: var(--warp-font-sans);
+  --warp-ref-tree-guides: 0; --warp-ref-tree-tint: 0;
+}
+[data-expression="vivid"] {
+  --warp-ref-data-draw: 1; --warp-ref-data-rise: 1; --warp-ref-data-fade: 1;
+  --warp-ref-data-area: 0.34; --warp-ref-data-line: 2px;
+  --warp-ref-data-num-font: var(--warp-font-display);
+  --warp-ref-tree-guides: 1; --warp-ref-tree-tint: 1;
+}
+
+/* sys: re-declared on every scope root, exactly like warp.css §2 */
+:root, [data-expression], [data-density], [data-form], [data-pointer],
+[data-motion], [data-flair], [data-warp] {
+  /* -- categorical palette v0.2 (replaces warp.css v0.1 data-1…8) ---------
+     Same eight families, re-stepped so ADJACENT slots differ in lightness as
+     well as hue. Validated (Machado 2009 CVD sim, OKLab ΔE×100) in light and
+     dark at every stop: adjacent protan/deutan ΔE ≥ 15.8 (target 8), normal
+     ΔE ≥ 21.3 (floor 15), chroma ≥ 0.10, every mark ≥ 3:1 vs page, surface,
+     raised and sunken. v0.1 failed adjacent CVD (teal↔magenta ΔE 3.1).
+     Order: blue · amber · magenta · olive · cyan · red-orange · violet · teal */
+  --warp-color-data-1: light-dark(oklch(0.571 min(calc(0.220 * var(--_tk)), 0.233) 260), oklch(0.600 min(calc(0.220 * var(--_tk)), 0.216) 260));
+  --warp-color-data-2: light-dark(oklch(0.639 min(calc(0.191 * var(--_tk)), 0.142) 65),  oklch(0.664 min(calc(0.191 * var(--_tk)), 0.148) 65));
+  --warp-color-data-3: light-dark(oklch(0.570 min(calc(0.220 * var(--_tk)), 0.239) 347), oklch(0.648 min(calc(0.220 * var(--_tk)), 0.272) 347));
+  --warp-color-data-4: light-dark(oklch(0.625 min(calc(0.193 * var(--_tk)), 0.142) 117), oklch(0.664 min(calc(0.193 * var(--_tk)), 0.151) 117));
+  --warp-color-data-5: light-dark(oklch(0.622 min(calc(0.153 * var(--_tk)), 0.118) 226), oklch(0.664 min(calc(0.153 * var(--_tk)), 0.126) 226));
+  --warp-color-data-6: light-dark(oklch(0.600 min(calc(0.220 * var(--_tk)), 0.187) 40),  oklch(0.604 min(calc(0.220 * var(--_tk)), 0.188) 40));
+  --warp-color-data-7: light-dark(oklch(0.592 min(calc(0.220 * var(--_tk)), 0.255) 298), oklch(0.605 min(calc(0.220 * var(--_tk)), 0.246) 298));
+  --warp-color-data-8: light-dark(oklch(0.574 min(calc(0.209 * var(--_tk)), 0.119) 165), oklch(0.664 min(calc(0.209 * var(--_tk)), 0.138) 165));
+  --warp-color-data-other: var(--warp-color-text-faint);           /* the 9th+ series fold here */
+
+  /* sequential: one hue (accent), light → dark; diverging: critical ↔ neutral ↔ info */
+  --warp-color-data-seq-0: var(--warp-color-surface-sunken);
+  --warp-color-data-seq-1: color-mix(in oklab, var(--warp-color-accent-solid) 18%, var(--warp-color-surface));
+  --warp-color-data-seq-2: color-mix(in oklab, var(--warp-color-accent-solid) 38%, var(--warp-color-surface));
+  --warp-color-data-seq-3: color-mix(in oklab, var(--warp-color-accent-solid) 60%, var(--warp-color-surface));
+  --warp-color-data-seq-4: color-mix(in oklab, var(--warp-color-accent-solid) 82%, var(--warp-color-surface));
+  --warp-color-data-seq-5: var(--warp-color-accent-solid);
+  --warp-color-data-div-neg: var(--warp-color-critical-text);
+  --warp-color-data-div-mid: var(--warp-color-surface-active);
+  --warp-color-data-div-pos: var(--warp-color-info-text);
+
+  /* polarity (price up/down, KPI deltas): colour + shape, never colour alone */
+  --warp-color-data-up: var(--warp-color-positive-text);
+  --warp-color-data-down: var(--warp-color-critical-text);
+  --warp-color-data-up-flash: var(--warp-color-positive-soft);
+  --warp-color-data-down-flash: var(--warp-color-critical-soft);
+
+  /* marks + motion */
+  --warp-data-line: var(--warp-ref-data-line);
+  --warp-data-area: var(--warp-ref-data-area);
+  --warp-data-num-font: var(--warp-ref-data-num-font);
+  --warp-data-draw: calc(var(--warp-ref-data-draw) * var(--warp-motion-scale));
+  --warp-data-rise: calc(var(--warp-ref-data-rise) * var(--warp-motion-scale));
+  --warp-data-fade: calc(var(--warp-ref-data-fade) * var(--warp-motion-scale));
+  /* enter: slow at balanced; vivid draws over 2 × slow (the one data exception
+     to the 384ms cap, like the sweep: once, on enter, never on update) */
+  --warp-data-enter: calc(var(--warp-duration-slow) * (1 + var(--warp-ref-data-draw)));
+  --warp-data-tween: var(--warp-duration-base);                    /* live updates */
+  --warp-data-flash: calc(900ms * (0.4 + 0.6 * var(--warp-motion-scale)));
+
+  /* table */
+  --warp-table-row: max(calc(var(--warp-ref-control-md) + 4px), var(--warp-target-min)); /* 36 · 40 · 44; 44 coarse */
+  --warp-table-pad-x: calc(var(--warp-pad-control) * 1);
+  --warp-table-head: max(calc(var(--warp-ref-control-md) - 2px), var(--warp-target-min));
+  /* tree data: one level of indent (toggle 24 + related gap, density-scaled: 30 · 32 · 34) */
+  --warp-table-indent: calc(24px + var(--warp-space-related));
+  --warp-table-tree-guides: var(--warp-ref-tree-guides);
+  --warp-table-tree-tint: var(--warp-ref-tree-tint);
+}
+}

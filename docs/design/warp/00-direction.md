@@ -50,7 +50,7 @@ predecessor research notes under `docs/research/`.
 | Whitespace | `related` 8 · `group` 16 · `section` 32–48 · `page` gutter 16–32 | about 1.5× the content's own line gap between groups |
 | Dividers | `color.border` (≈1.2–1.5:1), decorative only | boundaries that matter use `border.control` (≥ 3:1) |
 
-**Shipping it.** This CSS and the specimens' behaviour ship as the framework-agnostic `@weft/ui-core`. The CSS is
+**Shipping it.** This CSS and the specimens' behaviour ship as the framework-agnostic `@weft/warp-core`. The CSS is
 split per component, unchanged. The behaviour (sweep, floating label, dials, widget machines) is plain TS over the
 DOM. `@weft/warp` is a thin weft binding that renders the specimen markup exactly. A binding for another framework
 sits beside it on the same core (PLAN §6.1).

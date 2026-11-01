@@ -1,11 +1,11 @@
-import { syncedForm, type FormOp } from '@weft/ui-core'
+import { syncedForm, type FormOp } from '@weft/warp-core'
 import { derived } from 'weft'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { read, type Live } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/base.css'
-import '@weft/ui-core/styles/app/synced-form.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/base.css'
+import '@weft/warp-core/styles/app/synced-form.css'
 
 /**
  * All-inputs sync (07 §6.4): every named control inside is shared. `ops` are the channel's remote edits, oldest first;

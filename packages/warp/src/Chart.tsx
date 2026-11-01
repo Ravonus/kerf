@@ -1,13 +1,13 @@
-import { uid } from '@weft/ui-core'
-import { chart, SSR_RADIUS, SSR_WIDTH, tableHTML, toHTML, type Ctx, type Form } from '@weft/ui-core/charts'
+import { uid } from '@weft/warp-core'
+import { chart, SSR_RADIUS, SSR_WIDTH, tableHTML, toHTML, type Ctx, type Form } from '@weft/warp-core/charts'
 import { derived, untrack } from 'weft'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/data/tokens.css'
-import '@weft/ui-core/styles/data/base.css'
-import '@weft/ui-core/styles/data/chart.css'
-import '@weft/ui-core/styles/data/legend.css'
-import '@weft/ui-core/styles/data/tooltip.css'
+import '@weft/warp-core/styles/data/tokens.css'
+import '@weft/warp-core/styles/data/base.css'
+import '@weft/warp-core/styles/data/chart.css'
+import '@weft/warp-core/styles/data/legend.css'
+import '@weft/warp-core/styles/data/tooltip.css'
 
 export type ChartFrame = {
   title: string
@@ -89,7 +89,7 @@ function Ready<C>(p: { form: Form<C>; cfg: () => C; id: string; root: () => HTML
 
 /**
  * The frame every chart shares (06 §12): figure > head · legend · plot (svg, tooltip) · table · summary. The plot is
- * laid out once here, so the server sends a whole chart, and from then on ui-core's `chart` owns it: width and data
+ * laid out once here, so the server sends a whole chart, and from then on warp-core's `chart` owns it: width and data
  * changes rewrite attributes on the same nodes, and the legend and the view toggle are delegated from the figure.
  */
 export function Chart<C extends { data: any; title: string }>(props: Props<C>) {

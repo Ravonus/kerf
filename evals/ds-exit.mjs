@@ -34,7 +34,7 @@ const CSS_TW = `@import "tailwindcss";\n`
 export const STACKS = {
   'weft-ds': {
     label: 'weft/ds (weft + warp)', tool: 'weft + @weft/warp',
-    deps: { weft: pkg('weft'), '@weft/warp': pkg('warp'), '@weft/ui-core': pkg('ui-core'), '@weft/cli': pkg('cli') },
+    deps: { weft: pkg('weft'), '@weft/warp': pkg('warp'), '@weft/warp-core': pkg('warp-core'), '@weft/cli': pkg('cli') },
     dev: { vite: '8.3.5' },
     files: {
       'vite.config.ts': `import { defineConfig } from 'vite'\nimport weft from 'weft/vite'\nexport default defineConfig({ plugins: [weft()] })\n`,

@@ -1,5 +1,5 @@
 import { TrashIcon, type IconComponent } from '@weft/icons'
-import { confirmMatches } from '@weft/ui-core'
+import { confirmMatches } from '@weft/warp-core'
 import { derived, state, type State, untrack, watch } from 'weft'
 import { Button, type Tone } from '../Button'
 import { Input } from '../Field'
@@ -9,14 +9,14 @@ import { toast } from '../Toast'
 import { latch } from './atoms'
 import { SettingsSection } from './Settings'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/flows/meter.css' // the result mark
-import '@weft/ui-core/styles/flows/confirm.css'
+import '@weft/warp-core/styles/flows/tokens.css'
+import '@weft/warp-core/styles/flows/base.css'
+import '@weft/warp-core/styles/rich/helpers.css'
+import '@weft/warp-core/styles/layout/tokens.css'
+import '@weft/warp-core/styles/layout/row.css'
+import '@weft/warp-core/styles/layout/stack.css'
+import '@weft/warp-core/styles/flows/meter.css' // the result mark
+import '@weft/warp-core/styles/flows/confirm.css'
 
 /** The danger zone (09 §4.4): the one critical-bordered section. Rows are SettingRows. */
 export function DangerZone({ id = 'danger', title = 'Danger zone', description, children }: { id?: string; title?: any; description?: any; children: any }) {

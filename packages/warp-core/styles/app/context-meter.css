@@ -1,0 +1,10 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+/* context meter: a ring + numbers; caution at 80%, critical at 95% */
+:where([data-scope="context-meter"]) { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="context-meter"] svg) { inline-size: 16px; block-size: 16px; rotate: -90deg; }
+:where([data-scope="context-meter"] circle) { fill: none; stroke-width: 3; }
+:where([data-scope="context-meter"] circle + circle) { stroke: var(--warp-color-sweep); stroke-dasharray: 100 100; stroke-dashoffset: calc(100 - var(--_v, 0) * 100); transition: stroke-dashoffset var(--warp-duration-slow) var(--warp-ease-out); }
+:where([data-scope="context-meter"][data-level="high"] circle + circle) { stroke: var(--warp-color-caution-solid); }
+:where([data-scope="context-meter"][data-level="full"] circle + circle) { stroke: var(--warp-color-critical-solid); }
+}

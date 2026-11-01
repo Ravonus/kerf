@@ -1,16 +1,16 @@
 import { MoreIcon } from '@weft/icons'
-import { announce, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/ui-core'
+import { announce, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/warp-core'
 import { Box, derived, flush, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { Input } from '../Field'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { VirtualList, type VirtualControl } from '../VirtualList'
 import { SWEEP } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/data/base.css'
-import '@weft/ui-core/styles/data/kanban.css'
-import '@weft/ui-core/styles/app/kanban.css'
+import '@weft/warp-core/styles/data/base.css'
+import '@weft/warp-core/styles/data/kanban.css'
+import '@weft/warp-core/styles/app/kanban.css'
 
 
 export type KanbanCardData = BoardCard & { label?: string; color?: number; assignee?: string; /** Footer text: a due date, a count. */ meta?: string }

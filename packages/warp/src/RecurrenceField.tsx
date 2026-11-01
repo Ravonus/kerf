@@ -1,10 +1,10 @@
-import { addDays, fmt, formReset, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft/ui-core'
+import { addDays, fmt, formReset, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft/warp-core'
 import { derived, flush, state } from 'weft'
 import { Chip } from './Chip'
 import { Input, Textarea } from './Field'
 import { bindable, usePickerEnv, type Bindable } from './Picker'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/recurrence.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/recurrence.css'
 
 const FREQS: Frequency[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']
 const titled = (s: string) => s[0] + s.slice(1).toLowerCase()

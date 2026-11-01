@@ -1,0 +1,13 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- recurrence */
+  :where(.rr-kept) { margin: 0; font-size: var(--warp-text-caption-size); }
+  :where([data-scope="chip"][role="radio"][aria-checked="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-solid); }
+  /* the specimen's layout helpers these fields need */
+  :where(.rr-sentence) { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: calc(var(--warp-text-heading-size) + 2px); letter-spacing: var(--warp-text-title-tracking); line-height: 1.25; }
+  :where(.rr-sentence em) { font-style: normal; color: var(--warp-color-accent-text); }
+  :where(.rr-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--warp-space-group); align-items: start; }
+  :where(.rr-next) { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--warp-text-body-size); font-variant-numeric: tabular-nums; }
+  :where(.rr-next li) { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); }
+  :where(.rr-next li span) { color: var(--warp-color-text-subtle); font-size: 12px; }
+}

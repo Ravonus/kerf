@@ -1,12 +1,12 @@
 import { XIcon } from '@weft/icons'
-import { announce, uid } from '@weft/ui-core'
+import { announce, uid } from '@weft/warp-core'
 import { derived, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { toast } from '../Toast'
 import { Mark, Rail } from './kit'
-import '@weft/ui-core/styles/flows/checklist.css'
-import '@weft/ui-core/styles/layout/row.css'
+import '@weft/warp-core/styles/flows/checklist.css'
+import '@weft/warp-core/styles/layout/row.css'
 
 export interface ChecklistItem {
   id: string

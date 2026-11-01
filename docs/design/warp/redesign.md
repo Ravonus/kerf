@@ -120,7 +120,7 @@ warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 
 6.36 KB now. Two changes of construction did that, and CSS (the kit counts JS only) carries both:
 
 - **Select** uses `appearance: base-select`, so warp's list needs no script: 1.61 KB. Chromium only for now: desktop Safari and
-  Firefox keep the OS popup, as touch does. `selectMenu()` stays in ui-core for an app that wants warp's list everywhere.
+  Firefox keep the OS popup, as touch does. `selectMenu()` stays in warp-core for an app that wants warp's list everywhere.
 - **The sweep** is one switch and two registered edges (SIGNATURE §1.4): 1.26 KB, the document `MutationObserver` and the
   hover tracking gone. An animation can't hand over to a transition in Blink (no transition starts on a property an animation
   was driving, even if the declared value changes too), so each edge has one job and its own transition instead.

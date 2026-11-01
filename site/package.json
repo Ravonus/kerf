@@ -12,8 +12,8 @@
   "dependencies": {
     "@weft/icons": "file:../packages/icons",
     "@weft/start": "file:../packages/start",
-    "@weft/ui-core": "file:../packages/ui-core",
     "@weft/warp": "file:../packages/warp",
+    "@weft/warp-core": "file:../packages/warp-core",
     "weft": "file:../packages/weft",
     "zod": "^4.6.7"
   },

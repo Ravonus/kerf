@@ -1,5 +1,5 @@
 import { AlertIcon, GlobeIcon, PlusIcon, XIcon } from '@weft/icons'
-import { announce, fmt, hhmm, nextRange, rangeIssues, timeOptions, uid, weekValid, type IsoDate, type Override, type Range, type WeekDay } from '@weft/ui-core'
+import { announce, fmt, hhmm, nextRange, rangeIssues, timeOptions, uid, weekValid, type IsoDate, type Override, type Range, type WeekDay } from '@weft/warp-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from '../Button'
 import { Switch } from '../Choice'
@@ -8,7 +8,7 @@ import { Input } from '../Field'
 import { usePickerEnv } from '../Picker'
 import { Select } from '../Select'
 import { confirmSweep } from './bits'
-import '@weft/ui-core/styles/app/availability.css'
+import '@weft/warp-core/styles/app/availability.css'
 
 export type Availability = { week: WeekDay[]; overrides: Override[] }
 export type AvailabilityEditorProps = {

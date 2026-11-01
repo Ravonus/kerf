@@ -4,7 +4,7 @@ import '../../../plugin-text/node_modules/@fontsource/inter/latin-500.css'
 import '../../../plugin-text/node_modules/@fontsource/inter/latin-600.css'
 import { state } from 'weft'
 import { render } from 'weft/dom'
-import type { ChatMessage } from '@weft/ui-core'
+import type { ChatMessage } from '@weft/warp-core'
 import { Feed, Kanban, ScrollGrid, Thread, Toaster, VirtualList, type KanbanCardData, type KanbanColumn, type VirtualControl } from '../../src/index'
 
 const q = new URLSearchParams(location.search)

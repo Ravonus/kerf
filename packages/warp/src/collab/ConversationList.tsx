@@ -1,13 +1,13 @@
 import { PinIcon } from '@weft/icons'
-import { peerColor, roving, type Peer } from '@weft/ui-core'
+import { peerColor, roving, type Peer } from '@weft/warp-core'
 import { Box, derived, state, untrack, type State } from 'weft'
 import { Badge } from '../Badge'
 import { Avatar } from '../parts'
-import { use } from '../use'
+import { use } from '@weft/warp-core/weft'
 import { tint } from './peer'
 import '../styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/conversations.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/conversations.css'
 
 export type ChatConversation = Peer & {
   /** Last message. */

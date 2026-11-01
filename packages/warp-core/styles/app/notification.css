@@ -1,0 +1,39 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.app {
+:where([data-scope="notification"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; align-items: start;
+  padding: 12px var(--warp-space-group); cursor: pointer; outline-offset: -2px;
+  transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="notification"]:hover) { background: color-mix(in oklab, var(--warp-color-text) var(--warp-state-hover), transparent); }
+/* review 01 M3: no 1px bottom rule; the full border sweeps over a hairline base, like any surface */
+:where([data-scope="notification"]) { --warp-sweep-radius: 0px; }
+:where([data-scope="notification"]) > :where([data-part="sweep-base"]) { color: var(--warp-color-border); }
+:where([data-scope="notification"] [data-part="icon"]) { position: relative; }
+:where([data-scope="notification"] [data-part="kind"]) {
+  position: absolute; inset-inline-end: -6px; inset-block-end: -6px; display: grid; place-items: center; inline-size: 16px; block-size: 16px;
+  border-radius: var(--warp-radius-round); background: var(--_solid); color: var(--_ink-on); box-shadow: 0 0 0 2px var(--warp-color-surface-overlay);
+}
+:where([data-scope="notification"] [data-part="kind"] svg[data-icon]) { inline-size: 10px; block-size: 10px; stroke-width: 2; }
+:where([data-scope="notification"] [data-part="text"]) { margin: 0; font-size: var(--warp-text-body-size); line-height: 1.45; color: var(--warp-color-text-subtle); }
+:where([data-scope="notification"] [data-part="text"] b) { color: var(--warp-color-text); font-weight: 500; }
+:where([data-scope="notification"] [data-part="quote"]) { grid-column: 2; margin: 4px 0 2px; padding: 8px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: var(--warp-text-caption-size); color: var(--warp-color-text); }
+:where([data-scope="notification"] [data-part="meta"]) { grid-column: 2; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--warp-color-text-subtle); }
+:where([data-scope="notification"] [data-part="actions"]) { grid-column: 2; display: flex; gap: 6px; margin-block-start: 8px; }
+:where([data-scope="notification"] [data-part="unread"]) { grid-column: 3; grid-row: 1; inline-size: 8px; block-size: 8px; margin-block-start: 6px; border-radius: 9px; background: var(--warp-color-accent-solid); transition: opacity var(--warp-duration-base), scale var(--warp-duration-base) var(--warp-ease-pop); }
+:where([data-scope="notification"][data-read] [data-part="unread"]) { opacity: 0; scale: 0.4; }
+:where([data-scope="notification"]:not([data-read])) { background: color-mix(in oklab, var(--warp-color-accent-soft) 45%, transparent); }
+:where([data-scope="notification"][data-state="dismissed"]) { animation: warp-dismiss calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in) forwards; }
+@media (forced-colors: active) {
+:where([data-arrive])::after,
+  :where([data-scope="calendar"] [data-part="now"])::before,
+  :where([data-scope="calendar"] [data-part="now-label"]),
+  :where([data-scope="agenda"] [data-part="now"] i, [data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
+  :where([data-scope="run"] > li[data-state="done"])::before,
+  :where([data-scope="tool-call"][data-state="running"])::before,
+  :where([data-scope="versions"] li[data-named] > i),
+  :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
+}
+@keyframes warp-dismiss { to { opacity: 0; translate: calc(var(--warp-motion-distance) * 3) 0; } }
+}

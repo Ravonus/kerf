@@ -1,0 +1,20 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* shared: numerals, eyebrow, sweep host gates -------------------------------- */
+:where([data-scope="table"], [data-scope="chart"], [data-scope="stat"], [data-scope="kanban"],
+       [data-scope="meter"], [data-scope="ring"], [data-scope="delta"], [data-scope="list"],
+       [data-scope="desc"], [data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
+/* after the generic .ar: same specificity */
+:where([data-scope="meter"], [data-scope="ring"]) { display: grid; justify-items: center; gap: 4px; position: relative; }
+:where([data-scope="meter"] svg, [data-scope="ring"] svg) { display: block; overflow: visible; }
+:where([data-scope="meter"] .trk, [data-scope="ring"] .trk) { fill: none; stroke: var(--warp-color-surface-sunken); stroke-linecap: var(--_cap, round); }
+:where([data-scope="meter"] .val, [data-scope="ring"] .val) {
+  fill: none; stroke: var(--_dc, var(--warp-color-accent-solid)); stroke-linecap: var(--_cap, round);
+  transition: stroke-dashoffset var(--warp-data-tween) var(--warp-ease-out);
+}
+:where([data-scope="meter"] [data-part="readout"], [data-scope="ring"] [data-part="readout"]) {
+  position: absolute; inset-inline: 0; text-align: center; line-height: 1;
+  font-family: var(--warp-data-num-font); font-size: calc(var(--warp-text-title-size) * 0.85); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="ring"] [data-part="readout"]) { inset-block-start: 32px; translate: 0 -50%; font-size: 13px; font-family: var(--warp-text-body-font); font-weight: 600; }
+}

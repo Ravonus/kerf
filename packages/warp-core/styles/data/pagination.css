@@ -1,0 +1,37 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.data {
+/* pagination bar -------------------------------------------------------------- */
+:where([data-scope="pagination"]) { container-type: inline-size; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="pagination"] ol) { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="pagination"] [data-part="page"]) {
+  all: unset; position: relative; box-sizing: border-box; display: grid; place-items: center; min-inline-size: var(--warp-control-sm); block-size: var(--warp-control-sm);
+  padding-inline: 6px; border-radius: var(--warp-radius-control); color: var(--warp-color-text); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+:where([data-scope="pagination"] [data-part="page"])::after { content: ""; position: absolute; inset: min(0px, calc((var(--warp-control-sm) - var(--warp-hit-min)) / 2)) -1px; }
+:where([data-scope="pagination"] [data-part="page"]:hover) { background: var(--warp-color-surface-hover); }
+:where([data-scope="pagination"] [data-part="page"]:focus-visible) { outline: 2px solid var(--warp-color-focus); }
+:where([data-scope="pagination"] [data-part="page"][aria-current="page"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+:where([data-scope="pagination"] [data-part="page"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
+:where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
+:where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
+:where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; }
+/* sm native controls: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
+:where([data-scope="pagination"] :is(select, [data-part="jump"])) {
+  --_band: max(0px, calc((var(--warp-hit-min) - var(--warp-control-sm)) / 2));
+  block-size: calc(var(--warp-control-sm) + 2 * var(--_band)); margin-block: calc(-1 * var(--_band));
+  border: 0 solid transparent; border-block-width: var(--_band); background-clip: padding-box;
+  box-shadow: inset 0 0 0 1px var(--warp-color-border-control); border-radius: var(--warp-radius-control) / calc(var(--warp-radius-control) + var(--_band));
+  background-color: var(--warp-color-surface-raised); color: var(--warp-color-text); font: 500 max(12px, var(--warp-input-font-min)) var(--warp-text-body-font);
+}
+:where([data-scope="pagination"] select) { padding-inline: 9px; }
+:where([data-scope="pagination"] [data-part="jump"]) { inline-size: 56px; padding-inline: 9px; box-sizing: border-box; }
+:where([data-scope="pagination"] :is(select, [data-part="jump"]):focus-visible) { outline: 2px solid var(--warp-color-focus); }
+@container (max-width: 520px) {
+:where([data-scope="pagination"] [data-part="page"]:not([aria-current], [data-edge])) { display: none; }
+:where([data-scope="pagination"] [data-part="gap"]) { display: none; }
+}
+/* pagination: pages are sm wide with a 2px gap (a 38px pitch: 24px floor + spacing); the edge buttons
+   (previous, next) reach outward to hit-min */
+:where([data-scope="pagination"] ol > li:first-child > [data-part="page"])::after { inset-inline-start: min(-1px, calc(100% + 1px - var(--warp-hit-min))); }
+:where([data-scope="pagination"] ol > li:last-child > [data-part="page"])::after { inset-inline-end: min(-1px, calc(100% + 1px - var(--warp-hit-min))); }
+}

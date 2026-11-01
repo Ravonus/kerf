@@ -1,13 +1,13 @@
-// The chart forms (06 §12), one line each: a form is a pure layout in ui-core, and `Chart` is the frame around it.
+// The chart forms (06 §12), one line each: a form is a pure layout in warp-core, and `Chart` is the frame around it.
 // Nothing here runs at import, so an app pays only for the forms it renders.
-import { spark as sparkAction, sparkScene, SSR_WIDTH, toHTML, bar, box, brush, bubble, candlestick, combo, donut, funnel, gauge, heat, histogram, line, radar, radial, sankey, scatter, stream, sunburst, tile, treemap, waterfall, type BarConfig, type BoxConfig, type BrushConfig, type CandleConfig, type ComboConfig, type DonutConfig, type FunnelConfig, type GaugeConfig, type HeatConfig, type HistConfig, type LineConfig, type RadarConfig, type RadialConfig, type SankeyConfig, type ScatterConfig, type StreamConfig, type SunConfig, type TileConfig, type TreemapConfig, type WaterConfig } from '@weft/ui-core/charts'
+import { spark as sparkAction, sparkScene, SSR_WIDTH, toHTML, bar, box, brush, bubble, candlestick, combo, donut, funnel, gauge, heat, histogram, line, radar, radial, sankey, scatter, stream, sunburst, tile, treemap, waterfall, type BarConfig, type BoxConfig, type BrushConfig, type CandleConfig, type ComboConfig, type DonutConfig, type FunnelConfig, type GaugeConfig, type HeatConfig, type HistConfig, type LineConfig, type RadarConfig, type RadialConfig, type SankeyConfig, type ScatterConfig, type StreamConfig, type SunConfig, type TileConfig, type TreemapConfig, type WaterConfig } from '@weft/warp-core/charts'
 import { state, untrack } from 'weft'
 import { Button } from './Button'
 import { Chart, type ChartFrame } from './Chart'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/data/tokens.css'
-import '@weft/ui-core/styles/data/base.css'
+import '@weft/warp-core/styles/data/tokens.css'
+import '@weft/warp-core/styles/data/base.css'
 
 export const LineChart = (p: ChartFrame & LineConfig) => <Chart form={line} {...p} />
 export const BarChart = (p: ChartFrame & BarConfig) => <Chart form={bar} {...p} />

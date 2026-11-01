@@ -1,0 +1,8 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.flows {
+/* SSO + passkey: a stack of neutral outline buttons with a provider glyph */
+:where([data-scope="sso"]) { display: grid; gap: var(--warp-space-related); }
+@container auth (min-width: 1000px) {
+:where([data-scope="sso"][data-layout="row"]) { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+}
+}

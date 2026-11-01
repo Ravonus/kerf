@@ -43,3 +43,21 @@ test('weft:slot/<id> resolves to .weft/slots/<id>.ts, and a missing one is P101'
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+test('weft:keyed reads the code it is given: bracket forms bring it in, a quoted word alone does not', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'weft-keyed-'))
+  const size = async (body: string) => {
+    writeFileSync(join(dir, 'entry.ts'), `import { state } from 'weft'\nconst box = state({ a: 1 })\n${body}\n`)
+    const out: any = await build({ configFile: false, logLevel: 'silent', root: dir, plugins: [weft()], build: { write: false, lib: { entry: join(dir, 'entry.ts'), formats: ['es'], fileName: 'entry' } } })
+    return out[0].output[0].code as string
+  }
+  try {
+    const without = await size(`document.title = String(box.value.a) + 'set'`)
+    const bracket = await size(`document.title = String(box['get']('a'))`)
+    const dotted = await size(`document.title = String(box.get('a'))`)
+    expect(bracket.length).toBeGreaterThan(without.length + 100)
+    expect(Math.abs(bracket.length - dotted.length)).toBeLessThan(40)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}, 60000)

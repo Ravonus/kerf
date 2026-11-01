@@ -1,7 +1,7 @@
 import { UndoIcon } from '@weft/icons'
 import { Button } from '../Button'
 import '../styles'
-import '@weft/ui-core/styles/app/checkpoint.css'
+import '@weft/warp-core/styles/app/checkpoint.css'
 
 /** Checkpoint (07 §1.3): a hairline with a label and Restore. Restoring forks a branch; `onRestore` decides how. */
 export function Checkpoint({ label, onRestore }: { label: any; onRestore?: () => void }) {

@@ -1,8 +1,8 @@
-import { parseInline, parseText, type AgentSource, type Inline, type TextBlock } from '@weft/ui-core'
+import { parseInline, parseText, type AgentSource, type Inline, type TextBlock } from '@weft/warp-core'
 import { derived, untrack } from 'weft'
 import { Cite } from './Cite'
 import '../styles'
-import '@weft/ui-core/styles/app/assistant.css'
+import '@weft/warp-core/styles/app/assistant.css'
 
 function Cited({ n, sources, base }: { n: number; sources: AgentSource[]; base: string }) {
   const source = derived(() => sources[n - 1])

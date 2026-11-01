@@ -1,7 +1,7 @@
 // One small app per chart form, for the SSR + hydrate round trip (test/charts.test.tsx) and the a11y gallery.
 import { BarChart, BoxPlot, BrushChart, BubbleChart, CandlestickChart, ComboChart, DonutChart, FunnelChart, GaugeChart, HeatGrid, Histogram, LineChart, RadarChart, RadialChart, SankeyChart, ScatterChart, Sparkline, StreamChart, Sunburst, TileMap, Treemap, WaterfallChart } from '../../src/Charts'
 import { Chart } from '../../src/Chart'
-import { line } from '@weft/ui-core/charts'
+import { line } from '@weft/warp-core/charts'
 import * as d from './ChartData'
 
 const series = ['subs', 'usage', 'services']

@@ -1,6 +1,6 @@
 import { Sweep, useSweep } from './bits'
 import '../styles'
-import '@weft/ui-core/styles/app/suggestions.css'
+import '@weft/warp-core/styles/app/suggestions.css'
 
 export type Suggestion = { id?: string; title: string; description?: string }
 

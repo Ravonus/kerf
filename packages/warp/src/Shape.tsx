@@ -1,4 +1,4 @@
-import { skeletonShape, isPart, type ShapeSpec, type SkeletonBox, type SkeletonPart } from '@weft/ui-core'
+import { skeletonShape, isPart, type ShapeSpec, type SkeletonBox, type SkeletonPart } from '@weft/warp-core'
 import './skeleton-css'
 
 const part = (p: SkeletonPart) => <span data-scope="skeleton" data-shape={p.shape === 'text' ? undefined : p.shape} style={p.style}></span>
@@ -6,7 +6,7 @@ const box = (b: SkeletonBox): any => <div style={b.style}>{b.children.map(c => (
 
 /**
  * A skeleton shaped like the content a `<Boundary>` is waiting for (research 26 §4): the spec's Skeleton parts in a
- * SkeletonScope region (05 §5), sized by ui-core's `skeletonShape()`. Use it as `pending`:
+ * SkeletonScope region (05 §5), sized by warp-core's `skeletonShape()`. Use it as `pending`:
  * `<Boundary pending={<Shape kind="list" rows={5} />}>`. Give it the content's counts so the swap shifts nothing
  * (X031 measures it in dev).
  */

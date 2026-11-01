@@ -5,15 +5,15 @@ import { derived } from 'weft'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
 import './styles'
-import '@weft/ui-core/styles/app/tokens.css'
-import '@weft/ui-core/styles/app/avatar.css'
-import '@weft/ui-core/styles/components/badge.css' // the status dot
-import '@weft/ui-core/styles/components/empty-state.css'
-import '@weft/ui-core/styles/components/live-status.css'
-import '@weft/ui-core/styles/components/spinner.css'
-import '@weft/ui-core/styles/components/steps.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/banner.css'
+import '@weft/warp-core/styles/app/tokens.css'
+import '@weft/warp-core/styles/app/avatar.css'
+import '@weft/warp-core/styles/components/badge.css' // the status dot
+import '@weft/warp-core/styles/components/empty-state.css'
+import '@weft/warp-core/styles/components/live-status.css'
+import '@weft/warp-core/styles/components/spinner.css'
+import '@weft/warp-core/styles/components/steps.css'
+import '@weft/warp-core/styles/layout/tokens.css'
+import '@weft/warp-core/styles/layout/banner.css'
 
 /** One path on the 24 grid, for a glyph the shared Icon set doesn't carry. */
 export const Glyph = ({ d, ...rest }: { d: string; [attr: string]: any }) => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false" {...rest}><path d={d} /></svg>

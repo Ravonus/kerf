@@ -1,0 +1,20 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs-rich {
+/* -- markdown */
+  :where([data-scope="markdown"]) { display: grid; gap: 10px; min-inline-size: 0; font-size: var(--warp-text-body-size); line-height: 1.6; padding: 4px 2px; }
+  :where([data-scope="markdown"] > *) { margin: 0; }
+  :where([data-scope="markdown"] :is(h2, h3, h4, h5)) { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); letter-spacing: var(--warp-text-title-tracking); line-height: 1.2; }
+  :where([data-scope="markdown"] h2) { font-size: calc(var(--warp-text-heading-size) + 6px); }
+  :where([data-scope="markdown"] h3) { font-size: calc(var(--warp-text-heading-size) + 2px); }
+  :where([data-scope="markdown"] :is(ul, ol)) { padding-inline-start: 1.3em; display: grid; gap: 3px; }
+  :where([data-scope="markdown"] li.task) { list-style: none; margin-inline-start: -1.3em; }
+  :where([data-scope="markdown"] li.task input) { accent-color: var(--warp-color-accent-solid); margin: 0 6px 0 0; vertical-align: -2px; }
+  :where([data-scope="markdown"] blockquote) { padding-inline-start: 12px; border-inline-start: 2px solid var(--warp-color-accent-solid); color: var(--warp-color-text-subtle); }
+  :where([data-scope="markdown"] hr) { border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
+  :where([data-scope="markdown"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
+  :where(.lab-f) { padding-block-start: 10px; }
+  :where([data-scope="field"][data-multiline] [data-part="body"] > textarea[data-part="input"]) { box-sizing: border-box; padding: 14px var(--warp-pad-control) 10px; resize: vertical; line-height: 1.55; min-block-size: 6lh; }
+  :where(.code-in) { padding: 14px var(--warp-pad-control) 10px; }
+  :where([data-scope="signature"] [data-part="typed"]::placeholder) { transition: color var(--warp-duration-fast); }
+  :where([data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-scope="signature"] [data-part="typed"]::placeholder, [data-scope="signature"] [data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-part="typed"]::placeholder) { color: transparent; }
+}

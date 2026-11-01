@@ -1,10 +1,10 @@
-import { comboPopup, uid } from '@weft/ui-core'
+import { comboPopup, uid } from '@weft/warp-core'
 import { derived, flush, onCleanup, state, untrack } from 'weft'
 import { Field, type FieldProps } from './Field'
 import { Icon, type IconRef } from './Icon'
-import { use } from './use'
-import '@weft/ui-core/styles/rich/listbox.css'
-import '@weft/ui-core/styles/rich/popover.css'
+import { use } from '@weft/warp-core/weft'
+import '@weft/warp-core/styles/rich/listbox.css'
+import '@weft/warp-core/styles/rich/popover.css'
 
 export type ComboRow = { main: string; sub?: string; meta?: string; icon?: IconRef }
 

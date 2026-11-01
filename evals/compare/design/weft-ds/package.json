@@ -8,7 +8,7 @@
   "dependencies": {
     "weft": "file:../../../../packages/weft",
     "@weft/warp": "file:../../../../packages/warp",
-    "@weft/ui-core": "file:../../../../packages/ui-core",
+    "@weft/warp-core": "file:../../../../packages/warp-core",
     "@weft/cli": "file:../../../../packages/cli"
   },
   "devDependencies": {

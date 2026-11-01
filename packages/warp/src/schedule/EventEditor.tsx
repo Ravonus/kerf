@@ -1,4 +1,4 @@
-import { at, asTime, dateOf, fmt, minuteOf, minutes, type CalEvent, type IsoDate, type IsoTime } from '@weft/ui-core'
+import { at, asTime, dateOf, fmt, minuteOf, minutes, type CalEvent, type IsoDate, type IsoTime } from '@weft/warp-core'
 import { derived, flush, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
 import { Switch } from '../Choice'

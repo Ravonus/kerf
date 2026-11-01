@@ -1,5 +1,5 @@
 import { AlertCircleIcon, UploadIcon } from '@weft/icons'
-import { announce, autoMap, badRows, checkImport, importRecords, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/ui-core'
+import { announce, autoMap, badRows, checkImport, importRecords, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/warp-core'
 import { derived, state } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
@@ -9,16 +9,16 @@ import { PlainTable } from './PlainTable'
 import { StepBar } from './StepBar'
 import { InlineSelect, Sweep, afterFlush } from './atoms'
 import '../styles'
-import '@weft/ui-core/styles/flows/tokens.css'
-import '@weft/ui-core/styles/flows/base.css'
-import '@weft/ui-core/styles/rich/helpers.css'
-import '@weft/ui-core/styles/layout/tokens.css'
-import '@weft/ui-core/styles/layout/row.css'
-import '@weft/ui-core/styles/layout/stack.css'
-import '@weft/ui-core/styles/inputs/field.css'
-import '@weft/ui-core/styles/inputs/file.css'
-import '@weft/ui-core/styles/flows/import-map.css'
-import '@weft/ui-core/styles/flows/import-preview.css'
+import '@weft/warp-core/styles/flows/tokens.css'
+import '@weft/warp-core/styles/flows/base.css'
+import '@weft/warp-core/styles/rich/helpers.css'
+import '@weft/warp-core/styles/layout/tokens.css'
+import '@weft/warp-core/styles/layout/row.css'
+import '@weft/warp-core/styles/layout/stack.css'
+import '@weft/warp-core/styles/inputs/field.css'
+import '@weft/warp-core/styles/inputs/file.css'
+import '@weft/warp-core/styles/flows/import-map.css'
+import '@weft/warp-core/styles/flows/import-preview.css'
 
 export interface CsvImportProps {
   targets: ImportTarget[]
@@ -37,7 +37,7 @@ const ORDER: Stage[] = ['upload', 'map', 'review', 'done']
 const PREVIEW_ROWS = 50
 
 /**
- * The CSV import wizard (09 §4.7), Upload → Map → Review → Import: parsing, mapping and validation are ui-core's. Each
+ * The CSV import wizard (09 §4.7), Upload → Map → Review → Import: parsing, mapping and validation are warp-core's. Each
  * step's heading takes focus. Bad cells say why inline; a required target with no column is reported once.
  */
 export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 5000, sample, onImport }: CsvImportProps) {

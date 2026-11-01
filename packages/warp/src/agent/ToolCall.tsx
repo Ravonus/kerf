@@ -1,11 +1,11 @@
 import { AlertIcon, CheckIcon, RightIcon, XIcon } from '@weft/icons'
-import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft/ui-core'
+import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft/warp-core'
 import { derived, onMount, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
 import { Sweep } from './bits'
 import '../styles'
-import '@weft/ui-core/styles/components/spinner.css'
-import '@weft/ui-core/styles/app/tool-call.css'
+import '@weft/warp-core/styles/components/spinner.css'
+import '@weft/warp-core/styles/app/tool-call.css'
 
 export interface ToolCallProps {
   call: AgentTool

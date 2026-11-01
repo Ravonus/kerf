@@ -1,0 +1,19 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.layout {
+:where([data-scope="breadcrumb"] ol) { display: flex; align-items: center; gap: 2px; margin: 0; padding: 0; list-style: none; min-inline-size: 0; }
+:where([data-scope="breadcrumb"] li) { display: flex; align-items: center; min-inline-size: 0; white-space: nowrap; }
+:where([data-scope="breadcrumb"] li + li)::before {
+  content: "/"; padding-inline: 6px; color: var(--warp-color-text-faint); font-weight: 400;
+}
+:where([data-scope="breadcrumb"] a) {
+  color: var(--warp-color-text-subtle); text-decoration: none; padding: 4px 4px; border-radius: var(--warp-radius-mark);
+  transition: color var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="breadcrumb"] a:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
+:where([data-scope="breadcrumb"] [aria-current]) { color: var(--warp-color-text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; padding-inline: 4px; }
+:where([data-scope="breadcrumb"] [data-part="ellipsis"]) { display: none; }
+@container (max-width: 999.98px) {
+:where([data-scope="breadcrumb"] li[data-collapse]) { display: none; }
+:where([data-scope="breadcrumb"] [data-part="ellipsis"]) { display: flex; }
+}
+}

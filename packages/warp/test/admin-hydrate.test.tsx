@@ -1,5 +1,5 @@
 // The admin pack, server-rendered and hydrated: every node claimed, nothing written, as in hydrate.test.tsx.
-import { resetIds } from '@weft/ui-core'
+import { resetIds } from '@weft/warp-core'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
 import { hydration } from '../../weft/src/hydrate'

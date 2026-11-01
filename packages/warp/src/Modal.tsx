@@ -1,11 +1,11 @@
 import { XIcon } from '@weft/icons'
-import { dialog, uid } from '@weft/ui-core'
+import { dialog, uid } from '@weft/warp-core'
 import { derived, type State } from 'weft'
 import type { Tone } from './Button'
-import { use } from './use'
+import { use } from '@weft/warp-core/weft'
 import './styles'
-import '@weft/ui-core/styles/components/button.css' // the close button's markup
-import '@weft/ui-core/styles/components/dialog.css'
+import '@weft/warp-core/styles/components/button.css' // the close button's markup
+import '@weft/warp-core/styles/components/dialog.css'
 
 /**
  * A modal dialog on the native <dialog> (05 §3; components.html:1067-1090): showModal, focus to [autofocus] or the

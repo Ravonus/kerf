@@ -21,5 +21,5 @@ removed from the agent's code: the suite failed, then the code was restored.
 - AGENTS.md forbids `fetch` to `/_weft/*` and offers no way to call a server function from a script.
 - warp's `Input` renders its label twice (visible, and aria-hidden character spans), so `label.textContent` is garbled.
   Accessible-name queries are right.
-- The two `tsc` errors in linked packages are `packages/ui-core/src/floating-label.ts:172,182`, which predate this work.
+- The two `tsc` errors in linked packages are `packages/warp-core/src/floating-label.ts:172,182`, which predate this work.
 - The build prints two harmless warnings: `bun:sqlite` treated as external, and a `@takumi-rs/core` traceInclude.

@@ -1,6 +1,0 @@
-/* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
-@layer warp.data {
-:where([data-scope="chips"]) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-block-size: 28px; }
-:where([data-scope="chips"] [data-part="clear"]) { all: unset; cursor: pointer; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); text-decoration: underline; text-underline-offset: 3px; padding: 4px 6px; border-radius: 4px; }
-:where([data-scope="chips"] [data-part="clear"]:focus-visible) { outline: 2px solid var(--warp-color-focus); }
-}
