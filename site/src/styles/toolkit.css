@@ -1,0 +1,38 @@
+/* The toolkit page. warp draws the demos; this only lays them out. */
+[data-toolkit] [data-tk="jump"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight) var(--warp-space-group); margin-block-end: var(--warp-space-group); font-size: 0.9375rem; }
+[data-toolkit] [data-site="stage-bar"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related) var(--warp-space-group); }
+[data-toolkit] [data-tk="group"] { margin-block-start: var(--warp-space-section); scroll-margin-block-start: 5rem; }
+[data-toolkit] [data-tk="group"] > h2 { margin: 0; font-family: var(--warp-font-sans); font-size: clamp(1.75rem, 4vw, 2.25rem); letter-spacing: -0.02em; }
+[data-toolkit] [data-tk="intro"] { max-inline-size: 65ch; margin-block: var(--warp-space-related) var(--warp-space-group); font-size: 1.0625rem; line-height: 1.6; }
+[data-toolkit] [data-tk="items"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--warp-space-group); }
+[data-toolkit] [data-tk="item"] { display: flex; flex-direction: column; gap: var(--warp-space-related); min-inline-size: 0; scroll-margin-block-start: 5rem; }
+[data-toolkit] [data-tk="item"][data-wide] { grid-column: 1 / -1; }
+[data-toolkit] [data-tk="item"] > h3 { margin: 0; font-family: var(--warp-font-sans); font-size: 1.125rem; }
+[data-toolkit] [data-tk="item"] > h3 a { color: inherit; text-decoration: none; }
+[data-toolkit] [data-tk="item"] > h3 a:hover { text-decoration: underline; }
+[data-toolkit] [data-tk="item"] > p { margin: 0; min-block-size: 3em; line-height: 1.5; }
+[data-toolkit] [data-tk="demo"] {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-related);
+  min-block-size: 168px; padding: var(--warp-space-group); box-sizing: border-box;
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); background: var(--warp-color-surface);
+  color: var(--warp-color-text);
+}
+[data-toolkit] [data-tk="demo"] > :where([data-scope="field"], [data-scope="tabs"], [data-scope="accordion"], [data-scope="progress"], [data-scope="alert"], [data-scope="surface"], [data-scope="skeleton"], [data-scope="table"], [data-scope="dither"], [data-scope="canvas"], [role="radiogroup"], div) { inline-size: 100%; }
+[data-toolkit] [data-tk="wait"] { font-size: 0.875rem; color: var(--warp-color-text-subtle); }
+[data-toolkit] [data-tk="item"] > details { min-inline-size: 0; }
+[data-toolkit] [data-tk="item"] > details > summary { cursor: pointer; font-size: 0.875rem; color: var(--warp-color-text-subtle); }
+[data-toolkit] [data-tk="item"] > details[open] > summary { margin-block-end: var(--warp-space-tight); }
+[data-toolkit] [data-tk="packs"] { display: grid; gap: var(--warp-space-group); margin: 0; }
+[data-toolkit] [data-tk="packs"] dt { font-weight: 600; }
+[data-toolkit] [data-tk="packs"] dd { margin: 0; }
+[data-toolkit] [data-tk="links"] { display: flex; flex-wrap: wrap; gap: 2px var(--warp-space-related); margin-block-start: var(--warp-space-tight); font-size: 0.875rem; }
+/* A last item alone on its row takes the whole row, so no grid cell is left empty. */
+[data-toolkit] [data-tk="item"]:last-child:nth-child(odd) { grid-column: 1 / -1; }
+[data-toolkit] [data-tk="item"]:is([data-wide], :last-child:nth-child(odd)) > p { min-block-size: 0; }
+[data-toolkit] > header { margin-block-end: var(--warp-space-group); }
+[data-toolkit] [data-part="lede"] { margin-block-start: var(--warp-space-group); }
+[data-site="doc-nav"] ul { margin: 0; padding: 0; list-style: none; }
+/* 200 links above the first heading is no way to open a page on a phone. The jump links do that job here. */
+@media (max-width: 759.98px) {
+  [data-site="docs"]:has([data-toolkit]) [data-site="doc-nav"] { display: none; }
+}

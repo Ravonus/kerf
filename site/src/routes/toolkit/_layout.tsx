@@ -5,6 +5,7 @@ import '@weft/ui-core/styles/rich/props.css'
 import '@weft/ui-core/styles/components/copy.css'
 import nav from '../../generated/toolkit-nav.json'
 import '../../styles/docs.css'
+import '../../styles/toolkit.css'
 
 export default function ToolkitLayout(props: RouteProps) {
   return (
