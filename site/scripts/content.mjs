@@ -6,10 +6,10 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { brotliCompressSync } from 'node:zlib'
+import { brotliCompressSync, deflateSync } from 'node:zlib'
 import { docs as weftDocs } from '../../packages/cli/src/docs.mjs'
 import { catalog } from '../../packages/cli/src/catalog.mjs'
-import { exportsOf } from '../../packages/cli/src/weft.mjs'
+import { exportsOf, loadCompiler, resolveWeft } from '../../packages/cli/src/weft.mjs'
 import { readFixtures, readToolkit } from './toolkit.mjs'
 
 // ui-core's source imports without extensions, for bundlers; here Node reads it directly.
@@ -24,6 +24,7 @@ registerHooks({
   },
 })
 const { buildIndex, highlight, markdownToHtml } = await import('../../packages/ui-core/src/index.ts')
+const { level, PALETTE } = await import('../src/lib/field.ts')
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(site, '..')
@@ -289,6 +290,57 @@ function buildIcons() {
   return names.map(n => ({ title: n, url: `/icons?q=${n}`, group: 'Icons', rank: 0.3 }))
 }
 
+// ------------------------------------------------------------------ art
+
+/** A palette PNG, by hand: the poster is a few KB of cells, sized up with `image-rendering: pixelated`. */
+function png(width, height, pixel, palette) {
+  const crcTable = Int32Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c })
+  const crc = buf => { let c = -1; for (const b of buf) c = crcTable[(c ^ b) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0 }
+  const chunk = (type, data) => {
+    const head = Buffer.alloc(4); head.writeUInt32BE(data.length)
+    const body = Buffer.concat([Buffer.from(type), data])
+    const tail = Buffer.alloc(4); tail.writeUInt32BE(crc(body))
+    return Buffer.concat([head, body, tail])
+  }
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4); ihdr[8] = 8; ihdr[9] = 3
+  const raw = Buffer.alloc((width + 1) * height)
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) raw[y * (width + 1) + 1 + x] = pixel(x, y)
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('PLTE', Buffer.from(palette.flatMap(c => c.slice(0, 3)))), chunk('tRNS', Buffer.from(palette.map(c => c[3]))), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))])
+}
+
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+
+function buildArt() {
+  mkdirSync(join(pub, 'art'), { recursive: true })
+  writeFileSync(join(pub, 'art/field.png'), png(160, 100, (x, y) => level(x, y, 160, 100, 0), PALETTE))
+  // A band that dissolves from solid to nothing: the site's divider.
+  writeFileSync(join(pub, 'art/band.png'), png(64, 12, (x, y) => (y / 12 < BAYER4[(y & 3) * 4 + (x & 3)] / 16 ? 1 : 0), [[0, 0, 0, 0], [46, 176, 104, 255]]))
+}
+
+/** The landing's code moment and diagnostic, from the real compiler. */
+function buildShowcase() {
+  const { transform } = loadCompiler(resolveWeft(site))
+  const source = `import { state } from 'weft'
+
+export function Counter() {
+  const n = state(0)
+  return <button onClick={() => n.value++}>{n.value}</button>
+}`
+  const compiled = transform(source, { filename: 'Counter.tsx' }).code.trim()
+  const bad = `function Price(props: { amount: number }) {
+  const amount = props.amount
+  return <b>{amount}</b>
+}`
+  const report = transform(bad, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W001')
+  if (!report) throw new Error('the showcase expects W001')
+  const entry = catalog.find(e => e.code === 'W001')
+  const good = `function Price(props: { amount: number }) {
+  return <b>{props.amount}</b>
+}`
+  const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
+  write('showcase.json', { source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+}
+
 // ------------------------------------------------------------------ agents
 
 function buildLlms(docs) {
@@ -305,6 +357,8 @@ function buildLlms(docs) {
 
 const docs = await buildDocs()
 const toolkit = buildToolkit()
+buildArt()
+buildShowcase()
 write('numbers.json', numbers())
 write('docs-nav.json', docs.nav)
 write('docs.json', docs.pages)

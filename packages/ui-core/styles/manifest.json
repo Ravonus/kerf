@@ -205,6 +205,9 @@
  "color": [
   "inputs/range.css"
  ],
+ "command-palette": [
+  "components/palette-motion.css"
+ ],
  "comment-anchor": [
   "app/comment-anchor.css"
  ],
@@ -559,6 +562,9 @@
  "monthgrid": [
   "rich/monthgrid.css",
   "rich/gap-rows.css"
+ ],
+ "nav": [
+  "components/nav.css"
  ],
  "navlist": [
   "layout/navlist.css"

@@ -1252,3 +1252,46 @@
     :where(:focus-visible) { outline-color: Highlight; }
   }
 }
+
+/* ===========================================================================
+   Motion defaults: what every warp app gets with no code. CSS only, compositor
+   only, scaled by --warp-motion-scale through the duration and distance tokens.
+   ======================================================================== */
+@layer warp.base {
+  :root { interpolate-size: allow-keywords; }
+
+  /* Route changes: same-document (start's router) and cross-document alike. The page's chrome stays put. */
+  @view-transition { navigation: auto; }
+  ::view-transition-group(*) { animation-duration: var(--warp-duration-slow); animation-timing-function: var(--warp-ease-out); }
+  ::view-transition-old(root) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+  ::view-transition-new(root) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  @keyframes warp-page-out { to { opacity: 0; } }
+  @keyframes warp-page-in { from { opacity: 0; transform: translateY(var(--warp-motion-distance)); } }
+  [data-vt="bar"] { view-transition-name: warp-bar; }
+  [data-vt="side"] { view-transition-name: warp-side; }
+  [data-vt="main"] { view-transition-name: warp-main; }
+  ::view-transition-old(warp-main) { animation: warp-page-out calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in) both; }
+  ::view-transition-new(warp-main) { animation: warp-page-in var(--warp-duration-slow) var(--warp-ease-out) both; }
+  ::view-transition-group(warp-bar), ::view-transition-group(warp-side) { z-index: 2; }
+
+  /* A block arriving: fade and rise as it enters the view, off the main thread. `--_d` staggers within a group. */
+  @supports (animation-timeline: view()) {
+    [data-reveal] {
+      animation: warp-reveal linear both; animation-timeline: view();
+      animation-range: entry calc(var(--_d, 0) * 4%) entry calc(60% + var(--_d, 0) * 4%);
+    }
+    @media (prefers-reduced-motion: reduce) { [data-reveal] { animation: none; } }
+    [data-motion="reduce"] [data-reveal] { animation: none; }
+  }
+  @keyframes warp-reveal { from { opacity: 0; transform: translateY(calc(var(--warp-motion-distance) * 3)); } }
+
+  /* Disclosures open by height; content that replaces a placeholder fades in. */
+  ::details-content { block-size: 0; overflow: clip; transition: block-size var(--warp-duration-slow) var(--warp-ease-out), content-visibility var(--warp-duration-slow) allow-discrete; }
+  [open]::details-content { block-size: auto; }
+  [role="tabpanel"]:not([hidden]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out); @starting-style { opacity: 0; translate: 0 var(--warp-motion-distance); } }
+  [data-fade-in] { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
+  [data-scope="skeleton"] + *, [data-scope="skeleton"] ~ * { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
+
+  /* Press feels instant at every stop. */
+  :where(a, button, [role="button"]):active { transition-duration: var(--warp-duration-instant); }
+}

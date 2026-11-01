@@ -82,13 +82,19 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     if (next.c) client.seed ? client.seed(next.c) : (client.seeds ??= []).push(...next.c)
     tags = next.m.map(m => m.t ?? [])
     bag = next.b
-    applyMatches(route, next.m.map(revive), path, next.s)
-    if (next.m.some(m => m.s)) current_(url.pathname)
-    if (next.h) setHead(next.h, url.pathname)
-    if (opts.scroll !== false && !opts.pop) {
-      const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
-      target ? target.scrollIntoView() : window.scrollTo(0, 0)
+    const swap = () => {
+      applyMatches(route, next.m.map(revive), path, next.s)
+      if (next.m.some(m => m.s)) current_(url.pathname)
+      if (next.h) setHead(next.h, url.pathname)
+      flush()
+      if (opts.scroll !== false && !opts.pop) {
+        const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
+        target ? target.scrollIntoView() : window.scrollTo(0, 0)
+      }
     }
+    // The old page stays on screen, as a picture, until the new one is ready to fade in. `hidden`: nothing would show it.
+    if (document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) await document.startViewTransition(swap).updateCallbackDone
+    else swap()
   }
   client.navigate = go
   // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
