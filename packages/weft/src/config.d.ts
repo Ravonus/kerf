@@ -99,6 +99,17 @@ export interface WeftConfig {
    */
   hydration?: 'lazy' | 'partial' | 'full'
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
+  /** Targets for a query's `live: { verify: 'staging' }`. */
+  live?: {
+    targets?: Record<string, {
+      /** A running staging app. */
+      url?: string
+      /** The name of the env var that holds its database URL. */
+      db?: string
+      /** `false` is required: `verify` writes rows, and only to what you've said isn't production. */
+      production?: boolean
+    }>
+  }
   trust?: 'enforce' | 'warn'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */
   slots?: { [id: string]: string | Record<string, string> }

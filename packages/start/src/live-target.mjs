@@ -76,3 +76,69 @@ export function livePlan({ preset, source, required = [] }) {
   }
   return { preset: target.preset, held: target.held, host: target.host, mode, says, required: required.map(r => r.name), options, diagnostics }
 }
+
+// ---- `verify` ---------------------------------------------------------------------------------------------------------
+
+const PRODUCTION = /(^|[.\-_])(prod|production|live|www|main|master)([.\-_]|$)/i
+const NOT_PRODUCTION = /(^|[.\-_])(staging|stage|stg|dev|develop|development|test|testing|qa|sandbox|preview|uat|demo)([.\-_]|$)|^localhost$|^127\.|^\[?::1\]?$/i
+
+const hostOf = url => { try { return new URL(url).hostname } catch { return url } }
+const dbNameOf = url => { try { return new URL(url).pathname.slice(1) } catch { return '' } }
+
+const HOWTO = 'Set `WEFT_STAGING_URL` to a running staging app, `STAGING_DATABASE_URL` to its database, or both for the whole chain.'
+
+/**
+ * Where a `verify` points, from the query's declaration, `live.targets` in weft.config.ts and the environment.
+ * @returns {{ name: string, url?: string, db?: string, marked: boolean } | { missing: string }}
+ */
+export function resolveTarget(verify, { targets = {}, env = process.env } = {}) {
+  if (typeof verify === 'object' && verify.target !== undefined) return resolveTarget(verify.target, { targets, env })
+  if (verify === true) {
+    const url = env.WEFT_STAGING_URL, db = env.STAGING_DATABASE_URL
+    return url || db ? { name: 'staging', url, db, marked: false } : { missing: `\`verify: true\` found neither \`WEFT_STAGING_URL\` nor \`STAGING_DATABASE_URL\`. ${HOWTO}` }
+  }
+  if (typeof verify === 'string') {
+    const t = targets[verify]
+    if (!t) return { missing: `\`verify: '${verify}'\` names no target. Add it to weft.config.ts: \`live: { targets: { ${verify}: { url: 'https://…', db: 'STAGING_DATABASE_URL', production: false } } }\`` }
+    const db = t.db && (t.db.includes('://') ? t.db : env[t.db])
+    if (t.db && !db) return { missing: `target \`${verify}\` reads its database from \`${t.db}\`, which isn't set on this machine.` }
+    return { name: verify, url: t.url, db, marked: t.production === false }
+  }
+  if (!verify.url && !verify.db) return { missing: `\`verify\` got an empty target (is its env var set?). ${HOWTO}` }
+  return { name: 'inline', url: verify.url, db: verify.db, marked: false }
+}
+
+/** Why this target must not be touched: R022. Anything that says production is refused, whatever config says. */
+export function refusal(target, { targets = {} } = {}) {
+  const hosts = [target.url && hostOf(target.url), target.db && hostOf(target.db)].filter(Boolean)
+  const names = [target.name, ...hosts, ...(target.db ? [dbNameOf(target.db)] : [])]
+  const said = names.find(n => PRODUCTION.test(n))
+  if (said) return `\`${said}\` looks like production: \`verify\` writes rows, and won't go near it`
+  if (target.name !== 'inline' && target.name !== 'staging' && targets[target.name]?.production !== false) return `target \`${target.name}\` isn't marked: add \`production: false\` to it in weft.config.ts`
+  if (target.marked) return
+  const unsure = hosts.find(h => !NOT_PRODUCTION.test(h))
+  if (unsure) return `nothing says \`${unsure}\` isn't production. Name it in weft.config.ts: \`live: { targets: { staging: { db: 'STAGING_DATABASE_URL', production: false } } }\`, and use \`verify: 'staging'\``
+}
+
+const PASSWORD = /[a-z][a-z0-9+.-]*:\/\/[^\s'"`/:@]+:[^\s'"`/@]+@/i
+
+/** R020: a connection string with a password, written into source. An env var's value never reaches this. */
+export function literalSecrets(root) {
+  const out = []
+  const look = file => {
+    const text = readFileSync(file, 'utf8')
+    if (!/\b(verify|targets)\b/.test(text)) return
+    text.split('\n').forEach((line, i) => {
+      if (PASSWORD.test(line) && /\b(db|url|verify)\b/.test(line)) out.push({ file: file.slice(root.length + 1), line: i + 1 })
+    })
+  }
+  const walk = dir => {
+    for (const d of readdirSync(dir, { withFileTypes: true })) {
+      const f = join(dir, d.name)
+      if (d.isDirectory()) { if (!SKIP.has(d.name)) walk(f) } else if (/\.[cm]?[jt]sx?$/.test(d.name)) look(f)
+    }
+  }
+  if (existsSync(join(root, 'src'))) walk(join(root, 'src'))
+  for (const f of ['weft.config.ts', 'weft.config.js', 'weft.config.mjs']) if (existsSync(join(root, f))) look(join(root, f))
+  return out
+}

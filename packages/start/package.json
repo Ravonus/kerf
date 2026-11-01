@@ -55,6 +55,7 @@
     "./changes-sql": "./src/changes-sql.mjs",
     "./live-target": "./src/live-target.mjs",
     "./listen": "./src/listen.ts",
+    "./verify": "./src/verify.ts",
     "./bus/postgres": "./src/bus/postgres.ts",
     "./list": "./src/list.ts",
     "./list/drizzle": "./src/list-drizzle.ts",

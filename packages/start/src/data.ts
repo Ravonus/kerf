@@ -80,7 +80,11 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
   tags?: QueryTags<Out<S>, A>
   /** `required: true`: `weft check` and `weft build` fail on a target with no real change feed, and the server won't start without one (R013, R015). */
-  live?: { required?: boolean }
+  live?: {
+    required?: boolean
+    /** A real round trip against a target that isn't production, in `weft check` and `weft build`. `true` finds `WEFT_STAGING_URL` or `STAGING_DATABASE_URL`; a string names a target in `live.targets`. */
+    verify?: true | string | import('./verify').VerifyOptions
+  }
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
   /** Named failures, for the client as `FnError.code` and `.data`. */

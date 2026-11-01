@@ -114,6 +114,10 @@ export const configSchema = z.strictObject({
     unions: z.literal('allow').optional(),
     services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional(), wasm: z.literal(false).optional() })).optional(),
   }).optional(),
+  /** Named targets for a query's `live: { verify: 'staging' }`. `db` is an env var's name. */
+  live: z.strictObject({
+    targets: z.record(z.string(), z.strictObject({ url: z.string().optional(), db: z.string().optional(), production: z.boolean().optional() })).optional(),
+  }).optional(),
   trust: z.enum(['enforce', 'warn']).optional(),
 })
 

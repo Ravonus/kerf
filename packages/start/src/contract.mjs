@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
 import weft from 'weft/vite'
-import { livePlan, scanRequired } from './live-target.mjs'
+import { literalSecrets, livePlan, refusal, resolveTarget, scanRequired } from './live-target.mjs'
 import { readMigrations } from './migrations.mjs'
 import { shapeTree, toJson } from './shape.mjs'
 import weftStart, { startDir } from './vite.mjs'
@@ -179,10 +179,66 @@ function planOf({ root, preset, realtime }) {
   return plan
 }
 
+const verifiedFile = root => join(root, '.weft', 'verify.json')
+const readVerified = root => { try { return JSON.parse(readFileSync(verifiedFile(root), 'utf8')) } catch { return {} } }
+
+/**
+ * Every query's `live.verify`, run. `strict` is a build: a target that isn't reachable from here fails it, where a
+ * check warns and goes on. A pass is kept by the query's contract entry and target, so an unchanged query runs once.
+ * @returns {Promise<{ diagnostics: any[], verified: any[] }>}
+ */
+async function verifyAll({ root, fns, realtime, server, live, strict }) {
+  const diagnostics = [], verified = []
+  for (const hit of literalSecrets(root)) diagnostics.push({ code: 'R020', severity: 'error', file: hit.file, why: `${hit.file}:${hit.line} has a connection string with a password in it: it would be committed. Read it from the environment: \`verify: { db: process.env.STAGING_DATABASE_URL }\`, or \`db: 'STAGING_DATABASE_URL'\` in a target.` })
+  const queries = [...fns.values()].filter(f => f.kind === 'query' && f.def.live?.verify)
+  if (!queries.length) return { diagnostics, verified }
+  const { roundTrip } = await server.ssrLoadModule(join(startDir, 'verify.ts'))
+  const cache = readVerified(root)
+  const contract = describe(fns).functions
+  const { env } = process
+  for (const f of queries) {
+    const name = f.$id.replace(/\..*$/, '')
+    const v = f.def.live.verify
+    const options = typeof v === 'object' ? v : {}
+    const target = resolveTarget(v, { targets: live?.targets, env })
+    if (target.missing) {
+      diagnostics.push({ code: 'R021', severity: strict ? 'error' : 'warning', why: `\`${name}\` can't be verified on this machine: ${target.missing}${strict ? ' A build needs it, because the query declares it.' : ' Skipped.'}` })
+      continue
+    }
+    const stop = refusal(target, { targets: live?.targets })
+    if (stop) {
+      diagnostics.push({ code: 'R022', severity: 'error', why: `\`${name}\`: ${stop}.` })
+      continue
+    }
+    const key = createHash('sha256').update(JSON.stringify([contract.find(c => c.id === f.$id), realtime?.changes?.tables, target.name, target.url ?? '', !!target.db])).digest('hex').slice(0, 16)
+    if (cache[f.$id]?.key === key && !env.WEFT_VERIFY_FRESH) {
+      verified.push({ name, cached: true, ...cache[f.$id].result })
+      continue
+    }
+    const result = await roundTrip({ fn: f, source: realtime?.changes, url: target.url, db: target.db, options, env })
+    verified.push({ name, ...result })
+    if (result.ok) cache[f.$id] = { key, result, at: new Date().toISOString() }
+    else {
+      delete cache[f.$id]
+      diagnostics.push({ code: 'R019', severity: 'error', why: `\`${name}\` failed its live round trip at \`${result.broke.link}\`: ${result.broke.why}.` })
+    }
+    if (result.ok && result.untested.length) diagnostics.push({ code: 'R023', severity: 'warning', why: `\`${name}\` passed, with ${result.untested.map(u => `\`${u.link}\``).join(', ')} untested: ${[...new Set(result.untested.map(u => u.why))].join(' ')}` })
+  }
+  mkdirSync(join(root, '.weft'), { recursive: true })
+  writeFileSync(verifiedFile(root), JSON.stringify(cache, null, 2) + '\n')
+  return { diagnostics, verified }
+}
+
 /** The deploy's live plan on its own, for `weft check` and `weft doctor`: no contract is written. */
-export const readLivePlan = ({ root, site, preset }) => {
+export const readLivePlan = ({ root, site, preset, live, verify = true }) => {
   root = resolve(root)
-  return withFns({ root, site }, async (_, server) => planOf({ root, preset, realtime: (await server.ssrLoadModule('virtual:weft/realtime')).default }))
+  return withFns({ root, site }, async (fns, server) => {
+    const realtime = (await server.ssrLoadModule('virtual:weft/realtime')).default
+    const plan = planOf({ root, preset, realtime })
+    if (!verify) return { ...plan, verified: [] }
+    const { diagnostics, verified } = await verifyAll({ root, fns, realtime, server, live, strict: false })
+    return { ...plan, diagnostics: [...plan.diagnostics, ...diagnostics], verified }
+  })
 }
 
 /** `src/realtime.server.ts` loaded, for `weft db live` and `weft db listen`. `fn` holds it open as long as it needs. */
@@ -218,7 +274,7 @@ async function withFns({ root, site = {} }, fn) {
 export const readShapes = options => withFns({ ...options, root: resolve(options.root) }, shapeTable)
 
 /** Load every server module and write `.weft/contract.json`. */
-export function writeContract({ root, site = {}, preset, rust }) {
+export function writeContract({ root, site = {}, preset, rust, live, verify }) {
   root = resolve(root)
   return withFns({ root, site }, async (fns, server) => {
     const { diagnostics, ...contract } = describe(fns, rust)
@@ -226,6 +282,12 @@ export function writeContract({ root, site = {}, preset, rust }) {
     const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
     if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft/realtime-redis\` or \`@weft/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
     diagnostics.push(...planOf({ root, preset, realtime: mod.default }).diagnostics)
+    let verified = []
+    if (verify) {
+      const done = await verifyAll({ root, fns, realtime: mod.default, server, live, strict: true })
+      diagnostics.push(...done.diagnostics)
+      verified = done.verified
+    }
     for (const [service, s] of Object.entries(contract.services ?? {})) {
       const why = s.kind === 'native' && nativeProblem({ service, preset, wasm: rust?.services?.[service]?.wasm })
       if (why) diagnostics.push({ code: 'R104', severity: 'error', why })
@@ -233,6 +295,6 @@ export function writeContract({ root, site = {}, preset, rust }) {
     mkdirSync(join(root, '.weft'), { recursive: true })
     const path = join(root, '.weft', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')
-    return { path, functions: contract.functions.length, diagnostics, contract }
+    return { path, functions: contract.functions.length, diagnostics, contract, verified }
   })
 }

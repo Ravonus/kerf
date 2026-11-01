@@ -230,13 +230,13 @@ async function liveChecks(root, loaded, preset) {
   let target
   try { target = await start(root, 'live-target') } catch { return [] }
   const required = target.scanRequired(root)
-  if (!required.length && !(existsSync(file) && /\bchanges\s*[:,}]/.test(readFileSync(file, 'utf8')))) return []
+  if (!required.length && !target.literalSecrets(root).length && !(existsSync(file) && /\bchanges\s*[:,}]/.test(readFileSync(file, 'utf8')))) return []
   const held = process.env.WEFT_BUILD
   process.env.WEFT_BUILD = '1'
   try {
     const { readLivePlan } = await start(root, 'contract')
-    const plan = await readLivePlan({ root, site: loaded.config?.site, preset: preset ?? { node: 'node', bun: 'bun', deno: 'deno_server' }[loaded.config?.runtime ?? 'node'] })
-    return plan.diagnostics.map(d => diagnostic({ ...d, file: required[0]?.file ?? 'src/realtime.server.ts' }))
+    const plan = await readLivePlan({ root, site: loaded.config?.site, live: loaded.config?.live, preset: preset ?? { node: 'node', bun: 'bun', deno: 'deno_server' }[loaded.config?.runtime ?? 'node'] })
+    return plan.diagnostics.map(d => diagnostic({ ...d, file: d.file ?? required[0]?.file ?? 'src/realtime.server.ts' }))
   } catch (e) {
     return [diagnostic({ code: 'R014', severity: 'warning', file: 'src/realtime.server.ts', why: `the deploy target couldn't be checked: ${e.message.split('\n')[0]}` })]
   } finally {

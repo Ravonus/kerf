@@ -96,7 +96,7 @@ export async function buildCommand(root, { preset, runtime } = {}) {
       running?.close()
       for (const k of Object.keys(running?.env ?? {})) before[k] === undefined ? delete process.env[k] : (process.env[k] = before[k])
     }
-    const contract = await contracted()
+    const contract = await writeContract({ root, site: config.site, preset, rust, live: (await loadConfig(root)).config?.live, verify: true })
     const refused = contract.diagnostics.find(d => d.severity === 'error')
     if (refused) refuse(refused)
     if (running) shipSidecars(root)
@@ -223,7 +223,7 @@ export async function doctorCommand(root, { preset, runtime } = {}) {
   process.env.WEFT_BUILD = '1'
   try {
     const { readLivePlan } = await start(root, 'contract')
-    const plan = await readLivePlan({ root, site: config.site, preset: preset ?? PRESETS[chosen] })
+    const plan = await readLivePlan({ root, site: config.site, preset: preset ?? PRESETS[chosen], live: (await loadConfig(root)).config?.live, verify: false })
     return { ...plan, diagnostics: plan.diagnostics.map(d => diagnostic({ file: 'src/realtime.server.ts', ...d })) }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD

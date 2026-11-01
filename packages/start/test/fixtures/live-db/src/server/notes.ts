@@ -9,7 +9,7 @@ const body: StandardSchemaV1<{ body: string }> = { '~standard': { version: 1, ve
 export const myNotes = query({
   auth: 'user',
   tags: ['notes'],
-  live: { required: true },
+  live: { required: true, verify: { target: 'staging', row: { owner: 'alice' } } },
   run: ({ ctx }) => db.select().from(notes).where(eq(notes.owner, ctx.user.id)).orderBy(notes.id) as Promise<{ id: number; owner: string; body: string }[]>,
 })
 
