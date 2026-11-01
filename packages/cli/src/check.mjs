@@ -155,6 +155,7 @@ export async function check(root, options = {}) {
     ...(await socketChecks(root)),
     ...schemaDrift(root, await dbLayer(root, loaded)),
     ...(await rustChecks(root, loaded)),
+    ...(await liveChecks(root, loaded, options.preset)),
   ]
   diagnostics.push(...await routeChecks(root, loaded, given, new Set(loaded.diagnostics.map(d => d.code))))
   sortDiagnostics(diagnostics)
@@ -239,6 +240,27 @@ function untouchedQueries(root, dir, contract, service) {
     }
   }
   return out
+}
+
+/** R013, R014 and R018: what the deploy target does to live data. Only an app with `changes` or `required` loads anything. */
+async function liveChecks(root, loaded, preset) {
+  const file = join(root, 'src/realtime.server.ts')
+  let target
+  try { target = await start(root, 'live-target') } catch { return [] }
+  const required = target.scanRequired(root)
+  if (!required.length && !target.literalSecrets(root).length && !(existsSync(file) && /\bchanges\s*[:,}]/.test(readFileSync(file, 'utf8')))) return []
+  const held = process.env.WEFT_BUILD
+  process.env.WEFT_BUILD = '1'
+  try {
+    const { readLivePlan } = await start(root, 'contract')
+    const plan = await readLivePlan({ root, site: loaded.config?.site, live: loaded.config?.live, preset: preset ?? { node: 'node', bun: 'bun', deno: 'deno_server' }[loaded.config?.runtime ?? 'node'] })
+    return plan.diagnostics.map(d => diagnostic({ ...d, file: d.file ?? required[0]?.file ?? 'src/realtime.server.ts' }))
+  } catch (e) {
+    return [diagnostic({ code: 'R014', severity: 'warning', file: 'src/realtime.server.ts', why: `the deploy target couldn't be checked: ${e.message.split('\n')[0]}` })]
+  } finally {
+    if (held === undefined) delete process.env.WEFT_BUILD
+    else process.env.WEFT_BUILD = held
+  }
 }
 
 /** R001 for a server module's `channel`, and R004 for a socket handler of the app's own (research 32 §1). */

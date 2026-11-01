@@ -79,6 +79,12 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
   tags?: QueryTags<Out<S>, A>
+  /** `required: true`: `weft check` and `weft build` fail on a target with no real change feed, and the server won't start without one (R013, R015). */
+  live?: {
+    required?: boolean
+    /** A real round trip against a target that isn't production, in `weft check` and `weft build`. `true` finds `WEFT_STAGING_URL` or `STAGING_DATABASE_URL`; a string names a target in `live.targets`. */
+    verify?: true | string | import('./verify').VerifyOptions
+  }
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
   /** Named failures, for the client as `FnError.code` and `.data`. */
@@ -139,9 +145,19 @@ export interface Mutation<I, O> {
   readonly $id: string
 }
 
-export type LiveStatus = 'connecting' | 'live' | 'reconnecting' | 'offline'
-export interface LiveOptions { keep?: string | number }
-export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus> }
+/** `degraded`: connected, and writes from outside the app arrive late or not at all. `.liveMode` says which. */
+export type LiveStatus = 'connecting' | 'live' | 'degraded' | 'reconnecting' | 'offline'
+/**
+ * How writes reach this page. `app`: mutations only, no `changes` configured. `feed`: the database reports every change.
+ * `external`: a separate listener does, through the bus. `poll`: an estimate, every few seconds. `off`: mutations only, though `changes` asks for more.
+ */
+export type LiveMode = 'app' | 'feed' | 'external' | 'poll' | 'off'
+export interface LiveOptions {
+  keep?: string | number
+  /** Fail `weft check`, `weft build` and server startup rather than run without a real change feed (R013, R015). */
+  required?: boolean
+}
+export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus>; readonly liveMode: Derived<LiveMode> }
 
 /** Any definition, as the executor and transports see it. */
 export interface Fn {
@@ -293,7 +309,7 @@ export const runtime: {
 } = {}
 
 /** The realtime connection's status and "this tab is older than the server" (research 30 §2). */
-export const rt = createRoot(() => ({ status: state<LiveStatus>('connecting'), stale: state(false) }), null)
+export const rt = createRoot(() => ({ status: state<LiveStatus>('connecting'), mode: state<LiveMode>('app'), stale: state(false) }), null)
 /** The server runs a different build than this tab loaded: offer a reload. */
 export const stale: Derived<boolean> = rt.stale
 
@@ -450,7 +466,7 @@ function liveQuery(fn: Fn, input: unknown, options?: LiveOptions): LiveQuery<any
         stop?.()
       })
     }, () => {})
-  return Object.assign(r, { live: rt.status })
+  return Object.assign(r, { live: rt.status, liveMode: rt.mode })
 }
 
 const name = (fn: Fn) => fn.$id.replace(/\..*$/, '')
@@ -470,6 +486,8 @@ interface Entry {
   tags: string[]
   readers: number
   p?: Promise<unknown>
+  /** Invalidated while `p` was in flight: its answer may predate the write. */
+  again?: boolean
 }
 
 const entries = new Map<string, Entry>()
@@ -510,6 +528,10 @@ function load(e: Entry): Promise<unknown> {
         throw { isRedirect: true, href: a.r, status: 307 }
       }
       setBase(e, a.v, a.t ?? [])
+      if (e.again) {
+        e.again = false
+        untrack(() => { e.stale.value = true }) // readers refetch: this answer may be older than the poke
+      }
       return untrack(() => e.value.value)
     },
     err => {
@@ -541,7 +563,11 @@ export function seed(list: Wire[] | null | undefined) {
 function staleTags(tags: string[], except: Set<string> = new Set()) {
   if (!tags.length) return
   untrack(() => {
-    for (const e of entries.values()) if (!except.has(e.key) && e.tags.some(t => tags.includes(t))) e.stale.value = true
+    for (const e of entries.values()) {
+      if (except.has(e.key) || !e.tags.some(t => tags.includes(t))) continue
+      e.stale.value = true
+      if (e.p) e.again = true
+    }
   })
   client.invalidated?.(tags)
 }

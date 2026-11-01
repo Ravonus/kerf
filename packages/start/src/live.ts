@@ -6,7 +6,7 @@
 // A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
 
 import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
-import type { AuthScope, Context, Fn, LiveApi, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from './data'
+import type { AuthScope, Context, Fn, LiveApi, LiveMode, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from './data'
 import type { Body, SubEntry, Tracked } from './hub'
 
 // `data.ts` hands these over (`use`). A static import would close a cycle with its `import('./live')`, and the bundler
@@ -265,6 +265,16 @@ function readPage() {
 
 const entry = (s: Sub): SubEntry => (s.fn.kind === 'query' ? [s.n, 'q', s.fn.$id, s.input] : [s.n, 's', s.fn.$id, s.input, s.cursor, s.buffer])
 const set = (status: LiveStatus) => { rt.status.value = status }
+/** The connection is up: how live that is depends on the server's feed. */
+function linked(l?: { m: LiveMode; d?: 1 }) {
+  rt.mode.value = l?.m ?? 'app'
+  set(l?.d ? 'reconnecting' : l?.m === 'poll' || l?.m === 'off' ? 'degraded' : 'live')
+  if (DEV && l && l.m !== 'feed' && l.m !== 'external' && !warned) {
+    warned = true
+    console.warn(`weft: R016 live queries are \`degraded\` (mode \`${l.m}\`): writes from outside the app arrive late or not at all. The server log says why.`)
+  }
+}
+let warned = false
 const offline = () => navigator.onLine === false
 
 function flushPokes() {
@@ -282,7 +292,7 @@ function frame(event: string, d: any) {
       if (conn) conn.k = runtime.conn = d.k
       cursor ??= d.c
       attempt = 0
-      set('live')
+      linked(d.l)
       sync() // what changed while connecting
     } else if (event === 'a') {
       const s = byN.get(d[0])
@@ -318,7 +328,8 @@ function frame(event: string, d: any) {
     } else if (event === 'e') {
       const s = byN.get(d[0])
       if (s) s.error.value = new FnError(d[1], d[1].code === 'A002' ? 401 : 500)
-    } else if (event === 'b') retry = d.retry
+    } else if (event === 'L') linked(d)
+    else if (event === 'b') retry = d.retry
   })
 }
 

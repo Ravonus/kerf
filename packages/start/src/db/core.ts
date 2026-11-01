@@ -12,6 +12,8 @@ export interface DbHandle {
   migrate(list: Migration[]): Promise<void>
   /** Tables Q011 doesn't report (Better Auth's). */
   exempt: Set<string>
+  /** `dbChanges`'s source: loaded on the first use, so a database with no live tables loads none of it. */
+  changes?(tables: string[], options: { listenUrl?: string; interval?: number }): Promise<{ probe(): Promise<any>; start(sink: any, how: any): Promise<() => unknown>; settle?(tags: string[]): Promise<void> }>
 }
 
 /** Attach weft's handle to a client. */

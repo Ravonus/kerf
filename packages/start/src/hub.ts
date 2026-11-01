@@ -10,8 +10,9 @@
 
 import type { Bus } from './bus'
 import { memoryBus } from './bus'
-import { currentScope, enter, fns, StartError, type Context, type Fn, type StandardSchemaV1 } from './data'
-import { createScope, guard, liveQueries, tagsOf, validate, type Scope, type ScopeOptions } from './exec'
+import { createFeed, functionHost, type Feed, type Poke, type Probe, type Source } from './changes'
+import { currentScope, enter, fns, StartError, type Context, type Fn, type LiveMode, type StandardSchemaV1 } from './data'
+import { createScope, defaultStore, guard, liveQueries, missedFeed, tagsOf, validate, type Scope, type ScopeOptions, type Store } from './exec'
 
 export interface Limits {
   subscriptions: number
@@ -49,6 +50,28 @@ export interface RealtimeOptions {
   limits?: Partial<Limits>
   /** Seconds the platform lets a response live: streams end 10 s earlier, and the client resumes. */
   maxDuration?: number
+  /** Writes from outside the app: `changes: dbChanges(db, [todos])`, or a source of your own. */
+  changes?: Source
+}
+
+/** What the app gets from `configure`, beside `src/realtime.server.ts`. */
+export interface HubOptions extends RealtimeOptions {
+  build?: string
+  dev?: boolean
+  /** Queries marked `live: { required: true }`: without a real feed the server refuses to run (R015). */
+  required?: string[]
+  store?: Store
+  onDiagnostic?: ScopeOptions['onDiagnostic']
+}
+
+/** What `.live` reports, and a health route reads. */
+export interface LiveState {
+  mode: LiveMode
+  via: string
+  why?: string
+  fix?: string
+  /** The feed works in general and is out right now. */
+  down?: string
 }
 
 /** `src/realtime.server.ts`'s default export. */
@@ -90,6 +113,8 @@ export interface Channel {
   ring: Ev[]
   floor: number
   listeners: Set<(ev: Ev | null) => void>
+  /** Take a message as if the bus had brought it: a change feed reaches this instance's connections only. */
+  got: (raw: string) => void
   ready: Promise<void>
   stop?: () => void
   idle?: ReturnType<typeof setTimeout>
@@ -141,6 +166,13 @@ export interface Hub {
   push(id: string, msg: unknown): number
   /** Server-side counts for tests and `weft browser`. */
   stats(): { connections: number; subscriptions: number; channels: number }
+  /** The live mode this server settled on: `.liveMode` on the client, and health routes. */
+  live(): LiveState
+  required: boolean
+  /** Settled once the source has been probed. */
+  probed: Promise<unknown>
+  /** R015: required live queries, and no feed. Requests get this instead of stale data. */
+  refused?: StartError
   shutdown(): Promise<void>
   /** The position a new listener resumes from. */
   position(): string
@@ -159,7 +191,7 @@ export interface Hub {
 
 const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
 
-function createHub(options: RealtimeOptions & { build?: string; dev?: boolean }): Hub {
+function createHub(options: HubOptions): Hub {
   const bus = options.bus ?? memoryBus()
   const limits = { ...LIMITS, ...options.limits }
   const epoch = crypto.randomUUID().slice(0, 8)
@@ -169,6 +201,70 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
   const closing = new Set<() => void>()
   let seq = 0
   const cursorOf = (n: number) => `${epoch}:${n}`
+  const source = options.changes
+  let live: LiveState = source ? { mode: 'off', via: 'none', why: 'not probed yet' } : { mode: 'app', via: 'mutations' }
+  let refused: StartError | undefined
+  let waking: Promise<unknown> | undefined, resting: ReturnType<typeof setTimeout> | undefined, beats: ReturnType<typeof setInterval> | undefined, beat = 0
+  const report = (code: string, severity: string, message: string) => options.onDiagnostic?.({ code, severity, message })
+  const status = (down: string | undefined) => {
+    if (live.down === down) return
+    live = { ...live, down }
+    if (down) report('R016', 'warning', `live: ${down}`)
+    for (const c of conns.values()) c.sink.write('L', JSON.stringify(wire()))
+  }
+  const wire = () => ({ m: live.mode, ...(live.down && { d: 1 }) })
+  const feed: Feed | undefined = source && createFeed(source, {
+    emit: p => pokes().got(JSON.stringify(p)),
+    bump: tags => void (options.store ?? defaultStore).bump(tags),
+    status,
+  })
+  const probed: Promise<unknown> = source && !process.env.WEFT_BUILD ? settle(source) : Promise.resolve()
+  probed.catch(() => {})
+
+  /** Probes rather than assumes (`what works here`), says what it found once, and refuses to serve what was required. */
+  async function settle(source: Source) {
+    const host = functionHost()
+    const how: Probe = source.external
+      ? { mode: 'feed', via: 'listener' }
+      : host
+        ? { mode: 'off', via: 'none', why: `${host} ends a process with its request, so nothing can hold a database connection`, fix: 'run `weft db listen` on an always-on host and set `listener: \'external\'`, or deploy to a server preset' }
+        : await source.probe().catch(e => ({ mode: 'off' as const, via: 'none', why: e instanceof Error ? e.message : String(e), fix: 'check the database' }))
+    live = { mode: source.external ? 'external' : how.mode, via: how.via, why: how.why, fix: how.fix }
+    const line = `live: ${live.mode} (${live.via})${how.why ? `: ${how.why}` : ''}`
+    if (how.mode === 'feed') console.info(`weft ${line}`)
+    else {
+      console.warn(`weft ${line}${how.fix ? `\n  fix: ${how.fix}` : ''}`)
+      report('R016', 'warning', `${line}. \`.live()\` shows \`degraded\``)
+    }
+    if (how.mode === 'feed' || !options.required?.length) return how
+    refused = new StartError('R015', `${options.required.map(n => `\`${n}\``).join(', ')} require${options.required.length > 1 ? '' : 's'} a live feed, and this server has ${how.mode === 'poll' ? 'only polling' : 'none'}${how.why ? `: ${how.why}` : ''}`, how.fix ?? 'see `weft doctor`', { status: 503 })
+    console.error(`weft ${refused.message}`)
+    if (!options.dev) process.exit(1)
+    return how
+  }
+
+  /** The feed runs while someone can use it: a server with no clients holds no listener and runs no watcher. */
+  function want() {
+    clearTimeout(resting)
+    resting = undefined
+    if (!source) return
+    if (source.external) {
+      if (beats) return
+      beat = Date.now()
+      void pokes()
+      beats = unref(setInterval(() => { if (Date.now() - beat > limits.window / 2) status('the external listener has gone quiet') }, limits.heartbeat / 2))
+      return
+    }
+    return (waking ??= probed.then(how => feed!.start(how as Probe)).catch(e => status(e instanceof Error ? e.message : String(e))).finally(() => { waking = undefined }))
+  }
+
+  function rest() {
+    if (!source || conns.size || resting || !feed?.running) return
+    resting = unref(setTimeout(() => {
+      resting = undefined
+      if (!conns.size) void feed.stop()
+    }, limits.window))
+  }
 
   const trim = (ch: Channel) => {
     const old = Date.now() - limits.window
@@ -186,9 +282,9 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
       ch.idle = undefined
       return ch
     }
-    const made: Channel = { name, ring: [], floor: seq, listeners: new Set(), ready: undefined as any }
+    const made: Channel = { name, ring: [], floor: seq, listeners: new Set(), got: undefined as any, ready: undefined as any }
     channels.set(name, made)
-    made.ready = bus.subscribe(name, raw => {
+    made.got = raw => {
       const ev = { seq: ++seq, at: Date.now(), raw }
       // Cursors and presence beats are only worth having now: in the ring they'd push out what a resume needs.
       if (!raw.startsWith(VOLATILE)) {
@@ -196,7 +292,8 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
         trim(made)
       }
       for (const on of made.listeners) on(ev)
-    }, () => {
+    }
+    made.ready = bus.subscribe(name, made.got, () => {
       made.ring.length = 0
       made.floor = seq
       for (const on of made.listeners) on(null)
@@ -237,11 +334,26 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
         for (const c of conns.values()) c.sink.write('R', JSON.stringify({ c: cursorOf(seq) }))
         return
       }
-      const { t, o } = JSON.parse(ev.raw) as { t: string[]; o?: string }
-      for (const c of conns.values()) if (c.k !== o) poke(c, t.filter(x => c.tags.has(x)), ev.seq)
-      for (const w of watchers) w(t)
+      const m = JSON.parse(ev.raw) as Poke & { o?: string; b?: 1 }
+      if (m.b) { // an external listener's heartbeat
+        beat = Date.now()
+        return status(undefined)
+      }
+      for (const c of conns.values()) if (c.k !== m.o) poke(c, picked(c, m), ev.seq)
+      for (const w of watchers) w(m.t)
     })
     return ch
+  }
+
+  /** What this connection subscribed to. `k`: a mutation's poke already reaches a subscription with one of these tags. */
+  function picked(c: Conn, { t, p, k }: Poke) {
+    if (!p && !k) return t.filter(x => c.tags.has(x))
+    const out = new Set<string>()
+    for (const s of c.subs.values()) {
+      if (k && s.tags.some(x => k.includes(x))) continue
+      for (const x of s.tags) if (t.includes(x) || p?.some(pre => x.startsWith(pre))) out.add(x)
+    }
+    return [...out]
   }
 
   function poke(c: Conn, tags: string[], at: number) {
@@ -303,6 +415,7 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
     for (const s of c.subs.values()) s.ac.abort()
     c.subs.clear()
     c.sink.close()
+    rest()
   }
 
   /** A subscription refused before it existed. */
@@ -344,6 +457,7 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
       for (const t of s.tags) c.tags.set(t, (c.tags.get(t) ?? 0) + 1)
       if (options.dev) {
         liveQueries.set(fn.$id, s.tags)
+        if (source) missedFeed(fn, s.tags, source.tables, options.onDiagnostic)
         if (!s.tags.length) options.onDiagnostic?.({ code: 'W053', severity: 'error', message: `\`${fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it. Add \`tags\` to the query` })
       }
       c.sink.write('a', JSON.stringify([n, s.tags]))
@@ -399,8 +513,8 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
     const list = replay(pokes(), after)
     if (!list) return c.sink.write('R', JSON.stringify({ c: cursorOf(seq) }))
     for (const ev of list) {
-      const { t, o } = JSON.parse(ev.raw) as { t: string[]; o?: string }
-      if (o !== c.k) poke(c, t.filter(x => c.tags.has(x)), ev.seq)
+      const m = JSON.parse(ev.raw) as Poke & { o?: string }
+      if (m.o !== c.k) poke(c, picked(c, m), ev.seq)
     }
   }
 
@@ -427,7 +541,8 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
       conns.delete(c.k)
       throw e
     })
-    sink.write('h', JSON.stringify({ k: c.k, e: epoch, b: options.build ?? '', c: cursorOf(seq) }))
+    await want() // before `h`: a client that reads next must not miss a change
+    sink.write('h', JSON.stringify({ k: c.k, e: epoch, b: options.build ?? '', c: cursorOf(seq), ...(source && { l: wire() }) }))
     await change(c, request, opts, body)
     if (body.c) replayPokes(c, body.c)
     let ticks = 0
@@ -450,9 +565,15 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
     find: k => conns.get(k),
     connections: () => [...conns.values()],
     cursor: () => (pokes().stop ? cursorOf(seq) : undefined),
-    ready: () => Promise.race([pokes().ready.catch(() => {}), new Promise(ok => unref(setTimeout(ok, 250)))]),
+    ready: () => {
+      const on = Promise.resolve(want()).then(rest)
+      return Promise.race([Promise.all([pokes().ready.catch(() => {}), on]), new Promise(ok => unref(setTimeout(ok, 250)))])
+    },
     async poke(tags, origin) {
-      if (tags.length) await bus.publish('weft:poke', JSON.stringify({ t: tags, ...(origin && { o: origin }) }))
+      if (!tags.length) return
+      // In this order: a client's refetch must start after what the barrier claims is covered.
+      if (live.mode === 'feed' || live.mode === 'external') await feed?.settle(tags)
+      await bus.publish('weft:poke', JSON.stringify({ t: tags, ...(origin && { o: origin }) }))
     },
     push(id, msg) {
       let hit = 0
@@ -466,7 +587,14 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
       return hit
     },
     stats: () => ({ connections: conns.size, subscriptions: [...conns.values()].reduce((n, c) => n + c.subs.size, 0), channels: channels.size }),
+    live: () => live,
+    probed,
+    required: !!options.required?.length,
+    get refused() { return refused },
     async shutdown() {
+      clearTimeout(resting)
+      clearInterval(beats)
+      await feed?.stop()
       for (const fn of closing) fn()
       for (const c of conns.values()) close(c)
       for (const ch of channels.values()) {
@@ -488,12 +616,21 @@ let current: Hub | undefined
 /** The process's hub: the first caller makes the default one (memory bus). */
 export const hub = (): Hub => (current ??= createHub({}))
 /** Set by `createHandler`, from `src/realtime.server.ts`. */
-export const configure = (options: RealtimeOptions & { build?: string; dev?: boolean }) => {
+export const configure = (options: HubOptions) => {
   void current?.shutdown() // a dev server's reload makes a new handler
   return (current = createHub(options))
 }
 /** This instance's connections, subscriptions and listened channels: for a health route. */
 export const realtimeStats = () => hub().stats()
+/**
+ * For a health route: `ok` is false when required live queries have no working feed, now or at startup. A server that
+ * started fine and lost its database mid-flight keeps running, and says so here: restarting it wouldn't bring the
+ * database back, and it recovers by itself.
+ */
+export function liveHealth(): LiveState & { ok: boolean; required: boolean } {
+  const h = hub(), s = h.live(), required = !!h.required
+  return { ...s, required, ok: !required || ((s.mode === 'feed' || s.mode === 'external') && !s.down) }
+}
 /** weft/test, after each test. */
 export const resetHub = () => {
   const old = current

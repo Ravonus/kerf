@@ -42,6 +42,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
         }
       })
     },
+    changes: (tables, o) => import('./changes-postgres').then(m => m.postgresChanges({ ...o, url, client, tables })),
   }
   const ready = gate(handle, migrate)
   // All Drizzle sends goes through `unsafe` and `begin`, so holding those holds it; `handle.migrate` keeps the plain client.

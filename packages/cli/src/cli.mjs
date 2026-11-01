@@ -22,13 +22,13 @@ import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
 import { metaTable } from './meta-table.mjs'
-import { buildCommand, dbCommand, devCommand, routesCommand, startCommand } from './start.mjs'
+import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand } from './start.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
-  check [files…]      compile in check mode; W-, P- and D-diagnostics with fixes (--verbose: which compiler ran)
-  doctor              which compiler build this install uses, and whether Rust is around (it's optional)
+  check [files…] [--preset <p>]  compile in check mode; W-, P- and D-diagnostics with fixes (--verbose: which compiler ran)
+  doctor [--preset <p>]  which compiler this install uses, whether Rust is around (it's optional), and what live data does on the target
   fix [files…]        apply the safe autofixes
   tokens              warp's resolved tokens as DTCG, in .weft/tokens/
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
@@ -38,6 +38,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
   db generate [name]  a migration for the schema's changes (it applies on the next request)
+  db live             a migration with change triggers for the tables in \`changes\`
+  db listen           the change feed as its own process, for an app on functions
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
   run <task>          run a project task from weft.config.ts
@@ -91,7 +93,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     args = parse(argv)
     switch (args.command) {
       case 'check': {
-        const result = await check(args.root, { files: args.positional })
+        const result = await check(args.root, { files: args.positional, preset: args.flags.preset })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
         if (args.flags.verbose) say(compilerLine(doctor(args.root).compiler))
@@ -99,10 +101,15 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         return result.ok ? 0 : 1
       }
       case 'doctor': {
+        // What this install compiles with, always; what live data does on the target, for an app that has any.
         const result = doctor(args.root)
-        if (args.json) print(result)
+        const plan = args.flags.preset || existsSync(join(args.root, 'src/realtime.server.ts')) ? await doctorCommand(args.root, { preset: args.flags.preset, runtime: args.flags.runtime }) : undefined
+        if (args.json) print({ ...result, live: plan })
         else say(formatDoctor(result))
-        return 0
+        if (!plan) return 0
+        say(`weft doctor: ${plan.preset} (${plan.host})\n  live mode: ${plan.mode}\n  ${plan.says}${plan.required.length ? `\n  required: ${plan.required.join(', ')}` : ''}${plan.options.length ? `\n  options:\n${plan.options.map(o => `    - ${o}`).join('\n')}` : ''}`)
+        say(formatHuman(plan.diagnostics))
+        return plan.diagnostics.some(d => d.severity === 'error') ? 1 : 0
       }
       case 'test': {
         if (!args.flags.gate) throw Object.assign(new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'), { code: 'E_USAGE' })
@@ -291,6 +298,6 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     const code = error.code ?? 'E_INTERNAL'
     if (args?.json || argv.includes('--json')) print({ ok: false, error: { code, message: error.message } })
     say(`weft: ${error.message}${code === 'E_USAGE' ? `\n\n${usage}` : ''}`)
-    return 2
+    return code === 'E_LIVE' ? 1 : 2
   }
 }

@@ -16,9 +16,10 @@ interface Conn {
   /** Array rows, as the proxy driver wants them. */
   query(sql: string, params: unknown[], method: Method): unknown
   exec(sql: string): void
+  close?(): void
 }
 
-async function open(path: string): Promise<Conn> {
+export async function open(path: string): Promise<Conn> {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
   const pick = (rows: unknown[][], method: Method) => (method === 'get' ? rows[0] : rows)
   let conn: Conn
@@ -28,6 +29,7 @@ async function open(path: string): Promise<Conn> {
     conn = {
       query: (sql, params, method) => (method === 'run' ? void db.prepare(sql).run(...params) : pick(db.prepare(sql).values(...params), method)),
       exec: sql => void db.run(sql),
+      close: () => db.close(),
     }
   } else {
     const { DatabaseSync } = await import('node:sqlite')
@@ -40,6 +42,7 @@ async function open(path: string): Promise<Conn> {
         return pick(s.all(...(params as any[])) as unknown as unknown[][], method)
       },
       exec: sql => db.exec(sql),
+      close: () => db.close(),
     }
   }
   if (path !== ':memory:') conn.exec('pragma journal_mode = wal')
@@ -85,6 +88,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url = 'fil
         }
       }
     },
+    changes: (tables, o) => import('./changes-sqlite').then(m => m.sqliteChanges({ ...o, path, open, tables })),
   }
   const ready = gate(handle, migrate)
   const run = async (sql: string, params: unknown[], method: Method) => {

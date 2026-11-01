@@ -47,6 +47,7 @@ export function createDb<S extends Record<string, unknown>>({ schema, url, migra
         c.release()
       }
     },
+    changes: (tables, o) => import('./changes-mysql').then(m => m.mysqlChanges({ ...o, pool, tables })),
   }
   const ready = gate(handle, migrate)
   // All Drizzle sends goes through these three, so holding them holds it; `handle.migrate` keeps the plain pool.

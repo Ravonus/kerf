@@ -163,3 +163,15 @@ describe('page metadata reaches every agent surface', () => {
     expect((await docs(fixture, 'H001')).text).toContain('reported by weft check')
   })
 })
+
+describe('live data', () => {
+  it('`start` tells a newcomer what to set, and each code has fix text', async () => {
+    const page = (await docs(fixture, 'start')).text
+    for (const word of ['dbChanges', 'weft db live', 'weft doctor', 'liveHealth', 'WEFT_STAGING_COOKIE', 'STAGING_DATABASE_URL', 'production: false']) expect(page).toContain(word)
+    for (let n = 12; n <= 23; n++) {
+      const code = `R0${n}`
+      expect(catalog.find(e => e.code === code)?.fix, code).toBeTruthy()
+      expect((await docs(fixture, code)).text, code).toMatch(new RegExp(`^# ${code} \\((error|warning)\\)`))
+    }
+  })
+})
