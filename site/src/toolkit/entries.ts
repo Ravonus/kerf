@@ -15,7 +15,7 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'forms', title: 'Forms', intro: 'Ways to ask people for something. All of them are real form controls, so they work with a plain form post.',
+    id: 'forms', title: 'Forms', intro: 'Ways to ask people for something. Give each one a name and it posts with a plain form. Most are native controls, and the slider sends its value through a hidden input.',
     entries: [
       e('input', 'Input', 'One line of text, with a label that lifts out of the way as you type.'),
       e('search', 'Search', 'An input for finding things, with a way to clear it.'),
