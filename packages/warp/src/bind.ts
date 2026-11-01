@@ -18,16 +18,21 @@ const isState = (v: any): v is State<any> => v instanceof Box
 /** One read/write over the three ways a value can be held. */
 export function bindable<T>(value: () => State<T> | T | undefined, initial: () => T | undefined, fallback: T, onChange?: () => ((v: T, r: ChangeReason) => void) | undefined) {
   const own = state<T>(untrack(() => { const v = value(); return (isState(v) ? undefined : (v as T | undefined)) ?? initial() ?? fallback }))
+  const read = (): T => {
+    const v = value()
+    return isState(v) ? v.value : v !== undefined ? (v as T) : own.value
+  }
+  const first = untrack(read)
+  const set = (next: T, reason: ChangeReason = 'programmatic') => {
+    const v = untrack(value)
+    if (isState(v)) v.value = next
+    else own.value = next
+    untrack(onChange ?? (() => undefined))?.(next, reason)
+  }
   return {
-    get value(): T {
-      const v = value()
-      return isState(v) ? v.value : v !== undefined ? (v as T) : own.value
-    },
-    set(next: T, reason: ChangeReason = 'programmatic') {
-      const v = untrack(value)
-      if (isState(v)) v.value = next
-      else own.value = next
-      untrack(onChange ?? (() => undefined))?.(next, reason)
-    },
+    get value(): T { return read() },
+    set,
+    /** Back to the value it started with: a form's reset. */
+    reset() { set(first) },
   }
 }

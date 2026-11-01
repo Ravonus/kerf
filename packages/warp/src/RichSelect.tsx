@@ -80,6 +80,7 @@ function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOp
       label={label}
       hint={hint}
       disabled={disabled}
+      bound={v}
       filled={!!v.value}
       hold={pop.value}
       control={() => (
@@ -216,12 +217,13 @@ export function PhoneField({ value, defaultValue, onValueChange, country, defaul
       filled={text.value.length > 0}
       hold={pop.value}
       attrs={{ 'data-phone': '' }}
-      control={({ id, describedby }) => (
+      reset={() => { v.reset(); own.value = undefined; code.value = inferCountry(v.value ?? '', code.value, list) ?? code.value; text.value = v.value ? formatPhone(v.value.slice(code.value.dial.length + 1), code.value).shown : ''; if (input) input.value = text.value }}
+      control={p => (
         <div data-part="body">
           <button ref={(n: any) => (button = n)} type="button" data-part="country" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} disabled={disabled} onClick={() => pop.set(!pop.value)}>
             <span aria-hidden="true"><b>{code.value.code}</b>+{code.value.dial}</span><span class="sr">Country: {name_.value}, +{code.value.dial}</span><DownIcon />
           </button>
-          <input ref={(n: any) => (input = n)} data-part="input" id={id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={describedby} value={text.value} disabled={disabled} onInput={e => { const el = e.currentTarget as HTMLInputElement; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
+          <input ref={(n: any) => (input = n)} data-part="input" id={p.id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={p.describedby} value={text.value} required={p.rest.required} disabled={disabled} onInput={e => { const el = e.currentTarget as HTMLInputElement; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </div>
       )}

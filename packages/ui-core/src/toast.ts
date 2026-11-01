@@ -3,6 +3,7 @@
 // smaller, three visible) that fans out on hover or focus, the timer (a Web Animation on the progress hairline,
 // paused while the region is hovered, focused or the page hidden), swipe to dismiss, F8, and announcing through the
 // pre-mounted live regions.
+import { onTopModal } from './layers'
 import { store, uid } from './store'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
@@ -161,6 +162,34 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
       layout()
     }
   }
+  // showModal makes everything outside the dialog inert, top layer or not, so while a modal is open the region and the
+  // live regions live inside the topmost one, a popover there so the dialog's box neither clips nor positions it. A
+  // comment holds their place. data-moving stops the toasts replaying their entrance; their timers are Animations,
+  // which don't notice.
+  let home: Comment | null = null
+  const follow = (top: HTMLElement | null) => {
+    const live = doc.querySelectorAll('[data-scope="announcer"]')
+    const focused = region.contains(doc.activeElement) ? doc.activeElement as HTMLElement : null
+    const hovered = region.matches(':hover') // lost with the move, until the pointer next moves
+    region.setAttribute('data-moving', '')
+    if (region.matches(':popover-open')) region.hidePopover()
+    if (top) {
+      if (!home) region.before((home = doc.createComment('')))
+      top.append(region, ...live)
+      region.setAttribute('popover', 'manual')
+      region.showPopover?.()
+    } else if (home) {
+      region.removeAttribute('popover')
+      if (home.parentNode) home.replaceWith(region, ...live)
+      else { region.remove(); for (const n of live) n.remove() } // the Toaster went while it was away
+      home = null
+    }
+    focused?.focus({ preventScroll: true })
+    win.requestAnimationFrame(() => region.removeAttribute('data-moving'))
+    if (hovered) doc.addEventListener('pointermove', onHover, { once: true })
+    else onHover()
+  }
+  const unwatch = onTopModal(doc, follow)
   const on: [EventTarget, string, (e: any) => void][] = [
     [region, 'pointerenter', onHover], [region, 'pointerleave', onHover], [region, 'focusin', onHover], [region, 'focusout', () => win.requestAnimationFrame(onHover)],
     [doc, 'visibilitychange', syncTimers], [doc, 'keydown', onKey],
@@ -173,6 +202,8 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
     destroy() {
       observer.disconnect()
       unsubscribe()
+      unwatch()
+      follow(null)
       for (const [t, type, fn] of on) t.removeEventListener(type, fn)
       for (const a of timers.values()) stop(a)
     },

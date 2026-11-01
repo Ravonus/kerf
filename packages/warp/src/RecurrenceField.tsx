@@ -1,8 +1,9 @@
-import { addDays, fmt, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft/ui-core'
+import { addDays, fmt, formReset, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft/ui-core'
 import { derived, flush, state } from 'weft'
 import { Chip } from './Chip'
 import { Input, Textarea } from './Field'
 import { bindable, usePickerEnv, type Bindable } from './Picker'
+import { use } from './use'
 import '@weft/ui-core/styles/rich/recurrence.css'
 
 const FREQS: Frequency[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']
@@ -72,8 +73,10 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
   }
   const num = (e: InputEvent, lo: number, hi: number) => Math.max(lo, Math.min(hi, parseInt((e.currentTarget as HTMLInputElement).value) || lo))
   const setEnd = (m: 'never' | 'count' | 'until') => set(m === 'count' ? { COUNT: 10, UNTIL: null } : m === 'until' ? { COUNT: null, UNTIL: addDays(dtstart, 60) as IsoDate } : { COUNT: null, UNTIL: null })
+  let root: HTMLDivElement | undefined
+  use(formReset, () => root, () => () => { v.reset(); asText.value = false })
   return (
-    <div role="group" aria-label={label} class="stack">
+    <div ref={(n: any) => (root = n)} role="group" aria-label={label} class="stack">
       {name && <input type="hidden" name={name} value={v.value ?? ''} />}
       {custom.value || asText.value ? (
         <>

@@ -1,5 +1,5 @@
 import { AlertIcon, SearchIcon, XIcon } from '@weft/icons'
-import { field, labelChars, uid } from '@weft/ui-core'
+import { field, formReset, labelChars, uid } from '@weft/ui-core'
 import { derived, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import { use } from './use'
@@ -36,24 +36,27 @@ export interface FieldProps {
 export type FieldShell = Omit<FieldProps, 'value' | 'defaultValue'> & { label: string }
 
 // `invalid` is a getter and `rest` the live props: the control is made once and its attributes update in place
-type Control = (p: { id: string; describedby?: string; readonly invalid: boolean; rest: Record<string, any> }) => any
+type Control = (p: { id: string; readonly describedby?: string; readonly invalid: boolean; rest: Record<string, any> }) => any
 
 /**
  * The field shell (03 §1 anatomy, verbatim order): control (sweep-base, sweep, icon, label, prefix, input, suffix,
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount ui-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean; wrap?: boolean }) {
+export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
   const id = untrack(() => given) ?? uid('field')
   const glyph = derived(() => icon)
-  const message = untrack(() => hint !== undefined || error !== undefined || counter !== undefined)
-  const msg = message ? `${id}-msg` : undefined
+  // an error can arrive long after mount, so the block and what points at it follow it
+  const message = derived(() => hint !== undefined || !!error || counter !== undefined)
+  const msg = derived(() => (message.value ? `${id}-msg` : undefined))
   // keyed by position: a label repeats letters
   const chars = derived(() => labelChars(String(label ?? '')).map((c, at) => ({ c, at })))
   // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
   const live = untrack(() => rest)
   let root: HTMLDivElement | undefined
+  const shell = { id, get describedby() { return msg.value }, get invalid() { return !!error }, rest: live }
   use(field, () => root, () => [live.value, label] as const)
+  if (untrack(() => reset)) use(formReset, () => root, () => () => reset!())
   return (
     <div
       ref={(n: any) => (root = n)}
@@ -76,14 +79,14 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
         </label>
         {prefix !== undefined && <span data-part="prefix">{prefix}</span>}
         {group
-          ? <div data-part="body" role="group" aria-labelledby={`${id}-l`} aria-describedby={msg} aria-invalid={error ? 'true' : undefined}>{untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}</div>
-          : untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}
+          ? <div data-part="body" role="group" aria-labelledby={`${id}-l`} aria-describedby={msg.value} aria-invalid={error ? 'true' : undefined}>{untrack(() => control(shell))}</div>
+          : untrack(() => control(shell))}
         {suffix !== undefined && <span data-part="suffix">{suffix}</span>}
         {clearable && <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${label}`}><XIcon /></button>}
         {end}
       </div>
-      {message && (
-        <div data-part="message" id={msg}>
+      {message.value && (
+        <div data-part="message" id={msg.value}>
           {error ? <span data-part="error" role="alert"><AlertIcon /><span>{error}</span></span> : hint !== undefined && <span data-part="hint">{hint}</span>}
           {counter !== undefined && <span data-part="counter" aria-live="off"></span>}
         </div>

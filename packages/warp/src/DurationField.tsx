@@ -73,6 +73,8 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
       hint={hint ?? words.value}
       error={error}
       disabled={disabled}
+      bound={v}
+      onReset={() => (buf.value = '')}
       filled={totalSeconds(parts.value) > 0}
       control={() => (
         <>
@@ -81,7 +83,7 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
               const n = derived(() => parts.value[u])
               return (
                 <>
-                  <span key={u} data-part="segment" data-u={u} role="spinbutton" tabindex={disabled ? undefined : '0'} aria-label={NAMES[u]} aria-valuemin="0" aria-valuemax={MAX[u]} aria-valuenow={n.value} aria-valuetext={say(u, n.value)}>{u === units[0] ? n.value : pad(n.value)}</span>
+                  <span key={u} data-part="segment" data-u={u} role="spinbutton" tabindex={disabled ? undefined : '0'} aria-label={NAMES[u]} aria-required={rest.required ? 'true' : undefined} aria-valuemin="0" aria-valuemax={MAX[u]} aria-valuenow={n.value} aria-valuetext={say(u, n.value)}>{u === units[0] ? n.value : pad(n.value)}</span>
                   <span data-part="literal" class="unit" aria-hidden="true">{SHORT[u]}</span>
                 </>
               )

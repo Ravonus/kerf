@@ -1,4 +1,4 @@
-import { menu, moveShuttle, place, uid, type Align, type Side } from '@weft/ui-core'
+import { menu, moveShuttle, uid, type Align, type Side } from '@weft/ui-core'
 import { onCleanup, onMount, state } from 'weft'
 import { Button, type ButtonProps } from './Button'
 import { Icon, type IconRef } from './Icon'
@@ -10,6 +10,14 @@ export type MenuEntry =
   | { label: string; onSelect?: () => void; icon?: IconRef; shortcut?: string; tone?: 'critical'; disabled?: boolean; href?: string }
   | { separator: true }
   | { group: string }
+
+const Row = ({ e }: { e: Extract<MenuEntry, { label: string }> }) => (
+  <>
+    {e.icon && <Icon name={e.icon} />}
+    <span data-part="item-label">{e.label}</span>
+    {e.shortcut && <span data-part="shortcut">{e.shortcut}</span>}
+  </>
+)
 
 export interface MenuProps {
   /** The trigger's text. */
@@ -38,10 +46,8 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
   }
   onMount(() => {
     const onToggle = (e: any) => {
-      if (e.newState === 'open') {
-        place(panel!, button!, side, align, 6)
-        face!.setAttribute('data-instant', '')
-      } else {
+      if (e.newState === 'open') face!.setAttribute('data-instant', '')
+      else {
         face!.removeAttribute('data-on')
         face!.style.removeProperty('--warp-a')
       }
@@ -51,7 +57,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
   })
   // the panel is shown before menu() moves focus in, so the first move lands without travelling
   const syncOpen = (el: HTMLElement, o: { open: boolean; at: 'first' | 'last' }) => {
-    const opts = () => ({ open: o.open, at: o.at, trigger: () => button, onClose: close })
+    const opts = () => ({ open: o.open, at: o.at, trigger: () => button, side, align, onClose: close })
     if (o.open) el.showPopover?.()
     const m = menu(el, opts())
     return {
@@ -94,13 +100,9 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
           ? <div key={i} data-part="separator" role="separator"></div>
           : 'group' in e
             ? <div key={i} data-part="group-label">{e.group}</div>
-            : (
-              <div key={i} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} aria-disabled={e.disabled ? 'true' : undefined} onClick={() => { if (!e.disabled) pick(e) }}>
-                {e.icon && <Icon name={e.icon} />}
-                <span data-part="item-label">{e.label}</span>
-                {e.shortcut && <span data-part="shortcut">{e.shortcut}</span>}
-              </div>
-            ))}
+            : e.href && !e.disabled
+              ? <a key={i} href={e.href} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} onClick={() => pick(e)}><Row e={e} /></a>
+              : <div key={i} data-part="item" role="menuitem" tabindex="-1" data-tone={e.tone} aria-disabled={e.disabled ? 'true' : undefined} onClick={() => { if (!e.disabled) pick(e) }}><Row e={e} /></div>)}
       </div>
     </>
   )

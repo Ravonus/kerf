@@ -142,11 +142,13 @@ export function TimeField({ value, defaultValue, onValueChange, open, defaultOpe
       error={error}
       disabled={disabled}
       readonly={readonly}
+      bound={v}
+      onReset={() => (started.value = false)}
       filled={v.value !== null || started.value}
       hold={pop.value}
       control={() => (
         <>
-          <Segments kind="time" options={{ hourCycle, seconds }} locale={env.locale.value} value={v.value} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={onEdit} />
+          <Segments required={rest.required} kind="time" options={{ hourCycle, seconds }} locale={env.locale.value} value={v.value} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={onEdit} />
           <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon={ClockIcon} label={t.value.chooseTime + (v.value ? `, ${fmtTime(v.value, env.locale.value, hourCycle)}` : '')} open={pop.value} disabled={disabled} onToggle={() => (pop.value ? pop.set(false) : open_())} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </>
@@ -197,13 +199,15 @@ export function DateTimeField({ value, defaultValue, onValueChange, open, defaul
       error={error}
       disabled={disabled}
       readonly={readonly}
+      bound={v}
+      onReset={() => { date.value = v.value?.slice(0, 10) ?? null; time.value = v.value?.slice(11) ?? null }}
       filled={!!(date.value || time.value)}
       hold={pop.value}
       control={() => (
         <>
-          <Segments kind="date" label="Date" locale={env.locale.value} value={date.value} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={onDate} />
+          <Segments required={rest.required} kind="date" label="Date" locale={env.locale.value} value={date.value} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={onDate} />
           <span data-part="literal" class="dt-sep" aria-hidden="true">·</span>
-          <Segments kind="time" label="Time" locale={env.locale.value} value={time.value} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={onTime} />
+          <Segments required={rest.required} kind="time" label="Time" locale={env.locale.value} value={time.value} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={onTime} />
           <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon={CalendarIcon} label="Choose date and time" open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </>

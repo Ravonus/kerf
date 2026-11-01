@@ -1,5 +1,7 @@
 // A slider on one or two thumbs (03 §5; inputs.html slider()): role=slider thumbs, keyboard per APG, pointer anywhere on
 // the track. The binding renders the parts; this writes --_v, --_v0, --_v1 and the ARIA values.
+import { formReset } from './form'
+
 export interface SliderOptions {
   values: number[]
   min: number
@@ -16,7 +18,12 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
   let vals = [...o.values]
   const thumbs = () => [...el.querySelectorAll<HTMLElement>(':scope > [data-part="thumb"]')]
   const pct = (v: number) => (v - o.min) / (o.max - o.min)
-  const snap = (v: number) => Math.round((Math.min(o.max, Math.max(o.min, v)) - o.min) / o.step) * o.step + o.min
+  // the nearest step that exists: the last may fall short of max; toPrecision drops binary noise (0.1 + 0.2)
+  const snap = (v: number) => {
+    const last = Math.floor((o.max - o.min) / o.step + 1e-9)
+    const n = Math.min(last, Math.max(0, Math.round((v - o.min) / o.step)))
+    return Number((n * o.step + o.min).toPrecision(15))
+  }
   function paint() {
     thumbs().forEach((t, i) => {
       t.style.setProperty('--_v', String(pct(vals[i])))
@@ -39,7 +46,8 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
   }
   const at = (x: number) => {
     const r = el.querySelector('[data-part="track"]')!.getBoundingClientRect()
-    return o.min + Math.min(1, Math.max(0, (x - r.left) / r.width)) * (o.max - o.min)
+    const f = Math.min(1, Math.max(0, (x - r.left) / r.width))
+    return o.min + (getComputedStyle(el).direction === 'rtl' ? 1 - f : f) * (o.max - o.min)
   }
   const onDown = (e: PointerEvent) => {
     if (o.disabled) return
@@ -66,19 +74,25 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
     const i = thumbs().indexOf(e.target as HTMLElement)
     if (i < 0 || o.disabled) return
     const big = Math.max(o.step, (o.max - o.min) / 10)
-    const d = ({ ArrowRight: o.step, ArrowUp: o.step, ArrowLeft: -o.step, ArrowDown: -o.step, PageUp: big, PageDown: -big } as Record<string, number>)[e.key]
+    // the arrows go the way they point: the track runs right to left in RTL
+    const along = getComputedStyle(el).direction === 'rtl' ? -o.step : o.step
+    const d = ({ ArrowRight: along, ArrowUp: o.step, ArrowLeft: -along, ArrowDown: -o.step, PageUp: big, PageDown: -big } as Record<string, number>)[e.key]
     if (d !== undefined) { e.preventDefault(); set(i, vals[i] + d) }
     if (e.key === 'Home') { e.preventDefault(); set(i, o.min) }
     if (e.key === 'End') { e.preventDefault(); set(i, o.max) }
   }
   el.addEventListener('pointerdown', onDown)
   el.addEventListener('keydown', onKey)
+  // the binding holds the value: a form's reset goes back to the first one through onChange
+  const first = vals
+  const reset = formReset(el, () => { vals = first; paint(); o.onChange(vals) })
   paint()
   return {
     update(next: SliderOptions) { o = next; vals = [...o.values]; paint() },
     destroy() {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('keydown', onKey)
+      reset.destroy()
     },
   }
 }

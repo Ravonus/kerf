@@ -24,6 +24,9 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   const show = () => {
     if (el.open) return
     opener = doc.activeElement as HTMLElement | null
+    const root = doc.documentElement
+    // a classic scrollbar, read before the lock takes it: the page keeps its room (warp's html:has(dialog:modal) rule)
+    root.toggleAttribute('data-scrollbar', doc.defaultView!.innerWidth > root.clientWidth && root.scrollHeight > root.clientHeight)
     el.showModal?.() ?? el.setAttribute('open', '')
     if (opener && opener !== doc.body && opener.getBoundingClientRect) {
       const a = opener.getBoundingClientRect(), r = el.getBoundingClientRect()

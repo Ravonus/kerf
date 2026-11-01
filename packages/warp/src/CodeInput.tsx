@@ -8,6 +8,8 @@ import '@weft/ui-core/styles/rich/body.css'
 import '@weft/ui-core/styles/rich/code-input.css'
 
 export type CodeInputProps = FieldShell & Bindable<string> & {
+  /** After a form's reset put the value back. */
+  onReset?: () => void
   language?: string
   lineNumbers?: boolean
   tabSize?: 2 | 4
@@ -26,7 +28,7 @@ const LEAVE = 'Tab indents · Esc then Tab leaves'
  * Highlight API, so a key press builds no spans; browsers without it show the textarea's own plain text. Tab indents,
  * Shift+Tab outdents, and Esc then Tab leaves, which the hint says. No autocorrect, spellcheck or autocapitalize.
  */
-export function CodeInput({ value, defaultValue, onValueChange, language, lineNumbers = true, tabSize = 2, wrap, rows = 8, errorLine, name, hint, ...rest }: CodeInputProps) {
+export function CodeInput({ value, defaultValue, onValueChange, language, lineNumbers = true, tabSize = 2, wrap, rows = 8, errorLine, name, hint, onReset, ...rest }: CodeInputProps) {
   const held = bindable<string>(() => value, () => defaultValue, '', () => onValueChange)
   const lines = derived(() => held.value.split('\n').map((_, n) => n + 1))
   const numbered = derived(() => lineNumbers && !wrap)
@@ -53,13 +55,14 @@ export function CodeInput({ value, defaultValue, onValueChange, language, lineNu
       hint={hint ?? LEAVE}
       attrs={{ 'data-multiline': '' }}
       filled={held.value.length > 0}
-      control={({ id, describedby, invalid, rest: live }) => (
+      reset={() => { held.reset(); onReset?.() }}
+      control={p => (
         <div data-part="body">
           <div ref={(n: any) => (box = n)} class="code-in" data-wrap={wrap ? '' : undefined} style={`--_tab:${tabSize}`}>
             {numbered.value && <ol data-part="lines" class="ln" aria-hidden="true">{lines.value.map(n => <li key={n} data-error={n === errorLine ? '' : undefined}>{n}</li>)}</ol>}
             <div data-part="surface">
               <pre data-part="layer" aria-hidden="true">{`${held.value}\n`}</pre>
-              <textarea {...live} data-part="input" id={id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget as HTMLTextAreaElement)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
+              <textarea {...p.rest} data-part="input" id={p.id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget as HTMLTextAreaElement)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
             </div>
           </div>
         </div>
@@ -112,6 +115,7 @@ export function JsonEditor({ value, defaultValue, onValueChange, schema, tabSize
       language="json"
       value={held.value}
       onValueChange={change}
+      onReset={() => { clearTimeout(timer); checked.value = held.value }}
       error={failed.value}
       hint={problem.value ? LEAVE : summary.value}
       errorLine={problem.value?.line}

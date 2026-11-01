@@ -162,9 +162,10 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
       hint={hint ?? 'Markdown shortcuts work at the start of a line. Esc closes menus.'}
       group
       filled
+      reset={held.reset}
       hold={menuOpen.value}
       attrs={{ 'data-multiline': '' }}
-      control={({ id: field, describedby, invalid }) => (
+      control={p => (
         <div data-scope="rte">
           <div data-part="frame">
             {toolbar !== 'none' && (
@@ -182,7 +183,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
                 <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => endLink(false)}>Cancel</Button>
               </div>
             )}
-            <div ref={(n: any) => (ed = n)} data-part="content" id={`${id}-c`} contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" aria-labelledby={`${field}-l`} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={`${id}-menu`} aria-activedescendant={menuOpen.value ? `${id}-${active.value}` : undefined} data-placeholder={placeholder} spellcheck style={rows()} onKeyDown={onMenuKey} innerHTML={start}></div>
+            <div ref={(n: any) => (ed = n)} data-part="content" id={`${id}-c`} contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" aria-labelledby={`${p.id}-l`} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={`${id}-menu`} aria-activedescendant={menuOpen.value ? `${id}-${active.value}` : undefined} data-placeholder={placeholder} spellcheck style={rows()} onKeyDown={onMenuKey} innerHTML={start}></div>
           </div>
           <span ref={(n: any) => (mark = n)} data-part="caret-anchor" style="position:fixed" aria-hidden="true"></span>
           <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>

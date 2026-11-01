@@ -118,9 +118,10 @@ export function MentionsInput({ triggers, rows = 3, value, defaultValue, onValue
       hint={hint}
       attrs={{ 'data-multiline': '' }}
       filled={text.value.length > 0}
+      reset={held.reset}
       hold={open.value}
-      control={({ id: field, describedby, invalid, rest: live }) => (
-        <textarea ref={(n: any) => (area = n)} {...live} data-part="input" id={field} rows={rows} placeholder=" " aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} value={text.value} onInput={onInput} onKeyDown={onKey} onClick={scan}>{start.text}</textarea>
+      control={p => (
+        <textarea ref={(n: any) => (area = n)} {...p.rest} data-part="input" id={p.id} rows={rows} placeholder=" " aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} value={text.value} onInput={onInput} onKeyDown={onKey} onClick={scan}>{start.text}</textarea>
       )}
       end={
         <>

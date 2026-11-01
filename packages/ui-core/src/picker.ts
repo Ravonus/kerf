@@ -2,7 +2,7 @@
 // a modal sheet on a phone, the list keys of a slot list or combobox, and the default range presets.
 import { dialog, popover } from './overlays'
 import { addDays, addMonths, monthStart, type DateRange, type IsoDate } from './temporal'
-import { place, type Align, type Side } from './layers'
+import { place, pushLayer, type Align, type Side } from './layers'
 
 export type Presentation = 'auto' | 'popover' | 'sheet'
 
@@ -88,15 +88,16 @@ export const defaultPresets = (locale: string): RangePreset[] => {
 }
 
 /**
- * The popup of a combobox (04 §3, APG): anchored like a popover, but presentational. Focus never leaves the input,
- * so it takes no layer; the input owns the keys and `onClose` hears a press outside.
+ * The popup of a combobox (04 §3, APG): anchored like a popover, but presentational: focus never leaves the input, and
+ * the input owns the keys. It is a layer, so Escape closes it before any dialog around it (the input sees that as
+ * `defaultPrevented`), and `onClose` hears that and a press outside.
  */
 export function comboPopup(el: HTMLElement, opts: { open: boolean; anchor: HTMLElement; onClose(): void }) {
   let o = opts
   const win = el.ownerDocument.defaultView!
   const reposition = () => el.matches(':popover-open') && place(el, o.anchor, 'bottom', 'start', 8)
-  const outside = (e: PointerEvent) => { const t = e.target as Node; if (!el.contains(t) && !o.anchor.contains(t)) o.onClose() }
   let shown = false
+  let remove: (() => void) | undefined
   const sync = () => {
     if (o.open === shown) return
     shown = o.open
@@ -107,7 +108,7 @@ export function comboPopup(el: HTMLElement, opts: { open: boolean; anchor: HTMLE
       reposition()
       win.addEventListener('resize', reposition)
       win.addEventListener('scroll', reposition, true)
-      el.ownerDocument.addEventListener('pointerdown', outside)
+      remove = pushLayer({ el, trigger: o.anchor, close: () => o.onClose() })
     } else off()
   }
   const off = () => {
@@ -115,7 +116,7 @@ export function comboPopup(el: HTMLElement, opts: { open: boolean; anchor: HTMLE
     if (el.matches?.(':popover-open')) el.hidePopover?.()
     win.removeEventListener('resize', reposition)
     win.removeEventListener('scroll', reposition, true)
-    el.ownerDocument.removeEventListener('pointerdown', outside)
+    remove?.()
   }
   sync()
   return { update(next: typeof opts) { o = next; sync() }, destroy: off }
