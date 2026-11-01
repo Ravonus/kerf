@@ -59,8 +59,7 @@ if (!has('sizes')) {
   if (host) {
     const dir = 'work/weft-lab'
     execSync(`ssh ${host} 'mkdir -p ${dir}' && rsync -a --delete --exclude .core dist/ ${host}:${dir}/dist/ && rsync -a measure.mjs reactive.mjs ${host}:${dir}/`, { cwd: here })
-    const browser = 'ls -d ~/Library/Caches/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell | tail -1'
-    execSync(`ssh ${host} 'export PATH=/opt/homebrew/bin:$PATH; cd ${dir}; echo "{\\"type\\":\\"module\\",\\"dependencies\\":{\\"playwright-core\\":\\"1.56.1\\"}}" > package.json; npm i --no-audit --no-fund >/dev/null 2>&1; CHROME=$(${browser}) node measure.mjs --out lab.json ${flags.join(' ')}' && scp -q ${host}:${dir}/lab.json ${out}`, { cwd: here, stdio: 'inherit' })
+    execSync(`ssh ${host} 'export PATH=/opt/homebrew/bin:$PATH; cd ${dir}; echo "{\\"type\\":\\"module\\",\\"dependencies\\":{\\"playwright-core\\":\\"1.56.1\\"}}" > package.json; npm i --no-audit --no-fund >/dev/null 2>&1; npx playwright-core install chromium-headless-shell >/dev/null 2>&1; node measure.mjs --out lab.json ${flags.join(' ')}' && scp -q ${host}:${dir}/lab.json ${out}`, { cwd: here, stdio: 'inherit' })
   } else {
     execFileSync(process.execPath, ['measure.mjs', '--out', out, ...flags], { cwd: here, stdio: 'inherit' })
   }

@@ -3,7 +3,7 @@
 // code imports `render` (or `hydrate`) and nothing else from here.
 
 import { Box, DEV, clean, createRoot, devComponent, getOwner, flat, hole, memo, NONE, onCleanup, rt, runMounts, setFlat, untrack, view, within, type Owner } from './index'
-import { DEFER, ENDS, FLAT, LINEAR, ROWBOX, SCAN, SWAP, TEXT, WIPE } from './flags'
+import { DEFER, ENDS, FLAT, LINEAR, ROWBOX, SORTED, SCAN, SWAP, TEXT, WIPE } from './flags'
 import { keys, step, under } from './keys'
 
 export { memo }
@@ -333,12 +333,18 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
   if (WIPE) wipe = empty
   // Only the first row of a key is kept: a repeat is built anew each pass.
   const repeats = () => {
+    fresh = false
+    // Keys that only rise can't repeat, and most keys are ids: that's a comparison a row, not a hash.
+    if (SORTED) {
+      let i = 1
+      while (i < order.length && (order[i - 1].key as any) < (order[i].key as any)) i++
+      if (i >= order.length) return
+    }
     const seen = new Set<unknown>()
     for (const r of order) {
       if (seen.has(r.key)) r.key = { duplicate: r.key }
       seen.add(r.key)
     }
-    fresh = false
   }
   onCleanup(() => {
     for (const r of order) clean(r)

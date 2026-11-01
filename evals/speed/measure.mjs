@@ -127,6 +127,38 @@ if (!process.argv.includes('--no-reactive')) {
   }
 }
 
-const results = { when: new Date().toISOString(), machine: cpus()[0].model, node: process.version, solid: '1.9.18', loads, maxLoad: Math.max(...loads), valid: Math.max(...loads) < 20, grid: summary, reactive }
+/** The median's 95% interval, by resampling the runs. */
+const rng = (seed => () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296)(1)
+const resample = list => list.map(() => list[Math.floor(rng() * list.length)])
+const interval = (values, n = 2000) => {
+  const sorted = values.sort((a, b) => a - b)
+  return [sorted[Math.floor(n * 0.025)], sorted[Math.floor(n * 0.975)]]
+}
+const spread = {}
+for (const [stack, groups] of Object.entries(data)) {
+  spread[stack] = {}
+  for (const [g, names] of Object.entries(groups)) {
+    spread[stack][g] = {}
+    for (const [k, list] of Object.entries(names)) spread[stack][g][k] = { runs: list.length, ci: interval(Array.from({ length: 2000 }, () => median(resample(list)))).map(v => +v.toPrecision(4)) }
+  }
+}
+/** `a / b` for each number both have, with its 95% interval: below 1 throughout is a win that held across runs. */
+const versus = (a, b) => {
+  const out = {}
+  for (const [g, names] of Object.entries(data[a] ?? {})) {
+    for (const [k, list] of Object.entries(names)) {
+      const other = data[b]?.[g]?.[k]
+      if (!other) continue
+      const [lo, hi] = interval(Array.from({ length: 2000 }, () => median(resample(list)) / median(resample(other))))
+      ;(out[g] ??= {})[k] = { ratio: +(median(list) / median(other)).toFixed(4), lo: +lo.toFixed(4), hi: +hi.toFixed(4) }
+    }
+  }
+  return out
+}
+const against = data['solid-batch'] ? 'solid-batch' : 'solid'
+const compared = Object.fromEntries(Object.keys(data).filter(s => s !== against).map(s => [s, versus(s, against)]))
+const paths = Object.fromEntries(Object.keys(data).filter(s => s.startsWith('off-')).map(s => [s, versus(s, 'weft')]))
+
+const results = { spread, compared, paths, when: new Date().toISOString(), machine: cpus()[0].model, node: process.version, solid: '1.9.18', loads, maxLoad: Math.max(...loads), valid: Math.max(...loads) < 20, grid: summary, reactive }
 writeFileSync(out, JSON.stringify(results, null, 1) + '\n')
 console.log(`wrote ${out}; load ${Math.min(...loads)} to ${Math.max(...loads)}`)
