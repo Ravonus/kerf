@@ -944,7 +944,7 @@ evals/        agent eval harness
 **5b status (2026-10-31):** built. `native()` in `@weft/start/rust`, `weft::native!`, a WASM fallback with its own small ABI,
 R104 and R105, and `weft add rust`, which closes 5a's gap: the crate ships inside `@weft/start`. Exit check: passed, 51 of 51
 on Node, Bun and Deno on Linux x64, with byte-identical answers and client: the addon beats its TS `run` by 7.2× on Node and
-5.1× on Bun at p50 (15.1× and 13.4× in calls/s), and WASM gives 6.4× and 5.1×. The body was chosen to vectorize, and Bun's
+5.1× on Bun at p50 (15.1× and 13.4× in calls/s), and WASM gives 6.4× and 5.1×; on macOS arm64, also 51 of 51, 14.3× and 7.7×. The body was chosen to vectorize, and Bun's
 margin is thin. Dev reload needs no restart: a new path per build loads beside the old one, which §11 had wrong. Not done:
 WASM on an edge isolate, bytes without JSON, Windows itself. What was built and left out: [37](research/37-rust-native.md).
 

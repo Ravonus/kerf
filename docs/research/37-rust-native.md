@@ -124,8 +124,8 @@ with 28 threads. TS is typed arrays with no allocation in a loop, and both give 
 | Deno | WASM | 16.4 | 65.3 | 5.5× p50 |
 
 Bun's p50 clears 5× narrowly. The body was picked to vectorize, which is where the ratio comes from: it's the case for
-`native()`, and a branchy body will gain less, by an amount nothing here measured. A raw run of the same body on an M4 Max under load 65 gave 12×
-on Node and 7× on Bun. An addon is built for the baseline CPU, so x64 gets SSE2, and it's barely ahead of WASM's 128-bit SIMD.
+`native()`, and a branchy body will gain less, by an amount nothing here measured. On an M4 Max under load 40 (`phase5b-exit-macos.md`, also 51 of 51) the addon gave 14.3× on Node and 7.7× on Bun at p50, and 77.7× and
+45.4× in calls/s. An addon is built for the baseline CPU, so x64 gets SSE2, and it's barely ahead of WASM's 128-bit SIMD.
 
 The addon is 776 KB, the `.wasm` 248 KB. A build with no `native()` has neither, and no loader: the check greps its server
 bundle.
