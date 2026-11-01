@@ -1,7 +1,7 @@
 import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start'
 import { Link } from '@weft/start'
 import { Button, Nav } from '@weft/warp'
-import { PageExample } from '../../components/Example'
+import { PageExample } from '../../components/PageExample'
 import pages from '../../generated/docs.json'
 
 const all = pages as unknown as Record<string, { slug: string; title: string; section: string; html: string; description: string; lead?: string; toc: { id: string; text: string }[]; prev?: { slug: string; title: string }; next?: { slug: string; title: string }; parent?: { slug: string; title: string } }>
@@ -20,7 +20,6 @@ const unfold = async (id: string) => {
   target!.scrollIntoView()
 }
 
-/* @weft client */
 function Toc(props: { items: { id: string; text: string }[] }) {
   return <Nav label="On this page" axis="y" spy>{props.items.map(t => <a key={t.id} href={`#${t.id}`} onClick={() => unfold(t.id)}>{t.text}</a>)}</Nav>
 }

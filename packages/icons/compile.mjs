@@ -354,7 +354,12 @@ export function analyze(root, { catalog }) {
   for (const unit of units.values()) {
     for (const use of unit.uses) {
       if (use.prop === 'name' && iconLocal(unit, use.comp)) site(unit, use.expr, use.at, false, use.element)
-      else if (use.prop === 'icon' && warpLocal(unit, use.comp)) site(unit, use.expr, use.at, false)
+      else if (use.prop === 'icon' && warpLocal(unit, use.comp)) {
+        // a literal becomes the icon itself (`rewrite`), so it needs no entry in every page's table
+        const v = literal(use.expr)
+        if (v !== undefined && known.has(v)) continue
+        site(unit, use.expr, use.at, false)
+      }
       if (use.prop === 'tier') { for (const v of expression(unit, use.expr).values) if (STOPS.includes(v)) stops.add(v) }
     }
     if (unit.warp) for (const s of unit.sites) site(unit, s.expr, s.at, true)
@@ -403,7 +408,12 @@ export function trimTiers(source, stops) {
   return stops.size === 1 ? out.replaceAll(/ data-t="[oqbv]"/g, '').replace("import '../tiers.css'\n", '') : out
 }
 
-/** `<Icon name="check">` becomes `<CheckIcon>`, the same output a named import gives. */
+const literal = expr => {
+  const v = unwrap(expr)
+  return (v.type === 'Literal' || v.type === 'StringLiteral') && typeof v.value === 'string' ? v.value : undefined
+}
+
+/** `<Icon name="check">` becomes `<CheckIcon>`, the same output a named import gives, and `icon="check"` on a warp component takes `CheckIcon`. */
 export function rewrite(code, file, catalog) {
   if (!/@weft\/(icons|warp)/.test(code)) return null
   const unit = read(file, code)
@@ -424,6 +434,15 @@ export function rewrite(code, file, catalog) {
     }
   }
   for (const use of unit.uses) {
+    if (use.prop === 'icon') {
+      const v = literal(use.expr), imp = unit.imports.get(use.comp.split('.')[0])
+      if (v === undefined || !imp || !(imp.source === '@weft/warp' || imp.source.startsWith('@weft/warp/'))) continue
+      if (catalog && !catalog.includes(v)) throw Object.assign(new Error(unknownMessage(v, catalog)), { loc: { file, ...line(code, unwrap(use.expr).start) } })
+      const name = pascal(v)
+      added.add(name)
+      edits.push({ start: use.at, end: use.end, text: `icon={${name}}` })
+      continue
+    }
     if (!local || use.comp !== local || use.prop !== 'name') continue
     const v = unwrap(use.expr)
     if ((v.type !== 'Literal' && v.type !== 'StringLiteral') || typeof v.value !== 'string') continue

@@ -4,7 +4,7 @@ import '@weft/ui-core/styles/rich/prose.css'
 import '@weft/ui-core/styles/rich/codeblock.css'
 import '@weft/ui-core/styles/components/copy.css'
 import { SearchTrigger } from '../../components/SearchTrigger'
-import { Spotlight } from '../../components/Spotlight'
+import { SpotlightGate } from '../../components/SpotlightGate'
 import nav from '../../generated/docs-nav.json'
 import '../../styles/docs.css'
 
@@ -24,7 +24,7 @@ export default function DocsLayout(props: RouteProps) {
         </Nav>
       </details>
       {props.children}
-      <Spotlight />
+      <SpotlightGate />
     </div>
   )
 }

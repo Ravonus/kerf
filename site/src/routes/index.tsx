@@ -1,6 +1,11 @@
 import { Link, type Meta } from '@weft/start'
 import { Arena } from '../components/Arena'
 import { Example } from '../components/Example'
+import Shop1 from '../demos/shop-1'
+import Shop2 from '../demos/shop-2'
+import Shop3 from '../demos/shop-3'
+import Shop4 from '../demos/shop-4'
+import Shop5 from '../demos/shop-5'
 import { Fix } from '../components/Fix'
 import { Loom } from '../components/Loom'
 import show from '../generated/showcase.json'
@@ -37,31 +42,31 @@ export default function Home() {
         <section>
           <h2>You already know how to write this</h2>
           <p data-part="intro">A weft component is a function that returns TSX. Keep a value in <code>state</code>, show it, change it. There is no new template language to learn.</p>
-          <Example id="shop-1" plain />
+          <Example id="shop-1" plain><Shop1 /></Example>
         </section>
 
         <section>
           <h2>Values that keep themselves right</h2>
           <p data-part="intro">Say how a value is worked out, and weft keeps it current. The shop gets a total and free shipping over $36.</p>
-          <Example id="shop-2" plain />
+          <Example id="shop-2" plain><Shop2 /></Example>
         </section>
 
         <section>
           <h2>Only what changed gets updated</h2>
           <p data-part="intro">Most frameworks re-run your component and compare the result to find what changed. weft works that out when it compiles, so a change goes straight to the piece of the page it affects. The shop gets more products, and stays just as quick.</p>
-          <Example id="shop-3" plain />
+          <Example id="shop-3" plain><Shop3 /></Example>
         </section>
 
         <section>
           <h2>No wiring between the parts</h2>
           <p data-part="intro">The shop gets a search box. It is one new value and one line of filtering, and everything that depends on it follows.</p>
-          <Example id="shop-4" plain />
+          <Example id="shop-4" plain><Shop4 /></Example>
         </section>
 
         <section>
           <h2>A UI kit comes with it</h2>
           <p data-part="intro">The buttons and fields so far are warp, weft's own component library: 227 components, with keyboard support, themes and 651 icons. The shop gets a checkout.</p>
-          <Example id="shop-5" plain />
+          <Example id="shop-5" plain><Shop5 /></Example>
           <p data-part="more"><Link href="/toolkit">Browse the toolkit</Link></p>
         </section>
 

@@ -34,12 +34,14 @@ let next = 0
 // nothing, so server ids stay in the page: they get their own namespace, or a field added later could take one.
 const side = typeof document === 'undefined' ? 's' : ''
 /** A document-unique id for ARIA wiring (`warp-0`, `warp-1`, …). */
-export const uid = (prefix = 'warp') => `${prefix}-${side}${(next++).toString(36)}`
+export const uid = (prefix = 'warp') => {
+  // A server render restarts the count, so a page's markup doesn't depend on what was served before it: that's how start
+  // tells a static level hasn't changed. weft has no import of this package, so the two meet on a global.
+  if (side) (globalThis as any)[Symbol.for('weft.render')] = resetIds
+  return `${prefix}-${side}${(next++).toString(36)}`
+}
 /**
  * Restart the id sequence. A server render and the hydration that adopts it each call this first, so the same
  * component order yields the same ids on both sides.
  */
 export const resetIds = () => void (next = 0)
-// A server render restarts the count, so a page's markup doesn't depend on what was served before it: that's how start
-// tells a static level hasn't changed. weft has no import of this package, so the two meet on a global.
-if (side) (globalThis as any)[Symbol.for('weft.render')] = resetIds

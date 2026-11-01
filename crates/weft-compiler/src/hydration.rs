@@ -47,6 +47,8 @@ pub struct HydrationFacts {
     pub stars: Vec<String>,
     /// What this module does as it loads (a client that skips the module would skip it).
     pub effects: Option<String>,
+    /// Modules it imports only to run them: an effect if they have one, which the project's view can tell.
+    pub side: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -538,7 +540,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                 }
                 let plain = source_name.split('?').next().unwrap_or("");
                 if !NOT_CODE.iter().any(|x| plain.ends_with(x)) && !source_name.starts_with("weft:") && !source_name.starts_with("virtual:") {
-                    out.effects.get_or_insert(format!("`import \"{source_name}\"` (line {line})"));
+                    out.side.push(source_name.clone());
                 }
             }
             Statement::FunctionDeclaration(f) => {

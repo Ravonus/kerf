@@ -1,5 +1,5 @@
 import { navigate } from '@weft/start'
-import { copyButtons, type SearchHit } from '@weft/ui-core'
+import type { SearchHit } from '@weft/ui-core'
 import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft/icons'
 import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource } from '@weft/warp'
 import { onMount } from 'weft'
@@ -81,14 +81,10 @@ const MODES: CommandMode[] = [
   { prefix: '#', label: 'Examples', placeholder: 'Search examples…', sources: [only('Examples')] },
 ]
 
-/** The ⌘K launcher, in the shell so opening it fetches nothing. Search and commands are one surface. */
+/** The ⌘K launcher. Search and commands are one surface. */
 export function Spotlight() {
   onMount(() => {
-    const stop = copyButtons()
-    const start = () => void loadTitles()
-    const idle = (globalThis as any).requestIdleCallback ?? ((f: () => void) => setTimeout(f, 200))
-    idle(start)
-    return stop
+    void loadTitles()
   })
   return <CommandPalette open={spotlightOpen} onOpenChange={v => (spotlightOpen.value = v)} slash sources={[titlesSource, bodySource]} modes={MODES} groupOrder={ORDER} onRun={remember} label="Search weft" placeholder="Search docs, components, codes…   > for commands" />
 }
