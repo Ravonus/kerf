@@ -129,7 +129,8 @@ export async function startCommand(root, { runtime } = {}) {
   // Sidecars first: the server's environment has their addresses, and they outlive a crash of either side.
   const { startSidecars } = await start(root, 'sidecar')
   const sidecars = await startSidecars({ root })
-  const child = spawn(cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
+  // The running binary when it can be: Deno on Windows doesn't find itself on PATH.
+  const child = spawn(chosen === hostRuntime() ? process.execPath : cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
   process.once('SIGINT', () => child.kill('SIGINT'))
   process.once('SIGTERM', () => child.kill('SIGTERM'))
   return new Promise(ok => child.on('close', code => (sidecars.close(), ok(code ?? 0))))

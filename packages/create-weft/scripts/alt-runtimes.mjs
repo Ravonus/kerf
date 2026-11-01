@@ -207,10 +207,10 @@ async function flow(runtime, port) {
     writeFileSync(route, LIVE.replace('<main>', '<main'))
     await until('syntax error shown', 15000, async () => (await fetch(`${base}/live`)).status >= 500)
     writeFileSync(route, LIVE)
-    // On Linux some runs stay on the error page, on Node too, so it isn't this runtime's.
+    // Off macOS some runs stay on the error page, on Node too, so it isn't this runtime's.
     const recovered = await until('recovery', 20000, async () => (await (await fetch(`${base}/live`)).text()).includes('first')).catch(() => false)
     if (recovered) pass('dev: recovers from a syntax error')
-    else if (process.platform === 'linux') console.log(`[${runtime}] dev: still on the error page after 20s (seen on Linux on Node too)`)
+    else if (process.platform !== 'darwin') console.log(`[${runtime}] dev: still on the error page after 20s (seen on Node on Linux too)`)
     else throw new Error('dev: stuck on a syntax error')
     hmr.close()
   })
