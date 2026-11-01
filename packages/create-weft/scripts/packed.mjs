@@ -218,6 +218,7 @@ const apps = [
   { name: 'media', options: { ui: 'warp', db: 'none' }, media: true },
   { name: 'rust', options: { ui: 'warp', db: 'none' }, rust: true },
   { name: 'pay', options: { ui: 'warp', db: 'sqlite', auth: true }, pay: true },
+  { name: 'landing', options: { template: 'landing' } }, // reads nothing on `/`, so no database is needed to serve it
 ]
 
 await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media, rust, pay }, i) => {
@@ -244,7 +245,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
   const sessions = []
   const mock = pay && await mockStripe(5299 + i, sessions)
   if (pay) await payApp(app, weft, 5299 + i, log)
-  for (const [cmd, ...args] of [...(options.db === 'none' ? [] : [['weft', 'db', 'generate']]), ['tsc', '--noEmit'], ['weft', 'check'], ['weft', 'build']]) {
+  for (const [cmd, ...args] of [...(options.db === 'none' || options.template ? [] : [['weft', 'db', 'generate']]), ['tsc', '--noEmit'], ['weft', 'check'], ['weft', 'build']]) {
     await sh(join(app, 'node_modules/.bin', cmd), args, app)
     log(`${cmd} ${args.join(' ')}: pass`)
   }

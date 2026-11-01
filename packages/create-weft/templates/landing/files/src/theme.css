@@ -1,0 +1,6 @@
+/* This app's own CSS. Tokens to change first: --warp-color-accent-solid, --warp-radius-surface, --warp-font-display. */
+.page {
+  max-inline-size: 40rem;
+  margin-inline: auto;
+  padding: var(--warp-space-page);
+}

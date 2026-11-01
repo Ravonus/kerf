@@ -1,7 +1,7 @@
 // The `--db` and `--auth` part of a scaffold (research 28 §6): a database, a todo app on it, and with `--auth` a
 // sign-in/sign-up flow and a guarded `/todos`. Pinned versions, so a scaffold builds what the matrix tested.
 
-const VERSIONS = {
+export const VERSIONS = {
   '@types/node': '26.6.5',
   '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', kysely: '0.29.7', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',
   prisma: '7.10.1', '@prisma/client': '7.10.1', '@prisma/adapter-libsql': '7.10.1', '@prisma/adapter-pg': '7.10.1', '@prisma/adapter-mariadb': '7.10.1',
@@ -35,6 +35,12 @@ const authTablesFile = db => ({
   postgres: () => `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg()}`,
   mysql: () => `import { boolean, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core'\n${authTablesMysql()}`,
 }[db]())
+
+const camel = column => column.replace(/_(\w)/g, (_, c) => c.toUpperCase())
+
+/** A template's `src/db/auth.ts`: Better Auth's own column names with time zones, as evals/apps/shared/pg/schema.sql has them. */
+export const sharedAuthTables = () => `import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'\n${authTablesPg()
+  .replace(/(text|boolean|timestamp)\('(\w+)'\)/g, (_, type, column) => `${type}('${camel(column)}'${type === 'timestamp' ? ', { withTimezone: true }' : ''})`)}`
 
 export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
   const shared = {

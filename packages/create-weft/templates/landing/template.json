@@ -1,0 +1,5 @@
+{
+  "requires": { "db": "postgres", "auth": false },
+  "pages": ["/"],
+  "warp": { "seed": { "accent": "#c2410c" }, "dials": { "expression": "vivid" }, "radius": "round" }
+}
