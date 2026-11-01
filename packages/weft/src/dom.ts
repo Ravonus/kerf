@@ -160,13 +160,14 @@ export function className(node: Element, value: any, prev?: any) {
   for (const k in value) if (value[k] && !p[k]) node.classList.add(k)
 }
 
-// The compiler resolves names it can see (crates/weft-compiler/src/react.rs); a spread's arrive here.
+// The compiler resolves names it can see (crates/weft-compiler/src/react.rs); a spread's arrive here. DASHED leaves out
+// SVG font attributes and other names no browser reads, so a spread keeps those as written.
 const NAMES: Record<string, string> = { className: 'class', htmlFor: 'for', acceptCharset: 'accept-charset', httpEquiv: 'http-equiv', tabIndex: 'tabindex', crossOrigin: 'crossorigin', hrefLang: 'hreflang', referrerPolicy: 'referrerpolicy' }
-const DASHED = /^(?:accentH|alignmentB|arabicF|baselineS|capH|clip(?:Path$|R)|color[IPR]|dominantB|enableB|fill[OR]|flood[CO]|font[FSVW]|glyph[NO]|horiz[AO]|imageR|letterS|lightingC|marker[EMS]|overline[PT]|paintO|panose1|pointerE|renderingI|shapeR|stop[CO]|strikethrough[PT]|stroke[DLMOW]|text(?:An|D|R)|transformO|underline[PT]|unicode[BR]|unitsP|v(?:Alp|[HIM])|vectorE|vert[AO]|wordS|writingM|xHeight)/
+const DASHED = /^(?:alignmentB|baselineS|clip(?:Path$|R)|color[IR]|dominantB|fill[OR]|flood[CO]|font[FSVW]|imageR|letterS|lightingC|marker[EMS]|paintO|pointerE|shapeR|stop[CO]|stroke[DLMOW]|text(?:An|D|R)|transformO|unicodeB|vectorE|wordS|writingM)/
 
 /** The attribute a prop in a spread writes. HTML lowercases the rest itself. */
 export const attrName = (k: string) =>
-  NAMES[k] ?? (DASHED.test(k) ? k.replace(/[A-Z]|1$/g, c => '-' + c.toLowerCase()) : /^(?:xlink|xmlns|xml)[A-Z]/.test(k) ? k.replace(/[A-Z]/, c => ':' + c.toLowerCase()) : k)
+  NAMES[k] ?? (DASHED.test(k) ? k.replace(/[A-Z]/g, c => '-' + c.toLowerCase()) : /^(?:xlink|xmlns|xml)[A-Z]/.test(k) ? k.replace(/[A-Z]/, c => ':' + c.toLowerCase()) : k)
 
 const UNITLESS = /^(?:--.*|(?:-\w+-)?(?:animation-iteration-count|aspect-ratio|border-image-(?:outset|slice|width)|box-(?:flex|flex-group|ordinal-group)|column-count|columns|flex(?:-grow|-shrink|-order|-positive|-negative)?|(?:fill|flood|stop|stroke)-opacity|font-weight|grid-(?:area|row|column)(?:-end|-span|-start)?|line-clamp|line-height|opacity|order|orphans|scale|stroke-(?:dasharray|dashoffset|miterlimit|width)|tab-size|widows|z-index|zoom))$/
 
