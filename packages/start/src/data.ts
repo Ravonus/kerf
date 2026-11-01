@@ -41,12 +41,13 @@ export interface Context {
   response: { headers: Headers }
   /** Uploads and CMS images (research 29 §6): `ingest` stores the original and returns the record `z.media()` validates. */
   media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('weft/media').MediaAsset> }
-  /** What this user holds (research 10 §3), from verified rail events. Await it. `src/pay.server.ts` turns it on. */
-  entitlements: { has(id: string): Promise<boolean>; list(): Promise<string[]> }
 }
 
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
 export const CLIENT_IP = 'x-weft-client-ip'
+
+/** Options a plugin adds to `query` and `mutation`, by augmenting this; its extension's `guard` reads them. Empty here. */
+export interface FnOptions {}
 
 /** `'minutes'` etc. or seconds: how long the shared server cache keeps a value (research 27 §4). */
 export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
@@ -68,7 +69,7 @@ export interface Impl { readonly kind: string; readonly target: string; readonly
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
 export type Errors = Record<string, StandardSchemaV1>
 
-export interface QueryDef<S, O, A = undefined> {
+export interface QueryDef<S, O, A = undefined> extends FnOptions {
   input?: S
   /** The result's shape: checked in dev and tests (C002), and the contract's `output`. */
   output?: StandardSchemaV1
@@ -78,8 +79,6 @@ export interface QueryDef<S, O, A = undefined> {
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
   tags?: QueryTags<Out<S>, A>
-  /** Entitlements this call needs, on the server: a typed 403 otherwise. */
-  requires?: readonly string[]
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
   /** Named failures, for the client as `FnError.code` and `.data`. */
@@ -94,14 +93,12 @@ export interface QueryDef<S, O, A = undefined> {
 export type ImplQueryDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<QueryDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
 export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<MutationDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
 
-export interface MutationDef<S, O, A = undefined> {
+export interface MutationDef<S, O, A = undefined> extends FnOptions {
   input?: S
   output?: StandardSchemaV1
   auth?: A
   /** Tags whose queries the response refreshes (single-flight) and whose cached values it drops. */
   invalidates?: Tags<[input: Out<S>, result: Awaited<O>]>
-  /** Entitlements this call needs, on the server: a typed 403 otherwise. */
-  requires?: readonly string[]
   /** Client only: predict the result. Each call's layers are re-applied on new values until it settles. */
   optimistic?: (args: { input: In<S> }, cache: OptimisticCache) => void
   errors?: Errors
@@ -151,7 +148,7 @@ export interface Fn {
   kind: 'query' | 'mutation' | 'stream' | 'channel' | 'shared'
   $id: string
   def: {
-    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; impl?: Impl; errors?: Errors; requires?: readonly string[]; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
+    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; impl?: Impl; errors?: Errors; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
     /** `channel` and `sharedState` (research 32). */
     params?: StandardSchemaV1; authorize?: any; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: any) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
   }
@@ -320,8 +317,8 @@ export const net = () => {
 export interface NetControl {
   latency: number
   ctx?: object
-  /** `fakePay`'s ledger: `ctx.entitlements` in the fake scope. */
-  pay?: any
+  /** Server extensions for this test (`net.extension`). */
+  extensions: any[]
   online(): boolean
   fails: Map<string, unknown[]>
   handlers: Map<string, (input: any, ctx: any) => unknown>
@@ -684,7 +681,7 @@ export const http: Transport = {
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
 export const fakeScope = (exec: typeof import('./exec'), n: NetControl, request: Request) =>
-  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, pay: n.pay, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, extensions: n.extensions, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
 
 const inProcess: Transport = {
   query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),

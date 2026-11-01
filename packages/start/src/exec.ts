@@ -10,6 +10,7 @@
 
 import { shapeTree } from './shape.mjs'
 import type { MediaAsset } from 'weft/media'
+import type { ServerExtension } from './extension'
 import { FnError, enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 import { unavailable } from './db/core'
 
@@ -63,8 +64,8 @@ export interface ScopeOptions {
   onDiagnostic?: (d: { code: string; severity: string; message: string }) => void
   dev?: boolean
   media?: () => Promise<MediaServer> | undefined
-  /** `src/pay.server.ts`'s default export: what `ctx.entitlements` reads (research 10 §3). */
-  pay?: { forContext(ctx: any): Context['entitlements'] }
+  /** What plugins add through `server.extension` (extension.ts). */
+  extensions?: ServerExtension[]
 }
 
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
@@ -72,20 +73,15 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
-    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => withEntitlements({ ...app, request, response: { headers }, media: mediaApi(options) } as Context, options), e => { throw dbError(e) })),
+    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => extended({ ...app, request, response: { headers }, media: mediaApi(options) } as Context, options), e => { throw dbError(e) })),
   }
 }
 
-/** `ctx.entitlements`, for the user this context turned out to be. `context()` may set its own: tests do. */
-function withEntitlements(ctx: Context, options: ScopeOptions): Context {
-  ctx.entitlements ??= options.pay?.forContext(ctx) ?? noRail
+/** Each extension's part of `ctx`, once the app's is there: an extension reads `ctx.user` to say what it adds. */
+function extended(ctx: Context, options: ScopeOptions): Context {
+  for (const e of options.extensions ?? []) Object.assign(ctx, e.context?.(ctx))
   return ctx
 }
-
-const unbound = (): never => {
-  throw new StartError('P101', '`ctx.entitlements` needs `src/pay.server.ts`', 'run `weft add pay`', { status: 500 })
-}
-const noRail: Context['entitlements'] = { has: unbound, list: unbound }
 
 /** `ctx.media`. A refusal is the user's answer, with its own status; `<Form>` shows it. */
 const mediaApi = (options: ScopeOptions): Context['media'] => ({
@@ -169,7 +165,7 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const store = storeOf(scope)
     // Checked before the shared cache, so a value stored for one user is never answered to no one.
     const early = fn.def.auth || cached?.scope ? await scope.ctx() : undefined
-    if (early) guard(fn, cached ? shared(early, fn) : early)
+    if (early) guard(fn, cached ? shared(early, fn, scope) : early)
     const stored = cached?.scope ? `${key}@${(early as any).user?.id ?? ''}` : key
     if (cached) {
       const hit = await store.get(stored)
@@ -179,7 +175,7 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const ctx = early ?? (await scope.ctx())
     const touched = tracker(scope)
     const added: string[] = []
-    const v = await call(scope, fn, valid, cached ? shared(ctx, fn) : ctx, touched, added)
+    const v = await call(scope, fn, valid, cached ? shared(ctx, fn, scope) : ctx, touched, added)
     const fresh = [...new Set(added)].filter(t => !entry.tags.includes(t))
     if (fresh.length) {
       entry.tags.push(...fresh)
@@ -231,7 +227,7 @@ async function callImpl(fn: Fn, input: unknown, ctx: Context, scope: Scope, touc
 
 async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?: Touched, added: string[] = []) {
   guard(fn, ctx)
-  if (fn.def.requires) await entitled(fn, ctx)
+  for (const e of scope.options.extensions ?? []) await e.guard?.({ id: fn.$id, kind: fn.kind, def: fn.def }, ctx)
   const replaced = scope.options.handlers?.get(fn.$id)
   // Awaited inside the frame: a Drizzle query is a thenable, and only runs when something awaits it.
   const run = async () => await (replaced ? replaced(input, ctx) : fn.def.impl ? callImpl(fn, input, ctx, scope, touched, added) : fn.def.run!({ input, ctx }))
@@ -252,17 +248,12 @@ export function guard(fn: Fn, ctx: Context) {
   if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
 }
 
-/** `requires: ['pro']`: a typed 403, before `run`. */
-async function entitled(fn: Fn, ctx: Context) {
-  for (const id of fn.def.requires!) if (!(await ctx.entitlements.has(id))) throw new FnError({ code: 'ENTITLEMENT_REQUIRED', message: `This needs \`${id}\`` }, 403)
-}
-
 const DOWN = /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|CONNECT_TIMEOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|PROTOCOL_CONNECTION_LOST|P100[12])$/
 
 /** A dropped connection is Q016; a missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
 export function dbError(e: unknown): unknown {
   const cause = (e as any)?.cause ?? e
-  if ((e as any)?.name === 'PayError') return new FnError({ code: (e as any).code, message: (e as any).message }, (e as any).status)
+  if ((e as any)?.answer) return new FnError((e as any).answer, (e as any).answer.status)
   if (cause instanceof StartError) return cause // Drizzle wraps what a driver throws, the gate's Q016 included
   if (!(e instanceof StartError) && DOWN.test(`${cause?.code ?? (e as any)?.code ?? ''}`)) return unavailable(e)
   const m = `${cause?.message ?? ''}`
@@ -300,12 +291,13 @@ function missedPokes(fn: Fn, write: Set<string>, tags: string[], scope: Scope) {
 }
 
 /** A cached query's ctx: no request, response or user. Its value is shared by every user (Q006). With `scope: 'user'`, one value per user: `ctx.user` is allowed. */
-function shared(ctx: Context, fn: Fn): Context {
+function shared(ctx: Context, fn: Fn, scope: Scope): Context {
   const own = fn.def.cache?.scope === 'user'
   return new Proxy(ctx, {
     get(t, k, r) {
-      if (own && (k === 'user' || k === 'session' || k === 'entitlements')) return Reflect.get(t, k, r)
-      if (k === 'request' || k === 'response' || k === 'user' || k === 'session' || k === 'entitlements')
+      const personal = scope.options.extensions?.some(e => e.personal?.includes(String(k)))
+      if (own && (k === 'user' || k === 'session' || personal)) return Reflect.get(t, k, r)
+      if (k === 'request' || k === 'response' || k === 'user' || k === 'session' || personal)
         throw new StartError('Q006', `\`${fn.$id}\` is cached (\`cache: { life }\`) and reads \`ctx.${String(k)}\`: its value would be shared by every user`, 'drop `cache`, or pass the value as input')
       return Reflect.get(t, k, r)
     },

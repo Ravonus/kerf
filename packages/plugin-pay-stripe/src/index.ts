@@ -6,7 +6,7 @@
 // rolls. Stripe has no ordering guarantee, so each event carries the object's `created` or the event's own time, and the
 // ledger orders by that. A price is the catalog's unless `prices` maps `pro.month` to a Stripe id, on the server.
 
-import { PayError, type CheckoutRequest, type PayRail, type PurchaseState, type RailEvent } from 'weft/pay'
+import { PayError, type CheckoutRequest, type PayRail, type PurchaseState, type RailEvent } from '@weft/pay'
 
 export interface StripeOptions {
   /** Stripe Price ids by `<product>.<plan>` or `<product>`, from your own config. Default: amounts from the catalog. */

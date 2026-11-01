@@ -125,7 +125,7 @@ async function payApp(app, weft, mock, log) {
   if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) throw new Error('pay: the rail is not pointed at the mock')
   writeFileSync(join(app, 'no-network.mjs'), LOOPBACK_ONLY)
   writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
-  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from 'weft/pay'
+  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from '@weft/pay'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements } from '#/server/pay'
 
@@ -164,7 +164,7 @@ async function payServed(port, sessions, secret, log) {
   const hook = (event, key = secret) => {
     const body = JSON.stringify(event), t = Math.floor(Date.now() / 1000)
     const v1 = createHmac('sha256', key).update(`${t}.${body}`).digest('hex')
-    return fetch(`${base}/_weft/pay/stripe`, { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${v1}`, 'content-type': 'application/json' }, body }).then(r => r.status)
+    return fetch(`${base}/_weft/x/pay/stripe`, { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${v1}`, 'content-type': 'application/json' }, body }).then(r => r.status)
   }
   const event = (id, status, ahead = 0) => ({ id, type: 'customer.subscription.updated', created: Math.floor(Date.now() / 1000) + ahead, data: { object: { id: 'sub_1', status, customer: 'cus_1', current_period_end: Math.floor(Date.now() / 1000) + 2_592_000, metadata: { weft_user: user, weft_product: 'pro', weft_plan: 'month' } } } })
   if (await hook(event('evt_forged', 'active'), 'whsec_wrong') !== 400 || await report() !== 403) throw new Error('pay: a forged webhook was believed')
@@ -232,7 +232,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
   for (const text of css ?? []) if (!built.includes(text)) throw new Error(`${name}: the built CSS has no ${text}`)
   const client = readdirSync(join(app, '.output/public/assets')).filter(f => f.endsWith('.js')).map(f => readFileSync(join(app, '.output/public/assets', f), 'utf8')).join('')
   if (/STRIPE_|api\.stripe\.com|checkout\/sessions/.test(client)) throw new Error(`${name}: a rail reached the client`)
-  if (!pay && /PayError/.test(client)) throw new Error(`${name}: weft/pay is in the bundle of an app that sells nothing`)
+  if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft/pay is in the bundle of an app that sells nothing`)
 
   // Production takes the host's environment, so the scaffold's .env goes in by hand.
   const envFile = join(app, '.env')

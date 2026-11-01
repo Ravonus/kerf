@@ -1,13 +1,13 @@
-// The ledger on a real database, and `/_weft/pay/<rail>` on the real handler: verification before anything is read,
+// The ledger on a real database, and `/_weft/x/pay/<rail>` on the real handler: verification before anything is read,
 // tags on to the hub, and an app with no `src/pay.server.ts` that has no such route at all.
 import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core'
 import { createHmac } from 'node:crypto'
-import { product, PayError, type PayRail } from 'weft/pay'
-import { definePay, memoryPayStore } from 'weft/pay/server'
+import { product, PayError, type PayRail } from '@weft/pay'
+import { definePay, extension, memoryPayStore } from '@weft/pay/server'
+import { drizzlePayStore } from '@weft/pay/drizzle'
 import { runtime } from '@weft/start/data'
-import { drizzlePayStore } from '../src/pay/drizzle'
-import { createDb } from '../src/db/sqlite'
-import { createHandler } from '../src/server'
+import { createDb } from '@weft/start/db/sqlite'
+import { createHandler } from '@weft/start/server'
 
 const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
 const urls = { success: '/', cancel: '/' }
@@ -31,7 +31,7 @@ describe('drizzlePayStore', () => {
   })
 })
 
-describe('/_weft/pay/<rail>', () => {
+describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
   const secret = 'placeholder'
   const hook = (body: string, key = secret) => ({ 'x-sig': createHmac('sha256', key).update(body).digest('hex') })
   const rail: PayRail = {
@@ -45,9 +45,9 @@ describe('/_weft/pay/<rail>', () => {
   }
   const manifest = { dir: '', routes: [], layouts: [] }
   const app = () => {
-    const pay = definePay({ catalog: [pro], store: memoryPayStore(), urls }).$weft.bind(async () => rail, { test: '@acme/rail' })
+    const pay = definePay({ catalog: [pro], store: memoryPayStore(), urls, slot: async () => ({ load: async () => rail, providers: { test: '@acme/rail' } }) })
     const diagnostics: { code: string; message: string }[] = []
-    return { pay, diagnostics, handler: createHandler({ manifest, modules: {}, pay, dev: true, onDiagnostic: d => diagnostics.push(d) }) }
+    return { pay, diagnostics, handler: createHandler({ manifest, modules: {}, extensions: [{ key: 'pay', load: async () => extension(pay) }], dev: true, onDiagnostic: d => diagnostics.push(d) }) }
   }
   const post = (path: string, body: string, headers: Record<string, string>) => new Request(`http://localhost${path}`, { method: 'POST', body, headers })
   const body = JSON.stringify([{ id: 'e1', at: 1000, purchase: 'p1', state: 'active', user: 'u1', product: 'pro' }])
@@ -57,7 +57,7 @@ describe('/_weft/pay/<rail>', () => {
     const poke = runtime.poke
     const poked: string[][] = []
     runtime.poke = async tags => void poked.push(tags)
-    const res = await handler(post('/_weft/pay/test', body, hook(body)))
+    const res = await handler(post('/_weft/x/pay/test', body, hook(body)))
     runtime.poke = poke
     expect(res.status).toBe(200)
     expect(poked).toEqual([['entitlements:u1']])
@@ -66,7 +66,7 @@ describe('/_weft/pay/<rail>', () => {
 
   test('a bad signature is a 400 that says nothing, and the reason goes to the log', async () => {
     const { pay, handler, diagnostics } = app()
-    const res = await handler(post('/_weft/pay/test', body, hook(body, 'another')))
+    const res = await handler(post('/_weft/x/pay/test', body, hook(body, 'another')))
     expect(res.status).toBe(400)
     expect(await res.text()).toBe('Bad signature')
     expect(diagnostics).toEqual([expect.objectContaining({ code: 'PAY011' })])
@@ -75,14 +75,14 @@ describe('/_weft/pay/<rail>', () => {
 
   test('an unknown rail is a 404, a GET a 405, and a huge body a 413', async () => {
     const { handler } = app()
-    expect((await handler(post('/_weft/pay/nope', body, hook(body)))).status).toBe(404)
-    expect((await handler(new Request('http://localhost/_weft/pay/test'))).status).toBe(405)
+    expect((await handler(post('/_weft/x/pay/nope', body, hook(body)))).status).toBe(404)
+    expect((await handler(new Request('http://localhost/_weft/x/pay/test'))).status).toBe(405)
     const big = 'x'.repeat((1 << 20) + 1)
-    expect((await handler(post('/_weft/pay/test', big, hook(big)))).status).toBe(413)
+    expect((await handler(post('/_weft/x/pay/test', big, hook(big)))).status).toBe(413)
   })
 
   test('with no `src/pay.server.ts` the path is nothing', async () => {
     const handler = createHandler({ manifest, modules: {}, dev: true })
-    expect((await handler(post('/_weft/pay/test', body, hook(body)))).status).toBe(405)
+    expect((await handler(post('/_weft/x/pay/test', body, hook(body)))).status).toBe(404)
   })
 })

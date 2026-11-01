@@ -1,13 +1,25 @@
-// weft/pay/server (research 10 §3): one ledger for every rail. A rail's `verify` turns the bytes it received into events;
+// @weft/pay/server (research 10 §3, 37): one ledger for every rail. A rail's `verify` turns the bytes it received into events;
 // `ingest` folds them into `purchases`; entitlements are read from those, against the catalog, so nothing else can grant
-// anything. `src/pay.server.ts` default-exports what `definePay` returns, and @weft/start mounts it the way it mounts
-// auth: `/_weft/pay/<rail>` for the webhook, `ctx.entitlements` everywhere.
+// anything. `src/pay.server.ts` default-exports what `definePay` returns, and that value is a `server.extension`: it is
+// how this package reaches the server, through the slot any plugin can use. No line of @weft/start names payments.
 //
 // Delivery is at least once, in any order. An event applies by the rail's own clock, so an old one changes nothing and a
 // repeat lands on what it already wrote; `mark` comes last, because a crash before it should redeliver. A failure answers
 // 500 for the same reason. A terminal state wins a tie: a refund and a renewal in the same second is a refund.
 
-import { entitlementTag, PayError, type CheckoutLine, type Interval, type PayRail, type Plan, type Product, type PurchaseState, type RailEvent } from './pay'
+import type { ServerExtension } from '@weft/start/extension'
+import { entitlementTag, PayError, type CheckoutLine, type Interval, type PayRail, type Plan, type Product, type PurchaseState, type RailEvent } from './index'
+
+declare module '@weft/start/data' {
+  interface Context {
+    /** What this user holds, from verified rail events. Await it. */
+    entitlements: Entitlements
+  }
+  interface FnOptions {
+    /** Entitlements this call needs, on the server: a typed 403 otherwise. */
+    requires?: readonly string[]
+  }
+}
 
 export interface Purchase {
   /** `<rail>:<rail's id>`. */
@@ -66,6 +78,8 @@ export interface PayOptions<P extends Product> {
   user?: (ctx: any) => string | null | undefined
   /** With several rails bound, the one that takes payments. One rail needs no choosing. */
   rail?: string
+  /** The `pay.rail` slot. Default the generated `weft:slot/pay.rail`, as any consumer of a slot reads it. */
+  slot?: () => Promise<{ load(key: string): Promise<unknown>; providers?: Record<string, unknown> }>
   /** Absolute origin for `urls`, behind a proxy. Default the request's. */
   origin?: string
   /** How long past a paid period access lasts, while a late renewal event arrives. Default 3 days. */
@@ -82,7 +96,7 @@ export interface CheckoutInput<P extends Product = Product> {
   quantity?: number
 }
 
-export interface Pay<P extends Product = Product> {
+export interface Pay<P extends Product = Product> extends ServerExtension {
   readonly catalog: readonly P[]
   /** For a mutation's `input`: the catalog decides what can be bought, and the client sends only names. */
   readonly input: { readonly '~standard': { version: 1; vendor: 'weft'; validate(v: unknown): { value: CheckoutInput<P> } | { issues: { message: string }[] }; types?: { input: CheckoutInput<P>; output: CheckoutInput<P> } } }
@@ -100,14 +114,10 @@ export interface Pay<P extends Product = Product> {
   /** Apply events that have been verified. Anything else must go through `webhook`. */
   ingest(rail: string, events: RailEvent[], report?: PayReport): Promise<string[]>
   refund(purchase: string): Promise<void>
-  $weft: {
-    /** What the `pay.rail` slot offers (`load`, the generated module's `providers`). */
-    bind(load: (key: string) => Promise<unknown>, providers: Record<string, unknown>): Pay<P>
-    /** A rail in place of the slot: weft/test's `fakePay`. */
-    use(rail: PayRail | undefined): void
-    /** On the first request, never in a build. */
-    check(dev?: boolean): void
-  }
+  /** A rail in place of the slot: `fakePay`. */
+  use(rail: PayRail | undefined): void
+  /** Back to the slot, with an empty ledger if it can be emptied: `net.extension` calls this after each test. */
+  reset(): void
 }
 
 const ACCESS: ReadonlySet<PurchaseState> = new Set(['active', 'trial', 'grace'])
@@ -123,18 +133,20 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
   const byId = new Map(catalog.map(p => [p.id, p]))
   const { store, urls, leeway = 3 * DAY } = options
   const userOf = options.user ?? (ctx => ctx?.user?.id)
-  let load: ((key: string) => Promise<unknown>) | undefined
-  let bound: string[] = []
+  const slot = options.slot ?? (() => {
+    // @ts-ignore a generated module, declared in .weft/slots.d.ts once bound
+    return import('weft:slot/pay.rail')
+  })
   let override: PayRail | undefined
   const rails = new Map<string, Promise<PayRail>>()
 
-  function railFor(key?: string): Promise<PayRail> {
-    if (override) return Promise.resolve(override)
+  async function railFor(key?: string): Promise<PayRail> {
+    if (override) return override
+    const { load, providers = {} } = await slot()
+    const bound = Object.keys(providers).filter(k => providers[k])
+    if (!bound.length) throw new PayError('P101', '`pay.rail` has no provider: add one to `plugins` in weft.config.ts', 500)
     const pick = key ?? options.rail ?? (bound.length === 1 ? bound[0] : undefined)
-    if (!pick || !load || !bound.includes(pick)) {
-      if (!bound.length) throw new PayError('P101', '`pay.rail` has no provider: add one to `plugins` in weft.config.ts', 500)
-      throw new PayError('PAY022', pick ? `no rail \`${pick}\` is bound (${bound.join(', ')})` : `${bound.join(' and ')} are both bound: set \`rail\` in \`definePay\``, 500)
-    }
+    if (!pick || !bound.includes(pick)) throw new PayError('PAY022', pick ? `no rail \`${pick}\` is bound (${bound.join(', ')})` : `${bound.join(' and ')} are both bound: set \`rail\` in \`definePay\``, 500)
     let r = rails.get(pick)
     if (!r) rails.set(pick, (r = load(pick) as Promise<PayRail>))
     return r
@@ -271,20 +283,31 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
       if (!rail.refund) throw new PayError('PAY022', `\`${rail.id}\` can't refund from here`, 501)
       await rail.refund({ purchase: id.slice(p.rail.length + 1) })
     },
-    $weft: {
-      bind(l, providers) {
-        load = l
-        bound = Object.keys(providers).filter(k => providers[k])
-        rails.clear()
-        return pay
-      },
-      use(rail) { override = rail },
-      check(dev) {
-        if (store.memory && !dev) throw new PayError('PAY016', 'The ledger is in memory: every purchase is gone on the next deploy. Pass a durable `store` to `definePay`', 500)
-      },
+    use(rail) { override = rail },
+    reset() {
+      override = undefined
+      ;(store as { clear?(): void }).clear?.()
+    },
+
+    // ---- what makes this a `server.extension` ---------------------------------------------------------------------
+    async handle(request, path, api) {
+      const { response, tags } = await pay.webhook(path, request, api.report)
+      await api.invalidate(tags)
+      return response
+    },
+    context: ctx => ({ entitlements: pay.forContext(ctx) }),
+    async guard(fn, ctx) {
+      for (const id of fn.def.requires ?? []) if (!(await ctx.entitlements.has(id))) throw new PayError('ENTITLEMENT_REQUIRED', `This needs \`${id}\``, 403)
+    },
+    personal: ['entitlements'],
+    check(dev) {
+      if (store.memory && !dev) throw new PayError('PAY016', 'The ledger is in memory: every purchase is gone on the next deploy. Pass a durable `store` to `definePay`', 500)
     },
   }
   return pay
 }
 
-export type { PayRail, RailEvent } from './pay'
+/** The `server.extension` provider: `src/pay.server.ts` already built it, so this hands it over. */
+export const extension = (app: Pay<any>): ServerExtension => app
+
+export type { PayRail, RailEvent } from './index'

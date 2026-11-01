@@ -1,7 +1,6 @@
-// weft/pay (PLAN §4.4, research 10): the catalog, and what a `pay.rail` provider implements. Nothing here reaches a rail or
-// a server, and nothing in weft imports this file, so an app that doesn't sell anything has none of it. App code names
-// products and plans; a rail is one line in `plugins`. `weft/pay/server` holds the ledger, and `checkout()` never grants
-// anything: the grant arrives from the server, from a verified rail event.
+// @weft/pay (PLAN §4.4, research 10): the catalog, and what a `pay.rail` provider implements. Safe in the client graph: nothing
+// here reaches a rail or a server. App code names products and plans; a rail is one line in `plugins`. `@weft/pay/server`
+// holds the ledger, and `checkout()` never grants anything: the grant arrives from a verified rail event.
 //
 //   export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
 //   <button onClick={() => checkout({ product: 'pro', plan: 'month' })}>Go Pro · {price(pro, 'month').display}</button>
@@ -38,12 +37,13 @@ export interface Product<G extends string = string, P extends string = string> e
 const INTERVALS: readonly string[] = ['day', 'week', 'month', 'year']
 const META = new Set(['trialDays', 'interval'])
 
-/** Thrown with a stable `code`. @weft/start answers a `status` from it, so `e.code` is what the client sees. */
+/** Thrown with a stable `code`. `answer` is the shape @weft/start sends any plugin's error to the client in. */
 export class PayError extends Error {
   override name = 'PayError'
   constructor(readonly code: string, message: string, readonly status = 400) {
     super(message)
   }
+  get answer() { return { code: this.code, message: this.message, status: this.status } }
 }
 
 const amounts = (p: object) => Object.entries(p).filter(([k]) => !META.has(k)) as [string, number][]

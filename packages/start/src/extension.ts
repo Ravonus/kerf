@@ -1,0 +1,32 @@
+// `server.extension@1`: how a plugin reaches the server without a private path. One provider per key adds what it needs,
+// and only an app with `src/<key>.server.ts` runs it, so nothing arrives behind the app's back (P118). The provider exports
+// a function from that file's default export to a `ServerExtension`; `@weft/pay` is the worked example (`weft docs plugins`).
+//
+// Four things, each optional. Routes live under `/_weft/x/<key>/`. `context` adds to `ctx`. `guard` runs before every server
+// function, and options it reads come from augmenting `FnOptions`. `check` runs before the first request.
+
+import type { Context } from './data'
+
+export const EXTENSION = '/_weft/x/'
+
+export interface ExtensionApi {
+  /** Drop these tags, as a mutation would: live readers refetch. */
+  invalidate(tags: string[]): Promise<void>
+  /** The server log. */
+  report(d: { code: string; severity: string; message: string }): void
+}
+
+export interface ServerExtension {
+  /** Serves `/_weft/x/<key>/<path>`. It sees the raw request: nothing has read the body. */
+  handle?(request: Request, path: string, api: ExtensionApi): Promise<Response> | Response
+  /** Merged into `ctx`, after the app's own. */
+  context?(ctx: Context): object
+  /** Before a function's `run`. Throw to refuse: an error with `answer: { code, message, status }` reaches the client as it is. */
+  guard?(fn: { id: string; kind: string; def: Record<string, any> }, ctx: Context): void | Promise<void>
+  /** The `ctx` keys that differ per user, which a shared cache may not read (Q006). */
+  personal?: readonly string[]
+  /** Before the first request, never in a build: throw for a server that can't run safely. */
+  check?(dev?: boolean): void
+}
+
+export interface ExtensionEntry { key: string; load(): Promise<ServerExtension> }

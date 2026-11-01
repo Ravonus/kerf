@@ -1,9 +1,9 @@
 // The rail against mocked Stripe HTTP: `fetch` here refuses anything it wasn't told to expect, so these tests can't reach
 // a network, and every signature is real HMAC over a placeholder secret.
 import { createHmac } from 'node:crypto'
-import { payRailSuite } from 'weft/test/plugins'
-import { definePay, memoryPayStore } from 'weft/pay/server'
-import { product } from 'weft/pay'
+import { payRailSuite } from '@weft/pay/test'
+import { definePay, memoryPayStore } from '@weft/pay/server'
+import { product } from '@weft/pay'
 import { stripeRail } from '../src/index'
 
 const SECRET = 'whsec_placeholder_for_tests'
@@ -200,7 +200,7 @@ describe('through the ledger', () => {
   const app = (over = {}) => {
     const store = memoryPayStore()
     const pay = definePay({ catalog: [pro, tee], store, urls: { success: '/ok', cancel: '/no' }, ...over })
-    pay.$weft.use(rail())
+    pay.use(rail())
     return pay
   }
   const post = (d: { body: string; headers: Headers }) => new Request('http://localhost/_weft/pay/stripe', { method: 'POST', body: d.body, headers: d.headers })

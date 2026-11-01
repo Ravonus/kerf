@@ -2,9 +2,10 @@
 // weft/pay end to end over `fakePay` (research 10 §8): a real mutation opens the checkout, a signed webhook goes through
 // the real ledger, and a `.live` query shows the grant. Nothing here reaches a network.
 import { derived } from 'weft'
-import { clock, fakePay, net, render, screen, user } from 'weft/test'
-import { entitlementTag, price, product } from 'weft/pay'
-import { definePay, memoryPayStore } from 'weft/pay/server'
+import { clock, net, render, screen, user } from 'weft/test'
+import { entitlementTag, price, product } from '@weft/pay'
+import { definePay, memoryPayStore } from '@weft/pay/server'
+import { fakePay } from '@weft/pay/test'
 import { mutation, query, redirect } from '@weft/start'
 
 const DAY = 86_400_000
@@ -63,6 +64,19 @@ describe('a purchase, as a user sees it', () => {
     fake.abandon()
     expect(plan()).toBe('Free')
     expect(fake.deliveries).toEqual([])
+  })
+})
+
+describe('between tests', () => {
+  test('a purchase on the app\'s own ledger', async () => {
+    const fake = fakePay(pay)
+    await fake.buy('leak', 'pro', 'month')
+    expect(await fake.entitlements('leak')).toEqual(['pro'])
+  })
+
+  test('is gone, and so is the fake rail', async () => {
+    expect(await pay.entitlements('leak').list()).toEqual([])
+    await expect(Promise.resolve().then(() => pay.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }))).rejects.toMatchObject({ code: 'P101' })
   })
 })
 
@@ -224,10 +238,9 @@ describe('on the server', () => {
   })
 
   test('a memory ledger is refused outside dev, and two rails need a choice', async () => {
-    const memory = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' } })
-    expect(() => memory.$weft.check(false)).toThrow(expect.objectContaining({ code: 'PAY016' }))
-    memory.$weft.check(true)
-    memory.$weft.bind(async () => ({}), { stripe: '@a', paddle: '@b' })
+    const memory = definePay({ catalog: [pro], store: memoryPayStore(), urls: { success: '/', cancel: '/' }, slot: async () => ({ load: async () => ({}), providers: { stripe: '@a', paddle: '@b' } }) })
+    expect(() => memory.check!(false)).toThrow(expect.objectContaining({ code: 'PAY016' }))
+    memory.check!(true)
     await expect(Promise.resolve().then(() => memory.checkout({ user: { id: 'u' }, request: { url: 'http://x/' } }, { product: 'pro' }))).rejects.toMatchObject({ code: 'PAY022' })
   })
 })

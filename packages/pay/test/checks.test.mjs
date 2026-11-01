@@ -1,14 +1,20 @@
-// The PAY-codes (research 10 §7, 37): each fires on the mistake and stays quiet on the fix.
+// The PAY-codes (research 10 §7, 37): each fires on the mistake and stays quiet on the fix. A check hook is a function of its
+// `ctx`, so most of this is a plain map of files; the last block runs it through a real `weft check` and `weft fix`.
 import { describe, expect, it } from 'vitest'
-import { check } from '../src/check.mjs'
-import { entry } from '../src/catalog.mjs'
-import { fix } from '../src/fix.mjs'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { project } from './helpers.mjs'
+import { check } from '../../cli/src/check.mjs'
+import { fix } from '../../cli/src/fix.mjs'
+import { project } from '../../cli/test/helpers.mjs'
+import pay from '../plugin.mjs'
+import { run as checks } from '../src/checks.mjs'
 
-const codes = (r, prefix = /^(PAY|T030)/) => r.diagnostics.filter(d => prefix.test(d.code)).map(d => d.code)
-const run = async files => check(project(files))
+const ledger = "import { definePay } from '@weft/pay/server'\nexport default definePay({ catalog: [], store, urls: { success: '/', cancel: '/' } })\n"
+const app = { 'src/pay.server.ts': ledger, '.env.example': 'STRIPE_WEBHOOK_SECRET=whsec_placeholder\n' }
+const stripe = { 'pay.rail': { stripe: '@weft/plugin-pay-stripe' } }
+const hook = (files, slots = stripe) => checks({ files: Object.keys(files), read: rel => files[rel] ?? '', exists: rel => rel in files, slots })
+const run = async files => ({ diagnostics: await hook({ ...app, ...files }) })
+const codes = r => r.diagnostics.map(d => d.code)
 const server = "import pay from '../pay.server'\n"
 
 describe('PAY003: keys', () => {
@@ -32,7 +38,6 @@ describe('PAY012: rail ids', () => {
   it('a price id in client code', async () => {
     const r = await run({ 'src/routes/index.tsx': "export default () => <button data-price=\"x\" onClick={() => go('price_1AbCdEfGhIjK')}>Buy</button>\n" })
     expect(codes(r)).toEqual(['PAY012'])
-    expect(r.diagnostics.find(d => d.code === 'PAY012').fix.text).toContain('checkout')
   })
   it('a price id on the server is its own business', async () => {
     expect(codes(await run({ 'src/server/x.ts': "export const id = 'price_1AbCdEfGhIjK'\n" }))).toEqual([])
@@ -51,7 +56,7 @@ describe('PAY011: webhooks', () => {
     expect(codes(await run({ 'src/routes/hook.ts': hand("stripe.webhooks.constructEvent(raw, sig, secret)") }))).toEqual([])
   })
   it('a rail whose `verify` never looks at a signature', async () => {
-    const rail = "import type { PayRail } from 'weft/pay'\nexport const rail: Partial<PayRail> = { verify: ({ body }) => JSON.parse(body) }\n"
+    const rail = "import type { PayRail } from '@weft/pay'\nexport const rail: Partial<PayRail> = { verify: ({ body }) => JSON.parse(body) }\n"
     expect(codes(await run({ 'src/rail.server.ts': rail }))).toEqual(['PAY011'])
     expect(codes(await run({ 'src/rail.server.ts': rail.replace('({ body })', '({ body, headers })') }))).toEqual([])
   })
@@ -62,7 +67,7 @@ describe('PAY013: checked only on the client', () => {
   it('fires when nothing on the server names it', async () => {
     const r = await run({ 'src/routes/index.tsx': page })
     expect(codes(r)).toEqual(['PAY013'])
-    expect(r.diagnostics[0].fix.text).toContain("requires: ['pro']")
+    expect(r.diagnostics[0].help).toContain("requires: ['pro']")
   })
   it('`requires` on the server settles it', async () => {
     expect(codes(await run({ 'src/routes/index.tsx': page, 'src/server/report.ts': "export const r = query({ requires: ['pro'], run: () => 1 })\n" }))).toEqual([])
@@ -90,8 +95,7 @@ describe('PAY004: a grant on the client', () => {
 
 describe('PAY008: money', () => {
   it('a float, with the integer as a reviewable edit', async () => {
-    const dir = project({ 'src/pay/catalog.ts': "import { product } from 'weft/pay'\nexport const a = product({ id: 'a', kind: 'one-time', use: 'digital', price: { usd: 9.99 } })\n" })
-    const r = await check(dir)
+    const r = await run({ 'src/pay/catalog.ts': "import { product } from '@weft/pay'\nexport const a = product({ id: 'a', kind: 'one-time', use: 'digital', price: { usd: 9.99 } })\n" })
     const d = r.diagnostics.find(x => x.code === 'PAY008')
     expect(d.fix.edits[0].text).toBe('999')
     expect(d.fix.safe).toBe(false)
@@ -106,12 +110,9 @@ describe('PAY008: money', () => {
 
 describe('PAY015: an unawaited check', () => {
   const body = "export const r = query({ run: async ({ ctx }) => { if (ctx.entitlements.has('pro')) return 1; return 0 } })\n"
-  it('fires, and `weft fix` awaits it', async () => {
-    const dir = project({ 'src/server/x.ts': `${server}${body}` })
-    expect(codes(await check(dir))).toEqual(['PAY015'])
-    await fix(dir)
-    expect(readFileSync(join(dir, 'src/server/x.ts'), 'utf8')).toContain("if (await ctx.entitlements.has('pro'))")
-    expect(codes(await check(dir))).toEqual([])
+  it('fires, with a safe fix', async () => {
+    const [d] = (await run({ 'src/server/x.ts': `${server}${body}` })).diagnostics
+    expect(d).toMatchObject({ code: 'PAY015', fix: { safe: true, edits: [{ text: 'await ' }] } })
   })
   it('an awaited check passes', async () => {
     expect(codes(await run({ 'src/server/x.ts': body.replace('if (ctx', 'if (await ctx') }))).toEqual([])
@@ -119,37 +120,53 @@ describe('PAY015: an unawaited check', () => {
 })
 
 describe('the wiring', () => {
-  const rail = "import { definePlugin, defineSlot, provide } from 'weft/plugin'\nconst slot = defineSlot({ id: 'pay.rail', version: 1, cardinality: 'keyed', sides: ['server'] })\nexport default definePlugin({ name: 'acme', contribute: () => ({ provides: [provide(slot, { key: 'stripe', sides: { server: { module: 'acme', export: 'rail' } } })] }) })\n"
-  const bound = { 'node_modules/acme/package.json': JSON.stringify({ name: 'acme', type: 'module', version: '0.0.0', exports: { './plugin': './plugin.mjs' } }), 'node_modules/acme/plugin.mjs': rail, 'weft.config.ts': "import acme from 'acme/plugin'\nexport default { plugins: [acme()] }\n" }
-  const payFile = store => `import { definePay${store === 'memoryPayStore()' ? ', memoryPayStore' : ''} } from 'weft/pay/server'\nexport default definePay({ catalog: [], store: ${store}, urls: { success: '/', cancel: '/' } })\n`
-  it('PAY014: a rail with no ledger', async () => {
-    expect(codes(await run(bound))).toEqual(['PAY014'])
+  const wired = (files, slots) => hook(files, slots).map(d => d.code)
+  it('PAY014: the plugin with no ledger', () => {
+    expect(wired({})).toEqual(['PAY014'])
   })
-  it('P101: a ledger with no rail', async () => {
-    expect(codes(await run({ 'src/pay.server.ts': payFile('store') }), /^P101$/)).toEqual(['P101'])
+  it('PAY018: a ledger with no rail', () => {
+    expect(wired(app, {})).toEqual(['PAY018'])
   })
-  it('PAY016 and no webhook secret: `.env.example` settles the second', async () => {
-    const files = { ...bound, 'src/pay.server.ts': payFile('memoryPayStore()') }
-    expect(codes(await run(files))).toEqual(['PAY011', 'PAY016'])
-    expect(codes(await run({ ...files, '.env.example': 'STRIPE_WEBHOOK_SECRET=whsec_placeholder\n' }))).toEqual(['PAY016'])
+  it('PAY016 and no webhook secret: `.env.example` settles the second', () => {
+    const files = { 'src/pay.server.ts': ledger.replace('store,', 'store: memoryPayStore(),') }
+    expect(wired(files).sort()).toEqual(['PAY011', 'PAY016'])
+    expect(wired({ ...files, '.env.example': app['.env.example'] })).toEqual(['PAY016'])
   })
   it('PAY010: a checkout anyone can start', async () => {
     const open = `import { mutation } from '@weft/start'\n${server}export const go = mutation({ run: async ({ ctx }) => pay.checkout(ctx, { product: 'pro' }) })\n`
     expect(codes(await run({ 'src/server/x.ts': open }))).toEqual(['PAY010'])
     expect(codes(await run({ 'src/server/x.ts': open.replace('mutation({ run', "mutation({ auth: 'user', run") }))).toEqual([])
   })
-  it('T030: a live key in a test', async () => {
-    const key = ['sk', 'live', 'abcdefghijkl'].join('_')
-    expect(codes(await run({ 'src/a.test.ts': `test('x', () => expect('${key}').toBeTruthy())\n` }))).toEqual(['T030'])
+  it('PAY017: the ledger in client code', async () => {
+    expect(codes(await run({ 'src/routes/index.tsx': "import { definePay } from '@weft/pay/server'\nexport default () => <p>{String(definePay)}</p>\n" }))).toEqual(['PAY017'])
   })
-  it('an app with no payments hears nothing', async () => {
+  it('PAY031: a live key in a test', async () => {
+    const key = ['sk', 'live', 'abcdefghijkl'].join('_')
+    expect(codes(await run({ 'src/a.test.ts': `test('x', () => expect('${key}').toBeTruthy())\n` }))).toEqual(['PAY031'])
+  })
+  it('an app with nothing to report hears nothing', async () => {
     expect(codes(await run({ 'src/routes/index.tsx': 'export default () => <p>$5 off</p>\n' }))).toEqual([])
   })
   it('PAY005 only where something is sold', async () => {
     const page = "import { checkout } from '#/server/pay'\nexport default () => <button onClick={() => checkout({ product: 'pro' })}>Buy for $9.99</button>\n"
     expect(codes(await run({ 'src/routes/index.tsx': page }))).toEqual(['PAY005'])
   })
-  it('every code has a catalog entry with a fix', () => {
-    for (const code of ['PAY003', 'PAY004', 'PAY005', 'PAY008', 'PAY010', 'PAY011', 'PAY012', 'PAY013', 'PAY014', 'PAY015', 'PAY016', 'T030']) expect(entry(code)?.fix).toBeTruthy()
+  it('every code it can report is declared, with a fix', () => {
+    const declared = pay().contribute({}).diagnostics
+    const source = readFileSync(new URL('../src/checks.mjs', import.meta.url), 'utf8')
+    for (const [code] of source.matchAll(/PAY\d{3}/g)) expect(declared.find(d => d.code === code)?.fix).toBeTruthy()
+  })
+})
+
+describe('through `weft check`', () => {
+  const body = "import { query } from '@weft/start'\nexport const r = query({ run: async ({ ctx }) => { if (ctx.entitlements.has('pro')) return 1; return 0 } })\n"
+  const config = "import pay from '../../../../pay/plugin.mjs'\nexport default { plugins: [pay()] }\n"
+  it('reports what the hook found, and `weft fix` applies its edit', async () => {
+    const dir = project({ 'weft.config.ts': config, 'src/pay.server.ts': ledger, 'src/server/x.ts': body })
+    const found = dir => check(dir).then(r => r.diagnostics.filter(d => d.code.startsWith('PAY')).map(d => d.code))
+    expect(await found(dir)).toEqual(expect.arrayContaining(['PAY015', 'PAY018']))
+    await fix(dir)
+    expect(readFileSync(join(dir, 'src/server/x.ts'), 'utf8')).toContain("if (await ctx.entitlements.has('pro'))")
+    expect(await found(dir)).not.toContain('PAY015')
   })
 })

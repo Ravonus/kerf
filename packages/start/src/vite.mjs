@@ -13,7 +13,7 @@
 //   virtual:weft/migrations     server: `drizzle/`'s migrations, embedded (a bundle can't read a folder on every preset)
 //   virtual:weft/media          server: the `media.server` provider when one is bound (research 29 §6)
 //   virtual:weft/realtime       server: `src/realtime.server.ts`'s default export (the bus, origins and limits)
-//   virtual:weft/pay            server: `src/pay.server.ts`'s default export, with the `pay.rail` slot bound (research 10)
+//   virtual:weft/extensions     server: each `server.extension` provider with its `src/<key>.server.ts` (extension.ts)
 //
 // Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream`/`channel` export
 // gets an `$id` on both sides; the client build replaces the module with stubs that keep only `optimistic`, the
@@ -50,7 +50,7 @@ const V = {
   migrations: 'virtual:weft/migrations',
   media: 'virtual:weft/media',
   realtime: 'virtual:weft/realtime',
-  pay: 'virtual:weft/pay',
+  extensions: 'virtual:weft/extensions',
 }
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
 const DEFAULT_FONTS = ['Inter:400,700']
@@ -215,7 +215,7 @@ export default function weftStart(options = {}) {
       if (!vite?.environments.client.moduleGraph.getModulesByFile(file)?.size && this.environment.moduleGraph.getModulesByFile(file)?.size) vite?.ws.send({ type: 'full-reload' })
     },
     resolveId: {
-      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list|rust|sidecar|pay)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+|plugin-pay-[\w-]+)$|weft\/pay\/server$|sharp$)/ },
+      filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
       handler(source, importer) {
         // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
         if (source === 'sharp') {
@@ -226,8 +226,8 @@ export default function weftStart(options = {}) {
           }
           return { id: 'sharp', external: true }
         }
-        if (source.startsWith('@weft/') || source === 'weft/pay/server') {
-          if (this.environment?.config.consumer === 'client') this.error(`Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(root, importer)}` : ''}: the database, auth, buses and payments run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``)
+        if (source.startsWith('@weft/')) {
+          if (this.environment?.config.consumer === 'client') this.error(`Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(root, importer)}` : ''}: the database, auth and buses run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``)
           return
         }
         const base = source.replace(/\?.*$/, '')
@@ -253,13 +253,13 @@ export default function weftStart(options = {}) {
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
         if (which === V.server) return serverEntry(clientEntry(), dev)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
-        if (which === V.context || which === V.auth || which === V.realtime || which === V.pay) {
+        if (which === V.context || which === V.auth || which === V.realtime) {
           const name = which.slice('virtual:weft/'.length)
           const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/${name}.server.${x}`).find(x => existsSync(abs(x)))
           if (which === V.realtime && busBound(root)) return busModule(f && abs(f), here)
-          if (which === V.pay && f) return payModule(root, abs(f))
           return f ? `export { default } from ${JSON.stringify(abs(f))}\n` : 'export default undefined\n'
         }
+        if (which === V.extensions) return extensionsModule(root, abs)
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
         if (which === V.media) return mediaModule(root, dev)
         if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
@@ -428,21 +428,30 @@ import auth from '${V.auth}'
 import migrations from '${V.migrations}'
 import media from '${V.media}'
 import realtime from '${V.realtime}'
-import pay from '${V.pay}'
+import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, statics, chunks, context, auth, migrations, media, realtime, pay, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
+const fetch = createHandler({ manifest, modules, statics, chunks, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
-  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^(PAY|[HQACFMRW])\\d{3}:? /, '')}\`) })
+  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }
 `
 }
 
-/** The app's ledger with its rails. A rail is loaded on first use, and nothing here reaches the client. */
-function payModule(root, file) {
-  if (!existsSync(join(root, '.weft', 'slots', 'pay.rail.ts'))) return `import pay from ${JSON.stringify(file)}\nexport default pay.$weft.bind(() => undefined, {})\n`
-  return `import pay from ${JSON.stringify(file)}\nimport { load, providers } from 'weft:slot/pay.rail'\nexport default pay.$weft.bind(load, providers)\n`
+/**
+ * A `server.extension` provider runs only for an app with `src/<key>.server.ts`, the file that says it wants it (P118):
+ * the provider is loaded on the first request and handed that file's default export. No provider gives an empty list.
+ */
+function extensionsModule(root, abs) {
+  const slot = join(root, '.weft', 'slots', 'server.extension.ts')
+  const keys = existsSync(slot) ? Object.entries(JSON.parse(/providers = (\{.*\}) as const/.exec(readFileSync(slot, 'utf8'))?.[1] ?? '{}')).filter(([, name]) => name).map(([key]) => key) : []
+  const files = keys.flatMap(key => {
+    const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/${key}.server.${x}`).find(x => existsSync(abs(x)))
+    return f ? [[key, abs(f)]] : []
+  })
+  if (!files.length) return 'export default []\n'
+  return `import { load } from 'weft:slot/server.extension'\n${files.map(([, f], i) => `import app${i} from ${JSON.stringify(f)}\n`).join('')}export default [${files.map(([key], i) => `{ key: ${JSON.stringify(key)}, load: () => load(${JSON.stringify(key)}).then(extend => extend(app${i})) }`).join(', ')}]\n`
 }
 
 /** Dev serves from the project; a built server from the directory it runs in (or `WEFT_MEDIA_DIR`). */

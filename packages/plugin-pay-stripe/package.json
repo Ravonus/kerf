@@ -13,9 +13,11 @@
     "test": "vitest run"
   },
   "peerDependencies": {
+    "@weft/pay": "*",
     "weft": "*"
   },
   "devDependencies": {
+    "@weft/pay": "file:../pay",
     "vitest": "5.0.5",
     "weft": "file:../weft"
   }

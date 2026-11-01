@@ -27,8 +27,6 @@
     "./media": "./src/media.tsx",
     "./shape": "./src/shape.ts",
     "./text": "./src/text.tsx",
-    "./pay": "./src/pay.ts",
-    "./pay/server": "./src/pay-server.ts",
     "./surface": "./src/surface.tsx",
     "./media-probe": "./media-probe.mjs",
     "./client": {

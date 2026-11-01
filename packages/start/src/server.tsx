@@ -27,6 +27,7 @@ import { rt } from 'weft'
 import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
+import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
 import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
@@ -77,12 +78,8 @@ export interface HandlerOptions {
   store?: Store
   /** `src/auth.server.ts`'s default export, any provider: mounted at its base path, checked on the first request. */
   auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$weft'>
-  /** `src/pay.server.ts`'s default export with its rails bound: the webhook at `/_weft/pay/<rail>`, and `ctx.entitlements`. */
-  pay?: {
-    webhook(rail: string, request: Request, report?: HandlerOptions['onDiagnostic']): Promise<{ response: Response; tags: string[] }>
-    forContext(ctx: any): any
-    $weft: { check(dev?: boolean): void }
-  }
+  /** `server.extension` providers with an app file (`virtual:weft/extensions`), loaded on the first request. */
+  extensions?: ExtensionEntry[]
   /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
   /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
@@ -152,9 +149,15 @@ export function createHandler(options: HandlerOptions) {
   const tree = routeTree(manifest, modules)
   let provider: Promise<MediaServer> | undefined
   const mediaServer = () => (provider ??= options.media?.())
-  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer, pay: options.pay }
+  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer, extensions: undefined as ServerExtension[] | undefined }
   let checked = !options.dev
   const authBase = (options.auth?.basePath ?? '/api/auth').replace(/\/$/, '')
+  const extensions = new Map<string, ServerExtension>()
+  let loading: Promise<void> | undefined
+  const loadExtensions = () => (loading ??= (async () => {
+    for (const { key, load } of options.extensions ?? []) extensions.set(key, await load())
+    scopeOptions.extensions = [...extensions.values()]
+  })())
   let applied = -1
   configure({ ...options.realtime, build: options.build, dev: options.dev })
 
@@ -167,7 +170,7 @@ export function createHandler(options: HandlerOptions) {
     const list = options.migrations?.() ?? []
     if (applied !== list.length) {
       options.auth?.$weft?.check()
-      options.pay?.$weft.check(options.dev)
+      for (const e of extensions.values()) e.check?.(options.dev)
       applied = list.length
       const report = (e: unknown) => options.onDiagnostic?.({ code: 'Q016', severity: 'error', message: `Q016: ${(e as any)?.message ?? e}` })
       runtime.migrations = { list, report }
@@ -459,18 +462,19 @@ export function createHandler(options: HandlerOptions) {
     return new Response(`<!doctype html>\n<meta name="robots" content="noindex">\n${list}\n`, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-nitro-prerender': paths.join(',') } })
   }
 
-  /** A rail's webhook: verified and applied by the ledger, then what changed goes to live readers like any mutation's tags. */
-  async function payHook(pay: NonNullable<HandlerOptions['pay']>, url: URL, request: Request, scope: Scope) {
-    const { response, tags } = await pay.webhook(url.pathname.slice('/_weft/pay/'.length), request, options.onDiagnostic)
-    await exec.invalidate(scope, tags)
-    return response
+  /** Everything under `/_weft/x/<key>/`, for the extension with that key. Nothing else reaches it. */
+  async function extensionRoute(url: URL, request: Request, scope: Scope) {
+    const [key = '', ...rest] = url.pathname.slice(EXTENSION.length).split('/')
+    const extension = extensions.get(key)
+    if (!extension?.handle) return new Response('Not found', { status: 404 })
+    return extension.handle(request, rest.join('/'), { invalidate: tags => exec.invalidate(scope, tags), report: d => options.onDiagnostic?.(d) })
   }
 
   const route = (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
-    if (options.pay && url.pathname.startsWith('/_weft/pay/')) return payHook(options.pay, url, request, scope)
+    if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
     if (request.method === 'POST' && !url.pathname.startsWith('/_weft/') && /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(request.headers.get('content-type') ?? '')) return form(url, request, scope)
     if (url.pathname === '/_weft/rt') return rtRoute(request, scope, options.realtime?.origins)
     if (url.pathname === '/_weft/ws') return socketRoute(request, scope, options.realtime?.origins)
@@ -483,6 +487,7 @@ export function createHandler(options: HandlerOptions) {
   }
   const handler = async (incoming: Request): Promise<Response> => {
     const request = options.auth ? stamped(incoming) : incoming
+    await loadExtensions()
     if (!checked) {
       checked = true
       exec.checkTags(d => options.onDiagnostic?.(d))

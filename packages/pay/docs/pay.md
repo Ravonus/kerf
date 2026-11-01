@@ -1,5 +1,7 @@
 # Payments
 
+This is a plugin, `@weft/pay`, and nothing in weft names it. `weft docs plugins` walks through how it is built.
+
 `weft add pay` needs a database and auth. It adds the Stripe rail to `plugins` and writes `src/pay/catalog.ts`,
 `src/pay.server.ts` and `src/server/pay.ts`, plus `src/db/pay.schema.ts` and placeholder keys. The keys go in `.env`
 with real test values before you run it. Nothing is called until a user checks out.
@@ -12,7 +14,7 @@ export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital',
   plans: { month: { usd: 999 }, year: { usd: 7999, trialDays: 7 } }, grants: ['pro'] })
 
 // a page
-import { price } from 'weft/pay'
+import { price } from '@weft/pay'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements, portal } from '#/server/pay'
 
@@ -26,7 +28,7 @@ const mine = entitlements.live()
 currency (PAY008). `price(p, plan)` formats by the currency's exponent, for the reader's locale.
 
 **A grant comes only from a verified event.** `checkout` goes to the rail's hosted page and grants nothing (PAY004). The
-rail then posts `/_weft/pay/<rail>`, which is the URL to give it, and `/_weft/pay/stripe` for Stripe. Each delivery is
+rail then posts `/_weft/x/pay/<rail>`, which is the URL to give it, and `/_weft/x/pay/stripe` for Stripe. Each delivery is
 verified on the exact bytes, applied to `purchases`, and pokes `entitlements:<user>`, so a `.live()` reader updates.
 Delivery is at least once and in any order: a repeat is a no-op, and an old event changes nothing, by the rail's own clock.
 A bad signature answers 400; a failure answers 500, so the rail delivers it again.
@@ -51,8 +53,8 @@ client. `pay.checkout(ctx, input)`, `pay.portal(ctx)`, `pay.entitlements(userId)
 refuses it (PAY016).
 
 **Another provider is one setting.** Replace `stripe()` in `plugins` with any plugin for the `pay.rail` slot; nothing else
-changes. A rail implements `PayRail` from `weft/pay`: `checkout`, `portal`, `verify`, optionally `refund`, declared for the
-`server` side, and passes `payRailSuite` from `weft/test/plugins`. `verify` gets the exact body and throws
+changes. A rail implements `PayRail` from `@weft/pay`: `checkout`, `portal`, `verify`, optionally `refund`, declared for the
+`server` side, and passes `payRailSuite` from `@weft/pay/test`. `verify` gets the exact body and throws
 `PayError('PAY011', …)` for anything it can't prove. An app with no `src/pay.server.ts` has no route and no code from any
 of this.
 
@@ -63,7 +65,7 @@ of this.
 
 ## Testing
 
-`fakePay` from `weft/test` is a rail with no key and no network. Its events are signed and go through your own webhook and
+`fakePay` from `@weft/pay/test` is a rail with no key and no network. Its events are signed and go through your own webhook and
 ledger, so a test sees what a user would:
 
 ```tsx
@@ -95,7 +97,9 @@ installed. `fake.redeliver()`, `fake.deliver(event, { forged: true })`, `fake.de
 | PAY014 | A rail bound with no `src/pay.server.ts` |
 | PAY015 | `ctx.entitlements.has()` tested without `await` |
 | PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning) |
-| T030 | A live key in a test |
+| PAY017 | `@weft/pay/server` or `/drizzle` imported in client code |
+| PAY018 | `src/pay.server.ts` with no `pay.rail` provider |
+| PAY031 | A live key in a test |
 
 At run time: PAY021 (not in the catalog), PAY022 (no rail chosen), PAY023 (already subscribed, 409), PAY024 (nothing to
 manage or refund), PAY030 (the rail refused). Native rails, store policy and `weft pay sync` aren't built.

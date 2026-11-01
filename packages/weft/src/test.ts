@@ -8,7 +8,6 @@
 //
 // `weft check` reports junk tests statically (T001–T009); a test here that never asserts also fails at runtime (T001).
 
-import { createFakePay } from './pay-fake'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { screen as dom } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
@@ -262,13 +261,15 @@ const transport = {
   rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
   /** Times the realtime connection was lost. */
   reconnects: 0,
-  /** The ledger behind `ctx.entitlements`, while a `fakePay` is alive. */
-  pay: undefined as object | undefined,
+  /** Server extensions for this test (`net.extension`): a plugin's fake runs through the real scope. */
+  extensions: [] as { reset?(): void }[],
 }
 ;(globalThis as any)[Symbol.for('weft.net')] = transport
 
 function resetTransport() {
-  Object.assign(transport, { latency: 0, ctx: undefined, pay: undefined })
+  for (const e of transport.extensions) e.reset?.()
+  transport.extensions.length = 0
+  Object.assign(transport, { latency: 0, ctx: undefined })
   transport.fails.clear()
   transport.handlers.clear()
   transport.log.length = 0
@@ -286,6 +287,8 @@ export const net = {
   latency(ms: number) { transport.latency = ms },
   /** The `ctx` server functions get (`{ db, user }`); `request` and `response` are added. */
   context(ctx: object) { transport.ctx = ctx },
+  /** A plugin's server extension in the fake scope, for this test: its `context` and `guard` run, and `reset` after it. */
+  extension(extension: { reset?(): void }) { transport.extensions.push(extension) },
   /** The next call of `fn` rejects with `error` (queue several by calling again). */
   fail(fn: FnRef, error: unknown = new Error(`net.fail(${fnId(fn)})`)) {
     const id = fnId(fn)
@@ -340,16 +343,6 @@ export const net = {
     throw new Error('net.settle(): calls kept starting (a refetch loop?)')
   },
 }
-
-/**
- * A fake `pay.rail`: `fakePay({ catalog })`, or `fakePay(pay)` with the app's own `definePay`. It backs `ctx.entitlements`
- * for this test, and its events go through the real webhook and ledger (research 10 §8).
- */
-export const fakePay = (app: Parameters<typeof createFakePay>[0]) => createFakePay(app, {
-  advance: ms => (clock.installed ? clock.advance(ms) : Promise.resolve()),
-  poke: async tags => { await transport.rt?.poke(tags); await net.settle() },
-  attach: pay => { transport.pay = pay },
-})
 
 function connected() {
   if (!transport.rt) throw new Error('net: no realtime connection yet: render a `.live()` or a stream, then `await net.settle()`')

@@ -40,7 +40,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
-  add <feature>       install a plugin and wire it into the config; also tailwind, auth, pay, and db [engine] [--layer drizzle|prisma|native] [--dry-run] [--no-install]
+  add <feature>       install a plugin and wire it into the config; also tailwind, auth, and db [engine] [--layer drizzle|prisma|native] [--dry-run] [--no-install]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
   plugins sync        regenerate .weft/slots/*, .weft/slots.d.ts and .weft/tokens/*

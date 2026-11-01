@@ -15,7 +15,6 @@ import { projectView } from './project.mjs'
 import { designChecks, hasTokens } from './design-checks.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, usesTailwind, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
-import { payChecks } from './pay-checks.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
 import { reactChecks } from './react-checks.mjs'
 import { trustDiagnostics } from './trust.mjs'
@@ -120,7 +119,6 @@ export async function check(root, options = {}) {
     ...stateChecks(root, { files, exclude }),
     ...reactChecks({ files }),
     ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),
-    ...payChecks(root, { exclude, slots: loaded.slots, testRels }),
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
     ...(await iconChecks(root)),

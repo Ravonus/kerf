@@ -1,19 +1,12 @@
-// Payments in `weft check` (research 10 §7): the mistakes that lose money or give it away, found from the source. Most
-// fire in a project that has `weft/pay`, but a key, a price id or a hand-written webhook fires in any app. A check only
-// looks at a file that a cheap regex says could hit, so an app with no payments pays a scan and no parse.
+// The PAY-codes (research 10 §7, 37): what `weft check` reports for this plugin, through the `check` hook any plugin has.
+// `run` gets the project through `ctx` and returns findings, and weft does the rest: spans, fixes, `weft fix`, `--json`.
+// TypeScript is loaded here, not in plugin.mjs, so a config load doesn't pay for it. A regex decides which files parse.
 //
 // The client is everything in `src` that isn't a server module. `src/pay/catalog.ts` is client code on purpose: it holds
 // names and amounts, which is why a rail's ids don't go there (PAY012).
 
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import ts from 'typescript'
-import { diagnostic, positions } from './diag.mjs'
-import { discover } from './files.mjs'
-import { isTestFile } from './tests.mjs'
 
-const CODE = 'src/**/*.{ts,tsx,js,jsx,mts,mjs}'
-const CONFIGS = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
 const isServer = rel => /^src\/server\//.test(rel) || /\.server\.[cm]?[jt]sx?$/.test(rel)
 
 const KEY = /\b(?:(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{6,}|whsec_[A-Za-z0-9]{6,})\b/g
@@ -33,12 +26,9 @@ function walk(node, visit) {
   ts.forEachChild(node, c => walk(c, visit))
 }
 
-const at = (sf, rel, node) => {
-  const pos = positions(sf.text)
-  const [a, b] = [node.getStart(sf), node.getEnd()]
-  return { file: rel, span: pos.span(a, b), offset: [a, b] }
-}
-const spanOf = (text, rel, index, length) => ({ file: rel, span: positions(text).span(index, index + length), offset: [index, index + length] })
+const at = (sf, rel, node) => ({ file: rel, start: node.getStart(sf), end: node.getEnd() })
+const spanOf = (rel, index, length) => ({ file: rel, start: index, end: index + length })
+const isTest = rel => /\.(test|spec)\.[cm]?[jt]sx?$/.test(rel) || rel.startsWith('test/')
 const prop = (object, name) => object.properties.find(p => p.name?.getText() === name)
 const callee = node => (ts.isCallExpression(node) ? node.expression.getText() : '')
 const isFunction = n => ts.isArrowFunction(n) || ts.isFunctionExpression(n) || ts.isFunctionDeclaration(n) || ts.isMethodDeclaration(n)
@@ -52,15 +42,15 @@ function enclosing(node) {
 function secrets(rel, text, server, out) {
   for (const m of text.matchAll(KEY)) {
     if (PLACEHOLDER.test(m[0])) continue
-    out.push(diagnostic({ code: 'PAY003', ...spanOf(text, rel, m.index, m[0].length), why: `A key is in the source: \`${m[0].slice(0, 8)}…\`. Anyone who can read this can charge or refund as you, and it stays in git after you delete it.` }))
+    out.push(({ code: 'PAY003', ...spanOf(rel, m.index, m[0].length), why: `A key is in the source: \`${m[0].slice(0, 8)}…\`. Anyone who can read this can charge or refund as you, and it stays in git after you delete it.` }))
   }
-  if (!server) for (const m of text.matchAll(SERVER_ENV)) out.push(diagnostic({ code: 'PAY003', ...spanOf(text, rel, m.index, m[0].length), why: `\`${m[0]}\` is read in client code: a build inlines it, or it is undefined there.` }))
+  if (!server) for (const m of text.matchAll(SERVER_ENV)) out.push(({ code: 'PAY003', ...spanOf(rel, m.index, m[0].length), why: `\`${m[0]}\` is read in client code: a build inlines it, or it is undefined there.` }))
 }
 
 /** PAY012: a rail's own id where the client bundle gets it. */
 function railIds(rel, sf, out) {
   walk(sf, n => {
-    if ((ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) && RAIL_ID.test(n.text)) out.push(diagnostic({ code: 'PAY012', ...at(sf, rel, n), why: `\`${n.text}\` is a rail's id in client code: the page now names a rail, and a client that sends a price picks its own.` }))
+    if ((ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) && RAIL_ID.test(n.text)) out.push(({ code: 'PAY012', ...at(sf, rel, n), why: `\`${n.text}\` is a rail's id in client code: the page now names a rail, and a client that sends a price picks its own.` }))
   })
 }
 
@@ -73,7 +63,7 @@ function money(rel, sf, out) {
       if (!ts.isNumericLiteral(v) || Number.isInteger(Number(v.text))) continue
       const fixed = String(Math.round(Number(v.text) * 100))
       const place = at(sf, rel, v)
-      out.push(diagnostic({ code: 'PAY008', ...place, why: `\`${path}.${p.name.getText()}\` is ${v.text}: money is whole minor units, and a float rounds differently on each rail.`, fix: { description: `Write ${fixed}, assuming a currency with two decimals`, safe: false, edits: [{ ...place, text: fixed }] } }))
+      out.push(({ code: 'PAY008', ...place, why: `\`${path}.${p.name.getText()}\` is ${v.text}: money is whole minor units, and a float rounds differently on each rail.`, fix: { description: `Write ${fixed}, assuming a currency with two decimals`, safe: false, edits: [{ start: place.start, end: place.end, text: fixed }] } }))
     }
   }
   walk(sf, n => {
@@ -81,7 +71,7 @@ function money(rel, sf, out) {
     const def = n.arguments[0]
     const id = prop(def, 'id')?.initializer?.text ?? 'product'
     const price = prop(def, 'price')?.initializer
-    if (price && ts.isNumericLiteral(price)) out.push(diagnostic({ code: 'PAY008', ...at(sf, rel, price), why: `\`${id}\`'s price has no currency: ${price.text} of what?` }))
+    if (price && ts.isNumericLiteral(price)) out.push(({ code: 'PAY008', ...at(sf, rel, price), why: `\`${id}\`'s price has no currency: ${price.text} of what?` }))
     if (price && ts.isObjectLiteralExpression(price)) amounts(price, `${id}.price`)
     const plans = prop(def, 'plans')?.initializer
     if (plans && ts.isObjectLiteralExpression(plans)) for (const p of plans.properties) if (ts.isPropertyAssignment(p) && ts.isObjectLiteralExpression(p.initializer)) amounts(p.initializer, `${id}.${p.name.getText()}`)
@@ -94,7 +84,7 @@ function clientGrants(rel, sf, out) {
     walk(scope, n => {
       if (n.getStart(sf) < from) return
       const target = ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken ? n.left.getText() : ts.isCallExpression(n) && /(^|\.)(setItem|set)$/.test(callee(n)) ? `${callee(n)} ${n.arguments[0]?.getText() ?? ''}` : undefined
-      if (target && PAID_NAME.test(target)) out.push(diagnostic({ code: 'PAY004', ...at(sf, rel, n), why: `\`${n.getText().slice(0, 60)}\` follows \`checkout()\`, which only opens the rail's page. Nobody has paid yet, and a refund would never undo this.` }))
+      if (target && PAID_NAME.test(target)) out.push(({ code: 'PAY004', ...at(sf, rel, n), why: `\`${n.getText().slice(0, 60)}\` follows \`checkout()\`, which only opens the rail's page. Nobody has paid yet, and a refund would never undo this.` }))
     })
   }
   walk(sf, n => {
@@ -111,7 +101,7 @@ function clientGrants(rel, sf, out) {
 /** PAY005: a price typed into the page beside something sold. */
 function hardcoded(rel, sf, out) {
   walk(sf, n => {
-    if (ts.isJsxText(n) && MONEY.test(n.text)) out.push(diagnostic({ code: 'PAY005', ...at(sf, rel, n), why: `\`${n.text.trim().slice(0, 40)}\` is a price typed by hand: it drifts from what \`checkout\` charges.` }))
+    if (ts.isJsxText(n) && MONEY.test(n.text)) out.push(({ code: 'PAY005', ...at(sf, rel, n), why: `\`${n.text.trim().slice(0, 40)}\` is a price typed by hand: it drifts from what \`checkout\` charges.` }))
   })
 }
 
@@ -125,8 +115,8 @@ function unawaited(rel, sf, out) {
     const place = at(sf, rel, n)
     const fn = enclosing(n)
     const async = fn?.modifiers?.some(m => m.kind === ts.SyntaxKind.AsyncKeyword)
-    const edit = async && { fix: { description: 'Await it', safe: true, edits: [{ file: rel, span: positions(sf.text).span(place.offset[0], place.offset[0]), offset: [place.offset[0], place.offset[0]], text: 'await ' }] } }
-    out.push(diagnostic({ code: 'PAY015', ...place, why: `\`${n.getText()}\` isn't awaited: it is a promise, which is always truthy, so the check passes for everyone.`, ...edit }))
+    const edit = async && { fix: { description: 'Await it', safe: true, edits: [{ start: place.start, end: place.start, text: 'await ' }] } }
+    out.push(({ code: 'PAY015', ...place, why: `\`${n.getText()}\` isn't awaited: it is a promise, which is always truthy, so the check passes for everyone.`, ...edit }))
   })
 }
 
@@ -135,7 +125,7 @@ function anonymous(rel, sf, out) {
   walk(sf, n => {
     if (callee(n) !== 'mutation' || !n.arguments[0] || !ts.isObjectLiteralExpression(n.arguments[0])) return
     const def = n.arguments[0]
-    if (/\.checkout\(\s*ctx\b/.test(def.getText()) && !prop(def, 'auth')) out.push(diagnostic({ code: 'PAY010', ...at(sf, rel, n), why: 'This mutation opens a checkout with no `auth: \'user\'`: a purchase with no owner can\'t be restored or granted.' }))
+    if (/\.checkout\(\s*ctx\b/.test(def.getText()) && !prop(def, 'auth')) out.push(({ code: 'PAY010', ...at(sf, rel, n), why: 'This mutation opens a checkout with no `auth: \'user\'`: a purchase with no owner can\'t be restored or granted.' }))
   })
 }
 
@@ -143,13 +133,13 @@ function anonymous(rel, sf, out) {
 function webhooks(rel, text, sf, out) {
   if (STRIPE_EVENT.test(text) && /\.json\(\)|JSON\.parse/.test(text) && !VERIFIED.test(text)) {
     const m = STRIPE_EVENT.exec(text)
-    out.push(diagnostic({ code: 'PAY011', ...spanOf(text, rel, m.index, m[0].length), why: `This handles ${m[0]} without checking a signature: anyone who finds the URL can POST themselves a purchase.` }))
+    out.push(({ code: 'PAY011', ...spanOf(rel, m.index, m[0].length), why: `This handles ${m[0]} without checking a signature: anyone who finds the URL can POST themselves a purchase.` }))
   }
   if (!/\bPayRail\b/.test(text)) return
   walk(sf, n => {
     if (!((ts.isMethodDeclaration(n) || ts.isPropertyAssignment(n)) && n.name.getText() === 'verify')) return
     const fn = ts.isPropertyAssignment(n) ? n.initializer : n
-    if (!/\bheaders\b/.test(fn.getText())) out.push(diagnostic({ code: 'PAY011', ...at(sf, rel, n.name), why: "This rail's `verify` never reads `headers`, so it can't be checking a signature." }))
+    if (!/\bheaders\b/.test(fn.getText())) out.push(({ code: 'PAY011', ...at(sf, rel, n.name), why: "This rail's `verify` never reads `headers`, so it can't be checking a signature." }))
   })
 }
 
@@ -170,26 +160,26 @@ function clientReads(rel, sf, reads) {
   })
 }
 
-/**
- * @param {string} root
- * @param {{ exclude?: string[], slots: Record<string, unknown>, testRels?: string[] }} options
- */
-export function payChecks(root, { exclude = [], slots, testRels = [] }) {
+/** A server entry in the client graph: it would carry the ledger, and it can't run there. */
+function serverImports(rel, text, out) {
+  for (const m of text.matchAll(/from\s+['"](@weft\/pay\/(?:server|drizzle))['"]/g)) out.push({ code: 'PAY017', ...spanOf(rel, m.index, m[0].length), why: `\`${m[1]}\` is imported in client code: the ledger runs on the server only.` })
+}
+
+/** @param {import('weft/plugin').CheckContext} ctx */
+export function run(ctx) {
   const out = []
-  const rels = discover(root, { include: [CODE], exclude }).filter(r => !isTestFile(r) && !r.endsWith('.d.ts'))
-  const rails = Object.entries(slots?.['pay.rail'] ?? {}).filter(([, name]) => name)
-  const payFile = ['ts', 'mts', 'js', 'mjs'].map(x => `src/pay.server.${x}`).find(f => existsSync(join(root, f)))
+  const rels = ctx.files.filter(r => r.startsWith('src/') && !isTest(r) && !r.endsWith('.d.ts'))
+  const rails = Object.entries(ctx.slots['pay.rail'] ?? {}).filter(([, name]) => name)
+  const payFile = ['ts', 'mts', 'js', 'mjs'].map(x => `src/pay.server.${x}`).find(ctx.exists)
   const known = new Set()
   const reads = []
-  let usesPay = rails.length > 0 || !!payFile
 
   for (const rel of rels) {
-    const text = readFileSync(join(root, rel), 'utf8')
+    const text = ctx.read(rel)
     const server = isServer(rel)
     secrets(rel, text, server, out)
-    const relevant = /weft\/pay|entitlements|requires:|\bcheckout\b|\bproduct\(|PayRail|price_|prod_|plink_/.test(text) || STRIPE_EVENT.test(text)
-    if (!relevant) continue
-    if (text.includes('weft/pay')) usesPay = true
+    if (!server) serverImports(rel, text, out)
+    if (!(/@weft\/pay|entitlements|requires:|\bcheckout\b|\bproduct\(|PayRail|price_|prod_|plink_/.test(text) || STRIPE_EVENT.test(text))) continue
     const sf = parse(rel, text)
     webhooks(rel, text, sf, out)
     money(rel, sf, out)
@@ -208,35 +198,33 @@ export function payChecks(root, { exclude = [], slots, testRels = [] }) {
 
   for (const r of reads) {
     if (known.has(r.id)) continue
-    out.push(diagnostic({ code: 'PAY013', ...at(r.sf, r.rel, r.node), why: `\`${r.id}\` is checked only on the client: no \`requires\` or \`ctx.entitlements.has\` on the server names it, so a request made by hand gets the same thing as a paying user.`, help: `Add \`requires: ['${r.id}']\` to the query or mutation it protects, or check \`await ctx.entitlements.has('${r.id}')\` in the route's \`load\`` }))
+    out.push({ code: 'PAY013', ...at(r.sf, r.rel, r.node), why: `\`${r.id}\` is checked only on the client: no \`requires\` or \`ctx.entitlements.has\` on the server names it, so a request made by hand gets the same thing as a paying user.`, help: `Add \`requires: ['${r.id}']\` to the query or mutation it protects, or check \`await ctx.entitlements.has('${r.id}')\` in the route's \`load\`` })
   }
 
-  for (const rel of CONFIGS) {
-    if (!existsSync(join(root, rel))) continue
-    const text = readFileSync(join(root, rel), 'utf8')
+  for (const rel of ctx.files.filter(r => /^weft\.config\./.test(r))) {
+    const text = ctx.read(rel)
     secrets(rel, text, true, out)
     const m = SECRET_OPTION.exec(text)
-    if (m) out.push(diagnostic({ code: 'PAY003', ...spanOf(text, rel, m.index, m[0].length), why: 'Plugin options are written into `.weft/slots/`, so a key given here sits in a generated file.' }))
+    if (m) out.push({ code: 'PAY003', ...spanOf(rel, m.index, m[0].length), why: 'Plugin options are written into `.weft/slots/`, so a key given here sits in a generated file.' })
   }
 
-  for (const rel of testRels) {
-    const abs = join(root, rel)
-    if (!existsSync(abs)) continue
-    const text = readFileSync(abs, 'utf8')
-    for (const m of text.matchAll(/\b(?:sk|rk)_live_\w+/g)) out.push(diagnostic({ code: 'T030', ...spanOf(text, rel, m.index, m[0].length), why: 'A live key in a test: it charges real cards, and it is now in git.' }))
+  for (const rel of ctx.files.filter(isTest)) {
+    const text = ctx.read(rel)
+    for (const m of text.matchAll(/\b(?:sk|rk)_live_\w+/g)) out.push({ code: 'PAY031', ...spanOf(rel, m.index, m[0].length), why: 'A live key in a test: it charges real cards, and it is now in git.' })
   }
 
-  if (!usesPay) return out
-  if (rails.length && !payFile) out.push(diagnostic({ code: 'PAY014', file: 'weft.config.ts', why: `\`pay.rail\` is bound to ${rails.map(([, n]) => n).join(', ')}, but there is no \`src/pay.server.ts\`: no webhook is mounted, so a payment would grant nothing.` }))
-  if (payFile && !rails.length) out.push(diagnostic({ code: 'P101', file: payFile, why: '`src/pay.server.ts` needs a `pay.rail` provider, and nothing provides it: every checkout fails.', help: '`weft add pay`, or add a rail plugin to `plugins`' }))
-  if (payFile) {
-    const text = readFileSync(join(root, payFile), 'utf8')
-    const m = /memoryPayStore\(/.exec(text)
-    if (m) out.push(diagnostic({ code: 'PAY016', ...spanOf(text, payFile, m.index, m[0].length - 1), why: 'The ledger is in memory: purchases are gone on restart, and a production server refuses to start with it.' }))
-    if (rails.some(([key]) => key === 'stripe')) {
-      const env = ['.env.example', 'src/env.server.ts', '.env'].filter(f => existsSync(join(root, f))).map(f => readFileSync(join(root, f), 'utf8')).join('\n')
-      if (!env.includes('STRIPE_WEBHOOK_SECRET')) out.push(diagnostic({ code: 'PAY011', file: payFile, why: 'Nothing declares `STRIPE_WEBHOOK_SECRET`. Without it the rail refuses every webhook, so no purchase ever lands.', help: 'Add `STRIPE_WEBHOOK_SECRET` to `.env.example` and `src/env.server.ts`' }))
-    }
+  const config = ctx.files.find(r => /^weft\.config\./.test(r)) ?? 'weft.config.ts'
+  if (!payFile) {
+    out.push({ code: 'PAY014', file: config, why: 'This plugin is in `plugins`, but there is no `src/pay.server.ts`: no webhook is mounted, so a payment would grant nothing.' })
+    return out
+  }
+  if (!rails.length) out.push({ code: 'PAY018', file: payFile, why: '`src/pay.server.ts` needs a `pay.rail` provider, and nothing provides it: every checkout fails.' })
+  const text = ctx.read(payFile)
+  const m = /memoryPayStore\(/.exec(text)
+  if (m) out.push({ code: 'PAY016', ...spanOf(payFile, m.index, m[0].length - 1), why: 'The ledger is in memory: purchases are gone on restart, and a production server refuses to start with it.' })
+  if (rails.some(([key]) => key === 'stripe')) {
+    const env = ['.env.example', 'src/env.server.ts'].map(ctx.read).join('\n')
+    if (!env.includes('STRIPE_WEBHOOK_SECRET')) out.push({ code: 'PAY011', file: payFile, why: 'Nothing declares `STRIPE_WEBHOOK_SECRET`. Without it the rail refuses every webhook, so no purchase ever lands.', help: 'Add `STRIPE_WEBHOOK_SECRET` to `.env.example` and `src/env.server.ts`' })
   }
   return out
 }
