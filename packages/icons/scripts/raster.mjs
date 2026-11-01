@@ -23,13 +23,37 @@ function poly(g, points, closed, cut) {
     }
   }
 }
-function arc(g, cx, cy, r, from = 0, to = Math.PI * 2) {
-  const steps = Math.max(24, Math.ceil(r * 16))
-  let last
+/** Cells along a curve, without the corners a rounded line leaves: a step is one pixel, never an L. */
+function trace(g, f, steps) {
+  const path = []
   for (let i = 0; i <= steps; i++) {
-    const t = from + (to - from) * i / steps, p = [cx + r * Math.cos(t), cy + r * Math.sin(t)]
-    if (last) line(g, last, p)
-    last = p
+    const [x, y] = f(i / steps), c = [Math.round(x), Math.round(y)], l = path.at(-1)
+    if (!l || l[0] !== c[0] || l[1] !== c[1]) path.push(c)
+  }
+  for (let i = 1; i < path.length - 1; i++) {
+    const a = path[i - 1], b = path[i + 1]
+    if (Math.abs(a[0] - b[0]) === 1 && Math.abs(a[1] - b[1]) === 1) path.splice(i--, 1)
+  }
+  for (const [x, y] of path) put(g, x, y)
+}
+function arc(g, cx, cy, r, from = 0, to = Math.PI * 2) {
+  trace(g, t => [cx + r * Math.cos(from + (to - from) * t), cy + r * Math.sin(from + (to - from) * t)], Math.max(48, Math.ceil(r * 32)))
+}
+/** A circle the way one is drawn on a grid: whole radius, midpoint rule, so each side is the same. A gap is an angle left out. */
+function disc(g, cx, cy, r, gap) {
+  const X = Math.round(cx), Y = Math.round(cy), R = Math.max(1, Math.round(r))
+  let x = R, y = 0, e = 1 - R
+  const out = new Set()
+  while (x >= y) {
+    for (const [a, b] of [[x, y], [y, x], [-x, y], [-y, x], [x, -y], [y, -x], [-x, -y], [-y, -x]]) out.add(`${a},${b}`)
+    y++
+    if (e < 0) e += 2 * y + 1
+    else { x--; e += 2 * (y - x) + 1 }
+  }
+  for (const k of out) {
+    const [a, b] = k.split(',').map(Number)
+    if (gap && Math.abs(Math.atan2(b, a) - gap[0]) < gap[1]) continue
+    put(g, X + a, Y + b)
   }
 }
 const pts = w => w.map(p => p.split(',').map(Number))
@@ -39,7 +63,7 @@ function raw(g, words) {
   let i = 0, cur = [0, 0], start = [0, 0]
   const take = k => { const v = toks.slice(i, i + k).map(Number); i += k; return v }
   const more = () => i < toks.length && !/[A-Z]/.test(toks[i])
-  const curve = f => { let last = cur; for (let s = 1; s <= 16; s++) { const p = f(s / 16); line(g, last, p); last = p } cur = last }
+  const curve = f => { trace(g, f, 48); cur = f(1) }
   while (i < toks.length) {
     const c = toks[i++]
     if (c === 'Z') { line(g, cur, start); cur = start }
@@ -74,11 +98,10 @@ function command(g, text) {
     case 'rect': { const [x, y, a, b] = v; return poly(g, [[x, y], [x + a, y], [x + a, y + b], [x, y + b]], true, true) }
     case 'box': { const [x, y, a, b] = v; return poly(g, [[x + 4, y], [x + a, y], [x + a, y + b], [x, y + b], [x, y], [x + 1, y]], false, true) }
     case 'ring': {
-      if (v[2] < 3) return arc(g, v[0], v[1], v[2])
-      const mid = -125 * Math.PI / 180, half = 1.4 / v[2]
-      return arc(g, v[0], v[1], v[2], mid + half, mid - half + Math.PI * 2)
+      if (v[2] < 3) return disc(g, v[0], v[1], v[2])
+      return disc(g, v[0], v[1], v[2], [-125 * Math.PI / 180, 1.4 / v[2]])
     }
-    case 'circ': return arc(g, v[0], v[1], v[2])
+    case 'circ': return disc(g, v[0], v[1], v[2])
     case 'dot': for (const [x, y] of pts(w)) put(g, x, y); return
     case 'p': return raw(g, w)
     default: throw new Error(`unknown draw op ${op}`)
@@ -110,12 +133,14 @@ export function enclosed(grid, wall = c => c === '#') {
 
 const count = (grid, c) => grid.flat().filter(v => v === c).length
 
-/** A little of the hand set's light: shade on the inside of the lower right edges, never more than the ink. */
-export function shaded(grid) {
+/** A little of the hand set's light: shade inside the lower right edges of the body, never more than the ink, and clear of
+ *  any detail, where it would only blur what the detail says. */
+export function shaded({ grid, body, weft }) {
   const inner = enclosed(grid)
   const out = grid.map(r => [...r])
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (inner[y][x] && (grid[y][x + 1] === '#' || grid[y + 1]?.[x] === '#')) out[y][x] = '+'
-  return count(out, '+') * 2 < count(out, '#') ? out : grid
+  const near = (x, y) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) if (weft[y + j]?.[x + i] === '#') return true; return false }
+  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (inner[y][x] && !near(x, y) && (body[y][x + 1] === '#' || body[y + 1]?.[x] === '#')) out[y][x] = '+'
+  return count(out, '+') * 3 < count(out, '#') ? out : grid
 }
 
 /** The outer edge only: shade goes, and a solid area keeps its rim. */

@@ -26,7 +26,7 @@ export const VARIANTS = ['Hollow', 'Solid', 'Dither']
 export const DITHER = 'checker'
 
 /** The pixel grid: drawn by hand, or landed on the grid from the outline spec. */
-export const gridOf = (name, [spec, art]) => (art ? pixel(art, name).grid : shaded(rasterize(spec).grid))
+export const gridOf = (name, [spec, art]) => (art ? pixel(art, name).grid : shaded(rasterize(spec)))
 
 const vivid = (grid, t = '') => {
   const p = cells(grid)

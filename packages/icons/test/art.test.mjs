@@ -8,8 +8,8 @@ import { names } from '../src/gen/names'
 const art = await load()
 const entries = Object.entries(art)
 
-test('the set is at least 150, with every warp and lemonstand name', () => {
-  expect(names.length).toBeGreaterThanOrEqual(150)
+test('the set is at least 500, with every warp and lemonstand name', () => {
+  expect(names.length).toBeGreaterThanOrEqual(500)
   for (const name of ['x', 'check', 'search', 'down', 'alert', 'alert-circle', 'info', 'check-circle', 'calendar', 'clock', 'left', 'right', 'globe', 'timer', 'pin', 'card', 'undo', 'more',
     'arrow-right', 'book-open', 'building', 'eye-off', 'file-check', 'hand-coins', 'hand-helping', 'heart', 'key', 'library', 'line-chart', 'loader', 'menu', 'message-question', 'plus', 'rotate-ccw', 'school', 'send', 'shield-check', 'user-check', 'users']) expect(names, name).toContain(name)
 })
