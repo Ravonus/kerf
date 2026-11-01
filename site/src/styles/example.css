@@ -3,6 +3,7 @@
 [data-site="example"] h2 { font-family: var(--warp-font-sans); font-size: 1.5rem; letter-spacing: -0.02em; color: var(--warp-color-text); }
 [data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid var(--warp-color-border); background: var(--warp-color-surface-sunken); }
 [data-site="example"] [data-part="run"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-related); min-inline-size: 0; min-block-size: 260px; background: radial-gradient(circle at 50% 30%, var(--warp-color-accent-soft), transparent 70%); padding: var(--warp-space-group); font-family: var(--warp-font-mono); border-inline-end: 1px solid var(--warp-color-border); }
+[data-site="example"] [data-part="run"]:empty { min-block-size: 0; block-size: 0; padding: 0; border: 0; }
 [data-site="example"] [data-part="run"] > * { inline-size: min(100%, 340px); }
 [data-site="example"] [data-part="run"] > [data-part="slow"], [data-site="example"] [data-part="run"] > iframe { inline-size: 100%; }
 [data-site="example"] [data-part="run"] > [data-part="panes"] { inline-size: 100%; }
