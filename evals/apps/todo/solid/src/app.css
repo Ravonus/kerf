@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* Metric-matched to Figtree, so the swap doesn't shift the layout. */
+@font-face {
+  font-family: "Figtree";
+  src: url("./assets/fonts/figtree-latin-wght.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+??,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Figtree Fallback";
+  src: local("Arial");
+  size-adjust: 99.6%;
+  ascent-override: 95.39%;
+  descent-override: 25.1%;
+  line-gap-override: 0%;
+}
+
+:root {
+  color-scheme: light dark;
+  --page: #faf7f2;
+  --surface: #ffffff;
+  --sunken: #fbeee4;
+  --ink: #1c1917;
+  --muted: #57534e;
+  --faint: #78716c;
+  --line: #e2dcd2;
+  --accent: #c2410c;
+  --accent-hover: #9a3412;
+  --accent-ink: #ffffff;
+  --accent-text: #9a3412;
+  --danger: #b91c1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #161412;
+    --surface: #211e1b;
+    --sunken: #2c1d13;
+    --ink: #f5f1ea;
+    --muted: #b5aea4;
+    --faint: #8f877c;
+    --line: #38332d;
+    --accent: #ea6a2e;
+    --accent-hover: #f08148;
+    --accent-ink: #1c0f06;
+    --accent-text: #f08148;
+    --danger: #f87171;
+  }
+}
+
+@theme inline {
+  --font-sans: "Figtree", "Figtree Fallback", ui-sans-serif, system-ui, sans-serif;
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+.check {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 1px solid var(--faint);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color 120ms, border-color 120ms;
+}
+.check::before {
+  content: "";
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--accent-ink);
+  clip-path: polygon(14% 52%, 0 67%, 38% 100%, 100% 22%, 85% 8%, 37% 70%);
+  transform: scale(0);
+  transition: transform 120ms;
+}
+.check:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.check:checked::before {
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check,
+  .check::before {
+    transition: none;
+  }
+}
