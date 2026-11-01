@@ -408,23 +408,30 @@ const KIT = /\/node_modules\/@weft\/.*\.[jt]sx?$/
  * so a page with one doesn't pull every component's sheet.
  */
 async function kitAssets(ctx, file, names, seen, words) {
-  if (seen.has(file)) return []
-  seen.add(file)
+  const id = names ? `${file}|${names.join()}` : file
+  if (seen.has(id)) return []
+  seen.add(id)
   const code = readFileSync(file, 'utf8')
-  words?.add(code)
+  const body = parse(file, code).program.body
+  const wanted = name => !names || names.includes(name)
+  const declared = n => n.declaration?.id?.name ?? n.declaration?.declarations?.[0]?.id?.name
+  // Only a file that makes a name itself brings its own imports: one that passes it on is a barrel.
+  const own = !names || body.some(n => n.type === 'ExportDefaultDeclaration' || (n.type === 'ExportNamedDeclaration' && !n.source && (names.includes(declared(n)) || n.specifiers.some(s => names.includes(s.exported.name)))))
+  if (own) words?.add(code)
   const out = []
-  for (const n of parse(file, code).program.body) {
-    const reexport = n.type === 'ExportNamedDeclaration' && n.source
-    if (!reexport && n.type !== 'ImportDeclaration' && n.type !== 'ExportAllDeclaration') continue
+  for (const n of body) {
     if (!n.source || n.importKind === 'type' || n.exportKind === 'type') continue
-    if (reexport && names && !n.specifiers.some(s => s.exportKind !== 'type' && names.includes(s.exported.name ?? s.exported.value))) continue
-    const id = (await ctx.resolve(n.source.value, file, { skipSelf: true }))?.id
-    if (!id || /^(weft|@weft\/start)($|\/)/.test(n.source.value)) continue
-    const bare = id.replace(/\?.*$/, '')
-    if (!NOT_ASSET.test(bare)) out.push(`import ${JSON.stringify(id.startsWith('\0') ? n.source.value : bare)}`)
-    else if (KIT.test(bare)) out.push(...await kitAssets(ctx, bare, importedNames(n), seen, words))
+    const all = n.type === 'ExportAllDeclaration'
+    const passed = n.type === 'ExportNamedDeclaration' && n.specifiers.filter(s => s.exportKind !== 'type' && wanted(s.exported.name ?? s.exported.value)).map(s => s.local.name ?? s.local.value)
+    if (n.type === 'ImportDeclaration' ? !own : passed ? !passed.length : !all) continue
+    if (/^(weft|@weft\/start)($|\/)/.test(n.source.value)) continue
+    const target = (await ctx.resolve(n.source.value, file, { skipSelf: true }))?.id
+    if (!target) continue
+    const bare = target.replace(/\?.*$/, '')
+    if (!NOT_ASSET.test(bare)) out.push(`import ${JSON.stringify(target.startsWith('\0') ? n.source.value : bare)}`)
+    else if (KIT.test(bare)) out.push(...await kitAssets(ctx, bare, passed || (all ? names : importedNames(n)), seen, words))
   }
-  return out
+  return [...new Set(out)]
 }
 
 /** The value names an import takes, or undefined for the whole module (`import 'x'`, `import * as x`). */
