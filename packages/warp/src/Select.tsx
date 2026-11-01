@@ -1,4 +1,5 @@
 import { DownIcon } from '@weft/icons'
+import { untrack } from 'weft'
 import { Field, type FieldProps } from './Field'
 import { use } from './use'
 import '@weft/ui-core/styles/inputs/choice.css' // the select and the field's chevron
@@ -37,7 +38,7 @@ export function Select({ options, placeholder, ...props }: FieldProps & { option
       control={p => (
         <select ref={(n: any) => (el = n)} data-part="input" id={p.id} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>
           {placeholder !== undefined && <option value="">{placeholder}</option>}
-          {options.map(o => <Choice key={'group' in o ? o.group : o.value} o={o} is={v => v === String(props.value)} />)}
+          {options.map(o => <Choice key={'group' in o ? o.group : o.value} o={o} is={v => untrack(() => v === String(props.value))} />)}
         </select>
       )}
     />

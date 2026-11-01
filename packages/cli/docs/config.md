@@ -22,7 +22,7 @@ export default defineConfig({
     locale: 'en_US',
     image: { url: '/og.png', width: 1200, height: 630 },   // or 'auto' (generated card, not built yet)
     twitter: { card: 'summary_large_image', site: '@acme' },
-    inlineCss: false, // default true: a build puts up to 256 KB of a page's stylesheets in its HTML; false keeps links
+    inlineCss: false, // default true: a build inlines what first paint needs (all of it under about 12 KB br) and links the rest; false keeps links, as a strict CSP needs (D012)
     head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft/warp/plugin restores `setDial(…, { persist: true })` before the first paint
   },
   plugins: [warp()],   // plugin factories (weft/plugin); a plain `{ name, provides }` entry is data only

@@ -46,6 +46,16 @@ describe('what isn\'t off-system', () => {
   })
 })
 
+describe('a CSP against inlined CSS', () => {
+  const header = `export const h = { 'Content-Security-Policy': "default-src 'self'; style-src 'self'" }\n`
+  test('D012 until inlining is off or inline styles are allowed', async () => {
+    const page = 'export const P = () => <p>x</p>'
+    expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': header })).result)).toEqual(['D012'])
+    expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': header.replace("'self'\"", "'self' 'unsafe-inline'\"") })).result)).toEqual([])
+    expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': header, 'weft.config.json': '{ "site": { "inlineCss": false } }' })).result)).toEqual([])
+  })
+})
+
 describe('role drift', () => {
   test('D006 one level at two roles across files; the common role wins and the fix matches it', async () => {
     const { root, result } = await app({

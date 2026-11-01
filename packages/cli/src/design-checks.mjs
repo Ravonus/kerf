@@ -354,6 +354,18 @@ export function designChecks(root, { files, exclude = [], tokens }) {
 
   for (const [level, sites] of looks) roleDrift(level, sites)
 
+  // -- a CSP against the inlined sheets --
+  const config = ['ts', 'mts', 'js', 'mjs', 'json', 'yaml', 'yml'].map(x => join(root, `weft.config.${x}`)).find(existsSync)
+  const configText = config ? readFileSync(config, 'utf8') : ''
+  if (!/inlineCss['"]?\s*:\s*false/.test(configText)) {
+    for (const f of [...files, ...(config ? [{ rel: config.slice(root.length + 1).split('\\').join('/'), text: configText }] : [])]) {
+      const m = /content-security-policy/i.exec(f.text)
+      if (!m) continue
+      const policy = /[`'"][^`'"]*(?:style-src|default-src)[^\n]*/i.exec(f.text.slice(m.index))?.[0] ?? ''
+      if (/(?:style-src|default-src)/i.test(policy) && !/unsafe-inline/i.test(/style-src[^;]*/i.exec(policy)?.[0] ?? policy)) reporter(f)('D012', m.index, m.index + m[0].length, 'This Content-Security-Policy blocks inline styles, and a build inlines the first paint\'s CSS: the page would show unstyled, and a deferred sheet would never switch on.', { description: 'Set site: { inlineCss: false }', safe: false, text: m[0] })
+    }
+  }
+
   // -- CSS files --
   for (const rel of discover(root, { include: ['**/*.css'], exclude })) {
     const text = readFileSync(join(root, rel), 'utf8')

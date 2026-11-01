@@ -459,12 +459,12 @@ it is pure CSS in `warp.css`. Native date/time inputs use the fixed-notch label 
 
 | Level | Changes | Markup | How |
 |---|---|---|---|
-| **1 Re-theme** | colour, fonts, dial, density, sweep | none | `theme` in config, or override `--warp-seed-*` / sys vars on a scope with `data-warp` |
-| **2 Restyle parts** | any part's CSS | none | every component emits `data-scope`, `data-part` and state (`data-tone`, `data-emphasis`, `data-size`, `data-state`, ARIA). Target `[data-scope="button"][data-part="root"]`, or Tailwind `data-[part=label]:…`; `class` merges onto the root, `partClass={{ label }}` onto parts |
-| **3 Headless** | all warp component CSS | none | `kit: "headless"`: same components, behaviour, a11y and attributes; only `warp.tokens` ships, so layout primitives and your CSS can still read tokens |
-| **4 None** | no warp at all | n/a | `kit: "none"`; `weft check` D-codes for tokens switch off |
+| **1 Re-theme** | colour, fonts, dial, density, sweep | none | `warp()` in config (`weft docs theme`), or override `--warp-seed-*` / sys vars on a scope with `data-warp` |
+| **2 Restyle parts** | any part's CSS | none | every component emits `data-scope`, `data-part` and state (`data-tone`, `data-emphasis`, `data-size`, `data-state`, ARIA). Target `[data-scope="button"]` (a component's root), or Tailwind `data-[part=label]:…`; `class` merges onto the root, `partClass={{ label }}` onto parts |
+| **3 Headless** | all warp component CSS | none | Not built; `create-weft --ui headless` gives warp's tokens with your own components. Planned: `kit: "headless"`: same components, behaviour, a11y and attributes; only `warp.tokens` ships, so layout primitives and your CSS can still read tokens |
+| **4 None** | no warp at all | n/a | `create-weft --ui none`; `weft check` D-codes for tokens switch off |
 
-Forking a component to restyle it is diagnostic `D040`; level 2 is the supported path.
+Level 2 is the supported path past tokens. `D040`, for forking a component, is reserved and not built.
 
 ## 10. Cascade layers and interop
 
