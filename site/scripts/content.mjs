@@ -441,7 +441,7 @@ const list = products()
   write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: plain(habit.message), fix: plain(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'add', 3: 'del', 4: 'add' }), code: 'W001', message: plain(report.message), file: `Total.tsx, line ${report.line}`, fix: plain(entry.fix) })
 }
 
-/** The arena's table: evals/speed's numbers whichever way they fall. Fastest in each row wins it, including when it isn't weft. */
+/** The arena's table: evals/speed's numbers whichever way they fall, including the rows weft loses. */
 function buildSpeed() {
   const run = JSON.parse(readFileSync(join(repo, 'evals/speed/results.json'), 'utf8'))
   if (!run.valid) throw new Error('evals/speed/results.json was measured under too much load')
@@ -452,11 +452,12 @@ function buildSpeed() {
     ['Update one cell of 10,000', 'update 10000', 'one cell, ms per tick'], ['Update every 10th of 10,000', 'update 10000', 'every 10th, ms per tick'], ['Update all 10,000 cells', 'update 10000', 'every cell, ms per tick'],
   ].map(([label, group, key]) => {
     const [weft, solid, react] = ['weft', 'solid-batch', 'react'].map(s => run.grid[s][group][key])
-    const best = Math.min(weft, solid, react)
-    return { label, weft, solid, react, fastest: best === weft ? 'weft' : best === solid ? 'Solid' : 'React' }
+    // Across the rounds: a row only goes to whoever's 95% interval against the other stays on one side of even.
+    const { lo, hi } = run.compared.weft[group][key]
+    return { label, weft, solid, react, fastest: hi < 1 ? 'weft' : lo > 1 ? 'Solid' : 'Too close' }
   })
   const arena = JSON.parse(readFileSync(join(repo, 'evals/speed/arena-site.json'), 'utf8'))
-  write('speed.json', { arena, machine: run.machine, solid: run.solid, when: run.when.slice(0, 10), rows, wins: rows.filter(r => r.fastest === 'weft').length })
+  write('speed.json', { arena, machine: run.machine, solid: run.solid, when: run.when.slice(0, 10), rows, wins: rows.filter(r => r.fastest === 'weft').length, losses: rows.filter(r => r.fastest === 'Solid').length })
 }
 
 // ------------------------------------------------------------------ agents

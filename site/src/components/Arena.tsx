@@ -94,13 +94,13 @@ export function Arena() {
       </div>
       <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. <a href="/arena/shared/harness.txt">How this is measured</a>: each update at 60 a second is timed on its own, with nothing watching the page, and the times are added up. One update in 30 runs untimed so its page changes can be counted. Time per update stays empty until a run has about five seconds in it, because a few clicks are too few to compare. On an {speed.machine}, 60 updates a second take {us(speed.arena.weft)} each in weft, {us(speed.arena.solid)} in Solid, {us(speed.arena.react)} in React and {us(speed.arena.raw)} in hand-written DOM.</p>
       <h3>Speed, measured in Chromium</h3>
-      <p data-part="intro">weft is fastest in {speed.wins} of these {speed.rows.length} rows. The others are marked. Times are milliseconds, the median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
+      <p data-part="intro">weft is faster than Solid in {speed.wins} of these {speed.rows.length} rows and slower in {speed.losses}, marked in red. In the rest the rounds overlap. Times are milliseconds, the median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
       <div data-part="table">
         <table>
           <thead><tr><th scope="col">Operation</th><th scope="col">weft</th><th scope="col">Solid</th><th scope="col">React</th><th scope="col">Fastest</th></tr></thead>
           <tbody>
             {speed.rows.map(r => (
-              <tr key={r.label} data-lost={r.fastest === 'weft' ? undefined : ''}>
+              <tr key={r.label} data-lost={r.fastest === 'Solid' ? '' : undefined}>
                 <th scope="row">{r.label}</th><td>{time(r.weft)}</td><td>{time(r.solid)}</td><td>{time(r.react)}</td><td>{r.fastest}</td>
               </tr>
             ))}
