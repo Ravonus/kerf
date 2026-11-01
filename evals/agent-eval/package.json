@@ -1,0 +1,10 @@
+{
+  "name": "agent-eval",
+  "private": true,
+  "type": "module",
+  "description": "Cold-start, token-for-token comparison of coding agents across stacks. Pre-registration: docs/research/42-agent-eval.md",
+  "dependencies": {
+    "axe-core": "4.14.0",
+    "playwright-core": "1.64.1"
+  }
+}
