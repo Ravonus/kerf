@@ -3,7 +3,7 @@
 | part | result | |
 |---|---|---|
 | hidden tests | pass | warp 23/23 (weft 23/23); price-push 1 DOM / 9 re-runs, add-one 1 DOM |
-| size | pass | JS 12.10 KB br = weft shop 5.65 KB + kit 6.46 KB; budget 10.00 KB + kit allowance 7.00 KB; CSS 12.44 KB |
+| size | pass | JS 12.61 KB br = weft shop 6.02 KB + kit 6.60 KB; budget 10.00 KB + kit allowance 7.00 KB; CSS 12.46 KB |
 | token contrast | pass | 858 pairs over 6 theme × expression stops, 0 failures |
-| a11y | pass | 108 runs, 1440 axe audits, 45848 pixel-measured contrasts, 0 failures; 0 spec findings reported |
+| a11y | pass | 108 runs, 1440 axe audits, 45772 pixel-measured contrasts, 0 failures; 0 spec findings reported |
 
