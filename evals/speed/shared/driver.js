@@ -23,6 +23,20 @@ export function expose(stack) {
   }
   const gc = () => globalThis.gc?.()
 
+  /** A list of 8 rotated: small lists are most lists. Ms per 1,000 rotations; too short to time one at a time. */
+  const small = (r, samples) => {
+    r.few()
+    const script = []
+    for (let i = 0; i < samples; i++) {
+      gc()
+      const start = performance.now()
+      for (let j = 0; j < 1000; j++) r.rotate()
+      script.push(performance.now() - start)
+    }
+    r.clear()
+    return { script: median(script.slice(samples >> 1)), total: median(script.slice(samples >> 1)) }
+  }
+
   window.speed = {
     /** Mounts `n` cells, once, in a fresh page: V8 hasn't seen this code run yet, as for a real first render. */
     create(n) {
@@ -61,6 +75,7 @@ export function expose(stack) {
     /** js-framework-benchmark's operations, on the 1,000 rows it uses (10,000 for `runLots`). */
     rows(name, { warm = 5, samples = 15 } = {}) {
       const r = stack.rows
+      if (name === 'small') return r.rotate ? small(r, warm + samples) : null
       const pick = () => [...document.querySelectorAll('tbody tr')]
       const before = {
         create: () => r.clear(), replace: () => r.run(), update: () => r.run(), select: () => r.run(),
@@ -87,6 +102,7 @@ export function expose(stack) {
     /** Live rows, for the memory step. */
     run: () => stack.rows.run(),
     clear: () => stack.rows.clear(),
+    stack,
   }
   stack.rows?.setup?.(place())
 }

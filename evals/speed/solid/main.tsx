@@ -43,6 +43,8 @@ const rows = {
     for (let i = 0; i < d.length; i += 10) d[i].setLabel(l => l + ' !!!')
   }),
   clear: () => void setData([]),
+  few: () => void setData(buildData(8)),
+  rotate: () => void setData(d => [...d.slice(1), d[0]]),
   swap: () => {
     const list = data().slice()
     if (list.length > 998) {

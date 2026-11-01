@@ -25,6 +25,8 @@ export const rows = {
     for (let i = 0; i < d.length; i += 10) d[i].label.value += ' !!!'
   }),
   clear: () => now(() => (data.value = [])),
+  few: () => now(() => (data.value = buildData(8))),
+  rotate: () => now(() => (data.value = [...data.value.slice(1), data.value[0]])),
   swap: () => now(() => {
     const list = data.value.slice()
     if (list.length > 998) {

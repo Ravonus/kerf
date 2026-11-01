@@ -1,7 +1,7 @@
 // Before, after, and the other stacks, on one machine, one page at a time. Every stack gets the same driver
 // (shared/driver.js), the same production settings, the same 5 microsecond timer (cross-origin isolated) and fresh
 // pages, and the order of the stacks changes each round. Nothing here counts at load above 20.
-//   node measure.mjs [--out results.json] [--quick] [--stacks weft-base,weft,solid,solid-batch,react]
+//   node measure.mjs [--out results.json] [--quick] [--rows] [--no-reactive] [--rounds 3] [--stacks weft-base,weft,solid,solid-batch,react]
 // CHROME=<path> uses that browser (another machine's Playwright build).
 import { execFileSync, execSync } from 'node:child_process'
 import { createServer } from 'node:http'
@@ -17,7 +17,7 @@ const quick = process.argv.includes('--quick')
 const out = arg('out', join(here, 'results.json'))
 const want = arg('stacks', 'weft-base,weft,solid,solid-batch,react').split(',').filter(s => existsSync(join(here, 'dist', s.replace('-batch', ''))))
 const load = () => Number(execSync('uptime').toString().match(/load averages?:\s*([\d.]+)/)[1])
-const rounds = quick ? 1 : 3
+const rounds = Number(arg('rounds', quick ? 1 : 3))
 const sizes = process.argv.includes("--rows") ? [] : quick ? [1000, 10000] : [1000, 10000, 100000]
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
@@ -85,8 +85,9 @@ for (let r = 0; r < rounds; r++) {
       }
     }
     const page = await open(stack)
-    for (const op of ['create', 'replace', 'update', 'select', 'swap', 'remove', 'runLots', 'append', 'clear']) {
+    for (const op of ['create', 'replace', 'update', 'select', 'swap', 'remove', 'runLots', 'append', 'clear', 'small']) {
       const v = await page.evaluate(([op, o]) => window.speed.rows(op, o), [op, quick ? { warm: 3, samples: 5 } : {}])
+      if (!v) continue
       note(stack, 'rows script', op, v.script)
       note(stack, 'rows total', op, v.total)
     }
@@ -117,7 +118,7 @@ for (const [stack, groups] of Object.entries(data)) {
 
 const reactive = {}
 if (!process.argv.includes('--no-reactive')) {
-  for (const lib of ['weft-base', 'weft', 'solid', 'alien']) {
+  for (const lib of new Set([...want.map(s => s.replace('-batch', '')), 'alien'])) {
     if (!existsSync(join(here, 'dist/reactive', `${lib}.mjs`))) continue
     const text = execFileSync(process.execPath, ['--expose-gc', join(here, 'reactive.mjs'), lib, '--rounds', quick ? '5' : '9'], { encoding: 'utf8' })
     reactive[lib] = JSON.parse(text.trim().split('\n').at(-1))
