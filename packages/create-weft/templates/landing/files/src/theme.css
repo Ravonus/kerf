@@ -16,10 +16,31 @@ body { margin: 0; }
   block-size: 3px;
   background: linear-gradient(90deg, var(--warp-color-accent-solid), var(--warp-color-caution-solid), transparent);
 }
-.site-head [data-scope="center"] { padding-block: var(--warp-space-related); }
+/* warp's <Center max="wide" gutter>, for the chrome: nothing in it runs, so it stays plain markup */
+.wrap {
+  box-sizing: content-box;
+  max-inline-size: var(--warp-layout-wide);
+  margin-inline: auto;
+  padding-inline: max(var(--warp-space-page), var(--warp-safe-left)) max(var(--warp-space-page), var(--warp-safe-right));
+}
+.site-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-group); }
+.site-links, .site-head nav, .site-foot nav { display: flex; align-items: center; gap: var(--warp-space-group); }
+.site-head .wrap { padding-block: var(--warp-space-related); }
+.site-head nav a { padding-block: var(--warp-space-tight); color: var(--warp-color-accent-text); text-decoration: none; transition: color var(--warp-duration-fast, 120ms) ease; }
+.site-head nav a:hover, .site-head nav a:focus-visible, .site-head nav a[aria-current] { color: var(--warp-color-text); }
+.site-head nav a[aria-current] { box-shadow: inset 0 -2px var(--warp-color-accent-solid); }
 .site-foot { margin-block-start: auto; border-block-start: 1px solid var(--warp-color-border); }
-.site-foot [data-scope="center"] { padding-block: var(--warp-space-section); }
-.site-foot-legal { margin-block-start: var(--warp-space-group); }
+.site-foot > .wrap { padding-block: var(--warp-space-section); }
+.site-foot p { margin: 0; color: var(--warp-color-text-subtle); }
+.site-foot-brand { display: grid; gap: var(--warp-space-tight); }
+.site-foot p.site-foot-legal {
+  margin-block-start: var(--warp-space-group);
+  color: var(--warp-color-text-faint);
+  font-size: var(--warp-text-caption-size);
+  line-height: var(--warp-text-caption-leading);
+}
+.site-foot nav { flex-wrap: wrap; }
+@media (width < 600px) { .site-foot .site-bar { flex-direction: column; align-items: stretch; gap: var(--warp-space-section); } }
 
 .brand {
   font-size: var(--warp-text-heading-size);

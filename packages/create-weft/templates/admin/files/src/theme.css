@@ -23,6 +23,8 @@ body { margin: 0; }
   padding-block: var(--warp-space-group) var(--warp-space-page);
 }
 
+.flow { display: grid; gap: var(--warp-space-group); }
+
 .section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--warp-space-related); }
 
 .stat { font-variant-numeric: tabular-nums; }

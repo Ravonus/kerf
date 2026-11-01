@@ -29,9 +29,11 @@ function Feed() {
   return <Table caption="Recent orders" captionHidden rows={rows} columns={columns} picker={false} empty={{ title: 'Quiet so far', text: 'New orders land here as they come in.' }} />
 }
 
+// A plain box, not warp's Stack: there the Boundary would be part of an island that waits for a click, and a stream that stops
+// early would leave the skeleton up. On its own the island runs as the page shows, and fills in from what the page carries.
 export default function OrderFeed() {
   return (
-    <Stack gap="group">
+    <div class="flow">
       <Stack gap="tight">
         <Heading level={1} role="title">Order feed</Heading>
         <Text subtle>The last 50 orders, each with who placed it.</Text>
@@ -39,6 +41,6 @@ export default function OrderFeed() {
       <Boundary pending={<Skeleton lines={12} height="1.75rem" aria-label="Loading the feed" />} error={(_, retry) => <Failed what="The feed" retry={retry} />}>
         <Feed />
       </Boundary>
-    </Stack>
+    </div>
   )
 }

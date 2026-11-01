@@ -20,8 +20,16 @@ body { margin: 0; }
   background: var(--warp-color-page);
   border-block-end: 1px solid var(--warp-color-border);
 }
-.site-foot { margin-block-start: var(--warp-space-page); border-block-start: 1px solid var(--warp-color-border); }
-.site-foot [data-scope="center"] { padding-block: var(--warp-space-group); }
+.site-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--warp-space-related);
+  margin-block-start: var(--warp-space-page);
+  padding: var(--warp-space-group) max(var(--warp-space-page), calc((100% - var(--warp-layout-wide)) / 2));
+  border-block-start: 1px solid var(--warp-color-border);
+}
+.site-foot p { margin: 0; color: var(--warp-color-text-subtle); }
 
 .brand {
   display: inline-flex;

@@ -1,14 +1,9 @@
-import { Center, Row, Text } from '@weft/warp'
-
+// Plain elements, like the header: nothing here runs, so nothing here has to ship.
 export function SiteFooter() {
   return (
     <footer class="site-foot">
-      <Center max="wide" gutter>
-        <Row justify="between" gap="related">
-          <Text subtle>Mendwell. Goods made to be used hard and fixed when they wear.</Text>
-          <Text subtle>Free repairs for the first ten years.</Text>
-        </Row>
-      </Center>
+      <p>Mendwell. Goods made to be used hard and fixed when they wear.</p>
+      <p>Free repairs for the first ten years.</p>
     </footer>
   )
 }

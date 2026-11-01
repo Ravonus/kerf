@@ -1,10 +1,9 @@
-import type { Meta, RouteProps } from '@weft/start'
-import { Card, Grid, Heading, Stack, Table, Text, type Column } from '@weft/warp'
-import { derived } from 'weft'
+import type { Meta } from '@weft/start'
+import { Card, Grid, Heading, Skeleton, Stack, Table, Text, type Column } from '@weft/warp'
+import { Boundary, derived } from 'weft'
+import { Failed } from '#/components/Failed'
 import { count, money } from '#/lib/orders'
 import { biggestCustomers, topCities } from '#/server/reports'
-
-export const load = async () => ({ cities: await topCities.fetch() })
 
 export const meta: Meta = { title: 'Regions' }
 
@@ -16,25 +15,37 @@ const columns: Column<City>[] = [
   { id: 'revenue', header: 'Revenue', numeric: true, value: row => money(row.revenue) },
 ]
 
+function Cities() {
+  const cities = topCities()
+  const rows = derived(() => cities.value ?? [])
+  return <Table caption="Cities" rows={rows} columns={columns} rowKey="city" picker={false} empty={{ title: 'No cities yet', text: 'Each city appears with its first order.' }} />
+}
+
 function BiggestCustomers() {
   const biggest = biggestCustomers()
   const people = derived(() => biggest.value ?? [])
   return (
-    <Stack gap="related">
-      <Heading level={2}>Biggest customers</Heading>
+    <div>
       {people.value.length > 0
         ? <Grid min="12rem" gap="related">{people.value.map(person => <Card key={person.id} eyebrow={person.city}><Stack gap="tight"><strong>{person.name}</strong><Text subtle>{money(person.revenue)}</Text></Stack></Card>)}</Grid>
         : <Text subtle>Your best customers will show up here once orders come in.</Text>}
-    </Stack>
+    </div>
   )
 }
 
-export default function RegionTable(props: RouteProps<typeof load>) {
-  const rows = derived(() => props.data.cities)
+// Each part reads its own data inside a Boundary, so the page's first byte waits for none of them.
+export default function RegionTable() {
   return (
     <Stack gap="group">
-      <Table caption="Cities" rows={rows} columns={columns} rowKey="city" picker={false} empty={{ title: 'No cities yet', text: 'Each city appears with its first order.' }} />
-      <BiggestCustomers />
+      <Boundary pending={<Skeleton lines={6} height="1.75rem" aria-label="Loading the cities" />} error={(_, retry) => <Failed what="The cities" retry={retry} />}>
+        <Cities />
+      </Boundary>
+      <Stack gap="related">
+        <Heading level={2}>Biggest customers</Heading>
+        <Boundary pending={<Skeleton height="5.25rem" aria-label="Loading the biggest customers" />} error={(_, retry) => <Failed what="The biggest customers" retry={retry} />}>
+          <BiggestCustomers />
+        </Boundary>
+      </Stack>
     </Stack>
   )
 }

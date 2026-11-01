@@ -1,21 +1,19 @@
 import { Link } from '@weft/start'
-import { Center, Nav, Row } from '@weft/warp'
 
+// Plain elements, not warp's Center and Row: nothing here runs, so nothing here has to ship.
 export function SiteHeader() {
   return (
     <header class="site-head">
-      <Center max="wide" gutter>
-        <Row justify="between" gap="group" wrap={false}>
-          <Link href="/" class="brand">Emberline</Link>
-          <Row gap="group" wrap={false}>
-            <Nav label="Main">
-              <Link href="/pricing">Pricing</Link>
-              <Link href="/privacy">Privacy</Link>
-            </Nav>
-            <Link href="/#join" class="cta" data-size="sm">Get early access</Link>
-          </Row>
-        </Row>
-      </Center>
+      <div class="wrap site-bar">
+        <Link href="/" class="brand">Emberline</Link>
+        <div class="site-links">
+          <nav aria-label="Main">
+            <Link href="/pricing">Pricing</Link>
+            <Link href="/privacy">Privacy</Link>
+          </nav>
+          <Link href="/#join" class="cta" data-size="sm">Get early access</Link>
+        </div>
+      </div>
     </header>
   )
 }

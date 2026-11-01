@@ -8,8 +8,10 @@ const card = { slug: products.slug, name: products.name, priceCents: products.pr
 
 export type ProductCardRow = { slug: string; name: string; priceCents: number; stock: number }
 
+// The aisles are on every page and hardly ever change.
 export const listCategories = query({
   tags: ['categories'],
+  cache: { life: 'hours' },
   run: ({ ctx }) => ctx.db.select({ slug: categories.slug, name: categories.name }).from(categories).orderBy(asc(categories.id)),
 })
 

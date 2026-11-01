@@ -21,9 +21,11 @@ const onTheWire = <T extends { createdAt: Date }>(row: T) => ({ ...row, createdA
 
 export type OrderRow = ReturnType<typeof onTheWire<{ id: number; customer: string; status: string; totalCents: number; createdAt: Date }>>
 
+// Aggregates over every order: worth keeping for a minute, and a status change clears them through the tag.
 export const storeStats = query({
   tags: ['orders', 'customers'],
   auth: 'user',
+  cache: { life: 'minutes', scope: 'user' },
   run: async ({ ctx }) => {
     const [[sales], customerCount] = await Promise.all([
       ctx.db.select({
@@ -40,6 +42,7 @@ export const storeStats = query({
 export const revenueByMonth = query({
   tags: ['orders'],
   auth: 'user',
+  cache: { life: 'minutes', scope: 'user' },
   run: async ({ ctx }) => {
     const month = sql`date_trunc('month', ${orders.createdAt} at time zone 'UTC')`
     const rows = await ctx.db.select({

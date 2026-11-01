@@ -31,7 +31,7 @@ export default function Home() {
               <Text class="lede" subtle>Emberline listens to your customer calls and turns them into a ranked list of what to build next.</Text>
               <WaitlistForm />
             </Stack>
-            <Media src={hero} priority width="1/2" class="hero-art" alt="The Emberline board: customer requests grouped into Now, Next and Later, with a quote from a renewal call" />
+            <Media src={hero} priority sizes="(max-width: 599px) 100vw, min(46vw, 696px)" class="hero-art" alt="The Emberline board: customer requests grouped into Now, Next and Later, with a quote from a renewal call" />
           </Split>
         </Center>
       </section>
