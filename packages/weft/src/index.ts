@@ -120,8 +120,11 @@ function mark(node: Computation, state: number) {
     queue.push(node)
   }
   node.state = state
-  const o = node.o
-  for (let i = 0; i < o.length; i++) mark(o[i], CHECK)
+  marks(node.o, CHECK)
+}
+
+function marks(list: Computation[], state: number) {
+  for (let i = 0; i < list.length; i++) mark(list[i], state)
 }
 
 function schedule() {
@@ -139,12 +142,10 @@ function unlink(node: Computation, from: number) {
   const s = node.s
   for (let i = s.length - 1; i >= from; i--) {
     const c = s[i], o = c.o, j = o.indexOf(node)
-    if (j === o.length - 1) o.pop()
-    else if (j >= 0) o.splice(j, 1)
+    if (j >= 0) o.splice(j, 1)
     if (c.b && !o.length) c.b.k!.delete(c.key!) // its last reader went
   }
-  if (from) s.length = from
-  else node.s = NONE
+  s.length = from
 }
 
 /** Dispose everything `node` owns and run its cleanups (a root's `dispose`). */
@@ -182,8 +183,7 @@ function run(node: Computation) {
       node.v = v
     } else if (!Object.is(v, node.v)) {
       node.v = v
-      const o = node.o
-      for (let i = 0; i < o.length; i++) o[i].state = DIRTY
+      for (const o of node.o) o.state = DIRTY
     }
   } catch (e) {
     if (DEV && node.n && e && typeof e === 'object' && !(e as any).weft) (e as any).weft = node.n // where it threw
@@ -304,6 +304,11 @@ export function collect<T>(fn: () => T): [T, Box<any>[]] {
   try { return [fn(), boxes] } finally { collecting = prev }
 }
 
+const plain = (x: any) => Object.getPrototypeOf(x ?? 0) === Object.prototype
+
+/** An object's keys, and each as a number too: `get(1)` reads the key the object calls '1'. */
+const own = (x: any) => Reflect.ownKeys(x).flatMap((k): PropertyKey | PropertyKey[] => (typeof k === 'string' ? [k, +k] : k))
+
 export class Box<T> implements State<T> {
   v: T
   o: Computation[] = NONE
@@ -341,15 +346,15 @@ export class Box<T> implements State<T> {
     const prev: any = this.v
     if (Object.is(prev, v)) return
     this.v = v
-    if (this.k) {
-      // Entry readers only: they re-run when their entry changed; whole-value readers are marked by write() below.
-      for (const [key, s] of this.k) {
-        if (!s.o.length) { this.k.delete(key); continue }
-        if (!Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
+    const k = this.k
+    if (k) {
+      // Entry readers only: they re-run when their entry changed. Between plain objects only their own keys can differ.
+      for (const key of plain(prev) && plain(v) ? [...own(prev), ...own(v)] : (k.keys() as Iterable<PropertyKey>)) {
+        const s = k.get(key)
+        if (s && !Object.is(prev?.[key], (v as any)?.[key])) marks(s.o, DIRTY)
       }
     }
-    const o = this.o
-    for (let i = 0; i < o.length; i++) mark(o[i], DIRTY)
+    marks(this.o, DIRTY)
     schedule()
     if (this.h) this.h(this, prev)
   }
@@ -359,47 +364,14 @@ export function state<T>(init: T, options?: StateOptions<T>): State<T> {
   return new Box(init, options)
 }
 
+/** weft/linked adds this; the weft() plugin imports it where an app uses it. */
+export declare namespace state {
+  const linked: <T>(source: () => T, options?: { key: () => unknown }) => Linked<T>
+}
+
 export interface Linked<T> extends State<T> {
   /** With `key`: the source moved under a local edit. `theirs` is its value now, `base` the one the edit started from. */
   readonly conflict: Derived<{ theirs: T; base: T } | undefined>
-}
-
-/**
- * A writable box that resets whenever `source` changes (a local copy of a prop). With `key`, it resets when the key
- * changes; while the key stays, it follows the source until a local edit, then keeps the edit and reports `conflict`
- * (a refetch or a push never clobbers what someone is typing, research 14 §3.4).
- */
-state.linked = <T>(source: () => T, options?: { key: () => unknown }): Linked<T> => {
-  const src = derived(source)
-  // A fresh object per key, so a write belongs to one key even if the key later returns to it. No `key`: the source.
-  const from = derived<{ k: unknown }>(((prev?: { k: unknown }) => {
-    const k = options ? options.key() : src.value
-    return prev && Object.is(prev.k, k) ? prev : { k }
-  }) as () => { k: unknown })
-  const local = new Box<{ v: T; from: { k: unknown }; base: T } | undefined>(undefined)
-  const edit = () => {
-    const f = from.value
-    const l = local.value
-    return l && l.from === f ? l : undefined
-  }
-  return {
-    get value() {
-      const l = edit()
-      return l ? l.v : src.value
-    },
-    set value(v: T) {
-      const f = from.value
-      const l = local.v
-      local.value = { v, from: f, base: l && l.from === f ? l.base : untrack(() => src.value) }
-    },
-    set(update) { const d: any = this.value; update(d); this.value = d },
-    get(key) { return (this.value as any)?.[key] },
-    conflict: derived(() => {
-      const l = edit()
-      const theirs = src.value
-      return l && !Object.is(theirs, l.base) ? { theirs, base: l.base } : undefined
-    }),
-  }
 }
 
 export class Memo<T> implements Derived<T> {
@@ -466,7 +438,7 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
 /** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
 function settle(node: Computation) {
   run(node)
-  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
+  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.at(-1) === node) owner.owned.pop()
 }
 
 /** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
@@ -493,15 +465,7 @@ export function onMount(fn: () => void) {
   schedule()
 }
 
-export function untrack<T>(fn: () => T): T {
-  const prev = listener
-  listener = null
-  try {
-    return fn()
-  } finally {
-    listener = prev
-  }
-}
+export const untrack = <T>(fn: () => T): T => within(owner!, fn)
 
 export function batch<T>(fn: () => T): T {
   return fn()

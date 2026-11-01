@@ -1,7 +1,7 @@
 // weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { createRoot, onCleanup, onMount, state } from 'weft'
+import { createRoot, onCleanup, onMount, state, untrack } from 'weft'
 import { flush, render, touches } from 'weft/test'
 
 function Counter({ step = 1 }: { step?: number }) {
@@ -92,6 +92,44 @@ test('keyed list: keys that repeat stay shown, and rows that went run their clea
   await flush()
   expect(shown()).toEqual(['3'])
   expect(gone).toHaveLength(5)
+})
+
+test('keyed list: a repeated key is rebuilt on every pass, and the first row of it is kept', async () => {
+  const items = state([1, 1, 2])
+  const mounts: number[] = []
+  function Row(props: { n: number }) {
+    const shown = untrack(() => props.n) // read when the row mounts, so a kept row would show it stale
+    mounts.push(shown)
+    return <li>{shown}</li>
+  }
+  render(() => <ul>{items.value.map(n => <Row n={n} />)}</ul>)
+  const [first] = screen.getAllByRole('listitem')
+  mounts.length = 0
+  items.value = [...items.value]
+  await flush()
+  expect(mounts).toEqual([1])
+  expect(screen.getAllByRole('listitem')[0]).toBe(first)
+  expect(screen.getAllByRole('listitem').map(n => n.textContent)).toEqual(['1', '1', '2'])
+})
+
+test('keyed list: one removal adds nothing to the list of keys and keeps every other row', async () => {
+  const items = state([1, 2, 3, 4, 5])
+  render(() => <ul>{items.value.map(n => <li key={n}>{n}</li>)}</ul>)
+  const [a, b, , d, e] = screen.getAllByRole('listitem')
+  const set = vi.spyOn(Map.prototype, 'set')
+  items.value = [1, 2, 4, 5]
+  await flush()
+  const sets = set.mock.calls.length
+  set.mockRestore()
+  expect(sets).toBeLessThan(2) // the row search's own, for the one node between
+  expect(screen.getAllByRole('listitem')).toEqual([a, b, d, e])
+})
+
+test('a plain object with a nodeType field is a value, not a node', async () => {
+  const v = state<any>({ nodeType: 1 })
+  render(() => <p>a{v.value}b</p>)
+  await flush()
+  expect(document.querySelector('p')!.textContent).toBe('a[object Object]b')
 })
 
 test('keyed list: nothing is re-placed when a new array has the same rows', async () => {

@@ -255,3 +255,68 @@ test('a flush by hand leaves the scheduled one harmless, and later writes still 
   await Promise.resolve()
   expect(seen).toEqual([0, 1, 2, 3])
 })
+
+describe('per-key reads between plain objects', () => {
+  function rows(box: { get(k: any): unknown }, keys: unknown[]) {
+    const seen: unknown[] = []
+    createRoot(() => keys.forEach(k => effect(() => box.get(k), v => seen.push([k, v]))))
+    seen.length = 0
+    return seen
+  }
+
+  test('one change reaches the two rows it changes, without visiting the others', () => {
+    const keys = Array.from({ length: 1000 }, (_, i) => i)
+    const box = state<Record<number, boolean>>({ 5: true })
+    const seen = rows(box, keys)
+    const k = (box as any).k as Map<unknown, unknown>
+    const visits = vi.spyOn(k, 'keys')
+    const at = stats.runs
+    box.value = { 7: true }
+    flush()
+    expect(seen).toEqual([[5, undefined], [7, true]])
+    expect(stats.runs - at).toBe(2)
+    expect(visits).not.toHaveBeenCalled()
+  })
+
+  test('string, number and symbol keys, and a key that went', () => {
+    const s = Symbol('s')
+    const box = state<any>({ 1: 'a', b: 'b', [s]: 'c' })
+    const seen = rows(box, [1, '1', 'b', s, 'gone', ...Array.from({ length: 20 }, (_, i) => `x${i}`)])
+    box.value = { b: 'b2', [s]: 'c2' }
+    flush()
+    expect(seen).toEqual([[1, undefined], ['1', undefined], ['b', 'b2'], [s, 'c2']])
+  })
+
+  test('a non-enumerable key, and an inherited key shadowed then not', () => {
+    const hidden = (v: number) => Object.defineProperty({}, 'h', { value: v, enumerable: false })
+    const box = state<any>(hidden(1))
+    const seen = rows(box, ['h', 'toString'])
+    box.value = hidden(2)
+    flush()
+    expect(seen).toEqual([['h', 2]])
+    seen.length = 0
+    const own = () => 'mine'
+    box.value = { toString: own }
+    flush()
+    box.value = {}
+    flush()
+    expect(seen.map((x: any) => x[0])).toEqual(['h', 'toString', 'toString'])
+  })
+
+  test('values that are not plain objects still compare every key read', () => {
+    class Cart { constructor(public a: number, public b: number) {} get total() { return this.a + this.b } }
+    const cart = state<any>(new Cart(1, 2))
+    const seen = rows(cart, ['total', 'a'])
+    cart.value = new Cart(1, 3)
+    flush()
+    expect(seen).toEqual([['total', 4]])
+    const list = state<any>([1, 2])
+    const lengths = rows(list, ['length', 0])
+    list.value = [1, 2, 3]
+    flush()
+    expect(lengths).toEqual([['length', 3]])
+    list.value = null
+    flush()
+    expect(lengths).toEqual([['length', 3], ['length', undefined], [0, undefined]])
+  })
+})
