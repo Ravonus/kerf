@@ -126,8 +126,10 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
 export const client: {
   route?: RouteState
   navigate?: (href: string, options?: NavigateOptions & { replace?: boolean }) => Promise<void>
-  seed?: (list: Wire[]) => void
+  /** `since`: what `now` said when the navigation left, so entries a write has passed don't land. */
+  seed?: (list: Wire[], since?: number) => void
   seeds?: Wire[]
+  now?: () => number
   invalidated?: (tags: string[]) => void
 } = {}
 

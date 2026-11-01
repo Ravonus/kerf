@@ -48,54 +48,88 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   route.around = (_d, _id, body) => enter(body)
   hydrate(() => <App route={route} />, container, { data })
   client.route = route
-  const q = (window as any).__wq
-  if (q) {
-    q.w = wake
-    if (q.l) wake(q.l)
-    drain()
-  }
 
   let current: AbortController | undefined
-  let warm: { path: string; at: number; res: Promise<Response> } | undefined
+  let refreshing: { ctrl: AbortController; tags: string[] } | undefined
+  /** Tags invalidated while a navigation was out: its route may read them, and that's only known when it lands. */
+  let owed: string[] = []
+  let warm: { path: string; at: number; since: number; res: Promise<Response> } | undefined
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   let fades = !(navigator.hardwareConcurrency <= 4)
-  async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {
-    const url = new URL(href, location.href)
-    if (url.origin !== location.origin) return location.assign(url.href)
-    current?.abort()
-    const ctrl = (current = new AbortController())
-    const path = url.pathname + url.search
-    guess(routes, url.pathname).forEach(chunk) // chunk loads start with the data fetch, not after it
-    let next: RoutePayload
-    try {
-      const held = warm?.path === path && performance.now() - warm.at < 10_000 ? warm.res : undefined
-      warm = undefined
-      next = await (held ?? ask(url, ctrl.signal)).then(r => r.clone().json())
-    } catch (e) {
-      if (ctrl.signal.aborted) return
-      return location.assign(url.href) // the data request failed: let the server render the page
-    }
-    if (next.r) {
-      const hops = (opts.hops ?? 0) + 1
-      return hops > 5 ? location.assign(next.r) : go(next.r, { replace: opts.pop || opts.replace, hops }) // a back/forward to a moved URL replaces its entry
-    }
-    await Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
-    if (ctrl.signal.aborted) return
-    if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+  const now = () => client.now?.() ?? 0
+  const needs = (next: RoutePayload) => Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
+  const reads = (t: string[]) => tags.some(l => l.some(x => t.includes(x)))
+
+  function apply(next: RoutePayload, url: URL, path: string, since: number, scroll: boolean) {
     at = path
-    if (next.c) client.seed ? client.seed(next.c) : (client.seeds ??= []).push(...next.c)
+    if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
     tags = next.m.map(m => m.t ?? [])
     bag = next.b
-    const swap = () => {
+    return () => {
       applyMatches(route, next.m.map(revive), path, next.s)
       if (next.m.some(m => m.s)) current_(url.pathname)
       if (next.h) setHead(next.h, url.pathname)
       flush()
-      if (opts.scroll !== false && !opts.pop) {
+      if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
         target ? target.scrollIntoView() : window.scrollTo(0, 0)
       }
     }
+  }
+
+  /** No navigation is out any more: what it left owed is for the page now showing. */
+  function settle() {
+    current = undefined
+    const t = owed
+    owed = []
+    if (reads(t)) void refresh(t)
+  }
+
+  async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {
+    const url = new URL(href, location.href)
+    if (url.origin !== location.origin) return location.assign(url.href)
+    current?.abort()
+    if (refreshing) {
+      refreshing.ctrl.abort()
+      owed.push(...refreshing.tags)
+      refreshing = undefined
+    }
+    const ctrl = (current = new AbortController())
+    try {
+      await travel(url, ctrl, opts)
+    } finally {
+      if (current === ctrl) settle()
+    }
+  }
+
+  async function travel(url: URL, ctrl: AbortController, opts: NavigateOptions & { pop?: boolean; hops?: number }) {
+    const path = url.pathname + url.search
+    guess(routes, url.pathname).forEach(id => void chunk(id).catch(() => {})) // chunk loads start with the data fetch, not after it
+    let next: RoutePayload
+    let since = now()
+    try {
+      const held = warm?.path === path && performance.now() - warm.at < 10_000 ? warm : undefined
+      warm = undefined
+      if (held) since = held.since
+      next = await (held?.res ?? ask(url, ctrl.signal)).then(r => r.clone().json())
+    } catch (e) {
+      if (ctrl.signal.aborted) return
+      return location.assign(url.href) // the data request failed: let the server render the page
+    }
+    if (ctrl.signal.aborted) return
+    if (next.r) {
+      const hops = (opts.hops ?? 0) + 1
+      return hops > 5 ? location.assign(next.r) : go(next.r, { replace: opts.pop || opts.replace, hops }) // a back/forward to a moved URL replaces its entry
+    }
+    try {
+      await needs(next)
+    } catch {
+      if (!ctrl.signal.aborted) location.assign(url.href) // a deploy took the old chunks: the server has the new ones
+      return
+    }
+    if (ctrl.signal.aborted) return
+    if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+    const swap = apply(next, url, path, since, opts.scroll !== false && !opts.pop)
     // The old page stays on screen, as a picture, until the new one is ready to fade in. `hidden`: nothing would show it.
     if (fades && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const started = performance.now()
@@ -106,10 +140,31 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     else swap()
   }
   client.navigate = go
-  // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
+
+  /** The page's own data again, in place: no history, no scroll, no fade. Only another refresh ever stops one. A failed one leaves the page as it is. */
+  async function refresh(t: string[]) {
+    t = [...new Set([...t, ...(refreshing?.tags ?? [])])]
+    refreshing?.ctrl.abort()
+    const self = (refreshing = { ctrl: new AbortController(), tags: t })
+    const url = new URL(location.href), since = now()
+    try {
+      const next: RoutePayload = await ask(url, self.ctrl.signal).then(r => r.json())
+      if (next.r && !self.ctrl.signal.aborted) {
+        refreshing = undefined
+        return void go(next.r, { replace: true })
+      }
+      await needs(next)
+      if (self.ctrl.signal.aborted) return
+      apply(next, url, url.pathname + url.search, since, false)()
+    } catch {}
+    if (refreshing === self) refreshing = undefined
+  }
+
+  // A mutation invalidated tags: when the route's loaders read one, refetch the route data.
   client.invalidated = t => {
     warm = undefined
-    if (tags.some(l => l.some(x => t.includes(x)))) void go(location.href, { pop: true })
+    if (current) owed.push(...t)
+    else if (reads(t)) void refresh(t)
   }
 
   document.addEventListener('click', e => {
@@ -128,8 +183,8 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     const path = url && url.pathname + url.search
     if (!url || warm?.path === path || (e.target as Element).closest('[data-preload="off"]') || (navigator as any).connection?.saveData) return
     pending = setTimeout(() => {
-      guess(routes, url.pathname).forEach(chunk)
-      warm = { path: path!, at: performance.now(), res: ask(url) }
+      guess(routes, url.pathname).forEach(id => void chunk(id).catch(() => {}))
+      warm = { path: path!, at: performance.now(), since: now(), res: ask(url) }
       warm.res.catch(() => { warm = undefined })
     }, e.type === 'focusin' ? 0 : 80)
   }
@@ -138,8 +193,20 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   // An in-page anchor fires this too, and the page hasn't changed: re-rendering it would lose what's been scrolled to.
   let at = location.pathname + location.search
   addEventListener('popstate', () => {
-    if (location.pathname + location.search !== at) go(location.href, { pop: true })
+    if (location.pathname + location.search !== at) return void go(location.href, { pop: true })
+    // Back and then Forward before it landed: the page showing is right, and what's on its way isn't wanted any more.
+    if (current) {
+      current.abort()
+      settle()
+    }
   })
+  // Last: a replayed click on a link needs the listener above, or it's a full page load.
+  const q = (window as any).__wq
+  if (q) {
+    q.w = wake
+    if (q.l) wake(q.l)
+    drain()
+  }
   return route
 }
 

@@ -307,7 +307,7 @@ export const net = () => {
     registered = true
     n.resets.push(() => {
       cache.clear()
-      callId = 0
+      callId = open = 0
     })
   }
   return n
@@ -407,6 +407,10 @@ function use(fn: Fn, input: unknown): Resource<any> {
     onCleanup(() => void e.readers--)
     const v = e.value.value // tracked: a new base or layer re-runs this, and the resource settles to it in place
     if (fresh(e)) return v
+    if (e.has.value && predicted(e)) {
+      e.held = true // the prediction shows now, and a read waits for the calls behind it
+      return v
+    }
     return load(e)
   }, {
     data: false,
@@ -470,9 +474,23 @@ interface Entry {
   tags: string[]
   readers: number
   p?: Promise<unknown>
+  /** The `clock` when `p` left. */
+  since: number
+  /** The `clock` when something newer than any read in flight reached the entry. */
+  gen: number
+  /** Which overlapping run of calls last landed a reply here. */
+  run: number
+  /** A value was turned away while layers were on it: it reads again once they're done. */
+  held?: boolean
+  /** Tags invalidated while a first load was out, when its own tags aren't known yet. */
+  missed?: Set<string>
+  /** When a server value last landed. */
+  at: number
 }
 
 const entries = new Map<string, Entry>()
+/** Orders what reaches an entry: a read or a navigation that left before `gen` is older than what's there. */
+let clock = 0
 /** Each query's latest entry: a skeleton for other args takes its shape (research 31 §4). */
 const lastSeen = new Map<string, Entry>()
 /** Objects an optimistic layer made (`cache.isOptimistic(row)`). */
@@ -482,7 +500,10 @@ function entry(fn: Fn, input: unknown): Entry {
   if (!registered) net()
   const key = keyOf(fn.$id, input)
   let e = entries.get(key)
-  if (!e) {
+  if (e) {
+    entries.delete(key) // the map is in order of use: `evict` starts from its far end
+    entries.set(key, e)
+  } else {
     // Owned by no component: the entry outlives its readers (the next reader finds it seeded).
     e = createRoot(() => {
       const base = state<unknown>(undefined), has = state(false), stale = state(false), layers = state<Layer[]>([])
@@ -492,36 +513,89 @@ function entry(fn: Fn, input: unknown): Entry {
         for (const l of layers.value) v = produce(v, l.apply)
         return v
       })
-      return { key, id: fn.$id, input, base, has, stale, layers, value, tags: [], readers: 0 }
+      return { key, id: fn.$id, input, base, has, stale, layers, value, tags: [], readers: 0, since: 0, gen: 0, run: 0, at: 0 }
     }, null)
     entries.set(key, e)
+    if (entries.size > ENTRIES) evict()
   }
   return e
 }
 
+const ENTRIES = 1000
+/** A search box writes an entry per keystroke for the tab's life. What nothing reads goes, least recently used first. */
+function evict() {
+  for (const e of entries.values()) {
+    if (entries.size <= ENTRIES) return
+    if (!e.readers && !e.p && !untrack(() => e.layers.value.length) && lastSeen.get(e.id) !== e) entries.delete(e.key)
+  }
+}
+
 const fresh = (e: Entry) => e.has.value && !e.stale.value
 
+/** A prediction no reply has confirmed yet. */
+const predicted = (e: Entry) => e.layers.value.some(l => !l.waiting)
+
 function load(e: Entry): Promise<unknown> {
-  return (e.p ??= transport().query(e.id, e.input).then(
+  if (e.p && e.gen <= e.since) return e.p
+  // What's read now may or may not hold the calls in flight, so it can't go under their layers: it waits for them.
+  if (untrack(() => e.has.value && predicted(e))) {
+    e.held = true
+    return Promise.resolve(untrack(() => e.value.value))
+  }
+  const since = (e.since = clock)
+  const p: Promise<unknown> = transport().query(e.id, e.input).then(
     a => {
-      e.p = undefined
+      if (e.p === p) e.p = undefined
       if (a.r !== undefined) {
         go(a.r, true)
         throw { isRedirect: true, href: a.r, status: 307 }
       }
-      setBase(e, a.v, a.t ?? [])
+      const tags = a.t ?? [], missed = tags.some(t => e.missed?.has(t))
+      if (!e.p) e.missed = undefined
+      if (missed) return load(e)
+      if (!land(e, a.v, tags, since)) {
+        if (e.p) return e.p
+        if (untrack(() => e.stale.value)) return load(e)
+      }
       return untrack(() => e.value.value)
     },
     err => {
-      e.p = undefined
+      if (e.p === p) e.p = undefined
       throw err
     },
-  ))
+  )
+  return (e.p = p)
+}
+
+/** A read or a navigation's value lands, unless something newer got here after it left, or layers are on the entry. */
+function land(e: Entry, v: unknown, tags: string[], since: number): boolean {
+  return untrack(() => {
+    if (e.gen > since) return false
+    if (e.has.value && predicted(e)) return !(e.held = true)
+    setBase(e, v, tags)
+    return true
+  })
+}
+
+/** Mark the entry out of date: a read already out is older than what it has to tell. */
+function outdate(e: Entry) {
+  e.gen = ++clock
+  e.stale.value = true
+}
+
+/** The layers that held a value off are gone: read once, now that every call behind them has answered. */
+function relieve(e: Entry) {
+  if (!e.held || predicted(e)) return
+  e.held = false
+  outdate(e)
+  load(e).catch(() => {})
 }
 
 /** A server value lands: shared with the old base, layers of settled calls dropped, readers updated in place. */
 function setBase(e: Entry, v: unknown, tags: string[]) {
   untrack(() => {
+    e.gen = ++clock
+    e.at = performance.now()
     e.tags = tags
     e.base.value = share(e.base.value, v)
     e.has.value = true
@@ -531,61 +605,89 @@ function setBase(e: Entry, v: unknown, tags: string[]) {
   })
 }
 
-/** Seed the cache from the server (the page's `#weft-cache`, a navigation's `c`, a mutation's refreshes). */
-export function seed(list: Wire[] | null | undefined) {
-  for (const [id, input, v, tags] of list ?? []) setBase(entry(fns.get(id) ?? ({ $id: id } as Fn), input), v, tags)
+/** Seed the cache from the server (the page's `#weft-cache`, a navigation's `c`). `since`: when that navigation left. */
+export function seed(list: Wire[] | null | undefined, since = Infinity) {
+  for (const [id, input, v, tags] of list ?? []) land(entry(fns.get(id) ?? ({ $id: id } as Fn), input), v, tags, since)
 }
-
 
 /** Mark entries with any of `tags` stale: entries with readers refetch now, the rest on their next read. */
 function staleTags(tags: string[], except: Set<string> = new Set()) {
   if (!tags.length) return
   untrack(() => {
-    for (const e of entries.values()) if (!except.has(e.key) && e.tags.some(t => tags.includes(t))) e.stale.value = true
+    for (const e of entries.values()) {
+      if (except.has(e.key)) continue
+      if (e.tags.some(t => tags.includes(t))) outdate(e)
+      else if (e.p && !e.tags.length) for (const t of tags) (e.missed ??= new Set()).add(t) // its tags come with its answer
+    }
   })
   client.invalidated?.(tags)
 }
+
+/** Tabs of this app tell each other what a write invalidated. */
+export const tabs = 'weft:tags'
+const peers = typeof document !== 'undefined' && typeof BroadcastChannel !== 'undefined' && !runtime.scope ? new BroadcastChannel(tabs) : undefined
+
+/** How old a value can be when its tab comes back and still be left alone. */
+const FOCUS = 30_000
 
 async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State<unknown>, form?: true | FormData): Promise<unknown> {
   const scope = server()
   if (scope) return (await runtime.exec!.runMutation(scope, fn, input, [], !!form)).v
   const m = ++callId
   const touched = new Set<Entry>()
+  if (!open++) run++
+  const overlap = run
   untrack(() => calls.value++)
   if (fn.def.optimistic) untrack(() => fn.def.optimistic!({ input }, overlay(m, touched)))
   const refresh = [...entries.values()].filter(e => e.readers > 0).map(e => [e.id, e.input] as [string, unknown])
   const drop = (e: Entry) => { e.layers.value = e.layers.value.filter(l => l.m !== m) }
+  const wait = (e: Entry) => { e.layers.value = e.layers.value.map(l => (l.m === m ? { ...l, waiting: true } : l)) }
   try {
-    const a = await transport().mutate(fn.$id, input, refresh, form)
+    const a = await settled(() => transport().mutate(fn.$id, input, refresh, form))
     let out: unknown
     untrack(() => {
       const refreshed = new Set<string>()
+      const seen: Entry[] = []
       for (const w of a.c ?? []) {
         const e = entry(fns.get(w[0]) ?? ({ $id: w[0] } as Fn), w[1])
-        setBase(e, w[2], w[3])
         refreshed.add(e.key)
-      }
-      for (const e of touched) {
-        if (refreshed.has(e.key)) drop(e)
-        else {
-          // S011: the server sent no fresh value for an entry this call predicted. Keep the layer until the entry's
-          // next value (refetched now) instead of flashing back to the old one.
-          if (DEV && !e.tags.some(t => a.t?.includes(t)))
-            console.warn(`weft: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``)
-          e.layers.value = e.layers.value.map(l => (l.m === m ? { ...l, waiting: true } : l))
-          e.stale.value = true
-          if (!e.readers) load(e).catch(() => {})
+        seen.push(e)
+        // Replies don't say which came first, and one taken in arrival order can put back what a later call changed: where
+        // calls overlap on an entry its layers stay, in order, and it reads once the last has answered.
+        if (e.held || e.run === overlap || e.layers.value.some(l => l.m !== m)) {
+          e.held = true
+          wait(e)
+        } else {
+          setBase(e, w[2], w[3])
+          drop(e)
+          if (open) e.run = overlap
         }
       }
+      for (const e of touched) {
+        if (refreshed.has(e.key)) continue
+        // S011: the server sent no fresh value for an entry this call predicted. Keep the layer until the entry's
+        // next value (refetched now) instead of flashing back to the old one.
+        if (DEV && !e.tags.some(t => a.t?.includes(t)))
+          console.warn(`weft: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``)
+        wait(e)
+        e.held = true
+      }
       staleTags(a.t ?? [], refreshed)
+      for (const e of seen) relieve(e)
+      for (const e of touched) relieve(e)
       error.value = undefined
       out = a.v
     })
+    if (a.t?.length) peers?.postMessage(a.t)
     if (a.r !== undefined) a.x ? location.assign(a.r) : go(a.r)
     return out
   } catch (err) {
     untrack(() => {
-      for (const e of touched) drop(e) // only this call's prediction goes
+      for (const e of touched) {
+        drop(e) // only this call's prediction goes
+        if (!(err instanceof FnError)) e.held = true // the reply was lost, not the write: it may have landed
+        relieve(e)
+      }
       error.value = err
     })
     throw err
@@ -594,6 +696,16 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
   }
 }
 let callId = 0
+/** Calls in flight, and which unbroken run of overlapping calls they belong to. */
+let open = 0
+let run = 0
+const settled = async <T>(call: () => Promise<T>) => {
+  try {
+    return await call()
+  } finally {
+    open--
+  }
+}
 
 /** The `cache` an `optimistic` gets: `update` and `set` add this call's layers instead of writing the base. */
 function overlay(m: number, touched: Set<Entry>): OptimisticCache {
@@ -819,8 +931,20 @@ export type LiveApi = typeof liveApi
 // whatever a navigation brought before this module loaded.
 if (typeof document !== 'undefined' && !runtime.scope) {
   client.seed = seed
+  client.now = () => clock
   seed(client.seeds)
   client.seeds = undefined
   const el = document.getElementById('weft-cache')
   if (el) seed(JSON.parse(el.textContent!))
+  let owed: string[] = []
+  const back = () => {
+    if (document.hidden) return
+    const old = performance.now() - FOCUS
+    untrack(() => { for (const e of entries.values()) if (e.readers && e.has.value && e.at < old) outdate(e) })
+    if (owed.length) staleTags(owed.splice(0))
+  }
+  // A hidden tab reads nothing until it shows: every open tab refetching on every write is what this would cost otherwise.
+  if (peers) peers.onmessage = m => { if (document.hidden) owed.push(...m.data); else staleTags(m.data) }
+  addEventListener('focus', back)
+  document.addEventListener('visibilitychange', back)
 }
