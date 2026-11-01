@@ -1,4 +1,4 @@
-import { IconX } from '@weft/icons'
+import { XIcon } from '@weft/icons'
 import { derived } from 'weft'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
@@ -18,8 +18,8 @@ export function Alert({ tone = 'info', title, live, actions, onDismiss, children
       {title !== undefined && <div data-part="title">{title}</div>}
       {children !== undefined && <div data-part="description">{children}</div>}
       {actions !== undefined && <div data-part="actions">{actions}</div>}
-      {/* <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label="Dismiss"> as its markup: a ghost button needs no JS */}
-      {onDismiss && <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-part="close" data-dismiss="" onClick={onDismiss}><IconX /></button>}
+      {/* <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label="Dismiss"> as its markup: a ghost button needs no JS */}
+      {onDismiss && <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-part="close" data-dismiss="" onClick={onDismiss}><XIcon /></button>}
     </div>
   )
 }

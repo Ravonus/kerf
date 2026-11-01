@@ -1,4 +1,4 @@
-import { IconArrowUpRight } from '@weft/icons'
+import { ArrowUpRightIcon } from '@weft/icons'
 import { httpsEndpoint, uid } from '@weft/ui-core'
 import { derived, state, type State, untrack, watch } from 'weft'
 import { Alert } from '../Alert'
@@ -90,7 +90,7 @@ export function IntegrationsGrid({ items, onConnect, settings, onSave, onDisconn
         {list.value.map(x => <Card key={x.id} item={x} onConnect={() => { pick.value = x; connecting.value = true }} onConfigure={() => { pick.value = x; configuring.value = true }} />)}
       </ul>
       {armedC.value && (
-        <Modal open={connecting} size="sm" title={`Connect ${name.value}`} description="You can disconnect any time." footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button autofocus onClick={go}>Continue to {name.value}<IconArrowUpRight /></Button></>}>
+        <Modal open={connecting} size="sm" title={`Connect ${name.value}`} description="You can disconnect any time." footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button autofocus onClick={go}>Continue to {name.value}<ArrowUpRightIcon /></Button></>}>
           <div data-scope="stack">
             <ul>{(pick.value?.can ?? []).map(t => <li key={t}>{t}</li>)}</ul>
             <span class="muted">Next, {name.value} asks you to approve this in a new window.</span>

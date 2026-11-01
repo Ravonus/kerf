@@ -1,4 +1,4 @@
-import { IconColumns } from '@weft/icons'
+import { ColumnsIcon } from '@weft/icons'
 import { checkState, filterRows, hideRule, installSweep, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
 import { Button } from './Button'
@@ -92,7 +92,7 @@ export interface TableProps<T> {
 
 export const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
 export const sortIcon = () => <svg data-part="sort-icon" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M2 5.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
-export const columnsIcon = () => <IconColumns />
+export const columnsIcon = () => <ColumnsIcon />
 const SKELETON_ROWS = 6
 const CARDS_BELOW = 600 // table width: the phone cards' @container query, so the sort bar exists only there
 const DETAILS_FROM = 1000 // table width: below it `details="sheet"` opens the sheet (06 §5)

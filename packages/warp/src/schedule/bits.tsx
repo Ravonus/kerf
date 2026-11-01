@@ -1,5 +1,5 @@
 // What the schedule pack's components share: sweep parts, glyphs, the clock.
-import { IconRepeat } from '@weft/icons'
+import { RepeatIcon } from '@weft/icons'
 import { installSweep, nowIn } from '@weft/ui-core'
 import { onCleanup, onMount, state, untrack, watch } from 'weft'
 import '../styles'
@@ -11,7 +11,7 @@ export const SweepParts = () => <><span data-part="sweep-base" aria-hidden="true
 
 /** calendar.css and agenda.css default `--_c` on the same element as `data-cal`, so the source's colour is set inline too. */
 export const tint = (cal?: number) => `--_c:var(--warp-color-data-${cal ?? 1})`
-export const RepeatGlyph = () => <IconRepeat />
+export const RepeatGlyph = () => <RepeatIcon />
 
 /**
  * The wall clock for the now line (07 §2.2): the prop when there is one, else null through hydration and the browser's

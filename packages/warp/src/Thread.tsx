@@ -1,4 +1,4 @@
-import { IconAlert } from '@weft/icons'
+import { AlertIcon } from '@weft/icons'
 import { derived, state, untrack, watch } from 'weft'
 import { Text } from 'weft/text'
 import { Button } from './Button'
@@ -77,7 +77,7 @@ export function Thread(props: ThreadProps) {
         </div>
         {mine(m()) && m().state && (
           <span data-part="status">
-            {m().state === 'failed' && <IconAlert />}
+            {m().state === 'failed' && <AlertIcon />}
             {STATUS[m().state!]} {m().state !== 'failed' && m().time}
             {m().state === 'failed' && <Button emphasis="link" tone="critical" onClick={() => props.onRetry?.(m())}>Retry</Button>}
           </span>

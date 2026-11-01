@@ -1,4 +1,4 @@
-import { IconAlert, IconCheck, IconChecks, IconClock, IconCopy, IconQuote, IconSmile } from '@weft/icons'
+import { AlertIcon, CheckIcon, ChecksIcon, ClockIcon, CopyIcon, QuoteIcon, SmileIcon } from '@weft/icons'
 import { announce, arrivalTracker, burst, firstName, installSweep, joinNames, messageLog, quoteText, reactionName, textParts, threadRows, typingLine, uid, type ChatMessage, type MessageReaction, type ThreadRow } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
@@ -66,8 +66,8 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
       <div data-part="body">
         {!continued && !message.mine && <div data-part="by"><b>{message.author.name}</b><time>{message.time}</time></div>}
         <div data-part="actions" role="toolbar" aria-label="Message actions">
-          <Button emphasis="ghost" tone="neutral" size="sm" label="Quote reply" data-icon-only="" data-quote="" tabindex="-1" aria-keyshortcuts="Q"><IconQuote /></Button>
-          <Button emphasis="ghost" tone="neutral" size="sm" label="Copy text" data-icon-only="" data-copytext="" tabindex="-1"><IconCopy /></Button>
+          <Button emphasis="ghost" tone="neutral" size="sm" label="Quote reply" data-icon-only="" data-quote="" tabindex="-1" aria-keyshortcuts="Q"><QuoteIcon /></Button>
+          <Button emphasis="ghost" tone="neutral" size="sm" label="Copy text" data-icon-only="" data-copytext="" tabindex="-1"><CopyIcon /></Button>
         </div>
         <div data-part="bubble" data-sweep="" data-phase="idle">
           <SWEEP />
@@ -86,7 +86,7 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
             {message.reactions!.map(r => (
               <button key={r.emoji} type="button" aria-pressed={r.mine ? 'true' : 'false'} aria-label={reactionName(r)} onClick={() => onReact?.(message, r)}>{r.emoji} <span>{r.count}</span></button>
             ))}
-            <button type="button" aria-label="Add reaction" onClick={() => onReact?.(message, null)}><IconSmile /></button>
+            <button type="button" aria-label="Add reaction" onClick={() => onReact?.(message, null)}><SmileIcon /></button>
           </div>
         )}
         {message.replies && (
@@ -95,10 +95,10 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
             {message.replies.count} {message.replies.count === 1 ? 'reply' : 'replies'}{message.replies.last ? ` · last ${message.replies.last}` : ''}
           </button>
         )}
-        {delivery.value === 'failed' && <span data-part="status"><IconAlert /> Not sent. <Button emphasis="link" tone="critical" onClick={() => onRetry?.(message)}>Retry</Button></span>}
-        {delivery.value === 'sending' && <span data-part="status"><IconClock /> Sending…</span>}
-        {delivery.value === 'sent' && <span data-part="status"><IconCheck /> Sent {message.time}</span>}
-        {delivery.value === 'read' && <span data-part="status"><IconChecks /> Read {message.readAt ?? message.time}</span>}
+        {delivery.value === 'failed' && <span data-part="status"><AlertIcon /> Not sent. <Button emphasis="link" tone="critical" onClick={() => onRetry?.(message)}>Retry</Button></span>}
+        {delivery.value === 'sending' && <span data-part="status"><ClockIcon /> Sending…</span>}
+        {delivery.value === 'sent' && <span data-part="status"><CheckIcon /> Sent {message.time}</span>}
+        {delivery.value === 'read' && <span data-part="status"><ChecksIcon /> Read {message.readAt ?? message.time}</span>}
       </div>
     </div>
   )

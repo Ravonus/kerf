@@ -1,4 +1,4 @@
-import { IconX } from '@weft/icons'
+import { XIcon } from '@weft/icons'
 import type { Tone } from './Button'
 import './styles'
 import '@weft/ui-core/styles/components/tag.css'
@@ -9,7 +9,7 @@ export function Tag({ tone, swatch, onRemove, label, children, ...rest }: { tone
     <span data-scope="tag" data-tone={tone} {...rest}>
       {swatch && <span data-part="swatch"></span>}
       {children}
-      {onRemove && <button type="button" data-part="remove" aria-label={`Remove ${label ?? children}`} onClick={onRemove}><IconX /></button>}
+      {onRemove && <button type="button" data-part="remove" aria-label={`Remove ${label ?? children}`} onClick={onRemove}><XIcon /></button>}
     </span>
   )
 }

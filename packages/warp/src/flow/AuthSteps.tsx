@@ -1,4 +1,4 @@
-import { IconKey, IconLeft, IconMail } from '@weft/icons'
+import { KeyIcon, LeftIcon, MailIcon } from '@weft/icons'
 import { clockLabel, emailError, passwordRules, uid } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
 import { Avatar } from '../parts'
@@ -11,7 +11,7 @@ import '../styles'
 import '@weft/ui-core/styles/flows/auth.css'
 import '@weft/ui-core/styles/layout/row.css'
 
-const Back = ({ onBack }: { onBack: () => void }) => <div><Button emphasis="ghost" tone="neutral" size="sm" icon={IconLeft} onClick={onBack}>Back</Button></div>
+const Back = ({ onBack }: { onBack: () => void }) => <div><Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} onClick={onBack}>Back</Button></div>
 
 /** "Check your inbox" (09 §2.1): waiting, so no solid; the address, Open mail app, resend on a countdown, change email. */
 export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mailHref, onResend, onChangeEmail, onBack }: { email: any; title?: any; lede?: any; heading?: Heading; resendIn?: number; /** Shows Open email app (phones). */ mailHref?: string; onResend?: () => void; onChangeEmail?: () => void; onBack?: () => void }) {
@@ -20,7 +20,7 @@ export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mail
   return (
     <div data-scope="stack">
       {onBack && <Back onBack={onBack} />}
-      <Mark><IconMail /></Mark>
+      <Mark><MailIcon /></Mark>
       <div><Title as={heading}>{title ?? 'Check your inbox'}</Title><p data-part="lede">{lede ?? <>We sent a sign-in link to <b>{email}</b>. It works once and expires in 15 minutes.</>}</p></div>
       {mailHref && <Button emphasis="frame" full role="link" onClick={() => location.assign(mailHref!)}>Open email app</Button>}
       <div data-part="row">
@@ -55,7 +55,7 @@ export function ResetPassword(p: ResetPasswordProps) {
   return (
     <StepFrame ctl={ctl} embedded={!!p.form} labelledby={`${id}-t`}>
       {p.onBack && <Back onBack={p.onBack} />}
-      <Mark><IconKey /></Mark>
+      <Mark><KeyIcon /></Mark>
       <div>
         <Title as={p.heading} id={`${id}-t`}>{p.title ?? (stage === 'request' ? 'Reset your password' : 'Choose a new password')}</Title>
         <p data-part="lede">{p.lede ?? (stage === 'request' ? "We'll email a link that lets you choose a new one. It expires in 30 minutes." : 'Then sign in with it everywhere.')}</p>

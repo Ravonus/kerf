@@ -1,4 +1,4 @@
-import { IconCheck } from '@weft/icons'
+import { CheckIcon } from '@weft/icons'
 import { announce, arrivalTracker, installSweep, isSheet, uid, type Peer } from '@weft/ui-core'
 import { derived, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
@@ -53,7 +53,7 @@ export function CommentThread({ thread, active, onReply, onResolve }: { thread: 
             <div data-part="reply">
               <label data-part="sr-only" for={id}>Reply to {first.value?.author.name}</label>
               <input id={id} placeholder="Reply…" onKeyDown={reply} />
-              <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => flip(true)}><IconCheck /> Resolve</Button>
+              <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => flip(true)}><CheckIcon /> Resolve</Button>
             </div>
           </>}
     </article>

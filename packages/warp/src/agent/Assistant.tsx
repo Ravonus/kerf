@@ -1,4 +1,4 @@
-import { IconSparkle } from '@weft/icons'
+import { SparkleIcon } from '@weft/icons'
 import { announce, answerText, copyConfirm, uid, type AgentTool, type Answer, type AnswerBlock } from '@weft/ui-core'
 import { derived, onMount, untrack, watch } from 'weft'
 import { Alert } from '../Alert'
@@ -71,7 +71,7 @@ export function Assistant(p: AssistantProps) {
   })
   return (
     <article ref={(n: any) => (root = n)} data-scope="assistant" data-state={st.value} aria-label={p.n !== undefined ? `Assistant answer ${p.n}` : 'Assistant answer'} aria-busy={busy.value ? 'true' : undefined} data-arrive={p.arrive ? '' : undefined}>
-      <span data-part="mark"><IconSparkle /></span>
+      <span data-part="mark"><SparkleIcon /></span>
       <div data-part="content">
         {empty.value && <p></p>}
         {blocks.value.map(b => <Block key={b.id} block={b} base={base} p={p} />)}
