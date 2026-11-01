@@ -106,7 +106,7 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
   expect(warp['weft.config.ts']).toContain("import { warp } from '@weft/warp/plugin'")
   expect(warp['weft.config.ts']).toContain('plugins: [warp()]')
   expect(warp['src/app.css']).toBeUndefined()
-  expect(JSON.parse(warp['package.json']).scripts).toEqual({ dev: 'weft dev', build: 'weft build', check: 'weft check', start: 'weft start' })
+  expect(JSON.parse(warp['package.json']).scripts).toEqual({ dev: 'weft dev', build: 'weft build', check: 'weft check', typecheck: 'weft tsc', start: 'weft start' })
   const headless = template({ ui: 'headless' })
   expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual(['weft', '@weft/start', '@weft/ui-core'])
   expect(headless['src/routes/_layout.tsx']).toContain("import '@weft/ui-core/styles/warp.css'")

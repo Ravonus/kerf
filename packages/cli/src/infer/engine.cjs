@@ -3,7 +3,7 @@
 // the next round sees the types that made possible (a prop forwarded to another inferred component, a component passed
 // as a prop). Rounds stop when nothing changes, and a project with nothing to infer never starts a checker.
 
-const { fileFacts, MARK } = require('./facts.cjs')
+const { fileFacts, hashOf, MARK } = require('./facts.cjs')
 const { inGenerated, shadow, toShadow, toSource } = require('./shadow.cjs')
 
 const ROUNDS = 5
@@ -29,15 +29,19 @@ class Engine {
     this.maps = new Map() // file → shadow, for files that differ from their source
     this.state = new Map() // comp id → { type, keys, sites, ... }
     this.findings = new Map() // file → engine diagnostics
+    this.typed = new Map() // file → what the checker said about its sites, until the file or a shadow it reads moves
+    this.flowCache = new Map()
+    this.diags = new Map() // file → the checker's errors for one shadow text
+    this.touched = new Set() // files whose errors the last run may have moved
     this.stats = { rounds: 0, queries: 0, parses: 0 }
   }
 
   /** New text for a file. @returns whether anything about it changed */
   set(file, text = this.read(file)) {
-    if (text === undefined) { const had = this.facts.delete(file); this.texts.delete(file); this.maps.delete(file); return had }
+    if (text === undefined) { const had = this.facts.delete(file); this.texts.delete(file); this.maps.delete(file); this.typed.delete(file); this.flowCache.delete(file); return had }
     const before = this.facts.get(file)
     this.texts.set(file, text)
-    const hash = require('./facts.cjs').hashOf(text)
+    const hash = hashOf(text)
     if (before?.hash === hash) return false
     this.stats.parses++
     this.facts.set(file, fileFacts(this.ts, file, text))
@@ -48,19 +52,25 @@ class Engine {
   /** Facts that need a shadow at all: most projects have none, and then no checker starts. */
   needed() { return [...this.facts.values()].some(f => f.comps.length || f.sites.some(s => s.attrs.some(a => a.bind))) }
 
-  /** Whether a saved file can move anything: it holds a component or a site of one, or a file that does imports it. */
-  relevant(file) {
-    const facts = this.facts.get(file)
+  /** Files with a component or a site of one that import `file`: what they pass may have changed type. */
+  dependents(file) {
     const base = file.replace(/^.*[\\/]/, '').replace(/\.[^.]*$/, '')
-    if (!this.needed()) return false
-    if (!facts || facts.comps.length || facts.sites.some(s => s.attrs.some(a => a.bind))) return true
     const names = new Set(this.comps().map(c => c.name))
-    if (facts.sites.some(s => names.has(s.tag))) return true
+    const out = new Set()
     for (const f of this.facts.values()) {
       if (!f.comps.length && !f.sites.some(s => names.has(s.tag))) continue
-      for (const { from } of f.imports.values()) if (from.endsWith(`/${base}`) || from === base) return true
+      for (const { from } of f.imports.values()) if (from === base || from.endsWith(`/${base}`)) { out.add(f.file); break }
     }
-    return false
+    return out
+  }
+
+  /** Whether a saved file can move anything: it holds a component or a site of one, or such a file imports it. */
+  relevant(file) {
+    if (!this.needed()) return false
+    const facts = this.facts.get(file)
+    if (!facts || facts.comps.length || facts.sites.some(s => s.attrs.some(a => a.bind))) return true
+    const names = new Set(this.comps().map(c => c.name))
+    return facts.sites.some(s => names.has(s.tag) || (this.flowing?.has(file) ?? false)) || this.dependents(file).size > 0
   }
 
   /** `comp` for a tag that needs no checker: a name in the same file, or a local wrap of one. */
@@ -109,6 +119,16 @@ class Engine {
     return changed
   }
 
+  /** The checker's errors, once per shadow text: conflicts, naming and reporting all want them. */
+  diag(host, file) {
+    const text = this.maps.get(file)?.text ?? this.texts.get(file)
+    const hit = this.diags.get(file)
+    if (hit?.text === text) return hit.list
+    const list = host.diagnostics(file)
+    this.diags.set(file, { text, list })
+    return list
+  }
+
   ask(host, file, reqs) {
     if (!reqs.length) return []
     this.stats.queries += reqs.length
@@ -118,7 +138,7 @@ class Engine {
   }
 
   /** Who a tag renders when its name doesn't say: a component held in a variable, a map, a prop, an import. */
-  flows(host) {
+  flows(host, force) {
     const out = new Map() // "file:start" → comps
     const comps = this.comps()
     const open = comps.filter(c => c.exported || this.facts.get(c.file).escaped.has(c.name) || [...this.facts.values()].some(f => [...f.wraps.values()].some(l => l.includes(c.name))))
@@ -131,39 +151,51 @@ class Engine {
         if (imported) return names.has(imported.name) || imported.name === 'default' || names.has(head)
         return !facts.comps.some(c => c.name === s.tag)
       }
+      const held = this.flowCache.get(file)
+      if (force && !force.has(file) && held?.facts === facts) {
+        for (const [k, v] of held.hits) out.set(k, v)
+        continue
+      }
       const sites = facts.sites.filter(s => !this.direct(facts, s).length && cross(s))
+      const hits = new Map()
+      this.flowCache.set(file, { facts, hits })
       if (!sites.length) continue
       const res = this.ask(host, file, sites.map(s => ({ kind: 'decls', span: s.tagSpan })))
       sites.forEach((s, i) => {
-        const hits = []
+        const found = []
         for (const d of res[i].decls ?? []) {
           for (const c of open) {
             if (!sameFile(c.file, d.file)) continue
             const map = this.maps.get(c.file)
-            if ((map ? toShadow(map, c.bodySpan[1]) : c.bodySpan[1]) === d.end && !hits.includes(c)) hits.push(c)
+            if ((map ? toShadow(map, c.bodySpan[1]) : c.bodySpan[1]) === d.end && !found.includes(c)) found.push(c)
           }
         }
-        if (hits.length) out.set(`${file}:${s.span[0]}`, hits)
+        if (found.length) { hits.set(`${file}:${s.span[0]}`, found); out.set(`${file}:${s.span[0]}`, found) }
       })
     }
     return out
   }
 
   /** Every call site of every component, with what the checker says each attribute is. */
-  collect(host) {
-    const flows = this.flows(host)
+  collect(host, force) {
+    const flows = this.flows(host, force)
     const sites = new Map(this.comps().map(c => [c.id, []]))
     for (const [file, facts] of this.facts) {
       const targets = facts.sites.map(s => { const d = this.direct(facts, s); return d.length ? d : flows.get(`${file}:${s.span[0]}`) ?? [] })
-      const reqs = [], back = []
-      facts.sites.forEach((s, i) => {
-        if (!targets[i].length) return
-        for (const a of s.attrs) if (a.span) { back.push(a); reqs.push({ kind: 'type', span: a.span }) }
-        for (const sp of s.spreads) { back.push(sp); reqs.push({ kind: 'spread', span: sp.span }) }
-        if (s.children?.span) { back.push(s.children); reqs.push({ kind: 'type', span: s.children.span }) }
-      })
-      const res = this.ask(host, file, reqs)
-      const typed = new Map(back.map((a, i) => [a, res[i]]))
+      let held = this.typed.get(file)
+      if (!held || held.facts !== facts || !force || force.has(file)) {
+        const reqs = [], back = []
+        facts.sites.forEach((s, i) => {
+          if (!targets[i].length) return
+          for (const a of s.attrs) if (a.span) { back.push(a); reqs.push({ kind: 'type', span: a.span }) }
+          for (const sp of s.spreads) { back.push(sp); reqs.push({ kind: 'spread', span: sp.span }) }
+          if (s.children?.span) { back.push(s.children); reqs.push({ kind: 'type', span: s.children.span }) }
+        })
+        const res = this.ask(host, file, reqs)
+        held = { facts, typed: new Map(back.map((a, i) => [a, res[i]])) }
+        this.typed.set(file, held)
+      }
+      const { typed } = held
       facts.sites.forEach((s, i) => { for (const c of targets[i]) sites.get(c.id).push({ file, site: s, typed }) })
     }
     return sites
@@ -284,7 +316,7 @@ class Engine {
         if (k.tally.size < 2 || st.pins.has(key)) continue
         const map = this.maps.get(c.file)
         const uses = k.uses.map(u => u.span.map(p => toShadow(map, p)))
-        const hurt = () => host.diagnostics(c.file).filter(d => uses.some(u => overlaps(u, [d.start, d.start + d.length])))
+        const hurt = () => this.diag(host, c.file).filter(d => uses.some(u => overlaps(u, [d.start, d.start + d.length])))
         if (!hurt().length) continue
         const shape = this.shapes(st)
         if (shape) {
@@ -293,7 +325,7 @@ class Engine {
           this.publish(host, new Set([c.file]))
           const m2 = this.maps.get(c.file)
           const u2 = k.uses.map(u => u.span.map(p => toShadow(m2, p)))
-          if (!host.diagnostics(c.file).some(d => u2.some(u => overlaps(u, [d.start, d.start + d.length])))) { st.shape = shape; break }
+          if (!this.diag(host, c.file).some(d => u2.some(u => overlaps(u, [d.start, d.start + d.length])))) { st.shape = shape; break }
           st.shape = undefined
           this.state.set(c.id, this.infer(c, this.lastSites.get(c.id), host))
           this.publish(host, new Set([c.file]))
@@ -306,7 +338,7 @@ class Engine {
           this.publish(host, new Set([c.file]))
           const m2 = this.maps.get(c.file)
           const u2 = k.uses.map(u => u.span.map(p => toShadow(m2, p)))
-          if (!host.diagnostics(c.file).some(d => u2.some(u => overlaps(u, [d.start, d.start + d.length])))) { chosen = t; break }
+          if (!this.diag(host, c.file).some(d => u2.some(u => overlaps(u, [d.start, d.start + d.length])))) { chosen = t; break }
         }
         if (chosen) {
           st.pins.set(key, chosen)
@@ -350,7 +382,7 @@ class Engine {
     for (const c of comps) {
       const map = this.maps.get(c.file)
       if (!map || !this.state.get(c.id)?.keys) continue
-      for (const d of host.diagnostics(c.file)) {
+      for (const d of this.diag(host, c.file)) {
         const at = toSource(map, d.start)
         if (!inGenerated(map, d.start, d.length) || at !== c.nameEnd) continue
         const st = this.state.get(c.id)
@@ -364,7 +396,7 @@ class Engine {
   errors(host, file) {
     const map = this.maps.get(file)
     const said = (this.findings.get(file) ?? []).filter(f => f.code === 'W084')
-    return host.diagnostics(file).flatMap(d => {
+    return this.diag(host, file).flatMap(d => {
       if (map && inGenerated(map, d.start, d.length)) return []
       const start = map ? toSource(map, d.start) : d.start
       const end = map ? toSource(map, d.start + d.length) : d.start + d.length
@@ -381,29 +413,40 @@ class Engine {
   }
 
   /** @returns {Map<string, {code: string, severity?: string, start: number, end: number, why: string, help?: string, edit?: object}[]>} */
-  run(host) {
+  run(host, changed) {
     this.findings = new Map()
     const comps = this.comps()
     if (!this.needed()) { this.publish(host); return this.findings }
-    this.publish(host)
-    let sites
+    const first = this.publish(host)
+    let force = changed ? new Set(changed) : undefined
+    if (force) {
+      for (const f of changed) for (const d of this.dependents(f)) force.add(d)
+      for (const f of first.keys()) force.add(f)
+    }
+    const touched = new Set(force)
+    const sitesOf = id => (this.lastSites?.get(id) ?? []).map(s => s.file)
+    let dirty = comps
     for (let round = 0; round < ROUNDS; round++) {
       this.stats.rounds++
-      sites = this.collect(host)
+      const sites = this.collect(host, force)
       this.lastSites = sites
-      let moved = false
-      for (const c of comps) {
+      if (force) dirty = comps.filter(c => !this.state.has(c.id) || force.has(c.file) || sites.get(c.id).some(s => force.has(s.file)))
+      const moved = []
+      for (const c of dirty) {
         const st = this.infer(c, sites.get(c.id), host)
-        if (st.type !== this.state.get(c.id)?.type) moved = true
+        if (st.type !== this.state.get(c.id)?.type) moved.push(c)
         this.state.set(c.id, st)
       }
-      if (!moved) break
-      this.publish(host)
+      if (!moved.length) break
+      const out = this.publish(host)
+      force = new Set([...out.keys(), ...moved.flatMap(c => [c.file, ...sitesOf(c.id)])])
+      for (const f of force) touched.add(f)
     }
-    this.conflicts(host, comps)
-    this.unprintable(host, comps)
+    this.conflicts(host, dirty)
+    this.unprintable(host, dirty)
     this.publish(host)
     for (const c of comps) this.report(c)
+    this.touched = touched
     return this.findings
   }
 

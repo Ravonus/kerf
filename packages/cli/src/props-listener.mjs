@@ -9,7 +9,7 @@ const SKIP = /[\\/](node_modules|\.weft|\.output|dist)[\\/]/
 /** @param {{ watcher: any, ws: any, config: any, close: () => Promise<void> }} server */
 export function attachProps(server, root, config) {
   const setting = config?.check?.props
-  if (setting === false) return null
+  if (setting === false || process.env.WEFT_PROPS === 'off') return null
   const worker = new Worker(new URL('./infer/worker.cjs', import.meta.url), { workerData: { root, write: setting !== 'manual' }, stdout: false })
   worker.unref()
   const stats = { saves: 0, ms: [] }

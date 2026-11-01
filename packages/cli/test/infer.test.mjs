@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { bin } from './helpers.mjs'
@@ -126,6 +126,23 @@ describe('explicit annotations and pinning', () => {
   }, 60_000)
 })
 
+describe('agents', () => {
+  it('AGENTS.md says to leave props unannotated, within its size limit', async () => {
+    const { agentsMd } = await import('../src/agents-md.mjs')
+    const out = await agentsMd(app(goalOnly))
+    expect(out.text).toContain('**Leave props unannotated**')
+    expect(out.overLimit).toBe(false)
+  })
+
+  it('a diagnostic tells an agent what to do, as the code it can act on', async () => {
+    const dir = app({ ...goalOnly, 'src/goal.tsx': 'function Row(props) { return <li>{props.a}</li> }\nexport const X = 1\n' })
+    const r = spawnSync(process.execPath, [bin, 'tsc', '--json', '--root', dir], { encoding: 'utf8' })
+    const d = JSON.parse(r.stdout).diagnostics[0]
+    expect(d).toMatchObject({ code: 'W080', severity: 'error', file: 'src/goal.tsx', span: [1, 10, 1, 13], docs: 'weft docs W080' })
+    expect(d.fix.text).toContain('annotate the parameter: function Row(props: { ... })')
+  }, 60_000)
+})
+
 describe('the CLI', () => {
   const weft = (...args) => { const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' }); return { code: r.status, stdout: r.stdout, stderr: r.stderr } }
 
@@ -214,6 +231,53 @@ describe('the dev listener', () => {
     expect(readFileSync(card, 'utf8')).toContain('Card(props: /*inferred*/ { title: number })')
     await server.close()
   }, 30_000)
+})
+
+describe('an editor on TypeScript 7, through weft lsp', () => {
+  it('hover and diagnostics at source positions, over tsc --lsp', async () => {
+    const dir = app({ ...goalOnly, 'src/card.tsx': 'export function Card(props) { return <h2>{props.title}</h2> }\n', 'src/use.tsx': 'import { Card } from \'./card\'\nexport const Use = () => <Card title="t" />\n' })
+    const child = spawn(process.execPath, [bin, 'lsp', '--root', dir], { stdio: ['pipe', 'pipe', 'ignore'] })
+    let id = 0, buffer = Buffer.alloc(0)
+    const wait = new Map()
+    child.stdout.on('data', d => {
+      buffer = Buffer.concat([buffer, d])
+      for (;;) {
+        const head = buffer.indexOf('\r\n\r\n')
+        if (head < 0) return
+        const len = Number(/Content-Length: (\d+)/.exec(buffer.subarray(0, head).toString())[1])
+        if (buffer.length < head + 4 + len) return
+        const msg = JSON.parse(buffer.subarray(head + 4, head + 4 + len).toString())
+        buffer = buffer.subarray(head + 4 + len)
+        if (msg.id !== undefined && !msg.method) { wait.get(msg.id)?.(msg); wait.delete(msg.id) }
+        else if (msg.id !== undefined) child.stdin.write(wire({ jsonrpc: '2.0', id: msg.id, result: null }))
+      }
+    })
+    const wire = m => { const b = Buffer.from(JSON.stringify(m)); return Buffer.concat([Buffer.from(`Content-Length: ${b.length}\r\n\r\n`), b]) }
+    const note = (method, params) => child.stdin.write(wire({ jsonrpc: '2.0', method, params }))
+    const ask = (method, params) => new Promise(ok => { wait.set(++id, ok); child.stdin.write(wire({ jsonrpc: '2.0', id, method, params })) })
+    try {
+      await ask('initialize', { processId: null, rootUri: pathToFileURL(dir).href, capabilities: { textDocument: { hover: { contentFormat: ['plaintext'] }, diagnostic: {} } } })
+      note('initialized', {})
+      const file = join(dir, 'src/goal.tsx')
+      const uri = pathToFileURL(file).href
+      const text = readFileSync(file, 'utf8')
+      note('textDocument/didOpen', { textDocument: { uri, languageId: 'typescriptreact', version: 1, text } })
+      const lines = text.split('\n')
+      const line = lines.findIndex(l => l.includes('function AddButton'))
+      const hover = await ask('textDocument/hover', { textDocument: { uri }, position: { line, character: lines[line].indexOf('props.count') + 7 } })
+      expect(JSON.stringify(hover.result)).toContain('count: number')
+      expect(hover.result.range.start.line).toBe(line)
+      const clean = await ask('textDocument/diagnostic', { textDocument: { uri } })
+      expect(clean.result.items).toEqual([])
+
+      const card = join(dir, 'src/card.tsx')
+      note('textDocument/didOpen', { textDocument: { uri: pathToFileURL(card).href, languageId: 'typescriptreact', version: 1, text: readFileSync(card, 'utf8') } })
+      const w = await ask('textDocument/diagnostic', { textDocument: { uri: pathToFileURL(card).href } })
+      expect(w.result.items.map(d => d.code)).toEqual(['W081'])
+    } finally {
+      child.kill()
+    }
+  }, 60_000)
 })
 
 describe('the editor, through the TS server protocol', () => {

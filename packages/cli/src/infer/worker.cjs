@@ -8,10 +8,10 @@ const { parentPort, workerData } = require('node:worker_threads')
 const ts = require('typescript')
 const { Session } = require('./session.cjs')
 
-const { root, write, debounce = 25, settle = 400 } = workerData
+const { root, write, debounce = 25, settle = 400, rest = 120_000 } = workerData
 const session = new Session(ts, root)
 const pending = new Set()
-let timer = null, running = false, last = '', writes = null
+let timer = null, running = false, last = '', writes = null, resting = null
 
 function publish(list) {
   const text = JSON.stringify(list)
@@ -42,18 +42,27 @@ function scheduleWrites(findings) {
   }, settle)
 }
 
+/** The checker holds a few hundred MB, so it goes after two quiet minutes. The next save starts it again. */
+function rested() {
+  clearTimeout(resting)
+  resting = setTimeout(() => session.close(), rest)
+  resting.unref()
+}
+
 async function first() {
   running = true
   try { await report(performance.now()) } catch (e) { parentPort.postMessage({ type: 'failed', message: e.stack }) } finally { running = false }
   drain()
 }
 
-async function report(t) {
-  const { findings, errors } = await session.analyze()
+async function report(t, files) {
+  const { findings, errors } = await session.analyze(files)
   const flat = []
   for (const [file, list] of [...findings, ...errors]) for (const f of list) flat.push({ file: relative(root, file), line: session.engine.texts.get(file).slice(0, f.start).split('\n').length, code: f.code, severity: f.severity ?? 'error', why: f.why, help: f.help })
   scheduleWrites(findings)
-  parentPort.postMessage({ type: 'done', ms: performance.now() - t, changed: publish(flat), diagnostics: flat })
+  const changed = publish(flat)
+  rested()
+  parentPort.postMessage({ type: 'done', ms: performance.now() - t, at: Date.now(), changed, diagnostics: flat })
 }
 
 async function drain() {
@@ -68,7 +77,7 @@ async function drain() {
       for (const f of files) if (session.engine.set(f)) changed = true
       if (session.host) session.touch(files)
       if (!changed || !files.some(f => session.engine.relevant(f))) { parentPort.postMessage({ type: 'idle', ms: performance.now() - t }); continue }
-      await report(t)
+      await report(t, files)
     }
   } catch (e) {
     parentPort.postMessage({ type: 'failed', message: e.stack })

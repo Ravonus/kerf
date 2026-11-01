@@ -102,7 +102,7 @@ export const configSchema = z.strictObject({
       gate: z.strictObject({ mutationBudgetSec: z.number().positive().optional(), maxMutants: z.number().int().positive().optional() }).optional(),
     })
     .optional(),
-  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional() }).optional(),
+  check: z.strictObject({ include: globs.optional(), exclude: globs.optional(), design: z.boolean().optional(), props: z.union([z.boolean(), z.literal('manual')]).optional() }).optional(),
   plugins: z.array(pluginEntry).optional(),
   slots: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
   site: site.optional(),

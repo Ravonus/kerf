@@ -71,6 +71,8 @@ export interface WeftConfig {
     exclude?: readonly string[]
     /** `false` turns the design D-codes (D001–D007, D011, D030–D039) off. Default on. */
     design?: boolean
+    /** Prop inference (research 41). `false` turns it off; `'manual'` leaves written types to `weft fix` instead of `weft dev`. Default on. */
+    props?: boolean | 'manual'
   }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig

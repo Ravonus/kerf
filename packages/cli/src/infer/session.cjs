@@ -46,6 +46,7 @@ class Session {
     this.engine = new Engine({ ts, read: f => (existsSync(f) ? readFileSync(f, 'utf8') : undefined), routes: options.routes })
     this.host = null
     this.overlay = new Map()
+    this.errors = new Map()
     for (const f of this.parsed.fileNames) if (f.endsWith('.tsx')) this.engine.set(f)
   }
 
@@ -64,16 +65,19 @@ class Session {
   }
 
   /** Findings and the checker's errors in the files inference touches, in source positions. */
-  async analyze() {
+  async analyze(changed) {
     if (!this.engine.needed()) return { findings: new Map(), errors: new Map(), started: false }
+    const fresh = !this.host
     const host = await this.start()
-    const findings = this.engine.run(host)
-    const errors = new Map()
-    for (const file of this.engine.affected()) {
+    const findings = this.engine.run(host, fresh ? undefined : changed)
+    const redo = fresh || !changed ? this.engine.affected() : this.engine.touched
+    for (const file of redo) {
+      if (!this.engine.facts.has(file)) { this.errors.delete(file); continue }
       const list = this.engine.errors(host, file)
-      if (list.length) errors.set(file, list)
+      if (list.length) this.errors.set(file, list)
+      else this.errors.delete(file)
     }
-    return { findings, errors, started: true }
+    return { findings, errors: this.errors, started: true }
   }
 
   /** Every file's errors, the way `tsc --noEmit` would report them with inference applied. */
