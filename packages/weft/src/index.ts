@@ -630,3 +630,6 @@ export function restOf(props: any, keys: string[]) {
 
 export { Boundary, resource, type Resource, type ResourceOptions } from './async'
 export { defineState, StateError, type ScopeHandle, type History, type HistoryEntry } from './scope'
+
+/** A component's props, for the rare case inference doesn't cover: `Props<typeof Button>`. Types only. */
+export type Props<C> = C extends (props: infer P, ...rest: any[]) => any ? P : never

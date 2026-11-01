@@ -71,6 +71,8 @@ export async function agentsMd(root) {
          core.includes('Boundary') ? '    Show loading and errors with `<Boundary pending={…} error={(e, retry) => …}>`. More: `weft docs async`.' : '']
       : []),
     '',
+    '**Leave props untyped**: `weft docs props`.',
+    '',
     `## API in weft@${info.weft.version}`,
     '',
     `- \`weft\`: ${core.filter(n => planned.includes(n)).map(n => `\`${n}\``).join(', ')}` + (core.includes('state') ? ', `state.linked`' : ''),

@@ -16,6 +16,7 @@ import { designChecks, hasTokens } from './design-checks.mjs'
 import { classSoup, matrixDiagnostics, styleFiles, styleModule, usesTailwind, writeMatrixFile } from './style.mjs'
 import { checkTests, isTestFile, testGlobs } from './tests.mjs'
 import { pluginChecks } from './plugin-checks.mjs'
+import { propChecks } from './props-checks.mjs'
 import { reactChecks } from './react-checks.mjs'
 import { trustDiagnostics } from './trust.mjs'
 import { stateChecks } from './state-checks.mjs'
@@ -148,6 +149,7 @@ export async function check(root, options = {}) {
     ...reactChecks({ files }),
     ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),
     ...(await pluginChecks(root, loaded, { files, exclude })),
+    ...(await propChecks(root, config)),
     ...checkTests(root, testRels),
     ...(await iconChecks(root)),
     ...hydrationChecks(root),

@@ -4,12 +4,13 @@
 import { fix } from './fix.mjs'
 import { writeTokens } from './tokens.mjs'
 import { createRequire } from 'node:module'
+import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { addCommand } from './add.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
 import { check } from './check.mjs'
-import { formatHuman } from './diag.mjs'
+import { formatHuman, sortDiagnostics } from './diag.mjs'
 import { docs } from './docs.mjs'
 import { compilerLine, doctor, formatDoctor } from './doctor.mjs'
 import { formatMap, writeMap } from './map.mjs'
@@ -34,6 +35,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
                       [--base <ref>] [--budget <sec>] [--max-mutants <n>] [--refactor] [--no-mutation]
   browser <cmd>       drive the running app (\`weft browser help\`): open, snapshot, act, assert, net, time, record…
+  lsp                 a language server for editors on TypeScript 7: tsc --lsp with inferred props
+  tsc                 type-check the whole project with inferred props (tsc or tsgo; for CI)
   dev [--port <n>]    the dev server for an app with src/routes (Vite + Nitro)
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json
   start [--runtime r] run .output/ on its runtime (the config's \`runtime\`, node by default)
@@ -92,6 +95,19 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
   try {
     args = parse(argv)
     switch (args.command) {
+      case 'lsp': {
+        const { lsp } = await import('./infer/lsp.mjs')
+        const out = await lsp(args.root)
+        return await new Promise(ok => out.server.on('exit', () => ok(0)))
+      }
+      case 'tsc': {
+        const { propTsc } = await import('./props-checks.mjs')
+        const diagnostics = sortDiagnostics(await propTsc(args.root))
+        if (args.json) print({ ok: !diagnostics.some(d => d.severity === 'error'), diagnostics })
+        say(formatHuman(diagnostics))
+        say(`weft tsc: ${diagnostics.filter(d => d.severity === 'error').length} errors`)
+        return diagnostics.some(d => d.severity === 'error') ? 1 : 0
+      }
       case 'check': {
         const result = await check(args.root, { files: args.positional, preset: args.flags.preset })
         if (args.json) print(result)
