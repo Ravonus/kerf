@@ -2,11 +2,23 @@ import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start
 import { Link } from '@weft/start'
 import { Button, Nav } from '@weft/warp'
 import { PageExample } from '../../components/PageExample'
+import { demos } from '../../demos'
 import pages from '../../generated/docs.json'
 
 const all = pages as unknown as Record<string, { slug: string; title: string; section: string; html: string; description: string; lead?: string; toc: { id: string; text: string }[]; prev?: { slug: string; title: string }; next?: { slug: string; title: string }; parent?: { slug: string; title: string } }>
 
-export const load = ({ params }: LoadArgs<'/docs/[...slug]'>) => all[params.slug] ?? notFound()
+/** What a page's example looks like before it runs: the half a reader without scripts gets, and everyone's first paint. */
+const stills = async (slug: string) => {
+  const ids = Object.keys(demos).filter(id => demos[id].page === slug)
+  if (!ids.length) return {}
+  const [{ runs }, { renderToString }] = await Promise.all([import('../../demos/runs'), import('weft/ssr')])
+  return Object.fromEntries(ids.map(id => [id, renderToString(runs[id])]))
+}
+
+export const load = async ({ params }: LoadArgs<'/docs/[...slug]'>) => {
+  const page = all[params.slug] ?? notFound()
+  return { ...page, stills: await stills(params.slug) }
+}
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })
 export const prerender = () => Object.keys(all).map(slug => ({ slug }))
 
@@ -33,7 +45,7 @@ export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'
           <h1>{props.data.title}</h1>
         </header>
         {props.data.lead && <p data-part="lead" innerHTML={props.data.lead}></p>}
-        <PageExample slug={props.data.slug} />
+        <PageExample slug={props.data.slug} stills={props.data.stills} />
         <div data-scope="prose" innerHTML={props.data.html}></div>
         <footer data-part="pager">
           {props.data.prev && <Link href={`/docs/${props.data.prev.slug}`} class="prev"><span>Previous</span>{props.data.prev.title}</Link>}

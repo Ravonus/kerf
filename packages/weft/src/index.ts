@@ -4,6 +4,8 @@
 // effects are queued and flushed in creation order (parents before children) on a microtask or by `flush()`.
 
 const CLEAN = 0, CHECK = 1, DIRTY = 2
+/** `effect` of a disposed node: it never runs again, and there's no field for it on the live ones. */
+const DEAD = 3
 
 /** Dev build: diagnostic text, dev names and dev-only checks. Vite folds it to `false` in production builds. */
 export const DEV: boolean = (import.meta as any).env?.DEV !== false
@@ -14,6 +16,7 @@ export interface Owner {
   owned: Computation[] | null
   cleanups: (() => void)[] | null
   owner: Owner | null
+  /** Set by `provide` on its root; everything below finds it through `owner`. */
   context?: Record<symbol, unknown>
 }
 
@@ -21,12 +24,11 @@ export interface Computation extends Source, Owner {
   fn: (prev: any) => any
   s: Source[]
   state: number
-  /** 0: derived (lazy), 1: effect (queued), 2: effect whose value is unwrapped (a child hole: functions are called) */
-  effect: 0 | 1 | 2
+  /** 0: derived (lazy), 1: effect (queued), 2: effect whose value is unwrapped (a child hole: functions are called), 3: disposed */
+  effect: 0 | 1 | 2 | 3
   /** Effects: writes the computed value, untracked (`apply(value, prev)`). */
   a: ((value: any, prev: any) => void) | undefined
   id: number
-  dead?: true
   /** Dev name: the binding (`li.children`), its source location and the component it was created in. */
   n?: string
 }
@@ -40,7 +42,12 @@ export const devComponent: { label?: string; id?: number } = {}
 let listener: Computation | null = null
 let owner: Owner | null = null
 let nextId = 0
+/** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
+let at = 0
 let queue: Computation[] = []
+/** Queued out of id order, so `flush` has to sort: rare, as writes mostly reach bindings in creation order. */
+let shuffled = false
+/** A flush is on the microtask queue. */
 let scheduled = false
 /** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
 let mounts: (() => void)[] = []
@@ -80,46 +87,64 @@ const NONE: any[] = []
  * lists are copied at their exact size (memory: research 19 §5.8).
  */
 function add<T>(list: T[], x: T): T[] {
-  if (list.length < 8) return list.concat([x])
+  const n = list.length
+  if (!n) return [x]
+  if (n === 1) return [list[0], x]
+  if (n < 8) return list.concat([x])
   list.push(x)
   return list
 }
 
+/**
+ * A run reads what the run before it read, nearly always, so a read that matches the list by position only moves on.
+ * From the first that doesn't, the rest of the list is dropped and rebuilt as reads come in.
+ */
 function read(node: Source) {
-  if (listener) {
-    listener.s = add(listener.s, node)
-    node.o = add(node.o, listener)
+  const l = listener
+  if (l) {
+    const s = l.s
+    if (s[at] === node) at++
+    else if (!at || at > 8 || s.lastIndexOf(node, at - 1) < 0) { // short lists don't hold one box twice
+      if (at < s.length) unlink(l, at)
+      l.s = add(l.s, node)
+      node.o = add(node.o, l)
+      at++
+    }
   }
 }
 
 function mark(node: Computation, state: number) {
   if (node.state >= state) return
-  if (node.state === CLEAN && node.effect) queue.push(node)
+  if (node.state === CLEAN && node.effect) {
+    if (node.id < queue[queue.length - 1]?.id) shuffled = true
+    queue.push(node)
+  }
   node.state = state
-  for (const o of node.o) mark(o, CHECK)
-}
-
-function write(node: Source, value: any) {
-  if (Object.is(node.v, value)) return
-  node.v = value
-  for (const o of node.o) mark(o, DIRTY)
-  schedule()
+  const o = node.o
+  for (let i = 0; i < o.length; i++) mark(o[i], CHECK)
 }
 
 function schedule() {
   if (!scheduled && (queue.length || mounts.length)) {
     scheduled = true
-    queueMicrotask(flush)
+    queueMicrotask(() => {
+      scheduled = false
+      flush()
+    })
   }
 }
 
-function unlink(node: Computation) {
-  for (const s of node.s) {
-    const i = s.o.indexOf(node)
-    if (i >= 0) s.o.splice(i, 1)
-    if (s.b && !s.o.length) s.b.k!.delete(s.key!) // its last reader went
+/** Take `node` off its sources from `from` on. */
+function unlink(node: Computation, from: number) {
+  const s = node.s
+  for (let i = s.length - 1; i >= from; i--) {
+    const c = s[i], o = c.o, j = o.indexOf(node)
+    if (j === o.length - 1) o.pop()
+    else if (j >= 0) o.splice(j, 1)
+    if (c.b && !o.length) c.b.k!.delete(c.key!) // its last reader went
   }
-  node.s = NONE
+  if (from) s.length = from
+  else node.s = NONE
 }
 
 /** Dispose everything `node` owns and run its cleanups (a root's `dispose`). */
@@ -135,16 +160,16 @@ export function clean(node: Owner) {
 }
 
 function dispose(node: Computation) {
-  node.dead = true
-  unlink(node)
+  node.effect = DEAD
+  unlink(node, 0)
   clean(node)
 }
 
 function run(node: Computation) {
   clean(node)
-  unlink(node)
-  const prevListener = listener, prevOwner = owner
+  const prevListener = listener, prevOwner = owner, prevAt = at
   listener = owner = node
+  at = 0
   try {
     const v = node.effect === 2 ? (node.fn as () => unknown)() : node.fn(node.v) // a hole's value takes no arguments
     if (node.effect === 2 && live(v)) {
@@ -157,26 +182,31 @@ function run(node: Computation) {
       node.v = v
     } else if (!Object.is(v, node.v)) {
       node.v = v
-      for (const o of node.o) o.state = DIRTY
+      const o = node.o
+      for (let i = 0; i < o.length; i++) o[i].state = DIRTY
     }
   } catch (e) {
     if (DEV && node.n && e && typeof e === 'object' && !(e as any).weft) (e as any).weft = node.n // where it threw
     throw e
   } finally {
+    if (at < node.s.length) unlink(node, at) // what this run didn't read
     listener = prevListener
     owner = prevOwner
+    at = prevAt
   }
   node.state = CLEAN
 }
 
 function update(node: Computation) {
   if (node.state === CHECK) {
-    for (const s of node.s) {
-      if ('fn' in s) update(s as Computation)
+    const s = node.s
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i] as Computation
+      if (c.state) update(c)
       if ((node.state as number) === DIRTY) break
     }
   }
-  if (node.state === DIRTY && !node.dead) {
+  if (node.state === DIRTY && node.effect !== DEAD) {
     stats.runs++
     run(node)
   }
@@ -197,7 +227,7 @@ const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) &
 function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {
   const node: Computation = {
     fn, v: undefined, o: NONE, s: NONE, state: DIRTY, effect, a, id: nextId++,
-    owned: null, cleanups: null, owner, context: owner?.context,
+    owned: null, cleanups: null, owner,
   }
   if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) owner.owned = add(owner.owned ?? NONE, node)
@@ -206,12 +236,12 @@ function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation[
 
 /** Apply pending effects and DOM updates now. */
 export function flush() {
-  scheduled = false
   do {
     while (queue.length) {
-      const batch = queue.sort((a, b) => a.id - b.id)
+      const batch = shuffled ? queue.sort((a, b) => a.id - b.id) : queue
       queue = []
-      for (const node of batch) if (!node.dead) update(node)
+      shuffled = false
+      for (let i = 0; i < batch.length; i++) update(batch[i])
     }
     runMounts() // the DOM is placed now; a callback's writes queue more work, applied in this same flush
   } while (queue.length)
@@ -310,6 +340,7 @@ export class Box<T> implements State<T> {
   w(v: T) {
     const prev: any = this.v
     if (Object.is(prev, v)) return
+    this.v = v
     if (this.k) {
       // Entry readers only: they re-run when their entry changed; whole-value readers are marked by write() below.
       for (const [key, s] of this.k) {
@@ -317,7 +348,9 @@ export class Box<T> implements State<T> {
         if (!Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
       }
     }
-    write(this, v)
+    const o = this.o
+    for (let i = 0; i < o.length; i++) mark(o[i], DIRTY)
+    schedule()
     if (this.h) this.h(this, prev)
   }
 }
@@ -433,7 +466,7 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
 /** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
 function settle(node: Computation) {
   run(node)
-  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.at(-1) === node) owner.owned.pop()
+  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
 }
 
 /** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
@@ -479,7 +512,7 @@ export function getOwner() {
 }
 
 export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner): T {
-  const root: Owner = { owned: null, cleanups: null, owner: parent, context: parent?.context }
+  const root: Owner = { owned: null, cleanups: null, owner: parent }
   return within(root, () => fn(() => clean(root)))
 }
 
@@ -496,6 +529,12 @@ export function within<T>(root: Owner, fn: () => T): T {
   }
 }
 
+/** The nearest `provide`'s values: each one holds its parents' too. */
+function contexts(from: Owner | null) {
+  while (from && !from.context) from = from.owner
+  return from?.context
+}
+
 export function context<T>(fallback?: T) {
   const id = Symbol()
   return {
@@ -503,12 +542,12 @@ export function context<T>(fallback?: T) {
       const parent = owner
       return createRoot(dispose => {
         if (parent) (parent.cleanups ??= []).push(dispose) // the subtree goes when its parent does
-        owner!.context = { ...owner!.context, [id]: value }
+        owner!.context = { ...contexts(parent), [id]: value }
         return fn()
       })
     },
     get use(): T {
-      const ctx = owner?.context
+      const ctx = contexts(owner)
       return ctx && id in ctx ? (ctx[id] as T) : (fallback as T)
     },
   }

@@ -2,27 +2,27 @@
   "warp": {
     "probe": {
       "add-one": {
-        "domMutations": 1,
+        "domMutations": 2,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 63.58
+        "wallMs": 39.06
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.42
+        "wallMs": 0.28
       },
       "type-3-chars": {
-        "domMutations": 154,
+        "domMutations": 158,
         "commits": 33,
         "renderMs": 0,
-        "wallMs": 21.98
+        "wallMs": 19.95
       }
     },
-    "bundleGzBytes": 12609,
-    "srcFiles": 18,
-    "srcLines": 225,
+    "bundleGzBytes": 13967,
+    "srcFiles": 9,
+    "srcLines": 216,
     "effects": 1,
     "memos": 4
   },
@@ -32,24 +32,24 @@
         "domMutations": 1,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 55.84
+        "wallMs": 36.02
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.54
+        "wallMs": 0.29
       },
       "type-3-chars": {
         "domMutations": 152,
         "commits": 21,
         "renderMs": 0,
-        "wallMs": 18.17
+        "wallMs": 13.62
       }
     },
     "bundleGzBytes": 5444,
-    "srcFiles": 16,
-    "srcLines": 198,
+    "srcFiles": 8,
+    "srcLines": 190,
     "effects": 1,
     "memos": 4
   }

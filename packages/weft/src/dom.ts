@@ -43,17 +43,20 @@ export function render(code: () => any, container: Element): () => void {
 // `Cart ({n})` costs one text write, not three new nodes. Nobody else holds them, so reuse can't take a node away.
 const made = new WeakSet<Node>()
 
-function resolve(value: any, out: Node[], reuse?: { texts: Text[]; at: number }): Node[] {
+/** Every hole's first `current`. `place` only rearranges a list of two or more. */
+const EMPTY: Node[] = []
+
+function resolve(value: any, out: Node[], reuse?: { from: Node[]; texts?: Text[]; at: number }): Node[] {
   while (typeof value === 'function') value = value()
   if (value == null || value === true || value === false) return out
   if (Array.isArray(value)) {
-    for (const v of value) resolve(v, out, reuse)
-  } else if (value instanceof Node) {
-    if (value.nodeType === 11) out.push(...(value.childNodes as any))
+    for (let i = 0; i < value.length; i++) resolve(value[i], out, reuse)
+  } else if (value.nodeType) {
+    if (value.nodeType === 11) out.push(...value.childNodes)
     else out.push(value)
   } else {
     const text = String(value)
-    const t = reuse && reuse.texts[reuse.at++]
+    const t = reuse && (reuse.texts ??= reuse.from.filter(n => made.has(n)) as Text[])[reuse.at++]
     if (t) {
       if (t.data !== text) t.data = text
       out.push(t)
@@ -77,16 +80,33 @@ export function place(parent: Node, value: any, current: Node[], marker: Node | 
     }
     if (!current.length) return [parent.insertBefore(document.createTextNode(value as string), marker)] // the DOM converts a number
   }
-  const next = resolve(value, [], { texts: current.filter(n => made.has(n)) as Text[], at: 0 })
-  if (next.length === current.length && next.every((n, i) => n === current[i])) return current
-  const keep = new Set(next)
-  for (const n of current) if (!keep.has(n) && n.parentNode === parent) parent.removeChild(n)
-  // Nodes on the longest run that is already in order stay put; every other node moves once.
-  const stable = inOrder(next, current)
-  let after = marker
-  for (let i = next.length - 1; i >= 0; i--) {
+  const next = resolve(value, [], { from: current, at: 0 })
+  // Nodes that stayed at either end, and ends that traded places, cost no lookups. The middle is what's left.
+  let start = 0, was = current.length, now = next.length
+  for (;;) {
+    while (start < was && start < now && next[start] === current[start]) start++
+    while (was > start && now > start && next[now - 1] === current[was - 1]) was--, now--
+    const a = current[start], b = current[was - 1]
+    if (was - start < 2 || was !== now || next[start] !== b || next[now - 1] !== a || a.parentNode !== parent || b.parentNode !== parent) break
+    const after = b.nextSibling
+    parent.insertBefore(b, a)
+    parent.insertBefore(a, after)
+    current[start] = b
+    current[was - 1] = a
+  }
+  if (start === was && start === now) return current
+  let stable: Set<Node> | undefined
+  if (was > start) {
+    const before = current.slice(start, was), after = next.slice(start, now)
+    const keep = new Set(after)
+    for (const n of before) if (!keep.has(n) && n.parentNode === parent) parent.removeChild(n)
+    // Nodes on the longest run that is already in order stay put; every other node moves once.
+    stable = inOrder(after, before)
+  }
+  let after = now < next.length ? next[now] : marker
+  for (let i = now - 1; i >= start; i--) {
     const n = next[i]
-    if (!stable.has(n) || n.parentNode !== parent) parent.insertBefore(n, after)
+    if (!stable?.has(n) || n.parentNode !== parent) parent.insertBefore(n, after)
     after = n
   }
   return next
@@ -120,7 +140,7 @@ function inOrder(next: Node[], current: Node[]): Set<Node> {
  * `marker` null: append at the end after static children. A node: insert before it.
  */
 export function insert(parent: Mountable, value: any, marker?: Node | null) {
-  let current: Node[] = []
+  let current = EMPTY
   const at = marker ?? null
   // Dev: hot-swappable components (weft/hmr) are accessors, so a static array of them (`<><A /><B /></>`) is live.
   if (DEV && Array.isArray(value) && value.some(v => typeof v === 'function')) {
@@ -243,10 +263,18 @@ export function addEvent(node: any, name: string, handler: any, delegate?: boole
 
 // ---- keyed list (§3.4) ----------------------------------------------------------------------------------------
 
-/** A row is its own root (no closure to dispose it). `index` exists only when `children` takes one. */
-interface Row extends Owner { item: Box<any>; index: Box<number> | undefined; nodes: any }
+/** A row is its own root (no closure to dispose it) and the box of its item. `index` exists only when `children` takes one. */
+class Row extends Box<any> implements Owner {
+  owned: Owner['owned'] = null
+  cleanups: Owner['cleanups'] = null
+  nodes: any = undefined
+  constructor(item: unknown, public key: unknown, public owner: Owner | null, public index: Box<number> | undefined) {
+    super(item)
+  }
+}
 
 const reader = (box: Box<any>) => () => box.value
+const zero = () => 0
 
 /**
  * Compiled from `xs.map(x => <Row key={x.id} … />)`. Rows are keyed by `by(item, index)` (or the item itself): a new
@@ -254,12 +282,11 @@ const reader = (box: Box<any>) => () => box.value
  */
 export function For<T>(props: { each: readonly T[] | null | undefined; by?: (item: T, index: number) => unknown; children: (item: () => T, index: () => number) => any }) {
   const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
-  let rows = new Map<unknown, Row>()
   let order: Row[] = []
   let out: any[] = []
   onCleanup(() => {
-    for (const r of rows.values()) clean(r)
-    rows.clear()
+    for (const r of order) clean(r)
+    order = []
   })
   return memo(() => {
     const list = props.each || []
@@ -267,34 +294,42 @@ export function For<T>(props: { each: readonly T[] | null | undefined; by?: (ite
     // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
     const indexed = props.children.length !== 1
     return untrack(() => {
-      const next = new Map<unknown, Row>()
-      const nextOrder: Row[] = []
+      const next = new Array<Row>(list.length)
+      const paths = keys.on ? new Set<unknown>() : undefined // two rows with one key can't share a hydration scope
+      // Rows that stayed are found by position. From the first that didn't, the ones left are found by key.
+      let left: Map<unknown, Row> | undefined
       for (let i = 0; i < list.length; i++) {
         const item = list[i]
         let key = props.by ? props.by(item, i) : item
-        if (next.has(key)) key = { duplicate: key }
-        let row = rows.get(key)
+        if (paths) {
+          if (paths.has(key)) key = { duplicate: key }
+          paths.add(key)
+        }
+        let row = left ? undefined : order[i]
+        if (row && row.key !== key) {
+          left = new Map()
+          for (let j = order.length - 1; j >= i; j--) {
+            const twin = left.get(order[j].key)
+            if (twin) clean(twin)
+            left.set(order[j].key, order[j])
+          }
+          row = undefined
+        }
+        if (left && (row = left.get(key))) left.delete(key)
         if (row) {
-          rows.delete(key)
-          row.item.value = item
+          row.value = item
           if (row.index) row.index.value = i
         } else {
-          const r: Row = (row = {
-            owned: null, cleanups: null, owner: parent, context: parent?.context,
-            item: new Box(item), index: indexed ? new Box(i) : undefined, nodes: undefined,
-          })
-          const make = () => props.children(reader(r.item), r.index ? reader(r.index) : () => 0)
+          const r = (row = new Row(item, key, parent, indexed ? new Box(i) : undefined))
+          const make = () => props.children(reader(r), r.index ? reader(r.index) : zero)
           r.nodes = within(r, keys.on ? () => under(base + step(key) + '/', make) : make)
         }
-        next.set(key, row)
-        nextOrder.push(row)
+        next[i] = row
       }
-      for (const r of rows.values()) clean(r)
-      rows = next
-      if (nextOrder.length !== order.length || nextOrder.some((r, i) => r !== order[i])) {
-        order = nextOrder
-        out = nextOrder.map(r => r.nodes)
-      }
+      if (left) for (const r of left.values()) clean(r)
+      else for (let i = list.length; i < order.length; i++) clean(order[i])
+      if (left || next.length !== order.length) out = next.map(r => r.nodes)
+      order = next
       return out
     })
   })
