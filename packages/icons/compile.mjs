@@ -2,8 +2,9 @@
 // Names go through variables, conditionals, static lists and maps, imports and props handed down through components.
 // A name it can't follow is legal: that use gets the pack, lazily. An unknown literal is an error. No Rust: the pass is
 // a parse and a walk, so it runs the same in `vite build` and `weft check`.
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, extname, join, relative, resolve as path } from 'node:path'
+import { brotliCompressSync, constants } from 'node:zlib'
 import { parseAst } from 'vite'
 
 export const STOPS = ['quiet', 'balanced', 'vivid']
@@ -12,7 +13,7 @@ const SKIP = new Set(['node_modules', 'dist', '.weft', '.git', 'target', 'covera
 const CODE = /\.[cm]?[jt]sx?$/
 const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ParenthesizedExpression', 'TSTypeAssertion'])
 const ITERATORS = new Set(['map', 'flatMap', 'filter', 'forEach', 'find', 'some', 'every', 'sort', 'toSorted'])
-const ICON_SOURCES = new Set(['@weft/icons/all', '@weft/warp'])
+const ICON_SOURCES = new Set(['@weft/icons/all', '@weft/icons/icon', '@weft/warp'])
 
 const title = name => name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
 export const pascal = (name, variant = '') => `${title(name)}Icon${variant ? variant[0].toUpperCase() + variant.slice(1) : ''}`
@@ -71,7 +72,7 @@ function parse(file, code) {
 
 /** One source: its imports, what its names are bound to, and every place an icon name, a stop or a pack is used. */
 function read(file, code) {
-  const unit = { file, code, imports: new Map(), bindings: new Map(), exports: new Map(), uses: [], sites: [], stops: [], related: [], warp: false }
+  const unit = { file, code, imports: new Map(), bindings: new Map(), exports: new Map(), uses: [], sites: [], stops: [], related: [], members: [], idents: [], warp: false }
   if (extname(file) === '.html') {
     for (const m of code.matchAll(/data-expression=["']?([a-z]+)/g)) unit.stops.push({ value: m[1] })
     return unit
@@ -136,6 +137,16 @@ function read(file, code) {
         }
         break
       }
+      case 'MemberExpression':
+        if (node.object.type === 'Identifier') unit.members.push({ local: node.object.name, node })
+        break
+      case 'JSXMemberExpression':
+        if (node.object.type === 'JSXIdentifier') unit.members.push({ local: node.object.name, node, jsx: true })
+        break
+      case 'Identifier':
+      case 'JSXIdentifier':
+        unit.idents.push(node)
+        break
       case 'JSXOpeningElement': {
         const comp = node.name.type === 'JSXIdentifier' ? node.name.name : node.name.type === 'JSXMemberExpression' ? `${node.name.object.name}.${node.name.property.name}` : null
         if (!comp) break
@@ -157,6 +168,23 @@ function read(file, code) {
   visit(ast.body, null)
   return unit
 }
+
+const isSpecifier = (unit, id) => unit.ast.body.some(n => n.type === 'ImportDeclaration' && n.specifiers?.some(s => s.local === id || s.local.start === id.start))
+const packLocals = unit => [...unit.imports].filter(([, i]) => i.source === '@weft/icons' && (i.imported === 'default' || i.imported === '*')).map(([l]) => l)
+const kebab = s => s.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`).replace(/^-/, '')
+const TOOLS = new Set(['iconSet'])
+/** `X`, `XHollow`, `XIcon`, `IconX`: a pack member as a name and a variant. */
+function member(id) {
+  const [, base, variant = ''] = /^(.+?)(Hollow|Solid|Dither)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$)/, '').replace(/^Icon(?=[A-Z])/, ''))
+  return { name: kebab(base), variant: variant.toLowerCase() }
+}
+function packName(id, catalog, names, missing) {
+  if (TOOLS.has(id)) return
+  const { name, variant } = member(id)
+  if (catalog.includes(name)) names.add(variant ? `${name}:${variant}` : name)
+  else missing()
+}
+const packIds = catalog => catalog.map(n => title(n))
 
 const unwrap = node => { while (node && WRAPPERS.has(node.type)) node = node.expression; return node }
 
@@ -306,7 +334,7 @@ export function analyze(root, { catalog }) {
     }
   }
 
-  const names = new Set(), unknown = [], dynamic = [], stops = new Set([DEFAULT_STOP]), stopsDynamic = []
+  const names = new Set(), unknown = [], dynamic = [], escaped = [], stops = new Set([DEFAULT_STOP]), stopsDynamic = []
   const known = new Set(catalog)
   const where = (unit, at) => ({ file: relative(root, unit.file), abs: unit.file, ...line(unit.code, at) })
   const site = (unit, expr, at, soft, element) => {
@@ -327,6 +355,17 @@ export function analyze(root, { catalog }) {
       if (use.prop === 'tier') { for (const v of expression(unit, use.expr).values) if (STOPS.includes(v)) stops.add(v) }
     }
     if (unit.warp) for (const s of unit.sites) site(unit, s.expr, s.at, true)
+    for (const local of packLocals(unit)) {
+      const own = unit.members.filter(m => m.local === local), inner = new Set(own.map(m => m.node.object))
+      for (const { node } of own) {
+        if (node.computed) {
+          const r = expression(unit, node.property)
+          for (const v of r.values) packName(v, catalog, names, () => unknown.push({ name: v, suggest: closest(v, packIds(catalog)), ...where(unit, node.start) }))
+          if (r.dynamic) dynamic.push({ why: r.dynamic, ...where(unit, node.start) })
+        } else packName(node.property.name, catalog, names, () => unknown.push({ name: node.property.name, suggest: closest(node.property.name, packIds(catalog)), ...where(unit, node.property.start) }))
+      }
+      for (const id of unit.idents) if (id.name === local && !inner.has(id) && !isSpecifier(unit, id)) escaped.push({ why: `${local} is used as a value`, ...where(unit, id.start) })
+    }
     for (const s of unit.stops) {
       if (s.value) { if (STOPS.includes(s.value)) stops.add(s.value); continue }
       if (s.dynamic) { stopsDynamic.push(where(unit, s.at)); continue }
@@ -335,17 +374,19 @@ export function analyze(root, { catalog }) {
       if (r.dynamic) stopsDynamic.push({ why: r.dynamic, ...where(unit, s.at) })
     }
   }
-  return { names, unknown, dynamic, stops: stopsDynamic.length ? new Set(STOPS) : stops, stopsDynamic, files: units.size }
+  return { names, unknown, dynamic, escaped, stops: stopsDynamic.length ? new Set(STOPS) : stops, stopsDynamic, files: units.size }
 }
 
 /** The module warp's name lookup becomes in a build: these names and no others, and the pack only if a name escaped. */
-export function namesModule(names, { lazy = false } = {}) {
+export function namesModule(names, { lazy = false, source } = {}) {
   const list = [...names].sort()
   const id = key => pascal(...key.split(':'))
   const imports = list.length ? `import { ${list.map(id).join(', ')} } from '@weft/icons'\n` : ''
   const table = `const names = { ${list.map(n => `${JSON.stringify(n)}: ${id(n)}`).join(', ')} }\nconst key = (name, variant) => (variant ? name + ':' + variant : name)\n`
-  if (lazy) return `${imports}import { late } from '@weft/icons/late'\n${table}const pack = () => import('@weft/icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, pack)\n`
-  return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n`
+  const member = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Dither)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$)/, '').replace(/^Icon(?=[A-Z])/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
+  if (source) return `${imports}import { remote } from '@weft/icons/late'\n${table}const get = remote(${JSON.stringify(source)})\nexport const resolve = (name, variant) => names[key(name, variant)] ?? get(name, variant)\n${member}`
+  if (lazy) return `${imports}import { late } from '@weft/icons/late'\n${table}const load = () => import('@weft/icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, load)\n${member}`
+  return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n${member}`
 }
 
 const VISIBLE = { quiet: 'oq', balanced: 'ob', vivid: 'v' }
@@ -361,14 +402,26 @@ export function trimTiers(source, stops) {
 
 /** `<Icon name="check">` becomes `<IconCheck>`, the same output a named import gives. */
 export function rewrite(code, file, catalog) {
-  if (!/@weft\/(icons\/all|warp)/.test(code) || !/<Icon\b/.test(code)) return null
+  if (!/@weft\/(icons|warp)/.test(code)) return null
   const unit = read(file, code)
   if (!unit.ast) return null
   const local = [...unit.imports].find(([, i]) => i.imported === 'Icon' && ICON_SOURCES.has(i.source))?.[0]
-  if (!local) return null
   const edits = [], added = new Set()
+  // `Icon` alone is a small file over the names module, so this import doesn't bring the set
+  for (const n of unit.ast.body) if (n.type === 'ImportDeclaration' && n.source.value === '@weft/icons/all' && n.specifiers.length === 1 && n.specifiers[0].imported?.name === 'Icon') edits.push({ start: n.source.start, end: n.source.end, text: "'@weft/icons/icon'" })
+  // the pack: a default import is the namespace, so a static member is an ordinary named import to the bundler
+  let lookups = false
+  for (const pack of packLocals(unit)) {
+    for (const n of unit.ast.body) if (n.type === 'ImportDeclaration' && n.source.value === '@weft/icons') for (const s of n.specifiers) if (s.local.name === pack && s.type === 'ImportDefaultSpecifier') edits.push({ start: s.start, end: s.end, text: `* as ${pack}` })
+    for (const { local: l, node } of unit.members) {
+      if (l !== pack) continue
+      if (!node.computed) { if (catalog) packName(node.property.name, catalog, new Set(), () => { throw Object.assign(new Error(unknownMessage(node.property.name, packIds(catalog))), { loc: { file, ...line(code, node.property.start) } }) }); continue }
+      edits.push({ start: node.start, end: node.property.start, text: '__icon(' }, { start: node.property.end, end: node.end, text: ')' })
+      lookups = true
+    }
+  }
   for (const use of unit.uses) {
-    if (use.comp !== local || use.prop !== 'name') continue
+    if (!local || use.comp !== local || use.prop !== 'name') continue
     const v = unwrap(use.expr)
     if ((v.type !== 'Literal' && v.type !== 'StringLiteral') || typeof v.value !== 'string') continue
     if (catalog && !catalog.includes(v.value)) throw Object.assign(new Error(unknownMessage(v.value, catalog)), { loc: { file, ...line(code, v.start) } })
@@ -383,7 +436,8 @@ export function rewrite(code, file, catalog) {
   if (!edits.length) return null
   let out = code
   for (const e of edits.sort((a, b) => b.start - a.start)) out = out.slice(0, e.start) + e.text + out.slice(e.end)
-  return `import { ${[...added].join(', ')} } from '@weft/icons'\n${out}`
+  const head = (added.size ? `import { ${[...added].join(', ')} } from '@weft/icons'\n` : '') + (lookups ? "import { pack as __icon } from '@weft/icons/names'\n" : '')
+  return head + out
 }
 
 export const unknownMessage = (name, catalog) => `I001 no icon '${name}', did you mean '${closest(name, catalog)}'?`
@@ -391,11 +445,44 @@ export const unknownMessage = (name, catalog) => `I001 no icon '${name}', did yo
 export const list = () => [...new Set([...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').split('\n')[1].matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1]))]
 
 /** The vite side, loaded by weft/vite when @weft/icons is in the build. */
-export function pass({ root, command, tier }) {
+export function pass({ root, command, tier, source }) {
   const build = command === 'build'
   const catalog = list()
   const result = build ? analyze(root, { catalog }) : null
   const lazy = !!result?.dynamic.length
   const stops = tier && tier !== 'all' ? new Set([tier]) : result && !tier ? result.stops : new Set(STOPS)
-  return { catalog, result, lazy, stops, module: () => namesModule(result.names, { lazy }) }
+  return { catalog, result, lazy, stops, module: () => namesModule(result.names, { lazy, source }) }
+}
+
+/** What the pack costs if a page takes it: every icon in one tier, brotli. */
+export function packCost() {
+  const code = readFileSync(new URL('./src/gen/all.tsx', import.meta.url), 'utf8')
+  return brotliCompressSync(Buffer.from(code), { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }).length
+}
+
+/** `weft check`'s view: the same walk a build does, as findings. */
+export function findings(root) {
+  const catalog = list(), r = analyze(root, { catalog })
+  const kb = `${(packCost() / 1024).toFixed(0)} KB`
+  return [
+    ...r.unknown.map(u => ({ code: 'I001', file: u.file, line: u.line, column: u.column, why: `no icon '${u.name}', did you mean '${u.suggest}'?` })),
+    ...r.dynamic.map(d => ({ code: 'I002', file: d.file, line: d.line, column: d.column, why: `\`${d.why}\` isn't known until runtime, so this use loads the icon pack lazily (about ${kb} br, only on pages that reach it).` })),
+    ...r.escaped.map(d => ({ code: 'I003', file: d.file, line: d.line, column: d.column, why: `${d.why}, so every icon ships with the page (about ${kb} br).` })),
+  ]
+}
+
+/** Every icon and variant as a static .svg, for a CDN or bucket. Writes files; nothing is uploaded. */
+export async function publish(dir) {
+  const { load, fragments } = await import('./scripts/build.mjs')
+  const icons = await load()
+  mkdirSync(dir, { recursive: true })
+  const svg = html => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${html}</svg>\n`
+  let files = 0
+  for (const [name, entry] of Object.entries(icons)) {
+    const f = fragments(name, entry)
+    const all = { '': f.line + f.vivid, '.hollow': f.line + f.hollow, '.solid': f.solid, '.dither': f.line + f.dither }
+    for (const [suffix, html] of Object.entries(all)) { writeFileSync(join(dir, `${name}${suffix}.svg`), svg(html)); files++ }
+  }
+  writeFileSync(join(dir, 'manifest.json'), JSON.stringify({ icons: Object.keys(icons), variants: ['', 'hollow', 'solid', 'dither'] }) + '\n')
+  return { dir, files, icons: Object.keys(icons).length }
 }

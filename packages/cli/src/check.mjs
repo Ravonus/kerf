@@ -34,6 +34,19 @@ function schemaDrift(root, layer) {
   return [diagnostic({ code: 'Q015', file: layer.schema, why: existsSync(file) ? 'The schema changed since the last `weft db generate`: the database will not match it.' : 'No migrations yet: the first request that reads a table fails with Q014.' })]
 }
 
+/** I001–I003: the walk a build does (@weft/icons/compile), when the project has the package. */
+async function iconChecks(root) {
+  const require = createRequire(join(root, 'package.json'))
+  let compile
+  for (const from of [() => require.resolve('@weft/icons/compile'), () => createRequire(require.resolve('@weft/warp'))
+    .resolve('@weft/icons/compile')]) {
+    try { compile = from(); break } catch { /* not this way */ }
+  }
+  if (!compile) return []
+  const { findings } = await import(pathToFileURL(compile).href)
+  return findings(root).map(f => diagnostic({ code: f.code, file: f.file, span: [f.line, f.column, f.line, f.column], why: f.why }))
+}
+
 /**
  * @param {string} root
  * @param {{ files?: string[] }} [options] files relative to `root` (or absolute); default: discovered
@@ -106,6 +119,7 @@ export async function check(root, options = {}) {
     ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
+    ...(await iconChecks(root)),
     ...hygiene(root),
     ...(await socketChecks(root)),
     ...schemaDrift(root, await dbLayer(root, loaded)),

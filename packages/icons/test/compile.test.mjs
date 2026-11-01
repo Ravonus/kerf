@@ -1,9 +1,9 @@
 // @vitest-environment node
 // The build follows a name as far as it can and ships that set; what it can't follow is legal, and reported.
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { analyze, closest, list, namesModule, rewrite, trimTiers } from '../compile.mjs'
+import { analyze, closest, findings, list, namesModule, publish, rewrite, trimTiers } from '../compile.mjs'
 
 const catalog = list()
 function scan(files) {
@@ -88,4 +88,49 @@ test('trimTiers keeps what the stops show', () => {
   const src = `icon('<path data-t="o" d="M1"/><path data-t="q" d="M2"/><path data-t="b" d="M3"/><path data-t="v" d="M4"/>')`
   expect(trimTiers(src, new Set(['quiet', 'balanced']))).toBe(`icon('<path data-t="o" d="M1"/><path data-t="q" d="M2"/><path data-t="b" d="M3"/>')`)
   expect(trimTiers(src, new Set(['balanced', 'vivid']))).toBe(`icon('<path data-t="o" d="M1"/><path data-t="b" d="M3"/><path data-t="v" d="M4"/>')`)
+})
+
+const pack = body => ({ 'src/a.tsx': `import Icons from '@weft/icons'\n${body}` })
+test('a pack member is that icon', () => expect(names(scan(pack(`export const A = () => <Icons.Bell />`)))).toEqual(['bell']))
+test('a pack variant', () => expect(names(scan(pack(`export const A = () => <Icons.ArrowRightHollow />`)))).toEqual(['arrow-right:hollow']))
+test('a namespace import works the same', () => expect(names(scan({ 'src/a.tsx': `import * as Icons from '@weft/icons'\nexport const A = () => <Icons.BellIcon />` }))).toEqual(['bell']))
+test('an unknown pack member is an error', () => expect(scan(pack(`export const A = () => <Icons.Bel />`)).unknown[0]).toMatchObject({ name: 'Bel', suggest: 'Bell' }))
+test('a bounded pack lookup ships that set', () => {
+  const r = scan(pack(`export const A = ({ on }) => { const C = Icons[on ? 'Bell' : 'Mail']; return <C /> }`))
+  expect(names(r)).toEqual(['bell', 'mail']); expect(r.dynamic).toEqual([])
+})
+test('an open pack lookup is dynamic, and legal', () => {
+  const r = scan(pack(`export const A = ({ n }) => { const C = Icons[pick(n)]; return <C /> }`))
+  expect(r.dynamic).toHaveLength(1); expect(r.unknown).toEqual([])
+})
+test('the pack passed as a value is reported', () => expect(scan(pack(`export const A = () => use(Icons)`)).escaped).toHaveLength(1))
+test('a default import of the pack becomes the namespace, so members shake', () => {
+  const out = rewrite(`import Icons from '@weft/icons'\nexport const A = () => <Icons.Bell />`, 'a.tsx', catalog)
+  expect(out).toContain("import * as Icons from '@weft/icons'")
+})
+test('an open lookup goes through the names module', () => {
+  const out = rewrite(`import Icons from '@weft/icons'\nexport const A = n => Icons[n]`, 'a.tsx', catalog)
+  expect(out).toContain('__icon(n)'); expect(out).toContain("import { pack as __icon } from '@weft/icons/names'")
+})
+test('rewrite refuses an unknown member', () => expect(() => rewrite(`import Icons from '@weft/icons'\nconst a = <Icons.Bel />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'Bel', did you mean 'Bell'/))
+test('a remote source fetches singles, with no pack in the build', () => {
+  const m = namesModule(['check'], { source: 'https://cdn.example.com/icons/' })
+  expect(m).toContain('remote("https://cdn.example.com/icons/")'); expect(m).not.toContain('@weft/icons/all')
+})
+test('publish writes each variant as a static file, and uploads nothing', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'icons-pub-'))
+  try {
+    const out = await publish(dir)
+    expect(out.files).toBe(out.icons * 4)
+    expect(readFileSync(join(dir, 'bell.hollow.svg'), 'utf8')).toContain('<svg xmlns=')
+    expect(JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')).icons).toContain('bell')
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+test('findings: unknown is an error code, dynamic and escaped are info codes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'icons-find-'))
+  try {
+    mkdirSync(join(root, 'src'))
+    writeFileSync(join(root, 'src/a.tsx'), `import { Icon } from '@weft/warp'\nimport * as I from '@weft/icons'\nexport const A = ({ r }) => <><Icon name="chekc" /><Icon name={load(r)} />{use(I)}</>`)
+    expect(findings(root).map(f => f.code).sort()).toEqual(['I001', 'I002', 'I003'])
+  } finally { rmSync(root, { recursive: true, force: true }) }
 })

@@ -3,7 +3,9 @@
 
 import { fix } from './fix.mjs'
 import { writeTokens } from './tokens.mjs'
-import { resolve } from 'node:path'
+import { createRequire } from 'node:module'
+import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { addCommand } from './add.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
 import { check } from './check.mjs'
@@ -166,6 +168,14 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         if (args.json) print(map)
         else if (args.stdout) process.stdout.write(formatMap(map))
         else say(`.weft/map.md: ${map.rows.length} rows`)
+        return 0
+      }
+      case 'icons': {
+        if (args.positional[0] !== 'publish' || !args.positional[1]) { say('usage: weft icons publish <dir>'); return 1 }
+        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft/icons/compile')).href)
+        const out = await publish(resolve(args.root, args.positional[1]))
+        if (args.json) print(out)
+        else say(`${out.files} files for ${out.icons} icons in ${out.dir}. Nothing was uploaded: host that folder, then set icons({ source }).`)
         return 0
       }
       case 'add': {

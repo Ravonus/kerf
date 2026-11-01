@@ -311,8 +311,9 @@ function icons() {
     if (!found) return null
     const { pass, rewrite, unknownMessage, trimTiers } = await import(pathToFileURL(found.id.replace(/\?.*$/, '')).href)
     const alias = join(config.root, '.weft', 'tokens', 'icons.alias.json') // icons({ tier }) wrote this: a stop, or the package itself for every tier
-    const named = existsSync(alias) ? JSON.parse(readFileSync(alias, 'utf8'))['@weft/icons'] : undefined
-    const out = pass({ root: config.root, command: config.command, tier: named && (named.split('/')[2] ?? 'all') })
+    const options = existsSync(alias) ? JSON.parse(readFileSync(alias, 'utf8')) : {}
+    const named = options['@weft/icons']
+    const out = pass({ root: config.root, command: config.command, tier: named && (named.split('/')[2] ?? 'all'), source: options['@weft/icons/source'] })
     return { ...out, rewrite, unknownMessage, trimTiers }
   })())
   const fail = (ctx, p) => {
@@ -325,14 +326,14 @@ function icons() {
       enforce: 'pre',
       configResolved(c) { config = c },
       transform: {
-        filter: { id: /\.[jt]sx(\?|$)/, code: /@weft\/(icons\/all|warp)|\/\*#__PURE__\*\/ icon\(/ },
+        filter: { id: /\.[jt]sx?(\?|$)/, code: /@weft\/(icons|warp)|\/\*#__PURE__\*\/ icon\(/ },
         async handler(code, id) {
           if (/icons\/src\/gen\/all\.tsx/.test(id)) {
             if (config.command !== 'build') return null
             const p = await load(this, id)
             return p ? p.trimTiers(code, p.stops) : null
           }
-          if (id.includes('node_modules') || !/<Icon\b/.test(code)) return null
+          if (id.includes('node_modules') || /packages\/(icons|warp)\/src\//.test(id)) return null
           const p = await load(this, id)
           return p ? p.rewrite(code, id.replace(/\?.*$/, ''), p.catalog) : null
         },
