@@ -41,7 +41,7 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
       />
       {list.value.length > 0 && (
         <div class="chips" role="group" aria-label="Prefer">
-          {list.value.map(b => <Chip key={b.id} pressed={!!bias.value[b.id]} onClick={() => (bias.value = { ...bias.value, [b.id]: !bias.value[b.id] })}>{b.label}</Chip>)}
+          {list.value.map(b => <Chip key={b.id} pressed={!!bias.get(b.id)} onClick={() => (bias.value = { ...bias.value, [b.id]: !bias.value[b.id] })}>{b.label}</Chip>)}
         </div>
       )}
     </div>
@@ -85,13 +85,16 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
       {name && <input type="hidden" name={name} value={v.value ? JSON.stringify(v.value) : ''} />}
       <div class="addr-grid">
         <CountrySelect label="Country or region" value={country} options={countries} locale={locale} onValueChange={c => { if (v.value) v.set({ ...v.value, country: c! }, 'pointer') }} />
-        {format.value.fields.map(([part, title, span, auto]) => (
-          <div key={`${country.value}:${part}`} data-span={span}>
-            {part === 'line1' && provider && !manual.value
-              ? <ComboField icon={PinIcon} label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: PinIcon })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
-              : <Input label={title} autocomplete={auto} icon={part === 'line1' ? 'pin' : undefined} value={addressPart(v.value, part)} error={errors?.[part] ?? (part === 'postalCode' ? postal.value : undefined) ?? (errors ? '' : undefined)} onInput={e => write(part, e.currentTarget.value)} onBlur={part === 'postalCode' ? () => (touched.value = { ...touched.value, postal: true }) : undefined} />}
-          </div>
-        ))}
+        {format.value.fields.map(([part, title, span, auto]) => {
+          const problem = derived(() => errors?.[part])
+          return (
+            <div key={`${country.value}:${part}`} data-span={span}>
+              {part === 'line1' && provider && !manual.value
+                ? <ComboField icon={PinIcon} label={title} autocomplete={auto} text={() => addressPart(v.value, 'line1')} timeout={1500} find={(q, signal) => provider.suggest(q, { country: country.value!, signal })} row={s => ({ main: s.label, sub: s.secondary, icon: PinIcon })} onText={t => write('line1', t)} onPick={s => fill(s.id)} onFail={() => goManual('Suggestions are unavailable. Enter the address here.')} />
+                : <Input label={title} autocomplete={auto} icon={part === 'line1' ? 'pin' : undefined} value={addressPart(v.value, part)} error={problem.value ?? (part === 'postalCode' ? postal.value : undefined) ?? (errors ? '' : undefined)} onInput={e => write(part, e.currentTarget.value)} onBlur={part === 'postalCode' ? () => (touched.value = { ...touched.value, postal: true }) : undefined} />}
+            </div>
+          )
+        })}
       </div>
       <p class="addr-foot">
         {provider && !manual.value && <button type="button" class="linkish" onClick={() => goManual('Manual entry.')}>Enter address manually</button>}
