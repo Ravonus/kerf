@@ -24,7 +24,7 @@ function killTree(pid, signal) {
 }
 
 /** What's listening on a port: a server whose wrapper died first is out of taskkill's reach, and a leaked one ruins the next run. */
-const listeners = port => [...execFileSync('netstat', ['-ano', '-p', 'TCP'], { encoding: 'utf8' }).matchAll(new RegExp(String.raw`\s127\.0\.0\.1:${port}\s.*LISTENING\s+(\d+)`, 'g'))].map(m => m[1])
+const listeners = port => [...execFileSync('netstat', ['-ano'], { encoding: 'utf8', windowsHide: true }).matchAll(new RegExp(String.raw`^\s*TCP\s+\S*:${port}\s+\S+\s+LISTENING\s+(\d+)`, 'gm'))].map(m => m[1])
 
 export async function startServer(v, firstPage, { proveBuild = true } = {}) {
   const port = await freePort(), url = `http://127.0.0.1:${port}`
