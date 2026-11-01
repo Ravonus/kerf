@@ -10,10 +10,14 @@ export const load = ({ params }: LoadArgs<'/docs/[...slug]'>) => all[params.slug
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })
 export const prerender = () => Object.keys(all).map(slug => ({ slug }))
 
-/** A folded section opens before the browser scrolls to it. */
-const unfold = (id: string) => {
-  const fold = document.getElementById(id)?.closest('details')
-  if (fold) fold.open = true
+/** A folded section opens, and once it has its height the page scrolls to it: until then there's nothing to scroll past. */
+const unfold = async (id: string) => {
+  const target = document.getElementById(id)
+  const fold = target?.closest('details')
+  if (!fold || fold.open) return
+  fold.open = true
+  await Promise.allSettled(fold.getAnimations({ subtree: true }).map(a => a.finished))
+  target!.scrollIntoView()
 }
 
 /* @weft client */
