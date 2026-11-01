@@ -425,6 +425,23 @@ fn bind_gives_the_prop_a_setter_and_a_plain_read_has_none() {
 }
 
 #[test]
+fn bind_attribute_is_the_same_binding() {
+    let code = clean("import { state } from 'weft'; export function A() { const count = state(1); return <C bind:count={count} /> }");
+    assert!(code.contains("get count() { return count.value; }, set count(_v) { count.value = _v; }"), "{code}");
+    assert!(!code.contains("bind:count"), "{code}");
+    let code = clean("export function A(props) { return <C bind:n={props.box} /> }");
+    assert!(code.contains("set n(_v) { props.box.value = _v; }"), "{code}");
+    for src in [
+        "import { state } from 'weft'; export function A() { const n = state(1); return <input bind:value={n} /> }",
+        "export function A() { return <C bind:n={1} /> }",
+        "export function A() { return <C bind:n /> }",
+    ] {
+        let (_, d) = run(src);
+        assert!(codes(&d).contains(&"W061"), "{src}");
+    }
+}
+
+#[test]
 fn bind_outside_a_component_prop_is_w061() {
     for src in [
         "import { bind, state } from 'weft'; export function A() { const n = state(1); return <input value={bind(n)} /> }",

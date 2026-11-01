@@ -136,6 +136,21 @@ describe.each([['let', ByLet], ['props.x =', ByProps]])('a write through %s', (_
   })
 })
 
+test('bind:count on the tag: a child\'s count++ updates the parent, and the parent the child', async () => {
+  function AddButton(props: { count?: number }) {
+    let count = props.count!
+    return <button onClick={() => count++}>{count}</button>
+  }
+  const count = state(1)
+  render(() => <AddButton bind:count={count} />)
+  await press()
+  expect(untrack(() => count.value)).toBe(2)
+  expect(text()).toBe('2')
+  count.value = 8
+  await flush()
+  expect(text()).toBe('8')
+})
+
 test('a default applies until something is written, and a written default counts from it', async () => {
   const v = state<number | undefined>(undefined)
   render(() => <ByPattern n={v.value} />)

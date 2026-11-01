@@ -30,7 +30,7 @@ declaration. The pitfalls they document decided the edges:
 with each written key read through a `state.linked` of the parent's value. That's the override, and resetting when the
 parent's value changes is what `linked` already does. Components that never write pay nothing.
 
-Leaving the component takes `bind(box)` at the call site, which gives that prop a setter. It's a call rather than the
-`bind:x` spelling because TypeScript would then report `x` as missing on the child: `bind` types as the box's value. No
+Leaving the component takes `bind:x={box}` at the call site, which gives that prop a setter. `x={bind(box)}` lowers to
+the same thing; TypeScript reports a required `x` as missing with `bind:x`, and `bind` types as the box's value. No
 existing idiom covered this (`bind` in weft/dom is an internal helper). Inferring setters from `n={box.value}` was
 rejected: a prop that looks one-way mustn't write parent state.

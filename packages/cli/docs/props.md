@@ -27,16 +27,17 @@ The compiler turns a component's props into live reads, so a parent writing `cou
 
 A component can write its own props. `let` makes a local writable; `+=`, `++` and `let { a } = props` work too.
 
-| In the child | Parent passed `n={x}` | Parent passed `n={bind(box)}` |
+| In the child | Parent passed `n={x}` | Parent passed `bind:n={box}` |
 |---|---|---|
 | Read `n` or `props.n` | Live | Live |
 | `let n = props.n; n = 5` | Holds in the child until the parent's value next changes, then the parent wins | Writes `box` |
 | `props.n = 5` | The same | The same: writes `box` |
 | `const n = props.n; n = 5` | **W001**: use `let` or `props.n =` | **W001** |
 
-`bind` at the call site alone decides whether a write leaves the component. `<Card n={box.value} />` never writes
-`box`, whatever `Card` does. `bind` takes a box (**W061** otherwise) and types as the box's value, so `n: number` stays
-`n: number`. An island's props arrive as data, so a write there is always local.
+`bind:` at the call site alone decides whether a write leaves the component. `<Card n={box.value} />` never writes
+`box`, whatever `Card` does. It takes a box, on a component (**W061** otherwise). `n={bind(box)}` is the same binding,
+and types as the box's value, so use it if `n` is a required prop: TypeScript doesn't connect `bind:n` to `n`. An
+island's props arrive as data, so a write there is always local.
 
 Only a whole prop can be written this way. `let n = props.user.name; n = 1` is **W001**; `props.user.name = 1` writes
 that object, as in any JavaScript.

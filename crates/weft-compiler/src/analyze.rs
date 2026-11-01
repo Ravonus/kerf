@@ -856,6 +856,30 @@ impl<'s> Analyzer<'s> {
         }
     }
 
+    /// `bind:count={box}`: only on a component, and only with something that can be a box.
+    fn bound_attribute(&mut self, attr: &JSXAttributeItem<'_>, intrinsic: bool) {
+        let JSXAttributeItem::Attribute(a) = attr else { return };
+        let JSXAttributeName::NamespacedName(ns) = &a.name else { return };
+        if ns.namespace.name != "bind" {
+            return;
+        }
+        let value = match &a.value {
+            Some(JSXAttributeValue::ExpressionContainer(c)) => c.expression.as_expression(),
+            _ => None,
+        };
+        let path = value.is_some_and(|e| chain_root_member(e).is_some() || matches!(e.get_inner_expression(), Expression::Identifier(_)));
+        if intrinsic || !path {
+            self.plan.diagnostics.push(Diagnostic::new(
+                self.source,
+                "W061",
+                Severity::Error,
+                (a.span.start, a.span.end),
+                "`bind:` takes a box, on a component.",
+                "Write `<Card bind:person={name} />`, with `name` a box. A form element takes `value` and `onChange`.",
+            ));
+        }
+    }
+
     fn is_bind(&self, call: &CallExpression<'_>) -> bool {
         let Expression::Identifier(id) = &call.callee else { return false };
         symbol_of(self.scoping, id).and_then(|s| self.imports.get(&s)).is_some_and(|(from, name)| from == "weft" && name == "bind")
@@ -1318,6 +1342,9 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
     fn visit_jsx_opening_element(&mut self, it: &JSXOpeningElement<'a>) {
         // On a native element a box can only mean its value; on a component it may be passed for write access.
         let intrinsic = matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
+        for attr in &it.attributes {
+            self.bound_attribute(attr, intrinsic);
+        }
         if intrinsic {
             for attr in &it.attributes {
                 if let JSXAttributeItem::Attribute(a) = attr

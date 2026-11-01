@@ -1064,6 +1064,14 @@ impl<'t> Emitter<'t> {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
                         JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
                     };
+                    // `bind:count={box}`: the child reads the box, and its writes reach it.
+                    if let (false, JSXAttributeName::NamespacedName(ns), Some(e)) = (element, &a.name, attr_expression(a))
+                        && ns.namespace.name == "bind"
+                    {
+                        let (k, target) = (prop_key(ns.name.name.as_str()), self.expr(e));
+                        fields.push(format!("get {k}() {{ return {target}.value; }}, set {k}(_v) {{ {target}.value = _v; }}"));
+                        continue;
+                    }
                     if key == "key" || key == TAG || key == ISLAND {
                         continue;
                     }

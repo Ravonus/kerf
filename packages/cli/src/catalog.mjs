@@ -138,8 +138,8 @@ export const catalog = [
     example: "import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
   },
   {
-    code: 'W061', severity: 'error', by: 'compiler', catches: '`bind(box)` anywhere but as the whole value of a component prop, or with something that isn\'t a box',
-    fix: 'Write `<Card person={bind(name)} />`. A form element takes `value` and `onChange`',
+    code: 'W061', severity: 'error', by: 'compiler', catches: '`bind:x` on a native element, or `bind:x`/`bind(box)` with something that isn\'t a box or that isn\'t a component prop',
+    fix: 'Write `<Card bind:person={name} />`. A form element takes `value` and `onChange`',
     example: "import { bind, state } from 'weft'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
   },
 

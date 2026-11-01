@@ -43,7 +43,7 @@ export type HTMLAttributes<T> = Events<T> & {
 export namespace JSX {
   export type Element = any
   export interface ElementChildrenAttribute { children: {} }
-  export interface IntrinsicAttributes { key?: string | number }
+  export interface IntrinsicAttributes { key?: string | number; [bound: `bind:${string}`]: unknown }
   export type IntrinsicElements = { [K in keyof HTMLElementTagNameMap]: HTMLAttributes<HTMLElementTagNameMap[K]> } & {
     [K in Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>]: HTMLAttributes<SVGElementTagNameMap[K]>
   }
