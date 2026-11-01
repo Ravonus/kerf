@@ -1,5 +1,6 @@
 import { indicator, installSweep, uid } from '@weft/ui-core'
 import { onMount, untrack } from 'weft'
+import type { Interaction } from 'weft/interaction'
 import { Icon, type IconRef } from './Icon'
 import { use } from './use'
 import './fields'
@@ -28,15 +29,18 @@ export function Switch({ children, hint, size, placement = 'end', ...rest }: { c
 }
 
 /** A native checkbox (03 §4): the box never fills, the check draws in; `indeterminate` is the real property. */
-export function Checkbox({ children, hint, error, indeterminate, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: any; error?: any; children?: any; [attr: string]: any }) {
+export function Checkbox({ children, hint, error, indeterminate, ui, ...rest }: { checked?: boolean; indeterminate?: boolean; hint?: any; error?: any; ui?: Interaction; children?: any; [attr: string]: any }) {
   onMount(() => installSweep())
   let input: HTMLInputElement | undefined
+  let host: HTMLLabelElement | undefined
+  const row = untrack(() => ui)
+  if (row) use(row.attach, () => host)
   use((el: HTMLInputElement, on: boolean | undefined) => {
     el.indeterminate = !!on
     return { update: v => void (el.indeterminate = !!v), destroy() {} }
   }, () => input, () => indeterminate)
   return (
-    <label data-scope="checkbox" data-invalid={error ? '' : undefined}>
+    <label ref={(n: any) => (host = n)} data-scope="checkbox" data-invalid={error ? '' : undefined}>
       <input ref={(n: any) => (input = n)} type="checkbox" aria-invalid={error ? 'true' : undefined} {...rest} />
       <span data-part="control" data-sweep="" data-phase="idle">
         {sweepParts()}

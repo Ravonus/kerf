@@ -36,3 +36,4 @@ export { mentionToken, parseMentions, serializeMentions, shiftMarks, findTrigger
 export { indented, tokenize, highlight, copyButtons, jsonProblem, codeLayer, type CodeToken, type CodeSpan } from './code'
 export { sanitizeHtml, safeUrl, markdownToHtml, htmlToMarkdown, richText, keyboardDock, type RichTextOptions, type RichTextHandle } from './editor'
 export { navIndicator, type NavIndicatorOptions } from './nav'
+export { interact, type Flag, type Interactive } from './interact'

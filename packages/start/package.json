@@ -55,6 +55,8 @@
     "./list": "./src/list.ts",
     "./list/drizzle": "./src/list-drizzle.ts",
     "./channel": "./src/channel.ts",
+    "./share": "./src/share.ts",
+    "./share/server": "./src/share-server.ts",
     "./db": "./src/db/index.ts",
     "./db/core": "./src/db/core.ts",
     "./db/sqlite": "./src/db/sqlite.ts",

@@ -8,11 +8,13 @@
   "sideEffects": [
     "*.css",
     "./src/styles.ts",
-    "./src/fields.ts"
+    "./src/fields.ts",
+    "./src/ui.ts"
   ],
   "exports": {
     ".": "./src/index.ts",
     "./skeleton": "./src/skeleton-css.ts",
+    "./ui": "./src/ui.ts",
     "./plugin": "./plugin.mjs",
     "./tailwind.css": "./tailwind.css"
   },

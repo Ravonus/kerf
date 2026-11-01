@@ -1,6 +1,8 @@
 import { installSweep } from '@weft/ui-core'
 import { derived, onMount, untrack } from 'weft'
+import type { Interaction } from 'weft/interaction'
 import { Icon, type IconRef } from './Icon'
+import { use } from './use'
 import './styles'
 import '@weft/ui-core/styles/components/button.css'
 import '@weft/ui-core/styles/components/spinner.css'
@@ -21,6 +23,8 @@ export interface ButtonProps {
   label?: string
   /** Busy: the label stays the accessible name (hidden by opacity), presses are swallowed, focus stays. */
   loading?: boolean
+  /** PROTOTYPE (research 40): state to fill and to draw from, whoever set it. */
+  ui?: Interaction
   children?: any
   [attr: string]: any
 }
@@ -31,8 +35,11 @@ const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
  * A native button (05 §2), the specimen markup exactly: solid, ghost and link draw their sweep in CSS (the ::before
  * wipe); soft and outline append one [data-part="sweep"]; frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
-export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, children, ...rest }: ButtonProps) {
+export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
   const kind = untrack(() => emphasis)
+  let host: HTMLButtonElement | undefined
+  const row = untrack(() => ui)
+  if (row) use(row.attach, () => host)
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
   if (swept(kind)) onMount(() => installSweep())
@@ -61,6 +68,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       aria-disabled={loading ? 'true' : undefined}
       onClick={press}
       {...rest}
+      ref={(n: any) => { host = n; ref?.(n) }}
     >
       {kind === 'frame' ? (
         <>
