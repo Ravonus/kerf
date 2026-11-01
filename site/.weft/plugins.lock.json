@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "plugins": {
+    "@weft/icons": {
+      "version": "0.0.0",
+      "integrity": null,
+      "permissions": [],
+      "provides": [],
+      "undeclared": []
+    },
+    "@weft/plugin-text": {
+      "version": "0.0.0",
+      "integrity": null,
+      "permissions": [
+        "fs.read:**/*.{woff2,woff,ttf,otf}"
+      ],
+      "provides": [
+        "font.build"
+      ],
+      "undeclared": []
+    },
+    "@weft/warp": {
+      "version": "0.0.0",
+      "integrity": null,
+      "permissions": [
+        "fs.read:node_modules/@weft/ui-core/**",
+        "fs.write:$TMPDIR/warp-seed-*",
+        "spawn:node"
+      ],
+      "provides": [],
+      "undeclared": []
+    }
+  }
+}

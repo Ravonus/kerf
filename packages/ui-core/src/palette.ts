@@ -49,11 +49,13 @@ export function marked(label: string, hits: readonly number[]) {
 }
 
 /** ⌘K or Ctrl+K anywhere in the document (05 §3). */
-export function paletteHotkey(el: HTMLElement, opts: { key: string; onPress(): void }) {
+export function paletteHotkey(el: HTMLElement, opts: { key: string; slash?: boolean; onPress(): void }) {
   let o = opts
   const doc = el.ownerDocument
   const onKey = (e: KeyboardEvent) => {
-    if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== o.key) return
+    const target = e.target as HTMLElement | null
+    const slash = o.slash && e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !target?.closest?.('input, textarea, select') && !target?.isContentEditable
+    if (!slash && (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== o.key)) return
     e.preventDefault()
     o.onPress()
   }

@@ -12,6 +12,7 @@
     ".": "./src/index.ts",
     "./motion": "./src/motion.ts",
     "./charts": "./src/charts/index.ts",
+    "./search": "./src/search.ts",
     "./styles/*": "./styles/*"
   },
   "devDependencies": {

@@ -1,0 +1,11 @@
+node_modules/
+.weft/*
+!.weft/plugins.lock.json
+.output/
+dist/
+src/generated/
+public/search/
+public/llms.txt
+public/llms-full.txt
+public/search.json
+public/docs/

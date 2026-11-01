@@ -212,6 +212,12 @@ function rescoped(key, scope) {
   return out
 }
 
+/**
+ * For `site.head`: applies the dials `setDial(…, { persist: true })` kept, before the first paint, so a prerendered page
+ * doesn't show the OS theme first.
+ */
+export const dialScript = `<script>try{Object.assign(document.documentElement.dataset,JSON.parse(localStorage.getItem('warp:dials')||'{}'))}catch(e){}</script>`
+
 export const classicCss = () => rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
 export const dialCss = (dial, value) => rescoped(`[data-${dial}="${value}"]`, `:root:not([data-${dial}])`)
 

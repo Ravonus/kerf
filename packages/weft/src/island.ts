@@ -41,9 +41,11 @@ function bounds(nodes: Node[], d: number): [Comment?, Comment?] {
 
 /**
  * The server's children of an island: in place, or in the `<template>` after it when it didn't render them. Taken once,
- * at mount: the markers go in the sweep, and the island may show these nodes again and again.
+ * at mount: the markers go in the sweep, and the island may show these nodes again and again. An island that shows its
+ * children twice (a label and its sweep copy) has a range for each, so each read takes the next.
  */
 function slot(open: Node, close: Node) {
+  const ranges: Node[][] = []
   const w = document.createTreeWalker(open.parentNode!, 128)
   w.currentNode = open
   let a: Node | undefined
@@ -53,13 +55,14 @@ function slot(open: Node, close: Node) {
     if (c.data === 'ws' && !depth++) a = c
     else if (c.data === '/ws' && !--depth) {
       hydration.trash.push(a as ChildNode, c)
-      return siblings(a!, c)
+      ranges.push(siblings(a!, c))
     }
   }
+  if (ranges.length) return ranges
   const t = close.nextSibling as HTMLTemplateElement | null
-  if (t?.nodeName !== 'TEMPLATE') return []
+  if (t?.nodeName !== 'TEMPLATE') return [[]]
   hydration.trash.push(t)
-  return [...t.content.childNodes]
+  return [[...t.content.childNodes]]
 }
 
 function closing(open: Node) {
@@ -89,7 +92,9 @@ function mountIslands(nodes: Node[], load: Load) {
     const [id, key, v] = JSON.parse(c.data.slice(3)) as [string, string, unknown[]]
     const open = c.nextSibling!
     const close = closing(open)
-    const props = { v, s: slot(open, close!) }
+    const ranges = slot(open, close!)
+    let read = 0
+    const props = { v, get s() { return ranges[read++ % ranges.length] } }
     under(key + '/', () => hchild(c.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1))
     // At the level's top with a range that stays: the island decides what's in it, so the level can't list it.
     if (top && !hydration.trash.includes(close as ChildNode)) {

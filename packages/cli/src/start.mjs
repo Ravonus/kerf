@@ -30,6 +30,9 @@ export async function start(root, sub) {
 async function site(root) {
   const loaded = await loadConfig(root)
   if (!loaded.diagnostics.some(d => d.code === 'P007') && loaded.config?.plugins?.length) sync(root, loaded)
+  // A build on a config that doesn't load would quietly drop every plugin: fonts, tokens and slots.
+  const bad = loaded.diagnostics.find(d => d.code === 'P007')
+  if (bad) throw Object.assign(new Error(`P007: ${bad.message ?? bad.why}`), { code: 'E_USAGE' })
   return { site: loaded.config?.site ?? {}, hydration: loaded.config?.hydration, diagnostics: loaded.diagnostics }
 }
 

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "jsx": "preserve",
+    "jsxImportSource": "weft",
+    "lib": [
+      "es2023",
+      "dom",
+      "dom.iterable"
+    ],
+    "paths": {
+      "#/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "weft/client"
+    ]
+  },
+  "include": [
+    "src",
+    "weft.config.ts",
+    ".weft/*.d.ts"
+  ]
+}

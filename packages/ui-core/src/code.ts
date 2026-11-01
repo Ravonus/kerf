@@ -34,6 +34,71 @@ export function tokenize(text: string, language = 'code') {
   return spans
 }
 
+const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' }
+const esc = (s: string) => s.replace(/[&<>]/g, c => HTML_ESCAPES[c])
+const TSX_KEYWORDS = 'import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|class|extends|new|await|async|type|interface|typeof|keyof|as|try|catch|throw|yield'
+const SHELL = /(#[^\n]*)|("[^"\n]*"|'[^'\n]*')|(?<![\w-])(--?[\w-]+)|^(\s*\w[\w-]*)/gm
+const TSX = new RegExp(
+  '(\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)' + // comment
+  '|("(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\'|`(?:[^`\\\\]|\\\\.)*`)' + // string
+  '|\\b(\\d+(?:\\.\\d+)?)\\b' + // number
+  `|\\b(${TSX_KEYWORDS}|true|false|null|undefined)\\b` + // keyword
+  '|(?<=<\\/?)([A-Za-z][\\w.-]*)|\\b([A-Z]\\w*)\\b', // tag, then a capitalised name
+  'g',
+)
+
+/**
+ * Code as HTML, for a build or a server render: spans `.c` comment, `.s` string, `.n` number, `.k` keyword and `.t` type or
+ * tag, one `data-part="line"` per line (`[data-scope="codeblock"]`). Escaped, so it's safe in `innerHTML`.
+ */
+export function highlight(text: string, language = 'tsx') {
+  const shell = language === 'sh' || language === 'bash' || language === 'shell'
+  const json = language === 'json'
+  const plain = !shell && !json && !/^[jt]sx?$|^mjs$|^jsonc$/.test(language)
+  const out: string[] = []
+  let at = 0
+  const span = (cls: string, from: number, to: number) => {
+    if (from > at) out.push(esc(text.slice(at, from)))
+    out.push(`<span class="${cls}">${esc(text.slice(from, to))}</span>`)
+    at = to
+  }
+  if (json) for (const t of tokenize(text, 'json')) span(t.kind === 'string' ? 's' : t.kind === 'number' ? 'n' : 'k', t.start, t.end)
+  else if (shell) for (const m of text.matchAll(SHELL)) span(m[1] ? 'c' : m[2] ? 's' : m[3] ? 't' : 'k', m.index, m.index + m[0].length)
+  else if (!plain) for (const m of text.matchAll(TSX)) span(m[1] ? 'c' : m[2] ? 's' : m[3] ? 'n' : m[4] ? 'k' : 't', m.index, m.index + m[0].length)
+  out.push(esc(text.slice(at)))
+  // A multi-line span closes and reopens at each newline, so every line stands alone.
+  return out.join('').replace(/\n$/, '').split('\n').reduce<{ lines: string[]; open: string }>((acc, line) => {
+    const opens = line.match(/<span class="[^"]*">/g) ?? []
+    const closes = (line.match(/<\/span>/g) ?? []).length
+    const unclosed = opens.length > closes ? opens.at(-1)! : ''
+    const body = acc.open + line + (unclosed || (acc.open && closes === 0) ? '</span>' : '')
+    acc.lines.push(`<span data-part="line">${body}</span>`)
+    acc.open = unclosed || (acc.open && closes === 0 ? acc.open : '')
+    return acc
+  }, { lines: [], open: '' }).lines.join('')
+}
+
+/**
+ * Every `[data-act="copy"]` in the document, by one listener: the code is the nearest `[data-scope="codeblock"]`'s, or
+ * the button's `data-copy-text`, or what `data-copy-url` answers. A page of static code blocks needs this once and no
+ * other script.
+ */
+export function copyButtons(doc: Document = document) {
+  const onClick = (e: Event) => {
+    const button = (e.target as Element).closest?.<HTMLElement>('[data-act="copy"]')
+    if (!button) return
+    const code = button.closest('[data-scope="codeblock"]')?.querySelector('code')
+    const url = button.dataset.copyUrl
+    const text = url ? fetch(url).then(r => r.text()) : Promise.resolve(button.dataset.copyText ?? code?.textContent ?? '')
+    void text.then(t => navigator.clipboard?.writeText(t)).then(() => {
+      button.dataset.done = ''
+      setTimeout(() => delete button.dataset.done, 1600)
+    })
+  }
+  doc.addEventListener('click', onClick)
+  return () => doc.removeEventListener('click', onClick)
+}
+
 const JSON_ATOM = /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[\da-fA-F]{4}))*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y
 
 /** Where JSON stops being JSON. V8 names a position only sometimes and short text never, so this walks it itself. */

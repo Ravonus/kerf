@@ -85,6 +85,7 @@ const site = z.strictObject({
   description: z.string().optional(),
   locale: z.string().regex(/^[a-z]{2,3}(_[A-Z]{2})?$/, { error: 'must look like `en_US`' }).optional(),
   image: z.union([z.literal('auto'), z.string().min(1), image]).optional(),
+  head: z.string().optional(),
   twitter: z
     .strictObject({ card: z.enum(['summary', 'summary_large_image', 'app', 'player']).optional(), site: z.string().optional(), creator: z.string().optional() })
     .optional(),

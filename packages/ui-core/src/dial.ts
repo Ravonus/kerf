@@ -14,6 +14,17 @@ export const DIALS = {
 export type Dial = keyof typeof DIALS
 export type DialValue<D extends Dial> = (typeof DIALS)[D]['values'][number]
 const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair'])
+// `dialScript` in @weft/warp/plugin reads this key before the first paint.
+const KEY = 'warp:dials'
+
+function remember(name: Dial, value: string) {
+  try {
+    const held = JSON.parse(localStorage.getItem(KEY) ?? '{}')
+    if (value === DIALS[name].initial) delete held[name]
+    else held[name] = value
+    localStorage.setItem(KEY, JSON.stringify(held))
+  } catch {} // private windows and blocked storage: the dial still works for this page
+}
 
 /** The dial's value on `root` (its initial value when unset). */
 export function getDial<D extends Dial>(name: D, root: HTMLElement = document.documentElement): DialValue<D> {
@@ -27,7 +38,7 @@ export function getDial<D extends Dial>(name: D, root: HTMLElement = document.do
 export function setDial<D extends Dial>(
   name: D,
   value: DialValue<D>,
-  { root = document.documentElement, url = false, transition }: { root?: HTMLElement; url?: boolean; transition?: (write: () => void) => void } = {},
+  { root = document.documentElement, url = false, persist = false, transition }: { root?: HTMLElement; url?: boolean; persist?: boolean; transition?: (write: () => void) => void } = {},
 ) {
   if (!(DIALS[name].values as readonly string[]).includes(value)) throw new RangeError(`${name} is one of ${DIALS[name].values.join(', ')}`)
   let done = false
@@ -38,6 +49,7 @@ export function setDial<D extends Dial>(
     else root.dataset[name] = value
     root.ownerDocument.dispatchEvent(new CustomEvent('warp:dial', { detail: { name, value } }))
   }
+  if (persist) remember(name, value)
   if (url) {
     const q = new URLSearchParams(location.search)
     if (value === DIALS[name].initial) q.delete(name)

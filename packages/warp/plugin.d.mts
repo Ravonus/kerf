@@ -1,5 +1,8 @@
 import type { PluginInstance } from 'weft/plugin'
 
+/** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
+export const dialScript: string
+
 export interface WarpOptions {
   /** The brand accent: `{ accent: '#rrggbb' }`, or a hue and chroma. Checked against every dial stop (D010). */
   seed?: { accent: string } | { hue: number; chroma: number }

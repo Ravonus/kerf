@@ -54,6 +54,15 @@ test('islands hydrate 0/0, then what only the claim needed goes', async () => {
   await page.close()
 })
 
+test('an island that shows its children twice keeps both', async () => {
+  const { page, errors } = await open('/islands')
+  await settled(page)
+  expect(await page.textContent('.twice b')).toBe('both places')
+  expect(await page.textContent('.twice i')).toBe('both places')
+  expect(errors).toEqual([])
+  await page.close()
+})
+
 test('props reach an island, and each row of a keyed list keeps its own state', async () => {
   const { page, errors } = await open('/islands')
   expect(await page.textContent('.counter[data-label=solo]')).toBe('solo: 5')

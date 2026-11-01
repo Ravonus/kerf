@@ -76,10 +76,20 @@ function inline(s: string, target: string) {
   return styled.replace(/\u0000(\d+)\u0000/g, (_, i) => held[i])
 }
 
-const STARTS = /^(#{1,4}\s|```|>|\s*[-*+]\s|\s*\d+[.)]\s|-{3,}\s*$)/
+const STARTS = /^(#{1,4}\s|```|>|\|.*\|\s*$|\s*[-*+]\s|\s*\d+[.)]\s|-{3,}\s*$)/
+const TABLE_RULE = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/
+const cells = (row: string) => row.trim().replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, '|'))
+
+export interface MarkdownOptions {
+  linkTarget?: string
+  /** Replaces a fenced block's markup: a build's highlighter, say. It gets the raw text, and what it returns isn't escaped. */
+  code?: (text: string, language: string) => string
+  /** Keep a document's own levels (`#` is h1) and give each heading the id this returns. */
+  heading?: (text: string, level: number) => string
+}
 
 /** The small safe renderer (04 Markdown). Raw HTML is escaped and shows as text; headings render one level down. */
-export function markdownToHtml(source: string, { linkTarget = '_self' }: { linkTarget?: string } = {}) {
+export function markdownToHtml(source: string, { linkTarget = '_self', code, heading }: MarkdownOptions = {}) {
   const L = source.replace(/\r/g, '').split('\n')
   let out = ''
   for (let i = 0; i < L.length;) {
@@ -90,11 +100,19 @@ export function markdownToHtml(source: string, { linkTarget = '_self' }: { linkT
       const buf: string[] = []
       for (i++; i < L.length && !/^```/.test(L[i]); i++) buf.push(L[i])
       i++
-      out += `<pre data-scope="codeblock"${lang ? ` data-lang="${esc(lang)}"` : ''} tabindex="0" aria-label="${esc(lang || 'Code')}"><code>${esc(buf.join('\n'))}</code></pre>`
+      if (code) out += code(buf.join('\n'), lang)
+      else out += `<pre data-scope="codeblock"${lang ? ` data-lang="${esc(lang)}"` : ''} tabindex="0" aria-label="${esc(lang || 'Code')}"><code>${esc(buf.join('\n'))}</code></pre>`
     } else if ((m = /^(#{1,4})\s+(.*)$/.exec(l))) {
-      const tag = `h${m[1].length + 1}`
-      out += `<${tag}>${inline(m[2], linkTarget)}</${tag}>`
+      const tag = `h${m[1].length + (heading ? 0 : 1)}`
+      out += `<${tag}${heading ? ` id="${esc(heading(m[2], m[1].length))}"` : ''}>${inline(m[2], linkTarget)}</${tag}>`
       i++
+    } else if (l.includes('|') && TABLE_RULE.test(L[i + 1] ?? '')) {
+      const head = cells(l)
+      const align = cells(L[i + 1]).map(c => (c.endsWith(':') ? ' style="text-align:end"' : ''))
+      i += 2
+      const rows: string[] = []
+      for (; i < L.length && L[i].includes('|') && L[i].trim(); i++) rows.push(`<tr>${cells(L[i]).map((c, n) => `<td${align[n] ?? ''}>${inline(c, linkTarget)}</td>`).join('')}</tr>`)
+      out += `<table><thead><tr>${head.map((c, n) => `<th scope="col"${align[n] ?? ''}>${inline(c, linkTarget)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`
     } else if (/^(-{3,}|\*{3,})\s*$/.test(l)) {
       out += '<hr>'
       i++
@@ -106,7 +124,11 @@ export function markdownToHtml(source: string, { linkTarget = '_self' }: { linkT
       const ordered = /^\s*\d/.test(l)
       const re = ordered ? /^\s*\d+[.)]\s+/ : /^\s*[-*+]\s+/
       const items: string[] = []
-      while (i < L.length && re.test(L[i])) items.push(L[i++].replace(re, ''))
+      while (i < L.length) {
+        if (re.test(L[i])) items.push(L[i++].replace(re, ''))
+        else if (items.length && /^\s+\S/.test(L[i]) && !/^\s*([-*+]|\d+[.)])\s/.test(L[i])) items[items.length - 1] += ` ${L[i++].trim()}` // a wrapped item
+        else break
+      }
       const tag = ordered ? 'ol' : 'ul'
       out += `<${tag}>${items.map(x => {
         const task = /^\[( |x)\]\s+/i.exec(x)

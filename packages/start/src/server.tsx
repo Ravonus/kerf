@@ -186,7 +186,7 @@ export function createHandler(options: HandlerOptions) {
     const moved = hold.out.redirect
     if (moved) return { status: moved.status, path, levels: [], head: mergeMeta(site), redirect: moved }
     const matches = router.state.matches.map(m => ({ m, weft: (router.routesById as any)[m.routeId]?.options.weft as RouteEntry | LayoutEntry | undefined }))
-    const params = (m: any) => cleanParams(m.params)
+    const params = (m: any, splat?: string) => cleanParams(m.params, splat)
     const leaf = matches.at(-1)?.weft
     const route = leaf && 'kind' in leaf ? leaf : undefined
     const failed = matches.find(x => x.m.status === 'error')
@@ -196,7 +196,7 @@ export function createHandler(options: HandlerOptions) {
     const levelOf = (x: (typeof matches)[number]): Level => {
       const raw = x.m.loaderData
       const t = hold.tags.get(x.weft!.file)
-      return { id: x.weft!.id, params: params(x.m), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
+      return { id: x.weft!.id, params: params(x.m, (x.weft as RouteEntry).splat), mod: mod(x.weft!.file), raw, ...split(raw), ...(t?.size && { t: [...t] }) }
     }
     const special = (id: '404' | 'error', status: number, error?: unknown): Promise<Resolved> => {
       const entry = byId.get(id)
@@ -257,6 +257,7 @@ export function createHandler(options: HandlerOptions) {
     const head =
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
+      (site.head ? site.head + '\n' : '') +
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
       sheets(assets) +
       // The entry's own script tag, just below, already fetches it.
@@ -612,7 +613,7 @@ interface LoadContext { request: Request; scope: Scope; tags: Map<string, Set<st
 
 /** The router-core tree for the manifest: layouts are path prefixes, routes hang under their innermost layout. */
 function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
-  const loader = (file: string) => async ({ params, context, abortController }: { params: any; context: LoadContext; abortController: AbortController }) => {
+  const loader = (file: string, splat?: string) => async ({ params, context, abortController }: { params: any; context: LoadContext; abortController: AbortController }) => {
     const load = modules[file]?.load
     if (!load) return undefined
     // Parent first (router-core starts them together): a layout's `load` is a guard, so a child never runs for a
@@ -628,7 +629,7 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     context.tags.set(file, f.tags!)
     try {
       const ctx = await f.ctx()
-      const v = await als.run(f, () => load({ params: cleanParams(params), request: context.request, signal: abortController.signal, ctx }))
+      const v = await als.run(f, () => load({ params: cleanParams(params, splat), request: context.request, signal: abortController.signal, ctx }))
       if (isNotFound(v)) throw v
       return v
     } catch (e) {
@@ -655,7 +656,7 @@ function routeTree(manifest: Manifest, modules: Record<string, RouteModule>) {
     if (r.kind !== 'page') continue
     const parent = at(r.layouts.at(-1))
     const rel = r.pattern.slice(1).split('/').slice(parent.dir ? parent.dir.split('/').length : 0).join('/')
-    parent.children.push(new BaseRoute({ getParentRoute: () => parent.route, path: rel || '/', loader: loader(r.file), weft: r } as any))
+    parent.children.push(new BaseRoute({ getParentRoute: () => parent.route, path: rel || '/', loader: loader(r.file, r.splat), weft: r } as any))
   }
   // Innermost layouts first, so each route's children are attached before its parent takes it.
   for (const n of [...new Set(nodes.values())].filter(n => n !== top).sort((a, b) => b.dir.length - a.dir.length)) if (n.children.length) n.route.addChildren(n.children)
@@ -669,9 +670,10 @@ function toPath(dir: string, parentDir: string) {
 }
 
 /** router-core's params without its splat aliases; a splat is under its file name (`[...rest]` → `rest`). */
-function cleanParams(p: Record<string, unknown> = {}): Record<string, string> {
+function cleanParams(p: Record<string, unknown> = {}, splat?: string): Record<string, string> {
   const out: Record<string, string> = {}
   for (const k in p) if (k !== '*' && k !== '_splat') out[k] = String(p[k])
+  if (splat && p._splat !== undefined) out[splat] = String(p._splat)
   return out
 }
 

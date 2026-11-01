@@ -462,9 +462,11 @@
   :where([data-scope="codeblock"] [data-part="line"]) { white-space: pre; min-block-size: 1.65em; }
   :where([data-scope="codeblock"][data-wrap] [data-part="line"]) { white-space: pre-wrap; overflow-wrap: anywhere; }
   :where([data-scope="codeblock"] pre[data-lines] [data-part="line"])::before { counter-increment: ln; content: counter(ln); display: inline-block; inline-size: 2ch; margin-inline-end: 14px; text-align: end; color: var(--warp-color-text-subtle); user-select: none; }
-  :where([data-scope="codeblock"] .c) { color: var(--warp-color-text-subtle); font-style: italic; }
+  :where([data-scope="codeblock"] .c) { color: var(--warp-color-text-subtle); }
   :where([data-scope="codeblock"] .s) { color: var(--warp-color-accent-text); }
-  :where([data-scope="codeblock"] .k) { font-weight: 600; }
+  :where([data-scope="codeblock"] .k) { color: var(--warp-color-info-text); }
+  :where([data-scope="codeblock"] .t) { color: var(--warp-color-highlight-text); }
+  :where([data-scope="codeblock"] .n) { color: var(--warp-color-caution-text); }
   /* -- markdown */
   :where([data-scope="markdown"]) { display: grid; gap: 10px; min-inline-size: 0; font-size: var(--warp-text-body-size); line-height: 1.6; padding: 4px 2px; }
   :where([data-scope="markdown"] > *) { margin: 0; }

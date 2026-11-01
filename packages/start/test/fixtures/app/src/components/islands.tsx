@@ -41,3 +41,9 @@ export function Many() {
 export function Label(props: { text: string }) {
   return <em class="label">{props.text}</em>
 }
+
+/** Shows its children twice, as warp's frame button shows its label and the sweep's copy. */
+export function Twice(props: { children?: unknown }) {
+  const n = state(0)
+  return <button class="twice" onClick={() => n.value++}><b>{props.children}</b><i>{props.children}</i>{n.value}</button>
+}

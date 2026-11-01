@@ -54,6 +54,8 @@ export interface SiteConfig {
   twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
   /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
   inlineCss?: boolean
+  /** Raw HTML for every page's head, before the stylesheets: what has to run before the first paint. Not escaped. */
+  head?: string
 }
 
 export interface WeftConfig {

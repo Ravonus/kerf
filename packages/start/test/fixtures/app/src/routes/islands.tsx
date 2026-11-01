@@ -1,5 +1,5 @@
 import type { RouteProps } from '@weft/start'
-import { Counter, Fold, Label, Reveal, Stocked } from '../components/islands'
+import { Counter, Fold, Label, Reveal, Stocked, Twice } from '../components/islands'
 
 export const load = async () => ({ start: 5, note: 'From the server', items: [{ id: 'a', n: 1 }, { id: 'b', n: 2 }] })
 
@@ -15,6 +15,7 @@ export default function Islands(props: RouteProps<typeof load>) {
       <Fold title="fold"><p class="kept">{props.data.note}</p></Fold>
       <Reveal><p class="late">{props.data.note}</p></Reveal>
       <Stocked n={7} />
+      <Twice>both places</Twice>
     </main>
   )
 }
