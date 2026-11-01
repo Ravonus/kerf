@@ -107,7 +107,7 @@ test('a shuffle is a permutation, and the seed replays it', () => {
 })
 
 test('the proxy delays each way, counts turns, and frames queries across chunks', async () => {
-  const echo = net.createServer(c => c.on('data', d => c.write(d)))
+  const echo = net.createServer(c => c.on('data', d => c.write(d)).on('error', () => {})) // proxy.close() is a reset on Windows
   await new Promise(ok => echo.listen(0, '127.0.0.1', ok))
   const proxy = createProxy({ port: echo.address().port, rtt: 40 }), port = await proxy.listen()
   const c = net.connect(port, '127.0.0.1')
