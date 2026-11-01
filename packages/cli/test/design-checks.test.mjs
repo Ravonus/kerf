@@ -154,7 +154,7 @@ describe('values (an app with warp)', () => {
   test('!important is not part of a value: zero stays zero, and a raw value is still caught', async () => {
     const root = project({ ...warpPkg, 'src/app.css': `.a { margin: 0 !important; }\n.b { gap: 7px !important; }\n` })
     const r = await check(root)
-    expect(r.diagnostics.filter(d => d.file === 'src/app.css').map(d => d.message)).toEqual([expect.stringContaining('7px')])
+    expect(r.diagnostics.filter(d => d.file === 'src/app.css').map(d => d.code)).toEqual(['D002'])
   })
 
   test('static files in public/ are not the app', async () => {
