@@ -215,3 +215,25 @@ test('the contrast measurer skips text clipped out of sight, and only that', asy
   expect((await pixelContrast(page, 2)).ok).toBe(false)
   await page.close()
 })
+
+// when a mask goes in, between the box being read and the screenshot being taken: the race a timed banner ran
+const whenMasked = move => `new MutationObserver(() => (${move})()).observe(document.head, { childList: true })`
+const banner = `<!doctype html><body style="background:#fff;margin:0;height:100vh;display:flex;flex-direction:column">
+  <div id="banner" style="height:57px;background:#fff"></div>
+  <button data-a11y-px="0" style="all:unset;align-self:start;padding:8px 16px;background:#176;color:#fff">Create project</button>`
+
+test('the contrast measurer reads text where it is, not where it was', async () => {
+  const page = await browser.newPage()
+  await page.setContent(banner)
+  await page.evaluate(whenMasked("() => document.getElementById('banner')?.remove()"))
+  expect((await pixelContrast(page, 0)).ok).toBe(true)
+  await page.close()
+})
+
+test('the contrast measurer fails text that never holds still', async () => {
+  const page = await browser.newPage()
+  await page.setContent(banner)
+  await page.evaluate(whenMasked("() => { document.getElementById('banner').style.height = Math.random() * 300 + 'px' }"))
+  await expect(pixelContrast(page, 0)).rejects.toThrow('kept moving')
+  await page.close()
+})

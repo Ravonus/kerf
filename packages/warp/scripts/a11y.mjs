@@ -277,7 +277,7 @@ function keepEvidence(moment, reading) {
  * oklch and color-mix work, times every ancestor's opacity) over the backgrounds actually painted under its text box
  * (a screenshot with the text made transparent), unless an overlay or scrim covers it. Every background covering ≥ 10% of the box counts; the worst wins.
  */
-export async function pixelContrast(page, i) {
+export async function pixelContrast(page, i, tries = 4) {
   const sel = `[data-a11y-px="${i}"]`
   const info = await page.evaluate(async sel => {
     const el = document.querySelector(sel)
@@ -305,7 +305,7 @@ export async function pixelContrast(page, i) {
     const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data
     const size = parseFloat(cs.fontSize), bold = Number(cs.fontWeight) >= 700
     const where = `${el.closest('[data-scope]')?.dataset.scope ?? el.tagName.toLowerCase()}/${el.dataset.part ?? el.tagName.toLowerCase()}`
-    return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
+    return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, at: [own.x, own.y, own.width, own.height], fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
   }, sel)
   if (!info || info.a < 0.05) return null
   if (await clippedAway(page, sel, info.box)) return null
@@ -315,6 +315,17 @@ export async function pixelContrast(page, i) {
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
+  // a timer can reflow the page after the box was read (a rate limit's banner ending): those pixels are some other
+  // part of the page, so they say nothing about this text. Read it again where it is now; never settling is a failure.
+  const moved = await page.evaluate(({ sel, at }) => {
+    const r = document.querySelector(sel)?.getBoundingClientRect()
+    return !r || [r.x, r.y, r.width, r.height].some((v, k) => Math.abs(v - at[k]) > 0.5)
+  }, { sel, at: info.at })
+  if (moved) {
+    await hide.evaluate(n => n.remove())
+    if (tries > 1) return pixelContrast(page, i, tries - 1)
+    throw new Error(`${info.where} kept moving while its contrast was measured`)
+  }
   // A11Y_EVIDENCE=<dir>: what the page was at this moment, with the mask still on, kept only if the reading fails
   const moment = process.env.A11Y_EVIDENCE && await evidence(page, sel, info)
   await hide.evaluate(n => n.remove())
