@@ -34,3 +34,13 @@ export const LINEAR = true
 export const KEYREAD = true
 /** A delegated handler that's a function is one property write, not two calls (crates/weft-compiler). */
 export const EVENT = true
+/** A hole that holds one text node writes a new primitive straight to it: no `place`, no reads from the DOM. */
+export const STEADY = true
+/** A flush whose effects were queued in creation order doesn't sort them. */
+export const ORDERED = true
+/** A hole's parent, marker and nodes are a plain record its one shared writer reads, not a closure per hole. */
+export const RECORD = true
+/** The first reader of a source and the first source of a reader sit on the object itself, so one link is no array. */
+export const INLINE = true
+/** What an owner owns is a chain through the computations, so owning is no array. */
+export const CHAIN = true

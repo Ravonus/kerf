@@ -85,8 +85,8 @@ export function graph(filter?: string): GraphNode[] {
   for (const n of nodes) {
     const id = ids.get(n)!
     if (filter && !id.startsWith(filter) && !n.n!.startsWith(filter)) continue
-    const readers = new Set<Computation>(n.o)
-    if (isBox(n) && n.k) for (const s of n.k.values()) for (const o of s.o) readers.add(o)
+    const readers = new Set<Computation>(n.f ? [n.f, ...n.o] : n.o)
+    if (isBox(n) && n.k) for (const s of n.k.values()) for (const o of s.f ? [s.f, ...s.o] : s.o) readers.add(o)
     const feeds: string[] = []
     const bindings = new Map<string, number>()
     const derivs = new Map<string, number>()
@@ -98,7 +98,7 @@ export function graph(filter?: string): GraphNode[] {
     for (const [where, count] of derivs) feeds.push(`${count} derived${where ? ` in ${where}` : ' (unnamed)'}`)
     for (const [where, count] of bindings) feeds.push(`${count} binding${count > 1 ? 's' : ''} in ${where}`)
     const reads: string[] = []
-    if (!isBox(n)) for (const s of n.s) {
+    if (!isBox(n)) for (const s of n.p ? [n.p, ...n.s] : n.s) {
       const src = (s as any).b ?? s // a `get(key)` source stands for its box
       const name = named.has(src) ? ids.get(src) : (src as any).n
       const key = (s as any).b ? `.get(${JSON.stringify((s as any).key)})` : ''
