@@ -9,12 +9,34 @@
 //
 // A caller stays on the client when a site's prop is a function over its local names, or a spread: `$iN` can't hold it
 // and JSON can't carry it. That is how a route falls back to hydrating whole, as every route did before.
+//
+// Then when each island loads, from everything it reaches. Waiting is the default and has to be earned the other way
+// round from above: only what is seen doing nothing without an event may wait for one.
+//
+//   interaction  handlers and nothing else: every change starts with an event, and events replay
+//   visible      work that starts by itself but stays inside the island (`onMount` with `SAFE` globals only), or server
+//                data that can move on; `@weft visible` says so where the compiler can't prove it
+//   load         anything else: `@weft client`, `autofocus`, a `ref` that does work, a module that runs as it loads, a
+//                box at module level (a write elsewhere couldn't reach an island that isn't there), code it can't see
 
 import { readFileSync, statSync } from 'node:fs'
 
 const PURE = { weft: new Set(['For', 'mergeProps']), '@weft/start': new Set(['Link']) }
 const OPAQUE = /^(weft|@weft\/start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
+/** weft API that needs nothing from the page and starts nothing by itself. */
+const QUIET = {
+  weft: new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
+  'weft/style': { has: () => true },
+  '@weft/start': new Set(['Link', 'Form']),
+}
+const STARTS = new Set(['onMount', 'watch', 'effect'])
+const DATA = new Set(['resource', 'Boundary'])
+const BOXES = new Set(['state', 'derived', 'memo', 'defineState'])
+/** Globals work may touch and still be its island's own: nothing here reaches past the island. */
+const SAFE = new Set(`Array BigInt Boolean Date Error Infinity IntersectionObserver Intl JSON Map Math MutationObserver NaN Number Object Promise
+  RegExp ResizeObserver Set String Symbol WeakMap WeakSet cancelAnimationFrame clearInterval clearTimeout console isFinite isNaN matchMedia parseFloat parseInt
+  performance requestAnimationFrame setInterval setTimeout structuredClone undefined`.split(/\s+/))
 const isServer = f => /\/src\/server\//.test(f) || /\.server\.[cm]?[jt]sx?$/.test(f)
 
 /**
@@ -24,8 +46,9 @@ const isServer = f => /\/src\/server\//.test(f) || /\.server\.[cm]?[jt]sx?$/.tes
  * @param {(spec: string, from: string) => Promise<string | undefined>} o.resolve
  * @param {(file: string) => string} o.rel a file's project-relative path, its islands' id
  * @param {Map} [o.cache] file → { mtime, facts }, kept between runs
+ * @param {boolean} [o.lazy] islands may wait for the page to need them (default true)
  */
-export async function solve({ entries, transform, resolve, rel, cache = new Map() }) {
+export async function solve({ entries, transform, resolve, rel, cache = new Map(), lazy = true }) {
   const mods = new Map()
   const queue = [...entries]
   const follow = async (mod, spec) => {
@@ -152,8 +175,65 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     }
   }
 
+  /** When an island may load: `when` (`v`, `i`, or none for the page's load), `why`, and `fix` when it's avoidable. */
+  const timing = (n, s) => {
+    const seen = new Set()
+    const at = o => `${o.name} (${rel(o.mod.file)}:${o.line})`
+    let start, data, forced, stop
+    const halt = (why, fix) => { stop ??= { why, fix } }
+    const look = (owner, names) => {
+      for (const u of names) {
+        const i = owner.mod.imports.get(u)
+        if (i && OPAQUE.test(i.source)) {
+          if (i.source === 'weft' && STARTS.has(i.imported)) start ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === 'weft' && DATA.has(i.imported)) data ??= `\`${i.imported}\` in ${at(owner)}`
+          else if (i.source === 'weft' && BOXES.has(i.imported)) {
+            if (owner.value) halt(`\`${owner.name}\` is a box at module level (${at(owner)}): a write from outside couldn't reach an island that isn't running`, `make the box inside the component, or pass it down from one that runs: nothing else keeps this island from waiting`)
+          } else if (!QUIET[i.source]?.has(i.imported)) halt(`\`${i.imported}\` from ${i.source} in ${at(owner)} isn't known to wait`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
+          continue
+        }
+        const file = i && owner.mod.resolved.get(i.source)
+        if (file && isServer(file)) {
+          if (owner.calls.includes(u)) data ??= `\`${u}()\` in ${at(owner)}`
+          continue
+        }
+        const t = local(owner.mod, u, new Set())
+        if (t?.ns) t.ns.facts.nodes.forEach(visit)
+        else if (t === true) halt(`\`${u}\` in ${at(owner)} is code the compiler can't see into`, `\`/* @weft visible */\` above ${owner.name}, when it does nothing until it's on screen`)
+        else if (t) visit(t)
+      }
+    }
+    const site = (owner, x) => {
+      look(owner, x.attrs.flatMap(a => a.uses))
+      look(owner, x.kids.uses)
+      if (x.tag) look(owner, [x.tag])
+    }
+    const visit = o => {
+      if (seen.has(o)) return
+      seen.add(o)
+      if (o.force === 'visible') return void (forced = o)
+      if (o.force === 'static') return
+      if (o.force === 'client') return halt(`\`@weft client\` on ${at(o)}`)
+      if (o.early) halt(`${o.early} in ${at(o)}`, o.early.startsWith('`autofocus') ? undefined : `keep the \`ref\` to storing the node, and do the work in a handler`)
+      if (o.mod.facts.effects) halt(`${rel(o.mod.file)} runs ${o.mod.facts.effects} as it loads`, `move that into a function an island calls`)
+      look(o, o.uses)
+      for (const x of o.sites) site(o, x)
+    }
+    site(n, s)
+    if (stop) return stop
+    const away = [...seen].flatMap(o => o.globals).filter(g => !SAFE.has(g))
+    if (start && away.length) return { why: `${start} can reach \`${away[0]}\`, past the island`, fix: `\`/* @weft visible */\` above the component, when that only matters once it's on screen` }
+    if (forced) return { when: 'v', why: `\`@weft visible\` on ${at(forced)}` }
+    if (start) return { when: 'v', why: `${start} stays inside the island` }
+    if (data) return { when: 'v', why: `${data} reads server data` }
+    return { when: 'i', why: 'handlers only: nothing happens before an event' }
+  }
+
+  const NAMES = { v: 'visible', i: 'interaction' }
   const files = new Map()
   const islands = []
+  const loads = []
+  const diagnostics = []
   for (const mod of mods.values()) {
     if (isServer(mod.file)) continue
     const sites = []
@@ -162,8 +242,12 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       for (const s of inner(n)) {
         if (!interactive(n, s) || !s.tag) continue
         const hoisted = hoist(n, s)
-        sites.push({ index: s.index, hoist: hoisted })
-        islands.push({ id: `${rel(mod.file)}#${s.index}`, file: mod.file, index: s.index })
+        const id = `${rel(mod.file)}#${s.index}`
+        const t = lazy ? timing(n, s) : { why: 'hydration: partial' }
+        sites.push({ index: s.index, hoist: hoisted, when: t.when ?? '' })
+        islands.push({ id, file: mod.file, index: s.index })
+        loads.push({ id, tag: s.member ?? s.tag, line: s.line, when: NAMES[t.when] ?? 'load', why: t.why })
+        if (t.fix) diagnostics.push({ code: 'H010', file: rel(mod.file), line: s.line, why: `<${s.member ?? s.tag}> has to load with the page: ${t.why}`, fix: t.fix })
       }
     }
     if (sites.length) files.set(mod.file, { id: rel(mod.file), sites })
@@ -177,7 +261,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     file: rel(m.file),
     nodes: m.facts.nodes.filter(n => n.sites.length || /^[A-Z]/.test(n.name)).map(n => ({ name: n.name, line: n.line, client: client.get(n) ?? null })),
   })).filter(f => f.nodes.length)
-  return { files, islands, statics, report, stamps: [...mods.keys()] }
+  return { files, islands, loads, diagnostics, statics, report, stamps: [...mods.keys()] }
 }
 
 function external(spec, file) {

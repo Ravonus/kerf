@@ -1177,11 +1177,14 @@ Also out of v0:
   confirms the error rate.
 - **Compiler spike outcome: settled, then superseded.** The spike passed on Solid 2's crate; weft now owns its back
   end and removes the crate once its own passes the same checks (§3.6, §12).
-- **Event replay before hydration:** a capture script like Solid's `_$HY`, or nothing?
+- **Event replay before hydration: settled, a capture script** (§12), inline on every page of an app with lazy islands.
 - **Partial hydration: settled, inferred, on by default** (§12). Nothing to annotate: the compiler reports what each
   top-level binding reads and every project-level pass follows it, so a component with no handler, effect or state
   ships no JS. `@weft client` and `@weft static` above a declaration overrule the inference; `hydration: 'full'` in
   `weft.config.ts` turns it off. Each decision and its reason is in `.weft/hydration.json`.
+- **Lazy islands: settled, inferred, on by default** (§12). An island loads with the page, when visible or on interaction,
+  whichever the compiler can prove safe; `@weft client` means with the page, `@weft visible` says what it can't prove,
+  and `hydration: 'partial'` turns it off. `loads` in `.weft/hydration.json` says when and why, H010 what would help.
 - **Hydrated resources:** trust the server's value (today), or revalidate in the background?
 - **Style groups:** spread (`{...orderCard()}`) or a `g=` prop, and CSS-file groups as a second input format? The [23 §4](research/23-style-groups.md) spike decides.
 - **OG renderer:** Takumi (Rust, HTML in, native + wasm) or Satori + resvg? The [20 §7](research/20-metadata-and-og.md) spike decides.
@@ -1216,7 +1219,36 @@ Also out of v0:
   swaps its HTML instead of patching text, and an island remounts when its level does. **10 KB is not reachable by
   this alone**: a page with no islands is 8.2 KB (the router and runtime), and Lemonstand's home adds 18 KB of
   interactive app code it runs at load. Reaching it needs islands hydrated on interaction or visibility, which puts
-  about 4.7 KB up front by the spike's estimate, plus event replay for what happens before they arrive. Not built.
+  about 4.7 KB up front by the spike's estimate, plus event replay for what happens before they arrive. Built: next entry.
+- **Lazy islands are inferred too, with replay (2026-10-31).** On the Lemonstand home (slow 4G, 4× CPU, 5 runs, bytes over the wire), JS that
+  runs before anything happens goes from 27.7 KB to 2.3 KB (entry 1.8, capture script 0.5), and JS fetched up front from
+  27.7 KB to 20.7 KB: the hero's island is in the first view, so its chunks stay preloaded, which the spike's 4.7 KB didn't
+  count. Everything together costs more, 30.4 KB, for the split. TBT doesn't move (85 → 93 ms, within noise; script is
+  8 → 5 ms of the main thread, the rest is parse and layout). A click before the code arrived was lost 5 times in 5, and now
+  lands in 342 ms.
+  The rule runs opposite to partial hydration's: there a binding is static until seen doing something; here an island
+  loads with the page until seen doing nothing without an event. `solve` walks what each island reaches: handlers alone
+  wait for `interaction`; work that starts by itself but touches only `SAFE` globals, or server data, waits until
+  `visible`; `@weft client`, `autofocus`, a `ref` that does work, moving focus or scroll, a module that runs as it loads,
+  a box at module level (a write elsewhere couldn't reach an island that isn't running) or code it can't see load with
+  the page. H010 names the avoidable ones, and `@weft visible` is the answer where the compiler can't prove what's true.
+  `start()` is a thin `client.tsx` over `run.tsx`: on a page where nothing has to run, only `boot.ts` does, and the client
+  arrives on the first event on an island, or when an island that wants to run comes into view. A link outside an island
+  is a plain link until then: a page with no code running has no state to keep, so a document load loses nothing.
+  **The capture script** (`capture.mjs`, 0.4 KB) is inline in every page of such an app, since a navigation can arrive at
+  a lazy island from a page without one. `wk` with no `$k` means code that isn't there, which finds the island with no
+  markers to add: static regions have no `wk`. Clicks, submits and resets are held and their replay is what acts, so
+  defaults run once, and if the code never comes they run anyway and the page works as it would with no JS. Typing and
+  focus already happened in the DOM, so those only replay to catch the island's state up; controls that moved with no
+  event seen (autofill, a restored form) get one after the claim. One queue, so an event on an island still loading holds
+  up the ones behind it: order over speed. Claiming late is `claiming` again, the pass navigations already use, with the
+  level's owner and data, so Boundaries, slots and disposal needed nothing new and nothing writes to the DOM: no layout
+  shift. **Preload** is the one thing guessed, from the HTML: blocks and text before the island, against 900 px. A wrong
+  guess costs one fetch. Above that line stays `modulepreload` (fetched, not run), below it isn't. `Save-Data` or
+  `prefers-reduced-data`: no lazy preloads, and nothing loads until interaction, so a `visible` island may never run.
+  Under a CSP that blocks inline scripts nothing can wake an island, so with no script they stop waiting: today's load.
+  Trade-offs: a first click costs a client start (59 ms against 2 on the same setup, with its code preloaded); global order can hold a fast island behind a slow
+  one; a custom entry's `await start()` now resolves late (`start(routes, { eager: true })` restores it).
 - **Getter props over Ripple-style plain props.** Research 01 recommended Ripple 0.4's plain props with `Live<T>`
   types. We chose compiler-made live props because agents will write `count={count.value}`, and only live props make
   that correct without type-directed compilation. The holes this opens are closed by §3.3 and W001/W005/W006.

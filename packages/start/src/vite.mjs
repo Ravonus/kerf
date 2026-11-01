@@ -57,6 +57,7 @@ const DEFAULT_FONTS = ['Inter:400,700']
 const SHEET = '/@weft-sheet/'
 const ASSETS = '?weft-assets'
 const ISLAND = 'virtual:weft/island/'
+const PRELOAD = 'Per page, from the HTML: an island that loads with the page, or a lazy one in about the first 900px, is modulepreloaded (fetched, not run). The rest load when needed. Save-Data: lazy ones are not preloaded, and wait for interaction.'
 const NOT_ASSET = /\.[cm]?[jt]sx?$/
 const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
 
@@ -77,7 +78,7 @@ export function inlineSheets(outDir, base) {
 }
 
 /**
- * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[], hydration?: 'partial' | 'full' }} [options]
+ * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   let root = options.root ?? process.cwd()
@@ -101,11 +102,11 @@ export default function weftStart(options = {}) {
       if (!p.stamps.some(f => statSync(f, { throwIfNoEntry: false })?.mtimeMs !== facts.get(f)?.mtime)) return p
     }
     const entries = [...manifest.routes, ...manifest.layouts].map(r => abs(r.file))
-    plan = solve({ entries, transform: compile, rel: f => relative(root, f).split('\\').join('/'), cache: facts, resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id })
+    plan = solve({ entries, lazy: (options.hydration ?? 'lazy') === 'lazy', transform: compile, rel: f => relative(root, f).split('\\').join('/'), cache: facts, resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id })
     const done = await plan
     try {
       mkdirSync(join(root, '.weft'), { recursive: true })
-      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), files: done.report }, null, 2)}\n`)
+      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), loads: done.loads, preload: PRELOAD, diagnostics: done.diagnostics, files: done.report }, null, 2)}\n`)
     } catch {}
     return done
   }
@@ -339,8 +340,9 @@ export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? []
     `export const manifest = ${JSON.stringify({ dir: manifest.dir, routes: manifest.routes, layouts: manifest.layouts, defaultCard: manifest.defaultCard })}`,
     // The built-in 404 and error pages have no state, and stand in only when the app has no route file for them.
     `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter(r => isStatic(r.file)).map(r => r.id), ...['404', 'error'].filter(id => !manifest.routes.some(r => r.id === id))])}`,
+    `export const lazy = ${!!plan?.loads.some(l => l.when !== 'load')}`,
     // The chunks a page's levels and islands will import, for the document's modulepreloads. Dev has no chunks.
-    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file])].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
+    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file]), ['$client', join(here, 'run.tsx')]].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
     `export const modules = { ${unique.map((f, i) => `${JSON.stringify(f)}: ${renders(f) ? `styled(m${i}, ${css(f)})` : `m${i}`}`).join(', ')} }`,
   ].join('\n')
 }
@@ -421,7 +423,7 @@ async function assetsOnly(ctx, code, path, root, words) {
 
 function serverEntry(clientEntry, dev) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
-import { chunks, manifest, modules, routeCss, statics } from '${V.routes}'
+import { chunks, lazy, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
 import context from '${V.context}'
 import auth from '${V.auth}'
@@ -432,7 +434,7 @@ import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, statics, chunks, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
+const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }

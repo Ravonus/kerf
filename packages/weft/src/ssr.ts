@@ -230,9 +230,10 @@ const notWire = (v: any): string | undefined => {
 
 /**
  * A component the compiler made an island: in a static region, its nodes with what the client needs to adopt them.
- * `names`: the props that go as JSON. Anywhere else it's the component.
+ * `names`: the props that go as JSON, `when`: `v` or `i` when it can wait for the page to need it. Anywhere else it's
+ * the component.
  */
-export function island(id: string, names: string[], Comp: (props: any) => unknown, props: Record<string, unknown>, slotted?: 1): unknown {
+export function island(id: string, names: string[], Comp: (props: any) => unknown, props: Record<string, unknown>, slotted?: 1, when?: string): unknown {
   if (!quiet) return component(Comp, props)
   const k = nextKey()
   const v = names.map(n => {
@@ -251,7 +252,7 @@ export function island(id: string, names: string[], Comp: (props: any) => unknow
     quiet = true
     open = outer
   }
-  const data = JSON.stringify([id, k, v]).replace(/--/g, '-\\u002d')
+  const data = JSON.stringify(when ? [id, k, v, when] : [id, k, v]).replace(/--/g, '-\\u002d')
   const rest = slotted && !frame.read ? `<template>${(props.children as { h: string }).h}</template>` : ''
   return { t: `<!--wi:${data}--><!--[-->${html}<!--]-->${rest}` }
 }

@@ -969,11 +969,16 @@ impl<'t> Emitter<'t> {
             Some(read) => self.expr(read),
             None => name.clone(),
         };
-        if let Some((id, values, slotted)) = island {
+        if let Some((id, values, slotted, when)) = island {
             let call = self.helper("island");
             let names = serde_json::to_string(&values).unwrap();
-            let slotted = if slotted && !kids.is_empty() { ", 1" } else { "" };
-            return format!("{call}({id:?}, {names}, {callee}, {props}{slotted})");
+            let slotted = slotted && !kids.is_empty();
+            let tail = match (slotted, when.is_empty()) {
+                (true, true) => ", 1".to_string(),
+                (false, true) => String::new(),
+                (s, false) => format!(", {}, {when:?}", if s { "1" } else { "void 0" }),
+            };
+            return format!("{call}({id:?}, {names}, {callee}, {props}{tail})");
         }
         // Dev builds name the component, so a <Boundary> can say where an error was thrown.
         match self.origin.get(&el.span.start) {
@@ -1147,7 +1152,7 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
 }
 
 /// The island mark on a component's tag (`hydration::mark`).
-fn island_mark(el: &JSXElement<'_>) -> Option<(String, Vec<String>, bool)> {
+fn island_mark(el: &JSXElement<'_>) -> Option<(String, Vec<String>, bool, String)> {
     el.opening_element.attributes.iter().find_map(|a| match a {
         JSXAttributeItem::Attribute(a) if matches!(&a.name, JSXAttributeName::Identifier(id) if id.name == ISLAND) => match &a.value {
             Some(JSXAttributeValue::StringLiteral(s)) => marked(s.value.as_str()),

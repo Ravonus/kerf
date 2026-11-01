@@ -87,8 +87,11 @@ export interface WeftConfig {
       wasm?: false
     }>
   }
-  /** `'full'` hydrates every route whole. Default `'partial'`: code that needs no client ships none (PLAN §11). */
-  hydration?: 'partial' | 'full'
+  /**
+   * Default `'lazy'`: code that needs no client ships none, and islands load when they're needed, with what happens
+   * before then replayed (PLAN §11). `'partial'`: every island loads with the page. `'full'` hydrates every route whole.
+   */
+  hydration?: 'lazy' | 'partial' | 'full'
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'
   /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft/plugin-text' }`. */

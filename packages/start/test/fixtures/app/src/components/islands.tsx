@@ -1,11 +1,15 @@
 import { Boundary, resource, state, untrack } from 'weft'
 
+/* @weft client */
 export function Counter(props: { start: number; label: string }) {
   const n = state(untrack(() => props.start))
   return <button class="counter" data-label={props.label} onClick={() => { n.value++ }}>{props.label}: {n.value}</button>
 }
 
-/** Renders its children: the server's nodes come back when it reopens. */
+/**
+ * Renders its children: the server's nodes come back when it reopens.
+ * @weft client
+ */
 export function Fold(props: { title: string; children?: unknown }) {
   const open = state(true)
   return (
@@ -16,7 +20,10 @@ export function Fold(props: { title: string; children?: unknown }) {
   )
 }
 
-/** Doesn't render its children at first: they wait in a template. */
+/**
+ * Doesn't render its children at first: they wait in a template.
+ * @weft client
+ */
 export function Reveal(props: { children?: unknown }) {
   const on = state(false)
   return <div class="reveal-box"><button class="reveal" onClick={() => { on.value = true }}>reveal</button>{on.value ? props.children : null}</div>
@@ -27,11 +34,15 @@ function Stock(props: { n: number }) {
   return <p class="island-stock">In stock: {r.value}</p>
 }
 
+/* @weft client */
 export function Stocked(props: { n: number }) {
   return <Boundary pending={<p class="island-pending">Loading</p>}><Stock n={props.n} /></Boundary>
 }
 
-/** A fragment whose nodes come and go, at the top of a static route. */
+/**
+ * A fragment whose nodes come and go, at the top of a static route.
+ * @weft client
+ */
 export function Many() {
   const on = state(true)
   return <>{on.value ? <b class="many">here</b> : null}<button class="many-toggle" onClick={() => { on.value = !on.value }}>toggle</button></>

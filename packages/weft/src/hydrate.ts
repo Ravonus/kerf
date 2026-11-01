@@ -4,8 +4,8 @@
 // server element is a miss: dev builds warn, every build counts it in `hydration.misses`, and the client renders
 // that template fresh so the app still works.
 //
-// Phase 1: events fired before hydration finishes are dropped (no capture script yet), and hydration is one
-// synchronous pass over the whole container.
+// Hydration is one synchronous pass over the whole container. Events fired before it finishes are dropped, unless the
+// app has lazy islands: then `@weft/start`'s capture script holds them for `drain` (island.ts).
 
 import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
 import { hchild } from './claim'
