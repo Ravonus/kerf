@@ -17,12 +17,12 @@ const WARPS = [5, 10, 15, 20]
 const WEFTS = [9, 15]
 
 /** The mark, large and centred. Each thread records when it reaches each cell, so the logo draws itself on. */
-export function threads(cols: number, rows: number, cell: number, delay = 0.2): Threads {
+export function threads(cols: number, rows: number, delay = 0.2, centre = 0.5): Threads {
   const cover = new Float32Array(cols * rows)
   const born = new Float32Array(cols * rows).fill(1e9)
   const band = new Uint8Array(cols * rows)
   const unit = (rows * 0.96) / 24
-  const ox = cols / 2 - 12 * unit, oy = rows / 2 - 12 * unit
+  const ox = cols * centre - 12 * unit, oy = rows / 2 - 12 * unit
   const half = Math.max(1.4, (0.62 * unit))
   const put = (x: number, y: number, a: number, at: number, b: number) => {
     const i = y * cols + x
@@ -53,7 +53,7 @@ export function threads(cols: number, rows: number, cell: number, delay = 0.2): 
   return { cover, born, band }
 }
 
-export function weaver(cols: number, rows: number, word: Float32Array, logo: Threads) {
+export function weaver(cols: number, rows: number, word: Float32Array | null, logo: Threads) {
   const GAP = 5
   const nx = Math.ceil(cols / GAP) + 2, ny = Math.ceil(rows / GAP) + 2
   const ux = new Float32Array(nx * ny), uy = new Float32Array(nx * ny), vx = new Float32Array(nx * ny), vy = new Float32Array(nx * ny)
@@ -122,9 +122,9 @@ export function weaver(cols: number, rows: number, word: Float32Array, logo: Thr
     const flash = age > 0 && age < 0.35 ? (0.35 - age) * 1.6 * logo.cover[i] : 0
     // The shed: alternate threads rise as a slow wave crosses the cloth.
     const shed = ((x >> 1) ^ (y >> 1)) & 1 ? Math.sin(x * 0.07 + y * 0.045 - t * 2.4) * 0.09 : 0
-    const v = level(x, y, cols, rows, t, word[i] * 0.98 + thread * 0.46 + flash + energy * 0.8 + shed)
+    const v = level(x, y, cols, rows, t, (word ? word[i] * 0.98 : 0) + thread * 0.5 + flash + energy * 0.8 + shed)
     let band = energy > 0.34 ? 2 : energy > 0.14 ? 1 : thread > 0.5 ? logo.band[i] : 0
-    if (word[i] > 0.5 && energy < 0.14) band = 0
+    if (word && word[i] > 0.5 && energy < 0.14) band = 0
     else if (!band && Math.sin((x / cols) * 3.1 + (y / rows) * 1.7 - t * 0.5) > 0.86) band = 1
     return v + band * STEPS
   }

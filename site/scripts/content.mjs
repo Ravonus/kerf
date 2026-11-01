@@ -2,7 +2,7 @@
 // own pages plus a few files; numbers are evals/. Output is gitignored: src/generated for the routes, public for files
 // served as they are (`.md` twins, llms.txt, search indexes).
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -167,9 +167,7 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    const file = join(site, 'src/demos', `${slug}.tsx`)
-    const demo = existsSync(file) ? `<pre tabindex="0"><code>${highlight(readFileSync(file, 'utf8').trim(), 'tsx')}</code></pre>` : undefined
-    return { slug, title, section, html: fold(html), demo, toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
+    return { slug, title, section, html: fold(html), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
@@ -350,7 +348,9 @@ export function Counter() {
   return <b>{props.amount}</b>
 }`
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
-  write('showcase.json', { source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+  const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
+  if (!habit) throw new Error('the showcase expects W005')
+  write('showcase.json', { habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
 }
 
 // ------------------------------------------------------------------ agents
@@ -371,6 +371,7 @@ const docs = await buildDocs()
 const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
+write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), `<pre tabindex="0"><code>${highlight(readFileSync(join(site, 'src/demos', f), 'utf8').trim(), 'tsx')}</code></pre>`])))
 write('numbers.json', numbers())
 write('docs-nav.json', docs.nav)
 write('docs.json', docs.pages)

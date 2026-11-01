@@ -69,10 +69,11 @@ export function Arena() {
 
   return (
     <section data-site="arena" ref={(n: any) => (box = n)}>
-      <h2>One click. Three frameworks.</h2>
+      <h2>The same app in weft, Solid and React</h2>
+      <p data-part="intro">These are three real production builds of one small app, running in your browser now: a counter and a grid of 1,000 cells. Press the buttons and compare what each one had to do.</p>
       <div data-part="actions">
         <Button size="lg" onClick={() => { for (const { arena } of live()) arena.click(); read() }}>Click all three</Button>
-        <Button size="lg" emphasis="ghost" tone="neutral" aria-pressed={hot.value ? 'true' : 'false'} onClick={() => (beat ? stop() : start())}>{hot.value ? 'Stop' : '100 cells, 60 times a second'}</Button>
+        <Button size="lg" emphasis="ghost" tone="neutral" aria-pressed={hot.value ? 'true' : 'false'} onClick={() => (beat ? stop() : start())}>{hot.value ? 'Stop' : 'Run 60 updates a second'}</Button>
       </div>
       <div data-part="stage">
         {rows.map(r => (
@@ -81,16 +82,16 @@ export function Arena() {
             <iframe ref={(n: any) => (r.frame = n)} title={`${r.name} counter`} scrolling="no"></iframe>
             <div data-part="weight" style={`--share:${bytes[r.id] / top}`}></div>
             <dl>
-              <div><dt>JS shipped, br</dt><dd>{kb(bytes[r.id])}</dd></div>
-              <div data-loud={r.out.value.renders > 0 ? '' : undefined}><dt>re-renders</dt><dd>{n(r.out.value.renders)}</dd></div>
-              <div><dt>reactive runs</dt><dd>{r.id === 'react' ? '–' : n(r.out.value.runs)}</dd></div>
-              <div><dt>DOM writes</dt><dd>{n(r.out.value.writes)}</dd></div>
-              <div><dt>per update</dt><dd>{ms(r.out.value.ms, r.out.value.updates)}</dd></div>
+              <div><dt>download size</dt><dd>{kb(bytes[r.id])}</dd></div>
+              <div data-loud={r.out.value.renders > 0 ? '' : undefined}><dt>components re-run</dt><dd>{n(r.out.value.renders)}</dd></div>
+              <div><dt>small updates run</dt><dd>{r.id === 'react' ? '–' : n(r.out.value.runs)}</dd></div>
+              <div><dt>page changes</dt><dd>{n(r.out.value.writes)}</dd></div>
+              <div><dt>time per update</dt><dd>{ms(r.out.value.ms, r.out.value.updates)}</dd></div>
             </dl>
           </article>
         ))}
       </div>
-      <footer><a href="/arena/shared/harness.txt">the meter</a></footer>
+      <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. Solid is close to weft here, and that is a fair result. <a href="/arena/shared/harness.txt">How this is measured</a>.</p>
     </section>
   )
 }

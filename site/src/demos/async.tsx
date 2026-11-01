@@ -1,15 +1,23 @@
 import { state } from 'weft'
+import { Badge, Button, Card, Spinner } from '@weft/warp'
 
-const wait = (ms: number) => new Promise(done => setTimeout(done, ms))
+const save = () => new Promise(done => setTimeout(done, 800))
 
-export default function Later() {
-  const busy = state(false)
-  const hits = state(0)
+export default function Profile() {
+  const saving = state(false)
+  const saves = state(0)
   const go = async () => {
-    busy.value = true
-    await wait(600)
-    hits.value++
-    busy.value = false
+    saving.value = true
+    await save()
+    saves.value++
+    saving.value = false
   }
-  return <button disabled={busy.value} onClick={go}>{busy.value ? 'Loading' : `Loaded ${hits.value}`}</button>
+  return (
+    <Card title="Profile">
+      <Badge tone="success">Saved {saves.value} times</Badge>
+      <Button disabled={saving.value} onClick={go}>
+        {saving.value ? <Spinner /> : 'Save changes'}
+      </Button>
+    </Card>
+  )
 }
