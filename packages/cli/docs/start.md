@@ -239,7 +239,7 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: 
 export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: dbChanges(db, [notes], { listener: 'external' }) })
 ```
 
-A listener that stops is noticed: its heartbeat ends, and within a minute `.live()` shows `reconnecting`.
+`weft db listen` loads your server modules from source, so it runs from a checkout with dependencies installed, and with the same env as the app. A listener that stops is noticed: its heartbeat ends, and within a minute `.live()` shows `reconnecting`.
 
 **`live: { required: true }`** (or `q.live(input, { required: true })`) refuses to ship a page that only looks live. `weft check` and `weft build` fail with R013 when the target can't do it. What only a running server can know fails at startup with R015: the process stops rather than serve stale data, and in dev it says so instead. For a health route, `liveHealth()` from `@weft/start` answers `ok: false` while a required query has no working feed. An outage after a good start reports there too, and doesn't stop the server: restarting wouldn't bring the database back, and the feed recovers by itself.
 
