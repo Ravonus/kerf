@@ -20,6 +20,8 @@ mod transform;
 
 #[cfg(feature = "node")]
 mod node;
+#[cfg(target_arch = "wasm32")]
+mod wasm;
 
 pub use diag::{Diagnostic, Edit, Fix, Severity};
 pub use project::Facts;
@@ -58,6 +60,8 @@ pub struct Options {
     pub shapes: Option<std::collections::HashMap<String, bool>>,
     /// The sites the project's view made islands (hydration.rs). `None`: every component hydrates.
     pub islands: Option<hydration::Islands>,
+    /// The working directory, for a build with no filesystem of its own (the WASM binding). `None`: ask the process.
+    pub cwd: Option<String>,
 }
 
 impl Default for Options {
@@ -76,6 +80,7 @@ impl Default for Options {
             tagged_parts: false,
             shapes: None,
             islands: None,
+            cwd: None,
         }
     }
 }
@@ -92,6 +97,12 @@ pub struct Output {
     /// Each JSX node's lowering, by authored line (`explain`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub explain: Option<Vec<emit::Explained>>,
+}
+
+/// What every binding calls: text in, JSON text out, so the addon and the WASM build differ only in how the text travels.
+pub fn transform_json(source: &str, options_json: &str) -> String {
+    let options: Options = serde_json::from_str(options_json).unwrap_or_default();
+    serde_json::to_string(&compile(source, &options)).expect("serializable output")
 }
 
 pub fn compile(source: &str, options: &Options) -> Output {
@@ -171,7 +182,7 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     let printed = built.code + &shapes.code;
     let points = built.map.as_ref().map(|m| srcmap::points(&printed, m));
     let module = if ssr && options.module_name == "weft/dom" { "weft/ssr" } else { &options.module_name };
-    let display = display_path(&options.filename);
+    let display = display_path(&options.filename, options.cwd.as_deref());
     let o = emit::EmitOptions {
         filename: &options.filename, display: &display, module, ssr, hydratable: options.hydratable, dev: options.dev, origins,
         map: points.as_ref().map(|p| (p, source)),
@@ -186,7 +197,8 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
 }
 
 /// `filename` relative to the working directory when it's inside it (dev comments, `weft explain`).
-fn display_path(filename: &str) -> String {
+fn display_path(filename: &str, cwd: Option<&str>) -> String {
     let path = std::path::Path::new(filename);
-    std::env::current_dir().ok().and_then(|cwd| path.strip_prefix(cwd).ok().map(|p| p.display().to_string())).unwrap_or_else(|| filename.to_string())
+    let cwd = cwd.map(std::path::PathBuf::from).or_else(|| std::env::current_dir().ok());
+    cwd.and_then(|cwd| path.strip_prefix(cwd).ok().map(|p| p.display().to_string())).unwrap_or_else(|| filename.to_string())
 }
