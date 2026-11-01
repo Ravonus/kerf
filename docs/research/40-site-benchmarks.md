@@ -25,6 +25,8 @@ public "faster than Solid" claim comes from them. That needs a critic from each 
 8. Wins use `lib/stats.mjs`: no sample overlap and past the metric's floor. No composite score. Lighthouse is not the headline.
 9. Every report has a table of where weft loses.
 10. All stacks in a comparison run on one host, in one run. `bench.mjs` refuses over load 40.
+   Todo, admin and catalog use system fonts and no images in all three stacks, so `next/font`, `next/image` and their equivalents
+   are exercised on landing, where every stack loads the same web font and hero image.
 
 ## The sites
 

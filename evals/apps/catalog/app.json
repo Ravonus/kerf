@@ -28,7 +28,12 @@
       },
       "interact": [
         "button:Add to cart"
-      ]
+      ],
+      "mutate": {
+        "fill": {},
+        "click": "button:Add to cart",
+        "see": "Cart (1)"
+      }
     }
   ],
   "variants": {
