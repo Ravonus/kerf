@@ -183,7 +183,7 @@
 :where([data-scope="field"]:is([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
 :where([data-scope="field"] [data-part="indicator"]) { flex: none; display: inline-flex; color: var(--warp-color-text-subtle); transition: rotate calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease), color var(--warp-duration-fast); }
 :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="indicator"]) { color: var(--warp-color-sweep); }
-:where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]) { rotate: 180deg; }
+:where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]:not([data-part="item"] > *)) { rotate: 180deg; }
 :where([data-scope="field"] > [data-part="control"][data-wrap] > [data-part="indicator"]) { align-self: center; margin-inline-start: auto; }
 /* native select (phones): the real element fills the control, the chevron is painted */
 :where([data-scope="field"] select[data-part="input"]) {
