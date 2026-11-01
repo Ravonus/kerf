@@ -12,7 +12,7 @@ import { hydration } from '../src/hydrate'
 import * as Dom from './fixtures/react-props/Props.tsx'
 import * as Server from './fixtures/react-props/Props.tsx?weft-ssr'
 import * as Client from './fixtures/react-props/Props.tsx?weft-hydrate'
-import { Control, Defaults, Direct, Focused, Spread as SpreadEvents, Swapped } from './fixtures/react-props/Events.tsx'
+import { Control, Defaults, Direct, Focused, InClosedDialog, Spread as SpreadEvents, Swapped } from './fixtures/react-props/Events.tsx'
 
 type Name = keyof typeof Dom
 
@@ -199,6 +199,14 @@ test('defaultValue never overwrites what the user typed', async () => {
 })
 
 describe('autoFocus focuses on mount, as React does', () => {
+  test('in a closed dialog it waits for showModal, and forces no layout', async () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus')
+    render(() => <InClosedDialog />, mount())
+    await Promise.resolve()
+    expect(focus).not.toHaveBeenCalled()
+    focus.mockRestore()
+  })
+
   test.each([[false], [true]])('spread: %s', async spread => {
     const root = mount()
     render(() => Focused({ show: () => true, spread }), root)
@@ -240,7 +248,9 @@ describe('the runtime table agrees with the compiler table', () => {
   test('dashed names', () => {
     const dashed = list('DASHED')
     expect(dashed.length).toBeGreaterThan(70)
-    for (const k of dashed) expect(attrName(k)).toBe(k.replace(/[A-Z]|1$/g, c => '-' + c.toLowerCase()))
+    // No browser reads these, so only the compiler spells them: a spread keeps them as written.
+    const unread = /^(?:accentHeight|arabicForm|capHeight|colorProfile|enableBackground|glyph|horiz|overline|panose1|renderingIntent|strikethrough|underline|unicodeRange|unitsPerEm|vAlphabetic|vHanging|vIdeographic|vMathematical|vert|xHeight)/
+    for (const k of dashed) expect(attrName(k)).toBe(unread.test(k) ? k : k.replace(/[A-Z]/g, c => '-' + c.toLowerCase()))
   })
 
   test('lowered names stay valid on HTML: the element lowercases them itself', () => {

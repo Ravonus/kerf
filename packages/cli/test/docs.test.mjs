@@ -71,7 +71,7 @@ describe('AGENTS.md', () => {
     expect(text).toContain('`weft docs <code>` explains one')
     expect(text).not.toContain('Not reported yet')
     expect(text).not.toContain('Planned, not shipped yet')
-    expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D001–D005, D011, D020–D025, D030–D039, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes\.$/m)
+    expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D001–D007, D011, D020–D025, D030–D039, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes\.$/m)
     expect(text).not.toContain('| `weft style` |') // the section covers it
     expect(text).toContain('Test checks (`weft check` on test files): T001–T009, T013.')
     // The installed weft has every planned export now, so the async rule is in and nothing is listed as missing.
@@ -130,5 +130,21 @@ describe('AGENTS.md', () => {
     expect(await writeAgentsMd(dir, { check: true })).toMatchObject({ current: true, written: false })
     writeFileSync(join(dir, 'AGENTS.md'), `${readFileSync(join(dir, 'AGENTS.md'), 'utf8')}\nhand edit\n`)
     expect(await writeAgentsMd(dir, { check: true })).toMatchObject({ current: false, written: false })
+  })
+})
+
+describe('a plugin in the docs', () => {
+  const app = () => {
+    const dir = project({ 'kit.mjs': "import { definePlugin } from 'weft/plugin'\nexport default definePlugin({ name: 'kit', namespace: 'KIT', contribute: () => ({ docs: { topic: 'kit', summary: 'The kit', file: new URL('./kit.md', import.meta.url).pathname }, diagnostics: [{ code: 'KIT001', severity: 'warning', catches: 'A loose kit', fix: 'Tighten it' }] }) })\n", 'kit.md': '# Kit\n\nHello.\n', 'weft.config.ts': "import kit from './kit.mjs'\nexport default { plugins: [kit()] }\n" })
+    return dir
+  }
+  it('its topic is listed and served, and its codes have pages', async () => {
+    const dir = app()
+    expect((await docs(dir)).topics.kit).toBe('The kit')
+    expect((await docs(dir, 'kit')).text).toContain('Hello.')
+    const page = await docs(dir, 'KIT001')
+    expect(page.text).toContain('A loose kit')
+    expect(page.text).toContain('Tighten it')
+    expect((await docs(dir, 'diagnostics')).text).toContain('KIT001')
   })
 })

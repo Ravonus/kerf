@@ -1,9 +1,9 @@
 {
  "n": 10000,
  "browser": "chromium",
- "at": "2026-10-31T05:31:40.192Z",
+ "at": "2026-10-31T23:58:40.045Z",
  "list": {
-  "firstRowMs": 133,
+  "firstRowMs": 82,
   "nodesAtRest": 51,
   "down": {
    "worstJump": 0,
@@ -49,7 +49,7 @@
   "drift": 0,
   "seen": 3255,
   "resize": {
-   "resizeMs": 11.4,
+   "resizeMs": 12.2,
    "top": -33,
    "height": 647202,
    "rows": 30
@@ -69,61 +69,61 @@
   }
  },
  "chat": {
-  "firstRowMs": 143,
-  "nodesAtRest": 98,
+  "firstRowMs": 108,
+  "nodesAtRest": 256,
   "down": {
    "worstJump": 0,
    "blankFrames": 0,
-   "nodes": 140,
+   "nodes": 363,
    "slowFrames": 0,
    "frames": 300,
    "moved": 36000,
-   "shared": 1140,
-   "rowsSeen": 298,
+   "shared": 1226,
+   "rowsSeen": 355,
    "scrollTop": 36000,
-   "scrollHeight": 1212486
+   "scrollHeight": 1015380
   },
   "fling": {
    "worstJump": 0,
    "blankFrames": 0,
-   "nodes": 140,
+   "nodes": 357,
    "slowFrames": 0,
    "frames": 200,
    "moved": 480000,
    "shared": 0,
-   "rowsSeen": 982,
+   "rowsSeen": 1055,
    "scrollTop": 516000,
-   "scrollHeight": 1212486
+   "scrollHeight": 1015380
   },
   "up": {
    "worstJump": 0,
    "blankFrames": 0,
-   "nodes": 140,
+   "nodes": 363,
    "slowFrames": 0,
    "frames": 300,
    "moved": -36000,
-   "shared": 1155,
-   "rowsSeen": 298,
+   "shared": 1259,
+   "rowsSeen": 360,
    "scrollTop": 480000,
-   "scrollHeight": 1212486
+   "scrollHeight": 1015380
   },
   "covered": {
    "rows": 5,
    "overlap": 0,
-   "gap": 0
+   "gap": 2
   },
   "drift": 0,
-  "seen": 1280,
+  "seen": 1410,
   "live": {
-   "appendWrites": 4,
+   "appendWrites": 6,
    "atEnd": 0,
    "streamUpward": 0,
    "endGap": 0,
-   "prependShift": -0.13
+   "prependShift": 0.38
   }
  },
  "feed": {
-  "firstRowMs": 81,
+  "firstRowMs": 88,
   "nodesAtRest": 106,
   "down": {
    "worstJump": 0,
@@ -170,58 +170,58 @@
   "seen": 2734
  },
  "kanban": {
-  "firstRowMs": 88,
-  "nodesAtRest": 130,
+  "firstRowMs": 115,
+  "nodesAtRest": 155,
   "down": {
    "worstJump": 0,
    "blankFrames": 0,
-   "nodes": 200,
+   "nodes": 233,
    "slowFrames": 0,
    "frames": 300,
    "moved": 36000,
-   "shared": 1690,
-   "rowsSeen": 438,
+   "shared": 1804,
+   "rowsSeen": 467,
    "scrollTop": 36000,
-   "scrollHeight": 209052
+   "scrollHeight": 195026
   },
   "fling": {
    "worstJump": 0,
    "blankFrames": 0,
-   "nodes": 200,
+   "nodes": 233,
    "slowFrames": 0,
    "frames": 200,
    "moved": 480000,
    "shared": 0,
-   "rowsSeen": 504,
-   "scrollTop": 208490,
-   "scrollHeight": 209002
+   "rowsSeen": 496,
+   "scrollTop": 194498,
+   "scrollHeight": 195016
   },
   "up": {
    "worstJump": 0.06,
    "blankFrames": 0,
-   "nodes": 200,
+   "nodes": 233,
    "slowFrames": 0,
    "frames": 300,
    "moved": -36000,
-   "shared": 1678,
-   "rowsSeen": 435,
-   "scrollTop": 172490,
-   "scrollHeight": 209001
+   "shared": 1809,
+   "rowsSeen": 467,
+   "scrollTop": 158498,
+   "scrollHeight": 195014
   },
   "covered": {
-   "rows": 6,
+   "rows": 8,
    "overlap": 0,
    "gap": 8.02
   },
-  "drift": 2,
-  "seen": 942,
+  "drift": 0,
+  "seen": 963,
   "move": {
    "inColumn": true,
    "focusIn": true
   }
  },
  "grid": {
-  "firstRowMs": 41,
+  "firstRowMs": 43,
   "nodesAtRest": 347,
   "down": {
    "worstJump": 0,
@@ -273,7 +273,7 @@
   }
  },
  "gridWrapped": {
-  "firstRowMs": 70,
+  "firstRowMs": 64,
   "nodesAtRest": 170,
   "down": {
    "worstJump": 0,
@@ -303,7 +303,7 @@
    "worstJump": 0,
    "blankFrames": 0,
    "nodes": 240,
-   "slowFrames": 4,
+   "slowFrames": 0,
    "frames": 300,
    "moved": -36000,
    "shared": 2120,

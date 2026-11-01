@@ -20,6 +20,82 @@ function apply(root, d) {
   return text
 }
 
+/** A warp app of several files, checked whole. */
+const app = async pages => {
+  const root = project({ ...warpPkg, ...pages })
+  return { root, result: await check(root, { files: Object.keys(pages) }) }
+}
+const IMPORT = `import { Heading } from '@weft/warp'\n`
+
+describe('role drift', () => {
+  test('D006 one level at two roles across files; the common role wins and the fix matches it', async () => {
+    const { root, result } = await app({
+      'src/A.tsx': `${IMPORT}export const A = () => <Heading level={1}>A</Heading>`,
+      'src/B.tsx': `${IMPORT}export const B = () => <Heading level={1} role="title">B</Heading>`,
+      'src/C.tsx': `${IMPORT}export const C = () => <Heading level={1} role="display">C</Heading>`,
+    })
+    const ds = result.diagnostics.filter(d => d.code === 'D006')
+    expect(ds).toHaveLength(1)
+    expect(ds[0].file).toBe('src/C.tsx')
+    expect(ds[0].why).toContain('h1 renders at two roles')
+    expect(apply(root, ds[0])).toContain('<Heading level={1}>C</Heading>')
+    expect(codes(await check(root, { files: ['src/A.tsx', 'src/B.tsx', 'src/C.tsx'] }))).toEqual([])
+  })
+  test('D006 a role that outnumbers the default is what the rest move to', async () => {
+    const { root, result } = await app({
+      'src/A.tsx': `${IMPORT}export const A = () => <><Heading level={1} role="display">A</Heading><Heading level={1} role="display">B</Heading></>`,
+      'src/B.tsx': `${IMPORT}export const B = () => <Heading level={1}>C</Heading>`,
+    })
+    const [d, ...rest] = result.diagnostics.filter(d => d.code === 'D006')
+    expect(rest).toEqual([])
+    expect(apply(root, d)).toContain('<Heading role="display" level={1}>C</Heading>')
+  })
+  test('D006 h2 is the default level, a bare heading beside Heading is swapped, and the import follows', async () => {
+    const { root, result } = await app({
+      'src/A.tsx': `${IMPORT}export const A = () => <><Heading>A</Heading><Heading role="title">B</Heading></>`,
+      'src/B.tsx': `export const B = () => <h3>C</h3>`,
+      'src/C.tsx': `${IMPORT}export const C = () => <Heading level={3}>D</Heading>`,
+    })
+    const ds = result.diagnostics.filter(d => d.code === 'D006')
+    expect(ds.map(d => d.file).sort()).toEqual(['src/A.tsx', 'src/B.tsx'])
+    const fixed = apply(root, ds.find(d => d.file === 'src/B.tsx'))
+    expect(fixed).toContain('<Heading level={3}>C</Heading>')
+    expect(fixed).toContain(`import { Heading } from '@weft/warp'`)
+  })
+  test('D006 leaves one role per level, a hidden role, and an allowed exception alone', async () => {
+    const { result } = await app({
+      'src/A.tsx': `${IMPORT}export const A = ({ r, n }) => <><Heading level={1}>A</Heading><Heading level={1} role={r}>B</Heading><Heading level={n} role="label">C</Heading></>`,
+      'src/B.tsx': `${IMPORT}export const B = () => (\n  // weft-allow D006: the marketing hero\n  <Heading level={1} role="display">C</Heading>\n)`,
+    })
+    expect(result.diagnostics.filter(d => d.code === 'D006')).toEqual([])
+  })
+  test('D006 a level of only bare headings is left alone, and it needs warp', async () => {
+    const bare = await app({ 'src/A.tsx': `export const A = () => <><h1>A</h1><h1>B</h1></>` })
+    expect(codes(bare.result)).toEqual([])
+    const root = project({ 'package.json': JSON.stringify({ name: 'a' }), 'src/A.tsx': `export const A = ({ Heading }) => <><Heading level={1}>A</Heading><Heading level={1} role="display">B</Heading></>` })
+    expect(codes(await check(root, { files: ['src/A.tsx'] }))).toEqual([])
+  })
+  test('D007 a bare link is swapped for Link, and the import follows', async () => {
+    const { root, result } = await run(`import { Row } from '@weft/warp'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`)
+    const d = result.diagnostics.find(d => d.code === 'D007')
+    expect(d.fix.safe).toBe(false)
+    const fixed = apply(root, d)
+    expect(fixed).toContain('<Link href="/a">Home</Link>')
+    expect(fixed).toContain(`import { Row, Link } from '@weft/warp'`)
+    expect(codes(await check(root, { files: ['src/Page.tsx'] }))).toEqual([])
+  })
+  test('D007 leaves a styled link, an anchor with no href, and a name that is taken', async () => {
+    const { result } = await run(`import { Link } from 'router'\nexport const P = () => <><a href="/a" class="x">A</a><a id="top">B</a><Link href="/c">C</Link></>`)
+    expect(codes(result)).toEqual([])
+    const taken = await run(`import { Link } from 'router'\nexport const P = () => <a href="/a">A</a>`)
+    expect(taken.result.diagnostics.find(d => d.code === 'D007').fix.edits).toBeUndefined()
+  })
+  test('D007 needs warp', async () => {
+    const { result } = await run(`export const P = () => <a href="/a">A</a>`, { 'package.json': JSON.stringify({ name: 'a' }) })
+    expect(codes(result)).toEqual([])
+  })
+})
+
 describe('values (an app with warp)', () => {
   test('D001 a raw colour, with no autofix', async () => {
     const { result } = await run(`export const P = () => <p style={{ color: '#7c3aed' }}>x</p>`)

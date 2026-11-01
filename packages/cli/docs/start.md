@@ -172,6 +172,9 @@ than this tab: offer a reload.
 still wins. `durableObjectBus({ namespace })` (`@weft/realtime-durable-object`, the `cloudflare_durable` preset only) needs a
 binding, so it's set here.
 
+Payments: `weft add pay`, then `ctx.entitlements` and `requires: ['pro']` on any function. `weft docs pay`. A query's `tags`
+can take `ctx`, for one user's tag: `tags: (_, ctx) => [`orders:${ctx.user.id}`]`.
+
 **Testing** uses the real hub and client over `weft/test`'s fake transport: `await net.settle()`, then
 `await net.push(prices, message)`, `await net.poke('todos')`, `await net.drop()`, `net.offline()`, `net.reconnects()`,
 `net.subscriptions()`.

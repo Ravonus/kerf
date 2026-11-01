@@ -290,23 +290,30 @@ export function region(on: boolean, d: number, held: boolean, fn: () => unknown)
  * `<!--,-->` between them so the client finds one text node per value.
  */
 function text(v: unknown): string {
-  const out: string[] = []
-  let lastText = false
-  const walk = (v: any) => {
-    while (typeof v === 'function') v = v()
-    if (v == null || typeof v === 'boolean' || v === '') return
-    if (Array.isArray(v)) return v.forEach(walk)
-    if (typeof v === 'object' && typeof v.t === 'string') {
-      out.push(v.t)
-      lastText = false
-      return
-    }
-    if (lastText && !quiet) out.push('<!--,-->')
-    out.push(escape(String(v)))
-    lastText = true
+  while (typeof v === 'function') v = v()
+  if (v == null || typeof v === 'boolean' || v === '') return ''
+  if (Array.isArray(v)) {
+    const out = { html: '', lastText: false }
+    append(v, out)
+    return out.html
   }
-  walk(v)
-  return out.join('')
+  return typeof (v as any).t === 'string' ? (v as any).t : escape(String(v))
+}
+
+/** `+=`, not an array's `join`: that copies the whole subtree at every level, and this leaves one flatten at the end. */
+function append(list: unknown[], out: { html: string; lastText: boolean }) {
+  for (let v of list as any[]) {
+    while (typeof v === 'function') v = v()
+    if (v == null || typeof v === 'boolean' || v === '') continue
+    if (Array.isArray(v)) append(v, out)
+    else if (typeof v.t === 'string') {
+      out.html += v.t
+      out.lastText = false
+    } else {
+      out.html += (out.lastText && !quiet ? '<!--,-->' : '') + escape(String(v))
+      out.lastText = true
+    }
+  }
 }
 
 // ---- escaping -------------------------------------------------------------------------------------------------
@@ -329,13 +336,26 @@ export function escape(s: string, attr?: boolean): string {
  * attributes write booleans as the words (`aria-pressed="false"`), as weft/dom does.
  */
 export function attr(name: string, value: any): string {
-  name = attrName(name)
+  name = attribute(name)
   if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
   if (name === 'class') value = classes(value)
   else if (name === 'style') value = styles(value)
   if (value == null || value === false || value === '' && (name === 'class' || name === 'style')) return ''
   if (value === true) return ` ${name}`
   return ` ${name}="${escape(String(value), true)}"`
+}
+
+const NAMES_MAX = 2048
+const names = new Map<string, string>()
+
+/** `attrName`, remembered: a server sees the same few names on every request, and its regexes run on each. */
+function attribute(k: string) {
+  let name = names.get(k)
+  if (name === undefined) {
+    if (names.size >= NAMES_MAX) names.clear()
+    names.set(k, (name = attrName(k)))
+  }
+  return name
 }
 
 function classes(v: any): string {

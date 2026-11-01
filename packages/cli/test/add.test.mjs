@@ -1,5 +1,5 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -193,5 +193,37 @@ describe('weft add db', () => {
     writeFileSync(join(dir, 'package.json'), JSON.stringify({ overrides: { '@weft/warp': 'file:/x/warp.tgz', zod: '4.0.0' } }))
     expect(pinned(dir, ['@weft/warp@0.0.0', 'zod@4.6.7'])).toEqual(['zod@4.6.7'])
     expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@weft/warp': 'file:/x/warp.tgz' })
+  })
+
+  describe('a plugin with `setup`', () => {
+    const source = "import { definePlugin } from 'weft/plugin'\nconst setup = { needs: ['db'], with: ['helper'], run: ({ engine, read }) => ({ files: { 'src/kit.server.ts': `// ${engine}\\n` }, edits: { 'src/env.server.ts': read('src/env.server.ts') + '// kit\\n' }, env: { KIT_KEY: 'placeholder' }, next: ['`weft kit`'] }) }\nexport default definePlugin({ name: 'kit', contribute: () => ({ setup }) })\n"
+    const pkg = (name, plugin) => ({ [`node_modules/${name}/package.json`]: JSON.stringify({ name, type: 'module', exports: { './plugin': './plugin.mjs' } }), [`node_modules/${name}/plugin.mjs`]: plugin })
+    const app = (extra = {}) => project({ ...pkg('kit', source), ...pkg('helper', plugin.replace("'acme'", "'helper'")), 'weft.config.ts': 'export default {}\n', 'src/db/schema.ts': "export {}\n", 'drizzle.config.ts': "import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: 'sqlite', schema: './src/db/schema.ts', out: './drizzle' })\n", 'src/db/index.server.ts': "import { createDb } from '@weft/start/db/sqlite'\nexport const db = createDb({ schema: {}, url: 'file:a.db' })\n", 'src/env.server.ts': '// env\n', '.env': 'A=1\n', ...extra })
+
+    it('adds what it comes with, writes its files and placeholder env, and says what is next', async () => {
+      const dir = app()
+      const r = await addCommand(dir, 'kit', { install: false })
+      expect(await names(dir)).toEqual(['kit', 'helper'])
+      expect(read(dir, 'src/kit.server.ts')).toBe('// sqlite\n')
+      expect(read(dir, 'src/env.server.ts')).toBe('// env\n// kit\n')
+      expect(read(dir, '.env')).toBe('A=1\nKIT_KEY=placeholder\n')
+      expect(read(dir, '.env.example')).toBe('KIT_KEY=placeholder\n')
+      expect(r.actions).toContain('next: `weft kit`')
+    })
+
+    it('stops with nothing changed when it lacks what it needs, or a file is taken', async () => {
+      await expect(addCommand(project({ ...pkg('kit', source), 'weft.config.ts': 'export default {}\n' }), 'kit', { install: false })).rejects.toThrow('weft add db')
+      const dir = app({ 'src/kit.server.ts': 'mine\n' })
+      await expect(addCommand(dir, 'kit', { install: false })).rejects.toThrow('already exist')
+      expect(read(dir, 'weft.config.ts')).toBe('export default {}\n')
+      expect(read(dir, 'src/kit.server.ts')).toBe('mine\n')
+    })
+
+    it('a dry run lists the same and writes nothing', async () => {
+      const dir = app()
+      const r = await addCommand(dir, 'kit', { install: false, dryRun: true })
+      expect(r.actions).toContain('write src/kit.server.ts')
+      expect(existsSync(join(dir, 'src/kit.server.ts'))).toBe(false)
+    })
   })
 })

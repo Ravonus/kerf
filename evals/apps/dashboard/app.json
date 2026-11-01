@@ -1,7 +1,7 @@
 {
   "label": "Dashboard (evals/compare)",
   "note": "The synthetic screen from evals/compare, every stack, client-rendered and served statically, so warp is measured on a real bundle. A manifest only: the stack folders aren't changed.",
-  "pages": [{ "path": "/", "probe": { "click": "[role=columnheader] button", "watch": "table, [role=grid]" } }],
+  "pages": [{ "path": "/", "probe": { "click": "[role=columnheader] button, th button", "watch": "table, [role=grid]" } }],
   "env": {},
   "variants": {
     "weft-warp": { "path": "../../compare", "cwd": "weft-warp", "src": ["src"] },

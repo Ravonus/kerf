@@ -5,6 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { catalog, entry, probe } from './catalog.mjs'
+import { loadConfig } from './load-config.mjs'
 import { tasks } from './tasks.mjs'
 import { probeTests } from './tests.mjs'
 import { exportsOf, loadCompiler, resolveWeft } from './weft.mjs'
@@ -19,6 +20,7 @@ export const topics = {
   async: 'resource, <Boundary pending error>, weft/ssr and hydrate; W012',
   start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A004, C001–C002, F001–F003, R001–R011',
   rust: 'Rust sidecars: remote(), impl, the weft crate, build.rs, Ctx, touch, weft dev reload, weft start, deployment; R101–R103, R106–R109',
+  plugins: 'Build a plugin: slots, server extensions, check hooks, docs, `weft add`, conformance. Walks through how @weft/pay is built',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
@@ -26,7 +28,7 @@ export const topics = {
   icons: '@weft/icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
   fonts: 'Fonts with @weft/plugin-text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
-  design: 'The design language: Stack, Row, Heading, Text, the closed vocabulary, `weft fix`, `weft tokens`; D001–D005, D011, D030–D039',
+  design: 'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `weft fix`, `weft tokens`; D001–D007, D011, D030–D039',
   style: 'Style groups (weft/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',
   diagnostics: 'Every W-, T-, P-, H- and D-code, and which ones the installed weft reports',
   commands: "This project's commands and tasks (from `weft tasks`)",
@@ -67,8 +69,14 @@ function codePage(code, info) {
   return lines.join('\n')
 }
 
-function diagnosticsPage(info) {
-  const rows = catalog.map(e => `| ${e.code} | ${e.severity} | ${e.catches} | ${e.fix} | ${status(e.code, info)} |`)
+const contributed = async root => (await loadConfig(root)).contributions
+
+/** What this app's plugins add to the docs (`docs` and `diagnostics` in their manifests). */
+const pluginDocs = async root => (await contributed(root)).flatMap(c => (c.manifest.docs ? [c.manifest.docs] : []))
+const pluginCodes = async root => (await contributed(root)).flatMap(c => (c.manifest.diagnostics ?? []).map(d => ({ ...d, plugin: c.name })))
+
+function diagnosticsPage(info, own = []) {
+  const rows = [...catalog.map(e => `| ${e.code} | ${e.severity} | ${e.catches} | ${e.fix} | ${status(e.code, info)} |`), ...own.map(d => `| ${d.code} | ${d.severity ?? 'error'} | ${d.catches} | ${d.fix} | from \`${d.plugin}\` |`)]
   return [`# Diagnostics (weft@${info.weft.version})`, '', '| Code | Severity | Catches | Fix | Status |', '|---|---|---|---|---|', ...rows].join('\n')
 }
 
@@ -89,21 +97,26 @@ export async function docs(root, topic) {
   root = resolve(root)
   const key = (topic ?? 'index').trim()
   if (key === 'index') {
-    const text = ['# weft docs', '', ...Object.entries(topics).map(([t, d]) => `- \`${t}\`: ${d}`), '', 'Any diagnostic code works too: `W014`, `T003`, `P004`, `D025`, `Q001`.'].join('\n')
-    return { topic: 'index', text, topics }
+    const all = { ...topics, ...Object.fromEntries((await pluginDocs(root)).map(d => [d.topic, d.summary])) }
+    const text = ['# weft docs', '', ...Object.entries(all).map(([t, d]) => `- \`${t}\`: ${d}`), '', 'Any diagnostic code works too: `W014`, `T003`, `P004`, `D025`, `Q001`.'].join('\n')
+    return { topic: 'index', text, topics: all }
   }
   const info = installed(root)
-  if (/^[WPTHDQSACFMR]\d{3}$/i.test(key)) {
+  if (/^[A-Z]{1,5}\d{3}$/i.test(key)) {
     const code = key.toUpperCase()
+    const own = !entry(code) && (await pluginCodes(root)).find(d => d.code === code)
+    if (own) return { topic: code, text: `# ${code} (${own.severity ?? 'error'})\n\n${own.catches}.\n\n**Fix:** ${own.fix}.\n\nReported by weft check, from \`${own.plugin}\`.` }
     if (!entry(code)) throw Object.assign(new Error(`unknown diagnostic code ${code}`), { code: 'E_UNKNOWN_TOPIC' })
     return { topic: code, text: codePage(code, info) }
   }
-  if (key === 'diagnostics') return { topic: key, text: diagnosticsPage(info) }
+  if (key === 'diagnostics') return { topic: key, text: diagnosticsPage(info, await pluginCodes(root)) }
   if (key === 'commands') return { topic: key, text: `# Commands\n\n${commandsPage(await tasks(root))}` }
   if (key === 'agents') {
     const { agentsMd } = await import('./agents-md.mjs')
     return { topic: key, text: (await agentsMd(root)).text }
   }
+  const page = (await pluginDocs(root)).find(d => d.topic === key)
+  if (page) return { topic: key, text: readFileSync(page.file, 'utf8').trim() }
   if (fileTopics[key]) {
     const text = readFileSync(resolve(docsDir, fileTopics[key]), 'utf8').trim()
     return { topic: key, text: key === 'rules' ? `# The rules\n\n${text}` : text }

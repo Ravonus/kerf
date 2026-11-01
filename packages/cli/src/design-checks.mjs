@@ -1,6 +1,6 @@
 // The design D-codes in `weft check` (PLAN §6, research 36). Two families:
 //
-//   D001–D005  off-system values and hand-rolled layout. Only where the app has warp's tokens to use instead (`@weft/warp`
+//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft/warp`
 //              in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
 //   D011, D030–D039  contrast and accessibility, in every app.
 //
@@ -21,6 +21,8 @@ const SPACE_NAMES = 'hair tight related group section page'.split(' ')
 /** warp's radii at the quiet stop, where a raw radius is most likely to have been copied from. */
 const RADIUS = new Map([[4, 'mark'], [8, 'control'], [12, 'surface']])
 const WARP = '@weft/warp'
+/** The role each heading level takes by default: the same table as warp's `Heading` (packages/warp/src/Type.tsx). */
+const HEADING_ROLE = { 1: 'title', 2: 'heading', 3: 'heading', 4: 'label', 5: 'label', 6: 'label' }
 
 const COLOR_EXPECTED = 'var(--warp-color-text), -text-subtle, -surface, -surface-raised, -accent-solid, -border, or a `tone` on the component'
 const COLOR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb)\(|(?<![-\w])(?:white|black|red|green|blue|gray|grey|orange|yellow|purple|pink|indigo|teal)(?![-\w])/i
@@ -137,7 +139,7 @@ function layoutOf(el) {
 }
 
 const NATIVE = { button: 'Button', select: 'Select', textarea: 'Textarea' }
-const INTERACTIVE = new Set(['a', 'button', 'input', 'select', 'textarea', 'summary', 'Button', 'Toggle', 'Input', 'Search', 'Textarea', 'Select', 'Checkbox', 'Switch', 'Chip'])
+const INTERACTIVE = new Set(['a', 'button', 'input', 'select', 'textarea', 'summary', 'Button', 'Toggle', 'Input', 'Search', 'Textarea', 'Select', 'Checkbox', 'Switch', 'Chip', 'Link'])
 const STATIC = new Set(['div', 'span', 'p', 'li', 'section', 'article', 'td', 'tr', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'label'])
 
 const NAMED = ['aria-label', 'aria-labelledby', 'title']
@@ -202,6 +204,7 @@ export function hasTokens(root) {
  */
 export function designChecks(root, { files, exclude = [], tokens }) {
   const out = []
+  const looks = new Map() // heading level → every site that renders it, across the app, for D006
   const reporter = file => {
     const pos = positions(file.text)
     const allow = allowed(file.text)
@@ -244,7 +247,7 @@ export function designChecks(root, { files, exclude = [], tokens }) {
         }
         const layout = /^[a-z]/.test(el.name) && ['div', 'section', 'ul', 'ol', 'nav', 'header', 'footer', 'main', 'aside', 'article', 'form'].includes(el.name) && layoutOf(el)
         if (layout) {
-          const close = f.text.lastIndexOf('</', el.end)
+          const close = f.text.lastIndexOf('</', el.end - 1)
           const selfClosed = !f.text.slice(el.start, el.end).includes(`</${el.name}`)
           const as = el.name === 'div' ? '' : ` as="${el.name}"`
           const gap = layout.gap ? ` gap="${layout.gap}"` : ''
@@ -259,11 +262,24 @@ export function designChecks(root, { files, exclude = [], tokens }) {
           }
           report('D004', el.start, el.tagEnd, `Hand-rolled layout on <${el.name}>: <${layout.primitive}> says what this is and keeps the gap on the scale.`, fix || undefined)
         }
+        const bare = /^h[1-6]$/.test(el.name)
+        if (bare || (el.name === 'Heading' && warpName('Heading'))) {
+          const site = headingSite(el, bare)
+          if (site && !allowed(f.text).has(`D006:${positions(f.text).lineCol(el.start)[0]}`)) looks.set(site.level, [...(looks.get(site.level) ?? []), { ...site, el, text: f.text, report }])
+        }
+        if (el.name === 'a' && el.attr('href') && !el.attr('class') && !el.attr('className') && !el.attr('style') && !el.attr('data-scope') && !el.attr('data-part') && !el.attrs.some(a => a.kind === 'spread')) {
+          const taken = localComponents.has('Link') || scan.imports.some(i => i.local === 'Link' && i.source !== WARP)
+          const close = f.text.lastIndexOf('</', el.end - 1)
+          report('D007', el.start, el.tagEnd, 'A bare <a> in a warp app: it gets warp\'s link colour but no underline sweep or touch target, and nav links read as prose. Use <Link>, or `Shell`\'s `nav` for navigation.', !taken && f.text.slice(el.start, el.end).includes('</a') ? {
+            description: 'Use <Link>', safe: false,
+            edits: [{ start: el.start + 1, end: el.tagEnd, text: 'Link' }, { start: close + 2, end: el.end - 1, text: 'Link' }, ...addImport(f.text, ['Link'])].sort((a, b) => b.start - a.start),
+          } : undefined)
+        }
         if (NATIVE[el.name] && !localComponents.has(NATIVE[el.name])) {
           const swap = el.name === 'button' && !el.attr('class') && !el.attr('className') && !el.attr('style') && f.text.slice(el.start, el.end).includes('</button')
           report('D005', el.start, el.tagEnd, `Native <${el.name}> in a warp app: <${NATIVE[el.name]}> brings the focus ring, the sweep, the tones and the touch target.`, swap ? {
             description: 'Use <Button>', safe: false,
-            edits: [{ start: el.start + 1, end: el.tagEnd, text: 'Button' }, { start: f.text.lastIndexOf('</', el.end) + 2, end: el.end - 1, text: 'Button' }, ...addImport(f.text, ['Button'])].sort((a, b) => b.start - a.start),
+            edits: [{ start: el.start + 1, end: el.tagEnd, text: 'Button' }, { start: f.text.lastIndexOf('</', el.end - 1) + 2, end: el.end - 1, text: 'Button' }, ...addImport(f.text, ['Button'])].sort((a, b) => b.start - a.start),
           } : undefined)
         }
       }
@@ -292,7 +308,7 @@ export function designChecks(root, { files, exclude = [], tokens }) {
         const unseen = id?.kind === 'expr' || el.attr('aria-hidden')?.value === 'true' || el.ancestors.some(a => /^[A-Z]/.test(a))
         if (!skip && !unseen && !named(el) && !(id?.value && labelled.has(id.value)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
       }
-      if (['button', 'a', 'Button'].includes(el.name) && !el.attr('label') && !named(el) && !(el.name === 'a' && !el.attr('href')) && !hasName(el.children)) report('D031', el.start, el.tagEnd, `<${el.name}> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).`)
+      if (['button', 'a', 'Button', 'Link'].includes(el.name) && !el.attr('label') && !named(el) && !(el.name === 'a' && !el.attr('href')) && !hasName(el.children)) report('D031', el.start, el.tagEnd, `<${el.name}> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).`)
       if (el.name === 'img' && !el.attr('alt') && !el.attrs.some(a => a.kind === 'spread')) report('D032', el.start, el.tagEnd, '<img> has no `alt`: a screen reader reads out the file name (WCAG 1.1.1).')
 
       // -- behaviour on the wrong element --
@@ -300,7 +316,7 @@ export function designChecks(root, { files, exclude = [], tokens }) {
         const swap = (el.name === 'div' || el.name === 'span') && f.text.slice(el.start, el.end).includes(`</${el.name}`)
         report('D033', el.start, el.tagEnd, `onClick on <${el.name}>: no keyboard, no focus, no role, so it only works with a mouse (WCAG 2.1.1).`, swap ? {
           description: 'Use a real button', safe: false,
-          edits: [{ start: el.start + 1, end: el.tagEnd, text: 'button type="button"' }, { start: f.text.lastIndexOf('</', el.end) + 2, end: el.end - 1, text: 'button' }].sort((a, b) => b.start - a.start),
+          edits: [{ start: el.start + 1, end: el.tagEnd, text: 'button type="button"' }, { start: f.text.lastIndexOf('</', el.end - 1) + 2, end: el.end - 1, text: 'button' }].sort((a, b) => b.start - a.start),
         } : undefined)
       }
       if (INTERACTIVE.has(el.name) && el.ancestors.some(a => INTERACTIVE.has(a) && a !== 'label')) {
@@ -333,6 +349,8 @@ export function designChecks(root, { files, exclude = [], tokens }) {
     }
   }
 
+  for (const [level, sites] of looks) roleDrift(level, sites)
+
   // -- CSS files --
   for (const rel of discover(root, { include: ['**/*.css'], exclude })) {
     const text = readFileSync(join(root, rel), 'utf8')
@@ -359,6 +377,44 @@ export function designChecks(root, { files, exclude = [], tokens }) {
     if (m && !/\blang\s*=/.test(m[0])) reporter({ rel, text })('D039', m.index, m.index + m[0].length, '<html> has no `lang`: a screen reader guesses the language to speak (WCAG 3.1.1).', { description: 'Set lang="en"', safe: false, text: `${m[0].slice(0, -1)} lang="en">` })
   }
   return out
+}
+
+/** What one heading renders at: `{ level, role, set }`, or null when a `level` or `role` expression hides it. `role` is null for a bare `<hN>`. */
+function headingSite(el, bare) {
+  if (bare) return { level: Number(el.name[1]), role: null }
+  const lv = el.attr('level')
+  const level = !lv ? 2 : Number(lv.value ?? /^\d$/.exec(lv.expr ?? '')?.[0])
+  if (!HEADING_ROLE[level]) return null
+  const attr = el.attr('role')
+  if (attr && attr.kind !== 'string') return null
+  return { level, role: attr?.value ?? HEADING_ROLE[level], set: attr }
+}
+
+/** D006: the roles one level renders at across the app. The most used `Heading` role wins, then the level's default; every other site is fixed to it. */
+function roleDrift(level, sites) {
+  const counts = new Map()
+  for (const s of sites) if (s.role) counts.set(s.role, (counts.get(s.role) ?? 0) + 1)
+  if (!counts.size || new Set(sites.map(s => s.role)).size < 2) return
+  const fallback = HEADING_ROLE[level]
+  const top = Math.max(...counts.values())
+  const role = counts.get(fallback) === top ? fallback : [...counts].find(([, n]) => n === top)[0]
+  const prop = role === fallback ? '' : ` role="${role}"`
+  const all = [...counts.keys()].join(', ')
+  for (const { el, text, report, role: has, set } of sites) {
+    if (has === role) continue
+    if (has === null) {
+      const swap = !el.attr('class') && !el.attr('className') && !el.attr('style') && text.slice(el.start, el.end).includes(`</${el.name}`)
+      report('D006', el.start, el.tagEnd, `A bare <h${level}> beside <Heading level={${level}}>: this one renders at the browser's size, the rest at \`${role}\`.`, swap ? {
+        description: `Use <Heading level={${level}}>`, safe: false,
+        edits: [{ start: el.start + 1, end: el.tagEnd, text: `Heading level={${level}}${prop}` }, { start: text.lastIndexOf('</', el.end - 1) + 2, end: el.end - 1, text: 'Heading' }, ...addImport(text, ['Heading'])].sort((a, b) => b.start - a.start),
+      } : undefined)
+      continue
+    }
+    const fix = set
+      ? { description: role === fallback ? `Drop \`role\`: h${level} is \`${role}\`` : `Use role="${role}"`, safe: false, edits: [role === fallback ? { start: text.slice(0, set.start).trimEnd().length, end: set.end, text: '' } : { start: set.valueStart, end: set.valueEnd, text: `"${role}"` }] }
+      : { description: `Use role="${role}"`, safe: false, text: prop, at: [el.tagEnd, el.tagEnd] }
+    report('D006', el.start, el.tagEnd, `h${level} renders at two roles in this app (${all}): a level is one size everywhere. This one is \`${has}\`, the rest \`${role}\`. \`// weft-allow D006: <reason>\` keeps a real exception.`, fix)
+  }
 }
 
 /** The nearest element that contains `el`. */

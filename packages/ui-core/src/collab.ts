@@ -94,6 +94,8 @@ export interface ChatMessage {
   replies?: { count: number; last?: string; people?: Peer[] }
   /** Names mentioned in `text`, without the @. "you" marks the whole message. */
   mentions?: string[]
+  /** The text is still arriving: rendered with `<Text stream>`. */
+  streaming?: boolean
 }
 
 export const GROUP_MS = 5 * 60 * 1000
@@ -179,40 +181,33 @@ export function reactionName(r: MessageReaction) {
 export interface MessageLogOptions {
   /** Q or the Quote button; `selection` is the text picked inside that message. */
   onQuote(id: string, selection: string): void
-  /** The log left or reached the bottom, or new messages came in while it was away. */
-  onStick?(stuck: boolean, unseen: number): void
+  /** Every message in the log, rendered or not. */
+  ids(): readonly string[]
+  /** Render a message wherever it is, and focus it. */
+  reveal(id: string): void
 }
 
 /**
- * The log's behaviour (07 §5.2, §5.5). Stick to bottom within 48px; opening lands on the unread divider. Messages are
- * one roving stop (↑/↓, Home/End), the focused one's toolbar joins the tab order, Q quotes it. A tap shows a message's
- * toolbar on touch. Delegates Quote, Copy text and Jump to original. New nodes are watched, so a list render is enough.
+ * The log's behaviour (07 §5.2, §5.5), over a window of rows: the window owns scrolling and sticking to the bottom, so
+ * this is what a message does. Messages are one roving stop (↑/↓, Home/End), the focused one's toolbar joins the tab
+ * order, Q quotes it. A tap shows a message's toolbar on touch. Delegates Quote, Copy text and Jump to original. New
+ * nodes are watched, so a rendered row is enough.
  */
 export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
   let o = opts
-  let stuck = true
-  let unseen = 0
   let picked = ''
   const doc = log.ownerDocument
-  const all = () => [...log.querySelectorAll<HTMLElement>('[data-scope="message"]')]
+  const all = () => [...log.querySelectorAll<HTMLElement>('[data-scope="message"]')].filter(m => !m.closest('[data-probe]'))
   const owner = (t: EventTarget | null) => (t as Element).closest<HTMLElement>('[data-scope="message"]')
-  const rove = (m: HTMLElement | undefined) => {
+  const stop = (el: HTMLElement, on: boolean) => { const to = on ? 0 : -1; if (el.tabIndex !== to) el.tabIndex = to }
+  const rove = (m: HTMLElement | null | undefined) => {
     for (const x of all()) {
-      x.tabIndex = x === m ? 0 : -1
-      for (const b of x.querySelectorAll<HTMLElement>('[data-part="actions"] button')) b.tabIndex = x === m ? 0 : -1
+      stop(x, x === m)
+      const open = x === m && x.contains(doc.activeElement) // only a focused message's toolbar is in the tab order
+      for (const b of x.querySelectorAll<HTMLElement>('[data-part="actions"] button')) stop(b, open)
     }
   }
-  const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight <= STICK_PX
-  const toBottom = () => { log.scrollTop = log.scrollHeight }
-  const report = () => o.onStick?.(stuck, unseen)
   const confirm = (m: Element) => installSweep(doc).confirm(m.querySelector('[data-part="bubble"]'))
-  const onScroll = () => {
-    const now = atBottom()
-    if (now === stuck && !(now && unseen)) return
-    stuck = now
-    if (now) unseen = 0
-    report()
-  }
   const quote = (m: HTMLElement) => {
     const text = m.querySelector('[data-part="text"]')
     const sel = doc.getSelection()
@@ -221,20 +216,31 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
     picked = ''
     o.onQuote(m.dataset.mid!, selection)
   }
-  const jump = (id: string) => {
-    const m = all().find(x => x.dataset.mid === id)
-    if (!m) return announce(doc, 'Original message deleted')
+  const land = (m: HTMLElement) => {
     m.scrollIntoView?.({ block: 'center', behavior: reducedMotion(m) ? 'auto' : 'smooth' })
     m.focus({ preventScroll: true })
     confirm(m)
     announce(doc, `Original message from ${m.getAttribute('aria-label')}`)
   }
+  const byId = (id: string) => all().find(x => x.dataset.mid === id)
+  const jump = (id: string) => {
+    if (!o.ids().includes(id)) return announce(doc, 'Original message deleted')
+    const m = byId(id)
+    if (m) return land(m)
+    o.reveal(id) // out of the window: it renders, then lands
+    requestAnimationFrame(() => { const now = byId(id); if (now) land(now) })
+  }
   const onKey = (e: KeyboardEvent) => {
     const m = e.target as HTMLElement
     if (m.dataset.scope !== 'message') return
-    const list = all(), i = list.indexOf(m)
-    const to = ({ ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: list.length - 1 } as Record<string, number>)[e.key]
-    if (to !== undefined && list[to]) { e.preventDefault(); list[to].focus() }
+    const ids = o.ids(), i = ids.indexOf(m.dataset.mid!)
+    const to = ({ ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: ids.length - 1 } as Record<string, number>)[e.key]
+    if (to !== undefined && ids[to] !== undefined) {
+      e.preventDefault()
+      const next = byId(ids[to])
+      if (next) next.focus()
+      else o.reveal(ids[to])
+    }
     else if (e.key.toLowerCase() === 'q' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); quote(m) }
   }
   const onFocus = (e: FocusEvent) => { const m = owner(e.target); if (m) rove(m) }
@@ -262,33 +268,21 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
     if (j) jump(j.dataset.jump!)
   }
   const watch = new (doc.defaultView as any).MutationObserver((records: MutationRecord[]) => {
-    const added = records.flatMap(r => [...r.addedNodes]).filter((n): n is HTMLElement => (n as Element).matches?.('[data-scope="message"]'))
-    if (!records.some(r => r.addedNodes.length || r.removedNodes.length)) return
-    if (!log.contains(doc.activeElement)) rove(all().at(-1))
-    else for (const n of added) n.tabIndex = -1
-    if (!added.length) return
-    if (stuck || added.some(n => n.hasAttribute('data-mine'))) { toBottom(); stuck = true; unseen = 0 }
-    else unseen += added.length
-    report()
+    if (!records.some(r => [...r.addedNodes, ...r.removedNodes].some(n => n.nodeType === 1))) return
+    const focused = log.contains(doc.activeElement) ? owner(doc.activeElement) : null
+    rove(focused ?? all().at(-1))
   })
-  const divider = log.querySelector<HTMLElement>('[data-part="divider"][data-unread]')
-  if (divider) log.scrollTop = divider.offsetTop - log.offsetTop
-  else toBottom()
-  stuck = atBottom()
   rove(all().at(-1))
-  report()
-  log.addEventListener('scroll', onScroll, { passive: true })
   log.addEventListener('keydown', onKey)
   log.addEventListener('focusin', onFocus)
   log.addEventListener('pointerdown', onDown)
   log.addEventListener('pointerup', onUp)
   log.addEventListener('click', onClick)
-  watch.observe(log, { childList: true })
+  watch.observe(log, { childList: true, subtree: true })
   return {
     update(next: MessageLogOptions) { o = next },
     destroy() {
       watch.disconnect()
-      log.removeEventListener('scroll', onScroll)
       log.removeEventListener('keydown', onKey)
       log.removeEventListener('focusin', onFocus)
       log.removeEventListener('pointerdown', onDown)
@@ -473,11 +467,13 @@ export interface KanbanOptions {
   columns: () => readonly BoardColumn<any>[]
   /** Commit a move and render it before returning, so focus can follow the card. */
   onMove(id: string, col: number, index: number): void
+  /** Render a card wherever it is in its column's window, and focus it. */
+  focus(id: string): void
 }
 
 /**
- * The board's two non-menu move paths (07 §6.2, 06 §10). Pointer: HTML drag-and-drop with a 4px placeholder and a
- * data-drop column. Keyboard: Alt + arrows moves at once; Space picks up, arrows move, Space drops, Escape puts it back.
+ * The board's two non-menu move paths (07 §6.2, 06 §10), over columns that are windows: a card's `li` is a window row,
+ * positioned by the list. Pointer: HTML drag-and-drop with a 4px placeholder laid over the list and a data-drop column. Keyboard: Alt + arrows moves at once; Space picks up, arrows move, Space drops, Escape puts it back.
  * Every move is announced by the caller's onMove; focus stays on the card.
  */
 export function kanban(host: HTMLElement, opts: KanbanOptions) {
@@ -488,12 +484,12 @@ export function kanban(host: HTMLElement, opts: KanbanOptions) {
   const ph = doc.createElement('li')
   ph.dataset.part = 'placeholder'
   ph.setAttribute('aria-hidden', 'true')
-  const cardEl = (id: string) => [...host.querySelectorAll<HTMLElement>('[data-part="card"]')].find(c => c.dataset.id === id)
+  const cardEl = (id: string) => [...host.querySelectorAll<HTMLElement>('[data-part="card"]')].find(c => c.dataset.id === id && !c.closest('[data-probe]'))
   const lift = (on: boolean) => { if (lifted) cardEl(lifted.id)?.toggleAttribute('data-dragging', on) }
   const go = (id: string, col: number, index: number) => {
     o.onMove(id, col, index)
-    cardEl(id)?.focus({ preventScroll: false })
-    lift(true)
+    o.focus(id)
+    queueMicrotask(() => lift(true)) // the card renders in its new window first
   }
   const drop = () => { lift(false); lifted = null }
   const onKey = (e: KeyboardEvent) => {
@@ -537,21 +533,27 @@ export function kanban(host: HTMLElement, opts: KanbanOptions) {
     e.preventDefault()
     for (const c of host.querySelectorAll('[data-part="column"]')) c.toggleAttribute('data-drop', c === col)
     const ol = col.querySelector('ol')!
-    const after = [...ol.querySelectorAll<HTMLElement>('[data-part="card"]:not([data-dragging])')].find(li => e.clientY < li.getBoundingClientRect().top + li.offsetHeight / 2)
-    ol.insertBefore(ph, after ?? null)
+    const rows = [...ol.querySelectorAll<HTMLElement>('[data-part="row"]:not([data-probe])')].filter(li => !li.contains(drag)).sort((a, b) => Number(a.getAttribute('aria-posinset')) - Number(b.getAttribute('aria-posinset')))
+    const after = rows.find(li => { const r = li.getBoundingClientRect(); return e.clientY < r.top + r.height / 2 })
+    const edge = after?.getBoundingClientRect().top ?? rows.at(-1)?.getBoundingClientRect().bottom
+    const at = (edge ?? ol.getBoundingClientRect().top) - ol.getBoundingClientRect().top
+    ph.style.cssText = `position:absolute;inset-inline:0;inset-block-start:0;transform:translateY(${after ? at - 6 : at + 2}px)`
+    ph.dataset.before = after?.getAttribute('aria-posinset') ?? ''
+    if (ph.parentElement !== ol) ol.append(ph)
   }
   const onDrop = (e: DragEvent) => {
     if (!drag || !ph.parentElement) return
     e.preventDefault()
     const ol = ph.parentElement
-    const index = [...ol.children].filter(c => c !== drag).indexOf(ph)
     const col = [...host.querySelectorAll('[data-part="column"]')].indexOf(ol.closest('[data-part="column"]')!)
     const id = drag.dataset.id!
+    const all = o.columns(), from = findCard(all, id)
+    const before = ph.dataset.before ? Number(ph.dataset.before) - 1 : all[col].cards.length
+    const index = from?.col === col && from.index < before ? before - 1 : before
     ph.remove()
     o.onMove(id, col, index)
-    cardEl(id)?.focus({ preventScroll: true })
-    const landed = cardEl(id)
-    if (landed) installSweep(doc).confirm(landed)
+    o.focus(id)
+    requestAnimationFrame(() => { const landed = cardEl(id); if (landed) installSweep(doc).confirm(landed) })
   }
   const onEnd = () => {
     drag?.removeAttribute('data-dragging')
