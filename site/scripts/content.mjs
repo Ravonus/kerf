@@ -166,7 +166,6 @@ async function buildDocs() {
   const slugs = new Set(flat.map(p => p.slug))
   for (const p of flat) p.md = await p.source()
   const render = (slug, title, section, md) => {
-    if (LEADS[slug]) md = md.replace(/^# [^\n]*\n/, top => `${top}\n${LEADS[slug]}\n\n`)
     const toc = []
     const seen = new Map()
     const html = linkify(markdownToHtml(md.replace(/^# [^\n]*\n/, ''), {
@@ -182,7 +181,7 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, html: fold(html, slug), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
+    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: fold(html, slug), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }

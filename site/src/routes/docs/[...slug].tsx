@@ -4,7 +4,7 @@ import { Button, Nav } from '@weft/warp'
 import { PageExample } from '../../components/Example'
 import pages from '../../generated/docs.json'
 
-const all = pages as unknown as Record<string, { slug: string; title: string; section: string; html: string; description: string; toc: { id: string; text: string }[]; prev?: { slug: string; title: string }; next?: { slug: string; title: string }; parent?: { slug: string; title: string } }>
+const all = pages as unknown as Record<string, { slug: string; title: string; section: string; html: string; description: string; lead?: string; toc: { id: string; text: string }[]; prev?: { slug: string; title: string }; next?: { slug: string; title: string }; parent?: { slug: string; title: string } }>
 
 export const load = ({ params }: LoadArgs<'/docs/[...slug]'>) => all[params.slug] ?? notFound()
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })
@@ -33,6 +33,7 @@ export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'
           <p data-part="crumb">{props.data.parent ? <Link href={`/docs/${props.data.parent.slug}`}>{props.data.parent.title}</Link> : props.data.section}</p>
           <h1>{props.data.title}</h1>
         </header>
+        {props.data.lead && <p data-part="lead" innerHTML={props.data.lead}></p>}
         <PageExample slug={props.data.slug} />
         <div data-scope="prose" innerHTML={props.data.html}></div>
         <footer data-part="pager">
