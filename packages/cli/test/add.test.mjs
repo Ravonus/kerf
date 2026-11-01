@@ -1,5 +1,5 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -193,5 +193,47 @@ describe('weft add db', () => {
     writeFileSync(join(dir, 'package.json'), JSON.stringify({ overrides: { '@weft/warp': 'file:/x/warp.tgz', zod: '4.0.0' } }))
     expect(pinned(dir, ['@weft/warp@0.0.0', 'zod@4.6.7'])).toEqual(['zod@4.6.7'])
     expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@weft/warp': 'file:/x/warp.tgz' })
+  })
+
+  describe('pay', () => {
+    const rail = { 'node_modules/@weft/plugin-pay-stripe/package.json': JSON.stringify({ name: '@weft/plugin-pay-stripe', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/@weft/plugin-pay-stripe/plugin.mjs': "import { definePlugin } from 'weft/plugin'\nexport const stripe = definePlugin({ name: '@weft/plugin-pay-stripe', contribute: () => ({}) })\n" }
+    const env = "export const env = createEnv({\n  server: {\n    DATABASE_URL: z.string(),\n  },\n})\n"
+    const app = (extra = {}) => project({ ...rail, 'weft.config.ts': 'export default {}\n', 'src/db/schema.ts': "import { sqliteTable, text } from 'drizzle-orm/sqlite-core'\n\nexport const todos = sqliteTable('todos', { id: text() })\n", 'drizzle.config.ts': "import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: 'sqlite', schema: './src/db/schema.ts', out: './drizzle' })\n", 'src/db/index.server.ts': "import { createDb } from '@weft/start/db/sqlite'\nexport const db = createDb({ schema: {}, url: 'file:a.db' })\n", 'src/env.server.ts': env, 'src/auth.server.ts': 'export default {}\n', '.env': 'DATABASE_URL=file:a.db\n', ...extra })
+
+    it('writes the rail, the catalog, the ledger, its tables and placeholder keys', async () => {
+      const dir = app()
+      const r = await addCommand(dir, 'pay', { install: false })
+      expect(r.ok).toBe(true)
+      expect(read(dir, 'weft.config.ts')).toContain("import { stripe } from '@weft/plugin-pay-stripe/plugin'")
+      expect(read(dir, 'weft.config.ts')).toContain('stripe()')
+      expect(read(dir, 'src/pay.server.ts')).toContain('drizzlePayStore(db, { purchases, payEvents })')
+      expect(read(dir, 'src/server/pay.ts')).toContain('tags: (_, ctx) => [entitlementTag(ctx.user.id)]')
+      expect(read(dir, 'src/pay/catalog.ts')).toContain("id: 'pro'")
+      expect(read(dir, 'src/db/pay.schema.ts')).toContain("sqliteTable('pay_events'")
+      expect(read(dir, 'src/db/schema.ts')).toContain("export * from './pay.schema'")
+      expect(read(dir, 'src/env.server.ts')).toContain('STRIPE_WEBHOOK_SECRET: z.string().min(1)')
+      for (const f of ['.env', '.env.example']) expect(read(dir, f)).toContain('STRIPE_SECRET_KEY=sk_test_placeholder\nSTRIPE_WEBHOOK_SECRET=whsec_placeholder')
+    })
+
+    it('stops with nothing changed when the database, auth or an old file is missing', async () => {
+      const refused = async (dir, why) => {
+        await expect(addCommand(dir, 'pay', { install: false })).rejects.toThrow(why)
+        expect(read(dir, 'weft.config.ts')).toBe('export default {}\n')
+      }
+      await refused(project({ ...rail, 'weft.config.ts': 'export default {}\n' }), 'weft add db')
+      const noAuth = app()
+      rmSync(join(noAuth, 'src/auth.server.ts'))
+      await refused(noAuth, 'weft add auth')
+      await refused(app({ 'src/pay.server.ts': 'export default {}\n' }), 'already exist')
+      await refused(app({ 'src/env.server.ts': 'export const env = {}\n' }), 'server: {')
+    })
+
+    it('a dry run writes nothing', async () => {
+      const dir = app()
+      const r = await addCommand(dir, 'pay', { install: false, dryRun: true })
+      expect(r.dryRun).toBe(true)
+      expect(r.actions).toContain('write src/pay.server.ts')
+      expect(existsSync(join(dir, 'src/pay.server.ts'))).toBe(false)
+    })
   })
 })

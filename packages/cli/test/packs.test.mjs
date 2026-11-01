@@ -8,7 +8,7 @@ import { audit, grants } from '../src/trust.mjs'
 import { bindSlots } from '../src/slots.mjs'
 
 const packages = fileURLToPath(new URL('../../', import.meta.url))
-const packs = readdirSync(packages).filter(d => /^(realtime|db)-/.test(d))
+const packs = readdirSync(packages).filter(d => /^(realtime|db|plugin-pay)-/.test(d))
 
 const load = async dir => {
   const mod = await import(pathToFileURL(join(packages, dir, 'plugin.mjs')).href)
@@ -18,7 +18,7 @@ const load = async dir => {
 }
 
 test('the list of packs', () => {
-  expect(packs.sort()).toEqual(['db-dynamodb', 'db-firestore', 'db-kysely', 'db-mongo', 'db-prisma', 'db-sql', 'realtime-durable-object', 'realtime-livekit', 'realtime-nats', 'realtime-redis', 'realtime-socketio', 'realtime-webrtc'])
+  expect(packs.sort()).toEqual(['db-dynamodb', 'db-firestore', 'db-kysely', 'db-mongo', 'db-prisma', 'db-sql', 'plugin-pay-stripe', 'realtime-durable-object', 'realtime-livekit', 'realtime-nats', 'realtime-redis', 'realtime-socketio', 'realtime-webrtc'])
 })
 
 describe.each(packs)('%s', dir => {
@@ -35,6 +35,13 @@ describe.each(packs)('%s', dir => {
     expect(manifest.agents.text.length).toBeLessThanOrEqual(1024)
     expect(existsSync(join(packages, dir, 'test'))).toBe(true)
   })
+})
+
+test('a rail provides `pay.rail`, keyed, and only on the server', async () => {
+  const stripe = await load('plugin-pay-stripe')
+  expect(stripe.plugin.provides).toEqual([{ slot: 'pay.rail', key: 'stripe' }])
+  expect(Object.keys(stripe.manifest.provides[0].sides)).toEqual(['server'])
+  expect(bindSlots({ plugins: [stripe.plugin] }, (code, why) => { throw new Error(`${code} ${why}`) })['pay.rail']).toEqual({ stripe: '@weft/plugin-pay-stripe' })
 })
 
 test('a bus provides `realtime.bus`, a list source `db.adapter`, keyed', async () => {

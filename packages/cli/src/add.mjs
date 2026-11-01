@@ -18,7 +18,7 @@ import { trustStatus } from './trust.mjs'
 const usageError = message => Object.assign(new Error(message), { code: 'E_USAGE' })
 const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
-const ALIASES = { warp: '@weft/warp', icons: '@weft/icons', text: '@weft/plugin-text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel', redis: '@weft/realtime-redis', nats: '@weft/realtime-nats' }
+const ALIASES = { warp: '@weft/warp', icons: '@weft/icons', text: '@weft/plugin-text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel', redis: '@weft/realtime-redis', nats: '@weft/realtime-nats', 'pay-stripe': '@weft/plugin-pay-stripe' }
 
 const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
 
@@ -247,12 +247,46 @@ async function addAuth(root, { dryRun, install }) {
   return { ok: true, package: `Better Auth on ${layer.layer}`, actions, ...(dryRun && { dryRun: true }) }
 }
 
+/** Payments on an app with users: the rail in `plugins`, the catalog, the ledger, its two tables and three server functions. */
+async function addPay(root, { dryRun, install }) {
+  const taken = ['src/pay.server.ts', 'src/server/pay.ts', 'src/pay/catalog.ts'].filter(f => existsSync(join(root, f)))
+  if (taken.length) throw refused(`${taken.join(', ')} already exist. Nothing was changed.`)
+  const layer = await dbLayer(root)
+  if (!layer) throw refused('Purchases have to survive a restart, so they live in a database: run `weft add db` first. Nothing was changed.')
+  if (!existsSync(join(root, 'src/auth.server.ts'))) throw refused('A purchase belongs to a user: run `weft add auth` first. Nothing was changed.')
+  const envModule = join(root, 'src/env.server.ts')
+  const envText = existsSync(envModule) ? readFileSync(envModule, 'utf8') : ''
+  if (!envText.includes('STRIPE_SECRET_KEY') && !/server: \{\n/.test(envText)) throw refused('src/env.server.ts has no `server: {` block to add the Stripe keys to. Nothing was changed.')
+  const { payFiles } = await import('create-weft/stack')
+  const { files, tables } = payFiles({ db: database(root, layer).engine, layer: layer.layer })
+  const edits = { ...files }
+  if (!envText.includes('STRIPE_SECRET_KEY')) edits['src/env.server.ts'] = envText.replace('server: {\n', "server: {\n    STRIPE_SECRET_KEY: z.string().min(1),\n    STRIPE_WEBHOOK_SECRET: z.string().min(1),\n")
+  if (tables) {
+    edits['src/db/pay.schema.ts'] = tables
+    edits['src/db/schema.ts'] = `${readFileSync(join(root, 'src/db/schema.ts'), 'utf8').trimEnd()}\n\nexport * from './pay.schema'\n`
+  }
+  const actions = [...(await addCommand(root, '@weft/plugin-pay-stripe', { dryRun, install })).actions, ...Object.keys(edits).map(f => `write ${f}`)]
+  if (!dryRun) {
+    for (const [file, text] of Object.entries(edits)) {
+      mkdirSync(dirname(join(root, file)), { recursive: true })
+      writeFileSync(join(root, file), text)
+    }
+    for (const name of ['.env', '.env.example']) {
+      const env = join(root, name)
+      if (!(existsSync(env) && readFileSync(env, 'utf8').includes('STRIPE_SECRET_KEY'))) writeFileSync(env, `${existsSync(env) ? `${readFileSync(env, 'utf8').trimEnd()}\n` : ''}STRIPE_SECRET_KEY=sk_test_placeholder\nSTRIPE_WEBHOOK_SECRET=whsec_placeholder\n`)
+    }
+  }
+  actions.push('add placeholder Stripe keys to .env and .env.example', ...(tables ? ['next: `weft db generate`', 'next: `weft db migrate`'] : ['next: `src/pay.server.ts` starts on `memoryPayStore()`: write a `PayStore` on your data layer (PAY016)']), 'next: put your real test keys in .env, and give Stripe the webhook URL /_weft/pay/stripe')
+  return { ok: true, package: `Stripe on ${layer.layer}`, actions, ...(dryRun && { dryRun: true }) }
+}
+
 export async function addCommand(root, feature, { dryRun = false, install = true, engine, layer } = {}) {
   root = resolve(root)
-  if (!feature) throw usageError(`weft add needs a feature: db, auth, tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
+  if (!feature) throw usageError(`weft add needs a feature: db, auth, pay, tailwind, ${Object.keys(ALIASES).join(', ')}, or a package name`)
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
+  if (feature === 'pay') return addPay(root, { dryRun, install })
   const pkg = ALIASES[feature] ?? feature
   const file = findConfig(root) ?? join(root, 'weft.config.ts')
   const config = relative(root, file)
