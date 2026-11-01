@@ -267,9 +267,8 @@ export function createHandler(options: HandlerOptions) {
     const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }
     // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
     if (!Object.values(s.data()?.b ?? {}).includes('p')) {
-      const html = head + (await finish())
-      const res = new Response(html, init)
-      whole.set(res, html)
+      const res = new Response(null, init)
+      whole.set(res, head + (await finish()))
       return withHeaders(res, scope)
     }
     const enc = new TextEncoder()
@@ -482,7 +481,7 @@ export function createHandler(options: HandlerOptions) {
   return Object.assign(handler, { resolve })
 }
 
-/** The text of a response that is already complete, so it needn't be read back from its stream. */
+/** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
 const whole = new WeakMap<Response, string>()
 
 type Encoding = 'br' | 'gzip'
@@ -556,15 +555,17 @@ function compressStream(zlib: Zlib, encoding: Encoding, source: ReadableStream<U
  * with no node:zlib sits behind a platform that compresses.
  */
 async function compressed(request: Request, response: Response): Promise<Response> {
-  if (!response.body || response.headers.has('content-encoding')) return response
+  const page = whole.get(response)
+  const plain = () => (page === undefined ? response : new Response(page, response))
+  if (page === undefined && (!response.body || response.headers.has('content-encoding'))) return response
   const type = response.headers.get('content-type') ?? ''
-  if (!/^(text\/html|application\/json)/.test(type)) return response
+  if (!/^(text\/html|application\/json)/.test(type)) return plain()
   const accepts = request.headers.get('accept-encoding') ?? ''
   const encoding = /\bbr\b/.test(accepts) ? 'br' : /\bgzip\b/.test(accepts) ? 'gzip' : undefined
   const zlib = encoding && (await loadZlib())
-  if (!zlib) return response
-  const text = whole.get(response) ?? (type.startsWith('application/json') ? await response.text() : undefined)
-  const body = text === undefined ? compressStream(zlib, encoding, response.body) : await compressWhole(zlib, encoding, text)
+  if (!zlib) return plain()
+  const text = page ?? (type.startsWith('application/json') ? await response.text() : undefined)
+  const body = text === undefined ? compressStream(zlib, encoding, response.body!) : await compressWhole(zlib, encoding, text)
   const headers = new Headers(response.headers)
   headers.set('content-encoding', encoding)
   headers.append('vary', 'Accept-Encoding')
@@ -700,8 +701,23 @@ function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerO
   return [...hrefs].map(href => `<link rel="modulepreload" href="${esc(href)}">\n`).join('')
 }
 
+/** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */
+interface Rendered { h: Record<number, string>; x: Record<number, string>; i?: string[] }
+const RENDERED_MAX = 64
+const rendered = new Map<string, Rendered>()
+
+function renderedOf(html: string) {
+  let r = rendered.get(html)
+  if (!r) {
+    if (rendered.size >= RENDERED_MAX) rendered.clear()
+    rendered.set(html, (r = { h: {}, x: {} }))
+  }
+  return r
+}
+
 function withLevels(payload: RoutePayload, html: string, statics: Set<string>, sendHtml: boolean): RoutePayload {
   if (!payload.m.some(m => statics.has(m.id))) return payload
+  const known = renderedOf(html)
   const slice = (d: number) => {
     const open = html.indexOf(`<!--wl:${d}:`)
     const end = `<!--/wl:${d}-->`
@@ -715,10 +731,10 @@ function withLevels(payload: RoutePayload, html: string, statics: Set<string>, s
   const m = payload.m.map((lv, d) => {
     if (!statics.has(lv.id)) return lv
     const { data: _, ...rest } = lv
-    const h = slice(d)
-    return { ...rest, s: 1 as const, x: hash(h.replaceAll(' aria-current="page"', '')), ...(sendHtml && { h }) }
+    const h = (known.h[d] ??= slice(d))
+    return { ...rest, s: 1 as const, x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))), ...(sendHtml && { h }) }
   })
-  const i = [...new Set([...html.matchAll(/<!--wi:\["([^"]+)"/g)].map(x => x[1]))]
+  const i = (known.i ??= [...new Set([...html.matchAll(/<!--wi:\["([^"]+)"/g)].map(x => x[1]))])
   return { ...payload, m, ...(i.length && { i }) }
 }
 
