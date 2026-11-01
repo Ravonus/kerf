@@ -403,7 +403,7 @@ export function trimTiers(source, stops) {
   return stops.size === 1 ? out.replaceAll(/ data-t="[oqbv]"/g, '').replace("import '../tiers.css'\n", '') : out
 }
 
-/** `<Icon name="check">` becomes `<IconCheck>`, the same output a named import gives. */
+/** `<Icon name="check">` becomes `<CheckIcon>`, the same output a named import gives. */
 export function rewrite(code, file, catalog) {
   if (!/@weft\/(icons|warp)/.test(code)) return null
   const unit = read(file, code)
