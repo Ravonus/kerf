@@ -2,28 +2,32 @@
 // consumer installs. The other suites link the workspace, where undeclared dependencies and TypeScript loaded by Node
 // both work; under node_modules neither does.
 //
-//   node packages/create-weft/scripts/packed.mjs <empty-dir> [app]
+//   node packages/create-weft/scripts/packed.mjs <empty-dir> [app[,app…]]
 import { execFile, execFileSync, spawn } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { createServer } from 'node:http'
 import { promisify } from 'node:util'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseEnv } from 'node:util'
 import { scaffold } from '../src/index.mjs'
 import { fnId } from '../../start/src/vite.mjs'
-import { packAll, pin, pkgs } from './tarballs.mjs'
+import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
+import { packWithAddon } from './pack-all.mjs'
+import { pin, pkgs } from './tarballs.mjs'
 import { jobs, pool } from '../../../scripts/jobs.mjs'
 
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
 const root = resolve(process.argv.slice(2).find(a => !a.startsWith('--')))
 if (existsSync(root) && readdirSync(root).length) throw new Error(`${root} is not empty`)
-const sh = (cmd, args, cwd) => promisify(execFile)(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1 << 26 })
+const run = (cmd, args, cwd, env) => promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26 })
+const sh = (cmd, args, cwd) => run(cmd, args, cwd, process.env)
 
-const tarballs = packAll(join(root, 'tgz'))
+const tarballs = packWithAddon(join(root, 'tgz'))
+const hostAddon = `compiler-${hostPlatform().name}`
 
 /** The add path a user takes, three sources, and a page that renders them. */
-async function mediaApp(app, weft, log) {
+async function mediaApp(app, weft, log, sh) {
   await sh(weft, ['add', 'media'], app)
   await sh(weft, ['add', 'media-ffmpeg'], app)
   await sh('npm', ['install', '--silent', 'sharp@0.35.5'], app) // the media route loads it at run time (M017)
@@ -70,7 +74,7 @@ export default function Page() {
 }
 
 /** `weft add rust` on a packed install: the crate comes with @weft/start, and `weft check` passes without an edit. */
-async function rustApp(app, weft, log) {
+async function rustApp(app, weft, log, sh) {
   await sh(weft, ['add', 'rust', 'hasher'], app)
   const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
   if (!cargo.includes('path = "../../node_modules/@weft/start/crate"')) throw new Error(`rust: the crate isn't the one @weft/start shipped:\n${cargo}`)
@@ -130,7 +134,7 @@ globalThis.fetch = (input, init) => {
 `
 
 /** The add path, a page that sells, and a report only a buyer may read. The rail talks to `mock`, a local stand-in for Stripe. */
-async function payApp(app, weft, mock, log) {
+async function payApp(app, weft, mock, log, sh) {
   await sh(weft, ['add', 'pay'], app)
   const config = join(app, 'weft.config.ts')
   const text = readFileSync(config, 'utf8')
@@ -206,11 +210,45 @@ function mockStripe(port, sessions) {
   return new Promise(ok => server.listen(port, '127.0.0.1', () => ok(server)))
 }
 
-// Six apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, one that adds media
+/** PATH for an app with no Rust: only the tools the gate calls, so `cargo` can't be found by anything it runs. */
+function withoutRust() {
+  const bin = join(root, 'no-rust-bin')
+  mkdirSync(bin)
+  for (const tool of ['node', 'npm', 'npx', 'ffmpeg', 'ffprobe']) {
+    const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
+    if (found) symlinkSync(found, join(bin, tool))
+  }
+  const PATH = [bin, '/usr/bin', '/bin'].join(':')
+  for (const tool of ['cargo', 'rustc', 'rustup']) {
+    const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8', env: { PATH } }).trim()
+    if (found) throw new Error(`${found} is on the no-Rust PATH: this gate needs a machine where it's elsewhere`)
+  }
+  return { ...process.env, PATH }
+}
+const noRust = withoutRust()
+
+/** `weft dev` on an app, one page served. */
+async function devServed(app, weft, port, env, log) {
+  const server = spawn(weft, ['dev', '--port', String(port)], { cwd: app, env, stdio: 'ignore' })
+  try {
+    let status
+    for (let i = 0; i < 120 && status !== 200; i++) {
+      status = await fetch(`http://localhost:${port}/`).then(r => r.status, () => undefined)
+      if (status !== 200) await new Promise(ok => setTimeout(ok, 250))
+    }
+    if (status !== 200) throw new Error(`weft dev answered ${status}`)
+    log('weft dev: pass')
+  } finally {
+    server.kill()
+  }
+}
+
+// Seven apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, one that adds media
 // and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one), one that adds
-// Rust (cargo has to be), and one that adds payments and buys something from a mock of Stripe.
+// Rust (cargo has to be, and it's the only one that sees it), one that adds payments and buys something from a mock of
+// Stripe, and the default again without the prebuilt addon, whose WASM build has to emit the same client.
 const theme = `{ seed: { hue: 220, chroma: 0.12 }, dials: { expression: 'quiet', density: 'compact' }, radius: 'round', fonts: { body: 'Georgia, serif' } }`
-const only = process.argv.slice(2).filter(a => !a.startsWith('--'))[1]
+const only = process.argv.slice(2).filter(a => !a.startsWith('--'))[1]?.split(',')
 const apps = [
   { name: 'default', options: { ui: 'warp', db: 'sqlite', auth: true } },
   { name: 'tailwind', options: { ui: 'tailwind', db: 'sqlite', auth: true }, css: ['.flex{', '.rounded-lg{'] },
@@ -218,11 +256,14 @@ const apps = [
   { name: 'media', options: { ui: 'warp', db: 'none' }, media: true },
   { name: 'rust', options: { ui: 'warp', db: 'none' }, rust: true },
   { name: 'pay', options: { ui: 'warp', db: 'sqlite', auth: true }, pay: true },
+  { name: 'wasm', dir: 'wasm/default', options: { ui: 'warp', db: 'sqlite', auth: true }, wasm: true }, // the same app name, so the same bytes
 ]
+const clients = {}
 
-await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media, rust, pay }, i) => {
-  const app = join(root, name)
+await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ name, dir, options, theme, add, css, media, rust, pay, wasm }, i) => {
+  const app = join(root, dir ?? name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
+  const sh = (cmd, args, cwd) => run(cmd, args, cwd, rust ? process.env : noRust)
   scaffold(app, options)
   writeFileSync(join(app, 'package.json'), JSON.stringify(pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs), null, 2))
   if (theme) {
@@ -232,6 +273,10 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
 
   await sh('npm', ['install', '--silent'], app)
   const weft = join(app, 'node_modules/.bin/weft')
+  if (wasm) rmSync(join(app, 'node_modules/@weft', hostAddon), { recursive: true, force: true })
+  const { compiler } = JSON.parse((await sh(weft, ['doctor', '--json'], app)).stdout)
+  if (compiler.kind !== (wasm ? 'wasm' : 'native')) throw new Error(`${name}: compiling with ${JSON.stringify(compiler)}`)
+  log(`compiler ${compiler.kind}: pass`)
   if (add) {
     await sh(weft, ['add', add], app)
     // Something only Tailwind can have built, in the app's own markup.
@@ -239,11 +284,11 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     writeFileSync(home, readFileSync(home, 'utf8').replace('<Badge', '<Badge class="mx-related"'))
     log(`weft add ${add}: pass`)
   }
-  if (media) await mediaApp(app, weft, log)
-  if (rust) await rustApp(app, weft, log)
+  if (media) await mediaApp(app, weft, log, sh)
+  if (rust) await rustApp(app, weft, log, sh)
   const sessions = []
   const mock = pay && await mockStripe(5299 + i, sessions)
-  if (pay) await payApp(app, weft, 5299 + i, log)
+  if (pay) await payApp(app, weft, 5299 + i, log, sh)
   for (const [cmd, ...args] of [...(options.db === 'none' ? [] : [['weft', 'db', 'generate']]), ['tsc', '--noEmit'], ['weft', 'check'], ['weft', 'build']]) {
     await sh(join(app, 'node_modules/.bin', cmd), args, app)
     log(`${cmd} ${args.join(' ')}: pass`)
@@ -252,12 +297,14 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
   for (const text of css ?? []) if (!built.includes(text)) throw new Error(`${name}: the built CSS has no ${text}`)
   const client = readdirSync(join(app, '.output/public/assets')).filter(f => f.endsWith('.js')).map(f => readFileSync(join(app, '.output/public/assets', f), 'utf8')).join('')
   if (/STRIPE_|api\.stripe\.com|checkout\/sessions/.test(client)) throw new Error(`${name}: a rail reached the client`)
+  clients[name] = Object.fromEntries(readdirSync(join(app, '.output/public/assets')).sort().map(f => [f, readFileSync(join(app, '.output/public/assets', f), 'utf8')]))
   if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft/pay is in the bundle of an app that sells nothing`)
 
   // Production takes the host's environment, so the scaffold's .env goes in by hand.
   const envFile = join(app, '.env')
   const env = existsSync(envFile) ? parseEnv(readFileSync(envFile, 'utf8')) : {}
   const port = 5199 + i
+  if (wasm) await devServed(app, weft, 5399 + i, noRust, log)
   const server = spawn(process.execPath, [...(pay ? ['--import', './no-network.mjs'] : []), '.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port), BETTER_AUTH_URL: `http://localhost:${port}` }, stdio: 'ignore' })
   try {
     let status
@@ -275,6 +322,11 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     mock?.close()
   }
 })
+
+if (clients.default && clients.wasm) {
+  if (JSON.stringify(clients.default) !== JSON.stringify(clients.wasm)) throw new Error('the same app built with the addon and with WASM differs')
+  console.log(`[packed] native and WASM builds of one app: ${Object.keys(clients.wasm).length} client files identical: pass`)
+}
 
 // A room on the packs' tarballs: two browsers, over the socket and then peer to peer. TypeScript in node_modules and the
 // packs' optional dependencies are what this adds.

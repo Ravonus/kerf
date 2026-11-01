@@ -1,5 +1,7 @@
 # Full stack: `@weft/start`
 
+Needs Node and no Rust (`weft docs rust` is opt-in). An app builds for and runs on Node, Bun or Deno.
+
 ## Files
 
 ```

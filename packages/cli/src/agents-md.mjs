@@ -27,7 +27,7 @@ export function ranges(codes) {
 /** PLAN §3.1 primitives an agent may reach for; listed as missing when the installed weft doesn't export them. */
 const planned = ['state', 'derived', 'resource', 'Boundary', 'watch', 'onMount', 'onCleanup', 'context', 'defineState', 'flush', 'untrack', 'batch']
 /** Commands AGENTS.md leaves to `weft tasks --json`: rarely run by hand, or taught in their own section. */
-const elsewhere = new Set(['agents-md', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks', 'tokens'])
+const elsewhere = new Set(['agents-md', 'doctor', 'mcp', 'plugins', 'start', 'style', 'surfaces', 'tasks', 'tokens'])
 /** The app-facing part of subpaths whose other exports are helpers compiled code calls. */
 const entryPoints = { 'weft/dom': ['render', 'hydrate'], 'weft/ssr': ['renderToString', 'renderToStringAsync'], 'weft/browser': ['online', 'visible', 'lifecycle', 'media', 'on', 'interval'] }
 
