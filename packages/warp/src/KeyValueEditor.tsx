@@ -1,10 +1,12 @@
 import { XIcon } from '@weft/icons'
 import { flush, onCleanup, state, untrack } from 'weft'
+import { formReset } from '@weft/ui-core'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Segmented } from './Choice'
 import { JsonEditor } from './CodeInput'
 import { Field, type FieldShell } from './Field'
+import { use } from './use'
 import '@weft/ui-core/styles/rich/body.css'
 import '@weft/ui-core/styles/rich/key-value.css'
 
@@ -67,8 +69,15 @@ export function KeyValueEditor({ value, defaultValue, onValueChange, keyLabel = 
     }, 250)
   }
   const switcher = untrack(() => json) ? <Segmented label={`${rest.label} format`} size="sm" value={mode.value} options={[{ value: 'form', label: 'Form' }, { value: 'json', label: 'JSON' }]} onChange={(m: any) => flipMode(m)} /> : undefined
+  let root: HTMLDivElement | undefined
+  use(formReset, () => root, () => () => {
+    clearTimeout(timer)
+    held.reset()
+    ids.value = held.value.map(() => ++serial)
+    text.value = toJson(held.value)
+  })
   return (
-    <div data-scope="kv">
+    <div ref={(n: any) => (root = n)} data-scope="kv">
       {switcher}
       {mode.value === 'json'
         ? <JsonEditor {...rest} value={text.value} onValueChange={fromJson} />

@@ -173,7 +173,8 @@ export function floatingLabel(field: HTMLElement) {
  * input, the counter (`n/max`, data-level near ≥ 90% / over), and for a textarea Cmd/Ctrl+Enter submits its form and
  * it grows with its content where `field-sizing` isn't supported.
  */
-export function field(el: HTMLElement) {
+export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?: unknown]) {
+  let held = opts?.[0]
   const label = floatingLabel(el)
   const box = el.querySelector<HTMLElement>(':scope > [data-part="control"]')
   const input = box?.querySelector<HTMLInputElement | HTMLTextAreaElement>('[data-part="input"]')
@@ -191,7 +192,8 @@ export function field(el: HTMLElement) {
   const grows = input instanceof HTMLTextAreaElement && !(globalThis.CSS?.supports?.('field-sizing', 'content') ?? true)
   const grow = () => { if (grows && input) { input.style.height = 'auto'; input.style.height = `${input.scrollHeight + 2}px` } }
   const onInput = () => { count(); grow() }
-  const reset = formReset(el, onInput)
+  // a value the binding holds stands: the native reset only knows the markup's
+  const reset = formReset(el, () => { if (input && held != null) input.value = String(held); onInput() })
   const onClick = (e: MouseEvent) => {
     if (!(e.target as Element).closest('[data-part="clear"]') || !input) return
     input.value = ''
@@ -220,7 +222,7 @@ export function field(el: HTMLElement) {
   count()
   grow()
   return {
-    update() { label.update(); count(); grow() },
+    update(next?: typeof opts) { held = next?.[0]; label.update(); count(); grow() },
     destroy() {
       label.destroy()
       reset.destroy()

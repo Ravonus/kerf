@@ -82,6 +82,23 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.close()
   })
 
+  test('in RTL align="start" lines up the right edges', async () => {
+    const page = await fresh()
+    await opened(page, 'RtlMenu')
+    const b = await boxes(page, 'rtlmenu')
+    expect(Math.abs(b.right - b.tRight)).toBeLessThanOrEqual(2)
+    await page.close()
+  })
+
+  test('a slider arrow in RTL goes the way it points', async () => {
+    const page = await fresh()
+    await page.locator('#rtl [data-part="thumb"]').focus()
+    await page.keyboard.press('ArrowLeft')
+    await page.waitForTimeout(100)
+    expect(await page.locator('#rtl [data-part="thumb"]').getAttribute('aria-valuenow')).toBe('51')
+    await page.close()
+  })
+
   test('a menu follows its trigger through a scroll', async () => {
     const page = await fresh()
     await page.getByRole('button', { name: 'ScrollMenu' }).scrollIntoViewIfNeeded()
@@ -181,6 +198,173 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     await page.close()
   })
 
+  describe('toasts and modals', () => {
+    const region = '[data-scope="toast"][data-part="region"]'
+    const where = page => page.evaluate(r => {
+      const el = document.querySelector(r), d = el.closest('dialog')
+      return { dialog: d ? d.querySelector('[data-part="title"]')?.textContent ?? d.dataset.scope : null, popover: el.hasAttribute('popover'), top: el.matches(':popover-open') }
+    }, region)
+    // what the pointer would hit at the middle of Undo, and that it works
+    const undo = async page => {
+      const button = page.getByRole('button', { name: 'Undo' }).first()
+      const box = await button.boundingBox()
+      expect(box.x + box.width).toBeLessThanOrEqual(1100)
+      expect(box.y + box.height).toBeLessThanOrEqual(700)
+      const hit = await page.evaluate(({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[data-act]'), { x: box.x + box.width / 2, y: box.y + box.height / 2 })
+      expect(hit).toBe(true)
+      const was = await page.evaluate(() => window.api.undone)
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+      await page.waitForTimeout(100)
+      expect(await page.evaluate(() => window.api.undone)).toBe(was + 1)
+    }
+    const raise = (page, o) => page.evaluate(o => window.api.raise(o), o)
+    const set = (page, name, v) => page.evaluate(([n, v]) => { window.api[n].value = v }, [name, v])
+
+    test('Undo works when the toast is raised during a modal, and the modal stays', async () => {
+      const page = await fresh()
+      await opened(page, 'Open modal')
+      await raise(page)
+      await page.waitForTimeout(300)
+      expect(await where(page)).toEqual({ dialog: 'One', popover: true, top: true })
+      await undo(page)
+      expect(await page.evaluate(() => document.querySelector('dialog[data-scope="dialog"]').open)).toBe(true)
+      await page.close()
+    })
+
+    test('the toast sits at the viewport corner, not in the dialog box', async () => {
+      const page = await fresh()
+      await raise(page)
+      await page.waitForTimeout(400)
+      const rect = () => page.evaluate(() => { const r = document.querySelector('[data-scope="toast"][data-part="root"]').getBoundingClientRect(); return [Math.round(r.right), Math.round(r.bottom)] })
+      const before = await rect()
+      await opened(page, 'Open modal')
+      await page.waitForTimeout(200)
+      expect(await rect()).toEqual(before)
+      await page.close()
+    })
+
+    test('one already showing moves in without replaying, its timer running; back out on close', async () => {
+      const page = await fresh()
+      await raise(page, { duration: 60000 })
+      await page.waitForTimeout(500)
+      const time = () => page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.currentTime)
+      const t0 = await time()
+      await page.evaluate(() => {
+        window.api.modal.value = true
+        window.seen = []
+        const root = document.querySelector('[data-scope="toast"][data-part="root"]')
+        const look = () => { window.seen.push(new DOMMatrix(getComputedStyle(root).translate === 'none' ? undefined : `translate(${getComputedStyle(root).translate.split(' ').join(',')})`).m42); if (window.seen.length < 20) requestAnimationFrame(look) }
+        requestAnimationFrame(look)
+      })
+      await page.waitForTimeout(500)
+      expect(await where(page)).toMatchObject({ dialog: 'One', top: true })
+      expect(Math.max(...(await page.evaluate(() => window.seen)).map(Math.abs))).toBeLessThan(2) // no slide-up from below
+      expect(await time()).toBeGreaterThan(t0)
+      await undo(page)
+      await raise(page, { duration: 60000 })
+      await page.waitForTimeout(200)
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(300)
+      expect(await where(page)).toEqual({ dialog: null, popover: false, top: false })
+      await undo(page)
+      await page.close()
+    })
+
+    test('stacked modals: the top one holds it, closing returns it to the next', async () => {
+      const page = await fresh()
+      await opened(page, 'Open modal')
+      await raise(page, { duration: 60000 })
+      await set(page, 'modal2', true)
+      await page.waitForTimeout(300)
+      expect((await where(page)).dialog).toBe('Two')
+      await undo(page)
+      await raise(page, { duration: 60000 })
+      await set(page, 'modal2', false)
+      await page.waitForTimeout(300)
+      expect(await where(page)).toMatchObject({ dialog: 'One', top: true })
+      await undo(page)
+      await raise(page, { duration: 60000 })
+      await set(page, 'modal', false)
+      await page.waitForTimeout(300)
+      expect((await where(page)).dialog).toBe(null)
+      await undo(page)
+      await page.close()
+    })
+
+    test.each([['drawer'], ['sheet']])('works over a %s', async kind => {
+      const page = await fresh()
+      await set(page, kind, true)
+      await page.waitForTimeout(350)
+      await raise(page, { duration: 60000 })
+      await page.waitForTimeout(300)
+      expect((await where(page)).top).toBe(true)
+      await undo(page)
+      await page.close()
+    })
+
+    test('a timer ends inside the modal; hover still pauses it', async () => {
+      const page = await fresh()
+      await opened(page, 'Open modal')
+      await raise(page, { duration: 60000 })
+      await page.waitForTimeout(300)
+      const state = () => page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
+      expect(await state()).toBe('running')
+      const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
+      await page.mouse.move(box.x + 2, box.y + 2)
+      await page.waitForTimeout(150)
+      expect(await state()).toBe('paused')
+      await page.mouse.move(5, 5)
+      await page.waitForTimeout(150)
+      expect(await state()).toBe('running')
+      await raise(page, { title: 'Brief', duration: 200, action: undefined })
+      await expect.poll(() => page.locator('[data-part="root"]', { hasText: 'Brief' }).count(), { timeout: 3000 }).toBe(0)
+      await page.close()
+    })
+
+    test('a paused toast stays paused through the move', async () => {
+      const page = await fresh()
+      await raise(page, { duration: 60000 })
+      await page.waitForTimeout(300)
+      const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
+      await page.mouse.move(box.x + 2, box.y + 2)
+      await page.waitForTimeout(150)
+      await set(page, 'modal', true)
+      await page.waitForTimeout(300)
+      expect(await page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)).toBe('paused')
+      await page.close()
+    })
+
+    test('focus stays put: on the modal when a toast arrives, on the toast through a stacked close', async () => {
+      const page = await fresh()
+      await opened(page, 'Open modal')
+      const before = await page.evaluate(() => document.activeElement.outerHTML)
+      await raise(page, { duration: 60000 })
+      await page.waitForTimeout(200)
+      expect(await page.evaluate(() => document.activeElement.outerHTML)).toBe(before)
+      await page.keyboard.press('F8')
+      expect(await page.evaluate(() => !!document.activeElement.closest('[data-scope="toast"]'))).toBe(true)
+      await set(page, 'modal2', true)
+      await page.waitForTimeout(300)
+      await page.evaluate(() => document.querySelector('[data-act]').focus())
+      await set(page, 'modal2', false)
+      await page.waitForTimeout(300)
+      expect(await page.evaluate(() => !!document.activeElement.closest('[data-scope="toast"]') || document.activeElement.tagName)).not.toBe('BODY')
+      await page.close()
+    })
+
+    test('the live regions go with it and get the text (DOM only: no screen reader in this)', async () => {
+      const page = await fresh()
+      await opened(page, 'Open modal')
+      await raise(page, { title: 'Announced', duration: 60000 })
+      await page.waitForTimeout(250)
+      expect(await page.evaluate(() => [...document.querySelectorAll('[data-scope="announcer"]')].map(n => [!!n.closest('dialog'), n.textContent]))).toEqual([[true, 'Announced'], [true, '']])
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(300)
+      expect(await page.evaluate(() => [...document.querySelectorAll('[data-scope="announcer"]')].every(n => !n.closest('dialog')))).toBe(true)
+      await page.close()
+    })
+  })
+
   test('a required DateField stops the submit, says why, and lets it through once filled', async () => {
     const page = await fresh()
     await page.click('#send')
@@ -203,7 +387,7 @@ test('a classic scrollbar keeps its room when a modal opens (Chromium)', async (
   const page = await browser.newPage({ viewport: { width: 1100, height: 700 } })
   await page.goto(url)
   await page.waitForFunction(() => window.api)
-  const width = () => page.evaluate(() => document.documentElement.clientWidth)
+  const width = () => page.evaluate(() => document.body.offsetWidth) // clientWidth reports the gutter's room as its own
   const before = await width()
   await page.evaluate(() => { window.api.modal.value = true })
   await page.waitForTimeout(300)

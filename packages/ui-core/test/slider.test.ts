@@ -74,3 +74,24 @@ test('place() measures the laid-out size, not a panel still scaled in', () => {
   place(el, t, 'bottom', 'end', 6)
   expect(el.style.left).toBe('400px')
 })
+
+test('in RTL the arrows go the way they point', () => {
+  const s = make({ values: [50] }, 'rtl')
+  s.key('ArrowLeft')
+  expect(s.seen.at(-1)).toEqual([51])
+  s.key('ArrowRight')
+  expect(s.seen.at(-1)).toEqual([50])
+  s.key('ArrowUp')
+  expect(s.seen.at(-1)).toEqual([51])
+})
+
+test.each([['start', 'ltr', 500], ['end', 'ltr', 400], ['start', 'rtl', 400], ['end', 'rtl', 500], ['center', 'rtl', 450]] as const)('place(): align %s in %s', (align, dir, left) => {
+  const el = document.createElement('div')
+  const t = document.createElement('button')
+  t.style.direction = dir
+  document.body.append(el, t)
+  t.getBoundingClientRect = () => ({ left: 500, right: 600, top: 100, bottom: 130, width: 100, height: 30 }) as DOMRect
+  el.getBoundingClientRect = () => ({ width: 200, height: 100 }) as DOMRect
+  place(el, t, 'bottom', align, 6)
+  expect(el.style.left).toBe(`${left}px`)
+})

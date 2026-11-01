@@ -74,7 +74,9 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
     const i = thumbs().indexOf(e.target as HTMLElement)
     if (i < 0 || o.disabled) return
     const big = Math.max(o.step, (o.max - o.min) / 10)
-    const d = ({ ArrowRight: o.step, ArrowUp: o.step, ArrowLeft: -o.step, ArrowDown: -o.step, PageUp: big, PageDown: -big } as Record<string, number>)[e.key]
+    // the arrows go the way they point: the track runs right to left in RTL
+    const along = getComputedStyle(el).direction === 'rtl' ? -o.step : o.step
+    const d = ({ ArrowRight: along, ArrowUp: o.step, ArrowLeft: -along, ArrowDown: -o.step, PageUp: big, PageDown: -big } as Record<string, number>)[e.key]
     if (d !== undefined) { e.preventDefault(); set(i, vals[i] + d) }
     if (e.key === 'Home') { e.preventDefault(); set(i, o.min) }
     if (e.key === 'End') { e.preventDefault(); set(i, o.max) }

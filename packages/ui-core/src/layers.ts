@@ -42,13 +42,30 @@ function stackOf(doc: Document) {
   return stack
 }
 
+const modalWatchers = new WeakMap<Document, Set<(top: HTMLElement | null) => void>>()
+
+/** Hear which modal is on top, now and each time that changes (null: none); the returned function stops listening. */
+export function onTopModal(doc: Document, fn: (top: HTMLElement | null) => void) {
+  let set = modalWatchers.get(doc)
+  if (!set) modalWatchers.set(doc, (set = new Set()))
+  set.add(fn)
+  const top = stackOf(doc).findLast(l => l.modal)?.el
+  if (top) fn(top)
+  return () => void set!.delete(fn)
+}
+
 /** Push a layer; the returned function removes it (call it when the overlay closes, whatever closed it). */
 export function pushLayer(layer: Layer) {
-  const stack = stackOf(layer.el.ownerDocument)
+  const doc = layer.el.ownerDocument
+  const stack = stackOf(doc)
+  const told = () => { if (layer.modal) for (const fn of modalWatchers.get(doc) ?? []) fn(stack.findLast(l => l.modal)?.el ?? null) }
   stack.push(layer)
+  told()
   return () => {
     const i = stack.indexOf(layer)
-    if (i >= 0) stack.splice(i, 1)
+    if (i < 0) return
+    stack.splice(i, 1)
+    told()
   }
 }
 
@@ -57,7 +74,8 @@ export type Align = 'start' | 'center' | 'end'
 
 /**
  * place(layer, trigger, side, align, gap) from the specimens: position a top-layer element (fixed) by its trigger,
- * flip to the opposite side when there is no room, clamp 8px inside the viewport, write data-side.
+ * flip to the opposite side when there is no room, clamp 8px inside the viewport, write data-side. `side` is physical;
+ * along the inline axis `align` is logical, so start is the trigger's right edge in RTL.
  */
 export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', align: Align = 'start', gap = 8) {
   const win = el.ownerDocument.defaultView!
@@ -73,7 +91,8 @@ export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', 
   let x: number, y: number
   if (side === 'top' || side === 'bottom') {
     y = side === 'top' ? t.top - gap - h : t.bottom + gap
-    x = align === 'start' ? t.left : align === 'end' ? t.right - w : t.left + (t.width - w) / 2
+    const rtl = win.getComputedStyle(trigger).direction === 'rtl'
+    x = align === 'center' ? t.left + (t.width - w) / 2 : (align === 'start') !== rtl ? t.left : t.right - w
   } else {
     x = side === 'left' ? t.left - gap - w : t.right + gap
     y = align === 'start' ? t.top : align === 'end' ? t.bottom - h : t.top + (t.height - h) / 2

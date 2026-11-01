@@ -89,6 +89,14 @@ export function SignaturePad({ value, defaultValue, onValueChange, label, hint, 
         label={label}
         hint={hint ?? 'Draw with a finger, a pen or a mouse, or switch to Type.'}
         filled={has.value}
+        reset={() => {
+          v.reset()
+          strokes.value = start?.strokes ?? []
+          typed.value = start?.text ?? ''
+          method.value = start?.method === 'typed' ? 'type' : 'draw'
+          flush()
+          draw()
+        }}
         control={() => (
           <div ref={(n: any) => (pad = n)} data-part="pad">
             <canvas ref={(n: any) => (canvas = n)} role="img" aria-label={name.value} style={method.value === 'type' ? 'visibility:hidden' : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}></canvas>

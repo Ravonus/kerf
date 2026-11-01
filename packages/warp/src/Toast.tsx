@@ -24,7 +24,7 @@ export const toast = {
 
 /**
  * The toast region and the two pre-mounted live regions (05 §5; components.html:1115-1117). Mount once, near the
- * root. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
+ * root. While a modal is open they move into it, or it would make them inert. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
  * Dismiss removes one; F8 focuses the newest.
  */
 export function Toaster() {

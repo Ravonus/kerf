@@ -6,6 +6,9 @@
   inset-inline-end: var(--warp-space-page); inline-size: min(380px, calc(100vw - 16px)); margin: 0; padding: 0; list-style: none;
   outline: none; pointer-events: none;
 }
+/* inside an open modal it is a popover (toaster()): undo the UA's popover box */
+:where([data-scope="toast"][data-part="region"]:popover-open) { inset-block-start: auto; inset-inline-start: auto; overflow: visible; border: 0; background: none; color: inherit; }
+:where([data-scope="toast"][data-part="region"][data-moving] [data-part="root"]) { transition: none; }
 @media (max-width: 599.98px) {
   :where([data-scope="toast"][data-part="region"]) { inset-inline: 8px; inline-size: auto; inset-block-end: calc(8px + env(safe-area-inset-bottom, 0px)); }
 }

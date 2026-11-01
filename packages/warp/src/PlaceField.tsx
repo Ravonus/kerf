@@ -1,11 +1,12 @@
 import { PinIcon } from '@weft/icons'
-import { addressFormat, addressPart, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft/ui-core'
+import { addressFormat, addressPart, formReset, withAddressPart, type Address, type AddressPart, type TimeZoneId } from '@weft/ui-core'
 import { derived, state, untrack } from 'weft'
 import { Chip } from './Chip'
 import { ComboField } from './Combobox'
 import { Input } from './Field'
 import { bindable, type Bindable, type RichFieldProps } from './Picker'
 import { CountrySelect } from './RichSelect'
+import { use } from './use'
 import '@weft/ui-core/styles/rich/address.css'
 
 export type Place = { displayName: string; lat: number; lng: number; timezone?: TimeZoneId; category?: string; id?: string }
@@ -24,11 +25,18 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
   const bias = state<Record<string, boolean>>(untrack(() => Object.fromEntries((biases ?? []).map(b => [b.id, !!b.default]))))
   const list = derived(() => biases ?? [])
   const chosen = derived(() => { const p = v.value; return p ? `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}${p.timezone ? ` · ${p.timezone}` : ''}` : undefined })
+  let box: HTMLDivElement | undefined
+  const reset = () => {
+    v.reset()
+    text.value = v.value?.displayName ?? ''
+    box!.querySelector('input')!.value = text.value // the native reset emptied it, and the text may not have changed
+  }
   return (
-    <div class="stack">
+    <div ref={(n: any) => (box = n)} class="stack">
       <ComboField
         icon={PinIcon}
         {...rest}
+        reset={reset}
         label={label}
         hint={hint}
         minChars={minChars}
@@ -80,8 +88,16 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
     const f = format.value, t = addressPart(v.value, 'postalCode').trim()
     return f.postal && t && touched.value.postal && !f.postal.test(t) ? f.postalMessage : undefined
   })
+  let root: HTMLDivElement | undefined
+  use(formReset, () => root, () => () => {
+    v.reset()
+    country.value = v.value?.country ?? defaultCountry
+    manual.value = false
+    note.value = ''
+    touched.value = {}
+  })
   return (
-    <div role="group" aria-label={label} class="stack">
+    <div ref={(n: any) => (root = n)} role="group" aria-label={label} class="stack">
       {name && <input type="hidden" name={name} value={v.value ? JSON.stringify(v.value) : ''} />}
       <div class="addr-grid">
         <CountrySelect label="Country or region" value={country} options={countries} locale={locale} onValueChange={c => { if (v.value) v.set({ ...v.value, country: c! }, 'pointer') }} />

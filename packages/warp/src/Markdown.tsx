@@ -50,7 +50,7 @@ export function MarkdownEditor({ value, defaultValue, onValueChange, rows = 12, 
     <div data-scope="md-editor" data-tab={tab.value}>
       <div data-part="tabs" role="tablist" aria-label={untrack(() => rest.label)} onKeyDown={onTabKey}>{button('write', 'Write')}{button('preview', 'Preview')}</div>
       <div data-part="source" role="tabpanel" id={`${id}-write-p`} aria-labelledby={`${id}-write`}>
-        <Textarea {...rest} rows={rows} value={held.value} spellcheck={false} onInput={(e: any) => held.set(e.currentTarget.value, 'keyboard')} onKeyDown={onKey} />
+        <Textarea {...rest} reset={held.reset} rows={rows} value={held.value} spellcheck={false} onInput={(e: any) => held.set(e.currentTarget.value, 'keyboard')} onKeyDown={onKey} />
       </div>
       <div data-scope="markdown" role="tabpanel" id={`${id}-preview-p`} aria-labelledby={`${id}-preview`} tabindex="0" innerHTML={html.value}></div>
     </div>
