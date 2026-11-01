@@ -68,12 +68,18 @@ describe.each([['tsgo', 7], ['typescript 6', 6]])('inference on %s', (_, version
   it('the goal: props.count is number, from bind: at the only call site', async () => {
     const r = await run(app(goalOnly, { version }))
     expect(r.types.AddButton).toBe('{ count: number }')
-    expect(r.list.map(d => d.code)).toEqual(['W086']) // typed, and told the one spelling that compiles
+    expect(r.list).toEqual([])
+  }, 60_000)
+
+  it('bind: satisfies a required prop, and a box of the wrong type is an error', async () => {
+    const page = box => `import { state } from 'weft'\nfunction Card(props: { n: number }) { return <b>{props.n}</b> }\nexport default function P() { const box = state(${box}); return <Card bind:n={box} /> }\n`
+    expect((await run(app({ ...goalOnly, 'src/goal.tsx': page('1') }, { version }))).list).toEqual([])
+    expect((await run(app({ ...goalOnly, 'src/goal.tsx': page("'a'") }, { version }))).list).toMatchObject([{ code: 'TS2322', file: 'src/goal.tsx', line: 3 }])
   }, 60_000)
 
   it('misuse in the child is a real error at the true source', async () => {
     const r = await run(app({ ...goalOnly, 'src/goal.tsx': readFileSync(join(here, 'fixtures/infer/src/goal.tsx'), 'utf8').replace('props.count++', 'props.count.toUpperCase()') }, { version }))
-    expect(r.list).toMatchObject([{ code: 'W086' }, { code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
+    expect(r.list).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
   }, 60_000)
 
   it('every edge in the fixture', async () => {
@@ -176,15 +182,6 @@ describe('the CLI', () => {
     expect(out.diagnostics[0].fix.text).toMatch(/Pass number here/)
   }, 60_000)
 
-  it('weft fix turns bind: into the call that compiles', () => {
-    const dir = app(goalOnly)
-    writeFileSync(join(dir, 'weft.config.json'), '{}')
-    expect(weft('fix', '--json', '--root', dir).code).toBe(0)
-    const text = readFileSync(join(dir, 'src/goal.tsx'), 'utf8')
-    expect(text).toContain('<AddButton count={bind(count)} />')
-    expect(text.startsWith("import { bind } from 'weft'\n")).toBe(true)
-  }, 60_000)
-
   it('weft fix writes exported types, and a plain tsc then accepts the export', () => {
     const dir = app({ ...goalOnly, 'src/goal.tsx': 'import { Card } from \'./card\'\nexport default function P() { return <Card title="t" /> }\n', 'src/card.tsx': 'export function Card(props) { return <h2>{props.title}</h2> }\n', 'src/routes/index.tsx': null })
     writeFileSync(join(dir, 'weft.config.json'), '{}')
@@ -236,13 +233,13 @@ describe('the dev listener', () => {
     writeFileSync(file, good.replace('props.count++', 'props.count.oops()'))
     server.watcher.emit('change', file)
     const bad = await next('done')
-    expect(bad.diagnostics).toMatchObject([{ code: 'W086' }, { code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
-    expect(JSON.parse(readFileSync(join(dir, '.weft/props.json'), 'utf8')).diagnostics).toHaveLength(2)
+    expect(bad.diagnostics).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 4 }])
+    expect(JSON.parse(readFileSync(join(dir, '.weft/props.json'), 'utf8')).diagnostics).toHaveLength(1)
     await new Promise(ok => setTimeout(ok, 5))
     expect(server.sent.map(m => m.type)).toContain('error')
     writeFileSync(file, good)
     server.watcher.emit('change', file)
-    expect((await next('done')).diagnostics).toMatchObject([{ code: 'W086' }])
+    expect((await next('done')).diagnostics).toEqual([])
     await server.close()
   }, 30_000)
 
@@ -298,7 +295,7 @@ describe('an editor on TypeScript 7, through weft lsp', () => {
       expect(JSON.stringify(hover.result)).toContain('count: number')
       expect(hover.result.range.start.line).toBe(line)
       const clean = await ask('textDocument/diagnostic', { textDocument: { uri } })
-      expect(clean.result.items.map(d => d.code)).toEqual(['W086'])
+      expect(clean.result.items).toEqual([])
 
       const card = join(dir, 'src/card.tsx')
       note('textDocument/didOpen', { textDocument: { uri: pathToFileURL(card).href, languageId: 'typescriptreact', version: 1, text: readFileSync(card, 'utf8') } })
@@ -325,7 +322,7 @@ describe('the editor, through the TS server protocol', () => {
       const param = (await s.ask('quickinfo', { file, line, offset: lines[line - 1].indexOf('(props') + 2 })).body
       expect(param.displayString).toMatch(/props: \{\s+count: number;\s+\}/)
       const diags = (await s.ask('semanticDiagnosticsSync', { file })).body
-      expect(diags.map(d => d.code)).toEqual([9086])
+      expect(diags).toEqual([])
       const shop = lines.findIndex(l => l.includes('<AddButton')) + 1
       const def = (await s.ask('definition', { file, line: shop, offset: lines[shop - 1].indexOf('<AddButton') + 3 })).body
       expect(def[0].start).toMatchObject({ line, offset: lines[line - 1].indexOf('AddButton') + 1 })
@@ -335,7 +332,7 @@ describe('the editor, through the TS server protocol', () => {
 
       s.send('change', { file, line, offset: lines[line - 1].indexOf('props.count++') + 1, endLine: line, endOffset: lines[line - 1].indexOf('props.count++') + 14, insertString: 'props.count.oops()' })
       const bad = (await s.ask('semanticDiagnosticsSync', { file })).body
-      expect(bad).toMatchObject([{ code: 2339, start: { line } }, { code: 9086 }])
+      expect(bad).toMatchObject([{ code: 2339, start: { line } }])
 
       const card = join(dir, 'src/card.tsx')
       s.send('open', { file: card })

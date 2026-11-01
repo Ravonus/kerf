@@ -446,22 +446,8 @@ class Engine {
     this.unprintable(host, dirty)
     this.publish(host)
     for (const c of comps) this.report(c)
-    for (const facts of this.facts.values()) this.spelling(facts)
     this.touched = touched
     return this.findings
-  }
-
-  /** `bind:x={box}` types as `x={bind(box)}`, but the compiler has only the call, and would pass a prop named `bind:x`. */
-  spelling(facts) {
-    const has = facts.imports.get('bind')?.from === 'weft'
-    let first = true
-    for (const site of facts.sites) for (const a of site.attrs) {
-      if (!a.bind || !a.raw) continue
-      const edits = [{ start: a.raw[0], end: a.raw[0] + 5, text: '' }, { start: a.span[0], end: a.span[0], text: 'bind(' }, { start: a.span[1], end: a.span[1], text: ')' }]
-      if (!has && first) edits.push({ start: 0, end: 0, text: "import { bind } from 'weft'\n" })
-      first = false
-      this.note(facts.file, { code: 'W086', start: a.raw[0], end: a.raw[1], why: `\`bind:${a.name}\` isn't compiled: the child would get a prop literally named \`bind:${a.name}\``, help: `Write ${a.name}={bind(box)} (\`weft fix\`)`, edits, safe: true })
-    }
   }
 
   note(file, finding) {

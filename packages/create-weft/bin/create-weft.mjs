@@ -61,7 +61,12 @@ try {
   if (choices.git) step('git init', 'git', ['init', '--quiet'], dir)
   const installed = choices.install && step('The install', choices.pm, ['install'], dir)
   const weft = { npm: 'npx weft', pnpm: 'pnpm exec weft', bun: 'bunx --bun weft', deno: 'deno run -A npm:@weft/cli', yarn: 'yarn weft' }[choices.pm]
-  console.log(`\n  cd ${where}${installed ? '' : `\n  ${choices.pm} install`}${choices.db === 'none' ? '' : `\n  ${weft} db generate`}\n  ${weft} dev\n`)
+  // AGENTS.md comes from the weft just installed, so it always matches the compiler the app runs.
+  if (installed) {
+    const [command, ...args] = weft.split(' ')
+    step('AGENTS.md', command, [...args, 'agents-md'], dir)
+  }
+  console.log(`\n  cd ${where}${installed ? '' : `\n  ${choices.pm} install\n  ${weft} agents-md`}${choices.db === 'none' ? '' : `\n  ${weft} db generate`}\n  ${weft} dev\n`)
 } catch (e) {
   console.error(`create-weft: ${e.message}`)
   process.exit(1)

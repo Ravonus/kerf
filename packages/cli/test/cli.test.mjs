@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { bin, fixture, project, spreadBug } from './helpers.mjs'
 
 const weft = (...args) => {
@@ -100,6 +100,14 @@ describe('weft (bin)', () => {
 describe('live data on a deploy target', () => {
   const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
   const codes = out => JSON.parse(out).diagnostics.map(d => d.code)
+
+  // The fixture has its own package.json, so `@weft/start` isn't a self-import and a checkout has nothing to find.
+  beforeAll(() => {
+    const start = join(app, 'node_modules/@weft/start')
+    mkdirSync(join(app, 'node_modules/@weft'), { recursive: true })
+    rmSync(start, { recursive: true, force: true })
+    symlinkSync(join(import.meta.dirname, '../../start'), start)
+  })
 
   it.each(['vercel', 'netlify', 'aws_lambda', 'azure_functions', 'firebase', 'cloudflare_module', 'deno_deploy'])('%s: a required query fails check, doctor and build, naming the query', preset => {
     const check = weft('check', '--json', '--root', app, '--preset', preset)

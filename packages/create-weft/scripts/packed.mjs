@@ -339,6 +339,11 @@ if (clients.default && clients.wasm) {
 const room = join(root, 'room')
 const browsers = join(pkgs, 'multiplayer/scripts/e2e-browsers.mjs')
 writeFileSync(join(root, 'tgz/tarballs.json'), JSON.stringify(tarballs))
+// A person's path through the bin: the install, then the AGENTS.md of the weft that install brought.
+const person = join(root, 'person')
+await sh('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'npm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
+if (!readFileSync(join(person, 'AGENTS.md'), 'utf8').includes('weft check')) throw new Error('create-weft left no AGENTS.md')
+console.log('[packed] create-weft: AGENTS.md at scaffold: pass')
 await sh('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
 await sh('node', [browsers, 'run', room, '--runtimes', 'node'], root)
 await sh('node', [browsers, 'run', room, '--runtimes', 'node', '--via', 'webrtc'], root)

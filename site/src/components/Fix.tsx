@@ -1,27 +1,29 @@
-import { onMount, state } from 'weft'
+import { derived, onMount, state } from 'weft'
 import { Button } from '@weft/warp'
 import '@weft/ui-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
-const START = 10
+const START = 2
+const EACH = 5
 const STEPS = ['Your agent wrote this', 'weft stops the build', 'The fix', 'Now it works']
 const SAY = [
-  'The component copies its price once, so the number on the page can never change.',
+  'The component works out its total once, so the number on the page can never change.',
   'The compiler explains what is wrong and refuses to build, so this never reaches a browser.',
-  'Read the prop where it is shown, and the copy can go.',
-  'The same button now moves the price.',
+  'Put the sum in derived, and it follows the count.',
+  'The same button now moves the total.',
 ]
-const HINT = ['Press +1. The amount goes up, the price stays stuck.', 'Still stuck: nothing has been built.', 'Still stuck: the fix is not built yet.', 'Press +1. The price follows.']
+const HINT = ['Press +1. The count goes up, the total stays stuck.', 'Still stuck: nothing has been built.', 'Still stuck: the fix is not built yet.', 'Press +1. The price follows.']
 const PAUSE = 2600
 
-function Live(props: { amount: number }) {
-  return <b>{props.amount}</b>
+function Live(props: { count: number }) {
+  const total = derived(() => props.count * EACH)
+  return <b>{total.value}</b>
 }
 
 /** The compiler's real W001 on real code, as four steps that open broken, with the component it breaks running beside it. */
 export function Fix() {
   const step = state(0)
-  const amount = state(START)
+  const count = state(START)
   let box: HTMLElement | undefined
   let timers: number[] = []
   const stop = () => {
@@ -69,9 +71,9 @@ export function Fix() {
           </div>
         </div>
         <div data-part="play">
-          <output aria-live="polite">{step.value < 3 ? <b>{START}</b> : <Live amount={amount.value} />}</output>
-          <p data-part="amount">Amount {amount.value}</p>
-          <Button size="lg" onClick={() => amount.value++}>+1</Button>
+          <output aria-live="polite">{step.value < 3 ? <b>{START * EACH}</b> : <Live count={count.value} />}</output>
+          <p data-part="amount">Count {count.value}</p>
+          <Button size="lg" onClick={() => count.value++}>+1</Button>
           <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>Replay</Button>
           <p data-part="hint">{HINT[step.value]}</p>
         </div>

@@ -1,6 +1,7 @@
 import { onMount, state } from 'weft'
 import { Button } from '@weft/warp'
 import bytes from '../generated/arena.json'
+import speed from '../generated/speed.json'
 
 const FRAMES = [
   { id: 'weft', name: 'weft' },
@@ -15,6 +16,7 @@ const ms = (total: number, updates: number) => {
   const each = total / updates
   return each < 0.1 ? '<0.1 ms' : `${each.toFixed(1)} ms`
 }
+const time = (v: number) => (v < 0.01 ? '<0.01' : v < 10 ? v.toFixed(2) : v.toFixed(1))
 const top = Math.max(...FRAMES.map(f => bytes[f.id]))
 
 /** The same app built three times, each in its own frame. All readouts come from the frames' own harness. */
@@ -91,7 +93,21 @@ export function Arena() {
           </article>
         ))}
       </div>
-      <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. Solid is close to weft here, and that is a fair result. <a href="/arena/shared/harness.txt">How this is measured</a>.</p>
+      <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. <a href="/arena/shared/harness.txt">How this is measured</a>.</p>
+      <h3>Speed, measured in Chromium</h3>
+      <p data-part="intro">weft is fastest in {speed.wins} of these {speed.rows.length} rows. The others are marked. Times are milliseconds from one run on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
+      <div data-part="table">
+        <table>
+          <thead><tr><th scope="col">Operation</th><th scope="col">weft</th><th scope="col">Solid</th><th scope="col">React</th><th scope="col">Fastest</th></tr></thead>
+          <tbody>
+            {speed.rows.map(r => (
+              <tr key={r.label} data-lost={r.fastest === 'weft' ? undefined : ''}>
+                <th scope="row">{r.label}</th><td>{time(r.weft)}</td><td>{time(r.solid)}</td><td>{time(r.react)}</td><td>{r.fastest}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }

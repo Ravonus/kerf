@@ -84,6 +84,12 @@
   [data-site="arena"] dl > div { display: flex; justify-content: space-between; align-items: baseline; padding-block-end: var(--warp-space-tight); border-block-end: 1px solid var(--warp-color-surface-hover); }
   [data-site="arena"] dd { margin: 0; font-family: var(--warp-font-mono); font-size: 1.125rem; font-variant-numeric: tabular-nums; color: var(--warp-color-accent-text); }
   [data-site="arena"] [data-loud] dd { color: var(--warp-color-critical-text); }
+  [data-site="arena"] [data-part="table"] { overflow-x: auto; }
+  [data-site="arena"] table { inline-size: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  [data-site="arena"] th, [data-site="arena"] td { padding: var(--warp-space-tight); border-block-end: 1px solid var(--warp-color-surface-hover); text-align: end; white-space: nowrap; font-weight: 400; }
+  [data-site="arena"] th:first-child { text-align: start; color: var(--warp-color-text); }
+  [data-site="arena"] thead th { color: var(--warp-color-text-subtle); }
+  [data-site="arena"] [data-lost] td:last-child { color: var(--warp-color-critical-text); }
   [data-site="arena"] dt { font-size: 0.875rem; color: var(--warp-color-text-subtle); }
   [data-site="arena"] [data-part="weight"] { block-size: 8px; inline-size: calc(var(--share) * 100%); background: repeating-linear-gradient(90deg, var(--warp-color-accent-text) 0 4px, transparent 4px 6px); }
 

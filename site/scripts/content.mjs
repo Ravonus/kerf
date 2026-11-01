@@ -402,15 +402,16 @@ export function Counter() {
   return <button onClick={() => n.value++}>{n.value}</button>
 }`
   const compiled = transform(source, { filename: 'Counter.tsx' }).code.trim()
-  const bad = `function Price(props: { amount: number }) {
-  const amount = props.amount
-  return <b>{amount}</b>
+  const bad = `function Total(props: { count: number }) {
+  const total = props.count * 5
+  return <b>{total}</b>
 }`
-  const report = transform(bad, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W001')
+  const report = transform(bad, { filename: 'Total.tsx' }).diagnostics.find(d => d.code === 'W001')
   if (!report) throw new Error('the showcase expects W001')
   const entry = catalog.find(e => e.code === 'W001')
-  const good = `function Price(props: { amount: number }) {
-  return <b>{props.amount}</b>
+  const good = `function Total(props: { count: number }) {
+  const total = derived(() => props.count * 5)
+  return <b>{total.value}</b>
 }`
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
   const plain = s => s.replaceAll('`', '') // the compiler's words, without the terminal's quoting
@@ -418,10 +419,11 @@ export function Counter() {
     let n = -1
     return `<pre tabindex="0"><code>${highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => { n++; return lines[n] ? `<span data-part="line" data-${lines[n]}="">` : tag })}</code></pre>`
   }
-  const diff = `function Price(props: { amount: number }) {
-  const amount = props.amount
-  return <b>{amount}</b>
-  return <b>{props.amount}</b>
+  const diff = `function Total(props: { count: number }) {
+  const total = props.count * 5
+  const total = derived(() => props.count * 5)
+  return <b>{total}</b>
+  return <b>{total.value}</b>
 }`
   const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
@@ -436,7 +438,24 @@ const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
   const size = JSON.parse(readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8')).size
   const kb = n => +(n / 1024).toFixed(2)
-  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: plain(habit.message), fix: plain(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'del', 3: 'add' }), code: 'W001', message: plain(report.message), file: 'Price.tsx, line 2', fix: plain(entry.fix) })
+  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: plain(habit.message), fix: plain(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'add', 3: 'del', 4: 'add' }), code: 'W001', message: plain(report.message), file: `Total.tsx, line ${report.line}`, fix: plain(entry.fix) })
+}
+
+/** The arena's table: evals/speed's numbers whichever way they fall. Fastest in each row wins it, including when it isn't weft. */
+function buildSpeed() {
+  const run = JSON.parse(readFileSync(join(repo, 'evals/speed/results.json'), 'utf8'))
+  if (!run.valid) throw new Error('evals/speed/results.json was measured under too much load')
+  const rows = [
+    ['Create 1,000 rows', 'rows total', 'create'], ['Replace 1,000 rows', 'rows total', 'replace'], ['Create 10,000 rows', 'rows total', 'runLots'],
+    ['Append 1,000 rows', 'rows total', 'append'], ['Update every 10th row', 'rows total', 'update'], ['Select a row', 'rows total', 'select'],
+    ['Swap two rows', 'rows total', 'swap'], ['Remove a row', 'rows total', 'remove'], ['Clear all rows', 'rows total', 'clear'],
+    ['Update one cell of 10,000', 'update 10000', 'one cell, ms per tick'], ['Update every 10th of 10,000', 'update 10000', 'every 10th, ms per tick'], ['Update all 10,000 cells', 'update 10000', 'every cell, ms per tick'],
+  ].map(([label, group, key]) => {
+    const [weft, solid, react] = ['weft', 'solid-batch', 'react'].map(s => run.grid[s][group][key])
+    const best = Math.min(weft, solid, react)
+    return { label, weft, solid, react, fastest: best === weft ? 'weft' : best === solid ? 'Solid' : 'React' }
+  })
+  write('speed.json', { machine: run.machine, solid: run.solid, when: run.when.slice(0, 10), rows, wins: rows.filter(r => r.fastest === 'weft').length })
 }
 
 // ------------------------------------------------------------------ agents
@@ -457,6 +476,7 @@ const docs = await buildDocs()
 const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
+buildSpeed()
 // The shop's steps mark the lines each one added, so the code on the page shows the app growing.
 // `ask` is a frame, so what it shows is the app inside it. `slow` shows the page it loads.
 const SHOWN = { 'ask.tsx': 'arena/graph/main.tsx', 'slow.tsx': 'src/routes/examples/slow.tsx' }
