@@ -905,7 +905,9 @@ impl<'t> Emitter<'t> {
             let memo = self.helper("memo");
             return format!("({})", rest(&format!("{memo}(() => {test})()")));
         }
-        self.expr(e)
+        // A fragment around one expression lowers to an arrow, which can't be the right side of `&&` bare.
+        let code = self.expr(e);
+        if code.starts_with("() =>") { format!("({code})") } else { code }
     }
 
     fn fragment(&mut self, f: &JSXFragment<'_>) -> String {

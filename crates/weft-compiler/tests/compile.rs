@@ -1035,3 +1035,11 @@ fn an_island_mark_carries_when_it_loads() {
     let code = compile("import { C } from './c'\nexport const A = () => <C />", &opts).code.unwrap();
     assert!(code.contains(r#"void 0, "i")"#), "{code}");
 }
+
+#[test]
+fn a_fragment_of_one_expression_can_follow_a_logical_operator() {
+    let (code, d) = run("export function A(p: any) { return <div>{p.c && <>{p.x}</>}{p.c || <>{p.y}</>}</div> }");
+    assert!(d.is_empty(), "{d:?}");
+    assert!(code.contains("_c() && (() => (p.x))"), "{code}");
+    assert!(code.contains("_c() || (() => (p.y))"), "{code}");
+}

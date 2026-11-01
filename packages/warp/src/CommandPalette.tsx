@@ -1,6 +1,6 @@
 import { SearchIcon } from '@weft/icons'
 import { dialog, installSweep, listKey, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
-import { derived, flush, onMount, state, untrack, watch } from 'weft'
+import { derived, effect, flush, onMount, state, untrack, watch } from 'weft'
 import { bindable, type Openable } from './bind'
 import { Icon, type IconRef } from './Icon'
 import { Kbd } from './Kbd'
@@ -117,25 +117,39 @@ function paint(list: HTMLElement | undefined, query: string, rows: readonly Row[
   win.CSS.highlights.set(HIT, new win.Highlight(...ranges))
 }
 
+/** Writes `value` only if it differs, and hides the node when there is nothing to show. */
+const put = (el: HTMLElement, value: string | undefined) => {
+  el.hidden = !value
+  if (value && el.textContent !== value) el.textContent = value
+}
+
+/** One row of the pool. Everything but the active mark is one write pass per change of row, so a list costs little to open. */
 function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined; id: string; active: () => number; onPick: (at: number) => void; onHover: (at: number) => void }) {
   const r = derived(() => row())
-  const item = derived(() => r.value?.item)
-  const at = derived(() => r.value?.at ?? -1)
-  const icon = derived(() => item.value?.icon)
-  return (
-    <div data-part="row" hidden={r.value ? undefined : ''} role={item.value ? undefined : 'presentation'}>
-      {r.value?.head !== undefined
-        ? <div data-part="group-label" role="presentation">{r.value?.head}</div>
-        : (
-          <div data-part="item" role={item.value ? 'option' : undefined} id={item.value ? `${id}-${at.value}` : undefined} aria-selected={item.value ? (at.value === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at.value !== active()) onHover(at.value) }} onClick={() => onPick(at.value)}>
-            {icon.value && <Icon name={icon.value} />}
-            <span data-part="text">{item.value?.label}</span>
-            {item.value?.hint && <span data-part="hint">{item.value?.hint}</span>}
-            {item.value?.shortcut && <span data-part="shortcut">{item.value?.shortcut}</span>}
-          </div>
-        )}
+  const at = () => untrack(() => r.value?.at ?? -1)
+  let box!: HTMLElement, head!: HTMLElement, option!: HTMLElement, text!: HTMLElement, hint!: HTMLElement, keys!: HTMLElement
+  const view = (
+    <div ref={(n: any) => (box = n)} data-part="row" role="presentation" hidden="">
+      <div ref={(n: any) => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
+      <div ref={(n: any) => (option = n)} data-part="item" hidden="" aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at() !== active()) onHover(at()) }} onClick={() => onPick(at())}>
+        {r.value?.item?.icon && <Icon name={r.value?.item?.icon as IconRef} />}
+        <span ref={(n: any) => (text = n)} data-part="text"></span>
+        <span ref={(n: any) => (hint = n)} data-part="hint" hidden=""></span>
+        <span ref={(n: any) => (keys = n)} data-part="shortcut" hidden=""></span>
+      </div>
     </div>
   )
+  effect(() => r.value, v => {
+    const item = v?.item
+    box.hidden = !v
+    put(head, v?.head)
+    option.hidden = !item
+    if (item) { option.setAttribute('role', 'option'); option.id = `${id}-${v!.at}` } else { option.removeAttribute('role'); option.removeAttribute('id') }
+    text.textContent = item?.label ?? ''
+    put(hint, item?.hint)
+    put(keys, item?.shortcut)
+  })
+  return view
 }
 
 /**

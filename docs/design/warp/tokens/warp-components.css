@@ -723,7 +723,7 @@
 :where([data-scope="palette"] [data-part="item"] [data-part="hint"]) { flex: 1 1 0; min-inline-size: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="palette"] [data-part="item"] [data-part="text"]) { flex: 0 1 auto; min-inline-size: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 :where([data-scope="palette"] [data-part="item"][aria-selected="true"]) { background: var(--warp-color-accent-soft); }
-:where([data-scope="palette"] [data-part="row"][hidden]) { display: none; }
+:where([data-scope="palette"] [data-part][hidden]) { display: none; }
 ::highlight(warp-palette-hit) { color: var(--warp-color-accent-text); text-decoration: underline; text-underline-offset: 2px; }
 :where([data-scope="palette"] [data-part="empty"]) { padding: 32px var(--warp-pad-surface); text-align: center; color: var(--warp-color-text-subtle); }
 :where([data-scope="palette"] [data-part="footer"]) {
@@ -1551,9 +1551,9 @@
 :where([data-scope="qr"] > [data-part="value"]) { font: 500 var(--warp-text-caption-size)/1.3 var(--warp-font-mono); color: var(--warp-color-text-subtle); overflow-wrap: anywhere; text-align: center; max-inline-size: var(--_size); }
 
 /* -- Palette motion: a dialog that scales in, rows that settle as the pool shows them */
-:where([data-scope="command-palette"] [data-part="row"]:not([hidden])) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), translate var(--warp-duration-fast) var(--warp-ease-out); @starting-style { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.5); } }
-:where(dialog[data-scope="command-palette"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-pop), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; opacity: 0; scale: var(--warp-motion-scale-from); }
-:where(dialog[data-scope="command-palette"][open]) { opacity: 1; scale: 1; @starting-style { opacity: 0; scale: var(--warp-motion-scale-from); } }
+:where([data-scope="palette"] [data-part="row"]:not([hidden])) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), translate var(--warp-duration-fast) var(--warp-ease-out); @starting-style { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.5); } }
+:where(dialog[data-scope="palette"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-pop), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; opacity: 0; scale: var(--warp-motion-scale-from); }
+:where(dialog[data-scope="palette"][open]) { opacity: 1; scale: 1; @starting-style { opacity: 0; scale: var(--warp-motion-scale-from); } }
 
 /* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (ui-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */

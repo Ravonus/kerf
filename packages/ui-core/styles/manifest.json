@@ -205,9 +205,6 @@
  "color": [
   "inputs/range.css"
  ],
- "command-palette": [
-  "components/palette-motion.css"
- ],
  "comment-anchor": [
   "app/comment-anchor.css"
  ],
@@ -594,7 +591,8 @@
   "components/dialog.css",
   "components/menu.css",
   "components/command-palette.css",
-  "components/highlight.css"
+  "components/highlight.css",
+  "components/palette-motion.css"
  ],
  "panel": [
   "data/panel.css"

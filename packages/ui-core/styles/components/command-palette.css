@@ -39,7 +39,7 @@
 :where([data-scope="palette"] [data-part="item"] [data-part="hint"]) { flex: 1 1 0; min-inline-size: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="palette"] [data-part="item"] [data-part="text"]) { flex: 0 1 auto; min-inline-size: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 :where([data-scope="palette"] [data-part="item"][aria-selected="true"]) { background: var(--warp-color-accent-soft); }
-:where([data-scope="palette"] [data-part="row"][hidden]) { display: none; }
+:where([data-scope="palette"] [data-part][hidden]) { display: none; }
 ::highlight(warp-palette-hit) { color: var(--warp-color-accent-text); text-decoration: underline; text-underline-offset: 2px; }
 :where([data-scope="palette"] [data-part="empty"]) { padding: 32px var(--warp-pad-surface); text-align: center; color: var(--warp-color-text-subtle); }
 :where([data-scope="palette"] [data-part="footer"]) {
