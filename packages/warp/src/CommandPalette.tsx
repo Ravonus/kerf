@@ -9,6 +9,7 @@ import './styles'
 import '@weft/ui-core/styles/components/dialog.css'
 import '@weft/ui-core/styles/components/menu.css'
 import '@weft/ui-core/styles/components/command-palette.css'
+import '@weft/ui-core/styles/components/palette-motion.css'
 
 export interface Command {
   id?: string

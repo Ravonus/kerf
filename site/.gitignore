@@ -9,3 +9,5 @@ public/llms.txt
 public/llms-full.txt
 public/search.json
 public/docs/
+arena/node_modules/
+public/arena/
