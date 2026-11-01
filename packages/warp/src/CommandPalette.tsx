@@ -290,14 +290,14 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     answer(e.currentTarget.value)
   }
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
-  // one highlight that travels (redesign §3): it reads the row after the render that moved it
-  watch(() => [active.value, rows.value, flag.value] as const, ([, , on]) => queueMicrotask(() => {
-    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')
+  // one highlight that travels (redesign §3): a frame later, once the rows it reads are laid out
+  watch(() => [active.value, rows.value, flag.value] as const, ([, , on]) => { requestAnimationFrame(() => {
     if (!face) return
     if (!on) { face.setAttribute('data-instant', ''); face.style.removeProperty('--warp-a'); return }
+    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')
     if (row) moveShuttle(face, row.offsetTop, row.offsetTop + row.offsetHeight)
     requestAnimationFrame(() => face?.removeAttribute('data-instant'))
-  }))
+  }) })
   return (
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="">

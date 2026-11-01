@@ -185,6 +185,22 @@ test('forced colours drop the copy, so the label stays whole', async () => {
   await close()
 })
 
+test('an open palette holds its sweep and shows its shuttle, with nothing written', async () => {
+  const { page, close } = await open()
+  await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', `<dialog id="pal" data-scope="palette">
+    <div id="pal-row" data-part="input-row" data-sweep=""><span data-part="sweep"></span></div>
+    <div data-part="list"><span id="face" data-part="shuttle"></span><div id="opt" aria-selected="false">One</div></div></dialog>`))
+  const held = () => page.locator('#pal-row').evaluate(n => getComputedStyle(n).getPropertyValue('--_a').trim())
+  const seen = () => page.locator('#face').evaluate(n => getComputedStyle(n).opacity)
+  expect(await held()).toBe('0')
+  await page.evaluate(() => document.getElementById('pal').showModal())
+  expect(await held()).toBe('1')
+  expect(await seen()).toBe('0')
+  await set(page, 'opt', 'aria-selected', 'true')
+  await expect.poll(seen).toBe('1')
+  await close()
+})
+
 test('the contrast measurer skips text clipped out of sight, and only that', async () => {
   const page = await browser.newPage()
   await page.setContent(`<!doctype html><body style="background:#fff;margin:40px">

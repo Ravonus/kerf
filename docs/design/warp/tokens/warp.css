@@ -918,7 +918,7 @@
          [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
          :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
          :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
-         [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
+         dialog[data-scope="palette"][open] > [data-sweep], [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
 
   /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
      while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
@@ -975,7 +975,7 @@
     border-radius: max(2px, calc(var(--warp-radius-control) - 2px)); background: var(--warp-color-accent-soft); opacity: 0;
     --warp-shuttle-head: calc(70ms * var(--warp-motion-scale)); --warp-shuttle-tail: calc(120ms * var(--warp-motion-scale)); --warp-ease-spring: var(--warp-ease-out);
   }
-  :where([data-part="shuttle"][data-on]) { opacity: 1; }
+  :where([data-part="shuttle"][data-on], [data-part="list"]:has([aria-selected="true"]) > [data-part="shuttle"]) { opacity: 1; }
 
   /* -- sweep fill: solid buttons; slides in L→R, leaves to the right ----- */
   :where([data-part="sweep-fill"]) {
@@ -1237,7 +1237,7 @@
   :where([data-scope="surface"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
 
   /* focus: the sweep is the indicator for fields; everything else keeps the ring */
-  :where([data-scope="field"] [data-part="input"]:focus-visible) { outline: none; }
+  :where([data-scope="field"] [data-part="input"]:focus-visible, [data-scope="palette"] [data-part="input"]:focus-visible) { outline: none; }
 
   /* -- 5 · forced colours (Windows High Contrast and friends) ------------
      The UA repaints every colour with a few system colours, so "accent over ink" collapses to
