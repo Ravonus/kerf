@@ -46,7 +46,7 @@
   :root[data-theme="light"] [data-site="loom"][data-live] { opacity: 1; }
   [data-site="hero"] [data-part="say"] { display: grid; gap: var(--warp-space-group); max-inline-size: 660px; }
   [data-site="hero"] h1 { font-family: var(--warp-font-sans); font-weight: 700; font-size: clamp(2.75rem, 1.4rem + 4.4vw, 5rem); line-height: 1.02; letter-spacing: -0.04em; color: var(--warp-color-text); }
-  [data-site="hero"] [data-part="say"] > p:not([data-part]) { font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); line-height: 1.5; color: var(--warp-color-text-subtle); }
+  [data-site="hero"] [data-part="say"] > p:not([data-part]) { max-inline-size: 34rem; margin-block-start: var(--warp-space-related); font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); line-height: 1.5; color: var(--warp-color-text-subtle); }
   [data-part="next"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-group); }
   [data-part="quiet"] { color: var(--warp-color-text-subtle); }
   [data-part="next"] [data-scope="button"] { display: inline-flex; align-items: center; min-block-size: 48px; padding-inline: var(--warp-space-group); background: var(--warp-color-accent-text); color: var(--warp-color-surface-sunken); font-family: var(--warp-font-sans); font-size: 1.0625rem; font-weight: 700; letter-spacing: 0; text-transform: none; text-decoration: none; transition: background-color 120ms var(--warp-ease-out), scale 120ms var(--warp-ease-out); }
