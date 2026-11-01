@@ -6,7 +6,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "node scripts/crate.mjs",
+    "postpack": "node scripts/crate.mjs --clean"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
@@ -61,6 +63,7 @@
     "./auth": "./src/auth.ts",
     "./auth/better-auth": "./src/auth/better-auth.ts",
     "./auth/drizzle": "./src/auth/drizzle.ts",
+    "./extension": "./src/extension.ts",
     "./client": "./src/client.tsx",
     "./server": "./src/server.tsx",
     "./vite": "./src/vite.mjs",

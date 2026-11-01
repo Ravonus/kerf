@@ -1,4 +1,4 @@
-import { IconFileText, IconLock, IconTrash } from '@weft/icons'
+import { FileTextIcon, LockIcon, TrashIcon } from '@weft/icons'
 import { money } from '@weft/ui-core'
 import { derived, state, type State } from 'weft'
 import { Badge } from '../Badge'
@@ -32,7 +32,7 @@ export function Invoices({ invoices, currency, locale, onUpdatePayment, onExport
     { id: 'number', header: 'Number' },
     { id: 'status', header: 'Status', card: 'badge', cell: i => <Badge tone={STATUS[i.status][1]} dot>{STATUS[i.status][0]}</Badge> },
     { id: 'amount', header: 'Amount', numeric: true, value: i => money(i.amount, currency, locale) },
-    { id: 'pdf', header: 'Receipt', value: () => '', cell: i => (i.pdf ? <a data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" href={i.pdf} aria-label={`PDF for ${i.number}`}><IconFileText /></a> : '') },
+    { id: 'pdf', header: 'Receipt', value: () => '', cell: i => (i.pdf ? <a data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" href={i.pdf} aria-label={`PDF for ${i.number}`}><FileTextIcon /></a> : '') },
   ]
   const fix = derived(() => <Button size="sm" tone="critical" onClick={() => onUpdatePayment?.()}>Update payment method</Button>) // one build: Banner reads the prop twice
   const tools = derived(() => (onExport ? <Button emphasis="ghost" tone="neutral" size="sm" onClick={onExport}>Export CSV</Button> : undefined)) // one build: Table reads the prop twice
@@ -63,7 +63,7 @@ export function PaymentMethods({ methods, onAdd, onDefault, onRemove, onRestore 
                   ? <Badge tone="neutral">Default</Badge>
                   : <>
                     <Button emphasis="link" aria-label={`Make default: ${name(m)}`} onClick={() => { onDefault(m); toast.show({ title: 'Default payment method changed', tone: 'positive' }) }}>Make default</Button>
-                    <Button emphasis="ghost" tone="critical" size="sm" data-icon-only="" label={`Remove ${name(m)}`} onClick={() => { onRemove(m); toast.show({ title: `${name(m)} removed`, action: onRestore && { label: 'Undo', onClick: () => onRestore(m) } }) }}><IconTrash /></Button>
+                    <Button emphasis="ghost" tone="critical" size="sm" data-icon-only="" label={`Remove ${name(m)}`} onClick={() => { onRemove(m); toast.show({ title: `${name(m)} removed`, action: onRestore && { label: 'Undo', onClick: () => onRestore(m) } }) }}><TrashIcon /></Button>
                   </>}
               </span>
             </div>
@@ -107,7 +107,7 @@ export function PayFrame({ title, src, mount, testMode, ready }: PayFrameProps) 
   return (
     <div data-scope="pay-frame" data-state={done.value ? undefined : 'loading'} aria-busy={done.value ? undefined : 'true'}>
       <div data-part="head">
-        <span class="row"><IconLock />Card fields are hosted by your payment provider</span>
+        <span class="row"><LockIcon />Card fields are hosted by your payment provider</span>
         {testMode && <Badge tone="caution">Test mode</Badge>}
       </div>
       <div ref={(n: any) => (host = n)} data-part="slot" role="group" aria-label={title}>

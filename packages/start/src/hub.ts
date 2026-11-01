@@ -11,7 +11,7 @@
 import type { Bus } from './bus'
 import { memoryBus } from './bus'
 import { currentScope, enter, fns, StartError, type Context, type Fn, type StandardSchemaV1 } from './data'
-import { createScope, guard, liveQueries, validate, type Scope, type ScopeOptions } from './exec'
+import { createScope, guard, liveQueries, tagsOf, validate, type Scope, type ScopeOptions } from './exec'
 
 export interface Limits {
   subscriptions: number
@@ -340,7 +340,7 @@ function createHub(options: RealtimeOptions & { build?: string; dev?: boolean })
       if (kind === 's') return void stream(c, s, valid, cursor)
       guard(fn, fn.def.auth ? await createScope(request, options).ctx() : ({} as Context))
       if (s.ac.signal.aborted) return
-      s.tags = [...(typeof fn.def.tags === 'function' ? fn.def.tags(valid) : fn.def.tags ?? [])]
+      s.tags = await tagsOf(fn, valid, createScope(request, options))
       for (const t of s.tags) c.tags.set(t, (c.tags.get(t) ?? 0) + 1)
       if (options.dev) {
         liveQueries.set(fn.$id, s.tags)

@@ -20,6 +20,7 @@ export type SlotId =
   | 'text.measure'
   | 'surface.renderer'
   | 'realtime.bus'
+  | 'server.extension'
   | 'db.adapter'
   | 'pay.rail'
   | `device.${string}`
@@ -73,7 +74,7 @@ export interface WeftConfig {
   site?: SiteConfig
   /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */
   runtime?: 'node' | 'bun' | 'deno'
-  /** Sidecars behind `remote('rust://<name>')`. A service's crate is `crates/<name>` unless it says otherwise. */
+  /** The crates behind `remote('rust://<name>')` and `native('<name>')`. One is `crates/<name>` unless it says otherwise. */
   rust?: {
     /** Let plain object unions through to a sidecar (R102). */
     unions?: 'allow'
@@ -82,6 +83,8 @@ export interface WeftConfig {
       crate?: string
       /** Built and run elsewhere: no cargo here, and `WEFT_RUST_<NAME>_URL` says where it is. */
       external?: boolean
+      /** `false`: a `native()` crate that can't build for WASM, and needs no fallback on this host (R104). */
+      wasm?: false
     }>
   }
   /**

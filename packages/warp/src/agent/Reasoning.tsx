@@ -1,4 +1,4 @@
-import { IconRight } from '@weft/icons'
+import { RightIcon } from '@weft/icons'
 import { derived } from 'weft'
 import { Shimmer } from './Shimmer'
 import '../styles'
@@ -10,7 +10,7 @@ export function Reasoning({ text, streaming, seconds }: { text: string; streamin
   return (
     <details data-scope="reasoning" data-state={streaming ? 'streaming' : 'done'} open={!!streaming}>
       <summary>
-        <IconRight data-part="chev" />
+        <RightIcon data-part="chev" />
         {streaming ? <Shimmer>Thinking…</Shimmer> : <span>{label.value}</span>}
       </summary>
       <div data-part="body">{text}</div>

@@ -1,4 +1,4 @@
-import { IconCheck, IconTrash, IconUsers } from '@weft/icons'
+import { CheckIcon, TrashIcon, UsersIcon } from '@weft/icons'
 import { isLastOwner, plural, uid } from '@weft/ui-core'
 import { derived, state, type State } from 'weft'
 import { Badge } from '../Badge'
@@ -107,7 +107,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
     { id: 'lastActive', header: 'Last active', card: 'hide' },
     {
       id: 'menu', header: 'Actions', value: () => '',
-      cell: m => (m.id === me || locked(m) ? '' : <Button emphasis="ghost" tone="critical" size="sm" data-icon-only="" label={`Remove ${m.name}`} onClick={() => ask([m])}><IconTrash /></Button>),
+      cell: m => (m.id === me || locked(m) ? '' : <Button emphasis="ghost" tone="critical" size="sm" data-icon-only="" label={`Remove ${m.name}`} onClick={() => ask([m])}><TrashIcon /></Button>),
     },
   ]
   const inviteColumns: Column<Invite>[] = [
@@ -139,7 +139,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
       />
       {pending.value.length > 0 && <Table caption="Pending invites" rows={pending as any} columns={inviteColumns} picker={false} heading={3} />}
       <InviteDialog open={inviting} roles={roles.filter(r => r.value !== owner)} seatsLeft={seats - used.value} onSend={onInvite} defaultRole="member" />
-      <ConfirmDialog open={confirming} glyph={IconUsers} tone="critical" title={count.value > 1 ? `Remove ${count.value} members?` : `Remove ${leaving.value[0]?.name}?`} description={`${leaving.value.map(m => m.name).join(', ')} ${count.value > 1 ? 'lose' : 'loses'} access right away. Their work stays.`} action={count.value > 1 ? `Remove ${count.value} members` : 'Remove member'} onConfirm={remove} />
+      <ConfirmDialog open={confirming} glyph={UsersIcon} tone="critical" title={count.value > 1 ? `Remove ${count.value} members?` : `Remove ${leaving.value[0]?.name}?`} description={`${leaving.value.map(m => m.name).join(', ')} ${count.value > 1 ? 'lose' : 'loses'} access right away. Their work stays.`} action={count.value > 1 ? `Remove ${count.value} members` : 'Remove member'} onConfirm={remove} />
       <ConfirmDialog open={demoting} tone="critical" title="Change your own role?" description="You’ll lose access to this page, and someone else will have to give it back." action="Change my role" onConfirm={() => { const d = demote!; assign(d.m, d.role) }} onCancel={() => { if (demote) demote.el.value = demote.m.role }} />
     </div>
   )
@@ -169,7 +169,7 @@ export function RolesMatrix({ roles, permissions, onToggle }: { roles: Role[]; p
               {onToggle
                 ? <Checkbox checked={p.roles.includes(r.value)} aria-label={`${r.label}: ${p.label}`} onChange={(e: any) => onToggle(p, r.value, e.currentTarget.checked)} />
                 : p.roles.includes(r.value)
-                  ? <span data-part="yes"><IconCheck /><span data-part="sr-only">Yes</span></span>
+                  ? <span data-part="yes"><CheckIcon /><span data-part="sr-only">Yes</span></span>
                   : <><span data-part="no" aria-hidden="true">–</span><span data-part="sr-only">No</span></>}
             </td>
           ))}

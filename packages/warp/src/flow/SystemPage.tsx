@@ -1,4 +1,4 @@
-import { IconClock, IconCopy, IconPlus, IconRefresh } from '@weft/icons'
+import { ClockIcon, CopyIcon, PlusIcon, RefreshIcon } from '@weft/icons'
 import { announce, copyText, menu, uid } from '@weft/ui-core'
 import { derived, state, untrack, watch } from 'weft'
 import { Badge } from '../Badge'
@@ -52,7 +52,7 @@ function Head({ art, code, title, focus, as }: { art: any; code: any; title: any
 }
 
 function RequestId({ id }: { id: string }) {
-  return <span data-part="meta">Request ID <code>{id}</code><Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" label="Copy request ID" onClick={async () => { await copyText(document, id); announce(document, 'Copied') }}><IconCopy /></Button></span>
+  return <span data-part="meta">Request ID <code>{id}</code><Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" label="Copy request ID" onClick={async () => { await copyText(document, id); announce(document, 'Copied') }}><CopyIcon /></Button></span>
 }
 
 export interface SwitchAccount { id: string; email: string; detail?: string; hasAccess?: boolean; current?: boolean }
@@ -74,7 +74,7 @@ function AccountMenu({ accounts, onSwitch }: { accounts: SwitchAccount[]; onSwit
           </button>
         </li>
       ))}
-      <li role="none"><button type="button" role="menuitem" tabindex="-1" onClick={() => pick(undefined)}><IconPlus /><span>Use another account</span><span></span></button></li>
+      <li role="none"><button type="button" role="menuitem" tabindex="-1" onClick={() => pick(undefined)}><PlusIcon /><span>Use another account</span><span></span></button></li>
     </ul>
   ) }
 }
@@ -177,7 +177,7 @@ function Denied(p: SystemPageProps) {
             {view.value === 'request' && <p>{p.description ?? <>{p.account ? `You're signed in as ${p.account}. ` : ''}Ask the owner for access, or switch to an account that has it.</>}</p>}
             {view.value === 'compose' && <p>{approvers.value} can share it. Add a note if it helps them decide.</p>}
             {view.value === 'closed' && <p>This workspace doesn't take access requests. Ask {approvers.value} to share it{p.account ? ` with ${p.account}` : ''}.</p>}
-            {view.value === 'pending' && <span data-part="pending" role="status"><IconClock /> Request sent to {approvers.value} · we'll email you when they answer</span>}
+            {view.value === 'pending' && <span data-part="pending" role="status"><ClockIcon /> Request sent to {approvers.value} · we'll email you when they answer</span>}
             {view.value === 'compose'
               ? (
                 <div data-part="request">
@@ -226,7 +226,7 @@ export function SystemPage(p: SystemPageProps) {
           </form>
         )}
         <div data-part="actions">
-          {kind === '500' && p.onRetry && <Button onClick={p.onRetry}><IconRefresh />Try again</Button>}
+          {kind === '500' && p.onRetry && <Button onClick={p.onRetry}><RefreshIcon />Try again</Button>}
           {p.primary && <Act a={p.primary} />}
           {home.value && <Act a={home.value} emphasis="frame" />}
         </div>

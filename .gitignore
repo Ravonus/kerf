@@ -4,6 +4,7 @@ coverage/
 .DS_Store
 *.log
 target/
+packages/start/crate/
 spikes/native/ios/build/
 spikes/native/ios/*.xcodeproj/
 spikes/native/android/third_party/

@@ -1,4 +1,4 @@
-import { IconAlertCircle, IconUpload } from '@weft/icons'
+import { AlertCircleIcon, UploadIcon } from '@weft/icons'
 import { announce, autoMap, badRows, checkImport, importRecords, installSweep, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/ui-core'
 import { derived, onMount, state } from 'weft'
 import { Alert } from '../Alert'
@@ -111,7 +111,7 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
           <div data-scope="dropzone" data-sweep="" data-phase="idle" data-pin={dragging.value ? '' : undefined} onDragOver={(e: DragEvent) => { e.preventDefault(); dragging.value = true }} onDragLeave={() => (dragging.value = false)} onDrop={(e: DragEvent) => { e.preventDefault(); dragging.value = false; take(e.dataTransfer?.files[0]) }}>
             <Sweep />
             <input type="file" accept=".csv,text/csv" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onChange={(e: any) => { take(e.currentTarget.files?.[0]); e.currentTarget.value = '' }} />
-            <span data-part="icon" aria-hidden="true"><IconUpload /></span>
+            <span data-part="icon" aria-hidden="true"><UploadIcon /></span>
             <span data-part="drop-copy"><span data-part="title" id={`${id}-t`}>Drop a CSV here or <u>browse</u></span></span>
             <span data-part="hint" id={`${id}-h`}>Up to {rowLimit.toLocaleString('en-US')} rows · first row is the header</span>
           </div>
@@ -170,5 +170,5 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
 }
 
 function Cell({ value, issue }: { value: string; issue?: ImportIssue }) {
-  return <td data-invalid={issue ? '' : undefined}>{value}{issue && <span data-part="error"><IconAlertCircle />{issue.message}</span>}</td>
+  return <td data-invalid={issue ? '' : undefined}>{value}{issue && <span data-part="error"><AlertCircleIcon />{issue.message}</span>}</td>
 }

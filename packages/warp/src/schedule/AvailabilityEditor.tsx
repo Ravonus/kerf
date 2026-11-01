@@ -1,4 +1,4 @@
-import { IconAlert, IconGlobe, IconPlus, IconX } from '@weft/icons'
+import { AlertIcon, GlobeIcon, PlusIcon, XIcon } from '@weft/icons'
 import { announce, fmt, hhmm, nextRange, rangeIssues, timeOptions, uid, weekValid, type IsoDate, type Override, type Range, type WeekDay } from '@weft/ui-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from '../Button'
@@ -100,7 +100,7 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
   return (
     <div ref={(n: any) => (root = n)} data-scope="availability">
       <div class="row">
-        {p.zoneLabel && <span class="muted"><IconGlobe /> Times in {p.zoneLabel}</span>}
+        {p.zoneLabel && <span class="muted"><GlobeIcon /> Times in {p.zoneLabel}</span>}
         <span style="flex:1"></span>
         <Button emphasis="ghost" tone="neutral" size="sm" onClick={copyMonday}>Copy Monday to weekdays</Button>
       </div>
@@ -113,7 +113,7 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
           {overrides.value.map(o => (
             <li key={o.id}>
               <span><b>{fmt(o.date, { weekday: 'short', month: 'short', day: 'numeric' }, env.locale.value)}</b> · {hours(o)}{o.note && <><br /><small>{o.note}</small></>}</span>
-              <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label={`Remove override for ${fmt(o.date, { month: 'short', day: 'numeric' }, env.locale.value)}`} data-rov={o.id} onClick={() => removeOverride(o)} />
+              <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label={`Remove override for ${fmt(o.date, { month: 'short', day: 'numeric' }, env.locale.value)}`} data-rov={o.id} onClick={() => removeOverride(o)} />
             </li>
           ))}
           {!overrides.value.length && <li><span class="muted">No overrides. Add one for holidays or a half day.</span></li>}
@@ -149,9 +149,9 @@ function Day({ day, id, name, options, onToggle, onTime, onAdd, onRemove }: { da
               <div key={x.k} data-part="range" data-invalid={x.error ? '' : undefined} role="group" aria-label={`${name}, range ${x.at + 1}`}>
                 <Select label="From" size="sm" options={options} value={String(x.r[0])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: any) => onTime(day.day, x.at, 0, +e.currentTarget.value)} />
                 <Select label="To" size="sm" options={options} value={String(x.r[1])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: any) => onTime(day.day, x.at, 1, +e.currentTarget.value)} />
-                {day.ranges.length > 1 && <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label={`Remove ${name} range ${x.at + 1}`} onClick={() => onRemove(day.day, x.at)} />}
-                {x.at === day.ranges.length - 1 && <Button emphasis="ghost" tone="neutral" size="sm" label={`Add a range on ${name}`} data-icon-only="" data-add={day.day} onClick={() => onAdd(day.day)}><IconPlus /></Button>}
-                {x.error && <span data-part="error" id={`${id}-${x.k}-e`}><IconAlert /> {x.error}</span>}
+                {day.ranges.length > 1 && <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label={`Remove ${name} range ${x.at + 1}`} onClick={() => onRemove(day.day, x.at)} />}
+                {x.at === day.ranges.length - 1 && <Button emphasis="ghost" tone="neutral" size="sm" label={`Add a range on ${name}`} data-icon-only="" data-add={day.day} onClick={() => onAdd(day.day)}><PlusIcon /></Button>}
+                {x.error && <span data-part="error" id={`${id}-${x.k}-e`}><AlertIcon /> {x.error}</span>}
               </div>
             ))
           : <span data-part="off">Unavailable</span>}

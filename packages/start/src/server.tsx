@@ -27,6 +27,7 @@ import { rt } from 'weft'
 import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
+import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
 import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
@@ -80,6 +81,8 @@ export interface HandlerOptions {
   store?: Store
   /** `src/auth.server.ts`'s default export, any provider: mounted at its base path, checked on the first request. */
   auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$weft'>
+  /** `server.extension` providers with an app file (`virtual:weft/extensions`), loaded on the first request. */
+  extensions?: ExtensionEntry[]
   /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
   /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
@@ -149,9 +152,15 @@ export function createHandler(options: HandlerOptions) {
   const tree = routeTree(manifest, modules)
   let provider: Promise<MediaServer> | undefined
   const mediaServer = () => (provider ??= options.media?.())
-  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer }
+  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer, extensions: undefined as ServerExtension[] | undefined }
   let checked = !options.dev
   const authBase = (options.auth?.basePath ?? '/api/auth').replace(/\/$/, '')
+  const extensions = new Map<string, ServerExtension>()
+  let loading: Promise<void> | undefined
+  const loadExtensions = () => (loading ??= (async () => {
+    for (const { key, load } of options.extensions ?? []) extensions.set(key, await load())
+    scopeOptions.extensions = [...extensions.values()]
+  })())
   let applied = -1
   configure({ ...options.realtime, build: options.build, dev: options.dev })
 
@@ -164,6 +173,7 @@ export function createHandler(options: HandlerOptions) {
     const list = options.migrations?.() ?? []
     if (applied !== list.length) {
       options.auth?.$weft?.check()
+      for (const e of extensions.values()) e.check?.(options.dev)
       applied = list.length
       const report = (e: unknown) => options.onDiagnostic?.({ code: 'Q016', severity: 'error', message: `Q016: ${(e as any)?.message ?? e}` })
       runtime.migrations = { list, report }
@@ -458,10 +468,19 @@ export function createHandler(options: HandlerOptions) {
     return new Response(`<!doctype html>\n<meta name="robots" content="noindex">\n${list}\n`, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-nitro-prerender': paths.join(',') } })
   }
 
+  /** Everything under `/_weft/x/<key>/`, for the extension with that key. Nothing else reaches it. */
+  async function extensionRoute(url: URL, request: Request, scope: Scope) {
+    const [key = '', ...rest] = url.pathname.slice(EXTENSION.length).split('/')
+    const extension = extensions.get(key)
+    if (!extension?.handle) return new Response('Not found', { status: 404 })
+    return extension.handle(request, rest.join('/'), { invalidate: tags => exec.invalidate(scope, tags), report: d => options.onDiagnostic?.(d) })
+  }
+
   const route = (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
+    if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
     if (request.method === 'POST' && !url.pathname.startsWith('/_weft/') && /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(request.headers.get('content-type') ?? '')) return form(url, request, scope)
     if (url.pathname === '/_weft/rt') return rtRoute(request, scope, options.realtime?.origins)
     if (url.pathname === '/_weft/ws') return socketRoute(request, scope, options.realtime?.origins)
@@ -474,6 +493,7 @@ export function createHandler(options: HandlerOptions) {
   }
   const handler = async (incoming: Request): Promise<Response> => {
     const request = options.auth ? stamped(incoming) : incoming
+    await loadExtensions()
     if (!checked) {
       checked = true
       exec.checkTags(d => options.onDiagnostic?.(d))

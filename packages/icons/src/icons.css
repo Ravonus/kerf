@@ -1,11 +1,23 @@
 /* Every @weft/icons svg, with or without warp. warp's own base rule says the same; this one lets the set stand alone. */
 @layer warp.components {
   :where(svg[data-icon]) { inline-size: var(--warp-icon-md, 1em); block-size: var(--warp-icon-md, 1em); flex: none; fill: none; stroke: currentColor; stroke-width: var(--warp-icon-stroke, 1.5); stroke-linecap: round; stroke-linejoin: round; }
-  :where(svg[data-icon] [data-w]) { stroke-width: var(--warp-icon-weft, 2); }
+    /* weights: each tier has its own, on the path, so they hold when a build compiles the tier switch out */
+  :where(svg[data-icon] [data-qs]) { stroke-width: 1; }
+  :where(svg[data-icon] [data-bs]) { stroke-width: 2; }
+  :where(svg[data-icon] [data-bw]) { stroke-width: 2.5; }
+  /* the weft, the stroke that says what the icon means: colour it with --warp-icon-weft-color */
+  :where(svg[data-icon] [data-w]) { stroke: var(--warp-icon-weft-color, currentColor); }
   /* pixels: a 16 grid in the 24 box. In forced colours currentColor is the system's, so these follow it. */
-  :where(svg[data-icon] [data-p]) { fill: currentColor; stroke: none; transform: scale(1.5); shape-rendering: crispEdges; }
-  :where(svg[data-icon] [data-p="s"]) { fill-opacity: .4; }
-  /* solid: the body fills, and a weft stroke inside it is cut out of the fill */
-  :where(svg[data-icon] [data-s]) { fill: currentColor; }
-  :where(svg[data-icon] [data-k]) { stroke: var(--warp-icon-knock, Canvas); stroke-width: var(--warp-icon-weft, 2); }
+  :where(svg[data-icon] [data-p], svg[data-icon] [data-c]) { stroke: none; transform: scale(1.5); shape-rendering: crispEdges; }
+  :where(svg[data-icon] [data-p]) { fill: currentColor; }
+  :where(svg[data-icon] [data-p][data-w]) { fill: var(--warp-icon-weft-color, currentColor); }
+  /* solid: a filled body, its offset shade, and what's cut from it */
+  :where(svg[data-icon] [data-s]) { fill: currentColor; stroke: none; }
+  :where(svg[data-icon] [data-sh]) { stroke: currentColor; stroke-width: 1.5; }
+  :where(svg[data-icon] [data-so]) { fill: currentColor; fill-opacity: .3; stroke: none; }
+  :where(svg[data-icon] [data-k]) { stroke: var(--warp-icon-knock, Canvas); stroke-width: 2.5; }
+  :where(svg[data-icon] [data-k][data-qs]) { stroke-width: 1.5; }
+  :where(svg[data-icon] [data-hi]) { stroke-width: 1.25; }
+  :where(svg[data-icon] [data-c]) { fill: var(--warp-icon-knock, Canvas); }
+  @media (forced-colors: active) { :where(svg[data-icon] [data-so]) { display: none; } }
 }

@@ -1,4 +1,4 @@
-//! `weft::build::generate("search")` in a sidecar's `build.rs`: `.weft/contract.json` → serde types (typify), a typed
+//! `weft::build::generate("search")` in a sidecar's or an addon's `build.rs`: `.weft/contract.json` → serde types (typify), a typed
 //! error enum per function, the `Service` trait and `functions()`. Rust never defines a schema (PLAN §4.3). A contract
 //! that changes reruns this, and cargo then stops exactly where the implementation no longer fits, which `weft dev`,
 //! `weft build` and `weft check` report as R103 with the function's id.
@@ -24,6 +24,10 @@ pub fn generate(service: &str) {
     let text = fs::read_to_string(&path).unwrap_or_else(|e| panic!("R103: can't read {}: {e}", path.display()));
     let contract: Value = serde_json::from_str(&text).unwrap_or_else(|e| panic!("R103: {} isn't JSON: {e}", path.display()));
     let code = render(&contract, service).unwrap_or_else(|e| panic!("R103: {e}"));
+    // An addon's undefined `napi_*` symbols are the host's, which macOS's linker has to be told.
+    if contract["services"][service]["kind"] == "native" && env::var("CARGO_CFG_TARGET_FAMILY").is_ok_and(|f| !f.contains("wasm")) {
+        napi_build::setup();
+    }
     let out = PathBuf::from(env::var("OUT_DIR").expect("cargo sets OUT_DIR")).join("weft_contract.rs");
     fs::write(&out, &code).expect("OUT_DIR is writable");
     if let Some(dir) = path.parent().map(|p| p.join("rust")) {
@@ -152,7 +156,7 @@ pub(crate) fn render(contract: &Value, service: &str) -> Result<String, String> 
     let all = contract["functions"].as_array().ok_or("the contract has no `functions`")?;
     let functions: Vec<&Value> = all.iter().filter(|f| f["impl"]["service"] == service).collect();
     if functions.is_empty() {
-        return Err(format!("no function in the contract has `impl: remote('rust://{service}')`. Point one at it, or rename the service in build.rs"));
+        return Err(format!("no function in the contract has `impl: remote('rust://{service}')` or `impl: native('{service}')`. Point one at it, or rename the service in build.rs"));
     }
     let hash = contract["services"][service]["hash"].as_str().unwrap_or("");
 
@@ -238,15 +242,15 @@ impl ::weft::Failure for {name}Error {{
         r#"{types}
 {extra}
 {body}
-/// The contract's hash: `GET /_weft/health` reports it, and the supervisor refuses a binary built from another one.
+/// The contract's hash: `GET /_weft/health` reports it, and neither side runs a binary built from another one.
 pub const CONTRACT_HASH: &str = {hash:?};
 
-/// Every function `remote('rust://{service}')` implements. Written by `weft::build`: edit the TypeScript, not this.
+/// Every function `{service}` implements. Written by `weft::build`: edit the TypeScript, not this.
 pub trait Service: Send + Sync + 'static {{
     {methods}
 }}
 
-/// What `weft::router` serves.
+/// What `weft::router` serves, or `weft::native!` exports.
 pub fn functions<S: Service>(service: S) -> ::weft::Functions {{
     let service = ::std::sync::Arc::new(service);
     ::weft::Functions::new({service:?}, CONTRACT_HASH)

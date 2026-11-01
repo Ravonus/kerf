@@ -391,7 +391,7 @@ fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, 
 
 ### 4.3 Rust, opt-in and as far as you want
 
-Status: `remote()` is built ([36](research/36-rust-remote.md)); `native()` is Phase 5b.
+Status: both are built: `remote()` ([36](research/36-rust-remote.md)) and `native()` ([37](research/37-rust-native.md)).
 
 Zod stays the single source of truth. `.weft/contract.json` → typify generates Rust types in `build.rs`. Rust never
 defines the schema, and drift stops `cargo` at the function it broke. A server function swaps `run` for `impl`:
@@ -421,12 +421,13 @@ call costs:
 - a 100-object payload costs 176 µs into napi as JS objects, 58 µs as a JSON string, and ~0.2 µs as a `Buffer`;
 - loopback HTTP to a sidecar costs 43–81 µs.
 
-No native binary is ever required for a default app. On Deno and edge, `native()` falls back to WASM or `remote()`.
+No native binary is ever required for a default app. `native()` loads the addon on Node, Bun and Deno, and its `.wasm` where
+the addon can't load. An edge preset has no file to read either from, so it's R104, and `remote()` is the way out.
 R101–R105: unrepresentable schemas (add a codec), plain unions, impl/contract drift, `native()` on a preset without
 WASM, and a cached Rust query that reports no touched tables. R106–R109 are a sidecar's runtime and build failures: no
 address or secret, unreachable, panicked, and a compile error unrelated to the contract.
 
-### 4.4 Payments: `weft/pay`
+### 4.4 Payments: `@weft/pay`
 
 Products are declared once, `checkout()` is called once, and entitlements are read everywhere
 ([10](research/10-payments.md)). App code never names a rail.
@@ -442,7 +443,13 @@ Products are declared once, `checkout()` is called once, and entitlements are re
   - `checkout()` never grants anything itself.
 - **PAY-codes:** Stripe for digital goods in a store build, client-side grants, secret keys in the client graph,
   hardcoded store prices, missing Restore Purchases, float money.
-- **Testing:** `fakePay` in `weft/test` plays renewals, failures, refunds and revocations on the deterministic clock.
+- **Testing:** `fakePay` from `@weft/pay/test` plays renewals, failures, refunds and revocations on the deterministic clock.
+- **Status (2026-10-31):** the web half is built ([37](research/37-pay-web.md)), as a plugin on the public API and the
+  worked example for building one (`weft docs plugins`): `@weft/pay`, `@weft/plugin-pay-stripe` on the `pay.rail` slot,
+  `/_weft/x/pay/<rail>` through `server.extension`, `ctx.entitlements`, `requires`, `fakePay` (from `@weft/pay/test`),
+  `weft add pay` and the PAY-codes. `entitlements` is a query the app owns (`src/server/pay.ts`), so a client reads
+  `.live().value?.includes('pro')`, and `checkout` is a mutation that redirects. Not built: every native rail, the policy
+  table, `weft pay explain` and `weft pay sync`. No purchase has reached a real Stripe account.
 
 ### 4.5 App state: `defineState` (zustand ergonomics, no second container)
 
@@ -751,6 +758,8 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
 
 Details: [13](research/13-plugins.md).
 
+- **A plugin with a server part** provides `server.extension@1`: routes under `/_weft/x/<key>/`, `ctx`, guards and enforced
+  options, gated by the app's `src/<key>.server.ts` (P118). `@weft/pay` is the worked example (`weft docs plugins`).
 - **Model.** Core defines typed, versioned **slots**: `text.measure@1`, `font.build@1`, `surface.renderer`,
   `realtime.bus`, `db.adapter`, `auth.provider`, `pay.rail`, `device.*`. A plugin *provides* an implementation, and core, warp and app
   code *consume* the slot.
@@ -914,7 +923,7 @@ crates/
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
-  pay         weft/pay: catalog, resolver + policy table, Stripe/StoreKit/Play adapters, entitlements (+ @weft/db-pay)
+  pay         @weft/pay (catalog, entitlements, ledger; the reference plugin) and @weft/plugin-pay-stripe, built (37); resolver + policy table and the StoreKit/Play adapters to come
 crates/weft-layout  Taffy-based layout shared by the iOS host, the Android host and Node
 evals/        agent eval harness
 ```
@@ -937,14 +946,21 @@ evals/        agent eval harness
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
 | **6a. Native spike (3 weeks)** | Hermes + op buffer + `weft-layout` + Swift/Kotlin hosts for `Stack Row Text Button Input Scroll`, `weft dev --ios/--android`, HMR. | The v3 list screen runs on both platforms; price push ≤ 1 host op; Node layout matches device within 1pt for non-text boxes. Stop and revisit if a mid-range Android can't hold 60 Hz. |
 | **6b. warp native + device** | Tier-1 resolution table, `idiom`, `weft/device` core, generated projects, `weft device`, N-codes, split tooling. | An agent takes a shared web app to TestFlight and the Play internal track with ≤ 3 variant files. |
-| **6c. Payments** | `weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
+| **6c. Payments** | `@weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
+
+**5b status (2026-10-31):** built. `native()` in `@weft/start/rust`, `weft::native!`, a WASM fallback with its own small ABI,
+R104 and R105, and `weft add rust`, which closes 5a's gap: the crate ships inside `@weft/start`. Exit check: passed, 51 of 51
+on Node, Bun and Deno on Linux x64, with byte-identical answers and client: the addon beats its TS `run` by 7.2× on Node and
+5.1× on Bun at p50 (15.1× and 13.4× in calls/s), and WASM gives 6.4× and 5.1×; on macOS arm64, also 51 of 51, 14.3× and 7.7×. The body was chosen to vectorize, and Bun's
+margin is thin. Dev reload needs no restart: a new path per build loads beside the old one, which §11 had wrong. Not done:
+WASM on an edge isolate, bytes without JSON, Windows itself. What was built and left out: [37](research/37-rust-native.md).
 
 **5a status (2026-10-31):** built. `remote()` in `@weft/start/rust`, the `weft` crate, the supervisor in `weft dev`,
 `build` and `start`, typed errors with `raise()` for TS bodies too, and R101–R103 and R106–R109. Exit check:
 passed, 28 of 28 on Node, Bun and Deno with 20,000 documents: 29 client files byte-identical, the same HTML, answers and
-Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published and has no `weft add` or
-template, and `remote()` on `channel` isn't built. What was built and left out: [36](research/36-rust-remote.md).
+Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published, and `remote()` on
+`channel` isn't built. What was built and left out: [36](research/36-rust-remote.md).
 
 **1b status (2026-10-29):** name-keyed HMR and the 1k-component gates landed earlier (research 21, §3.7). The
 verify loop is built: the in-page agent bridge with the graph overlay, recorder, clock and network control; the
@@ -1026,6 +1042,8 @@ a fresh agent added an animated surface with a live slider from a one-line reque
 **3c status (2026-10-30):** plugin trust tooling is built ([13](research/13-plugins.md) §2.9). `.weft/plugins.lock.json` records each plugin's permissions, slots, undeclared use and a hash of its package files. P109 (a new permission, or use the audit finds undeclared) and P110 (changed code, or an unreadable lock) stop `weft check`, `weft dev` and `weft build`. A plugin asking for permissions is blocked with no lock too; one asking for nothing that passes the audit isn't. `weft plugins audit` scans the plugin's own files from its entry and its build and server modules, and `approve <name…>` or `--all` writes the lock (no arguments only shows what's waiting). `weft add` reports and never approves, `create-weft` approves what it picks, and `trust: 'warn'` turns the block into warnings. The first audit found undeclared use in warp, Prisma, Native and media, all now declared. Not built: `weft build --sandbox`, `plugins verify` and the provenance report. The lock hashes installed files, not the tarball, and transitive dependencies stay with the package manager's lockfile. `.weft/` in a repository-root `.gitignore` above an app still hides the lock.
 
 **3c virtual collections (2026-10-30):** built. `@weft/ui-core` has `Sizes` (a height index with O(log n) offsets) and `virtualizer()` (one window on one scroller, either axis), and warp has `VirtualList`, `Thread`, `Feed`, `Kanban` and `ScrollGrid` on them. `Thread` and `Kanban` are the collab pack's components, with their rich rows and move paths, windowed: there are no separate virtual ones. Give a list `text` and rows have exact heights before they render, from the lazy `text.measure` slot; without an engine rows are measured as they render. Either way what's on screen doesn't move: a size change above the viewport moves `scrollTop` by the same amount before paint. Margins, padding and wrap width come from a hidden real row per row kind, so nothing in JS restates warp's CSS. `measure()`, `lines()` and `fit()` are in `weft/text`. `<Text stream>` lands tokens once a frame, grows in whole lines and never rewrites a complete block; its height comes from the DOM, since the frame lays out after the write anyway. At 10,000 items in Chromium, and 2,000 in WebKit, every on-screen row moved exactly the scroll distance in all five views ([result](../evals/results/virtual.md); rerun with `node packages/warp/scripts/virtual.mjs`). In the long-list comparison warp's total height moves 0 px where the other stacks move about 6,600, jumps are 0 everywhere, and warp costs more load CPU: 740 ms at 4× throttle against 110–260. Not built: Ctrl+F across unrendered rows, Thread's quote, reactions and attachments, Kanban swimlanes and the 4px drop placeholder.
+
+**6c web half (2026-10-31):** payments ahead of the native half, as the table allows ([37](research/37-pay-web.md)). Stripe Checkout, one ledger with verified, idempotent and ordered webhooks, entitlements from a `query` and on the server, `fakePay`, `weft add pay` and PAY-codes in `weft check`, all as `@weft/pay`, a plugin that uses only public API: what it needed went into the API for everyone (`server.extension`, `FnOptions`, `net.extension`, manifest `setup` and `docs`), and `weft docs plugins` walks through it. A wasm verifier was measured against WebCrypto on Node, Bun and Deno and not adopted (37 §8). Checked with fakes and mocks only; a real test-mode purchase is still to do.
 
 **3c multiplayer and packs (2026-10-30):** `@weft/multiplayer` (presence, cursors across screen sizes, typed relay, synced scroll), three bus packs moved out of `@weft/start` (`@weft/realtime-redis`, `-nats`, `-durable-object`), three peer transports (`-webrtc`, `-socketio`, `-livekit`) and six list sources (`@weft/db-sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb`), with bus, transport and list conformance suites. Every pack declares its permissions and passes the audit. What was built and left out: [35](research/35-multiplayer-and-packs.md).
 
@@ -1173,8 +1191,9 @@ Also out of v0:
 - **Keyed reads of record boxes: settled, `box.get(key)`** ([14 §11](research/14-app-state.md)). One method on
   every box, no new primitive, no proxies: v3 add-one goes from 452 re-runs to 5. A compiler hint that suggests it
   when a keyed list's row reads `box.value[expr]` is a proposed follow-up.
-- **Native addons on Bun and Deno.** napi-rs doesn't test addons on Deno, and Bun support is best-effort. Native
-  addons also can't be unloaded in dev, so dev reload means restarting the server worker. Spike before Phase 5b.
+- **Native addons on Bun and Deno: settled for now.** napi-rs doesn't test addons on Deno, and Bun support is
+  best-effort, but both pass the 5b exit check, which is what holds it. Dev reload needs no restart: an addon can't be
+  unloaded, and a new path per build loads beside the old one ([37 §1](research/37-rust-native.md)).
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
 - **Native host on Android:** Views for the core (finer recycling control), Compose for system components through
   interop? And Hermes everywhere, or JSC on iOS for binary size? Both are settled by the 6a spike.
@@ -1332,3 +1351,7 @@ Also out of v0:
   The rest is spread evenly (tokens 3.3, layout 3.2, data 2.6, inputs 2.3, components 2.2, signature 1.6, base 1.1 KB),
   and Table, Shell and Field are about 2.4 KB each. Those rules sit behind props the JS can set, so going further
   needs per-feature CSS and JS in those components, and a tier set from outside the build needs `purge: { keep }`.
+- **A rebuilt addon loads beside the old one** (2026-10-31). §11 expected dev reload to restart the server worker, because
+  an addon can't be unloaded. It needn't be: `dlopen` of a new path gives a second copy on macOS and Linux, on Node, Bun
+  and Deno, and calls in flight finish on the first. So `weft dev` writes each build to its own file, and `native()` has
+  no worker pool of its own to strand ([37](research/37-rust-native.md)).

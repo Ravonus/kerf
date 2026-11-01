@@ -1,4 +1,4 @@
-import { IconLeft, IconRight } from '@weft/icons'
+import { LeftIcon, RightIcon } from '@weft/icons'
 import { addMonths, dayState, fmt, gridKey, isoWeek, isWeekend, isUnavailable, messages, monthEnd, monthStart, monthWeeks, ymd, weekStart, weekdays, type CalendarContext, type CalendarMode, type CalendarValue, type ChangeReason, type DateRange, type IsoDate } from '@weft/ui-core'
 import { derived, flush, state, untrack, watch } from 'weft'
 import { Button } from './Button'
@@ -84,8 +84,8 @@ export function CalendarGrid(p: GridProps) {
   watch(() => p.goTo?.(), iso => { if (iso) moveTo(iso) })
   return (
     <div ref={(n: any) => (box = n)} data-scope="calendar" data-part="root">
-      <Button emphasis="ghost" size="sm" icon={IconLeft} label={t.value.prev} data-part="nav" data-dir="prev" data-icon="" onClick={() => page(-1)} />
-      <Button emphasis="ghost" size="sm" icon={IconRight} label={t.value.next} data-part="nav" data-dir="next" data-icon="" onClick={() => page(1)} />
+      <Button emphasis="ghost" size="sm" icon={LeftIcon} label={t.value.prev} data-part="nav" data-dir="prev" data-icon="" onClick={() => page(-1)} />
+      <Button emphasis="ghost" size="sm" icon={RightIcon} label={t.value.next} data-part="nav" data-dir="next" data-icon="" onClick={() => page(1)} />
       <div data-part="months" data-anim={anim.value} onKeyDown={onKey} onClick={onClick} onPointerOver={onOver} onPointerLeave={onLeave}>
         {shown.value.map(m => <Month key={m.month} month={m.month} heads={heads.value} first={firstDay.value} weekNumbers={p.weekNumbers} locale={p.locale} wholeWeek={p.mode === 'week'} ctx={context} cursor={cursor.value} initial={p.autofocus} />)}
       </div>

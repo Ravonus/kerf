@@ -1,4 +1,4 @@
-import { IconCopy, IconEdit } from '@weft/icons'
+import { CopyIcon, EditIcon } from '@weft/icons'
 import { copyConfirm, installSweep } from '@weft/ui-core'
 import { onMount, state, untrack } from 'weft'
 import { Button } from '../Button'
@@ -42,8 +42,8 @@ export function Message({ text, arrive, onEdit }: { text: string; arrive?: boole
           <>
             <div ref={(n: any) => (bubble = n)} data-part="bubble" data-variant="prompt" data-sweep="" data-phase="idle"><Sweep />{text}</div>
             <div data-part="status" style="gap:2px">
-              {onEdit && <IconButton icon={IconEdit} label="Edit message" onClick={open} />}
-              <IconButton icon={IconCopy} label="Copy" onClick={(e: Event) => copyConfirm(e.currentTarget as Element, text, bubble)} />
+              {onEdit && <IconButton icon={EditIcon} label="Edit message" onClick={open} />}
+              <IconButton icon={CopyIcon} label="Copy" onClick={(e: Event) => copyConfirm(e.currentTarget as Element, text, bubble)} />
             </div>
           </>
         )}

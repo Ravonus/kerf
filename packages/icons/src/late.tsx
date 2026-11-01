@@ -25,7 +25,7 @@ let loaded: Promise<Lookup> | undefined
 export const late = (name: string, variant: string | undefined, pack: () => Promise<Lookup>) => deferred(`${name}:${variant ?? ''}`, async () => (await (loaded ??= pack()))(name, variant))
 
 // Only paths go in, with their d and data attributes: what a remote host sends is data, never markup that can run.
-const clean = (svg: string) => (svg.match(/<path(?:\s+data-[a-z]+(?:="[^"<>]*")?|\s+d="[^"<>]*")*\s*\/>/g) ?? []).join('')
+const clean = (svg: string) => (svg.match(/<path(?:\s+data-[a-z]+(?:="[^"<>]*")?|\s+d="[^"<>]*"|\s+transform="translate\([\d. ]+\)")*\s*\/>/g) ?? []).join('')
 
 /** From a host of static files (`weft icons publish`): one small fetch per icon. */
 export const remote = (source: string) => (name: string, variant?: string) => deferred(`${name}:${variant ?? ''}`, async () => {

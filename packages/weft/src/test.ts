@@ -261,10 +261,14 @@ const transport = {
   rt: undefined as undefined | { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] },
   /** Times the realtime connection was lost. */
   reconnects: 0,
+  /** Server extensions for this test (`net.extension`): a plugin's fake runs through the real scope. */
+  extensions: [] as { reset?(): void }[],
 }
 ;(globalThis as any)[Symbol.for('weft.net')] = transport
 
 function resetTransport() {
+  for (const e of transport.extensions) e.reset?.()
+  transport.extensions.length = 0
   Object.assign(transport, { latency: 0, ctx: undefined })
   transport.fails.clear()
   transport.handlers.clear()
@@ -283,6 +287,8 @@ export const net = {
   latency(ms: number) { transport.latency = ms },
   /** The `ctx` server functions get (`{ db, user }`); `request` and `response` are added. */
   context(ctx: object) { transport.ctx = ctx },
+  /** A plugin's server extension in the fake scope, for this test: its `context` and `guard` run, and `reset` after it. */
+  extension(extension: { reset?(): void }) { transport.extensions.push(extension) },
   /** The next call of `fn` rejects with `error` (queue several by calling again). */
   fail(fn: FnRef, error: unknown = new Error(`net.fail(${fnId(fn)})`)) {
     const id = fnId(fn)

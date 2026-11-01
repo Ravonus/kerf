@@ -4,6 +4,8 @@
 //
 //   node packages/create-weft/scripts/packed.mjs <empty-dir> [app]
 import { execFile, execFileSync, spawn } from 'node:child_process'
+import { createHmac } from 'node:crypto'
+import { createServer } from 'node:http'
 import { promisify } from 'node:util'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -67,6 +69,23 @@ export default function Page() {
 `)
 }
 
+/** `weft add rust` on a packed install: the crate comes with @weft/start, and `weft check` passes without an edit. */
+async function rustApp(app, weft, log) {
+  await sh(weft, ['add', 'rust', 'hasher'], app)
+  const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
+  if (!cargo.includes('path = "../../node_modules/@weft/start/crate"')) throw new Error(`rust: the crate isn't the one @weft/start shipped:\n${cargo}`)
+  const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
+  if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
+  log('weft add rust, check: pass')
+}
+
+async function rustServed(port, log) {
+  const r = await fetch(`http://localhost:${port}/_weft/fn/${fnId('digest', 'src/server/hasher.ts')}?i=${encodeURIComponent('{"text":"hello"}')}`)
+  const body = await r.json()
+  if (r.status !== 200 || body.v?.hash !== '4f9f2cab') throw new Error(`rust: the addon answered ${r.status}: ${JSON.stringify(body)}`)
+  log('the addon answered: pass')
+}
+
 /** What a browser would fetch: each file there, in the codec it says, by ranges, and cacheable for good. */
 async function mediaServed(app, port, log) {
   const base = `http://localhost:${port}`
@@ -101,8 +120,95 @@ async function mediaServed(app, port, log) {
   log('video upload encoded and served: pass')
 }
 
-// Four apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, and one that adds
-// media and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one).
+/** Preloaded into the built server of the pay app: a request that leaves this machine fails the gate instead of being sent. */
+const LOOPBACK_ONLY = `const real = globalThis.fetch
+globalThis.fetch = (input, init) => {
+  const { hostname } = new URL(input?.url ?? input)
+  if (!['127.0.0.1', 'localhost', '[::1]'].includes(hostname)) throw new Error('no-network: refused a request to ' + hostname)
+  return real(input, init)
+}
+`
+
+/** The add path, a page that sells, and a report only a buyer may read. The rail talks to `mock`, a local stand-in for Stripe. */
+async function payApp(app, weft, mock, log) {
+  await sh(weft, ['add', 'pay'], app)
+  const config = join(app, 'weft.config.ts')
+  const text = readFileSync(config, 'utf8')
+  const pointed = text.replace(/\b(\w*[sS]tripe)\(\)/, `$1({ api: 'http://127.0.0.1:${mock}' })`)
+  if (pointed === text) throw new Error(`pay: no Stripe plugin call to point at the mock in:\n${text}`) // never fall through to the real API
+  writeFileSync(config, pointed)
+  await sh(weft, ['plugins', 'approve', '--all'], app)
+  if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) await sh(weft, ['plugins', 'sync'], app)
+  if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) throw new Error('pay: the rail is not pointed at the mock')
+  writeFileSync(join(app, 'no-network.mjs'), LOOPBACK_ONLY)
+  writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
+  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from '@weft/pay'
+import { pro } from '#/pay/catalog'
+import { checkout, entitlements } from '#/server/pay'
+
+export default function Pricing() {
+  const mine = entitlements.live()
+  return (
+    <main>
+      <p>{mine.value?.includes('pro') ? 'Thanks' : 'Free'}</p>
+      <button onClick={() => checkout({ product: 'pro', plan: 'month' })}>Go Pro: {price(pro, 'month').display}</button>
+    </main>
+  )
+}
+`)
+  log('weft add pay, approve: pass')
+}
+
+/** A whole purchase against the built server: sign up, check out at the mock, then signed webhooks, forged and repeated ones. */
+async function payServed(port, sessions, secret, log) {
+  const base = `http://localhost:${port}`
+  const email = 'buyer@example.test'
+  const signup = await fetch(`${base}/api/auth/sign-up/email`, { method: 'POST', headers: { 'content-type': 'application/json', origin: base }, body: JSON.stringify({ name: 'Buyer', email, password: 'correct-horse-battery' }) })
+  if (!signup.ok) throw new Error(`pay: sign-up answered ${signup.status}: ${await signup.text()}`)
+  const cookie = signup.headers.getSetCookie().map(c => c.split(';')[0]).join('; ')
+  const user = (await signup.json()).user.id
+  const call = (name, file) => fetch(`${base}/_weft/fn/${fnId(name, file)}`, { headers: { cookie, accept: 'application/json' } })
+  const report = () => call('report', 'src/server/report.ts').then(r => r.status)
+  const first = await call('report', 'src/server/report.ts')
+  if (first.status !== 403) throw new Error(`pay: a non-buyer got ${first.status}: ${await first.text()}`)
+
+  const mutate = await fetch(`${base}/_weft/fn/${fnId('checkout', 'src/server/pay.ts')}`, { method: 'POST', headers: { cookie, 'content-type': 'application/json', accept: 'application/json', 'x-weft': '1', origin: base }, body: JSON.stringify({ i: { product: 'pro', plan: 'month' }, f: [] }) })
+  const answer = await mutate.json()
+  if (!answer.r?.startsWith('http://127.0.0.1')) throw new Error(`pay: checkout answered ${JSON.stringify(answer)}`)
+  if (sessions.length !== 1 || !sessions[0].authorized) throw new Error(`pay: the mock saw ${JSON.stringify(sessions)}`)
+  if (await report() !== 403) throw new Error('pay: checkout granted something')
+  log('checkout reaches the mock rail and grants nothing: pass')
+
+  const hook = (event, key = secret) => {
+    const body = JSON.stringify(event), t = Math.floor(Date.now() / 1000)
+    const v1 = createHmac('sha256', key).update(`${t}.${body}`).digest('hex')
+    return fetch(`${base}/_weft/x/pay/stripe`, { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${v1}`, 'content-type': 'application/json' }, body }).then(r => r.status)
+  }
+  const event = (id, status, ahead = 0) => ({ id, type: 'customer.subscription.updated', created: Math.floor(Date.now() / 1000) + ahead, data: { object: { id: 'sub_1', status, customer: 'cus_1', current_period_end: Math.floor(Date.now() / 1000) + 2_592_000, metadata: { weft_user: user, weft_product: 'pro', weft_plan: 'month' } } } })
+  if (await hook(event('evt_forged', 'active'), 'whsec_wrong') !== 400 || await report() !== 403) throw new Error('pay: a forged webhook was believed')
+  if (await hook(event('evt_1', 'active')) !== 200 || await report() !== 200) throw new Error('pay: a signed webhook granted nothing')
+  if (await hook(event('evt_2', 'canceled', 5)) !== 200 || await report() !== 403) throw new Error('pay: a cancellation was ignored')
+  if (await hook(event('evt_1', 'active')) !== 200 || await report() !== 403) throw new Error('pay: a redelivery changed the ledger')
+  log('webhooks: forged refused, signed granted, cancelled, redelivered: pass')
+}
+
+/** A local stand-in for Stripe: what the rail sends to `/v1/checkout/sessions`, answered with a URL. Nothing leaves the machine. */
+function mockStripe(port, sessions) {
+  const server = createServer((req, res) => {
+    let body = ''
+    req.on('data', c => { body += c })
+    req.on('end', () => {
+      sessions.push({ path: req.url, authorized: req.headers.authorization === 'Bearer sk_test_placeholder', body })
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify({ id: 'cs_1', url: `http://127.0.0.1:${port}/hosted` }))
+    })
+  })
+  return new Promise(ok => server.listen(port, '127.0.0.1', () => ok(server)))
+}
+
+// Six apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, one that adds media
+// and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one), one that adds
+// Rust (cargo has to be), and one that adds payments and buys something from a mock of Stripe.
 const theme = `{ seed: { hue: 220, chroma: 0.12 }, dials: { expression: 'quiet', density: 'compact' }, radius: 'round', fonts: { body: 'Georgia, serif' } }`
 const only = process.argv.slice(2).filter(a => !a.startsWith('--'))[1]
 const apps = [
@@ -110,9 +216,11 @@ const apps = [
   { name: 'tailwind', options: { ui: 'tailwind', db: 'sqlite', auth: true }, css: ['.flex{', '.rounded-lg{'] },
   { name: 'themed', options: { ui: 'warp', db: 'none' }, theme, add: 'tailwind', css: ['--warp-radius-control:14px', '.mx-related{'] },
   { name: 'media', options: { ui: 'warp', db: 'none' }, media: true },
+  { name: 'rust', options: { ui: 'warp', db: 'none' }, rust: true },
+  { name: 'pay', options: { ui: 'warp', db: 'sqlite', auth: true }, pay: true },
 ]
 
-await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media }, i) => {
+await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media, rust, pay }, i) => {
   const app = join(root, name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
   scaffold(app, options)
@@ -132,18 +240,25 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     log(`weft add ${add}: pass`)
   }
   if (media) await mediaApp(app, weft, log)
+  if (rust) await rustApp(app, weft, log)
+  const sessions = []
+  const mock = pay && await mockStripe(5299 + i, sessions)
+  if (pay) await payApp(app, weft, 5299 + i, log)
   for (const [cmd, ...args] of [...(options.db === 'none' ? [] : [['weft', 'db', 'generate']]), ['tsc', '--noEmit'], ['weft', 'check'], ['weft', 'build']]) {
     await sh(join(app, 'node_modules/.bin', cmd), args, app)
     log(`${cmd} ${args.join(' ')}: pass`)
   }
   const built = readdirSync(join(app, '.output/public/assets')).filter(f => f.endsWith('.css')).map(f => readFileSync(join(app, '.output/public/assets', f), 'utf8')).join('')
   for (const text of css ?? []) if (!built.includes(text)) throw new Error(`${name}: the built CSS has no ${text}`)
+  const client = readdirSync(join(app, '.output/public/assets')).filter(f => f.endsWith('.js')).map(f => readFileSync(join(app, '.output/public/assets', f), 'utf8')).join('')
+  if (/STRIPE_|api\.stripe\.com|checkout\/sessions/.test(client)) throw new Error(`${name}: a rail reached the client`)
+  if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft/pay is in the bundle of an app that sells nothing`)
 
   // Production takes the host's environment, so the scaffold's .env goes in by hand.
   const envFile = join(app, '.env')
   const env = existsSync(envFile) ? parseEnv(readFileSync(envFile, 'utf8')) : {}
   const port = 5199 + i
-  const server = spawn(process.execPath, ['.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port) }, stdio: 'ignore' })
+  const server = spawn(process.execPath, [...(pay ? ['--import', './no-network.mjs'] : []), '.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port), BETTER_AUTH_URL: `http://localhost:${port}` }, stdio: 'ignore' })
   try {
     let status
     for (let i = 0; i < 80 && !status; i++) {
@@ -153,8 +268,11 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     if (status !== 200) throw new Error(`${name}: the built server answered ${status}`)
     log('built server: pass')
     if (media) await mediaServed(app, port, log)
+    if (rust) await rustServed(port, log)
+    if (pay) await payServed(port, sessions, env.STRIPE_WEBHOOK_SECRET, log)
   } finally {
     server.kill()
+    mock?.close()
   }
 })
 

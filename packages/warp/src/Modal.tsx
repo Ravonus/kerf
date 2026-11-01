@@ -1,4 +1,4 @@
-import { IconX } from '@weft/icons'
+import { XIcon } from '@weft/icons'
 import { dialog, uid } from '@weft/ui-core'
 import { derived, type State } from 'weft'
 import type { Tone } from './Button'
@@ -26,8 +26,8 @@ export function Modal({ open, title, description, footer, size, alert, tone, mar
         {sign.value}
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>
         {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
-        {/* <Button emphasis="ghost" tone="neutral" icon={IconX} label="Close"> as its markup: a ghost button needs no JS */}
-        <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><IconX /></button>
+        {/* <Button emphasis="ghost" tone="neutral" icon={XIcon} label="Close"> as its markup: a ghost button needs no JS */}
+        <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><XIcon /></button>
       </div>
       <div data-part="body">{children}</div>
       {foot.value !== undefined && <div data-part="footer">{foot.value}</div>}

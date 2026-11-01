@@ -1,4 +1,4 @@
-import { IconDown, IconLeft, IconRight } from '@weft/icons'
+import { DownIcon, LeftIcon, RightIcon } from '@weft/icons'
 import { addDays, dow, fmt, fmtRange, isoWeek, isoWeekStart, pad, toIso, weekOf, ymd, type ChangeReason, type IsoDate, type IsoMonth, type IsoWeek } from '@weft/ui-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from './Button'
@@ -37,9 +37,9 @@ function PeriodGrid({ title, cells, columns, value, current, prev, next, onPage,
   return (
     <div ref={(n: any) => (box = n)} data-scope="monthgrid" onKeyDown={onKey}>
       <div data-part="head">
-        <Button emphasis="ghost" size="sm" icon={IconLeft} label={prev} data-icon="" onClick={() => onPage(-1)} />
+        <Button emphasis="ghost" size="sm" icon={LeftIcon} label={prev} data-icon="" onClick={() => onPage(-1)} />
         <b aria-live="polite">{title}</b>
-        <Button emphasis="ghost" size="sm" icon={IconRight} label={next} data-icon="" onClick={() => onPage(1)} />
+        <Button emphasis="ghost" size="sm" icon={RightIcon} label={next} data-icon="" onClick={() => onPage(1)} />
       </div>
       <div role="grid" aria-label={title} class={wide ? 'pg' : undefined} style={wide ? `--c:${columns}` : undefined}>
         {rows.value.map(r => (
@@ -59,7 +59,7 @@ const yearOf = (v: string | null, today: string) => +(v ?? today).slice(0, 4)
 function PickButton({ el, text, label, open, disabled, onToggle }: { el: (b: HTMLButtonElement) => void; text: string; label: string; open: boolean; disabled?: boolean; onToggle: () => void }) {
   return (
     <button ref={(n: any) => el(n)} type="button" data-part="pick" aria-haspopup="dialog" aria-expanded={open ? 'true' : 'false'} aria-label={label} disabled={disabled} onClick={onToggle}>
-      <span>{text}</span><IconDown />
+      <span>{text}</span><DownIcon />
     </button>
   )
 }

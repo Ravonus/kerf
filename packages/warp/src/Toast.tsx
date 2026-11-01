@@ -1,4 +1,4 @@
-import { IconX } from '@weft/icons'
+import { XIcon } from '@weft/icons'
 import { toaster, toastStore, type Toast, type ToastInput } from '@weft/ui-core'
 import { onCleanup, state } from 'weft'
 import { Icon, toneIcon } from './Icon'
@@ -40,7 +40,7 @@ export function Toaster() {
             <div data-part="actions">
               {/* ghost <Button>s as their markup: they need no JS */}
               {t.action && <button type="button" data-scope="button" data-emphasis="ghost" data-size="sm" data-act="" onClick={() => { t.action!.onClick(); toast.dismiss(t.id) }}>{t.action.label}</button>}
-              <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-x="" onClick={() => toast.dismiss(t.id)}><IconX /></button>
+              <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-x="" onClick={() => toast.dismiss(t.id)}><XIcon /></button>
             </div>
             {t.life > 0 && <span data-part="progress" aria-hidden="true"></span>}
           </div>

@@ -36,3 +36,5 @@ await expect(() => api.pushPrice('p1', 2)).toTouchAtMost(1, { runs: 10 })
 
 A deliberate exception needs a reason: `// weft-allow T007: the exported SVG is the product`. In the file's header
 comments it covers the whole file; elsewhere, its own line and the next.
+
+Plugins can use this clock too: `fakePay` from `@weft/pay/test` plays a rail on it, through your real webhook and ledger. `weft docs pay`.

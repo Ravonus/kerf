@@ -108,7 +108,7 @@ export const configSchema = z.strictObject({
   runtime: z.enum(['node', 'bun', 'deno']).optional(),
   rust: z.strictObject({
     unions: z.literal('allow').optional(),
-    services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional() })).optional(),
+    services: z.record(z.string(), z.strictObject({ crate: z.string().optional(), external: z.boolean().optional(), wasm: z.literal(false).optional() })).optional(),
   }).optional(),
   trust: z.enum(['enforce', 'warn']).optional(),
 })

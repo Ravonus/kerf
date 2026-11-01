@@ -13,6 +13,7 @@
 //   virtual:weft/migrations     server: `drizzle/`'s migrations, embedded (a bundle can't read a folder on every preset)
 //   virtual:weft/media          server: the `media.server` provider when one is bound (research 29 §6)
 //   virtual:weft/realtime       server: `src/realtime.server.ts`'s default export (the bus, origins and limits)
+//   virtual:weft/extensions     server: each `server.extension` provider with its `src/<key>.server.ts` (extension.ts)
 //
 // Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream`/`channel` export
 // gets an `$id` on both sides; the client build replaces the module with stubs that keep only `optimistic`, the
@@ -49,6 +50,7 @@ const V = {
   migrations: 'virtual:weft/migrations',
   media: 'virtual:weft/media',
   realtime: 'virtual:weft/realtime',
+  extensions: 'virtual:weft/extensions',
 }
 const SERVER_EXPORTS = new Set(['load', 'meta', 'prerender'])
 const DEFAULT_FONTS = ['Inter:400,700']
@@ -258,6 +260,7 @@ export default function weftStart(options = {}) {
           if (which === V.realtime && busBound(root)) return busModule(f && abs(f), here)
           return f ? `export { default } from ${JSON.stringify(abs(f))}\n` : 'export default undefined\n'
         }
+        if (which === V.extensions) return extensionsModule(root, abs)
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
         if (which === V.media) return mediaModule(root, dev)
         if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
@@ -427,14 +430,30 @@ import auth from '${V.auth}'
 import migrations from '${V.migrations}'
 import media from '${V.media}'
 import realtime from '${V.realtime}'
+import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
+const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
-  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQACFMRW]\\d{3}:? /, '')}\`) })
+  onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }
 `
+}
+
+/**
+ * A `server.extension` provider runs only for an app with `src/<key>.server.ts`, the file that says it wants it (P118):
+ * the provider is loaded on the first request and handed that file's default export. No provider gives an empty list.
+ */
+function extensionsModule(root, abs) {
+  const slot = join(root, '.weft', 'slots', 'server.extension.ts')
+  const keys = existsSync(slot) ? Object.entries(JSON.parse(/providers = (\{.*\}) as const/.exec(readFileSync(slot, 'utf8'))?.[1] ?? '{}')).filter(([, name]) => name).map(([key]) => key) : []
+  const files = keys.flatMap(key => {
+    const f = ['ts', 'mts', 'js', 'mjs'].map(x => `src/${key}.server.${x}`).find(x => existsSync(abs(x)))
+    return f ? [[key, abs(f)]] : []
+  })
+  if (!files.length) return 'export default []\n'
+  return `import { load } from 'weft:slot/server.extension'\n${files.map(([, f], i) => `import app${i} from ${JSON.stringify(f)}\n`).join('')}export default [${files.map(([key], i) => `{ key: ${JSON.stringify(key)}, load: () => load(${JSON.stringify(key)}).then(extend => extend(app${i})) }`).join(', ')}]\n`
 }
 
 /** Dev serves from the project; a built server from the directory it runs in (or `WEFT_MEDIA_DIR`). */

@@ -1,4 +1,4 @@
-import { IconCopy, IconLink } from '@weft/icons'
+import { CopyIcon, LinkIcon } from '@weft/icons'
 import { announce, arrivalTracker, installSweep, uid, type Peer } from '@weft/ui-core'
 import { derived, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
@@ -98,7 +98,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
           ))}
         </div>
         <div data-part="link">
-          <IconLink />
+          <LinkIcon />
           <label data-part="sr-only" for={`${id}-a`}>Link access</label>
           <select id={`${id}-a`} value={access.value.access} onChange={(e: any) => onLinkAccess({ ...access.value, access: e.currentTarget.value })}>
             <option value="restricted" selected={access.value.access === 'restricted'}>Restricted</option>
@@ -117,7 +117,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
               copied.value = true
               installSweep().confirm(e.currentTarget as Element)
               announce((e.currentTarget as Element).ownerDocument, 'Link copied')
-            }}><IconCopy /> {copied.value ? 'Copied' : 'Copy link'}</Button>
+            }}><CopyIcon /> {copied.value ? 'Copied' : 'Copy link'}</Button>
           </span>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { IconDown } from '@weft/icons'
+import { DownIcon } from '@weft/icons'
 // Small pieces the admin pack shares. Internal: not exported from the barrel.
 import { flush, type State, state, untrack, watch } from 'weft'
 import '../fields'
@@ -38,7 +38,7 @@ export function InlineSelect({ id, label, value, options, describedby, onChange 
           <select data-part="input" id={id} value={value} aria-describedby={describedby} onChange={onChange}>
             {options.map(o => <option key={o.value} value={o.value} selected={o.value === value}>{o.label}</option>)}
           </select>
-          <span data-part="indicator" aria-hidden="true"><IconDown /></span>
+          <span data-part="indicator" aria-hidden="true"><DownIcon /></span>
         </div>
       </div>
     </>

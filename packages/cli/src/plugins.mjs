@@ -152,7 +152,7 @@ export function generated(root, loaded) {
     files[`.weft/slots/${id}.build.json`] = `${JSON.stringify({ plugin: binding, version: plugin.version, module, export: side.export, ...(side.options === undefined ? {} : { options: side.options }) }, null, 2)}\n`
   }
   files['.weft/slots.d.ts'] = `${header}\n// Only bound slots are declared: importing an unbound one is a type error (P101).\n${typed
-    .map(id => `declare module 'weft:slot/${id}' {\n  export const provider: unknown\n  export const load: (key?: string) => Promise<any>\n}\n`)
+    .map(id => `declare module 'weft:slot/${id}' {\n  export const provider: unknown\n  export const providers: Record<string, unknown>\n  export const load: (key?: string) => Promise<any>\n}\n`)
     .join('')}`
   for (const c of loaded.contributions) {
     const t = c.manifest.tokens

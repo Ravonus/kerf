@@ -170,7 +170,8 @@ async function rustChecks(root, loaded) {
   process.env.WEFT_BUILD = '1'
   try {
     const { writeContract } = await start(root, 'contract')
-    const { contract, diagnostics } = await writeContract({ root, site: loaded.config?.site, rust })
+    const preset = { node: 'node', bun: 'bun', deno: 'deno_server' }[loaded.config?.runtime ?? 'node']
+    const { contract, diagnostics } = await writeContract({ root, site: loaded.config?.site, rust, preset })
     const out = diagnostics.filter(d => /^R1/.test(d.code)).map(d => diagnostic({ ...d, file: '.weft/contract.json' }))
     if (out.some(d => d.severity === 'error')) return out
     for (const service of Object.keys(contract.services ?? {})) {
@@ -182,6 +183,10 @@ async function rustChecks(root, loaded) {
       }
       const checked = await sidecar.cargo('check', { root, dir, service, contract })
       out.push(...checked.diagnostics.map(({ rendered, ...d }) => diagnostic({ ...d, help: rendered })))
+      out.push(...untouchedQueries(root, dir, contract, service))
+      if (contract.services[service].kind !== 'native' || !checked.ok) continue
+      const wasm = await sidecar.checkWasm({ root, dir, service, contract, preset, rust })
+      out.push(...wasm.diagnostics.map(d => diagnostic(d)))
     }
     return out
   } catch (e) {
@@ -190,6 +195,32 @@ async function rustChecks(root, loaded) {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held
   }
+}
+
+/** R105 before anything runs: a cached query with tags whose Rust never mentions `touch`, or hands `ctx` to anything. */
+function untouchedQueries(root, dir, contract, service) {
+  const sources = readdirSync(join(dir, 'src'), { recursive: true, withFileTypes: true }).filter(f => f.isFile() && f.name.endsWith('.rs')).map(f => join(f.parentPath, f.name))
+  const out = []
+  for (const f of contract.functions) {
+    if (f.impl?.service !== service || !f.cache || !(f.tags === 'dynamic' || f.tags?.length)) continue
+    const method = f.name.replace(/[A-Z]/g, (c, i) => `${i ? '_' : ''}${c.toLowerCase()}`)
+    for (const file of sources) {
+      const text = readFileSync(file, 'utf8')
+      const at = text.search(new RegExp(`\\bfn\\s+${method}\\s*\\(`))
+      if (at < 0) continue
+      const open = text.indexOf('{', at)
+      let depth = 0, end = open
+      for (; end < text.length; end++) {
+        if (text[end] === '{') depth++
+        if (text[end] === '}' && --depth === 0) break
+      }
+      const body = text.slice(open, end)
+      const line = text.slice(0, at).split('\n').length
+      if (!/\.touch\(|\(\s*&?ctx\b|,\s*&?ctx\b/.test(body)) out.push(diagnostic({ code: 'R105', severity: 'warning', file: posix(relative(root, file)), span: [line, 1, line, 1], why: `\`${f.id}\` is cached under tags and reports no table: nothing can tell whether they cover what it reads. Call \`ctx.touch("table")\`, or drop \`tags\` if it reads none.` }))
+      break
+    }
+  }
+  return out
 }
 
 /** R001 for a server module's `channel`, and R004 for a socket handler of the app's own (research 32 §1). */
