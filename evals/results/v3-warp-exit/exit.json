@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "date": "2026-11-01T08:00:39.001Z",
+  "date": "2026-11-01T09:03:56.216Z",
   "hidden": {
     "ok": true,
     "warp": "23/23",
@@ -8,10 +8,30 @@
     "probe": {
       "warp": {
         "add-one": {
-          "domMutations": 2,
+          "domMutations": 1,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 66.09
+          "wallMs": 63.58
+        },
+        "price-push": {
+          "domMutations": 1,
+          "commits": 9,
+          "renderMs": 0,
+          "wallMs": 0.42
+        },
+        "type-3-chars": {
+          "domMutations": 154,
+          "commits": 33,
+          "renderMs": 0,
+          "wallMs": 21.98
+        }
+      },
+      "weft": {
+        "add-one": {
+          "domMutations": 1,
+          "commits": 5,
+          "renderMs": 0,
+          "wallMs": 55.84
         },
         "price-push": {
           "domMutations": 1,
@@ -20,30 +40,10 @@
           "wallMs": 0.54
         },
         "type-3-chars": {
-          "domMutations": 158,
-          "commits": 33,
-          "renderMs": 0,
-          "wallMs": 30.32
-        }
-      },
-      "weft": {
-        "add-one": {
-          "domMutations": 1,
-          "commits": 5,
-          "renderMs": 0,
-          "wallMs": 55.24
-        },
-        "price-push": {
-          "domMutations": 1,
-          "commits": 9,
-          "renderMs": 0,
-          "wallMs": 0.38
-        },
-        "type-3-chars": {
           "domMutations": 152,
           "commits": 21,
           "renderMs": 0,
-          "wallMs": 17.69
+          "wallMs": 18.17
         }
       }
     },
@@ -57,14 +57,14 @@
   "size": {
     "ok": true,
     "warp": {
-      "js": 12666,
-      "css": 12545
+      "js": 11452,
+      "css": 12735
     },
     "weft": {
       "js": 4923,
       "css": 0
     },
-    "kit": 7743,
+    "kit": 6529,
     "budget": {
       "app": 10240,
       "kitAllowance": 7168,
@@ -107,8 +107,8 @@
   "a11y": {
     "ok": true,
     "runs": 108,
-    "audits": 1404,
-    "measured": 45644,
+    "audits": 1440,
+    "measured": 45848,
     "specFindings": [],
     "failures": []
   }
