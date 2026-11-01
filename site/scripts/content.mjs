@@ -373,7 +373,9 @@ export const products = query({
 // in Shop: the list now comes from the database
 const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
-  write('showcase.json', { server: block(server, 'tsx'), habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+  const size = JSON.parse(readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8')).size
+  const kb = n => +(n / 1024).toFixed(2)
+  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
 }
 
 // ------------------------------------------------------------------ agents
@@ -395,7 +397,9 @@ const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
 // The shop's steps mark the lines each one added, so the code on the page shows the app growing.
-const demoText = f => readFileSync(join(site, 'src/demos', f), 'utf8').trim()
+// `ask` is a frame, so what it shows is the app inside it. `slow` shows the page it loads.
+const SHOWN = { 'ask.tsx': 'arena/graph/main.tsx', 'slow.tsx': 'src/routes/examples/slow.tsx' }
+const demoText = f => readFileSync(join(site, SHOWN[f] ?? `src/demos/${f}`), 'utf8').trim()
 const demoHtml = f => {
   const text = demoText(f)
   const step = /^shop-(\d)\.tsx$/.exec(f)

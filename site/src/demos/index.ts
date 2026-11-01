@@ -1,4 +1,8 @@
 import started from './getting-started'
+import ask from './ask'
+import chat from './chat'
+import receipt from './receipt'
+import slow from './slow'
 import rules from './rules'
 import props from './props'
 import lists from './lists'
@@ -107,5 +111,29 @@ export const demos: Record<string, Demo> = {
     look: 'A billing form: email field, switch and button, all from warp, the UI kit that ships with weft.',
     tryIt: 'Hover the field and the button, then press Tab to move through them.',
     why: 'Forms, dialogs, tables and menus are in the box, keyboard support included, so you do not choose and wire up a component library.',
+  },
+  chat: {
+    run: chat, title: 'Chat that survives a cut wire',
+    look: 'A real WebSocket to this site\'s server, in a room made just for you. The code is the page; the channel and its authorize check are in src/server/chat.ts.',
+    tryIt: 'Join and send a message. While the server is replying, cut the wire, wait a few seconds, then restore it. The replies you missed arrive in order.',
+    why: 'Reconnecting and catching up take no code here: status, resume and the message list come with channel. A channel without authorize is an error, not a bug you find later.',
+  },
+  slow: {
+    run: slow, title: 'A slow page with an instant shell',
+    look: 'A real page from this server, in a frame. Its data takes as long as you choose. The code is that page.',
+    tryIt: 'Pick 3 s. The card appears at once, stock fills in at 1.5 s and reviews at 3 s.',
+    why: 'load returns its promises without waiting, so the server sends the page first and streams each value in as it\'s ready. Each Boundary says what to show until then.',
+  },
+  receipt: {
+    run: receipt, title: 'The shop, itemised',
+    look: 'What the phase 2 shop app sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
+    tryIt: 'Compare it with the download sizes on the home page, which measure a larger dashboard.',
+    why: 'You pay for the components you use. A page that imports a button doesn\'t bring the rest of warp with it.',
+  },
+  ask: {
+    run: ask, title: 'Ask the app',
+    look: 'A small todo app above its reactive graph. The JSON is what graph() from weft/devtools returns. Development builds only: this frame is one.',
+    tryIt: 'Press Add a task, then Finish one. Only the lines that changed light up.',
+    why: 'An agent sees the same JSON through weft mcp, with your real names, so it can check what depends on what instead of guessing.',
   },
 }

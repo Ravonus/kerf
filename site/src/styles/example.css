@@ -4,6 +4,7 @@
 [data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid oklch(0.3 0.02 150); background: oklch(0.14 0.015 150); }
 [data-site="example"] [data-part="run"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 10px; min-inline-size: 0; min-block-size: 260px; background: radial-gradient(circle at 50% 30%, oklch(0.86 0.17 150 / 0.1), transparent 70%); padding: var(--warp-space-group); font-family: var(--warp-font-mono); border-inline-end: 1px solid oklch(0.3 0.02 150); }
 [data-site="example"] [data-part="run"] > * { inline-size: min(100%, 340px); }
+[data-site="example"] [data-part="run"] > [data-part="slow"], [data-site="example"] [data-part="run"] > iframe { inline-size: 100%; }
 [data-site="example"] [data-part="run"] > [data-part="panes"] { inline-size: 100%; }
 [data-site="example"] [data-part="run"] form, [data-site="example"] [data-scope="surface"] > :not([data-part="eyebrow"]) { font-family: var(--warp-font-sans); }
 [data-site="example"] [data-scope="surface"] { display: grid; gap: var(--warp-space-related); justify-items: start; }
@@ -27,3 +28,11 @@
 /* A docs column is narrow: the example sits above its code, so the code keeps its line breaks. */
 [data-site="doc"] [data-site="example"] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }
 [data-site="doc"] [data-site="example"] [data-part="run"] { border-inline-end: 0; border-block-end: 1px solid oklch(0.3 0.02 150); }
+[data-site="example"] [data-part="said"] { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; max-block-size: 160px; overflow-y: auto; }
+[data-site="example"] [data-part="slow"] { display: grid; gap: 10px; }
+[data-site="example"] [data-part="slow"] > p { display: flex; gap: 6px; margin: 0; }
+[data-site="example"] [data-part="run"] iframe { inline-size: 100%; block-size: 300px; border: 1px solid oklch(0.3 0.02 150); background: oklch(0.1 0.01 150); }
+[data-site="example"] [data-part="run"] [data-part="ask"] { block-size: 460px; }
+[data-site="example"] [data-part="receipt"] { display: grid; gap: 10px; margin: 0; }
+[data-site="example"] [data-part="receipt"] p { display: flex; justify-content: space-between; gap: 12px; margin: 0; padding: 6px 8px; background: linear-gradient(90deg, oklch(0.42 0.1 150) var(--share, 0%), transparent 0); }
+[data-site="example"] [data-part="receipt"] [data-part="total"] { background: none; border-block-start: 1px solid oklch(0.3 0.02 150); }
