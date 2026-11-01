@@ -183,6 +183,7 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     }
     if (scope.options.dev) await checked(v, fn, scope)
     if (touched) {
+      untouched(fn, touched.read, entry.tags, scope)
       missedTags(fn, 'read', touched.read, entry.tags, scope)
       reads.set(fn.$id, touched.read)
     }
@@ -277,6 +278,13 @@ export function dbError(e: unknown): unknown {
 }
 
 const tracker = (scope: Scope): Touched | undefined => (scope.options.dev ? { read: new Set(), write: new Set() } : undefined)
+
+/** R105 (dev, once per function): a cached Rust query with tags that named no table, so Q011 has nothing to check it by. */
+function untouched(fn: Fn, read: Set<string>, tags: readonly string[], scope: Scope) {
+  if (!fn.def.impl || !fn.def.cache || read.size || !tags.length || warned.has(`${fn.$id}:R105`)) return
+  warned.add(`${fn.$id}:R105`)
+  scope.options.onDiagnostic?.({ code: 'R105', severity: 'warning', message: `\`${fn.$id}\` is cached under ${tags.map(t => `\`${t}\``).join(', ')} and reported no table: nothing can tell whether those tags cover what it reads. Call \`ctx.touch("table")\` in the Rust, or drop \`tags\` if it reads none` })
+}
 
 /** Q011 (dev, once per function and table): a table the function touched that no tag names (PLAN §4). */
 function missedTags(fn: Fn, verb: 'read' | 'write', tables: Set<string>, tags: readonly string[], scope: Scope) {

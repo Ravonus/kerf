@@ -13,6 +13,46 @@ const add = (dir, name = 'acme') => addCommand(dir, name, { install: false })
 const read = (dir, file) => readFileSync(join(dir, file), 'utf8')
 const names = async dir => (await loadConfig(dir)).config.plugins?.map(p => p.name)
 
+describe('weft add rust', () => {
+  const app = () => project({ 'package.json': JSON.stringify({ name: 'a', dependencies: { zod: '4' } }), 'src/routes/index.tsx': 'export default () => <p />\n' })
+  const rust = (dir, name, options) => addCommand(dir, 'rust', { install: false, engine: name, ...options })
+
+  it('writes a native crate, its module and the one place targets are named', async () => {
+    const dir = app()
+    const r = await rust(dir, 'image-tools')
+    expect(r).toMatchObject({ ok: true, service: 'image-tools', kind: 'native' })
+    expect(read(dir, 'src/server/rust.ts')).toContain("import { native } from '@weft/start/rust'")
+    expect(read(dir, 'src/server/rust.ts')).toContain("export const imageTools = native('image-tools')")
+    expect(read(dir, 'src/server/image-tools.ts')).toContain('impl: imageTools')
+    expect(read(dir, 'crates/image-tools/Cargo.toml')).toMatch(/crate-type = \["cdylib"\]/)
+    expect(read(dir, 'crates/image-tools/Cargo.toml')).toMatch(/weft = \{ path = "[^"]*crates\/weft", default-features = false, features = \["native"\] \}/)
+    expect(read(dir, 'crates/image-tools/rust-toolchain.toml')).toContain('wasm32-unknown-unknown')
+    expect(read(dir, 'crates/image-tools/src/lib.rs')).toContain('weft::native!(contract::functions(ImageTools));')
+    expect(read(dir, 'crates/image-tools/build.rs')).toContain('generate("image-tools")')
+    expect(read(dir, '.gitignore')).toContain('target/')
+  })
+
+  it('writes a sidecar with --remote, and a second target joins the first', async () => {
+    const dir = app()
+    await rust(dir, 'media')
+    expect((await rust(dir, 'search', { remote: true })).kind).toBe('remote')
+    const named = read(dir, 'src/server/rust.ts')
+    expect(named).toContain("export const media = native('media')")
+    expect(named).toContain("export const search = remote('rust://search')")
+    expect(read(dir, 'crates/search/src/main.rs')).toContain('weft::serve(weft::router(')
+    expect(read(dir, 'crates/search/Cargo.toml')).not.toContain('cdylib')
+  })
+
+  it('changes nothing when the name is taken, or on a dry run', async () => {
+    const dir = app()
+    expect((await rust(dir, 'media', { dryRun: true })).dryRun).toBe(true)
+    expect(existsSync(join(dir, 'crates'))).toBe(false)
+    await rust(dir, 'media')
+    await expect(rust(dir, 'media')).rejects.toMatchObject({ code: 'E_ADD', message: expect.stringContaining('crates/media') })
+    await expect(rust(dir, 'Bad Name')).rejects.toMatchObject({ code: 'E_USAGE' })
+  })
+})
+
 describe('weft add', () => {
   it.each([
     ['an existing plugins array', "import { defineConfig } from 'weft/config'\n\nexport default defineConfig({\n  plugins: [],\n})\n"],

@@ -1,14 +1,17 @@
 // `remote()` against a stand-in sidecar on a real socket (research 36): what crosses, and every way a call can come back.
 // The real crate is covered by `cargo test` in crates/weft and by evals/phase5a-exit.mjs.
 import { createHmac } from 'node:crypto'
+import { mkdtempSync, renameSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { z } from 'zod'
 import { describe, expect, test, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { fns, mutation, query, raise, StartError } from '../src/data'
 import { createScope, fetchQuery, memoryStore, runMutation } from '../src/exec'
-import { describe as contract } from '../src/contract.mjs'
+import { describe as contract, nativeProblem } from '../src/contract.mjs'
 import { readCargo, urlVariable as cliVariable } from '../src/sidecar.mjs'
-import { remote, sign, urlVariable } from '../src/rust'
+import { native, remote, sign, urlVariable } from '../src/rust'
 
 const SECRET = 's3cret'
 type Seen = { url: string; headers: Record<string, any>; body: string; envelope: any }
@@ -336,5 +339,159 @@ describe('cargo\'s messages', () => {
       'not json',
     ])
     expect(r).toMatchObject({ ok: true, exe: '/x/target/debug/search', diagnostics: [] })
+  })
+})
+
+// `native()` with `process.dlopen` stood in for: what crosses, and what a build's manifest decides. The real addon and
+// its WASM are covered by evals/phase5b-exit.mjs.
+describe('native()', () => {
+  const dlopen = process.dlopen
+  let dir: string
+  let addons: Record<string, { hash: string; call: (id: string, ctx: string, body: string) => unknown }>
+  let calls: { id: string; ctx: any; body: any }[]
+  const manifest = (m: unknown) => {
+    writeFileSync(join(dir, 'next.json'), JSON.stringify(m))
+    renameSync(join(dir, 'next.json'), join(dir, 'manifest.json'))
+  }
+  const addon = (file: string, hash: string, call: (id: string, ctx: string, body: string) => unknown = () => JSON.stringify({ ok: true, value: { n: 1 }, tags: [], touched: [] })) => {
+    writeFileSync(join(dir, file), '')
+    addons[join(dir, file)] = { hash, call }
+  }
+  const fn = (def: any = {}, impl: any = native('media')) => fnOf(query({ $id: `n${++n}.abc123`, output: z.any(), ...def, impl } as any))
+  const signedIn = (user: unknown) => scope({ context: () => ({ user }) })
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'native-'))
+    process.env.WEFT_NATIVE_DIR = dir
+    addons = {}
+    calls = []
+    process.dlopen = ((mod: any, file: string) => {
+      const a = addons[file]
+      if (!a) throw new Error(`no such addon: ${file}`)
+      mod.exports = {
+        contract: () => JSON.stringify({ hash: a.hash }),
+        call: (id: string, ctx: string, body: string) => {
+          calls.push({ id, ctx: JSON.parse(ctx), body: JSON.parse(body) })
+          return Promise.resolve(a.call(id, ctx, body))
+        },
+      }
+    }) as any
+  })
+  afterEach(() => {
+    process.dlopen = dlopen
+    delete process.env.WEFT_NATIVE_DIR
+  })
+
+  test('sends the wire input and the claims, no signature, and validates what comes back', async () => {
+    addon('m.node', 'h')
+    manifest({ media: { hash: 'h', addon: 'm.node' } })
+    const f = fn({ input: z.object({ at: z.string().trim() }), output: z.object({ n: z.number() }) })
+    await expect(fetchQuery(signedIn({ id: 7, role: 'admin', secret: 'no' }), f, { at: ' x ' }).then(r => r.v)).resolves.toEqual({ n: 1 })
+    expect(calls[0].body).toEqual({ input: { at: 'x' } })
+    expect(calls[0].ctx.user).toEqual({ id: '7', roles: ['admin'] })
+    expect(calls[0].ctx.deadlineMs).toBe(10_000)
+  })
+
+  test('errors read as they do from a sidecar, and a panic stays in the log', async () => {
+    const answers: unknown[] = [{ ok: false, error: { code: 'Internal', requestId: 'r1', detail: 'panicked: boom' } }, { ok: false, error: { code: 'Drift', message: 'x' } }, { ok: false, error: { code: 'NotFound', data: { id: 'a' } } }]
+    addon('m.node', 'h', () => JSON.stringify(answers.shift()))
+    manifest({ media: { hash: 'h', addon: 'm.node' } })
+    const logged: string[] = []
+    const error = console.error
+    console.error = (m: string) => logged.push(m)
+    const f = fn({ errors: { NotFound: z.object({ id: z.string() }) } })
+    const run = () => fetchQuery(scope(), f, undefined)
+    try {
+      await expect(run()).rejects.toMatchObject({ code: 'R108', status: 500, message: expect.not.stringContaining('boom') })
+      expect(logged[0]).toContain('panicked: boom')
+      await expect(run()).rejects.toMatchObject({ code: 'R103', status: 502 })
+      await expect(run()).rejects.toMatchObject({ code: 'NotFound', data: { id: 'a' } })
+    } finally {
+      console.error = error
+    }
+  })
+
+  test('R107: past `timeout`, TS stops waiting', async () => {
+    addon('m.node', 'h', () => new Promise(() => {}))
+    manifest({ media: { hash: 'h', addon: 'm.node' } })
+    const f = fn({}, native('media', { timeout: 20 }))
+    await expect(fetchQuery(scope(), f, undefined)).rejects.toMatchObject({ code: 'R107', status: 504 })
+  })
+
+  test('R103: a library from another contract', async () => {
+    addon('m.node', 'old')
+    manifest({ media: { hash: 'new', addon: 'm.node' } })
+    await expect(native('media').engine()).rejects.toMatchObject({ code: 'R103', message: expect.stringContaining('old') })
+  })
+
+  test('R104: nothing to load, and an addon that fails with no WASM behind it', async () => {
+    const warn = console.warn
+    console.warn = () => {}
+    try {
+      manifest({})
+      await expect(native('media').engine()).rejects.toMatchObject({ code: 'R104' })
+      manifest({ media: { hash: 'h', addon: 'gone.node' } })
+      await expect(native('media').engine()).rejects.toMatchObject({ code: 'R104', status: 503 })
+      writeFileSync(join(dir, 'broken.node'), '')
+      manifest({ media: { hash: 'h', addon: 'broken.node' } })
+      await expect(native('media').engine()).rejects.toMatchObject({ code: 'R104' })
+    } finally {
+      console.warn = warn
+    }
+    expect(() => native('Not A Name')).toThrow(StartError)
+  })
+
+  test('dev: a new manifest loads the new file, and a failed build keeps what was serving', async () => {
+    const reply = (n: number) => () => JSON.stringify({ ok: true, value: { n }, tags: [], touched: [] })
+    addon('m-1.node', 'h', reply(1))
+    addon('m-2.node', 'h', reply(2))
+    manifest({ media: { hash: 'h', addon: 'm-1.node' } })
+    const f = fn()
+    const run = () => fetchQuery(scope(), f, undefined).then(r => r.v)
+    expect(await run()).toEqual({ n: 1 })
+    await new Promise(ok => setTimeout(ok, 5))
+    manifest({ media: { hash: 'h', addon: 'm-2.node' } })
+    expect(await run()).toEqual({ n: 2 })
+    await new Promise(ok => setTimeout(ok, 5))
+    manifest({ media: { hash: 'other', addon: 'm-1.node' } })
+    expect(await run()).toEqual({ n: 2 })
+    await new Promise(ok => setTimeout(ok, 5))
+    manifest({ media: { hash: '', failure: 'it broke' } })
+    await expect(run()).rejects.toMatchObject({ code: 'R103', message: expect.stringContaining('it broke') })
+  })
+
+  test('the contract says which kind a service is, and one name is never both', () => {
+    fns.clear()
+    query({ $id: 'a.x', output: z.null(), impl: native('media') } as any)
+    expect(contract(fns).services).toMatchObject({ media: { kind: 'native' } })
+    query({ $id: 'b.x', output: z.null(), impl: remote('rust://media') } as any)
+    expect(contract(fns).diagnostics).toEqual([expect.objectContaining({ code: 'R109', why: expect.stringContaining('both') })])
+  })
+
+  test('R104 from a preset', () => {
+    expect(nativeProblem({ service: 'media', preset: 'cloudflare_module' })).toContain('remote(')
+    expect(nativeProblem({ service: 'media', preset: 'vercel', wasm: false })).toContain('wasm: false')
+    expect(nativeProblem({ service: 'media', preset: 'vercel' })).toBeUndefined()
+    expect(nativeProblem({ service: 'media', preset: 'node', wasm: false })).toBeUndefined()
+  })
+
+  test('readCargo finds the library', () => {
+    const line = JSON.stringify({ reason: 'compiler-artifact', target: { kind: ['cdylib'] }, filenames: ['/t/libmedia.d', '/t/libmedia.dylib'] })
+    expect(readCargo(line, { service: 'media', root: '/', dir: '/' }).lib).toBe('/t/libmedia.dylib')
+  })
+
+  test('R105: a cached Rust query with tags that reported no table, once', async () => {
+    addon('m.node', 'h')
+    manifest({ media: { hash: 'h', addon: 'm.node' } })
+    const seen: any[] = []
+    const make = () => scope({ dev: true, onDiagnostic: (d: any) => seen.push(d) })
+    const f = fn({ tags: ['docs'], cache: { life: 'seconds' } })
+    await fetchQuery(make(), f, undefined)
+    await fetchQuery(make(), f, { again: 1 })
+    expect(seen.filter(d => d.code === 'R105')).toHaveLength(1)
+    seen.length = 0
+    const pure = fn({ cache: { life: 'seconds' } })
+    await fetchQuery(make(), pure, undefined)
+    expect(seen).toEqual([])
   })
 })

@@ -1,15 +1,17 @@
-// `remote()` (PLAN §4.3, research 36): a server function whose body is a Rust sidecar. One crossing per function, over
-// `fetch` so it's the same on Node, Bun, Deno and the edge. TS keeps the public edge: the input is validated before the
-// call and the output after it, the user's claims go signed (never cookies), and the caches stay here.
+// `remote()` and `native()` (PLAN §4.3, research 36 and 37): a server function whose body is Rust, in a sidecar over
+// `fetch`, or in this process. One crossing per function. TS keeps the public edge: the input is validated before the
+// call and the output after it, the user's claims go along (never cookies; signed for a sidecar), and the caches stay here.
 //
 //   // src/server/rust.ts: the only place Rust targets are named
 //   export const search = remote('rust://search')
+//   export const media = native('media')            // an addon, or its .wasm where an addon can't load
 //
 //   // src/server/docs.ts: swap `run` for `impl`, and nothing on the client changes
 //   export const searchDocs = query({ input: Search, output: z.array(Hit), tags: ['docs'], impl: search })
 //
-// The address and the key are the environment's: `weft dev` and `weft start` set `WEFT_RUST_<NAME>_URL` and
+// A sidecar's address and key are the environment's: `weft dev` and `weft start` set `WEFT_RUST_<NAME>_URL` and
 // `WEFT_RUST_SECRET` for the sidecars they supervise, and a sidecar deployed on its own needs both set by hand.
+// Nothing here imports a Node module, so none of it reaches a bundle that doesn't call it.
 
 import { raise, StartError, type Fn, type StandardSchemaV1 } from './data'
 
@@ -37,7 +39,26 @@ export interface Remote {
   call(c: RemoteCall): Promise<RemoteResult>
 }
 
+export interface NativeOptions {
+  /** Milliseconds TS waits. A call can't be stopped: `ctx.cancelled()` tells the Rust. 10 s by default. */
+  timeout?: number
+  /** What a function gets of `ctx.user`, as for `remote()`. */
+  claims?: (user: any) => Claims | null
+  /** `false` trusts the output. Keep it on: it's a check on every call, and small next to the work. */
+  validate?: boolean
+}
+
+export interface Native {
+  readonly kind: 'native'
+  readonly target: string
+  readonly service: string
+  /** What's serving, once a call has loaded it: `addon` or `wasm`. For a log line or a test. */
+  engine(): Promise<'addon' | 'wasm'>
+  call(c: RemoteCall): Promise<RemoteResult>
+}
+
 const TARGET = /^rust:\/\/([a-z][a-z0-9_-]*)$/
+const NAME = /^[a-z][a-z0-9_-]*$/
 const DEFAULT_TIMEOUT = 10_000
 const encoder = new TextEncoder()
 
@@ -96,6 +117,25 @@ async function declared(fn: Fn, error: { code: string; data?: unknown }): Promis
   raise(error.code, r.value)
 }
 
+/** A shared value goes by no one's claims: the crate's `SharedCtx` has no user to read, and neither has the wire. */
+function callContext(fn: Fn, ctx: any, request: Request, timeout: number, claims: (user: any) => Claims | null) {
+  const shared = fn.def.cache && fn.def.cache.scope !== 'user'
+  return { user: shared ? null : claims(ctx.user ?? null) ?? null, requestId: randomHex(8), deadlineMs: timeout, traceparent: traceparent(request) }
+}
+
+/** What a reply comes to: the same for a sidecar's body and an addon's string. */
+async function settled(fn: Fn, reply: any, target: string, timeout: number, validate: boolean): Promise<RemoteResult> {
+  if (reply?.ok === true) return { value: await checkedOutput(fn, reply.value, validate), tags: reply.tags ?? [], touched: reply.touched ?? [] }
+  const error = reply?.error
+  if (error?.code === 'Refused') throw new StartError('R106', `\`${target}\` refused \`${fn.$id}\`'s signature`, '`WEFT_RUST_SECRET` must be the same on both sides, and the clocks within a minute', { status: 503 })
+  if (error?.code === 'Deadline') throw new StartError('R107', `\`${fn.$id}\` ran past its ${timeout} ms`, 'raise `timeout`, or make the Rust answer sooner', { status: 504 })
+  if (error?.code === 'Drift') throw new StartError('R103', `\`${fn.$id}\` doesn't match \`${target}\`: ${error.message}`, 'rebuild it from the current contract', { status: 502 })
+  if (error?.code && error.code !== 'Internal') await declared(fn, error)
+  // The detail stays in a log, under this id: a sidecar's own, or this server's for what ran in this process.
+  if (error?.detail) console.error(`[weft] \`${fn.$id}\` failed (request ${error.requestId}): ${error.detail}`)
+  throw new StartError('R108', `\`${fn.$id}\` failed in \`${target}\` (request ${error?.requestId ?? 'unknown'})`, 'find the request id in the server\'s or the sidecar\'s log', { status: 500 })
+}
+
 /**
  * A Rust sidecar implementing the functions that point at it, as `impl: search`. `run` and `impl` are one or the other:
  * the declaration, the client and the caches are the same for both.
@@ -112,10 +152,7 @@ export function remote(target: string, options: RemoteOptions = {}): Remote {
       const secret = env('WEFT_RUST_SECRET')
       if (!secret) throw new StartError('R106', `\`${fn.$id}\` can't sign its call: \`WEFT_RUST_SECRET\` isn't set`, 'set the same value on the server and the sidecar', { status: 503 })
 
-      // A shared value goes by no one's claims: the crate's `SharedCtx` has no user to read, and neither has the wire.
-      const shared = fn.def.cache && fn.def.cache.scope !== 'user'
-      const user = shared ? null : claims((ctx as any).user ?? null) ?? null
-      const envelope = base64url(JSON.stringify({ user, requestId: randomHex(8), deadlineMs: timeout, traceparent: traceparent(request), iat: Date.now() }))
+      const envelope = base64url(JSON.stringify({ ...callContext(fn, ctx, request, timeout, claims), iat: Date.now() }))
       const body = JSON.stringify({ input: (await wire(fn, input)) ?? null })
 
       let res: Response
@@ -130,15 +167,146 @@ export function remote(target: string, options: RemoteOptions = {}): Remote {
         if (e?.name === 'TimeoutError') throw new StartError('R107', `\`${fn.$id}\` took longer than its ${timeout} ms`, 'raise `timeout` on `remote()`, or make the sidecar answer sooner', { status: 504 })
         throw new StartError('R107', `\`${fn.$id}\`: \`${target}\` didn't answer`, 'check that the sidecar is running. Nothing else on this server is affected', { status: 503 })
       }
-      const reply = await res.json().catch(() => undefined)
-      if (reply?.ok === true) return { value: await checkedOutput(fn, reply.value, validate), tags: reply.tags ?? [], touched: reply.touched ?? [] }
-      const error = reply?.error
-      if (error?.code === 'Refused') throw new StartError('R106', `\`${target}\` refused \`${fn.$id}\`'s signature`, '`WEFT_RUST_SECRET` must be the same on both sides, and the clocks within a minute', { status: 503 })
-      if (error?.code === 'Deadline') throw new StartError('R107', `\`${fn.$id}\` ran past its ${timeout} ms`, 'raise `timeout` on `remote()`, or make the sidecar answer sooner', { status: 504 })
-      if (error?.code === 'Drift') throw new StartError('R103', `\`${fn.$id}\` doesn't match its sidecar: ${error.message}`, 'rebuild the sidecar from the current contract', { status: 502 })
-      if (error?.code && error.code !== 'Internal') await declared(fn, error)
-      // The detail stays in the sidecar's log, under this id.
-      throw new StartError('R108', `\`${fn.$id}\` failed in \`${target}\` (request ${error?.requestId ?? 'unknown'})`, 'find the request id in the sidecar\'s log', { status: 500 })
+      return settled(fn, await res.json().catch(() => undefined), target, timeout, validate)
+    },
+  }
+}
+
+// ---- native ---------------------------------------------------------------------------------------------------------
+
+interface Engine { kind: 'addon' | 'wasm'; call(id: string, ctx: string, body: string): Promise<string> | string }
+interface Entry { kind?: string; hash: string; addon?: string; wasm?: string; failure?: string }
+
+const builtin = (name: string): any => (globalThis as any).process?.getBuiltinModule?.(name)
+const platform = () => { const p = (globalThis as any).process; return `${p?.platform}-${p?.arch}` }
+
+/** `.output/server/rust/` from wherever the bundle put this code. `WEFT_NATIVE_DIR` is `weft dev`'s, and `weft build`'s. */
+function nativeDir(): string | undefined {
+  const fs = builtin('node:fs'), path = builtin('node:path'), url = builtin('node:url')
+  if (!fs) return undefined
+  const set = env('WEFT_NATIVE_DIR')
+  if (set) return set
+  let dir = path.dirname(url.fileURLToPath(import.meta.url))
+  for (let i = 0; i < 6; i++, dir = path.dirname(dir)) if (fs.existsSync(path.join(dir, 'rust', 'manifest.json'))) return path.join(dir, 'rust')
+}
+
+function addonEngine(file: string, hash: string, target: string): Engine {
+  const mod = { exports: {} as any }
+  ;(globalThis as any).process.dlopen(mod, file)
+  const built = JSON.parse(mod.exports.contract())
+  if (built.hash !== hash) throw new StartError('R103', `\`${target}\`'s library was built from contract ${built.hash}, and this app's is ${hash}`, 'rebuild it: `weft build`', { status: 502 })
+  return { kind: 'addon', call: mod.exports.call }
+}
+
+/**
+ * The same functions as a `.wasm`, on this thread. A panic traps, which ends an instance: what it said arrives first,
+ * and the next call gets a new one, as a sidecar's crash gets a restart.
+ */
+async function wasmEngine(file: string, hash: string, target: string): Promise<Engine> {
+  const module = await WebAssembly.compile(builtin('node:fs').readFileSync(file))
+  const decoder = new TextDecoder()
+  let said = ''
+  let x: any
+  const text = (ptr: number, len: number) => decoder.decode(new Uint8Array(x.memory.buffer, ptr, len))
+  const fresh = () => {
+    x = new WebAssembly.Instance(module, { weft: { now: () => performance.now(), panicked: (ptr: number, len: number) => { said = text(ptr, len) } } }).exports
+    x.weft_init()
+  }
+  const taken = (packed: bigint) => {
+    const ptr = Number(packed >> 32n), len = Number(packed & 0xffffffffn)
+    const out = text(ptr, len)
+    x.weft_free(ptr, len)
+    return out
+  }
+  const put = (s: string): [number, number] => {
+    const bytes = encoder.encode(s)
+    const ptr = x.weft_alloc(bytes.length)
+    new Uint8Array(x.memory.buffer, ptr, bytes.length).set(bytes)
+    return [ptr, bytes.length]
+  }
+  fresh()
+  const built = JSON.parse(taken(x.weft_contract()))
+  if (built.hash !== hash) throw new StartError('R103', `\`${target}\`'s library was built from contract ${built.hash}, and this app's is ${hash}`, 'rebuild it: `weft build`', { status: 502 })
+  return {
+    kind: 'wasm',
+    call(id, ctx, body) {
+      if (!x) fresh()
+      const [i, il] = put(id), [c, cl] = put(ctx), [b, bl] = put(body)
+      try {
+        const reply = taken(x.weft_call(i, il, c, cl, b, bl))
+        x.weft_free(i, il)
+        x.weft_free(c, cl)
+        return reply
+      } catch (e) {
+        if (!(e instanceof WebAssembly.RuntimeError)) throw e
+        x = undefined
+        return JSON.stringify({ ok: false, error: { code: 'Internal', requestId: JSON.parse(ctx).requestId, detail: said || e.message } })
+      }
+    },
+  }
+}
+
+/**
+ * A Rust library implementing the functions that point at it, in this process, as `impl: media`. An addon runs each call
+ * on the worker pool, so the event loop stays free; where one can't load, its `.wasm` runs them on this thread. Either
+ * way the declaration, the client and the caches are the same as for `run`.
+ */
+export function native(name: string, options: NativeOptions = {}): Native {
+  if (!NAME.test(name)) throw new StartError('R104', `\`native('${name}')\` isn't a service name`, "`native('media')`, for the crate at `crates/media`")
+  const { timeout = DEFAULT_TIMEOUT, claims = defaultClaims, validate = true } = options
+  const target = `native('${name}')`
+  // Before the pool's first use: its default of 4 is a ceiling on calls at once that an app would never think to raise.
+  const proc = (globalThis as any).process
+  if (proc?.env && !proc.env.UV_THREADPOOL_SIZE) proc.env.UV_THREADPOOL_SIZE = String(Math.max(4, (globalThis as any).navigator?.hardwareConcurrency ?? 4))
+
+  let loaded: Promise<Engine> | undefined, stamp: number | undefined
+
+  async function load(dir: string, entry: Entry): Promise<Engine> {
+    const fs = builtin('node:fs'), path = builtin('node:path')
+    const addon = entry.addon && path.join(dir, entry.addon)
+    if (addon && fs.existsSync(addon)) {
+      try {
+        return addonEngine(addon, entry.hash, target)
+      } catch (e: any) {
+        if (e instanceof StartError) throw e
+        console.warn(`[weft] ${target}: the addon didn't load here (${String(e.message).split('\n')[0]})${entry.wasm ? ': using its WASM' : ''}`)
+      }
+    }
+    if (entry.wasm) return wasmEngine(path.join(dir, entry.wasm), entry.hash, target)
+    throw new StartError('R104', `\`${target}\` has no addon for ${platform()} and no WASM`, 'build on this platform, drop `wasm: false` from `rust.services`, or use `remote()`', { status: 503 })
+  }
+
+  /** The engine for now. Under `weft dev` a rebuild is a new file: the next call loads it, and calls on the old one finish. */
+  function engine(): Promise<Engine> {
+    const fs = builtin('node:fs'), path = builtin('node:path')
+    const dir = nativeDir()
+    if (!dir) throw new StartError('R104', `\`${target}\` has nothing to load here`, 'this runtime has no file system, or the build has no `rust/` folder: use `remote()`, or run `weft build`', { status: 503 })
+    const file = path.join(dir, 'manifest.json')
+    const watching = !!env('WEFT_NATIVE_DIR')
+    const mtime = watching ? fs.statSync(file, { throwIfNoEntry: false })?.mtimeMs : undefined
+    if (loaded && mtime === stamp) return loaded
+    const entry: Entry | undefined = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8'))[name] : undefined
+    if (!entry) throw new StartError('R104', `\`${target}\` isn't in this build`, 'run `weft build`, or check `crates/' + name + '`', { status: 503 })
+    if (entry.failure) throw new StartError('R103', `\`${target}\` didn't build: ${entry.failure}`, 'fix the crate: `weft dev` retries on every edit', { status: 503 })
+    stamp = mtime
+    const held = loaded
+    const next = load(dir, entry)
+    // A bad build keeps what was serving, as a sidecar's does.
+    loaded = next.catch(e => { if (held) { loaded = held; return held } loaded = undefined; throw e })
+    return loaded
+  }
+
+  return {
+    kind: 'native', target: `native://${name}`, service: name,
+    engine: async () => (await engine()).kind,
+    async call({ fn, input, ctx, request }) {
+      const context = JSON.stringify(callContext(fn, ctx, request, timeout, claims))
+      const body = JSON.stringify({ input: (await wire(fn, input)) ?? null })
+      const running = (await engine()).call(fn.$id, context, body)
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const reply = typeof running === 'string' ? running : await Promise.race([running, new Promise<string>(ok => { timer = setTimeout(ok, timeout, '{"ok":false,"error":{"code":"Deadline"}}') })])
+      clearTimeout(timer)
+      return settled(fn, JSON.parse(reply), target, timeout, validate)
     },
   }
 }

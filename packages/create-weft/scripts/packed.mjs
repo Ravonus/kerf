@@ -69,6 +69,23 @@ export default function Page() {
 `)
 }
 
+/** `weft add rust` on a packed install: the crate comes with @weft/start, and `weft check` passes without an edit. */
+async function rustApp(app, weft, log) {
+  await sh(weft, ['add', 'rust', 'hasher'], app)
+  const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
+  if (!cargo.includes('path = "../../node_modules/@weft/start/crate"')) throw new Error(`rust: the crate isn't the one @weft/start shipped:\n${cargo}`)
+  const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
+  if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
+  log('weft add rust, check: pass')
+}
+
+async function rustServed(port, log) {
+  const r = await fetch(`http://localhost:${port}/_weft/fn/${fnId('digest', 'src/server/hasher.ts')}?i=${encodeURIComponent('{"text":"hello"}')}`)
+  const body = await r.json()
+  if (r.status !== 200 || body.v?.hash !== '4f9f2cab') throw new Error(`rust: the addon answered ${r.status}: ${JSON.stringify(body)}`)
+  log('the addon answered: pass')
+}
+
 /** What a browser would fetch: each file there, in the codec it says, by ranges, and cacheable for good. */
 async function mediaServed(app, port, log) {
   const base = `http://localhost:${port}`
@@ -189,9 +206,9 @@ function mockStripe(port, sessions) {
   return new Promise(ok => server.listen(port, '127.0.0.1', () => ok(server)))
 }
 
-// Five apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, one that adds media
-// and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one), and one that
-// adds payments and buys something from a mock of Stripe.
+// Six apps: the default, Tailwind, a re-themed warp app that gets Tailwind later through `weft add`, one that adds media
+// and ffmpeg and encodes a GIF, a video ladder and an audio file (ffmpeg has to be installed for that one), one that adds
+// Rust (cargo has to be), and one that adds payments and buys something from a mock of Stripe.
 const theme = `{ seed: { hue: 220, chroma: 0.12 }, dials: { expression: 'quiet', density: 'compact' }, radius: 'round', fonts: { body: 'Georgia, serif' } }`
 const only = process.argv.slice(2).filter(a => !a.startsWith('--'))[1]
 const apps = [
@@ -199,10 +216,11 @@ const apps = [
   { name: 'tailwind', options: { ui: 'tailwind', db: 'sqlite', auth: true }, css: ['.flex{', '.rounded-lg{'] },
   { name: 'themed', options: { ui: 'warp', db: 'none' }, theme, add: 'tailwind', css: ['--warp-radius-control:14px', '.mx-related{'] },
   { name: 'media', options: { ui: 'warp', db: 'none' }, media: true },
+  { name: 'rust', options: { ui: 'warp', db: 'none' }, rust: true },
   { name: 'pay', options: { ui: 'warp', db: 'sqlite', auth: true }, pay: true },
 ]
 
-await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media, pay }, i) => {
+await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, options, theme, add, css, media, rust, pay }, i) => {
   const app = join(root, name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
   scaffold(app, options)
@@ -222,6 +240,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     log(`weft add ${add}: pass`)
   }
   if (media) await mediaApp(app, weft, log)
+  if (rust) await rustApp(app, weft, log)
   const sessions = []
   const mock = pay && await mockStripe(5299 + i, sessions)
   if (pay) await payApp(app, weft, 5299 + i, log)
@@ -249,6 +268,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
     if (status !== 200) throw new Error(`${name}: the built server answered ${status}`)
     log('built server: pass')
     if (media) await mediaServed(app, port, log)
+    if (rust) await rustServed(port, log)
     if (pay) await payServed(port, sessions, env.STRIPE_WEBHOOK_SECRET, log)
   } finally {
     server.kill()
