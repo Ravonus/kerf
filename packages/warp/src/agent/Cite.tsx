@@ -13,7 +13,7 @@ export function Cite({ n, source, href }: { n: number; source?: AgentSource; hre
   const open = state(false)
   let link: HTMLAnchorElement | undefined
   let panel: HTMLElement | undefined
-  use(citePreview, () => link, () => ({ panel: panel!, onOpen: (o: boolean) => (open.value = o) }))
+  use(citePreview, () => (source ? link : undefined), () => ({ panel: panel!, onOpen: (o: boolean) => (open.value = o) }))
   const jump = (e: MouseEvent) => {
     const a = e.currentTarget as Element
     const doc = a.ownerDocument

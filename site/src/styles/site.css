@@ -73,6 +73,24 @@
   [data-site="dial-panel"] h3 { font-family: var(--warp-text-title-font); font-size: var(--warp-text-title-size); }
   [data-site="dial-panel"] [data-part="row"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related); }
 
+  [data-site="lede"] { margin-block: var(--warp-space-related) var(--warp-space-group); max-inline-size: 64ch; color: var(--warp-color-text-subtle); }
+  [data-site="icons"] { display: grid; gap: var(--warp-space-group); min-inline-size: 0; font-family: var(--warp-text-body-font); }
+  [data-site="icons"] [data-part="controls"] { display: flex; flex-wrap: wrap; align-items: end; gap: var(--warp-space-group); }
+  [data-site="icons"] [data-part="controls"] > :first-child { flex: 1 1 240px; }
+  [data-site="icons"] [data-part="count"] { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+  [data-site="icons"] [data-scope="virtual"] { block-size: 68dvh; }
+  [data-site="icons"] [data-scope="virtual"] [data-part="row"] { display: block; block-size: auto; padding-inline: 0; border-block-end: 0; }
+  [data-site="icons"] [data-part="line"] { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); }
+  [data-site="icons"] [data-part="cell"] { display: grid; justify-items: center; align-content: center; gap: var(--warp-space-related); block-size: 112px; inline-size: 100%; padding: var(--warp-space-related); }
+  [data-site="icons"] [data-part="name"] { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+  [data-site="icons"] [data-part="glyph"] { display: inline-flex; }
+  [data-site="icons"][data-size="16"] [data-part="glyph"] svg { inline-size: 16px; block-size: 16px; }
+  [data-site="icons"][data-size="24"] [data-part="glyph"] svg { inline-size: 24px; block-size: 24px; }
+  [data-site="icons"][data-size="32"] [data-part="glyph"] svg { inline-size: 32px; block-size: 32px; }
+  [data-site="icon-sheet"] { display: grid; gap: var(--warp-space-related); margin-block-end: var(--warp-space-group); }
+  [data-site="icon-sheet"] > div { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--warp-space-group); }
+  [data-site="icon-sheet"] svg { inline-size: 48px; block-size: 48px; }
+
   @media (max-width: 899.98px) {
     [data-site="hero"], [data-site="split"] { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-group); padding-block: var(--warp-space-section); }
   }
