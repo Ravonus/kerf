@@ -62,6 +62,8 @@ pub struct Options {
     pub islands: Option<hydration::Islands>,
     /// The working directory, for a build with no filesystem of its own (the WASM binding). `None`: ask the process.
     pub cwd: Option<String>,
+    /// `WEFT_OFF`, for a build with no environment of its own (the WASM binding).
+    pub off: Option<String>,
 }
 
 impl Default for Options {
@@ -81,6 +83,7 @@ impl Default for Options {
             shapes: None,
             islands: None,
             cwd: None,
+            off: None,
         }
     }
 }
@@ -106,6 +109,7 @@ pub fn transform_json(source: &str, options_json: &str) -> String {
 }
 
 pub fn compile(source: &str, options: &Options) -> Output {
+    emit::set_off(options.off.clone());
     let source_type = SourceType::from_path(&options.filename).unwrap_or_else(|_| SourceType::tsx());
     // DOM output keeps each island's call site as an export, appended so every pass reads it as authored code.
     let islands = options.islands.as_ref().filter(|i| !i.sites.is_empty() && !options.check_only);

@@ -159,6 +159,6 @@ const against = data['solid-batch'] ? 'solid-batch' : 'solid'
 const compared = Object.fromEntries(Object.keys(data).filter(s => s !== against).map(s => [s, versus(s, against)]))
 const paths = Object.fromEntries(Object.keys(data).filter(s => s.startsWith('off-')).map(s => [s, versus(s, 'weft')]))
 
-const results = { spread, compared, paths, when: new Date().toISOString(), machine: cpus()[0].model, node: process.version, solid: '1.9.18', loads, maxLoad: Math.max(...loads), valid: Math.max(...loads) < 20, grid: summary, reactive }
+const results = { spread, compared, paths, when: new Date().toISOString(), machine: cpus()[0].model, node: process.version, solid: '1.9.7', loads, maxLoad: Math.max(...loads), valid: Math.max(...loads) < 20, grid: summary, reactive }
 writeFileSync(out, JSON.stringify(results, null, 1) + '\n')
 console.log(`wrote ${out}; load ${Math.min(...loads)} to ${Math.max(...loads)}`)

@@ -259,7 +259,7 @@ export function native(name: string, options: NativeOptions = {}): Native {
   const proc = (globalThis as any).process
   if (proc?.env && !proc.env.UV_THREADPOOL_SIZE) proc.env.UV_THREADPOOL_SIZE = String(Math.max(4, (globalThis as any).navigator?.hardwareConcurrency ?? 4))
 
-  let loaded: Promise<Engine> | undefined, stamp: number | undefined
+  let loaded: Promise<Engine> | undefined, stamp: string | undefined
 
   async function load(dir: string, entry: Entry): Promise<Engine> {
     const fs = builtin('node:fs'), path = builtin('node:path')
@@ -283,12 +283,13 @@ export function native(name: string, options: NativeOptions = {}): Native {
     if (!dir) throw new StartError('R104', `\`${target}\` has nothing to load here`, 'this runtime has no file system, or the build has no `rust/` folder: use `remote()`, or run `weft build`', { status: 503 })
     const file = path.join(dir, 'manifest.json')
     const watching = !!env('WEFT_NATIVE_DIR')
-    const mtime = watching ? fs.statSync(file, { throwIfNoEntry: false })?.mtimeMs : undefined
-    if (loaded && mtime === stamp) return loaded
-    const entry: Entry | undefined = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8'))[name] : undefined
+    // Its text, not its mtime: two writes can land in one tick of a coarse clock.
+    const text: string | undefined = watching && fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : undefined
+    if (loaded && text === stamp) return loaded
+    const entry: Entry | undefined = fs.existsSync(file) ? JSON.parse(text ?? fs.readFileSync(file, 'utf8'))[name] : undefined
     if (!entry) throw new StartError('R104', `\`${target}\` isn't in this build`, 'run `weft build`, or check `crates/' + name + '`', { status: 503 })
     if (entry.failure) throw new StartError('R103', `\`${target}\` didn't build: ${entry.failure}`, 'fix the crate: `weft dev` retries on every edit', { status: 503 })
-    stamp = mtime
+    stamp = text
     const held = loaded
     const next = load(dir, entry)
     // A bad build keeps what was serving, as a sidecar's does.

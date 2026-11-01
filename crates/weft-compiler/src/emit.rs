@@ -1177,7 +1177,17 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
 
 /// A compiled speed path turned off for this run (`WEFT_OFF`, packages/weft/src/flags.ts).
 fn flag_off(name: &str) -> bool {
-    std::env::var("WEFT_OFF").is_ok_and(|v| v.split(',').any(|f| f == name || f == "all"))
+    let off = OFF.with(|off| off.borrow().clone()).or_else(|| std::env::var("WEFT_OFF").ok());
+    off.is_some_and(|v| v.split(',').any(|f| f == name || f == "all"))
+}
+
+thread_local! {
+    static OFF: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+}
+
+/// `Options::off`, for this compile.
+pub(crate) fn set_off(off: Option<String>) {
+    OFF.with(|slot| *slot.borrow_mut() = off);
 }
 
 /// Reads of a row's key, moved to one read as the row is made. A row's key never changes (a new key is a new row), so

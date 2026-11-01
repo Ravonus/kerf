@@ -8,8 +8,9 @@ const posixKeys = map => map && Object.fromEntries(Object.entries(map).map(([k, 
 /** The build has no filesystem to ask, and only ever sees `/`: the working directory, and Windows paths written its way. */
 exports.wasmOptions = (options = {}) => {
   const cwd = posix(process.cwd())
-  if (process.platform !== 'win32') return { cwd, ...options }
-  return { cwd, ...options, filename: options.filename && posix(options.filename), groups: posixKeys(options.groups), shapes: posixKeys(options.shapes) }
+  const off = process.env.WEFT_OFF // WASM has no environment of its own
+  if (process.platform !== 'win32') return { cwd, off, ...options }
+  return { cwd, off, ...options, filename: options.filename && posix(options.filename), groups: posixKeys(options.groups), shapes: posixKeys(options.shapes) }
 }
 
 exports.loadWasm = file => {

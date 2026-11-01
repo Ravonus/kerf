@@ -9,27 +9,10 @@
 
 import postgres from 'postgres'
 import { CHANNEL } from './changes-sql.mjs'
-import type { Fn } from './data'
+import type { Fn, VerifyOptions } from './data'
 import type { Source } from './changes'
 
-export interface VerifyOptions {
-  /** `true` or a target's name, as `verify: true` and `verify: 'staging'` mean, for when the rest of this is needed too. */
-  target?: true | string
-  /** A running staging app. Fine in code. */
-  url?: string
-  /** A database, from the environment: `process.env.STAGING_DATABASE_URL`. */
-  db?: string
-  /** The query's input. */
-  input?: unknown
-  /** Columns of the test row: whose it is, so the signed-in test user can see it. The rest are made up. */
-  row?: Record<string, unknown>
-  /** Name of the env var with a cookie for a user who can see the row. Default `WEFT_STAGING_COOKIE`. */
-  cookie?: string
-  /** Name of the env var with a cookie for a user who can't. Default `WEFT_STAGING_OTHER_COOKIE`; without it, a signed-out client. */
-  otherCookie?: string
-  /** Ms each link may take. Default 5000. */
-  timeout?: number
-}
+export type { VerifyOptions }
 
 export const LINKS = ['trigger', 'write', 'notify', 'app', 'poke', 'refetch', 'denied', 'cleanup'] as const
 export type Link = (typeof LINKS)[number]

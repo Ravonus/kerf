@@ -95,7 +95,7 @@ export function Arena() {
       </div>
       <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. <a href="/arena/shared/harness.txt">How this is measured</a>.</p>
       <h3>Speed, measured in Chromium</h3>
-      <p data-part="intro">weft is fastest in {speed.wins} of these {speed.rows.length} rows. The others are marked. Times are milliseconds from one run on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
+      <p data-part="intro">weft is fastest in {speed.wins} of these {speed.rows.length} rows. The others are marked. Times are milliseconds, the median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
       <div data-part="table">
         <table>
           <thead><tr><th scope="col">Operation</th><th scope="col">weft</th><th scope="col">Solid</th><th scope="col">React</th><th scope="col">Fastest</th></tr></thead>

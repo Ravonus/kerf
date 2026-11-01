@@ -993,11 +993,13 @@ fn hmr_is_dev_dom_only() {
         Options { dev: false, hmr: true, ..Default::default() },
         Options { dev: true, hmr: false, ..Default::default() },
         Options { dev: true, hmr: true, generate: "ssr".into(), ..Default::default() },
-        Options { dev: true, hmr: true, hydratable: true, ..Default::default() },
     ] {
         let code = compile(src, &o).code.unwrap();
         assert!(!code.contains("weft/hmr") && !code.contains("_$keep"), "{code}");
     }
+    // A Start app hydrates in dev too, and keeps the page across a save.
+    let hydrated = compile(src, &Options { dev: true, hmr: true, hydratable: true, ..Default::default() }).code.unwrap();
+    assert!(hydrated.contains("weft/hmr"), "{hydrated}");
     assert!(!hot("const x = 1").contains("weft/hmr"), "no components, no registration");
 }
 

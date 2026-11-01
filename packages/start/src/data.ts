@@ -19,6 +19,26 @@ import { client } from './router'
 
 // ---- definitions ------------------------------------------------------------------------------------------------
 
+/** Here and not in verify.ts: that file needs `postgres`, and an app without it still reads this type. */
+export interface VerifyOptions {
+  /** `true` or a target's name, as `verify: true` and `verify: 'staging'` mean, for when the rest of this is needed too. */
+  target?: true | string
+  /** A running staging app. Fine in code. */
+  url?: string
+  /** A database, from the environment: `process.env.STAGING_DATABASE_URL`. */
+  db?: string
+  /** The query's input. */
+  input?: unknown
+  /** Columns of the test row: whose it is, so the signed-in test user can see it. The rest are made up. */
+  row?: Record<string, unknown>
+  /** Name of the env var with a cookie for a user who can see the row. Default `WEFT_STAGING_COOKIE`. */
+  cookie?: string
+  /** Name of the env var with a cookie for a user who can't. Default `WEFT_STAGING_OTHER_COOKIE`; without it, a signed-out client. */
+  otherCookie?: string
+  /** Ms each link may take. Default 5000. */
+  timeout?: number
+}
+
 /** The Standard Schema interface (standardschema.dev): Zod, Valibot, ArkType and Drizzle's derived schemas. */
 export interface StandardSchemaV1<I = unknown, O = I> {
   readonly '~standard': {
@@ -83,7 +103,7 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   live?: {
     required?: boolean
     /** A real round trip against a target that isn't production, in `weft check` and `weft build`. `true` finds `WEFT_STAGING_URL` or `STAGING_DATABASE_URL`; a string names a target in `live.targets`. */
-    verify?: true | string | import('./verify').VerifyOptions
+    verify?: true | string | VerifyOptions
   }
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
