@@ -1,7 +1,7 @@
-export const statuses = ["paid", "pending", "shipped", "refunded"] as const;
+export const statuses = ["pending", "paid", "shipped", "refunded"] as const;
 export type Status = (typeof statuses)[number];
 
-export const sorts = ["id", "customer", "status", "total", "date"] as const;
+export const sorts = ["id", "customer", "status", "total", "created"] as const;
 export type Sort = (typeof sorts)[number];
 export type Dir = "asc" | "desc";
 
@@ -18,7 +18,7 @@ export function parseSearch(raw: Partial<Record<keyof OrderSearch, unknown>>): O
   const q = String(first(raw.q) ?? "").trim().slice(0, 100);
   return {
     page: Number.isSafeInteger(page) && page > 0 && page < 1e6 ? page : 1,
-    sort: oneOf(sorts, first(raw.sort)) ?? "date",
+    sort: oneOf(sorts, first(raw.sort)) ?? "created",
     dir: oneOf(["asc", "desc"] as const, first(raw.dir)) ?? "desc",
     status: oneOf(statuses, first(raw.status)),
     q: q || undefined,
@@ -29,7 +29,7 @@ export function parseSearch(raw: Partial<Record<keyof OrderSearch, unknown>>): O
 export function searchHref(s: OrderSearch, page: number) {
   const p = new URLSearchParams();
   if (page > 1) p.set("page", String(page));
-  if (s.sort !== "date" || s.dir !== "desc") {
+  if (s.sort !== "created" || s.dir !== "desc") {
     p.set("sort", s.sort);
     p.set("dir", s.dir);
   }

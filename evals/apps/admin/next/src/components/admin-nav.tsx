@@ -6,9 +6,9 @@ import { useSelectedLayoutSegment } from 'next/navigation'
 const links = [
   { href: '/admin', label: 'Overview', segment: null },
   { href: '/admin/orders', label: 'Orders', segment: 'orders' },
-  { href: '/admin/nested', label: 'Insights', segment: 'nested' },
-  { href: '/admin/per-row', label: 'Recent', segment: 'per-row' },
-  { href: '/admin/slow', label: 'Report', segment: 'slow' },
+  { href: '/admin/nested', label: 'Regions', segment: 'nested' },
+  { href: '/admin/per-row', label: 'Order feed', segment: 'per-row' },
+  { href: '/admin/slow', label: 'Year report', segment: 'slow' },
 ]
 
 export function NavLinks({ active }: { active?: string | null }) {

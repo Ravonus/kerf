@@ -2,34 +2,34 @@
 
 :root {
   color-scheme: light dark;
-  --page: #f2f4ef;
-  --surface: #f9faf7;
-  --sunken: #eef1eb;
-  --ink: #1c1917;
-  --muted: #57534e;
-  --faint: #78716c;
-  --line: #e2dcd2;
-  --accent: #1f6f5c;
-  --accent-hover: #185849;
+  --page: #eceef5;
+  --surface: #fbfbfe;
+  --sunken: #f1f2f8;
+  --ink: #1a1c2b;
+  --muted: #555a70;
+  --faint: #70758c;
+  --line: #dcdfea;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
   --accent-ink: #ffffff;
-  --accent-text: #185849;
+  --accent-text: #4338ca;
   --danger: #b91c1c;
   --warn: #92600a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #121815;
-    --surface: #18201c;
-    --sunken: #0e1311;
-    --ink: #f5f1ea;
-    --muted: #b5aea4;
-    --faint: #8f877c;
-    --line: #38332d;
-    --accent: #4fb89d;
-    --accent-hover: #6cc9b1;
-    --accent-ink: #07140f;
-    --accent-text: #6cc9b1;
+    --page: #0e1020;
+    --surface: #161a2e;
+    --sunken: #0a0c18;
+    --ink: #eef0f8;
+    --muted: #aab0c6;
+    --faint: #8a90a8;
+    --line: #2a2f48;
+    --accent: #818cf8;
+    --accent-hover: #a5b4fc;
+    --accent-ink: #0e1020;
+    --accent-text: #a5b4fc;
     --danger: #f87171;
   --warn: #e0ac4f;
   }
@@ -112,7 +112,7 @@ body {
 
 .select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%2378716c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%2370758c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-position: right 0.625rem center;
   background-repeat: no-repeat;
   background-size: 1rem;

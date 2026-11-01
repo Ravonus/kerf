@@ -18,9 +18,9 @@ const isStatus = (value?: string): value is Status => statuses.includes(value as
 const isSort = (value?: string): value is SortKey => sortKeys.includes(value as SortKey)
 
 export function parseQuery(raw: Raw): OrdersQuery {
-  const status = one(raw.status), sort = one(raw.sort), q = one(raw.q)?.trim(), page = Number(one(raw.page))
+  const status = one(raw.status), sort = one(raw.sort), q = one(raw.q)?.trim().slice(0, 100), page = Number(one(raw.page))
   return {
-    page: Number.isInteger(page) && page > 0 ? page : 1,
+    page: Number.isSafeInteger(page) && page > 0 && page < 1e6 ? page : 1,
     sort: isSort(sort) ? sort : 'created',
     dir: one(raw.dir) === 'asc' ? 'asc' : 'desc',
     status: isStatus(status) ? status : undefined,

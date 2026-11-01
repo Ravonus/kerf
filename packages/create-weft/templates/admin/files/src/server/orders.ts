@@ -9,6 +9,14 @@ const sortColumns = { id: orders.id, customer: customers.name, status: orders.st
 const like = (text: string) => `%${text.replace(/[\\%_]/g, '\\$&')}%`
 
 const listed = { id: orders.id, customer: customers.name, status: orders.status, totalCents: orders.totalCents, createdAt: orders.createdAt }
+const orderView = z.object({
+  page: z.number().int().min(1),
+  sort: z.enum(sortKeys),
+  dir: z.enum(['asc', 'desc']),
+  status: status.or(z.literal('')),
+  q: z.string().max(100),
+})
+
 const onTheWire = <T extends { createdAt: Date }>(row: T) => ({ ...row, createdAt: row.createdAt.toISOString() })
 
 export type OrderRow = ReturnType<typeof onTheWire<{ id: number; customer: string; status: string; totalCents: number; createdAt: Date }>>
@@ -59,13 +67,7 @@ export const latestOrders = query({
 })
 
 export const listOrders = query({
-  input: z.object({
-    page: z.number().int().min(1),
-    sort: z.enum(sortKeys),
-    dir: z.enum(['asc', 'desc']),
-    status: status.or(z.literal('')),
-    q: z.string().max(100),
-  }),
+  input: orderView,
   tags: ['orders', 'customers'],
   auth: 'user',
   run: async ({ input, ctx }) => {
@@ -78,9 +80,9 @@ export const listOrders = query({
         .orderBy(direction(sortColumns[input.sort]), direction(orders.id))
         .limit(PAGE_SIZE)
         .offset((input.page - 1) * PAGE_SIZE),
-      ctx.db.select({ total: count() }).from(orders)
-        .innerJoin(customers, eq(customers.id, orders.customerId))
-        .where(where),
+      input.q
+        ? ctx.db.select({ total: count() }).from(orders).innerJoin(customers, eq(customers.id, orders.customerId)).where(where)
+        : ctx.db.select({ total: count() }).from(orders).where(where),
     ])
     return { rows: rows.map(onTheWire), total: found!.total }
   },
@@ -108,15 +110,21 @@ export const setOrderStatus = mutation({
   input: z.object({ id: z.number().int().positive(), status }),
   auth: 'user',
   invalidates: ['orders'],
+  optimistic: ({ input }, cache) => cache.update(getOrder, { id: input.id }, order => { if (order) order.status = input.status }),
   run: async ({ input, ctx }) => {
     await ctx.db.update(orders).set({ status: input.status }).where(eq(orders.id, input.id))
   },
 })
 
 export const markShipped = mutation({
-  input: z.object({ ids: z.array(z.number().int().positive()).min(1).max(PAGE_SIZE) }),
+  // `view` names the list on screen, for the optimistic update; the server only reads `ids`.
+  input: z.object({ ids: z.array(z.number().int().positive()).min(1).max(PAGE_SIZE), view: orderView }),
   auth: 'user',
   invalidates: ['orders'],
+  optimistic: ({ input }, cache) =>
+    cache.update(listOrders, input.view, list => {
+      for (const row of list.rows) if (input.ids.includes(row.id)) row.status = 'shipped'
+    }),
   run: async ({ input, ctx }) => {
     await ctx.db.update(orders).set({ status: 'shipped' }).where(inArray(orders.id, input.ids))
   },

@@ -13,7 +13,7 @@ export const route = { preload: () => void getOverview() } satisfies RouteDefini
 export default function Overview() {
   return (
     <>
-      <Title>Overview · Harbor</Title>
+      <Title>Overview · Backroom</Title>
       <h1 class="text-2xl font-semibold tracking-tight">Overview</h1>
       <div class="mt-6">
         <Loads what="The overview">

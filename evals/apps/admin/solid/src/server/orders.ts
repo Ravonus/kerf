@@ -12,12 +12,13 @@ import { requireUser } from "./auth.server";
 const Id = z.coerce.number().int().positive().max(2147483647);
 const Status = z.enum(statuses);
 
-const sortColumns = { id: orders.id, customer: customers.name, status: orders.status, total: orders.totalCents, date: orders.createdAt };
+const sortColumns = { id: orders.id, customer: customers.name, status: orders.status, total: orders.totalCents, created: orders.createdAt };
 
 // Every key a change of status can touch. The ones the current route preloads come back in the reply.
-const answer = () => reload({ revalidate: ["orders", "order-detail", "overview", "status-counts", "recent-orders", "report"] });
+const answer = () => reload({ revalidate: ["orders", "order-detail", "overview", "top-cities", "biggest-customers", "recent-orders", "report"] });
 
 const money = (expr: ReturnType<typeof sql>) => sql`coalesce(${expr}, 0)`.mapWith(Number);
+const cents = money(sql`sum(${orders.totalCents})`);
 const listed = { id: orders.id, status: orders.status, totalCents: orders.totalCents, createdAt: orders.createdAt, customer: customers.name };
 
 function latest(limit: number) {
@@ -36,14 +37,15 @@ export async function loadOverview() {
       })
       .from(orders),
     db
-      .select({ month: sql<string>`to_char(${orders.createdAt} at time zone 'UTC', 'YYYY-MM')`, cents: money(sql`sum(${orders.totalCents})`) })
+      .select({ month: sql<string>`to_char(${orders.createdAt} at time zone 'UTC', 'YYYY-MM')`, cents })
       .from(orders)
       .where(ne(orders.status, "refunded"))
       .groupBy(sql`1`)
-      .orderBy(sql`1`),
+      .orderBy(sql`1 desc`)
+      .limit(12),
     latest(10),
   ]);
-  return { stats: stats!, months, recent };
+  return { stats: stats!, months: months.reverse(), recent };
 }
 
 export async function loadOrders(raw: OrderSearch) {
@@ -94,24 +96,31 @@ export async function loadOrder(rawId: number) {
   return order ? { ...order, items } : null;
 }
 
-export async function loadStatusCounts() {
+export async function loadReach() {
   await requireUser();
-  return db
-    .select({ status: orders.status, n: count(), cents: money(sql`sum(${orders.totalCents})`) })
-    .from(orders)
-    .groupBy(orders.status)
-    .orderBy(desc(count()));
+  const [row] = await db.select({ customers: count(), cities: sql`count(distinct ${customers.city})`.mapWith(Number) }).from(customers);
+  return row!;
 }
 
-export async function loadTopCustomers() {
+export async function loadTopCities() {
   await requireUser();
   return db
-    .select({ id: customers.id, name: customers.name, city: customers.city, orders: count(), cents: money(sql`sum(${orders.totalCents})`) })
-    .from(customers)
-    .innerJoin(orders, eq(orders.customerId, customers.id))
+    .select({ city: customers.city, orders: count(), cents })
+    .from(orders)
+    .innerJoin(customers, eq(customers.id, orders.customerId))
+    .groupBy(customers.city)
+    .orderBy(desc(cents));
+}
+
+export async function loadBiggestCustomers() {
+  await requireUser();
+  return db
+    .select({ id: customers.id, name: customers.name, city: customers.city, cents })
+    .from(orders)
+    .innerJoin(customers, eq(customers.id, orders.customerId))
     .groupBy(customers.id)
-    .orderBy(desc(sql`sum(${orders.totalCents})`), customers.id)
-    .limit(10);
+    .orderBy(desc(cents))
+    .limit(5);
 }
 
 export async function loadRecentOrders() {
@@ -132,13 +141,7 @@ export async function loadCustomer(id: number) {
 export async function loadReport() {
   await requireUser();
   await db.execute(sql`select pg_sleep(2)`);
-  return db
-    .select({ city: customers.city, orders: count(), cents: money(sql`sum(${orders.totalCents})`) })
-    .from(orders)
-    .innerJoin(customers, eq(customers.id, orders.customerId))
-    .where(ne(orders.status, "refunded"))
-    .groupBy(customers.city)
-    .orderBy(desc(sql`sum(${orders.totalCents})`));
+  return db.select({ status: orders.status, orders: count(), cents }).from(orders).groupBy(orders.status).orderBy(desc(cents));
 }
 
 export async function markOrdersShipped(form: FormData | URLSearchParams) {

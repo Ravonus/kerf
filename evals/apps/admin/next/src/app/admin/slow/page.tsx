@@ -1,26 +1,37 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Counter } from '@/components/counter'
+import { bodyCell, headCell, tableRow } from '@/components/order-cells'
 import { PageTitle } from '@/components/page-title'
 import { panel } from '@/components/skeleton'
 import { StatusBadge } from '@/components/status-badge'
 import { currentUser } from '@/server/auth'
-import { loadSlowReport } from '@/server/data'
+import { loadSlowReport, money } from '@/server/data'
 
-export const metadata: Metadata = { title: 'Report' }
+export const metadata: Metadata = { title: 'Year report' }
 
 async function Report() {
   await currentUser()
-  const counts = await loadSlowReport()
+  const lines = await loadSlowReport()
   return (
-    <ul>
-      {counts.map(({ status, orders }) => (
-        <li key={status} className="flex items-center justify-between gap-4 border-b border-line py-2 text-sm last:border-0">
-          <StatusBadge status={status} />
-          <span className="tabular-nums">{orders.toLocaleString('en-US')}</span>
-        </li>
-      ))}
-    </ul>
+    <table className="w-full border-collapse">
+      <thead>
+        <tr className="border-b border-line">
+          <th scope="col" className={headCell}>Status</th>
+          <th scope="col" className={`${headCell} text-right`}>Orders</th>
+          <th scope="col" className={`${headCell} text-right`}>Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {lines.map(line => (
+          <tr key={line.status} className={tableRow}>
+            <td className={bodyCell}><StatusBadge status={line.status} /></td>
+            <td className={`${bodyCell} text-right tabular-nums`}>{line.orders.toLocaleString('en-US')}</td>
+            <td className={`${bodyCell} text-right tabular-nums`}>{money(line.revenue)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
@@ -32,7 +43,7 @@ export default function Slow() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <PageTitle note="The full report takes a moment; the page doesn't wait for it.">Report</PageTitle>
+        <PageTitle note="The books take a moment to add up. Keep working: the page is yours while they do.">Year report</PageTitle>
         <Counter />
       </header>
       <section aria-labelledby="report" className={`${panel} p-5`}>

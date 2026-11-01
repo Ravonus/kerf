@@ -5,10 +5,10 @@ import { HttpStatusCode } from "@solidjs/start";
 export default function NotFound() {
   return (
     <main class="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-3 px-4 text-center">
-      <Title>Page not found · Harbor</Title>
+      <Title>Page not found · Backroom</Title>
       <HttpStatusCode code={404} />
-      <h1 class="text-2xl font-semibold tracking-tight">Nothing here</h1>
-      <p class="text-muted">That page doesn't exist.</p>
+      <h1 class="text-2xl font-semibold tracking-tight">Nothing on this shelf</h1>
+      <p class="text-muted">The order may be gone, or the address mistyped.</p>
       <A href="/admin" class="font-medium text-accent-text hover:underline" activeClass="" inactiveClass="">
         Back to the overview
       </A>

@@ -49,7 +49,7 @@ async function Latest() {
 export default function Overview() {
   return (
     <div className="flex flex-col gap-6">
-      <PageTitle note="How the store is doing.">Overview</PageTitle>
+      <PageTitle note="How the shop is doing, all time.">Overview</PageTitle>
       <section aria-label="Totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Suspense fallback={[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-[5.625rem]" />)}>
           <Stats />

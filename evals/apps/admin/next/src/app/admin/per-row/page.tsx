@@ -7,7 +7,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { currentUser } from '@/server/auth'
 import { date, loadCustomer, loadRecentOrderRefs, money } from '@/server/data'
 
-export const metadata: Metadata = { title: 'Recent' }
+export const metadata: Metadata = { title: 'Order feed' }
 
 type Ref = Awaited<ReturnType<typeof loadRecentOrderRefs>>[number]
 
@@ -47,7 +47,7 @@ async function Rows() {
 export default function PerRow() {
   return (
     <div className="flex flex-col gap-5">
-      <PageTitle note="The last 50 orders, with where each customer lives.">Recent</PageTitle>
+      <PageTitle note="The last 50 orders, each with who placed it.">Order feed</PageTitle>
       <Suspense fallback={<TableSkeleton rows={50} />}><Rows /></Suspense>
     </div>
   )

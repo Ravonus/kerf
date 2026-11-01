@@ -11,9 +11,9 @@ export const route = { preload: () => void getViewer() } satisfies RouteDefiniti
 const links = [
   { href: "/admin", label: "Overview", end: true },
   { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/nested", label: "Nested" },
-  { href: "/admin/per-row", label: "Per row" },
-  { href: "/admin/slow", label: "Slow" },
+  { href: "/admin/nested", label: "Regions" },
+  { href: "/admin/per-row", label: "Order feed" },
+  { href: "/admin/slow", label: "Year report" },
 ];
 
 export default function AdminLayout(props: RouteSectionProps) {

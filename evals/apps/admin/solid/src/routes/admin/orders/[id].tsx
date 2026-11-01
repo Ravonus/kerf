@@ -34,10 +34,10 @@ export default function OrderPage() {
 function Missing() {
   return (
     <div class="py-16 text-center">
-      <Title>Order not found · Harbor</Title>
+      <Title>Order not found · Backroom</Title>
       <HttpStatusCode code={404} />
-      <h1 class="text-2xl font-semibold tracking-tight">No such order</h1>
-      <p class="mt-2 text-muted">It may have been removed, or the link is wrong.</p>
+      <h1 class="text-2xl font-semibold tracking-tight">Nothing on this shelf</h1>
+      <p class="mt-2 text-muted">The order may be gone, or the address mistyped.</p>
     </div>
   );
 }
@@ -55,7 +55,7 @@ function Details(props: { order: Order }) {
 
   return (
     <>
-      <Title>{`Order ${props.order.id} · Harbor`}</Title>
+      <Title>{`Order #${props.order.id} · Backroom`}</Title>
       <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-2xl font-semibold tracking-tight">Order #{props.order.id}</h1>

@@ -22,7 +22,7 @@ const columns: { key: SortKey; label: string; right?: boolean }[] = [
 ]
 
 function sortColumn(column: (typeof columns)[number], query: OrdersQuery): SortColumn {
-  const dir = query.sort === column.key && query.dir === 'desc' ? 'asc' : 'desc'
+  const dir = query.sort === column.key && query.dir === 'asc' ? 'desc' : 'asc'
   return { ...column, href: ordersHref({ ...query, sort: column.key, dir, page: 1 }) }
 }
 

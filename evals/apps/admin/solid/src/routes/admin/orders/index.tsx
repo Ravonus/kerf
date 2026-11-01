@@ -16,7 +16,7 @@ const columns: { sort: Sort; label: string; right?: boolean }[] = [
   { sort: "customer", label: "Customer" },
   { sort: "status", label: "Status" },
   { sort: "total", label: "Total", right: true },
-  { sort: "date", label: "Date" },
+  { sort: "created", label: "Date" },
 ];
 
 export default function Orders() {
@@ -33,7 +33,7 @@ export default function Orders() {
 
   return (
     <>
-      <Title>Orders · Harbor</Title>
+      <Title>Orders · Backroom</Title>
       <h1 class="text-2xl font-semibold tracking-tight">Orders</h1>
       <form
         method="get"

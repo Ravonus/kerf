@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, asc, count, desc, eq, ilike, inArray, ne, type SQL, sql, sum } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, ne, type SQL, sql, sum } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
 import { db } from '@/db'
 import { customers, orderItems, orders, products } from '@/db/schema'
@@ -63,16 +63,14 @@ export async function loadLatestOrders(limit: number) {
 }
 
 export async function loadOrders({ page, sort, dir, status, q }: OrdersQuery) {
-  const conditions: (SQL | undefined)[] = [status && eq(orders.status, status)]
-  if (q) {
-    const name = ilike(customers.name, `%${q.replace(/[\\%_]/g, '\\$&')}%`)
-    conditions.push(inArray(orders.customerId, db.select({ id: customers.id }).from(customers).where(name)))
-  }
-  const where = and(...conditions), direction = dir === 'asc' ? asc : desc
-  const [rows, total] = await Promise.all([
+  const name: SQL | undefined = q ? ilike(customers.name, `%${q.replace(/[\\%_]/g, '\\$&')}%`) : undefined
+  const where = and(status && eq(orders.status, status), name), direction = dir === 'asc' ? asc : desc
+  const [rows, [{ total }]] = await Promise.all([
     db.select(row).from(orders).innerJoin(customers, eq(customers.id, orders.customerId)).where(where)
       .orderBy(direction(sortColumns[sort]), direction(orders.id)).limit(pageSize).offset((page - 1) * pageSize),
-    db.$count(orders, where),
+    q
+      ? db.select({ total: count() }).from(orders).innerJoin(customers, eq(customers.id, orders.customerId)).where(where)
+      : db.select({ total: count() }).from(orders).where(where),
   ])
   return { rows: rows.map(present), total }
 }
@@ -94,19 +92,21 @@ export async function loadOrder(id: number) {
   return order ? { ...order, items } : null
 }
 
-export function loadStatusCounts() {
-  return db.select({ status: orders.status, orders: count() }).from(orders).groupBy(orders.status).orderBy(desc(count()))
+const revenue = sql<number>`coalesce(sum(${orders.totalCents}), 0)`.mapWith(Number)
+
+export async function loadReach() {
+  const [row] = await db.select({ customers: count(), cities: sql<number>`count(distinct ${customers.city})`.mapWith(Number) }).from(customers)
+  return row
 }
 
 export function loadTopCities() {
-  return db.select({ city: customers.city, orders: count() }).from(orders).innerJoin(customers, eq(customers.id, orders.customerId))
-    .groupBy(customers.city).orderBy(desc(count())).limit(6)
+  return db.select({ city: customers.city, orders: count(), revenue }).from(orders).innerJoin(customers, eq(customers.id, orders.customerId))
+    .groupBy(customers.city).orderBy(desc(revenue))
 }
 
-export function loadTopProducts() {
-  const units = sum(orderItems.quantity).mapWith(Number)
-  return db.select({ id: products.id, name: products.name, units }).from(orderItems).innerJoin(products, eq(products.id, orderItems.productId))
-    .groupBy(products.id).orderBy(desc(units), products.id).limit(8)
+export function loadBiggestCustomers() {
+  return db.select({ id: customers.id, name: customers.name, city: customers.city, revenue }).from(orders)
+    .innerJoin(customers, eq(customers.id, orders.customerId)).groupBy(customers.id).orderBy(desc(revenue)).limit(5)
 }
 
 export function loadRecentOrderRefs(limit: number) {
@@ -121,5 +121,5 @@ export async function loadCustomer(id: number) {
 
 export async function loadSlowReport() {
   await db.execute(sql`select pg_sleep(2)`)
-  return loadStatusCounts()
+  return db.select({ status: orders.status, orders: count(), revenue }).from(orders).groupBy(orders.status).orderBy(desc(revenue))
 }

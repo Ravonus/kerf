@@ -15,10 +15,10 @@ type Order = NonNullable<Awaited<ReturnType<typeof getRecentOrders>>>[number];
 export default function PerRow() {
   return (
     <>
-      <Title>Per row · Harbor</Title>
-      <h1 class="text-2xl font-semibold tracking-tight">Recent orders</h1>
+      <Title>Order feed · Backroom</Title>
+      <h1 class="text-2xl font-semibold tracking-tight">Order feed</h1>
       <div class="mt-6">
-        <Loads what="Recent orders">
+        <Loads what="The feed">
           <Orders />
         </Loads>
       </div>

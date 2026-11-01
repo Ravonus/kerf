@@ -17,8 +17,8 @@ export default function Login() {
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
       <Suspense><SignedIn /></Suspense>
       <Logo />
-      <h1 className="mt-8 text-3xl font-semibold tracking-tight">Welcome back</h1>
-      <p className="mt-2 text-muted">Sign in to see today's orders.</p>
+      <h1 className="mt-8 text-3xl font-semibold tracking-tight">Back to work</h1>
+      <p className="mt-2 text-muted">Sign in to see what came in overnight.</p>
       <SignInForm />
     </main>
   )

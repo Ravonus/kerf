@@ -8,7 +8,7 @@ export default createHandler(() => (
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <meta name="description" content="Harbor is where a small shop keeps track of its orders." />
+          <meta name="description" content="Backroom is where you run the shop: orders, customers and revenue in one place." />
           <link rel="icon" href="/icon.svg" type="image/svg+xml" />
           {assets}
         </head>

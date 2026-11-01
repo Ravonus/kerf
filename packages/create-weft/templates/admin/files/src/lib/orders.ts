@@ -24,9 +24,9 @@ export function viewOf(url: string): OrderView {
   const sort = sortKeys.find(key => key === asked.get('sort'))
   const status = statuses.find(key => key === asked.get('status'))
   return {
-    page: Number.isInteger(page) && page > 0 ? page : 1,
+    page: Number.isSafeInteger(page) && page > 0 && page < 1e6 ? page : 1,
     sort: sort ?? defaultView.sort,
-    dir: sort && asked.get('dir') === 'asc' ? 'asc' : sort ? 'desc' : defaultView.dir,
+    dir: asked.get('dir') === 'asc' ? 'asc' : 'desc',
     status: status ?? '',
     q: (asked.get('q') ?? '').trim().slice(0, 100),
   }

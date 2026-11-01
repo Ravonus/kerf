@@ -8,7 +8,7 @@ import { StatusSelect } from '@/components/status-select'
 import { currentUser } from '@/server/auth'
 import { date, loadOrder, money } from '@/server/data'
 
-export const metadata: Metadata = { title: 'Order' }
+export const generateMetadata = async ({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> => ({ title: `Order #${(await params).id}` })
 
 async function Order({ params }: { params: Promise<{ id: string }> }) {
   const [, { id: raw }] = await Promise.all([currentUser(), params])

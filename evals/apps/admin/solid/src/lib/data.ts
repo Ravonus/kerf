@@ -2,14 +2,15 @@ import { action, query } from "@solidjs/router";
 
 import { loadViewer, signIn, signOut } from "~/server/account";
 import {
+  loadBiggestCustomers,
   loadCustomer,
   loadOrder,
   loadOrders,
   loadOverview,
+  loadReach,
   loadRecentOrders,
   loadReport,
-  loadStatusCounts,
-  loadTopCustomers,
+  loadTopCities,
   markOrdersShipped,
   setOrderStatus,
 } from "~/server/orders";
@@ -18,8 +19,9 @@ export const getViewer = query(loadViewer, "viewer");
 export const getOverview = query(loadOverview, "overview");
 export const getOrders = query(loadOrders, "orders");
 export const getOrder = query(loadOrder, "order-detail");
-export const getStatusCounts = query(loadStatusCounts, "status-counts");
-export const getTopCustomers = query(loadTopCustomers, "top-customers");
+export const getReach = query(loadReach, "reach");
+export const getTopCities = query(loadTopCities, "top-cities");
+export const getBiggestCustomers = query(loadBiggestCustomers, "biggest-customers");
 export const getRecentOrders = query(loadRecentOrders, "recent-orders");
 export const getCustomer = query(loadCustomer, "customer");
 export const getReport = query(loadReport, "report");

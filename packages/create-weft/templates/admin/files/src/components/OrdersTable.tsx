@@ -30,7 +30,7 @@ export function OrdersTable({ view }: { view: OrderView }) {
 
   const ship = async (keys: string[]) => {
     try {
-      await markShipped({ ids: keys.map(Number) })
+      await markShipped({ ids: keys.map(Number), view: { ...view } })
       selected.value = {}
       toast.show({ tone: 'positive', title: keys.length === 1 ? '1 order marked shipped' : `${keys.length} orders marked shipped` })
     } catch {

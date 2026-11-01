@@ -40,10 +40,10 @@ export const recentOrderIds = query({
   tags: ['orders'],
   auth: 'user',
   run: async ({ ctx }) => {
-    const rows = await ctx.db.select({ id: orders.id, customerId: orders.customerId, status: orders.status, totalCents: orders.totalCents }).from(orders)
+    const rows = await ctx.db.select({ id: orders.id, customerId: orders.customerId, status: orders.status, totalCents: orders.totalCents, createdAt: orders.createdAt }).from(orders)
       .orderBy(desc(orders.createdAt), desc(orders.id))
       .limit(50)
-    return rows
+    return rows.map(row => ({ ...row, createdAt: row.createdAt.toISOString() }))
   },
 })
 
