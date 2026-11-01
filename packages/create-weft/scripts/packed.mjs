@@ -103,12 +103,27 @@ async function mediaServed(app, port, log) {
   log('video upload encoded and served: pass')
 }
 
+/** Preloaded into the built server of the pay app: a request that leaves this machine fails the gate instead of being sent. */
+const LOOPBACK_ONLY = `const real = globalThis.fetch
+globalThis.fetch = (input, init) => {
+  const { hostname } = new URL(input?.url ?? input)
+  if (!['127.0.0.1', 'localhost', '[::1]'].includes(hostname)) throw new Error('no-network: refused a request to ' + hostname)
+  return real(input, init)
+}
+`
+
 /** The add path, a page that sells, and a report only a buyer may read. The rail talks to `mock`, a local stand-in for Stripe. */
 async function payApp(app, weft, mock, log) {
   await sh(weft, ['add', 'pay'], app)
   const config = join(app, 'weft.config.ts')
-  writeFileSync(config, readFileSync(config, 'utf8').replace('stripe()', `stripe({ api: 'http://127.0.0.1:${mock}' })`))
+  const text = readFileSync(config, 'utf8')
+  const pointed = text.replace(/\b(\w*[sS]tripe)\(\)/, `$1({ api: 'http://127.0.0.1:${mock}' })`)
+  if (pointed === text) throw new Error(`pay: no Stripe plugin call to point at the mock in:\n${text}`) // never fall through to the real API
+  writeFileSync(config, pointed)
   await sh(weft, ['plugins', 'approve', '--all'], app)
+  if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) await sh(weft, ['plugins', 'sync'], app)
+  if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) throw new Error('pay: the rail is not pointed at the mock')
+  writeFileSync(join(app, 'no-network.mjs'), LOOPBACK_ONLY)
   writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
   writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from 'weft/pay'
 import { pro } from '#/pay/catalog'
@@ -223,7 +238,7 @@ await pool(apps.filter(a => !only || a.name === only), jobs(), async ({ name, op
   const envFile = join(app, '.env')
   const env = existsSync(envFile) ? parseEnv(readFileSync(envFile, 'utf8')) : {}
   const port = 5199 + i
-  const server = spawn(process.execPath, ['.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port), BETTER_AUTH_URL: `http://localhost:${port}` }, stdio: 'ignore' })
+  const server = spawn(process.execPath, [...(pay ? ['--import', './no-network.mjs'] : []), '.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port), BETTER_AUTH_URL: `http://localhost:${port}` }, stdio: 'ignore' })
   try {
     let status
     for (let i = 0; i < 80 && !status; i++) {

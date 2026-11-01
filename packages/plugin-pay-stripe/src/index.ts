@@ -31,6 +31,7 @@ const STATES: Record<string, PurchaseState> = {
   active: 'active', trialing: 'trial', past_due: 'grace', unpaid: 'billing-retry', paused: 'paused', canceled: 'expired', incomplete_expired: 'expired', incomplete: 'pending',
 }
 
+const API = 'https://api.stripe.com'
 const encoder = new TextEncoder()
 const toHex = (b: ArrayBuffer) => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('')
 
@@ -105,11 +106,12 @@ function normalise(event: any): RailEvent | null {
 }
 
 export function stripeRail(options: StripeOptions = {}): PayRail {
-  const { prices = {}, api = 'https://api.stripe.com', apiVersion = '2025-09-30.clover', tolerance = 300 } = options
+  const { prices = {}, api = API, apiVersion = '2025-09-30.clover', tolerance = 300 } = options
   const fetcher = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
   const secret = () => {
     const key = options.secretKey ?? process.env.STRIPE_SECRET_KEY
     if (!key) throw new PayError('PAY003', '`STRIPE_SECRET_KEY` is not set on the server', 500)
+    if (api === API && /placeholder/i.test(key)) throw new PayError('PAY003', '`STRIPE_SECRET_KEY` is still the placeholder `weft add pay` wrote: nothing was sent to Stripe', 500) // a mock may take one
     return key
   }
 

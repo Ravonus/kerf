@@ -7,7 +7,7 @@ import { product } from 'weft/pay'
 import { stripeRail } from '../src/index'
 
 const SECRET = 'whsec_placeholder_for_tests'
-const KEY = 'sk_test_placeholder'
+const KEY = 'sk_test_mocked'
 
 interface Call { url: string; headers: Record<string, string>; body: URLSearchParams }
 
@@ -102,6 +102,16 @@ describe('checkout', () => {
     await expect(stripeRail({ fetch: fetcher }).checkout(request)).rejects.toMatchObject({ code: 'PAY003' })
     process.env.STRIPE_SECRET_KEY = old
     expect(calls).toEqual([])
+  })
+
+  test('a placeholder key never leaves for the real API, and a mock may take one', async () => {
+    const { calls, fetcher } = mock()
+    const placeholder = { secretKey: 'sk_test_placeholder' }
+    await expect(rail({ fetch: fetcher, ...placeholder }).checkout(request)).rejects.toMatchObject({ code: 'PAY003' })
+    expect(calls).toEqual([])
+    const local = vi.fn(async () => new Response('{"url":"http://127.0.0.1:1/s"}')) as unknown as typeof fetch
+    await rail({ fetch: local, api: 'http://127.0.0.1:1', ...placeholder }).checkout(request)
+    expect(local).toHaveBeenCalledOnce()
   })
 
   test('the portal and a refund post to their own endpoints', async () => {
