@@ -1,3 +1,4 @@
+// @vitest-environment node
 // What an app built on the kit prints: nothing. Every warning here would land in a stranger's terminal, for code they
 // didn't write and can't fix.
 import { readdirSync, readFileSync } from 'node:fs'
