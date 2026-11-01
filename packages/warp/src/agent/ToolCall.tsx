@@ -1,4 +1,4 @@
-import { IconAlert, IconCheck, IconRight, IconX } from '@weft/icons'
+import { AlertIcon, CheckIcon, RightIcon, XIcon } from '@weft/icons'
 import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft/ui-core'
 import { derived, onMount, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
@@ -55,15 +55,15 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
         <summary ref={(n: any) => (head = n)}>
           <span>
             {st.value === 'running' && <span data-scope="spinner" style="--_size:13px;color:var(--warp-color-accent-text)"></span>}
-            {st.value === 'done' && <IconCheck style="color:var(--warp-color-positive-text)" />}
-            {st.value === 'approval' && <IconAlert style="color:var(--warp-color-caution-text)" />}
-            {(st.value === 'failed' || st.value === 'denied') && <IconX style="color:var(--warp-color-critical-text)" />}
+            {st.value === 'done' && <CheckIcon style="color:var(--warp-color-positive-text)" />}
+            {st.value === 'approval' && <AlertIcon style="color:var(--warp-color-caution-text)" />}
+            {(st.value === 'failed' || st.value === 'denied') && <XIcon style="color:var(--warp-color-critical-text)" />}
           </span>
           <span data-part="name">{call.name}</span>
           <span data-part="sr-only">{meta.value.word}</span>
           <span data-part="arg" aria-hidden="true">{call.args}</span>
           <span data-part="dur" data-numeric="">{meta.value.status}</span>
-          <IconRight data-part="chev" />
+          <RightIcon data-part="chev" />
         </summary>
         <div data-part="io">
           <span>Input</span>
@@ -77,7 +77,7 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
             <textarea aria-labelledby={`${id}-a`} spellcheck="false" value={args.value} onInput={e => (args.value = (e.currentTarget as HTMLTextAreaElement).value)}></textarea>
             {diff.value && <section data-part="io"><span>Your edit</span><pre>{diff.value}</pre></section>}
             <div>
-              <Button size="sm" ref={(n: any) => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><IconCheck />Approve</Button>
+              <Button size="sm" ref={(n: any) => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><CheckIcon />Approve</Button>
               <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>Deny</Button>
               {alwaysAllow !== undefined && <label><input type="checkbox" checked={always.value} onChange={e => (always.value = (e.currentTarget as HTMLInputElement).checked)} /> {alwaysAllow}</label>}
             </div>

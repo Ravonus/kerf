@@ -1,4 +1,4 @@
-import { IconCheck } from '@weft/icons'
+import { CheckIcon } from '@weft/icons'
 import { installSweep } from '@weft/ui-core'
 import { derived, onMount } from 'weft'
 import { Icon, type IconRef } from './Icon'
@@ -17,7 +17,7 @@ export function Chip({ pressed, count, icon, children, ...rest }: { pressed?: bo
   return (
     <button type="button" data-scope="chip" data-sweep="" data-phase="idle" aria-pressed={pressed ? 'true' : 'false'} {...rest}>
       {sweepParts()}
-      {pressed ? <IconCheck data-part="check" /> : glyph.value && <Icon name={glyph.value} />}
+      {pressed ? <CheckIcon data-part="check" /> : glyph.value && <Icon name={glyph.value} />}
       {children}
       {count !== undefined && <span data-part="count">{count}</span>}
     </button>

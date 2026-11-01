@@ -1,4 +1,4 @@
-import { IconDown, IconGlobe, IconSearch } from '@weft/icons'
+import { DownIcon, GlobeIcon, SearchIcon } from '@weft/icons'
 import { caretAfter, currencyCodes, currencySymbol, digitsOf, displayName, formatPhone, inferCountry, languageCodes, listKey, localZone, matchZone, nationalLength, PHONE_COUNTRIES, regionCodes, regionOf, uid, zoneCity, zoneRows, type ChangeReason, type CountryCode, type E164, type IsoDate, type PhoneCountry, type TimeZoneId } from '@weft/ui-core'
 import { derived, flush, onMount, state, untrack } from 'weft'
 import { Field } from './Field'
@@ -44,7 +44,7 @@ function SearchList({ label, placeholder, rows, value, match, onPick, count }: {
   return (
     <div class="tz-pop">
       <label data-part="search">
-        <IconSearch />
+        <SearchIcon />
         <span class="sr">{label}</span>
         <input type="search" role="combobox" data-initial="" aria-expanded="true" aria-controls={id} aria-autocomplete="list" aria-activedescendant={shown.value.length ? `${id}-${active.value}` : undefined} placeholder={placeholder} onInput={e => { q.value = (e.currentTarget as HTMLInputElement).value; active.value = 0 }} onKeyDown={onKey} />
       </label>
@@ -85,7 +85,7 @@ function ListField({ value, defaultValue, onValueChange, open, defaultOpen, onOp
       control={() => (
         <>
           <button ref={(n: any) => (trigger = n)} type="button" data-part="pick" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} aria-label={`${label}, ${shown.value || 'none'}`} disabled={disabled} onClick={() => pop.set(!pop.value)}>
-            <span>{shown.value}</span><IconDown />
+            <span>{shown.value}</span><DownIcon />
           </button>
           <Hidden name={name} value={() => v.value ?? ''} />
         </>
@@ -111,7 +111,7 @@ export function TimeZoneSelect({ referenceDate, zones, showOffset = true, ...pro
     const row = (z: (typeof list)[number]): Row => ({ key: z.zone, main: z.city, sub: z.region, meta: showOffset ? z.offset : undefined, pin: z.zone === local ? 'Local' : undefined, search: z.search })
     return [...list.filter(z => z.zone === local), ...list.filter(z => z.zone !== local)].map(row)
   }
-  return <ListField icon={IconGlobe} title="Choose a time zone" search="City, zone or +5:30" text={v => zoneCity(v)} rows={rows} match={(r, q) => matchZone(matches.get(r.key)!, q)} count={(n, q) => (q ? `${n} zone${n === 1 ? '' : 's'}` : `${n} zones · offsets for today`)} {...props} />
+  return <ListField icon={GlobeIcon} title="Choose a time zone" search="City, zone or +5:30" text={v => zoneCity(v)} rows={rows} match={(r, q) => matchZone(matches.get(r.key)!, q)} count={(n, q) => (q ? `${n} zone${n === 1 ? '' : 's'}` : `${n} zones · offsets for today`)} {...props} />
 }
 
 export type CodeSelectProps = RichFieldProps & Bindable<string | null> & Openable & { options?: string[]; preferred?: string[] }
@@ -120,13 +120,13 @@ const pinned = (list: string[], first?: string[]) => (first ? [...first, ...list
 /** CountrySelect (04 §3): names from Intl.DisplayNames in the UI locale; `preferred` pins items. */
 export function CountrySelect({ options, preferred, ...props }: CodeSelectProps) {
   const rows = (locale: string): Row[] => pinned(options ?? regionCodes(), preferred).map(c => { const main = displayName('region', c, locale); return { key: c, code: c, main, search: `${main} ${c}`.toLowerCase() } })
-  return <ListField icon={IconGlobe} title="Choose a country" search="Search countries" text={(v, l) => displayName('region', v, l)} rows={rows} {...props} />
+  return <ListField icon={GlobeIcon} title="Choose a country" search="Search countries" text={(v, l) => displayName('region', v, l)} rows={rows} {...props} />
 }
 
 /** LanguageSelect (04 §3): each language with its endonym, because people look for their own language in their own script. */
 export function LanguageSelect({ options, preferred, endonyms = true, ...props }: CodeSelectProps & { endonyms?: boolean }) {
   const rows = (locale: string): Row[] => pinned(options ?? languageCodes(), preferred).map(c => { const main = displayName('language', c, locale), own = displayName('language', c, c); return { key: c, main, sub: endonyms && own !== main ? `· ${own}` : undefined, search: `${main} ${own} ${c}`.toLowerCase() } })
-  return <ListField icon={IconGlobe} title="Choose a language" search="Search languages" text={(v, l) => displayName('language', v, l)} rows={rows} {...props} />
+  return <ListField icon={GlobeIcon} title="Choose a language" search="Search languages" text={(v, l) => displayName('language', v, l)} rows={rows} {...props} />
 }
 
 /** CurrencySelect (04 §3): "Euro · EUR · €". */
@@ -219,7 +219,7 @@ export function PhoneField({ value, defaultValue, onValueChange, country, defaul
       control={({ id, describedby }) => (
         <div data-part="body">
           <button ref={(n: any) => (button = n)} type="button" data-part="country" aria-haspopup="dialog" aria-expanded={pop.value ? 'true' : 'false'} disabled={disabled} onClick={() => pop.set(!pop.value)}>
-            <span aria-hidden="true"><b>{code.value.code}</b>+{code.value.dial}</span><span class="sr">Country: {name_.value}, +{code.value.dial}</span><IconDown />
+            <span aria-hidden="true"><b>{code.value.code}</b>+{code.value.dial}</span><span class="sr">Country: {name_.value}, +{code.value.dial}</span><DownIcon />
           </button>
           <input ref={(n: any) => (input = n)} data-part="input" id={id} type="tel" inputmode="tel" autocomplete="tel-national" placeholder={placeholder.value} aria-describedby={describedby} value={text.value} disabled={disabled} onInput={e => { const el = e.currentTarget as HTMLInputElement; sync(el.value, el.selectionStart) }} onBlur={onBlur} onPaste={onPaste} />
           <Hidden name={name} value={() => v.value ?? ''} />

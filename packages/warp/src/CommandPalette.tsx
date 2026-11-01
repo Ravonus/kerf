@@ -1,4 +1,4 @@
-import { IconSearch } from '@weft/icons'
+import { SearchIcon } from '@weft/icons'
 import { dialog, installSweep, listKey, marked, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
 import { derived, flush, onMount, state, untrack, watch } from 'weft'
 import { bindable, type Openable } from './bind'
@@ -83,7 +83,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, onRu
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="" data-phase="idle" data-hold={flag.value ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
-        <IconSearch />
+        <SearchIcon />
         <label for={`${id}-in`} data-part="sr-only">{label}</label>
         <input ref={(n: any) => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={rows.value.length ? `${id}-${active.value}` : undefined} placeholder={placeholder} autocomplete="off" spellcheck={false} onInput={(e: any) => (typed.value = e.currentTarget.value)} onKeyDown={onKey} />
         <Kbd>esc</Kbd>

@@ -1,4 +1,4 @@
-import { IconKey } from '@weft/icons'
+import { KeyIcon } from '@weft/icons'
 import { agoText, usedWithinDay } from '@weft/ui-core'
 import { derived, state, type State } from 'weft'
 import { Badge } from '../Badge'
@@ -126,8 +126,8 @@ export function ApiKeys({ keys, kind = 'test', now, scopes = SCOPES, expiries = 
             )}
         </Modal>
       )}
-      <TypeToConfirm open={typedOpen} glyph={IconKey} title={`Revoke “${revoking.value?.name}”?`} description="This key was used in the last 24 hours. Anything using it stops working right away." confirmText={revoking.value?.name ?? ''} action="Revoke key" onConfirm={gone} />
-      <ConfirmDialog open={plainOpen} glyph={IconKey} tone="critical" title={`Revoke “${revoking.value?.name}”?`} description="Anything still using it stops working right away." action="Revoke key" onConfirm={gone} />
+      <TypeToConfirm open={typedOpen} glyph={KeyIcon} title={`Revoke “${revoking.value?.name}”?`} description="This key was used in the last 24 hours. Anything using it stops working right away." confirmText={revoking.value?.name ?? ''} action="Revoke key" onConfirm={gone} />
+      <ConfirmDialog open={plainOpen} glyph={KeyIcon} tone="critical" title={`Revoke “${revoking.value?.name}”?`} description="Anything still using it stops working right away." action="Revoke key" onConfirm={gone} />
     </div>
   )
 }

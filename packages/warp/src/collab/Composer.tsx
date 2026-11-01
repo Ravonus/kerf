@@ -1,4 +1,4 @@
-import { IconAt, IconCheck, IconPaperclip, IconSend, IconSmile, IconX } from '@weft/icons'
+import { AtIcon, CheckIcon, PaperclipIcon, SendIcon, SmileIcon, XIcon } from '@weft/icons'
 import { announce, insertMention, installSweep, mentionQuery, nextIndex, uid, type Peer } from '@weft/ui-core'
 import { derived, onMount, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
@@ -111,8 +111,8 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
         <div data-part="files">
           {(files ?? []).map(f => (
             <span key={f.id} data-part="file" data-arrive="">
-              <IconCheck /><span>{f.name}</span>
-              <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label={`Remove ${f.name}`} onClick={() => onRemoveFile?.(f)} />
+              <CheckIcon /><span>{f.name}</span>
+              <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label={`Remove ${f.name}`} onClick={() => onRemoveFile?.(f)} />
             </span>
           ))}
         </div>
@@ -121,7 +121,7 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
         <div data-part="quote-draft" role="group" aria-label={`Quoting ${draft.value.author}`} data-arrive="">
           <span data-part="quote-by">{draft.value.author} · {draft.value.time}</span>
           <span data-part="quote-text">{draft.value.text}</span>
-          <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label="Remove quote" onClick={() => { removeQuote(); ta!.focus(); announce(ta!.ownerDocument, 'Quote removed') }} />
+          <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label="Remove quote" onClick={() => { removeQuote(); ta!.focus(); announce(ta!.ownerDocument, 'Quote removed') }} />
         </div>
       )}
       <label data-part="sr-only" for={id}>{label}</label>
@@ -139,12 +139,12 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
         onBlur={closeList}
       ></textarea>
       <div data-part="row">
-        {canAttach.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Attach" data-icon-only="" onClick={() => onAttach?.()}><IconPaperclip /></Button>}
-        {canEmoji.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Emoji" data-icon-only="" onClick={() => onEmoji?.(insert)}><IconSmile /></Button>}
-        {hasPeople.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Mention someone" data-icon-only="" onClick={() => { insert(`${ta!.value && !/\s$/.test(ta!.value) ? ' ' : ''}@`); scan() }}><IconAt /></Button>}
+        {canAttach.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Attach" data-icon-only="" onClick={() => onAttach?.()}><PaperclipIcon /></Button>}
+        {canEmoji.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Emoji" data-icon-only="" onClick={() => onEmoji?.(insert)}><SmileIcon /></Button>}
+        {hasPeople.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Mention someone" data-icon-only="" onClick={() => { insert(`${ta!.value && !/\s$/.test(ta!.value) ? ' ' : ''}@`); scan() }}><AtIcon /></Button>}
         <span data-part="spacer"></span>
         <span data-part="hint" id={`${id}-h`} data-state={hint.value ? 'error' : undefined}>{hint.value ?? (compact ? '' : HINT)}</span>
-        <button type="button" data-scope="button" data-part="send" data-icon-only="" aria-label="Send" onClick={send}><IconSend /></button>
+        <button type="button" data-scope="button" data-part="send" data-icon-only="" aria-label="Send" onClick={send}><SendIcon /></button>
       </div>
       {open.value && (
         <div data-scope="suggest" role="listbox" id={`${id}-l`} aria-label="Mention">

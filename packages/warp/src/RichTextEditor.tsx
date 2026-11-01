@@ -1,4 +1,4 @@
-import { IconCode, IconCodeBlock, IconLink, IconList, IconListOrdered, IconQuote, IconUndo } from '@weft/icons'
+import { CodeIcon, CodeBlockIcon, LinkIcon, ListIcon, ListOrderedIcon, QuoteIcon, UndoIcon } from '@weft/icons'
 import { comboPopup, htmlToMarkdown, keyboardDock, markdownToHtml, nextIndex, richText, sanitizeHtml, uid, type MentionItem, type RichTextHandle } from '@weft/ui-core'
 import { derived, flush, onCleanup, state, untrack, watch } from 'weft'
 import { bindable, type Bindable } from './bind'
@@ -36,12 +36,12 @@ const TOOLS: Record<Mark | Block, Tool> = {
   bold: { cmd: 'bold', label: 'Bold', tip: 'Bold · ⌘B', glyph: () => 'B', style: 'font-weight:700', toggles: true },
   italic: { cmd: 'italic', label: 'Italic', tip: 'Italic · ⌘I', glyph: () => 'I', style: 'font-style:italic;font-family:Georgia,serif;font-weight:400;font-size:16px', toggles: true },
   strike: { cmd: 'strikeThrough', label: 'Strikethrough', tip: 'Strikethrough', glyph: () => 'S', style: 'text-decoration:line-through;font-weight:500', toggles: true },
-  code: { cmd: 'code', label: 'Inline code', tip: 'Code · `text`', glyph: () => <IconCode />, toggles: true },
-  link: { cmd: 'link', label: 'Link', tip: 'Link · ⌘K', glyph: () => <IconLink />, toggles: true },
-  ul: { cmd: 'insertUnorderedList', label: 'Bulleted list', tip: 'Bullets · - ', glyph: () => <IconList />, toggles: true },
-  ol: { cmd: 'insertOrderedList', label: 'Numbered list', tip: 'Numbers · 1. ', glyph: () => <IconListOrdered />, toggles: true },
-  quote: { cmd: 'blockquote', label: 'Quote', tip: 'Quote · > ', glyph: () => <IconQuote />, toggles: true },
-  codeblock: { cmd: 'pre', label: 'Code block', tip: 'Code block · ```', glyph: () => <IconCodeBlock />, toggles: true },
+  code: { cmd: 'code', label: 'Inline code', tip: 'Code · `text`', glyph: () => <CodeIcon />, toggles: true },
+  link: { cmd: 'link', label: 'Link', tip: 'Link · ⌘K', glyph: () => <LinkIcon />, toggles: true },
+  ul: { cmd: 'insertUnorderedList', label: 'Bulleted list', tip: 'Bullets · - ', glyph: () => <ListIcon />, toggles: true },
+  ol: { cmd: 'insertOrderedList', label: 'Numbered list', tip: 'Numbers · 1. ', glyph: () => <ListOrderedIcon />, toggles: true },
+  quote: { cmd: 'blockquote', label: 'Quote', tip: 'Quote · > ', glyph: () => <QuoteIcon />, toggles: true },
+  codeblock: { cmd: 'pre', label: 'Code block', tip: 'Code block · ```', glyph: () => <CodeBlockIcon />, toggles: true },
 }
 const SLASH: SlashCommand[] = [
   { id: 'h2', label: 'Heading', hint: '#', run: e => e.run('h2') },
@@ -171,7 +171,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
               <div ref={(n: any) => (bar = n)} role="toolbar" aria-label="Formatting" aria-controls={`${id}-c`} popover={toolbar === 'bubble' ? 'manual' : undefined} data-bubble={toolbar === 'bubble' ? '' : undefined} onKeyDown={onToolKey} onPointerDown={e => { if ((e.target as Element).closest('[data-part="tool"]')) e.preventDefault() }}>
                 {tools.value.map((g, i) => <span key={g[0].cmd} style="display:contents">{i > 0 && <span data-part="sep"></span>}{g.map(t => <Tool key={t.cmd} tool={t} />)}</span>)}
                 <span data-part="sep"></span>
-                <button type="button" data-part="tool" tabindex="-1" aria-label="Undo" title="Undo · ⌘Z" onClick={() => handle!.run('undo')}><IconUndo /></button>
+                <button type="button" data-part="tool" tabindex="-1" aria-label="Undo" title="Undo · ⌘Z" onClick={() => handle!.run('undo')}><UndoIcon /></button>
               </div>
             )}
             {linking.value && (

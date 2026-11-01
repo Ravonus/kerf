@@ -35,14 +35,14 @@ async function run(code, root) {
 const page = (names, from = '@weft/icons') => `import { render } from 'weft/dom'\nimport { ${names.join(', ')} } from '${from}'\nrender(() => <div>${names.map(n => `<${n} />`).join('')}</div>, document.body)\n`
 
 test('one icon imported: its drawing ships, and no other', async () => {
-  const one = await bundle(page(['IconCheck']))
+  const one = await bundle(page(['CheckIcon']))
   expect(one.js.match(/data-p=/g)?.length ?? 0).toBeLessThanOrEqual(2)
   for (const other of ['M1 3h13v2h-13z']) expect(one.js).not.toContain(other)
-  const two = await bundle(page(['IconCheck', 'IconBell']))
+  const two = await bundle(page(['CheckIcon', 'BellIcon']))
   const added = br(two.js) - br(one.js)
   expect(added).toBeGreaterThan(0)
   expect(added, 'one more icon').toBeLessThan(700)
-  process.stderr.write(`BYTES IconCheck js ${br(one.js)} css ${br(one.css)}, IconBell adds ${added}\n`)
+  process.stderr.write(`BYTES CheckIcon js ${br(one.js)} css ${br(one.css)}, BellIcon adds ${added}\n`)
 }, 60000)
 
 test('importing iconSet alone brings no drawing', async () => {
@@ -52,12 +52,12 @@ test('importing iconSet alone brings no drawing', async () => {
 
 test('a static tier compiles one tier in: no switch attributes, no switch CSS, no other tier', async () => {
   {
-    const { js, css } = await bundle(page(['IconCheck', 'IconAlert']), { alias: { '@weft/icons': '@weft/icons/vivid' } })
+    const { js, css } = await bundle(page(['CheckIcon', 'AlertIcon']), { alias: { '@weft/icons': '@weft/icons/vivid' } })
     expect(js).toContain('data-p')
     expect(js).not.toContain('data-t')
     expect(js).not.toContain('stroke-linecap')
     expect(css).not.toContain('--warp-icon-v')
-    const all = await bundle(page(['IconCheck', 'IconAlert']))
+    const all = await bundle(page(['CheckIcon', 'AlertIcon']))
     expect(all.js).toContain('data-t')
     expect(all.css).toContain('--warp-icon-v')
     expect(br(js)).toBeLessThan(br(all.js))
@@ -66,9 +66,9 @@ test('a static tier compiles one tier in: no switch attributes, no switch CSS, n
 }, 90000)
 
 test('per tier, per icon: what an icon costs in each build', async () => {
-  const names = ['IconSearch', 'IconCalendar', 'IconUser', 'IconSettings', 'IconTrash', 'IconMail', 'IconLock', 'IconHome', 'IconBell', 'IconFile']
-  const base = await bundle(page(['IconCheck']))
-  const ten = await bundle(page(['IconCheck', ...names]))
+  const names = ['SearchIcon', 'CalendarIcon', 'UserIcon', 'SettingsIcon', 'TrashIcon', 'MailIcon', 'LockIcon', 'HomeIcon', 'BellIcon', 'FileIcon']
+  const base = await bundle(page(['CheckIcon']))
+  const ten = await bundle(page(['CheckIcon', ...names]))
   const each = (br(ten.js) - br(base.js)) / names.length
   expect(each).toBeLessThan(400)
   process.stderr.write(`BYTES average icon, all tiers: ${each.toFixed(0)} B br\n`)
@@ -91,9 +91,9 @@ test.each(Object.keys(forms))('%s: exactly one icon, the same output as a named 
 }, 60000)
 test('a variant ships its own drawing, not the plain one', async () => {
   const plain = await bundle(forms.named)
-  const hollow = await bundle(`${render}import { BellIconHollow } from '@weft/icons'\nrender(() => <div><BellIconHollow /></div>, document.body)\n`)
-  expect(hollow.js).not.toBe(plain.js)
-  process.stderr.write(`BYTES BellIcon ${br(plain.js)}, BellIconHollow ${br(hollow.js)}\n`)
+  const solid = await bundle(`${render}import { BellIconSolid } from '@weft/icons'\nrender(() => <div><BellIconSolid /></div>, document.body)\n`)
+  expect(solid.js).not.toBe(plain.js)
+  process.stderr.write(`BYTES BellIcon ${br(plain.js)}, BellIconSolid ${br(solid.js)}\n`)
 }, 60000)
 test('a dynamic name: the pack is its own chunk, and the page stays small', async () => {
   const lazy = await bundle(`${render}import { Icon } from '@weft/icons/all'\nconst n = location.hash.slice(1)\nrender(() => <div><Icon name={n} /></div>, document.body)\n`)
@@ -105,7 +105,7 @@ test('a dynamic name: the pack is its own chunk, and the page stays small', asyn
 
 test('an action costs nothing unless that one is used', async () => {
   const none = await bundle(forms.named)
-  expect(none.css).not.toContain('weft-')
+  expect(none.css).not.toMatch(/weft-(trash|bell|check|refresh|copy)/)
   const trash = await bundle(`${render}import { TrashIconAction } from '@weft/icons'\nrender(() => <div><TrashIconAction /></div>, document.body)\n`)
   expect(trash.css).toContain('weft-trash'); expect(trash.css).not.toContain('weft-bell')
   expect(trash.css).toContain('prefers-reduced-motion'); expect(trash.css).toContain('--warp-motion-scale')

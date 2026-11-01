@@ -1,4 +1,4 @@
-import { IconCheck, IconFileText } from '@weft/icons'
+import { CheckIcon, FileTextIcon } from '@weft/icons'
 import { announce, uid } from '@weft/ui-core'
 import { derived, state, untrack, watch } from 'weft'
 import { Badge } from '../Badge'
@@ -26,7 +26,7 @@ const COPY: Record<SignStatus, string> = {
 /** The gate's status (09 §2.4): caution, positive, critical, neutral. */
 export function SignGateBadge({ status }: { status: SignStatus }) {
   const s = derived(() => status)
-  return <Badge tone={TONES[s.value]} data-state={s.value}>{s.value === 'signed' ? <IconCheck /> : <IconFileText />}{LABELS[s.value]}</Badge>
+  return <Badge tone={TONES[s.value]} data-state={s.value}>{s.value === 'signed' ? <CheckIcon /> : <FileTextIcon />}{LABELS[s.value]}</Badge>
 }
 
 export interface SignGateProps {
@@ -77,7 +77,7 @@ export function SignGate({ status, src, title, description, signerTitle = 'Signe
       {s.value !== 'signed' && (
         <section data-part="blocker" aria-labelledby={`${id}-t`}>
           <div data-scope="stack" data-align="center">
-            <Mark tone={TONES[s.value] === 'critical' ? 'critical' : 'caution'}><IconFileText /></Mark>
+            <Mark tone={TONES[s.value] === 'critical' ? 'critical' : 'caution'}><FileTextIcon /></Mark>
             <h4 id={`${id}-t`} aria-level={level}>{title}</h4>
             <p>{s.value === 'unsigned' && description !== undefined ? description : COPY[s.value]}</p>
             {inline.value ? <iframe data-scope="pay-frame" title={signerTitle} src={src} height="560" width="100%"></iframe>

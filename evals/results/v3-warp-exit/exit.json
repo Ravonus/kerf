@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "date": "2026-11-01T01:38:26.809Z",
+  "date": "2026-11-01T02:17:40.093Z",
   "hidden": {
     "ok": true,
     "warp": "23/23",
@@ -11,19 +11,19 @@
           "domMutations": 2,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 61.29
+          "wallMs": 58.85
         },
         "price-push": {
           "domMutations": 1,
           "commits": 9,
           "renderMs": 0,
-          "wallMs": 0.51
+          "wallMs": 0.45
         },
         "type-3-chars": {
           "domMutations": 158,
           "commits": 33,
           "renderMs": 0,
-          "wallMs": 30.45
+          "wallMs": 27.79
         }
       },
       "weft": {
@@ -31,7 +31,7 @@
           "domMutations": 1,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 53.7
+          "wallMs": 52.41
         },
         "price-push": {
           "domMutations": 1,
@@ -43,7 +43,7 @@
           "domMutations": 152,
           "commits": 21,
           "renderMs": 0,
-          "wallMs": 18.25
+          "wallMs": 17.61
         }
       }
     },
@@ -57,14 +57,14 @@
   "size": {
     "ok": true,
     "warp": {
-      "js": 12699,
-      "css": 13331
+      "js": 12720,
+      "css": 13394
     },
     "weft": {
       "js": 4923,
       "css": 0
     },
-    "kit": 7776,
+    "kit": 7797,
     "budget": {
       "app": 10240,
       "kitAllowance": 7168,

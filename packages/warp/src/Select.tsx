@@ -1,4 +1,4 @@
-import { IconDown } from '@weft/icons'
+import { DownIcon } from '@weft/icons'
 import { Field, type FieldProps } from './Field'
 import '@weft/ui-core/styles/inputs/choice.css' // the native select and the field's chevron
 
@@ -20,7 +20,7 @@ export function Select({ options, placeholder, ...props }: FieldProps & { option
     <Field
       {...props}
       filled
-      end={<span data-part="indicator" aria-hidden="true"><IconDown /></span>}
+      end={<span data-part="indicator" aria-hidden="true"><DownIcon /></span>}
       control={p => (
         <select data-part="input" id={p.id} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>
           {placeholder !== undefined && <option value="">{placeholder}</option>}

@@ -1,4 +1,4 @@
-import { IconX } from '@weft/icons'
+import { XIcon } from '@weft/icons'
 import { flush, onCleanup, state, untrack } from 'weft'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
@@ -88,7 +88,7 @@ export function KeyValueEditor({ value, defaultValue, onValueChange, keyLabel = 
                       <tr key={rowId}>
                         <td><input aria-label={`${keyLabel}, row ${at + 1}`} value={held.value[at]?.key ?? ''} data-duplicate={held.value[at] && dup(held.value, at) ? '' : undefined} onInput={(e: any) => edit(at, 'key', e.currentTarget.value)} /></td>
                         <td><input aria-label={`${valueLabel}, row ${at + 1}`} value={held.value[at]?.value ?? ''} onInput={(e: any) => edit(at, 'value', e.currentTarget.value)} /></td>
-                        <td><button type="button" data-part="remove" aria-label={`Remove row ${at + 1}`} onClick={() => remove(at)}><IconX /></button></td>
+                        <td><button type="button" data-part="remove" aria-label={`Remove row ${at + 1}`} onClick={() => remove(at)}><XIcon /></button></td>
                       </tr>
                     ))}
                   </tbody>

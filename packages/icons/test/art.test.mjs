@@ -1,12 +1,15 @@
 // @vitest-environment node
 // The set holds to its rules (docs/design/warp/10-icons.md).
 import { readFileSync } from 'node:fs'
-import { gridOf, load } from '../scripts/build.mjs'
+import { load } from '../scripts/build.mjs'
 import { cells, outline } from '../scripts/draw.mjs'
+import { grid as  hollowGrid } from '../scripts/forms.mjs'
+import { auto, crescent } from '../scripts/style.mjs'
 import { names } from '../src/gen/names'
 
 const art = await load()
 const entries = Object.entries(art)
+const inked = g => g.map(r => r.map(c => (c === 'w' ? '#' : c)))
 
 test('the set is at least 500, with every warp and lemonstand name', () => {
   expect(names.length).toBeGreaterThanOrEqual(500)
@@ -21,7 +24,7 @@ test.each(entries)('%s: both outlines draw, and the pixels are 16×16 with ink',
     expect(body + weft, name).toMatch(/^M/)
     expect(body + weft, name).not.toMatch(/NaN|undefined/)
   }
-  const grid = gridOf(name, entry), { ink } = cells(grid)
+  const grid = inked(hollowGrid(name, entry)), { ink } = cells(grid)
   expect(ink).toMatch(/^M/)
   expect(grid).toHaveLength(16)
   expect(grid.flat().filter(c => c === '#').length, name).toBeGreaterThan(5)
@@ -30,16 +33,17 @@ test.each(entries)('%s: both outlines draw, and the pixels are 16×16 with ink',
 test('no two icons share a pixel drawing', () => {
   const seen = new Map()
   for (const [name, entry] of entries) {
-    const key = cells(gridOf(name, entry)).ink
+    const key = cells(inked(hollowGrid(name, entry))).ink
     expect(seen.get(key), `${name} repeats ${seen.get(key)}`).toBeUndefined()
     seen.set(key, name)
   }
 })
 
-test('the pixel tier reads without its shade: there is always more ink than shade', () => {
-  for (const [name, entry] of entries) {
-    const flat = gridOf(name, entry).flat()
-    expect(flat.filter(c => c === '+').length, name).toBeLessThan(flat.filter(c => c === '#').length)
+test('a crescent holds together: no loose cells, and none too small to read as shade', () => {
+  for (const [name, [spec]] of entries) {
+    const g = crescent(auto(spec)), on = (x, y) => g[y]?.[x] === '#', cells = g.flatMap((r, y) => r.flatMap((c, x) => (c === '#' ? [[x, y]] : [])))
+    expect(cells.length === 0 || cells.length >= 6, name).toBe(true)
+    for (const [x, y] of cells) expect(on(x - 1, y - 1) || on(x + 1, y - 1) || on(x - 1, y + 1) || on(x + 1, y + 1), name).toBe(true)
   }
 })
 

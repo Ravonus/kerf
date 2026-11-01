@@ -1,10 +1,10 @@
 // What the live pack's components share: glyphs from the specimen's 24 grid, and reading a prop that may be a plain
 // value, a weft State or Signal, or a getter (07 §4.5: `count={() => …}`, `items={inbox}`).
-import { IconAlert, IconAt, IconBell, IconBoard, IconBolt, IconCalendar, IconCam, IconCamOff, IconChat, IconCheck, IconComment, IconFlag, IconGrid, IconHand, IconLeave, IconLock, IconMic, IconMicOff, IconMore, IconPlus, IconPresent, IconRefresh, IconScreen, IconSignal, IconSmile, IconSpeaker, IconUsers, IconX, iconSet } from '@weft/icons'
+import { AlertIcon, AtIcon, BellIcon, BoardIcon, BoltIcon, CalendarIcon, CamIcon, CamOffIcon, ChatIcon, CheckIcon, CommentIcon, FlagIcon, GridIcon, HandIcon, LeaveIcon, LockIcon, MicIcon, MicOffIcon, MoreIcon, PlusIcon, PresentIcon, RefreshIcon, ScreenIcon, SignalIcon, SmileIcon, SpeakerIcon, UsersIcon, XIcon, iconSet } from '@weft/icons'
 import { hueOf } from '@weft/ui-core'
 import { Box, state, untrack, type State } from 'weft'
 
-const GLYPHS = { bell: IconBell, at: IconAt, comment: IconComment, flag: IconFlag, check: IconCheck, alert: IconAlert, cal: IconCalendar, more: IconMore, x: IconX, plus: IconPlus, lock: IconLock, refresh: IconRefresh, bolt: IconBolt, mic: IconMic, micoff: IconMicOff, cam: IconCam, camoff: IconCamOff, screen: IconScreen, hand: IconHand, smile: IconSmile, chat: IconChat, users: IconUsers, leave: IconLeave, signal: IconSignal, grid: IconGrid, speaker: IconSpeaker, present: IconPresent, board: IconBoard }
+const GLYPHS = { bell: BellIcon, at: AtIcon, comment: CommentIcon, flag: FlagIcon, check: CheckIcon, alert: AlertIcon, cal: CalendarIcon, more: MoreIcon, x: XIcon, plus: PlusIcon, lock: LockIcon, refresh: RefreshIcon, bolt: BoltIcon, mic: MicIcon, micoff: MicOffIcon, cam: CamIcon, camoff: CamOffIcon, screen: ScreenIcon, hand: HandIcon, smile: SmileIcon, chat: ChatIcon, users: UsersIcon, leave: LeaveIcon, signal: SignalIcon, grid: GridIcon, speaker: SpeakerIcon, present: PresentIcon, board: BoardIcon }
 
 export type GlyphName = keyof typeof GLYPHS
 export const G = iconSet(GLYPHS)

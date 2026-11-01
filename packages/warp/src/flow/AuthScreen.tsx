@@ -1,4 +1,4 @@
-import { IconWeave } from '@weft/icons'
+import { WeaveIcon } from '@weft/icons'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
 import '@weft/ui-core/styles/flows/base.css'
@@ -17,7 +17,7 @@ const WeaveArt = () => (
 
 
 /** The product's mark: a logo of the app's, or warp's woven square. */
-export const AuthLogo = ({ logo, name }: { logo?: any; name?: any }) => <span data-part="logo">{logo ?? <IconWeave />}{name}</span>
+export const AuthLogo = ({ logo, name }: { logo?: any; name?: any }) => <span data-part="logo">{logo ?? <WeaveIcon />}{name}</span>
 
 /**
  * The auth layout (09 §2.2), by its own width: full-bleed under 600, a 420 card on the page at 600–999, split with the

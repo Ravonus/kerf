@@ -1,4 +1,4 @@
-import { IconAlert, IconSearch, IconX } from '@weft/icons'
+import { AlertIcon, SearchIcon, XIcon } from '@weft/icons'
 import { field, installSweep, labelChars, uid } from '@weft/ui-core'
 import { derived, onMount, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
@@ -80,12 +80,12 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
           ? <div data-part="body" role="group" aria-labelledby={`${id}-l`} aria-describedby={msg} aria-invalid={error ? 'true' : undefined}>{untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}</div>
           : untrack(() => control({ id, describedby: msg, get invalid() { return !!error }, rest: live }))}
         {suffix !== undefined && <span data-part="suffix">{suffix}</span>}
-        {clearable && <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${label}`}><IconX /></button>}
+        {clearable && <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${label}`}><XIcon /></button>}
         {end}
       </div>
       {message && (
         <div data-part="message" id={msg}>
-          {error ? <span data-part="error" role="alert"><IconAlert /><span>{error}</span></span> : hint !== undefined && <span data-part="hint">{hint}</span>}
+          {error ? <span data-part="error" role="alert"><AlertIcon /><span>{error}</span></span> : hint !== undefined && <span data-part="hint">{hint}</span>}
           {counter !== undefined && <span data-part="counter" aria-live="off"></span>}
         </div>
       )}
@@ -110,7 +110,7 @@ export function Input({ placeholder, ...props }: FieldProps & { placeholder?: st
 export function Search({ placeholder, ...props }: FieldProps & { placeholder?: string }) {
   return (
     <Field
-      icon={IconSearch}
+      icon={SearchIcon}
       clearable
       {...props}
       attrs={{ role: 'search' }}
