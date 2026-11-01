@@ -6,6 +6,7 @@ import { copyFileSync, createWriteStream, existsSync, lstatSync, mkdirSync, mkdt
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative } from 'node:path'
 import { here } from './app.mjs'
+import { quote } from './serve.mjs'
 import { spread } from './stats.mjs'
 
 const repo = join(here, '../..')
@@ -109,7 +110,7 @@ export async function packOnce(store, log) {
   const inputs = weftInputs(), stamp = join(store, 'inputs')
   mkdirSync(store, { recursive: true })
   if (existsSync(stamp) && existsSync(join(store, 'tarballs.json')) && readFileSync(stamp, 'utf8') === inputs) return { inputs, packed: false }
-  await run(`${JSON.stringify(process.execPath)} ${JSON.stringify(localMjs)} pack`, { cwd: repo, env: { WEFT_LOCAL_DIR: store, npm_config_min_release_age: '0' }, log })
+  await run(`${quote(process.execPath)} ${quote(localMjs)} pack`, { cwd: repo, env: { WEFT_LOCAL_DIR: store, npm_config_min_release_age: '0' }, log })
   writeFileSync(stamp, inputs)
   return { inputs, packed: true }
 }
@@ -149,7 +150,7 @@ export async function prepare(app, v, { work, runId, store, weft, buildRuns, reb
   const env = { ...process.env, ...v.buildEnv, npm_config_min_release_age: '0', WEFT_LOCAL_DIR: store }
   delete env.NODE_ENV
   if (v.tarballs) {
-    await run(`${JSON.stringify(process.execPath)} ${JSON.stringify(localMjs)} refresh . --packed`, { cwd: root, env, log })
+    await run(`${quote(process.execPath)} ${quote(localMjs)} refresh . --packed`, { cwd: root, env, log })
     v.weft = installedIsPacked(root, store)
   } else await run(v.install.join(' '), { cwd: root, env, log })
   if (app.setup) await run(app.setup, { cwd: root, env, log })

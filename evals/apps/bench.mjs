@@ -17,7 +17,7 @@ import { cpus, homedir, hostname, loadavg } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { allApps, freshness, here, loadApp } from './lib/app.mjs'
-import { jobs as defaultJobs, pool } from '../../scripts/jobs.mjs'
+import { cpuBusy, jobs as defaultJobs, pool } from '../../scripts/jobs.mjs'
 import { attribute } from './lib/attribute.mjs'
 import { linesOfCode, packOnce, prepare, repoState } from './lib/build.mjs'
 import { diagnose, report } from './lib/diagnose.mjs'
@@ -32,7 +32,9 @@ const { values: opt, positionals } = parseArgs({ allowPositionals: true, options
   rebuild: { type: 'boolean' }, json: { type: 'string' }, 'no-load': { type: 'boolean' }, 'no-record': { type: 'boolean' }, detect: { type: 'boolean' },
 } })
 const say = s => process.stderr.write(`${s}\n`)
-const BUSY = 40 // load the shared Mac can take before measurements mean nothing; see ~/.claude/CLAUDE.md
+const windows = process.platform === 'win32'
+// Load the shared Mac can take before measurements mean nothing; see ~/.claude/CLAUDE.md. Windows has no load average, so a share of the CPU.
+const BUSY = windows ? 80 : 40, load = ms => (windows ? 100 * cpuBusy(ms) : loadavg()[0])
 process.on('SIGINT', () => process.exit(130)); process.on('SIGTERM', () => process.exit(143))
 const results = join(here, 'results.json'), history = join(here, '../results/apps-history.jsonl')
 const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'), store = join(work, 'store')
@@ -47,7 +49,8 @@ if (opt.detect) {
   process.exit(0)
 }
 if (+process.versions.node.split('.')[0] < 26) { console.error(`weft needs Node 26; this is ${process.version}`); process.exit(1) }
-if (loadavg()[0] > BUSY) { console.error(`1-minute load is ${loadavg()[0].toFixed(0)}, over ${BUSY}: numbers would be noise. Run this on another machine.`); process.exit(1) }
+const atStart = load(3000)
+if (atStart > BUSY) { console.error(`${windows ? 'CPU busy' : '1-minute load'} is ${atStart.toFixed(0)}${windows ? '%' : ''}, over ${BUSY}: numbers would be noise. Run this on another machine.`); process.exit(1) }
 
 /** The sample nearest the median, for what can't be medianed: LCP phases, findings, the resource list. */
 const middle = (samples, key) => [...samples].sort((a, b) => a[key] - b[key])[samples.length >> 1]
@@ -63,14 +66,14 @@ async function timed(v, server, page, browser, site) {
   const hyd = await hydrationPass(browser, url, page.probe, { cookies })
   const real = await lighthouseThrottled(url, cookieHeader(cookies))
   await assertFresh(v, server)
-  return { bytes, hyd, real, lh: {}, fresh: first.canary, load: loadavg()[0] }
+  return { bytes, hyd, real, lh: {}, fresh: first.canary, load: load() }
 }
 
 /** Lighthouse's simulated throttling models the network and CPU, so these can overlap: see README, and --jobs=1 to compare. */
 async function simulated(v, server, sample, url, form, keepTo, cookie) {
   const lh = sample.lh[form] = await lighthouseRun(url, form, keepTo, cookie)
   await assertFresh(v, server, lh.scripts.filter(u => u.startsWith(server.url)).map(u => u.slice(server.url.length)).filter(p => sample.bytes.assets.includes(p) || !/[?]/.test(p)))
-  sample.load = Math.max(sample.load, loadavg()[0])
+  sample.load = Math.max(sample.load, load())
 }
 
 function summarise(page, samples) {

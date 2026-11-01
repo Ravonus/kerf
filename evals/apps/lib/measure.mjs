@@ -3,11 +3,15 @@ import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import http from 'node:http'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
+import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 
-export const launchBrowser = () => chromium.launch()
-export const chromePath = () => chromium.executablePath()
+// Playwright's own Chromium, except with BENCH_CHROME, and on Windows, where installed Chrome is used if it's there.
+const WINDOWS_CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+const chrome = process.env.BENCH_CHROME ?? (process.platform === 'win32' && existsSync(WINDOWS_CHROME) ? WINDOWS_CHROME : undefined)
+export const launchBrowser = () => chromium.launch(chrome ? { executablePath: chrome } : {})
+export const chromePath = () => chrome ?? chromium.executablePath()
 
 const pathOf = u => { try { const p = new URL(u); return p.pathname + p.search } catch { return u } }
 

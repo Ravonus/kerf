@@ -14,7 +14,7 @@ export function packAll(dest) {
     const file = join(pkgs, dir, 'package.json')
     if (!existsSync(file)) continue
     const { name } = JSON.parse(readFileSync(file, 'utf8'))
-    const packed = execFileSync('npm', ['pack', '--silent', '--pack-destination', dest], { cwd: join(pkgs, dir), encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] })
+    const packed = execFileSync('npm', ['pack', '--silent', '--pack-destination', dest], { cwd: join(pkgs, dir), encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
     tarballs[name] = `file:${join(dest, packed.trim().split('\n').pop())}`
   }
   return tarballs

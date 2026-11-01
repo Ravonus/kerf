@@ -16,7 +16,7 @@ import { packAll, pin, pkgs } from './tarballs.mjs'
 
 const store = resolve(process.env.WEFT_LOCAL_DIR ?? join(homedir(), '.weft/local'))
 const tgz = join(store, 'tgz')
-const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit' })
+const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' && cmd === 'npm' }) // npm is npm.cmd there
 const OTHER_LOCKS = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock']
 
 /** The compiler, when its stamp no longer matches the crate. */

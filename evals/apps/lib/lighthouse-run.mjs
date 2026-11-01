@@ -64,5 +64,9 @@ try {
     bootupMs: lhr.audits['bootup-time']?.numericValue, mainThreadMs: lhr.audits['mainthread-work-breakdown']?.numericValue,
     scripts: (lhr.audits['network-requests']?.details?.items ?? []).filter(r => r.resourceType === 'Script' || r.resourceType === 'Stylesheet').map(r => r.url),
   }))
-} finally { await chrome.kill(); process.chdir(tmpdir()); rmSync(userDataDir, { recursive: true, force: true }) }
+} finally {
+  await chrome.kill(); process.chdir(tmpdir())
+  // Windows holds a dead Chrome's files for a moment after it goes. The numbers are already out, so a profile left in temp costs nothing.
+  try { rmSync(userDataDir, { recursive: true, force: true, maxRetries: process.platform === 'win32' ? 20 : 0, retryDelay: 100 }) } catch (e) { if (process.platform !== 'win32') throw e }
+}
 process.exit(0)

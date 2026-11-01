@@ -1,7 +1,6 @@
 // node --test evals/apps/lib: the database half of the harness. The last tests need Postgres, psql and Chromium, and run the probes
 // for real against lib/fixture, which has the todo contract and no framework.
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import net from 'node:net'
@@ -18,7 +17,7 @@ import { SITE_METRICS } from './stats.mjs'
 import { clone, contentHash, dbName, ensureSeed, measureRtt, provision, psql, seedHash, seedName } from '../shared/pg/env.mjs'
 import { createProxy } from '../shared/pg/latency-proxy.mjs'
 
-const pgUp = (() => { try { execFileSync('psql', ['-h', '127.0.0.1', '-d', 'postgres', '-XAtc', 'select 1'], { stdio: 'ignore' }); return true } catch { return false } })()
+const pgUp = await psql('postgres', 'select 1').then(() => true, () => false)
 
 test('live needs a canary, cached is a label, and a map picks by variant', () => {
   const canary = { sql: 'x', text: true }

@@ -6,7 +6,7 @@ import { createServer } from 'node:http'
 import { promisify } from 'node:util'
 
 const exec = promisify(execFile), derive = promisify(scrypt), { DATABASE_URL, BETTER_AUTH_SECRET: secret, FIXTURE_BUG: bug, PORT, HOST } = process.env
-const q = async sql => (await exec('psql', [DATABASE_URL, '-X', '-A', '-t', '-q', '-c', sql])).stdout.trim()
+const q = async sql => (await exec(process.env.BENCH_PSQL ?? 'psql', [DATABASE_URL, '-X', '-A', '-t', '-q', '-c', sql])).stdout.trim()
 const json = async sql => JSON.parse(await q(`select coalesce(json_agg(t), '[]') from (${sql}) t`))
 const text = s => `'${String(s).replaceAll("'", "''")}'`
 const sign = id => `${id}.${createHmac('sha256', secret).update(id).digest('hex')}`

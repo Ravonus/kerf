@@ -114,7 +114,7 @@ page focused. `toggles` holds an even reply last, as an odd one matches the end 
 
 `shared/pg/env.mjs` keeps `weft_bench_seed_<hash>` from `schema.sql` and `seed.sql`, clones it per variant with `CREATE DATABASE ...
 TEMPLATE`, and resets by dropping and cloning, which cuts the server's connections for its pool to reopen. It touches only
-`weft_bench_*`, needs `psql`, and takes `BENCH_PG_HOST` and `BENCH_PG_PORT`. `shared/pg/latency-proxy.mjs` is its own process,
+`weft_bench_*`, needs `psql` (or `BENCH_PSQL`, its path), and takes `BENCH_PG_HOST`, `BENCH_PG_PORT` and `BENCH_PG_USER` (default your login). `shared/pg/latency-proxy.mjs` is its own process,
 delays each direction by RTT/2 and counts turns, and each `sitePass` checks the RTT with `SELECT 1` (`db.rtt` in the run, about 1 ms
 over at 2 ms on a loaded Mac). `shared/pg/bench-user.json` is a throwaway local account; the hash in the seed is Better Auth's own.
 
@@ -135,6 +135,9 @@ about 25% low side by side, which is why it isn't.
 `BENCH_WORK` moves the work area and `BENCH_HOME` is what `~` means in a manifest, so an external variant can be a copy elsewhere; `BENCH_COMMIT` names the commit when the checkout there is a snapshot.
 Bring only the files bench would copy; never a real env file.
 
+On Windows: clone with `core.autocrlf=false`, or the seed hash and build keys change, and put `BENCH_WORK` outside the checkout, somewhere short. `BENCH_PG_*` and `BENCH_PSQL`
+reach a private Postgres, `BENCH_CHROME` overrides the installed Chrome it finds by itself, and servers are killed by tree with `taskkill`.
+
 ## What it diagnoses
 
 For each weft variant: the mobile points each metric costs; LCP phases and element; the largest resources; JS and CSS that
@@ -150,10 +153,10 @@ app's last run; and a ranked list, where bytes and milliseconds are converted to
 - Every measurement proves it hit this build. The run writes a canary into `public/`, each sample fetches it back, and every JS
   and CSS file a sample touched has to hash to a file the build wrote. Any miss stops the run.
 - Weft variants go through `local.mjs refresh` into a private store, so each run measures this checkout, and the installed `weft`
-  is compared to the tarball byte for byte. Servers run on ports checked to be free, each in its own process group.
+  is compared to the tarball byte for byte. Servers run on ports checked to be free, each in its own process group (Windows: stopped by process tree, then by port).
 - A diff only reports variants that were rebuilt. Ones that weren't are controls: machine drift shows up in them, and is taken off
   timing metrics before anything is called a change.
-- Peak load is recorded per run. Over 40 at start it refuses: use another machine, with `BENCH_WORK` set.
+- Peak load is recorded per run. Over 40 at start it refuses: use another machine, with `BENCH_WORK` set. Windows has no load average, so there it's the percent of CPU in use: a 3 s sample over 80% refuses, and `loadMax` is a percent.
 
 The stack rule still holds: a claim about weft gets measured across the other variants, here and in `evals/compare`.
 

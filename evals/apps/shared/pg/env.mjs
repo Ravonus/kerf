@@ -11,7 +11,8 @@ import { promisify } from 'node:util'
 import { spawnProxy } from './latency-proxy.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url)), exec = promisify(execFile)
-const HOST = process.env.BENCH_PG_HOST ?? '127.0.0.1', PORT = +(process.env.BENCH_PG_PORT ?? 5432)
+const HOST = process.env.BENCH_PG_HOST ?? '127.0.0.1', PORT = +(process.env.BENCH_PG_PORT ?? 5432), USER = process.env.BENCH_PG_USER
+export const PSQL = process.env.BENCH_PSQL ?? 'psql'
 const STATS = 'weft_bench_stats' // holds the pg_stat_statements extension, so reading it adds nothing to a variant's own database
 export const benchUser = JSON.parse(readFileSync(join(here, 'bench-user.json'), 'utf8'))
 export const seedHash = () => createHash('sha256').update(readFileSync(join(here, 'schema.sql'))).update(readFileSync(join(here, 'seed.sql'))).digest('hex').slice(0, 12)
@@ -23,9 +24,9 @@ function mine(name) {
   return name
 }
 
-const psqlArgs = (db, { port = PORT, host = HOST } = {}) => ['-h', host, '-p', String(port), '-d', db, '-X', '-A', '-t', '-q', '-v', 'ON_ERROR_STOP=1']
-export const psql = async (db, sql, to) => (await exec('psql', [...psqlArgs(db, to), '-c', sql], { maxBuffer: 1 << 28 })).stdout.trim()
-const psqlFile = (db, file) => exec('psql', [...psqlArgs(db), '-f', file], { maxBuffer: 1 << 26 })
+const psqlArgs = (db, { port = PORT, host = HOST } = {}) => ['-h', host, '-p', String(port), ...(USER ? ['-U', USER] : []), '-d', db, '-X', '-A', '-t', '-q', '-v', 'ON_ERROR_STOP=1']
+export const psql = async (db, sql, to) => (await exec(PSQL, [...psqlArgs(db, to), '-c', sql], { maxBuffer: 1 << 28 })).stdout.replace(/\r\n/g, process.platform === 'win32' ? '\n' : '$&').trim()
+const psqlFile = (db, file) => exec(PSQL, [...psqlArgs(db), '-f', file], { maxBuffer: 1 << 26 })
 /** Rows of a query as objects, through json so types survive. */
 export const rows = async (db, sql, to) => JSON.parse(await psql(mine(db), `select coalesce(json_agg(t), '[]') from (${sql}) t`, to))
 const has = async name => (await psql('postgres', `select 1 from pg_database where datname = '${mine(name)}'`)) === '1'
@@ -93,7 +94,7 @@ export async function countQueries(name, proxy, fn, { forceProxy = false } = {})
 /** `select 1` through the proxy against the same without it, by psql's own timing: the RTT a run really got. */
 export async function measureRtt(db, proxyPort, n = 20) {
   const time = async to => {
-    const { stdout } = await exec('psql', [...psqlArgs(db, to), '-c', '\\timing on', ...Array(n).fill(['-c', 'select 1']).flat()])
+    const { stdout } = await exec(PSQL, [...psqlArgs(db, to), '-c', '\\timing on', ...Array(n).fill(['-c', 'select 1']).flat()])
     const t = [...stdout.matchAll(/Time: ([\d.]+) ms/g)].map(m => +m[1]).sort((a, b) => a - b)
     return t[t.length >> 1]
   }
@@ -113,7 +114,7 @@ export async function provision(app, variant, { rtt = 2 } = {}) {
   const proxy = await spawnProxy({ port: PORT, host: HOST, rtt })
   return {
     name, proxy,
-    env: { DATABASE_URL: `postgres://${userInfo().username}@127.0.0.1:${proxy.port}/${name}`, BETTER_AUTH_SECRET: benchUser.authSecret },
+    env: { DATABASE_URL: `postgres://${USER ?? userInfo().username}@127.0.0.1:${proxy.port}/${name}`, BETTER_AUTH_SECRET: benchUser.authSecret },
     reset: () => clone(name),
     sql: q => psql(name, q),
     rows: q => rows(name, q),
