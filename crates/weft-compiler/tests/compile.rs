@@ -985,3 +985,53 @@ fn inner_html_and_form_values_compile_as_content() {
     assert!(!code.contains("dangerouslySetInnerHTML"), "{code}");
     assert!(code.contains(r#"_$bind(() => ("a")"#) && code.contains(".value = v"), "{code}");
 }
+
+// ---- partial hydration: what says when an island can wait ----------------------------------------------------------
+
+fn node(source: &str, name: &str) -> weft_compiler::hydration::Node {
+    let out = compile(source, &Options { filename: "App.tsx".into(), check_only: true, ..Default::default() });
+    out.facts.hydration.nodes.into_iter().find(|n| n.name == name).expect("node")
+}
+
+#[test]
+fn facts_name_globals_outside_handlers_only() {
+    let n = node("export function A() { const x = window.matchMedia('(a)'); document.title = 'x'; return <button onClick={() => localStorage.clear()}>{x.matches}</button> }", "A");
+    assert!(n.globals.contains(&"matchMedia".to_string()), "{:?}", n.globals);
+    assert!(n.globals.contains(&"document".to_string()), "{:?}", n.globals);
+    assert!(!n.globals.contains(&"localStorage".to_string()), "a handler waits for its event: {:?}", n.globals);
+}
+
+#[test]
+fn facts_name_what_cannot_wait() {
+    assert!(node("export const A = () => <input autofocus />", "A").early.unwrap().contains("autofocus"));
+    assert!(node("export const A = () => <div ref={el => el.focus()} />", "A").early.unwrap().contains("ref"));
+    assert!(node("export function A() { let e; return <div ref={el => { e = el }} /> }", "A").early.is_none());
+    assert!(node("export function A() { let e; const go = () => e.focus(); return <div ref={e} onClick={go} /> }", "A").globals.contains(&".focus".to_string()));
+}
+
+#[test]
+fn facts_tell_a_box_from_a_function_and_see_calls() {
+    let src = "import { state } from 'weft'\nimport { list } from './server/x'\nexport const cart = state(0)\nexport const A = () => <p onClick={() => list()}>{list().value}</p>\nexport const B = () => <p onClick={() => list()}>b</p>";
+    assert!(node(src, "cart").value);
+    assert!(!node(src, "A").value);
+    assert_eq!(node(src, "A").calls, vec!["list"]);
+    assert!(node(src, "B").calls.is_empty(), "a handler's calls wait for it");
+}
+
+#[test]
+fn the_visible_hatch_is_a_force() {
+    assert_eq!(node("/* @weft visible */\nexport const A = () => <p onClick={() => 1} />", "A").force.as_deref(), Some("visible"));
+}
+
+#[test]
+fn an_island_mark_carries_when_it_loads() {
+    let opts = Options {
+        filename: "App.tsx".into(),
+        generate: "ssr".into(),
+        hydratable: true,
+        islands: Some(serde_json::from_str(r#"{"id":"a.tsx","sites":[{"index":0,"hoist":false,"when":"i"}]}"#).unwrap()),
+        ..Default::default()
+    };
+    let code = compile("import { C } from './c'\nexport const A = () => <C />", &opts).code.unwrap();
+    assert!(code.contains(r#"void 0, "i")"#), "{code}");
+}
