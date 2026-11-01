@@ -55,6 +55,7 @@ const DEFAULT_FONTS = ['Inter:400,700']
 const SHEET = '/@weft-sheet/'
 const ASSETS = '?weft-assets'
 const ISLAND = 'virtual:weft/island/'
+const PRELOAD = 'Per page, from the HTML: an island that loads with the page, or a lazy one in about the first 900px, is modulepreloaded (fetched, not run). The rest load when needed. Save-Data: lazy ones are not preloaded, and wait for interaction.'
 const NOT_ASSET = /\.[cm]?[jt]sx?$/
 const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
 
@@ -103,7 +104,7 @@ export default function weftStart(options = {}) {
     const done = await plan
     try {
       mkdirSync(join(root, '.weft'), { recursive: true })
-      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), loads: done.loads, diagnostics: done.diagnostics, files: done.report }, null, 2)}\n`)
+      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), loads: done.loads, preload: PRELOAD, diagnostics: done.diagnostics, files: done.report }, null, 2)}\n`)
     } catch {}
     return done
   }
