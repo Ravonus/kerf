@@ -1,10 +1,11 @@
 import { announce, findCard, installSweep, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/ui-core'
-import { Box, derived, flush, onMount, state, untrack, type State } from 'weft'
+import { Box, derived, flush, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { Input } from '../Field'
 import { Glyph } from '../parts'
 import { use } from '../use'
+import { VirtualList, type VirtualControl } from '../VirtualList'
 import { SWEEP } from './peer'
 import '../styles'
 import '@weft/ui-core/styles/data/base.css'
@@ -13,7 +14,7 @@ import '@weft/ui-core/styles/app/kanban.css'
 
 const MORE = 'M5 12h.01M12 12h.01M19 12h.01'
 
-export type KanbanCardData = BoardCard & { label?: string; color?: number; assignee?: string }
+export type KanbanCardData = BoardCard & { label?: string; color?: number; assignee?: string; /** Footer text: a due date, a count. */ meta?: string }
 export type KanbanColumn = BoardColumn<KanbanCardData>
 
 type Ctx = {
@@ -23,13 +24,21 @@ type Ctx = {
   coarse: (el: Element) => boolean
   focus: (id: string) => void
   hint: string
+  drift?: (index: number, predicted: number, actual: number) => void
+  window: (column: string, c: VirtualControl) => void
+  adds: () => boolean
+  add: (column: string, title: string) => void
 }
+
+const hasFooter = (c: KanbanCardData) => c.label !== undefined || c.assignee !== undefined || c.meta !== undefined
 
 function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
   const open = state(false)
   let btn: HTMLButtonElement | undefined
   let panel: HTMLDivElement | undefined
+  let el: HTMLDivElement | undefined
   use(menu, () => panel, () => ({ open: open.value, trigger: () => btn, onClose: () => (open.value = false) }))
+  watch(() => open.value, on => { const row = el?.parentElement; if (row) row.style.zIndex = on ? '5' : '' }) // a row is its own stacking context, so the menu's has to rise
   const to = (col: number, index: number) => {
     const id = card.id
     open.value = false
@@ -38,11 +47,12 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
   }
   const at = () => findCard(ctx.board(), card.id)
   return (
-    <li data-part="card" data-sweep="" data-phase="idle" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
+    <div ref={(n: any) => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="" data-phase="idle" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
       <SWEEP />
-      <h4>{card.title}</h4>
-      {(card.label !== undefined || card.assignee !== undefined) && (
+      <h4 data-measure="">{card.title}</h4>
+      {hasFooter(card) && (
         <footer>
+          {card.meta}
           {card.label !== undefined && <span data-part="label-chip" style={`--_dc:var(--warp-color-data-${card.color ?? 1})`}><i></i>{card.label}</span>}
           {card.assignee !== undefined && <span data-scope="avatar" data-size="sm" aria-hidden="true">{card.assignee}</span>}
         </footer>
@@ -53,7 +63,7 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
         {open.value && <button type="button" role="menuitem" tabindex="-1" onClick={() => { const a = at()!; to(a.col, a.index - 1) }}>Move up</button>}
         {open.value && <button type="button" role="menuitem" tabindex="-1" onClick={() => { const a = at()!; to(a.col, a.index + 1) }}>Move down</button>}
       </div>
-    </li>
+    </div>
   )
 }
 
@@ -74,21 +84,56 @@ function QuickAdd({ column, onAdd }: { column: KanbanColumn; onAdd: (title: stri
   )
 }
 
+function Column({ col, ctx, hint }: { col: () => KanbanColumn; ctx: Ctx; hint: string }) {
+  const id = untrack(() => col().id)
+  return (
+    <section data-part="column" aria-labelledby={`${hint}-${id}`} data-over-limit={col().limit !== undefined && col().cards.length > col().limit! ? '' : undefined}>
+      <header data-part="column-head">
+        {col().color !== undefined && <i style={`--_dc:var(--warp-color-data-${col().color})`}></i>}
+        <h3 id={`${hint}-${id}`} style="margin-inline-end:auto">{col().title}</h3>
+        <em data-part="count">{col().cards.length}{col().limit !== undefined ? ` / ${col().limit}` : ''}</em>
+      </header>
+      <VirtualList
+        part="cards"
+        tag="ol"
+        role="list"
+        inner
+        label={col().title}
+        items={col().cards}
+        rowKey={c => c.id}
+        text={c => c.title}
+        variant={c => (hasFooter(c) ? 'footer' : 'plain')}
+        estimate={72}
+        gap={8}
+        onDrift={ctx.drift}
+        control={c => ctx.window(id, c)}
+      >{card => <Card card={card()} ctx={ctx} />}</VirtualList>
+      {ctx.adds() && <QuickAdd column={col()} onAdd={t => ctx.add(id, t)} />}
+    </section>
+  )
+}
+
 /**
- * The board (07 §6.2, 06 §10): columns are `section > ol`, with count and WIP limit, caution when over. Three move
- * paths: HTML drag with a placeholder; keyboard (Alt + arrows, or Space, arrows, Space); the Move button, a menu at a
- * fine pointer and a Sheet on a phone. Each move is announced. `columns` is a box or a plain list with `onMove`.
+ * The board (07 §6.2, 06 §10). Columns are `section > ol`, each a window, so one with 10,000 cards costs what one with
+ * 20 does, with count and WIP limit, caution when over. Three move paths: HTML drag with a placeholder; keyboard
+ * (Alt + arrows, or Space, arrows, Space); the Move button, a menu at a fine pointer and a Sheet on a phone. Each move is
+ * announced. `columns` is a box, or a list the board follows and `onMove` reports to. `height` defaults to 560px.
  */
-export function Kanban({ columns, onMove, onAdd, label = 'Board' }: { columns: State<KanbanColumn[]> | KanbanColumn[]; onMove?: (id: string, column: string, index: number) => void; onAdd?: (column: string, title: string) => void; label?: string }) {
+export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board' }: { columns: State<KanbanColumn[]> | KanbanColumn[]; onMove?: (id: string, column: string, index: number) => void; onAdd?: (column: string, title: string) => void; onDrift?: (index: number, predicted: number, actual: number) => void; height?: string; label?: string }) {
   const hint = uid('kanban')
   const own = state(untrack(() => (columns instanceof Box ? [] : columns)))
   const board = derived<KanbanColumn[]>(() => (columns instanceof Box ? columns.value : own.value))
+  watch(() => columns, c => { if (!(c instanceof Box)) own.value = c })
   const adds = derived(() => onAdd !== undefined)
   const moving = state<KanbanCardData | null>(null)
   const sheetOpen = state(false)
+  const windows = new Map<string, VirtualControl>()
   let host: HTMLDivElement | undefined
   onMount(() => installSweep())
-  const focus = (id: string) => setTimeout(() => [...host!.querySelectorAll<HTMLElement>('[data-part="card"]')].find(c => c.dataset.id === id)?.focus())
+  const focus = (id: string) => {
+    const at = findCard(board.value, id)
+    if (at) queueMicrotask(() => windows.get(board.value[at.col].id)?.focus(id)) // focus follows the card
+  }
   const move = (id: string, col: number, index: number) => {
     const next = moveCard(board.value, id, col, index)
     if (columns instanceof Box) columns.value = next
@@ -98,7 +143,7 @@ export function Kanban({ columns, onMove, onAdd, label = 'Board' }: { columns: S
     announce(host!.ownerDocument, moveLine(next, id))
     onMove?.(id, next[at.col].id, at.index)
   }
-  use(kanban, () => host, () => ({ columns: () => untrack(() => board.value), onMove: move }))
+  use(kanban, () => host, () => ({ columns: () => untrack(() => board.value), onMove: move, focus }))
   const ctx: Ctx = {
     board: () => board.value,
     move,
@@ -106,6 +151,10 @@ export function Kanban({ columns, onMove, onAdd, label = 'Board' }: { columns: S
     hint,
     coarse: el => isSheet(el) || !!el.ownerDocument.defaultView?.matchMedia?.('(pointer: coarse)').matches,
     sheet: c => { moving.value = c; sheetOpen.value = true },
+    drift: (i, p, a) => onDrift?.(i, p, a),
+    window: (column, c) => windows.set(column, c),
+    adds: () => adds.value,
+    add: (column, title) => onAdd?.(column, title),
   }
   const sheetTo = (col: number, index: number) => {
     const id = moving.value!.id
@@ -116,20 +165,8 @@ export function Kanban({ columns, onMove, onAdd, label = 'Board' }: { columns: S
   const place = derived(() => (moving.value ? findCard(board.value, moving.value.id) : null))
   return (
     <>
-      <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label}>
-        {board.value.map(c => (
-          <section key={c.id} data-part="column" aria-labelledby={`${hint}-${c.id}`} data-over-limit={c.limit !== undefined && c.cards.length > c.limit ? '' : undefined}>
-            <header data-part="column-head">
-              {c.color !== undefined && <i style={`--_dc:var(--warp-color-data-${c.color})`}></i>}
-              <h3 id={`${hint}-${c.id}`} style="margin-inline-end:auto">{c.title}</h3>
-              <em data-part="count">{c.cards.length}{c.limit !== undefined ? ` / ${c.limit}` : ''}</em>
-            </header>
-            <ol aria-labelledby={`${hint}-${c.id}`}>
-              {c.cards.map(card => <Card key={card.id} card={card} ctx={ctx} />)}
-            </ol>
-            {adds.value && <QuickAdd column={c} onAdd={t => onAdd!(c.id, t)} />}
-          </section>
-        ))}
+      <div ref={(n: any) => (host = n)} data-scope="kanban" role="group" aria-label={label} style={`block-size:${height ?? '560px'}`}>
+        {board.value.map(c => <Column key={c.id} col={() => board.value.find(x => x.id === c.id) ?? c} ctx={ctx} hint={hint} />)}
       </div>
       <p data-part="sr-only" id={hint}>Alt plus arrow keys move this card. Space picks it up. The move button lists every destination.</p>
       <Drawer open={sheetOpen} title={`Move ${moving.value?.title ?? ''}`} side="bottom">

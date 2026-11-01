@@ -150,7 +150,7 @@ out.list.jump = await page.evaluate(async far => {
 }, far)
 must(out.list.jump.offBy !== null && Math.abs(out.list.jump.offBy) <= 1, `list: jump to row landed ${out.list.jump.offBy}px off`)
 
-const THREAD = { scroller: '[role="log"]', row: '[data-part="row"]:not([data-probe])', key: 'aria-posinset' }
+const THREAD = { scroller: '[role="log"]', row: '[data-part="row"]:not([data-probe])', key: 'data-index' }
 const chat = await sweep('chat', 'chat', THREAD, { from: 'end' })
 out.chat.live = await chat.evaluate(async () => {
   const el = document.querySelector('[role="log"]')

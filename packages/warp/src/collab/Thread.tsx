@@ -1,9 +1,11 @@
-import { announce, arrivalTracker, burst, firstName, installSweep, joinNames, messageLog, quoteText, reactionName, textParts, threadRows, typingLine, uid, type ChatMessage, type MessageReaction, type ThreadRow } from '@weft/ui-core'
+import { announce, arrivalTracker, burst, firstName, installSweep, joinNames, messageLog, quoteText, reactionName, STICK_PX, textParts, threadRows, typingLine, uid, type ChatMessage, type MessageReaction, type ThreadRow } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
+import { Text } from 'weft/text'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
 import { Glyph } from '../parts'
 import { use } from '../use'
+import { VirtualList, type VirtualControl } from '../VirtualList'
 import { Composer, SMILE, TypingIndicator, type ComposerProps, type ComposerSend, type QuoteDraftValue } from './Composer'
 import { PeerAvatar, read, SWEEP, type Live } from './peer'
 import '../styles'
@@ -56,6 +58,7 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
   return (
     <div
       data-scope="message"
+      data-focus=""
       role="article"
       tabindex="-1"
       data-mid={message.id}
@@ -81,7 +84,9 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
               {!quoted.value.deleted && <span data-part="quote-text">{quoted.value.text}</span>}
             </blockquote>
           )}
-          <span data-part="text">{parts.value.map(p => p.mention ? <span key={p.at} data-part="mention">{p.text}</span> : <span key={p.at}>{p.text}</span>)}</span>
+          {message.streaming
+            ? <Text stream as="div">{message.text}</Text>
+            : <span data-part="text" data-measure="">{parts.value.map(p => p.mention ? <span key={p.at} data-part="mention">{p.text}</span> : <span key={p.at}>{p.text}</span>)}</span>}
         </div>
         {quoted.value?.ref && <Button emphasis="link" tone="neutral" data-part="quote-jump" data-jump={quoted.value.ref}>Jump to original</Button>}
         {message.attachment && <div data-part="attachment"><i>{message.attachment.kind}</i><b>{message.attachment.name}</b><small>{message.attachment.meta}</small></div>}
@@ -108,16 +113,31 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
   )
 }
 
-type RowCtx = Pick<MessageProps, 'onRetry' | 'onReact' | 'onReplies'> & { find: (id?: string) => ChatMessage | undefined; fresh: () => string[] }
+type MessageRow = Extract<ThreadRow, { kind: 'message' }>
+/** One row of the window: a message, and the divider above it if it has one. */
+type Entry = { id: string; row: MessageRow; divider?: Exclude<ThreadRow, MessageRow> }
 
-function Row({ row, ctx }: { row: ThreadRow; ctx: RowCtx }) {
-  const kind = untrack(() => row.kind)
-  if (kind === 'message') {
-    const r = () => row as Extract<ThreadRow, { kind: 'message' }>
-    return <Message message={r().message} continued={r().continued} last={r().last} arrive={ctx.fresh().includes(r().id)} source={ctx.find(r().message.quote?.ref)} onRetry={ctx.onRetry} onReact={ctx.onReact} onReplies={ctx.onReplies} />
+function entries(rows: readonly ThreadRow[]) {
+  const out: Entry[] = []
+  let divider: Entry['divider']
+  for (const r of rows) {
+    if (r.kind !== 'message') { divider = r; continue }
+    out.push({ id: r.id, row: r, divider })
+    divider = undefined
   }
-  const d = () => row as Exclude<ThreadRow, { kind: 'message' }>
-  return <div data-part="divider" data-unread={d().unread ? '' : undefined} role="separator" aria-label={d().unread ? 'New messages' : d().label}>{d().label}</div>
+  return out
+}
+
+const plain = (m: ChatMessage) => !m.quote && !m.attachment && !m.reactions?.length && !m.replies && !m.mentions?.length && !m.streaming
+/** Rows that look the same around their text share one measurement. Anything richer is measured when it renders. */
+function shape({ row: { message: m, continued, last }, divider }: Entry) {
+  if (!plain(m)) return 'rich'
+  const status = !m.mine ? '' : m.state === 'failed' || m.state === 'sending' ? m.state : last ? 'last' : ''
+  return `${m.mine ? 'm' : continued ? 'c' : 'h'}${divider?.unread ? 'u' : divider ? 'd' : ''}${status}`
+}
+
+function Divider({ d }: { d: NonNullable<Entry['divider']> }) {
+  return <div data-part="divider" data-unread={d.unread ? '' : undefined} role="separator" aria-label={d.unread ? 'New messages' : d.label}>{d.label}</div>
 }
 
 export interface ThreadProps {
@@ -130,32 +150,42 @@ export interface ThreadProps {
   typing?: Live<string[]>
   /** The header's content (`data-part="app-bar"`): channel, members, stack, call, search. */
   header?: any
-  onSend: (m: ComposerSend) => void
+  /** A log height, if the parent doesn't size the thread. */
+  height?: string
+  /** No `onSend`, no composer: a read-only log. */
+  onSend?: (m: ComposerSend) => void
   onRetry?: (m: ChatMessage) => void
   onReact?: (m: ChatMessage, r: MessageReaction | null) => void
   onReplies?: (m: ChatMessage) => void
-  composer: Omit<ComposerProps, 'onSend' | 'quote' | 'input'>
+  /** Near the top: load older messages, and prepend them to `messages`. */
+  onOlder?: () => void
+  onDrift?: (index: number, predicted: number, actual: number) => void
+  control?: (c: VirtualControl) => void
+  composer?: Omit<ComposerProps, 'onSend' | 'quote' | 'input'>
 }
 
 /**
- * A conversation (07 §5, §5.5): the log (role=log; day and unread dividers, grouping, stick to bottom, Jump to latest
- * with the new count, roving messages and Q), typing line, composer with the quote draft. New messages are announced
- * as one summary after 1 s of quiet, a failed send assertively once. Rows are keyed, so live updates patch in place.
+ * A conversation (07 §5, §5.5): the log, a window of rows, so 100,000 messages cost what 20 do (role=log; day and unread
+ * dividers, grouping, stick to bottom, Jump to latest with the new count, roving messages and Q), typing line, composer
+ * with the quote draft. New messages are announced as one summary after 1 s of quiet, a failed send assertively once.
+ * Plain messages have exact heights from `text.measure`; rows are keyed, so live updates patch in place.
  */
-export function Thread({ label, messages, unreadFrom, typing, header, onSend, onRetry, onReact, onReplies, composer }: ThreadProps) {
+export function Thread({ label, messages, unreadFrom, typing, header, height, onSend, onRetry, onReact, onReplies, onOlder, onDrift, control, composer }: ThreadProps) {
   const id = uid('thread')
   const list = derived(() => read(messages))
-  const rows = derived(() => threadRows(list.value, unreadFrom))
+  const rows = derived(() => entries(threadRows(list.value, unreadFrom)))
+  const ids = derived(() => list.value.map(m => m.id))
   const mark = arrivalTracker()
-  const fresh = derived(() => mark(list.value.map(m => m.id)))
+  const fresh = derived(() => mark(ids.value))
   const stuck = state(true)
   const unseen = state(0)
   const draft = state<QuoteDraftValue | null>(null)
   const typingNames = derived(() => read(typing) ?? [])
   const head = derived(() => header)
-  let log: HTMLDivElement | undefined
+  let root: HTMLElement | undefined
   let box: HTMLTextAreaElement | undefined
-  const doc = () => log!.ownerDocument
+  let win: VirtualControl | undefined
+  const doc = () => root!.ownerDocument
   const find = (mid?: string) => (mid ? list.value.find(m => m.id === mid) : undefined)
 
   onMount(() => {
@@ -165,7 +195,7 @@ export function Thread({ label, messages, unreadFrom, typing, header, onSend, on
       announce(doc(), names.length === 1 ? `New message from ${who[0]}` : who.length === 1 ? `${names.length} new messages from ${who[0]}` : `${names.length} new messages from ${joinNames(who)}`)
     })
     const failed = new Set(untrack(() => list.value.filter(m => m.state === 'failed').map(m => m.id)))
-    let seen = new Set(untrack(() => list.value.map(m => m.id)))
+    let seen = new Set(untrack(() => ids.value))
     onCleanup(told.cancel)
     watch(() => list.value, l => {
       for (const m of l) {
@@ -173,10 +203,17 @@ export function Thread({ label, messages, unreadFrom, typing, header, onSend, on
         if (m.state === 'failed' && !failed.has(m.id)) { failed.add(m.id); announce(doc(), 'Message not sent', true) }
         if (m.state !== 'failed') failed.delete(m.id)
       }
+      const last = l.at(-1)
+      if (last && !seen.has(last.id)) { // a prepend of older messages isn't an arrival
+        const known = l.findIndex(m => seen.has(m.id))
+        const arrived = l.slice(l.findLastIndex(m => seen.has(m.id)) + 1)
+        if (arrived.some(m => m.mine)) queueMicrotask(() => win?.scrollToEnd())
+        else if (known >= 0 && !stuck.value) unseen.value += arrived.length
+      }
       seen = new Set(l.map(m => m.id))
     })
   })
-  use(messageLog, () => log, () => ({
+  use(messageLog, () => root?.querySelector<HTMLElement>('[data-part="log"]') ?? undefined, () => ({
     onQuote(mid: string, selection: string) {
       const m = find(mid)
       if (!m) return
@@ -185,25 +222,54 @@ export function Thread({ label, messages, unreadFrom, typing, header, onSend, on
       box?.focus()
       announce(doc(), `Quoting ${author}. Escape removes the quote.`)
     },
-    onStick(on: boolean, n: number) { stuck.value = on; unseen.value = n },
+    ids: () => untrack(() => ids.value),
+    reveal: (mid: string) => win?.focus(mid),
   }))
   const latest = () => {
-    log!.scrollTop = log!.scrollHeight
-    log!.dispatchEvent(new Event('scroll'))
-    ;[...log!.querySelectorAll<HTMLElement>('[data-scope="message"]')].at(-1)?.focus({ preventScroll: true })
+    win?.scrollToEnd()
+    const last = ids.value.at(-1)
+    if (last !== undefined) win?.focus(last)
   }
-  const ctx: RowCtx = { find, fresh: () => fresh.value, onRetry: m => onRetry?.(m), onReact: (m, r) => onReact?.(m, r), onReplies: m => onReplies?.(m) }
-  const comp = untrack(() => composer)
+  const take = (c: VirtualControl) => {
+    win = c
+    control?.(c)
+    const open = untrack(() => unreadFrom)
+    if (open) queueMicrotask(() => c.scrollTo(open))
+  }
+  const row = (e: () => Entry) => (
+    <>
+      {e().divider && <Divider d={e().divider!} />}
+      <Message message={e().row.message} continued={e().row.continued} last={e().row.last} arrive={fresh.value.includes(e().id)} source={find(e().row.message.quote?.ref)} onRetry={m => onRetry?.(m)} onReact={(m, r) => onReact?.(m, r)} onReplies={m => onReplies?.(m)} />
+    </>
+  )
+  const comp = untrack(() => composer ?? { label: `Message ${label}` })
   return (
-    <section data-scope="thread" data-part="root" aria-label={label} id={id}>
+    <section ref={(n: any) => (root = n)} data-scope="thread" data-part="root" aria-label={label} id={id} style={height ? `block-size:${height}` : undefined}>
       {head.value !== undefined ? <div data-part="app-bar">{head.value}</div> : <span></span>}
-      <div ref={(n: any) => (log = n)} data-part="log" role="log" aria-label="Messages" aria-live="off" tabindex="-1">
-        {rows.value.map(r => <Row key={r.id} row={r} ctx={ctx} />)}
-      </div>
+      <VirtualList
+        part="log"
+        role="log"
+        bareRows
+        open
+        tabindex={-1}
+        label="Messages"
+        items={rows.value}
+        rowKey={e => e.id}
+        text={e => (plain(e.row.message) ? e.row.message.text : null)}
+        variant={shape}
+        estimate={64}
+        gap={2}
+        stick={STICK_PX}
+        from={untrack(() => (unreadFrom ? 'start' : 'end'))}
+        onStart={onOlder}
+        onStick={s => { stuck.value = s; if (s) unseen.value = 0 }}
+        onDrift={onDrift}
+        control={take}
+      >{row}</VirtualList>
       {!stuck.value && <Button size="sm" data-part="jump" onClick={latest}>Jump to latest{unseen.value > 0 ? ` · ${unseen.value} new` : ''}</Button>}
       <div>
         <TypingIndicator text={typingLine(typingNames.value)} />
-        <Composer {...comp} quote={draft} onSend={onSend} input={el => (box = el)} />
+        {onSend && <Composer {...comp} quote={draft} onSend={m => onSend!(m)} input={el => (box = el)} />}
       </div>
     </section>
   )
