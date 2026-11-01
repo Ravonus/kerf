@@ -53,13 +53,14 @@ export function CodeInput({ value, defaultValue, onValueChange, language, lineNu
       hint={hint ?? LEAVE}
       attrs={{ 'data-multiline': '' }}
       filled={held.value.length > 0}
-      control={({ id, describedby, invalid, rest: live }) => (
+      reset={held.reset}
+      control={p => (
         <div data-part="body">
           <div ref={(n: any) => (box = n)} class="code-in" data-wrap={wrap ? '' : undefined} style={`--_tab:${tabSize}`}>
             {numbered.value && <ol data-part="lines" class="ln" aria-hidden="true">{lines.value.map(n => <li key={n} data-error={n === errorLine ? '' : undefined}>{n}</li>)}</ol>}
             <div data-part="surface">
               <pre data-part="layer" aria-hidden="true">{`${held.value}\n`}</pre>
-              <textarea {...live} data-part="input" id={id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget as HTMLTextAreaElement)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
+              <textarea {...p.rest} data-part="input" id={p.id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget as HTMLTextAreaElement)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
             </div>
           </div>
         </div>

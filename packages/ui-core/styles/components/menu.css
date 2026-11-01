@@ -1,13 +1,13 @@
 /* generated from docs/design/warp/tokens by ui-core/scripts/split-css.mjs: do not edit */
 @layer warp.components {
 /* -- Menu (dropdown, context, submenu; also the action sheet on phones) ----- */
-:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; overflow: visible; }
+:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; }
 /* the panel's border draws in L→R as it opens and holds while open (sweep child, inset over the hairline) */
 :where([data-scope="menu"] [data-part="item"], [data-scope="select"] [data-part="item"], [data-scope="palette"] [data-part="item"]) {
   position: relative; display: flex; align-items: center; gap: var(--warp-space-related);
   min-block-size: max(32px, var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-space-related) var(--warp-pad-control);
   border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); outline: none;
-  color: var(--warp-color-text); cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
+  color: var(--warp-color-text); text-decoration: none; cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="menu"] [data-part="item"]:focus, [data-scope="menu"] [data-part="item"][data-state="open"],

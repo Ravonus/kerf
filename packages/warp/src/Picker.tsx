@@ -1,4 +1,4 @@
-import { isSheet, messages, pickerPanel, todayIso, uid, type Presentation } from '@weft/ui-core'
+import { isSheet, messages, pickerPanel, reportMissing, todayIso, uid, type Presentation } from '@weft/ui-core'
 import { onMount, state, untrack, watch, type State } from 'weft'
 import { bindable, type Bindable, type Openable } from './bind'
 import { Button } from './Button'
@@ -84,9 +84,36 @@ export function Hidden({ name, value }: { name?: string; value: () => string }) 
   return <>{name && <input type="hidden" name={name} value={value()} />}</>
 }
 
-/** A composite in the field shell: a body role=group named by the visible label; segments keep their short names. */
-export function Composite({ control, ...props }: any) {
-  return <Field {...props} group control={control} />
+/**
+ * A composite in the field shell: a body role=group named by the visible label; segments keep their short names. `bound`
+ * is its value: a form's reset goes back to the first one (`onReset` clears what the composite holds beside it), and
+ * `required` is a hidden text input (a type=hidden one is never validated) that is empty while the value is, so the
+ * form won't submit; the browser's own message shows as the field's error.
+ */
+export function Composite({ control, bound, onReset, ...props }: any) {
+  const missing = state<string | undefined>(undefined)
+  const blank = () => { const v = bound.value; return v === null || v === '' || (typeof v === 'object' && Object.values(v).includes(null)) }
+  let proxy: HTMLInputElement | undefined
+  const reset = () => {
+    bound.reset()
+    onReset?.()
+    missing.value = undefined
+    if (proxy) proxy.value = blank() ? '' : 'set' // the native reset emptied it, and the value may not have changed
+  }
+  return (
+    <Field
+      {...props}
+      error={props.error ?? (blank() ? missing.value : undefined)}
+      group
+      reset={reset}
+      control={p => (
+        <>
+          {untrack(() => control(p))}
+          {props.required && <input ref={(n: any) => (proxy = n)} onInvalid={(e: Event) => (missing.value = reportMissing(e))} data-part="sr-only" tabindex="-1" aria-hidden="true" required disabled={props.disabled} readonly={props.readonly} value={blank() ? '' : 'set'} />}
+        </>
+      )}
+    />
+  )
 }
 
 export { isSheet, messages, uid }

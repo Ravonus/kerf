@@ -50,12 +50,14 @@ export function DateField({ value, defaultValue, onValueChange, open, defaultOpe
       error={error ?? own.value ?? undefined}
       disabled={disabled}
       readonly={readonly}
+      bound={v}
+      onReset={() => { own.value = null; started.value = false }}
       filled={v.value !== null || started.value}
       hold={pop.value}
       attrs={{ onClick: (e: MouseEvent) => { if (!disabled && isSheet(e.currentTarget as Element, presentation) && (e.target as Element).closest('[data-part="segment"]')) pop.set(true) } }}
       control={() => (
         <>
-          <Segments kind="date" locale={env.locale.value} value={v.value} today={env.today.value} clears={clears.value} disabled={disabled} readonly={readonly} onEdit={onEdit} onBlurPartial={() => (own.value = 'Enter a complete date, or pick one from the calendar.')} />
+          <Segments required={rest.required} kind="date" locale={env.locale.value} value={v.value} today={env.today.value} clears={clears.value} disabled={disabled} readonly={readonly} onEdit={onEdit} onBlurPartial={() => (own.value = 'Enter a complete date, or pick one from the calendar.')} />
           <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon={CalendarIcon} label={t.value.choose + (v.value ? `, ${fmt(v.value, { dateStyle: 'full' }, env.locale.value)}` : '')} open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </>
@@ -172,13 +174,15 @@ export function DateRangeField({ value, defaultValue, onValueChange, open, defau
       error={error ?? trouble.value}
       disabled={disabled}
       readonly={readonly}
+      bound={v}
+      onReset={() => { started.value = false; chosen.value = untrack(() => preset) ?? null }}
       filled={!!(v.value.start || v.value.end) || started.value}
       hold={pop.value}
       control={() => (
         <>
-          <Segments kind="date" label="Start" locale={env.locale.value} value={v.value.start} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={editStart} />
+          <Segments required={rest.required} kind="date" label="Start" locale={env.locale.value} value={v.value.start} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={editStart} />
           <span data-part="range-sep" aria-hidden="true">–</span>
-          <Segments kind="date" label="End" locale={env.locale.value} value={v.value.end} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={editEnd} />
+          <Segments required={rest.required} kind="date" label="End" locale={env.locale.value} value={v.value.end} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={editEnd} />
           <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon={CalendarIcon} label={t.value.chooseRange + (v.value.start && v.value.end ? `, ${summary.value}` : '')} open={pop.value} disabled={disabled} onToggle={toggle} />
           <Hidden name={name} value={() => (v.value.start && v.value.end ? `${v.value.start}/${v.value.end}` : '')} />
         </>

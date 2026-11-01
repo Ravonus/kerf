@@ -16,10 +16,12 @@ export interface SliderProps {
   /** A range's thumbs, for screen readers: "Minimum price", "Maximum price". */
   names?: [string, string]
   disabled?: boolean
+  /** Posts with a form: the number, or one entry per thumb. */
+  name?: string
 }
 
 /** A slider (03 §5): role=slider thumbs on warp's rail, keyboard per APG, a pointer anywhere on the track. */
-export function Slider({ label, value, onChange, min = 0, max = 100, step = 1, format = String, names, disabled }: SliderProps) {
+export function Slider({ label, value, onChange, min = 0, max = 100, step = 1, format = String, names, disabled, name }: SliderProps) {
   const id = uid('slider')
   const values = derived(() => (Array.isArray(value) ? value : [value]))
   let el: HTMLDivElement | undefined
@@ -33,6 +35,7 @@ export function Slider({ label, value, onChange, min = 0, max = 100, step = 1, f
           <div key={i} data-part="thumb" role="slider" tabindex={disabled ? '-1' : '0'} aria-labelledby={`${id}-l`} aria-valuemin={min} aria-valuemax={max} aria-valuenow={v} aria-disabled={disabled ? 'true' : undefined}></div>
         ))}
       </div>
+      {name && values.value.map((v, i) => <input key={i} type="hidden" name={name} value={v} />)}
     </div>
   )
 }

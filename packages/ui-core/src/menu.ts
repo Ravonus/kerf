@@ -1,5 +1,5 @@
 // The APG menu button (02 §6, "The account menu"): one menu, any number of triggers.
-import { pushLayer } from './layers'
+import { place, pushLayer, type Align, type Side } from './layers'
 
 export interface MenuOptions {
   open: boolean
@@ -7,6 +7,9 @@ export interface MenuOptions {
   trigger: () => HTMLElement | null | undefined
   /** Which item takes focus on open (↑ on a trigger opens at the last). */
   at?: 'first' | 'last'
+  /** Anchor it to the trigger while open (placed once shown, followed through scroll and resize). */
+  side?: Side
+  align?: Align
   onClose(): void
 }
 
@@ -26,13 +29,27 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
   let typed = ''
   let typedAt = 0
   const items = () => [...el.querySelectorAll<HTMLElement>(ITEMS)]
+  const win = el.ownerDocument.defaultView!
+  const reposition = (e?: Event) => {
+    const t = o.trigger()
+    if (o.side && t && e?.target !== el && el.matches(':popover-open')) place(el, t, o.side, o.align, 6)
+  }
   const show = () => {
     if (remove) return
+    reposition()
+    win.addEventListener('resize', reposition)
+    win.addEventListener('scroll', reposition, true)
     remove = pushLayer({ el, trigger: o.trigger(), close: reason => { if (reason === 'escape') o.trigger()?.focus(); o.onClose() } })
     const all = items()
     ;(o.at === 'last' ? all.at(-1) : all[0])?.focus({ preventScroll: true })
   }
-  const hide = () => { remove?.(); remove = undefined; typed = '' }
+  const hide = () => {
+    remove?.()
+    remove = undefined
+    typed = ''
+    win.removeEventListener('resize', reposition)
+    win.removeEventListener('scroll', reposition, true)
+  }
   const onKey = (e: KeyboardEvent) => {
     const all = items()
     const at = all.indexOf(el.ownerDocument.activeElement as HTMLElement)

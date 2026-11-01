@@ -79,6 +79,7 @@ export function MonthPicker({ value, defaultValue, onValueChange, open, defaultO
       {...rest}
       label={label}
       disabled={disabled}
+      bound={v}
       filled={!!v.value}
       hold={pop.value}
       control={() => <><PickButton el={n => (trigger = n)} text={shown.value} label={`${label}, ${shown.value || 'none'}`} open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} /><Hidden name={name} value={() => v.value ?? ''} /></>}
@@ -110,6 +111,7 @@ export function WeekPicker({ value, defaultValue, onValueChange, open, defaultOp
       {...rest}
       label={label}
       disabled={disabled}
+      bound={v}
       filled={!!v.value}
       hold={pop.value}
       control={() => <><PickButton el={n => (trigger = n)} text={shown.value} label={v.value ? `${label}, ${shown.value}, ${weekName(v.value, env.locale.value)}` : `${label}, none`} open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} /><Hidden name={name} value={() => v.value ?? ''} /></>}
@@ -168,6 +170,7 @@ export function PeriodPicker({ value, defaultValue, onValueChange, open, default
       {...rest}
       label={label}
       disabled={disabled}
+      bound={v}
       filled={!!v.value}
       hold={pop.value}
       control={() => <><PickButton el={n => (trigger = n)} text={shown.value} label={`${label}, ${shown.value || 'none'}`} open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} /><Hidden name={name} value={() => v.value ?? ''} /></>}

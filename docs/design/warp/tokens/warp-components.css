@@ -92,6 +92,10 @@
   font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle);
 }
 
+/* a modal open: the page behind holds still. data-scrollbar (dialog()) keeps a classic scrollbar's room, so nothing shifts */
+html:has(dialog:modal) { overflow: hidden; }
+html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
+
 /* visually hidden (live regions, labels) */
 :where([data-part="sr-only"], [data-scope="announcer"]) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
@@ -648,13 +652,13 @@
 :where([data-scope="hover-card"][data-part="content"]) { inline-size: 300px; padding: var(--warp-space-group); display: grid; gap: var(--warp-space-related); }
 
 /* -- Menu (dropdown, context, submenu; also the action sheet on phones) ----- */
-:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; overflow: visible; }
+:where([data-scope="menu"][data-part="content"]) { min-inline-size: 208px; }
 /* the panel's border draws in L→R as it opens and holds while open (sweep child, inset over the hairline) */
 :where([data-scope="menu"] [data-part="item"], [data-scope="select"] [data-part="item"], [data-scope="palette"] [data-part="item"]) {
   position: relative; display: flex; align-items: center; gap: var(--warp-space-related);
   min-block-size: max(32px, var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-space-related) var(--warp-pad-control);
   border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); outline: none;
-  color: var(--warp-color-text); cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
+  color: var(--warp-color-text); text-decoration: none; cursor: default; user-select: none; scroll-margin-block: var(--warp-space-tight);
   transition: background-color var(--warp-duration-fast) var(--warp-ease-out);
 }
 :where([data-scope="menu"] [data-part="item"]:focus, [data-scope="menu"] [data-part="item"][data-state="open"],

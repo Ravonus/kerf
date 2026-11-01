@@ -69,9 +69,9 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
   const onKey = (e: KeyboardEvent) => {
     const el = e.currentTarget as HTMLInputElement
     if (e.key === 'Escape') {
+      if (e.defaultPrevented) return // an overlay took it: this popup, or the dialog around a closed one
       e.preventDefault()
-      if (open.value) open.value = false
-      else if (el.value) { cancel(); onText?.('') }
+      if (el.value) { cancel(); onText?.('') }
     } else if (e.key === 'ArrowDown' && !open.value) { e.preventDefault(); run(el.value) }
     else if (open.value && hits.value.length) {
       const d = ({ ArrowDown: 1, ArrowUp: -1 } as Record<string, number>)[e.key]
@@ -90,8 +90,8 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
       hint={shownHint.value}
       filled={text().length > 0}
       hold={open.value}
-      control={({ id: field, describedby, invalid, rest: live }) => (
-        <input ref={(n: any) => (input = n)} {...live} data-part="input" id={field} placeholder=" " role="combobox" aria-autocomplete="list" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} aria-busy={busy.value ? 'true' : undefined} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} autocomplete={live.autocomplete ?? 'off'} value={text()} onInput={e => { const v = (e.currentTarget as HTMLInputElement).value; onText?.(v); run(v) }} onKeyDown={onKey} />
+      control={p => (
+        <input ref={(n: any) => (input = n)} {...p.rest} data-part="input" id={p.id} placeholder=" " role="combobox" aria-autocomplete="list" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} aria-busy={busy.value ? 'true' : undefined} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} autocomplete={p.rest.autocomplete ?? 'off'} value={text()} onInput={e => { const v = (e.currentTarget as HTMLInputElement).value; onText?.(v); run(v) }} onKeyDown={onKey} />
       )}
       end={
         <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>

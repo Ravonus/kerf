@@ -8,8 +8,10 @@ import { Accordion } from '../../src/Accordion'
 import { Button } from '../../src/Button'
 import { Canvas } from '../../src/Canvas'
 import { RadioGroup } from '../../src/Choice'
+import { DateField } from '../../src/DateField'
 import { Dither, DitherField, DitherGlyph } from '../../src/Dither'
 import { Menu } from '../../src/Menu'
+import { MonthPicker } from '../../src/MonthPicker'
 import { Select } from '../../src/Select'
 import { Slider } from '../../src/Slider'
 import { Ticker } from '../../src/Ticker'
@@ -104,7 +106,7 @@ function RichInputs() {
   return (
     <>
       <h1>warp rich inputs</h1>
-      <Rich.DateFieldCase /><Rich.RangeFieldCase /><Rich.TimeFieldCase /><Rich.DateTimeFieldCase /><Rich.CalendarCase />
+      <Rich.DateFieldCase /><DateField label="Required date" required locale="en-US" today="2026-01-15" /><MonthPicker label="Required month" required locale="en-US" today="2026-01-15" /><Rich.RangeFieldCase /><Rich.TimeFieldCase /><Rich.DateTimeFieldCase /><Rich.CalendarCase />
       <Rich.MonthCase /><Rich.WeekCase /><Rich.PeriodCase /><Rich.ZoneCase /><Rich.CountryCase /><Rich.LanguageCase /><Rich.CurrencyCase />
       <Rich.PhoneCase /><Rich.DurationCase /><Rich.RecurrenceCase /><Rich.CustomRuleCase />
       <Rich.PlaceCase /><Rich.AddressCase /><Rich.CardCase /><Rich.SignatureCase />

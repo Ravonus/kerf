@@ -62,27 +62,29 @@ export type Align = 'start' | 'center' | 'end'
 export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', align: Align = 'start', gap = 8) {
   const win = el.ownerDocument.defaultView!
   const t = trigger.getBoundingClientRect()
+  // the laid-out size: a panel opening is still scaled down, and a rect would measure that
   const r = el.getBoundingClientRect()
+  const w = el.offsetWidth || r.width, h = el.offsetHeight || r.height
   const vw = win.innerWidth, vh = win.innerHeight
   const room = { top: t.top, bottom: vh - t.bottom, left: t.left, right: vw - t.right }
-  const size = side === 'top' || side === 'bottom' ? r.height : r.width
+  const size = side === 'top' || side === 'bottom' ? h : w
   const flip = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' } as const
   if (room[side] < size + gap && room[flip[side]] > room[side]) side = flip[side]
   let x: number, y: number
   if (side === 'top' || side === 'bottom') {
-    y = side === 'top' ? t.top - gap - r.height : t.bottom + gap
-    x = align === 'start' ? t.left : align === 'end' ? t.right - r.width : t.left + (t.width - r.width) / 2
+    y = side === 'top' ? t.top - gap - h : t.bottom + gap
+    x = align === 'start' ? t.left : align === 'end' ? t.right - w : t.left + (t.width - w) / 2
   } else {
-    x = side === 'left' ? t.left - gap - r.width : t.right + gap
-    y = align === 'start' ? t.top : align === 'end' ? t.bottom - r.height : t.top + (t.height - r.height) / 2
+    x = side === 'left' ? t.left - gap - w : t.right + gap
+    y = align === 'start' ? t.top : align === 'end' ? t.bottom - h : t.top + (t.height - h) / 2
   }
-  const left = Math.round(Math.max(8, Math.min(x, vw - r.width - 8)))
-  const top = Math.round(Math.max(8, Math.min(y, vh - r.height - 8)))
+  const left = Math.round(Math.max(8, Math.min(x, vw - w - 8)))
+  const top = Math.round(Math.max(8, Math.min(y, vh - h - 8)))
   el.style.left = `${left}px`
   el.style.top = `${top}px`
   // it scales about the trigger, so it visibly comes from what opened it
-  const ox = side === 'left' ? r.width : side === 'right' ? 0 : Math.max(0, Math.min(r.width, t.left + t.width / 2 - left))
-  const oy = side === 'top' ? r.height : side === 'bottom' ? 0 : Math.max(0, Math.min(r.height, t.top + t.height / 2 - top))
+  const ox = side === 'left' ? w : side === 'right' ? 0 : Math.max(0, Math.min(w, t.left + t.width / 2 - left))
+  const oy = side === 'top' ? h : side === 'bottom' ? 0 : Math.max(0, Math.min(h, t.top + t.height / 2 - top))
   el.style.setProperty('--warp-origin', `${Math.round(ox)}px ${Math.round(oy)}px`)
   el.dataset.side = side
 }
