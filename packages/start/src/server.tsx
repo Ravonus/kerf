@@ -39,7 +39,7 @@ import { ErrorPage, NotFoundPage } from './builtin'
 // @ts-expect-error: plain JS module
 import { renderCard } from './og/index.mjs'
 // @ts-expect-error: plain JS module
-import { INLINE_CSS_MAX } from './inline.mjs'
+import { pageStyles } from './inline.mjs'
 import { capture } from './capture.mjs'
 
 export interface RouteEntry { id: string; file: string; layouts: string[]; pattern: string; params: string[]; splat?: string; card?: string; kind: 'page' | '404' | 'error' }
@@ -258,13 +258,14 @@ export function createHandler(options: HandlerOptions) {
     const assets = options.assets ?? {}
     const parts = islandsOf(s.shell)
     const now = !parts.lazy.length || payload.m.some(m => !m.s) || !!payload.i?.length
+    const styles = pageStyles(assets, pageSheets(assets.css, parts, options.chunks), s.shell, site.head)
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
     const head =
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
       (site.head ? site.head + '\n' : '') +
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
-      sheets({ ...assets, css: pageSheets(assets.css, parts, options.chunks) }) +
+      styles.head +
       // The entry's own script tag, just below, already fetches it.
       modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
       (options.lazy ? `<script>${capture(now)}</script>\n` : '') +
@@ -293,7 +294,7 @@ export function createHandler(options: HandlerOptions) {
       async start(controller) {
         controller.enqueue(enc.encode(head))
         try {
-          for await (const chunk of s.chunks) controller.enqueue(enc.encode(chunk + '\n'))
+          for await (const chunk of s.chunks) controller.enqueue(enc.encode(styles.late(pageSheets([], islandsOf(chunk), options.chunks)) + chunk + '\n'))
         } catch (e) {
           options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
         }
@@ -597,17 +598,6 @@ async function compressed(request: Request, response: Response): Promise<Respons
   headers.append('vary', 'Accept-Encoding')
   headers.delete('content-length')
   return new Response(body as BodyInit, { status: response.status, statusText: response.statusText, headers })
-}
-
-/** A page's stylesheets, in order: inline while they fit, then links. */
-function sheets(assets: NonNullable<HandlerOptions['assets']>) {
-  let left = INLINE_CSS_MAX as number
-  return (assets.css ?? []).map(c => {
-    const css = assets.inline?.[c.href]
-    if (css === undefined || css.length > left) return `<link rel="stylesheet" href="${esc(c.href)}">\n`
-    left -= css.length
-    return `<style>${css}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`
-  }).join('')
 }
 
 /**

@@ -8,7 +8,6 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fnId, inlineSheets } from '../src/vite.mjs'
-import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
@@ -109,20 +108,49 @@ describe('node preset, end to end', () => {
   test('a page carries its stylesheets inline, each with a disabled link so it is neither fetched nor applied twice', async () => {
     const html = await (await fetch(server.url + '/styled')).text()
     const head = html.slice(0, html.indexOf('</head>'))
-    const styles = [...head.matchAll(/<style>([\s\S]*?)<\/style>\n<link rel="stylesheet" href="([^"]+)" disabled>/g)]
+    const styles = [...head.matchAll(/<style>((?:(?!<\/style>)[\s\S])*)<\/style>\n<link rel="stylesheet" href="([^"]+)" disabled>/g)]
     expect(styles.length).toBeGreaterThan(0)
     for (const [, css, href] of styles) expect(css).toBe(await (await fetch(server.url + href)).text())
     expect(head).not.toMatch(/<link rel="stylesheet" href="[^"]+">/)
   })
 
-  test('inlineSheets leaves out what would break in a <style>, and what is too big to carry', () => {
+  test('inlineSheets leaves out what would break in a <style>', () => {
     const dir = mkdtempSync(join(tmpdir(), 'weft-sheets-'))
     mkdirSync(join(dir, 'assets'))
-    const sheets = { 'ok.css': 'a{background:url(/assets/x.png)}', 'data.css': 'a{background:url("data:image/svg+xml,%3Csvg filter=\'url(%23n)\'/%3E")}', 'rel.css': 'a{background:url(x.png)}', 'close.css': 'a{content:"</style>"}', 'big.css': 'a{}'.repeat(INLINE_CSS_MAX) }
+    const sheets = { 'ok.css': 'a{background:url(/assets/x.png)}', 'data.css': 'a{background:url("data:image/svg+xml,%3Csvg filter=\'url(%23n)\'/%3E")}', 'rel.css': 'a{background:url(x.png)}', 'close.css': 'a{content:"</style>"}' }
     for (const [name, css] of Object.entries(sheets)) writeFileSync(join(dir, 'assets', name), css)
     expect(Object.keys(inlineSheets(dir, '/')).sort()).toEqual(['/assets/data.css', '/assets/ok.css'])
     rmSync(dir, { recursive: true, force: true })
   })
+
+  test('a Boundary chunk needing rules the head left out brings the sheet, and swaps only once it has loaded', async () => {
+    const html = await (await fetch(server.url + '/stream-sheet')).text()
+    const head = html.slice(0, html.indexOf('</head>'))
+    expect(head).toContain('shell-card')
+    expect(head).not.toContain('late-card')
+    const href = /<link rel="stylesheet" href="(\/assets\/[^"]+)">\n<template>/.exec(html)?.[1]
+    expect(href).toBeTruthy()
+    expect(await (await fetch(server.url + href)).text()).toContain('late-card')
+
+    const { chromium } = createRequire(import.meta.url)('playwright-core')
+    const browser = await chromium.launch()
+    try {
+      const page = await browser.newPage()
+      // The sheet is slow and the swap is not: whatever the page first shows has to be styled.
+      await page.route('**/*.css', async route => { await new Promise(ok => setTimeout(ok, 200)); await route.continue() })
+      await page.addInitScript(() => {
+        new MutationObserver((_, o) => {
+          const el = document.querySelector('[data-scope="late-card"]')
+          if (el?.closest('#app')) { window.seen = getComputedStyle(el).color; o.disconnect() }
+        }).observe(document, { subtree: true, childList: true })
+      })
+      await page.goto(server.url + '/stream-sheet')
+      await page.waitForSelector('#app [data-scope="late-card"]')
+      expect(await page.evaluate(() => window.seen)).toBe('rgb(1, 2, 3)')
+    } finally {
+      await browser.close()
+    }
+  }, 30_000)
 
   test('the entry has no modulepreload: its script tag fetches it', async () => {
     const head = (await (await fetch(server.url + '/about')).text()).split('</head>')[0]

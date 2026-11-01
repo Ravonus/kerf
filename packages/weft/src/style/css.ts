@@ -348,7 +348,7 @@ export function emitGroups(groups: GroupSource[], uses: GroupUse[], { dev = fals
   const head = dev && shared.size ? '  /* the same base or part in several groups, written once */\n' : ''
   const sharedBlocks = [...shared.values()].map(m => block(m.sels, m.decls, '  '))
   if (!blocks.length && !sharedBlocks.length) return ''
-  return `@layer app.groups {\n${head}${[...sharedBlocks, ...blocks].join('\n')}\n}\n`
+  return `@layer warp, app, theme, base, components, utilities;\n@layer app.groups {\n${head}${[...sharedBlocks, ...blocks].join('\n')}\n}\n`
 }
 
 /**
