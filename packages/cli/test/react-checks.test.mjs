@@ -1,4 +1,4 @@
-// W043 in `weft check`: a literal boolean on a `data-*` attribute, whose `weft fix` renders the same.
+// `weft check` W043, a literal boolean on a `data-*` attribute whose `weft fix` renders the same, and W044, a random key.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -46,5 +46,20 @@ describe('W043', () => {
     await fix(dir)
     expect(readFileSync(join(dir, file), 'utf8')).toContain('<div data-open id="a" />')
     expect(w043(await check(dir))).toEqual([])
+  })
+})
+
+describe('W044', () => {
+  const w044 = r => r.diagnostics.filter(d => d.code === 'W044')
+  it('is in the catalog, as a warning', () => {
+    expect(entry('W044')).toMatchObject({ severity: 'warning', by: 'cli' })
+  })
+  it.each(['crypto.randomUUID()', 'Date.now()', 'Math.random()', '`row-${Date.now()}`'])('flags key={%s}', async key => {
+    const [d] = w044(await check(app(`<ul>{[1].map(n => <li key={${key}}>{n}</li>)}</ul>`)))
+    expect(d).toMatchObject({ severity: 'warning', file })
+    expect(d.why).toContain('differs between the server and the client')
+  })
+  it('leaves a stable key alone', async () => {
+    expect(w044(await check(app('<ul>{[1].map(n => <li key={n}>{n}</li>)}</ul>')))).toEqual([])
   })
 })

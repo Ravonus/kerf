@@ -83,7 +83,6 @@ export function Prompt(p: PromptProps) {
   let picker: HTMLInputElement | undefined
   use(autosize, () => box, () => draft.value)
   onMount(() => {
-    installSweep()
     p.control?.({
       insert(text) {
         draft.set(draft.value ? `${draft.value} ${text}` : text)
@@ -136,7 +135,7 @@ export function Prompt(p: PromptProps) {
   return (
     <div data-scope="prompt" style="position:relative;padding:0 var(--warp-space-group) var(--warp-space-group)">
       {p.children}
-      <div ref={(n: any) => (host = n)} data-scope="composer" data-sweep="" data-phase="idle" data-pin={drag.value ? '' : undefined} style="margin:0" onDragOver={over} onDragLeave={() => (drag.value = false)} onDrop={onDrop}>
+      <div ref={(n: any) => (host = n)} data-scope="composer" data-sweep="" data-pin={drag.value ? '' : undefined} style="margin:0" onDragOver={over} onDragLeave={() => (drag.value = false)} onDrop={onDrop}>
         <Sweep />
         {hasFiles.value && (
           <div data-part="files">

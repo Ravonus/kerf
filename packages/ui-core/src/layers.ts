@@ -76,7 +76,13 @@ export function place(el: HTMLElement, trigger: Element, side: Side = 'bottom', 
     x = side === 'left' ? t.left - gap - r.width : t.right + gap
     y = align === 'start' ? t.top : align === 'end' ? t.bottom - r.height : t.top + (t.height - r.height) / 2
   }
-  el.style.left = `${Math.round(Math.max(8, Math.min(x, vw - r.width - 8)))}px`
-  el.style.top = `${Math.round(Math.max(8, Math.min(y, vh - r.height - 8)))}px`
+  const left = Math.round(Math.max(8, Math.min(x, vw - r.width - 8)))
+  const top = Math.round(Math.max(8, Math.min(y, vh - r.height - 8)))
+  el.style.left = `${left}px`
+  el.style.top = `${top}px`
+  // it scales about the trigger, so it visibly comes from what opened it
+  const ox = side === 'left' ? r.width : side === 'right' ? 0 : Math.max(0, Math.min(r.width, t.left + t.width / 2 - left))
+  const oy = side === 'top' ? r.height : side === 'bottom' ? 0 : Math.max(0, Math.min(r.height, t.top + t.height / 2 - top))
+  el.style.setProperty('--warp-origin', `${Math.round(ox)}px ${Math.round(oy)}px`)
   el.dataset.side = side
 }

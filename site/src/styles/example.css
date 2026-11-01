@@ -3,7 +3,6 @@
 [data-site="example"] h2 { font-family: var(--warp-font-sans); font-size: 1.5rem; letter-spacing: -0.02em; color: var(--warp-color-text); }
 [data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid var(--warp-color-border); background: var(--warp-color-surface-sunken); }
 [data-site="example"] [data-part="run"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-related); min-inline-size: 0; min-block-size: 260px; background: radial-gradient(circle at 50% 30%, var(--warp-color-accent-soft), transparent 70%); padding: var(--warp-space-group); font-family: var(--warp-font-mono); border-inline-end: 1px solid var(--warp-color-border); }
-[data-site="example"] [data-part="run"]:empty { min-block-size: 0; block-size: 0; padding: 0; border: 0; }
 [data-site="example"] [data-part="run"] > * { inline-size: min(100%, 340px); }
 [data-site="example"] [data-part="run"] > [data-part="slow"], [data-site="example"] [data-part="run"] > iframe { inline-size: 100%; }
 [data-site="example"] [data-part="run"] > [data-part="panes"] { inline-size: 100%; }
@@ -23,7 +22,8 @@
 [data-site="example"] [data-part="tags"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
 [data-site="example"] [data-part="tags"] > * { inline-size: auto; }
 
-[data-site="example"] [data-part="panes"] { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-related); inline-size: 100%; }
+[data-site="example"] [data-part="panes"] { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-related); inline-size: 100%; align-items: start; }
+[data-site="example"] [data-part="run"]:has(> [data-part="panes"]) { align-content: start; }
 [data-site="example"] [data-new] { display: block; margin-inline: calc(var(--warp-space-group) * -1); padding-inline: calc(var(--warp-space-group) - 3px) var(--warp-space-group); border-inline-start: 3px solid var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
 [data-site="example"] [data-scope="surface"] p { display: flex; align-items: center; gap: var(--warp-space-related); }
 /* A docs column is narrow: the example sits above its code, so the code keeps its line breaks. */

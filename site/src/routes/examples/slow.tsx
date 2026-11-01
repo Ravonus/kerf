@@ -27,7 +27,7 @@ function Reviews(props: { list: Promise<string[]> }) {
 
 export default function Slow(props: RouteProps<typeof load>) {
   return (
-    <Card title="House blend, 250 g">
+    <Card data-site="framed" title="House blend, 250 g">
       <Boundary pending={<Skeleton />}>
         <Stock n={props.data.stock} />
       </Boundary>

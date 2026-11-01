@@ -2,22 +2,22 @@ import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft/start
 import { Link } from '@weft/start'
 import { Button, Nav } from '@weft/warp'
 import { PageExample } from '../../components/PageExample'
-import { demos } from '../../demos'
 import pages from '../../generated/docs.json'
 
 const all = pages as unknown as Record<string, { slug: string; title: string; section: string; html: string; description: string; lead?: string; toc: { id: string; text: string }[]; prev?: { slug: string; title: string }; next?: { slug: string; title: string }; parent?: { slug: string; title: string } }>
 
-/** What a page's example looks like before it runs: the half a reader without scripts gets, and everyone's first paint. */
-const stills = async (slug: string) => {
+/** A page's examples: their words and highlighted code, which the page's script then doesn't carry. */
+const examples = async (slug: string) => {
+  const { demos } = await import('../../demos')
   const ids = Object.keys(demos).filter(id => demos[id].page === slug)
-  if (!ids.length) return {}
-  const [{ runs }, { renderToString }] = await Promise.all([import('../../demos/runs'), import('weft/ssr')])
-  return Object.fromEntries(ids.map(id => [id, renderToString(runs[id])]))
+  if (!ids.length) return []
+  const { default: code } = await import('../../generated/demos.json')
+  return ids.map(id => ({ id, look: demos[id].look, tryIt: demos[id].tryIt, why: demos[id].why, code: (code as Record<string, string>)[id] }))
 }
 
 export const load = async ({ params }: LoadArgs<'/docs/[...slug]'>) => {
   const page = all[params.slug] ?? notFound()
-  return { ...page, stills: await stills(params.slug) }
+  return { ...page, examples: await examples(params.slug) }
 }
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })
 export const prerender = () => Object.keys(all).map(slug => ({ slug }))
@@ -32,6 +32,7 @@ const unfold = async (id: string) => {
   target!.scrollIntoView()
 }
 
+/* @weft visible */
 function Toc(props: { items: { id: string; text: string }[] }) {
   return <Nav label="On this page" axis="y" spy>{props.items.map(t => <a key={t.id} href={`#${t.id}`} onClick={() => unfold(t.id)}>{t.text}</a>)}</Nav>
 }
@@ -45,7 +46,7 @@ export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'
           <h1>{props.data.title}</h1>
         </header>
         {props.data.lead && <p data-part="lead" innerHTML={props.data.lead}></p>}
-        <PageExample slug={props.data.slug} stills={props.data.stills} />
+        <PageExample examples={props.data.examples} />
         <div data-scope="prose" innerHTML={props.data.html}></div>
         <footer data-part="pager">
           {props.data.prev && <Link href={`/docs/${props.data.prev.slug}`} class="prev"><span>Previous</span>{props.data.prev.title}</Link>}

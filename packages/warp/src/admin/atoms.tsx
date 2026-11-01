@@ -33,7 +33,7 @@ export function InlineSelect({ id, label, value, options, describedby, onChange 
     <>
       <label data-part="sr-only" for={id}>{label}</label>
       <div data-scope="field" data-size="sm" data-variant="classic">
-        <div data-part="control" data-filled="" data-sweep="" data-phase="idle">
+        <div data-part="control" data-filled="" data-sweep="">
           <Sweep />
           <select data-part="input" id={id} value={value} aria-describedby={describedby} onChange={onChange}>
             {options.map(o => <option key={o.value} value={o.value} selected={o.value === value}>{o.label}</option>)}

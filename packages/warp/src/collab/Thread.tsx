@@ -72,7 +72,7 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
           <Button emphasis="ghost" tone="neutral" size="sm" label="Quote reply" data-icon-only="" data-quote="" tabindex="-1" aria-keyshortcuts="Q"><QuoteIcon /></Button>
           <Button emphasis="ghost" tone="neutral" size="sm" label="Copy text" data-icon-only="" data-copytext="" tabindex="-1"><CopyIcon /></Button>
         </div>
-        <div data-part="bubble" data-sweep="" data-phase="idle">
+        <div data-part="bubble" data-sweep="">
           <SWEEP />
           {quoted.value && (
             <blockquote data-part="quote">
@@ -185,7 +185,6 @@ export function Thread({ label, messages, unreadFrom, typing, header, height, on
   const find = (mid?: string) => (mid ? list.value.find(m => m.id === mid) : undefined)
 
   onMount(() => {
-    installSweep()
     const told = burst<string>(names => {
       const who = [...new Set(names)]
       announce(doc(), names.length === 1 ? `New message from ${who[0]}` : who.length === 1 ? `${names.length} new messages from ${who[0]}` : `${names.length} new messages from ${joinNames(who)}`)
@@ -232,13 +231,13 @@ export function Thread({ label, messages, unreadFrom, typing, header, height, on
     const open = untrack(() => unreadFrom)
     if (open) queueMicrotask(() => c.scrollTo(open))
   }
-  const row = (e: () => Entry) => (
-    <>
+  const row = (e: () => Entry) => {
+    const source = derived(() => find(e().row.message.quote?.ref))
+    return <>
       {e().divider && <Divider d={e().divider!} />}
-      <Message message={e().row.message} continued={e().row.continued} last={e().row.last} arrive={fresh.value.includes(e().id)} source={find(e().row.message.quote?.ref)} onRetry={m => onRetry?.(m)} onReact={(m, r) => onReact?.(m, r)} onReplies={m => onReplies?.(m)} />
+      <Message message={e().row.message} continued={e().row.continued} last={e().row.last} arrive={fresh.value.includes(e().id)} source={source.value} onRetry={m => onRetry?.(m)} onReact={(m, r) => onReact?.(m, r)} onReplies={m => onReplies?.(m)} />
     </>
-  )
-  const comp = untrack(() => composer ?? { label: `Message ${label}` })
+  }
   return (
     <section ref={(n: any) => (root = n)} data-scope="thread" data-part="root" aria-label={label} id={id} style={height ? `block-size:${height}` : undefined}>
       {head.value !== undefined ? <div data-part="app-bar">{head.value}</div> : <span></span>}
@@ -265,7 +264,7 @@ export function Thread({ label, messages, unreadFrom, typing, header, height, on
       {!stuck.value && <Button size="sm" data-part="jump" onClick={latest}>Jump to latest{unseen.value > 0 ? ` · ${unseen.value} new` : ''}</Button>}
       <div>
         <TypingIndicator text={typingLine(typingNames.value)} />
-        {onSend && <Composer {...comp} quote={draft} onSend={m => onSend!(m)} input={el => (box = el)} />}
+        {onSend && <Composer {...(composer ?? { label: `Message ${label}` })} quote={draft} onSend={m => onSend!(m)} input={el => (box = el)} />}
       </div>
     </section>
   )

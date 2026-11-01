@@ -549,16 +549,16 @@ impl<'s> Analyzer<'s> {
         let Some(ctx) = self.body_level() else { return };
         if let Some(call) = ctx.state_arg {
             let arg = self.text(span);
+            let inner = &self.source[call.start as usize..call.end as usize];
+            let arg_text = inner.strip_prefix("state(").and_then(|s| s.strip_suffix(')')).unwrap_or(arg);
             let d = Diagnostic::new(
                 self.source,
                 "W005",
                 Severity::Error,
                 (span.start, span.end),
-                format!("`state({arg})` copies `{what}` once; later changes are ignored."),
+                format!("`state({arg_text})` copies `{arg_text}` once; later changes are ignored."),
                 "Use `state.linked(() => …)` to reset when it changes, or `untrack()` if a snapshot is intended.",
             );
-            let inner = &self.source[call.start as usize..call.end as usize];
-            let arg_text = inner.strip_prefix("state(").and_then(|s| s.strip_suffix(')')).unwrap_or(arg);
             let fix = Fix {
                 description: "Make it a linked state that resets when the prop changes".into(),
                 safe: false,

@@ -13,7 +13,7 @@
 //
 // Exit 1 on any violation, page error or motion leak.
 import { createServer } from 'node:http'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -50,6 +50,15 @@ const SCENARIOS = {
     await audit('tooltip')
     await page.getByLabel('Name', { exact: true }).focus()
     await audit('focused field')
+    await page.goto(`${url}?part=added`)
+    await settle(page)
+    await audit('added')
+    await page.getByRole('button', { name: 'Actions' }).click()
+    await audit('menu open')
+    await page.keyboard.press('Escape')
+    await page.getByLabel('Sort by').click()
+    await audit('select open')
+    await page.keyboard.press('Escape')
     await page.goto(`${url}?part=overlays`)
     await settle(page)
     await audit('modal + drawer open')
@@ -178,9 +187,20 @@ const SCENARIOS = {
     await page.locator(':popover-open [role="option"]').first().waitFor()
     await audit('slash menu open')
     await page.keyboard.press('Escape')
+    // the highlight is only worth its write if it lands on the row: the audit can't see this, and jsdom has no layout
+    const onRow = async () => {
+      await page.waitForTimeout(500)
+      const off = await page.evaluate(() => {
+        const row = document.querySelector('dialog[open] [aria-selected="true"]'), face = document.querySelector('dialog[open] [data-part="shuttle"]')
+        return row && face ? Math.abs(row.getBoundingClientRect().top - face.getBoundingClientRect().top) : null
+      })
+      if (off === null || off > 1) throw new Error(`palette shuttle is ${off}px off its row`)
+    }
     await page.getByRole('button', { name: 'Open', exact: true }).click()
+    await onRow()
     await page.locator('input[role="combobox"]:visible').first().fill('e')
     await audit('palette open')
+    await onRow()
   },
   ...Object.fromEntries(Object.entries(scenes).map(([name, run]) => [name, (page, audit, url) => run(page, audit, url, settle)])),
   async shop(page, audit, url) {
@@ -201,11 +221,63 @@ const ratio = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q
 const hex = c => `#${c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('')}`
 
 /**
+ * Clipped out of sight: a sweep's two copies of its text take turns behind clip-path, and the one out of sight has no
+ * contrast to measure. Only a clip excuses text, and only if a probe colour shows none of it reached the screen, so
+ * text that's merely the colour of its background still fails.
+ */
+async function clippedAway(page, sel, { x, y, width, height }) {
+  const clipped = await page.evaluate(sel => {
+    for (let e = document.querySelector(sel); e; e = e.parentElement) if (getComputedStyle(e).clipPath !== 'none') return true
+    return false
+  }, sel)
+  if (!clipped) return false
+  const probe = await page.addStyleTag({ content: `${sel}, ${sel} * { color: #f0f !important; fill: #f0f !important; -webkit-text-fill-color: #f0f !important; text-shadow: none !important; }` })
+  const png = await page.screenshot({ clip: { x, y, width, height }, animations: 'disabled' })
+  await probe.evaluate(n => n.remove())
+  return page.evaluate(async b64 => {
+    const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob())
+    const cx = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height }).getContext('2d')
+    cx.drawImage(img, 0, 0)
+    const d = cx.getImageData(0, 0, img.width, img.height).data
+    for (let p = 0; p < d.length; p += 4) if (d[p] > 180 && d[p + 1] < 90 && d[p + 2] > 180) return false
+    return true
+  }, png.toString('base64'))
+}
+
+/** The element, its ancestors, everything animating, and the viewport, as they are right now. */
+async function evidence(page, sel, info) {
+  const state = await page.evaluate(({ sel, box }) => {
+    const props = ['display', 'visibility', 'opacity', 'backgroundColor', 'backgroundImage', 'color', 'clipPath', 'transform', 'scale', 'translate', 'filter', 'mixBlendMode', 'transitionProperty', 'transitionDuration', 'zIndex', 'position', 'isolation']
+    const read = e => {
+      const cs = getComputedStyle(e), r = e.getBoundingClientRect()
+      return { tag: e.tagName.toLowerCase(), scope: e.dataset?.scope, part: e.dataset?.part, rect: [r.x, r.y, r.width, r.height], style: Object.fromEntries(props.map(p => [p, cs[p]])), fill: cs.getPropertyValue('--_fill'), a: cs.getPropertyValue('--_a'), states: [':hover', ':active', ':focus', ':focus-visible'].filter(q => e.matches(q)) }
+    }
+    const el = document.querySelector(sel), chain = []
+    for (let e = el; e; e = e.parentElement) chain.push(read(e))
+    const under = document.elementsFromPoint(box.x + box.width / 2, box.y + box.height / 2).map(e => `${e.tagName.toLowerCase()}[${e.dataset?.part ?? e.dataset?.scope ?? ''}]`)
+    return {
+      chain, kids: [...el.children].map(read), html: el.outerHTML.slice(0, 600), under, scroll: [scrollX, scrollY], viewport: [innerWidth, innerHeight], active: document.activeElement?.tagName, activePart: document.activeElement?.textContent?.slice(0, 30),
+      animations: document.getAnimations().map(a => ({ name: a.animationName ?? a.transitionProperty, state: a.playState, time: a.currentTime, target: a.effect?.target?.tagName, part: a.effect?.target?.dataset?.part, scope: a.effect?.target?.dataset?.scope, pseudo: a.effect?.pseudoElement })),
+    }
+  }, { sel, box: info.box })
+  const whole = await page.screenshot({ animations: 'disabled' })
+  return { state, whole, info, url: page.url() }
+}
+let kept = 0
+function keepEvidence(moment, reading) {
+  const dir = process.env.A11Y_EVIDENCE, n = `${process.pid}-${kept++}`
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, `${n}.png`), moment.whole)
+  writeFileSync(join(dir, `${n}-box.png`), reading.png)
+  writeFileSync(join(dir, `${n}.json`), JSON.stringify({ ...moment, whole: undefined, reading: { ...reading, png: undefined } }, null, 1))
+}
+
+/**
  * WCAG contrast of the text in `[data-a11y-px=i]`, measured: the text's own colour (resolved through a canvas, so
  * oklch and color-mix work, times every ancestor's opacity) over the backgrounds actually painted under its text box
  * (a screenshot with the text made transparent), unless an overlay or scrim covers it. Every background covering ≥ 10% of the box counts; the worst wins.
  */
-async function pixelContrast(page, i) {
+export async function pixelContrast(page, i, tries = 4) {
   const sel = `[data-a11y-px="${i}"]`
   const info = await page.evaluate(async sel => {
     const el = document.querySelector(sel)
@@ -223,8 +295,6 @@ async function pixelContrast(page, i) {
     // covered by an overlay in the top layer (an open tooltip over the text above its trigger): not this text's contrast
     const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('[popover], dialog, [data-part="scrim"], [data-scope="save-bar"]')
     if (top && !top.contains(el)) return null
-    // mid-sweep the label's sweep-content twin paints the same text over it: that twin is what's read
-    if (el.matches('[data-phase="in"] > [data-part="sweep-label"]')) return null
     const cs = getComputedStyle(el)
     let alpha = 1
     for (let e = el; e; e = e.parentElement) alpha *= Number(getComputedStyle(e).opacity)
@@ -235,15 +305,29 @@ async function pixelContrast(page, i) {
     const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data
     const size = parseFloat(cs.fontSize), bold = Number(cs.fontWeight) >= 700
     const where = `${el.closest('[data-scope]')?.dataset.scope ?? el.tagName.toLowerCase()}/${el.dataset.part ?? el.tagName.toLowerCase()}`
-    return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
+    return { where, box: { x: box.x, y: box.y, width: box.width, height: box.height }, at: [own.x, own.y, own.width, own.height], fg: [r, g, b], a: (a / 255) * alpha, large: size >= 24 || (bold && size >= 18.66) }
   }, sel)
   if (!info || info.a < 0.05) return null
+  if (await clippedAway(page, sel, info.box)) return null
   // what passes over or beside text without being behind it: the now line, peers' cursors and flags, a plan's radio dot
   const passing = `[data-scope="calendar"] [data-part="now"], [data-scope="cursor"]:not(:has(${sel})), [data-peer-selection]::before, [data-scope="plan-card"] [data-part="radio"] { visibility: hidden !important; } [data-peer-selection] { outline-color: transparent !important; }`
   const hide = await page.addStyleTag({ content: `${sel}, ${sel} * { color: transparent !important; fill: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } ${passing}` })
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
+  // a timer can reflow the page after the box was read (a rate limit's banner ending): those pixels are some other
+  // part of the page, so they say nothing about this text. Read it again where it is now; never settling is a failure.
+  const moved = await page.evaluate(({ sel, at }) => {
+    const r = document.querySelector(sel)?.getBoundingClientRect()
+    return !r || [r.x, r.y, r.width, r.height].some((v, k) => Math.abs(v - at[k]) > 0.5)
+  }, { sel, at: info.at })
+  if (moved) {
+    await hide.evaluate(n => n.remove())
+    if (tries > 1) return pixelContrast(page, i, tries - 1)
+    throw new Error(`${info.where} kept moving while its contrast was measured`)
+  }
+  // A11Y_EVIDENCE=<dir>: what the page was at this moment, with the mask still on, kept only if the reading fails
+  const moment = process.env.A11Y_EVIDENCE && await evidence(page, sel, info)
   await hide.evaluate(n => n.remove())
   const bgs = await page.evaluate(async b64 => {
     const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob())
@@ -263,17 +347,22 @@ async function pixelContrast(page, i) {
     if (!worst || r < worst.ratio) worst = { ratio: r, fg: hex(fg), bg: hex(bg) }
   }
   if (!worst) return null
+  if (moment && worst.ratio < need) keepEvidence(moment, { ...worst, need, png })
   return { where: info.where, ok: worst.ratio >= need, ratio: Math.round(worst.ratio * 100) / 100, need, fg: worst.fg, bg: worst.bg }
 }
 
 /**
  * Contrast failures that are in the spec's own CSS (docs/design/warp/tokens, split verbatim into ui-core/styles), so
  * warp can't fix them without changing the spec. They are reported, not failed; anything else fails. The spec's a11y
- * review names the class (reviews/03 m12: small text under 4.5:1, fix with the subtle or text tokens). Empty: the chip
- * and segmented counts (opacity .7/.8, 3.2:1 and 4.0:1 in light) were fixed in the spec on 2026-10-30.
+ * review names the class (reviews/03 m12: small text under 4.5:1, fix with the subtle or text tokens). The chip and
+ * segmented counts (opacity .7/.8, 3.2:1 and 4.0:1 in light) were fixed in the spec on 2026-10-30.
+ *
+ * `expression` and `state` narrow an entry to one look and one audit, so it can't excuse the same part anywhere else.
  */
-export const SPEC_FINDINGS = []
-const known = (m, stop) => SPEC_FINDINGS.find(f => f.where === m.where && f.theme === stop.theme)
+const OVER_TITLE = "the open event card's vivid hard shadow lies across another event's title, and the card covers it anyway: the overlay check only tests the box's centre (test/a11y/evidence/schedule-card-over-title.png)"
+export const SPEC_FINDINGS = ['light', 'dark'].map(theme => ({ where: 'calendar/event-title', theme, expression: 'vivid', state: 'schedule event card', why: OVER_TITLE }))
+const known = (m, stop, label) => SPEC_FINDINGS.find(f => f.where === m.where && f.theme === stop.theme
+  && (!f.expression || f.expression === stop.expression) && (!f.state || f.state === label))
 
 // let entry motion and sweeps finish (they are ≤ 600 ms at full motion)
 const settle = page => page.waitForTimeout(700)
@@ -347,11 +436,11 @@ export async function a11y(sites, { log = () => {}, only, workers = jobs() } = {
             return a.effect.getKeyframes().some(k => Object.keys(k).some(p => !['offset', 'computedOffset', 'easing', 'composite', 'opacity'].includes(p)))
           }).map(a => `${a.animationName ?? 'animation'} on ${a.effect?.target?.tagName?.toLowerCase()}${a.effect?.target?.dataset?.scope ? `[${a.effect.target.dataset.scope}]` : ''}`))
           : []
-        const failing = measured.filter(m => !m.ok && !known(m, stop))
+        const failing = measured.filter(m => !m.ok && !known(m, stop, label))
         states.push({
           label,
           violations: [...res.violations, ...(failing.length ? [{ id: 'color-contrast (measured)', impact: 'serious', nodes: failing.map(m => ({ target: m.target, why: `${m.where} ${m.ratio}:1 (needs ${m.need}:1), text ${m.fg} on ${m.bg}` })) }] : [])],
-          spec: measured.filter(m => !m.ok && known(m, stop)).map(m => ({ ...m, finding: known(m, stop).why })),
+          spec: measured.filter(m => !m.ok && known(m, stop, label)).map(m => ({ ...m, finding: known(m, stop, label).why })),
           measured,
           moving,
         })

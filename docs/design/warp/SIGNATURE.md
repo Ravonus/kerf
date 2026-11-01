@@ -25,12 +25,15 @@ The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
    `inset(0)`. At the same moment the base border wipes away left to right, from `inset(0)` to `inset(0 0 0 100%)`.
 3. **Out:** the sweep border **keeps travelling left to right**. It clips away from the left, `inset(0)` →
    `inset(0 0 0 100%)`, while the base border snaps back underneath. It never reverses.
-4. **Phase machine:** `idle → in → out → idle`. The reset to `idle` happens on the `clip-path` `transitionend`.
-   Re-entering while the phase is `out` **restarts from the left**: snap to `idle` (one style flush), then `in`.
-   Jumping straight from `out` to `in` would pull the sweep back right to left, so the direction would depend on
-   how the pointer moved. Every entry draws left to right, and every exit leaves to the right.
+4. **One switch, two edges (redesign.md §6).** `--_a` is 1 while a host is hovered, focused or held, and two registered
+   edges (`--_sl`, `--_sr`) draw from it: active, the right edge draws across; inactive, the left edge follows it out and the
+   right resets out of sight once that has finished. So a stroke can't reverse, and leaving part way only ends it sooner.
+   Re-entering during an exit shows the stroke whole at once, where the phase machine restarted it from the left: neither
+   runs backwards. Hover and focus are the browser's, so the sweep runs with no script and writes nothing to the DOM.
 5. **Timing:** 620 ms, `cubic-bezier(0.65, 0, 0.35, 1)`. The clip-path corners use `round` to match the host's corner
    radius.
+   Phase **in** runs on `--warp-sweep-ease-in`, front-loaded so the stroke leaves at once (redesign.md §2); phase **out**
+   keeps this curve. To revert, set that token to `--warp-sweep-ease`.
 6. **Errors:** the sweep is pinned in, painted `--danger`.
 7. **Where it's used:** across the whole kit, including:
    - text inputs, checkbox, combobox, select, the date pickers
@@ -65,7 +68,7 @@ Source: `buttons/core/Button.frame.tsx` and `theme/tokens.css:228-480`.
    so it exits through the right side. The corners and content clip out to the right.
 4. **Timing: 760 ms**, `cubic-bezier(0.65,0,0.35,1)`: the original's `--btn-sweep-duration`, longer than the 620 ms
    field sweep. Token `--warp-frame-duration` (quiet 590 ms, balanced 760 ms, vivid 760 ms; 0 under reduced motion).
-   The frame host runs every part on it, so the phase machine reads 760 ms from the part.
+   The frame host runs every part on it.
 5. **Filled variant** (`btn-border-sweep-filled`): a tone fill slides in from the left (`translateX(-101%) → 0`) and
    leaves to the right (`→ 101%`).
 6. **Touch:** a tap shows the full "in" state briefly (`data-touch-effect`).
@@ -141,18 +144,14 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 
 ## 4. In weft
 
-- The phase machine is a `state` plus `transitionend`.
+- The sweep is CSS: `--_a` plus two registered edges (§1.4). `installSweep()` keeps only `confirm()`, `pin()` and `duration()`.
+- A tap draws one whole sweep, then exits. `:active` ends too soon to do that, so each part keeps its `--_a` for 1.25 sweeps past it: still no script.
+- A held sweep never stacks two copies of its text: the resting label wipes away ahead of the copy and returns the moment the host lets go.
 - The per-character delays come from one layout read after mount, re-read on resize.
 - The notch window is a `derived` value that reads the layout once.
-- Expose the behaviour as `sweep()` and `floatingLabel()`, usable on any element through `data-part` hooks:
-  `data-part="sweep"`, `data-part="sweep-base"`, `data-phase`.
-- Specimens run **one** shared phase machine, `specimens/warp-sweep.js` (`window.warpSweep = { init, sync, pin,
-  confirm, duration }`). It reads the duration from the travelling part's computed `transition-duration`, never by
-  parsing the `calc()` custom property, and resets to `idle` on that part's `transitionend` (with a backstop).
-  Pages only inject parts and drive demos through the API; `data-static` hosts are frozen states it never touches.
-- Keep each phase change to O(1) DOM work: a single attribute change, with CSS doing the rest.
-- `duration()` is cached per (expression, motion, OS reduced motion, host kind); hosts with an inline duration
-  override opt out with `data-sweep-duration="live"`.
+- The markup is `data-sweep` on the host, `data-part="sweep"` and `data-part="sweep-base"` inside it. `floatingLabel()` does the
+  label.
+- `specimens/warp-sweep.js` is the historical phase machine that the specimens still run. warp no longer ships one.
 - **`--_on` is reserved.** It is the sweep switch, a number (0/1) the signature layer multiplies into opacity and
   clip. Components must name tone colours differently (`--_tone`, `--_solid`); a colour in `--_on` kills the sweep.
 - `--warp-color-sweep-base: inherit` on a host restores the ink resting border after a component recolours it.

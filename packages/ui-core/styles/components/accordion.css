@@ -22,7 +22,7 @@
 :where([data-scope="accordion"] [data-part="heading"]) { margin: 0; font: inherit; }
 :where([data-scope="accordion"] [data-part="trigger"], [data-scope="disclosure"][data-part="trigger"]) {
   display: flex; align-items: center; gap: var(--warp-space-related); inline-size: 100%;
-  min-block-size: max(var(--warp-control-lg), var(--warp-target-min)); padding: var(--warp-space-related) var(--warp-space-tight);
+  min-block-size: max(var(--warp-control-lg), var(--warp-target-min)); padding-block: var(--warp-space-related);
   border: 0; background: transparent; color: var(--warp-color-text); cursor: pointer; text-align: start;
   font: 500 var(--warp-text-body-size)/1.35 var(--warp-text-body-font); -webkit-tap-highlight-color: transparent;
   border-radius: var(--warp-radius-control);
@@ -45,5 +45,6 @@
   transition: grid-template-rows var(--warp-duration-base) var(--warp-ease-in-out), opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s;
 }
 :where([data-scope="accordion"] [data-part="content"] > div, [data-scope="disclosure"][data-part="content"] > div) { overflow: hidden; min-block-size: 0; }
-:where([data-scope="accordion"] [data-part="content"] > div > div) { padding: 0 var(--warp-space-tight) var(--warp-space-group); color: var(--warp-color-text-subtle); }
+:where([data-scope="accordion"] [data-part="content"] > div > div) { padding-block-end: var(--warp-space-group); color: var(--warp-color-text-subtle); }
+:where([data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="trigger"], [data-scope="accordion"][data-variant="line"] [data-part="item"] [data-part="content"] > div > div) { padding-inline: var(--warp-space-tight); }
 }

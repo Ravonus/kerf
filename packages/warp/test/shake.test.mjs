@@ -45,6 +45,22 @@ test('a Button pays nothing for the windows; a list brings its window, not chat,
   for (const word of ['scroll-grid', 'column-head', 'data-scope="composer"']) expect(list.css, word).not.toContain(word)
 }, 60000)
 
+test('a button pays nothing for canvas or dither; a Canvas brings no dither engine', async () => {
+  const plain = await bundle('<Button>Save</Button>', 'Button')
+  for (const word of ['data-fx-offscreen', 'putImageData', 'warp-dither', 'Path2D']) expect(plain.js + plain.css, word).not.toContain(word)
+  for (const word of ['data-scope="dither"', 'data-scope=dither', 'data-scope="canvas"', 'data-scope=canvas']) expect(plain.css, word).not.toContain(word)
+  const canvas = await bundle('<Canvas draw={() => {}} />', 'Canvas')
+  expect(canvas.js).toContain('data-fx-offscreen')
+  for (const word of ['putImageData', 'Path2D']) expect(canvas.js, word).not.toContain(word)
+}, 60000)
+
+test('a dither brings its own CSS and the inks it can name, and no field or signature rules', async () => {
+  const { css } = await bundle('<DitherField />', 'DitherField')
+  expect(css).toContain('[data-scope=dither]')
+  for (const token of ['--warp-color-accent-soft', '--warp-color-critical-border', '--warp-color-text']) expect(css, token).toContain(token)
+  expect(css).not.toContain('[data-scope=field]')
+}, 60000)
+
 test('a button brings no grid, palette or editor', async () => {
   const { js, css } = await bundle('<Button>Save</Button>', 'Button')
   for (const word of ['treegrid', 'aria-activedescendant', 'contenteditable', 'warp-code-', 'Unexpected end']) expect(js, word).not.toContain(word)

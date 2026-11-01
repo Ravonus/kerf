@@ -50,7 +50,8 @@ export function hydrate(code: () => any, container: Element, options: { data?: S
       hchild(container, code, script ?? undefined, undefined, undefined, 2) // the app's nodes are those before the data script
     }, null)
   } finally {
-    Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
+    if (hydration.misses) console.warn('weft: rendered fresh, a key differs between server and client (see `weft docs W044`)')
+    Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = undefined
     if (DEV && registry.size) console.warn(`weft: ${registry.size} server element(s) were never claimed (first: wk=${registry.keys().next().value})`)
     registry.clear()

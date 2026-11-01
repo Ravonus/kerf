@@ -98,6 +98,7 @@ export const catalog = [
     code: 'W041', severity: 'error', by: 'compiler', catches: '`let` variable mutated in a handler and read in JSX (never updates)', fix: 'Make it `state`',
     example: 'export function A() { let n = 0; return <button onClick={() => { n++ }}>{n}</button> }',
   },
+  { code: 'W044', severity: 'warning', by: 'cli', catches: 'A `key` read from `crypto.randomUUID()`, `Date.now()`, `Math.random()` or `performance.now()`: it differs between server and client, so the row is rebuilt on hydration and on every render. At runtime the same miss logs `a key differs between server and client`', fix: 'Key on a stable id from the data' },
   {
     code: 'W043', severity: 'warning', by: 'cli', catches: '`data-x={true}` or `data-x={false}` on a native element: `data-*` booleans are presence flags, so these write `data-x=""` or nothing, not React\'s `"true"` and `"false"`',
     fix: '`data-x` for a flag (`weft fix`), or `data-x="true"` for the word. CSS matches `[data-x]`',
@@ -143,6 +144,7 @@ export const catalog = [
   { code: 'D002', severity: 'error', by: 'cli', catches: 'Spacing off the scale, or a scale step written by hand (`padding: 16px`, `p-[13px]`, `gap-3`)', fix: 'A step of `hair tight related group section page`; autofix when the value is exactly one' },
   { code: 'D003', severity: 'warning', by: 'cli', catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)', fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius' },
   { code: 'D004', severity: 'warning', by: 'cli', catches: 'Layout spelled out on an element (`display: flex`, `flex flex-col gap-4`) where a primitive says it', fix: '`<Stack>` or `<Row>`; a suggested edit when nothing else is on the element' },
+  { code: 'D040', severity: 'warning', by: 'cli', catches: 'The style gate (`data-weft="styled"`) on the main content or a page heading: the first paint hides what it should show', fix: 'Mark the secondary part that needs its late styles, or drop the marker' },
   { code: 'D005', severity: 'warning', by: 'cli', catches: 'A native `<button>`, `<select>` or `<textarea>` in a warp app', fix: 'The warp component: focus ring, sweep, tones and touch target come with it' },
   { code: 'D006', severity: 'warning', by: 'cli', catches: 'One heading level at two roles across an app (`h1` as both `title` and `display`), or a bare `<hN>` beside `<Heading>`', fix: 'Drop `role`, or match the rest: `Heading` picks the role from `level`. A suggested edit at each site' },
   { code: 'D007', severity: 'warning', by: 'cli', catches: 'A bare `<a href>` in a warp app', fix: '`<Link>`, or `Shell`\'s `nav` for navigation (suggested edit)' },

@@ -25,7 +25,7 @@
   inline-size: 100%; border-collapse: separate; border-spacing: 0; table-layout: auto;
   font-size: var(--warp-text-body-size); line-height: 1.35; color: var(--warp-color-text);
 }
-:where([data-scope="table"] caption) { text-align: start; padding: 0 0 var(--warp-space-related); font-weight: 600; }
+:where([data-scope="table"] caption) { text-align: start; padding: var(--warp-space-group) var(--_px) var(--warp-space-related); font-weight: 600; }
 :where([data-scope="table"] th, [data-scope="table"] td) {
   block-size: var(--_row); padding: 0 var(--_px); text-align: start; vertical-align: middle; white-space: nowrap;
   border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
@@ -82,6 +82,7 @@
 :where([data-scope="table"] [data-part="resize"]:focus-visible) { outline: none; }
 :where([data-scope="table"] th:has([data-part="resize"])) { position: sticky; }
 /* rows: hover = state layer; selected = accent soft + emphasis line on the leading edge */
+:where([data-scope="table"] tbody tr:hover > *) { transition-duration: 0ms; }
 :where([data-scope="table"] tbody tr:hover) { --_cell-bg: color-mix(in oklab, var(--warp-color-text) calc(var(--warp-state-hover) * 100%), var(--warp-color-surface-raised)); }
 :where([data-scope="table"] tbody tr[data-selected]) { --_cell-bg: var(--warp-color-accent-soft); }
 :where([data-scope="table"] tbody tr[data-selected] > :first-child) { box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }

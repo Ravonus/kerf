@@ -75,6 +75,11 @@ describe('role drift', () => {
     const root = project({ 'package.json': JSON.stringify({ name: 'a' }), 'src/A.tsx': `export const A = ({ Heading }) => <><Heading level={1}>A</Heading><Heading level={1} role="display">B</Heading></>` })
     expect(codes(await check(root, { files: ['src/A.tsx'] }))).toEqual([])
   })
+  test('D040 the style gate on main content, and not on a side part', async () => {
+    const { result } = await run(`export const P = () => <main data-weft="styled"><aside data-weft="styled">x</aside></main>`)
+    expect(result.diagnostics.filter(d => d.code === 'D040').length).toBe(1)
+  })
+
   test('D007 a bare link is swapped for Link, and the import follows', async () => {
     const { root, result } = await run(`import { Row } from '@weft/warp'\nexport const P = () => <Row as="nav"><a href="/a">Home</a></Row>`)
     const d = result.diagnostics.find(d => d.code === 'D007')

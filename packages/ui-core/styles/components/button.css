@@ -13,20 +13,21 @@
   font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-  transition: transform var(--warp-duration-instant) var(--warp-ease-out),
-              border-color var(--warp-duration-fast) var(--warp-ease-out),
-              color var(--warp-duration-fast) var(--warp-ease-out);
+  /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
+  transition: scale var(--warp-spring-duration) var(--warp-ease-spring), translate var(--warp-spring-duration) var(--warp-ease-spring),
+              box-shadow var(--warp-spring-duration) var(--warp-ease-spring),
+              border-color var(--warp-touch-out) var(--warp-ease-out), color var(--warp-touch-out) var(--warp-ease-out);
 }
-/* the fill sweep: the hover layer (solid-hover, or the 7% ink layer) wipes in
-   L→R and leaves by shrinking toward the right, so it never reverses */
+:where([data-scope="button"]:hover) { transition-property: scale, translate, box-shadow; }
+/* the touch clock's fill: the hover layer wipes in L→R at once and leaves through the right, so it never reverses */
 :where([data-scope="button"])::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
   background: var(--_layer); opacity: var(--_layer-a);
   transform: scaleX(0); transform-origin: right center;
-  transition: transform var(--warp-sweep-duration) var(--warp-sweep-ease);
+  transition: transform calc(var(--warp-touch-out) * 2) var(--warp-ease-out);
 }
 :where([data-scope="button"]:hover, [data-scope="button"]:focus-visible, [data-scope="button"][data-state="open"], [data-scope="button"][aria-expanded="true"])::before {
-  transform: scaleX(1); transform-origin: left center;
+  transform: scaleX(1); transform-origin: left center; transition-duration: var(--warp-duration-base);
 }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
 :where([data-scope="button"][data-tone]:not([data-tone="accent"]):not([data-tone="neutral"])) { --warp-color-sweep: var(--_text); }
@@ -53,20 +54,20 @@
    clip-path instead: the same L→R edge on the same curve, never outside the box, and the 44px hit area and the
    focus ring (outline) are untouched. --_on 0 (flair none) keeps the plain fade. */
 :where([data-scope="button"] > [data-part="sweep-fill"]) {
-  transform: none; clip-path: inset(0 calc(100% * var(--_on, 1)) 0 0);
-  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), opacity var(--warp-duration-fast) var(--warp-ease-out);
+  transform: none; clip-path: inset(0 calc(var(--_sr) * var(--_on, 1)) 0 calc(var(--_sl) * var(--_on, 1)));
 }
-:where([data-scope="button"][data-phase="idle"] > [data-part="sweep-fill"]) { transition: none; }
-:where([data-scope="button"][data-phase="in"] > [data-part="sweep-fill"]) { transform: none; clip-path: inset(0); }
-:where([data-scope="button"][data-phase="out"] > [data-part="sweep-fill"]) { transform: none; clip-path: inset(0 0 0 calc(100% * var(--_on, 1))); }
-/* touch: a tap holds the phase "in" for 620ms (data-touch-effect, set by sweep()), then exits through the right */
 /* touch: the hit area reaches hit-min even when the visual is smaller */
 :where([data-scope="button"])::after {
   content: ""; position: absolute; pointer-events: auto;
   inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
-:where([data-scope="button"]:active) { transform: translateY(1px); }
+:where([data-scope="button"]:active) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
+/* vivid: no soft shadow to lift with, so a solid rests on a hard ink offset and presses into it */
+:where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) { box-shadow: var(--warp-offset) var(--warp-offset) 0 var(--warp-color-text); }
+:where([data-expression="vivid"] [data-scope="button"]:not([data-emphasis]):active, [data-expression="vivid"][data-scope="button"]:not([data-emphasis]):active) {
+  scale: 1; translate: var(--warp-offset) var(--warp-offset); box-shadow: 0 0 0 var(--warp-color-text);
+}
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--_layer-a) * 1.55); }
 :where([data-scope="button"][data-emphasis="soft"]) {
   --_fill: var(--_soft); --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
@@ -90,7 +91,7 @@
   text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
 }
 :where([data-scope="button"][data-emphasis="link"]:hover) { text-decoration-color: currentColor; text-decoration-thickness: var(--warp-border-emphasis); }
-:where([data-scope="button"][data-emphasis="link"]:active) { transform: none; }
+:where([data-scope="button"][data-emphasis="link"]:active) { scale: 1; }
 :where([data-scope="button"][data-size="sm"]) { block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); gap: calc(var(--warp-space-related) * 0.75); }
 :where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
 :where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
@@ -103,11 +104,12 @@
   opacity: var(--warp-opacity-disabled); cursor: not-allowed;
 }
 :where([data-scope="button"]:disabled)::before, :where([data-scope="button"][aria-disabled="true"])::before { opacity: 0; }
-:where([data-scope="button"]:disabled:active, [data-scope="button"][aria-disabled="true"]:active) { transform: none; }
+:where([data-scope="button"]:disabled:active, [data-scope="button"][aria-disabled="true"]:active) { scale: 1; translate: 0 0; }
 :where([data-scope="button"][data-full]) { inline-size: 100%; }
 /* loading: width is kept, the label hides visually, a spinner sits on top */
 :where([data-scope="button"][data-loading]) { cursor: progress; }
-:where([data-scope="button"][data-loading] > :not([data-part="spinner"])) { opacity: 0; }   /* opacity, not visibility: the label stays the accessible name (review 03 M3) */
-:where([data-scope="button"] > [data-part="spinner"]) { position: absolute; inset: 0; margin: auto; }
+:where([data-scope="button"][data-loading] > :not([data-part="spinner"])) { opacity: 0; scale: 0.96; }   /* opacity, not visibility: the label stays the accessible name (review 03 M3) */
+:where([data-scope="button"] > [data-part="label"]) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="button"] > [data-part="spinner"]) { position: absolute; inset: 0; margin: auto; color: var(--_ink); border-color: color-mix(in oklab, var(--_ink) 30%, transparent); border-block-start-color: var(--_ink); }
 :where([data-scope="button"] > [data-part="label"]) { display: inline-flex; align-items: center; gap: inherit; }
 }

@@ -29,7 +29,7 @@ export function boot(full: () => Promise<unknown>) {
       first.add(e.target)
       if (e.isIntersecting && (was || needs.has(e.target))) return go()
     }
-  }, { rootMargin: '200px' })
+  }, { rootMargin: '600px' })
   const w = document.createTreeWalker(document.body, 128)
   while (w.nextNode()) {
     const c = w.currentNode as Comment

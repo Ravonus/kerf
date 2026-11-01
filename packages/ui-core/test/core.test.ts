@@ -1,4 +1,4 @@
-// The core in plain DOM, no framework: the sweep phase machine, the label anatomy, roving focus, the dials.
+// The core in plain DOM, no framework: the sweep's helpers, the label anatomy, roving focus, the dials.
 import { DIALS, getDial, setDial } from '../src/dial'
 import { labelChars } from '../src/floating-label'
 import { nextIndex, roving } from '../src/focus'
@@ -8,43 +8,25 @@ afterEach(() => { installSweep().destroy(); document.body.replaceChildren(); doc
 
 const html = (s: string) => { document.body.innerHTML = s; return document.body.firstElementChild as HTMLElement }
 const pointer = (type: string, el: Element, init: PointerEventInit = {}) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'mouse', ...init }))
-const ticks = () => new Promise(r => setTimeout(r, 0))
 
-test('sweep: idle on install, in on hover, out then idle on leave (no transition: straight to idle)', async () => {
-  const b = html('<button data-sweep><span data-part="sweep-base"></span><span data-part="sweep"></span>Go</button>')
-  installSweep()
-  expect(b.dataset.phase).toBe('idle')
-  pointer('pointerover', b)
-  expect(b.dataset.phase).toBe('in')
-  pointer('pointerout', b, { relatedTarget: document.body })
-  expect(b.dataset.phase).toBe('idle')
+test('sweep: pin holds a host, and confirm holds it for one pass', async () => {
+  const b = html('<button data-sweep style="--warp-sweep-duration: 10ms">Go</button>')
+  const m = installSweep()
+  m.pin(b, true)
+  expect(b.hasAttribute('data-pin')).toBe(true)
+  m.pin(b, false)
+  expect(b.hasAttribute('data-pin')).toBe(false)
+  m.confirm(b)
+  expect(b.hasAttribute('data-confirm')).toBe(true)
+  await new Promise(r => setTimeout(r, 30))
+  expect(b.hasAttribute('data-confirm')).toBe(false)
 })
 
-test('sweep: a held state (aria-expanded) keeps the host in; releasing it lets it go', async () => {
-  const b = html('<button data-sweep data-phase="idle" aria-expanded="false">Menu</button>')
-  installSweep()
-  b.setAttribute('aria-expanded', 'true')
-  await ticks()
-  expect(b.dataset.phase).toBe('in')
-  b.setAttribute('aria-expanded', 'false')
-  await ticks()
-  expect(b.dataset.phase).toBe('idle')
-})
-
-test('sweep: hosts added later are picked up; data-static hosts are never touched', async () => {
-  installSweep()
-  document.body.innerHTML = '<span data-sweep id="a"></span><span data-sweep data-static data-phase="in" id="b"></span>'
-  await ticks()
-  expect(document.getElementById('a')!.dataset.phase).toBe('idle')
-  pointer('pointerover', document.getElementById('b')!)
-  expect(document.getElementById('b')!.dataset.phase).toBe('in')
-})
-
-test('sweep: touch pointers never count as hover', () => {
-  const b = html('<button data-sweep>Go</button>')
-  installSweep()
-  pointer('pointerover', b, { pointerType: 'touch' })
-  expect(b.dataset.phase).toBe('idle')
+test('sweep: duration reads the token, in s or ms', () => {
+  const b = html('<button data-sweep style="--warp-sweep-duration: .5s">Go</button>')
+  expect(installSweep().duration(b)).toBe(500)
+  b.style.setProperty('--warp-sweep-duration', '300ms')
+  expect(installSweep().duration(b)).toBe(300)
 })
 
 test('labelChars: grapheme clusters stay whole, whitespace collapses', () => {

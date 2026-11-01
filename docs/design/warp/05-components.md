@@ -124,6 +124,9 @@ Toolbar(props: Named & { overflow?: 'menu' | 'scroll' | 'wrap' })
 CopyButton(props: { value: string | (() => string); label?: string; onCopied?(ok: boolean): void })
 ```
 
+**Press (redesign.md §3).** A press is instant and takes `--warp-press` scale; release settles on `--warp-ease-spring`. Vivid
+solid buttons rest on `--warp-offset` and press into it instead of scaling.
+
 ## 3. Overlays
 
 **One layer stack** (the overlay manager) for dialogs, sheets, menus, popovers, selects, hover cards and toasts:
@@ -190,6 +193,9 @@ Menu.RadioGroup(Bindable<string>) · Menu.Sub · Menu.Separator · Menu.GroupLab
 Tooltip(props: { content: Text; side?: Side; kbd?: string })   // never essential: content must also exist elsewhere
 CommandPalette(props: Openable & { commands: Command[]; onRun?(cmd, reason): void })
 ```
+
+Built in the redesign: `Menu`, `Accordion`, `Slider`, `Radio`/`RadioGroup`, `Ticker` and `toast.promise`. `Select` keeps a real
+`<select>` and swaps the popup on fine pointers (redesign.md §5).
 
 ## 4. Navigation widgets
 

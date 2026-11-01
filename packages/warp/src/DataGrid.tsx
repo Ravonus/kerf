@@ -1,5 +1,5 @@
 import { XIcon } from '@weft/icons'
-import { aggregate, grid, groupRows, installSweep, leaves, matchFilter, moved, pageSlice, pivotTable, sortRows, table, toCSV, treeRows, uid, type Aggregate, type GridFilter, type TreeEntry } from '@weft/ui-core'
+import { aggregate, grid, groupRows, leaves, matchFilter, moved, pageSlice, pivotTable, sortRows, table, toCSV, treeRows, uid, type Aggregate, type GridFilter, type TreeEntry } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from './Button'
 import { Segmented } from './Choice'
@@ -403,7 +403,6 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     say(`Exported ${visible.value.length} rows`)
   }
 
-  onMount(() => installSweep())
   use(table, () => el, () => ({ hidden: [], rows: lines.value }))
   use((node: HTMLDivElement, o: any) => { const g = grid(node, o); behaviour = g; return g }, () => el, () => ({
     tree: treed.value, rows: [lines.value, cols.value],

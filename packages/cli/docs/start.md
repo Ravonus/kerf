@@ -262,3 +262,24 @@ same in every tab, by key for plain objects, last writer wins. It needs `persist
 `await net.publish(room, { roomId }, 'said', row)`, `net.sent(room)`, `await net.drop()`, `await net.offline()`,
 `await net.session({ user })`. From `weft/test`, `tabs.post(name, msg)` and `tabs.posted(name)` play another tab, and two
 `render()`s sharing one `storage` are two tabs.
+
+## CSS on a page
+
+A built page carries the CSS its first paint needs in a `<style>`, and links the rest at the end of its shell, where it blocks nothing above it. The links are at most two hashed files: one with what every route shares, one with the rest of that route. Client navigation loads each chunk's own CSS and waits for it.
+
+The server finds the first-paint CSS by reading the page's HTML against a table from the build, with lookups and no CSS parsing. So the same HTML always gets the same CSS. Nothing depends on what rendered it: a prerendered page, a `@weft static` level, a page from a cache and a live render take one path, and there is no `Vary`. A streamed chunk carries only the styles that response hasn't sent.
+
+Rules for hover, focus and other states aren't in the first paint, so they work once the late sheet lands. A class a head script sets isn't in the HTML: name it in `site.criticalKeep`. A dial value a head script sets with `dataset.x = 'y'` is found by itself. A stored dial choice the head doesn't name shows the default until the sheet lands.
+
+If part of a page must not show before the late sheet, mark it:
+
+```tsx
+<section data-weft="styled">…</section>
+```
+
+It keeps its room, stays hidden until the sheet lands, and shows anyway after 3 s with no JavaScript, so a missing file can't hide it for good. Assistive tech doesn't see it while hidden. `weft check` warns on this mark on main content or an `h1` (D040). Nothing adds the mark for you: the first paint already holds every rule that matches the HTML.
+
+`site.criticalCss: false` goes back to one sheet per chunk, inlined up to 48 KB and linked past that. `site.inlineCss: false` keeps plain links.
+
+**Deploying.** A page cached before a deploy links the sheets it was built with, so `weft build` keeps old combined sheets for 30 days in `.weft/sheets`. Keep that folder between builds, or the old files go: a cached page then paints from its own `<style>`, without hover and focus styles until it is cached again. The folder is copied into the build's assets, so a preset that serves those assets needs nothing else.
+

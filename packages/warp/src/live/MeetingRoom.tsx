@@ -19,6 +19,12 @@ type Video = (p: Participant) => any
 
 const LAYOUTS: [MeetingLayout, string, GlyphName][] = [['gallery', 'Gallery', 'grid'], ['speaker', 'Speaker', 'speaker'], ['presentation', 'Presentation', 'present'], ['board', 'Board', 'board']]
 
+/** Built once a mount: an option's label is a node, and a read of the prop would otherwise make it again. */
+function LayoutPicker(props: { value: MeetingLayout; onChange: (l: MeetingLayout) => void }) {
+  const options = LAYOUTS.map(l => ({ value: l[0], label: <><G name={l[2]} />{l[1]}</> }))
+  return <Segmented label="Layout" size="sm" options={options} {...props} />
+}
+
 /**
  * A tile (07 §3.1): video slot or avatar, name chip with level bars, flags with words in the name. The speaking ring is
  * the sweep: `data-speaking`, then `data-speaking-out` until it has left. The bars read `--level`: set it on the tile
@@ -171,11 +177,6 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
   const network = derived<LiveState>(() => { const s = val(live as any); return s === 'open' || s === 'live' ? 'live' : s === 'reconnecting' ? 'reconnecting' : s === 'connecting' ? 'connecting' : 'offline' })
   const netWords = derived(() => (network.value === 'live' ? 'Good connection' : network.value === 'reconnecting' ? 'Reconnecting…' : network.value === 'connecting' ? 'Connecting…' : 'Offline'))
   const presenterText = derived(() => (sharingOn.value ? 'You are presenting' : `${presenter ?? 'Someone'} is presenting`))
-  const shareSlot = untrack(() => share)
-  const boardSlot = untrack(() => board)
-  const chatSlot = untrack(() => chat)
-  const inviteSlot = untrack(() => invite)
-  const heading = untrack(() => timer)
   const v = untrack(() => video)
   let root: HTMLDivElement | undefined
   let stage: HTMLDivElement | undefined
@@ -183,7 +184,6 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
 
   const say = (text: string) => announce(root!.ownerDocument, text)
   onMount(() => {
-    installSweep()
     const follow = speakerFollow(id => (speaker.value = id))
     follow.update(untrack(() => speaker.value))
     watch(() => speaking.value, s => follow.update(s))
@@ -219,10 +219,10 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
     <div ref={(n: any) => (root = n)} data-scope="room" data-part="root" data-theme={theme} role="region" aria-label={`${title} meeting`}>
       <div data-part="header">
         <b>{title}</b>
-        {heading !== undefined && <span data-numeric="">{heading}</span>}
+        {timer !== undefined && <span data-numeric="">{timer}</span>}
         {recording && <span data-part="rec"><span data-scope="status-dot" data-tone="critical"></span>Rec</span>}
         <span data-part="spacer"></span>
-        {!phone.value && <Segmented label="Layout" size="sm" value={L.value} options={LAYOUTS.map(l => ({ value: l[0], label: <><G name={l[2]} />{l[1]}</> }))} onChange={(l: MeetingLayout) => { chosen.set(l); if (sharingOn.value) sharingOn.set(false); say(`${l[0].toUpperCase()}${l.slice(1)} layout`) }} />}
+        {!phone.value && <LayoutPicker value={L.value} onChange={(l: MeetingLayout) => { chosen.set(l); if (sharingOn.value) sharingOn.set(false); say(`${l[0].toUpperCase()}${l.slice(1)} layout`) }} />}
         <LiveStatus state={network.value} label="Connection">{phone.value ? '' : netWords.value}</LiveStatus>
       </div>
       <div ref={(n: any) => (stage = n)} data-part="stage" data-layout={L.value} style={`--_cols:${cols.value}`} role="group" aria-label="Participants">
@@ -232,13 +232,13 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
         {L.value === 'presentation' && (
           <div data-part="share">
             <header><G name="screen" /> {presenterText.value} · {shareTitle}{sharingOn.value && <Button tone="critical" size="sm" onClick={() => toggle('share')}>Stop sharing</Button>}</header>
-            {shareSlot ? shareSlot() : <div></div>}
+            {share ? share() : <div></div>}
           </div>
         )}
         {L.value === 'board' && (
           <div data-part="share">
             <header><G name="board" /> Whiteboard · everyone can draw</header>
-            {boardSlot ? boardSlot() : <div></div>}
+            {board ? board() : <div></div>}
           </div>
         )}
         {(L.value === 'presentation' || L.value === 'board') && <div data-part="rail" role="list" aria-label="Participants">{people.value.map(p => <Tile key={p.id} p={p} video={v} role="listitem" />)}</div>}
@@ -250,18 +250,18 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
         <div data-part="app-bar">
           <b>{side.value === 'chat' ? 'Chat' : `People · ${people.value.length + 1}`}</b>
           <span data-part="spacer"></span>
-          {phone.value && chatSlot && <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => side.set(side.value === 'chat' ? 'people' : 'chat')}>{side.value === 'chat' ? 'People' : 'Chat'}</Button>}
+          {phone.value && chat && <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => side.set(side.value === 'chat' ? 'people' : 'chat')}>{side.value === 'chat' ? 'People' : 'Chat'}</Button>}
           <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" aria-label="Close panel" onClick={closeSide}><G name="x" /></Button>
         </div>
         {side.value === 'chat'
-          ? (chatSlot ? chatSlot() : <div></div>)
+          ? (chat ? chat() : <div></div>)
           : (
             <ul data-part="people">
               <Person p={me.value} sub="You" />
               {people.value.map(p => <Person key={p.id} p={p} sub={p.role || (p.handRaised ? 'Hand raised' : p.network === 'poor' ? 'Poor connection' : 'Participant')} />)}
             </ul>
           )}
-        {side.value !== 'chat' && inviteSlot ? <div>{inviteSlot()}</div> : <div hidden></div>}
+        {side.value !== 'chat' && invite ? <div>{invite()}</div> : <div hidden></div>}
       </aside>
       <ControlBar mic={micOn.value} camera={camOn.value} sharing={sharingOn.value} hand={handUp.value} side={side.value} compact={phone.value} onToggle={toggle} onLeave={() => onLeave?.()} />
     </div>

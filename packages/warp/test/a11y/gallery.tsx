@@ -4,7 +4,15 @@
 import { render } from 'weft/dom'
 import * as Rest from '../fixtures/Surfaces'
 import * as Rich from '../fixtures/Rich'
+import { Accordion } from '../../src/Accordion'
 import { Button } from '../../src/Button'
+import { Canvas } from '../../src/Canvas'
+import { RadioGroup } from '../../src/Choice'
+import { Dither, DitherField, DitherGlyph } from '../../src/Dither'
+import { Menu } from '../../src/Menu'
+import { Select } from '../../src/Select'
+import { Slider } from '../../src/Slider'
+import { Ticker } from '../../src/Ticker'
 import { Kbd } from '../../src/Kbd'
 import { Stack } from '../../src/Layout'
 import { Heading, Text } from '../../src/Type'
@@ -22,6 +30,29 @@ import { Virtuals } from '../fixtures/Virtual'
 import { Alerts, Buttons, Choices, Fields, Icons, Overlays, Surfaces, Tabbed, Toasts, Toggles, seedToasts } from '../fixtures/Variants'
 // after the components: the first import fixes the order of warp's CSS layers
 import '@weft/ui-core/styles/data/panel.css'
+
+// The redesign's components and the canvas pack. Menu's and Select's open states are audited from a11y.mjs.
+function Added() {
+  return (
+    <>
+      <h1>warp, added</h1>
+      <Stack gap="group">
+        <Menu label="Actions" items={[{ group: 'Project' }, { label: 'Rename', icon: 'pencil', shortcut: '⌘R' }, { label: 'Archived', disabled: true }, { separator: true }, { label: 'Delete', tone: 'critical', icon: 'x' }]} />
+        <Select label="Sort by" options={[{ value: 'new', label: 'Newest' }, { value: 'old', label: 'Oldest' }, { group: 'More', options: [{ value: 'az', label: 'A to Z' }] }]} />
+        <Accordion level={2} defaultOpen={['a']} items={[{ value: 'a', title: 'General', content: 'Workspace name and default branch.' }, { value: 'b', title: 'Security', content: 'Require two-factor sign-in.' }]} />
+        <RadioGroup label="Plan" value="pro" onChange={() => {}} options={[{ value: 'free', label: 'Free' }, { value: 'pro', label: 'Pro', hint: 'Most teams.' }]} />
+        <Slider label="Volume" value={40} onChange={() => {}} format={v => `${v}%`} />
+        <Slider label="Price" value={[10, 80]} onChange={() => {}} names={['Minimum', 'Maximum']} />
+        <span style="font-size:32px"><Ticker value={48120} format={{ style: 'currency', currency: 'USD' }} locale="en-US" /></span>
+        <DitherField label="A moving field" ratio={4}><Heading level={2}>Over the field</Heading></DitherField>
+        <DitherField ratio={8} />
+        <Dither label="A dithered gradient" ratio={4} />
+        <DitherGlyph text="warp" />
+        <Canvas label="A drawing" draw={({ ctx }) => { ctx.fillRect(0, 0, 8, 8) }} style="block-size:40px" />
+      </Stack>
+    </>
+  )
+}
 
 function Static() {
   return (
@@ -83,7 +114,7 @@ function RichInputs() {
 
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
-const PACKS: Record<string, () => any> = { agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
+const PACKS: Record<string, () => any> = { added: Added, agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
 const View = PACKS[part] ? PACKS[part] : part === 'virtual' ? Virtuals : part === 'surfaces' ? Remaining : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
 // the shell brings its own main
 const host = document.getElementById('root')!

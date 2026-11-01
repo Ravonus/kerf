@@ -18,7 +18,10 @@ function Cell(props: { i: number }) {
 
 function Grid() {
   count.renders++
-  return <div data-grid><For each={cells}>{(_, i) => <Cell i={untrack(i)} />}</For></div>
+  return <div data-grid><For each={cells}>{(_, i) => {
+    const index = untrack(i)
+    return <Cell i={index} />
+  }}</For></div>
 }
 
 const tick = (k: number) => {

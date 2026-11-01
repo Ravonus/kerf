@@ -2,12 +2,12 @@
 // (pages, prerendered and on-demand cards, hydration in Chrome); Bun runs its build when `bun` is on PATH; Deno's
 // build is checked to complete (no deno here).
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fnId, inlineSheets } from '../src/vite.mjs'
+import { fnId, inlineSheets, sheetPieces } from '../src/vite.mjs'
 import { INLINE_CSS_MAX } from '../src/inline.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
 
@@ -89,30 +89,133 @@ describe('node preset, end to end', () => {
     expect([image.status, image.headers.get('content-type'), image.headers.get('cache-control')]).toEqual([200, 'image/avif', 'public, max-age=31536000, immutable'])
   })
 
-  test('a page links the CSS of its entry, layouts, route and components before the first byte, and no other route\'s', async () => {
-    const sheets = async path => {
-      const html = await (await fetch(server.url + path)).text()
-      const head = html.slice(0, html.indexOf('</head>'))
-      const hrefs = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1])
-      expect(new Set(hrefs).size).toBe(hrefs.length)
-      return (await Promise.all(hrefs.map(h => fetch(server.url + h).then(r => r.text())))).join('\n')
-    }
-    const styled = await sheets('/styled')
+  const page = path => fetch(server.url + path).then(async r => ({ html: await r.text(), res: r }))
+  const paint = html => [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(m => m[1]).join('')
+  const lateLink = html => /<link rel="stylesheet" href="([^"]+)">/.exec(html)?.[1]
+
+  test('a page carries the first paint of what it rendered, and no other route\'s', async () => {
+    const styled = paint((await page('/styled')).html)
     for (const rule of ['html{', '.root{', '.styled{', '.badge{']) expect(styled).toContain(rule)
-    const about = await sheets('/about')
+    const about = paint((await page('/about')).html)
     expect(about).toContain('.root{')
     expect(about).not.toContain('.styled{')
     expect(about).not.toContain('.badge{')
-    expect(await sheets('/users/999')).toContain('.not-found{') // the 404 page is a level too
+    expect(paint((await page('/users/999')).html)).toContain('.not-found{')
   })
 
-  test('a page carries its stylesheets inline, each with a disabled link so it is neither fetched nor applied twice', async () => {
-    const html = await (await fetch(server.url + '/styled')).text()
+  test('the page\'s sheets are at most two links past the shell, with every rule it needs and no other route\'s, cached for good', async () => {
+    const { html } = await page('/styled')
     const head = html.slice(0, html.indexOf('</head>'))
-    const styles = [...head.matchAll(/<style>([\s\S]*?)<\/style>\n<link rel="stylesheet" href="([^"]+)" disabled>/g)]
-    expect(styles.length).toBeGreaterThan(0)
-    for (const [, css, href] of styles) expect(css).toBe(await (await fetch(server.url + href)).text())
-    expect(head).not.toMatch(/<link rel="stylesheet" href="[^"]+">/)
+    expect(head).not.toMatch(/<link rel="stylesheet"/)
+    const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m => m[1])
+    expect(links.length).toBeLessThanOrEqual(2)
+    let css = ''
+    for (const href of links) {
+      expect(html.indexOf(`href="${href}"`)).toBeGreaterThan(html.indexOf('</head>'))
+      const res = await fetch(server.url + href)
+      expect(res.headers.get('cache-control')).toContain('immutable')
+      css += await res.text()
+    }
+    for (const rule of ['.root{', '.styled{', '.badge{']) expect(css).toContain(rule)
+    expect(css).not.toContain('.not-found{') // another route's
+  })
+
+  test('a hit and a miss are the same bytes, and nothing varies on the visitor', async () => {
+    const a = await page('/styled'), b = await page('/styled')
+    const c = await fetch(server.url + '/styled', { headers: { cookie: 'theme=dark; session=x' } }).then(r => r.text())
+    expect(paint(a.html)).toBe(paint(b.html))
+    expect(paint(c)).toBe(paint(a.html))
+    expect(a.res.headers.get('vary') ?? '').not.toMatch(/cookie/i)
+  })
+
+  test('a streamed Boundary comes after the sheet\'s link, with only the styles not yet sent', async () => {
+    const { html } = await page('/slow')
+    const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(m => m[1])
+    const link = html.indexOf('<link rel="stylesheet" href=')
+    const swap = html.indexOf('<template')
+    if (swap > 0) expect(link).toBeLessThan(swap)
+    const seen = new Set()
+    for (const css of styles) for (const rule of css.match(/[^{}]+\{[^{}]*\}/g) ?? []) {
+      if (rule.startsWith('@') || rule.includes('--')) continue
+      expect(seen.has(rule)).toBe(false)
+      seen.add(rule)
+    }
+  })
+
+  const browsers = ['chromium', 'firefox', 'webkit']
+  for (const name of browsers) describe(`style gate in ${name}`, () => {
+    const pw = createRequire(import.meta.url)('playwright-core')
+    let browser
+    beforeAll(async () => { browser = await pw[name].launch() })
+    afterAll(async () => { await browser?.close() })
+
+    const open = async (options = {}, hold) => {
+      const context = await browser.newContext(options)
+      const tab = await context.newPage()
+      if (hold) await tab.route('**/assets/sheet-*.css', hold)
+      await tab.goto(server.url + '/gate', { waitUntil: 'commit' })
+      await tab.waitForSelector('h1')
+      return { context, tab, vis: () => tab.evaluate(() => getComputedStyle(document.getElementById('gated')).visibility) }
+    }
+    const geometry = tab => tab.evaluate(() => { const r = document.getElementById('gated').getBoundingClientRect(); return [r.top, r.height] })
+
+    test('the page paints without the sheet, holds the gate with its room kept, and shows it when the sheet lands', async () => {
+      const held = []
+      const release = () => held.forEach(go => go())
+      const { context, tab, vis } = await open({}, async r => { await new Promise(go => held.push(go)); await r.continue() })
+      await tab.waitForTimeout(400)
+      expect(await tab.locator('h1').isVisible()).toBe(true)
+      expect(await vis()).toBe('hidden')
+      const before = await geometry(tab)
+      release()
+      await tab.waitForFunction(() => getComputedStyle(document.getElementById('gated')).visibility === 'visible')
+      expect(await geometry(tab)).toEqual(before)
+      expect(await tab.locator('#gated').isVisible()).toBe(true)
+      await context.close()
+    })
+
+    test('a sheet that never comes, or is gone after a deploy, can\'t hide it for good', async () => {
+      const { context, tab } = await open({}, r => r.fulfill({ status: 404, body: '' }))
+      await tab.waitForFunction(() => getComputedStyle(document.getElementById('gated')).visibility === 'visible', null, { timeout: 5000 })
+      await context.close()
+    })
+
+    test('with no script at all, and in the accessibility tree once shown', async () => {
+      const { context, tab, vis } = await open({ javaScriptEnabled: false })
+      await tab.waitForLoadState('load')
+      await tab.waitForTimeout(100)
+      expect(await tab.locator('#gated').isVisible()).toBe(true)
+      expect(await tab.getByRole('complementary', { name: 'Gated' }).count()).toBe(1)
+      void vis
+      await context.close()
+    })
+
+    test('reduced motion shows it with no fade', async () => {
+      const { context, tab } = await open({ reducedMotion: 'reduce' })
+      await tab.waitForLoadState('load')
+      await tab.waitForFunction(() => getComputedStyle(document.getElementById('gated')).visibility === 'visible')
+      expect(await tab.evaluate(() => getComputedStyle(document.getElementById('gated')).animationName)).toBe('none')
+      await context.close()
+    })
+
+    test('a streamed Boundary waits for the sheet, and a client route change finds its styles', async () => {
+      let release
+      const context = await browser.newContext(); const tab = await context.newPage()
+      await tab.route('**/assets/sheet-*.css', async r => { await new Promise(go => (release = go)); await r.continue() })
+      await tab.goto(server.url + '/slow', { waitUntil: 'commit' })
+      await tab.waitForSelector('.skeleton')
+      await tab.waitForTimeout(1500)
+      expect(await tab.locator('.stock').count()).toBe(0) // the server sent it, the parser is held at the link
+      release()
+      await tab.waitForSelector('.stock')
+      await tab.unroute('**/assets/sheet-*.css')
+      await tab.goto(server.url + '/gate', { waitUntil: 'load' })
+      await tab.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+      await tab.click('a[href="/styled"]')
+      await tab.waitForURL('**/styled')
+      await tab.waitForSelector('.badge')
+      await context.close()
+    })
   })
 
   test('inlineSheets leaves out what would break in a <style>, and what is too big to carry', () => {
@@ -122,6 +225,22 @@ describe('node preset, end to end', () => {
     for (const [name, css] of Object.entries(sheets)) writeFileSync(join(dir, 'assets', name), css)
     expect(Object.keys(inlineSheets(dir, '/')).sort()).toEqual(['/assets/data.css', '/assets/ok.css'])
     rmSync(dir, { recursive: true, force: true })
+  })
+
+  test('a combined sheet stays in the build for the window a page cached before the deploy needs it, and no longer', () => {
+    const root = mkdtempSync(join(tmpdir(), 'weft-keep-'))
+    const dir = join(root, 'out'), old = join(root, '.weft/sheets')
+    mkdirSync(join(dir, 'assets'), { recursive: true }); mkdirSync(old, { recursive: true })
+    writeFileSync(join(dir, 'assets/a.css'), 'p{color:red}')
+    writeFileSync(join(old, 'sheet-old.css'), 'p{color:blue}')
+    writeFileSync(join(old, 'sheet-dead.css'), 'p{color:green}')
+    utimesSync(join(old, 'sheet-dead.css'), new Date(0), new Date(0))
+    sheetPieces(dir, '/', { shared: { file: 'assets/sheet-new.css', has: ['assets/a.css'] }, routes: [], files: { 'assets/sheet-new.css': 'p{color:red}' } }, [], root)
+    expect(existsSync(join(dir, 'assets/sheet-old.css'))).toBe(true)
+    expect(existsSync(join(dir, 'assets/sheet-dead.css'))).toBe(false)
+    expect(existsSync(join(old, 'sheet-dead.css'))).toBe(false)
+    expect(existsSync(join(old, 'sheet-new.css'))).toBe(true)
+    rmSync(root, { recursive: true, force: true })
   })
 
   test('the entry has no modulepreload: its script tag fetches it', async () => {

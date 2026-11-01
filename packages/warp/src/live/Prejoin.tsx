@@ -39,19 +39,17 @@ export function Prejoin({ name = '', preview, level, mic, camera, onMic, onCamer
   const who = state(untrack(() => name))
   const micOn = held<boolean>(() => mic, true, () => onMic)
   const camOn = held<boolean>(() => camera, true, () => onCamera)
-  const slot = untrack(() => preview)
   const list = untrack(() => devices) ?? {}
-  const test = untrack(() => onTestSound)
   let meter: HTMLDivElement | undefined
   use(levelMeter, () => meter, () => level)
-  const pick = (kind: 'mic' | 'camera' | 'speaker') => (e: Event) => onDevice?.(kind, (e.target as HTMLSelectElement).value)
+  const pick = (kind: 'mic' | 'camera' | 'speaker', e: Event) => onDevice?.(kind, (e.target as HTMLSelectElement).value)
   return (
     <div data-scope="prejoin">
       <div data-part="layout">
         <div data-part="stack">
           <div data-part="preview">
             <div data-scope="tile" data-cam={camOn.value ? undefined : 'off'}>
-              {camOn.value && slot ? <div data-part="video">{slot()}</div> : <Avatar name={who.value || 'You'} size="xl" style={avatarTint(who.value)} />}
+              {camOn.value && preview ? <div data-part="video">{preview()}</div> : <Avatar name={who.value || 'You'} size="xl" style={avatarTint(who.value)} />}
               <span data-part="name">You</span>
             </div>
             <div data-part="preview-controls">
@@ -65,10 +63,10 @@ export function Prejoin({ name = '', preview, level, mic, camera, onMic, onCamer
         </div>
         <div data-part="stack">
           <Input label="Your name" value={who.value} autocomplete="name" onInput={e => (who.value = e.currentTarget.value)} />
-          {list.mics && <Select label="Microphone" options={list.mics} onChange={pick('mic')} />}
-          {list.cameras && <Select label="Camera" options={list.cameras} onChange={pick('camera')} />}
-          {list.speakers && <Select label="Speakers" options={list.speakers} onChange={pick('speaker')} />}
-          {test && <Button emphasis="link" size="sm" onClick={test}>Play test sound</Button>}
+          {list.mics && <Select label="Microphone" options={list.mics} onChange={e => pick('mic', e)} />}
+          {list.cameras && <Select label="Camera" options={list.cameras} onChange={e => pick('camera', e)} />}
+          {list.speakers && <Select label="Speakers" options={list.speakers} onChange={e => pick('speaker', e)} />}
+          {onTestSound && <Button emphasis="link" size="sm" onClick={onTestSound}>Play test sound</Button>}
           <Button size="lg" full loading={!!joining} onClick={() => onJoin?.(who.value)}>{joinLabel}</Button>
         </div>
       </div>
@@ -121,14 +119,13 @@ export function ScheduledLobby({ title, children, to, now, joinable, opensAt, on
   const ended = state(false)
   const can = derived(() => !!joinable || ended.value)
   const id = uid('sched')
-  const add = untrack(() => onAddToCalendar)
   return (
     <Card eyebrow="Scheduled lobby" title={title} sweep={false} aria-labelledby={undefined}>
       {children !== undefined && <p>{children}</p>}
       <Countdown to={to} now={now} onDone={() => (ended.value = true)} />
       <p>
         <Button size="sm" disabled={!can.value} title={!can.value && opensAt ? `Opens at ${opensAt}` : undefined} aria-describedby={!can.value && opensAt ? id : undefined} onClick={() => onJoin?.()}>Join</Button>
-        {add && <Button emphasis="outline" tone="neutral" size="sm" onClick={add}><G name="cal" />Add to calendar</Button>}
+        {onAddToCalendar && <Button emphasis="outline" tone="neutral" size="sm" onClick={onAddToCalendar}><G name="cal" />Add to calendar</Button>}
       </p>
       {opensAt && !can.value && <span id={id} data-part="sr-only">Opens at {opensAt}</span>}
     </Card>

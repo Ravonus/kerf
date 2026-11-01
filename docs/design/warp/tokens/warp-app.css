@@ -91,8 +91,8 @@
   58%  { clip-path: inset(0 0 0 0); }
   100% { clip-path: inset(0 0 0 100%); }
 }
-/* a one-shot sweep on any host (drop commit, message sent, tool done): warpSweep.confirm() runs the
-   host through in → out (L→R both ways) and sets data-confirm for the pass, so it shows even on
+/* a one-shot sweep on any host (drop commit, message sent, tool done): confirm() sets data-confirm
+   for one pass, which runs the host in and out L→R, so it shows even on
    hosts whose hover sweep is dial-gated (--_on: 0) */
 :where([data-sweep])[data-confirm] { --_on: 1; }
 

@@ -19,8 +19,9 @@
   max-inline-size: none; max-block-size: min(86dvh, 760px);
   border-radius: var(--warp-radius-surface);
   display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
-  /* exit (and base) state */
-  opacity: 0; translate: 0 calc(var(--warp-motion-distance) * -0.5); scale: var(--warp-motion-scale-from);
+  /* exit (and base) state. It scales about the control that opened it (--warp-origin), so it comes from somewhere */
+  transform-origin: var(--warp-origin, 50% 50%);
+  opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.25); scale: var(--warp-motion-scale-from);
   transition:
     opacity calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
     translate calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) var(--warp-ease-in),
@@ -32,13 +33,25 @@
 :where(dialog[data-scope="dialog"][open]) {
   opacity: 1; translate: 0 0; scale: 1;
   transition:
-    opacity var(--warp-duration-slow) var(--warp-ease-out), translate var(--warp-duration-slow) var(--warp-ease-out),
-    scale var(--warp-duration-slow) var(--warp-ease-pop),
+    opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-spring-duration) var(--warp-ease-spring),
+    scale var(--warp-spring-duration) var(--warp-ease-spring),
     overlay var(--warp-duration-slow) allow-discrete, display var(--warp-duration-slow) allow-discrete;
 }
 @starting-style {
   :where(dialog[data-scope="dialog"][open]) { opacity: 0; translate: 0 var(--warp-motion-distance); scale: var(--warp-motion-scale-from); }
 }
+/* the pick: one pass of weft across the top edge as it arrives, then gone */
+:where(dialog[data-scope="dialog"][open], dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
+  content: ""; position: absolute; inset: -1px -1px auto; block-size: var(--warp-sweep-width); background: var(--warp-color-sweep); border-radius: inherit;
+  pointer-events: none; transform-origin: 0 50%;
+  animation: warp-pick calc(var(--warp-sweep-duration) * 1.2) var(--warp-sweep-ease-in) both;
+}
+:where(dialog[data-tone="critical"])::before { background: var(--warp-color-sweep-critical); }
+@keyframes warp-pick { from { scale: 0 1; opacity: 1; } 62% { scale: 1 1; opacity: 1; } to { scale: 1 1; opacity: 0; } }
+/* contents arrive after the panel, once, in reading order */
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="body"], [data-part="footer"]) { animation: warp-rise var(--warp-spring-duration) var(--warp-ease-spring) calc(var(--warp-stagger) * var(--_i, 1)) backwards; }
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { --_i: 2; }
+@keyframes warp-rise { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.75); } }
 :where(dialog[data-size="sm"]) { --_w: 420px; }
 :where(dialog[data-size="lg"]) { --_w: 800px; }
 /* backdrop: scrim + the dial's blur (12 · 6 · 0) */

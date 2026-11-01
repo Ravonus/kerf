@@ -1,6 +1,7 @@
 // The helpers weft's own back end emits (research 19 §3): one job each, named for it. Hydratable output uses the
 // claiming versions of `tpl` and `child` from claim.ts (`htpl`, `hchild`), so client-only apps don't ship them.
-// Bindings here skip their first write while hydrating (the server wrote it).
+// Bindings here skip their first write while hydrating (the server wrote it). A template that missed was built fresh and
+// comes before its own bindings, so they write (`keys.miss`, which each claim and the end of each hole put back).
 
 import { DEV, effect } from './index'
 import { addEvent, attrName, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
@@ -26,7 +27,7 @@ export const child: (parent: Element, value: unknown, marker?: Node | null) => v
 
 /** One element's dynamic attributes: `compute` reads them (a value, or an array of them), `apply` writes changes. */
 export function bind<T>(compute: () => T, apply: (value: T, prev: T | undefined) => void) {
-  if (!keys.hydrating) return effect(compute, apply)
+  if (!keys.hydrating || keys.miss) return effect(compute, apply)
   let skip = true // the server wrote these
   effect(compute, (v, p) => {
     if (skip) skip = false
@@ -81,7 +82,7 @@ export function focus(el: HTMLElement, on: unknown) {
 
 /** A spread element's hole, hydrating: content the server rendered from its props stays. */
 export function kids(props: Record<string, any>, el: Element) {
-  return keys.hydrating && (props.dangerouslySetInnerHTML || props.innerHTML != null || props.textContent != null || el.localName === 'textarea') ? [...el.childNodes] : props.children
+  return keys.hydrating && !keys.miss && (props.dangerouslySetInnerHTML || props.innerHTML != null || props.textContent != null || el.localName === 'textarea') ? [...el.childNodes] : props.children
 }
 
 /**
@@ -107,7 +108,7 @@ export function spread(el: Element, props: () => Record<string, any>) {
   const listeners: Record<string, EventListener> = {}
   let refDone = false
   let latest: unknown
-  let hydrating = keys.hydrating
+  let hydrating = keys.hydrating && !keys.miss
   effect(props, (v, p = {}) => {
     delete v.children
     delete v.key

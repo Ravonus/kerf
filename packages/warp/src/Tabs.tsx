@@ -18,7 +18,7 @@ export function Tabs<V extends string>({ label, value, onChange, options, varian
   const tab = (i: number) => `${base}-t${i}`
   const panel = (i: number) => (kind === 'pill' ? `${base}-p0` : `${base}-p${i}`)
   let list: HTMLDivElement | undefined
-  use(indicator, () => list, () => ({ selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw', at: value }))
+  use(indicator, () => list, () => ({ selected: '[aria-selected="true"]', at: value }))
   use(overflow, () => list, () => list?.querySelector<HTMLElement>('[aria-selected="true"]') ?? null)
   const onKey = (e: KeyboardEvent) => {
     const tabs = options.filter(o => !o.disabled)

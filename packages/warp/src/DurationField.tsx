@@ -77,12 +77,15 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
       control={() => (
         <>
           <div ref={(n: any) => (group = n)} data-part="segments" onKeyDown={onKey} onFocusOut={() => (buf.value = '')}>
-            {units.map(u => (
-              <>
-                <span key={u} data-part="segment" data-u={u} role="spinbutton" tabindex={disabled ? undefined : '0'} aria-label={NAMES[u]} aria-valuemin="0" aria-valuemax={MAX[u]} aria-valuenow={parts.value[u]} aria-valuetext={say(u, parts.value[u])}>{u === units[0] ? parts.value[u] : pad(parts.value[u])}</span>
-                <span data-part="literal" class="unit" aria-hidden="true">{SHORT[u]}</span>
-              </>
-            ))}
+            {units.map(u => {
+              const n = derived(() => parts.value[u])
+              return (
+                <>
+                  <span key={u} data-part="segment" data-u={u} role="spinbutton" tabindex={disabled ? undefined : '0'} aria-label={NAMES[u]} aria-valuemin="0" aria-valuemax={MAX[u]} aria-valuenow={n.value} aria-valuetext={say(u, n.value)}>{u === units[0] ? n.value : pad(n.value)}</span>
+                  <span data-part="literal" class="unit" aria-hidden="true">{SHORT[u]}</span>
+                </>
+              )
+            })}
           </div>
           <Hidden name={name} value={() => v.value ?? ''} />
         </>

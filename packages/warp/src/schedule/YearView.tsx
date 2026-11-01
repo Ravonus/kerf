@@ -48,7 +48,7 @@ export function YearView(p: YearViewProps) {
     const { total } = monthSummary(p.counts, month)
     return {
       month, total, name: fmt(month, { month: 'long' }, env.locale.value), current: month === monthStart(env.today.value),
-      weeks: monthWeeks(month, first.value).map((days, r) => ({ key: `${month}-${r}`, cells: days.map((iso, c) => ({ key: iso ?? `${month}-${r}-${c}`, iso, weekend: (first.value + c) % 7 === 0 || (first.value + c) % 7 === 6 })) })),
+      weeks: monthWeeks(month, first.value).map((days, r) => ({ key: `${month}-${r}`, cells: days.map((iso, c) => ({ key: iso ?? `${month}-${r}-${c}`, iso, count: iso ? p.counts[iso] ?? 0 : 0, weekend: (first.value + c) % 7 === 0 || (first.value + c) % 7 === 6 })) })),
     }
   }))
   const toCell = () => { flush(); months?.querySelector<HTMLElement>('[data-day][tabindex="0"]')?.focus() }
@@ -128,7 +128,7 @@ export function YearView(p: YearViewProps) {
               {m.weeks.map(w => (
                 <div key={w.key} role="row">
                   {w.cells.map(c => (c.iso
-                    ? <span key={c.key} role="gridcell" data-day={c.iso} tabindex={c.iso === focus.value ? '0' : '-1'} aria-selected={picked.value?.iso === c.iso && picked.value.kind === 'day' ? 'true' : 'false'} aria-current={c.iso === env.today.value ? 'date' : undefined} data-weekend={c.weekend ? '' : undefined} aria-label={`${dayName(c.iso)}${c.iso === env.today.value ? ', today' : ''}`}><span data-part="num" aria-hidden="true">{ymd(c.iso)[2]}</span><i data-part="dots" style={`--_n:${yearLevel(p.counts[c.iso] ?? 0)}`} aria-hidden="true"></i></span>
+                    ? <span key={c.key} role="gridcell" data-day={c.iso} tabindex={c.iso === focus.value ? '0' : '-1'} aria-selected={picked.value?.iso === c.iso && picked.value.kind === 'day' ? 'true' : 'false'} aria-current={c.iso === env.today.value ? 'date' : undefined} data-weekend={c.weekend ? '' : undefined} aria-label={`${dayName(c.iso)}${c.iso === env.today.value ? ', today' : ''}`}><span data-part="num" aria-hidden="true">{ymd(c.iso)[2]}</span><i data-part="dots" style={`--_n:${yearLevel(c.count)}`} aria-hidden="true"></i></span>
                     : <span key={c.key} role="gridcell" data-outside="" aria-hidden="true"></span>))}
                 </div>
               ))}

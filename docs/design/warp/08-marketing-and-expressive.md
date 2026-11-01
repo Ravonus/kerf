@@ -666,6 +666,31 @@ Vivid: hover also rises 2px and scales 1.01 on the pop spring. This is the docum
 "cards don't move on hover": vivid only, transform only, never layout, and the content never shifts under the pointer
 by more than 2px. Quiet and reduced motion: shadow and colour only.
 
+### 6.7 Canvas and dither
+
+The site's hero loom and the icons' shaded depth, as a family. `@weft/ui-core/canvas` is a surface (`surface(canvas, { draw })`):
+pixel ratio, resize, a pause off screen and in a hidden tab, one still frame under reduced motion, and one shared
+`requestAnimationFrame`. With nothing to paint no frame is scheduled. `@weft/ui-core/dither` is the engine: tiles (Bayer 2/4/8,
+blue noise, halftone), error diffusion (Floyd-Steinberg, Atkinson) for stills, fields, masks and a spring lattice for the pointer.
+
+```tsx
+<DitherField fill pointer={['pull', 'shockwave']} fade="left" />   // a hero's background, behind its content
+<Dither src="/team.jpg" alt="The team" />                          // a photo in warp's inks
+<DitherGlyph text="warp" reveal={1.4} />                           // a word woven from the field
+<Canvas draw={({ ctx, width, height, time }) => …} animate />      // anything else
+```
+
+| Registry | Min | quiet | balanced | vivid | Reduced | Class · budget |
+|---|---|---|---|---|---|---|
+| `dither` | quiet | `still`, 2 inks | `on`, half speed, 3 inks | `on`, 4 inks | `still`, no pointer | S · ≤ 2 ms a frame, pauses off screen |
+
+The tier's numbers follow `--warp-x`, read where the canvas sits, so a `data-expression` island retunes it, and a
+`--warp-dither-inks`, `-speed`, `-reach` or `-gain` set in CSS overrides one. Inks are the tone's `soft`, `border` and `text` tokens and `--warp-color-text`, which run
+from the page outward in both themes, so one ramp reads in light and dark. A cell is a typed-array value, not a signal: the
+loom's one signal per cell is a demonstration of weft, and a toolkit field should not pay for it. Canvas2D is the only
+path: the look is a coarse grid of whole cells, which costs about a millisecond a frame, so WebGL would add bytes and spend a
+scarce context to save nothing.
+
 ## 7. Accessibility checklist
 
 - Carousel and fact carousel follow the APG carousel pattern (§5.1); slides beyond view are `inert` in stacked modes.

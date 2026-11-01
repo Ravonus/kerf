@@ -64,6 +64,7 @@ Where the app has warp's tokens (`@weft/warp` in package.json; headless `@weft/u
 | D002 | Spacing off the scale, or a step by hand | Autofix when exactly a step |
 | D003 | Raw type, radius, shadow | `Heading`, `Text`, radius and elevation tokens; autofix for an exact radius |
 | D004 | Layout spelled out on an element | `Stack`, `Row` (suggested edit) |
+| D040 | The style gate (`data-weft="styled"`) on main content or an h1 | A secondary part, or no marker |
 | D005 | Native `<button>`, `<select>`, `<textarea>` | The warp component (suggested edit for a button) |
 | D006 | One heading level at two roles across the app, or a bare `<hN>` beside `<Heading>` | Match the level's main role (suggested edit at each site) |
 | D007 | A bare `<a href>` | `<Link>`, or `Shell`'s `nav` (suggested edit) |

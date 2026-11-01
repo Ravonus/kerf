@@ -52,8 +52,12 @@ export interface SiteConfig {
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
   image?: 'auto' | string | { url: string; width?: number; height?: number; alt?: string }
   twitter?: { card?: 'summary' | 'summary_large_image' | 'app' | 'player'; site?: string; creator?: string }
-  /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
+  /** `false`: no stylesheet text in the page, just links. */
   inlineCss?: boolean
+  /** `false`: one sheet per chunk, inline up to 48 KB, instead of a first-paint part of the build's one sheet. */
+  criticalCss?: boolean
+  /** Words of selectors a first paint keeps whatever the HTML holds: for a class a head script sets. */
+  criticalKeep?: string[]
   /** Raw HTML for every page's head, before the stylesheets: what has to run before the first paint. Not escaped. */
   head?: string
 }

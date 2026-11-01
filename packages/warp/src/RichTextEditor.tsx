@@ -185,7 +185,7 @@ export function RichTextEditor({ value, defaultValue, onValueChange, format = 'h
             <div ref={(n: any) => (ed = n)} data-part="content" id={`${id}-c`} contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" aria-labelledby={`${field}-l`} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} aria-autocomplete="list" aria-controls={`${id}-menu`} aria-activedescendant={menuOpen.value ? `${id}-${active.value}` : undefined} data-placeholder={placeholder} spellcheck style={rows()} onKeyDown={onMenuKey} innerHTML={start}></div>
           </div>
           <span ref={(n: any) => (mark = n)} data-part="caret-anchor" style="position:fixed" aria-hidden="true"></span>
-          <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" data-phase="idle" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+          <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
             <span data-part="sweep" aria-hidden="true"></span>
             <ul data-part="listbox" role="listbox" id={`${id}-menu`} aria-label="Insert">
               {items.value.map((r, n) => <li key={r.id} role="option" id={`${id}-${n}`} aria-selected={n === active.value ? 'true' : 'false'} data-active={n === active.value ? '' : undefined} onClick={() => choose(n)}><span>{r.main}</span>{r.meta && <span data-part="opt-meta">{r.meta}</span>}</li>)}

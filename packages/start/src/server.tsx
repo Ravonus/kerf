@@ -39,6 +39,8 @@ import { ErrorPage, NotFoundPage } from './builtin'
 // @ts-expect-error: plain JS module
 import { renderCard } from './og/index.mjs'
 // @ts-expect-error: plain JS module
+import { firstPaint, type Pieces } from './first-paint'
+import { pick } from './sheets.mjs'
 import { INLINE_CSS_MAX } from './inline.mjs'
 import { capture } from './capture.mjs'
 
@@ -62,7 +64,7 @@ export interface HandlerOptions {
   modules: Record<string, RouteModule>
   site?: Site
   /** The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`). */
-  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[]; inline?: Record<string, string> }
+  assets?: { entry?: string; js?: { href: string }[]; css?: { href: string }[]; fonts?: { href: string; type: string }[]; pieces?: Pieces & { shared?: { href: string; has: string[] }; routes: { href: string; has: string[] }[] }; inline?: Record<string, string> }
   /** Changes with every build: part of each card's `?v=` hash. */
   build?: string
   dev?: boolean
@@ -259,19 +261,25 @@ export function createHandler(options: HandlerOptions) {
     const parts = islandsOf(s.shell)
     const now = !parts.lazy.length || payload.m.some(m => !m.s) || !!payload.i?.length
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
+    const css = pageSheets(assets.css, parts, options.chunks).map(c => c.href)
+    const late = assets.pieces && pick(assets.pieces, css)
+    const paint = late && firstPaint(assets.pieces!, css, site.head)
     const head =
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
       metaTags(r.head, url.pathname) + '\n' +
       (site.head ? site.head + '\n' : '') +
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
-      sheets({ ...assets, css: pageSheets(assets.css, parts, options.chunks) }) +
+      (paint ? `<style>${assets.pieces!.layers}${paint(`<html${lang}><body><div id="app">${s.shell}`)}</style>\n` : sheets({ ...assets, css: pageSheets(assets.css, parts, options.chunks) })) +
       // The entry's own script tag, just below, already fetches it.
       modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
       (options.lazy ? `<script>${capture(now)}</script>\n` : '') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
-      `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
+      `</head>\n<body>\n<div id="app">${s.shell}</div>\n` +
+      // Past the shell: it can't hold the first paint, a Boundary streamed after it waits for it, and so do the scripts.
+      (late ? [...late.sheets.map(c => c.href), ...late.rest].map(href => `<link rel="stylesheet" href="${esc(href)}">\n`).join('') + late.sheets.flatMap(c => c.has).map(href => `<link rel="stylesheet" href="${esc(href)}" disabled>\n`).join('') : '') +
+      `<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
       (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '')
     const finish = async () => {
       const cached = wire(scope)
@@ -293,7 +301,10 @@ export function createHandler(options: HandlerOptions) {
       async start(controller) {
         controller.enqueue(enc.encode(head))
         try {
-          for await (const chunk of s.chunks) controller.enqueue(enc.encode(chunk + '\n'))
+          for await (const chunk of s.chunks) {
+            const css = paint?.(chunk)
+            controller.enqueue(enc.encode((css ? `<style>${css}</style>\n` : '') + chunk + '\n'))
+          }
         } catch (e) {
           options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
         }

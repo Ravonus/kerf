@@ -75,7 +75,7 @@
     "./rust": "./src/rust.ts",
     "./sidecar": "./src/sidecar.mjs"
   },
-  "sideEffects": false,
+  "sideEffects": ["**/*.css"],
   "peerDependenciesMeta": {
     "better-auth": {
       "optional": true

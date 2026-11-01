@@ -85,7 +85,7 @@
   border: var(--warp-border-hairline) solid var(--warp-color-border);
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-2);
   font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading);
-  transform-origin: var(--_origin, top left);
+  transform-origin: var(--warp-origin, var(--_origin, top left));
   /* exit state (also the base): toward the anchor by half the distance */
   opacity: 0;
   translate: calc(var(--_side-x) * var(--warp-motion-distance) * 0.5) calc(var(--_side-y) * var(--warp-motion-distance) * 0.5);
@@ -101,9 +101,9 @@
        [data-scope="select"][data-part="content"], [data-scope="hover-card"][data-part="content"]):where(:popover-open, [data-state="open"]) {
   opacity: 1; translate: 0 0; scale: 1;
   transition:
-    opacity var(--warp-duration-base) var(--warp-ease-out),
-    translate var(--warp-duration-base) var(--warp-ease-out),
-    scale var(--warp-duration-base) var(--warp-ease-pop),
+    opacity var(--warp-duration-fast) var(--warp-ease-out),
+    translate var(--warp-spring-duration) var(--warp-ease-spring),
+    scale var(--warp-spring-duration) var(--warp-ease-spring),
     overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
 }
 @starting-style {

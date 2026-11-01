@@ -1,5 +1,5 @@
 import { Link } from '@weft/start'
-import { Appearance } from './Appearance'
+import { AppearanceGate } from './AppearanceGate'
 import { Mark } from './Mark'
 import { NavSheet } from './NavSheet'
 import { Nav } from '@weft/warp'
@@ -22,7 +22,7 @@ export function Header() {
           {NAV.map(n => <Link key={n.href} href={n.href}>{n.label}</Link>)}
         </Nav>
         <span data-site="grow"></span>
-        <Appearance />
+        <AppearanceGate />
         <NavSheet />
       </div>
     </header>

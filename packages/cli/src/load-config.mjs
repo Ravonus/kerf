@@ -84,6 +84,9 @@ const site = z.strictObject({
   title: z.string().includes('%s', { error: 'must contain `%s` (the page title)' }).optional(),
   description: z.string().optional(),
   locale: z.string().regex(/^[a-z]{2,3}(_[A-Z]{2})?$/, { error: 'must look like `en_US`' }).optional(),
+  inlineCss: z.boolean().optional(),
+  criticalCss: z.boolean().optional(),
+  criticalKeep: z.array(z.string()).optional(),
   image: z.union([z.literal('auto'), z.string().min(1), image]).optional(),
   head: z.string().optional(),
   twitter: z

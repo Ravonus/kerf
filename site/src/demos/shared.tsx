@@ -2,12 +2,15 @@ import { state } from 'weft'
 import { Button, Card, Checkbox } from '@weft/warp'
 
 // One list, two views of it. In a real app it comes from a server `query`.
-const todos = state([
-  { id: 1, text: 'Book flights' },
-  { id: 2, text: 'Pack' },
-])
+const task = (id: number, text: string) => ({
+  id,
+  text,
+  done: state(false),
+})
+const todos = state([task(1, 'Book flights'), task(2, 'Pack')])
 const add = (who: string) => {
-  todos.value = [...todos.value, { id: Date.now(), text: `From ${who}` }]
+  const id = todos.value.length + 1
+  todos.value = [...todos.value, task(id, `From ${who}`)]
 }
 
 export default function Shared() {
@@ -15,7 +18,15 @@ export default function Shared() {
     <div data-part="panes">
       {['Ana', 'Ben'].map(who => (
         <Card key={who} title={who}>
-          {todos.value.map(t => <Checkbox key={t.id}>{t.text}</Checkbox>)}
+          {todos.value.map(t => (
+            <Checkbox
+              key={t.id}
+              checked={t.done.value}
+              onChange={(e: any) => (t.done.value = e.currentTarget.checked)}
+            >
+              {t.text}
+            </Checkbox>
+          ))}
           <Button
             emphasis="ghost"
             tone="neutral"
