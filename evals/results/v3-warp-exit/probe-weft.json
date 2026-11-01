@@ -3,18 +3,18 @@
     "domMutations": 1,
     "commits": 5,
     "renderMs": 0,
-    "wallMs": 50.62
+    "wallMs": 53.7
   },
   "price-push": {
     "domMutations": 1,
     "commits": 9,
     "renderMs": 0,
-    "wallMs": 0.93
+    "wallMs": 0.48
   },
   "type-3-chars": {
     "domMutations": 152,
     "commits": 21,
     "renderMs": 0,
-    "wallMs": 15.61
+    "wallMs": 18.25
   }
 }
