@@ -13,7 +13,7 @@
 //
 // Exit 1 on any violation, page error or motion leak.
 import { createServer } from 'node:http'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -244,6 +244,34 @@ async function clippedAway(page, sel, { x, y, width, height }) {
   }, png.toString('base64'))
 }
 
+/** The element, its ancestors, everything animating, and the viewport, as they are right now. */
+async function evidence(page, sel, info) {
+  const state = await page.evaluate(({ sel, box }) => {
+    const props = ['display', 'visibility', 'opacity', 'backgroundColor', 'backgroundImage', 'color', 'clipPath', 'transform', 'scale', 'translate', 'filter', 'mixBlendMode', 'transitionProperty', 'transitionDuration', 'zIndex', 'position', 'isolation']
+    const read = e => {
+      const cs = getComputedStyle(e), r = e.getBoundingClientRect()
+      return { tag: e.tagName.toLowerCase(), scope: e.dataset?.scope, part: e.dataset?.part, rect: [r.x, r.y, r.width, r.height], style: Object.fromEntries(props.map(p => [p, cs[p]])), fill: cs.getPropertyValue('--_fill'), a: cs.getPropertyValue('--_a'), states: [':hover', ':active', ':focus', ':focus-visible'].filter(q => e.matches(q)) }
+    }
+    const el = document.querySelector(sel), chain = []
+    for (let e = el; e; e = e.parentElement) chain.push(read(e))
+    const under = document.elementsFromPoint(box.x + box.width / 2, box.y + box.height / 2).map(e => `${e.tagName.toLowerCase()}[${e.dataset?.part ?? e.dataset?.scope ?? ''}]`)
+    return {
+      chain, kids: [...el.children].map(read), html: el.outerHTML.slice(0, 600), under, scroll: [scrollX, scrollY], viewport: [innerWidth, innerHeight], active: document.activeElement?.tagName, activePart: document.activeElement?.textContent?.slice(0, 30),
+      animations: document.getAnimations().map(a => ({ name: a.animationName ?? a.transitionProperty, state: a.playState, time: a.currentTime, target: a.effect?.target?.tagName, part: a.effect?.target?.dataset?.part, scope: a.effect?.target?.dataset?.scope, pseudo: a.effect?.pseudoElement })),
+    }
+  }, { sel, box: info.box })
+  const whole = await page.screenshot({ animations: 'disabled' })
+  return { state, whole, info, url: page.url() }
+}
+let kept = 0
+function keepEvidence(moment, reading) {
+  const dir = process.env.A11Y_EVIDENCE, n = `${process.pid}-${kept++}`
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, `${n}.png`), moment.whole)
+  writeFileSync(join(dir, `${n}-box.png`), reading.png)
+  writeFileSync(join(dir, `${n}.json`), JSON.stringify({ ...moment, whole: undefined, reading: { ...reading, png: undefined } }, null, 1))
+}
+
 /**
  * WCAG contrast of the text in `[data-a11y-px=i]`, measured: the text's own colour (resolved through a canvas, so
  * oklch and color-mix work, times every ancestor's opacity) over the backgrounds actually painted under its text box
@@ -287,6 +315,8 @@ export async function pixelContrast(page, i) {
   // the inner box: a pill's round corners show what's behind the pill, which is not behind the text
   const { x, y, width, height } = info.box
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
+  // A11Y_EVIDENCE=<dir>: what the page was at this moment, with the mask still on, kept only if the reading fails
+  const moment = process.env.A11Y_EVIDENCE && await evidence(page, sel, info)
   await hide.evaluate(n => n.remove())
   const bgs = await page.evaluate(async b64 => {
     const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob())
@@ -306,6 +336,7 @@ export async function pixelContrast(page, i) {
     if (!worst || r < worst.ratio) worst = { ratio: r, fg: hex(fg), bg: hex(bg) }
   }
   if (!worst) return null
+  if (moment && worst.ratio < need) keepEvidence(moment, { ...worst, need, png })
   return { where: info.where, ok: worst.ratio >= need, ratio: Math.round(worst.ratio * 100) / 100, need, fg: worst.fg, bg: worst.bg }
 }
 
