@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The split keeps the spec's CSS exactly: every rule ships verbatim, in the spec's order within its file, and the
 // files on disk are what the splitter produces from docs/design/warp/tokens today.
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { transform } from 'lightningcss'
 import { build } from '../scripts/split-css.mjs'
 
@@ -71,4 +71,13 @@ test('each file parses as CSS and keeps its layer', () => {
 
 test('scripts/contrast-check.mjs is the spec checker, unchanged', () => {
   expect(readFileSync(new URL('../scripts/contrast-check.mjs', import.meta.url), 'utf8')).toBe(readFileSync(new URL('../../../docs/design/warp/scripts/contrast-check.mjs', import.meta.url), 'utf8'))
+})
+
+test('the sweep has one switch: no stylesheet reads a phase, and every part draws from the two edges', () => {
+  const dir = new URL('../../../docs/design/warp/tokens/', import.meta.url)
+  for (const f of readdirSync(dir)) expect(readFileSync(new URL(f, dir), 'utf8').match(/\[data-phase[=\]]/g), f).toBeNull()
+  const css = readFileSync(new URL('warp.css', dir), 'utf8')
+  expect(css).toMatch(/@property --_sl/)
+  expect(css).toMatch(/@property --_sr/)
+  expect(css).toMatch(/\{ --_a: 1; \}/)
 })

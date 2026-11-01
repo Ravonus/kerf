@@ -1,5 +1,4 @@
-import { installSweep } from '@weft/ui-core'
-import { onMount, untrack } from 'weft'
+import { untrack } from 'weft'
 import './styles'
 import '@weft/ui-core/styles/components/surface.css'
 
@@ -8,7 +7,6 @@ import '@weft/ui-core/styles/components/surface.css'
  * the sweep; static ones carry `data-sweep="surface"`, which the dial shows only at vivid (`--warp-sweep-surfaces`).
  */
 export function Card({ eyebrow, title, href, onClick, sweep = true, children, ...rest }: { eyebrow?: any; title?: any; href?: string; onClick?: (e: MouseEvent) => void; sweep?: boolean; children?: any; [attr: string]: any }) {
-  onMount(() => installSweep())
   const interactive = untrack(() => !!(href || onClick))
   const swept = untrack(() => sweep)
   const parts = () => (
@@ -20,7 +18,7 @@ export function Card({ eyebrow, title, href, onClick, sweep = true, children, ..
     </>
   )
   const sweepAttr = swept ? (interactive ? '' : 'surface') : undefined
-  if (untrack(() => href)) return <a href={href} data-scope="surface" data-sweep={sweepAttr} data-phase={swept ? 'idle' : undefined} onClick={onClick} {...rest}>{parts()}</a>
-  if (interactive) return <button type="button" data-scope="surface" data-sweep={sweepAttr} data-phase={swept ? 'idle' : undefined} onClick={onClick} {...rest}>{parts()}</button>
-  return <div data-scope="surface" data-sweep={sweepAttr} data-phase={swept ? 'idle' : undefined} {...rest}>{parts()}</div>
+  if (untrack(() => href)) return <a href={href} data-scope="surface" data-sweep={sweepAttr} onClick={onClick} {...rest}>{parts()}</a>
+  if (interactive) return <button type="button" data-scope="surface" data-sweep={sweepAttr} onClick={onClick} {...rest}>{parts()}</button>
+  return <div data-scope="surface" data-sweep={sweepAttr} {...rest}>{parts()}</div>
 }

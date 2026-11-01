@@ -72,7 +72,7 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
           <Button emphasis="ghost" tone="neutral" size="sm" label="Quote reply" data-icon-only="" data-quote="" tabindex="-1" aria-keyshortcuts="Q"><QuoteIcon /></Button>
           <Button emphasis="ghost" tone="neutral" size="sm" label="Copy text" data-icon-only="" data-copytext="" tabindex="-1"><CopyIcon /></Button>
         </div>
-        <div data-part="bubble" data-sweep="" data-phase="idle">
+        <div data-part="bubble" data-sweep="">
           <SWEEP />
           {quoted.value && (
             <blockquote data-part="quote">
@@ -185,7 +185,6 @@ export function Thread({ label, messages, unreadFrom, typing, header, height, on
   const find = (mid?: string) => (mid ? list.value.find(m => m.id === mid) : undefined)
 
   onMount(() => {
-    installSweep()
     const told = burst<string>(names => {
       const who = [...new Set(names)]
       announce(doc(), names.length === 1 ? `New message from ${who[0]}` : who.length === 1 ? `${names.length} new messages from ${who[0]}` : `${names.length} new messages from ${joinNames(who)}`)

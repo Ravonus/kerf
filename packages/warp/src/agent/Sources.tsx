@@ -11,7 +11,7 @@ export function Sources({ items, base }: { items: AgentSource[]; base: string })
   return (
     <div data-scope="sources" role="group" aria-label="Sources">
       {rows.value.map(r => (
-        <a key={r.n} id={r.id} href={r.s.url ?? `#${r.id}`} data-sweep="" data-phase="idle">
+        <a key={r.n} id={r.id} href={r.s.url ?? `#${r.id}`} data-sweep="">
           <Sweep />
           <i>{r.n}</i>
           <b>{r.s.title}</b>

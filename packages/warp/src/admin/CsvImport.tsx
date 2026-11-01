@@ -1,6 +1,6 @@
 import { AlertCircleIcon, UploadIcon } from '@weft/icons'
-import { announce, autoMap, badRows, checkImport, importRecords, installSweep, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/ui-core'
-import { derived, onMount, state } from 'weft'
+import { announce, autoMap, badRows, checkImport, importRecords, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/ui-core'
+import { derived, state } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Progress } from '../Progress'
@@ -51,7 +51,6 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
   const dragging = state(false)
   const issue = state('')
   let heading: HTMLElement | undefined
-  onMount(() => installSweep())
 
   const at = derived(() => ORDER.indexOf(stage.value))
   const options = derived(() => [...targets.map(t => ({ value: t.id, label: t.label })), { value: SKIP_COLUMN, label: 'Don’t import' }])
@@ -108,7 +107,7 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
       <h3 ref={(n: any) => (heading = n)} data-part="step-title" tabindex="-1">{STEPS[at.value].title} {noun[1]}</h3>
       {stage.value === 'upload' && (
         <>
-          <div data-scope="dropzone" data-sweep="" data-phase="idle" data-pin={dragging.value ? '' : undefined} onDragOver={(e: DragEvent) => { e.preventDefault(); dragging.value = true }} onDragLeave={() => (dragging.value = false)} onDrop={(e: DragEvent) => { e.preventDefault(); dragging.value = false; take(e.dataTransfer?.files[0]) }}>
+          <div data-scope="dropzone" data-sweep="" data-pin={dragging.value ? '' : undefined} onDragOver={(e: DragEvent) => { e.preventDefault(); dragging.value = true }} onDragLeave={() => (dragging.value = false)} onDrop={(e: DragEvent) => { e.preventDefault(); dragging.value = false; take(e.dataTransfer?.files[0]) }}>
             <Sweep />
             <input type="file" accept=".csv,text/csv" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onChange={(e: any) => { take(e.currentTarget.files?.[0]); e.currentTarget.value = '' }} />
             <span data-part="icon" aria-hidden="true"><UploadIcon /></span>

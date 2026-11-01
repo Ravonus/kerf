@@ -61,7 +61,7 @@ export function Panel({ label, open, trigger, presentation, align, kind, childre
   const done = () => open.set(false)
   use(pickerPanel, () => panel, () => ({ open: open.value, trigger: trigger(), presentation, align, onClose: done }))
   return (
-    <dialog ref={(n: any) => (panel = n)} data-scope="popover" data-kind={kind} data-align={align} data-sweep="" data-phase="idle" popover="manual" aria-label={label}>
+    <dialog ref={(n: any) => (panel = n)} data-scope="popover" data-kind={kind} data-align={align} data-sweep="" popover="manual" aria-label={label}>
       <span data-part="sweep" aria-hidden="true"></span>
       <div data-part="handle" aria-hidden="true"></div>
       <div data-part="sheet-head"><span>{label}</span><Button emphasis="soft" size="sm" data-part="done" onClick={done}>Done</Button></div>

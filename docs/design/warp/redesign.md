@@ -70,7 +70,7 @@ Today quiet and balanced differ in colour and shape. After this they differ in p
 
 Two registered numbers, one per edge, on separate timings. Moving right, the leading edge goes first and the trailing
 edge follows, so the highlight pulls out like a thread and snaps back to width. It costs one attribute (`data-dir`) and
-no per-frame script. Used by Tabs, Segmented, Select, Menu and the palette.
+no per-frame script. Used by Tabs, Segmented, Menu and the palette. Select has a plain highlight: `::picker` has no shuttle.
 
 ### Pick and selvedge
 
@@ -110,23 +110,18 @@ case, but that is a loading decision for the framework, not this pass.
 ## 5. Select, by construction
 
 `Select` stays a real `<select>`. It is the form control, the accessible name and the `change` event, so no consumer
-changes, forms and tests keep working, and without JavaScript it still works. On fine pointers a small action takes over
-the open: it cancels the native popup and shows warp's listbox in the top layer, driven from the same element. On coarse
-pointers the OS sheet stays, as 03 §4 already says. All inputs look custom where a pointer can see them, and the
-kit gains about 1.4 KB, over the 1 KB planned, instead of a second control.
+changes, forms and tests keep working, and without JavaScript it still works. On fine pointers `appearance: base-select` gives
+it warp's list in CSS, and the browser owns open, keyboard, typeahead, the top layer and flipping. Touch keeps the OS sheet, as
+03 §4 says, and so does any browser without base-select.
 
 ## 6. Size
 
-warp's kit was 7.57 KB against the 7.00 KB allowance before this pass and is about 9.2 KB after it, mostly `select.ts`.
-The total JS gate (17 KB) and ceiling (50 KB) still pass. The allowance is not met: the sweep machine below is the way back.
-No gates. The fix is construction.
+warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 KB once it added the custom Select. It is
+6.36 KB now. Two changes of construction did that, and CSS (the kit counts JS only) carries both:
 
-- Motion is CSS: a token and a few rules each, inside files a component already loads.
-- New components live in their own files and cost nothing unused.
-- `ui-core` adds small actions only: shared `place()` origin, shuttle, select.
-- The sweep machine's document-wide `MutationObserver` and hover tracking are the largest kit cost. A pure-CSS hover sweep
-  looks feasible (animation in, transition out) and would remove most of it, but it touches 30 stylesheets and the
-  `data-phase` contract. Prototype it separately.
-- Reading the duration from a registered `--warp-sweep-duration` instead of measuring the part was tried and dropped. It
-  saves about 0.2 KB, and a host that sets its own part timing, or a page without the token, loses its sweep: that is
-  the behaviour `ui-core/test/trace.test.ts` pins.
+- **Select** uses `appearance: base-select`, so warp's list needs no script: 1.61 KB. Chromium only for now: desktop Safari and
+  Firefox keep the OS popup, as touch does. `selectMenu()` stays in ui-core for an app that wants warp's list everywhere.
+- **The sweep** is one switch and two registered edges (SIGNATURE §1.4): 1.26 KB, the document `MutationObserver` and the
+  hover tracking gone. An animation can't hand over to a transition in Blink (no transition starts on a property an animation
+  was driving, even if the declared value changes too), so each edge has one job and its own transition instead.
+- Motion is CSS: a token and a few rules each, inside files a component already loads. New components cost nothing unused.

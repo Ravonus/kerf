@@ -87,6 +87,10 @@
 @property --warp-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --warp-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
 
+/* the sweep's two edges, one per transition (warp.signature) */
+@property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+@property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+@property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 620ms; }
 @layer warp.tokens {
 
 /* ---------------------------------------------------------------------------
@@ -898,60 +902,51 @@
    SIGNATURE · the sweep border + the floating border label.  Every stop.
    Source of truth: ../SIGNATURE.md. Behaviour (weft `sweep()`, or ~30 lines
    of vanilla JS — see the specimen) writes ONE attribute per change:
-     host[data-phase]:  active → "in" (from "out": "idle", flush, then "in",
-                        so re-entry redraws L→R instead of reversing);
-                        inactive while "in" → "out";
-                        transitionend(clip-path | transform | opacity) on a
-                        sweep part while "out" → "idle".
-     If --warp-sweep-duration resolves to 0 (reduced motion), go straight
-     from "out" to "idle"; the end states are identical.
+     --_a is 1 while a host is active; two registered edges do the rest, so a part has no states. It draws L→R, leaves L→R,
+     and never reverses. Duration 0 (reduced motion) makes every change instant, with the same end states.
    Hosts: [data-sweep]. Set --warp-sweep-radius to the host's corner radius
    (clip-path `round` must match it). --_on gates decorative hosts (0 = fade).
    ======================================================================== */
 @layer warp.signature {
-  :where([data-sweep]) { position: relative; --warp-sweep-radius: var(--warp-radius-control); --_on: 1; }
+  :where([data-sweep]) { position: relative; --warp-sweep-radius: var(--warp-radius-control); --_on: 1; --_a: 0; }
 
-  /* -- 1 · two stacked 1px borders (or any content, e.g. an icon) -------- */
+  /* -- the switch: --_a is 1 while a host is active. Hover (not touch), focus, a held state, a pass. The only state.
+     Hover and focus are the browser's, so the sweep runs with no script and no write to the DOM. */
+  @media (hover: hover) { :where([data-sweep]:hover, [data-sweep-trigger]:hover [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):hover [data-sweep]) { --_a: 1; } }
+  @media (hover: none) { :where([data-sweep]:active) { --_a: 1; } }
+  :where([data-sweep]:is(:focus-visible, :has(:focus-visible), [data-pin], [data-hold], [data-confirm], [data-invalid], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"], :popover-open),
+         [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
+         :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
+         :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
+         [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
+
+  /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
+     while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
+     then resets out of sight. It never reverses, and leaving part way only means the left edge catches up sooner. */
+  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-content"], [data-part="rail-hover"]) {
+    --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
+    --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
+              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration));
+    transition: var(--_edges);
+  }
+  /* two stacked 1px borders (or any content, e.g. an icon) */
   :where([data-part="sweep"], [data-part="sweep-base"]) {
     position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
     border-radius: inherit;
-    transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
   }
   :where([data-part="sweep"]:empty) { border: var(--warp-sweep-width) solid currentColor; }
   :where([data-part="sweep-base"]:empty) { border: var(--warp-sweep-base-width) solid currentColor; }
+  /* the base wipes away ahead of the stroke and is back the moment the host lets go */
   :where([data-part="sweep-base"]) {
     z-index: 1; color: var(--warp-color-sweep-base);
-    clip-path: inset(0 round var(--warp-sweep-radius));
+    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
   }
   :where([data-part="sweep"]) {
     z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on);
-    clip-path: inset(0 100% 0 0 round var(--warp-sweep-radius));
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
   }
-  /* idle: snap, no transition */
-  :where([data-phase="idle"] > [data-part="sweep"], [data-phase="idle"] > [data-part="sweep-base"],
-         [data-phase="idle"] > [data-part="icon"] > [data-part]) { transition: none; }
-  /* in: sweep draws L→R while the base wipes away L→R */
-  :where([data-phase="in"] > [data-part="sweep-base"], [data-phase="in"] > [data-part="icon"] > [data-part="sweep-base"]) {
-    clip-path: inset(0 0 0 calc(100% * var(--_on)) round var(--warp-sweep-radius));
-  }
-  :where([data-phase="in"] > [data-part="sweep"], [data-phase="in"] > [data-part="icon"] > [data-part="sweep"]) {
-    clip-path: inset(0 round var(--warp-sweep-radius));
-  }
-  :where([data-phase="in"] > [data-part="sweep"], [data-phase="in"] > [data-part="sweep-base"], [data-phase="in"] > [data-part="icon"] > [data-part]) {
-    transition-timing-function: var(--warp-sweep-ease-in);
-  }
-  /* out: sweep keeps travelling L→R (never reverses); base snaps back */
-  :where([data-phase="out"] > [data-part="sweep-base"], [data-phase="out"] > [data-part="icon"] > [data-part="sweep-base"]) {
-    clip-path: inset(0 round var(--warp-sweep-radius)); transition: none;
-  }
-  :where([data-phase="out"] > [data-part="sweep"], [data-phase="out"] > [data-part="icon"] > [data-part="sweep"]) {
-    clip-path: inset(0 0 0 100% round var(--warp-sweep-radius));
-  }
-  /* error: pinned in, painted critical */
-  :where([data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) {
-    clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-sweep-critical); opacity: 1;
-  }
-  :where([data-invalid] > [data-part="sweep-base"], [data-invalid] > [data-sweep] > [data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+  /* error: pinned in by the switch, painted critical */
+  :where([data-invalid] > [data-part="sweep"], [data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-color-sweep-critical); opacity: 1; }
 
   /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
      own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
@@ -979,13 +974,9 @@
   :where([data-part="sweep-fill"]) {
     position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
     background: var(--warp-sweep-fill, var(--warp-color-accent-solid-hover));
-    transform: translateX(calc(-101% * var(--_on))); opacity: calc(var(--_on));
-    transition: transform var(--warp-sweep-duration) var(--warp-sweep-ease),
-                opacity var(--warp-duration-fast) var(--warp-ease-out);
+    transform: translateX(calc((var(--_sl) - var(--_sr)) * 1.01 * var(--_on))); opacity: max(var(--_on), var(--_a, 0));
+    transition: var(--_edges), opacity var(--warp-duration-fast) var(--warp-ease-out);
   }
-  :where([data-phase="idle"] > [data-part="sweep-fill"]) { transition: none; }
-  :where([data-phase="in"] > [data-part="sweep-fill"]) { transform: translateX(0); opacity: 1; }
-  :where([data-phase="out"] > [data-part="sweep-fill"]) { transform: translateX(calc(101% * var(--_on))); opacity: var(--_on); }
 
   /* -- 1b · frame button (SIGNATURE §1b; old: theme/tokens.css:317-493) ---
      rest: four 10px/2px bracket corners in the track colour, no border.
@@ -1019,15 +1010,14 @@
   :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--warp-frame-weight);   border-inline-end-width: var(--warp-frame-weight); }
   :where([data-part="sweep-corners"], [data-part="sweep-content"]) {
     color: var(--_tone, var(--warp-color-sweep)); opacity: var(--_on);
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl));
   }
   :where([data-part="sweep-outline"]) {
     position: absolute; inset: 0; z-index: 0; pointer-events: none;
     container-type: size;               /* its children measure it: 100cqw × 100cqh */
-    --warp-frame-tail: 0; --warp-frame-head: 0; opacity: var(--_on);
-    transition: --warp-frame-tail var(--warp-sweep-duration) var(--warp-sweep-ease),
-                --warp-frame-head var(--warp-sweep-duration) var(--warp-sweep-ease);
+    --warp-frame-tail: calc(1 - var(--_a, 0)); --warp-frame-head: var(--_a, 0); opacity: var(--_on);
+    transition: --warp-frame-tail calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
+                --warp-frame-head calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration));
   }
   /* each segment: offset o along the route, length n; route length L = w + h
      (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
@@ -1061,11 +1051,6 @@
     position: absolute; inset: 0; z-index: 2; display: inline-flex; align-items: center; justify-content: center;
     gap: inherit; padding: inherit; pointer-events: none; color: var(--warp-color-text);
   }
-  :where([data-phase="idle"] > :is([data-part="sweep-corners"], [data-part="sweep-content"], [data-part="sweep-outline"])) { transition: none; }
-  :where([data-phase="in"] > :is([data-part="sweep-corners"], [data-part="sweep-content"])) { clip-path: inset(0); }
-  :where([data-phase="out"] > :is([data-part="sweep-corners"], [data-part="sweep-content"])) { clip-path: inset(0 0 0 100%); }
-  :where([data-phase="in"] > [data-part="sweep-outline"]) { --warp-frame-tail: 0; --warp-frame-head: 1; }
-  :where([data-phase="out"] > [data-part="sweep-outline"]) { --warp-frame-tail: 1; --warp-frame-head: 1; }
   /* filled frame: the tone fill slides in under it (sweep-fill), the content copy reads on it */
   :where([data-sweep]:has(> [data-part="sweep-fill"]) > [data-part="sweep-content"]) { color: var(--_tone-ink, var(--warp-color-accent-on-solid)); }
 
@@ -1085,12 +1070,8 @@
   :where([data-on] > [data-part="rail-fill"], :checked + [data-part="track"] > [data-part="rail-fill"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
   :where([data-part="rail-hover"]) {
     background: var(--warp-color-accent-solid-hover);
-    clip-path: inset(0 100% 0 0 round var(--warp-sweep-radius));
-    transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
   }
-  :where([data-phase="idle"] [data-part="rail-hover"]) { transition: none; }
-  :where([data-phase="in"] [data-part="rail-hover"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
-  :where([data-phase="out"] [data-part="rail-hover"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
   /* the ring only sweeps while off; while on the inside sweeps instead */
   :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: hidden; }
   :where([data-part="track"]:not([data-on], :checked + *)) [data-part="rail-hover"] { visibility: hidden; }
@@ -1265,7 +1246,7 @@
     :where([data-part="sweep"]:empty) { border-width: 2px; }
     :where([data-part="icon"] > [data-part="sweep-base"]) { color: CanvasText; }
     /* dial-gated hosts (--_on: 0) still show the state change in forced colours */
-    :where([data-phase="in"] > [data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+    :where([data-sweep]) { --_on: 1; }
     /* fields: the sweep alone is a 1→2px change, so focus also gets the system ring */
     :where([data-scope="field"] > [data-part="control"]:focus-within) { outline: 2px solid Highlight; outline-offset: 2px; }
     :where([data-scope="field"][data-invalid] > [data-part="control"] > [data-part="sweep"],

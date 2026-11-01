@@ -1,5 +1,5 @@
 import { ColumnsIcon } from '@weft/icons'
-import { checkState, filterRows, hideRule, installSweep, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/ui-core'
+import { checkState, filterRows, hideRule, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
 import { Button } from './Button'
 import { Checkbox } from './Choice'
@@ -403,7 +403,6 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
     return typed.value ? 'Try a shorter term, or clear the filter.' : empty?.text
   })
 
-  onMount(() => installSweep())
   use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value, onWidth: w => (small.value = w < CARDS_BELOW) }))
   onCleanup(() => (sheet.value = undefined))
 

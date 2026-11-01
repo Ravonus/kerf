@@ -10,7 +10,7 @@ export function Suggestions({ items, variant, onPick, ...rest }: { items: Sugges
   return (
     <div data-scope="suggestions" data-variant={variant === 'chips' ? 'chips' : undefined} {...rest}>
       {items.map(s => (
-        <button key={s.id ?? s.title} type="button" data-sweep="" data-phase="idle" onClick={() => onPick?.(s)}>
+        <button key={s.id ?? s.title} type="button" data-sweep="" onClick={() => onPick?.(s)}>
           <Sweep />
           <span>{s.title}</span>
           {s.description !== undefined && <small>{s.description}</small>}

@@ -220,7 +220,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
                 <fieldset data-scope="choice">
                   <legend data-part="sr-only">Shipping speed</legend>
                   {shipping.map(o => (
-                    <label key={o.id} data-scope="plan-card" data-sweep="" data-phase="idle">
+                    <label key={o.id} data-scope="plan-card" data-sweep="">
                       <Sweep />
                       <input type="radio" name={`${id}-ship`} value={o.id} checked={o.id === ship.value} onChange={() => (ship.value = o.id)} />
                       <span data-part="radio" aria-hidden="true"></span>

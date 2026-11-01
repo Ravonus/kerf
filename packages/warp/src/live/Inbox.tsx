@@ -1,5 +1,5 @@
-import { announce, arrivals, feed, filterNotes, groupByDay, indicator, installSweep, nextIndex, readOnView, uid, unreadCount, type InboxTab } from '@weft/ui-core'
-import { derived, onMount, state, untrack } from 'weft'
+import { announce, arrivals, feed, filterNotes, groupByDay, indicator, nextIndex, readOnView, uid, unreadCount, type InboxTab } from '@weft/ui-core'
+import { derived, state, untrack } from 'weft'
 import { Avatar, type LiveState } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -83,7 +83,6 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
   let root: HTMLElement | undefined
   const doc = () => root!.ownerDocument
 
-  onMount(() => installSweep())
   use(indicator, () => tablist, () => ({ selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw', at: tab.value }))
   use(feed, () => list, () => ({ items: '[data-scope="notification"]' }))
   use(readOnView, () => list, () => ({ items: '[data-scope="notification"]', active: !!open, onRead: (rid: string) => onRead?.(rid) }))
@@ -179,7 +178,7 @@ function Row({ n, at, size, leaving, stop, onKey, onPress, onFocus, onDismiss, o
     <article
       data-scope="notification"
       data-sweep=""
-      data-phase="idle"
+     
       data-id={n.id}
       data-read={n.read ? '' : undefined}
       data-state={leaving ? 'dismissed' : undefined}

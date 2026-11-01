@@ -41,7 +41,8 @@
   transform: scale(0); transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
 }
 :where([data-scope="radio"]) > input:checked + [data-part="control"]::after { transform: scale(1); }
-:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-sweep-critical); }
+:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] { --_a: 1; }
+:where([data-scope="checkbox"][data-invalid], [data-scope="radio"][data-invalid]) > input:not(:checked) + [data-part="control"] > [data-part="sweep"] { color: var(--warp-color-sweep-critical); }
 
 /* switch (SIGNATURE §1c): the accent fill moves THROUGH the rail as the knob slides.
    Off + hover/focus: the ring sweeps. On + hover/focus: accent-hover sweeps inside the rail. */
@@ -94,8 +95,8 @@
 :where([data-scope="choice-card"] [data-part="hint"]) { grid-column: 1; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="choice-card"] [data-part="meta"]) { grid-row: 1; grid-column: 2; font-variant-numeric: tabular-nums; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
 :where([data-scope="choice-card"]:has(input:checked)) { background: var(--warp-color-accent-soft); }
-:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); border-width: calc(var(--warp-sweep-width) + 0.5px); }
-:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep-base"] { clip-path: inset(0 0 0 100%); }
+:where([data-scope="choice-card"]:has(input:checked)) { --_a: 1; }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 0.5px); }
 :where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]) { color: var(--warp-color-accent-text); }
 
 /* segmented (original Segmented.tsx; review 01 M8): the group rests on the ink control border and
@@ -145,7 +146,7 @@
 :where([data-scope="chip"][data-sweep]) > svg[data-part="check"] { display: none; margin-inline-start: -2px; }
 :where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
 :where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > svg[data-part="check"] { display: block; }
-:where([data-scope="chip"][data-sweep]:is([aria-pressed="true"], [aria-checked="true"])) > [data-part="sweep"] { clip-path: inset(0 round var(--warp-sweep-radius)); }
+:where([data-scope="chip"][data-sweep][aria-checked="true"]) { --_a: 1; }
 :where([data-scope="chip"][data-sweep]:focus-visible) { outline: none; }
 :where([data-scope="chip"][data-sweep]:disabled) { opacity: var(--warp-opacity-disabled); cursor: not-allowed; }
 :where([data-scope="chip"] [data-part="count"]) { font-variant-numeric: tabular-nums; }   /* full ink: 0.7 opacity fell to 3.2:1 (review 03 m12) */

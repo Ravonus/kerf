@@ -1,5 +1,5 @@
-import { installSweep, slider as action, uid } from '@weft/ui-core'
-import { derived, onMount } from 'weft'
+import { slider as action, uid } from '@weft/ui-core'
+import { derived } from 'weft'
 import { use } from './use'
 import './fields'
 import '@weft/ui-core/styles/inputs/range.css'
@@ -23,7 +23,6 @@ export function Slider({ label, value, onChange, min = 0, max = 100, step = 1, f
   const id = uid('slider')
   const values = derived(() => (Array.isArray(value) ? value : [value]))
   let el: HTMLDivElement | undefined
-  onMount(() => installSweep())
   use(action, () => el, () => ({ values: values.value, min, max, step, format, names, disabled, onChange: (v: number[]) => onChange(v.length === 1 ? v[0] : v) }))
   return (
     <div style="display:grid;gap:6px">

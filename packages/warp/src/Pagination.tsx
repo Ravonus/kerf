@@ -1,5 +1,5 @@
-import { infiniteScroll, installSweep, pageList, uid } from '@weft/ui-core'
-import { derived, flush, onMount, untrack, type State } from 'weft'
+import { infiniteScroll, pageList, uid } from '@weft/ui-core'
+import { derived, flush, untrack, type State } from 'weft'
 import { Button } from './Button'
 import { bindable } from './bind'
 import { use } from './use'
@@ -96,7 +96,6 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
 export function LoadMore({ onLoad, loading, done, message, auto = true, root }: { onLoad: () => void; loading?: boolean; done?: boolean; message?: any; auto?: boolean; root?: () => HTMLElement | null }) {
   let el: HTMLDivElement | undefined
   const reach = () => { if (auto && !loading && !done) onLoad() }
-  onMount(() => installSweep())
   use(infiniteScroll, () => el, () => ({ onReach: reach, root: root?.() }))
   return (
     <div ref={(n: any) => (el = n)} data-scope="load-more">

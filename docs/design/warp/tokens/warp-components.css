@@ -200,13 +200,8 @@
    clip-path instead: the same L→R edge on the same curve, never outside the box, and the 44px hit area and the
    focus ring (outline) are untouched. --_on 0 (flair none) keeps the plain fade. */
 :where([data-scope="button"] > [data-part="sweep-fill"]) {
-  transform: none; clip-path: inset(0 calc(100% * var(--_on, 1)) 0 0);
-  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), opacity var(--warp-duration-fast) var(--warp-ease-out);
+  transform: none; clip-path: inset(0 calc(var(--_sr) * var(--_on, 1)) 0 calc(var(--_sl) * var(--_on, 1)));
 }
-:where([data-scope="button"][data-phase="idle"] > [data-part="sweep-fill"]) { transition: none; }
-:where([data-scope="button"][data-phase="in"] > [data-part="sweep-fill"]) { transform: none; clip-path: inset(0); }
-:where([data-scope="button"][data-phase="out"] > [data-part="sweep-fill"]) { transform: none; clip-path: inset(0 0 0 calc(100% * var(--_on, 1))); }
-/* touch: a tap holds the phase "in" for 620ms (data-touch-effect, set by sweep()), then exits through the right */
 /* touch: the hit area reaches hit-min even when the visual is smaller */
 :where([data-scope="button"])::after {
   content: ""; position: absolute; pointer-events: auto;

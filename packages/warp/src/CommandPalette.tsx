@@ -1,6 +1,6 @@
 import { SearchIcon } from '@weft/icons'
-import { dialog, installSweep, listKey, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
-import { derived, flush, onMount, state, untrack, watch } from 'weft'
+import { dialog, listKey, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
+import { derived, flush, state, untrack, watch } from 'weft'
 import { bindable, type Openable } from './bind'
 import { Icon, type IconRef } from './Icon'
 import { Kbd } from './Kbd'
@@ -166,7 +166,6 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   let shown: Command[] = []
   use(dialog, () => el, () => ({ open: flag.value, onClose: () => flag.set(false) }))
   if (untrack(() => hotkey) !== false) use(paletteHotkey, () => el, () => ({ key: String(hotkey), slash, onPress: () => flag.set(!untrack(() => flag.value)) }))
-  onMount(() => installSweep())
 
   const show = (next: Command[], q: string) => {
     shown = next
@@ -278,7 +277,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
   return (
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
-      <div data-part="input-row" data-sweep="" data-phase="idle" data-hold={flag.value ? '' : undefined}>
+      <div data-part="input-row" data-sweep="" data-hold={flag.value ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
         <label for={`${id}-in`} data-part="sr-only">{label}</label>

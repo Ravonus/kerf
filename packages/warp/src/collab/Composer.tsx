@@ -1,6 +1,6 @@
 import { AtIcon, CheckIcon, PaperclipIcon, SendIcon, SmileIcon, XIcon } from '@weft/icons'
-import { announce, insertMention, installSweep, mentionQuery, nextIndex, uid, type Peer } from '@weft/ui-core'
-import { derived, onMount, state, untrack, type State } from 'weft'
+import { announce, insertMention, mentionQuery, nextIndex, uid, type Peer } from '@weft/ui-core'
+import { derived, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
 import { PeerAvatar, SWEEP } from './peer'
 import '../styles'
@@ -57,7 +57,6 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
   const open = derived(() => query.value !== null && shown.value.length > 0)
   const draft = derived(() => quote?.value ?? null)
   let ta: HTMLTextAreaElement | undefined
-  onMount(() => installSweep())
 
   const removeQuote = () => {
     if (quote) quote.value = null
@@ -105,7 +104,7 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
     ta!.focus()
   }
   return (
-    <div data-scope="composer" data-sweep="" data-phase="idle">
+    <div data-scope="composer" data-sweep="">
       <SWEEP />
       {(files ?? []).length > 0 && (
         <div data-part="files">

@@ -1,6 +1,6 @@
 import { MoreIcon } from '@weft/icons'
-import { announce, findCard, installSweep, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/ui-core'
-import { Box, derived, flush, onMount, state, untrack, watch, type State } from 'weft'
+import { announce, findCard, isSheet, kanban, menu, moveCard, moveLine, uid, type BoardCard, type BoardColumn } from '@weft/ui-core'
+import { Box, derived, flush, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { Input } from '../Field'
@@ -46,7 +46,7 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
   }
   const at = () => findCard(ctx.board(), card.id)
   return (
-    <div ref={(n: any) => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="" data-phase="idle" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
+    <div ref={(n: any) => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
       <SWEEP />
       <h4 data-measure="">{card.title}</h4>
       {hasFooter(card) && (
@@ -128,7 +128,6 @@ export function Kanban({ columns, onMove, onAdd, onDrift, height, label = 'Board
   const sheetOpen = state(false)
   const windows = new Map<string, VirtualControl>()
   let host: HTMLDivElement | undefined
-  onMount(() => installSweep())
   const focus = (id: string) => {
     const at = findCard(board.value, id)
     if (at) queueMicrotask(() => windows.get(board.value[at.col].id)?.focus(id)) // focus follows the card

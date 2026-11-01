@@ -40,7 +40,7 @@ export function Message({ text, arrive, onEdit }: { text: string; arrive?: boole
           </>
         ) : (
           <>
-            <div ref={(n: any) => (bubble = n)} data-part="bubble" data-variant="prompt" data-sweep="" data-phase="idle"><Sweep />{text}</div>
+            <div ref={(n: any) => (bubble = n)} data-part="bubble" data-variant="prompt" data-sweep=""><Sweep />{text}</div>
             <div data-part="status" style="gap:2px">
               {onEdit && <IconButton icon={EditIcon} label="Edit message" onClick={open} />}
               <IconButton icon={CopyIcon} label="Copy" onClick={(e: Event) => copyConfirm(e.currentTarget as Element, text, bubble)} />

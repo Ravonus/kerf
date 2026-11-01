@@ -125,7 +125,7 @@ export function MentionsInput({ triggers, rows = 3, value, defaultValue, onValue
       end={
         <>
           <span ref={(n: any) => (mark = n)} data-part="caret-anchor" aria-hidden="true"></span>
-          <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" data-phase="idle" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+          <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
             <span data-part="sweep" aria-hidden="true"></span>
             <ul data-part="listbox" role="listbox" id={id} aria-label="Suggestions">
               {hits.value.map((it, n) => (

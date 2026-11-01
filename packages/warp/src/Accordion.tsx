@@ -1,6 +1,6 @@
 import { DownIcon } from '@weft/icons'
-import { installSweep, nextIndex, uid } from '@weft/ui-core'
-import { onMount, state, untrack } from 'weft'
+import { nextIndex, uid } from '@weft/ui-core'
+import { state, untrack } from 'weft'
 import './styles'
 import '@weft/ui-core/styles/components/accordion.css'
 
@@ -25,7 +25,6 @@ export function Accordion({ items, variant = 'boxed', multiple, defaultOpen = []
   const base = uid('acc')
   const open = state<string[]>(untrack(() => defaultOpen))
   const kind = untrack(() => variant)
-  onMount(() => installSweep())
   const toggle = (v: string) => {
     const on = open.value.includes(v)
     open.value = on ? open.value.filter(x => x !== v) : multiple ? [...open.value, v] : [v]
@@ -43,7 +42,7 @@ export function Accordion({ items, variant = 'boxed', multiple, defaultOpen = []
   return (
     <div data-scope="accordion" data-part="root" data-variant={kind === 'line' ? 'line' : undefined} onKeyDown={onKey}>
       {items.map((it, i) => (
-        <div key={it.value} data-part="item" data-sweep="" data-phase="idle">
+        <div key={it.value} data-part="item" data-sweep="">
           <div data-part="heading" role="heading" aria-level={level}>
             <button type="button" data-part="trigger" id={`${base}-h${i}`} aria-expanded={open.value.includes(it.value) ? 'true' : 'false'} aria-controls={`${base}-c${i}`} disabled={it.disabled} onClick={() => toggle(it.value)}>
               {it.title}<DownIcon data-part="chevron" />

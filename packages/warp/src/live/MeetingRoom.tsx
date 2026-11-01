@@ -183,7 +183,6 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
 
   const say = (text: string) => announce(root!.ownerDocument, text)
   onMount(() => {
-    installSweep()
     const follow = speakerFollow(id => (speaker.value = id))
     follow.update(untrack(() => speaker.value))
     watch(() => speaking.value, s => follow.update(s))

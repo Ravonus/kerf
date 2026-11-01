@@ -1,5 +1,5 @@
-import { installSweep, meterParts, money, planPrice, prorate, uid, type BillingInterval, type Proration } from '@weft/ui-core'
-import { derived, onMount, state, type State, untrack } from 'weft'
+import { meterParts, money, planPrice, prorate, uid, type BillingInterval, type Proration } from '@weft/ui-core'
+import { derived, state, type State, untrack } from 'weft'
 import { Alert } from '../Alert'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -55,7 +55,6 @@ export function PlanPicker({ plans, current, selected, interval, seats, daysLeft
   const quote = state<Proration | undefined>(undefined)
   const busy = state(false)
   const problem = state('')
-  onMount(() => installSweep())
   const find = (id: string) => plans.find(p => p.id === id)!
   const cost = (n: number) => money(n, currency, locale)
   const now = derived(() => find(current))
@@ -95,7 +94,7 @@ export function PlanPicker({ plans, current, selected, interval, seats, daysLeft
       <div data-scope="plans">
         <div data-part="grid" role="radiogroup" aria-label="Plan">
           {plans.map(p => (
-            <label key={p.id} data-scope="plan-card" data-sweep="" data-phase="idle">
+            <label key={p.id} data-scope="plan-card" data-sweep="">
               <Sweep />
               <input type="radio" name={group} value={p.id} checked={p.id === picked.value} onChange={() => (picked.value = p.id)} />
               <span data-part="name"><span class="row"><span data-part="radio" aria-hidden="true"></span>{p.name}</span>{p.id === current && <Badge tone="neutral">Current</Badge>}</span>

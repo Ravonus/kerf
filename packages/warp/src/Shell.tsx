@@ -1,6 +1,6 @@
 import { CheckIcon, type IconComponent, DownIcon, LeftIcon, MoreIcon, PanelIcon, RightIcon, SearchIcon, XIcon } from '@weft/icons'
-import { dialog, installSweep, menu, shell, uid } from '@weft/ui-core'
-import { derived, onMount, state, type State, untrack } from 'weft'
+import { dialog, menu, shell, uid } from '@weft/ui-core'
+import { derived, state, type State, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import { use } from './use'
 import './styles'
@@ -79,7 +79,7 @@ function Item({ item, current, quiet, onPick }: { item: NavItem; current?: strin
     onPick()
   }
   return (
-    <a href={it.href ?? '#'} data-part="nav-item" data-sweep="" data-phase="idle" aria-current={current === it.id ? 'page' : undefined} onClick={press}>
+    <a href={it.href ?? '#'} data-part="nav-item" data-sweep="" aria-current={current === it.id ? 'page' : undefined} onClick={press}>
       <span data-part="icon">{draw(it.icon)}{sweepParts()}</span>
       <span data-part="nav-label">{it.label}</span>
       {it.count !== undefined && <span data-part="nav-count" style={quiet ? 'background:none;color:var(--warp-color-text-subtle)' : undefined}>{it.count}<span data-part="nav-count-label">{it.countLabel ?? ' new'}</span></span>}
@@ -174,7 +174,6 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
   }
   const shut = () => (menuOpen.value = false)
 
-  onMount(() => installSweep())
   use(shell, () => root, () => ({
     navOpen: navOpen.value, current, onToggle: toggle, onCloseNav: closeNav,
     onWide: (w: boolean) => { wide.value = w; if (w) navOpen.value = folded.value === 'hidden' && navOpen.value },
@@ -203,7 +202,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
           <div data-part="actions">
             {focus.value && step !== undefined && <span style="white-space:nowrap;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">{step}</span>}
             {!focus.value && command && (
-              <button type="button" data-part="command" data-sweep="" data-phase="idle" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" onClick={command.onOpen}>
+              <button type="button" data-part="command" data-sweep="" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" onClick={command.onOpen}>
                 {sweepParts()}<SearchIcon />
                 <span data-part="command-label">{command.label ?? 'Search'}</span>
                 <span data-part="command-hint">{command.hint ?? 'Jump to, or run…'}</span>
@@ -222,7 +221,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
           <nav data-part="nav" aria-label={navLabel} id={navId} onClick={(e: MouseEvent) => { if ((e.target as Element).closest('a')) closeNav() }}>
             {groups.value[0]?.label !== undefined && <p data-part="nav-group" id={`${navId}-g`}>{groups.value[0].label}</p>}
             {switcher && (
-              <button type="button" data-part="switcher" data-sweep="" data-phase="idle" aria-haspopup="menu" aria-expanded={menuOpen.value ? 'true' : 'false'} aria-controls={menuId} onClick={(e: Event) => openMenu(e)} onKeyDown={menuKey}>
+              <button type="button" data-part="switcher" data-sweep="" aria-haspopup="menu" aria-expanded={menuOpen.value ? 'true' : 'false'} aria-controls={menuId} onClick={(e: Event) => openMenu(e)} onKeyDown={menuKey}>
                 {sweepParts()}
                 <span data-scope="avatar" data-shape="square" data-size="sm" aria-hidden="true">{workspace.value?.initials}</span>
                 <span data-part="sr-only">Workspace: </span>
@@ -233,7 +232,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
             )}
             <ul data-part="nav-list" aria-labelledby={groups.value[0]?.label !== undefined ? `${navId}-g` : undefined}>
               {primary.value.map(p => <li key={p.item.id} data-tab={p.tab ? '' : undefined}><Item item={p.item} current={current} onPick={closeNav} /></li>)}
-              {more.value.length > 0 && <li data-tab="" data-part="nav-more"><button type="button" data-part="nav-item" data-sweep="" data-phase="idle" aria-haspopup="dialog" aria-expanded={moreOpen.value ? 'true' : 'false'} onClick={() => (moreOpen.value = true)}><span data-part="icon"><MoreIcon />{sweepParts()}</span><span data-part="nav-label">More</span></button></li>}
+              {more.value.length > 0 && <li data-tab="" data-part="nav-more"><button type="button" data-part="nav-item" data-sweep="" aria-haspopup="dialog" aria-expanded={moreOpen.value ? 'true' : 'false'} onClick={() => (moreOpen.value = true)}><span data-part="icon"><MoreIcon />{sweepParts()}</span><span data-part="nav-label">More</span></button></li>}
             </ul>
             {extra.value.length > 0 && (
               <div data-part="nav-extra">

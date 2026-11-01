@@ -4,5 +4,5 @@
   --warp-color-sweep-base: var(--warp-color-border); --warp-sweep-radius: var(--warp-radius-surface);
   border-color: transparent;
 }
-:where([data-scope="surface"][data-sweep][data-phase="in"]) { --warp-color-sweep-base: var(--warp-color-border-strong); }
+:where([data-scope="surface"][data-sweep]:is(:hover, :focus-visible, :has(:focus-visible))) { --warp-color-sweep-base: var(--warp-color-border-strong); }
 }

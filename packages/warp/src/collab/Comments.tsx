@@ -1,5 +1,5 @@
 import { CheckIcon } from '@weft/icons'
-import { announce, arrivalTracker, installSweep, isSheet, uid, type Peer } from '@weft/ui-core'
+import { announce, arrivalTracker, isSheet, uid, type Peer } from '@weft/ui-core'
 import { derived, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
@@ -26,7 +26,6 @@ export function CommentThread({ thread, active, onReply, onResolve }: { thread: 
   const fresh = derived(() => mark(data.value.comments.map(c => c.id)))
   const first = derived(() => data.value.comments[0])
   let root: HTMLElement | undefined
-  onMount(() => installSweep())
   const flip = (on: boolean) => {
     own.value = on
     onResolve?.(on)
@@ -40,7 +39,7 @@ export function CommentThread({ thread, active, onReply, onResolve }: { thread: 
     el.value = ''
   }
   return (
-    <article ref={(n: any) => (root = n)} data-scope="comment-thread" data-c={data.value.id} data-sweep="surface" data-phase="idle" data-active={active ? '' : undefined} data-pin={active ? '' : undefined} data-resolved={resolved.value ? '' : undefined} aria-label={`Comment from ${first.value?.author.name}`}>
+    <article ref={(n: any) => (root = n)} data-scope="comment-thread" data-c={data.value.id} data-sweep="surface" data-active={active ? '' : undefined} data-pin={active ? '' : undefined} data-resolved={resolved.value ? '' : undefined} aria-label={`Comment from ${first.value?.author.name}`}>
       <SWEEP />
       {resolved.value
         ? <div data-part="reply"><span>{first.value?.author.name}: {first.value?.text}</span><Button emphasis="ghost" tone="neutral" size="sm" onClick={() => flip(false)}>Reopen</Button></div>

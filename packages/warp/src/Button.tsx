@@ -1,5 +1,4 @@
-import { installSweep } from '@weft/ui-core'
-import { derived, onMount, untrack } from 'weft'
+import { derived, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import './styles'
 import '@weft/ui-core/styles/components/button.css'
@@ -35,7 +34,6 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
   const kind = untrack(() => emphasis)
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
-  if (swept(kind)) onMount(() => installSweep())
   // a loading or aria-disabled button swallows presses (components.html guard())
   const press = (e: MouseEvent) => {
     const el = e.currentTarget as HTMLElement
@@ -55,7 +53,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       data-icon-only={glyph.value && !children ? '' : undefined}
       aria-label={label}
       data-sweep={swept(kind) ? '' : undefined}
-      data-phase={swept(kind) ? 'idle' : undefined}
+     
       data-loading={loading ? '' : undefined}
       aria-busy={loading ? 'true' : undefined}
       aria-disabled={loading ? 'true' : undefined}

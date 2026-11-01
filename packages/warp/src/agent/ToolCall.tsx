@@ -34,7 +34,6 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
   let head: HTMLElement | undefined
   let ok: HTMLElement | undefined
   onMount(() => {
-    installSweep()
     const asked = () => queueMicrotask(() => {
       ok?.focus({ preventScroll: true })
       if (frame) announce(frame.ownerDocument, `The assistant wants to run ${untrack(() => call.name)}. Approve or deny.`, true)
@@ -49,7 +48,7 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
   })
   const leave = (then: () => void) => { head?.focus({ preventScroll: true }); then() }
   return (
-    <div ref={(n: any) => (frame = n)} data-part="tool-frame" data-sweep="" data-phase="idle">
+    <div ref={(n: any) => (frame = n)} data-part="tool-frame" data-sweep="">
       <Sweep />
       <details data-scope="tool-call" data-state={st.value} open={st.value === 'approval'}>
         <summary ref={(n: any) => (head = n)}>
