@@ -1,4 +1,4 @@
-import { IconCheck } from '@weft/icons'
+import { CheckIcon } from '@weft/icons'
 import { derived } from 'weft'
 import '../parts'
 import '@weft/ui-core/styles/rich/helpers.css'
@@ -18,7 +18,7 @@ export function StepBar({ label, steps, current, error }: { label: string; steps
       <ol>
         {steps.map((s, i) => (
           <li key={s.id} data-part="item" data-state={i === error ? 'error' : i < current ? 'complete' : i === current ? 'current' : undefined} aria-current={i === current ? 'step' : undefined}>
-            <span data-part="indicator"><IconCheck /></span>
+            <span data-part="indicator"><CheckIcon /></span>
             <span data-part="title">{s.title}</span>
           </li>
         ))}

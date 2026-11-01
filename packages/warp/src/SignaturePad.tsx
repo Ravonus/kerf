@@ -1,4 +1,4 @@
-import { IconUndo, IconX } from '@weft/icons'
+import { UndoIcon, XIcon } from '@weft/icons'
 import { paintStrokes, signatureSvg, strokeWidth, uid, type Stroke } from '@weft/ui-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from './Button'
@@ -101,8 +101,8 @@ export function SignaturePad({ value, defaultValue, onValueChange, label, hint, 
       <div class="row" style="justify-content:space-between">
         <span class="muted" aria-live="polite">{status.value}</span>
         <span class="row">
-          {method.value === 'draw' && <Button emphasis="ghost" size="sm" icon={IconUndo} disabled={!count.value} onClick={undo}>Undo</Button>}
-          <Button emphasis="ghost" size="sm" icon={IconX} disabled={!has.value} onClick={clear}>Clear</Button>
+          {method.value === 'draw' && <Button emphasis="ghost" size="sm" icon={UndoIcon} disabled={!count.value} onClick={undo}>Undo</Button>}
+          <Button emphasis="ghost" size="sm" icon={XIcon} disabled={!has.value} onClick={clear}>Clear</Button>
         </span>
       </div>
     </div>

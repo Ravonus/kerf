@@ -1,5 +1,5 @@
-// The shared geometry behind the pixel tier: an outline spec lands on the 16×16 grid as one-pixel lines, and every pixel
-// variant (hollow, solid, dithered) is worked out from a grid. Hand-drawn bitmaps go through the same variants.
+// The shared geometry behind the pixel tier: an outline spec lands on the 16×16 grid as one-pixel lines, and scripts/style.mjs
+// shades it. Hand-drawn bitmaps go through the same shading.
 const SIZE = 16
 const blank = () => Array.from({ length: SIZE }, () => Array(SIZE).fill('.'))
 const put = (g, x, y, c = '#') => { const X = Math.round(x), Y = Math.round(y); if (X >= 0 && Y >= 0 && X < SIZE && Y < SIZE) g[Y][X] = c }
@@ -137,64 +137,3 @@ export function interior(grid) {
   const wall = (x, y, i, j) => { for (let k = 1; k < SIZE; k++) { const c = grid[y + j * k]?.[x + i * k]; if (c === undefined) return false; if (c === '#') return true } return false }
   return grid.map((row, y) => row.map((c, x) => c !== '#' && (inner[y][x] || (wall(x, y, 1, 0) && wall(x, y, -1, 0) && wall(x, y, 0, 1) && wall(x, y, 0, -1)))))
 }
-
-const count = (grid, c) => grid.flat().filter(v => v === c).length
-
-/** A little of the hand set's light: shade inside the lower right edges of the body, never more than the ink, and clear of
- *  any detail, where it would only blur what the detail says. */
-export function shaded({ grid, body, weft }) {
-  const inner = enclosed(grid)
-  const out = grid.map(r => [...r])
-  const near = (x, y) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) if (weft[y + j]?.[x + i] === '#') return true; return false }
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (inner[y][x] && !near(x, y) && (body[y][x + 1] === '#' || body[y + 1]?.[x] === '#')) out[y][x] = '+'
-  return count(out, '+') * 3 < count(out, '#') ? out : grid
-}
-
-/** The outer edge only: shade goes, and a solid area keeps its rim. */
-export function hollow(grid) {
-  const ink = (x, y) => grid[y]?.[x] === '#'
-  return grid.map((row, y) => row.map((c, x) => (c === '#' && !(ink(x + 1, y) && ink(x - 1, y) && ink(x, y + 1) && ink(x, y - 1)) ? '#' : '.')))
-}
-
-/** Filled in: the inside goes to ink, and a detail drawn inside it is cut out so it still reads. */
-export function solid(grid) {
-  const inner = interior(grid.map(r => r.map(c => (c === '+' ? '.' : c))))
-  // the largest connected ink is the silhouette; anything else inside it is detail
-  const seen = grid.map(r => r.map(() => 0)); let best = 0, bestId = 0, id = 0
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
-    if (grid[y][x] !== '#' || seen[y][x]) continue
-    id++; let size = 0; const stack = [[x, y]]
-    while (stack.length) {
-      const [a, b] = stack.pop()
-      if (grid[b]?.[a] !== '#' || seen[b][a]) continue
-      seen[b][a] = id; size++
-      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) stack.push([a + i, b + j])
-    }
-    if (size > best) { best = size; bestId = id }
-  }
-  const inside = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([i, j]) => { for (let k = 1; k < SIZE; k++) { const c = grid[y + j * k]?.[x + i * k]; if (c === undefined) return false; if (seen[y + j * k][x + i * k] === bestId) return true } return false })
-  return grid.map((row, y) => row.map((c, x) => {
-    if (inner[y][x]) return '#'
-    if (c === '#' && seen[y][x] !== bestId && inside(x, y)) return '.'
-    return c === '+' ? '.' : c
-  }))
-}
-
-const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
-export const PATTERNS = {
-  /** Every other cell: the coarsest two-tone, and the one that survives 16px. */
-  checker: (x, y) => (x + y) % 2 === 0,
-  /** A Bayer threshold, thinner than checker. */
-  ordered: (x, y) => BAYER[y % 4][x % 4] < 6,
-  /** Two diagonals. */
-  crosshatch: (x, y) => (x + y) % 4 === 0 || (x - y + 16) % 4 === 0,
-}
-
-/** The drawing's insides shaded in a pattern, as `+` cells: ink stays, and the pattern never touches the outside. */
-export function dither(grid, pattern) {
-  const on = PATTERNS[pattern]
-  const inner = interior(grid.map(r => r.map(c => (c === '+' ? '.' : c))))
-  return grid.map((row, y) => row.map((c, x) => (c === '#' ? '#' : (inner[y][x] || c === '+') && on(x, y) ? '+' : '.')))
-}
-
-export const rows = grid => grid.map(r => r.join('')).join('\n')

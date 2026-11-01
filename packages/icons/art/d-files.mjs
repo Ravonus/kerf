@@ -396,7 +396,7 @@ export default {
 .#.++#+++++++#
 ..###########
 `],
-  columns: ['box 1 2 12 10; ln 5,2 5,12; ln 9,2 9,12', over(frame(1, 2, 13, 12), `
+  columns: ['box 1 2 12 10 / ln 5,2 5,12; ln 9,2 9,12', over(frame(1, 2, 13, 12), `
 .
 .
 .....#...#
@@ -453,7 +453,7 @@ export default {
 ...##.##
 ...#
 `)],
-  layout: ['box 1 1 12 12; ln 1,5 13,5; ln 6,5 6,13', over(frame(1, 1, 13, 13), `
+  layout: ['box 1 1 12 12 / ln 1,5 13,5; ln 6,5 6,13', over(frame(1, 1, 13, 13), `
 .
 .
 .

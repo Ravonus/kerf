@@ -1,17 +1,18 @@
-// The contact sheet: every icon, with controls for tier, variant, size and theme, and a search. One static HTML file built
-// from the art, so it needs no build and no server. The dithering comparison is scripts/dither-sheet.mjs.
+// The contact sheet: every icon, with controls for tier, form, size, theme and accent, and a search. One static HTML file
+// built from the art, so it needs no build and no server.
 //   node scripts/sheet.mjs [out.html]
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import ACTIONS from '../art/actions/index.mjs'
-import { acting, fragments, load } from './build.mjs'
+import { load } from './build.mjs'
+import { acting, forms } from './forms.mjs'
 
 const dir = new URL('../art/', import.meta.url)
 const icons = await load()
 const groups = {}
 for (const f of readdirSync(dir).filter(f => f.endsWith('.mjs')).sort()) groups[f.slice(2, -4)] = Object.keys((await import(new URL(f, dir))).default).sort()
 const data = Object.fromEntries(Object.entries(icons).map(([n, e]) => {
-  const f = fragments(n, e), a = ACTIONS[n] && acting(n, e)
-  return [n, { plain: f.line + f.vivid, hollow: f.line + f.hollow, solid: f.solid, dither: f.line + f.dither, ...(a && { action: a.line + a.pixels }) }]
+  const f = forms(n, e), a = ACTIONS[n] && acting(n, e, ACTIONS[n])
+  return [n, { hollow: f.hollow.line + f.hollow.pixels, solid: f.solid.line + f.solid.pixels, ...(a && { action: a.line + a.pixels }) }]
 }))
 const css = ['icons.css', 'tiers.css'].map(f => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8')).join('\n') + Object.keys(ACTIONS).map(n => readFileSync(new URL(`../src/gen/actions/${n}.css`, import.meta.url), 'utf8')).join('\n')
 const out = process.argv[2] ?? new URL('../contact-sheet.html', import.meta.url).pathname
@@ -22,6 +23,7 @@ writeFileSync(out, `<!doctype html>
 <title>weft icons</title>
 <style>
 ${css}
+[data-accent="accent"] { --warp-icon-weft-color: #d9480f; }
 :root { --bg: #f6f5f1; --fg: #1c1c1a; --mute: #6b6a64; --line: #dddbd3; color-scheme: light; --warp-icon-knock: var(--bg); }
 :root[data-theme="dark"] { --bg: #111311; --fg: #e8e7e1; --mute: #9b9a92; --line: #2a2c29; color-scheme: dark; }
 [data-tier="quiet"] { --warp-icon-o: inline; --warp-icon-q: inline; --warp-icon-b: none; --warp-icon-v: none; }
@@ -44,9 +46,10 @@ figcaption { font: 10px/1.2 ui-monospace, monospace; color: var(--mute); max-inl
   <h1>weft icons</h1><span id="count"></span>
   <input type="search" id="q" placeholder="Search" aria-label="Search icons">
   ${pick('tier', 'Tier', ['quiet', 'balanced', 'vivid'], 'balanced')}
-  ${pick('variant', 'Variant', ['plain', 'hollow', 'solid', 'dither', 'action'], 'plain')}
+  ${pick('variant', 'Form', ['hollow', 'solid', 'action'], 'hollow')}
   ${pick('size', 'Size', ['16', '20', '24', '32', '48'], '32')}
   ${pick('theme', 'Theme', ['light', 'dark'], 'light')}
+  ${pick('accent', 'Weft', ['ink', 'accent'], 'ink')}
 </header>
 <main id="main"></main>
 <script type="application/json" id="data">${JSON.stringify({ groups, data })}</script>
@@ -58,6 +61,7 @@ function draw() {
   const q = document.getElementById('q').value.trim().toLowerCase(), v = value('variant'), size = value('size')
   document.body.dataset.tier = value('tier')
   document.documentElement.dataset.theme = value('theme')
+  document.documentElement.dataset.accent = value('accent')
   let html = '', shown = 0
   for (const [group, names] of Object.entries(groups)) {
     const hit = names.filter(n => n.includes(q) && data[n][v])

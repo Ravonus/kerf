@@ -1,4 +1,4 @@
-import { IconX } from '@weft/icons'
+import { XIcon } from '@weft/icons'
 import { aggregate, grid, groupRows, installSweep, leaves, matchFilter, moved, pageSlice, pivotTable, sortRows, table, toCSV, treeRows, uid, type Aggregate, type GridFilter, type TreeEntry } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from './Button'
@@ -422,7 +422,7 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
         {views && <Button emphasis="ghost" tone="neutral" onClick={save}>Save view</Button>}
         {applied.value.length > 0 && (
           <div data-scope="chips" role="group" aria-label="Applied filters">
-            {applied.value.map(f => <span key={f.k} data-scope="chip">{f.c?.header} {opOf(f.c)} <b>{f.v}</b><button type="button" aria-label={`Remove filter ${f.c?.header}`} onClick={() => setFilter(f.k, '')}><IconX /></button></span>)}
+            {applied.value.map(f => <span key={f.k} data-scope="chip">{f.c?.header} {opOf(f.c)} <b>{f.v}</b><button type="button" aria-label={`Remove filter ${f.c?.header}`} onClick={() => setFilter(f.k, '')}><XIcon /></button></span>)}
             <button type="button" data-part="clear" onClick={() => change({ filters: {} })}>Clear all</button>
           </div>
         )}

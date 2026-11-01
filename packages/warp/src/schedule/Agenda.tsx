@@ -1,4 +1,4 @@
-import { IconPlus } from '@weft/icons'
+import { PlusIcon } from '@weft/icons'
 import { addDays, agendaItems, announce, at, clock, dayDots, eventsOn, fmt, longDuration, longPress, slide, swipePages, uid, weekDates, weekStart, ymd, type AgendaItem, type CalEvent, type IsoDate, type Slot } from '@weft/ui-core'
 import { derived, flush, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
@@ -157,7 +157,7 @@ export function Agenda(p: AgendaProps) {
           ))}
         </div>
       </div>
-      {p.onCreate && <button data-scope="fab" type="button" aria-label="New event" onClick={create}><IconPlus /></button>}
+      {p.onCreate && <button data-scope="fab" type="button" aria-label="New event" onClick={create}><PlusIcon /></button>}
       <MoveSheet open={sheet} event={moving.value} events={p.events} firstDayOfWeek={first.value} locale={env.locale.value} hourCycle={p.hourCycle} onMove={moved} onClose={() => (lifted.value = null)} />
       <EventEditor open={editing} event={draft.value} isNew calendars={p.calendars} timeZone={p.timeZone} locale={env.locale.value} today={env.today.value} onSave={e => p.onCreate?.(e)} />
     </div>

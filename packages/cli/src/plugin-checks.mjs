@@ -46,6 +46,7 @@ export async function pluginChecks(root, loaded, { files, exclude = [] }) {
       read,
       jsx,
       importOf,
+      slots: loaded.slots ?? {},
       exists: rel => existsSync(join(root, rel)),
       bytes: rel => (existsSync(join(root, rel)) ? new Uint8Array(readFileSync(join(root, rel))) : undefined),
     })

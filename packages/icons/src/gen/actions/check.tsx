@@ -3,4 +3,4 @@ import { acting } from '../../action'
 import '../../tiers.css'
 import './check.css'
 
-export const CheckIconAction = /*#__PURE__*/ acting('<g data-a="check"><path pathLength="1" data-t="o" data-w="" d="M2.25 12.75L8.25 18.75L20.25 5.25"/></g>','<g data-a="check" data-t="v"><path data-p="" d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z"/></g>')
+export const CheckIconAction = /*#__PURE__*/ acting('<g data-a="check"><path pathLength="1" data-t="q" data-qs="" data-w="" d="M2.25 12.75L8.25 18.75L20.25 5.25"/><path pathLength="1" data-t="b" data-bw="" data-w="" d="M2.25 12.75L8.25 18.75L20.25 5.25"/></g>','<g data-a="check" data-t="v"><path data-p="" d="M13 3h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM11 5h1v1h-1zM13 5h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM6 12h1v1h-1z"/><path data-p="" data-w="" d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z"/></g>')

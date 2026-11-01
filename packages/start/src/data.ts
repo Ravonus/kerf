@@ -46,6 +46,9 @@ export interface Context {
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
 export const CLIENT_IP = 'x-weft-client-ip'
 
+/** Options a plugin adds to `query` and `mutation`, by augmenting this; its extension's `guard` reads them. Empty here. */
+export interface FnOptions {}
+
 /** `'minutes'` etc. or seconds: how long the shared server cache keeps a value (research 27 §4). */
 export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
 
@@ -57,6 +60,8 @@ type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
 type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
 type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
+/** Read before `run`, for one user's tag: `tags: (_, ctx) => [`entitlements:${ctx.user.id}`]`. */
+type QueryTags<I, A> = Tags<[input: I, ctx: Ctx<A>]>
 
 /** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft/start/rust` (research 36, 37). */
 export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
@@ -64,7 +69,7 @@ export interface Impl { readonly kind: string; readonly target: string; readonly
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
 export type Errors = Record<string, StandardSchemaV1>
 
-export interface QueryDef<S, O, A = undefined> {
+export interface QueryDef<S, O, A = undefined> extends FnOptions {
   input?: S
   /** The result's shape: checked in dev and tests (C002), and the contract's `output`. */
   output?: StandardSchemaV1
@@ -73,7 +78,7 @@ export interface QueryDef<S, O, A = undefined> {
   /** An example result, for what `output` can't say: sizes a pending view (research 31 §2). */
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
-  tags?: Tags<[input: Out<S>]>
+  tags?: QueryTags<Out<S>, A>
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
   /** Named failures, for the client as `FnError.code` and `.data`. */
@@ -88,7 +93,7 @@ export interface QueryDef<S, O, A = undefined> {
 export type ImplQueryDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<QueryDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
 export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<MutationDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
 
-export interface MutationDef<S, O, A = undefined> {
+export interface MutationDef<S, O, A = undefined> extends FnOptions {
   input?: S
   output?: StandardSchemaV1
   auth?: A
@@ -312,6 +317,8 @@ export const net = () => {
 export interface NetControl {
   latency: number
   ctx?: object
+  /** Server extensions for this test (`net.extension`). */
+  extensions: any[]
   online(): boolean
   fails: Map<string, unknown[]>
   handlers: Map<string, (input: any, ctx: any) => unknown>
@@ -674,7 +681,7 @@ export const http: Transport = {
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
 export const fakeScope = (exec: typeof import('./exec'), n: NetControl, request: Request) =>
-  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, extensions: n.extensions, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
 
 const inProcess: Transport = {
   query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),

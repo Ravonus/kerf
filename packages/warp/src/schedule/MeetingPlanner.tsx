@@ -1,4 +1,4 @@
-import { IconClock, IconSend, IconX } from '@weft/icons'
+import { ClockIcon, SendIcon, XIcon } from '@weft/icons'
 import { announce, asTime, clock, clockRange, fmt, minutes, sharedFree, suggestSlots, uid, withinHours, zoneCity, zoneMinute, type Attendee, type IsoTime, type Range } from '@weft/ui-core'
 import { derived, flush, state, untrack, watch } from 'weft'
 import { Badge } from '../Badge'
@@ -138,7 +138,7 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
                 <span>{a.name}{a.organizer && <span class="muted"> (organizer)</span>}</span>
                 <span style="flex:1"></span>
                 <span class="muted">{a.zone ? zoneCity(a.zone) : ''}</span>
-                {!a.organizer && <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label={`Remove ${a.name}`} onClick={() => drop(a)} />}
+                {!a.organizer && <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label={`Remove ${a.name}`} onClick={() => drop(a)} />}
               </li>
             ))}
           </ul>
@@ -195,8 +195,8 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
               <div class="row">
                 <span><b>{summary.value}</b> {elsewhere.value.length > 0 && <span class="muted">· {elsewhere.value.join(' · ')}</span>}</span>
                 <span style="flex:1"></span>
-                <Button emphasis="outline" tone="neutral" size="sm" icon={IconClock} onClick={() => { typed.value = chosen.value !== null ? asTime(chosen.value) : null; manual.value = !manual.value }}>{manual.value ? 'Suggested times' : 'Pick manually'}</Button>
-                <Button loading={busy.value} disabled={chosen.value === null} onClick={send}><IconSend />Send invite</Button>
+                <Button emphasis="outline" tone="neutral" size="sm" icon={ClockIcon} onClick={() => { typed.value = chosen.value !== null ? asTime(chosen.value) : null; manual.value = !manual.value }}>{manual.value ? 'Suggested times' : 'Pick manually'}</Button>
+                <Button loading={busy.value} disabled={chosen.value === null} onClick={send}><SendIcon />Send invite</Button>
               </div>
               {failed.value && <p role="alert" class="muted">Couldn't send the invite: {failed.value}</p>}
             </div>}

@@ -1,6 +1,6 @@
 # Icons
 
-`@weft/icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has hollow, solid and dithered variants. Rules: `docs/design/warp/10-icons.md`.
+`@weft/icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow, the default, and solid, drawn apart in every tier and shaded with dither. Rules: `docs/design/warp/10-icons.md`.
 
 `weft add icons` installs it and adds `icons()` to the config. warp already depends on it.
 
@@ -36,13 +36,12 @@ One scheme, generated from the art with its types:
 
 | Export | Pack | `<Icon>` | What it is |
 |---|---|---|---|
-| `BellIcon` | `Icons.Bell` | `name="bell"` | as drawn: outline at quiet and balanced, pixels at vivid |
-| `BellIconHollow` | `Icons.BellHollow` | `hollow` | always hollow, pixels included |
-| `BellIconSolid` | `Icons.BellSolid` | `solid` | filled in every tier |
-| `BellIconDither` | `Icons.BellDither` | `dither` | pixels shaded in a checker |
+| `BellIcon` | `Icons.Bell` | `name="bell"` | hollow, the default |
+| `BellIconHollow` | `Icons.BellHollow` | | the same, by name |
+| `BellIconSolid` | `Icons.BellSolid` | `solid` | the solid form |
 | `BellIconAction` | `Icons.BellAction` | `action` | has a built-in animation |
 
-`IconBell` is the same as `BellIcon`. The tier is a prop, never a name. Dithering shades a drawing's inside, so an icon with no inside, like an arrow, looks the same with it. Pick it on the sheet: `npm run sheet` in the package writes `contact-sheet.html`, with tier, variant, size, theme and search. `dither-sheet.html` compares the treatments.
+The tier is a prop, never a name. An open mark, like an arrow, has a notched badge as its solid, with the mark cut out. Pick it on the sheet: `npm run sheet` in the package writes `contact-sheet.html`, with tier, variant, size, theme and search. `dither-sheet.html` compares the treatments.
 
 ## A wrong name
 
@@ -96,5 +95,7 @@ export default { plugins: [icons({ tier: 'vivid' })] }
 The pixel tier is exact at 16, 32 and 48. At 20 and 24 a 1× screen rounds cells unevenly; a 2× screen draws 24 evenly. Prefer 16 or 32 at vivid.
 
 ## Styling
+
+A solid cuts its marks with `--warp-icon-knock`, which defaults to `Canvas`. On a coloured surface, like a solid button, set it to that surface's colour.
 
 Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`. A solid icon cuts its detail out with the page background, `--warp-icon-knock`: set it on a surface of another colour.

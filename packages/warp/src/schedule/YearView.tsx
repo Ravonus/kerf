@@ -1,4 +1,4 @@
-import { IconLeft, IconRight } from '@weft/icons'
+import { LeftIcon, RightIcon } from '@weft/icons'
 import { addMonths, announce, clock, eventsOn, fmt, minuteOf, monthStart, monthSummary, monthWeeks, motionOff, uid, weekStart, weekdays, ymd, yearKey, yearLevel, yearMonths, yearTotal, type CalEvent, type IsoDate } from '@weft/ui-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from '../Button'
@@ -113,9 +113,9 @@ export function YearView(p: YearViewProps) {
   return (
     <section data-scope="year" aria-label={p.label} aria-labelledby={p.label ? undefined : `${id}-t`}>
       <div data-part="toolbar">
-        <Button emphasis="ghost" tone="neutral" size="sm" icon={IconLeft} label="Previous year" onClick={() => go(addMonths(focus.value, -12), false)} />
+        <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label="Previous year" onClick={() => go(addMonths(focus.value, -12), false)} />
         <h3 data-part="title" id={`${id}-t`} aria-live="polite">{year.value}</h3>
-        <Button emphasis="ghost" tone="neutral" size="sm" icon={IconRight} label="Next year" onClick={() => go(addMonths(focus.value, 12), false)} />
+        <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label="Next year" onClick={() => go(addMonths(focus.value, 12), false)} />
         <Button emphasis="outline" tone="neutral" size="sm" onClick={() => go(env.today.value)}>Today</Button>
         <span data-part="legend" aria-hidden="true"><span><i data-part="dots" data-zero=""></i>none</span><span><i data-part="dots" style="--_n:1"></i>1–2</span><span><i data-part="dots" style="--_n:2"></i>3–4</span><span><i data-part="dots" style="--_n:3"></i>5+</span></span>
       </div>

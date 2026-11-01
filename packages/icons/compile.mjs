@@ -17,8 +17,8 @@ const ICON_SOURCES = new Set(['@weft/icons/all', '@weft/icons/icon', '@weft/warp
 
 const title = name => name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
 export const pascal = (name, variant = '') => `${title(name)}Icon${variant ? variant[0].toUpperCase() + variant.slice(1) : ''}`
-export const VARIANTS = ['hollow', 'solid', 'dither']
-/** Which variants an element asks for: '' is the plain icon. A flag it can't read may be either. */
+export const VARIANTS = ['solid']
+/** Which variants an element asks for: '' is hollow, the default. A flag it can't read may be either. */
 function variants(element) {
   const out = new Set(), flags = element.attributes.filter(a => a.type === 'JSXAttribute' && (VARIANTS.includes(a.name.name) || a.name.name === 'action'))
   for (const a of flags) {
@@ -173,10 +173,10 @@ const isSpecifier = (unit, id) => unit.ast.body.some(n => n.type === 'ImportDecl
 const packLocals = unit => [...unit.imports].filter(([, i]) => i.source === '@weft/icons' && (i.imported === 'default' || i.imported === '*')).map(([l]) => l)
 const kebab = s => s.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`).replace(/^-/, '')
 const TOOLS = new Set(['iconSet'])
-/** `X`, `XHollow`, `XIcon`, `IconX`: a pack member as a name and a variant. */
+/** `X`, `XHollow`, `XIcon`, `XIconSolid`: a pack member as a name and a variant. */
 function member(id) {
-  const [, base, variant = ''] = /^(.+?)(Hollow|Solid|Dither|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$|Action$)/, '').replace(/^Icon(?=[A-Z])/, ''))
-  return { name: kebab(base), variant: variant.toLowerCase() }
+  const [, base, variant = ''] = /^(.+?)(Hollow|Solid|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Action$)/, ''))
+  return { name: kebab(base), variant: variant === 'Hollow' ? '' : variant.toLowerCase() }
 }
 function packName(id, catalog, names, missing) {
   if (TOOLS.has(id)) return
@@ -386,7 +386,7 @@ export function namesModule(names, { lazy = false, source } = {}) {
   const id = key => pascal(...key.split(':'))
   const imports = list.length ? `import { ${list.map(id).join(', ')} } from '@weft/icons'\n` : ''
   const table = `const names = { ${list.map(n => `${JSON.stringify(n)}: ${id(n)}`).join(', ')} }\nconst key = (name, variant) => (variant ? name + ':' + variant : name)\n`
-  const member = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Dither|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$|Action$)/, '').replace(/^Icon(?=[A-Z])/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
+  const member = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Action$)/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
   if (source) return `${imports}import { remote } from '@weft/icons/late'\n${table}const get = remote(${JSON.stringify(source)})\nexport const resolve = (name, variant) => names[key(name, variant)] ?? get(name, variant)\n${member}`
   if (lazy) return `${imports}import { late } from '@weft/icons/late'\n${table}const load = () => import('@weft/icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, load)\n${member}`
   return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n${member}`
@@ -403,7 +403,7 @@ export function trimTiers(source, stops) {
   return stops.size === 1 ? out.replaceAll(/ data-t="[oqbv]"/g, '').replace("import '../tiers.css'\n", '') : out
 }
 
-/** `<Icon name="check">` becomes `<IconCheck>`, the same output a named import gives. */
+/** `<Icon name="check">` becomes `<CheckIcon>`, the same output a named import gives. */
 export function rewrite(code, file, catalog) {
   if (!/@weft\/(icons|warp)/.test(code)) return null
   const unit = read(file, code)
@@ -479,16 +479,17 @@ export function findings(root) {
 
 /** Every icon and variant as a static .svg, for a CDN or bucket. Writes files; nothing is uploaded. */
 export async function publish(dir) {
-  const { load, fragments } = await import('./scripts/build.mjs')
+  const { load } = await import('./scripts/build.mjs')
+  const { forms } = await import('./scripts/forms.mjs')
   const icons = await load()
   mkdirSync(dir, { recursive: true })
   const svg = html => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${html}</svg>\n`
   let files = 0
   for (const [name, entry] of Object.entries(icons)) {
-    const f = fragments(name, entry)
-    const all = { '': f.line + f.vivid, '.hollow': f.line + f.hollow, '.solid': f.solid, '.dither': f.line + f.dither }
+    const f = forms(name, entry)
+    const all = { '': f.hollow.line + f.hollow.pixels, '.solid': f.solid.line + f.solid.pixels }
     for (const [suffix, html] of Object.entries(all)) { writeFileSync(join(dir, `${name}${suffix}.svg`), svg(html)); files++ }
   }
-  writeFileSync(join(dir, 'manifest.json'), JSON.stringify({ icons: Object.keys(icons), variants: ['', 'hollow', 'solid', 'dither'] }) + '\n')
+  writeFileSync(join(dir, 'manifest.json'), JSON.stringify({ icons: Object.keys(icons), variants: ['', 'solid'] }) + '\n')
   return { dir, files, icons: Object.keys(icons).length }
 }

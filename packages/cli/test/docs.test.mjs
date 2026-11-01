@@ -132,3 +132,19 @@ describe('AGENTS.md', () => {
     expect(await writeAgentsMd(dir, { check: true })).toMatchObject({ current: false, written: false })
   })
 })
+
+describe('a plugin in the docs', () => {
+  const app = () => {
+    const dir = project({ 'kit.mjs': "import { definePlugin } from 'weft/plugin'\nexport default definePlugin({ name: 'kit', namespace: 'KIT', contribute: () => ({ docs: { topic: 'kit', summary: 'The kit', file: new URL('./kit.md', import.meta.url).pathname }, diagnostics: [{ code: 'KIT001', severity: 'warning', catches: 'A loose kit', fix: 'Tighten it' }] }) })\n", 'kit.md': '# Kit\n\nHello.\n', 'weft.config.ts': "import kit from './kit.mjs'\nexport default { plugins: [kit()] }\n" })
+    return dir
+  }
+  it('its topic is listed and served, and its codes have pages', async () => {
+    const dir = app()
+    expect((await docs(dir)).topics.kit).toBe('The kit')
+    expect((await docs(dir, 'kit')).text).toContain('Hello.')
+    const page = await docs(dir, 'KIT001')
+    expect(page.text).toContain('A loose kit')
+    expect(page.text).toContain('Tighten it')
+    expect((await docs(dir, 'diagnostics')).text).toContain('KIT001')
+  })
+})

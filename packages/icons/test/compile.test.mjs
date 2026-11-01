@@ -73,11 +73,11 @@ test('rewrite refuses an unknown literal, in dev too', () => {
   expect(() => rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="chekc" />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'chekc', did you mean 'check'/)
 })
 test('a variant flag picks the export', () => {
-  const out = rewrite(`import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="bell" hollow />`, 'a.tsx', catalog)
-  expect(out).toContain('<BellIconHollow'); expect(out).not.toContain('hollow />')
+  const out = rewrite(`import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="bell" solid />`, 'a.tsx', catalog)
+  expect(out).toContain('<BellIconSolid'); expect(out).not.toContain('solid />')
 })
-test('a variant ships only itself', () => expect(names(scan(app(`export const A = () => <Icon name="bell" hollow />`)))).toEqual(['bell:hollow']))
-test('a variant flag it cannot read may be either', () => expect(names(scan(app(`export const A = ({ h }) => <Icon name="bell" hollow={h} />`)))).toEqual(['bell', 'bell:hollow']))
+test('a variant ships only itself', () => expect(names(scan(app(`export const A = () => <Icon name="bell" solid />`)))).toEqual(['bell:solid']))
+test('a variant flag it cannot read may be either', () => expect(names(scan(app(`export const A = ({ h }) => <Icon name="bell" solid={h} />`)))).toEqual(['bell', 'bell:solid']))
 test('a tier prop keeps that stop', () => expect([...scan(app(`export const A = () => <Icon name="bell" tier="vivid" />`)).stops].sort()).toEqual(['balanced', 'vivid']))
 test('one stop drops the switch and the other drawings', () => {
   const src = `import '../tiers.css'\nicon('<path data-t="o" d="M1"/><path data-t="v" data-p="" d="M4"/>')`
@@ -92,7 +92,7 @@ test('trimTiers keeps what the stops show', () => {
 
 const pack = body => ({ 'src/a.tsx': `import Icons from '@weft/icons'\n${body}` })
 test('a pack member is that icon', () => expect(names(scan(pack(`export const A = () => <Icons.Bell />`)))).toEqual(['bell']))
-test('a pack variant', () => expect(names(scan(pack(`export const A = () => <Icons.ArrowRightHollow />`)))).toEqual(['arrow-right:hollow']))
+test('a pack variant', () => expect(names(scan(pack(`export const A = () => <Icons.ArrowRightSolid />`)))).toEqual(['arrow-right:solid']))
 test('a namespace import works the same', () => expect(names(scan({ 'src/a.tsx': `import * as Icons from '@weft/icons'\nexport const A = () => <Icons.BellIcon />` }))).toEqual(['bell']))
 test('an unknown pack member is an error', () => expect(scan(pack(`export const A = () => <Icons.Bel />`)).unknown[0]).toMatchObject({ name: 'Bel', suggest: 'Bell' }))
 test('a bounded pack lookup ships that set', () => {
@@ -121,8 +121,8 @@ test('publish writes each variant as a static file, and uploads nothing', async 
   const dir = mkdtempSync(join(tmpdir(), 'icons-pub-'))
   try {
     const out = await publish(dir)
-    expect(out.files).toBe(out.icons * 4)
-    expect(readFileSync(join(dir, 'bell.hollow.svg'), 'utf8')).toContain('<svg xmlns=')
+    expect(out.files).toBe(out.icons * 2)
+    expect(readFileSync(join(dir, 'bell.solid.svg'), 'utf8')).toContain('<svg xmlns=')
     expect(JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')).icons).toContain('bell')
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })

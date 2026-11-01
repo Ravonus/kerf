@@ -1,4 +1,4 @@
-import { IconTrash, type IconComponent } from '@weft/icons'
+import { TrashIcon, type IconComponent } from '@weft/icons'
 import { confirmMatches } from '@weft/ui-core'
 import { derived, state, type State, untrack, watch } from 'weft'
 import { Button, type Tone } from '../Button'
@@ -79,7 +79,7 @@ export interface TypeToConfirmProps {
  * Type-to-confirm (09 §4.4): an AlertDialog whose field sweeps critical. Deviation from 05: focus goes to the field,
  * not Cancel. The confirm stays disabled until the text matches exactly, and Enter submits only then.
  */
-export function TypeToConfirm({ open, title, description, confirmText, items, action, glyph = IconTrash, onConfirm }: TypeToConfirmProps) {
+export function TypeToConfirm({ open, title, description, confirmText, items, action, glyph = TrashIcon, onConfirm }: TypeToConfirmProps) {
   const armed = latch(untrack(() => open))
   const typed = state('')
   const busy = state(false)
