@@ -99,6 +99,8 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
       },
       include: ['src', ...(config === 'ts' ? ['weft.config.ts'] : []), '.weft/*.d.ts'],
     }),
+    // VS Code's own tsserver only looks for plugins where it's told, and TypeScript 7 ships no tsserver to select instead.
+    '.vscode/settings.json': json({ 'typescript.tsserver.pluginPaths': ['.'] }),
     '.gitignore': `node_modules/\n.weft/*\n!.weft/plugins.lock.json\n.output/\ndist/\n${db === 'none' ? '' : '.env\n.data/\n'}${layer === 'prisma' ? 'src/generated/\n' : ''}`,
     'src/routes/_layout.tsx': layout(ui, { db, auth }),
     'src/routes/index.tsx': home(ui, label),

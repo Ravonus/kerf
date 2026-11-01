@@ -6,7 +6,7 @@ const { Engine } = require('../src/infer/engine.cjs')
 const { languageHost } = require('../src/infer/hosts.cjs')
 const { toShadow, toSource, inGenerated } = require('../src/infer/shadow.cjs')
 
-const CODES = { W080: 9080, W081: 9081, W082: 9082, W083: 9083, W084: 9084, W085: 9085 }
+const CODES = { W080: 9080, W081: 9081, W082: 9082, W083: 9083, W084: 9084, W085: 9085, W086: 9086 }
 const SPANS = new Set(['textSpan', 'contextSpan', 'triggerSpan', 'applicableSpan', 'applicableToSpan', 'optionalReplacementSpan', 'replacementSpan', 'fileTextChangesSpan', 'span'])
 
 function init({ typescript: ts }) {

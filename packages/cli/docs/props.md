@@ -21,6 +21,7 @@ export default function List() { return <Row label="One" onPick={() => go(1)} />
 | An export | `weft dev` or `weft fix` writes the type with an `/*inferred*/` comment, so it shows in a diff. **W082** when callers move on; delete the comment to keep the type |
 | An `any` from a caller | The body's use, or `any`, with **W083** naming where it came from |
 | No caller | **W080**, with what to do |
+| `bind:x={box}` | Typed as the value, but it doesn't compile: **W086**, and `weft fix` writes `x={bind(box)}` |
 
 Write a type yourself when two props must agree (a type parameter), when the file is `.jsx`, or for a public API with no
 caller in this repository. `Props<typeof Button>` names another component's props. `tsc` alone reports TS7006 on an

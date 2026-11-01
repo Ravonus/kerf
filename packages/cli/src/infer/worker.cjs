@@ -30,7 +30,7 @@ const applyEdits = (text, edits) => [...edits].sort((a, b) => b.start - a.start)
 function scheduleWrites(findings) {
   clearTimeout(writes)
   if (!write) return
-  const jobs = [...findings].flatMap(([file, list]) => { const edits = list.filter(f => f.safe && f.edits).flatMap(f => f.edits); return edits.length ? [{ file, edits, hash: session.engine.facts.get(file)?.hash, codes: list.map(f => f.code) }] : [] })
+  const jobs = [...findings].flatMap(([file, list]) => { const edits = list.filter(f => f.safe && f.edits && f.code !== 'W086').flatMap(f => f.edits); return edits.length ? [{ file, edits, hash: session.engine.facts.get(file)?.hash, codes: list.map(f => f.code) }] : [] })
   if (!jobs.length) return
   writes = setTimeout(() => {
     for (const job of jobs) {
