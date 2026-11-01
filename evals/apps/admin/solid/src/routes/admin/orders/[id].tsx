@@ -1,5 +1,5 @@
 import { Title } from "@solidjs/meta";
-import { createAsync, useAction, useParams, useSubmissions, type RouteDefinition } from "@solidjs/router";
+import { createAsyncStore, useAction, useParams, useSubmissions, type RouteDefinition } from "@solidjs/router";
 import { HttpStatusCode } from "@solidjs/start";
 import { createMemo, For, Show } from "solid-js";
 
@@ -15,7 +15,8 @@ type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 export default function OrderPage() {
   const params = useParams();
   // Deferred because a missing order has to answer 404, and a status can't change once the first byte is out.
-  const order = createAsync(() => getOrder(Number(params.id)), { deferStream: true });
+  // A store, so a save's reply keeps the same `Details` and the select keeps focus.
+  const order = createAsyncStore(() => getOrder(Number(params.id)), { deferStream: true, reconcile: { key: "id" } });
 
   return (
     <>

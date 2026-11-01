@@ -1,6 +1,6 @@
 import { Title } from "@solidjs/meta";
 import { A, createAsyncStore, useAction, useSearchParams, useSubmissions, type RouteDefinition } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js";
+import { createEffect, createMemo, createSelector, createSignal, For, on, Show } from "solid-js";
 
 import { field, pageLink, panel, primary, select, td, th } from "~/components/button";
 import { Loads, Rows } from "~/components/states";
@@ -75,6 +75,7 @@ function OrderTable(props: { search: OrderSearch; sortBy(sort: Sort): void }) {
   const rows = () => data()?.rows ?? [];
 
   const [picked, setPicked] = createSignal<ReadonlySet<number>>(new Set());
+  const isPicked = createSelector(picked, (id: number, set) => set.has(id));
   const mark = useAction(markShipped);
   const marks = useSubmissions(markShipped);
 
@@ -155,7 +156,7 @@ function OrderTable(props: { search: OrderSearch; sortBy(sort: Sort): void }) {
               {(order) => (
                 <tr class="hover:bg-sunken/60">
                   <td class="pl-4">
-                    <input type="checkbox" form="bulk" name="id" value={order.id} aria-label={`Select order ${order.id}`} class="check" checked={picked().has(order.id)} onInput={() => toggle(order.id)} />
+                    <input type="checkbox" form="bulk" name="id" value={order.id} aria-label={`Select order ${order.id}`} class="check" checked={isPicked(order.id)} onInput={() => toggle(order.id)} />
                   </td>
                   <td class={td}>
                     <a href={`/admin/orders/${order.id}`} class="font-medium text-accent-text hover:underline">

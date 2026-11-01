@@ -1,9 +1,9 @@
 import { Title } from "@solidjs/meta";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { For } from "solid-js";
+import { For, Suspense } from "solid-js";
 
 import { heading } from "~/components/button";
-import { ProductArt, ProductCard, wideGrid } from "~/components/product-card";
+import { GridSkeleton, ProductArt, ProductCard, wideGrid } from "~/components/product-card";
 import { getHome } from "~/lib/data";
 
 export const route = { preload: () => void getHome() } satisfies RouteDefinition;
@@ -15,8 +15,8 @@ const promises = [
 ];
 
 export default function Home() {
-  // Deferred: the aisles and products are what this page is, so they belong in the first HTML a crawler reads.
-  const home = createAsync(() => getHome(), { deferStream: true });
+  // Nothing here can change the status, so the page goes out at once and these two stream into it.
+  const home = createAsync(() => getHome());
   return (
     <div class="mx-auto max-w-360 px-8">
       <Title>Goods made to be mended · Mendwell</Title>
@@ -40,22 +40,26 @@ export default function Home() {
             Aisles
           </h2>
           <nav aria-label="Aisles" class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] border-t-2 border-ink">
-            <For each={home()?.categories}>
-              {(c) => (
-                <a href={`/c/${c.slug}`} class="border-b border-line py-2.5 text-xl font-semibold hover:text-accent-text">
-                  {c.name}
-                </a>
-              )}
-            </For>
+            <Suspense fallback={<For each={Array.from({ length: 8 })}>{() => <span class="border-b border-line py-2.5 text-xl">&nbsp;</span>}</For>}>
+              <For each={home()?.categories}>
+                {(c) => (
+                  <a href={`/c/${c.slug}`} class="border-b border-line py-2.5 text-xl font-semibold hover:text-accent-text">
+                    {c.name}
+                  </a>
+                )}
+              </For>
+            </Suspense>
           </nav>
         </section>
         <section id="featured" aria-labelledby="featured-title" class="flex flex-col gap-2.5">
           <h2 id="featured-title" class={`${heading} text-xl`}>
             On the front table
           </h2>
-          <ul class={wideGrid}>
-            <For each={home()?.featured}>{(p) => <ProductCard product={p} />}</For>
-          </ul>
+          <Suspense fallback={<GridSkeleton count={12} />}>
+            <ul class={wideGrid}>
+              <For each={home()?.featured}>{(p) => <ProductCard product={p} />}</For>
+            </ul>
+          </Suspense>
         </section>
         <div class="grid gap-5 border-t-2 border-ink pt-12 md:grid-cols-3">
           <For each={promises}>

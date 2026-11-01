@@ -8,3 +8,5 @@ export const pageLink =
 export const panel = "rounded-2xl border border-line bg-surface";
 export const th = "px-4 py-2.5 text-left text-xs font-medium tracking-wide whitespace-nowrap text-muted uppercase";
 export const td = "px-4 py-2.5 whitespace-nowrap";
+export const avatar =
+  "grid size-9 cursor-pointer place-items-center rounded-full bg-sunken text-sm font-semibold text-accent-text outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-accent/40 data-expanded:ring-3 data-expanded:ring-accent/25";

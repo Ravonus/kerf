@@ -1,5 +1,5 @@
 import { A, createAsync, Navigate, useIsRouting, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { For, Show, Suspense } from "solid-js";
 
 import { AccountMenu } from "~/components/account-menu";
 import { Loads } from "~/components/states";
@@ -17,15 +17,17 @@ const links = [
 ];
 
 export default function AdminLayout(props: RouteSectionProps) {
-  // Deferred because a redirect has to go out before the first byte. Each page's data needs no such thing, so it streams.
-  const viewer = createAsync(() => getViewer(), { deferStream: true });
+  const viewer = createAsync(() => getViewer());
   const routing = useIsRouting();
 
   return (
     <>
-      <Show when={viewer() === null}>
-        <Navigate href="/login" />
-      </Show>
+      {/* The middleware turned away anyone with no cookie, so the shell is already out. A cookie that no longer stands is caught here. */}
+      <Suspense>
+        <Show when={viewer() === null}>
+          <Navigate href="/login" />
+        </Show>
+      </Suspense>
       <div aria-hidden="true" class="fixed inset-x-0 top-0 z-30 h-0.5 overflow-hidden">
         <Show when={routing()}>
           <div class="routing h-full bg-accent" />
@@ -70,8 +72,8 @@ export default function AdminLayout(props: RouteSectionProps) {
 
 function Account(props: { viewer?: { name: string; email: string } | null }) {
   return (
-    <Show when={props.viewer} fallback={<span class="block size-9 rounded-full bg-sunken" />}>
-      {(user) => <AccountMenu name={user().name} email={user().email} />}
-    </Show>
+    <Suspense fallback={<span class="block size-9 rounded-full bg-sunken" />}>
+      <Show when={props.viewer}>{(user) => <AccountMenu name={user().name} email={user().email} />}</Show>
+    </Suspense>
   );
 }

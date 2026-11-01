@@ -4,5 +4,5 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [solidStart(), tailwindcss(), nitro({ compressPublicAssets: { gzip: true, brotli: true } })],
+  plugins: [solidStart({ middleware: "./src/middleware.ts" }), tailwindcss(), nitro({ compressPublicAssets: { gzip: true, brotli: true } })],
 });

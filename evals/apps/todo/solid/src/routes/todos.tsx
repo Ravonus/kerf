@@ -21,8 +21,6 @@ const empty = { all: "Nothing here yet", active: "All caught up", done: "Nothing
 export default function Todos() {
   const [params] = useSearchParams();
   const filter = () => parseFilter(params.filter);
-  // Deferred because a redirect has to go out before the first byte. The list needs no such thing, so it streams.
-  const viewer = createAsync(() => getViewer(), { deferStream: true });
 
   const adds = useSubmissions(addTodo);
   const toggles = useSubmissions(toggleTodo);
@@ -73,17 +71,14 @@ export default function Todos() {
   return (
     <>
       <Title>Todos · Daybook</Title>
-      <Show when={viewer() === null}>
-        <Navigate href="/login" />
-      </Show>
       <header class="sticky top-0 z-10 border-b border-line/70 bg-page/85 backdrop-blur">
         <div class="mx-auto flex h-16 max-w-2xl items-center justify-between px-4 sm:px-6">
           <a href="/todos">
             <Logo />
           </a>
-          <Show when={viewer()} fallback={<span class="size-9 rounded-full bg-sunken" />}>
-            {(user) => <AccountMenu name={user().name} email={user().email} />}
-          </Show>
+          <Suspense fallback={<span class="size-9 rounded-full bg-sunken" />}>
+            <Account />
+          </Suspense>
         </div>
       </header>
       <main class="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
@@ -128,6 +123,16 @@ export default function Todos() {
         </ErrorBoundary>
       </main>
     </>
+  );
+}
+
+/** The middleware turned away anyone with no cookie, so the shell is already out. A cookie that no longer stands is caught here. */
+function Account() {
+  const viewer = createAsync(() => getViewer());
+  return (
+    <Show when={viewer()} fallback={<Show when={viewer() === null}><Navigate href="/login" /></Show>}>
+      {(user) => <AccountMenu name={user().name} email={user().email} />}
+    </Show>
   );
 }
 

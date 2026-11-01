@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { artOf } from "~/lib/art";
 import { money } from "~/lib/format";
@@ -34,6 +34,20 @@ export function ProductCard(props: { product: Card }) {
     </li>
   );
 }
+
+export const GridSkeleton = (props: { count: number }) => (
+  <ul aria-hidden="true" class={`${wideGrid} animate-pulse`}>
+    <For each={Array.from({ length: props.count })}>
+      {() => (
+        <li>
+          <div class="aspect-square rounded-[20px] bg-sunken" />
+          <div class="mt-1 h-6 w-3/4 rounded bg-sunken" />
+          <div class="mt-1 h-6 w-1/4 rounded bg-sunken" />
+        </li>
+      )}
+    </For>
+  </ul>
+);
 
 export const grid = "grid grid-cols-2 gap-5 sm:grid-cols-3";
 export const wideGrid = "grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4";
