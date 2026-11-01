@@ -10,9 +10,15 @@ export const load = ({ params }: LoadArgs<'/docs/[...slug]'>) => all[params.slug
 export const meta: Meta<typeof load> = ({ data }) => ({ title: data.title, description: data.description })
 export const prerender = () => Object.keys(all).map(slug => ({ slug }))
 
+/** A folded section opens before the browser scrolls to it. */
+const unfold = (id: string) => {
+  const fold = document.getElementById(id)?.closest('details')
+  if (fold) fold.open = true
+}
+
 /* @weft client */
 function Toc(props: { items: { id: string; text: string }[] }) {
-  return <Nav label="On this page" axis="y" spy>{props.items.map(t => <a key={t.id} href={`#${t.id}`}>{t.text}</a>)}</Nav>
+  return <Nav label="On this page" axis="y" spy>{props.items.map(t => <a key={t.id} href={`#${t.id}`} onClick={() => unfold(t.id)}>{t.text}</a>)}</Nav>
 }
 
 export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'>) {
