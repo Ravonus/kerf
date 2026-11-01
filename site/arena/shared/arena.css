@@ -5,4 +5,5 @@ button:hover { border-color: #5eead4; }
 button:focus-visible { outline: 2px solid #5eead4; outline-offset: -2px; }
 main { display: grid; gap: 6px; }
 [data-grid] { color: #5eead4; display: grid; font-size: 7px; grid-template-columns: repeat(40, 1fr); line-height: 7px; text-align: center; }
-[data-grid] i { font-style: normal; }
+[data-grid] { contain: strict; block-size: 175px; }
+[data-grid] i { block-size: 7px; contain: strict; display: block; font-style: normal; }

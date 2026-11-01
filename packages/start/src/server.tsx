@@ -70,7 +70,7 @@ export interface HandlerOptions {
   /** Route and layout ids with no client code (PLAN §11): the server sends their HTML. */
   statics?: string[]
   /** Client chunks by level or island id: the page's own are preloaded, so they don't wait for the entry to ask. */
-  chunks?: Record<string, { js?: { href: string }[] }>
+  chunks?: Record<string, { js?: { href: string }[]; css?: { href: string }[] }>
   /** Some island can wait, so every page carries the capture script: a navigation can arrive at one that does. */
   lazy?: boolean
   /** Stream timeout for Boundaries (ms). */
@@ -264,7 +264,7 @@ export function createHandler(options: HandlerOptions) {
       metaTags(r.head, url.pathname) + '\n' +
       (site.head ? site.head + '\n' : '') +
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
-      sheets(assets) +
+      sheets({ ...assets, css: pageSheets(assets.css, parts, options.chunks) }) +
       // The entry's own script tag, just below, already fetches it.
       modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
       (options.lazy ? `<script>${capture(now)}</script>\n` : '') +
@@ -726,6 +726,15 @@ function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
 const pageChunks = (payload: RoutePayload, chunks: HandlerOptions['chunks'] = {}, fold: string[] = [], now = true) => {
   const ids = [...payload.m.filter(m => !m.s).map(m => m.id), ...(payload.i ?? []), ...fold]
   return [...(now || ids.length ? ['$client'] : []), ...ids].flatMap(id => chunks[id]?.js ?? [])
+}
+
+/**
+ * The route's stylesheets and those of every island on the page. An island is a dynamic import, so its CSS is not in the
+ * route's chunk graph; without this the server's HTML paints bare and the sheets arrive with the script.
+ */
+const pageSheets = (css: { href: string }[] = [], parts: { now: string[]; lazy: string[]; fold: string[] }, chunks: HandlerOptions['chunks'] = {}) => {
+  const found = [...parts.now, ...parts.lazy, ...parts.fold].flatMap(id => chunks[id]?.css ?? [])
+  return [...new Map([...css, ...found].map(c => [c.href, c])).values()]
 }
 
 const saveData = (request: Request) => request.headers.get('save-data') === 'on' || request.headers.get('sec-ch-prefers-reduced-data') === 'reduce'

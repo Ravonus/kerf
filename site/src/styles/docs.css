@@ -10,10 +10,11 @@
 
 [data-site="doc"] { min-inline-size: 0; padding-block: var(--warp-space-section); }
 [data-site="doc"] > header { position: relative; display: grid; gap: var(--warp-space-tight); margin-block-end: var(--warp-space-group); padding-block-start: 44px; background: url(/art/band.png) 0 0 / auto 28px repeat-x; image-rendering: pixelated; }
-[data-site="doc"] h1 { font-family: 'Space Grotesk', Arial, sans-serif; font-weight: 700; font-size: clamp(2.75rem, 1.6rem + 4vw, 4.75rem); line-height: 1; letter-spacing: -0.04em; color: var(--ink); image-rendering: auto; }
+[data-site="doc"] h1 { font-family: var(--warp-font-sans); font-weight: 700; font-size: clamp(2.75rem, 1.6rem + 4vw, 4.75rem); line-height: 1; letter-spacing: -0.04em; color: var(--ink); image-rendering: auto; }
 [data-site="doc"] [data-part="crumb"] { font: 400 0.75rem/1.4 var(--warp-font-mono); letter-spacing: 0.06em; color: var(--glow); }
 [data-site="doc"] [data-part="crumb"] a { color: inherit; }
-[data-site="doc"] [data-scope="prose"] { color: oklch(0.88 0.02 130); font-size: 1.0625rem; line-height: 1.7; }
+[data-site="doc"] [data-scope="prose"] :is(h2, h3, h4) { font-family: var(--warp-font-sans); letter-spacing: -0.02em; }
+[data-site="doc"] [data-scope="prose"] { max-inline-size: none; color: oklch(0.88 0.02 130); font-size: 1.0625rem; line-height: 1.7; }
 [data-site="doc"] [data-scope="prose"] > p:first-child { font-size: 1.375rem; line-height: 1.4; color: var(--ink); letter-spacing: -0.01em; }
 [data-site="doc"] [data-part="tools"] { margin-block-start: var(--warp-space-group); }
 
@@ -35,7 +36,7 @@
 [data-part="fold"] > summary h2 { margin: 0 !important; padding: 0 !important; border: 0 !important; font-size: 1.25rem; }
 
 [data-part="pager"] { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-related); margin-block-start: var(--warp-space-section); }
-[data-part="pager"] a { display: grid; gap: 2px; padding: var(--warp-space-related) var(--warp-space-group); border: 1px solid var(--rule); color: var(--ink); text-decoration: none; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 1.125rem; transition: border-color var(--warp-duration-base) var(--warp-ease-out); }
+[data-part="pager"] a { display: grid; gap: 2px; padding: var(--warp-space-related) var(--warp-space-group); border: 1px solid var(--rule); color: var(--ink); text-decoration: none; font-family: var(--warp-font-sans); font-size: 1.125rem; transition: border-color var(--warp-duration-base) var(--warp-ease-out); }
 [data-part="pager"] a:hover { border-color: var(--glow); }
 [data-part="pager"] span { font: 400 0.75rem/1.4 var(--warp-font-mono); color: var(--dim); }
 [data-part="pager"] .next { grid-column: 2; text-align: end; }

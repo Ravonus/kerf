@@ -45,3 +45,9 @@ test('an island that loads with the page is preloaded wherever it is, and the pa
 test('no capture script without lazy islands in the app', async () => {
   expect(await (await lazy(PAGE, CHUNKS, {})).text()).not.toContain('__wq')
 })
+
+test('every island on the page, in view or not, has its stylesheet in the head', async () => {
+  const chunks = { top: { js: [], css: [{ href: '/top.css' }] }, low: { js: [], css: [{ href: '/low.css' }, { href: '/top.css' }] } }
+  const html = await (await lazy(PAGE, chunks as any)).text()
+  expect(html.match(/stylesheet" href="[^"]+/g)?.map(s => s.slice(18))).toEqual(['/top.css', '/low.css'])
+})
