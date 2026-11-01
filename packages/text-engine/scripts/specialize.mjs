@@ -12,7 +12,7 @@
 // with the same script, and test/accuracy diffs the result against unmodified upstream on the corpus.
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { genEngineData } from './gendata.mjs'
 
@@ -294,7 +294,7 @@ export function __missing(pack: string, fn: string): never { throw new PackMissi
   return { engine, folds, base: baseData.stats, packs: Object.keys(packFiles) }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const flags = process.argv.slice(2).filter(a => a.startsWith('--'))
   const list = process.argv.slice(2).filter(a => !a.startsWith('--'))
   const engines = list.length ? list : ['blink', 'webkit', 'gecko']

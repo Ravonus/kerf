@@ -7,6 +7,7 @@ import * as esbuild from 'esbuild'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
+import { pathToFileURL } from 'node:url'
 
 const MAPS = {
   blink: ['chromium/line_normal', 'chromium/line_normal_cj', 'chromium/char', 'chromium/script'],
@@ -26,7 +27,7 @@ async function loadUpstream(dir) {
     stdin: { contents: `export * as D from './generated/engine-break-data.ts'; export { unpackVarints, unpackTable, unpackClassRuns, unpackStateRows } from './line-breaks.ts'`, resolveDir: path.resolve(dir), loader: 'ts' },
     bundle: true, format: 'esm', outfile: out, platform: 'node', logLevel: 'error',
   })
-  const m = await import(out)
+  const m = await import(pathToFileURL(out).href)
   fs.rmSync(tmp, { recursive: true })
   return m
 }
@@ -224,7 +225,7 @@ export async function genEngineData({ upstreamDir, engine, alphabet = null }) {
   return { src, stats, jointCount, runs: runList.length / 2 }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [engine, alpha] = process.argv.slice(2)
   const BASE = JSON.parse(fs.readFileSync(new URL('./alphabet.json', import.meta.url)))
   const r = await genEngineData({ upstreamDir: 'upstream', engine, alphabet: alpha === 'base' ? BASE : null })
