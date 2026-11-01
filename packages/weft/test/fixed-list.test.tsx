@@ -1,4 +1,5 @@
 // The compiler lowers a list over an array nothing re-reads to a plain `.map`. Server, hydration and updates stay the same.
+// weft-allow T005: framework test of hydration; node identity is the subject
 import { flush } from 'weft'
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'

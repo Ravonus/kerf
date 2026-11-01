@@ -40,18 +40,25 @@ export function exportsOf(weft, subpaths = ['.', './dom', './ssr', './test', './
     const target = weft.pkg.exports?.[sub]
     const file = typeof target === 'string' ? join(weft.dir, target) : null
     if (!file || !/\.[mc]?[jt]sx?$/.test(file) || !existsSync(file)) continue
-    const sf = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
     const names = new Set()
-    for (const node of sf.statements) {
-      const exported = ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(m => m.kind === ts.SyntaxKind.ExportKeyword)
-      if (ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause)) {
-        if (!node.isTypeOnly) for (const el of node.exportClause.elements) if (!el.isTypeOnly) names.add(el.name.text)
-      } else if (exported && (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name) {
-        names.add(node.name.text)
-      } else if (exported && ts.isVariableStatement(node)) {
-        for (const d of node.declarationList.declarations) if (ts.isIdentifier(d.name)) names.add(d.name.text)
+    const read = file => {
+      const sf = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
+      for (const node of sf.statements) {
+        const exported = ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(m => m.kind === ts.SyntaxKind.ExportKeyword)
+        if (ts.isExportDeclaration(node) && !node.exportClause && !node.isTypeOnly) {
+          // `export * from './index'`: the `weft` entry is a thin one over the runtime.
+          const next = join(dirname(file), `${node.moduleSpecifier.text}.ts`)
+          if (existsSync(next)) read(next)
+        } else if (ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause)) {
+          if (!node.isTypeOnly) for (const el of node.exportClause.elements) if (!el.isTypeOnly) names.add(el.name.text)
+        } else if (exported && (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name) {
+          names.add(node.name.text)
+        } else if (exported && ts.isVariableStatement(node)) {
+          for (const d of node.declarationList.declarations) if (ts.isIdentifier(d.name)) names.add(d.name.text)
+        }
       }
     }
+    read(file)
     out[sub === '.' ? 'weft' : `weft/${sub.slice(2)}`] = [...names].sort()
   }
   return out
