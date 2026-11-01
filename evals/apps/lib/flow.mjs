@@ -248,7 +248,7 @@ export async function sitePass({ app, v, site, server, browser, samples, out, sa
   const race = {}
   for (let i = 0; i < samples; i++) {
     for (const p of app.pages) {
-      const url = server.url + p.path, cookie = cookieHeader(site.cookies()), get = () => fetch(url, { headers: { cookie: cookie ?? '' }, redirect: 'manual' }).then(r => r.arrayBuffer())
+      const url = server.url + p.path, cookie = cookieHeader(site.cookies(p)), get = () => fetch(url, { headers: { cookie: cookie ?? '' }, redirect: 'manual' }).then(r => r.arrayBuffer())
       await get()
       const n = await db.counted(async () => { for (let j = 0; j < 3; j++) await get() })
       out.db.queries = n.source

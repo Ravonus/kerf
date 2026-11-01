@@ -1,7 +1,7 @@
 "use server";
 
 import { reload } from "@solidjs/router";
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "~/db/index.server";
@@ -24,7 +24,7 @@ export async function loadTodos(filter: Filter) {
       .select({ id: todos.id, title: todos.title, done: todos.done })
       .from(todos)
       .where(and(mine, shown[filter]))
-      .orderBy(asc(todos.createdAt), asc(todos.id)),
+      .orderBy(desc(todos.createdAt), desc(todos.id)),
     db.select({ n: count() }).from(todos).where(and(mine, eq(todos.done, false))),
   ]);
   return { rows, left: left!.n };

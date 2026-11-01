@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, asc, eq, type SQL } from 'drizzle-orm'
+import { and, desc, eq, type SQL } from 'drizzle-orm'
 import { db } from '@/db'
 import { todos } from '@/db/schema'
 
@@ -12,7 +12,7 @@ const narrow: Record<Filter, SQL | undefined> = { all: undefined, active: eq(tod
 export async function loadTodos(userId: string, filter: Filter) {
   const mine = eq(todos.userId, userId)
   const [rows, left] = await Promise.all([
-    db.select({ id: todos.id, title: todos.title, done: todos.done }).from(todos).where(and(mine, narrow[filter])).orderBy(asc(todos.createdAt), asc(todos.id)),
+    db.select({ id: todos.id, title: todos.title, done: todos.done }).from(todos).where(and(mine, narrow[filter])).orderBy(desc(todos.createdAt), desc(todos.id)),
     db.$count(todos, and(mine, eq(todos.done, false))),
   ])
   return { rows, left }

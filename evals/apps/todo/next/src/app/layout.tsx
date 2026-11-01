@@ -1,22 +1,15 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
 import type { ReactNode } from 'react'
 import './globals.css'
 
-const figtree = localFont({
-  src: '../assets/figtree-latin-wght.woff2',
-  weight: '300 900',
-  variable: '--font-figtree',
-})
-
 export const metadata: Metadata = {
-  title: { default: 'Emberline', template: '%s · Emberline' },
-  description: 'A short list of what to do next.',
+  title: { default: 'Daybook', template: '%s · Daybook' },
+  description: 'Daybook is a plain, private list of what you mean to get done.',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={figtree.variable}>
+    <html lang="en">
       <body className="min-h-dvh font-sans antialiased">{children}</body>
     </html>
   )

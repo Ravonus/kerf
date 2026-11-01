@@ -5,6 +5,7 @@ export const views = {
 }
 
 export type View = keyof typeof views
+export const viewNames = ['all', 'active', 'done'] as const
 
 export const viewOf = (url: string): View => {
   const filter = new URL(url).searchParams.get('filter')

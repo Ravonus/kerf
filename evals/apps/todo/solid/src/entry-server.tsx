@@ -1,8 +1,6 @@
 // @refresh reload
 import { createHandler, StartServer } from "@solidjs/start/server";
 
-import figtree from "~/assets/fonts/figtree-latin-wght.woff2?url";
-
 export default createHandler(() => (
   <StartServer
     document={({ assets, children, scripts }) => (
@@ -10,9 +8,8 @@ export default createHandler(() => (
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <meta name="description" content="A short list of what to do next." />
+          <meta name="description" content="Daybook is a plain, private list of what you mean to get done." />
           <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-          <link rel="preload" as="font" type="font/woff2" href={figtree} crossorigin="anonymous" />
           {assets}
         </head>
         <body>

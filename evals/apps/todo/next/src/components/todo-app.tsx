@@ -17,7 +17,7 @@ const links: { filter: Filter; label: string; href: string }[] = [
 
 function applyChange({ todos, left }: List, change: Change, filter: Filter): List {
   const shows = (done: boolean) => filter === 'all' || done === (filter === 'done')
-  if (change.type === 'add') return { todos: shows(false) ? [...todos, change.todo] : todos, left: left + 1 }
+  if (change.type === 'add') return { todos: shows(false) ? [change.todo, ...todos] : todos, left: left + 1 }
   if (change.type === 'delete') {
     const gone = todos.find(t => t.id === change.id)
     return { todos: todos.filter(t => t.id !== change.id), left: gone && !gone.done ? left - 1 : left }
@@ -127,7 +127,7 @@ export function TodoApp({ todos, left, filter }: List & { filter: Filter }) {
       </ul>
       {list.todos.length === 0 && (
         <p className="rounded-2xl border border-dashed border-line px-4 py-12 text-center text-muted">
-          {filter === 'done' ? 'Nothing finished yet.' : filter === 'active' ? 'All done.' : 'Nothing here yet. Add your first todo above.'}
+          {filter === 'done' ? 'Nothing finished yet' : filter === 'active' ? 'All caught up' : 'Nothing here yet'}
         </p>
       )}
     </>

@@ -5,7 +5,7 @@ export function Logo() {
   return (
     <span className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
       <Image src={logo} alt="" width={24} height={24} priority />
-      Emberline
+      Daybook
     </span>
   )
 }

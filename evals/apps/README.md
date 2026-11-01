@@ -86,6 +86,7 @@ Keys on top of the ones above:
 | `db` | app | `{}`, or `{ "rtt": [2, 40], "pool": 10 }`, the defaults. Gives each variant a clone and a proxy; the seed hash joins the build key |
 | `login` | app | `{}`, or `path`, `email`, `password`, `submit` to rename the contract's. Signs in through the form as the bench user; the cookie goes to Lighthouse, Playwright and the load client |
 | `race` | app | `path`, `list`, `input`, `submit`, `toggle` (a row), `state` (SQL giving `title`, `done`), `away` (`link`, and `keep`, the rows that view shows) |
+| `signedOut` | page | `true`: measured without the bench user's cookie, for a page a signed-in visitor is redirected away from |
 | `canary` | page | `{ "sql": "update ... set x = $1", "text": true }`: a random value goes in a row the page already shows, and the page has to show it, or the run stops |
 | `freshness` | page | `live` needs a canary; `cached` is skipped and labelled. Or a map, `{ "next": "cached", "*": "live" }`. No key and no canary reads `unchecked` |
 | `nav` | page | `click`, `url` (a substring), and `see` (text) or `canary` (SQL writing the text to wait for) |

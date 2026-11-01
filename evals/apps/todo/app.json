@@ -4,7 +4,7 @@
   "db": {},
   "login": {},
   "pages": [
-    "/login",
+    { "path": "/login", "signedOut": true },
     {
       "path": "/todos",
       "freshness": "live",

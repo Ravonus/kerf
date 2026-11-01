@@ -16,13 +16,13 @@ export default function Login() {
 
   return (
     <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
-      <Title>Sign in · Emberline</Title>
+      <Title>Sign in · Daybook</Title>
       <Show when={viewer()}>
         <Navigate href="/todos" />
       </Show>
       <Logo />
       <h1 class="mt-8 text-3xl font-semibold tracking-tight">Welcome back</h1>
-      <p class="mt-2 text-muted">Sign in to see your list.</p>
+      <p class="mt-2 text-muted">Sign in to pick up where you left off.</p>
       <form action={signInAction} method="post" class="mt-8 flex flex-col gap-4">
         <div>
           <label for="email" class="mb-1.5 block text-sm font-medium">

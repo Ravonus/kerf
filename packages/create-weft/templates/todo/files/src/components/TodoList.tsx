@@ -1,6 +1,7 @@
 import { CheckCircleIcon, InboxIcon, XIcon } from '@weft/icons'
+import { invalidate } from '@weft/start'
 import { Button, Checkbox, Heading, Progress, Skeleton, Stack, Text, toast } from '@weft/warp'
-import { derived } from 'weft'
+import { derived, onCleanup, onMount } from 'weft'
 import type { View } from '#/lib/views'
 import { deleteTodo, listTodos, toggleTodo } from '#/server/todos'
 
@@ -22,16 +23,27 @@ function TodoRow({ todo }: { todo: { id: string; title: string; done: boolean } 
 }
 
 export function TodoList({ view }: { view: View }) {
-  const todos = listTodos()
-  const all = derived(() => todos.value ?? [])
-  const left = derived(() => all.value.filter(t => !t.done).length)
-  const shown = derived(() => (view === 'all' ? all.value : all.value.filter(t => t.done === (view === 'done'))))
+  const list = listTodos(() => ({ view }))
+  const shown = derived(() => list.value?.rows ?? [])
+  const left = derived(() => list.value?.left ?? 0)
   const empty = derived(() => blank[view])
+
+  // Another tab, or another device, may have changed the list while this one was in the background.
+  onMount(() => {
+    const refresh = () => { if (!document.hidden) invalidate('todos') }
+    addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    onCleanup(() => {
+      removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    })
+  })
+
   return (
     <Stack gap="group">
       <div class="tally">
         <Text>{left.value} left</Text>
-        {all.value.length > 0 && <Progress label="Done so far" value={((all.value.length - left.value) / all.value.length) * 100} />}
+        {view === 'all' && shown.value.length > 0 && <Progress label="Done so far" value={((shown.value.length - left.value) / shown.value.length) * 100} />}
       </div>
       {shown.value.length > 0
         ? <ul class="todos" aria-label="Todos">{shown.value.map(todo => <TodoRow key={todo.id} todo={todo} />)}</ul>

@@ -16,7 +16,7 @@ export const route = {
 } satisfies RouteDefinition;
 
 const labels = { all: "All", active: "Active", done: "Done" };
-const empty = { all: "Nothing here yet. Add your first todo above.", active: "All done.", done: "Nothing finished yet." };
+const empty = { all: "Nothing here yet", active: "All caught up", done: "Nothing finished yet" };
 
 export default function Todos() {
   const [params] = useSearchParams();
@@ -72,7 +72,7 @@ export default function Todos() {
 
   return (
     <>
-      <Title>Todos · Emberline</Title>
+      <Title>Todos · Daybook</Title>
       <Show when={viewer() === null}>
         <Navigate href="/login" />
       </Show>
@@ -165,7 +165,7 @@ function TodoList(props: {
     const known = new Set(data()?.rows.map((t) => t.id));
     return [...overlay().added.values()].filter((t) => !known.has(t.id)).filter(fits);
   });
-  const rows = createMemo(() => [...(data()?.rows.filter(fits) ?? []), ...fresh()]);
+  const rows = createMemo(() => [...fresh(), ...(data()?.rows.filter(fits) ?? [])]);
 
   const left = createMemo(() => {
     const { done, gone } = overlay();

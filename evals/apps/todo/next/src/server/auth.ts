@@ -14,9 +14,11 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
 })
 
+export const currentSession = cache(async () => auth.api.getSession({ headers: await headers() }))
+
 /** The signed-in user, or off to /login. Proxy only looks for the cookie; this is the real check, once per request. */
 export const currentUser = cache(async () => {
-  const found = await auth.api.getSession({ headers: await headers() })
+  const found = await currentSession()
   if (!found) redirect('/login')
   return { id: found.user.id, name: found.user.name, email: found.user.email }
 })

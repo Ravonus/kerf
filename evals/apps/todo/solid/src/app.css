@@ -1,58 +1,40 @@
 @import "tailwindcss";
 
-/* Metric-matched to Figtree, so the swap doesn't shift the layout. */
-@font-face {
-  font-family: "Figtree";
-  src: url("./assets/fonts/figtree-latin-wght.woff2") format("woff2");
-  font-weight: 300 900;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+??,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: "Figtree Fallback";
-  src: local("Arial");
-  size-adjust: 99.6%;
-  ascent-override: 95.39%;
-  descent-override: 25.1%;
-  line-gap-override: 0%;
-}
-
 :root {
   color-scheme: light dark;
-  --page: #faf7f2;
-  --surface: #ffffff;
-  --sunken: #fbeee4;
+  --page: #f2f4ef;
+  --surface: #f9faf7;
+  --sunken: #eef1eb;
   --ink: #1c1917;
   --muted: #57534e;
   --faint: #78716c;
   --line: #e2dcd2;
-  --accent: #c2410c;
-  --accent-hover: #9a3412;
+  --accent: #1f6f5c;
+  --accent-hover: #185849;
   --accent-ink: #ffffff;
-  --accent-text: #9a3412;
+  --accent-text: #185849;
   --danger: #b91c1c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #161412;
-    --surface: #211e1b;
-    --sunken: #2c1d13;
+    --page: #121815;
+    --surface: #18201c;
+    --sunken: #0e1311;
     --ink: #f5f1ea;
     --muted: #b5aea4;
     --faint: #8f877c;
     --line: #38332d;
-    --accent: #ea6a2e;
-    --accent-hover: #f08148;
-    --accent-ink: #1c0f06;
-    --accent-text: #f08148;
+    --accent: #4fb89d;
+    --accent-hover: #6cc9b1;
+    --accent-ink: #07140f;
+    --accent-text: #6cc9b1;
     --danger: #f87171;
   }
 }
 
 @theme inline {
-  --font-sans: "Figtree", "Figtree Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --color-page: var(--page);
   --color-surface: var(--surface);
   --color-sunken: var(--sunken);
