@@ -55,6 +55,16 @@ describe('weft (bin)', () => {
     expect(weft('agents-md', '--check', '--json', '--root', dir)).toMatchObject({ code: 0, stdout: expect.stringContaining('"current": true') })
   })
 
+  it('doctor says which compiler runs, and nothing it finds is an error', async () => {
+    const { doctor, formatDoctor, compilerLine } = await import('../src/doctor.mjs')
+    const r = doctor(join(import.meta.dirname, '..'))
+    expect(['native', 'wasm']).toContain(r.compiler.kind)
+    expect(r).toMatchObject({ ok: true, rust: { required: false } })
+    expect(formatDoctor(r)).toContain('Not needed for weft')
+    expect(compilerLine({ kind: 'wasm', wanted: ['@weft/compiler-x'] })).toContain('Optional, and faster: @weft/compiler-x')
+    expect(compilerLine({ kind: 'wasm', wanted: [] })).toContain('none is needed')
+  })
+
   it('usage errors exit 2 with a stable code', () => {
     const r = weft('frobnicate', '--json')
     expect(r.code).toBe(2)

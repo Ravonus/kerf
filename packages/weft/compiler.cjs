@@ -6,7 +6,7 @@ const { join } = require('node:path')
 const { existsSync, readFileSync } = require('node:fs')
 const { sourceStamp, stampFile } = require('./scripts/native-stamp.cjs')
 const { forHost } = require('./platforms.cjs')
-const { loadWasm } = require('./compiler-wasm.cjs')
+const { loadWasm, wasmOptions } = require('./compiler-wasm.cjs')
 
 const key = `${process.platform}-${process.arch}`
 const addon = join(__dirname, 'native', `weft-compiler.${key}.node`)
@@ -71,14 +71,10 @@ function load() {
   return { binding: loadWasm(wasm), wasm: true, info: { kind: 'wasm', file: wasm, wanted: forHost().map(p => `@weft/compiler-${p.name}`), skipped } }
 }
 
-const { binding, wasm: needsCwd, info } = load()
+const { binding, wasm: isWasm, info } = load()
 
 /** Which build this process compiles with: `kind` ('native' or 'wasm') and `file`, for `weft doctor` and cache keys. */
 exports.backend = info
 
 /** @returns {{ code: string | null, diagnostics: Array<{ code: string, severity: 'error' | 'warning', message: string, help: string, line: number, column: number, fix?: object }> }} */
-exports.transform = (source, options) => {
-  // WASM has no filesystem to ask. It sees `/`, so a Windows working directory has to match how filenames are written.
-  const given = needsCwd ? { cwd: process.cwd().replaceAll('\\', '/'), ...options } : options ?? {}
-  return JSON.parse(binding.transform(source, JSON.stringify(given)))
-}
+exports.transform = (source, options) => JSON.parse(binding.transform(source, JSON.stringify(isWasm ? wasmOptions(options) : options ?? {})))

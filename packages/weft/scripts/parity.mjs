@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const { loadWasm } = require('../compiler-wasm.cjs')
+const { loadWasm, wasmOptions } = require('../compiler-wasm.cjs')
 const here = dirname(fileURLToPath(import.meta.url))
 const pkg = join(here, '..')
 const repo = join(pkg, '..', '..')
@@ -41,6 +41,9 @@ const EDGES = {
   'parens.ts': `export const a = ${'('.repeat(500)}1${')'.repeat(500)}\n`,
 }
 
+const GROUP = `import { group } from 'weft/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
+const GROUP_USE = `import { card } from './card'\nexport const Row = () => <p {...card({ status: 'late' })}>x</p>\n`
+
 function walk(dir, out) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     if (e.isDirectory()) {
@@ -58,7 +61,9 @@ export function parity({ also = [], limit } = {}) {
   const native = require(addon)
   const wasm = loadWasm(wasmFile)
   const cwd = process.cwd()
-  const corpus = [...[repo, ...also].flatMap(dir => walk(dir, []).map(f => [f, readFileSync(f, 'utf8')])), ...Object.entries(EDGES).map(([f, s]) => [join(cwd, 'edge', f), s])]
+  // Vite's ids: forward slashes on every platform.
+  const id = file => file.replaceAll('\\', '/')
+  const corpus = [...[repo, ...also].flatMap(dir => walk(dir, []).map(f => [id(f), readFileSync(f, 'utf8')])), ...Object.entries(EDGES).map(([f, s]) => [id(join(cwd, 'edge', f)), s])]
   const cases = limit ? corpus.slice(0, limit) : corpus
   const report = { files: cases.length, modes: Object.keys(MODES).length, compared: 0, bytes: 0, ms: { native: 0, wasm: 0 }, mismatches: [] }
   for (const [filename, source] of cases) {
@@ -67,7 +72,7 @@ export function parity({ also = [], limit } = {}) {
       const a = native.transform(source, JSON.stringify({ filename, ...options }))
       report.ms.native += performance.now() - t
       t = performance.now()
-      const b = wasm.transform(source, JSON.stringify({ filename, cwd, ...options }))
+      const b = wasm.transform(source, JSON.stringify(wasmOptions({ filename, ...options })))
       report.ms.wasm += performance.now() - t
       report.compared++
       report.bytes += a.length
@@ -77,6 +82,14 @@ export function parity({ also = [], limit } = {}) {
       report.mismatches.push({ file: filename, mode, at, native: a.slice(Math.max(0, at - 40), at + 80), wasm: b.slice(Math.max(0, at - 40), at + 80) })
     }
   }
+  // A group from another file: its key is a `path.resolve`d one (vite.mjs), which reads differently on Windows.
+  const definition = JSON.parse(native.transform(GROUP, JSON.stringify({ filename: join(cwd, 'edge', 'card.ts'), checkOnly: true }))).facts.groups[0]
+  const options = { filename: id(join(cwd, 'edge', 'page.tsx')), groups: { [`${join(cwd, 'edge', 'card')}#card`]: { name: definition.name, def: definition.def } } }
+  const a = native.transform(GROUP_USE, JSON.stringify(options))
+  const b = wasm.transform(GROUP_USE, JSON.stringify(wasmOptions(options)))
+  report.compared++
+  if (!a.includes('data-g=')) throw new Error(`the imported group didn't apply: ${a}`)
+  if (a !== b) report.mismatches.push({ file: 'imported group', mode: 'groups', at: 0, native: a.slice(0, 300), wasm: b.slice(0, 300) })
   return report
 }
 

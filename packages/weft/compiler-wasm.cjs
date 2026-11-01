@@ -2,6 +2,16 @@
 // It has no imports, so plain `WebAssembly` runs it on Node, Bun and Deno. Instantiated at the first compile.
 const { readFileSync } = require('node:fs')
 
+const posix = path => path.replaceAll('\\', '/')
+const posixKeys = map => map && Object.fromEntries(Object.entries(map).map(([k, v]) => [posix(k), v]))
+
+/** The build has no filesystem to ask, and only ever sees `/`: the working directory, and Windows paths written its way. */
+exports.wasmOptions = (options = {}) => {
+  const cwd = posix(process.cwd())
+  if (process.platform !== 'win32') return { cwd, ...options }
+  return { cwd, ...options, filename: options.filename && posix(options.filename), groups: posixKeys(options.groups), shapes: posixKeys(options.shapes) }
+}
+
 exports.loadWasm = file => {
   const module = new WebAssembly.Module(readFileSync(file))
   const encoder = new TextEncoder()

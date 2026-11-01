@@ -47,7 +47,7 @@ export function pinned(root, specs) {
 }
 
 function installSpecs(root, manager, verb, specs) {
-  execFileSync(manager, [verb, ...pinned(root, specs)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] })
+  execFileSync(manager, [verb, ...pinned(root, specs)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
 }
 
 /** The import to write: `<pkg>/plugin` when the package has one, and however it exports its factory. */

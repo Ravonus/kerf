@@ -36,7 +36,7 @@ async function directory() {
 /** Git and the install are conveniences: the app is already written, so a failure here only leaves a step for later. */
 function step(what, command, args, cwd) {
   try {
-    execFileSync(command, args, { cwd, stdio: ['ignore', 'ignore', 'inherit'] })
+    execFileSync(command, args, { cwd, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
     return true
   } catch {
     console.error(`create-weft: ${what} didn't finish; run \`${[command, ...args].join(' ')}\` yourself.`)
