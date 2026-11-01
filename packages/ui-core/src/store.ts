@@ -40,3 +40,6 @@ export const uid = (prefix = 'warp') => `${prefix}-${side}${(next++).toString(36
  * component order yields the same ids on both sides.
  */
 export const resetIds = () => void (next = 0)
+// A server render restarts the count, so a page's markup doesn't depend on what was served before it: that's how start
+// tells a static level hasn't changed. weft has no import of this package, so the two meet on a global.
+if (side) (globalThis as any)[Symbol.for('weft.render')] = resetIds

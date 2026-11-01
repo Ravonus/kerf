@@ -78,6 +78,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     await Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
     if (ctrl.signal.aborted) return
     if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+    at = path
     if (next.c) client.seed ? client.seed(next.c) : (client.seeds ??= []).push(...next.c)
     tags = next.m.map(m => m.t ?? [])
     bag = next.b
@@ -119,7 +120,11 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   }
   document.addEventListener('pointerover', intent)
   document.addEventListener('focusin', intent)
-  addEventListener('popstate', () => go(location.href, { pop: true }))
+  // An in-page anchor fires this too, and the page hasn't changed: re-rendering it would lose what's been scrolled to.
+  let at = location.pathname + location.search
+  addEventListener('popstate', () => {
+    if (location.pathname + location.search !== at) go(location.href, { pop: true })
+  })
   return route
 }
 

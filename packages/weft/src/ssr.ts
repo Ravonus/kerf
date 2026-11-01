@@ -167,6 +167,7 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
+  ;(globalThis as any)[Symbol.for('weft.render')]?.() // ui-core's ids (store.ts)
   let html = ''
   const app = createApp(options.app)
   const prevApp = useApp(app) // a swap, not an owner: the render is synchronous

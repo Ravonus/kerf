@@ -107,7 +107,7 @@ describe('AGENTS.md', () => {
 
   it('lists project tasks in Commands, so docs cannot drift from weft tasks', async () => {
     const dir = project({ 'weft.config.ts': "export default { tasks: { seed: { run: 'node seed.mjs', description: 'Load demo products', sideEffects: ['db'] } } }\n" })
-    expect((await agentsMd(dir)).text).toContain('| `node seed.mjs` | Load demo products | db |')
+    expect((await agentsMd(dir)).text).toContain('| `weft run seed` | Load demo products | db |')
   })
 
   it('a full-stack app gets the Full stack section, still under the limit', async () => {

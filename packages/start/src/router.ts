@@ -97,6 +97,7 @@ const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.s
 export function applyMatches(r: RouteState, matches: Match[], path: string, status: number) {
   untrack(() => {
     const depth = Math.max(matches.length, r.levels.length)
+    let fresh = false
     for (let d = 0; d < depth; d++) {
       const m = matches[d]
       const lv = level(r, d)
@@ -104,7 +105,10 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
         if (!same(lv.params.value, m.params)) lv.params.value = m.params
         if (!same(lv.data.value, m.data)) lv.data.value = m.data
         if (!m.s) lv.html.value = undefined
-        else if (lv.x !== m.x || lv.id.value !== m.id) lv.html.value = m.h
+        else if (fresh || lv.x !== m.x || lv.id.value !== m.id) {
+          lv.html.value = m.h
+          fresh = true // its markers for the levels below are gone with it, so those can't adopt the page
+        }
         lv.x = m.x
       }
       if (lv.id.value !== m?.id) lv.id.value = m?.id
