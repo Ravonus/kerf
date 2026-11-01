@@ -49,7 +49,7 @@ export const demos: Record<string, Demo> = {
     why: 'Forms, dialogs, tables and menus are in the box with keyboard support, so you do not pick and wire up a component library.',
   },
   'getting-started': {
-    run: started, page: 'getting-started', title: 'An add-to-cart button',
+    run: started, title: 'An add-to-cart button',
     look: 'A product card. inCart is a piece of state: a value the page shows and can change.',
     tryIt: 'Press Add to cart and watch the badge count up.',
     why: 'If you have written React, this already reads right. The difference is that Product ran once, so there are no hook rules or dependency lists to think about.',

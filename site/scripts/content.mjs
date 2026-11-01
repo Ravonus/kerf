@@ -53,10 +53,23 @@ function numbers() {
 const file = path => () => readFileSync(join(repo, path), 'utf8')
 const topic = name => async () => (await weftDocs(site, name)).text
 
+/**
+ * The opening line of a page that starts straight in. `weft docs` is read by agents, whose context pays for every word, so
+ * these say what a page is for to someone arriving here, and stay out of that source.
+ */
+const LEADS = {
+  rules: 'Nine rules cover how every weft component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
+  lists: 'Lists and conditionals work as they do in React: `.map` with a `key`, `&&` and ternaries. This page covers the mistakes to avoid and the few habits that keep a long list fast.',
+  async: 'Load data with `resource`, and say what to show while it loads with `Boundary`. On the server, weft can wait for that data so the first page arrives filled in.',
+  start: '`@weft/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
+  browser: "`weft/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
+  testing: '`weft/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
+}
+
 /** The nav. A page's source is `weft docs <topic>` wherever one exists, so the site and the CLI read one file. */
 const SECTIONS = [
   ['Start', [
-    ['getting-started', 'Getting started', file('docs/getting-started.md')],
+    ['getting-started', 'Getting started', file('site/content/getting-started.md')],
     ['rules', 'The rules', topic('rules')],
     ['props', 'Props', topic('props')],
     ['lists', 'Lists', topic('lists')],
@@ -136,7 +149,8 @@ function linkify(html, slugs) {
 }
 
 /** The first thing on a page stays out. Long pages fold their other sections; `weft docs` prints the same source in full. */
-function fold(html) {
+function fold(html, slug) {
+  if (slug === 'getting-started') return html // steps: all of them are the page
   const [lead, ...rest] = html.split(/(?=<h2[ >])/)
   if (rest.length < 2 || html.replace(/<[^>]+>/g, ' ').split(/\s+/).length < 220) return html
   return lead + rest.map(part => {
@@ -152,6 +166,7 @@ async function buildDocs() {
   const slugs = new Set(flat.map(p => p.slug))
   for (const p of flat) p.md = await p.source()
   const render = (slug, title, section, md) => {
+    if (LEADS[slug]) md = md.replace(/^# [^\n]*\n/, top => `${top}\n${LEADS[slug]}\n\n`)
     const toc = []
     const seen = new Map()
     const html = linkify(markdownToHtml(md.replace(/^# [^\n]*\n/, ''), {
@@ -167,7 +182,7 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, html: fold(html), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
+    return { slug, title, section, html: fold(html, slug), toc, description: plain(md.replace(/^# [^\n]*\n/, '')).slice(0, 155) }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
