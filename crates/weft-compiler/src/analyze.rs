@@ -29,6 +29,9 @@ pub enum Rewrite {
     /// `rest` → `<local>`, one live view of the other props (`const <local> = omit(props, [...])`, declared at the top
     /// of the component when something holds it); `rest.x` → `props.x`; `<el {...rest}>` → a copy, `restOf(props, [...])`.
     Rest { props: String, exclude: Vec<String>, local: String, component: SpanKey },
+    /// `const b = a.x` where `a` is itself rewritten and its read isn't a plain path (a default, memoised children):
+    /// `b` → `a`'s live read, then `path`.
+    Via { of: SymbolId, path: Vec<String> },
     /// A keyed-list item or index: `p` → `p()`.
     Accessor,
     /// A destructured keyed-list item, any depth: `name` → `_item().name`, `v` → `_item()[1]`, `...more` →
@@ -67,6 +70,14 @@ pub struct Plan {
     pub children: HashMap<SpanKey, ChildrenPlan>,
     /// `props.children` reads (span) → the memo's local name and its component.
     pub children_reads: HashMap<SpanKey, (String, SpanKey)>,
+    /// Body declarators that only name a prop (`const x = props.y`): gone from the output, their locals rewritten.
+    pub aliases: HashSet<SpanKey>,
+    /// Component span → the props it writes: a write stays in the component until the parent's value next changes.
+    pub local_props: HashMap<SpanKey, (String, Vec<(String, SymbolId)>)>,
+    /// `bind(box)` calls that are a component prop's whole value: the back end gives that prop a setter.
+    pub bound: HashSet<SpanKey>,
+    /// Body declarators already reported as reassigned: their initialisers aren't reported again.
+    pub aliases_refused: HashSet<SpanKey>,
     pub diagnostics: Vec<Diagnostic>,
     pub facts: Facts,
 }
@@ -96,6 +107,7 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         list_sources: Vec::new(),
         imports: HashMap::new(),
         box_props: Vec::new(),
+        defaulted: HashSet::new(),
     };
     a.visit_program(program);
     a.finish()
@@ -317,6 +329,8 @@ struct Analyzer<'s> {
     imports: HashMap<SymbolId, (String, String)>,
     /// Box symbol passed as a component prop: (box, component name, import, prop name).
     box_props: Vec<(SymbolId, String, Option<String>, String)>,
+    /// Destructured props with a default: their read isn't a plain path.
+    defaulted: HashSet<SymbolId>,
 }
 
 impl<'s> Analyzer<'s> {
@@ -472,6 +486,7 @@ impl<'s> Analyzer<'s> {
             match &prop.value {
                 BindingPattern::BindingIdentifier(id) => {
                     if let Some(sym) = binding_symbol(id) {
+                        self.written_prop(sym, &k, path, props, ctx.span, prop.span);
                         let rewrite = if path.is_empty() && k == "children" {
                             Rewrite::Children { local: self.children_local(ctx, props), component: key(ctx.span) }
                         } else {
@@ -485,8 +500,10 @@ impl<'s> Analyzer<'s> {
                     if let BindingPattern::BindingIdentifier(id) = &ap.left
                         && let Some(sym) = binding_symbol(id)
                     {
+                        self.written_prop(sym, &k, path, props, ctx.span, prop.span);
                         self.plan.rewrites.insert(sym, Rewrite::Prop { props: props.into(), path: sub });
                         ctx.prop_syms.insert(sym);
+                        self.defaulted.insert(sym);
                     }
                 }
                 BindingPattern::ObjectPattern(inner) => {
@@ -535,6 +552,219 @@ impl<'s> Analyzer<'s> {
         }
     }
 
+    /// Where `e` reads from, if it's a plain path off the component's props: the props object's name and the path.
+    /// `None` for anything else, a default or memo in the way included.
+    fn prop_path(&self, e: &Expression<'_>) -> Option<(SymbolId, Vec<String>)> {
+        let mut path = Vec::new();
+        let mut e = e.get_inner_expression();
+        let id = loop {
+            match e {
+                Expression::StaticMemberExpression(m) if !m.optional => {
+                    path.insert(0, m.property.name.to_string());
+                    e = m.object.get_inner_expression();
+                }
+                Expression::Identifier(id) => break id,
+                _ => return None,
+            }
+        };
+        let sym = symbol_of(self.scoping, id)?;
+        self.comps.last()?.prop_syms.contains(&sym).then_some((sym, path))
+    }
+
+    /// The props parameter can be named at a use only if no inner scope binds that name too.
+    fn props_nameable(&self, sym: SymbolId, span: Span) -> bool {
+        let name = self.scoping.symbol_name(sym);
+        !self.written(sym)
+            && !self.scoping.symbol_ids().any(|s| {
+                s != sym && self.scoping.symbol_name(s) == name && {
+                    let at = self.scoping.symbol_span(s);
+                    at.start >= span.start && at.end <= span.end
+                }
+            })
+    }
+
+    fn written(&self, sym: SymbolId) -> bool {
+        self.scoping.get_resolved_references(sym).any(|r| r.is_write())
+    }
+
+    /// `const x = props.y`: `x` is another name for the prop, so each use reads it live.
+    fn alias(&mut self, init: &Expression<'_>) -> Option<Rewrite> {
+        let (root, path) = self.prop_path(init)?;
+        let ctx = self.comps.last()?;
+        if ctx.props_param == Some(root) {
+            if path.is_empty() || !self.props_nameable(root, ctx.span) {
+                return None;
+            }
+            let props = self.scoping.symbol_name(root).to_string();
+            if path.len() == 1 && path[0] == "children" {
+                let ctx = self.comps.pop()?;
+                let local = self.children_local(&ctx, &props);
+                let component = key(ctx.span);
+                self.comps.push(ctx);
+                return Some(Rewrite::Children { local, component });
+            }
+            return Some(Rewrite::Prop { props, path });
+        }
+        match self.plan.rewrites.get(&root)? {
+            Rewrite::Rest { props, exclude, .. } => {
+                let first = path.first()?;
+                (!exclude.contains(first)).then(|| Rewrite::Prop { props: props.clone(), path })
+            }
+            Rewrite::Prop { props, path: base } if !self.defaulted.contains(&root) => {
+                Some(Rewrite::Prop { props: props.clone(), path: base.iter().cloned().chain(path).collect() })
+            }
+            Rewrite::Prop { .. } | Rewrite::Children { .. } | Rewrite::Via { .. } => Some(Rewrite::Via { of: root, path }),
+            _ => None,
+        }
+    }
+
+    /// `const { a, b = 1, ...rest } = props`: the same live reads as the parameter's pattern. The pattern must be one
+    /// that can be: known keys, no array patterns, at most one rest in a component and none below the top.
+    fn alias_pattern(&mut self, obj: &ObjectPattern<'_>, init: &Expression<'_>) -> bool {
+        let Some((root, path)) = self.prop_path(init) else { return false };
+        fn plain(obj: &ObjectPattern<'_>) -> bool {
+            obj.properties.iter().all(|p| {
+                static_key(&p.key).is_some()
+                    && match &p.value {
+                        BindingPattern::BindingIdentifier(_) => true,
+                        BindingPattern::AssignmentPattern(a) => matches!(a.left, BindingPattern::BindingIdentifier(_)),
+                        BindingPattern::ObjectPattern(inner) => inner.rest.is_none() && plain(inner),
+                        _ => false,
+                    }
+            }) && obj.rest.as_ref().is_none_or(|r| matches!(r.argument, BindingPattern::BindingIdentifier(_)))
+        }
+        let Some(ctx) = self.comps.last() else { return false };
+        let span = key(ctx.span);
+        if !plain(obj) {
+            return false;
+        }
+        let (props, base) = if ctx.props_param == Some(root) {
+            if !self.props_nameable(root, ctx.span) {
+                return false;
+            }
+            (self.scoping.symbol_name(root).to_string(), Vec::new())
+        } else {
+            match self.plan.rewrites.get(&root) {
+                Some(Rewrite::Prop { props, path }) if !self.defaulted.contains(&root) => (props.clone(), path.clone()),
+                _ => return false,
+            }
+        };
+        let base: Vec<String> = base.into_iter().chain(path).collect();
+        if obj.rest.is_some() {
+            let taken = self.plan.rewrites.values().any(|r| matches!(r, Rewrite::Rest { component, .. } if *component == span));
+            if taken || !base.is_empty() {
+                return false;
+            }
+        }
+        let mut ctx = self.comps.pop().unwrap();
+        self.destructure_props(obj, &props, &base, &mut ctx);
+        self.comps.push(ctx);
+        true
+    }
+
+    /// A destructured prop that's assigned to: plans its local override.
+    fn written_prop(&mut self, sym: SymbolId, k: &str, path: &[String], props: &str, component: Span, span: Span) {
+        if !self.written(sym) {
+            return;
+        }
+        if path.is_empty() && k != "children" {
+            self.local_prop(component, props, k, sym);
+        } else {
+            let name = self.scoping.symbol_name(sym).to_string();
+            self.reassigned(span, &name, k);
+        }
+    }
+
+    fn local_prop(&mut self, component: Span, props: &str, k: &str, sym: SymbolId) {
+        let entry = self.plan.local_props.entry(key(component)).or_insert_with(|| (props.to_string(), Vec::new()));
+        if !entry.1.iter().any(|(name, _)| name == k) {
+            entry.1.push((k.to_string(), sym));
+        }
+    }
+
+    /// W001 for a local that names no single prop but is written: nothing says where the write should go.
+    fn reassigned(&mut self, span: Span, name: &str, read: &str) {
+        self.plan.diagnostics.push(Diagnostic::new(
+            self.source,
+            "W001",
+            Severity::Error,
+            (span.start, span.end),
+            format!("`{name}` is reassigned, but it reads `{read}`, which isn't one prop to override."),
+            format!("For an editable copy: `const {name} = state.linked(() => {read})`, then read and write `{name}.value`."),
+        ));
+    }
+
+    /// `const a = props.a; a = 2`: a `const` is read-only, alias or not. Says where a write can go.
+    fn const_written(&mut self, it: &VariableDeclarator<'_>) -> bool {
+        let Some(init) = it.init.as_ref().filter(|i| self.prop_path(i).is_some()) else { return false };
+        let names = it.id.get_binding_identifiers();
+        let Some(id) = names.iter().find(|b| binding_symbol(b).is_some_and(|s| self.written(s))) else { return false };
+        let name = id.name.as_str();
+        let read = self.text(init.span()).to_string();
+        self.plan.diagnostics.push(Diagnostic::new(
+            self.source,
+            "W001",
+            Severity::Error,
+            (id.span.start, id.span.end),
+            format!("`{name}` is a `const`, so it can't be assigned to."),
+            format!("To write the prop, declare it with `let`, or assign to `{read}` directly."),
+        ));
+        self.plan.aliases_refused.insert(key(it.span));
+        true
+    }
+
+    /// `props.x = v` anywhere in a component, closures included: the same override a `let` alias makes.
+    fn props_write(&mut self, target: &SimpleAssignmentTarget<'_>) {
+        let SimpleAssignmentTarget::StaticMemberExpression(m) = target else { return };
+        let Expression::Identifier(id) = m.object.get_inner_expression() else { return };
+        let Some(sym) = symbol_of(self.scoping, id) else { return };
+        let Some(span) = self.comps.iter().rev().find(|c| c.props_param == Some(sym)).map(|c| c.span) else { return };
+        self.local_prop(span, id.name.as_str(), m.property.name.as_str(), sym);
+    }
+
+    /// A body-level declarator that only names a prop becomes an alias: see `alias` and `alias_pattern`.
+    fn try_alias(&mut self, it: &VariableDeclarator<'_>) {
+        let Some(init) = &it.init else { return };
+        if self.prop_path(init).is_none() {
+            return;
+        }
+        let aliased = match &it.id {
+            BindingPattern::BindingIdentifier(id) => {
+                let Some(sym) = binding_symbol(id) else { return };
+                match self.alias(init) {
+                    Some(rewrite) => {
+                        if self.written(sym) {
+                            let span = self.comps.last().unwrap().span;
+                            match &rewrite {
+                                Rewrite::Prop { props, path } if path.len() == 1 => {
+                                    let (props, k) = (props.clone(), path[0].clone());
+                                    self.local_prop(span, &props, &k, sym);
+                                }
+                                _ => {
+                                    let read = self.text(init.span()).to_string();
+                                    self.reassigned(id.span, id.name.as_str(), &read);
+                                    self.plan.aliases_refused.insert(key(it.span));
+                                    return;
+                                }
+                            }
+                        }
+                        self.plan.rewrites.insert(sym, rewrite);
+                        self.comps.last_mut().unwrap().prop_syms.insert(sym);
+                        true
+                    }
+                    None => false,
+                }
+            }
+            BindingPattern::ObjectPattern(obj) => {
+                self.alias_pattern(obj, init)
+            }
+            _ => false,
+        };
+        if aliased {
+            self.plan.aliases.insert(key(it.span));
+        }
+    }
+
     /// The memo local for a component's children, planned on first use.
     fn children_local(&mut self, ctx: &CompCtx, props: &str) -> String {
         let plan = self.plan.children.entry(key(ctx.span)).or_insert_with(|| {
@@ -579,7 +809,7 @@ impl<'s> Analyzer<'s> {
             Severity::Error,
             (span.start, span.end),
             format!("`{what}` is read once when the component is set up, so this never updates."),
-            "Wrap it in `derived(() => …)`, move it into `watch`, or use `untrack()` if a snapshot is intended.",
+            "`const x = props.y` stays live on its own, but this does more than name a prop: wrap it in `derived(() => …)`, move it into `watch`, or use `untrack()` if a snapshot is intended.",
         );
         if let Some(init) = decl {
             let text = self.text(init);
@@ -612,6 +842,47 @@ impl<'s> Analyzer<'s> {
             edits: vec![Edit { start: id.span.end, end: id.span.end, text: ".value".into() }],
         });
         self.plan.diagnostics.push(d);
+    }
+
+    /// `<Card person={bind(name)} />`: the one way a child's write reaches the parent.
+    fn bound_prop(&mut self, attr: &JSXAttribute<'_>) {
+        let Some(JSXAttributeValue::ExpressionContainer(c)) = &attr.value else { return };
+        let Some(Expression::CallExpression(call)) = c.expression.as_expression().map(|e| e.get_inner_expression()) else { return };
+        if self.is_bind(call)
+            && let [arg] = call.arguments.as_slice()
+            && arg.as_expression().is_some_and(|e| chain_root_member(e).is_some() || matches!(e.get_inner_expression(), Expression::Identifier(_)))
+        {
+            self.plan.bound.insert(key(call.span));
+        }
+    }
+
+    /// `bind:count={box}`: only on a component, and only with something that can be a box.
+    fn bound_attribute(&mut self, attr: &JSXAttributeItem<'_>, intrinsic: bool) {
+        let JSXAttributeItem::Attribute(a) = attr else { return };
+        let JSXAttributeName::NamespacedName(ns) = &a.name else { return };
+        if ns.namespace.name != "bind" {
+            return;
+        }
+        let value = match &a.value {
+            Some(JSXAttributeValue::ExpressionContainer(c)) => c.expression.as_expression(),
+            _ => None,
+        };
+        let path = value.is_some_and(|e| chain_root_member(e).is_some() || matches!(e.get_inner_expression(), Expression::Identifier(_)));
+        if intrinsic || !path {
+            self.plan.diagnostics.push(Diagnostic::new(
+                self.source,
+                "W061",
+                Severity::Error,
+                (a.span.start, a.span.end),
+                "`bind:` takes a box, on a component.",
+                "Write `<Card bind:person={name} />`, with `name` a box. A form element takes `value` and `onChange`.",
+            ));
+        }
+    }
+
+    fn is_bind(&self, call: &CallExpression<'_>) -> bool {
+        let Expression::Identifier(id) = &call.callee else { return false };
+        symbol_of(self.scoping, id).and_then(|s| self.imports.get(&s)).is_some_and(|(from, name)| from == "weft" && name == "bind")
     }
 
     /// W016: `<App api={createFakeApi()} />`. A component prop compiles to a getter, so a call in it runs again on
@@ -936,7 +1207,29 @@ impl<'s> Analyzer<'s> {
 }
 
 impl<'a, 's> Visit<'a> for Analyzer<'s> {
+    fn visit_statement(&mut self, it: &Statement<'a>) {
+        if let Statement::VariableDeclaration(d) = it
+            && self.body_level().is_some()
+        {
+            for declarator in &d.declarations {
+                if d.kind == VariableDeclarationKind::Const && self.const_written(declarator) {
+                    continue;
+                }
+                self.try_alias(declarator);
+            }
+        }
+        walk::walk_statement(self, it);
+    }
+
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
+        if self.plan.aliases.contains(&key(it.span)) {
+            // Applied at each read (`transform`), as a parameter's are, so reads in a default are live too.
+            self.nested(|s| s.visit_binding_pattern(&it.id));
+            return;
+        }
+        if self.plan.aliases_refused.contains(&key(it.span)) {
+            return;
+        }
         let name = match &it.id {
             BindingPattern::BindingIdentifier(id) => Some((id.name.to_string(), binding_symbol(id))),
             _ => None,
@@ -1049,6 +1342,9 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
     fn visit_jsx_opening_element(&mut self, it: &JSXOpeningElement<'a>) {
         // On a native element a box can only mean its value; on a component it may be passed for write access.
         let intrinsic = matches!(&it.name, JSXElementName::Identifier(n) if n.name.starts_with(|c: char| c.is_ascii_lowercase()));
+        for attr in &it.attributes {
+            self.bound_attribute(attr, intrinsic);
+        }
         if intrinsic {
             for attr in &it.attributes {
                 if let JSXAttributeItem::Attribute(a) = attr
@@ -1071,6 +1367,7 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
             for attr in &it.attributes {
                 let JSXAttributeItem::Attribute(a) = attr else { continue };
                 self.call_prop(a, &component);
+                self.bound_prop(a);
                 if let (JSXAttributeName::Identifier(n), Some(JSXAttributeValue::ExpressionContainer(c))) = (&a.name, &a.value)
                     && let Some((root, _)) = c.expression.as_expression().and_then(chain_root_member)
                     && let Some(sym) = symbol_of(self.scoping, root).filter(|s| self.boxes.contains(s))
@@ -1162,7 +1459,30 @@ impl<'a, 's> Visit<'a> for Analyzer<'s> {
         self.spread_ctx.pop();
     }
 
+    fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
+        self.props_write(it);
+        walk::walk_simple_assignment_target(self, it);
+    }
+
+    fn visit_assignment_target_property_identifier(&mut self, it: &AssignmentTargetPropertyIdentifier<'a>) {
+        if symbol_of(self.scoping, &it.binding).is_some_and(|s| self.plan.rewrites.contains_key(&s)) {
+            let name = it.binding.name.to_string();
+            self.reassigned(it.span, &name, "a destructuring assignment");
+        }
+        walk::walk_assignment_target_property_identifier(self, it);
+    }
+
     fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        if self.is_bind(it) && !self.plan.bound.contains(&key(it.span)) {
+            self.plan.diagnostics.push(Diagnostic::new(
+                self.source,
+                "W061",
+                Severity::Error,
+                (it.span.start, it.span.end),
+                "`bind(box)` only means something as a component prop's whole value.",
+                "Write `<Card person={bind(name)} />`, with `name` a box. A form element takes `value` and `onChange`.",
+            ));
+        }
         if let Some(cb) = map_callback(it) {
             if self.jsx_depth > 0 && returned(cb).0.is_some_and(returns_jsx) {
                 self.analyze_list(it, cb);

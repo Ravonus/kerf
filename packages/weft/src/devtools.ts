@@ -79,7 +79,7 @@ const isBox = (n: Node): n is Box<any> => n instanceof Box
 
 /** Every named node alive now. `filter` keeps names starting with it (`Cart`, `Cart.total`, `cart.`). */
 export function graph(filter?: string): GraphNode[] {
-  const nodes = [...named].filter(n => !(n as Computation).dead)
+  const nodes = [...named].filter(n => (n as Computation).effect !== 3)
   label(nodes)
   const out: GraphNode[] = []
   for (const n of nodes) {

@@ -3,7 +3,11 @@
 // Push-pull graph: a write marks observers DIRTY/CHECK; derived values recompute lazily when read;
 // effects are queued and flushed in creation order (parents before children) on a microtask or by `flush()`.
 
+import { LITERAL, MICRO, OWNKEYS, POP, REUSE } from './flags'
+
 const CLEAN = 0, CHECK = 1, DIRTY = 2
+/** `effect` of a disposed node: it never runs again, and there's no field for it on the live ones. */
+const DEAD = 3
 
 /** Dev build: diagnostic text, dev names and dev-only checks. Vite folds it to `false` in production builds. */
 export const DEV: boolean = (import.meta as any).env?.DEV !== false
@@ -14,6 +18,7 @@ export interface Owner {
   owned: Computation[] | null
   cleanups: (() => void)[] | null
   owner: Owner | null
+  /** Set by `provide` on its root; everything below finds it through `owner`. */
   context?: Record<symbol, unknown>
 }
 
@@ -21,12 +26,11 @@ export interface Computation extends Source, Owner {
   fn: (prev: any) => any
   s: Source[]
   state: number
-  /** 0: derived (lazy), 1: effect (queued), 2: effect whose value is unwrapped (a child hole: functions are called) */
-  effect: 0 | 1 | 2
+  /** 0: derived (lazy), 1: effect (queued), 2: effect whose value is unwrapped (a child hole: functions are called), 3: disposed */
+  effect: 0 | 1 | 2 | 3
   /** Effects: writes the computed value, untracked (`apply(value, prev)`). */
   a: ((value: any, prev: any) => void) | undefined
   id: number
-  dead?: true
   /** Dev name: the binding (`li.children`), its source location and the component it was created in. */
   n?: string
 }
@@ -40,7 +44,10 @@ export const devComponent: { label?: string; id?: number } = {}
 let listener: Computation | null = null
 let owner: Owner | null = null
 let nextId = 0
+/** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
+let at = 0
 let queue: Computation[] = []
+/** A flush is on the microtask queue. */
 let scheduled = false
 /** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
 let mounts: (() => void)[] = []
@@ -73,22 +80,36 @@ export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Recor
 export const stats = { runs: 0 }
 
 /** The empty list every graph list starts as (never written: `add` replaces it). */
-const NONE: any[] = []
+export const NONE: any[] = []
 
 /**
  * `list` with `x` appended. Graph lists are mostly 1–3 long, and V8's first `push` reserves 17 slots, so short
  * lists are copied at their exact size (memory: research 19 §5.8).
  */
 function add<T>(list: T[], x: T): T[] {
-  if (list.length < 8) return list.concat([x])
+  const n = list.length
+  if (LITERAL && !n) return [x]
+  if (LITERAL && n === 1) return [list[0], x]
+  if (n < 8) return list.concat([x])
   list.push(x)
   return list
 }
 
+/**
+ * A run reads what the run before it read, nearly always, so a read that matches the list by position only moves on.
+ * From the first that doesn't, the rest of the list is dropped and rebuilt as reads come in.
+ */
 function read(node: Source) {
-  if (listener) {
-    listener.s = add(listener.s, node)
-    node.o = add(node.o, listener)
+  const l = listener
+  if (l) {
+    const s = l.s
+    if (REUSE && s[at] === node) at++
+    else if (!at || at > 8 || s.lastIndexOf(node, at - 1) < 0) { // short lists don't hold one box twice
+      if (at < s.length) unlink(l, at)
+      l.s = add(l.s, node)
+      node.o = add(node.o, l)
+      at++
+    }
   }
 }
 
@@ -96,30 +117,31 @@ function mark(node: Computation, state: number) {
   if (node.state >= state) return
   if (node.state === CLEAN && node.effect) queue.push(node)
   node.state = state
-  for (const o of node.o) mark(o, CHECK)
-}
-
-function write(node: Source, value: any) {
-  if (Object.is(node.v, value)) return
-  node.v = value
-  for (const o of node.o) mark(o, DIRTY)
-  schedule()
+  const o = node.o
+  for (let i = 0; i < o.length; i++) mark(o[i], CHECK)
 }
 
 function schedule() {
   if (!scheduled && (queue.length || mounts.length)) {
     scheduled = true
-    queueMicrotask(flush)
+    queueMicrotask(MICRO ? () => {
+      scheduled = false
+      flush()
+    } : flush)
   }
 }
 
-function unlink(node: Computation) {
-  for (const s of node.s) {
-    const i = s.o.indexOf(node)
-    if (i >= 0) s.o.splice(i, 1)
-    if (s.b && !s.o.length) s.b.k!.delete(s.key!) // its last reader went
+/** Take `node` off its sources from `from` on. */
+function unlink(node: Computation, from: number) {
+  const s = node.s
+  for (let i = s.length - 1; i >= from; i--) {
+    const c = s[i], o = c.o, j = o.indexOf(node)
+    if (POP && j === o.length - 1) o.pop()
+    else if (j >= 0) o.splice(j, 1)
+    if (c.b && !o.length) c.b.k!.delete(c.key!) // its last reader went
   }
-  node.s = NONE
+  if (POP && !from) node.s = NONE
+  else s.length = from
 }
 
 /** Dispose everything `node` owns and run its cleanups (a root's `dispose`). */
@@ -135,16 +157,17 @@ export function clean(node: Owner) {
 }
 
 function dispose(node: Computation) {
-  node.dead = true
-  unlink(node)
+  node.effect = DEAD
+  unlink(node, 0)
   clean(node)
 }
 
 function run(node: Computation) {
-  clean(node)
-  unlink(node)
-  const prevListener = listener, prevOwner = owner
+  if (node.owned || node.cleanups) clean(node)
+  if (!REUSE) unlink(node, 0)
+  const prevListener = listener, prevOwner = owner, prevAt = at
   listener = owner = node
+  at = 0
   try {
     const v = node.effect === 2 ? (node.fn as () => unknown)() : node.fn(node.v) // a hole's value takes no arguments
     if (node.effect === 2 && live(v)) {
@@ -157,26 +180,31 @@ function run(node: Computation) {
       node.v = v
     } else if (!Object.is(v, node.v)) {
       node.v = v
-      for (const o of node.o) o.state = DIRTY
+      const o = node.o
+      for (let i = 0; i < o.length; i++) o[i].state = DIRTY
     }
   } catch (e) {
     if (DEV && node.n && e && typeof e === 'object' && !(e as any).weft) (e as any).weft = node.n // where it threw
     throw e
   } finally {
+    if (at < node.s.length) unlink(node, at) // what this run didn't read
     listener = prevListener
     owner = prevOwner
+    at = prevAt
   }
   node.state = CLEAN
 }
 
 function update(node: Computation) {
   if (node.state === CHECK) {
-    for (const s of node.s) {
-      if ('fn' in s) update(s as Computation)
+    const s = node.s
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i] as Computation
+      if (c.state) update(c)
       if ((node.state as number) === DIRTY) break
     }
   }
-  if (node.state === DIRTY && !node.dead) {
+  if (node.state === DIRTY && node.effect !== DEAD) {
     stats.runs++
     run(node)
   }
@@ -192,12 +220,16 @@ function unwrap(v: any): any {
   return Array.isArray(v) ? v.map(unwrap) : v
 }
 
-const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) && v.some(live))
+const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) && v !== flat && v.some(live))
+
+/** The last row list made of single elements (weft/dom `For`): nothing in it is live, and `place` can take it as it is. */
+export let flat: unknown = NONE
+export const setFlat = (list: unknown) => { flat = list }
 
 function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {
   const node: Computation = {
     fn, v: undefined, o: NONE, s: NONE, state: DIRTY, effect, a, id: nextId++,
-    owned: null, cleanups: null, owner, context: owner?.context,
+    owned: null, cleanups: null, owner,
   }
   if (DEV && devComponent.label) node.n = devComponent.label
   if (owner) owner.owned = add(owner.owned ?? NONE, node)
@@ -206,12 +238,12 @@ function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation[
 
 /** Apply pending effects and DOM updates now. */
 export function flush() {
-  scheduled = false
+  if (!MICRO) scheduled = false
   do {
     while (queue.length) {
       const batch = queue.sort((a, b) => a.id - b.id)
       queue = []
-      for (const node of batch) if (!node.dead) update(node)
+      for (let i = 0; i < batch.length; i++) update(batch[i])
     }
     runMounts() // the DOM is placed now; a callback's writes queue more work, applied in this same flush
   } while (queue.length)
@@ -274,12 +306,19 @@ export function collect<T>(fn: () => T): [T, Box<any>[]] {
   try { return [fn(), boxes] } finally { collecting = prev }
 }
 
+const plain = (x: any) => Object.getPrototypeOf(x ?? 0) === Object.prototype
+
+/** An object's keys, and each as a number too: `get(1)` reads the key the object calls '1'. */
+const own = (x: any) => Reflect.ownKeys(x).flatMap((k): PropertyKey | PropertyKey[] => (typeof k === 'string' ? [k, +k] : k))
+
 export class Box<T> implements State<T> {
   v: T
   o: Computation[] = NONE
   // Rarely set, so not own fields of every box (memory).
   /** Per-entry sources for `get(key)`. */
   declare k?: Map<PropertyKey, Source>
+  /** How many keys the last two values had, when they were compared key by key. */
+  declare c?: number
   /** Write hook: a scope's history, persistence and transactions. */
   declare h?: (box: Box<T>, prev: T) => void
   /** Dev name (`cart.note`). */
@@ -310,14 +349,21 @@ export class Box<T> implements State<T> {
   w(v: T) {
     const prev: any = this.v
     if (Object.is(prev, v)) return
-    if (this.k) {
-      // Entry readers only: they re-run when their entry changed; whole-value readers are marked by write() below.
-      for (const [key, s] of this.k) {
-        if (!s.o.length) { this.k.delete(key); continue }
-        if (!Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
+    this.v = v
+    const k = this.k
+    if (k) {
+      // Entry readers only: they re-run when their entry changed. Between plain objects only their own keys can differ,
+      // so those are compared instead of every reader's, unless the objects have been far larger than the readers.
+      const many = OWNKEYS && k.size > 8 && (this.c ?? 0) < k.size * 8 && plain(prev) && plain(v) && [...own(prev), ...own(v)]
+      if (many) this.c = many.length
+      for (const key of many || (k.keys() as Iterable<PropertyKey>)) {
+        const s = k.get(key)
+        if (s && !Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
       }
     }
-    write(this, v)
+    const o = this.o
+    for (let i = 0; i < o.length; i++) mark(o[i], DIRTY)
+    schedule()
     if (this.h) this.h(this, prev)
   }
 }
@@ -433,7 +479,7 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
 /** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
 function settle(node: Computation) {
   run(node)
-  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.at(-1) === node) owner.owned.pop()
+  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
 }
 
 /** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
@@ -479,7 +525,7 @@ export function getOwner() {
 }
 
 export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner): T {
-  const root: Owner = { owned: null, cleanups: null, owner: parent, context: parent?.context }
+  const root: Owner = { owned: null, cleanups: null, owner: parent }
   return within(root, () => fn(() => clean(root)))
 }
 
@@ -496,6 +542,12 @@ export function within<T>(root: Owner, fn: () => T): T {
   }
 }
 
+/** The nearest `provide`'s values: each one holds its parents' too. */
+function contexts(from: Owner | null) {
+  while (from && !from.context) from = from.owner
+  return from?.context
+}
+
 export function context<T>(fallback?: T) {
   const id = Symbol()
   return {
@@ -503,12 +555,12 @@ export function context<T>(fallback?: T) {
       const parent = owner
       return createRoot(dispose => {
         if (parent) (parent.cleanups ??= []).push(dispose) // the subtree goes when its parent does
-        owner!.context = { ...owner!.context, [id]: value }
+        owner!.context = { ...contexts(parent), [id]: value }
         return fn()
       })
     },
     get use(): T {
-      const ctx = owner?.context
+      const ctx = contexts(owner)
       return ctx && id in ctx ? (ctx[id] as T) : (fallback as T)
     },
   }
@@ -534,6 +586,37 @@ export function view(sources: any[], skip: string[] = []): any {
     getOwnPropertyDescriptor: (_, k) => (kept(k) ? { configurable: true, enumerable: true } : undefined),
   })
 }
+
+/**
+ * Compiled from a component that assigns to a prop's local (`let amount = props.amount; amount = 5`). Each written prop
+ * reads through a linked state, so a write holds in this component until the parent's value next changes, and only a
+ * prop given with `bind(box)` has a setter that takes it further. `written`: each key, then its default or 0.
+ */
+export function localProps(props: any, written: unknown[]) {
+  const boxes = new Map<PropertyKey, Linked<unknown>>()
+  for (let i = 0; i < written.length; i += 2) {
+    const k = written[i] as string, fallback = written[i + 1] as (() => unknown) | 0
+    boxes.set(k, state.linked(() => (props[k] === undefined && fallback ? fallback() : props[k])))
+  }
+  return new Proxy(props, {
+    get: (t, k) => (boxes.has(k) ? boxes.get(k)!.value : t[k]),
+    set(t, k, v) {
+      const box = boxes.get(k)
+      if (box) box.value = v
+      Reflect.set(t, k, v) // a setter, if the parent bound this prop; a getter alone ignores it
+      return true
+    },
+    has: (t, k) => boxes.has(k) || k in t,
+    ownKeys: t => [...new Set([...Reflect.ownKeys(t), ...boxes.keys()])] as (string | symbol)[],
+    getOwnPropertyDescriptor: (t, k) => (boxes.has(k) || k in t ? { configurable: true, enumerable: true } : undefined),
+  })
+}
+
+/**
+ * `<Card person={bind(name)} />`: `person` reads the box, and a write in `Card` reaches it. Without this, a child's
+ * writes stay in the child. The compiler reads the call; this is its value where nothing compiled it.
+ */
+export const bind = <T>(box: State<T>): T => box.value
 
 /** A live view of `props` without `keys` (`({ a, ...rest }) =>`, §3.3). */
 export const omit = (props: object, keys: string[]): any => view([props], keys)

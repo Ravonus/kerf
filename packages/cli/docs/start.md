@@ -24,7 +24,7 @@ export const meta: Meta<typeof load> = ({ data }) => ({ title: data.list.name })
 export default function List(props: RouteProps<typeof load, '/lists/[id]'>) { return <h1>{props.data.list.name}</h1> }
 ```
 
-Read `props.data` in JSX or `derived`, not in the component body (W001).
+`props.data` and `const { data } = props` stay live; compute from them in JSX or `derived`, not in the component body (W001).
 
 Import your own code as `#/server/todos`, which is `src/server/todos`. That alias is `paths` in `tsconfig.json`: change it or add your own there, and Vite and `weft check` follow. Generated files have their own prefix: `weft:slot/<id>` and `weft:tokens/<name>`.
 

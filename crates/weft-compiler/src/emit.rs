@@ -575,6 +575,12 @@ impl<'t> Emitter<'t> {
                     self.delegated.insert(event.clone());
                     self.helpers.insert("delegate");
                 }
+                // A delegated function needs no call: `addEvent` would only store it here. An array might be `[fn, data]`.
+                let function = attr_expression(attr).is_some_and(|e| matches!(e.get_inner_expression(), Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)));
+                if delegated && function && !flag_off("EVENT") {
+                    b.ops.push(format!("{el_var}._$${event} = {h};"));
+                    continue;
+                }
                 let on = self.helper("on");
                 b.ops.push(format!("{on}({el_var}, {event:?}, {h}, {delegated});"));
                 continue;
@@ -951,6 +957,10 @@ impl<'t> Emitter<'t> {
             [Kid::Text(t)] => fields.push(format!("children: {}", serde_json::to_string(&decode_entities(t)).unwrap())),
             [Kid::Expr(e)] if passes_as_value(e) => {
                 let v = self.expr(e);
+                let v = match self.keys.last().filter(|_| keyed && !self.ssr) {
+                    Some(read) => hoist_key(v, read),
+                    None => v,
+                };
                 fields.push(format!("children: {v}"));
             }
             [k] => {
@@ -1054,6 +1064,14 @@ impl<'t> Emitter<'t> {
                         JSXAttributeName::Identifier(id) => id.name.to_string(),
                         JSXAttributeName::NamespacedName(ns) => format!("{}:{}", ns.namespace.name, ns.name.name),
                     };
+                    // `bind:count={box}`: the child reads the box, and its writes reach it.
+                    if let (false, JSXAttributeName::NamespacedName(ns), Some(e)) = (element, &a.name, attr_expression(a))
+                        && ns.namespace.name == "bind"
+                    {
+                        let (k, target) = (prop_key(ns.name.name.as_str()), self.expr(e));
+                        fields.push(format!("get {k}() {{ return {target}.value; }}, set {k}(_v) {{ {target}.value = _v; }}"));
+                        continue;
+                    }
                     if key == "key" || key == TAG || key == ISLAND {
                         continue;
                     }
@@ -1064,6 +1082,10 @@ impl<'t> Emitter<'t> {
                         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
                             None => continue,
                             Some(e) if element && key == "ref" && self.assignable(e) => format!("{k}: {}", self.assigner(e)),
+                            Some(Expression::CallExpression(b)) if matches!(&b.callee, Expression::Identifier(id) if id.name == "_$bound") => {
+                                let target = b.arguments[0].as_expression().map(|e| self.expr(e)).unwrap_or_default();
+                                format!("get {k}() {{ return {target}.value; }}, set {k}(_v) {{ {target}.value = _v; }}")
+                            }
                             Some(e) if passes_as_value(e) => format!("{k}: {}", self.expr(e)),
                             Some(e) => format!("get {k}() {{ return {}; }}", self.expr(e)),
                         },
@@ -1151,6 +1173,26 @@ fn list_key(el: &JSXElement<'_>) -> Option<String> {
     }
     path.reverse();
     Some(format!("{}().{}", p.name, path.join(".")))
+}
+
+/// A compiled speed path turned off for this run (`WEFT_OFF`, packages/weft/src/flags.ts).
+fn flag_off(name: &str) -> bool {
+    std::env::var("WEFT_OFF").is_ok_and(|v| v.split(',').any(|f| f == name || f == "all"))
+}
+
+/// Reads of a row's key, moved to one read as the row is made. A row's key never changes (a new key is a new row), so
+/// the read needs no link to the item: that's a dependency each row doesn't allocate. `WEFT_OFF=KEYREAD` leaves it.
+fn hoist_key(row: String, read: &str) -> String {
+    let off = flag_off("KEYREAD");
+    let item = read.split('(').next().unwrap_or(read);
+    // The body has to be the emitted element, and nothing inside may rebind the item.
+    let shadowed = row.matches(&format!("{item} =>")).count() + row.matches(&format!("({item})")).count() > 1;
+    let body = "(() => {";
+    let Some(at) = row.find(body).map(|at| at + body.len()).filter(|at| srcmap::strip(&row[..*at]) == format!("({item}) => {body}")) else { return row };
+    if off || shadowed || row.contains("_key$") || !row[at..].contains(read) {
+        return row;
+    }
+    format!("{} const _key$ = {read};{}", &row[..at], row[at..].replace(read, "_key$"))
 }
 
 /// The island mark on a component's tag (`hydration::mark`).

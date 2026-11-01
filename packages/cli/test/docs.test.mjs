@@ -12,7 +12,7 @@ const status = probe(loadCompiler(resolveWeft(fixture)))
 describe('catalog probe', () => {
   it('finds the codes the Phase 1 compiler reports, with their autofixes', () => {
     const reported = Object.entries(status).filter(([, s]) => s.implemented).map(([c]) => c)
-    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015', 'W017', 'W018', 'W019', 'W050', 'W051', 'W052', 'W054', 'W056', 'W060', 'D024', 'D025'])
+    expect(reported).toEqual(['W000', 'W001', 'W005', 'W006', 'W010', 'W013', 'W014', 'W015', 'W017', 'W018', 'W019', 'W050', 'W051', 'W052', 'W054', 'W056', 'W060', 'W061', 'D024', 'D025'])
     expect(status.W006.autofix).toBe(true)
     expect(status.W015.autofix).toBe(true)
     expect(status.W001).toMatchObject({ autofix: false, suggestion: true })

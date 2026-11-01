@@ -17,7 +17,7 @@ export function Cart({ items, taxRate }: { items: Item[]; taxRate: number }) {
 ```
 
 1. **State is a box. Read and write `.value`.** Everywhere, JSX included (W015).
-2. **Anything computed from other values is `derived`.** Never in a `watch`, never in the component body (W001).
+2. **Anything computed from other values is `derived`.** Never in a `watch`, never in the component body (W001). Only naming a prop is fine: `const x = props.y` stays live.
 3. **JSX is always live.** Every `{expr}` and attribute re-evaluates when what it reads changes.
 4. **Props are always current.** Destructure them (one level, W006). Read them in `derived`, `watch`, JSX or handlers.
 5. **The component body runs once.** No early returns on state, no `let` counters. Branch in JSX.

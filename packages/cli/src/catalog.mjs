@@ -16,9 +16,9 @@ export const catalog = [
   { code: 'W000', severity: 'error', by: 'compiler', catches: 'Syntax error; nothing else in the file is checked', fix: 'Fix the syntax error first' },
   {
     code: 'W001', severity: 'error', by: 'compiler',
-    catches: 'A prop or `.value` read in the component body outside `derived`/`watch`/JSX/handlers (the body runs once)',
+    catches: 'A prop or `.value` used to compute something in the component body outside `derived`/`watch`/JSX/handlers (the body runs once). `const x = props.y` and destructuring only name the prop and stay live',
     fix: 'Wrap in `derived`, move into `watch`, or `untrack()` if a snapshot is intended',
-    example: 'export function A({ items }: any) { const n = items.length; return <p>{n}</p> }',
+    example: 'export function A({ items }: any) { const n = items.length + 1; return <p>{n}</p> }',
   },
   {
     code: 'W002', severity: 'error', by: 'compiler', catches: 'Writing state inside `derived`', fix: 'Move the write to a handler, or make the target `derived`',
@@ -137,6 +137,11 @@ export const catalog = [
     code: 'W060', severity: 'error', by: 'compiler', catches: "A `group()` from weft/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
     fix: 'Inline the token name or literal; define groups as `export const x = group(\'x\', { … })`; raw CSS goes in `css: { … }`',
     example: "import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
+  },
+  {
+    code: 'W061', severity: 'error', by: 'compiler', catches: '`bind:x` on a native element, or `bind:x`/`bind(box)` with something that isn\'t a box or that isn\'t a component prop',
+    fix: 'Write `<Card bind:person={name} />`. A form element takes `value` and `onChange`',
+    example: "import { bind, state } from 'weft'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
   },
 
   // The design language (PLAN §6, research 36): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.

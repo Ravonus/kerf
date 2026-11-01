@@ -306,14 +306,209 @@ export function Form({ initial }: { initial: string }) {
     assert!(d.is_empty(), "{d:?}");
 }
 
+// ---- naming a prop in the body ------------------------------------------------------------------------------------
+
+/// Compiles without a diagnostic; the output, with whitespace squeezed.
+fn clean(source: &str) -> String {
+    let (code, d) = run(source);
+    assert_eq!(codes(&d), Vec::<&str>::new(), "{source}");
+    code.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+#[test]
+fn alias_reads_the_prop_at_each_use() {
+    let code = clean("export function A(props) { const amount = props.amount; return <p>{amount}</p> }");
+    assert!(code.contains("props.amount"), "{code}");
+    assert!(!code.contains("amount = props"), "no copy is left: {code}");
+    assert!(code.contains("() =>"), "a live hole: {code}");
+}
+
+#[test]
+fn alias_paths_chains_and_casts() {
+    let code = clean("export function A(props: any) { const u = props.user as any; const name = u.name!; const n = props.items.length; return <p>{name}{n}</p> }");
+    assert!(code.contains("props.user.name") && code.contains("props.items.length"), "{code}");
+}
+
+#[test]
+fn alias_of_a_destructured_param() {
+    let code = clean("export function A({ items, size = 2 }) { const n = items.length; const s = size; return <p>{n}{s}</p> }");
+    assert!(code.contains("props.items.length"), "{code}");
+    assert!(code.contains("props.size === undefined ? 2 : props.size"), "{code}");
+}
+
+#[test]
+fn alias_destructuring_renames_defaults_and_rest() {
+    let code = clean("export function A(props) { const { amount: a, label = 'x', ...rest } = props; return <p {...rest} title={rest.t}>{a}{label}</p> }");
+    assert!(code.contains("props.amount") && code.contains("props.label === undefined ? \"x\" : props.label"), "{code}");
+    assert!(code.contains("_$restOf(props, [\"amount\", \"label\"])") && code.contains("props.t"), "{code}");
+}
+
+#[test]
+fn alias_default_seen_by_a_closure_above_it() {
+    let code = clean("export function A(props) { function f() { return b } const { b = 1 } = props; return <button onClick={f} /> }");
+    assert!(code.contains("props.b === undefined ? 1 : props.b"), "{code}");
+}
+
+#[test]
+fn alias_shadowing_is_by_binding_not_name() {
+    let code = clean("export function A(props) { const a = props.a; const f = (a) => a + 1; return <p onClick={() => f(a)}>{a}</p> }");
+    assert!(code.contains("(a) => a + 1") && code.contains("f(props.a)"), "{code}");
+}
+
+#[test]
+fn alias_refused_when_a_closure_shadows_the_props_name() {
+    let (_, d) = run("export function A(props) { const a = props.a; const f = (props) => a + props; return <p onClick={f} /> }");
+    assert_eq!(codes(&d), ["W001"], "`props` at the use would be the wrong one");
+}
+
+#[test]
+fn alias_keeps_shorthand_and_other_declarators() {
+    let code = clean("export function A(props) { const a = props.a, b = 1; const o = () => ({ a, b }); return <p onClick={o} /> }");
+    assert!(code.contains("a: props.a") && code.contains("b = 1"), "{code}");
+}
+
+#[test]
+fn alias_let_never_written_is_fine() {
+    let code = clean("export function A(props) { let a = props.a; return <p>{a}</p> }");
+    assert!(code.contains("props.a"), "{code}");
+}
+
+#[test]
+fn alias_written_is_a_local_override() {
+    let code = clean("export function A(props) { let a = props.a; const f = () => { a = 2; a += 1; a++ }; return <p onClick={f}>{a}</p> }");
+    assert!(code.contains("props = _$localProps(props, [\"a\", 0])"), "{code}");
+    assert!(code.contains("props.a = 2") && code.contains("props.a += 1") && code.contains("props.a++"), "{code}");
+    let code = clean("export function A(props) { let { a = 1 } = props; return <p onClick={() => a++}>{a}</p> }");
+    assert!(code.contains("_$localProps(props, [\"a\", () => 1])") && !code.contains("undefined"), "{code}");
+    let code = clean("export function A({ a }) { return <p onClick={() => { a = 2 }}>{a}</p> }");
+    assert!(code.contains("_$localProps"), "a written parameter too: {code}");
+}
+
+#[test]
+fn alias_const_stays_read_only() {
+    for src in [
+        "export function A(props) { const a = props.a; return <p onClick={() => { a = 2 }}>{a}</p> }",
+        "export function A(props) { const { a } = props; return <p onClick={() => { a++ }}>{a}</p> }",
+    ] {
+        let (_, d) = run(src);
+        assert_eq!(codes(&d), ["W001"], "{src}");
+        assert!(d[0].help.contains("`let`") && d[0].help.contains("props"), "{}", d[0].help);
+    }
+}
+
+#[test]
+fn props_write_is_the_same_override() {
+    let code = clean("export function A(props) { return <p onClick={() => { props.a = 2; props.b++ }}>{props.a}</p> }");
+    assert!(code.contains("_$localProps(props, [ \"a\", 0, \"b\", 0 ])"), "{code}");
+    let code = clean("export function A(props) { const f = () => { props.user.name = 1 }; return <p onClick={f} /> }");
+    assert!(!code.contains("_$localProps"), "a deeper write is the object's: {code}");
+}
+
+#[test]
+fn alias_written_with_no_single_prop_is_w001() {
+    for src in [
+        "export function A(props) { let n = props.user.name; return <p onClick={() => { n = 2 }}>{n}</p> }",
+        "export function A(props) { let c = props.children; c = 1; return <p>{c}</p> }",
+        "export function A(props) { let a = props.a; const f = (o) => { ({ a } = o) }; return <p onClick={f}>{a}</p> }",
+    ] {
+        let (_, d) = run(src);
+        assert_eq!(codes(&d), ["W001"], "{src}");
+        assert!(d[0].help.contains("state.linked"));
+    }
+}
+
+#[test]
+fn bind_gives_the_prop_a_setter_and_a_plain_read_has_none() {
+    let code = clean("import { bind, state } from 'weft'; export function A() { const n = state(1); return <C n={bind(n)} m={n.value} /> }");
+    assert!(code.contains("get n() { return n.value; }, set n(_v) { n.value = _v; }"), "{code}");
+    assert!(!code.contains("set m"), "{code}");
+}
+
+#[test]
+fn bind_attribute_is_the_same_binding() {
+    let code = clean("import { state } from 'weft'; export function A() { const count = state(1); return <C bind:count={count} /> }");
+    assert!(code.contains("get count() { return count.value; }, set count(_v) { count.value = _v; }"), "{code}");
+    assert!(!code.contains("bind:count"), "{code}");
+    let code = clean("export function A(props) { return <C bind:n={props.box} /> }");
+    assert!(code.contains("set n(_v) { props.box.value = _v; }"), "{code}");
+    for src in [
+        "import { state } from 'weft'; export function A() { const n = state(1); return <input bind:value={n} /> }",
+        "export function A() { return <C bind:n={1} /> }",
+        "export function A() { return <C bind:n /> }",
+    ] {
+        let (_, d) = run(src);
+        assert!(codes(&d).contains(&"W061"), "{src}");
+    }
+}
+
+#[test]
+fn bind_outside_a_component_prop_is_w061() {
+    for src in [
+        "import { bind, state } from 'weft'; export function A() { const n = state(1); return <input value={bind(n)} /> }",
+        "import { bind, state } from 'weft'; export function A() { const n = state(1); const v = bind(n); return <p /> }",
+        "import { bind } from 'weft'; export function A() { return <C n={bind(1)} /> }",
+    ] {
+        let (_, d) = run(src);
+        assert!(codes(&d).contains(&"W061"), "{src}");
+    }
+}
+
+#[test]
+fn alias_not_for_arrays_computed_keys_or_calls() {
+    for src in [
+        "export function A(props) { const [a] = props.pair; return <p>{a}</p> }",
+        "export function A(props) { const { [props.k]: a } = props; return <p>{a}</p> }",
+        "export function A(props) { const a = props.f(); return <p>{a}</p> }",
+        "export function A(props) { const a = props.a ?? 1; return <p>{a}</p> }",
+    ] {
+        let (_, d) = run(src);
+        assert_eq!(codes(&d), ["W001"], "{src}");
+    }
+}
+
+#[test]
+fn alias_passed_to_a_helper_in_the_body_is_still_one_read() {
+    let (_, d) = run("export function A(props) { const a = props.a; const c = makeChart(a); return <p>{c}</p> }");
+    assert_eq!(codes(&d), ["W001"]);
+    let (_, d) = run("import { state } from 'weft'; export function A(props) { const a = props.a; const s = state(a); return <p>{s.value}</p> }");
+    assert_eq!(codes(&d), ["W005"]);
+}
+
+#[test]
+fn alias_children_is_the_memo() {
+    let code = clean("export function A(props) { const kids = props.children; return <div>{kids}</div> }");
+    assert!(code.contains("_children()"), "{code}");
+}
+
+#[test]
+fn alias_a_list_over_it_is_keyed() {
+    let code = clean("export function A(props) { const items = props.items; return <ul>{items.map(x => <li key={x.id}>{x.id}</li>)}</ul> }");
+    assert!(code.contains("For") && code.contains("props.items"), "{code}");
+}
+
+#[test]
+fn alias_only_in_components() {
+    let code = clean("export function helper(props) { const a = props.a; return a }");
+    assert!(code.contains("const a = props.a"), "{code}");
+}
+
+#[test]
+fn a_rows_key_is_read_once_as_the_row_is_made() {
+    let code = clean("export function A(p) { return <ul>{p.xs.map(x => <li key={x.id} class={p.on.get(x.id) ? 'a' : ''} onClick={() => go(x.id)}>{x.t}</li>)}</ul> }");
+    assert!(code.contains("const _key$ = x().id;") && code.contains("p.on.get(_key$)") && code.contains("go(_key$)"), "{code}");
+    assert!(code.contains("x().t"), "the rest of the row stays live: {code}");
+    let code = clean("export function A(p) { return <ul>{p.xs.map(x => <li key={x.id} onClick={() => [].map(x => x().id)} />)}</ul> }");
+    assert!(!code.contains("_key$"), "rebound inside: {code}");
+}
+
 // ---- W001 / W005 ---------------------------------------------------------------------------------------------
 
 #[test]
 fn w001_prop_read_in_setup() {
-    let src = "export function A({ items }) { const n = items.length; return <p>{n}</p> }";
+    let src = "export function A({ items }) { const n = items.length + 1; return <p>{n}</p> }";
     let (_, d) = run(src);
     assert_eq!(codes(&d), ["W001"]);
-    assert_eq!(apply_fix(src, &d[0]), "export function A({ items }) { const n = derived(() => items.length); return <p>{n}</p> }");
+    assert_eq!(apply_fix(src, &d[0]), "export function A({ items }) { const n = derived(() => items.length + 1); return <p>{n}</p> }");
     assert!(!d[0].fix.as_ref().unwrap().safe, "the fix needs `.value` at the use site");
 }
 
@@ -405,15 +600,15 @@ fn a_rows_key_is_written_once() {
     let src = "export function L({ xs }) { return <ul>{xs.map(x => <li key={x.id} data-id={x.id} title={x.name}>{x.id}: {x.name}</li>)}</ul> }";
     let (code, d) = run(src);
     assert!(d.is_empty(), "{d:?}");
-    assert!(code.contains("\"data-id\", x().id);") && !code.contains("() => (x().id)"), "{code}");
+    assert!(code.contains("\"data-id\", _key$);") && !code.contains("() => (_key$)"), "{code}");
     assert!(code.contains("() => (x().name)") && code.contains("_$bind("), "{code}");
     // Hydrating, the attribute stays a binding (it skips the server's value; a write would be a mutation).
     let o = Options { filename: "App.tsx".into(), hydratable: true, ..Default::default() };
     let hydratable = compile(src, &o).code.unwrap();
-    assert!(hydratable.contains("_$bind(() => [x().id, x().name]"), "{hydratable}");
+    assert!(hydratable.contains("_$bind(() => [_key$, x().name]"), "{hydratable}");
     // Other key shapes, and expressions that only contain the key, stay live.
     let (code, _) = run("export function L({ xs }) { return <ul>{xs.map(x => <li key={x.id}>{x.id + 1}</li>)}</ul> }");
-    assert!(code.contains("() => (x().id + 1)"), "{code}");
+    assert!(code.contains("() => (_key$ + 1)"), "{code}");
 }
 
 #[test]
@@ -656,7 +851,7 @@ fn syntax_errors_are_diagnostics() {
 #[test]
 fn check_only_skips_codegen() {
     let out = compile(
-        "export function A({ items }) { const n = items.length; return <p>{n}</p> }",
+        "export function A({ items }) { const n = items.length + 1; return <p>{n}</p> }",
         &Options { check_only: true, ..Default::default() },
     );
     assert!(out.code.is_none());
@@ -665,7 +860,7 @@ fn check_only_skips_codegen() {
 
 #[test]
 fn diagnostics_have_editor_positions() {
-    let (_, d) = run("export function A({ items }) {\n  const n = items.length\n  return <p>{n}</p>\n}");
+    let (_, d) = run("export function A({ items }) {\n  const n = items.length + 1\n  return <p>{n}</p>\n}");
     assert_eq!((d[0].line, d[0].column), (2, 13));
 }
 
@@ -720,7 +915,7 @@ fn weft_back_end_source_maps_point_at_the_authored_lines() {
     let map = oxc_sourcemap::SourceMap::from_json_string(&json).unwrap();
     let table = map.generate_lookup_table();
     // (text in the output, its authored line, 1-based)
-    for (needle, line) in [("helper = ", 3), ("state(helper())", 6), ("count.value++", 9), ("count.value * 2", 10), ("_$on(", 8)] {
+    for (needle, line) in [("helper = ", 3), ("state(helper())", 6), ("count.value++", 9), ("count.value * 2", 10)] {
         let at = code.find(needle).unwrap_or_else(|| panic!("{needle} in {code}"));
         let out_line = code[..at].matches('\n').count() as u32;
         let out_col = code[..at].rsplit('\n').next().unwrap().encode_utf16().count() as u32;
@@ -823,8 +1018,12 @@ fn w001_not_on_a_rest_alias() {
     // a rest parameter is a live view of the props: holding it is not a read
     let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest; return <p {...x}>{a}</p> }");
     assert!(d.is_empty(), "{d:?}");
-    let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest.title; return <p title={x}>{a}</p> }");
+    let (_, d) = run("export function A({ a, ...rest }: any) { const x = rest.title + '!'; return <p title={x}>{a}</p> }");
     assert_eq!(codes(&d), ["W001"], "a member of rest is a prop read");
+    let (code, d) = run("export function A({ a, ...rest }: any) { const x = rest.title; const y = rest.a; return <p title={x}>{a}{y}</p> }");
+    assert_eq!(codes(&d), ["W001"], "`a` isn't in rest: {code}");
+    let (code, d) = run("export function A({ a, ...rest }: any) { const x = rest.title; return <p title={x}>{a}</p> }");
+    assert!(d.is_empty() && code.contains("props.title"), "{code}");
 }
 
 #[test]

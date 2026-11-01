@@ -1,0 +1,4 @@
+[data-grid] { display: grid; grid-template-columns: repeat(50, 1ch); font: 12px monospace }
+i { font-style: normal }
+td { padding: 1px 4px }
+.danger { background: #fdd }

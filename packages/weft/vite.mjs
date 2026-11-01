@@ -30,6 +30,21 @@ const features = {
   },
 }
 
+/** `weft({ off })`: the speed paths in src/flags.ts to leave out. `WEFT_OFF` does it for a whole run. */
+const flags = off => ({
+  name: 'weft:flags',
+  enforce: 'pre',
+  transform: {
+    filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ },
+    handler(code) {
+      const names = [...(off ?? []), ...(process.env.WEFT_OFF?.split(',').filter(Boolean) ?? [])]
+      if (!names.length) return
+      const every = names.includes('all')
+      return { code: code.replace(/const (\w+) = true/g, (line, name) => (every || names.includes(name) ? `const ${name} = false` : line)), map: null }
+    },
+  },
+})
+
 // Slots weft/surface imports dynamically: it has to build in an app that never ran `weft plugins sync` (research 33 §5).
 const CORE_SLOTS = new Set(['text.measure', 'surface.renderer', 'pay.rail'])
 const UNSYNCED = '\0weft:slot-unsynced/'
@@ -381,7 +396,7 @@ function icons() {
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
  * their own updates (research 21). Never for SSR or hydratable output.
  */
-export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions } = {}) {
+export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions, off } = {}) {
   let isDev = false
   let isHot = false
   const style = styleGroups(styleOptions)
@@ -427,7 +442,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     api: {},
   }
   const icon = icons()
-  return [icon.rewrite, main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
+  return [icon.rewrite, flags(off), main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
 
 /**
