@@ -66,7 +66,7 @@ function styleDecls(attr) {
 
 /** The D-code for one raw declaration, or null. `report` takes (code, start, end, why, fix). */
 function declaration({ prop, value, numeric, start, end, quote }, report) {
-  const css = numeric && SPACE_PROPS.test(prop) ? `${value}px` : value
+  const css = (numeric && SPACE_PROPS.test(prop) ? `${value}px` : value).replace(/\s*!important\s*$/i, '')
   if (/var\(|^(inherit|initial|unset|transparent|currentcolor|none)$/i.test(css.trim())) return
   if (COLOR_PROPS.test(prop) && COLOR.test(css)) return report('D001', start, end, `Raw colour \`${prop}: ${css}\`: it won't follow the theme, the dials or dark mode. Use ${COLOR_EXPECTED}.`)
   if (SPACE_PROPS.test(prop)) {

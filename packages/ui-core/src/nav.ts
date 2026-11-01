@@ -95,7 +95,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     }
     nav.dataset.ready = ''
   }
-  start()
+  // At the frame, once layout is due anyway. Measuring now would force it in the middle of building the page.
+  const first = win.requestAnimationFrame(start)
 
   const seen = new win.MutationObserver(settle)
   seen.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] })
@@ -128,6 +129,7 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   return {
     update() { settle() },
     destroy() {
+      win.cancelAnimationFrame(first)
       seen.disconnect(); resized?.disconnect(); spy?.disconnect()
       doc.removeEventListener('warp:dial', onDial)
       nav.removeEventListener('pointerover', over); nav.removeEventListener('pointerout', off)

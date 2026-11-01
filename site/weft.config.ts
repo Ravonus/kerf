@@ -6,6 +6,8 @@ import { text } from '@weft/plugin-text'
 const FILES = 'node_modules/@fontsource'
 
 export default defineConfig({
+  // arena/ is its own project: the same page in React, Solid and weft, none of which may load warp or the sizes it compares change.
+  check: { exclude: ['arena/**'] },
   tasks: {
     content: { run: 'node --disable-warning=ExperimentalWarning scripts/content.mjs', description: 'Generate docs, search indexes, llms.txt and numbers from the repo', sideEffects: ['fs'] },
   },
@@ -14,7 +16,7 @@ export default defineConfig({
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',
-    head: `<script>document.documentElement.dataset.theme='dark';document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
+    head: `<script>document.documentElement.dataset.expression='vivid'</script>${dialScript}`,
   },
   plugins: [
     warp(),

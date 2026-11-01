@@ -3,7 +3,7 @@
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
-const skipDirs = new Set(['node_modules', '.git', '.weft', '.output', 'dist', 'coverage', 'target'])
+const skipDirs = new Set(['public', 'node_modules', '.git', '.weft', '.output', 'dist', 'coverage', 'target'])
 
 export function globToRegExp(glob) {
   let re = ''
