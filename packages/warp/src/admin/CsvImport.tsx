@@ -1,13 +1,13 @@
+import { IconAlertCircle, IconUpload } from '@weft/icons'
 import { announce, autoMap, badRows, checkImport, importRecords, installSweep, isCsvFile, missingTargets, parseCsv, plural, SKIP_COLUMN, uid, type CsvTable, type ImportIssue, type ImportTarget } from '@weft/ui-core'
 import { derived, onMount, state } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
-import { Glyph } from '../parts'
 import { Progress } from '../Progress'
 import { toast } from '../Toast'
 import { PlainTable } from './PlainTable'
 import { StepBar } from './StepBar'
-import { GLYPH, InlineSelect, Sweep, afterFlush } from './atoms'
+import { InlineSelect, Sweep, afterFlush } from './atoms'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
 import '@weft/ui-core/styles/flows/base.css'
@@ -111,7 +111,7 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
           <div data-scope="dropzone" data-sweep="" data-phase="idle" data-pin={dragging.value ? '' : undefined} onDragOver={(e: DragEvent) => { e.preventDefault(); dragging.value = true }} onDragLeave={() => (dragging.value = false)} onDrop={(e: DragEvent) => { e.preventDefault(); dragging.value = false; take(e.dataTransfer?.files[0]) }}>
             <Sweep />
             <input type="file" accept=".csv,text/csv" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onChange={(e: any) => { take(e.currentTarget.files?.[0]); e.currentTarget.value = '' }} />
-            <span data-part="icon" aria-hidden="true"><Glyph d={GLYPH.upload} /></span>
+            <span data-part="icon" aria-hidden="true"><IconUpload /></span>
             <span data-part="drop-copy"><span data-part="title" id={`${id}-t`}>Drop a CSV here or <u>browse</u></span></span>
             <span data-part="hint" id={`${id}-h`}>Up to {rowLimit.toLocaleString('en-US')} rows · first row is the header</span>
           </div>
@@ -170,5 +170,5 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
 }
 
 function Cell({ value, issue }: { value: string; issue?: ImportIssue }) {
-  return <td data-invalid={issue ? '' : undefined}>{value}{issue && <span data-part="error"><Glyph d="M12 7.5v5.5M12 16.2v.3M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0" />{issue.message}</span>}</td>
+  return <td data-invalid={issue ? '' : undefined}>{value}{issue && <span data-part="error"><IconAlertCircle />{issue.message}</span>}</td>
 }

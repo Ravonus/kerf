@@ -1,10 +1,11 @@
+import { IconKey, IconMail } from '@weft/icons'
 import { clockLabel, emailError, passwordRules, uid } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
-import { Avatar, Glyph } from '../parts'
+import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Input } from '../Field'
-import { FormError, G, Mark, Rail, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm, type Heading } from './kit'
+import { FormError, Mark, Rail, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm, type Heading } from './kit'
 import { PasswordMeter } from './SignUp'
 import '../styles'
 import '@weft/ui-core/styles/flows/auth.css'
@@ -19,7 +20,7 @@ export function MagicLinkSent({ email, title, lede, heading, resendIn = 30, mail
   return (
     <div data-scope="stack">
       {onBack && <Back onBack={onBack} />}
-      <Mark><Glyph d={G.mail} /></Mark>
+      <Mark><IconMail /></Mark>
       <div><Title as={heading}>{title ?? 'Check your inbox'}</Title><p data-part="lede">{lede ?? <>We sent a sign-in link to <b>{email}</b>. It works once and expires in 15 minutes.</>}</p></div>
       {mailHref && <Button emphasis="frame" full role="link" onClick={() => location.assign(mailHref!)}>Open email app</Button>}
       <div data-part="row">
@@ -54,7 +55,7 @@ export function ResetPassword(p: ResetPasswordProps) {
   return (
     <StepFrame ctl={ctl} embedded={!!p.form} labelledby={`${id}-t`}>
       {p.onBack && <Back onBack={p.onBack} />}
-      <Mark><Glyph d={G.key} /></Mark>
+      <Mark><IconKey /></Mark>
       <div>
         <Title as={p.heading} id={`${id}-t`}>{p.title ?? (stage === 'request' ? 'Reset your password' : 'Choose a new password')}</Title>
         <p data-part="lede">{p.lede ?? (stage === 'request' ? "We'll email a link that lets you choose a new one. It expires in 30 minutes." : 'Then sign in with it everywhere.')}</p>

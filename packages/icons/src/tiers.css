@@ -1,0 +1,8 @@
+/* The runtime tier switch. warp's expression stops set these four properties, so the nearest data-expression wins with
+   no script and no reflow; a page without warp shows balanced. */
+@layer warp.components {
+  :where(svg[data-icon] [data-t="o"]) { display: var(--warp-icon-o, inline); }
+  :where(svg[data-icon] [data-t="q"]) { display: var(--warp-icon-q, none); }
+  :where(svg[data-icon] [data-t="b"]) { display: var(--warp-icon-b, inline); }
+  :where(svg[data-icon] [data-t="v"]) { display: var(--warp-icon-v, none); }
+}

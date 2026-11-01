@@ -1,3 +1,4 @@
+import { IconSend } from '@weft/icons'
 import { announce, asTime, clock, clockRange, fmt, minutes, sharedFree, suggestSlots, uid, withinHours, zoneCity, zoneMinute, type Attendee, type IsoTime, type Range } from '@weft/ui-core'
 import { derived, flush, state, untrack, watch } from 'weft'
 import { Badge } from '../Badge'
@@ -6,10 +7,10 @@ import { Card } from '../Card'
 import { Segmented } from '../Choice'
 import { ComboField } from '../Combobox'
 import { Input } from '../Field'
-import { Avatar, Glyph } from '../parts'
+import { Avatar } from '../parts'
 import { usePickerEnv } from '../Picker'
 import { TimeField } from '../TimeField'
-import { PATHS, SweepParts, confirmSweep } from './bits'
+import { SweepParts, confirmSweep } from './bits'
 import '@weft/ui-core/styles/app/booking.css'
 import '@weft/ui-core/styles/app/calendar.css'
 
@@ -195,7 +196,7 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
                 <span><b>{summary.value}</b> {elsewhere.value.length > 0 && <span class="muted">· {elsewhere.value.join(' · ')}</span>}</span>
                 <span style="flex:1"></span>
                 <Button emphasis="outline" tone="neutral" size="sm" icon="clock" onClick={() => { typed.value = chosen.value !== null ? asTime(chosen.value) : null; manual.value = !manual.value }}>{manual.value ? 'Suggested times' : 'Pick manually'}</Button>
-                <Button loading={busy.value} disabled={chosen.value === null} onClick={send}><Glyph d={PATHS.send} />Send invite</Button>
+                <Button loading={busy.value} disabled={chosen.value === null} onClick={send}><IconSend />Send invite</Button>
               </div>
               {failed.value && <p role="alert" class="muted">Couldn't send the invite: {failed.value}</p>}
             </div>}

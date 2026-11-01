@@ -1,8 +1,8 @@
+import { IconKey } from '@weft/icons'
 import { isPasskeyCancel } from '@weft/ui-core'
 import { derived, state } from 'weft'
 import { Button } from '../Button'
 import { Glyph } from '../parts'
-import { G } from './kit'
 import '../styles'
 import '@weft/ui-core/styles/flows/sso.css'
 import '@weft/ui-core/styles/layout/grid.css'
@@ -16,7 +16,7 @@ export function PasskeyButton({ onPasskey, onError, children, ...rest }: { onPas
     busy.value = true
     try { await onPasskey?.() } catch (e) { if (!isPasskeyCancel(e)) onError?.(e) } finally { busy.value = false }
   }
-  return <Button emphasis="frame" full loading={busy.value} onClick={press} {...rest}>{() => <><Glyph d={G.key} />{children ?? 'Continue with passkey'}</>}</Button>
+  return <Button emphasis="frame" full loading={busy.value} onClick={press} {...rest}>{() => <><IconKey />{children ?? 'Continue with passkey'}</>}</Button>
 }
 
 export interface SsoProvider { id: string; label: string; /** One path on the 24 grid: monochrome, never the provider's colours. */ glyph?: string; /** More words for assistive tech, after a short label: the label stays part of the name. */ name?: string }

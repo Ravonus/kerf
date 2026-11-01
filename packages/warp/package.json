@@ -23,7 +23,8 @@
     "virtual": "node scripts/virtual.mjs"
   },
   "dependencies": {
-    "@weft/ui-core": "file:../ui-core"
+    "@weft/ui-core": "file:../ui-core",
+    "@weft/icons": "file:../icons"
   },
   "peerDependencies": {
     "weft": "*"

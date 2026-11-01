@@ -46,7 +46,13 @@ export interface Contributions {
   provides?: ProviderRef[]
   requires?: SlotDef[]
   /** CSS variables in `--<namespace>-*`; `css` is written to `.weft/tokens/<namespace>.css`. Collisions are P113. */
-  tokens?: { namespace: string; css?: string; values?: Record<string, unknown> }
+  tokens?: {
+    namespace: string
+    css?: string
+    values?: Record<string, unknown>
+    /** Module ids the build resolves to another id, written to `.weft/tokens/<namespace>.alias.json`: one variant compiled in. */
+    alias?: Record<string, string>
+  }
   /** One AGENTS.md section, at most 1 KB (P112). */
   agents?: { title: string; text: string }
   /** Components/APIs for the MCP catalog. Names collide across plugins as P113. */

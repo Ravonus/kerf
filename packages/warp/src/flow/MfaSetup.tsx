@@ -1,13 +1,13 @@
+import { IconDownload } from '@weft/icons'
 import { announce, copyText, mapFlowError } from '@weft/ui-core'
 import { derived, state, type State } from 'weft'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Input } from '../Field'
 import { Modal } from '../Modal'
-import { Glyph } from '../parts'
 import { toast } from '../Toast'
 import { Flow } from './Flow'
-import { G, TextLink } from './kit'
+import { TextLink } from './kit'
 import '@weft/ui-core/styles/layout/row.css'
 
 export interface MfaSetupProps {
@@ -89,7 +89,7 @@ export function MfaSetup({ open, qr, secret, onVerify, codes, onDownload, onDone
               <p>Each code works once if you lose your phone. Store them somewhere safe; you won't see them again.</p>
               <ol data-part="codes" aria-label="Backup codes">{codes.map(c => <li key={c}><code>{c}</code></li>)}</ol>
               <div data-scope="row">
-                <Button emphasis="frame" size="sm" onClick={() => (onDownload ?? save)(codes)}>{() => <><Glyph d={G.download} />Download</>}</Button>
+                <Button emphasis="frame" size="sm" onClick={() => (onDownload ?? save)(codes)}>{() => <><IconDownload />Download</>}</Button>
                 <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => copy(codes.join('\n'))}>Copy all</Button>
               </div>
               <Checkbox onChange={(e: Event) => (saved.value = (e.currentTarget as HTMLInputElement).checked)}>I saved my backup codes</Checkbox>

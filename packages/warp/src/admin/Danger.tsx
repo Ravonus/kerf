@@ -1,3 +1,4 @@
+import { IconTrash, type IconComponent } from '@weft/icons'
 import { confirmMatches } from '@weft/ui-core'
 import { derived, state, type State, untrack, watch } from 'weft'
 import { Button, type Tone } from '../Button'
@@ -5,7 +6,7 @@ import { Input } from '../Field'
 import { Modal } from '../Modal'
 import { Glyph } from '../parts'
 import { toast } from '../Toast'
-import { GLYPH, latch } from './atoms'
+import { latch } from './atoms'
 import { SettingsSection } from './Settings'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
@@ -31,7 +32,7 @@ export interface ConfirmDialogProps {
   cancel?: string
   tone?: Tone
   /** Drawn at the top of the body, in the result mark. */
-  glyph?: string
+  glyph?: string | IconComponent
   children?: any
   onConfirm: () => Promise<void> | void
   onCancel?: () => void
@@ -53,7 +54,7 @@ export function ConfirmDialog({ open, title, description, action, cancel = 'Canc
   return (
     <>
       {armed.value && (
-        <Modal open={open} alert size="sm" title={title} description={description} mark={glyph ? <span data-part="mark" data-tone={tone === 'critical' ? 'critical' : undefined}><Glyph d={glyph} /></span> : undefined} footer={<><Button emphasis="frame" autofocus data-close="" onClick={() => onCancel?.()}>{cancel}</Button><Button tone={tone} loading={busy.value} onClick={go}>{action}</Button></>}>
+        <Modal open={open} alert size="sm" title={title} description={description} mark={glyph ? <span data-part="mark" data-tone={tone === 'critical' ? 'critical' : undefined}>{typeof glyph === 'string' ? <Glyph d={glyph} /> : glyph!({})}</span> : undefined} footer={<><Button emphasis="frame" autofocus data-close="" onClick={() => onCancel?.()}>{cancel}</Button><Button tone={tone} loading={busy.value} onClick={go}>{action}</Button></>}>
           {children}
         </Modal>
       )}
@@ -70,7 +71,7 @@ export interface TypeToConfirmProps {
   /** What goes, listed. */
   items?: string[]
   action: any
-  glyph?: string
+  glyph?: string | IconComponent
   onConfirm: () => Promise<void> | void
 }
 
@@ -78,7 +79,7 @@ export interface TypeToConfirmProps {
  * Type-to-confirm (09 §4.4): an AlertDialog whose field sweeps critical. Deviation from 05: focus goes to the field,
  * not Cancel. The confirm stays disabled until the text matches exactly, and Enter submits only then.
  */
-export function TypeToConfirm({ open, title, description, confirmText, items, action, glyph = GLYPH.trash, onConfirm }: TypeToConfirmProps) {
+export function TypeToConfirm({ open, title, description, confirmText, items, action, glyph = IconTrash, onConfirm }: TypeToConfirmProps) {
   const armed = latch(untrack(() => open))
   const typed = state('')
   const busy = state(false)
@@ -95,7 +96,7 @@ export function TypeToConfirm({ open, title, description, confirmText, items, ac
   return (
     <>
       {armed.value && (
-        <Modal open={open} alert size="sm" tone="critical" title={title} description={description} mark={<span data-part="mark" data-tone="critical"><Glyph d={glyph} /></span>} footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button tone="critical" disabled={!ok.value} loading={busy.value} onClick={go}>{action}</Button></>}>
+        <Modal open={open} alert size="sm" tone="critical" title={title} description={description} mark={<span data-part="mark" data-tone="critical">{typeof glyph === 'string' ? <Glyph d={glyph} /> : glyph!({})}</span>} footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button tone="critical" disabled={!ok.value} loading={busy.value} onClick={go}>{action}</Button></>}>
           <form data-scope="confirm" novalidate onSubmit={submit}>
             {items && <ul>{items.map(t => <li key={t}>{t}</li>)}</ul>}
             <Input label={`Type ${confirmText} to confirm`} autofocus autocomplete="off" spellcheck="false" value={typed.value} onInput={e => (typed.value = e.currentTarget.value)} />

@@ -4,9 +4,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 "<div>
 <div data-scope="alert" data-tone="info">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">info</div>
@@ -14,9 +20,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <div data-scope="alert" data-tone="neutral">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">neutral</div>
@@ -24,9 +36,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <div data-scope="alert" data-tone="accent">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">accent</div>
@@ -34,9 +52,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <div data-scope="alert" data-tone="positive">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M8 12.5l2.5 2.5L16 9.5">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">positive</div>
@@ -44,9 +68,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <div data-scope="alert" data-tone="caution">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7.5v5.5M12 16.2v.3">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-t="q">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">caution</div>
@@ -54,9 +84,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <div data-scope="alert" data-tone="critical">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">critical</div>
@@ -64,9 +100,15 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <div data-scope="alert" data-tone="critical" role="alert">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -76,16 +118,24 @@ exports[`Alerts: client DOM after mount 1`] = `
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
 </div>
 <div data-scope="alert" data-tone="info">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="description">Only body</div>
@@ -97,9 +147,15 @@ exports[`Alerts: server HTML 1`] = `
 "<div>
 <div data-scope="alert" data-tone="info">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">info</div>
@@ -107,9 +163,15 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <div data-scope="alert" data-tone="neutral">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">neutral</div>
@@ -117,9 +179,15 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <div data-scope="alert" data-tone="accent">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">accent</div>
@@ -127,9 +195,15 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <div data-scope="alert" data-tone="positive">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M8 12.5l2.5 2.5L16 9.5">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">positive</div>
@@ -137,9 +211,15 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <div data-scope="alert" data-tone="caution">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7.5v5.5M12 16.2v.3">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-t="q">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">caution</div>
@@ -147,9 +227,15 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <div data-scope="alert" data-tone="critical">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">critical</div>
@@ -157,9 +243,15 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <div data-scope="alert" data-tone="critical" role="alert">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -169,16 +261,24 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
 </div>
 <div data-scope="alert" data-tone="info">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="description">Only body</div>
@@ -274,25 +374,37 @@ exports[`Buttons: client DOM after mount 1`] = `
 </span>
 <span data-part="sweep-label">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Frame fill</span>
 <span aria-hidden="true" data-part="sweep-content">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Frame fill</span>
 </button>
 <button data-scope="button" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>With icon</button>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -302,7 +414,9 @@ exports[`Buttons: client DOM after mount 1`] = `
 <button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" type="button">
 <span data-part="label">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
@@ -407,25 +521,37 @@ exports[`Buttons: server HTML 1`] = `
 </span>
 <span data-part="sweep-label">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Frame fill</span>
 <span aria-hidden="true" data-part="sweep-content">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Frame fill</span>
 </button>
 <button data-scope="button" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>With icon</button>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -435,7 +561,9 @@ exports[`Buttons: server HTML 1`] = `
 <button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" type="button">
 <span data-part="label">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Loading</span>
 <span aria-hidden="true" data-part="spinner" data-scope="spinner">
@@ -513,7 +641,9 @@ exports[`Choices: client DOM after mount 1`] = `
 <input name="view" type="radio" value="a">
 <span data-part="item">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>A<span data-part="count">3</span>
 </span>
@@ -536,7 +666,9 @@ exports[`Choices: client DOM after mount 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 <svg aria-hidden="true" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Pressed<span data-part="count">4</span>
 </button>
@@ -546,9 +678,15 @@ exports[`Choices: client DOM after mount 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Icon</button>
 </div>"
@@ -615,7 +753,9 @@ exports[`Choices: server HTML 1`] = `
 <input name="view" type="radio" value="a">
 <span data-part="item">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>A<span data-part="count">3</span>
 </span>
@@ -638,7 +778,9 @@ exports[`Choices: server HTML 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 <svg aria-hidden="true" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Pressed<span data-part="count">4</span>
 </button>
@@ -648,9 +790,15 @@ exports[`Choices: server HTML 1`] = `
 <span aria-hidden="true" data-part="sweep">
 </span>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Icon</button>
 </div>"
@@ -689,17 +837,29 @@ exports[`Fields: client DOM after mount 1`] = `
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
 <span data-part="sweep">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
@@ -740,7 +900,9 @@ exports[`Fields: client DOM after mount 1`] = `
 <span data-part="suffix">.com</span>
 <button aria-label="Clear Email address" data-part="clear" tabindex="-1" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -773,9 +935,15 @@ exports[`Fields: client DOM after mount 1`] = `
 <div data-part="message" id="field-2-msg">
 <span data-part="error" role="alert">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7.5v5.5M12 16.2v.3">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-t="q">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <span>Required</span>
@@ -791,17 +959,29 @@ exports[`Fields: client DOM after mount 1`] = `
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
 <span data-part="sweep">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
@@ -826,7 +1006,9 @@ exports[`Fields: client DOM after mount 1`] = `
 <input autocomplete="off" data-part="input" enterkeyhint="search" id="field-3" placeholder=" " type="search">
 <button aria-label="Clear Search" data-part="clear" tabindex="-1" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -886,7 +1068,9 @@ exports[`Fields: client DOM after mount 1`] = `
 </select>
 <span aria-hidden="true" data-part="indicator">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6 9l6 6 6-6">
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
+</path>
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
@@ -928,17 +1112,29 @@ exports[`Fields: server HTML 1`] = `
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
 <span data-part="sweep">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
@@ -979,7 +1175,9 @@ exports[`Fields: server HTML 1`] = `
 <span data-part="suffix">.com</span>
 <button aria-label="Clear Email address" data-part="clear" tabindex="-1" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1012,9 +1210,15 @@ exports[`Fields: server HTML 1`] = `
 <div data-part="message" id="field-2-msg">
 <span data-part="error" role="alert">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7.5v5.5M12 16.2v.3">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-t="q">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <span>Required</span>
@@ -1030,17 +1234,29 @@ exports[`Fields: server HTML 1`] = `
 <span aria-hidden="true" data-part="icon">
 <span data-part="sweep-base">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
 <span data-part="sweep">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
@@ -1065,7 +1281,9 @@ exports[`Fields: server HTML 1`] = `
 <input autocomplete="off" data-part="input" enterkeyhint="search" id="field-3" placeholder=" " type="search">
 <button aria-label="Clear Search" data-part="clear" tabindex="-1" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1126,7 +1344,9 @@ exports[`Fields: server HTML 1`] = `
 </select>
 <span aria-hidden="true" data-part="indicator">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6 9l6 6 6-6">
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
+</path>
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </span>
@@ -1138,49 +1358,87 @@ exports[`Fields: server HTML 1`] = `
 exports[`Icons: client DOM after mount 1`] = `
 "<div>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6 9l6 6 6-6">
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
+</path>
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7.5v5.5M12 16.2v.3">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-t="q">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M8 12.5l2.5 2.5L16 9.5">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </div>"
@@ -1189,49 +1447,87 @@ exports[`Icons: client DOM after mount 1`] = `
 exports[`Icons: server HTML 1`] = `
 "<div>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6 9l6 6 6-6">
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="o" data-w="">
+</path>
+<path d="M1 4h2v1h-2zM10 4h2v1h-2zM2 5h2v1h-2zM9 5h2v1h-2zM3 6h2v1h-2zM8 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM5 8h3v1h-3zM6 9h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7.5v5.5M12 16.2v.3">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-t="q">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-t="o" data-w="">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v2h-1zM3 8h1v2h-1zM11 8h1v2h-1zM2 10h1v2h-1zM12 10h1v2h-1zM7 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM1 13h13v1h-13z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M9 7h1v1h-1zM10 8h1v2h-1zM11 10h1v3h-1z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M8 12.5l2.5 2.5L16 9.5">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </div>"
@@ -1295,9 +1591,15 @@ exports[`Overlays: client DOM after mount 1`] = `
 <div aria-labelledby="pop-0-b" data-part="content" data-scope="popover" id="pop-0" popover="manual" role="dialog">body</div>
 <button aria-controls="pop-1" aria-expanded="false" aria-haspopup="dialog" data-emphasis="soft" data-phase="idle" data-scope="button" data-size="sm" data-sweep="" data-tone="neutral" id="pop-1-b" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Titled<span aria-hidden="true" data-part="sweep">
 </span>
@@ -1311,7 +1613,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 <p data-part="description" id="dlg-2-d">Desc</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1326,7 +1630,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 <h2 data-part="title" id="dlg-3-t">Alert</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1341,7 +1647,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 <p data-part="description" id="sheet-4-d">D</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1358,7 +1666,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 <h2 data-part="title" id="sheet-5-t">Auto</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1372,7 +1682,9 @@ exports[`Overlays: client DOM after mount 1`] = `
 <h2 data-part="title" id="sheet-6-t">Bottom</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1390,9 +1702,15 @@ exports[`Overlays: server HTML 1`] = `
 <div aria-labelledby="pop-0-b" data-part="content" data-scope="popover" id="pop-0" popover="manual" role="dialog">body</div>
 <button aria-controls="pop-1" aria-expanded="false" aria-haspopup="dialog" data-emphasis="soft" data-phase="idle" data-scope="button" data-size="sm" data-sweep="" data-tone="neutral" id="pop-1-b" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>Titled<span aria-hidden="true" data-part="sweep">
 </span>
@@ -1406,7 +1724,9 @@ exports[`Overlays: server HTML 1`] = `
 <p data-part="description" id="dlg-2-d">Desc</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1421,7 +1741,9 @@ exports[`Overlays: server HTML 1`] = `
 <h2 data-part="title" id="dlg-3-t">Alert</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1436,7 +1758,9 @@ exports[`Overlays: server HTML 1`] = `
 <p data-part="description" id="sheet-4-d">D</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1453,7 +1777,9 @@ exports[`Overlays: server HTML 1`] = `
 <h2 data-part="title" id="sheet-5-t">Auto</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1467,7 +1793,9 @@ exports[`Overlays: server HTML 1`] = `
 <h2 data-part="title" id="sheet-6-t">Bottom</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1504,7 +1832,9 @@ exports[`Surfaces: client DOM after mount 1`] = `
 <span data-part="swatch">
 </span>fruit<button aria-label="Remove fruit" data-part="remove" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1610,7 +1940,9 @@ exports[`Surfaces: server HTML 1`] = `
 <span data-part="swatch">
 </span>fruit<button aria-label="Remove fruit" data-part="remove" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1753,16 +2085,24 @@ exports[`Toasts: client DOM after mount 1`] = `
 "<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" style="block-size: 0px;" tabindex="-1">
 <div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group" style="z-index: 100; --_y: 0px; --_s: 1; --_o: 1;">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Plain</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1770,9 +2110,15 @@ exports[`Toasts: client DOM after mount 1`] = `
 </div>
 <div aria-label="Failed" data-behind="" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group" style="z-index: 99; max-block-size: 0px; overflow: hidden; --_y: -10px; --_s: 0.95; --_o: 1;">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -1781,7 +2127,9 @@ exports[`Toasts: client DOM after mount 1`] = `
 <button data-act="" data-emphasis="ghost" data-scope="button" data-size="sm" type="button">Retry</button>
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1789,16 +2137,24 @@ exports[`Toasts: client DOM after mount 1`] = `
 </div>
 <div aria-label="Saved" data-behind="" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group" style="z-index: 98; max-block-size: 0px; overflow: hidden; --_y: -20px; --_s: 0.9; --_o: 1;">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M8 12.5l2.5 2.5L16 9.5">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Saved</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1815,16 +2171,24 @@ exports[`Toasts: server HTML 1`] = `
 "<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" tabindex="-1">
 <div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 11v5M12 7.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v2h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 6h2v5h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Plain</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1832,9 +2196,15 @@ exports[`Toasts: server HTML 1`] = `
 </div>
 <div aria-label="Failed" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M12 7v6M12 16.5h.01">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM6 3h2v5h-2zM12 3h1v2h-1zM1 5h1v5h-1zM13 5h1v5h-1zM6 9h2v2h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Failed</div>
@@ -1843,7 +2213,9 @@ exports[`Toasts: server HTML 1`] = `
 <button data-act="" data-emphasis="ghost" data-scope="button" data-size="sm" type="button">Retry</button>
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1851,16 +2223,24 @@ exports[`Toasts: server HTML 1`] = `
 </div>
 <div aria-label="Saved" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9">
-</circle>
-<path d="M8 12.5l2.5 2.5L16 9.5">
+<path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-t="q">
+</path>
+<path d="M7.93 2.88A9 9 0 1 1 4.52 5.27" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-t="o" data-w="">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v1h-1zM10 4h3v1h-3zM1 5h1v5h-1zM9 5h2v1h-2zM13 5h1v5h-1zM8 6h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM4 8h4v1h-4zM5 9h2v1h-2zM2 10h1v2h-1zM12 10h1v2h-1zM3 12h2v1h-2zM10 12h2v1h-2zM5 13h5v1h-5z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M12 5h1v5h-1zM11 10h1v1h-1zM10 11h2v1h-2zM5 12h5v1h-5z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <div data-part="title">Saved</div>
 <div data-part="actions">
 <button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M6.5 6.5l11 11M17.5 6.5l-11 11">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="o" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 </button>
@@ -1882,16 +2262,24 @@ exports[`Toggles: client DOM after mount 1`] = `
 </button>
 <button aria-pressed="true" data-phase="in" data-scope="toggle" data-size="sm" data-sweep="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>On<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
 <button aria-label="Search" aria-pressed="false" data-phase="idle" data-scope="toggle" data-sweep="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <span aria-hidden="true" data-part="sweep">
@@ -1907,16 +2295,24 @@ exports[`Toggles: server HTML 1`] = `
 </button>
 <button aria-pressed="true" data-phase="idle" data-scope="toggle" data-size="sm" data-sweep="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<path d="M5 12.5l4.5 4.5L19 7.5">
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="o" data-w="">
+</path>
+<path d="M12 2h2v1h-2zM11 3h2v1h-2zM10 4h2v1h-2zM9 5h2v1h-2zM8 6h2v1h-2zM1 7h2v1h-2zM7 7h2v1h-2zM2 8h2v1h-2zM6 8h2v1h-2zM3 9h4v1h-4zM4 10h2v1h-2z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>On<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
 <button aria-label="Search" aria-pressed="false" data-phase="idle" data-scope="toggle" data-sweep="" type="button">
 <svg aria-hidden="true" data-icon="" focusable="false" viewBox="0 0 24 24">
-<circle cx="11" cy="11" r="6.5">
-</circle>
-<path d="M16 16l4.5 4.5">
+<path d="M6.89 2.82A7.5 7.5 0 1 1 4.21 4.69" data-t="q">
+</path>
+<path d="M7.31 2.66A7.5 7.5 0 1 1 3.92 5.03" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-t="o" data-w="">
+</path>
+<path d="M4 1h5v1h-5zM2 2h1v2h-1zM8 2h2v1h-2zM10 3h1v1h-1zM1 4h1v5h-1zM11 4h1v5h-1zM2 9h1v1h-1zM10 9h1v1h-1zM3 10h2v1h-2zM8 10h2v1h-2zM4 11h5v1h-5zM10 11h2v1h-2zM11 12h2v1h-2zM12 13h2v1h-2zM13 14h1v1h-1z" data-t="v" fill="currentColor" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
+</path>
+<path d="M10 5h1v4h-1zM9 9h1v1h-1zM5 10h3v1h-3z" data-t="v" fill="currentColor" fill-opacity=".4" shape-rendering="crispEdges" stroke="none" transform="scale(1.5)">
 </path>
 </svg>
 <span aria-hidden="true" data-part="sweep">

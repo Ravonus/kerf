@@ -1,3 +1,4 @@
+import { IconPlus } from '@weft/icons'
 import { announce, fmt, hhmm, nextRange, rangeIssues, timeOptions, uid, weekValid, type IsoDate, type Override, type Range, type WeekDay } from '@weft/ui-core'
 import { derived, flush, state, untrack } from 'weft'
 import { Button } from '../Button'
@@ -7,8 +8,7 @@ import { Input } from '../Field'
 import { Icon } from '../Icon'
 import { usePickerEnv } from '../Picker'
 import { Select } from '../Select'
-import { Glyph } from '../parts'
-import { PATHS, confirmSweep } from './bits'
+import { confirmSweep } from './bits'
 import '@weft/ui-core/styles/app/availability.css'
 
 export type Availability = { week: WeekDay[]; overrides: Override[] }
@@ -151,7 +151,7 @@ function Day({ day, id, name, options, onToggle, onTime, onAdd, onRemove }: { da
                 <Select label="From" size="sm" options={options} value={String(x.r[0])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: any) => onTime(day.day, x.at, 0, +e.currentTarget.value)} />
                 <Select label="To" size="sm" options={options} value={String(x.r[1])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: any) => onTime(day.day, x.at, 1, +e.currentTarget.value)} />
                 {day.ranges.length > 1 && <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label={`Remove ${name} range ${x.at + 1}`} onClick={() => onRemove(day.day, x.at)} />}
-                {x.at === day.ranges.length - 1 && <Button emphasis="ghost" tone="neutral" size="sm" label={`Add a range on ${name}`} data-icon-only="" data-add={day.day} onClick={() => onAdd(day.day)}><Glyph d={PATHS.plus} /></Button>}
+                {x.at === day.ranges.length - 1 && <Button emphasis="ghost" tone="neutral" size="sm" label={`Add a range on ${name}`} data-icon-only="" data-add={day.day} onClick={() => onAdd(day.day)}><IconPlus /></Button>}
                 {x.error && <span data-part="error" id={`${id}-${x.k}-e`}><Icon name="alert" /> {x.error}</span>}
               </div>
             ))

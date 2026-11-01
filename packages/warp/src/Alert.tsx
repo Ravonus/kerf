@@ -1,3 +1,4 @@
+import { IconX } from '@weft/icons'
 import { derived } from 'weft'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
@@ -18,7 +19,7 @@ export function Alert({ tone = 'info', title, live, actions, onDismiss, children
       {children !== undefined && <div data-part="description">{children}</div>}
       {actions !== undefined && <div data-part="actions">{actions}</div>}
       {/* <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label="Dismiss"> as its markup: a ghost button needs no JS */}
-      {onDismiss && <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-part="close" data-dismiss="" onClick={onDismiss}><svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></button>}
+      {onDismiss && <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-part="close" data-dismiss="" onClick={onDismiss}><IconX /></button>}
     </div>
   )
 }

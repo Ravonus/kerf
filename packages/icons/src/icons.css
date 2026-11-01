@@ -1,0 +1,5 @@
+/* Every @weft/icons svg, with or without warp. warp's own base rule says the same; this one lets the set stand alone. */
+@layer warp.components {
+  :where(svg[data-icon]) { inline-size: var(--warp-icon-md, 1em); block-size: var(--warp-icon-md, 1em); flex: none; fill: none; stroke: currentColor; stroke-width: var(--warp-icon-stroke, 1.5); stroke-linecap: round; stroke-linejoin: round; }
+  :where(svg[data-icon] [data-w]) { stroke-width: var(--warp-icon-weft, 2); }
+}
