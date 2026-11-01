@@ -30,6 +30,7 @@ test('src/routes → routes in match order, layouts, cards, 404 and error', () =
     ['/lazy-early', 'page', [], ['layout:'], null],
     ['/leak', 'page', [], ['layout:'], null],
     ['/live', 'page', [], ['layout:'], null],
+    ['/mixed', 'page', [], ['layout:'], null],
     ['/notes', 'page', [], ['layout:'], null],
     ['/old', 'page', [], ['layout:'], null],
     ['/prefs', 'page', [], ['layout:'], null],

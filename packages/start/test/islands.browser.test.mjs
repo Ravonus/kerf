@@ -467,3 +467,16 @@ test('the capture script comes before anything else that runs, and says when a p
   expect(lazy).toMatch(/\}\)\(0\)<\/script>/)
   expect(await (await fetch(url + '/islands')).text()).toMatch(/\}\)\(1\)<\/script>/)
 })
+
+test('an island inside a client page is just a component: its children are claimed, not added', async () => {
+  const { page, errors } = await open('/mixed')
+  await settled(page)
+  expect(await page.$$eval('.mixed-link', a => a.map(x => x.getAttribute('href')))).toEqual(['#one', '#two', '#three'])
+  expect(await page.$$eval('.pair-link', a => a.map(x => x.getAttribute('href')))).toEqual(['#alone'])
+  expect(await page.$$eval('.pair-b', b => b.length)).toBe(1)
+  expect(await page.$$eval('.rail[data-ready]', r => r.length)).toBe(2)
+  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect((await count(page)).comments.filter(c => /^\/?ws/.test(c))).toEqual([])
+  expect(errors).toEqual([])
+  await page.close()
+})
