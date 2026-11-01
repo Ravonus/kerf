@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { createBuilder, createServer } from 'vite'
 import { nitro } from 'nitro/vite'
 import weft from 'weft/vite'
+import { devRunner, devSockets } from './dev-runtime.mjs'
 import weftStart from './vite.mjs'
 
 /** An app with a `channel` or `sharedState`: only those pay for crossws in the server bundle (research 32 §1). */
@@ -18,6 +19,8 @@ function usesSockets(root) {
 
 function config({ root, site, hydration, preset, port, logLevel, command, nitro: nitroOptions = {} }) {
   root = resolve(root)
+  const sockets = usesSockets(root)
+  const runner = devRunner(sockets)
   const user = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs'].map(f => join(root, f)).find(existsSync)
   return {
     root,
@@ -27,11 +30,13 @@ function config({ root, site, hydration, preset, port, logLevel, command, nitro:
     plugins: [
       weft({ hydratable: true }),
       weftStart({ root, site, hydration }),
+      runner && devSockets(),
       nitro({
         preset,
         // Every app gets this: built assets ship as .br and .gz next to the file, and Nitro picks by Accept-Encoding.
         compressPublicAssets: { gzip: true, brotli: true },
-        ...(usesSockets(root) && { features: { websocket: true } }),
+        ...(sockets && { features: { websocket: true } }),
+        ...(runner && { devServer: { runner } }),
         // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.
         prerender: { routes: ['/_weft/og-routes'], failOnError: true },
         // Prerendered cards are static files at content-addressed URLs: immutable. The rule names each file (a
