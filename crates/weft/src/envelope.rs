@@ -11,25 +11,12 @@
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use hmac::{Hmac, KeyInit, Mac};
-use serde::Deserialize;
 use sha2::Sha256;
 
-use crate::ctx::User;
+pub use crate::ctx::Envelope;
 
 /// How far `iat` may be from this machine's clock.
 pub const MAX_SKEW_MS: u64 = 60_000;
-
-/// What TS tells a sidecar about the call. Claims only: never a cookie or a session token.
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Envelope {
-    pub user: Option<User>,
-    pub request_id: String,
-    pub deadline_ms: u64,
-    pub traceparent: Option<String>,
-    /// Milliseconds since the epoch when TS signed it.
-    pub iat: u64,
-}
 
 /// Why a call was refused before any handler ran.
 #[derive(Debug, PartialEq, Eq)]

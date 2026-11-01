@@ -391,7 +391,7 @@ fakes the page (`net.offline()`, `page.hide()`, `page.freeze()`, `page.media(q, 
 
 ### 4.3 Rust, opt-in and as far as you want
 
-Status: `remote()` is built ([36](research/36-rust-remote.md)); `native()` is Phase 5b.
+Status: both are built: `remote()` ([36](research/36-rust-remote.md)) and `native()` ([37](research/37-rust-native.md)).
 
 Zod stays the single source of truth. `.weft/contract.json` → typify generates Rust types in `build.rs`. Rust never
 defines the schema, and drift stops `cargo` at the function it broke. A server function swaps `run` for `impl`:
@@ -421,7 +421,8 @@ call costs:
 - a 100-object payload costs 176 µs into napi as JS objects, 58 µs as a JSON string, and ~0.2 µs as a `Buffer`;
 - loopback HTTP to a sidecar costs 43–81 µs.
 
-No native binary is ever required for a default app. On Deno and edge, `native()` falls back to WASM or `remote()`.
+No native binary is ever required for a default app. `native()` loads the addon on Node, Bun and Deno, and its `.wasm` where
+the addon can't load. An edge preset has no file to read either from, so it's R104, and `remote()` is the way out.
 R101–R105: unrepresentable schemas (add a codec), plain unions, impl/contract drift, `native()` on a preset without
 WASM, and a cached Rust query that reports no touched tables. R106–R109 are a sidecar's runtime and build failures: no
 address or secret, unreachable, panicked, and a compile error unrelated to the contract.
@@ -948,11 +949,18 @@ evals/        agent eval harness
 | **6c. Payments** | `@weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
 
+**5b status (2026-10-31):** built. `native()` in `@weft/start/rust`, `weft::native!`, a WASM fallback with its own small ABI,
+R104 and R105, and `weft add rust`, which closes 5a's gap: the crate ships inside `@weft/start`. Exit check: passed, 51 of 51
+on Node, Bun and Deno on Linux x64, with byte-identical answers and client: the addon beats its TS `run` by 7.2× on Node and
+5.1× on Bun at p50 (15.1× and 13.4× in calls/s), and WASM gives 6.4× and 5.1×; on macOS arm64, also 51 of 51, 14.3× and 7.7×. The body was chosen to vectorize, and Bun's
+margin is thin. Dev reload needs no restart: a new path per build loads beside the old one, which §11 had wrong. Not done:
+WASM on an edge isolate, bytes without JSON, Windows itself. What was built and left out: [37](research/37-rust-native.md).
+
 **5a status (2026-10-31):** built. `remote()` in `@weft/start/rust`, the `weft` crate, the supervisor in `weft dev`,
 `build` and `start`, typed errors with `raise()` for TS bodies too, and R101–R103 and R106–R109. Exit check:
 passed, 28 of 28 on Node, Bun and Deno with 20,000 documents: 29 client files byte-identical, the same HTML, answers and
-Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published and has no `weft add` or
-template, and `remote()` on `channel` isn't built. What was built and left out: [36](research/36-rust-remote.md).
+Chromium e2e, and a crate edit reloads with no failed request. The swap in the eval is scripted, not done by an agent. Not done: the crate isn't published, and `remote()` on
+`channel` isn't built. What was built and left out: [36](research/36-rust-remote.md).
 
 **1b status (2026-10-29):** name-keyed HMR and the 1k-component gates landed earlier (research 21, §3.7). The
 verify loop is built: the in-page agent bridge with the graph overlay, recorder, clock and network control; the
@@ -1180,8 +1188,9 @@ Also out of v0:
 - **Keyed reads of record boxes: settled, `box.get(key)`** ([14 §11](research/14-app-state.md)). One method on
   every box, no new primitive, no proxies: v3 add-one goes from 452 re-runs to 5. A compiler hint that suggests it
   when a keyed list's row reads `box.value[expr]` is a proposed follow-up.
-- **Native addons on Bun and Deno.** napi-rs doesn't test addons on Deno, and Bun support is best-effort. Native
-  addons also can't be unloaded in dev, so dev reload means restarting the server worker. Spike before Phase 5b.
+- **Native addons on Bun and Deno: settled for now.** napi-rs doesn't test addons on Deno, and Bun support is
+  best-effort, but both pass the 5b exit check, which is what holds it. Dev reload needs no restart: an addon can't be
+  unloaded, and a new path per build loads beside the old one ([37 §1](research/37-rust-native.md)).
 - **Nitro v3 is beta.** Pin it; h3 v2 is the fallback.
 - **Native host on Android:** Views for the core (finer recycling control), Compose for system components through
   interop? And Hermes everywhere, or JSC on iOS for binary size? Both are settled by the 6a spike.
@@ -1310,3 +1319,7 @@ Also out of v0:
   The rest is spread evenly (tokens 3.3, layout 3.2, data 2.6, inputs 2.3, components 2.2, signature 1.6, base 1.1 KB),
   and Table, Shell and Field are about 2.4 KB each. Those rules sit behind props the JS can set, so going further
   needs per-feature CSS and JS in those components, and a tier set from outside the build needs `purge: { keep }`.
+- **A rebuilt addon loads beside the old one** (2026-10-31). §11 expected dev reload to restart the server worker, because
+  an addon can't be unloaded. It needn't be: `dlopen` of a new path gives a second copy on macOS and Linux, on Node, Bun
+  and Deno, and calls in flight finish on the first. So `weft dev` writes each build to its own file, and `native()` has
+  no worker pool of its own to strand ([37](research/37-rust-native.md)).

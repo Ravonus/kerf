@@ -63,7 +63,7 @@ type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly strin
 /** Read before `run`, for one user's tag: `tags: (_, ctx) => [`entitlements:${ctx.user.id}`]`. */
 type QueryTags<I, A> = Tags<[input: I, ctx: Ctx<A>]>
 
-/** A server function's body in another process: `remote('rust://search')` from `@weft/start/rust` (research 36). */
+/** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft/start/rust` (research 36, 37). */
 export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
 
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
