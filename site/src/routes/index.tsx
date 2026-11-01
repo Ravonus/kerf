@@ -2,6 +2,7 @@ import { Link, type Meta } from '@weft/start'
 import { Arena } from '../components/Arena'
 import { Example } from '../components/Example'
 import numbers from '../generated/numbers.json'
+import kit from '../generated/toolkit-nav.json'
 import Shop1 from '../demos/shop-1'
 import Shop2 from '../demos/shop-2'
 import Shop3 from '../demos/shop-3'
@@ -14,6 +15,7 @@ import show from '../generated/showcase.json'
 export const prerender = true
 export const meta: Meta = { title: { absolute: 'weft: a TypeScript framework for fast web apps' }, description: 'Write components in TSX. weft compiles them to small, direct page updates, with routing, data, a UI kit and errors your coding agent can act on.' }
 
+const components = kit.reduce((n, g) => n + g.items.length, 0)
 const SHOWN = ['weft-warp', 'solid-kobalte', 'react-radix', 'react-mui']
 const SIZES = SHOWN.map(id => numbers.stacks.find(s => s.id === id)!).map(s => [s.label, s.js] as const)
 const FILES = `src/routes/index.tsx          the / page
@@ -67,7 +69,7 @@ export default function Home() {
 
         <section>
           <h2>A UI kit comes with it</h2>
-          <p data-part="intro">The buttons and fields so far are warp, weft's own component library: 227 components, with keyboard support, themes and 651 icons. The shop gets a checkout.</p>
+          <p data-part="intro">The buttons and fields so far are warp, weft's own component library: {components} components, with keyboard support, themes and 651 icons. The shop gets a checkout.</p>
           <Example id="shop-5" plain><Shop5 /></Example>
           <p data-part="more"><Link href="/toolkit">Browse the toolkit</Link></p>
         </section>
