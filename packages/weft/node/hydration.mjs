@@ -289,10 +289,12 @@ function read(file, transform, cache) {
   if (hit?.mtime === mtime) return structuredClone(hit.facts)
   let facts
   try {
-    facts = transform(readFileSync(file, 'utf8'), { filename: file, checkOnly: true }).facts.hydration
-  } catch {
-    return undefined
-  }
+    const code = readFileSync(file, 'utf8')
+    const out = transform(code, { filename: file, checkOnly: true })
+    if (code && !out.diagnostics?.some(d => d.code === 'W000')) facts = out.facts.hydration
+  } catch {}
+  // Mid-edit a file may not parse: what it was is a better guess than nothing, which would look static.
+  if (!facts) return hit && structuredClone(hit.facts)
   cache.set(file, { mtime, facts })
   return structuredClone(facts)
 }

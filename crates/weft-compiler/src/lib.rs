@@ -48,7 +48,7 @@ pub struct Options {
     pub hydratable: bool,
     /// Also return what each JSX node became (`Output::explain`).
     pub explain: bool,
-    /// Dev DOM output only, not hydratable: register components for hot updates and keep their state (weft/hmr).
+    /// Dev DOM output only: register components for hot updates and keep their state (weft/hmr).
     pub hmr: bool,
     /// Style groups defined in other modules, keyed `"<absolute path without extension>#<export>"` (style.rs).
     pub groups: std::collections::HashMap<String, style::Imported>,
@@ -162,7 +162,7 @@ fn compile_source(source: &str, authored: usize, options: &Options) -> Output {
     transform::apply(&allocator, &mut program, &scoping, &plan);
 
     let ssr = options.generate == "ssr";
-    let footer = (options.hmr && options.dev && !ssr && !options.hydratable)
+    let footer = (options.hmr && options.dev && !ssr)
         .then(|| hmr::apply(&allocator, &mut program, source, &options.filename))
         .flatten();
     // Dev DOM output names its boxes and derived values for the graph (`weft browser`, the overlay).

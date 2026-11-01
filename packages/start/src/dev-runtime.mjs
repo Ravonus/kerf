@@ -14,10 +14,11 @@ export const devSockets = () => ({
   apply: 'serve',
   enforce: 'post',
   configResolved(config) {
-    for (const environment of Object.values(config.environments)) {
+    for (const [name, environment] of Object.entries(config.environments)) {
       const create = environment.dev?.createEnvironment
-      if (!create) continue
-      environment.dev.createEnvironment = async (...args) => startOver(await create(...args))
+      if (!create || environment.consumer !== 'server') continue
+      const release = hold(name)
+      environment.dev.createEnvironment = async (...args) => release(await create(...args))
     }
   },
   transform: {
@@ -27,12 +28,15 @@ export const devSockets = () => ({
 })
 
 // Nitro can name an environment to the runner before Vite has made it. Across a process that takes long enough, but
-// `self` answers at once: the first request goes to nothing and the environment hangs for good. Start it over now that
-// something is listening. `init` names it again. (The worker keeps these on globalThis, and `self` is this process.)
-async function startOver(environment) {
-  const stale = globalThis.__nitro_vite_envs__?.[environment.name]
-  if (!stale) return environment
-  globalThis.__nitro_vite_envs__[environment.name] = undefined
-  await stale.runner.close()
-  return environment
+// `self` answers at once: the first request goes to nothing and the environment hangs for good. So each one is held
+// until it exists, and `init` names it again. (The worker keeps these on globalThis, and `self` is this process.)
+const HELD = { hasEvaluated: () => false, reload: async () => {}, fetch: async () => new Response('starting', { status: 503 }) }
+
+function hold(name) {
+  const environments = (globalThis.__nitro_vite_envs__ ??= {})
+  environments[name] = HELD
+  return environment => {
+    environments[name] = undefined
+    return environment
+  }
 }

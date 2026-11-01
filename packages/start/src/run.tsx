@@ -106,6 +106,16 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     else swap()
   }
   client.navigate = go
+  // Dev: server code changed under the page (vite.mjs). The route's data comes again, in place.
+  if ((import.meta as any).hot) (import.meta as any).hot.on('weft:refresh', async ({ queries }: { queries: boolean }) => {
+    const url = new URL(location.href)
+    const res = await ask(url)
+    // It doesn't load yet, and the error page would replace what's here: the next save asks again.
+    if (!res.ok || (await res.clone().json()).s >= 500) return
+    if (queries) client.refreshed?.()
+    warm = { path: url.pathname + url.search, at: performance.now(), res: Promise.resolve(res) }
+    await go(url.href, { pop: true })
+  })
   // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
   client.invalidated = t => {
     warm = undefined

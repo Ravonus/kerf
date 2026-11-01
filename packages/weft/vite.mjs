@@ -379,7 +379,7 @@ function icons() {
 
 /*
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
- * their own updates (research 21). Never for SSR or hydratable output.
+ * their own updates (research 21). Never for SSR output.
  */
 export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions } = {}) {
   let isDev = false
@@ -412,7 +412,7 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
         const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
         const shapes = await importedShapes(this, code, id.replace(/\?.*$/, ''))
         const islands = hydrating && !mode ? await main.api.islands?.(this, id) : undefined
-        const out = transform(code, { filename: id.replace(/\?.*$/, ''), islands, dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr && !hydrating, groups, shapes, taggedParts: !!styleOptions?.taggedParts })
+        const out = transform(code, { filename: id.replace(/\?.*$/, ''), islands, dev: isDev, sourceMap: true, generate: ssr ? 'ssr' : 'dom', hydratable: hydrating, hmr: isDev && isHot && !ssr, groups, shapes, taggedParts: !!styleOptions?.taggedParts })
         for (const d of out.diagnostics) {
           const text = `${d.code} ${d.message}\n  help: ${d.help}`
           const loc = { file: id, line: d.line, column: d.column - 1 }
@@ -422,6 +422,18 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
         if (!out.code) return null
         return { code: style.record(this, id, out.facts, out.code, ssr), map: out.map }
       },
+    },
+    /**
+     * The watcher takes one change per file per 50ms and drops the rest with no later event, so a save right after
+     * another is never seen and the page stays on the file before it. A fix right after a syntax error was stuck that
+     * way. Look again once the window has passed.
+     */
+    configureServer(server) {
+      const stamp = file => { try { return statSync(file).mtimeMs } catch { return undefined } }
+      server.watcher.on('change', file => {
+        const at = stamp(file)
+        setTimeout(() => stamp(file) !== at && server.watcher.emit('change', file), 75).unref?.()
+      })
     },
     /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
     api: {},

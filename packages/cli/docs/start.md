@@ -115,6 +115,12 @@ The CLI runs on whichever of the three starts it, with none of the others instal
 npm:@weft/cli`. `npm create weft`, `bun create weft` and `deno run -A npm:create-weft` each scaffold for their own runtime
 and package manager. HMR and sockets in `weft dev` work on all three.
 
+A save in `weft dev` keeps the page: a component or route swaps in place with its `state`, typed input, focus and scroll;
+CSS updates; a change to `load`, `meta` or server code refetches the page's data in place. `state` keeps its value while
+its name and initializer stay the same. Adding or removing a route, or a module that exports more than components with
+nothing above it to take the update, is a full reload, and the terminal says why. A tab that hit a syntax error comes back
+when it's fixed.
+
 `weft build` targets `runtime` in weft.config.ts (`node`, `bun`, `deno`; `--runtime` overrides), which is the runtime
 that ran it if unset, and writes `.output/` and `.weft/contract.json`. Runtime-specific APIs (`Bun.*`, `Deno.*`, `better-sqlite3`) in server
 code break the other targets; `node:` modules and web APIs work on all three.
