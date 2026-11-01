@@ -56,7 +56,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
 const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['dry-run', 'no-install', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all'])
+const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }

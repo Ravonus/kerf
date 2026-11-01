@@ -119,6 +119,9 @@ impl Service for Media {
         while !ctx.cancelled() {
             std::hint::spin_loop();
         }
+        // Past the deadline, so TS's gives up first. WASM can't sleep: it holds the thread anyway.
+        #[cfg(not(target_family = "wasm"))]
+        std::thread::sleep(std::time::Duration::from_millis(100));
         Ok(())
     }
 }

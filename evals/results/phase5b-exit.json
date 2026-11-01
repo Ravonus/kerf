@@ -1,0 +1,452 @@
+{
+  "date": "2026-11-01",
+  "ok": true,
+  "host": "linux-x64, 28 threads, load 2.6 at the end",
+  "runtimes": [
+    "node",
+    "bun",
+    "deno"
+  ],
+  "changed": [
+    "src/server/image.ts",
+    "src/server/rust.ts",
+    "src/server/thumb.ts"
+  ],
+  "speed": {
+    "node": {
+      "ts": {
+        "p50": 105.96,
+        "p99": 115.78,
+        "perSecond": 9.5
+      },
+      "rust": {
+        "p50": 14.62,
+        "p99": 18.69,
+        "perSecond": 143.7
+      },
+      "latency": 7.2,
+      "throughput": 15.1
+    },
+    "bun": {
+      "ts": {
+        "p50": 91.59,
+        "p99": 99.73,
+        "perSecond": 11
+      },
+      "rust": {
+        "p50": 17.85,
+        "p99": 20.22,
+        "perSecond": 147.4
+      },
+      "latency": 5.1,
+      "throughput": 13.4
+    },
+    "deno": {
+      "ts": {
+        "p50": 90.67,
+        "p99": 99.53,
+        "perSecond": 10.9
+      },
+      "rust": {
+        "p50": 14.33,
+        "p99": 18.65,
+        "perSecond": 146.4
+      },
+      "latency": 6.3,
+      "throughput": 13.4
+    }
+  },
+  "wasm": {
+    "node": {
+      "p50": 16.65,
+      "p99": 19.66,
+      "perSecond": 63
+    },
+    "bun": {
+      "p50": 17.99,
+      "p99": 21.34,
+      "perSecond": 57.9
+    },
+    "deno": {
+      "p50": 16.37,
+      "p99": 20.72,
+      "perSecond": 65.3
+    }
+  },
+  "sizes": {
+    "kind": "native",
+    "addon": "media.linux-x64.node",
+    "hash": "7c266b4191d20552",
+    "bytes": 794832,
+    "wasm": "media.wasm",
+    "wasmBytes": 254314
+  },
+  "checks": [
+    {
+      "name": "a build with no `native()` has none of it",
+      "ok": true,
+      "ms": 2
+    },
+    {
+      "name": "the swap touches server modules only",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "changed": [
+          "src/server/image.ts",
+          "src/server/rust.ts",
+          "src/server/thumb.ts"
+        ]
+      }
+    },
+    {
+      "name": "node: the client is byte-identical",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "files": 25
+      }
+    },
+    {
+      "name": "node: /thumb serves the same HTML",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "name": "node: every request gets the same answer, to the byte",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "requests": 8
+      }
+    },
+    {
+      "name": "node: the same e2e passes in Chromium",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "failed": "TooLarge:10000000000"
+      }
+    },
+    {
+      "name": "bun: the client is byte-identical",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "files": 25
+      }
+    },
+    {
+      "name": "bun: /thumb serves the same HTML",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "name": "bun: every request gets the same answer, to the byte",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "requests": 8
+      }
+    },
+    {
+      "name": "bun: the same e2e passes in Chromium",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "failed": "TooLarge:10000000000"
+      }
+    },
+    {
+      "name": "deno: the client is byte-identical",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "files": 25
+      }
+    },
+    {
+      "name": "deno: /thumb serves the same HTML",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "name": "deno: every request gets the same answer, to the byte",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "requests": 8
+      }
+    },
+    {
+      "name": "deno: the same e2e passes in Chromium",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "failed": "TooLarge:10000000000"
+      }
+    },
+    {
+      "name": "node: the addon beats its TS `run` by at least 5×",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "latency": 7.2,
+        "throughput": 15.1
+      }
+    },
+    {
+      "name": "bun: the addon beats its TS `run` by at least 5×",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "latency": 5.1,
+        "throughput": 13.4
+      }
+    },
+    {
+      "name": "node: a tag Rust adds reaches the response",
+      "ok": true,
+      "ms": 5
+    },
+    {
+      "name": "node: a panic costs one call, in R108, with the detail in the log only",
+      "ok": true,
+      "ms": 5
+    },
+    {
+      "name": "node: past its deadline TS gives up with R107, and the loop stays free",
+      "ok": true,
+      "ms": 205,
+      "detail": {
+        "duringSpinMs": 23
+      }
+    },
+    {
+      "name": "node: more than 4 calls run at once",
+      "ok": true,
+      "ms": 207,
+      "detail": {
+        "ms": 207
+      }
+    },
+    {
+      "name": "node: a stale library is refused with R103",
+      "ok": true,
+      "ms": 1360
+    },
+    {
+      "name": "node: with the addon gone, its WASM gives the same answers",
+      "ok": true,
+      "ms": 51,
+      "detail": {
+        "requests": 8
+      }
+    },
+    {
+      "name": "node: on WASM a panic ends an instance, and the next call has a new one",
+      "ok": true,
+      "ms": 3
+    },
+    {
+      "name": "node: on WASM `ctx.remaining()` runs on the host's clock",
+      "ok": true,
+      "ms": 206
+    },
+    {
+      "name": "bun: a tag Rust adds reaches the response",
+      "ok": true,
+      "ms": 4
+    },
+    {
+      "name": "bun: a panic costs one call, in R108, with the detail in the log only",
+      "ok": true,
+      "ms": 4
+    },
+    {
+      "name": "bun: past its deadline TS gives up with R107, and the loop stays free",
+      "ok": true,
+      "ms": 202,
+      "detail": {
+        "duringSpinMs": 22
+      }
+    },
+    {
+      "name": "bun: more than 4 calls run at once",
+      "ok": true,
+      "ms": 203,
+      "detail": {
+        "ms": 203
+      }
+    },
+    {
+      "name": "bun: a stale library is refused with R103",
+      "ok": true,
+      "ms": 1404
+    },
+    {
+      "name": "bun: with the addon gone, its WASM gives the same answers",
+      "ok": true,
+      "ms": 57,
+      "detail": {
+        "requests": 8
+      }
+    },
+    {
+      "name": "bun: on WASM a panic ends an instance, and the next call has a new one",
+      "ok": true,
+      "ms": 4
+    },
+    {
+      "name": "bun: on WASM `ctx.remaining()` runs on the host's clock",
+      "ok": true,
+      "ms": 204
+    },
+    {
+      "name": "deno: a tag Rust adds reaches the response",
+      "ok": true,
+      "ms": 6
+    },
+    {
+      "name": "deno: a panic costs one call, in R108, with the detail in the log only",
+      "ok": true,
+      "ms": 4
+    },
+    {
+      "name": "deno: past its deadline TS gives up with R107, and the loop stays free",
+      "ok": true,
+      "ms": 203,
+      "detail": {
+        "duringSpinMs": 23
+      }
+    },
+    {
+      "name": "deno: more than 4 calls run at once",
+      "ok": true,
+      "ms": 207,
+      "detail": {
+        "ms": 207
+      }
+    },
+    {
+      "name": "deno: a stale library is refused with R103",
+      "ok": true,
+      "ms": 1460
+    },
+    {
+      "name": "deno: with the addon gone, its WASM gives the same answers",
+      "ok": true,
+      "ms": 51,
+      "detail": {
+        "requests": 8
+      }
+    },
+    {
+      "name": "deno: on WASM a panic ends an instance, and the next call has a new one",
+      "ok": true,
+      "ms": 3
+    },
+    {
+      "name": "deno: on WASM `ctx.remaining()` runs on the host's clock",
+      "ok": true,
+      "ms": 203
+    },
+    {
+      "name": "`node .output/server/index.mjs` finds the addon with no `weft start`",
+      "ok": true,
+      "ms": 1098
+    },
+    {
+      "name": "`weft check` passes the clean app, with no warning",
+      "ok": true,
+      "ms": 13359,
+      "detail": {
+        "files": 4,
+        "tests": 0,
+        "errors": 0,
+        "warnings": 0,
+        "byCode": {}
+      }
+    },
+    {
+      "name": "R103: an edited schema stops cargo at the function it broke, named by id",
+      "ok": true,
+      "ms": 865,
+      "detail": {
+        "line": 97,
+        "why": "`thumbnail.0814fc`: the Rust no longer matches the contract: missing field `format` in initializer of `contract::Thumbna"
+      }
+    },
+    {
+      "name": "R104: an edge preset is refused with the fix, before anything compiles",
+      "ok": true,
+      "ms": 794
+    },
+    {
+      "name": "R104: a crate that won't build for WASM is a warning here, with the way out",
+      "ok": true,
+      "ms": 1068,
+      "detail": "`media` has no WASM fallback: cargo check failed in `media`:\nCompiling media v0.0.0 (/root/wk/5b-app/crates/media)\nerror"
+    },
+    {
+      "name": "R105: a cached query with tags and no `touch`, at the method",
+      "ok": true,
+      "ms": 991,
+      "detail": {
+        "line": 108
+      }
+    },
+    {
+      "name": "dev: the first request works, after one build",
+      "ok": true,
+      "ms": 0,
+      "detail": {
+        "firstMs": 6112
+      }
+    },
+    {
+      "name": "dev: a crate edit reloads in place, with no failed request and no new worker",
+      "ok": true,
+      "ms": 901,
+      "detail": {
+        "reloadMs": 602,
+        "requests": 49
+      }
+    },
+    {
+      "name": "dev: a compile error keeps the old library serving",
+      "ok": true,
+      "ms": 450
+    },
+    {
+      "name": "dev: a schema edit is reported as R103 with the id, and fixing the Rust recovers",
+      "ok": true,
+      "ms": 1504
+    },
+    {
+      "name": "`weft add rust`: a native crate and a sidecar build, check clean and answer, on the first try",
+      "ok": true,
+      "ms": 66509,
+      "detail": {
+        "sizes": {
+          "media": {
+            "kind": "native",
+            "addon": "media.linux-x64.node",
+            "hash": "7c266b4191d20552",
+            "bytes": 794832,
+            "wasm": "media.wasm",
+            "wasmBytes": 254314
+          },
+          "hasher": {
+            "kind": "native",
+            "addon": "hasher.linux-x64.node",
+            "hash": "e6a6f0b4ed4ded2f",
+            "bytes": 752952,
+            "wasm": "hasher.wasm",
+            "wasmBytes": 222396
+          }
+        }
+      }
+    }
+  ]
+}

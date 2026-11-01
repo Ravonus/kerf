@@ -1,5 +1,4 @@
-import { query } from '@weft/start/data'
-import { raise } from '@weft/start/data'
+import { query, raise } from '@weft/start/data'
 import { z } from 'zod'
 import { thumbnail as make } from './image'
 
@@ -20,3 +19,7 @@ export const guarded = query({
 })
 
 export const stats = query({ output: z.object({ images: z.int() }), tags: ['images'], cache: { life: 'seconds' }, run: () => ({ images: 3 }) })
+
+// Only the Rust has anything to show for these: they're here so both builds export the same functions.
+export const boom = query({ output: z.null(), run: () => null })
+export const spin = query({ output: z.null(), run: () => null })
