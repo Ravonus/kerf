@@ -12,6 +12,7 @@ import { diagnostic, locate } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { requireTrust } from './trust.mjs'
+import { attachProps } from './props-listener.mjs'
 
 export async function start(root, sub) {
   let file
@@ -51,6 +52,7 @@ export async function devCommand(root, { port } = {}) {
   // Before the dev server: its worker inherits the addresses, and a request can't reach a sidecar that's still building.
   const sidecars = usesRemote(root) ? await devSidecars({ root, site: config.site, rust }) : undefined
   const server = await dev({ root, ...config, port })
+  if (server.watcher) attachProps(server, root, (await loadConfig(root)).config)
   if (sidecars) {
     sidecars.attach(server)
     const close = server.close.bind(server)

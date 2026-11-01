@@ -14,6 +14,12 @@
 /** @type {Entry[]} */
 export const catalog = [
   { code: 'W000', severity: 'error', by: 'compiler', catches: 'Syntax error; nothing else in the file is checked', fix: 'Fix the syntax error first' },
+  { code: 'W080', severity: 'error', by: 'cli', catches: 'A component with an untyped parameter that nothing renders: its props have nothing to be inferred from', fix: 'Render it, delete it, or annotate the parameter' },
+  { code: 'W081', severity: 'error', by: 'cli', catches: 'An exported component with no written prop type', fix: '`weft fix` writes the inferred type (`weft dev` does this on save)' },
+  { code: 'W082', severity: 'error', by: 'cli', catches: 'A generated `/*inferred*/` prop type no longer matches the callers', fix: '`weft fix` rewrites it, or delete the comment to keep the type you have' },
+  { code: 'W083', severity: 'warning', by: 'cli', catches: 'An `any` weakens an inferred prop; names where the `any` came from', fix: 'Give the source a type, or annotate the prop' },
+  { code: 'W084', severity: 'error', by: 'cli', catches: 'One caller passes a type the component body can\'t handle, and the others agree', fix: 'Change the caller, or make the component handle both' },
+  { code: 'W085', severity: 'warning', by: 'cli', catches: 'An inferred prop names a type the component\'s scope can\'t see', fix: 'Move the type to module scope or export it, or annotate the parameter' },
   {
     code: 'W001', severity: 'error', by: 'compiler',
     catches: 'A prop or `.value` read in the component body outside `derived`/`watch`/JSX/handlers (the body runs once)',

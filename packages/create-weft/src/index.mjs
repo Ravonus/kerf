@@ -87,7 +87,7 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
       name,
       private: true,
       type: 'module',
-      scripts: { dev: 'weft dev', build: 'weft build', check: 'weft check', start: 'weft start', ...(db !== 'none' && { 'db:generate': 'weft db generate' }), ...(db !== 'none' && layer === 'prisma' && { postinstall: 'prisma generate' }) },
+      scripts: { dev: 'weft dev', build: 'weft build', check: 'weft check', typecheck: 'weft tsc', start: 'weft start', ...(db !== 'none' && { 'db:generate': 'weft db generate' }), ...(db !== 'none' && layer === 'prisma' && { postinstall: 'prisma generate' }) },
       dependencies: { ...deps, ...stack.deps },
       devDependencies: { '@weft/cli': version, typescript: '7.0.2', ...stack.dev },
     }),
@@ -95,7 +95,7 @@ export function template({ ui = 'warp', name = 'weft-app', version = '0.0.0', db
     'tsconfig.json': json({
       compilerOptions: {
         target: 'es2022', module: 'esnext', moduleResolution: 'bundler', strict: true, noEmit: true, skipLibCheck: true,
-        jsx: 'preserve', jsxImportSource: 'weft', lib: ['es2023', 'dom', 'dom.iterable'], paths: { '#/*': ['./src/*'] }, types: db === 'none' ? ['weft/client'] : ['weft/client', 'node'],
+        jsx: 'preserve', jsxImportSource: 'weft', lib: ['es2023', 'dom', 'dom.iterable'], paths: { '#/*': ['./src/*'] }, types: db === 'none' ? ['weft/client'] : ['weft/client', 'node'], plugins: [{ name: '@weft/cli/ts-plugin' }],
       },
       include: ['src', ...(config === 'ts' ? ['weft.config.ts'] : []), '.weft/*.d.ts'],
     }),
