@@ -13,6 +13,7 @@ node bin/weft.mjs check --json --root ../../evals/reference-v3/weft
 | Command | Does | Output |
 |---|---|---|
 | `weft check [files…]` | Compile every `.tsx`/`.jsx` in check mode, add the project view (cross-file W014), T-codes on `*.test.*`/`*.spec.*` files, config P-codes, P002, P120 and the `slots` block | `--json`: the check result. Exit 1 on errors |
+| `weft doctor` | Which compiler build this install runs, and whether `cargo` is around (it's optional). Also `weft check --verbose` | `--json`: `{ weft, runtime, compiler, rust }` |
 | `weft tasks` | Built-in commands plus the project's `tasks`, with args (JSON Schema), side effects, environments and scope | `--json`: the task list |
 | `weft docs [topic\|code]` | `rules`, `props`, `lists`, `async`, `testing`, `config`, `diagnostics`, `commands`, `agents`, or a code (`W014`, `T003`) | Markdown (`--json`: `{ topic, text }`) |
 | `weft agents-md` | Write AGENTS.md from the installed weft. `--check` exits 1 when stale, `--stdout` prints it | Under 8 KB (it is ~5.4 KB) |

@@ -1,13 +1,14 @@
 import { statSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import weft from './vite.mjs'
 
 const src = (f: string) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 
-// Vitest's module cache keys on the lockfile only. Compiled .tsx also depends on the native compiler, so key the
+// Vitest's module cache keys on the lockfile only. Compiled .tsx also depends on the compiler, so key the
 // cache on it, or a rebuilt compiler gets served stale output.
-const native = fileURLToPath(new URL(`./native/weft-compiler.${process.platform}-${process.arch}.node`, import.meta.url))
+const native = createRequire(import.meta.url)('./compiler.cjs').backend.file
 const cacheKey = `${Math.round(statSync(native).mtimeMs)}`
 
 export default defineConfig({

@@ -8,6 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { parseEnv } from 'node:util'
 import { diagnostic, locate, positions } from './diag.mjs'
 import { loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
@@ -47,10 +48,18 @@ export function siteOf(loaded) {
 
 /** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
 export const PRESETS = { node: 'node', bun: 'bun', deno: 'deno_server' }
+/** With no `runtime` in the config, the one running this: a machine may have only that one. */
+export const hostRuntime = () => (process.versions.deno ? 'deno' : process.versions.bun ? 'bun' : 'node')
+
+/** `.env` under what's already set. Not `process.loadEnvFile`: on Deno the file wins. */
+function loadEnv(root) {
+  const file = join(root, '.env')
+  if (existsSync(file)) for (const [key, value] of Object.entries(parseEnv(readFileSync(file, 'utf8')))) process.env[key] ??= value
+}
 
 export async function devCommand(root, { port } = {}) {
   // Production takes the host's environment; dev takes `.env`. What's already set wins.
-  if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
+  loadEnv(root)
   requireTrust(root, await loadConfig(root))
   const { dev } = await start(root, 'app')
   await writeMap(root)
@@ -74,7 +83,7 @@ export async function buildCommand(root, { preset, runtime } = {}) {
   const { writeContract } = await start(root, 'contract')
   const t = performance.now()
   const config = await site(root)
-  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? 'node'
+  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? hostRuntime()
   if (!preset && !PRESETS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(PRESETS).join(', ')}`), { code: 'E_USAGE' })
   preset ??= PRESETS[chosen]
   // A build holds no secrets: an app's env check stands down, and server modules load without a database.
@@ -122,14 +131,15 @@ const SERVERS = { node: ['node', ['--disable-warning=ExperimentalWarning']], bun
 
 /** `weft start`: run `.output/` on the runtime it was built for. Resolves with the exit code. */
 export async function startCommand(root, { runtime } = {}) {
-  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? 'node'
+  const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? hostRuntime()
   if (!SERVERS[chosen]) throw Object.assign(new Error(`unknown runtime "${chosen}": use ${Object.keys(SERVERS).join(', ')}`), { code: 'E_USAGE' })
-  if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
+  loadEnv(root)
   const [cmd, flags] = SERVERS[chosen]
   // Sidecars first: the server's environment has their addresses, and they outlive a crash of either side.
   const { startSidecars } = await start(root, 'sidecar')
   const sidecars = await startSidecars({ root })
-  const child = spawn(cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
+  // The running binary when it can be: Deno on Windows doesn't find itself on PATH.
+  const child = spawn(chosen === hostRuntime() ? process.execPath : cmd, [...flags, join('.output', 'server', 'index.mjs')], { cwd: root, stdio: 'inherit', env: { ...process.env, ...sidecars.env } })
   process.once('SIGINT', () => child.kill('SIGINT'))
   process.once('SIGTERM', () => child.kill('SIGTERM'))
   return new Promise(ok => child.on('close', code => (sidecars.close(), ok(code ?? 0))))

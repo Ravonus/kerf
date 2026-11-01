@@ -140,6 +140,9 @@ export default function weftStart(options = {}) {
   let build = ''
   let serverModules = []
   let vite
+  // To see what an edit changed: a route or layout file's server exports, and a server module's client stubs.
+  const loaders = new Map()
+  const stubs = new Map()
   let compile
   let plan
   let sheetPlan
@@ -249,34 +252,66 @@ export default function weftStart(options = {}) {
         res.setHeader('content-type', 'text/css')
         res.end(typeof css === 'string' ? css : css.code)
       })
+      server.middlewares.use(waitingForAFix)
       // A route file added or removed changes the virtual modules; edits to existing ones are ordinary HMR/reloads.
       const dir = join(root, 'src')
       if (!existsSync(dir)) return
       const routesDir = relative(dir, join(root, manifest.dir)).split('\\').join('/')
-      const w = watch(dir, { recursive: true }, (event, file) => {
-        if (event !== 'rename' || !file) return
+      const shape = () => JSON.stringify([manifest.routes.map(r => r.file), manifest.layouts.map(l => l.file), serverModules])
+      const changed = file => {
         const rel = file.split('\\').join('/')
         if (!rel.startsWith(routesDir + '/') && !isServerModule('src/' + rel)) return
+        // Saving a file can count as a rename, depending on the platform and the editor.
+        const before = shape()
         scan()
+        if (shape() === before) return
         for (const env of Object.values(server.environments)) {
           for (const v of [V.routes, V.fns, V.context]) {
             const m = env.moduleGraph.getModuleById('\0' + v)
             if (m) env.moduleGraph.invalidateModule(m)
           }
         }
+        server.config.logger.info(`weft: full reload: ${rel} was added or removed, so the routes changed`, { timestamp: true })
         server.ws.send({ type: 'full-reload' })
-      })
+      }
+      const w = watch(dir, { recursive: true }, (event, file) => { if (event === 'rename' && file) changed(file) })
+      // Not every runtime's recursive watch reports a new file, and Vite's watcher does.
+      for (const event of ['add', 'unlink']) server.watcher.on(event, file => { if (file.startsWith(dir)) changed(relative(dir, file)) })
       // Close with the server (middleware mode, as `weft routes --meta` runs it, has no httpServer to listen on).
       const close = server.close.bind(server)
       server.close = () => (w.close(), close())
     },
-    /** An edit can add or drop a stylesheet import: the next server load of the routes walks the graph again. */
-    hotUpdate({ file }) {
-      if (this.environment.config.consumer !== 'server') return
-      const m = this.environment.moduleGraph.getModuleById('\0' + V.routes)
-      if (m) this.environment.moduleGraph.invalidateModule(m)
-      // A static component is in no browser's module graph, so nothing else would tell the tab it changed.
-      if (!vite?.environments.client.moduleGraph.getModulesByFile(file)?.size && this.environment.moduleGraph.getModulesByFile(file)?.size) vite?.ws.send({ type: 'full-reload' })
+    /**
+     * What an edit means for an open page, which keeps its state wherever it can. Components update themselves
+     * (weft/hmr). Code that only runs on the server has nothing to swap: the page gets the server's new answer in place.
+     * Anything else that nothing above it can take is a full reload, and the terminal says why.
+     */
+    async hotUpdate({ file, modules }) {
+      const rel = relative(root, file).split('\\').join('/')
+      if (this.environment.config.consumer === 'server') {
+        // An edit can add or drop a stylesheet import: the next server load of the routes walks the graph again.
+        const m = this.environment.moduleGraph.getModuleById('\0' + V.routes)
+        if (m) this.environment.moduleGraph.invalidateModule(m)
+        // A static component or a server helper is in no browser's module graph, so nothing else would tell the tab.
+        if (!vite?.environments.client.moduleGraph.getModulesByFile(file)?.size && this.environment.moduleGraph.getModulesByFile(file)?.size) refresh(vite, rel)
+        return
+      }
+      const route = manifest.routes.some(r => r.file === rel) || manifest.layouts.some(l => l.file === rel)
+      if (route) {
+        const part = serverExports(readFileSync(file, 'utf8'), file)
+        // A level the server renders has no module in the page, and its `load` and `meta` are on the server too.
+        refresh(vite, rel, loaders.get(file) !== part, false)
+        loaders.set(file, part)
+      }
+      if (isServerModule(rel) && stubs.has(file) && modules.length) {
+        const before = stubs.get(file)
+        await Promise.all(modules.map(m => this.environment.transformRequest(m.url).catch(() => undefined)))
+        if (stubs.get(file) === before) return refresh(vite, rel), []
+      }
+      // A static route's stylesheet list: nothing runs it, so nothing has to take the update.
+      const live = modules.filter(m => !m.url.endsWith(ASSETS))
+      if (live.some(m => !reaches(m))) this.environment.logger.info(`weft: full reload: ${rel} exports more than components and nothing that imports it can take the update`, { timestamp: true })
+      if (live.length < modules.length) return live
     },
     resolveId: {
       filter: { id: /^(virtual:weft\/|@weft\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/ },
@@ -340,6 +375,7 @@ export default function weftStart(options = {}) {
         const rel = relative(root, path).split('\\').join('/')
         if (isServerModule(rel)) {
           const out = client ? clientStubs(code, path, rel, await shapeTable(this)) : withIds(code, path, rel)
+          if (client && dev) stubs.set(path, out)
           return out === code ? undefined : { code: out, map: null }
         }
         if (client && !rel.startsWith('..')) {
@@ -348,13 +384,66 @@ export default function weftStart(options = {}) {
         }
         if (!client) return
         if (!manifest.routes.some(r => r.file === rel) && !manifest.layouts.some(l => l.file === rel)) return
+        if (dev) loaders.set(file, serverExports(code, file))
         const out = stripServerExports(code, file)
+        // weft/hmr saw the server exports and left this to Vite, but they're gone and the rest is components.
+        if (dev && out !== code && !/^export (?!default\b|\{ \S+\$shape as default\$shape \})/m.test(out) && !out.includes('import.meta.hot.accept(')) return { code: `${out}\nif (import.meta.hot) import.meta.hot.accept();\n`, map: null }
         return out === code ? undefined : { code: out, map: null }
       },
     },
     /** `weft routes`, tests: the scanned manifest, the generated route types and the server modules. */
     api: { manifest: () => manifest ?? scan(), types: () => routeTypes(manifest ?? scan()), serverModules: () => (manifest ?? scan(), serverModules) },
   }
+}
+
+/** Dev, in place of the bare JSON a page gets when its code won't load: this tab can't take an update, so it reloads. */
+const NOT_LOADING = `<!doctype html><meta charset="utf-8"><title>This page failed to load</title>
+<body style="font:16px system-ui;padding:2rem"><h1>This page failed to load</h1><p>The error is in the terminal. This tab reloads when you save a fix.</p>
+<script type="module">
+import { createHotContext } from '/@vite/client'
+const hot = createHotContext('/@weft/not-loading')
+for (const event of ['vite:afterUpdate', 'weft:refresh']) hot.on(event, () => location.reload())
+</script>`
+
+function waitingForAFix(req, res, next) {
+  if (!req.headers.accept?.includes('text/html')) return next()
+  const { writeHead, end } = res
+  const json = headers => /json/.test(String(Array.isArray(headers) ? headers.flat().join(' ') : headers && Object.entries(headers).flat().join(' ')) + res.getHeader('content-type'))
+  let failed = false
+  res.writeHead = function (status, ...rest) {
+    failed = status >= 500 && json(rest.at(-1))
+    if (!failed) return writeHead.call(this, status, ...rest)
+    res.statusCode = status
+    return this
+  }
+  const write = res.write
+  res.write = function (...args) { return failed ? true : write.apply(this, args) }
+  res.end = function (...args) {
+    if (!failed && !(res.statusCode >= 500 && !res.headersSent && json())) return end.apply(this, args)
+    res.setHeader('content-type', 'text/html')
+    res.removeHeader('content-length')
+    return end.call(this, NOT_LOADING)
+  }
+  next()
+}
+
+/** Whether an update to `mod` stops at a module that accepts it. */
+function reaches(mod, seen = new Set()) {
+  if (mod.isSelfAccepting || mod.acceptedHmrDeps?.size) return true
+  if (seen.has(mod)) return true
+  seen.add(mod)
+  return mod.importers.size > 0 && [...mod.importers].every(m => m.acceptedHmrDeps?.has(mod) || reaches(m, seen))
+}
+
+/** Ask open pages for the server's new answer, once the server's own reload has been told. A burst of saves is one ask. */
+const asking = new WeakMap()
+function refresh(vite, rel, say = true, queries = true) {
+  if (!vite) return
+  clearTimeout(asking.get(vite))
+  asking.set(vite, setTimeout(() => {
+    if (say) vite.config.logger.info(`weft: ${rel} runs on the server: refreshing the page's data, state kept`, { timestamp: true })
+    vite.ws.send({ type: 'custom', event: 'weft:refresh', data: { queries } })
+  }, 50))
 }
 
 function packageDirs(root) {
@@ -592,7 +681,7 @@ function cardFonts(manifest, abs, defaults, root, own = {}) {
  * The client build of a route module: `load`, `meta` and `prerender` removed (they run on the server; loaders can
  * hold database code and secrets), then imports nothing else uses. Exported for tests.
  */
-export function stripServerExports(code, file = 'route.tsx') {
+function serverCuts(code, file) {
   const ast = parseSync(file, code, { lang: /\.tsx$/.test(file) ? 'tsx' : /\.ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
   const cuts = []
   for (const node of ast.program.body) {
@@ -601,6 +690,13 @@ export function stripServerExports(code, file = 'route.tsx') {
     const names = d.type === 'VariableDeclaration' ? d.declarations.map(x => x.id?.name) : [d.id?.name]
     if (names.length && names.every(n => SERVER_EXPORTS.has(n))) cuts.push([node.start, node.end])
   }
+  return cuts
+}
+
+const serverExports = (code, file) => serverCuts(code, file).map(([a, b]) => code.slice(a, b)).join('\n')
+
+export function stripServerExports(code, file = 'route.tsx') {
+  const cuts = serverCuts(code, file)
   if (!cuts.length) return code
   let out = code
   for (const [a, b] of cuts.sort((x, y) => y[0] - x[0])) out = out.slice(0, a) + out.slice(b)

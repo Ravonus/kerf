@@ -1,10 +1,11 @@
 # Getting started on this machine
 
-weft isn't published, and the compiler is a native addon built for one platform. `packages/create-weft/scripts/local.mjs`
-uses a checkout from any folder: it builds what's stale, packs every package into `~/.weft/local` (`WEFT_LOCAL_DIR` moves
+weft isn't published, so `packages/create-weft/scripts/local.mjs` uses a checkout from any folder: it builds what's stale, packs every package into `~/.weft/local` (`WEFT_LOCAL_DIR` moves
 it), and points an app at those tarballs. The app gets what a consumer would get, not workspace links.
 
-You need Node 26, Rust (cargo) and npm. Other package managers aren't supported here. Set this once, in `~/.zshrc`:
+You need Node 26, Rust (cargo) and npm here, because a checkout builds its own compiler. An app doesn't need Rust: an install
+gets the WASM compiler, plus a native addon where one fits (`weft doctor` says which is running). Other package managers
+aren't supported here. Set this once, in `~/.zshrc`:
 
 ```bash
 alias weft-local='npm_config_min_release_age=3 node ~/dev/weft/packages/create-weft/scripts/local.mjs'

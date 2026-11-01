@@ -11,6 +11,7 @@ import { writeAgentsMd } from './agents-md.mjs'
 import { check } from './check.mjs'
 import { formatHuman } from './diag.mjs'
 import { docs } from './docs.mjs'
+import { compilerLine, doctor, formatDoctor } from './doctor.mjs'
 import { formatMap, writeMap } from './map.mjs'
 import { serve } from './mcp.mjs'
 import { explain, list, sync } from './plugins.mjs'
@@ -26,7 +27,8 @@ import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writ
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
-  check [files…]      compile in check mode; W-, P- and D-diagnostics with fixes
+  check [files…]      compile in check mode; W-, P- and D-diagnostics with fixes (--verbose: which compiler ran)
+  doctor              which compiler build this install uses, and whether Rust is around (it's optional)
   fix [files…]        apply the safe autofixes
   tokens              warp's resolved tokens as DTCG, in .weft/tokens/
   test --gate         the test gate on the diff: fail-before (T010), mutants on changed lines (T011), no weakening (T020)
@@ -58,7 +60,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
 const valued = new Set(['layer', 'base', 'budget', 'max-mutants', 'concurrency', 'url', 'tab', 'out', 'component', 'from', 'props', 'name', 'scope', 'timeout', 'preset', 'port', 'runtime'])
 /** `weft style explain` takes the group's own axes as flags (`--status late`); these are its fixed ones. */
 const styleFlags = new Set(['states', 'accent', 'part'])
-const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all'])
+const booleans = new Set(['dry-run', 'no-install', 'remote', 'gate', 'refactor', 'no-mutation', 'interactive', 'delta', 'graph-only', 'no-graph', 'headed', 'full', 'reload', 'meta', 'all', 'verbose'])
 
 export function parse(argv) {
   const out = { command: argv[0], positional: [], json: false, root: process.cwd(), check: false, stdout: false, flags: {} }
@@ -92,8 +94,15 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         const result = await check(args.root, { files: args.positional })
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
+        if (args.flags.verbose) say(compilerLine(doctor(args.root).compiler))
         say(`weft check: ${result.summary.files} files, ${result.summary.errors} errors, ${result.summary.warnings} warnings (${result.ms} ms)`)
         return result.ok ? 0 : 1
+      }
+      case 'doctor': {
+        const result = doctor(args.root)
+        if (args.json) print(result)
+        else say(formatDoctor(result))
+        return 0
       }
       case 'test': {
         if (!args.flags.gate) throw Object.assign(new Error('`weft test` runs the gate with --gate; run the suite itself with vitest'), { code: 'E_USAGE' })

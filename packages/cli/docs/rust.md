@@ -1,5 +1,10 @@
 # Rust: `native()` and `remote()`
 
+Rust is optional. weft needs no Rust toolchain to create, run, build or check an app, on any platform: the compiler ships as
+WASM, and a prebuilt native addon installs by itself where one fits, which makes builds faster and changes no output.
+`weft doctor` says which one is running. Rust is for this page: the code you choose to write in it, which is the only thing
+that calls `cargo`.
+
 A server function can have a Rust body. The client doesn't change: the same import, call, cache, tags and errors. Zod
 stays the only schema. Reach for this at about 1 ms of CPU per call or on byte payloads (search, parsing, images), not for
 IO-bound CRUD.

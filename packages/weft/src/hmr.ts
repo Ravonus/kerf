@@ -8,7 +8,7 @@
 // value back. Child components created during a re-run take the state of the child at the same place in the
 // previous run (same component, same order), so an edit keeps the state below it too.
 
-import { Box, derived, getOwner, untrack, type Owner, type State } from './index'
+import { Box, derived, flush, getOwner, untrack, type Owner, type State } from './index'
 import { createComponent } from './dom'
 import { hmr as scopes } from './scope'
 
@@ -67,7 +67,55 @@ export function hot(file: string, comps: Record<string, [Comp, string]>) {
     const entry = e
     ;(fn as any).$$h = (props: unknown, n?: string, loc?: string) => mount(entry, props, n, loc)
   }
-  if (reran) for (const e of changed.length ? changed : mine) e.v.value++
+  if (!reran) return
+  const restore = capture()
+  for (const e of changed.length ? changed : mine) e.v.value++
+  flush()
+  restore()
+}
+
+/** Where a node sits: from its id, or from the body. */
+function path(el: Element): string {
+  const steps: string[] = []
+  for (let at: Element | null = el; at && at !== document.documentElement; at = at.parentElement) {
+    if (at.id) return `#${CSS.escape(at.id)} ${steps.join(' ')}`.trim()
+    steps.unshift(at === document.body ? 'body' : `> :nth-child(${[...at.parentElement!.children].indexOf(at) + 1})`)
+  }
+  return steps.join(' ')
+}
+
+/**
+ * What a re-render can lose that isn't in a `state`: what's been typed in an uncontrolled field, focus and the caret,
+ * and how far things are scrolled. A swap replaces nodes, so these go back by where the node sat.
+ */
+function capture() {
+  if (typeof document === 'undefined') return () => {}
+  const fields = [...document.querySelectorAll<HTMLInputElement>('input,textarea,select')].map(el => ({ el, at: path(el), value: el.value, checked: el.checked }))
+  const scrolled = [...document.querySelectorAll('*')].filter(el => el.scrollTop || el.scrollLeft).map(el => ({ el, at: path(el), top: el.scrollTop, left: el.scrollLeft }))
+  const active = document.activeElement as HTMLInputElement | null
+  const focus = active && active !== document.body ? { el: active, at: path(active), start: active.selectionStart, end: active.selectionEnd } : undefined
+  const find = <T extends Element>(was: { el: T; at: string }) => (was.el.isConnected ? was.el : document.querySelector<T>(was.at))
+  return () => {
+    for (const f of fields) {
+      const el = find(f)
+      if (!el || el === f.el || el.localName !== f.el.localName) continue
+      if (el.value !== f.value) el.value = f.value
+      el.checked = f.checked
+    }
+    const scroll = () => {
+      for (const s of scrolled) {
+        const el = find(s)
+        if (el) { el.scrollTop = s.top; el.scrollLeft = s.left }
+      }
+    }
+    scroll()
+    requestAnimationFrame?.(scroll) // the browser's scroll anchoring moves it again at the next layout
+    if (!focus) return
+    const el = find(focus)
+    if (!el || el === document.activeElement) return
+    el.focus({ preventScroll: true })
+    if (focus.start != null) el.setSelectionRange?.(focus.start, focus.end)
+  }
 }
 
 function mount(e: Entry, props: unknown, name?: string, loc?: string) {

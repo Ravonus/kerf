@@ -3,7 +3,7 @@
 import { emitKeypressEvents } from 'node:readline'
 import { CONFIGS, DB, LAYERS, RUNTIMES, UI } from './index.mjs'
 
-const PMS = ['npm', 'pnpm', 'bun', 'yarn']
+const PMS = ['npm', 'pnpm', 'bun', 'deno', 'yarn']
 const LABELS = {
   warp: 'warp', headless: 'Headless (warp behaviour, your markup)', tailwind: 'Tailwind', none: 'None',
   sqlite: 'SQLite', postgres: 'Postgres', mysql: 'MySQL', drizzle: 'Drizzle', prisma: 'Prisma', native: 'Native (no ORM)', node: 'Node', bun: 'Bun', deno: 'Deno', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn',
@@ -11,7 +11,9 @@ const LABELS = {
 }
 const list = values => values.map(value => ({ value, label: LABELS[value] ?? value }))
 const yesNo = [{ value: true, label: 'Yes' }, { value: false, label: 'No' }]
-const packageManager = env => PMS.find(pm => env.npm_config_user_agent?.startsWith(pm)) ?? 'npm'
+/** Whichever of Node, Bun and Deno is running this: a machine may have only that one. */
+const host = process.versions.deno ? 'deno' : process.versions.bun ? 'bun' : 'node'
+const packageManager = env => (host === 'node' ? PMS.find(pm => env.npm_config_user_agent?.startsWith(pm)) ?? 'npm' : host)
 
 /** In order. `when` skips a question that doesn't apply. `sideEffect` questions default to off with no terminal. */
 export const questions = env => [
@@ -19,7 +21,7 @@ export const questions = env => [
   { key: 'db', label: 'Database', default: 'sqlite', options: list(DB) },
   { key: 'layer', label: 'Data layer', default: 'drizzle', skip: 'drizzle', options: list(LAYERS), when: a => a.db !== 'none' },
   { key: 'auth', label: 'Sign-in', default: true, options: [{ value: true, label: 'Better Auth' }, { value: 'custom', label: 'Bring your own' }, { value: false, label: 'None' }], when: a => a.db !== 'none' },
-  { key: 'runtime', label: 'Runtime', default: 'node', options: list(RUNTIMES) },
+  { key: 'runtime', label: 'Runtime', default: host, options: list(RUNTIMES) },
   { key: 'config', label: 'Config file', default: 'ts', options: list(CONFIGS) },
   { key: 'pm', label: 'Package manager', default: packageManager(env), options: list(PMS) },
   { key: 'git', label: 'Start a git repository', default: true, options: yesNo, sideEffect: true },

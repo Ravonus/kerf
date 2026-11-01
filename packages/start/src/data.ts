@@ -648,6 +648,8 @@ export const cache: OptimisticCache & { invalidate(...tags: string[]): void; cle
   },
 }
 
+if ((import.meta as any).hot) client.refreshed = () => untrack(() => { for (const e of entries.values()) e.stale.value = true })
+
 /** Server: drop `tags` for this response and the shared cache. Client: refetch what reads them. */
 export const invalidate = (...tags: string[]) => cache.invalidate(...tags)
 

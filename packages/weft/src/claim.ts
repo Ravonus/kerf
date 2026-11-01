@@ -146,6 +146,15 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
     if (!keys.hydrating) return insert(parent, v, marker)
     // One element where a range would be (ssr.ts `hole`): the walk stopped on it, and building it claims it.
     if (once === 1 && marker?.nodeType === 1) {
+      // Dev: a hot-swappable component (weft/hmr) is an accessor, and has to stay live.
+      if (DEV && typeof v === 'function') {
+        let current: Node[] = [marker]
+        let at = marker.nextSibling
+        return void hole(v as () => unknown, x => {
+          at = current.at(-1)?.nextSibling ?? at
+          current = place(parent, x, current, at)
+        })
+      }
       if (v !== marker && v instanceof Node) parent.replaceChild(v, marker)
       return
     }

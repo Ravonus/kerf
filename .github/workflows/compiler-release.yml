@@ -1,0 +1,62 @@
+# The prebuilt compiler packages and the WASM build, one job per platform. The repo has no CI yet (runtime-matrix.yml says
+# why), so this is the definition for when it does, and it stops at artifacts: nothing here publishes. Locally the same
+# work is `node packages/weft/scripts/build-platform.mjs --target all`, which cross-builds with cargo-zigbuild and
+# cargo-xwin; each job below calls that script with one target.
+name: compiler-release
+on:
+  workflow_dispatch:
+jobs:
+  addon:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: darwin-arm64, target: aarch64-apple-darwin, os: macos-latest }
+          - { name: darwin-x64, target: x86_64-apple-darwin, os: macos-latest }
+          - { name: linux-x64-gnu, target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+          - { name: linux-arm64-gnu, target: aarch64-unknown-linux-gnu, os: ubuntu-latest, cross: zigbuild }
+          - { name: linux-x64-musl, target: x86_64-unknown-linux-musl, os: ubuntu-latest, cross: zigbuild }
+          - { name: linux-arm64-musl, target: aarch64-unknown-linux-musl, os: ubuntu-latest, cross: zigbuild }
+          - { name: win32-x64, target: x86_64-pc-windows-msvc, os: windows-latest }
+          - { name: win32-arm64, target: aarch64-pc-windows-msvc, os: windows-latest }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 26 }
+      - run: rustup target add ${{ matrix.target }}
+        working-directory: crates/weft-compiler
+      - if: matrix.cross == 'zigbuild'
+        run: |
+          python3 -m pip install ziglang
+          cargo install cargo-zigbuild --locked
+      - run: node packages/weft/scripts/build-platform.mjs --target ${{ matrix.name }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: packages/weft/dist/platform/${{ matrix.name }}
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 26 }
+      - run: node packages/weft/scripts/build-wasm.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm
+          path: packages/weft/native/weft-compiler.wasm*
+  verify:
+    needs: [addon, wasm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 26 }
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - run: |
+          mkdir -p packages/weft/native packages/weft/dist/platform
+          cp artifacts/wasm/* packages/weft/native/
+          for d in artifacts/*; do [ "$d" = artifacts/wasm ] || cp -r "$d" packages/weft/dist/platform/; done
+          node packages/weft/scripts/build-platform.mjs --verify

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // create-weft [dir] [--ui warp|headless|tailwind|none] [--db sqlite|postgres|mysql|none] [--layer drizzle|prisma|native] [--[no-]auth] [--auth-provider better-auth|custom] [--runtime node|bun|deno]
-//   [--config ts|json|yaml] [--pm npm|pnpm|bun|yarn] [--[no-]git] [--[no-]install] [--name <name>] [--tarballs <dir>] [--yes]
+//   [--config ts|json|yaml] [--pm npm|pnpm|bun|deno|yarn] [--[no-]git] [--[no-]install] [--name <name>] [--tarballs <dir>] [--yes]
 // In a terminal it asks what the flags don't answer; --yes, or no terminal, takes the defaults.
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -36,7 +36,7 @@ async function directory() {
 /** Git and the install are conveniences: the app is already written, so a failure here only leaves a step for later. */
 function step(what, command, args, cwd) {
   try {
-    execFileSync(command, args, { cwd, stdio: ['ignore', 'ignore', 'inherit'] })
+    execFileSync(command, args, { cwd, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
     return true
   } catch {
     console.error(`create-weft: ${what} didn't finish; run \`${[command, ...args].join(' ')}\` yourself.`)
@@ -60,8 +60,8 @@ try {
   console.log(`\nCreated ${files.length} files in ${dir}`)
   if (choices.git) step('git init', 'git', ['init', '--quiet'], dir)
   const installed = choices.install && step('The install', choices.pm, ['install'], dir)
-  const run = choices.pm === 'npm' ? 'npx' : choices.pm === 'pnpm' ? 'pnpm exec' : choices.pm === 'bun' ? 'bunx' : 'yarn'
-  console.log(`\n  cd ${where}${installed ? '' : `\n  ${choices.pm} install`}${choices.db === 'none' ? '' : `\n  ${run} weft db generate`}\n  ${run} weft dev\n`)
+  const weft = { npm: 'npx weft', pnpm: 'pnpm exec weft', bun: 'bunx --bun weft', deno: 'deno run -A npm:@weft/cli', yarn: 'yarn weft' }[choices.pm]
+  console.log(`\n  cd ${where}${installed ? '' : `\n  ${choices.pm} install`}${choices.db === 'none' ? '' : `\n  ${weft} db generate`}\n  ${weft} dev\n`)
 } catch (e) {
   console.error(`create-weft: ${e.message}`)
   process.exit(1)

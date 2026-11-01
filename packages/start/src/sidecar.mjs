@@ -102,7 +102,7 @@ export async function cargo(verb, { root, dir, service, contract, release, targe
   const args = [verb, '--message-format=json', ...(release ? ['--release'] : []), ...(target ? ['--target', target] : [])]
   const env = { WEFT_CONTRACT: join(root, '.weft', 'contract.json'), ...(target === WASM && { CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: '-C target-feature=+simd128' }) }
   const r = await run('cargo', args, { cwd: dir, env, onLine })
-  if (r.missing) return { ok: false, diagnostics: [{ code: 'R109', severity: 'error', file: 'package.json', span: [1, 1, 1, 1], why: `\`${service}\` needs Rust: \`cargo\` isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere.` }] }
+  if (r.missing) return { ok: false, diagnostics: [{ code: 'R109', severity: 'error', file: 'package.json', span: [1, 1, 1, 1], why: `\`${service}\` is Rust you opted into, so it needs \`cargo\`, and it isn't on PATH. Install it from rustup.rs, or set \`external: true\` for a sidecar built elsewhere. The rest of weft doesn't need Rust.` }] }
   const read = readCargo(r.stdout, { contract, service, root, dir })
   if (r.code === 0) return read
   if (!read.diagnostics.length) {

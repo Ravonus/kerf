@@ -129,6 +129,8 @@ export const client: {
   seed?: (list: Wire[]) => void
   seeds?: Wire[]
   invalidated?: (tags: string[]) => void
+  /** Dev: server code changed, so whatever a query read may have too. */
+  refreshed?: () => void
 } = {}
 
 export interface NavigateOptions {

@@ -103,7 +103,7 @@ export async function addRust(root, name = 'media', { remote = false, dryRun = f
   const needsZod = !pkg.dependencies?.zod && !pkg.devDependencies?.zod
   const gitignore = join(root, '.gitignore')
   const ignored = existsSync(gitignore) && /^\/?target\/?$|^\*\*\/target\/?$/m.test(readFileSync(gitignore, 'utf8'))
-  const actions = [`create crates/${name}`, `create src/server/${name}.ts`, `add \`${binding}\` to src/server/rust.ts`, ...(needsZod && install ? ['install zod'] : []), ...(ignored ? [] : ['ignore target/']), 'next: `weft check`, then `weft dev`']
+  const actions = [`create crates/${name}`, `create src/server/${name}.ts`, `add \`${binding}\` to src/server/rust.ts`, ...(needsZod && install ? ['install zod'] : []), ...(ignored ? [] : ['ignore target/']), 'this crate needs Rust (`cargo`, from rustup.rs); the rest of weft does not', 'next: `weft check`, then `weft dev`']
   if (dryRun) return { ok: true, feature: 'rust', service: name, kind: factory, actions, dryRun: true }
 
   const crate = await weftCrate(root, dir)

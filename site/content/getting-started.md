@@ -1,10 +1,14 @@
 # Getting started
 
-This page takes you from an empty folder to a running weft app, then has you change it. You'll need Node 26, Rust (`cargo`)
-and npm.
+This page takes you from an empty folder to a running weft app, then has you change it. You'll need Node 26 and npm.
+Once weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one, with no
+Node installed.
 
-weft isn't on npm yet, so the commands below run from a checkout of the repo. Rust is there because the compiler is built on
-your machine. Once weft is published, `npm create weft` will replace the first two steps.
+Rust isn't needed to use weft. The compiler comes with it as WebAssembly, which runs anywhere, and a native addon for your
+platform installs by itself and makes builds faster. Rust only comes in if you choose to write [Rust sidecars](/docs/rust).
+
+weft isn't on npm yet, so for now the commands below run from a checkout of the repo, and building that checkout's compiler
+does take Rust (`cargo`). Once weft is published, `npm create weft` will replace the first two steps and no Rust is involved.
 
 ## 1. Get the repo
 

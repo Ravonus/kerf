@@ -1,4 +1,5 @@
-// Compile-speed bench through the Node binding (what Vite pays), single-threaded, on the generated corpus.
+// Compile-speed bench through compiler.cjs (what Vite pays), single-threaded, on the generated corpus. WEFT_COMPILER=wasm
+// benches that build.
 // Usage: node scripts/bench.mjs [dir=bench/corpus] [runs=7] [--solid path/to/@solidjs/compiler]
 import { readFileSync, readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -23,8 +24,9 @@ function time(label, fn) {
 }
 
 const { transform } = require('../compiler.cjs')
-time('weft (napi, full)', (source, filename) => transform(source, { filename }))
-time('weft (napi, check only)', (source, filename) => transform(source, { filename, checkOnly: true }))
+const { backend } = require('../compiler.cjs')
+time(`weft (${backend.kind}, full)`, (source, filename) => transform(source, { filename }))
+time(`weft (${backend.kind}, check only)`, (source, filename) => transform(source, { filename, checkOnly: true }))
 if (solidPath) {
   const solid = require(solidPath)
   time('@solidjs/compiler (napi, no weft pre-pass)', (source, filename) => solid.transform(source, { filename, moduleName: 'weft/dom' }))

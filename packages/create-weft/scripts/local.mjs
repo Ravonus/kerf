@@ -12,19 +12,21 @@ import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { packAll, pin, pkgs } from './tarballs.mjs'
+import { packWithAddon } from './pack-all.mjs'
+import { pin, pkgs } from './tarballs.mjs'
 
 const store = resolve(process.env.WEFT_LOCAL_DIR ?? join(homedir(), '.weft/local'))
 const tgz = join(store, 'tgz')
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, stdio: 'inherit' })
 const OTHER_LOCKS = ['pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'yarn.lock']
 
-/** The compiler, when its stamp no longer matches the crate. */
+/** The compiler's addon and WASM builds, when a stamp no longer matches the crate. */
 function buildNative() {
   const { sourceStamp, stampFile } = createRequire(import.meta.url)(join(pkgs, 'weft/scripts/native-stamp.cjs'))
-  const native = join(pkgs, 'weft/native', `weft-compiler.${process.platform}-${process.arch}.node`)
-  if (existsSync(stampFile(native)) && readFileSync(stampFile(native), 'utf8').trim() === sourceStamp()) return
-  console.log('[local] building the native compiler')
+  const stamped = file => existsSync(stampFile(file)) && readFileSync(stampFile(file), 'utf8').trim() === sourceStamp()
+  const built = [`weft-compiler.${process.platform}-${process.arch}.node`, 'weft-compiler.wasm'].map(f => join(pkgs, 'weft/native', f))
+  if (built.every(stamped)) return
+  console.log('[local] building the compiler')
   run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
 }
 
@@ -41,7 +43,7 @@ function pack() {
   buildTextEngine()
   const next = `${tgz}.next`
   rmSync(next, { recursive: true, force: true })
-  const packed = packAll(next)
+  const packed = packWithAddon(next)
   rmSync(tgz, { recursive: true, force: true })
   renameSync(next, tgz)
   const tarballs = Object.fromEntries(Object.entries(packed).map(([name, spec]) => [name, spec.replace(next, tgz)]))

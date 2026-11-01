@@ -10,6 +10,19 @@
     "./src/history.ts",
     "./src/sync.ts"
   ],
+  "files": [
+    "src",
+    "node",
+    "native/weft-compiler.wasm",
+    "scripts/native-stamp.cjs",
+    "assets.mjs",
+    "client.d.ts",
+    "compiler.cjs",
+    "compiler-wasm.cjs",
+    "media-probe.mjs",
+    "platforms.cjs",
+    "vite.mjs"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./jsx-runtime": "./src/jsx-runtime.ts",
@@ -52,6 +65,10 @@
   },
   "scripts": {
     "build:native": "node scripts/build-native.mjs",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "build:platform": "node scripts/build-platform.mjs",
+    "prepack": "node scripts/build-wasm.mjs --if-stale",
+    "parity": "node scripts/parity.mjs",
     "test": "node --no-warnings scripts/node-style.mjs --check && vitest run",
     "bench": "node scripts/bench.mjs",
     "size": "node scripts/size.mjs"
@@ -83,5 +100,15 @@
   },
   "dependencies": {
     "dom-accessibility-api": "0.7.1"
+  },
+  "optionalDependencies": {
+    "@weft/compiler-darwin-arm64": "0.0.0",
+    "@weft/compiler-darwin-x64": "0.0.0",
+    "@weft/compiler-linux-arm64-gnu": "0.0.0",
+    "@weft/compiler-linux-arm64-musl": "0.0.0",
+    "@weft/compiler-linux-x64-gnu": "0.0.0",
+    "@weft/compiler-linux-x64-musl": "0.0.0",
+    "@weft/compiler-win32-arm64": "0.0.0",
+    "@weft/compiler-win32-x64": "0.0.0"
   }
 }
