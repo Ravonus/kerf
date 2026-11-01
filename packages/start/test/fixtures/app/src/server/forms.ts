@@ -22,6 +22,8 @@ export const addNote = mutation({
   },
 })
 
+export const rename = mutation({ input: z.object({ name: z.string().min(1) }), run: async ({ input }) => ({ name: input.name }) })
+
 export const setCover = mutation({
   input: z.object({ file: z.file() }),
   invalidates: ['cover'],

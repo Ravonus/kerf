@@ -10,13 +10,17 @@
 //!
 //! | Output | What it gets |
 //! |---|---|
-//! | SSR | `<T _$i="id|a,b|s">`: `emit` wraps the component in `_$island`, sending props `a` and `b` as JSON |
+//! | SSR | `<T _$i="id|a,b|s|w">`: `emit` wraps the component in `_$island`, sending props `a` and `b` as JSON; `w` is when it loads |
 //! | DOM | `export const $iN = (_p) => <T …/>` appended to the source, so every pass treats it as authored code |
 //!
 //! A prop that is a literal or reads only module-level names is client code (`$iN` keeps its text); any other is a
 //! server value (`_p.v[k]`). A prop that holds a function over local names can't be either, so the caller stays on the
 //! client. Children that are plain markup stay the server's (`_p.s`, the slot), and children that need the client are
 //! kept in `$iN` as written.
+//!
+//! When an island may load is the project's call too, so `facts` also says what could make waiting wrong: the globals a
+//! binding touches outside handlers (`window.x` counts as `x`), the methods that move focus or scroll, what it calls while
+//! rendering, and `early`, what must run with the page (`autofocus`, a `ref` callback that does more than keep the node).
 
 use std::collections::HashMap;
 
@@ -30,7 +34,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::diag::line_col;
 
-/// The attribute the marking adds to an island's tag: `id|prop,prop|s`.
+/// The attribute the marking adds to an island's tag: `id|prop,prop|s|when`.
 pub const ISLAND: &str = "_$i";
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -52,10 +56,18 @@ pub struct Node {
     pub line: u32,
     /// Why this binding needs the client, on its own.
     pub own: Option<String>,
-    /// The `@weft client` / `@weft static` comment above it.
+    /// The `@weft client` / `@weft static` / `@weft visible` comment above it.
     pub force: Option<String>,
     pub uses: Vec<String>,
     pub sites: Vec<Site>,
+    /// A variable holding a value, not a function: what it holds is shared by everything that reads it.
+    pub value: bool,
+    /// Why this can't wait for the page to settle.
+    pub early: Option<String>,
+    /// Globals and page-moving methods (`.focus`) touched outside handlers.
+    pub globals: Vec<String>,
+    /// Module-level names called outside handlers.
+    pub calls: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -123,6 +135,9 @@ pub struct IslandSite {
     pub index: u32,
     /// Keep the children in `$iN`; otherwise they are the server's.
     pub hoist: bool,
+    /// `v` (when visible) or `i` (on interaction). Empty: with the page.
+    #[serde(default)]
+    pub when: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -249,6 +264,28 @@ fn has_kids(el: &JSXElement<'_>) -> bool {
 struct Frame {
     uses: Vec<String>,
     own: Option<String>,
+    early: Option<String>,
+    globals: Vec<String>,
+    calls: Vec<String>,
+}
+
+fn add(list: &mut Vec<String>, name: String) {
+    if !list.contains(&name) {
+        list.push(name);
+    }
+}
+
+/// Methods whose call moves the user: they can't wait, whatever island they're in.
+const MOVES: &[&str] = &["focus", "scrollIntoView", "scrollTo", "scrollBy", "showModal", "showPopover", "requestFullscreen", "select"];
+const WINDOW: &[&str] = &["window", "globalThis", "self"];
+
+#[derive(Default)]
+struct Calls(bool);
+
+impl<'a> Visit<'a> for Calls {
+    fn visit_call_expression(&mut self, _: &CallExpression<'a>) {
+        self.0 = true;
+    }
 }
 
 struct Collect<'s> {
@@ -257,6 +294,8 @@ struct Collect<'s> {
     frames: Vec<Frame>,
     sites: Vec<Site>,
     count: u32,
+    /// Inside a handler's value: it runs on an event, which replays.
+    handler: u32,
 }
 
 impl Collect<'_> {
@@ -265,10 +304,38 @@ impl Collect<'_> {
         f.own.get_or_insert(reason);
     }
 
+    fn early(&mut self, reason: String) {
+        self.frames.last_mut().unwrap().early.get_or_insert(reason);
+    }
+
+    /// An attribute on a plain element: a handler's value runs on its event.
+    fn attribute<'a>(&mut self, a: &JSXAttributeItem<'a>) {
+        let on = matches!(a, JSXAttributeItem::Attribute(a) if attr_name(a) != "ref" && is_handler(&attr_name(a)));
+        self.handler += on as u32;
+        self.visit_jsx_attribute_item(a);
+        self.handler -= on as u32;
+    }
+
     fn framed(&mut self, f: impl FnOnce(&mut Self)) -> Frame {
         self.frames.push(Frame::default());
         f(self);
-        self.frames.pop().unwrap()
+        let frame = self.frames.pop().unwrap();
+        if let Some(up) = self.frames.last_mut() {
+            up.early = up.early.take().or(frame.early.clone());
+            for g in &frame.globals {
+                add(&mut up.globals, g.clone());
+            }
+            for c in &frame.calls {
+                add(&mut up.calls, c.clone());
+            }
+        }
+        frame
+    }
+
+    fn global(&mut self, name: &str) {
+        if self.handler == 0 {
+            add(&mut self.frames.last_mut().unwrap().globals, name.to_string());
+        }
     }
 
     /// `name` when `id` is bound at module level.
@@ -292,11 +359,41 @@ impl Collect<'_> {
 impl<'a> Visit<'a> for Collect<'_> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         if let Some(name) = self.top(it) {
-            let f = self.frames.last_mut().unwrap();
-            if !f.uses.contains(&name) {
-                f.uses.push(name);
+            add(&mut self.frames.last_mut().unwrap().uses, name);
+        } else if it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_none() && !WINDOW.contains(&it.name.as_str()) {
+            self.global(&it.name);
+        }
+    }
+
+    fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
+        if matches!(it.object.get_inner_expression(), Expression::Identifier(id) if WINDOW.contains(&id.name.as_str())) {
+            self.global(&it.property.name);
+        }
+        walk::walk_static_member_expression(self, it);
+    }
+
+    fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        if self.handler == 0 {
+            match it.callee.get_inner_expression() {
+                Expression::Identifier(id) => {
+                    if let Some(name) = self.top(id) {
+                        add(&mut self.frames.last_mut().unwrap().calls, name);
+                    }
+                }
+                Expression::StaticMemberExpression(m) => {
+                    if MOVES.contains(&m.property.name.as_str()) {
+                        self.global(&format!(".{}", m.property.name));
+                    }
+                    if let Expression::Identifier(id) = m.object.get_inner_expression()
+                        && let Some(name) = self.top(id)
+                    {
+                        add(&mut self.frames.last_mut().unwrap().calls, name);
+                    }
+                }
+                _ => {}
             }
         }
+        walk::walk_call_expression(self, it);
     }
 
     fn visit_ts_type(&mut self, _: &TSType<'a>) {}
@@ -305,14 +402,25 @@ impl<'a> Visit<'a> for Collect<'_> {
         let open = &it.opening_element;
         if !component_tag(&open.name) {
             for a in &open.attributes {
-                if let JSXAttributeItem::Attribute(a) = a
-                    && is_handler(&attr_name(a))
-                {
-                    let line = line_col(self.source, a.span.start).0;
-                    self.own(format!("`{}` on an element (line {line})", attr_name(a)));
+                let JSXAttributeItem::Attribute(a) = a else { continue };
+                let name = attr_name(a);
+                let line = line_col(self.source, a.span.start).0;
+                if is_handler(&name) {
+                    self.own(format!("`{name}` on an element (line {line})"));
+                }
+                if name.eq_ignore_ascii_case("autofocus") {
+                    self.early(format!("`autofocus` (line {line})"));
+                }
+                if name == "ref" && a.value.as_ref().is_some_and(calls) {
+                    self.early(format!("a `ref` callback that does work (line {line})"));
                 }
             }
-            walk::walk_jsx_element(self, it);
+            for a in &open.attributes {
+                self.attribute(a);
+            }
+            for k in &it.children {
+                self.visit_jsx_child(k);
+            }
             return;
         }
         let index = self.count;
@@ -332,10 +440,17 @@ impl<'a> Visit<'a> for Collect<'_> {
                     }
                     handler |= is_handler(&name);
                     let kind = attr_kind(self.scoping, a).to_string();
+                    if name == "ref" && a.value.as_ref().is_some_and(calls) {
+                        let line = line_col(self.source, a.span.start).0;
+                        self.early(format!("a `ref` callback that does work (line {line})"));
+                    }
                     let f = self.framed(|c| {
+                        let on = name != "ref" && is_handler(&name);
+                        c.handler += on as u32;
                         if let Some(v) = &a.value {
                             c.visit_jsx_attribute_value(v);
                         }
+                        c.handler -= on as u32;
                     });
                     attrs.push(Attr { name, kind, uses: f.uses, own: f.own });
                 }
@@ -364,12 +479,20 @@ impl<'a> Visit<'a> for Collect<'_> {
     }
 }
 
+fn calls(v: &JSXAttributeValue<'_>) -> bool {
+    let mut c = Calls::default();
+    c.visit_jsx_attribute_value(v);
+    c.0
+}
+
 fn hatch(source: &str, from: u32, to: u32) -> Option<String> {
     let text = source.get(from as usize..to as usize)?;
     if text.contains("@weft client") {
         Some("client".into())
     } else if text.contains("@weft static") {
         Some("static".into())
+    } else if text.contains("@weft visible") {
+        Some("visible".into())
     } else {
         None
     }
@@ -379,16 +502,16 @@ const NOT_CODE: &[&str] = &[".css", ".scss", ".sass", ".less", ".styl", ".pcss"]
 
 pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> HydrationFacts {
     let mut out = HydrationFacts::default();
-    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0 };
+    let mut c = Collect { scoping, source, frames: Vec::new(), sites: Vec::new(), count: 0, handler: 0 };
     let mut gap = 0u32;
     for stmt in &program.body {
         let span = stmt.span();
         let force = hatch(source, gap, span.start);
         gap = span.end;
         let line = line_col(source, span.start).0;
-        let mut node = |c: &mut Collect, name: String, visit: &dyn Fn(&mut Collect)| {
+        let mut node = |c: &mut Collect, name: String, value: bool, visit: &dyn Fn(&mut Collect)| {
             let f = c.framed(|c| visit(c));
-            out.nodes.push(Node { name, line, own: f.own, force: force.clone(), uses: f.uses, sites: std::mem::take(&mut c.sites) });
+            out.nodes.push(Node { name, line, own: f.own, force: force.clone(), uses: f.uses, sites: std::mem::take(&mut c.sites), value, early: f.early, globals: f.globals, calls: f.calls });
         };
         match stmt {
             Statement::ImportDeclaration(i) => {
@@ -420,18 +543,18 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
             }
             Statement::FunctionDeclaration(f) => {
                 let name = f.id.as_ref().map_or("(function)".to_string(), |i| i.name.to_string());
-                node(&mut c, name, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
+                node(&mut c, name, false, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
             }
             Statement::VariableDeclaration(v) => {
                 for d in &v.declarations {
                     let names = binding_names(&d.id);
                     let name = names.first().cloned().unwrap_or_default();
-                    node(&mut c, name, &|c| c.visit_variable_declarator(d));
+                    node(&mut c, name, holds_value(d), &|c| c.visit_variable_declarator(d));
                 }
             }
             Statement::ClassDeclaration(k) => {
                 let name = k.id.as_ref().map_or("(class)".to_string(), |i| i.name.to_string());
-                node(&mut c, name, &|c| c.visit_class(k));
+                node(&mut c, name, false, &|c| c.visit_class(k));
             }
             Statement::ExportDefaultDeclaration(e) => match &e.declaration {
                 ExportDefaultDeclarationKind::Identifier(id) => {
@@ -440,16 +563,16 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                 ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
                     let name = f.id.as_ref().map_or("default".to_string(), |i| i.name.to_string());
                     out.exports.push(Export { exported: "default".into(), local: Some(name.clone()), ..Default::default() });
-                    node(&mut c, name, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
+                    node(&mut c, name, false, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
                 }
                 ExportDefaultDeclarationKind::ClassDeclaration(k) => {
                     out.exports.push(Export { exported: "default".into(), local: Some("default".into()), ..Default::default() });
-                    node(&mut c, "default".into(), &|c| c.visit_class(k));
+                    node(&mut c, "default".into(), false, &|c| c.visit_class(k));
                 }
                 d => {
                     if let Some(x) = d.as_expression() {
                         out.exports.push(Export { exported: "default".into(), local: Some("default".into()), ..Default::default() });
-                        node(&mut c, "default".into(), &|c| c.visit_expression(x));
+                        node(&mut c, "default".into(), false, &|c| c.visit_expression(x));
                     }
                 }
             },
@@ -457,7 +580,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                 Declaration::FunctionDeclaration(f) => {
                     let name = f.id.as_ref().map_or(String::new(), |i| i.name.to_string());
                     out.exports.push(Export { exported: name.clone(), local: Some(name.clone()), ..Default::default() });
-                    node(&mut c, name, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
+                    node(&mut c, name, false, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
                 }
                 Declaration::VariableDeclaration(v) => {
                     for d in &v.declarations {
@@ -465,13 +588,13 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                         for n in &names {
                             out.exports.push(Export { exported: n.clone(), local: Some(n.clone()), ..Default::default() });
                         }
-                        node(&mut c, names.first().cloned().unwrap_or_default(), &|c| c.visit_variable_declarator(d));
+                        node(&mut c, names.first().cloned().unwrap_or_default(), holds_value(d), &|c| c.visit_variable_declarator(d));
                     }
                 }
                 Declaration::ClassDeclaration(k) => {
                     let name = k.id.as_ref().map_or(String::new(), |i| i.name.to_string());
                     out.exports.push(Export { exported: name.clone(), local: Some(name.clone()), ..Default::default() });
-                    node(&mut c, name, &|c| c.visit_class(k));
+                    node(&mut c, name, false, &|c| c.visit_class(k));
                 }
                 Declaration::TSEnumDeclaration(k) => {
                     let name = k.id.name.to_string();
@@ -512,11 +635,15 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
             Statement::TSTypeAliasDeclaration(_) | Statement::TSInterfaceDeclaration(_) | Statement::TSEnumDeclaration(_) | Statement::EmptyStatement(_) => {}
             other => {
                 out.effects.get_or_insert(format!("a top-level statement (line {line})"));
-                node(&mut c, "(module)".into(), &|c| c.visit_statement(other));
+                node(&mut c, "(module)".into(), false, &|c| c.visit_statement(other));
             }
         }
     }
     out
+}
+
+fn holds_value(d: &VariableDeclarator<'_>) -> bool {
+    !d.init.as_ref().is_some_and(|e| matches!(e.get_inner_expression(), Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)))
 }
 
 fn binding_names(p: &BindingPattern<'_>) -> Vec<String> {
@@ -615,7 +742,7 @@ impl<'a> VisitMut<'a> for Mark<'a, '_> {
                     })
                     .collect();
                 let slot = !site.hoist && has_kids(it);
-                let value = format!("{}#{index}|{}|{}", self.islands.id, values.join(","), if slot { "s" } else { "" });
+                let value = format!("{}#{index}|{}|{}|{}", self.islands.id, values.join(","), if slot { "s" } else { "" }, site.when);
                 let ast = oxc_ast::builder::AstBuilder::new(self.allocator);
                 let name = JSXAttributeName::new_identifier(SPAN, ISLAND, &ast);
                 let lit = JSXAttributeValue::new_string_literal(SPAN, self.allocator.alloc_str(&value), None, &ast);
@@ -626,12 +753,13 @@ impl<'a> VisitMut<'a> for Mark<'a, '_> {
     }
 }
 
-/// `(id, values, slot)` of a marked tag.
-pub fn marked(value: &str) -> Option<(String, Vec<String>, bool)> {
+/// `(id, values, slot, when)` of a marked tag.
+pub fn marked(value: &str) -> Option<(String, Vec<String>, bool, String)> {
     let mut parts = value.split('|');
     let id = parts.next()?.to_string();
     let values = parts.next()?.split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
-    Some((id, values, parts.next() == Some("s")))
+    let slot = parts.next() == Some("s");
+    Some((id, values, slot, parts.next().unwrap_or("").to_string()))
 }
 
 /// Sites by index, for tests and callers that want one.

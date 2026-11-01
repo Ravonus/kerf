@@ -48,6 +48,17 @@ async function iconChecks(root) {
   return findings(root).map(f => diagnostic({ code: f.code, file: f.file, span: [f.line, f.column, f.line, f.column], why: f.why }))
 }
 
+/** H010: what the last build or `weft dev` found keeps an island from waiting (`.weft/hydration.json`, weft/hydration). */
+function hydrationChecks(root) {
+  const file = join(root, '.weft', 'hydration.json')
+  if (!existsSync(file)) return []
+  try {
+    return JSON.parse(readFileSync(file, 'utf8')).diagnostics.filter(d => existsSync(join(root, d.file))).map(d => diagnostic({ code: d.code, file: d.file, span: [d.line, 1, d.line, 1], why: d.why, help: d.fix }))
+  } catch {
+    return []
+  }
+}
+
 /**
  * @param {string} root
  * @param {{ files?: string[] }} [options] files relative to `root` (or absolute); default: discovered
@@ -122,6 +133,7 @@ export async function check(root, options = {}) {
     ...(await pluginChecks(root, loaded, { files, exclude })),
     ...checkTests(root, testRels),
     ...(await iconChecks(root)),
+    ...hydrationChecks(root),
     ...hygiene(root),
     ...(await socketChecks(root)),
     ...schemaDrift(root, await dbLayer(root, loaded)),

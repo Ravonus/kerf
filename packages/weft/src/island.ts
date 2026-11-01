@@ -5,8 +5,13 @@
 //
 // Islands claim by key like any hydration, each starting from the scope the server recorded. Disposal is the caller's:
 // everything here is owned by the hole that shows the level.
+//
+// An island whose comment ends in `"v"` or `"i"` waits. Its nodes keep their `wk` and it stays in `later`, with the owner
+// and page data of its level, until `wake` (an event on it, through capture.mjs) or the viewport: `v`
+// runs when it's near, `i` only fetches then. Claiming it is a pass of its own, and then `drain` replays what the script
+// held, in order: an event on an island still loading holds up those behind it, so a click can't pass the typing before.
 
-import { onCleanup, rt, type SsrData } from './index'
+import { DEV, flush, getOwner, onCleanup, rt, runMounts, within, type Owner, type SsrData } from './index'
 import { hchild } from './claim'
 import { hydration, sweep } from './hydrate'
 import { keys, under } from './keys'
@@ -79,7 +84,101 @@ function closing(open: Node) {
 /** A comment only the claim reads, which never belongs to a hole: a level's or an island's or a slot's. */
 export const marks = (n: Node) => n.nodeType === 8 && /^\/?w[lis]:?/.test((n as Comment).data)
 
-function mountIslands(nodes: Node[], load: Load) {
+interface Later { key: string; when: string; wait(): Promise<unknown>; mount(): void; running?: Promise<void> }
+const later = new Map<string, Later>()
+/** What `capture.mjs` left: see there for the fields. */
+const held = () => (window as any).__wq as { q: Event[]; d: boolean; r?: number; p(e: Event): void; l?: Element; w(k: Element, lead?: 1): void } | undefined
+
+/** The island `el` (which has `wk`) is in, if it's still waiting. Keys nest by `/`, an island's own being the prefix. */
+function waiting(el: Element | null | undefined) {
+  for (let k = el?.getAttribute('wk'); k; k = k.slice(0, Math.max(k.lastIndexOf('/'), 0))) {
+    const r = later.get(k)
+    if (r) return r
+  }
+}
+
+/** Load and claim, once. Code that can't load drops the island: its events then take their defaults. */
+const run = (r: Later) => (r.running ??= r.wait().then(() => {
+  if (later.get(r.key) === r) {
+    later.delete(r.key)
+    r.mount()
+  }
+}, () => void later.delete(r.key)).catch(console.error).then(drain))
+
+export function wake(el: Element) {
+  const r = waiting(el)
+  r ? void run(r) : drain()
+}
+
+let draining = false
+/** Replay what was held, up to the first event on an island that isn't running yet. */
+export function drain() {
+  const c = held()
+  if (!c || draining) return
+  draining = true
+  try {
+    while (c.q.length) {
+      const e = c.q[0]
+      const r = waiting((e.target as Element).closest?.('[wk]'))
+      if (r) return void run(r)
+      c.q.shift()
+      if (e.type === 'input' && c.q[0]?.type === 'input' && c.q[0].target === e.target) continue // the DOM has the last value
+      c.p(e)
+      flush()
+    }
+  } finally {
+    draining = false
+  }
+}
+
+/** Controls that moved with no event the script saw (autofill, a restored form): the island hears about them too. */
+function typed(nodes: Node[]) {
+  const c = held()
+  if (!c) return
+  for (const n of nodes) {
+    if (n.nodeType !== 1) continue
+    for (const el of [n as any, ...(n as Element).querySelectorAll<any>('input,textarea,select')]) {
+      if (!/^(input|textarea|select)$/.test(el.localName) || c.q.some(e => e.target === el)) continue
+      const moved = el.localName === 'select' ? el.selectedIndex !== Math.max([...el.options].findIndex((o: any) => o.defaultSelected), 0)
+        : /^(checkbox|radio)$/.test(el.type) ? el.checked !== el.defaultChecked
+        : el.value !== el.defaultValue
+      if (!moved) continue
+      const was = c.r
+      c.r = 1
+      for (const t of ['input', 'change']) el.dispatchEvent(new Event(t, { bubbles: true }))
+      c.r = was
+    }
+  }
+}
+
+let near: IntersectionObserver | undefined
+const watched = new WeakMap<Element, Later>()
+function watch(r: Later, c: Comment) {
+  const el = c.nextElementSibling
+  if (!el) return void (r.when === 'v' && setTimeout(() => run(r)))
+  near ??= new IntersectionObserver(list => {
+    for (const e of list) {
+      const hit = e.isIntersecting && watched.get(e.target)
+      if (!hit) continue
+      near!.unobserve(e.target)
+      void (hit.when === 'v' ? run(hit) : hit.wait().catch(() => {}))
+    }
+  }, { rootMargin: '200px' })
+  watched.set(el, r)
+  near.observe(el)
+}
+
+function drop(c: Comment, close: Node) {
+  for (let n: Node | null = c.nextSibling; n && n !== close; ) {
+    const x: Node | null = n.nextSibling
+    n.parentNode!.removeChild(n)
+    n = x
+  }
+  close.parentNode?.removeChild(close)
+  c.parentNode?.removeChild(c)
+}
+
+function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<unknown>) {
   const found: [Comment, boolean][] = []
   const tops = new Set(nodes)
   let nested = 0
@@ -89,25 +188,46 @@ function mountIslands(nodes: Node[], load: Load) {
     else if (!nested && c.data.startsWith('wi:')) found.push([c, tops.has(c)])
   })
   for (const [c, top] of found) {
-    const [id, key, v] = JSON.parse(c.data.slice(3)) as [string, string, unknown[]]
+    const [id, key, v, when] = JSON.parse(c.data.slice(3)) as [string, string, unknown[], string?]
     const open = c.nextSibling!
     const close = closing(open)
-    const ranges = slot(open, close!)
-    let read = 0
-    const props = { v, get s() { return ranges[read++ % ranges.length] } }
-    under(key + '/', () => hchild(c.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1))
-    // At the level's top with a range that stays: the island decides what's in it, so the level can't list it.
-    if (top && !hydration.trash.includes(close as ChildNode)) {
-      onCleanup(() => {
-        for (let n: Node | null = c.nextSibling; n && n !== close; ) {
-          const x: Node | null = n.nextSibling
-          n.parentNode!.removeChild(n)
-          n = x
-        }
-        close!.parentNode?.removeChild(close!)
-        c.parentNode?.removeChild(c)
-      })
-    } else hydration.trash.push(c)
+    const mount = () => {
+      const ranges = slot(open, close!)
+      let read = 0
+      const props = { v, get s() { return ranges[read++ % ranges.length] } }
+      under(key + '/', () => hchild(c.parentNode as Element, () => load(id)(props), close, undefined, undefined, 1))
+      // At the level's top with a range that stays: the island decides what's in it, so the level can't list it.
+      if (top && !hydration.trash.includes(close as ChildNode)) onCleanup(() => drop(c, close!))
+      else hydration.trash.push(c)
+    }
+    if (!when || !wait) {
+      mount()
+      continue
+    }
+    const owner = getOwner() as Owner
+    const data = rt.data
+    const r: Later = {
+      key,
+      when,
+      wait: () => wait(id),
+      mount() {
+        const range = siblings(open, close)
+        within(owner, () => claiming(range, data, mount))
+        runMounts()
+        typed(range)
+      },
+    }
+    later.set(key, r)
+    onCleanup(() => {
+      if (later.get(key) !== r) return
+      later.delete(key)
+      if (top) drop(c, close!)
+    })
+    // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.
+    if (!held()) setTimeout(() => run(r))
+    else if (!held()!.d) watch(r, c)
+    // Not part of this pass: `hydrate` would call them unclaimed.
+    if (DEV) for (const n of siblings(open, close)) if (n.nodeType === 1) for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')]) hydration.registry.delete(el.getAttribute('wk')!)
   }
 }
 
@@ -147,9 +267,10 @@ export function enter<T>(fn: () => T): T {
 
 /**
  * Show level `d`: the nodes of `html`, or those between its markers when `html` is empty, with its islands running and
- * `next` (the next level) where that level's markers are. The value goes in the hole that shows the level.
+ * `next` (the next level) where that level's markers are. The value goes in the hole that shows the level. `wait`
+ * loads an island that doesn't have to be there first.
  */
-export function level(html: string, d: number, next: () => unknown, load: Load, data?: SsrData): unknown {
+export function level(html: string, d: number, next: () => unknown, load: Load, data?: SsrData, wait?: (id: string) => Promise<unknown>): unknown {
   const page = !html
   const t = document.createElement('template')
   let own: Comment[] = []
@@ -165,7 +286,7 @@ export function level(html: string, d: number, next: () => unknown, load: Load, 
   resume = page && a ? (JSON.parse(a.data.slice(a.data.indexOf(':', 3) + 1)) as [string, number]) : undefined
   const scope = resume
   resume = undefined
-  const islands = () => mountIslands(nodes, load)
+  const islands = () => mountIslands(nodes, load, wait)
   page ? islands() : claiming(nodes, data, islands)
   resume = scope
   hydration.trash.push(...own.filter(n => !anchors.has(n)))

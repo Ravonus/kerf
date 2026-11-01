@@ -40,6 +40,7 @@ import { ErrorPage, NotFoundPage } from './builtin'
 import { renderCard } from './og/index.mjs'
 // @ts-expect-error: plain JS module
 import { INLINE_CSS_MAX } from './inline.mjs'
+import { capture } from './capture.mjs'
 
 export interface RouteEntry { id: string; file: string; layouts: string[]; pattern: string; params: string[]; splat?: string; card?: string; kind: 'page' | '404' | 'error' }
 export interface LayoutEntry { id: string; file: string; dir: string; parent?: string }
@@ -70,6 +71,8 @@ export interface HandlerOptions {
   statics?: string[]
   /** Client chunks by level or island id: the page's own are preloaded, so they don't wait for the entry to ask. */
   chunks?: Record<string, { js?: { href: string }[] }>
+  /** Some island can wait, so every page carries the capture script: a navigation can arrive at one that does. */
+  lazy?: boolean
   /** Stream timeout for Boundaries (ms). */
   timeout?: number
   /** The app's context for `load` and server functions (`src/context.server.ts`'s default export). */
@@ -253,6 +256,8 @@ export function createHandler(options: HandlerOptions) {
     await s.settle() // queries read outside a Boundary have nowhere to stream to
     const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
     const assets = options.assets ?? {}
+    const parts = islandsOf(s.shell)
+    const now = !parts.lazy.length || payload.m.some(m => !m.s) || !!payload.i?.length
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
     const head =
       `<!doctype html>\n<html${lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
@@ -261,7 +266,8 @@ export function createHandler(options: HandlerOptions) {
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
       sheets(assets) +
       // The entry's own script tag, just below, already fetches it.
-      modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks)], assets) +
+      modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
+      (options.lazy ? `<script>${capture(now)}</script>\n` : '') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
@@ -275,7 +281,7 @@ export function createHandler(options: HandlerOptions) {
       return `<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'
     }
     const status = r.status === 200 && scope.form ? scope.form.status : r.status
-    const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }
+    const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
     // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
     if (!Object.values(s.data()?.b ?? {}).includes('p')) {
       const res = new Response(null, init)
@@ -712,9 +718,46 @@ function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
  * The payload with its static levels marked: their hash, without their data (the HTML holds it), and with `html` their
  * HTML, each level's next one cut down to its markers. The `aria-current` a navigation moves doesn't count as a change.
  */
-/** The chunks `payload`'s page imports on load: its non-static levels and its islands. */
-const pageChunks = (payload: RoutePayload, chunks: HandlerOptions['chunks'] = {}) =>
-  [...payload.m.filter(m => !m.s).map(m => m.id), ...(payload.i ?? [])].flatMap(id => chunks[id]?.js ?? [])
+/**
+ * The chunks `payload`'s page will want: its non-static levels and the islands that load with it, and `fold`, the lazy
+ * ones in the first view. Those stay preloaded, fetched but not run, so a first click on them doesn't wait; the rest
+ * load when they're needed. `$client`: the router and runtime, whenever any of that will run.
+ */
+const pageChunks = (payload: RoutePayload, chunks: HandlerOptions['chunks'] = {}, fold: string[] = [], now = true) => {
+  const ids = [...payload.m.filter(m => !m.s).map(m => m.id), ...(payload.i ?? []), ...fold]
+  return [...(now || ids.length ? ['$client'] : []), ...ids].flatMap(id => chunks[id]?.js ?? [])
+}
+
+const saveData = (request: Request) => request.headers.get('save-data') === 'on' || request.headers.get('sec-ch-prefers-reduced-data') === 'reduce'
+
+/** Where the first view ends, in px: past most laptops' and phones' first screen. */
+const FOLD = 900
+
+/**
+ * About how far down the page `html` runs out, in px. The server has no layout, so this counts what makes a page tall:
+ * blocks, and lines of their text. A wrong guess costs one chunk's fetch, either way: it's a preload, not a decision.
+ */
+function depth(html: string) {
+  const plain = html.replace(/<(svg|style|template)\b[\s\S]*?<\/\1>|<!--[\s\S]*?-->/g, '')
+  const blocks = plain.match(/<(?:section|article|header|footer|h[1-6]|p|li|tr|img|form|pre|blockquote|video|figure)\b/g)?.length ?? 0
+  return blocks * 32 + (plain.replace(/<[^>]*>/g, '').length / 60) * 24
+}
+
+/** What a page's HTML says about its islands: those that load with it, those that wait, and the waiting ones in view. */
+function islandsOf(html: string) {
+  const known = renderedOf(html)
+  if (known.p) return known.p
+  const parts = { now: [] as string[], lazy: [] as string[], fold: [] as string[] }
+  let past = false
+  for (const m of html.matchAll(/<!--wi:(\[.*?\])-->/g)) {
+    const [id, , , when] = JSON.parse(m[1]) as [string, string, unknown[], string?]
+    const list = when ? parts.lazy : parts.now
+    if (!list.includes(id)) list.push(id)
+    past ||= depth(html.slice(0, m.index)) >= FOLD
+    if (when && !past && !parts.fold.includes(id)) parts.fold.push(id)
+  }
+  return (known.p = parts)
+}
 
 function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerOptions['assets']>) {
   const hrefs = new Set(chunks.map(c => c.href))
@@ -723,7 +766,7 @@ function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerO
 }
 
 /** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */
-interface Rendered { h: Record<number, string>; x: Record<number, string>; i?: string[] }
+interface Rendered { h: Record<number, string>; x: Record<number, string>; p?: { now: string[]; lazy: string[]; fold: string[] } }
 const RENDERED_MAX = 64
 const rendered = new Map<string, Rendered>()
 
@@ -755,7 +798,7 @@ function withLevels(payload: RoutePayload, html: string, statics: Set<string>, s
     const h = (known.h[d] ??= slice(d))
     return { ...rest, s: 1 as const, x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))), ...(sendHtml && { h }) }
   })
-  const i = (known.i ??= [...new Set([...html.matchAll(/<!--wi:\["([^"]+)"/g)].map(x => x[1]))])
+  const i = islandsOf(html).now
   return { ...payload, m, ...(i.length && { i }) }
 }
 
