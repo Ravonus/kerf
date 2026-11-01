@@ -37,6 +37,31 @@ const items = () => screen.getAllByRole('listitem').map(li => li.textContent)
 const status = () => screen.getByLabelText('status').textContent
 
 describe('.live', () => {
+  test('a poke while a refetch is in flight isn\'t swallowed by that older answer', async () => {
+    render(List)
+    await net.settle()
+    let release!: () => void
+    const held = new Promise<void>(ok => (release = ok))
+    let first = true
+    net.handle(listTodos, async () => {
+      const snapshot = db.map(t => ({ ...t })) // read now, answered later: what a slow query does
+      if (first) {
+        first = false
+        await held
+      }
+      return snapshot
+    })
+    void net.poke('todos') // the first write: a refetch starts, and reads
+    await new Promise(ok => setTimeout(ok, 5))
+    expect(first).toBe(false)
+    db[1].title = 'Second write'
+    void net.poke('todos') // arrives while that refetch is out
+    await new Promise(ok => setTimeout(ok, 5))
+    release()
+    await net.settle()
+    expect(items()).toEqual(['One', 'Second write'])
+  })
+
   test('a poke refetches through the query, and only the changed row is written', async () => {
     render(List)
     await net.settle()

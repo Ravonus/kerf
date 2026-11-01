@@ -49,6 +49,8 @@ export interface Source {
   readonly external?: boolean
   /** Dev: the tags of one change. Default `[table, `${table}:${id}`]`. */
   readonly tagged?: (change: Change) => string[]
+  /** Ms a change waits for its barrier, when a feed delivers in slower batches than the default 25. */
+  readonly hold?: number
   /** The migration's input (`weft db live`). */
   defs?(): Promise<TableDef[]>
   readonly dialect?: string
@@ -135,7 +137,7 @@ export interface Feed {
 
 const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
 
-export function createFeed(source: Source, out: FeedOut, { hold = 25, throttle = 250, barrier = 1000 } = {}): Feed {
+export function createFeed(source: Source, out: FeedOut, { hold = source.hold ?? 25, throttle = 250, barrier = 1000 } = {}): Feed {
   const known = new Set(source.tables)
   let pending = new Set<string>(), prefixes = new Set<string>(), covered = new Set<string>()
   let timer: ReturnType<typeof setTimeout> | undefined

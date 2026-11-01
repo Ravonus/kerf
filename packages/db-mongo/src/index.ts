@@ -74,6 +74,7 @@ export function mongoChanges(db: MongoDb, collections: string[], options: { retr
   return {
     name: 'mongodb',
     tables: collections,
+    hold: 120, // a stream hands over a batch at a time
     external: options.external,
     async probe() {
       try {

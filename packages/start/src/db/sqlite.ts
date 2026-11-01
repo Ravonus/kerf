@@ -19,7 +19,7 @@ interface Conn {
   close?(): void
 }
 
-async function open(path: string): Promise<Conn> {
+export async function open(path: string): Promise<Conn> {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
   const pick = (rows: unknown[][], method: Method) => (method === 'get' ? rows[0] : rows)
   let conn: Conn
