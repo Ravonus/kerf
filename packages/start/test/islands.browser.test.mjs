@@ -481,6 +481,26 @@ test('an island inside a client page is just a component: its children are claim
   await page.close()
 })
 
+test('a route change on a phone-sized CPU does not ask for a fade at all', async () => {
+  const context = await browser.newContext()
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 4 })
+    window.__fades = 0
+    document.startViewTransition = fn => {
+      window.__fades++
+      const done = Promise.resolve().then(fn)
+      return { ready: done, updateCallbackDone: done }
+    }
+  })
+  const page = await context.newPage()
+  await page.goto(url + '/about')
+  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.evaluate(() => { const a = Object.assign(document.createElement('a'), { href: '/islands' }); document.body.append(a); a.click() })
+  await page.waitForURL('**/islands')
+  expect(await page.evaluate(() => window.__fades)).toBe(0)
+  await context.close()
+})
+
 test('a route fade that was slow to start is not asked for again', async () => {
   const { page, errors } = await open('/about')
   await page.evaluate(() => {
