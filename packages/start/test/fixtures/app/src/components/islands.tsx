@@ -54,6 +54,7 @@ export function Label(props: { text: string }) {
 }
 
 /** Shows its children twice, as warp's frame button shows its label and the sweep's copy. */
+/* @weft client */
 export function Twice(props: { children?: unknown }) {
   const n = state(0)
   return <button class="twice" onClick={() => n.value++}><b>{props.children}</b><i>{props.children}</i>{n.value}</button>
