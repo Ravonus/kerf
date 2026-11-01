@@ -37,11 +37,11 @@ export function Level(props: { route: RouteState; depth: number }) {
  *
  * @weft static
  */
-export function Link(props: { href: string; class?: string; children?: unknown }) {
+export function Link({ href, children, ...rest }: Record<string, unknown> & { href: string; class?: string; rel?: string; children?: unknown }) {
   const route = active.route
   return (
-    <a href={props.href} class={props.class} aria-current={route && route.path.value.replace(/[?#].*/, '') === props.href ? 'page' : undefined}>
-      {props.children}
+    <a {...rest} href={href} aria-current={route && route.path.value.replace(/[?#].*/, '') === href ? 'page' : undefined}>
+      {children}
     </a>
   )
 }

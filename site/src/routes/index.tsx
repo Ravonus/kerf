@@ -6,6 +6,7 @@ import { DialProof } from '../components/DialProof'
 import { SpotlightHint } from '../components/SpotlightHint'
 import numbers from '../generated/numbers.json'
 
+export const prerender = true
 export const meta: Meta = { title: { absolute: 'weft: TSX where a change is one DOM write' } }
 
 const kb = (n: number) => (n / 1024).toFixed(1)

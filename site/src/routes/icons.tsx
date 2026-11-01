@@ -1,3 +1,4 @@
+export const prerender = true
 export const meta = { title: 'Icons' }
 
 export default function Page() {

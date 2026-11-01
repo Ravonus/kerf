@@ -6,6 +6,9 @@ import { text } from '@weft/plugin-text'
 const FILES = 'node_modules/@fontsource'
 
 export default defineConfig({
+  tasks: {
+    content: { run: 'node --disable-warning=ExperimentalWarning scripts/content.mjs', description: 'Generate docs, search indexes, llms.txt and numbers from the repo', sideEffects: ['fs'] },
+  },
   site: {
     name: 'weft',
     title: '%s · weft',

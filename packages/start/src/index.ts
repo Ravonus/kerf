@@ -1,7 +1,7 @@
 // @weft/start: what route files import (research 25) and server modules define (research 27). A route module exports
 // its component (`default`) and, when it needs them, `load` (async data, often `await q.fetch()`), `meta` (research
-// 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params whose share cards
-// `weft build` renders).
+// 20 §3: static, awaited before the first byte, never reactive) and `prerender` (the params `weft build` writes as
+// static pages, with their share cards; `true` on a route without params).
 //
 //   // src/routes/users/[id].tsx
 //   export const load = async ({ params }: LoadArgs<'/users/[id]'>) => (await db.user(params.id)) ?? notFound()

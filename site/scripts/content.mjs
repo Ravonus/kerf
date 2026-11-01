@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { brotliCompressSync } from 'node:zlib'
 import { docs as weftDocs } from '../../packages/cli/src/docs.mjs'
 import { catalog } from '../../packages/cli/src/catalog.mjs'
+import { exportsOf } from '../../packages/cli/src/weft.mjs'
 
 // ui-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
@@ -185,6 +186,25 @@ function sections(md) {
 
 const GROUP = { Start: 'Guides', Learn: 'Guides', Extend: 'Guides', Agents: 'Guides', Migrate: 'Guides', Reference: 'API' }
 
+/** Every name `weft` exports, pointing at the section that first uses it, so "state" finds `state` before prose about it. */
+function symbols(docs) {
+  const dir = join(repo, 'packages/weft')
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
+  const rows = []
+  for (const [from, names] of Object.entries(exportsOf({ dir, pkg }))) {
+    for (const name of names) {
+      const uses = new RegExp(`\\b${name.replace(/\$/g, '\\$')}\\b`)
+      for (const p of docs.flat) {
+        const s = sections(p.md.replace(/^# [^\n]*\n/, '')).find(s => uses.test(s.lines.join('\n')))
+        if (!s) continue
+        rows.push({ title: name, url: `/docs/${p.slug}${s.heading ? `#${slugify(s.heading)}` : ''}`, group: 'API', rank: 0.95, parent: s.heading ? `${p.title} / ${s.heading}` : p.title, text: from })
+        break
+      }
+    }
+  }
+  return rows
+}
+
 function buildSearch(docs, extra = []) {
   const t0 = []
   const t1 = []
@@ -193,7 +213,7 @@ function buildSearch(docs, extra = []) {
     t0.push({ title: p.title, url: `/docs/${p.slug}`, group, rank: 1, keywords: p.slug })
     const rendered = docs.pages[p.slug]
     for (const h of rendered.toc) t0.push({ title: h.text, url: `/docs/${p.slug}#${h.id}`, group, rank: 0.6, parent: p.title })
-    for (const s of sections(p.md)) {
+    for (const s of sections(p.md.replace(/^# [^\n]*\n/, ''))) {
       const body = plain(s.lines.join('\n'))
       if (body.length < 12) continue
       const id = s.heading ? slugify(s.heading) : ''
@@ -201,7 +221,7 @@ function buildSearch(docs, extra = []) {
     }
   }
   for (const e of catalog) t0.push({ title: e.code, url: `/docs/codes/${e.code}`, group: 'Diagnostics', rank: 0.9, text: e.catches.slice(0, 90), keywords: e.fix })
-  t0.push(...extra)
+  t0.push(...symbols(docs), ...extra)
   const emit = (name, wire) => {
     const text = JSON.stringify(wire)
     const hash = createHash('sha256').update(text).digest('hex').slice(0, 10)

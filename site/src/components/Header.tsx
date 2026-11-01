@@ -15,7 +15,7 @@ export const NAV = [
 export function Header() {
   return (
     <header data-site="header">
-      <a data-site="skip" href="#content">Skip to content</a>
+      <Link data-site="skip" href="#content">Skip to content</Link>
       <div data-site="bar">
         <Link href="/" class="brand"><Mark /><span>weft</span></Link>
         <nav aria-label="Main">

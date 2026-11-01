@@ -446,14 +446,13 @@ export function createHandler(options: HandlerOptions) {
     const paths: string[] = []
     for (const route of manifest.routes) {
       if (route.kind !== 'page') continue
-      let list: Record<string, string>[] = [{}]
-      if (route.params.length) {
-        const p = mod(route.file)?.prerender
-        list = p ? (typeof p === 'function' ? await p() : p) : []
-      }
+      const p = mod(route.file)?.prerender
+      const given = typeof p === 'function' ? await p() : p
+      const list: Record<string, string>[] = given === true ? [{}] : given ?? (route.params.length ? [] : [{}])
       for (const params of list) {
         const path = fill(route.pattern, params, route.splat)
         const r = await resolve(path, request)
+        if (given && r.status === 200) paths.push(path)
         const image = r.head.og.image
         if (r.status === 200 && typeof image === 'object' && image.url.startsWith('/_weft/og/')) paths.push(image.url.replace(/\?.*/, ''))
       }

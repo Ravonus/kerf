@@ -1,3 +1,4 @@
+export const prerender = true
 export const meta = { title: 'Examples' }
 
 export default function Page() {

@@ -1,6 +1,7 @@
 import { Link, type Meta } from '@weft/start'
 import nav from '../../generated/docs-nav.json'
 
+export const prerender = true
 export const meta: Meta = { title: 'Docs', description: 'How weft works: the rules, the full stack, warp, diagnostics and what agents read.' }
 
 export default function DocsHome() {

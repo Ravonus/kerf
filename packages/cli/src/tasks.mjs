@@ -1,5 +1,6 @@
 // `weft tasks`: the single list of what can be run (PLAN §7b). Built-ins first, then the project's `tasks`.
 
+import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 import { z } from 'zod'
@@ -25,7 +26,7 @@ export const builtins = [
   { name: 'fix', description: 'Apply the safe autofixes from `weft check`', args: { type: 'object', properties: { files } }, sideEffects: ['fs:scope.write'], available: true },
   { name: 'tokens', description: "warp's resolved tokens as DTCG 2025.10 in `.weft/tokens/` (Figma, Style Dictionary, Terrazzo)", args: { type: 'object', properties: {} }, sideEffects: ['fs:.weft/tokens/**'], available: true },
   { name: 'browser', description: 'Drive the running app in any open browser by role/label/text (`weft browser help`)', args: { type: 'object', properties: { command: { type: 'string' } } }, sideEffects: ['network:dev-server', 'fs:.weft/browser'], available: true },
-  { name: 'run', description: 'Run a project task by name', sideEffects: ['task'], available: false },
+  { name: 'run', description: 'Run a project task by name', args: { type: 'object', properties: { name: { type: 'string' } } }, sideEffects: ['task'], available: true },
   { name: 'create', description: 'Scaffold a weft app', sideEffects: ['fs'], available: false },
   { name: 'surfaces', description: "List the project's surfaces: name, kind, props and file", sideEffects: [], available: true },
   { name: 'plugins', description: 'List and explain plugins and slot bindings; `sync` regenerates .weft/slots and plugin tokens; `audit` and `approve` check and write the permissions lock', args: { type: 'object', properties: { subcommand: { type: 'string', enum: ['list', 'explain', 'sync', 'audit', 'approve'] }, slot: { type: 'string' }, all: { type: 'boolean' } } }, sideEffects: ['fs:.weft/**', 'fs:.gitignore'], available: true },
@@ -41,6 +42,19 @@ function jsonSchema(args) {
     }
   }
   return args
+}
+
+/** `weft run <name>`: the task's command in a shell at the project root, its output yours. Resolves with its exit code. */
+export async function runTask(root, name) {
+  root = resolve(root)
+  const { config } = await loadConfig(root)
+  const task = config.tasks?.[name]
+  if (!task) throw Object.assign(new Error(`no task "${name}" (tasks: ${Object.keys(config.tasks ?? {}).join(', ') || 'none'})`), { code: 'E_USAGE' })
+  return new Promise((ok, fail) => {
+    const child = spawn(task.run, { cwd: root, shell: true, stdio: 'inherit' })
+    child.on('error', fail)
+    child.on('close', code => ok(code ?? 1))
+  })
 }
 
 export async function tasks(root) {
@@ -63,8 +77,7 @@ export async function tasks(root) {
     list.push({
       name,
       kind: 'project',
-      // `weft run` isn't shipped yet, so the command is the task's own; it becomes `weft run <name>` when it is.
-      command: t.run,
+      command: `weft run ${name}`,
       description: t.description ?? null,
       args: jsonSchema(t.args),
       sideEffects: t.sideEffects ?? null,

@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --disable-warning=ExperimentalWarning scripts/content.mjs && weft dev --port 3300",
-    "build": "node --disable-warning=ExperimentalWarning scripts/content.mjs && weft build",
+    "dev": "weft run content && weft dev --port 3300",
+    "build": "weft run content && weft build",
     "check": "weft check",
     "start": "weft start",
-    "content": "node --disable-warning=ExperimentalWarning scripts/content.mjs"
+    "content": "weft run content"
   },
   "dependencies": {
     "@weft/icons": "file:../packages/icons",

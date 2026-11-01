@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tasks } from '../src/tasks.mjs'
+import { runTask, tasks } from '../src/tasks.mjs'
 import { fixture, project } from './helpers.mjs'
 
 describe('weft tasks', () => {
@@ -7,11 +7,24 @@ describe('weft tasks', () => {
     const r = await tasks(fixture)
     expect(r).toMatchObject({ version: 1, ok: true, config: null, environments: [], diagnostics: [] })
     const available = r.tasks.filter(t => t.available).map(t => t.name)
-    expect(available).toEqual(['check', 'tasks', 'docs', 'agents-md', 'mcp', 'style', 'map', 'add', 'test', 'fix', 'tokens', 'browser', 'surfaces', 'plugins'])
+    expect(available).toEqual(['check', 'tasks', 'docs', 'agents-md', 'mcp', 'style', 'map', 'add', 'test', 'fix', 'tokens', 'browser', 'run', 'surfaces', 'plugins'])
     for (const t of r.tasks) {
       expect(t).toMatchObject({ kind: 'builtin', command: expect.stringMatching(/^weft /), description: expect.any(String), sideEffects: expect.any(Array) })
       expect(t.args.type).toBe('object')
     }
+  })
+
+  it('runs a project task at the project root and passes its exit code on', async () => {
+    const dir = project({
+      'weft.config.ts': `import { defineConfig } from 'weft/config'
+export default defineConfig({ tasks: {
+  ok: { run: 'test -f weft.config.ts', description: 'Passes at the root', sideEffects: [] },
+  no: { run: 'exit 3', description: 'Fails', sideEffects: [] },
+} })`,
+    })
+    expect(await runTask(dir, 'ok')).toBe(0)
+    expect(await runTask(dir, 'no')).toBe(3)
+    await expect(runTask(dir, 'missing')).rejects.toThrow(/no task "missing"/)
   })
 
   it('adds project tasks with args as JSON Schema (plain or Zod), side effects and environments', async () => {
@@ -33,7 +46,7 @@ export default defineConfig({
     expect(r.scope).toEqual({ write: ['src/**'], read: null, forbid: ['.env*'] })
     expect(r.environments).toEqual(['dev', 'ci'])
     const seed = r.tasks.find(t => t.name === 'seed')
-    expect(seed).toMatchObject({ kind: 'project', command: 'node scripts/seed.mjs', sideEffects: ['db'], env: ['dev'], available: true })
+    expect(seed).toMatchObject({ kind: 'project', command: 'weft run seed', sideEffects: ['db'], env: ['dev'], available: true })
     expect(seed.args).toMatchObject({ type: 'object', properties: { count: { type: 'integer' } }, required: ['count'] })
     expect(r.tasks.find(t => t.name === 'lint')).toMatchObject({ env: ['dev', 'ci'], args: { properties: { fix: { type: 'boolean' } } } })
   })

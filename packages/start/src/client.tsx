@@ -48,6 +48,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   client.route = route
 
   let current: AbortController | undefined
+  let warm: { path: string; at: number; res: Promise<Response> } | undefined
   async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
@@ -57,8 +58,9 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     guess(routes, url.pathname).forEach(chunk) // chunk loads start with the data fetch, not after it
     let next: RoutePayload
     try {
-      const res = await fetch(`/_weft/data${path === '/' ? '' : url.pathname}${url.search}`, { signal: ctrl.signal, headers: { accept: 'application/json' } })
-      next = await res.json()
+      const held = warm?.path === path && performance.now() - warm.at < 10_000 ? warm.res : undefined
+      warm = undefined
+      next = await (held ?? ask(url, ctrl.signal)).then(r => r.clone().json())
     } catch (e) {
       if (ctrl.signal.aborted) return
       return location.assign(url.href) // the data request failed: let the server render the page
@@ -84,21 +86,46 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   client.navigate = go
   // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
   client.invalidated = t => {
+    warm = undefined
     if (tags.some(l => l.some(x => t.includes(x)))) void go(location.href, { pop: true })
   }
 
   document.addEventListener('click', e => {
-    const a = (e.target as Element | null)?.closest?.('a')
-    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-    if ((a.target && a.target !== '_self') || a.hasAttribute('download') || a.getAttribute('rel')?.includes('external')) return
-    const url = new URL(a.href, location.href)
-    if (url.origin !== location.origin || url.pathname.startsWith('/_weft/')) return
-    if (url.pathname === location.pathname && url.search === location.search && url.hash) return // in-page anchor
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    const url = ours(e.target)
+    if (!url) return
     e.preventDefault()
     go(url.href)
   })
+  // A link the pointer rests on, or the keyboard lands on, has its chunks and data by the time it is pressed.
+  // `data-preload="off"` on a link opts out, and so does Save-Data.
+  let pending: ReturnType<typeof setTimeout> | undefined
+  const intent = (e: Event) => {
+    clearTimeout(pending)
+    const url = ours(e.target)
+    const path = url && url.pathname + url.search
+    if (!url || warm?.path === path || (e.target as Element).closest('[data-preload="off"]') || (navigator as any).connection?.saveData) return
+    pending = setTimeout(() => {
+      guess(routes, url.pathname).forEach(chunk)
+      warm = { path: path!, at: performance.now(), res: ask(url) }
+      warm.res.catch(() => { warm = undefined })
+    }, e.type === 'focusin' ? 0 : 80)
+  }
+  document.addEventListener('pointerover', intent)
+  document.addEventListener('focusin', intent)
   addEventListener('popstate', () => go(location.href, { pop: true }))
   return route
+}
+
+const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal, headers: { accept: 'application/json' } })
+
+/** The URL a client navigation would take from this event's link, or nothing for a link the browser should follow. */
+function ours(target: EventTarget | null) {
+  const a = (target as Element | null)?.closest?.('a')
+  if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download') || a.getAttribute('rel')?.includes('external')) return
+  const url = new URL(a.href, location.href)
+  if (url.origin !== location.origin || url.pathname.startsWith('/_weft/')) return
+  return url.pathname === location.pathname && url.search === location.search && url.hash ? undefined : url // not an in-page anchor
 }
 
 /** A kept static level has no binding for its links' current-page state: the same rule as `Link`, after the swap. */

@@ -17,7 +17,7 @@ import { explain, list, sync } from './plugins.mjs'
 import { approveCommand, auditCommand, formatTrust } from './trust.mjs'
 import { loadConfig } from './load-config.mjs'
 import { listSurfaces } from './surface-checks.mjs'
-import { tasks } from './tasks.mjs'
+import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
 import { browserCommand, browserUsage } from './browser/cli.mjs'
 import { buildCommand, dbCommand, devCommand, routesCommand, startCommand } from './start.mjs'
@@ -37,6 +37,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   db generate [name]  a migration for the schema's changes (it applies on the next request)
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
   tasks               commands and project tasks
+  run <task>          run a project task from weft.config.ts
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
@@ -149,6 +150,10 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         else say(result.tasks.map(t => `${t.available ? ' ' : '·'} ${t.name.padEnd(10)} ${t.description ?? ''}`).join('\n'))
         say(formatHuman(result.diagnostics))
         return result.ok ? 0 : 1
+      }
+      case 'run': {
+        if (!args.positional[0]) throw Object.assign(new Error('weft run <task>'), { code: 'E_USAGE' })
+        return await runTask(args.root, args.positional[0])
       }
       case 'docs': {
         const page = await docs(args.root, args.positional[0])
