@@ -14,7 +14,7 @@ function SortButton({ column, dir }: { column: SortColumn; dir?: Dir }) {
     <button
       type="button"
       onClick={() => startTransition(() => router.push(column.href))}
-      className={`inline-flex cursor-pointer items-center gap-1 tracking-wide uppercase hover:text-ink focus-visible:outline-3 focus-visible:outline-accent ${dir ? 'text-ink' : ''}`}
+      className={`inline-flex cursor-pointer items-center gap-1 tracking-wide uppercase hover:text-ink focus-visible:outline-3 focus-visible:outline-accent ${dir ? 'text-ink' : ''} ${column.right ? '-mr-4' : ''}`}
     >
       {column.label}
       <span aria-hidden="true" className="w-3 text-[10px]">{dir === 'asc' ? '▲' : dir === 'desc' ? '▼' : ''}</span>

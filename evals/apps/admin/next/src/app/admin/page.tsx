@@ -15,9 +15,9 @@ async function Stats() {
   const stats = await loadStats()
   const tiles = [['Revenue', stats.revenue], ['Orders', stats.orders], ['Customers', stats.customers], ['Refunded', stats.refunded]]
   return tiles.map(([label, value]) => (
-    <div key={label} className={`${panel} p-4`}>
+    <div key={label} className={`${panel} min-w-0 p-4`}>
       <p className="text-sm text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
+      <p className="mt-1 text-xl font-semibold sm:text-2xl tracking-tight tabular-nums">{value}</p>
     </div>
   ))
 }
