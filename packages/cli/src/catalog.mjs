@@ -99,6 +99,10 @@ export const catalog = [
     example: 'export function A() { let n = 0; return <button onClick={() => { n++ }}>{n}</button> }',
   },
   {
+    code: 'W043', severity: 'warning', by: 'cli', catches: '`data-x={true}` or `data-x={false}` on a native element: `data-*` booleans are presence flags, so these write `data-x=""` or nothing, not React\'s `"true"` and `"false"`',
+    fix: '`data-x` for a flag (`weft fix`), or `data-x="true"` for the word. CSS matches `[data-x]`',
+  },
+  {
     code: 'W050', severity: 'error', by: 'compiler',
     catches: 'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
     fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser, or clean it up in `onCleanup`',
@@ -140,6 +144,8 @@ export const catalog = [
   { code: 'D003', severity: 'warning', by: 'cli', catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)', fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius' },
   { code: 'D004', severity: 'warning', by: 'cli', catches: 'Layout spelled out on an element (`display: flex`, `flex flex-col gap-4`) where a primitive says it', fix: '`<Stack>` or `<Row>`; a suggested edit when nothing else is on the element' },
   { code: 'D005', severity: 'warning', by: 'cli', catches: 'A native `<button>`, `<select>` or `<textarea>` in a warp app', fix: 'The warp component: focus ring, sweep, tones and touch target come with it' },
+  { code: 'D006', severity: 'warning', by: 'cli', catches: 'One heading level at two roles across an app (`h1` as both `title` and `display`), or a bare `<hN>` beside `<Heading>`', fix: 'Drop `role`, or match the rest: `Heading` picks the role from `level`. A suggested edit at each site' },
+  { code: 'D007', severity: 'warning', by: 'cli', catches: 'A bare `<a href>` in a warp app', fix: '`<Link>`, or `Shell`\'s `nav` for navigation (suggested edit)' },
   { code: 'D011', severity: 'error', by: 'cli', catches: 'A literal text and background colour pair on one element below 4.5:1', fix: 'Use tokens: they pass at every dial stop' },
   { code: 'D030', severity: 'error', by: 'cli', catches: 'An `<input>`, `<select>` or `<textarea>` with no label', fix: 'A wrapping `<label>`, `<label for>`, `aria-label`, or warp\'s `<Input label>`' },
   { code: 'D031', severity: 'error', by: 'cli', catches: 'A button or link with no accessible name (icon only, or empty)', fix: 'Text, or `aria-label`; warp\'s Button takes `label`' },

@@ -12,8 +12,19 @@ test('a rule keyed on a value no build file mentions goes; one it mentions stays
 })
 
 test('a selector list loses only its dead members', () => {
-  expect(out(':where([data-scope="a"],[data-scope="b"]){color:red}', 'b')).toBe(':where([data-scope="a"]),:where([data-scope="b"]){color:red}')
+  expect(out(':where([data-scope="a"],[data-scope="b"]){color:red}', 'b')).toBe(':where([data-scope="b"]){color:red}')
   expect(out('[data-scope="a"],[data-scope="b"]{color:red}', 'b')).toBe('[data-scope="b"]{color:red}')
+})
+
+test('dead alternatives go from a :where() or :is() the rule keeps, however deep', () => {
+  expect(out('[data-part="x"]:is([data-scope="a"],[data-scope="b"]) p{color:red}', 'b', 'x')).toBe('[data-part="x"]:is([data-scope="b"]) p{color:red}')
+  expect(out('p:is(:where([data-scope="a"],[data-scope="b"]) i,[data-scope="a"]){color:red}', 'b')).toBe('p:is(:where([data-scope="b"]) i){color:red}')
+})
+
+test('a dial tier the build never names goes, with the tokens only it read, and one it names stays', () => {
+  const css = ':root{--warp-a:1;--warp-b:2}[data-expression=vivid]{--warp-b:3}[data-fields=classic] p{color:var(--warp-a)}p{color:var(--warp-b)}'
+  expect(out(css)).toBe(':root{--warp-b:2}p{color:var(--warp-b)}')
+  expect(out(css, 'vivid')).toBe(':root{--warp-b:2}[data-expression=vivid]{--warp-b:3}p{color:var(--warp-b)}')
 })
 
 test(':where lives if any branch does, and :not is no evidence', () => {
@@ -26,7 +37,7 @@ test('every keyed attribute in a selector has to be reachable', () => {
   expect(out('[data-scope=a] [data-part=b]{color:red}', 'a')).toBe('')
 })
 
-test('dials and plain selectors are left alone: an app sets those at run time', () => {
+test('data-theme and plain selectors are left alone: the OS answers those', () => {
   const css = '[data-theme=dark]{color:red}.x{color:blue}'
   expect(out(css)).toBe(css)
 })

@@ -71,9 +71,12 @@ export function change(el: Element, handler: any) {
   el.addEventListener('change', fire)
 }
 
-/** `autoFocus`, as React means it: focus on mount. Hydrating, the browser already acted on the server's attribute. */
+/**
+ * `autoFocus`, as React means it: focus on mount. Hydrating, the browser already acted on the server's attribute. In a
+ * closed `<dialog>` it's for `showModal()`, and `focus()` here would only force a layout of the page and do nothing.
+ */
 export function focus(el: HTMLElement, on: unknown) {
-  if (on && !keys.hydrating) queueMicrotask(() => el.focus())
+  if (on && !keys.hydrating) queueMicrotask(() => el.closest('dialog:not([open]),[hidden]') || el.focus())
 }
 
 /** A spread element's hole, hydrating: content the server rendered from its props stays. */

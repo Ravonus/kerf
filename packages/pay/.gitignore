@@ -1,0 +1,3 @@
+bench/verify/target/
+bench/verify/Cargo.lock
+bench/verify.wasm

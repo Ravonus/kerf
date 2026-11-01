@@ -1,3 +1,4 @@
+import { onTestFinished } from 'vitest'
 // The collab pack driven as a user would (07 §5, §6; 06 §10).
 import { fireEvent } from '@testing-library/dom'
 import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft/ui-core'
@@ -140,22 +141,22 @@ describe('Thread', () => {
   })
 
   test('away from the bottom: new messages count on Jump to latest, and it goes back', async () => {
+    const box = vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(100) // jsdom has no layout: the window reads this once, at the start
+    onTestFinished(() => box.mockRestore())
     const list = state(base())
     const c = mount(list)
     await tick()
     const log = q(c, '[role="log"]')
-    Object.defineProperty(log, 'scrollHeight', { configurable: true, value: 1000 })
-    Object.defineProperty(log, 'clientHeight', { configurable: true, value: 200 })
-    log.scrollTop = 100
+    log.scrollTop = 0
     fireEvent.scroll(log)
-    await flush()
+    await wait(40); await flush()
     expect(c.querySelector('[data-part="jump"]')!.textContent).toBe('Jump to latest')
     list.value = [...list.value, msg('e', mei, 'New')]
     await flush(); await tick(); await flush()
     expect(q(c, '[data-part="jump"]').textContent).toBe('Jump to latest · 1 new')
     q(c, '[data-part="jump"]').click()
-    await flush()
-    expect(log.scrollTop).toBe(1000)
+    await flush(); await tick(); await flush()
+    expect(log.scrollTop).toBeGreaterThan(0)
     expect(c.querySelector('[data-part="jump"]')).toBeNull()
     expect(document.activeElement).toBe(q(c, '[data-mid="e"]'))
   })
@@ -493,7 +494,7 @@ describe('Kanban', () => {
   const mount = () => {
     const moves: any[] = []
     const { container: c } = render(() => <><Kanban columns={data()} onMove={(id, col, i) => moves.push([id, col, i])} /><Toaster /></>)
-    const titles = () => qa(c, '[data-part="column"]').map(col => qa(col, 'h4').map(h => h.textContent))
+    const titles = () => qa(c, '[data-part="column"]').map(col => qa(col, '[data-part="row"]').sort((a, b) => Number(a.getAttribute('aria-posinset')) - Number(b.getAttribute('aria-posinset'))).map(r => r.querySelector('h4')!.textContent))
     const card = (id: string) => q(c, `[data-part="card"][data-id="${id}"]`)
     return { c, moves, titles, card }
   }
@@ -505,7 +506,7 @@ describe('Kanban', () => {
     expect(q(cols[1], '[data-part="count"]').textContent).toBe('2 / 1')
     expect(cols[1].hasAttribute('data-over-limit')).toBe(true)
     expect(cols[0].hasAttribute('data-over-limit')).toBe(false)
-    expect(q(cols[0], 'ol li').getAttribute('draggable')).toBe('true')
+    expect(q(cols[0], 'ol li [data-part="card"]').getAttribute('draggable')).toBe('true')
   })
 
   test('Alt + arrows move and announce; the same node reorders; focus follows across columns', async () => {
@@ -514,12 +515,14 @@ describe('Kanban', () => {
     const one = card('1')
     one.focus()
     fireEvent.keyDown(one, { key: 'ArrowDown', altKey: true })
+    await tick()
     expect(titles()[0]).toEqual(['Two', 'One'])
     expect(card('1')).toBe(one)
     expect(document.activeElement).toBe(one)
     await wait()
     expect(polite()).toBe('Moved One to To do, position 2 of 2')
     fireEvent.keyDown(one, { key: 'ArrowRight', altKey: true })
+    await tick()
     expect(titles()).toEqual([['Two'], ['Three', 'One', 'Four']])
     expect(document.activeElement).toBe(card('1'))
     expect(moves.at(-1)).toEqual(['1', 'b', 1])
@@ -536,13 +539,16 @@ describe('Kanban', () => {
     await wait()
     expect(polite()).toContain('Picked up One')
     fireEvent.keyDown(card('1'), { key: 'ArrowRight' })
+    await tick()
     expect(titles()[1]).toContain('One')
     expect(card('1').hasAttribute('data-dragging')).toBe(true)
     fireEvent.keyDown(card('1'), { key: ' ' })
     expect(card('1').hasAttribute('data-dragging')).toBe(false)
     fireEvent.keyDown(card('1'), { key: ' ' })
     fireEvent.keyDown(card('1'), { key: 'ArrowDown' })
+    await tick()
     fireEvent.keyDown(card('1'), { key: 'Escape' })
+    await tick()
     expect(titles()[1].indexOf('One')).toBe(0)
     expect(card('1').hasAttribute('data-dragging')).toBe(false)
   })

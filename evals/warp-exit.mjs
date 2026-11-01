@@ -113,9 +113,13 @@ const builds = {}
 // -- a11y at every dial stop
 if (!process.argv.includes('--skip-a11y')) {
   log('== a11y (axe + measured contrast, 12 stops)')
-  const { a11y, buildGallery, scenes } = await import(join(repo, 'packages', 'warp', 'scripts', 'a11y.mjs'))
+  const { a11y, buildGallery, DIALS, scenes } = await import(join(repo, 'packages', 'warp', 'scripts', 'a11y.mjs'))
   const gallery = await buildGallery(join(results.size.work, 'gallery'))
-  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: builds.warp.dist }], { log: l => log(`   ${l}`) })
+  // The audit sets the dials from outside the build, so the shop's audited copy keeps the tiers its size build drops.
+  const shop = join(results.size.work, 'warp')
+  writeFileSync(join(shop, 'vite.audit.ts'), `import weft from 'weft/vite'\nexport default { plugins: [weft({ purge: { keep: ${JSON.stringify(DIALS)} } })] }\n`)
+  await exec('npx', ['vite', 'build', '--logLevel', 'silent', '--config', 'vite.audit.ts', '--outDir', 'dist-audit'], { cwd: shop, timeout: 300_000 })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: join(shop, 'dist-audit') }], { log: l => log(`   ${l}`) })
   const failures = r.results.flatMap(run => [
     ...run.errors.map(e => ({ site: run.site, stop: `${run.expression}/${run.theme}/${run.motion}`, error: e })),
     ...run.states.flatMap(s => [...s.violations.map(v => ({ id: v.id, nodes: v.nodes })), ...s.moving.map(m => ({ id: 'moving at reduce', nodes: [{ target: m }] }))]

@@ -12,7 +12,9 @@ Code written with React habits runs as React would. On native elements these wor
 
 The compiler resolves names it can see (`crates/weft-compiler/src/react.rs`), so they cost nothing at run time. A spread
 resolves its keys in `attrName` (`weft/dom`). One gap: on an SVG element a spread lowercases only `tabIndex`,
-`crossOrigin`, `hrefLang` and `referrerPolicy`; other HTML-only camelCase names there keep their case.
+`crossOrigin`, `hrefLang` and `referrerPolicy`; other HTML-only camelCase names there keep their case. SVG font attributes
+(`unitsPerEm`, `horizAdvX`), which no browser reads, also keep their case in a spread. An app with no `{...spread}` on an
+element ships none of this.
 
 ## Values
 
@@ -41,7 +43,8 @@ Three things differ from weft before this was added:
 **`data-*` booleans are presence flags.** `data-open={true}` writes `data-open=""` and `data-open={false}` removes it;
 React writes `"true"` and `"false"`. So `[data-open]` works in weft, and `[data-open="true"]` doesn't match. For React's
 output, pass a string: `data-open={String(open)}`. weft's own components and recorded output depend on the presence form,
-so this stays.
+so this stays. `weft check` reports a literal `{true}` or `{false}` here as W043, and `weft fix` rewrites it to what it
+already renders: `data-open`, or nothing.
 
 ## Events
 

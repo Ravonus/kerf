@@ -30,10 +30,13 @@ export const STOPS = ['quiet', 'balanced', 'vivid'].flatMap(expression => ['ligh
 const RULES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']
 
 /** Build the gallery page (test/a11y) into a temp dir; returns the dist dir. */
+// The stops are set from outside the build, so purging can't see them.
+export const DIALS = ['quiet', 'balanced', 'vivid', 'classic', 'floating', 'compact', 'cozy', 'comfortable', 'sweep', 'none', 'phone', 'tablet', 'desktop']
+
 export async function buildGallery(outDir) {
   const { build } = await import('vite')
   const { default: weft } = await import('weft/vite')
-  await build({ root: join(pkg, 'test', 'a11y'), base: './', logLevel: 'silent', plugins: [weft()], build: { outDir, emptyOutDir: true } })
+  await build({ root: join(pkg, 'test', 'a11y'), base: './', logLevel: 'silent', plugins: [weft({ purge: { keep: DIALS } })], build: { outDir, emptyOutDir: true } })
   return outDir
 }
 

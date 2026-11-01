@@ -215,7 +215,7 @@ function rescoped(key, scope) {
 export const classicCss = () => rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
 export const dialCss = (dial, value) => rescoped(`[data-${dial}="${value}"]`, `:root:not([data-${dial}])`)
 
-const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D005). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
+const agents = `Import components from \`@weft/warp\`; each brings its own CSS (the spec's, split per component). Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page; \`as\`: the element). Text: \`Heading\` (\`level\`, \`role\`), \`Text\` (\`role\`, \`tone\`, \`subtle\`). No raw values (D001–D007). Intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). No style props: the look comes from the dials, \`data-expression="quiet|balanced|vivid"\`, \`data-theme\`, \`data-density\`, \`data-motion\`, \`data-flair\` on any element (scopes nest; \`setDial()\` from \`@weft/ui-core\` writes them). Fields take \`label\` (required), \`hint\`, \`error\`, native \`value\`/\`onInput\`; \`variant="classic"\` puts the label above. \`Modal\`/\`Drawer\` take \`open\` as a box. App-wide look: \`warp({ seed: { accent: '#0a7d4f' }, dials, radius, fonts, tokens })\`; \`weft check\` fails with D010 if any pair can't pass.`
 
 const catalog = [
   ['Stack', 'Vertical flow; `gap` is the relationship'],
@@ -227,8 +227,9 @@ const catalog = [
   ['Frame', 'Fixed-ratio media box'],
   ['Spacer', 'Takes the free space in a Row or Stack'],
   ['Inset', 'Sunken padded region'],
-  ['Heading', 'Real heading: `level` for the outline, `role` for the look'],
+  ['Heading', 'Real heading: `level` is the outline and picks the look; `role` overrides it'],
   ['Text', 'Text in a role: `role`, `tone`, `subtle`, `faint`'],
+  ['Link', 'A link: `href`, `subtle`, `external`; a bare `<a>` still gets warp\'s colour'],
   ['VirtualList', 'A long list with exact text heights: rows render only in view'],
   ['Thread', 'A chat log on a window: stick to end, older messages, unread divider'],
   ['Feed', 'APG feed on a window with Page Up/Down between articles'],

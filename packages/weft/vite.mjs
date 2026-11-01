@@ -31,7 +31,7 @@ const features = {
 }
 
 // Slots weft/surface imports dynamically: it has to build in an app that never ran `weft plugins sync` (research 33 §5).
-const CORE_SLOTS = new Set(['text.measure', 'surface.renderer'])
+const CORE_SLOTS = new Set(['text.measure', 'surface.renderer', 'pay.rail'])
 const UNSYNCED = '\0weft:slot-unsynced/'
 
 /** `weft:slot/<id>` → the generated `<root>/.weft/slots/<id>.ts` (research 13 §2.6; `weft plugins sync` writes it). */

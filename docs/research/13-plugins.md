@@ -235,7 +235,7 @@ A slot is defined once, in core or in a package that owns a domain:
 | `surface.renderer@1` | keyed by `kind` | client | built in: `canvas2d`, `webgl2` | `@weft/plugin-surface-keel` (`keel-pixel`) | 2 (Surfaces) |
 | `realtime.bus@1` | one | server | built in: `memory` (R002 on multi-instance presets) | `@weft/realtime-redis`, `-nats` ([35](35-multiplayer-and-packs.md)) | 3 / 3b |
 | `db.adapter@1` | keyed by name | server | built in: `drizzle` | `@weft/db-sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb` ([35](35-multiplayer-and-packs.md)) | 3c |
-| `pay.rail@1` | keyed by rail | server, client, native | `null`; `weft/pay` without a rail is PAY-coded | `@weft/plugin-pay-stripe`, `-storekit`, `-play` | 6c |
+| `pay.rail@1` | keyed by rail | server, client, native | `null`; `src/pay.server.ts` without a rail is P101, a rail without it PAY014 | `@weft/plugin-pay-stripe` built ([37](37-pay-web.md)); `-storekit`, `-play` | 6c |
 | `device.<capability>@1` | keyed by target | native, client | `null`; unguarded use is N031 | `@weft/plugin-device-*` (native-module codegen) | 6b |
 
 **Binding rules** (resolved once, at config load):
@@ -560,6 +560,7 @@ reference:
 | Realtime buses (`postgres`, `redis`, `nats`, `durable-object`) | **Plugins** for `realtime.bus` | Today this is a config string (`realtime.bus: 'redis'`). As a slot, the bus code is only installed when used, R002 becomes "default bound on a multi-instance preset", and every bus passes one conformance suite (ordering, resume, listener-before-backlog) |
 | `@weft/db-*` list/cursor adapters (agorix 03) | **Plugins** for `db.adapter` (keyed) | Seven adapters with one contract. The H6 identifier pass-through bug (agorix 03) is exactly what a conformance suite catches |
 | Pay rails (Stripe, StoreKit, Play, RevenueCat) | **Plugins** for `pay.rail` (keyed) | The resolver and the dated policy table stay in core `weft/pay`; a rail is an adapter. App code still never names a rail (PLAN §4.4) |
+| Pay itself, and any plugin with a server part | **`@weft/pay`** on `server.extension@1` (research 37), routes under `/_weft/x/<key>/` | The reference plugin. `weft docs plugins` walks through it |
 | Surface kinds (`keel-pixel`) | **Plugin** for `surface.renderer` | `weft/surface/keel` becomes `@weft/plugin-surface-keel`, which isolates the Keel licence question (PLAN §5) |
 | `weft/device` capabilities and native modules | **Plugins** for `device.*` | The per-target support table already exists (N031). Native-module codegen produces the provider |
 | Tailwind v4 adapter | **Plugin** (tokens and a filtered CSS hook, no slot) | It is optional styling interop |

@@ -59,6 +59,55 @@ export interface Contributions {
   catalog?: { name: string; import: string; summary: string }[]
   /** Codes in the plugin's namespace (P111 otherwise). */
   diagnostics?: { code: string; catches: string; fix: string; severity?: 'error' | 'warning' }[]
+  /** Runs in `weft check`, never on HMR: it reads through `ctx` and returns findings in the plugin's namespace. */
+  check?: { include?: string[]; run(ctx: CheckContext): Finding[] | Promise<Finding[]> }
+  /** `weft docs <topic>`: a page in the package, read at the time. `weft docs <code>` finds `diagnostics` by itself. */
+  docs?: { topic: string; summary: string; file: string }
+  /** What `weft add <alias>` does after adding the plugin. See {@link Setup}. */
+  setup?: Setup
+  /** Lines `weft add` prints after installing. */
+  notes?: string[]
+}
+
+export interface CheckContext {
+  root: string
+  /** The files that match `include`, relative to the root. */
+  files: readonly string[]
+  read(rel: string): string
+  exists(rel: string): boolean
+  bytes(rel: string): Uint8Array | undefined
+  jsx(rel: string): unknown
+  importOf(scan: unknown, name: string): unknown
+  /** The config's slot bindings. */
+  slots: Readonly<Record<string, unknown>>
+}
+
+export interface Finding {
+  code: string
+  file: string
+  start?: number
+  end?: number
+  why: string
+  help?: string
+  severity?: 'error' | 'warning' | 'info'
+  fix?: { description: string; safe?: boolean; edits: { file?: string; start: number; end: number; text: string }[] }
+}
+
+/** Files a plugin writes into an app, for `weft add`. Pure: it describes, and `weft add` does the writing, or a dry run. */
+export interface Setup {
+  /** Other packages to add first, as `weft add` would. */
+  with?: string[]
+  /** What the app must have, each with what to run instead: `'db'` and `'auth'`. */
+  needs?: ('db' | 'auth')[]
+  run(app: { engine: string | null; layer: string | null; read(rel: string): string | undefined }): {
+    /** New files. One that exists stops `weft add`, with nothing changed. */
+    files?: Record<string, string>
+    /** Existing files, whole. */
+    edits?: Record<string, string>
+    /** Lines for `.env` and `.env.example`, kept out of git and in it. Placeholders only. */
+    env?: Record<string, string>
+    next?: string[]
+  }
 }
 
 /** Options: a Standard Schema (Zod 4, Valibot…) or a parse function that throws on bad input. */

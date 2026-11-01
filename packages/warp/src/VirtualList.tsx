@@ -38,6 +38,8 @@ export interface VirtualListProps<T> {
   /** `list` by default; `feed`, `log` and the rest bring their own row role. */
   role?: string
   rowRole?: string
+  /** Rows take no list semantics: what's inside them says what it is. */
+  bareRows?: boolean
   /** Keep this role off the scroller and put it on the list inside. */
   inner?: boolean
   tag?: 'div' | 'ol'
@@ -52,6 +54,8 @@ export interface VirtualListProps<T> {
   onStick?: (stuck: boolean) => void
   onDrift?: (index: number, predicted: number, actual: number) => void
   control?: (c: VirtualControl) => void
+  /** The scroller's tabindex. Default 0, none with `roving`. */
+  tabindex?: number
   scope?: string
   part?: string
   listScope?: string
@@ -314,11 +318,12 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       ref: (n: HTMLElement) => (node = n),
       'data-part': 'row',
       role: props.rowRole,
-      'aria-posinset': index() + 1,
-      'aria-setsize': props.open ? -1 : keys.value.length,
+      'aria-posinset': props.bareRows ? undefined : index() + 1,
+      'aria-setsize': props.bareRows ? undefined : props.open ? -1 : keys.value.length,
+      'data-index': props.bareRows ? index() + 1 : undefined,
       tabindex: props.roving ? (active.value === key || (active.value === undefined && key === shown.value[0]) ? 0 : -1) : undefined,
       style: place,
-      onFocusIn: () => { if (props.roving || props.rowRole === 'article') active.value = key },
+      onFocusIn: () => { active.value = key },
     })
     const body = props.children(() => p.row.item, index)
     return props.tag === 'ol' ? <li {...attrs()}>{body}</li> : <div {...attrs()}>{body}</div>
@@ -335,8 +340,8 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     style: 'position:relative;flex:none',
   })
   function Probe(p: { sample: [string, T] }) {
-    const name = untrack(() => p.sample[0])
-    const body = props.children(() => p.sample[1], () => 0)
+    const [name, item] = untrack(() => p.sample)
+    const body = props.children(() => item, () => 0) // once: measuring overwrites the row's text
     const attrs = { ref: (n: HTMLElement) => probes.set(name, n), 'data-part': 'row', 'data-probe': '', 'aria-hidden': 'true', inert: true, style: 'position:absolute;inset-inline:0;inset-block-start:0;visibility:hidden;contain:layout' }
     return untrack(() => props.tag) === 'ol' ? <li {...attrs}>{body}</li> : <div {...attrs}>{body}</div>
   }
@@ -351,7 +356,7 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
       aria-label={inner ? undefined : props.label}
       aria-live={props.role === 'log' ? 'off' : undefined}
       aria-busy={!inner && props.busy ? 'true' : undefined}
-      tabindex={untrack(() => props.roving) ? undefined : 0}
+      tabindex={untrack(() => props.roving) ? undefined : props.tabindex ?? 0}
       style={props.height ? `block-size:${props.height}` : undefined}
       onKeyDown={onKeyDown}
     >

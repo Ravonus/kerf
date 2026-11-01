@@ -27,6 +27,7 @@ import { rt } from 'weft'
 import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, renderToStringAsync, type Merged, type Meta as MetaObject, type Site } from 'weft/ssr'
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
+import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
 import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
@@ -77,6 +78,8 @@ export interface HandlerOptions {
   store?: Store
   /** `src/auth.server.ts`'s default export, any provider: mounted at its base path, checked on the first request. */
   auth?: Pick<AuthProvider, 'handler' | 'basePath' | '$weft'>
+  /** `server.extension` providers with an app file (`virtual:weft/extensions`), loaded on the first request. */
+  extensions?: ExtensionEntry[]
   /** The app's migrations (`drizzle/`); dev reads them each request, so `weft db generate` needs no restart. */
   migrations?: () => { tag: string; sql: string }[]
   /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
@@ -146,9 +149,15 @@ export function createHandler(options: HandlerOptions) {
   const tree = routeTree(manifest, modules)
   let provider: Promise<MediaServer> | undefined
   const mediaServer = () => (provider ??= options.media?.())
-  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer }
+  const scopeOptions = { context: options.context, store: options.store, dev: options.dev, onDiagnostic: options.onDiagnostic, media: mediaServer, extensions: undefined as ServerExtension[] | undefined }
   let checked = !options.dev
   const authBase = (options.auth?.basePath ?? '/api/auth').replace(/\/$/, '')
+  const extensions = new Map<string, ServerExtension>()
+  let loading: Promise<void> | undefined
+  const loadExtensions = () => (loading ??= (async () => {
+    for (const { key, load } of options.extensions ?? []) extensions.set(key, await load())
+    scopeOptions.extensions = [...extensions.values()]
+  })())
   let applied = -1
   configure({ ...options.realtime, build: options.build, dev: options.dev })
 
@@ -161,6 +170,7 @@ export function createHandler(options: HandlerOptions) {
     const list = options.migrations?.() ?? []
     if (applied !== list.length) {
       options.auth?.$weft?.check()
+      for (const e of extensions.values()) e.check?.(options.dev)
       applied = list.length
       const report = (e: unknown) => options.onDiagnostic?.({ code: 'Q016', severity: 'error', message: `Q016: ${(e as any)?.message ?? e}` })
       runtime.migrations = { list, report }
@@ -256,6 +266,21 @@ export function createHandler(options: HandlerOptions) {
       (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
       `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
       (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '')
+    const finish = async () => {
+      const cached = wire(scope)
+      // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
+      if (scope.live) await hub().ready()
+      const rt = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
+      return `<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'
+    }
+    const status = r.status === 200 && scope.form ? scope.form.status : r.status
+    const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }
+    // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
+    if (!Object.values(s.data()?.b ?? {}).includes('p')) {
+      const res = new Response(null, init)
+      whole.set(res, head + (await finish()))
+      return withHeaders(res, scope)
+    }
     const enc = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -265,16 +290,11 @@ export function createHandler(options: HandlerOptions) {
         } catch (e) {
           options.onDiagnostic?.({ code: 'E_STREAM', severity: 'error', message: String(e) })
         }
-        const cached = wire(scope)
-        // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
-        if (scope.live) await hub().ready()
-        const rt = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
-        controller.enqueue(enc.encode(`<script type="application/json" id="weft-data">${json(s.data())}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'))
+        controller.enqueue(enc.encode(await finish()))
         controller.close()
       },
     })
-    const status = r.status === 200 && scope.form ? scope.form.status : r.status
-    return withHeaders(new Response(body, { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }), scope)
+    return withHeaders(new Response(body, init), scope)
   }
 
   /**
@@ -442,10 +462,19 @@ export function createHandler(options: HandlerOptions) {
     return new Response(`<!doctype html>\n<meta name="robots" content="noindex">\n${list}\n`, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-nitro-prerender': paths.join(',') } })
   }
 
+  /** Everything under `/_weft/x/<key>/`, for the extension with that key. Nothing else reaches it. */
+  async function extensionRoute(url: URL, request: Request, scope: Scope) {
+    const [key = '', ...rest] = url.pathname.slice(EXTENSION.length).split('/')
+    const extension = extensions.get(key)
+    if (!extension?.handle) return new Response('Not found', { status: 404 })
+    return extension.handle(request, rest.join('/'), { invalidate: tags => exec.invalidate(scope, tags), report: d => options.onDiagnostic?.(d) })
+  }
+
   const route = (request: Request, scope: Scope): Promise<Response> => {
     const url = new URL(request.url)
     if (options.auth && (url.pathname === authBase || url.pathname.startsWith(authBase + '/'))) return options.auth.handler(request)
     if (url.pathname.startsWith('/_weft/fn/')) return fn(url, request, scope)
+    if (url.pathname.startsWith(EXTENSION)) return extensionRoute(url, request, scope)
     if (request.method === 'POST' && !url.pathname.startsWith('/_weft/') && /^(application\/x-www-form-urlencoded|multipart\/form-data)/.test(request.headers.get('content-type') ?? '')) return form(url, request, scope)
     if (url.pathname === '/_weft/rt') return rtRoute(request, scope, options.realtime?.origins)
     if (url.pathname === '/_weft/ws') return socketRoute(request, scope, options.realtime?.origins)
@@ -458,6 +487,7 @@ export function createHandler(options: HandlerOptions) {
   }
   const handler = async (incoming: Request): Promise<Response> => {
     const request = options.auth ? stamped(incoming) : incoming
+    await loadExtensions()
     if (!checked) {
       checked = true
       exec.checkTags(d => options.onDiagnostic?.(d))
@@ -471,20 +501,54 @@ export function createHandler(options: HandlerOptions) {
   return Object.assign(handler, { resolve })
 }
 
+/** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
+const whole = new WeakMap<Response, string>()
+
+type Encoding = 'br' | 'gzip'
+type Zlib = typeof import('node:zlib')
+
+let loaded: Promise<Zlib | undefined> | undefined
+const loadZlib = () => (loaded ??= import('node:zlib').catch(() => undefined))
+const brotli = (zlib: Zlib, sizeHint: number) => ({ params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: sizeHint } })
+
+const PACKED_MAX = 16 * 1024 * 1024 // characters of text held, per encoding
+const PACKED_ENTRY_MAX = 1024 * 1024
+
 /**
- * HTML and data go out brotli or gzipped when the client takes it, flushed chunk by chunk so a streamed page still
- * streams. A runtime with no node:zlib sits behind a platform that compresses.
+ * Compressed bodies by their whole text, most recently used last. The text is the key, not a hash of it, so a response
+ * is only ever reused for the same bytes: two users can share an entry only if each was already being sent that page.
  */
-async function compressed(request: Request, response: Response): Promise<Response> {
-  if (!response.body || response.headers.has('content-encoding')) return response
-  if (!/^(text\/html|application\/json)/.test(response.headers.get('content-type') ?? '')) return response
-  const accepts = request.headers.get('accept-encoding') ?? ''
-  const encoding = /\bbr\b/.test(accepts) ? 'br' : /\bgzip\b/.test(accepts) ? 'gzip' : undefined
-  const zlib = encoding && (await import('node:zlib').catch(() => undefined))
-  if (!zlib) return response
-  const z = encoding === 'br' ? zlib.createBrotliCompress({ params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }) : zlib.createGzip()
-  const reader = response.body.getReader()
-  const body = new ReadableStream<Uint8Array>({
+const packed: Record<Encoding, { entries: Map<string, Promise<Uint8Array>>; held: number }> = { br: { entries: new Map(), held: 0 }, gzip: { entries: new Map(), held: 0 } }
+
+function compressWhole(zlib: Zlib, encoding: Encoding, text: string): Promise<Uint8Array> {
+  const cache = packed[encoding]
+  const hit = cache.entries.get(text)
+  if (hit) {
+    cache.entries.delete(text)
+    cache.entries.set(text, hit)
+    return hit
+  }
+  const out = new Promise<Uint8Array>((ok, no) => {
+    const done = (e: Error | null, b: Buffer) => (e ? no(e) : ok(b))
+    if (encoding === 'br') zlib.brotliCompress(text, brotli(zlib, Buffer.byteLength(text)), done)
+    else zlib.gzip(text, done)
+  })
+  if (text.length > PACKED_ENTRY_MAX) return out
+  cache.entries.set(text, out)
+  cache.held += text.length
+  for (const key of cache.entries.keys()) {
+    if (cache.held <= PACKED_MAX) break
+    cache.entries.delete(key)
+    cache.held -= key.length
+  }
+  return out
+}
+
+/** A stream of chunks, each flushed as it arrives so a Boundary reaches the client when it resolves. */
+function compressStream(zlib: Zlib, encoding: Encoding, source: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+  const z = encoding === 'br' ? zlib.createBrotliCompress(brotli(zlib, 0)) : zlib.createGzip()
+  const reader = source.getReader()
+  return new ReadableStream<Uint8Array>({
     start(out) {
       z.on('data', (d: Buffer) => out.enqueue(new Uint8Array(d)))
       z.on('end', () => out.close())
@@ -503,11 +567,30 @@ async function compressed(request: Request, response: Response): Promise<Respons
       return reader.cancel(reason)
     },
   })
+}
+
+/**
+ * HTML and data go out brotli or gzipped when the client takes it. A response that is complete is compressed once and
+ * kept, since most pages come out the same for every visitor; one still streaming is flushed chunk by chunk. A runtime
+ * with no node:zlib sits behind a platform that compresses.
+ */
+async function compressed(request: Request, response: Response): Promise<Response> {
+  const page = whole.get(response)
+  const plain = () => (page === undefined ? response : new Response(page, response))
+  if (page === undefined && (!response.body || response.headers.has('content-encoding'))) return response
+  const type = response.headers.get('content-type') ?? ''
+  if (!/^(text\/html|application\/json)/.test(type)) return plain()
+  const accepts = request.headers.get('accept-encoding') ?? ''
+  const encoding = /\bbr\b/.test(accepts) ? 'br' : /\bgzip\b/.test(accepts) ? 'gzip' : undefined
+  const zlib = encoding && (await loadZlib())
+  if (!zlib) return plain()
+  const text = page ?? (type.startsWith('application/json') ? await response.text() : undefined)
+  const body = text === undefined ? compressStream(zlib, encoding, response.body!) : await compressWhole(zlib, encoding, text)
   const headers = new Headers(response.headers)
   headers.set('content-encoding', encoding)
   headers.append('vary', 'Accept-Encoding')
   headers.delete('content-length')
-  return new Response(body, { status: response.status, statusText: response.statusText, headers })
+  return new Response(body as BodyInit, { status: response.status, statusText: response.statusText, headers })
 }
 
 /** A page's stylesheets, in order: inline while they fit, then links. */
@@ -638,8 +721,23 @@ function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerO
   return [...hrefs].map(href => `<link rel="modulepreload" href="${esc(href)}">\n`).join('')
 }
 
+/** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */
+interface Rendered { h: Record<number, string>; x: Record<number, string>; i?: string[] }
+const RENDERED_MAX = 64
+const rendered = new Map<string, Rendered>()
+
+function renderedOf(html: string) {
+  let r = rendered.get(html)
+  if (!r) {
+    if (rendered.size >= RENDERED_MAX) rendered.clear()
+    rendered.set(html, (r = { h: {}, x: {} }))
+  }
+  return r
+}
+
 function withLevels(payload: RoutePayload, html: string, statics: Set<string>, sendHtml: boolean): RoutePayload {
   if (!payload.m.some(m => statics.has(m.id))) return payload
+  const known = renderedOf(html)
   const slice = (d: number) => {
     const open = html.indexOf(`<!--wl:${d}:`)
     const end = `<!--/wl:${d}-->`
@@ -653,10 +751,10 @@ function withLevels(payload: RoutePayload, html: string, statics: Set<string>, s
   const m = payload.m.map((lv, d) => {
     if (!statics.has(lv.id)) return lv
     const { data: _, ...rest } = lv
-    const h = slice(d)
-    return { ...rest, s: 1 as const, x: hash(h.replaceAll(' aria-current="page"', '')), ...(sendHtml && { h }) }
+    const h = (known.h[d] ??= slice(d))
+    return { ...rest, s: 1 as const, x: (known.x[d] ??= hash(h.replaceAll(' aria-current="page"', ''))), ...(sendHtml && { h }) }
   })
-  const i = [...new Set([...html.matchAll(/<!--wi:\["([^"]+)"/g)].map(x => x[1]))]
+  const i = (known.i ??= [...new Set([...html.matchAll(/<!--wi:\["([^"]+)"/g)].map(x => x[1]))])
   return { ...payload, m, ...(i.length && { i }) }
 }
 

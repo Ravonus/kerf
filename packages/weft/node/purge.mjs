@@ -1,11 +1,13 @@
 // Drops the CSS a build can't reach, as Tailwind does: warp's rules are keyed on data-* values, so a rule whose
 // `[data-scope="knob"]` appears nowhere in the built JS or HTML can never match. Then the custom properties and
 // keyframes nothing refers to any more go too. It only ever looks for a value as a word in the output, so a name the
-// app builds at run time from parts needs `keep`.
+// app builds at run time from parts, or a dial a server sets from a cookie with no list of values, needs `keep`.
 
-// Attributes components set from fixed names. Dials (data-theme, data-density...) are left alone: an app sets those at
-// run time, and their rules only hold tokens.
-const KEYED = /\[data-(?:scope|part|variant|tone|emphasis)=["']?([^\]"']+)["']?\]/g
+// Attributes set from fixed names, in a component or in the app: a value that's in no built file can't reach them. That
+// takes in the dials with tiers (data-expression, data-fields, data-density, data-flair, data-form): an app that switches a
+// tier at run time has the tier's name in its build, and `setDial` brings all of them. data-theme and data-motion stay:
+// those rules answer the OS, and they're small.
+const KEYED = /\[data-(?:scope|part|variant|tone|emphasis|size|appearance|expression|fields|density|flair|form)=["']?([^\]"']+)["']?\]/g
 const OWNED_PROP = /^--(?:warp-|_)/
 
 /** Split at top-level `sep`, skipping strings and brackets. */
@@ -77,6 +79,19 @@ export function reachable(selector, has) {
   return true
 }
 
+/** A selector without the `:is()` and `:where()` alternatives that can't match. Call it on a reachable selector. */
+function trim(selector, has) {
+  const m = /:(is|where)\(/g
+  let out = selector
+  for (let hit; (hit = m.exec(out));) {
+    const open = hit.index + hit[0].length - 1, end = closing(out, open)
+    const kept = split(out.slice(open + 1, end), ',').filter(s => reachable(s, has)).map(s => trim(s, has))
+    out = out.slice(0, open + 1) + kept.join(',') + out.slice(end)
+    m.lastIndex = open + 1 + kept.join(',').length
+  }
+  return out
+}
+
 function prune(nodes, has) {
   const out = []
   for (const n of nodes) {
@@ -86,7 +101,7 @@ function prune(nodes, has) {
       if (inner.length) out.push({ head: n.head, body: print(inner) })
       continue
     }
-    const kept = split(n.head, ',').filter(s => reachable(s, has))
+    const kept = split(n.head, ',').filter(s => reachable(s, has)).map(s => trim(s, has))
     if (kept.length) out.push({ head: kept.join(','), body: n.body })
   }
   return out

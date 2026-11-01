@@ -1,7 +1,7 @@
 // The weft() Vite plugin's feature imports: an app pays for weft/persist and weft/history only where it uses them.
 import weft from '../vite.mjs'
 
-const [, features] = weft() as any[]
+const features = (weft() as any[]).find(p => p.name === 'weft:features')
 const { filter, handler } = features.transform
 const run = (code: string, id = '/app/src/state/cart.ts') =>
   filter.id.include.test(id) && !filter.id.exclude.test(id) && filter.code.test(code) ? handler(code, id)?.code ?? code : code

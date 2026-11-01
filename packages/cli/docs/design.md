@@ -39,8 +39,9 @@ export function Billing() {
 | Push to the far end | `Spacer` |
 | Sunken region | `Inset pad` |
 | Raised box | `Card` (warp's surface: `<Surface>` is weft's canvas) |
-| Heading | `Heading level role`: `level` is the outline, `role` the look |
+| Heading | `Heading level role`: `level` is the outline and picks the look (`title` for h1, `heading` for h2 and h3, `label` below); `role` overrides it |
 | Text | `Text role tone subtle faint inline` |
+| Link | `Link href subtle external`; a bare `<a>` still gets warp's colour |
 
 `gap`: `none hair tight related group section page`, a relationship and not a size: `related` inside a thing, `group`
 between things, `section` between sections. `as` picks the element: `div section article main header footer nav aside
@@ -64,6 +65,8 @@ Where the app has warp's tokens (`@weft/warp` in package.json; headless `@weft/u
 | D003 | Raw type, radius, shadow | `Heading`, `Text`, radius and elevation tokens; autofix for an exact radius |
 | D004 | Layout spelled out on an element | `Stack`, `Row` (suggested edit) |
 | D005 | Native `<button>`, `<select>`, `<textarea>` | The warp component (suggested edit for a button) |
+| D006 | One heading level at two roles across the app, or a bare `<hN>` beside `<Heading>` | Match the level's main role (suggested edit at each site) |
+| D007 | A bare `<a href>` | `<Link>`, or `Shell`'s `nav` (suggested edit) |
 
 In every app:
 
