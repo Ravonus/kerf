@@ -2,48 +2,48 @@
 
 :root {
   color-scheme: light dark;
-  --page: #f8f4ec;
-  --surface: #fffdf9;
-  --sunken: #efe9dd;
-  --ink: #241d16;
-  --muted: #62574a;
-  --faint: #7a6e60;
-  --line: #e2d9c9;
-  --accent: #9a3a12;
-  --accent-hover: #7f2e0c;
-  --accent-ink: #fffdf9;
-  --accent-text: #8f3510;
-  --danger: #b3261e;
-  --success: #2f6b3a;
+  --page: #f7f6f3;
+  --surface: #fdfcfa;
+  --raised: #ffffff;
+  --sunken: #f1efea;
+  --ink: oklch(0.235 0.005 80);
+  --muted: oklch(0.475 0.005 80);
+  --line: oklch(0.905 0.00225 80);
+  --accent: oklch(0.5 0.13 15.8);
+  --accent-hover: oklch(0.44 0.115 15.8);
+  --accent-ink: oklch(0.985 0.012 15.8);
+  --accent-text: oklch(0.46 0.12 15.8);
+  --danger: oklch(0.51 0.18 27);
+  --success: oklch(0.46 0.12 148);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #16120e;
-    --surface: #201a15;
-    --sunken: #0f0c09;
-    --ink: #f4eee4;
-    --muted: #bdb1a1;
-    --faint: #9a8e7e;
-    --line: #362d24;
-    --accent: #f0935c;
-    --accent-hover: #f6ae83;
-    --accent-ink: #16120e;
-    --accent-text: #f4a678;
-    --danger: #f28b82;
-    --success: #8fce9b;
+    --page: #141213;
+    --surface: #1d1a1b;
+    --raised: #231f20;
+    --sunken: #0e0c0d;
+    --ink: oklch(0.935 0.005 80);
+    --muted: oklch(0.735 0.005 80);
+    --line: oklch(0.29 0.005 80);
+    --accent: oklch(0.76 0.1564 15.8);
+    --accent-hover: oklch(0.81 0.1564 15.8);
+    --accent-ink: oklch(0.18 0.03 15.8);
+    --accent-text: oklch(0.833 0.136 15.8);
+    --danger: oklch(0.8 0.11 25);
+    --success: oklch(0.79 0.13 148);
   }
 }
 
 @theme inline {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Avenir Next", "Century Gothic", Futura, ui-sans-serif, system-ui, sans-serif;
   --color-page: var(--page);
   --color-surface: var(--surface);
+  --color-raised: var(--raised);
   --color-sunken: var(--sunken);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
-  --color-faint: var(--faint);
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
@@ -69,21 +69,27 @@ body {
   outline-offset: 2px;
 }
 
-/* Stand-ins for photography: a tint for the material, light in both themes as a photo would be. */
+/* The template's art: the object in its material's colour. */
 .art {
-  --tint: #e9e2d4;
+  --art: #6f665c;
+  --ground: light-dark(#ebe7df, #2a2624);
   display: grid;
   place-items: center;
-  background: var(--tint);
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: var(--ground);
+  overflow: hidden;
 }
-.art[data-material="oak"] { --tint: #ecd9b4; }
-.art[data-material="linen"] { --tint: #e8e3d6; }
-.art[data-material="copper"] { --tint: #efc9ae; }
-.art[data-material="slate"] { --tint: #cdd3d8; }
-.art[data-material="walnut"] { --tint: #d8c0a8; }
-.art[data-material="cedar"] { --tint: #e9c6a6; }
-.art[data-material="ceramic"] { --tint: #dfe6e2; }
-.art[data-material="brass"] { --tint: #ecdb9f; }
+.art svg { display: block; inline-size: 62%; max-block-size: 80%; fill: var(--art); transition: transform 160ms ease; }
+.group:hover .art svg { transform: translateY(-3px); }
+.art[data-material="oak"] { --art: #a9793f; --ground: light-dark(#f1e6d3, #2e261a); }
+.art[data-material="linen"] { --art: #9b9077; --ground: light-dark(#f2eee2, #2a2822); }
+.art[data-material="copper"] { --art: #b4602f; --ground: light-dark(#f6e3d6, #331f15); }
+.art[data-material="slate"] { --art: #56636f; --ground: light-dark(#e2e6ea, #20262c); }
+.art[data-material="walnut"] { --art: #5f4030; --ground: light-dark(#ebdfd6, #2b211c); }
+.art[data-material="cedar"] { --art: #a2472e; --ground: light-dark(#f4dfd6, #311c16); }
+.art[data-material="ceramic"] { --art: #4f8a8b; --ground: light-dark(#dcecec, #1a2a2a); }
+.art[data-material="brass"] { --art: #a78a2c; --ground: light-dark(#f4edcf, #2d2912); }
 
 .check {
   appearance: none;
@@ -92,7 +98,7 @@ body {
   flex: none;
   width: 1.125rem;
   height: 1.125rem;
-  border: 1px solid var(--faint);
+  border: 1px solid var(--muted);
   border-radius: 0.3125rem;
   background: var(--surface);
   cursor: pointer;
@@ -129,7 +135,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .check,
-  .check::before {
+  .check::before,
+  .art svg {
     transition: none;
   }
   .routing {

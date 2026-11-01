@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { AddToCart } from '@/components/add-to-cart'
-import { GridSkeleton, ProductCard, productGrid } from '@/components/product-card'
-import { productArt } from '@/lib/art'
+import { GridSkeleton, ProductArt, ProductCard, SoldOut, wideGrid } from '@/components/product-card'
 import { money } from '@/lib/format'
 import { findProduct, loadFeaturedSlugs, loadProduct, loadRelated } from '@/server/data'
 
@@ -19,45 +17,43 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: (await findProduct((await params).slug))?.name }
 }
 
-function availability(stock: number) {
-  if (stock === 0) return 'Sold out'
-  return stock < 5 ? `Only ${stock} left` : 'In stock'
-}
+const stockLine = (stock: number) => stock === 0 ? 'Back when the workshop catches up.' : stock < 5 ? `Only ${stock} left.` : 'In stock, ships in two days.'
 
 async function Details({ slug }: { slug: string }) {
   const product = await loadProduct(slug)
   if (!product) notFound()
-  const { image, tile } = productArt(product.id)
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <div className={`overflow-hidden rounded-3xl ${tile}`}>
-        <Image src={image} alt={product.name} sizes="(min-width: 1152px) 548px, (min-width: 768px) 47vw, 92vw" preload className="aspect-square w-full object-contain" />
-      </div>
-      <div className="flex flex-col items-start gap-4 md:py-6">
-        <Link href={`/c/${product.categorySlug}`} className="text-sm font-medium text-accent hover:underline">{product.category}</Link>
+    <article className="grid items-start gap-12 md:grid-cols-2">
+      <ProductArt name={product.name} />
+      <div className="flex flex-col gap-2.5">
+        <Link href={`/c/${product.categorySlug}`} className="text-sm text-muted">{product.category}</Link>
         <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-        <p className="text-2xl tabular-nums">{money(product.priceCents)}</p>
-        <p className="max-w-prose text-muted">{product.description}</p>
-        <p className="text-sm font-medium">{availability(product.stock)}</p>
-        {product.stock > 0 && <AddToCart productId={product.id} />}
+        <p className="flex items-center gap-2.5">
+          <span className="text-3xl font-semibold tabular-nums">{money(product.priceCents)}</span>
+          {product.stock === 0 && <SoldOut />}
+        </p>
+        <p>{product.description}</p>
+        <p className="text-muted">{stockLine(product.stock)}</p>
+        <AddToCart productId={product.id} soldOut={product.stock === 0} />
       </div>
-    </div>
+    </article>
   )
 }
 
 async function Related({ slug }: { slug: string }) {
   const products = await loadRelated(slug)
-  return <ul className={productGrid}>{products.map(p => <ProductCard key={p.id} product={p} />)}</ul>
+  if (!products.length) return <p className="text-muted">This is the only piece in its aisle for now.</p>
+  return <ul className={wideGrid}>{products.map(p => <ProductCard key={p.id} product={p} />)}</ul>
 }
 
 function DetailsSkeleton() {
   return (
-    <div aria-hidden="true" className="grid animate-pulse gap-8 md:grid-cols-2">
-      <div className="aspect-square rounded-3xl bg-tint" />
-      <div className="flex flex-col gap-4 md:py-6">
+    <div aria-hidden="true" className="grid animate-pulse items-start gap-12 md:grid-cols-2">
+      <div className="aspect-square rounded-[20px] bg-tint" />
+      <div className="flex flex-col gap-2.5">
         <div className="h-5 w-20 rounded bg-tint" />
         <div className="h-9 w-3/4 rounded bg-tint" />
-        <div className="h-8 w-24 rounded bg-tint" />
+        <div className="h-9 w-24 rounded bg-tint" />
         <div className="h-20 rounded bg-tint" />
       </div>
     </div>
@@ -68,13 +64,13 @@ export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params
   if (!await findProduct(slug)) notFound()
   return (
-    <div className="flex flex-col gap-12">
+    <div className="mx-auto flex max-w-360 flex-col gap-8 px-8 pt-12 pb-8">
       <Suspense fallback={<DetailsSkeleton />}>
         <Details slug={slug} />
       </Suspense>
-      <section aria-labelledby="related">
-        <h2 id="related" className="mb-4 text-xl font-semibold tracking-tight">You might also like</h2>
-        <Suspense fallback={<GridSkeleton count={4} />}>
+      <section aria-labelledby="related-title" className="flex flex-col gap-2.5">
+        <h2 id="related-title" className="text-xl font-semibold tracking-tight">From the same aisle</h2>
+        <Suspense fallback={<GridSkeleton count={4} wide />}>
           <Related slug={slug} />
         </Suspense>
       </section>

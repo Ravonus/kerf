@@ -12,7 +12,8 @@ export function CartLines() {
   const cart = listCart()
   const lines = derived(() => cart.value ?? [])
   const subtotal = derived(() => lines.value.reduce((sum, line) => sum + line.priceCents * line.quantity, 0))
-  return <>{lines.value.length === 0 ? (
+  // A real element at the root: under a bare fragment hydration misses every key and leaves bare elements with no handlers.
+  return <div>{lines.value.length === 0 ? (
     <Stack gap="tight" class="blank">
       <Heading level={2}>Your cart is empty</Heading>
       <Text subtle>Everything you add stays here for sixty days.</Text>
@@ -44,7 +45,7 @@ export function CartLines() {
       </div>
       <Text subtle>Checkout opens soon. Your cart keeps until then.</Text>
     </Stack>
-  )}</>
+  )}</div>
 }
 
 export const CartLoading = () => <div role="status" aria-label="Loading your cart"><Stack gap="related"><Skeleton lines={4} height="4rem" /></Stack></div>

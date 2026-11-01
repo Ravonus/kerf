@@ -68,5 +68,5 @@ export async function loadProduct(slug: string) {
 export function loadRelated(slug: string): Promise<ProductCard[]> {
   const category = sql`(select ${products.categoryId} from ${products} where ${products.slug} = ${slug})`
   return db.select(card).from(products).where(and(eq(products.categoryId, category), ne(products.slug, slug)))
-    .orderBy(asc(products.priceCents), asc(products.id)).limit(4)
+    .orderBy(asc(products.id)).limit(4)
 }

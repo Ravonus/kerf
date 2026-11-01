@@ -1,41 +1,73 @@
-import { Meta, Title } from "@solidjs/meta";
+import { Title } from "@solidjs/meta";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { For } from "solid-js";
 
 import { heading } from "~/components/button";
-import { grid, ProductCard } from "~/components/product-card";
+import { ProductArt, ProductCard, wideGrid } from "~/components/product-card";
 import { getHome } from "~/lib/data";
 
 export const route = { preload: () => void getHome() } satisfies RouteDefinition;
 
+const promises = [
+  ["Screws, not glue", "Every piece comes apart with a screwdriver you already own."],
+  ["Parts on the shelf", "Handles, hinges and cords are stocked for as long as we sell the piece."],
+  ["Repairs by post", "Send it in, and it comes back working. Free for ten years."],
+];
+
 export default function Home() {
-  // Deferred: the shelves and products are what this page is, so they belong in the first HTML a crawler reads.
+  // Deferred: the aisles and products are what this page is, so they belong in the first HTML a crawler reads.
   const home = createAsync(() => getHome(), { deferStream: true });
   return (
-    <>
-      <Title>Commonplace · Everyday goods, made to last</Title>
-      <Meta name="description" content="Lamps, kettles, shelves and more: dependable pieces for every room, made to be used and repaired." />
-      <section class="max-w-2xl py-6 sm:py-10">
-        <h1 class={`${heading} text-4xl text-balance sm:text-5xl`}>Everyday goods, made to last.</h1>
-        <p class="mt-3 text-lg text-muted">Dependable pieces for every room, built to be used and repaired when they wear.</p>
+    <div class="mx-auto max-w-360 px-8">
+      <Title>Goods made to be mended · Mendwell</Title>
+      <section class="grid items-center gap-12 py-8 md:grid-cols-[3fr_2fr]">
+        <div class="flex flex-col items-start gap-2.5">
+          <h1 class={`${heading} text-4xl sm:text-5xl`}>Buy it once. Mend it forever.</h1>
+          <p class="max-w-xl text-xl">Everyday goods in oak, copper, linen and slate, built with screws instead of glue, and repaired free for ten years.</p>
+          <a href="#featured" class="rounded-full bg-accent px-5 py-2.5 font-semibold text-accent-ink hover:bg-accent-hover">
+            See this month's table
+          </a>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <ProductArt name="Copper Kettle" class="col-span-2 aspect-2/1!" />
+          <ProductArt name="Oak Stool" />
+          <ProductArt name="Slate Lamp" />
+        </div>
       </section>
-      <nav aria-label="Categories" class="flex flex-wrap gap-2">
-        <For each={home()?.categories}>
-          {(c) => (
-            <a href={`/c/${c.slug}`} class="rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-sunken">
-              {c.name}
-            </a>
-          )}
-        </For>
-      </nav>
-      <section aria-labelledby="featured" class="mt-10">
-        <h2 id="featured" class={`${heading} text-2xl`}>
-          Featured
-        </h2>
-        <ul class={`${grid} mt-4`}>
-          <For each={home()?.featured}>{(p) => <ProductCard product={p} />}</For>
-        </ul>
-      </section>
-    </>
+      <div class="flex flex-col gap-8">
+        <section aria-labelledby="aisles-title" class="flex flex-col gap-2.5">
+          <h2 id="aisles-title" class={`${heading} text-xl`}>
+            Aisles
+          </h2>
+          <nav aria-label="Aisles" class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] border-t-2 border-ink">
+            <For each={home()?.categories}>
+              {(c) => (
+                <a href={`/c/${c.slug}`} class="border-b border-line py-2.5 text-xl font-semibold hover:text-accent-text">
+                  {c.name}
+                </a>
+              )}
+            </For>
+          </nav>
+        </section>
+        <section id="featured" aria-labelledby="featured-title" class="flex flex-col gap-2.5">
+          <h2 id="featured-title" class={`${heading} text-xl`}>
+            On the front table
+          </h2>
+          <ul class={wideGrid}>
+            <For each={home()?.featured}>{(p) => <ProductCard product={p} />}</For>
+          </ul>
+        </section>
+        <div class="grid gap-5 border-t-2 border-ink pt-12 md:grid-cols-3">
+          <For each={promises}>
+            {([title, text]) => (
+              <div class="flex flex-col gap-1">
+                <h3 class={`${heading} text-lg`}>{title}</h3>
+                <p class="text-muted">{text}</p>
+              </div>
+            )}
+          </For>
+        </div>
+      </div>
+    </div>
   );
 }

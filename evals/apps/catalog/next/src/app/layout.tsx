@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
 import Link from 'next/link'
 import { type ReactNode, Suspense } from 'react'
 import { CartLink } from '@/components/cart-link'
@@ -8,15 +7,9 @@ import { Logo } from '@/components/logo'
 import { loadCartCount } from '@/server/cart-data'
 import './globals.css'
 
-const figtree = localFont({
-  src: '../assets/figtree-latin-wght.woff2',
-  weight: '300 900',
-  variable: '--font-figtree',
-})
-
 export const metadata: Metadata = {
-  title: { default: 'Housewright: goods made to be used', template: '%s · Housewright' },
-  description: 'Housewright sells dependable things for the home, made to be used every day and repaired when they wear.',
+  title: { default: 'Mendwell', template: '%s · Mendwell' },
+  description: 'Mendwell sells everyday goods made to be used hard and repaired when they wear.',
 }
 
 async function CartCount() {
@@ -25,21 +18,24 @@ async function CartCount() {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={figtree.variable}>
+    <html lang="en">
       <body className="flex min-h-dvh flex-col font-sans antialiased">
         <CartProvider>
-          <header className="sticky top-0 z-10 border-b border-line/70 bg-paper/90 backdrop-blur">
-            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <header className="sticky top-0 z-10 border-b border-line bg-paper">
+            <div className="mx-auto flex max-w-360 items-center justify-between gap-5 px-8 py-2.5">
               <Link href="/"><Logo /></Link>
               <Suspense fallback={<CartLink />}>
                 <CartCount />
               </Suspense>
             </div>
           </header>
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+          <main className="flex-1">{children}</main>
         </CartProvider>
-        <footer className="border-t border-line">
-          <p className="mx-auto max-w-6xl px-4 py-6 text-sm text-muted sm:px-6">Housewright. Repairs for life on everything we sell.</p>
+        <footer className="mt-8 border-t border-line">
+          <div className="mx-auto flex max-w-360 flex-wrap justify-between gap-2.5 px-8 py-5 text-muted">
+            <p>Mendwell. Goods made to be used hard and fixed when they wear.</p>
+            <p>Free repairs for the first ten years.</p>
+          </div>
         </footer>
       </body>
     </html>

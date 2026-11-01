@@ -23,9 +23,11 @@ export async function loadCartCount() {
   return id ? countCart(id) : 0
 }
 
-export async function loadCart() {
+export type CartLine = { id: number; slug: string; name: string; priceCents: number; stock: number; quantity: number }
+
+export async function loadCart(): Promise<CartLine[]> {
   const id = await cartId()
   if (!id) return []
-  return db.select({ id: products.id, slug: products.slug, name: products.name, priceCents: products.priceCents, quantity: cartItems.quantity })
+  return db.select({ id: products.id, slug: products.slug, name: products.name, priceCents: products.priceCents, stock: products.stock, quantity: cartItems.quantity })
     .from(cartItems).innerJoin(products, eq(products.id, cartItems.productId)).where(eq(cartItems.cartId, id)).orderBy(asc(products.name), asc(products.id))
 }

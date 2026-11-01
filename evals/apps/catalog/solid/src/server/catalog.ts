@@ -25,8 +25,9 @@ export async function loadCategory(slug: string, raw: ProductSearch) {
     s.stock ? gt(products.stock, 0) : undefined,
   );
   const inCategory = eq(categories.id, products.categoryId);
-  const [[category], rows, [total]] = await Promise.all([
+  const [[category], shelves, rows, [total]] = await Promise.all([
     db.select({ name: categories.name }).from(categories).where(eq(categories.slug, slug)),
+    db.select({ slug: categories.slug, name: categories.name }).from(categories).orderBy(asc(categories.id)),
     db
       .select(card)
       .from(products)
@@ -37,7 +38,7 @@ export async function loadCategory(slug: string, raw: ProductSearch) {
       .offset((s.page - 1) * pageSize),
     db.select({ n: count() }).from(products).innerJoin(categories, inCategory).where(where),
   ]);
-  return category ? { name: category.name, rows, total: total!.n } : null;
+  return category ? { name: category.name, categories: shelves, rows, total: total!.n } : null;
 }
 
 export async function loadProduct(slug: string) {
@@ -51,7 +52,7 @@ export async function loadProduct(slug: string) {
     db
       .select(card)
       .from(products)
-      .where(and(eq(products.categoryId, sameShelf), ne(products.slug, slug), gt(products.stock, 0)))
+      .where(and(eq(products.categoryId, sameShelf), ne(products.slug, slug)))
       .orderBy(asc(products.id))
       .limit(4),
   ]);

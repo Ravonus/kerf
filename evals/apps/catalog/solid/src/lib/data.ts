@@ -1,6 +1,6 @@
 import { action, query } from "@solidjs/router";
 
-import { addItem, loadCart, loadCartCount, removeItem } from "~/server/cart";
+import { addItem, loadCart, loadCartCount, setItem } from "~/server/cart";
 import { loadCategory, loadHome, loadProduct } from "~/server/catalog";
 
 export const getHome = query(loadHome, "home");
@@ -24,4 +24,4 @@ function inOrder<A extends unknown[], R>(fn: ServerFn<A, R>): ServerFn<A, R> {
 }
 
 export const addToCart = action(inOrder(addItem), "addToCart");
-export const removeFromCart = action(inOrder(removeItem), "removeFromCart");
+export const setQuantity = action(inOrder(setItem), "setQuantity");

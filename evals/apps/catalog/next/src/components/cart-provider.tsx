@@ -1,15 +1,16 @@
 'use client'
 
-import { createContext, type ReactNode, use, useState } from 'react'
+import { createContext, type ReactNode, use, useOptimistic, useState } from 'react'
 
-type Cart = { latest: number | null; setLatest: (count: number) => void }
+type Cart = { latest: number | null; setLatest: (count: number) => void; moved: number; move: (by: number) => void }
 
 const CartContext = createContext<Cart | null>(null)
 
-/** The count the last cart action came back with: the layout's own stays as it was until a full load. */
+/** The count the last cart action came back with: the layout's own stays as it was until a full load. `moved` is what's still on its way. */
 export function CartProvider({ children }: { children: ReactNode }) {
   const [latest, setLatest] = useState<number | null>(null)
-  return <CartContext value={{ latest, setLatest }}>{children}</CartContext>
+  const [moved, move] = useOptimistic(0, (sum, by: number) => sum + by)
+  return <CartContext value={{ latest, setLatest, moved, move }}>{children}</CartContext>
 }
 
 export function useCart() {

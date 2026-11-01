@@ -1,65 +1,89 @@
 import { Title } from "@solidjs/meta";
 import { createAsync, useSubmissions, type RouteDefinition } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { For, Show, type JSX } from "solid-js";
 
-import { heading, textLink } from "~/components/button";
+import { heading, step, textLink } from "~/components/button";
 import { ProductArt } from "~/components/product-card";
-import { getCart, removeFromCart } from "~/lib/data";
+import { getCart, setQuantity } from "~/lib/data";
 import { money } from "~/lib/format";
 
 export const route = { preload: () => void getCart() } satisfies RouteDefinition;
 
+type Line = NonNullable<Awaited<ReturnType<typeof getCart>>>[number];
+
 export default function Cart() {
   const lines = createAsync(() => getCart());
-  const removing = useSubmissions(removeFromCart);
-  const gone = (id: number) => [...removing].some((s) => s.pending && s.input[0].get("product") === String(id));
-  const shown = () => lines()?.filter((l) => !gone(l.id)) ?? [];
-  const subtotal = () => shown().reduce((sum, l) => sum + l.priceCents * l.quantity, 0);
+  const steps = useSubmissions(setQuantity);
+  const wanted = (id: number) => [...steps].filter((s) => s.pending && s.input[0].get("product") === String(id)).at(-1)?.input[0].get("quantity");
+  const quantity = (l: Line) => Number(wanted(l.id) ?? l.quantity);
+  const shown = () => lines()?.filter((l) => quantity(l) > 0) ?? [];
+  const subtotal = () => shown().reduce((sum, l) => sum + l.priceCents * quantity(l), 0);
+  const failed = () => [...steps].at(-1)?.error;
+
+  const To = (props: { line: Line; to: number; label: string; class: string; disabled?: boolean; children: JSX.Element }) => (
+    <form action={setQuantity} method="post" class="contents">
+      <input type="hidden" name="product" value={props.line.id} />
+      <input type="hidden" name="quantity" value={props.to} />
+      <input type="hidden" name="change" value={props.to - quantity(props.line)} />
+      <button type="submit" aria-label={props.label} class={props.class} disabled={props.disabled}>
+        {props.children}
+      </button>
+    </form>
+  );
 
   return (
-    <>
-      <Title>Your cart · Commonplace</Title>
-      <h1 class={`${heading} text-3xl sm:text-4xl`}>Your cart</h1>
+    <div class="mx-auto flex max-w-290 flex-col gap-5 px-8 py-12">
+      <Title>Your cart · Mendwell</Title>
+      <h1 class={`${heading} text-3xl`}>Your cart</h1>
+      <Show when={failed()}>
+        <p role="alert" class="font-medium text-danger">
+          That didn't save. Your cart is back as it was. Try again in a moment.
+        </p>
+      </Show>
       <Show
         when={shown().length}
         fallback={
-          <div class="py-16 text-center">
-            <p class={`${heading} text-xl`}>Your cart is empty</p>
-            <a href="/" class={`${textLink} mt-2 inline-block text-sm`}>
-              See what's on the shelves
+          <div class="flex flex-col items-start gap-1 py-12">
+            <h2 class={`${heading} text-xl`}>Your cart is empty</h2>
+            <p class="text-muted">Everything you add stays here for sixty days.</p>
+            <a href="/" class={textLink}>
+              Back to the aisles
             </a>
           </div>
         }
       >
-        <ul class="mt-6 divide-y divide-line rounded-2xl border border-line bg-surface">
+        <ul aria-label="Cart">
           <For each={shown()}>
             {(line) => (
-              <li class="flex items-center gap-4 p-3 sm:p-4">
-                <ProductArt name={line.name} size={40} class="size-16 flex-none rounded-lg" />
-                <div class="min-w-0 flex-1">
-                  <a href={`/p/${line.slug}`} class="block truncate font-medium hover:text-accent-text">
-                    {line.name}
-                  </a>
-                  <p class="text-sm text-muted tabular-nums">{`${line.quantity} × ${money(line.priceCents)}`}</p>
+              <li class="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line py-2.5 md:grid-cols-[4.5rem_minmax(0,1fr)_auto_5.5rem_auto]">
+                <ProductArt name={line.name} />
+                <div>
+                  <a href={`/p/${line.slug}`}>{line.name}</a>
+                  <p class="text-muted">{`${money(line.priceCents)} each`}</p>
                 </div>
-                <p class="font-medium tabular-nums">{money(line.priceCents * line.quantity)}</p>
-                <form action={removeFromCart} method="post">
-                  <input type="hidden" name="product" value={line.id} />
-                  <button type="submit" aria-label={`Remove ${line.name}`} class={`${textLink} cursor-pointer text-sm`}>
-                    Remove
-                  </button>
-                </form>
+                <div class="inline-flex items-center gap-1 tabular-nums">
+                  <To line={line} to={quantity(line) - 1} label={`One fewer ${line.name}`} class={step}>
+                    −
+                  </To>
+                  <span aria-label={`Quantity of ${line.name}`}>{quantity(line)}</span>
+                  <To line={line} to={quantity(line) + 1} label={`One more ${line.name}`} class={step} disabled={quantity(line) >= Math.min(line.stock, 99)}>
+                    +
+                  </To>
+                </div>
+                <span class="text-end font-semibold tabular-nums">{money(line.priceCents * quantity(line))}</span>
+                <To line={line} to={0} label={`Remove ${line.name}`} class={`${textLink} cursor-pointer text-sm`}>
+                  Remove
+                </To>
               </li>
             )}
           </For>
         </ul>
-        <div class="mt-6 flex items-center justify-between gap-4">
-          <a href="/" class={`${textLink} text-sm`}>
-            Keep shopping
-          </a>
-          <p class="text-lg font-semibold tabular-nums">{`Subtotal ${money(subtotal())}`}</p>
+        <div class="flex items-baseline justify-between text-xl">
+          <p class="text-muted">Subtotal</p>
+          <span class="font-semibold tabular-nums">{money(subtotal())}</span>
         </div>
+        <p class="text-muted">Checkout opens soon. Your cart keeps until then.</p>
       </Show>
-    </>
+    </div>
   );
 }

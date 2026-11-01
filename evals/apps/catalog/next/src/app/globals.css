@@ -1,45 +1,55 @@
 @import 'tailwindcss';
 
 @theme inline {
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Avenir Next", "Century Gothic", Futura, ui-sans-serif, system-ui, sans-serif;
   --color-paper: var(--paper);
+  --color-surface: var(--surface);
   --color-raised: var(--raised);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-accent-text: var(--accent-text);
   --color-on-accent: var(--on-accent);
   --color-tint: var(--tint);
   --color-danger: var(--danger);
+  --color-success: var(--success);
 }
 
 :root {
   color-scheme: light dark;
-  --paper: #f7f3ec;
-  --raised: #fffdf9;
-  --ink: #2a211b;
-  --muted: #6a5c50;
-  --line: #e3dacc;
-  --accent: #a4471f;
-  --accent-strong: #873815;
-  --on-accent: #ffffff;
-  --tint: #efe8dc;
-  --danger: #b42318;
+  --paper: #f7f6f3;
+  --surface: #fdfcfa;
+  --raised: #ffffff;
+  --ink: oklch(0.235 0.005 80);
+  --muted: oklch(0.475 0.005 80);
+  --line: oklch(0.905 0.00225 80);
+  --accent: oklch(0.5 0.13 15.8);
+  --accent-strong: oklch(0.44 0.115 15.8);
+  --accent-text: oklch(0.46 0.12 15.8);
+  --on-accent: oklch(0.985 0.012 15.8);
+  --tint: #f1efea;
+  --danger: oklch(0.51 0.18 27);
+  --success: oklch(0.46 0.12 148);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #17130f;
-    --raised: #211b16;
-    --ink: #f4ede3;
-    --muted: #b9aa9a;
-    --line: #3a3027;
-    --accent: #e8935f;
-    --accent-strong: #f2ad80;
-    --on-accent: #231509;
-    --tint: #2a231c;
-    --danger: #f97066;
+    --paper: #141213;
+    --surface: #1d1a1b;
+    --raised: #231f20;
+    --ink: oklch(0.935 0.005 80);
+    --muted: oklch(0.735 0.005 80);
+    --line: oklch(0.29 0.005 80);
+    --accent: oklch(0.76 0.1564 15.8);
+    --accent-strong: oklch(0.81 0.1564 15.8);
+    --accent-text: oklch(0.833 0.136 15.8);
+    --on-accent: oklch(0.18 0.03 15.8);
+    --tint: #0e0c0d;
+    --danger: oklch(0.8 0.11 25);
+    --success: oklch(0.79 0.13 148);
   }
 }
 
@@ -47,3 +57,26 @@ body {
   background: var(--paper);
   color: var(--ink);
 }
+
+/* The template's art: the object in its material's colour. */
+.art {
+  --art: #6f665c;
+  --ground: light-dark(#ebe7df, #2a2624);
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: var(--ground);
+  overflow: hidden;
+}
+.art svg { display: block; inline-size: 62%; max-block-size: 80%; fill: var(--art); transition: transform 160ms ease; }
+.group:hover .art svg { transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) { .art svg { transition: none; } }
+.art[data-material="oak"] { --art: #a9793f; --ground: light-dark(#f1e6d3, #2e261a); }
+.art[data-material="linen"] { --art: #9b9077; --ground: light-dark(#f2eee2, #2a2822); }
+.art[data-material="copper"] { --art: #b4602f; --ground: light-dark(#f6e3d6, #331f15); }
+.art[data-material="slate"] { --art: #56636f; --ground: light-dark(#e2e6ea, #20262c); }
+.art[data-material="walnut"] { --art: #5f4030; --ground: light-dark(#ebdfd6, #2b211c); }
+.art[data-material="cedar"] { --art: #a2472e; --ground: light-dark(#f4dfd6, #311c16); }
+.art[data-material="ceramic"] { --art: #4f8a8b; --ground: light-dark(#dcecec, #1a2a2a); }
+.art[data-material="brass"] { --art: #a78a2c; --ground: light-dark(#f4edcf, #2d2912); }
