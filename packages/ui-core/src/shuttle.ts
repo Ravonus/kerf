@@ -6,6 +6,5 @@ export function moveShuttle(face: HTMLElement, a: number, b: number) {
   const was = parseFloat(face.style.getPropertyValue('--warp-a'))
   if (a < was) face.setAttribute('data-dir', 'back')
   else if (a > was) face.removeAttribute('data-dir')
-  face.style.setProperty('--warp-a', `${a}px`)
-  face.style.setProperty('--warp-b', `${b}px`)
+  face.style.cssText = `--warp-a:${a}px;--warp-b:${b}px` // both ends in one write: a shuttle holds no other inline style
 }

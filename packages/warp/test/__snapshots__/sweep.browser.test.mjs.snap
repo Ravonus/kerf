@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`every host kind goes active and lets go 1`] = `
+[
+  "install: pressed",
+  "hover soft: soft pressed",
+  "move within soft: soft pressed",
+  "leave soft: pressed",
+  "hover frame: frame pressed",
+  "leave frame: pressed",
+  "expand menu: pressed menu",
+  "collapse menu: pressed",
+  "unpress: ",
+  "press again: pressed",
+  "hover checkbox label: pressed cb-host",
+  "hover switch label: pressed sw-host",
+  "leave labels: pressed",
+  "focus field: pressed field-host",
+  "blur field: pressed",
+  "field data-open: pressed field-host",
+  "field closed: pressed",
+  "hover inner of a surface: pressed card inner",
+  "leave surface: pressed",
+  "popover data-state: pressed pop",
+  "popover closed: pressed",
+  "accordion child expanded: pressed heading",
+  "accordion collapsed: pressed",
+  "pin: soft pressed",
+  "unpin: pressed",
+  "confirm: soft pressed",
+  "confirm over: pressed",
+  "invalid: soft pressed",
+  "valid: pressed",
+  "host added later: pressed",
+  "late host seen: pressed late",
+  "late host removed: pressed",
+]
+`;

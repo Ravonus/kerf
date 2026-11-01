@@ -793,6 +793,9 @@
 :where([data-scope="palette"] [data-part="item"][aria-selected="true"]) { background: none; color: var(--warp-color-text); }
 :where([data-scope="palette"] [data-part="item"][aria-selected="true"] > svg[data-icon]) { color: var(--warp-color-accent-text); }
 :where([data-scope="palette"] [data-part][hidden]) { display: none; }
+/* derived, not written: an open palette holds its sweep, and the shuttle shows while a row is selected */
+:where(dialog[data-scope="palette"][open] > [data-part="input-row"]) { --_a: 1; }
+:where([data-scope="palette"] [data-part="list"]:has([aria-selected="true"]) > [data-part="shuttle"]) { opacity: 1; }
 ::highlight(warp-palette-hit) { color: var(--warp-color-accent-text); text-decoration: underline; text-underline-offset: 2px; }
 :where([data-scope="palette"] [data-part="empty"]) { padding: 32px var(--warp-pad-surface); text-align: center; color: var(--warp-color-text-subtle); }
 :where([data-scope="palette"] [data-part="footer"]) {

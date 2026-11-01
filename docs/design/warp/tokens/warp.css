@@ -88,6 +88,7 @@
 @property --warp-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
 
 /* the sweep's two edges, one per transition (warp.signature) */
+@property --_a { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 @property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 @property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 620ms; }
@@ -912,7 +913,7 @@
   /* -- the switch: --_a is 1 while a host is active. Hover (not touch), focus, a held state, a pass. The only state.
      Hover and focus are the browser's, so the sweep runs with no script and no write to the DOM. */
   @media (hover: hover) { :where([data-sweep]:hover, [data-sweep-trigger]:hover [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):hover [data-sweep]) { --_a: 1; } }
-  @media (hover: none) { :where([data-sweep]:active) { --_a: 1; } }
+  @media (hover: none) { :where([data-sweep]:active, [data-sweep-trigger]:active [data-sweep], label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):active [data-sweep]) { --_a: 1; } }
   :where([data-sweep]:is(:focus-visible, :has(:focus-visible), [data-pin], [data-hold], [data-confirm], [data-invalid], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"], :popover-open),
          [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
          :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
@@ -925,8 +926,15 @@
   :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-label"], [data-part="sweep-content"], [data-part="rail-hover"]) {
     --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
     --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
-              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration));
+              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+              --_a 0s linear var(--_latch, 0s);
     transition: var(--_edges);
+  }
+  /* A tap's :active is over in a blink. Each part keeps its --_a for one sweep past it, so a tap draws in whole, then exits. */
+  @media (hover: none) {
+    :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-outline"], [data-part="sweep-label"], [data-part="sweep-content"]) {
+      --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration));
+    }
   }
   /* two stacked 1px borders (or any content, e.g. an icon) */
   :where([data-part="sweep"], [data-part="sweep-base"]) {
@@ -1016,7 +1024,8 @@
     container-type: size;               /* its children measure it: 100cqw × 100cqh */
     --warp-frame-tail: calc(1 - var(--_a, 0)); --warp-frame-head: var(--_a, 0); opacity: var(--_on);
     transition: --warp-frame-tail calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
-                --warp-frame-head calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration));
+                --warp-frame-head calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+                --_a 0s linear var(--_latch, 0s);
   }
   /* each segment: offset o along the route, length n; route length L = w + h
      (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
