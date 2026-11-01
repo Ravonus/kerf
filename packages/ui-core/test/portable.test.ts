@@ -21,7 +21,7 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
     </div>`
   const list = document.querySelector<HTMLElement>('[role="tablist"]')!
   const tabs = [...list.querySelectorAll<HTMLElement>('[role="tab"]')]
-  const face = indicator(list, { selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw' })
+  const face = indicator(list, { selected: '[aria-selected="true"]' })
   const scroll = overflow(list)
   const select = (i: number) => {
     tabs.forEach((t, j) => {
@@ -39,7 +39,7 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
   })
   await frames()
   const bar = list.querySelector<HTMLElement>('[data-part="indicator"]')!
-  expect(bar.style.getPropertyValue('--_iw')).toMatch(/px$/)
+  expect(bar.style.getPropertyValue('--warp-b')).toMatch(/px$/)
   expect(bar.hasAttribute('data-instant')).toBe(false)
 
   tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))

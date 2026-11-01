@@ -63,16 +63,10 @@ export function selectMenu(sel: HTMLSelectElement) {
         box.append(group)
       } else add(child as HTMLOptionElement, box)
     }
-    box.addEventListener('pointermove', e => {
-      const el = (e.target as Element).closest<HTMLElement>('[role="option"]')
-      const i = rows.findIndex(r => r.el === el)
-      if (i >= 0 && i !== at) go(i, false)
-    })
-    box.addEventListener('mousedown', e => e.preventDefault()) // focus stays on the select
-    box.addEventListener('click', e => {
-      const i = rows.findIndex(r => r.el === (e.target as Element).closest('[role="option"]'))
-      if (i >= 0) commit(i)
-    })
+    const row = (e: Event) => rows.findIndex(r => r.el === (e.target as Element).closest('[role="option"]'))
+    box.onpointermove = e => { const i = row(e); if (i >= 0 && i !== at) go(i, false) }
+    box.onmousedown = e => e.preventDefault() // focus stays on the select
+    box.onclick = e => { const i = row(e); if (i >= 0) commit(i) }
     return box
   }
 
