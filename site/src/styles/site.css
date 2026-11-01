@@ -125,3 +125,6 @@
     [data-site="menu"] { display: inline-flex; }
     [data-site="sheet-nav"] { display: grid; }
   }
+
+/* Code wraps rather than hiding the end of a line behind a sideways scroll. */
+main pre, main pre code, main pre [data-part="line"] { white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -11,7 +11,13 @@ export default function Basket() {
       <p>{qty.value} × $12 · shipping ${shipping.value}</p>
       <p><strong>Total ${total.value}</strong></p>
       <Button onClick={() => qty.value++}>Add one</Button>
-      <Button emphasis="ghost" tone="neutral" onClick={() => (qty.value = 1)}>Reset</Button>
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        onClick={() => (qty.value = 1)}
+      >
+        Reset
+      </Button>
     </Card>
   )
 }

@@ -17,7 +17,9 @@ export default function Trips() {
         onInput={(e: any) => (query.value = e.currentTarget.value)}
       />
       <p>{found.value.length} of {CITIES.length}</p>
-      <div data-part="tags">{found.value.map(c => <Tag key={c}>{c}</Tag>)}</div>
+      <div data-part="tags">
+        {found.value.map(c => <Tag key={c}>{c}</Tag>)}
+      </div>
     </Card>
   )
 }

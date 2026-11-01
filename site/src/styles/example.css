@@ -20,7 +20,7 @@
 }
 [data-site="example"] [data-part="tags"] { display: flex; flex-wrap: wrap; gap: 6px; }
 [data-site="example"] [data-part="tags"] > * { inline-size: auto; }
-[data-site="example"] pre { white-space: pre; }
+
 [data-site="example"] [data-part="panes"] { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; inline-size: 100%; }
 [data-site="example"] [data-new] { display: block; margin-inline: calc(var(--warp-space-group) * -1); padding-inline: calc(var(--warp-space-group) - 3px) var(--warp-space-group); border-inline-start: 3px solid oklch(0.86 0.17 150); background: oklch(0.86 0.17 150 / 0.1); }
 [data-site="example"] [data-scope="surface"] p { display: flex; align-items: center; gap: 8px; }
