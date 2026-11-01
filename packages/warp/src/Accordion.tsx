@@ -24,7 +24,6 @@ export interface AccordionProps {
 export function Accordion({ items, variant = 'boxed', multiple, defaultOpen = [], onChange, level = 3 }: AccordionProps) {
   const base = uid('acc')
   const open = state<string[]>(untrack(() => defaultOpen))
-  const kind = untrack(() => variant)
   const toggle = (v: string) => {
     const on = open.value.includes(v)
     open.value = on ? open.value.filter(x => x !== v) : multiple ? [...open.value, v] : [v]
@@ -40,7 +39,7 @@ export function Accordion({ items, variant = 'boxed', multiple, defaultOpen = []
     list[to].focus()
   }
   return (
-    <div data-scope="accordion" data-part="root" data-variant={kind === 'line' ? 'line' : undefined} onKeyDown={onKey}>
+    <div data-scope="accordion" data-part="root" data-variant={variant === 'line' ? 'line' : undefined} onKeyDown={onKey}>
       {items.map((it, i) => (
         <div key={it.value} data-part="item" data-sweep="">
           <div data-part="heading" role="heading" aria-level={level}>

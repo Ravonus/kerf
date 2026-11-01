@@ -1,4 +1,4 @@
-import { derived, untrack } from 'weft'
+import { derived } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import './styles'
 import '@weft/ui-core/styles/components/button.css'
@@ -31,7 +31,6 @@ const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
  * wipe); soft and outline append one [data-part="sweep"]; frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
 export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, children, ...rest }: ButtonProps) {
-  const kind = untrack(() => emphasis)
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
   // a loading or aria-disabled button swallows presses (components.html guard())
@@ -45,14 +44,14 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
     <button
       type={type}
       data-scope="button"
-      data-emphasis={kind === 'solid' ? undefined : kind}
+      data-emphasis={emphasis === 'solid' ? undefined : emphasis}
       data-tone={tone}
       data-size={size === 'md' ? undefined : size}
-      data-fill={kind === 'frame' && fill ? '' : undefined}
+      data-fill={emphasis === 'frame' && fill ? '' : undefined}
       data-full={full ? '' : undefined}
       data-icon-only={glyph.value && !children ? '' : undefined}
       aria-label={label}
-      data-sweep={swept(kind) ? '' : undefined}
+      data-sweep={swept(emphasis) ? '' : undefined}
      
       data-loading={loading ? '' : undefined}
       aria-busy={loading ? 'true' : undefined}
@@ -60,7 +59,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       onClick={press}
       {...rest}
     >
-      {kind === 'frame' ? (
+      {emphasis === 'frame' ? (
         <>
           {fill && <span data-part="sweep-fill" aria-hidden="true"></span>}
           <span data-part="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -75,7 +74,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
         content()
       )}
       {loading && <span data-scope="spinner" data-part="spinner" aria-hidden="true"></span>}
-      {(kind === 'soft' || kind === 'outline') && <span data-part="sweep" aria-hidden="true"></span>}
+      {(emphasis === 'soft' || emphasis === 'outline') && <span data-part="sweep" aria-hidden="true"></span>}
     </button>
   )
 }

@@ -129,14 +129,13 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
     return (val(live as any) ?? 'live') === 'connecting' ? 'Connecting…' : 'Up to date'
   })
   const page = derived(() => viewAll)
-  const more = untrack(() => settings)
 
   return (
     <section ref={(n: any) => (root = n)} data-scope="inbox" data-part="root" data-variant={variant} aria-labelledby={`${id}-t`}>
       <div data-part="header">
         <h3 id={`${id}-t`}>{title}</h3>
         <Button emphasis="ghost" tone="neutral" size="sm" onClick={readAll}>Mark all as read</Button>
-        {more && <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" aria-label="Notification settings" onClick={more}><G name="more" /></Button>}
+        {settings && <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" aria-label="Notification settings" onClick={settings}><G name="more" /></Button>}
       </div>
       <div data-scope="tabs" data-part="root">
         <div ref={(n: any) => (tablist = n)} data-part="list" role="tablist" aria-label="Filter" onKeyDown={onTabKey}>

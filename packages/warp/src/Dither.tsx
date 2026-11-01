@@ -1,4 +1,5 @@
 import { ditherField, ditherImage, type Algorithm, type FieldOptions, type Gradient, type MaskSource, type Ramp } from '@weft/ui-core/dither'
+import { derived } from 'weft'
 import { use } from './use'
 import './styles'
 import '@weft/ui-core/styles/canvas/dither.css'
@@ -85,9 +86,9 @@ export interface DitherGlyphProps extends Omit<FieldOptions, 'mask'> {
 
 /** A word or a logo woven out of a dithered field (08 §6.7). */
 export function DitherGlyph({ text, path, box: viewBox, stroke, draw, label, font, weight, fit, cell = 4, ratio, kind = 'flow', ...rest }: DitherGlyphProps) {
-  const mask = (): MaskSource => draw ?? (path ? { path, box: viewBox ?? [24, 24], fit, stroke } : { text: text ?? '', font, weight, fit })
+  const mask = derived<MaskSource>(() => draw ?? (path ? { path, box: viewBox ?? [24, 24], fit, stroke } : { text: text ?? '', font, weight, fit }))
   return (
-    <DitherField {...rest} kind={kind} cell={cell} mask={mask()} ratio={ratio ?? '3 / 1'} label={text ? undefined : label}>
+    <DitherField {...rest} kind={kind} cell={cell} mask={mask.value} ratio={ratio ?? '3 / 1'} label={text ? undefined : label}>
       {text && <span data-part="glyph-text">{text}</span>}
     </DitherField>
   )

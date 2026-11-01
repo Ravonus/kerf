@@ -106,7 +106,7 @@ function Column({ col, ctx, hint }: { col: () => KanbanColumn; ctx: Ctx; hint: s
         gap={8}
         onDrift={ctx.drift}
         control={c => ctx.window(id, c)}
-      >{card => <Card card={card()} ctx={ctx} />}</VirtualList>
+      >{card => { const c = derived(card); return <Card card={c.value} ctx={ctx} /> }}</VirtualList>
       {ctx.adds() && <QuickAdd column={col()} onAdd={t => ctx.add(id, t)} />}
     </section>
   )
