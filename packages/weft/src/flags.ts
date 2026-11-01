@@ -32,7 +32,5 @@ export const SCAN = true
 export const LINEAR = true
 /** A row's key is read once as the row is made, not through its item in every binding (crates/weft-compiler, `hoist_key`). */
 export const KEYREAD = true
-/** Keys that only rise skip the check for repeats. */
-export const SORTED = true
 /** A delegated handler that's a function is one property write, not two calls (crates/weft-compiler). */
 export const EVENT = true

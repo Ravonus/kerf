@@ -53,6 +53,8 @@ run, and a gap counts only if the 95% interval of the ratio across runs (bootstr
 - **Closure-free bindings.** A hand-built prototype hoisted the bindings' functions and gave each row a data object
   (one per binding): create went from +9% to +14% against Solid and 10k rows from +10% to +16%. A closure sharing the
   row's context is cheap, and shared functions make their call sites megamorphic. Not built into the compiler.
+- **`SORTED`, skipping the repeat check for keys that only rise.** 40 B on the shop for no row past the interval.
+  Removed.
 - **Plain arrays without the longest-run search.** Would save bytes in apps without `For`, but a node that needn't move
   could move, and a moved node loses focus. That's a change of behaviour, so `inOrder` stays in every app.
 - **Hot code after first paint.** What could be deferred is the code `For` installs, 218 B brotli. Split out, the
@@ -70,6 +72,5 @@ run, and a gap counts only if the 95% interval of the ratio across runs (bootstr
 | Keyed write | over 8 readers and objects not far larger: compare the object's keys, else the readers' | one write costs the smaller side |
 | `For` middle | up to 8 rows: scan; past it: a Map | `LINEAR`: 15% on a list of 8, for 81 B |
 | `For` repeats | checked only once a pass could keep rows | a first render costs no hashing |
-| `For` repeats | keys that only rise aren't hashed | one comparison a row, for what most keys are |
 
 The current prices, per path, per bundle and per benchmark, are in `evals/speed/lab.html`.
