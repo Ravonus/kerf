@@ -922,7 +922,7 @@
   /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
      while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
      then resets out of sight. It never reverses, and leaving part way only means the left edge catches up sooner. */
-  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-content"], [data-part="rail-hover"]) {
+  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-label"], [data-part="sweep-content"], [data-part="rail-hover"]) {
     --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
     --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
               --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration));
@@ -1044,6 +1044,9 @@
   :where([data-part="sweep-outline"]) > i:nth-child(5) { inset-block-end: 0; }
   :where([data-part="sweep-outline"]) > i:nth-child(6) { inset-inline-end: 0; inset-block-end: var(--_u0); }
   :where([data-part="sweep-label"]) { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: inherit; }
+  /* the resting label gives way ahead of the copy that wipes over it, so a held sweep never stacks two copies of the text.
+     It is back the moment the host lets go. The margins keep descenders whole at rest; ×3 clears it however narrow it is. */
+  :where([data-part="sweep-label"]) { clip-path: inset(-1em -1em -1em calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1) * 3 - 1em)); }
   /* idle accent: the resting label is in the tone; the copy that wipes over it is the text colour */
   :where([data-sweep]:has(> [data-part="sweep-outline"]) > [data-part="sweep-label"]) { color: var(--_tone, var(--warp-color-accent-text)); }
   :where([data-part="sweep-content"]) {
@@ -1263,6 +1266,7 @@
     :where([data-part="sweep-outline"]) > i { background: Highlight; }
     :where([data-part="sweep-outline"]) { opacity: 1; }
     :where([data-part="sweep-content"]) { display: none; }
+    :where([data-part="sweep-label"]) { clip-path: none; }
     /* solid buttons: a sweep fill would sit under ButtonText; show the state as an inset Highlight ring */
     :where([data-part="sweep-fill"]) { background: transparent; box-shadow: inset 0 0 0 2px Highlight; border-radius: inherit; }
     /* rails */

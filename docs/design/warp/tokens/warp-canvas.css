@@ -41,6 +41,13 @@
     transition: opacity calc(var(--warp-duration-slow, 320ms) * var(--warp-motion-scale, 1)) linear;
   }
   [data-scope="dither"][data-state="live"] > canvas { opacity: 1; }
+  /* Anything set on a field sits on a scrim. Text over moving dots has no contrast to speak of, whatever the frame. */
+  [data-scope="dither"] > :where(:not(canvas, img, [data-part])) {
+    inline-size: fit-content;
+    padding: var(--warp-space-tight) var(--warp-space-related);
+    background: color-mix(in oklab, var(--warp-color-surface) 88%, transparent);
+    color: var(--warp-color-text);
+  }
   [data-scope="dither"] > img {
     position: absolute;
     inset: 0;
