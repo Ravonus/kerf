@@ -1,7 +1,8 @@
+import { IconSearch } from '@weft/icons'
 import { dialog, installSweep, listKey, marked, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
 import { derived, flush, onMount, state, untrack, watch } from 'weft'
 import { bindable, type Openable } from './bind'
-import { Icon, type IconName } from './Icon'
+import { Icon, type IconRef } from './Icon'
 import { Kbd } from './Kbd'
 import { use } from './use'
 import './styles'
@@ -14,7 +15,7 @@ export interface Command {
   label: string
   /** Rows gather under their group's heading. */
   group?: string
-  icon?: IconName
+  icon?: IconRef
   shortcut?: string
   /** More words it answers to. */
   keywords?: string[]
@@ -82,7 +83,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, onRu
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="" data-phase="idle" data-hold={flag.value ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
-        <Icon name="search" />
+        <IconSearch />
         <label for={`${id}-in`} data-part="sr-only">{label}</label>
         <input ref={(n: any) => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={rows.value.length ? `${id}-${active.value}` : undefined} placeholder={placeholder} autocomplete="off" spellcheck={false} onInput={(e: any) => (typed.value = e.currentTarget.value)} onKeyDown={onKey} />
         <Kbd>esc</Kbd>

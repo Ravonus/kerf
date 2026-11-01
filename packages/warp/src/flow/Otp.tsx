@@ -1,4 +1,4 @@
-import { IconShieldCheck } from '@weft/icons'
+import { IconLeft, IconShieldCheck } from '@weft/icons'
 import { clockLabel, otpInput, uid } from '@weft/ui-core'
 import { derived, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
@@ -94,7 +94,7 @@ export function OtpStep(p: OtpStepProps) {
   const status = derived(() => p.status ?? (ctl.pending.value ? 'checking' : 'idle'))
   return (
     <StepFrame ctl={ctl} embedded={!!p.form} labelledby={`${id}-t`}>
-      {p.onBack && <div><Button emphasis="ghost" tone="neutral" size="sm" icon="left" onClick={p.onBack}>Back</Button></div>}
+      {p.onBack && <div><Button emphasis="ghost" tone="neutral" size="sm" icon={IconLeft} onClick={p.onBack}>Back</Button></div>}
       <Mark><IconShieldCheck /></Mark>
       <div><Title as={p.heading} id={`${id}-t`}>{p.title ?? 'Enter your code'}</Title>{p.lede !== undefined && <p data-part="lede">{p.lede}</p>}</div>
       <FormError ctl={ctl} />

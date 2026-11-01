@@ -1,10 +1,9 @@
-import { IconPlus } from '@weft/icons'
+import { IconGlobe, IconLeft, IconPlus, IconRight } from '@weft/icons'
 import { allDayBars, announce, at, calendarDrag, clock, clockRange, conflicts, countByDay, dateOf, daySegments, dayState, dow, dstShift, eventKey, eventName, eventsOn, fmt, gridKey, indicator, isoWeek, isWeekend, laneKey, layoutDay, longDuration, minuteOf, monthCells, monthStart, monthWeeks, moveKey, nextIndex, overflow, popover, shownIn, slotOf, slotTimes, stepDate, toZone, uid, viewDays, weekStart, weekdays, ymd, zoneCity, type CalEvent, type CalView, type DragPreview, type IsoDate, type DaySegment, type Slot } from '@weft/ui-core'
 import { derived, flush, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Modal } from '../Modal'
 import { LiveStatus, type LiveState } from '../parts'
-import { Icon } from '../Icon'
 import { bindable, usePickerEnv } from '../Picker'
 import { Popover } from '../Popover'
 import { TimeZoneSelect } from '../RichSelect'
@@ -483,8 +482,8 @@ function MiniMonth({ c }: { c: Ctx }) {
       <div class="row">
         <b id={`${id}-t`} aria-live="polite">{fmt(cursor.value, { month: 'long', year: 'numeric' }, c.env.locale.value)}</b>
         <span style="flex:1"></span>
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="left" label="Previous month" onClick={() => (cursor.value = stepDate('month', cursor.value, -1))} />
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="right" label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
+        <Button emphasis="ghost" tone="neutral" size="sm" icon={IconLeft} label="Previous month" onClick={() => (cursor.value = stepDate('month', cursor.value, -1))} />
+        <Button emphasis="ghost" tone="neutral" size="sm" icon={IconRight} label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
       </div>
       <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
         <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><abbr title={h[0]} aria-hidden="true">{h[0][0]}</abbr><span class="sr">{h[0]}</span></span>)}</div>
@@ -512,7 +511,7 @@ function ZoneChip({ c }: { c: Ctx }) {
   use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <>
-      <button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} title={`Times shown in ${c.zone.value}`} onClick={() => { built.value = true; open.value = !open.value }}><Icon name="globe" />{c.zoneLabel.value}</button>
+      <button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} title={`Times shown in ${c.zone.value}`} onClick={() => { built.value = true; open.value = !open.value }}><IconGlobe />{c.zoneLabel.value}</button>
       <div ref={(n: any) => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
         {built.value && <TimeZoneSelect label="Time zone" value={c.zone.value} referenceDate={c.date.value} today={c.env.today.value} locale={c.env.locale.value} onValueChange={(z: string | null) => { c.zone.set(z); open.value = false; c.say(`Times shown in ${z}`) }} />}
       </div>
@@ -573,8 +572,8 @@ export function Calendar(p: CalendarProps) {
   return (
     <div ref={(n: any) => { root = n; c.bindRoot(n) }} data-scope="calendar" data-part="root">
       <div data-part="app-bar" class="row">
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="left" label={`Previous ${unit.value}`} onClick={() => step(-1)} />
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="right" label={`Next ${unit.value}`} onClick={() => step(1)} />
+        <Button emphasis="ghost" tone="neutral" size="sm" icon={IconLeft} label={`Previous ${unit.value}`} onClick={() => step(-1)} />
+        <Button emphasis="ghost" tone="neutral" size="sm" icon={IconRight} label={`Next ${unit.value}`} onClick={() => step(1)} />
         <Button emphasis="outline" tone="neutral" size="sm" onClick={() => c.date.set(c.env.today.value)}>Today</Button>
         {tablet.value
           ? <Popover label={title.value} title="Go to a date" trigger={{ emphasis: 'ghost', tone: 'neutral', size: 'sm' }}><span data-scope="calendar"><MiniMonth c={c} /></span></Popover>

@@ -1,7 +1,7 @@
+import { IconDown } from '@weft/icons'
 import { stick } from '@weft/ui-core'
 import { derived, state } from 'weft'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import { use } from '../use'
 import '../styles'
 import '@weft/ui-core/styles/app/tokens.css'
@@ -27,7 +27,7 @@ export function Conversation({ label = 'Assistant conversation', title, bar, pro
     <section data-scope="thread" data-part="root" aria-label={label}>
       {head.value && <div data-part="app-bar"><h2 data-part="app-title">{title}</h2><span data-part="spacer"></span>{bar}</div>}
       <div ref={(n: any) => (log = n)} data-part="log" role="log" aria-live="off" aria-label="Messages" tabindex="0">{children}</div>
-      {away.value && <Button emphasis="soft" tone="neutral" size="sm" data-part="jump" onClick={jump}><Icon name="down" />Jump to latest</Button>}
+      {away.value && <Button emphasis="soft" tone="neutral" size="sm" data-part="jump" onClick={jump}><IconDown />Jump to latest</Button>}
       <div style="grid-row:3">{prompt}</div>
     </section>
   )

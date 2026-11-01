@@ -1,5 +1,5 @@
+import { IconUndo } from '@weft/icons'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import '../styles'
 import '@weft/ui-core/styles/app/checkpoint.css'
 
@@ -8,7 +8,7 @@ export function Checkpoint({ label, onRestore }: { label: any; onRestore?: () =>
   return (
     <div data-scope="checkpoint">
       <span>{label}</span>
-      {onRestore && <Button emphasis="ghost" tone="neutral" size="sm" onClick={onRestore}><Icon name="undo" />Restore</Button>}
+      {onRestore && <Button emphasis="ghost" tone="neutral" size="sm" onClick={onRestore}><IconUndo />Restore</Button>}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { IconCard } from '@weft/icons'
 import { cardBrand, cardMask } from '@weft/ui-core'
 import { derived, state, untrack } from 'weft'
 import { Field, type FieldProps } from './Field'
@@ -29,7 +30,7 @@ export function PaymentCardInput({ mount, label, hint, error, ...rest }: Payment
   use(attach, () => host)
   return (
     <Field
-      icon="card"
+      icon={IconCard}
       {...rest}
       group
       label={label}

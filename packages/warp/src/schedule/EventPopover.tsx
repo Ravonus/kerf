@@ -1,10 +1,9 @@
-import { IconRepeat, IconUsers, IconVideo } from '@weft/icons'
+import { IconClock, IconInfo, IconPin, IconRepeat, IconUsers, IconVideo } from '@weft/icons'
 import { clockRange, dateOf, fmt, longDuration, popover, ruleSentence, parseRule, slotOf, type Align, type CalEvent, type Side } from '@weft/ui-core'
 import { derived, type State } from 'weft'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import { use } from '../use'
 import '@weft/ui-core/styles/components/popover.css'
 import '@weft/ui-core/styles/app/avatar-stack.css'
@@ -45,12 +44,12 @@ export function EventPopover(p: EventPopoverProps) {
         <div data-scope="event-card" data-cal={p.event.cal ?? 1}>
           <h4 data-part="title">{p.event.title}</h4>
           <dl>
-            <dt><Icon name="clock" /></dt>
+            <dt><IconClock /></dt>
             <dd>{when.value!.date} · {when.value!.time}{(when.value!.length || p.zoneLabel) && <><br /><span class="muted">{[when.value!.length, p.zoneLabel].filter(Boolean).join(' · ')}</span></>}</dd>
             {p.event.recurrence && <><dt><IconRepeat /></dt><dd>{ruleSentence(parseRule(p.event.recurrence), dateOf(p.event.start), locale.value)}</dd></>}
-            {p.event.location && <><dt><Icon name="pin" /></dt><dd>{p.event.location}</dd></>}
+            {p.event.location && <><dt><IconPin /></dt><dd>{p.event.location}</dd></>}
             {p.event.attendees?.length ? <><dt><IconUsers /></dt><dd><span data-scope="avatar-stack">{p.event.attendees.slice(0, 5).map(n => <Avatar key={n} name={n} size="sm" />)}</span> <span class="muted">{p.event.attendees.length} going</span></dd></> : null}
-            {p.event.tentative && <><dt><Icon name="info" /></dt><dd><Badge tone="caution">Tentative</Badge></dd></>}
+            {p.event.tentative && <><dt><IconInfo /></dt><dd><Badge tone="caution">Tentative</Badge></dd></>}
           </dl>
           <div data-part="actions">
             {!p.event.locked && p.onDelete && <Button emphasis="ghost" tone="critical" size="sm" onClick={act(p.onDelete)}>Delete</Button>}

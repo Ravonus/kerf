@@ -55,7 +55,14 @@ light from the top left.
 - Corners step: the corner cell of a frame is left empty.
 - No filled blob where a line will do. The silhouette should be recognisable at 16px, at 1×.
 - The notch is one empty cell in the top edge, third from the left. The weft is the solid ink mark in the middle.
-- Each one is drawn cell by cell. Pixel icons are never derived from the outline tier.
+- The first 170 are drawn cell by cell. The rest land on the grid from their outline spec (`scripts/raster.mjs`): curves step
+  one cell at a time, circles use the midpoint rule, and shade stays clear of detail. A hand bitmap overrides that wherever
+  the landing reads worse.
+
+Variants come from the same grid: hollow keeps the outer edge, solid fills the inside, and dither shades the inside in a
+checker. Checker won the comparison in `dither-sheet.html`: it holds an even mid-tone at 16 and 24 px, where ordered dither
+goes blotchy and crosshatch reads as noise against the shape. All three are plain ink, so forced colours keep the pattern. An
+icon with no inside has nothing to dither.
 
 ## 6. Optical sizes
 
@@ -73,8 +80,16 @@ Decorative by default (`aria-hidden`, `focusable="false"`). `label` makes it `ro
 
 ## 8. Shipping
 
-- `import { IconCheck } from '@weft/icons'` is one export; an unused one costs nothing.
-- `iconSet({ check: IconCheck })` gives a `<Icon name>` over those icons. `@weft/icons/all` is that over all of them.
+- `CheckIcon`, `Icons.Check` and `<Icon name="check">` build to identical output: `compile.mjs` turns the last two into the
+  first. Variants, tiers and action icons work the same way, so only combinations in use ship. An unknown literal is I001.
+- A name the build can't follow is legal: that use takes the pack as a lazy chunk, or single files from `icons({ source })`.
+- `iconSet({ check: CheckIcon })` gives a `<Icon name>` over those icons.
 - `icons({ tier: 'vivid' })` in `weft.config.ts` compiles one tier in, with no switch at all. With no tier, each icon
   carries its tiers and `tiers.css` shows the right one from the nearest `data-expression`: CSS only, no script,
   no flash and no change of box.
+
+## 9. Actions
+
+An action icon moves one part of itself: CSS only, in a stylesheet of its own that ships with that icon alone. Outlines ease.
+Pixels move in whole cells with `steps()`, so they stay on the grid. Durations multiply `--warp-motion-scale`, so the motion
+dial and `prefers-reduced-motion` end them before they start. A looping icon also honours `--warp-loop-play`.

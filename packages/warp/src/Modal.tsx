@@ -26,7 +26,7 @@ export function Modal({ open, title, description, footer, size, alert, tone, mar
         {sign.value}
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>
         {hasDescription.value && <p data-part="description" id={`${id}-d`}>{description}</p>}
-        {/* <Button emphasis="ghost" tone="neutral" icon="x" label="Close"> as its markup: a ghost button needs no JS */}
+        {/* <Button emphasis="ghost" tone="neutral" icon={IconX} label="Close"> as its markup: a ghost button needs no JS */}
         <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-part="close" data-close=""><IconX /></button>
       </div>
       <div data-part="body">{children}</div>

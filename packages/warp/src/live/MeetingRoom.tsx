@@ -1,3 +1,4 @@
+import { IconChat, IconHand, IconScreen, IconSmile, IconUsers } from '@weft/icons'
 import { announce, floatReaction, galleryCols, hueOf, installSweep, newHands, pauseOffscreen, pip, speakerFollow, speakingOut, tileLabel, toolbar, type LiveState, type ParticipantLike, type PipCorner } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
 import { Avatar, LiveStatus } from '../parts'
@@ -92,11 +93,11 @@ export function ControlBar({ mic, camera, sharing, hand, side, compact, onToggle
         <Control onToggle={onToggle} c="camera" name={camera ? 'Camera, stop video' : 'Camera, start video'} icon={camera ? 'cam' : 'camoff'} pressed={camera} device label={camera ? 'Stop video' : 'Start video'} />
       </div>
       <div data-part="group">
-        <Control onToggle={onToggle} c="share" name="Share screen" icon="screen" pressed={sharing} label="Share" />
-        <Control onToggle={onToggle} c="hand" name={hand ? 'Lower hand' : 'Raise hand'} icon="hand" pressed={hand} label={hand ? 'Lower hand' : 'Raise hand'} />
-        <Control onToggle={onToggle} c="react" name="React" icon="smile" label="React" />
-        {!compact && <Control onToggle={onToggle} c="chat" name="Chat" icon="chat" pressed={side === 'chat'} label="Chat" />}
-        {!compact && <Control onToggle={onToggle} c="people" name="People" icon="users" pressed={side === 'people'} label="People" />}
+        <Control onToggle={onToggle} c="share" name="Share screen" icon={IconScreen} pressed={sharing} label="Share" />
+        <Control onToggle={onToggle} c="hand" name={hand ? 'Lower hand' : 'Raise hand'} icon={IconHand} pressed={hand} label={hand ? 'Lower hand' : 'Raise hand'} />
+        <Control onToggle={onToggle} c="react" name="React" icon={IconSmile} label="React" />
+        {!compact && <Control onToggle={onToggle} c="chat" name="Chat" icon={IconChat} pressed={side === 'chat'} label="Chat" />}
+        {!compact && <Control onToggle={onToggle} c="people" name="People" icon={IconUsers} pressed={side === 'people'} label="People" />}
         <button type="button" data-part="control" aria-label={more} tabindex="-1" onClick={() => onToggle('more')}><G name="more" /></button>
       </div>
       <Button tone="critical" data-part="leave" aria-label="Leave meeting" data-icon-only={compact ? '' : undefined} tabindex="-1" onClick={() => onLeave?.()}><G name="leave" />{compact ? null : 'Leave'}</Button>

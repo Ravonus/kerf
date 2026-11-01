@@ -1,37 +1,85 @@
 # Icons
 
-`@weft/icons` is weft's own set: 160 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art drawn on a 16×16 grid at vivid. Rules: `docs/design/warp/10-icons.md`.
+`@weft/icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has hollow, solid and dithered variants. Rules: `docs/design/warp/10-icons.md`.
 
 `weft add icons` installs it and adds `icons()` to the config. warp already depends on it.
 
 ## Using one
 
-```tsx
-import { IconCheck } from '@weft/icons'
-
-<IconCheck />                 // decorative: aria-hidden, focusable="false"
-<IconCheck label="Saved" />   // role="img" with that name
-<IconCheck size={24} />       // otherwise warp's icon sizes apply
-```
-
-Every icon is its own export, named `Icon` plus the pascal-cased name, so `arrow-right` is `IconArrowRight`. An icon you don't import costs nothing. On average one adds about 170 B of brotli with all tiers in.
-
-## By name
-
-A name is a lookup, so the list has to be yours:
+Three forms, and all three build to the same bytes:
 
 ```tsx
-import { iconSet, IconCheck, IconX } from '@weft/icons'
+import { CheckIcon } from '@weft/icons'
+<CheckIcon />
 
-const Icon = iconSet({ yes: IconCheck, no: IconX })
-<Icon name="yes" />
+import Icons from '@weft/icons'           // or: import * as Icons
+<Icons.Check />
+
+import { Icon } from '@weft/warp'         // or: '@weft/icons/icon'
+<Icon name="check" />
 ```
 
-`import { Icon } from '@weft/icons/all'` is the same over every icon, for names that come from data. That one ships the whole set.
+Props on any of them:
+
+```tsx
+<CheckIcon />                 // decorative: aria-hidden, focusable="false"
+<CheckIcon label="Saved" />   // role="img" with that name
+<CheckIcon size={24} />       // otherwise warp's icon sizes apply
+<CheckIcon tier="vivid" />    // this tier whatever the page's expression is
+```
+
+An icon you don't use costs nothing. One adds about 147 B of brotli with all tiers in. `sideEffects` lists only CSS, so a named import ships that icon.
+
+## Names and variants
+
+One scheme, generated from the art with its types:
+
+| Export | Pack | `<Icon>` | What it is |
+|---|---|---|---|
+| `BellIcon` | `Icons.Bell` | `name="bell"` | as drawn: outline at quiet and balanced, pixels at vivid |
+| `BellIconHollow` | `Icons.BellHollow` | `hollow` | always hollow, pixels included |
+| `BellIconSolid` | `Icons.BellSolid` | `solid` | filled in every tier |
+| `BellIconDither` | `Icons.BellDither` | `dither` | pixels shaded in a checker |
+| `BellIconAction` | `Icons.BellAction` | `action` | has a built-in animation |
+
+`IconBell` is the same as `BellIcon`. The tier is a prop, never a name. Dithering shades a drawing's inside, so an icon with no inside, like an arrow, looks the same with it. Pick it on the sheet: `npm run sheet` in the package writes `contact-sheet.html`, with tier, variant, size, theme and search. `dither-sheet.html` compares the treatments.
+
+## A wrong name
+
+`<Icon name>` is typed, so a bad name is a type error. Untyped code gets the same from the compiler and from `weft check`:
+
+```
+I001 no icon 'chekc', did you mean 'check'?
+```
+
+It fails the build, and so does a variant an icon doesn't have.
+
+## Names that aren't literal
+
+The build follows a name through variables, props, conditionals, maps and component boundaries, and ships what it finds. A name it can't follow, such as one from an API, is legal. `weft check` reports it as I002 with the file and the cost (I003 if the pack itself is passed around). That use then gets one of two things:
+
+- **The pack, as its own chunk.** The default. About 118 KB of brotli for all 651 in one tier, loaded only by a page that reaches it. A page stays about 1.5 KB bigger than one with no dynamic name.
+- **Single icons from a URL.** `icons({ source: 'https://cdn.example.com/icons/' })`. Nothing of the pack is built; each icon is fetched when first drawn.
+
+`weft icons publish <dir>` writes every icon and variant as static `.svg` files, with a `manifest.json`, for that URL. It writes files and uploads nothing. Action icons aren't published.
+
+A remote icon renders an empty `<svg data-icon data-loading>` of the right size until it arrives, then swaps with no layout shift, and carries `data-failed` if the fetch fails. It stays empty on the server, so SSR needs no network. Elements are allowlisted before they are inserted. A Content-Security-Policy needs that origin in `connect-src`.
+
+## Actions
+
+Five icons have a built-in animation: `trash` (the lid lifts), `bell` (it rings), `check` (it draws on), `refresh` (it spins), `copy` (the sheet stacks).
+
+```tsx
+<Icon name="trash" action />          // hover, focus and press, on the icon or its parent
+<Icon name="refresh" action="on" />   // now; refresh keeps spinning
+<TrashIconAction action="press" />    // 'hover' | 'focus' | 'press' | 'on'
+```
+
+It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 140 B of JS). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
 
 ## Tiers
 
-With no options each icon carries its tiers, and CSS shows the one for the nearest `data-expression`. Switching needs no script, doesn't flash and doesn't change the box. A nested `data-expression` is honoured.
+With no options each icon carries its tiers, and CSS shows the one for the nearest `data-expression`. Switching needs no script, doesn't flash and doesn't change the box. A nested `data-expression` is honoured. The build keeps only the tiers your config and `data-expression` attributes name.
 
 To compile one tier in, with no switch, name it in the config:
 
@@ -49,8 +97,4 @@ The pixel tier is exact at 16, 32 and 48. At 20 and 24 a 1× screen rounds cells
 
 ## Styling
 
-Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`.
-
-## Names
-
-`weft icons` isn't a command; the names are in `@weft/icons/all`, as `names`, and on the contact sheet from `npm run sheet` in the package.
+Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`. A solid icon cuts its detail out with the page background, `--warp-icon-knock`: set it on a surface of another colour.

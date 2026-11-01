@@ -1,8 +1,7 @@
-import { IconChecks, IconCopy, IconQuote, IconSmile } from '@weft/icons'
+import { IconAlert, IconCheck, IconChecks, IconClock, IconCopy, IconQuote, IconSmile } from '@weft/icons'
 import { announce, arrivalTracker, burst, firstName, installSweep, joinNames, messageLog, quoteText, reactionName, textParts, threadRows, typingLine, uid, type ChatMessage, type MessageReaction, type ThreadRow } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import { use } from '../use'
 import { Composer, TypingIndicator, type ComposerProps, type ComposerSend, type QuoteDraftValue } from './Composer'
 import { PeerAvatar, read, SWEEP, type Live } from './peer'
@@ -96,9 +95,9 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
             {message.replies.count} {message.replies.count === 1 ? 'reply' : 'replies'}{message.replies.last ? ` · last ${message.replies.last}` : ''}
           </button>
         )}
-        {delivery.value === 'failed' && <span data-part="status"><Icon name="alert" /> Not sent. <Button emphasis="link" tone="critical" onClick={() => onRetry?.(message)}>Retry</Button></span>}
-        {delivery.value === 'sending' && <span data-part="status"><Icon name="clock" /> Sending…</span>}
-        {delivery.value === 'sent' && <span data-part="status"><Icon name="check" /> Sent {message.time}</span>}
+        {delivery.value === 'failed' && <span data-part="status"><IconAlert /> Not sent. <Button emphasis="link" tone="critical" onClick={() => onRetry?.(message)}>Retry</Button></span>}
+        {delivery.value === 'sending' && <span data-part="status"><IconClock /> Sending…</span>}
+        {delivery.value === 'sent' && <span data-part="status"><IconCheck /> Sent {message.time}</span>}
         {delivery.value === 'read' && <span data-part="status"><IconChecks /> Read {message.readAt ?? message.time}</span>}
       </div>
     </div>

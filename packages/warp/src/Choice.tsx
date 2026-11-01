@@ -1,6 +1,6 @@
 import { indicator, installSweep, uid } from '@weft/ui-core'
 import { onMount, untrack } from 'weft'
-import { Icon, type IconName } from './Icon'
+import { Icon, type IconRef } from './Icon'
 import { use } from './use'
 import './fields'
 import '@weft/ui-core/styles/inputs/choice.css'
@@ -48,7 +48,7 @@ export function Checkbox({ children, hint, error, indeterminate, ...rest }: { ch
   )
 }
 
-export type SegmentedOption<V extends string> = { value: V; label: any; icon?: IconName; count?: any; disabled?: boolean }
+export type SegmentedOption<V extends string> = { value: V; label: any; icon?: IconRef; count?: any; disabled?: boolean }
 
 /**
  * Segmented (03 §4, review 01 M8): native radios in a group that rests on its ink border; hovering or focusing an

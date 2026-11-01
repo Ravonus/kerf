@@ -1,8 +1,7 @@
-import { IconAt, IconPaperclip, IconSend, IconSmile } from '@weft/icons'
+import { IconAt, IconCheck, IconPaperclip, IconSend, IconSmile, IconX } from '@weft/icons'
 import { announce, insertMention, installSweep, mentionQuery, nextIndex, uid, type Peer } from '@weft/ui-core'
 import { derived, onMount, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import { PeerAvatar, SWEEP } from './peer'
 import '../styles'
 import '@weft/ui-core/styles/components/button.css'
@@ -112,8 +111,8 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
         <div data-part="files">
           {(files ?? []).map(f => (
             <span key={f.id} data-part="file" data-arrive="">
-              <Icon name="check" /><span>{f.name}</span>
-              <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label={`Remove ${f.name}`} onClick={() => onRemoveFile?.(f)} />
+              <IconCheck /><span>{f.name}</span>
+              <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label={`Remove ${f.name}`} onClick={() => onRemoveFile?.(f)} />
             </span>
           ))}
         </div>
@@ -122,7 +121,7 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
         <div data-part="quote-draft" role="group" aria-label={`Quoting ${draft.value.author}`} data-arrive="">
           <span data-part="quote-by">{draft.value.author} · {draft.value.time}</span>
           <span data-part="quote-text">{draft.value.text}</span>
-          <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label="Remove quote" onClick={() => { removeQuote(); ta!.focus(); announce(ta!.ownerDocument, 'Quote removed') }} />
+          <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label="Remove quote" onClick={() => { removeQuote(); ta!.focus(); announce(ta!.ownerDocument, 'Quote removed') }} />
         </div>
       )}
       <label data-part="sr-only" for={id}>{label}</label>

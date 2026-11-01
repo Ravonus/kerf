@@ -33,7 +33,7 @@ export { KeyValueEditor, type KeyValue, type KeyValueEditorProps } from './KeyVa
 export { RichTextEditor, type RichTextEditorProps, type SlashCommand } from './RichTextEditor'
 export { Markdown, MarkdownEditor, type MarkdownEditorProps } from './Markdown'
 export { Shell, type ShellProps, type NavItem, type NavGroup, type NavIcon, type Crumb, type MenuEntry, type Workspace } from './Shell'
-export { Icon, type IconName } from './Icon'
+export { Icon, type IconName, type IconRef } from './Icon'
 export { Chart, type ChartFrame } from './Chart'
 export { LineChart, BarChart, ComboChart, DonutChart, RadialChart, FunnelChart, ScatterChart, BubbleChart, Histogram, HeatGrid, RadarChart, Treemap, Sunburst, SankeyChart, CandlestickChart, BoxPlot, WaterfallChart, StreamChart, BrushChart, TileMap, GaugeChart, Sparkline } from './Charts'
 export { type Bindable, type Openable } from './Picker'

@@ -1,12 +1,12 @@
 import { installSweep } from '@weft/ui-core'
 import { derived, onMount } from 'weft'
-import { Icon, type IconName } from './Icon'
+import { Icon, type IconRef } from './Icon'
 import './styles'
 import '@weft/ui-core/styles/components/toggle-button.css'
 import '@weft/ui-core/styles/components/chip.css' // the pressed toggle's forced-colours rule lives with the chip
 
 /** A toggle button (05 §2): `aria-pressed`, the sweep held while pressed. */
-export function Toggle({ pressed, icon, label, size, children, ...rest }: { pressed: boolean; icon?: IconName; label?: string; size?: 'sm' | 'md' | 'lg'; children?: any; [attr: string]: any }) {
+export function Toggle({ pressed, icon, label, size, children, ...rest }: { pressed: boolean; icon?: IconRef; label?: string; size?: 'sm' | 'md' | 'lg'; children?: any; [attr: string]: any }) {
   onMount(() => installSweep())
   const glyph = derived(() => icon)
   return (

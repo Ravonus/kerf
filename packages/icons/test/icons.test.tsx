@@ -18,8 +18,7 @@ test('three tiers in one svg, no wrapper: outline and pixel paths are direct chi
   const svg = container.querySelector('svg')!
   expect([...svg.children].every(c => c.tagName.toLowerCase() === 'path')).toBe(true)
   const pixels = svg.querySelector('[data-t="v"]')!
-  expect(pixels.getAttribute('shape-rendering')).toBe('crispEdges')
-  expect(pixels.getAttribute('fill')).toBe('currentColor')
+  expect(pixels.hasAttribute('data-p')).toBe(true)
   expect(svg.querySelector('[data-w]')).not.toBeNull()
 })
 

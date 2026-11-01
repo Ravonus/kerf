@@ -1,3 +1,4 @@
+import { IconTimer } from '@weft/icons'
 import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft/ui-core'
 import { derived, state, untrack } from 'weft'
 import { bindable, Composite, Hidden, usePickerEnv, type Bindable, type RichFieldProps } from './Picker'
@@ -66,7 +67,7 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
   }
   return (
     <Composite
-      icon="timer"
+      icon={IconTimer}
       {...rest}
       label={label}
       hint={hint ?? words.value}
