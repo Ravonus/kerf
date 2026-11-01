@@ -73,7 +73,7 @@ export function Arena() {
       <p data-part="intro">These are three real production builds of one small app, running in your browser now: a counter and a grid of 1,000 cells. Press the buttons and compare what each one had to do.</p>
       <div data-part="actions">
         <Button size="lg" onClick={() => { for (const { arena } of live()) arena.click(); read() }}>Click all three</Button>
-        <Button size="lg" emphasis="ghost" tone="neutral" aria-pressed={hot.value ? 'true' : 'false'} onClick={() => (beat ? stop() : start())}>{hot.value ? 'Stop' : 'Update 100 cells, 60 times a second'}</Button>
+        <Button size="lg" emphasis="ghost" tone="neutral" aria-pressed={hot.value ? 'true' : 'false'} onClick={() => (beat ? stop() : start())}>{hot.value ? 'Stop' : 'Run 60 updates a second'}</Button>
       </div>
       <div data-part="stage">
         {rows.map(r => (
