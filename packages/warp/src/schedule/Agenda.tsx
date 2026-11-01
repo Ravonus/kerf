@@ -1,10 +1,10 @@
+import { IconPlus } from '@weft/icons'
 import { addDays, agendaItems, announce, at, clock, dayDots, eventsOn, fmt, longDuration, longPress, slide, swipePages, uid, weekDates, weekStart, ymd, type AgendaItem, type CalEvent, type IsoDate, type Slot } from '@weft/ui-core'
 import { derived, flush, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
-import { Glyph } from '../parts'
 import { bindable, usePickerEnv } from '../Picker'
 import { use } from '../use'
-import { PATHS, RepeatGlyph, tint, useNow } from './bits'
+import { RepeatGlyph, tint, useNow } from './bits'
 import { EventEditor, type CalendarSource } from './EventEditor'
 import { MoveSheet } from './MoveSheet'
 import '@weft/ui-core/styles/app/agenda.css'
@@ -157,7 +157,7 @@ export function Agenda(p: AgendaProps) {
           ))}
         </div>
       </div>
-      {p.onCreate && <button data-scope="fab" type="button" aria-label="New event" onClick={create}><Glyph d={PATHS.plus} /></button>}
+      {p.onCreate && <button data-scope="fab" type="button" aria-label="New event" onClick={create}><IconPlus /></button>}
       <MoveSheet open={sheet} event={moving.value} events={p.events} firstDayOfWeek={first.value} locale={env.locale.value} hourCycle={p.hourCycle} onMove={moved} onClose={() => (lifted.value = null)} />
       <EventEditor open={editing} event={draft.value} isNew calendars={p.calendars} timeZone={p.timeZone} locale={env.locale.value} today={env.today.value} onSave={e => p.onCreate?.(e)} />
     </div>

@@ -223,7 +223,7 @@ export function designChecks(root, { files, exclude = [], tokens }) {
     const report = reporter(f)
     const localComponents = new Set(scan.functions.keys())
     const warpName = n => scan.imports.some(i => i.source === WARP && i.local === n)
-    const labelled = new Set(scan.elements.filter(e => e.name === 'label').map(e => e.attr('for')?.value ?? e.attr('htmlFor')?.value).filter(Boolean))
+    const labelled = new Set(scan.elements.map(e => e.attr('for')?.value ?? e.attr('htmlFor')?.value).filter(Boolean))
     const headings = []
     const solids = new Map()
 
@@ -286,8 +286,11 @@ export function designChecks(root, { files, exclude = [], tokens }) {
       if (['input', 'select', 'textarea'].includes(el.name)) {
         const type = el.attr('type')?.value
         const skip = ['hidden', 'submit', 'button', 'reset', 'image'].includes(type)
-        const id = el.attr('id')?.value
-        if (!skip && !named(el) && !(id && labelled.has(id)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
+        const id = el.attr('id')
+        // A computed id can pair with a label anywhere, a component around the field can render its label, and an
+        // aria-hidden field (a honeypot) has no name to give. `for` counts on a component too: a `<Field for>` passes it on.
+        const unseen = id?.kind === 'expr' || el.attr('aria-hidden')?.value === 'true' || el.ancestors.some(a => /^[A-Z]/.test(a))
+        if (!skip && !unseen && !named(el) && !(id?.value && labelled.has(id.value)) && !el.ancestors.includes('label')) report('D030', el.start, el.tagEnd, `<${el.name}> has no label: a screen reader announces only "edit" (WCAG 1.3.1, 4.1.2).${el.attr('placeholder') ? ' A placeholder is not a label.' : ''}`)
       }
       if (['button', 'a', 'Button'].includes(el.name) && !el.attr('label') && !named(el) && !(el.name === 'a' && !el.attr('href')) && !hasName(el.children)) report('D031', el.start, el.tagEnd, `<${el.name}> has no name a screen reader can read: only an icon, or nothing (WCAG 4.1.2).`)
       if (el.name === 'img' && !el.attr('alt') && !el.attrs.some(a => a.kind === 'spread')) report('D032', el.start, el.tagEnd, '<img> has no `alt`: a screen reader reads out the file name (WCAG 1.1.1).')

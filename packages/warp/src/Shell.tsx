@@ -1,3 +1,4 @@
+import { IconLeft, IconMore, IconPanel, IconRight, IconX, type IconComponent } from '@weft/icons'
 import { dialog, installSweep, menu, shell, uid } from '@weft/ui-core'
 import { derived, onMount, state, type State, untrack } from 'weft'
 import { Icon, type IconName } from './Icon'
@@ -66,10 +67,6 @@ export interface ShellProps {
   children?: any
 }
 
-const svg = (d: string) => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={d} /></svg>
-const LEFT = 'M15 5l-7 7 7 7', RIGHT = 'M9 5l7 7-7 7', CLOSE = 'M6.5 6.5l11 11M17.5 6.5l-11 11'
-const panelIcon = () => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></svg>
-const moreIcon = () => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h.01M12 12h.01M19 12h.01" /></svg>
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i() : i ? <Icon name={i} /> : null)
 const TABS = 4
@@ -186,20 +183,20 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
   use(menu, () => menuEl, () => ({ open: menuOpen.value, trigger: () => from, at, onClose: shut }))
   use(dialog, () => sheetEl, () => ({ open: moreOpen.value, onClose: () => (moreOpen.value = false) }))
 
-  const button = (d: { label: string; href?: string; onClick?: () => void }, part: string | undefined, icon: string) => (
+  const button = (d: { label: string; href?: string; onClick?: () => void }, part: string | undefined, icon: IconComponent) => (
     d.href
-      ? <a href={d.href} data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label}>{svg(icon)}</a>
-      : <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label} onClick={d.onClick}>{svg(icon)}</button>
+      ? <a href={d.href} data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label}>{icon({})}</a>
+      : <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label} onClick={d.onClick}>{icon({})}</button>
   )
   const page = <div data-part="page">{children}</div>
   return (
     <div ref={(n: any) => (root = n)} data-scope="shell" data-part="root" data-variant={focus.value ? 'focus' : undefined} data-depth={depth} data-collapsed={folded.value === 'hidden' ? 'hidden' : folded.value ? '' : undefined} data-nav-open={navOpen.value ? '' : undefined}>
       <a data-part="skip" href={`#${main}`}>Skip to content</a>
-      {folded.value === 'hidden' && <button type="button" data-part="edge-tab" aria-controls={navId} aria-expanded={navOpen.value ? 'true' : 'false'} aria-label={navOpen.value ? 'Hide navigation' : 'Show navigation'} onClick={() => (navOpen.value = !navOpen.value)}>{svg(RIGHT)}</button>}
+      {folded.value === 'hidden' && <button type="button" data-part="edge-tab" aria-controls={navId} aria-expanded={navOpen.value ? 'true' : 'false'} aria-label={navOpen.value ? 'Hide navigation' : 'Show navigation'} onClick={() => (navOpen.value = !navOpen.value)}><IconRight /></button>}
       <div data-part="layout">
         <header data-part="header">
-          {focus.value && close && button(close, undefined, CLOSE)}
-          {!focus.value && back && button(back, 'back', LEFT)}
+          {focus.value && close && button(close, undefined, IconX)}
+          {!focus.value && back && button(back, 'back', IconLeft)}
           {!focus.value && brand && <a href={brand.href ?? '/'} data-part="brand" aria-label={`${brand.name}, home`}>{brand.mark}<span data-part="brand-name">{brand.name}</span></a>}
           {title !== undefined && <p data-part="title">{title}</p>}
           {!focus.value && crumbs && <Crumbs items={crumbs} />}
@@ -236,7 +233,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
             )}
             <ul data-part="nav-list" aria-labelledby={groups.value[0]?.label !== undefined ? `${navId}-g` : undefined}>
               {primary.value.map(p => <li key={p.item.id} data-tab={p.tab ? '' : undefined}><Item item={p.item} current={current} onPick={closeNav} /></li>)}
-              {more.value.length > 0 && <li data-tab="" data-part="nav-more"><button type="button" data-part="nav-item" data-sweep="" data-phase="idle" aria-haspopup="dialog" aria-expanded={moreOpen.value ? 'true' : 'false'} onClick={() => (moreOpen.value = true)}><span data-part="icon">{moreIcon()}{sweepParts()}</span><span data-part="nav-label">More</span></button></li>}
+              {more.value.length > 0 && <li data-tab="" data-part="nav-more"><button type="button" data-part="nav-item" data-sweep="" data-phase="idle" aria-haspopup="dialog" aria-expanded={moreOpen.value ? 'true' : 'false'} onClick={() => (moreOpen.value = true)}><span data-part="icon"><IconMore />{sweepParts()}</span><span data-part="nav-label">More</span></button></li>}
             </ul>
             {extra.value.length > 0 && (
               <div data-part="nav-extra">
@@ -250,7 +247,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
             )}
             <div data-part="nav-foot">
               {foot?.map(i => <Item key={i.id} item={i} current={current} onPick={closeNav} />)}
-              <button type="button" data-part="nav-toggle" aria-controls={navId} aria-expanded={toggleExpanded.value ? 'true' : 'false'} aria-label={toggleLabel.value} aria-keyshortcuts="[" onClick={toggle}>{panelIcon()}</button>
+              <button type="button" data-part="nav-toggle" aria-controls={navId} aria-expanded={toggleExpanded.value ? 'true' : 'false'} aria-label={toggleLabel.value} aria-keyshortcuts="[" onClick={toggle}><IconPanel /></button>
             </div>
           </nav>
         )}
@@ -289,7 +286,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
         <dialog ref={(n: any) => (sheetEl = n)} data-part="sheet" aria-labelledby={sheetId} hidden={!moreOpen.value} style="margin:0;max-inline-size:none">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <p data-part="title" id={sheetId} style="margin:0;font-weight:600">More</p>
-            <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-close="" autofocus>{svg(CLOSE)}</button>
+            <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-close="" autofocus><IconX /></button>
           </div>
           <div data-scope="menu">
             {more.value.map(i => <a key={i.id} data-part="item" style="text-decoration:none" href={i.href ?? '#'} aria-current={current === i.id ? 'page' : undefined} onClick={(e: MouseEvent) => { if (!i.href) e.preventDefault(); i.onSelect?.(); moreOpen.value = false }}>{draw(i.icon)}<span data-part="item-label">{i.label}</span>{i.count !== undefined && <span data-part="shortcut">{i.count}</span>}</a>)}

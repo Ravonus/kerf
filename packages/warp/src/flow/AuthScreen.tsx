@@ -1,4 +1,4 @@
-import { Glyph } from '../parts'
+import { IconWeave } from '@weft/icons'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
 import '@weft/ui-core/styles/flows/base.css'
@@ -15,10 +15,9 @@ const WeaveArt = () => (
   </svg>
 )
 
-const LOGO = 'M5 3v18M10 3v18M15 3v18M20 3v18M2 9h20M2 15h20'
 
 /** The product's mark: a logo of the app's, or warp's woven square. */
-export const AuthLogo = ({ logo, name }: { logo?: any; name?: any }) => <span data-part="logo">{logo ?? <Glyph d={LOGO} />}{name}</span>
+export const AuthLogo = ({ logo, name }: { logo?: any; name?: any }) => <span data-part="logo">{logo ?? <IconWeave />}{name}</span>
 
 /**
  * The auth layout (09 §2.2), by its own width: full-bleed under 600, a 420 card on the page at 600–999, split with the

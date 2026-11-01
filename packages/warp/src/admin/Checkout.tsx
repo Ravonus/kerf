@@ -1,3 +1,4 @@
+import { IconBag, IconLock } from '@weft/icons'
 import { addressProblems, announce, cartCount, cartTotals, errorStep, money, newOrderKey, openWhenWide, uid, type Address, type AddressPart, type CartLine, type CheckoutError } from '@weft/ui-core'
 import { derived, state, type State, untrack } from 'weft'
 import { Alert } from '../Alert'
@@ -5,7 +6,6 @@ import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Input } from '../Field'
 import { Icon } from '../Icon'
-import { Glyph } from '../parts'
 import { AddressField, type AddressProvider } from '../PlaceField'
 import { Tag } from '../Tag'
 import { toast } from '../Toast'
@@ -13,7 +13,7 @@ import { use } from '../use'
 import { LineItem } from './Cart'
 import { OrderConfirmation, type OrderStage } from './Order'
 import { StepBar } from './StepBar'
-import { GLYPH, Sweep, afterFlush } from './atoms'
+import { Sweep, afterFlush } from './atoms'
 import '../styles'
 import '@weft/ui-core/styles/flows/tokens.css'
 import '@weft/ui-core/styles/flows/base.css'
@@ -256,7 +256,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
                   ))}
                 </dl>
                 <span class="muted">By paying you agree to the terms of sale. You can cancel within 1 hour.</span>
-                <Nav back="payment"><Button size="lg" loading={placing.value} onClick={pay}><Glyph d={GLYPH.lock} />{`Pay ${cost(total.value)}`}</Button></Nav>
+                <Nav back="payment"><Button size="lg" loading={placing.value} onClick={pay}><IconLock />{`Pay ${cost(total.value)}`}</Button></Nav>
               </div>
             </section>
             <section data-part="step" data-step="done" data-state={step.value === 'done' ? 'active' : undefined} aria-labelledby={`${id}-done`}>
@@ -265,7 +265,7 @@ export function Checkout({ cart, shipping, countries, defaultCountry = 'US', add
           </div>
         </div>
         <details ref={(n: any) => (summary = n)} data-part="summary">
-          <summary><span class="row"><Glyph d={GLYPH.bag} />Order summary</span><span class="row"><b>{cost(total.value)}</b><Icon name="down" /></span></summary>
+          <summary><span class="row"><IconBag />Order summary</span><span class="row"><b>{cost(total.value)}</b><Icon name="down" /></span></summary>
           {lines.value.map(l => (
             <div key={l.id} data-scope="line-item">
               <span data-part="thumb">{l.art && <img src={l.art} alt="" />}</span>

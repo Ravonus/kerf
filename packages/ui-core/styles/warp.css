@@ -109,6 +109,7 @@
 /* -- the expression dial ------------------------------------------------- */
 :root, [data-expression="balanced"] {
   --warp-x: 0.5;
+  --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; --warp-icon-weft: 2; /* @weft/icons' tier, 10 §8 */
   --warp-ref-neutral-h: 80;  --warp-ref-neutral-c: 0.005;   /* graphite, a hint warm */
   --warp-ref-accent-k: 1;    --warp-ref-tone-k: 1;
   --warp-ref-depth: 0.7;
@@ -157,6 +158,7 @@
 }
 [data-expression="quiet"] {
   --warp-x: 0;
+  --warp-icon-o: inline; --warp-icon-q: inline; --warp-icon-b: none; --warp-icon-v: none; --warp-icon-weft: 1.5;
   --warp-ref-neutral-h: 255; --warp-ref-neutral-c: 0.011;   /* slate */
   --warp-ref-accent-k: 0.8;  --warp-ref-tone-k: 0.85;
   --warp-ref-depth: 1;
@@ -204,6 +206,7 @@
 }
 [data-expression="vivid"] {
   --warp-x: 1;
+  --warp-icon-o: none; --warp-icon-q: none; --warp-icon-b: none; --warp-icon-v: inline; --warp-icon-weft: 2;
   --warp-ref-neutral-h: 85;  --warp-ref-neutral-c: 0.012;   /* warm paper / ink */
   --warp-ref-accent-k: 1.2;  --warp-ref-tone-k: 1.1;
   --warp-ref-depth: 0.35;

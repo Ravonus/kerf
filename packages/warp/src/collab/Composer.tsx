@@ -1,7 +1,7 @@
+import { IconAt, IconPaperclip, IconSend, IconSmile } from '@weft/icons'
 import { announce, insertMention, installSweep, mentionQuery, nextIndex, uid, type Peer } from '@weft/ui-core'
 import { derived, onMount, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
-import { Glyph } from '../parts'
 import { Icon } from '../Icon'
 import { PeerAvatar, SWEEP } from './peer'
 import '../styles'
@@ -12,10 +12,6 @@ import '@weft/ui-core/styles/app/composer.css'
 import '@weft/ui-core/styles/app/suggest.css'
 import '@weft/ui-core/styles/app/typing.css'
 
-export const CLIP = 'M20 11.5l-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.2a1.7 1.7 0 0 1-2.4-2.4L15 7'
-export const SMILE = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14.5s1.2 1.5 3.5 1.5 3.5-1.5 3.5-1.5M9 9.5h.01M15 9.5h.01'
-const AT = 'M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1'
-const SEND = 'M5 12h13M12 5l7 7-7 7'
 const HINT = 'Enter sends, Shift+Enter adds a line'
 
 export interface QuoteDraftValue { ref: string; author: string; time: string; text: string }
@@ -144,12 +140,12 @@ export function Composer({ label, placeholder, onSend, quote, mentions, files, o
         onBlur={closeList}
       ></textarea>
       <div data-part="row">
-        {canAttach.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Attach" data-icon-only="" onClick={() => onAttach?.()}><Glyph d={CLIP} /></Button>}
-        {canEmoji.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Emoji" data-icon-only="" onClick={() => onEmoji?.(insert)}><Glyph d={SMILE} /></Button>}
-        {hasPeople.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Mention someone" data-icon-only="" onClick={() => { insert(`${ta!.value && !/\s$/.test(ta!.value) ? ' ' : ''}@`); scan() }}><Glyph d={AT} /></Button>}
+        {canAttach.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Attach" data-icon-only="" onClick={() => onAttach?.()}><IconPaperclip /></Button>}
+        {canEmoji.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Emoji" data-icon-only="" onClick={() => onEmoji?.(insert)}><IconSmile /></Button>}
+        {hasPeople.value && <Button emphasis="ghost" tone="neutral" size="sm" label="Mention someone" data-icon-only="" onClick={() => { insert(`${ta!.value && !/\s$/.test(ta!.value) ? ' ' : ''}@`); scan() }}><IconAt /></Button>}
         <span data-part="spacer"></span>
         <span data-part="hint" id={`${id}-h`} data-state={hint.value ? 'error' : undefined}>{hint.value ?? (compact ? '' : HINT)}</span>
-        <button type="button" data-scope="button" data-part="send" data-icon-only="" aria-label="Send" onClick={send}><Glyph d={SEND} /></button>
+        <button type="button" data-scope="button" data-part="send" data-icon-only="" aria-label="Send" onClick={send}><IconSend /></button>
       </div>
       {open.value && (
         <div data-scope="suggest" role="listbox" id={`${id}-l`} aria-label="Mention">

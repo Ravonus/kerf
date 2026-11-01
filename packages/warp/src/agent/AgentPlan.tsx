@@ -1,8 +1,8 @@
+import { IconHand, IconX } from '@weft/icons'
 import type { PlanStep } from '@weft/ui-core'
 import { derived } from 'weft'
 import { Icon } from '../Icon'
-import { Glyph } from '../parts'
-import { Bar, G, IconButton } from './bits'
+import { Bar, IconButton } from './bits'
 import '../styles'
 import '@weft/ui-core/styles/components/spinner.css'
 import '@weft/ui-core/styles/app/plan.css'
@@ -27,7 +27,7 @@ export function AgentPlan({ steps, queue, title = 'Plan', onRemoveQueued }: { st
             <span data-part="box">
               {s.state === 'done' && <Icon name="check" style="inline-size:12px;block-size:12px;stroke-width:2.2" />}
               {s.state === 'running' && <span data-scope="spinner" style="--_size:10px;color:var(--warp-color-accent-text)"></span>}
-              {s.state === 'blocked' && <Glyph d={G.hand} style="inline-size:11px;block-size:11px" />}
+              {s.state === 'blocked' && <IconHand style="inline-size:11px;block-size:11px" />}
             </span>
             <span>{s.title}{note(s) !== undefined && <small>{note(s)}</small>}</span>
           </li>
@@ -40,7 +40,7 @@ export function AgentPlan({ steps, queue, title = 'Plan', onRemoveQueued }: { st
           <div key={q.id}>
             <Icon name="clock" style="inline-size:14px;block-size:14px;color:var(--warp-color-text-subtle)" />
             <span>{q.text}</span>
-            <IconButton d="M6 6l12 12M18 6L6 18" label={`Remove from queue: ${q.text}`} onClick={() => onRemoveQueued?.(q.id)} />
+            <IconButton icon={IconX} label={`Remove from queue: ${q.text}`} onClick={() => onRemoveQueued?.(q.id)} />
           </div>
         ))}
       </div>

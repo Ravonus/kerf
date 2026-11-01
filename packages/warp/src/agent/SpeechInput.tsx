@@ -1,11 +1,11 @@
+import { IconMic } from '@weft/icons'
 import { announce, dictation, formatClock, listMics, speechWave, type DictationEngine, type DictationEvents, type DictationState } from '@weft/ui-core'
 import { derived, onCleanup, onMount, state, untrack } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
-import { Glyph } from '../parts'
 import { Select } from '../Select'
 import { use } from '../use'
-import { G, Sweep, useSweep } from './bits'
+import { Sweep, useSweep } from './bits'
 import '../styles'
 import '@weft/ui-core/styles/app/speech.css'
 
@@ -84,7 +84,7 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
       </div>
       <div data-part="strip" data-sweep="" data-phase="idle" data-pin={on.value ? '' : undefined}>
         <Sweep />
-        <Button data-icon-only="" tone={on.value ? 'critical' : undefined} aria-pressed={on.value ? 'true' : 'false'} label={on.value ? 'Stop dictation' : 'Start dictation'} onClick={toggle}><Glyph d={G.mic} /></Button>
+        <Button data-icon-only="" tone={on.value ? 'critical' : undefined} aria-pressed={on.value ? 'true' : 'false'} label={on.value ? 'Stop dictation' : 'Start dictation'} onClick={toggle}><IconMic /></Button>
         <span ref={(n: any) => (wave = n)} data-part="wave" data-loop="" aria-hidden="true">{BARS.map(b => <i key={b}></i>)}</span>
         <span data-part="time" role="timer" aria-label="Recording time" data-numeric="">{formatClock(seconds.value)}</span>
       </div>

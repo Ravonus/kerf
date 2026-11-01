@@ -1,8 +1,8 @@
+import { IconCopy, IconLink } from '@weft/icons'
 import { announce, arrivalTracker, installSweep, uid, type Peer } from '@weft/ui-core'
 import { derived, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
 import { ComboField } from '../Combobox'
-import { Glyph } from '../parts'
 import { Modal } from '../Modal'
 import { Tag } from '../Tag'
 import { PeerAvatar, read, type Live } from './peer'
@@ -12,8 +12,6 @@ import '@weft/ui-core/styles/app/base.css'
 import '@weft/ui-core/styles/app/share.css'
 import '@weft/ui-core/styles/components/share.css'
 
-const LINK = 'M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1'
-const COPY = 'M8 8h12v12H8zM16 8V4H4v12h4'
 
 export type ShareRole = 'viewer' | 'commenter' | 'editor' | 'owner'
 const ROLES: [ShareRole, string][] = [['viewer', 'Viewer'], ['commenter', 'Commenter'], ['editor', 'Editor']]
@@ -100,7 +98,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
           ))}
         </div>
         <div data-part="link">
-          <Glyph d={LINK} />
+          <IconLink />
           <label data-part="sr-only" for={`${id}-a`}>Link access</label>
           <select id={`${id}-a`} value={access.value.access} onChange={(e: any) => onLinkAccess({ ...access.value, access: e.currentTarget.value })}>
             <option value="restricted" selected={access.value.access === 'restricted'}>Restricted</option>
@@ -119,7 +117,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
               copied.value = true
               installSweep().confirm(e.currentTarget as Element)
               announce((e.currentTarget as Element).ownerDocument, 'Link copied')
-            }}><Glyph d={COPY} /> {copied.value ? 'Copied' : 'Copy link'}</Button>
+            }}><IconCopy /> {copied.value ? 'Copied' : 'Copy link'}</Button>
           </span>
         </div>
       </div>

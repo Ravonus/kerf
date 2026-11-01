@@ -1,9 +1,9 @@
+import { IconCommand, IconFile, IconGlobe, IconMic, IconPaperclip, IconSend, IconStop, IconX } from '@weft/icons'
 import { announce, applySuggest, autosize, installSweep, suggestQuery, uid } from '@weft/ui-core'
 import { derived, onMount, state, type State } from 'weft'
 import { Button } from '../Button'
-import { Glyph } from '../parts'
 import { use } from '../use'
-import { Bar, G, held, IconButton, Sweep } from './bits'
+import { Bar, held, IconButton, Sweep } from './bits'
 import { ContextMeter, type ContextUse } from './ContextMeter'
 import { ModelPicker, type ModelOption } from './ModelPicker'
 import '../styles'
@@ -142,8 +142,8 @@ export function Prompt(p: PromptProps) {
           <div data-part="files">
             {p.attachments ?? (p.files ?? []).map(f => (
               <span key={f.id} data-part="file">
-                <Glyph d={G.file} /><span>{f.name}</span>
-                <IconButton d="M6 6l12 12M18 6L6 18" label={`Remove ${f.name}`} onClick={() => p.onRemoveFile?.(f.id)} />
+                <IconFile /><span>{f.name}</span>
+                <IconButton icon={IconX} label={`Remove ${f.name}`} onClick={() => p.onRemoveFile?.(f.id)} />
                 {f.progress !== undefined && f.progress < 1 && <Bar label={`Uploading ${f.name}`} value={f.progress} />}
               </span>
             ))}
@@ -153,15 +153,15 @@ export function Prompt(p: PromptProps) {
         <textarea ref={(n: any) => (box = n)} id={`${id}-in`} rows="1" enterkeyhint="send" placeholder={p.placeholder ?? 'Ask, or type / for commands'} aria-describedby={p.blocked ? `${id}-hint ${id}-why` : `${id}-hint`} aria-controls={listed.value ? `${id}-list` : undefined} aria-activedescendant={activeId.value} value={draft.value} onInput={e => { draft.set((e.currentTarget as HTMLTextAreaElement).value); look() }} onKeyDown={onKey} onClick={look} onBlur={() => (open.value = null)}></textarea>
         {p.blocked && <span data-part="hint" data-state="error" id={`${id}-why`}>{p.blocked}</span>}
         <div data-part="row">
-          {shown('attach') && <IconButton d={G.clip} label="Attach file" onClick={() => picker?.click()} />}
+          {shown('attach') && <IconButton icon={IconPaperclip} label="Attach file" onClick={() => picker?.click()} />}
           {shown('attach') && <input ref={(n: any) => (picker = n)} type="file" multiple hidden onChange={e => { add((e.currentTarget as HTMLInputElement).files); (e.currentTarget as HTMLInputElement).value = '' }} />}
-          {shown('slash') && !!p.commands?.length && <IconButton d={G.cmd} label="Commands" onClick={() => { draft.set('/'); box!.value = '/'; box!.focus(); box!.setSelectionRange(1, 1); look() }} />}
-          {shown('mic') && <IconButton d={G.mic} label="Dictate" tone={p.mic ? 'critical' : 'neutral'} aria-pressed={p.mic ? 'true' : 'false'} onClick={p.onMic} />}
-          {shown('web') && !p.compact && <Button emphasis="ghost" tone="neutral" size="sm" aria-pressed={p.web ? 'true' : 'false'} onClick={() => p.onWebChange?.(!p.web)}><Glyph d={G.globe} /><span data-part="label">Web</span></Button>}
+          {shown('slash') && !!p.commands?.length && <IconButton icon={IconCommand} label="Commands" onClick={() => { draft.set('/'); box!.value = '/'; box!.focus(); box!.setSelectionRange(1, 1); look() }} />}
+          {shown('mic') && <IconButton icon={IconMic} label="Dictate" tone={p.mic ? 'critical' : 'neutral'} aria-pressed={p.mic ? 'true' : 'false'} onClick={p.onMic} />}
+          {shown('web') && !p.compact && <Button emphasis="ghost" tone="neutral" size="sm" aria-pressed={p.web ? 'true' : 'false'} onClick={() => p.onWebChange?.(!p.web)}><IconGlobe /><span data-part="label">Web</span></Button>}
           <span data-part="spacer"></span>
           {p.context && <ContextMeter used={p.context.used} limit={p.context.limit} parts={p.context.parts} onCompact={p.onCompact} />}
           {p.models && <ModelPicker models={p.models} value={p.model} onChange={p.onModelChange} compact={p.compact} />}
-          <Button data-part="send" data-icon-only="" tone={p.busy ? 'neutral' : undefined} label={p.busy ? 'Stop' : 'Send'} aria-disabled={p.blocked && !p.busy ? 'true' : undefined} onClick={press}><Glyph d={p.busy ? G.stop : G.send} /></Button>
+          <Button data-part="send" data-icon-only="" tone={p.busy ? 'neutral' : undefined} label={p.busy ? 'Stop' : 'Send'} aria-disabled={p.blocked && !p.busy ? 'true' : undefined} onClick={press}>{p.busy ? <IconStop /> : <IconSend />}</Button>
         </div>
         <span data-part="sr-only" id={`${id}-hint`}>Enter sends, Shift+Enter adds a line, Escape stops a running answer.</span>
         {listed.value && (

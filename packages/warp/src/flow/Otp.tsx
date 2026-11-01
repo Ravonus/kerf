@@ -1,9 +1,9 @@
+import { IconShieldCheck } from '@weft/icons'
 import { clockLabel, otpInput, uid } from '@weft/ui-core'
 import { derived, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
-import { Glyph } from '../parts'
 import { use } from '../use'
-import { G, Mark, FormError, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm } from './kit'
+import { Mark, FormError, StepFrame, Submit, TextLink, Title, useCooldown, useStepForm, type FlowForm } from './kit'
 import '../fields'
 import '@weft/ui-core/styles/inputs/field.css'
 import '@weft/ui-core/styles/inputs/text.css'
@@ -95,7 +95,7 @@ export function OtpStep(p: OtpStepProps) {
   return (
     <StepFrame ctl={ctl} embedded={!!p.form} labelledby={`${id}-t`}>
       {p.onBack && <div><Button emphasis="ghost" tone="neutral" size="sm" icon="left" onClick={p.onBack}>Back</Button></div>}
-      <Mark><Glyph d={G.shield} /></Mark>
+      <Mark><IconShieldCheck /></Mark>
       <div><Title as={p.heading} id={`${id}-t`}>{p.title ?? 'Enter your code'}</Title>{p.lede !== undefined && <p data-part="lede">{p.lede}</p>}</div>
       <FormError ctl={ctl} />
       <OtpField name="code" length={n.value} hint={p.hint ?? ''} status={status.value} error={ctl.errors.value.code} onValueChange={v => (code.value = v)} />
