@@ -328,9 +328,25 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       const box = await page.getByRole('button', { name: 'Undo' }).first().boundingBox()
       await page.mouse.move(box.x + 2, box.y + 2)
       await page.waitForTimeout(150)
+      const state = () => page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
+      expect(await state()).toBe('paused')
       await set(page, 'modal', true)
-      await page.waitForTimeout(300)
-      expect(await page.evaluate(() => document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)).toBe('paused')
+      // every frame for a second, not one late look: WebKit's own hover check lands about 300 ms after the move
+      const seen = await page.evaluate(() => new Promise(done => {
+        const seen = new Set(), end = performance.now() + 1000
+        const look = () => {
+          seen.add(document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
+          if (performance.now() < end) requestAnimationFrame(look)
+          else done([...seen])
+        }
+        look()
+      }))
+      expect(seen).toEqual(['paused'])
+      await page.mouse.move(box.x + 3, box.y + 3)
+      await page.waitForTimeout(150)
+      expect(await state()).toBe('paused')
+      await page.mouse.move(5, 5)
+      await expect.poll(state, { timeout: 2000 }).toBe('running')
       await page.close()
     })
 

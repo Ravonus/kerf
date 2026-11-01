@@ -65,7 +65,9 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
   const timers = new Map<HTMLElement, Animation | ReturnType<typeof setTimeout>>()
   const seen = new Set<string>()
   const items = () => [...region.querySelectorAll<HTMLElement>(':scope > [data-scope="toast"][data-part="root"]:not([data-state])')]
-  const expanded = () => region.matches(':hover, :focus-within')
+  // WebKit's first pointerenter after a move can come before :hover is true, and nothing follows it, so the event counts too
+  let over = false
+  const expanded = () => over || region.matches(':hover, :focus-within')
   const paused = () => expanded() || doc.hidden
 
   function layout() {
@@ -186,12 +188,12 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
     }
     focused?.focus({ preventScroll: true })
     win.requestAnimationFrame(() => region.removeAttribute('data-moving'))
-    if (hovered) doc.addEventListener('pointermove', onHover, { once: true })
+    if (hovered) doc.addEventListener('pointermove', () => { over = false; onHover() }, { once: true })
     else onHover()
   }
   const unwatch = onTopModal(doc, follow)
   const on: [EventTarget, string, (e: any) => void][] = [
-    [region, 'pointerenter', onHover], [region, 'pointerleave', onHover], [region, 'focusin', onHover], [region, 'focusout', () => win.requestAnimationFrame(onHover)],
+    [region, 'pointerenter', e => { over = e.pointerType !== 'touch'; onHover() }], [region, 'pointerleave', () => { over = false; onHover() }], [region, 'focusin', onHover], [region, 'focusout', () => win.requestAnimationFrame(onHover)],
     [doc, 'visibilitychange', syncTimers], [doc, 'keydown', onKey],
     [region, 'pointerdown', onDown], [region, 'pointermove', onMove], [region, 'pointerup', onUp], [region, 'pointercancel', onUp],
   ]
