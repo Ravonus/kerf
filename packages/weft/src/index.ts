@@ -587,6 +587,37 @@ export function view(sources: any[], skip: string[] = []): any {
   })
 }
 
+/**
+ * Compiled from a component that assigns to a prop's local (`let amount = props.amount; amount = 5`). Each written prop
+ * reads through a linked state, so a write holds in this component until the parent's value next changes, and only a
+ * prop given with `bind(box)` has a setter that takes it further. `written`: each key, then its default or 0.
+ */
+export function localProps(props: any, written: unknown[]) {
+  const boxes = new Map<PropertyKey, Linked<unknown>>()
+  for (let i = 0; i < written.length; i += 2) {
+    const k = written[i] as string, fallback = written[i + 1] as (() => unknown) | 0
+    boxes.set(k, state.linked(() => (props[k] === undefined && fallback ? fallback() : props[k])))
+  }
+  return new Proxy(props, {
+    get: (t, k) => (boxes.has(k) ? boxes.get(k)!.value : t[k]),
+    set(t, k, v) {
+      const box = boxes.get(k)
+      if (box) box.value = v
+      Reflect.set(t, k, v) // a setter, if the parent bound this prop; a getter alone ignores it
+      return true
+    },
+    has: (t, k) => boxes.has(k) || k in t,
+    ownKeys: t => [...new Set([...Reflect.ownKeys(t), ...boxes.keys()])] as (string | symbol)[],
+    getOwnPropertyDescriptor: (t, k) => (boxes.has(k) || k in t ? { configurable: true, enumerable: true } : undefined),
+  })
+}
+
+/**
+ * `<Card person={bind(name)} />`: `person` reads the box, and a write in `Card` reaches it. Without this, a child's
+ * writes stay in the child. The compiler reads the call; this is its value where nothing compiled it.
+ */
+export const bind = <T>(box: State<T>): T => box.value
+
 /** A live view of `props` without `keys` (`({ a, ...rest }) =>`, §3.3). */
 export const omit = (props: object, keys: string[]): any => view([props], keys)
 

@@ -33,6 +33,8 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
         plan,
         raw: HashSet::new(),
         defaults: HashMap::new(),
+        local: plan.local_props.values().flat_map(|(_, keys)| keys.iter().map(|(_, s)| *s)).collect(),
+        needs_local: false,
         children_used: HashSet::new(),
         rest_used: HashSet::new(),
         needs_memo: false,
@@ -45,6 +47,9 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
     }
     if t.needs_rest_of {
         imports.push(("restOf", "_$restOf"));
+    }
+    if t.needs_local {
+        imports.push(("localProps", "_$localProps"));
     }
     if t.needs_memo {
         imports.push(("memo", "_$weftMemo"));
@@ -59,6 +64,9 @@ struct Transformer<'a, 'p> {
     ast: AstBuilder<'a>,
     scoping: &'p Scoping,
     plan: &'p Plan,
+    /// Prop locals that are written: their default is applied by `localProps`, once.
+    local: HashSet<SymbolId>,
+    needs_local: bool,
     /// Item symbols kept as raw values (inside a list's `by` function).
     raw: HashSet<SymbolId>,
     /// Prop defaults moved out of the destructuring pattern, already rewritten; cloned into every read.
@@ -158,7 +166,7 @@ impl<'a, 'p> Transformer<'a, 'p> {
         match rewrite {
             Rewrite::Prop { props, path } => {
                 let read = || path.iter().fold(self.ident(props), |object, p| self.member(object, p));
-                match self.defaults.get(&sym) {
+                match self.defaults.get(&sym).filter(|_| !self.local.contains(&sym)) {
                     Some(fallback) => {
                         let fallback = fallback.clone_in(self.allocator);
                         let undefined = self.ident("undefined");
@@ -168,6 +176,12 @@ impl<'a, 'p> Transformer<'a, 'p> {
                     }
                     None => read(),
                 }
+            }
+            Rewrite::Via { of, path } => {
+                let plan = self.plan;
+                let (undefined, target) = (self.ident("undefined"), &plan.rewrites[of]);
+                let base = self.rewritten(*of, target, undefined);
+                path.iter().fold(base, |object, p| self.member(object, p))
             }
             Rewrite::Children { local, component } => {
                 self.children_used.insert(*component);
@@ -329,7 +343,7 @@ impl<'a, 'p> Transformer<'a, 'p> {
 
     /// Whether the component declares anything at the top of its body.
     fn declares(&self, span: SpanKey) -> bool {
-        self.children_used.contains(&span) || self.rest_used.contains(&span)
+        self.children_used.contains(&span) || self.rest_used.contains(&span) || self.plan.local_props.contains_key(&span)
     }
 
     /// After walking a component: declare its memoised children and its rest view at the top of the body, if used.
@@ -351,6 +365,24 @@ impl<'a, 'p> Transformer<'a, 'p> {
             let memo = self.call(self.ident("_$weftMemo"), [read]);
             body.statements.insert(0, self.const_decl(&children.local, memo));
             self.needs_memo = true;
+        }
+        // First: everything above reads the props through it.
+        if let Some((props, keys)) = self.plan.local_props.get(&span) {
+            let mut fields = Vec::new();
+            for (k, sym) in keys {
+                fields.push(self.string(k));
+                fields.push(match self.defaults.get(sym) {
+                    Some(f) => self.arrow([], f.clone_in(self.allocator)),
+                    None => self.number(0),
+                });
+            }
+            let items = ArenaVec::from_iter_in(fields.into_iter().map(ArrayExpressionElement::from), &self.ast);
+            let fallbacks = Expression::new_array_expression(SPAN, items, &self.ast);
+            let view = self.call(self.ident("_$localProps"), [self.ident(props), fallbacks]);
+            let target = AssignmentTarget::new_assignment_target_identifier(SPAN, self.str(props), &self.ast);
+            let assign = Expression::new_assignment_expression(SPAN, AssignmentOperator::Assign, target, view, &self.ast);
+            body.statements.insert(0, Statement::new_expression_statement(SPAN, assign, &self.ast));
+            self.needs_local = true;
         }
     }
 }
@@ -446,6 +478,22 @@ impl<'a> VisitMut<'a> for Unspan {
 }
 
 impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
+    /// Aliases go first, so a closure above one already reads it live, defaults included.
+    fn visit_statements(&mut self, it: &mut ArenaVec<'a, Statement<'a>>) {
+        let aliases = &self.plan.aliases;
+        if !aliases.is_empty() {
+            for statement in it.iter_mut() {
+                let Statement::VariableDeclaration(d) = statement else { continue };
+                for declarator in d.declarations.iter_mut().filter(|x| aliases.contains(&key(x.span))) {
+                    self.take_defaults(&mut declarator.id);
+                }
+                d.declarations.retain(|x| !aliases.contains(&key(x.span)));
+            }
+            it.retain(|s| !matches!(s, Statement::VariableDeclaration(d) if d.declarations.is_empty()));
+        }
+        walk_mut::walk_statements(self, it);
+    }
+
     fn visit_expression(&mut self, it: &mut Expression<'a>) {
         if let Expression::Identifier(id) = it
             && let Some((sym, rewrite)) = self.rewrite_of(id)
@@ -453,6 +501,12 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             let original = it.take_in(&self.ast);
             *it = self.rewritten(sym, rewrite, original);
             return;
+        }
+        // `bind(box)` as a component prop: the back end reads this name and gives the prop a setter.
+        if let Expression::CallExpression(c) = it
+            && self.plan.bound.contains(&key(c.span))
+        {
+            c.callee = self.ident("_$bound");
         }
         // `rest.x` is `props.x` (or nothing, for a key the pattern took).
         if let Expression::StaticMemberExpression(m) = it
@@ -507,6 +561,18 @@ impl<'a, 'p> VisitMut<'a> for Transformer<'a, 'p> {
             return;
         }
         walk_mut::walk_jsx_child(self, it);
+    }
+
+    /// `amount = 5` writes the prop, and `localProps` keeps it in the component.
+    fn visit_simple_assignment_target(&mut self, it: &mut SimpleAssignmentTarget<'a>) {
+        if let SimpleAssignmentTarget::AssignmentTargetIdentifier(id) = it
+            && let Some((_, Rewrite::Prop { props, path })) = self.rewrite_of(id)
+            && let Expression::StaticMemberExpression(m) = path.iter().fold(self.ident(props), |object, p| self.member(object, p))
+        {
+            *it = SimpleAssignmentTarget::StaticMemberExpression(m);
+            return;
+        }
+        walk_mut::walk_simple_assignment_target(self, it);
     }
 
     fn visit_object_property(&mut self, it: &mut ObjectProperty<'a>) {
