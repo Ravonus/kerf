@@ -936,6 +936,9 @@
  "thread-replies": [
   "app/thread-replies.css"
  ],
+ "ticker": [
+  "components/ticker.css"
+ ],
  "tile": [
   "app/tile.css"
  ],
@@ -947,8 +950,7 @@
   "components/toast.css"
  ],
  "toggle": [
-  "components/toggle-button.css",
-  "components/chip.css"
+  "components/toggle-button.css"
  ],
  "toggle-group": [
   "components/toggle-button.css"

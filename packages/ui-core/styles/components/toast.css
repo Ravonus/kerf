@@ -18,11 +18,12 @@
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
   box-shadow: var(--warp-elevation-2);
   translate: var(--_x) var(--_y); scale: var(--_s); opacity: var(--_o); transform-origin: 50% 100%;
-  transition: translate var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-out),
-              opacity var(--warp-duration-base) var(--warp-ease-out);
+  /* transitions, not keyframes: a toast can be retargeted mid-flight as the stack changes under it */
+  transition: translate calc(var(--warp-spring-duration) * 1.1) var(--warp-ease-spring), scale calc(var(--warp-spring-duration) * 1.1) var(--warp-ease-spring),
+              opacity var(--warp-duration-base) var(--warp-ease-out), max-block-size var(--warp-duration-base) var(--warp-ease-out);
 }
 @starting-style {
-  :where([data-scope="toast"][data-part="root"]) { translate: 0 calc(var(--warp-motion-distance) * 2); opacity: 0; scale: var(--warp-motion-scale-from); }
+  :where([data-scope="toast"][data-part="root"]) { translate: 0 calc(100% + var(--warp-space-page)); opacity: 0; scale: 1; }
 }
 :where([data-scope="toast"][data-part="root"][data-swiping]) { transition: none; }
 :where([data-scope="toast"][data-part="root"][data-state="closed"]) {

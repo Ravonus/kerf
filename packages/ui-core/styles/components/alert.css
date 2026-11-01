@@ -4,8 +4,10 @@
 :where([data-scope="alert"]) {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px var(--warp-space-related); align-items: start;
   padding: var(--warp-space-group); padding-inline-end: var(--warp-space-related);
-  background: var(--_soft); color: var(--warp-color-text);
-  border: var(--warp-border-hairline) solid var(--_border); border-radius: var(--warp-radius-surface);
+  /* a thread of tone down the edge on a neutral surface: the words carry it, not a slab of colour */
+  background: color-mix(in oklab, var(--_soft) 40%, var(--warp-color-surface-raised)); color: var(--warp-color-text);
+  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
+  box-shadow: inset var(--warp-border-emphasis) 0 0 var(--_text);
 }
 :where([data-scope="alert"] [data-part="icon"]) { color: var(--_text); margin-block-start: 1px; }
 :where([data-scope="alert"] [data-part="title"]) { font-weight: 600; line-height: 1.35; }

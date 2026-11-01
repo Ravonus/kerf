@@ -1,13 +1,14 @@
 // The sliding indicator of Segmented (inputs.html seg(), 1277-1284) and Tabs (components.html tabs(), 1821-1849): one
-// face measured from the selected item, moved through the rail on the sweep curve by CSS. The first placement and
-// re-measures on resize are instant (data-instant, dropped after two frames).
+// face measured from the selected item, moved as a shuttle (redesign §3): head first, tail after. The first placement
+// and re-measures on resize are instant (data-instant, dropped after two frames).
+import { moveShuttle } from './shuttle'
 
 export interface IndicatorOptions {
   /** The selected item, inside the container (Segmented: the checked radio's label; Tabs: the selected tab). */
   selected: string
-  /** The custom properties to write: Segmented `--_x`/`--_w`, Tabs `--_ix`/`--_iw`. */
-  x: string
-  w: string
+  /** Unused since the shuttle: it writes --warp-a and --warp-b. Kept so older calls still type-check. */
+  x?: string
+  w?: string
 }
 
 export function indicator(container: HTMLElement, opts: IndicatorOptions) {
@@ -19,8 +20,7 @@ export function indicator(container: HTMLElement, opts: IndicatorOptions) {
     const item = container.querySelector<HTMLElement>(o.selected)
     if (!el || !item) return
     if (instant) el.setAttribute('data-instant', '')
-    el.style.setProperty(o.x, `${item.offsetLeft}px`)
-    el.style.setProperty(o.w, `${item.offsetWidth}px`)
+    moveShuttle(el, item.offsetLeft, item.offsetLeft + item.offsetWidth)
     if (instant) win.requestAnimationFrame(() => win.requestAnimationFrame(() => el.removeAttribute('data-instant')))
   }
   const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => measure(true)) : null

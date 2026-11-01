@@ -107,6 +107,7 @@
   border-radius: calc(var(--warp-radius-control) + 2px);
   box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base);
   background: var(--warp-color-field); isolation: isolate; max-inline-size: 100%;
+  align-self: start; justify-self: start;   /* a control keeps its height in a grid */
 }
 :where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
 :where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--warp-sweep-width); }
@@ -125,11 +126,9 @@
 :where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); }
 :where([data-scope="segmented"] input:focus-visible + [data-part="item"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
 :where([data-scope="segmented"] [data-part="indicator"]) {
-  position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0; inline-size: var(--_w, 0); transform: translateX(var(--_x, 0));
+  position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0;
   border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: hidden;
-  transition: transform calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease), inline-size calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
 }
-:where([data-scope="segmented"] [data-part="indicator"][data-instant]) { transition: none; }
 :where([data-scope="segmented"][data-size="sm"] [data-part="item"]) { block-size: calc(var(--warp-control-sm) - 8px); font-size: var(--warp-text-caption-size); }
 
 /* chips (toggle group): pill, swept border; pressed pins the sweep on accent-soft */

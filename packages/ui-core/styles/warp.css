@@ -80,6 +80,9 @@
 /* cap-trim font-swap fix (01 §2 Type): registered, so it resolves to px on the trimmed element itself */
 @property --warp-trim-fix { syntax: "<length>"; inherits: true; initial-value: 0px; }
 
+/* the shuttle's two edges: registered so they interpolate, and on their own timings */
+@property --warp-a { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --warp-b { syntax: "<length>"; inherits: false; initial-value: 0px; }
 /* frame outline head/tail (§1b): registered so they interpolate */
 @property --warp-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --warp-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
@@ -145,6 +148,10 @@
   --warp-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --warp-ref-ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
   /* signature: the original sweep, 620ms; buttons sweep, surfaces don't */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --warp-ref-spring: linear(0, 0.186, 0.483, 0.718, 0.866, 0.945, 0.983, 0.998, 1.002, 1.003, 1.002, 1.001, 1);
+  --warp-ref-spring-ms: 380ms; --warp-ref-press: 0.97; --warp-ref-touch-out: 160ms;
+  --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 300ms; --warp-ref-offset: 0px;
   --warp-ref-sweep: 620ms;     --warp-ref-sweep-k: 1;
   --warp-ref-frame: 760ms;     /* frame button: the original's --btn-sweep-duration */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
@@ -194,6 +201,10 @@
   --warp-ref-ease-out: cubic-bezier(0.2, 0, 0, 1);
   --warp-ref-ease-pop: cubic-bezier(0.2, 0, 0, 1);
   /* signature, quieter: faster, neutral field; inputs, controls, buttons sweep (same full-accent stroke) */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --warp-ref-spring: cubic-bezier(0.2, 0, 0, 1);
+  --warp-ref-spring-ms: 240ms; --warp-ref-press: 0.985; --warp-ref-touch-out: 120ms;
+  --warp-ref-shuttle-head: 180ms; --warp-ref-shuttle-tail: 180ms; --warp-ref-offset: 0px;
   --warp-ref-sweep: 480ms;     --warp-ref-sweep-k: 1;
   --warp-ref-frame: 590ms;     /* frame, quieter: 760 at the same 480/620 ratio */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 0;
@@ -245,12 +256,16 @@
   --warp-ref-ease-pop: linear(0, 0.095, 0.291, 0.505, 0.692, 0.839, 0.936, 0.994, 1.024,
     1.034, 1.034, 1.028, 1.021, 1.014, 1.008, 1.004, 1.001, 1);
   /* signature, louder: longer travel; cards, panels, stat rows sweep too */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --warp-ref-spring: linear(0, 0.154, 0.44, 0.701, 0.883, 0.985, 1.029, 1.038, 1.032, 1.021, 1.011, 1.004, 1, 0.999, 1);
+  --warp-ref-spring-ms: 520ms; --warp-ref-press: 0.96; --warp-ref-touch-out: 200ms;
+  --warp-ref-shuttle-head: 150ms; --warp-ref-shuttle-tail: 420ms; --warp-ref-offset: 3px;
   --warp-ref-sweep: 700ms;     --warp-ref-sweep-k: 1;
   --warp-ref-frame: 760ms;     /* frame: the original 760, top of the vivid range */
   --warp-sweep-buttons: 1;     --warp-sweep-surfaces: 1;
   --warp-ref-sweep-base: var(--warp-color-text);
-  /* a hint of the accent at rest, not a slab; full accent-soft arrives with the sweep */
-  --warp-ref-field-fill: color-mix(in oklab, var(--warp-color-accent-soft) 35%, var(--warp-color-surface-raised));
+  /* neutral at rest (00 §10); accent-soft arrives with the sweep */
+  --warp-ref-field-fill: var(--warp-color-surface-raised);
   --warp-ref-field-fill-active: var(--warp-color-accent-soft);
   --warp-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
   /* Instrument Serif has no tnum: figures that update or align use the sans */
@@ -621,11 +636,19 @@
   --warp-duration-fast:    calc(120ms * var(--_mk));             /* hover, colour */
   --warp-duration-base:    calc(200ms * var(--_mk));             /* popover, menu, toast */
   --warp-duration-slow:    calc(320ms * var(--_mk));             /* sheet, dialog, page */
-  --warp-duration-exit-k:  0.7;                                  /* exits are 70% of enters */
+  --warp-duration-exit-k:  0.5;                                  /* exits are half of enters (redesign §3) */
   --warp-ease-out:    var(--warp-ref-ease-out);                  /* enter, settle */
   --warp-ease-in:     cubic-bezier(0.4, 0, 1, 1);                /* exit, leave */
   --warp-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);            /* move, sweep */
   --warp-ease-pop:    var(--warp-ref-ease-pop);                  /* scale-in accents */
+  --warp-ease-sheet:  cubic-bezier(0.32, 0.72, 0, 1);            /* drawers: long, rare, heavy */
+  --warp-ease-spring: var(--warp-ref-spring);                    /* release, arrivals: the stop's tension */
+  --warp-spring-duration: calc(var(--warp-ref-spring-ms) * var(--warp-motion-scale));
+  --warp-touch-out: calc(var(--warp-ref-touch-out) * var(--_mk));/* hover: instant in, this long out */
+  --warp-press: calc(1 - (1 - var(--warp-ref-press)) * var(--warp-motion-scale));
+  --warp-offset: calc(var(--warp-ref-offset) * 1);               /* vivid's hard ink shadow; it is depth, so it stays under reduced motion */
+  --warp-shuttle-head: calc(var(--warp-ref-shuttle-head) * var(--warp-motion-scale));
+  --warp-shuttle-tail: calc(var(--warp-ref-shuttle-tail) * var(--warp-motion-scale));
   --warp-motion-distance:   calc(var(--warp-ref-distance) * var(--warp-motion-scale));
   --warp-motion-scale-from: calc(1 - (1 - var(--warp-ref-scale-from)) * var(--warp-motion-scale));
   --warp-stagger:           calc(var(--warp-ref-stagger) * var(--warp-motion-scale));
@@ -634,6 +657,7 @@
   /* -- signature: sweep + floating border label ------------------------- */
   --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 480 · 620 · 700; 0 = instant */
   --warp-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --warp-sweep-ease-in: cubic-bezier(0.3, 0.55, 0.15, 1);        /* in leaves at once (redesign §2); out keeps the original curve */
   --warp-sweep-width: calc(1px + 0.5px * min(1, var(--warp-x) * 2));   /* stroke 1 · 1.5 · 1.5 */
   --warp-sweep-base-width: var(--warp-border-hairline);                  /* resting border stays 1px */
   /* the full accent at every stop: the dial never makes the stroke faint.
@@ -710,7 +734,9 @@
   :where(:focus-visible) {
     outline: var(--warp-focus-width) solid var(--warp-color-focus);
     outline-offset: var(--warp-focus-offset);
+    animation: warp-ring calc(120ms * var(--warp-motion-scale)) var(--warp-ease-out);   /* the ring is drawn out from the edge */
   }
+  @keyframes warp-ring { from { outline-offset: 0px; outline-color: transparent; } }
   :where(::selection) {
     background: var(--warp-color-accent-soft);
     color: var(--warp-color-text);
@@ -911,6 +937,9 @@
   :where([data-phase="in"] > [data-part="sweep"], [data-phase="in"] > [data-part="icon"] > [data-part="sweep"]) {
     clip-path: inset(0 round var(--warp-sweep-radius));
   }
+  :where([data-phase="in"] > [data-part="sweep"], [data-phase="in"] > [data-part="sweep-base"], [data-phase="in"] > [data-part="icon"] > [data-part]) {
+    transition-timing-function: var(--warp-sweep-ease-in);
+  }
   /* out: sweep keeps travelling L→R (never reverses); base snaps back */
   :where([data-phase="out"] > [data-part="sweep-base"], [data-phase="out"] > [data-part="icon"] > [data-part="sweep-base"]) {
     clip-path: inset(0 round var(--warp-sweep-radius)); transition: none;
@@ -923,6 +952,28 @@
     clip-path: inset(0 round var(--warp-sweep-radius)); color: var(--warp-color-sweep-critical); opacity: 1;
   }
   :where([data-invalid] > [data-part="sweep-base"], [data-invalid] > [data-sweep] > [data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--warp-sweep-radius)); }
+
+  /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
+     own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
+     back to width. ui-core writes --warp-a, --warp-b and data-dir. */
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]) {
+    transition: --warp-a var(--warp-shuttle-tail) var(--warp-ease-spring), --warp-b var(--warp-shuttle-head) var(--warp-ease-spring);
+  }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-dir="back"]) {
+    transition: --warp-a var(--warp-shuttle-head) var(--warp-ease-spring), --warp-b var(--warp-shuttle-tail) var(--warp-ease-spring);
+  }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-instant]) { transition: none; }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"]) {
+    translate: var(--warp-a) 0; inline-size: calc(var(--warp-b) - var(--warp-a));
+  }
+  /* the shuttle in a list: frequent, so short and without overshoot */
+  :where([data-part="shuttle"]) {
+    position: absolute; inset-inline: var(--_inset, 4px); inset-block-start: 0; z-index: -1; pointer-events: none;
+    translate: 0 var(--warp-a); block-size: calc(var(--warp-b) - var(--warp-a));
+    border-radius: max(2px, calc(var(--warp-radius-control) - 2px)); background: var(--warp-color-accent-soft); opacity: 0;
+    --warp-shuttle-head: calc(70ms * var(--warp-motion-scale)); --warp-shuttle-tail: calc(120ms * var(--warp-motion-scale)); --warp-ease-spring: var(--warp-ease-out);
+  }
+  :where([data-part="shuttle"][data-on]) { opacity: 1; }
 
   /* -- sweep fill: solid buttons; slides in L→R, leaves to the right ----- */
   :where([data-part="sweep-fill"]) {

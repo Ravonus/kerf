@@ -1,10 +1,11 @@
 import { XIcon } from '@weft/icons'
-import { toaster, toastStore, type Toast, type ToastInput } from '@weft/ui-core'
+import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft/ui-core'
 import { onCleanup, state } from 'weft'
 import { Icon, toneIcon } from './Icon'
 import { use } from './use'
 import './styles'
 import '@weft/ui-core/styles/components/button.css' // the action and dismiss buttons' markup
+import '@weft/ui-core/styles/components/spinner.css'
 import '@weft/ui-core/styles/components/toast.css'
 
 let store: ReturnType<typeof toastStore> | undefined
@@ -17,6 +18,8 @@ const toasts = () => (store ??= toastStore())
 export const toast = {
   show: (t: ToastInput) => toasts().show(t),
   dismiss: (id: string) => toasts().dismiss(id),
+  /** One toast through a promise's life: `pending`, then `done` or `error`, in place. Returns the promise. */
+  promise: <T,>(p: Promise<T>, messages: ToastPromise<T>) => toasts().promise(p, messages),
 }
 
 /**
@@ -34,7 +37,7 @@ export function Toaster() {
       <section ref={(n: any) => (region = n)} data-scope="toast" data-part="region" aria-label="Notifications (F8)" tabindex="-1">
         {list.value.map(t => (
           <div key={t.id} data-scope="toast" data-part="root" data-id={t.id} data-tone={t.tone ?? 'neutral'} data-state={t.state} role="group" aria-label={t.title}>
-            <Icon name={toneIcon[t.tone ?? 'neutral']} data-part="icon" />
+            {t.loading ? <span data-scope="spinner" data-part="icon" aria-hidden="true"></span> : <Icon name={toneIcon[t.tone ?? 'neutral']} data-part="icon" />}
             <div data-part="title">{t.title}</div>
             {t.description && <div data-part="description">{t.description}</div>}
             <div data-part="actions">

@@ -25,16 +25,13 @@
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"] [data-scope="badge"]) { block-size: 18px; padding-inline: 6px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
   position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--warp-border-emphasis);
-  inline-size: var(--_iw, 0px); translate: var(--_ix, 0px) 0; background: var(--warp-color-accent-solid);
-  pointer-events: none;
-  /* rail sweep: the indicator travels through the rail on the sweep curve */
-  transition: translate var(--warp-sweep-duration) var(--warp-sweep-ease), inline-size var(--warp-sweep-duration) var(--warp-sweep-ease);
+  background: var(--warp-color-accent-solid); pointer-events: none;
 }
-:where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"][data-instant]) { transition: none; }
 :where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }
 :where([data-scope="tabs"] > [data-part="content"]:focus-visible) { outline-offset: 4px; border-radius: var(--warp-radius-control); }
 :where([data-scope="tabs"] > [data-part="content"][hidden]) { display: none; }
-:where([data-scope="tabs"] > [data-part="content"]:not([hidden])) { animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="tabs"] > [data-part="content"]:not([hidden])) { animation: warp-settle var(--warp-spring-duration) var(--warp-ease-spring); }
+@keyframes warp-settle { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.5); } }
 /* pill */
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"]) {
   inline-size: fit-content; max-inline-size: 100%; gap: 2px; padding: 2px; box-shadow: none;

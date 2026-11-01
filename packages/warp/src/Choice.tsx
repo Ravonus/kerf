@@ -48,6 +48,31 @@ export function Checkbox({ children, hint, error, indeterminate, ...rest }: { ch
   )
 }
 
+/** One radio (03 §4): the native input, the sweep ring, a dot that springs in. Use RadioGroup for a set. */
+export function Radio({ children, hint, ...rest }: { hint?: any; children?: any; [attr: string]: any }) {
+  onMount(() => installSweep())
+  return (
+    <label data-scope="radio">
+      <input type="radio" {...rest} />
+      <span data-part="control" data-sweep="" data-phase="idle">{sweepParts()}</span>
+      <span data-part="label">{children}</span>
+      {hint !== undefined && <span data-part="hint">{hint}</span>}
+    </label>
+  )
+}
+
+export type RadioOption<V extends string> = { value: V; label: any; hint?: any; disabled?: boolean }
+
+/** A radio group: native radios, so arrow keys, form values and the group name are the platform's. */
+export function RadioGroup<V extends string>({ label, value, onChange, options, name }: { label: string; value: V; onChange: (v: V) => void; options: RadioOption<V>[]; name?: string }) {
+  const group = untrack(() => name) ?? uid('radio')
+  return (
+    <div role="radiogroup" aria-label={label} style="display:grid;gap:var(--warp-space-tight)">
+      {options.map(o => <Radio key={o.value} name={group} value={o.value} hint={o.hint} checked={o.value === value} disabled={o.disabled} onChange={() => onChange(o.value)}>{o.label}</Radio>)}
+    </div>
+  )
+}
+
 export type SegmentedOption<V extends string> = { value: V; label: any; icon?: IconRef; count?: any; disabled?: boolean }
 
 /**
@@ -58,7 +83,7 @@ export function Segmented<V extends string>({ label, value, onChange, options, s
   const group = untrack(() => name) ?? uid('seg')
   let root: HTMLDivElement | undefined
   onMount(() => installSweep())
-  use(indicator, () => root, () => ({ selected: ':scope > label:has(input:checked)', x: '--_x', w: '--_w', at: value }))
+  use(indicator, () => root, () => ({ selected: ':scope > label:has(input:checked)', at: value }))
   return (
     <div ref={(n: any) => (root = n)} data-scope="segmented" role="radiogroup" aria-label={label} data-size={size === 'sm' ? 'sm' : undefined}>
       <span data-part="indicator" aria-hidden="true" data-instant=""></span>

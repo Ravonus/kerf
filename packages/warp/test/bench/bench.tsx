@@ -3,7 +3,7 @@
 import { render } from 'weft/dom'
 import { state } from 'weft'
 import { dialsFromUrl } from '@weft/ui-core'
-import { Alert, Badge, Button, Card, Checkbox, Chip, CommandPalette, Drawer, Grid, Input, Kbd, Modal, Popover, Progress, Row, Search, Segmented, Select, Skeleton, Spinner, Stack, Switch, Table, Tabs, Tag, Textarea, Toaster, Toggle, Tooltip, toast, Heading, Text, Nav, Link } from '../../src/index'
+import { Accordion, Menu, RadioGroup, Slider, Ticker, Alert, Badge, Button, Card, Checkbox, Chip, CommandPalette, Drawer, Grid, Input, Kbd, Modal, Popover, Progress, Row, Search, Segmented, Select, Skeleton, Spinner, Stack, Switch, Table, Tabs, Tag, Textarea, Toaster, Toggle, Tooltip, toast, Heading, Text, Nav, Link } from '../../src/index'
 
 const TONES = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const
 const EMPHASES = ['solid', 'soft', 'outline', 'ghost', 'frame', 'link'] as const
@@ -18,6 +18,7 @@ function App() {
   const modal = state(false), drawer = state(false), alert = state(false)
   const palette = state(false)
   const pressed = state(true)
+  const money = state(48120), plan = state('pro'), vol = state(40)
   const rows = [
     { id: 'apollo', name: 'Apollo', owner: 'Mara Chen', status: 'Live', spend: 12400 },
     { id: 'hermes', name: 'Hermes', owner: 'Ivo Tan', status: 'Paused', spend: 860 },
@@ -84,6 +85,21 @@ function App() {
         <Row gap="group"><Progress label="Ring" shape="circle" value={70} tone="positive" /><Spinner label="Loading" /></Row>
         <Skeleton lines={2} />
       </Tile>
+      <Tile name="Menu">
+        <Row gap="tight">
+          <Menu label="Actions" items={[{ group: 'Project' }, { label: 'Rename', icon: 'search', shortcut: '⌘R' }, { label: 'Duplicate', shortcut: '⌘D' }, { label: 'Archived', disabled: true }, { separator: true }, { label: 'Delete', tone: 'critical', icon: 'x', shortcut: '⌫' }]} />
+        </Row>
+      </Tile>
+      <Tile name="Ticker">
+        <Stack gap="tight"><span data-roll="" style="font-size:32px;font-weight:600"><Ticker value={money.value} format={{ style: 'currency', currency: 'USD' }} /></span><Button emphasis="soft" size="sm" data-bump="" onClick={() => (money.value += 3187)}>Add sale</Button></Stack>
+      </Tile>
+      <Tile name="Radio / Slider">
+        <RadioGroup label="Plan" value={plan.value} onChange={v => (plan.value = v)} options={[{ value: 'free', label: 'Free' }, { value: 'pro', label: 'Pro', hint: 'Most teams.' }]} />
+        <Slider label="Volume" value={vol.value} onChange={v => (vol.value = v)} format={v => `${v}%`} />
+      </Tile>
+      <Tile name="Accordion">
+        <Accordion defaultOpen={['a']} items={[{ value: 'a', title: 'General settings', content: 'Workspace name and default branch.' }, { value: 'b', title: 'Security', content: 'Require two-factor sign-in.' }]} />
+      </Tile>
       <Tile name="Tooltip / Popover">
         <Row gap="tight">
           <Tooltip content="Copy the link" kbd="C"><Button emphasis="outline">Copy</Button></Tooltip>
@@ -100,6 +116,7 @@ function App() {
         <Row gap="tight">
           <Button emphasis="soft" data-toast="ok" onClick={() => toast.show({ title: 'Saved', description: 'Your changes are live.', tone: 'positive' })}>Toast</Button>
           <Button emphasis="soft" data-toast="undo" onClick={() => toast.show({ title: 'Archived', tone: 'neutral', action: { label: 'Undo', onClick() {} } })}>Undo toast</Button>
+          <Button emphasis="soft" data-toast="promise" onClick={() => toast.promise(new Promise(r => setTimeout(r, 1400)), { pending: 'Deploying…', done: 'Deployed' , error: 'Failed' })}>Promise</Button>
         </Row>
         <Modal open={modal} title="Invite a teammate" description="They get access to this workspace right away." footer={<><Button emphasis="ghost" tone="neutral" data-close="">Cancel</Button><Button data-close="">Send invite</Button></>}><Input label="Email" /></Modal>
         <Modal open={alert} alert tone="critical" size="sm" title="Delete project?" description="This cannot be undone." footer={<><Button emphasis="ghost" tone="neutral" data-close="" autofocus>Cancel</Button><Button tone="critical" data-close="">Delete</Button></>}></Modal>

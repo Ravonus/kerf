@@ -713,7 +713,7 @@ exports[`Choices: client DOM after mount 1`] = `
 <span data-part="hint">On the go</span>
 </label>
 <div aria-label="View" data-scope="segmented" data-size="sm" role="radiogroup">
-<span aria-hidden="true" data-part="indicator" style="--_x: 0px; --_w: 0px;">
+<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px;">
 </span>
 <label data-phase="idle" data-sweep="">
 <span aria-hidden="true" data-part="sweep">
@@ -1853,7 +1853,7 @@ exports[`Overlays: client DOM after mount 1`] = `
 </div>
 <div data-part="body">y</div>
 </dialog>
-<dialog aria-describedby="sheet-4-d" aria-labelledby="sheet-4-t" data-scope="sheet" data-side="left" open="">
+<dialog aria-describedby="sheet-4-d" aria-labelledby="sheet-4-t" data-scope="sheet" data-side="left" open="" style="--warp-origin: 0px 0px;">
 <button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
 </button>
 <div data-part="header">
@@ -2283,7 +2283,7 @@ exports[`Tabbed: client DOM after mount 1`] = `
 <div aria-label="T" data-part="list" role="tablist">
 <button aria-controls="tabs-0-p0" aria-selected="true" data-part="trigger" id="tabs-0-t0" role="tab" type="button">A</button>
 <button aria-controls="tabs-0-p1" aria-selected="false" data-part="trigger" disabled="" id="tabs-0-t1" role="tab" tabindex="-1" type="button">B</button>
-<span aria-hidden="true" data-part="indicator" style="--_ix: 0px; --_iw: 0px;">
+<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px;">
 </span>
 </div>
 <div aria-labelledby="tabs-0-t0" data-part="content" id="tabs-0-p0" role="tabpanel" tabindex="0">
@@ -2297,7 +2297,7 @@ exports[`Tabbed: client DOM after mount 1`] = `
 <div aria-label="P" data-part="list" role="tablist">
 <button aria-controls="tabs-1-p0" aria-selected="true" data-part="trigger" id="tabs-1-t0" role="tab" type="button">A</button>
 <button aria-controls="tabs-1-p0" aria-selected="false" data-part="trigger" id="tabs-1-t1" role="tab" tabindex="-1" type="button">B</button>
-<span aria-hidden="true" data-part="indicator" style="--_ix: 0px; --_iw: 0px;">
+<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px;">
 </span>
 </div>
 <div aria-labelledby="tabs-1-t0" data-part="content" id="tabs-1-p0" role="tabpanel" tabindex="0">
@@ -2370,7 +2370,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 </button>
 </div>
 </div>
-<div aria-label="Failed" data-behind="" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group" style="z-index: 99; max-block-size: 0px; overflow: hidden; --_y: -10px; --_s: 0.95; --_o: 1;">
+<div aria-label="Failed" data-behind="" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group" style="z-index: 99; max-block-size: 0px; overflow: hidden; --_y: -12px; --_s: 0.95; --_o: 1;">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>
@@ -2403,7 +2403,7 @@ exports[`Toasts: client DOM after mount 1`] = `
 </button>
 </div>
 </div>
-<div aria-label="Saved" data-behind="" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group" style="z-index: 98; max-block-size: 0px; overflow: hidden; --_y: -20px; --_s: 0.9; --_o: 1;">
+<div aria-label="Saved" data-behind="" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group" style="z-index: 98; max-block-size: 0px; overflow: hidden; --_y: -24px; --_s: 0.9; --_o: 1;">
 <svg aria-hidden="true" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
 <path d="M7.52 3.06A9 9 0 1 1 4.83 4.94" data-qs="" data-t="q">
 </path>

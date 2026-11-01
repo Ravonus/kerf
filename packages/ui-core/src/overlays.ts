@@ -25,6 +25,10 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
     if (el.open) return
     opener = doc.activeElement as HTMLElement | null
     el.showModal?.() ?? el.setAttribute('open', '')
+    if (opener && opener !== doc.body && opener.getBoundingClientRect) {
+      const a = opener.getBoundingClientRect(), r = el.getBoundingClientRect()
+      el.style.setProperty('--warp-origin', `${Math.round(a.left + a.width / 2 - r.left)}px ${Math.round(a.top + a.height / 2 - r.top)}px`)
+    }
     remove = pushLayer({ el, modal: true, close: () => o.onClose() })
     const first = el.querySelector<HTMLElement>('[autofocus], [data-initial]') ?? el.querySelector<HTMLElement>('[data-part="title"]')
     if (first && !first.matches(focusable)) first.tabIndex = -1
@@ -152,6 +156,7 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
     clearTimeout(timer)
     if (open()) return
     current?.()
+    tip.toggleAttribute('data-warm', performance.now() < warmUntil)
     tip.showPopover?.()
     place(tip, o.trigger, o.side ?? 'top', 'center', 6)
     remove = pushLayer({ el: tip, trigger: o.trigger, passive: true, close: hide })
