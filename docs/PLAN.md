@@ -426,7 +426,7 @@ R101–R105: unrepresentable schemas (add a codec), plain unions, impl/contract 
 WASM, and a cached Rust query that reports no touched tables. R106–R109 are a sidecar's runtime and build failures: no
 address or secret, unreachable, panicked, and a compile error unrelated to the contract.
 
-### 4.4 Payments: `weft/pay`
+### 4.4 Payments: `@weft/pay`
 
 Products are declared once, `checkout()` is called once, and entitlements are read everywhere
 ([10](research/10-payments.md)). App code never names a rail.
@@ -442,12 +442,13 @@ Products are declared once, `checkout()` is called once, and entitlements are re
   - `checkout()` never grants anything itself.
 - **PAY-codes:** Stripe for digital goods in a store build, client-side grants, secret keys in the client graph,
   hardcoded store prices, missing Restore Purchases, float money.
-- **Testing:** `fakePay` in `weft/test` plays renewals, failures, refunds and revocations on the deterministic clock.
-- **Status (2026-10-31):** the web half is built ([37](research/37-pay-web.md)): `weft/pay`, `weft/pay/server`,
-  `@weft/plugin-pay-stripe` on the `pay.rail` slot, `/_weft/pay/<rail>`, `ctx.entitlements`, `requires`, `fakePay`,
-  `weft add pay` and PAY003–PAY016. `entitlements` is a query the app owns (`src/server/pay.ts`), so a client reads
-  `.live().value?.includes('pro')`, and `checkout` is a mutation that redirects. Not built: every native rail, the
-  policy table, `weft pay explain` and `weft pay sync`. No run has reached a real Stripe account.
+- **Testing:** `fakePay` from `@weft/pay/test` plays renewals, failures, refunds and revocations on the deterministic clock.
+- **Status (2026-10-31):** the web half is built ([37](research/37-pay-web.md)), as a plugin on the public API and the
+  worked example for building one (`weft docs plugins`): `@weft/pay`, `@weft/plugin-pay-stripe` on the `pay.rail` slot,
+  `/_weft/x/pay/<rail>` through `server.extension`, `ctx.entitlements`, `requires`, `fakePay` (from `@weft/pay/test`),
+  `weft add pay` and the PAY-codes. `entitlements` is a query the app owns (`src/server/pay.ts`), so a client reads
+  `.live().value?.includes('pro')`, and `checkout` is a mutation that redirects. Not built: every native rail, the policy
+  table, `weft pay explain` and `weft pay sync`. No purchase has reached a real Stripe account.
 
 ### 4.5 App state: `defineState` (zustand ergonomics, no second container)
 
@@ -756,6 +757,8 @@ Details: [15](research/15-assets.md) (measured: Chrome 156 and WebKit 26, real K
 
 Details: [13](research/13-plugins.md).
 
+- **A plugin with a server part** provides `server.extension@1`: routes under `/_weft/x/<key>/`, `ctx`, guards and enforced
+  options, gated by the app's `src/<key>.server.ts` (P118). `@weft/pay` is the worked example (`weft docs plugins`).
 - **Model.** Core defines typed, versioned **slots**: `text.measure@1`, `font.build@1`, `surface.renderer`,
   `realtime.bus`, `db.adapter`, `auth.provider`, `pay.rail`, `device.*`. A plugin *provides* an implementation, and core, warp and app
   code *consume* the slot.
@@ -919,7 +922,7 @@ crates/
 crates/weft-fonts   font metrics + subsetting (napi), used by plugin-text's font.build
 crates/weft-media   SSIMULACRA2, ThumbHash, header probes, optional ravif/rav1e (napi + WASI)
   native      native compiler target runtime, weft/device, Swift + Kotlin hosts, project generation, `weft device`
-  pay         weft/pay: catalog, resolver + policy table, Stripe/StoreKit/Play adapters, entitlements (+ @weft/db-pay)
+  pay         @weft/pay (catalog, entitlements, ledger; the reference plugin) and @weft/plugin-pay-stripe, built (37); resolver + policy table and the StoreKit/Play adapters to come
 crates/weft-layout  Taffy-based layout shared by the iOS host, the Android host and Node
 evals/        agent eval harness
 ```
@@ -942,7 +945,7 @@ evals/        agent eval harness
 | **5b. Rust: native** | `native()` via napi-rs + WASM fallback, R104/R105. | A CPU-bound demo beats its TS `run` by ≥ 5× on Node and Bun. |
 | **6a. Native spike (3 weeks)** | Hermes + op buffer + `weft-layout` + Swift/Kotlin hosts for `Stack Row Text Button Input Scroll`, `weft dev --ios/--android`, HMR. | The v3 list screen runs on both platforms; price push ≤ 1 host op; Node layout matches device within 1pt for non-text boxes. Stop and revisit if a mid-range Android can't hold 60 Hz. |
 | **6b. warp native + device** | Tier-1 resolution table, `idiom`, `weft/device` core, generated projects, `weft device`, N-codes, split tooling. | An agent takes a shared web app to TestFlight and the Play internal track with ≤ 3 variant files. |
-| **6c. Payments** | `weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
+| **6c. Payments** | `@weft/pay`: web half (Stripe, entitlements, `fakePay`) can land with Phase 3; native half (StoreKit 2, Play Billing, Stripe native, policy table, `weft pay sync`). | One `pro` product bought in the iOS sandbox unlocks on web and Android with no app-code branch. |
 | **6d. Native extensions** | Native-module codegen, widget TSX subset → WidgetKit + Glance. | One TSX widget ships on both platforms. |
 
 **5a status (2026-10-31):** built. `remote()` in `@weft/start/rust`, the `weft` crate, the supervisor in `weft dev`,
@@ -1032,7 +1035,7 @@ a fresh agent added an animated surface with a live slider from a one-line reque
 
 **3c virtual collections (2026-10-30):** built. `@weft/ui-core` has `Sizes` (a height index with O(log n) offsets) and `virtualizer()` (one window on one scroller, either axis), and warp has `VirtualList`, `Thread`, `Feed`, `Kanban` and `ScrollGrid` on them. `Thread` and `Kanban` are the collab pack's components, with their rich rows and move paths, windowed: there are no separate virtual ones. Give a list `text` and rows have exact heights before they render, from the lazy `text.measure` slot; without an engine rows are measured as they render. Either way what's on screen doesn't move: a size change above the viewport moves `scrollTop` by the same amount before paint. Margins, padding and wrap width come from a hidden real row per row kind, so nothing in JS restates warp's CSS. `measure()`, `lines()` and `fit()` are in `weft/text`. `<Text stream>` lands tokens once a frame, grows in whole lines and never rewrites a complete block; its height comes from the DOM, since the frame lays out after the write anyway. At 10,000 items in Chromium, and 2,000 in WebKit, every on-screen row moved exactly the scroll distance in all five views ([result](../evals/results/virtual.md); rerun with `node packages/warp/scripts/virtual.mjs`). In the long-list comparison warp's total height moves 0 px where the other stacks move about 6,600, jumps are 0 everywhere, and warp costs more load CPU: 740 ms at 4× throttle against 110–260. Not built: Ctrl+F across unrendered rows, Thread's quote, reactions and attachments, Kanban swimlanes and the 4px drop placeholder.
 
-**6c web half (2026-10-31):** payments ahead of the native half, as the table allows ([37](research/37-pay-web.md)). Stripe Checkout, one ledger with verified, idempotent and ordered webhooks, entitlements from a `query` and on the server, `fakePay`, `weft add pay`, and PAY-codes for keys, rail ids, unverified webhooks and client-only checks. Checked with `fakePay`, mocked Stripe HTTP, and a purchase on the packed gate's built server against a local mock. 6c's exit check needs the native half, so it stays open.
+**6c web half (2026-10-31):** payments ahead of the native half, as the table allows ([37](research/37-pay-web.md)). Stripe Checkout, one ledger with verified, idempotent and ordered webhooks, entitlements from a `query` and on the server, `fakePay`, `weft add pay` and PAY-codes in `weft check`, all as `@weft/pay`, a plugin that uses only public API: what it needed went into the API for everyone (`server.extension`, `FnOptions`, `net.extension`, manifest `setup` and `docs`), and `weft docs plugins` walks through it. A wasm verifier was measured against WebCrypto on Node, Bun and Deno and not adopted (37 §8). Checked with fakes and mocks only; a real test-mode purchase is still to do.
 
 **3c multiplayer and packs (2026-10-30):** `@weft/multiplayer` (presence, cursors across screen sizes, typed relay, synced scroll), three bus packs moved out of `@weft/start` (`@weft/realtime-redis`, `-nats`, `-durable-object`), three peer transports (`-webrtc`, `-socketio`, `-livekit`) and six list sources (`@weft/db-sql`, `-kysely`, `-prisma`, `-mongo`, `-firestore`, `-dynamodb`), with bus, transport and list conformance suites. Every pack declares its permissions and passes the audit. What was built and left out: [35](research/35-multiplayer-and-packs.md).
 

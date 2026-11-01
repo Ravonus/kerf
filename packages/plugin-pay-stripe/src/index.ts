@@ -33,19 +33,19 @@ const STATES: Record<string, PurchaseState> = {
 
 const API = 'https://api.stripe.com'
 const encoder = new TextEncoder()
-const toHex = (b: ArrayBuffer) => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('')
 
-async function hmac(secret: string, text: string) {
-  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  return toHex(await crypto.subtle.sign('HMAC', key, encoder.encode(text)))
-}
+const fromHex = (s: string) => (/^[0-9a-f]{64}$/.test(s) ? Uint8Array.from(s.match(/../g)!, b => parseInt(b, 16)) : undefined)
 
-/** Constant time for equal lengths; a hex signature's length isn't a secret. */
-function same(a: string, b: string) {
-  if (a.length !== b.length) return false
-  let out = 0
-  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return out === 0
+/** The runtime's own constant-time compare, in native code. A wasm build was measured against it: see research 37. */
+async function verified(secret: string, text: string, signatures: string[]) {
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'])
+  const message = encoder.encode(text)
+  let ok = false
+  for (const s of signatures) {
+    const bytes = fromHex(s)
+    if (bytes && await crypto.subtle.verify('HMAC', key, bytes, message)) ok = true
+  }
+  return ok
 }
 
 /** Stripe's form encoding: `a[b][0]=c`. */
@@ -167,8 +167,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
       const t = Number(parts.find(([k]) => k === 't')?.[1])
       const given = parts.filter(([k]) => k === 'v1').map(([, v]) => v ?? '')
       if (!Number.isInteger(t) || !given.length) throw new PayError('PAY011', 'no `stripe-signature` to check')
-      const want = await hmac(signing, `${t}.${body}`)
-      if (!given.some(v => same(v, want))) throw new PayError('PAY011', 'the signature does not match this body')
+      if (!(await verified(signing, `${t}.${body}`, given))) throw new PayError('PAY011', 'the signature does not match this body')
       if (Math.abs(Date.now() / 1000 - t) > tolerance) throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
       const event = normalise(JSON.parse(body))
       return event ? [event] : []

@@ -39,6 +39,18 @@ describe('a plugin on the server', () => {
     await expect(fetchQuery(createScope(new Request('http://x/'), {}), fns.get('x.err')!, undefined)).rejects.toMatchObject({ status: 402 })
   })
 
+  test('a guard with an `answer` is that answer too', async () => {
+    query({ $id: 'x.guarded', run: () => 1 })
+    const extensions: ServerExtension[] = [{ guard: () => { throw Object.assign(new Error('no'), { answer: { code: 'X003', message: 'no', status: 403 } }) } }]
+    await expect(fetchQuery(createScope(new Request('http://x/'), { extensions }), fns.get('x.guarded')!, undefined)).rejects.toMatchObject({ status: 403, code: 'X003' })
+  })
+
+  test('an option nothing enforces refuses the call, and an extension claims it', async () => {
+    query({ $id: 'x.gated', requires: ['pro'], run: () => 1 } as any)
+    await expect(fetchQuery(createScope(new Request('http://x/'), {}), fns.get('x.gated')!, undefined)).rejects.toMatchObject({ code: 'P101' })
+    expect((await fetchQuery(createScope(new Request('http://x/'), { extensions: [{ options: ['requires'] }] }), fns.get('x.gated')!, undefined)).v).toBe(1)
+  })
+
   test('`check` can refuse a boot', async () => {
     const handler = createHandler({ manifest, modules: {}, dev: false, extensions: [{ key: 'kit', load: async () => ({ check: () => { throw new Error('not configured') } }) }] } as any)
     await expect(handler(new Request('http://x/_weft/x/kit/a'))).rejects.toThrow('not configured')

@@ -152,7 +152,8 @@ async function payServed(port, sessions, secret, log) {
   const user = (await signup.json()).user.id
   const call = (name, file) => fetch(`${base}/_weft/fn/${fnId(name, file)}`, { headers: { cookie, accept: 'application/json' } })
   const report = () => call('report', 'src/server/report.ts').then(r => r.status)
-  if (await report() !== 403) throw new Error('pay: a non-buyer read the report')
+  const first = await call('report', 'src/server/report.ts')
+  if (first.status !== 403) throw new Error(`pay: a non-buyer got ${first.status}: ${await first.text()}`)
 
   const mutate = await fetch(`${base}/_weft/fn/${fnId('checkout', 'src/server/pay.ts')}`, { method: 'POST', headers: { cookie, 'content-type': 'application/json', accept: 'application/json', 'x-weft': '1', origin: base }, body: JSON.stringify({ i: { product: 'pro', plan: 'month' }, f: [] }) })
   const answer = await mutate.json()

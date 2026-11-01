@@ -10,7 +10,7 @@
 import type { ServerExtension } from '@weft/start/extension'
 import { entitlementTag, PayError, type CheckoutLine, type Interval, type PayRail, type Plan, type Product, type PurchaseState, type RailEvent } from './index'
 
-declare module '@weft/start/data' {
+declare module '@weft/start' {
   interface Context {
     /** What this user holds, from verified rail events. Await it. */
     entitlements: Entitlements
@@ -299,6 +299,7 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
     async guard(fn, ctx) {
       for (const id of fn.def.requires ?? []) if (!(await ctx.entitlements.has(id))) throw new PayError('ENTITLEMENT_REQUIRED', `This needs \`${id}\``, 403)
     },
+    options: ['requires'],
     personal: ['entitlements'],
     check(dev) {
       if (store.memory && !dev) throw new PayError('PAY016', 'The ledger is in memory: every purchase is gone on the next deploy. Pass a durable `store` to `definePay`', 500)

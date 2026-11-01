@@ -225,9 +225,24 @@ async function callImpl(fn: Fn, input: unknown, ctx: Context, scope: Scope, touc
   return value
 }
 
+const OWN = new Set(['$id', 'auth', 'cache', 'errors', 'impl', 'input', 'invalidates', 'optimistic', 'output', 'run', 'shape', 'tags'])
+
+/** An option from `FnOptions` is a promise to enforce something: with the plugin gone, the call stops rather than runs open. */
+function claimed(fn: Fn, scope: Scope) {
+  for (const k in fn.def) {
+    if (OWN.has(k) || scope.options.extensions?.some(e => e.options?.includes(k))) continue
+    throw new StartError('P101', `\`${fn.$id}\` sets \`${k}\`, and no \`server.extension\` enforces it`, 'add the plugin that provides it to `plugins`, with its `src/<key>.server.ts`', { status: 500 })
+  }
+}
+
 async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?: Touched, added: string[] = []) {
   guard(fn, ctx)
-  for (const e of scope.options.extensions ?? []) await e.guard?.({ id: fn.$id, kind: fn.kind, def: fn.def }, ctx)
+  claimed(fn, scope)
+  try {
+    for (const e of scope.options.extensions ?? []) await e.guard?.({ id: fn.$id, kind: fn.kind, def: fn.def }, ctx)
+  } catch (e) {
+    throw dbError(e)
+  }
   const replaced = scope.options.handlers?.get(fn.$id)
   // Awaited inside the frame: a Drizzle query is a thenable, and only runs when something awaits it.
   const run = async () => await (replaced ? replaced(input, ctx) : fn.def.impl ? callImpl(fn, input, ctx, scope, touched, added) : fn.def.run!({ input, ctx }))

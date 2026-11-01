@@ -55,10 +55,11 @@ one line: `extension = app => app`. A `ServerExtension` (`@weft/start/extension`
 | `handle(request, path, api)` | Answers `/_weft/x/<key>/<path>` | Webhooks; `api.invalidate(tags)` pokes live queries |
 | `context(ctx)` | Adds to `ctx`, once per request | `ctx.entitlements` |
 | `guard(fn, ctx)` | Runs before every server function | `requires: ['pro']`, a typed 403 |
+| `options` | The `FnOptions` keys it enforces; with no extension, a call using one is refused | `requires` |
 | `personal` | `ctx` keys a shared cache can't read | `entitlements` (Q006) |
 | `check(dev)` | Refuses a bad boot | The in-memory ledger in production |
 
-Types follow: augment `Context` and `FnOptions` in `declare module '@weft/start/data'`, and `ctx.entitlements` and `requires`
+Types follow: augment `Context` and `FnOptions` in `declare module '@weft/start'`, and `ctx.entitlements` and `requires`
 are typed in any app that imports your server module. An error class with an `answer` getter reaches the client as a
 typed error, with that code and status.
 

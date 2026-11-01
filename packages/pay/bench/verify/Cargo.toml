@@ -1,0 +1,22 @@
+# The Rust half of bench/verify.mjs, kept in this package and out of `crates/` so the measurement can be rerun. Not shipped.
+[package]
+name = "weft-pay-verify"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+hmac = "0.12"
+sha2 = "0.10"
+subtle = "2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[workspace]
