@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "date": "2026-11-01T15:57:09.741Z",
+  "date": "2026-11-01T18:53:55.168Z",
   "hidden": {
     "ok": true,
     "warp": "23/23",
@@ -11,19 +11,19 @@
           "domMutations": 1,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 62.52
+          "wallMs": 60.01
         },
         "price-push": {
           "domMutations": 1,
           "commits": 9,
           "renderMs": 0,
-          "wallMs": 0.41
+          "wallMs": 0.44
         },
         "type-3-chars": {
           "domMutations": 154,
           "commits": 33,
           "renderMs": 0,
-          "wallMs": 20.22
+          "wallMs": 20.61
         }
       },
       "weft": {
@@ -31,19 +31,19 @@
           "domMutations": 1,
           "commits": 5,
           "renderMs": 0,
-          "wallMs": 51.96
+          "wallMs": 54.31
         },
         "price-push": {
           "domMutations": 1,
           "commits": 9,
           "renderMs": 0,
-          "wallMs": 0.46
+          "wallMs": 0.29
         },
         "type-3-chars": {
           "domMutations": 152,
           "commits": 21,
           "renderMs": 0,
-          "wallMs": 17.2
+          "wallMs": 16.16
         }
       }
     },
@@ -57,14 +57,14 @@
   "size": {
     "ok": true,
     "warp": {
-      "js": 11462,
+      "js": 12394,
       "css": 12735
     },
     "weft": {
-      "js": 4933,
+      "js": 5782,
       "css": 0
     },
-    "kit": 6529,
+    "kit": 6612,
     "budget": {
       "app": 10240,
       "kitAllowance": 7168,
@@ -108,7 +108,7 @@
     "ok": true,
     "runs": 108,
     "audits": 1440,
-    "measured": 45849,
+    "measured": 45848,
     "specFindings": [],
     "failures": []
   }

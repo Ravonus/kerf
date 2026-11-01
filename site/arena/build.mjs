@@ -36,5 +36,6 @@ await build({
 })
 mkdirSync(join(out, 'shared'), { recursive: true })
 copyFileSync(join(here, 'shared/harness.js'), join(out, 'shared/harness.txt'))
+mkdirSync(join(here, '../src/generated'), { recursive: true }) // a fresh checkout has none
 writeFileSync(join(here, '../src/generated/arena.json'), JSON.stringify(bytes) + '\n')
 console.log(bytes)
