@@ -308,7 +308,8 @@ function icons() {
   let config, loading
   const load = (ctx, importer) => (loading ??= (async () => {
     const found = await ctx.resolve('@weft/icons/compile', importer, { skipSelf: true })
-    if (!found) return null
+    // an app may reach icons only through warp: the next file, nearer the package, can still find it
+    if (!found) { loading = undefined; return null }
     const { pass, rewrite, unknownMessage, trimTiers } = await import(pathToFileURL(found.id.replace(/\?.*$/, '')).href)
     const alias = join(config.root, '.weft', 'tokens', 'icons.alias.json') // icons({ tier }) wrote this: a stop, or the package itself for every tier
     const options = existsSync(alias) ? JSON.parse(readFileSync(alias, 'utf8')) : {}
