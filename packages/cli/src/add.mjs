@@ -22,11 +22,11 @@ const refused = message => Object.assign(new Error(message), { code: 'E_ADD' })
 
 const ALIASES = { warp: '@weft/warp', icons: '@weft/icons', text: '@weft/plugin-text', media: '@weft/plugin-media', 'media-ffmpeg': '@weft/plugin-media-ffmpeg', 'surface-keel': '@weft/plugin-surface-keel', redis: '@weft/realtime-redis', nats: '@weft/realtime-nats', pay: '@weft/pay', 'pay-stripe': '@weft/plugin-pay-stripe' }
 
-const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'package-lock.json': ['npm', 'install'] }
+const INSTALL = { 'pnpm-lock.yaml': ['pnpm', 'add'], 'bun.lock': ['bun', 'add'], 'yarn.lock': ['yarn', 'add'], 'deno.lock': ['deno', 'add'], 'package-lock.json': ['npm', 'install'] }
 
 function installer(root) {
   const lock = Object.keys(INSTALL).find(f => existsSync(join(root, f)))
-  return INSTALL[lock] ?? INSTALL['package-lock.json']
+  return INSTALL[lock] ?? (process.versions.deno ? INSTALL['deno.lock'] : process.versions.bun ? INSTALL['bun.lock'] : INSTALL['package-lock.json'])
 }
 
 /** What to install: for an app on local tarballs (`local.mjs`) those go straight in `package.json`, since npm refuses any
@@ -47,7 +47,8 @@ export function pinned(root, specs) {
 }
 
 function installSpecs(root, manager, verb, specs) {
-  execFileSync(manager, [verb, ...pinned(root, specs)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
+  const rest = pinned(root, specs)
+  execFileSync(manager, [verb, ...(manager === 'deno' ? rest.map(spec => `npm:${spec}`) : rest)], { cwd: root, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
 }
 
 /** The import to write: `<pkg>/plugin` when the package has one, and however it exports its factory. */

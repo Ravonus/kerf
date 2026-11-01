@@ -1,8 +1,8 @@
 // Find, load and validate weft.config (TypeScript, JSON or YAML, one schema: research 34 §2). Plugins run only their pure
 // `contribute()` (plugins.mjs); `slots` is data.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { createRequire, registerHooks } from 'node:module'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import nodeModule, { createRequire } from 'node:module'
 import { join, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
@@ -17,6 +17,8 @@ export const builtinNames = ['add', 'map', 'dev', 'build', 'start', 'db', 'test'
 
 const configModule = pathToFileURL(join(fileURLToPath(new URL('.', import.meta.url)), 'config.mjs')).href
 const nativeRequire = createRequire(import.meta.url)
+/** Node's sync module hooks. Bun has none, and Deno's break `.node` requires, like Rolldown's; both read TypeScript without help (`importConfig`). */
+const registerHooks = process.versions.bun || process.versions.deno ? null : nodeModule.registerHooks
 /** `weft.config.ts.weft-load-<n>`: a fresh module id per load, so a long-lived `weft mcp` sees edits. */
 const tag = /\.weft-load-\d+$/
 let hooked = false
@@ -57,6 +59,25 @@ function hook() {
       return next(url, context)
     },
   })
+}
+
+/**
+ * The config on Bun and Deno: their own TypeScript, with a query for a fresh module per load. When the project has no
+ * `weft/config` of its own, a copy next to the config, so its relative imports still resolve, imports ours instead.
+ */
+async function importConfig(file) {
+  try {
+    return (await import(`${pathToFileURL(file).href}?weft-load=${generation++}`)).default ?? {}
+  } catch (error) {
+    if (!/weft\/config|@weft\/cli\/config/.test(error.message)) throw error
+  }
+  const copy = `${file}.weft-load-${generation++}.mjs`
+  writeFileSync(copy, transpile(file).replace(/(['"])(?:weft\/config|@weft\/cli\/config)\1/g, JSON.stringify(configModule)))
+  try {
+    return (await import(pathToFileURL(copy).href)).default ?? {}
+  } finally {
+    rmSync(copy, { force: true })
+  }
 }
 
 const zodSchema = z.custom(v => v != null && typeof v === 'object' && ('_zod' in v || '~standard' in v))
@@ -188,9 +209,9 @@ export async function loadConfig(root) {
 
   let config = {}
   if (file) {
-    hook()
+    if (registerHooks) hook()
     try {
-      config = isDataConfig(file) ? readDataConfig(root, file, text) : (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {})
+      config = isDataConfig(file) ? readDataConfig(root, file, text) : registerHooks ? (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {}) : await importConfig(file)
     } catch (error) {
       // A plugin factory rejecting its options throws while the config module evaluates (weft/plugin).
       if (error?.code === 'P115') report('P115', error.message.split('\n')[0], error.message.match(/^`([^`]+)`/)?.[1] ?? null)
