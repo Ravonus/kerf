@@ -187,15 +187,20 @@ const SCENARIOS = {
     await page.locator(':popover-open [role="option"]').first().waitFor()
     await audit('slash menu open')
     await page.keyboard.press('Escape')
+    // the highlight is only worth its write if it lands on the row: the audit can't see this, and jsdom has no layout
+    const onRow = async () => {
+      await page.waitForTimeout(500)
+      const off = await page.evaluate(() => {
+        const row = document.querySelector('dialog[open] [aria-selected="true"]'), face = document.querySelector('dialog[open] [data-part="shuttle"]')
+        return row && face ? Math.abs(row.getBoundingClientRect().top - face.getBoundingClientRect().top) : null
+      })
+      if (off === null || off > 1) throw new Error(`palette shuttle is ${off}px off its row`)
+    }
     await page.getByRole('button', { name: 'Open', exact: true }).click()
+    await onRow()
     await page.locator('input[role="combobox"]:visible').first().fill('e')
     await audit('palette open')
-    // the highlight is only worth its write if it lands on the row: the audit can't see this, and jsdom has no layout
-    const off = await page.evaluate(() => {
-      const row = document.querySelector('dialog[open] [aria-selected="true"]'), face = document.querySelector('dialog[open] [data-part="shuttle"]')
-      return row && face ? Math.abs(row.getBoundingClientRect().top - face.getBoundingClientRect().top) : null
-    })
-    if (off === null || off > 1) throw new Error(`palette shuttle is ${off}px off its row`)
+    await onRow()
   },
   ...Object.fromEntries(Object.entries(scenes).map(([name, run]) => [name, (page, audit, url) => run(page, audit, url, settle)])),
   async shop(page, audit, url) {
