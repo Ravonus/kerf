@@ -10,6 +10,8 @@ Screenshots are outside the repo:
 
 Grades: **done** (would show it), **weak** (works, no feeling), **ugly** (visibly wrong), **missing** (no weft component).
 
+Grades are the state before the redesign. Defects 1 to 9 are fixed; 10 is still open. See [../design/warp/redesign.md](../design/warp/redesign.md).
+
 ## The diagnosis
 
 The foundations are good: the token ladder, the dial, the sweep, the notch label, the contrast work. The magic is lost

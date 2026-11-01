@@ -101,6 +101,8 @@ Number roll (`Ticker`), Accordion, Radio, Slider.
 
 **Tier 3: fixes.** Nav layout, Chip and Toggle alignment, Alert's weight.
 
+Tiers 0 to 3 are built.
+
 **Deferred.** Palette height animation, HoverCard, Breadcrumbs, Stepper, the other stylesheets with no component, and the
 rich inputs, which inherit tier 0 and need their own pass. Fonts: the kit should have an answer for the unconfigured
 case, but that is a loading decision for the framework, not this pass.
@@ -110,12 +112,14 @@ case, but that is a loading decision for the framework, not this pass.
 `Select` stays a real `<select>`. It is the form control, the accessible name and the `change` event, so no consumer
 changes, forms and tests keep working, and without JavaScript it still works. On fine pointers a small action takes over
 the open: it cancels the native popup and shows warp's listbox in the top layer, driven from the same element. On coarse
-pointers the OS sheet stays, as 03 §4 already says. All inputs look custom where a pointer can see them, and the kit
-gains under 1 KB instead of a second control.
+pointers the OS sheet stays, as 03 §4 already says. All inputs look custom where a pointer can see them, and the
+kit gains about 1.4 KB, over the 1 KB planned, instead of a second control.
 
 ## 6. Size
 
-warp's kit is at 7.61 KB against the 7.00 KB allowance. No gates. The fix is construction.
+warp's kit was 7.57 KB against the 7.00 KB allowance before this pass and is about 9.2 KB after it, mostly `select.ts`.
+The total JS gate (17 KB) and ceiling (50 KB) still pass. The allowance is not met: the sweep machine below is the way back.
+No gates. The fix is construction.
 
 - Motion is CSS: a token and a few rules each, inside files a component already loads.
 - New components live in their own files and cost nothing unused.
@@ -123,3 +127,6 @@ warp's kit is at 7.61 KB against the 7.00 KB allowance. No gates. The fix is con
 - The sweep machine's document-wide `MutationObserver` and hover tracking are the largest kit cost. A pure-CSS hover sweep
   looks feasible (animation in, transition out) and would remove most of it, but it touches 30 stylesheets and the
   `data-phase` contract. Prototype it separately.
+- Reading the duration from a registered `--warp-sweep-duration` instead of measuring the part was tried and dropped. It
+  saves about 0.2 KB, and a host that sets its own part timing, or a page without the token, loses its sweep: that is
+  the behaviour `ui-core/test/trace.test.ts` pins.

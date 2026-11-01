@@ -31,6 +31,8 @@ The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
    how the pointer moved. Every entry draws left to right, and every exit leaves to the right.
 5. **Timing:** 620 ms, `cubic-bezier(0.65, 0, 0.35, 1)`. The clip-path corners use `round` to match the host's corner
    radius.
+   Phase **in** runs on `--warp-sweep-ease-in`, front-loaded so the stroke leaves at once (redesign.md §2); phase **out**
+   keeps this curve. To revert, set that token to `--warp-sweep-ease`.
 6. **Errors:** the sweep is pinned in, painted `--danger`.
 7. **Where it's used:** across the whole kit, including:
    - text inputs, checkbox, combobox, select, the date pickers
