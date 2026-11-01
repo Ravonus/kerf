@@ -59,8 +59,8 @@ const each = (g, f) => g.map((r, y) => r.map((c, x) => f(c, x, y)))
 const near = (g, x, y, ...want) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([i, j]) => want.includes(g[y + j]?.[x + i]))
 const INSIDE = ':^%'
 const checker = (x, y) => (x + y) % 2 === 0
-const sparse = (x, y) => x % 2 === 0 && y % 2 === 0
-const dense = (x, y) => checker(x, y) || (x % 2 === 1 && y % 2 === 1 && (x + y) % 4 === 2)
+
+
 
 /** 0 at the lit edge of a form, 1 at its shadow edge, measured along the light. */
 export function depth(g, x, y) {
@@ -73,12 +73,14 @@ const halo = (g, x, y) => near(g, x, y, 'w')
 
 /** No inside to shade: an arrow, a check. */
 export const open = g => { const f = g.flat(), inner = f.filter(c => INSIDE.includes(c)).length; return inner < 6 || inner < 1.25 * f.filter(c => c === '#' || c === 'w').length }
+/** A busy mark has no room for a shadow: at 16 px it turns to mud. */
+const sparse = g => g.flat().filter(c => c === '#' || c === 'w').length < 52
 const drop = (g, x, y) => { const on = (a, b) => g[b]?.[a] === 'w' || g[b]?.[a] === '#'; return !on(x, y) && (on(x - 1, y - 1) || on(x - 2, y - 2)) && checker(x, y) }
 
 /** Hollow in pixels: the edge and the mark, the shadow side shaded. An open mark throws a dithered shadow. */
 export const hollow = (g, openMark) => each(g, (c, x, y) => {
   if (c === '#' || c === 'w') return c
-  if (openMark) return drop(g, x, y) ? '#' : '.'
+  if (openMark) return sparse(g) && drop(g, x, y) ? '#' : '.'
   if (!INSIDE.includes(c) || halo(g, x, y)) return '.'
   const t = tone(g, x, y, c)
   return t > .86 ? '#' : t > .6 && checker(x, y) ? '#' : '.'

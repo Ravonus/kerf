@@ -16,7 +16,7 @@
   :where(svg[data-icon] [data-sh]) { stroke: currentColor; stroke-width: 1.5; }
   :where(svg[data-icon] [data-so]) { fill: currentColor; fill-opacity: .3; stroke: none; }
   :where(svg[data-icon] [data-k]) { stroke: var(--warp-icon-knock, Canvas); stroke-width: 2.5; }
-  :where(svg[data-icon] [data-k][data-qs]) { stroke-width: 1.25; }
+  :where(svg[data-icon] [data-k][data-qs]) { stroke-width: 1.5; }
   :where(svg[data-icon] [data-hi]) { stroke-width: 1.25; }
   :where(svg[data-icon] [data-c]) { fill: var(--warp-icon-knock, Canvas); }
   @media (forced-colors: active) { :where(svg[data-icon] [data-so]) { display: none; } }

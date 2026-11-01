@@ -96,4 +96,6 @@ The pixel tier is exact at 16, 32 and 48. At 20 and 24 a 1× screen rounds cells
 
 ## Styling
 
+A solid cuts its marks with `--warp-icon-knock`, which defaults to `Canvas`. On a coloured surface, like a solid button, set it to that surface's colour.
+
 Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`. A solid icon cuts its detail out with the page background, `--warp-icon-knock`: set it on a surface of another colour.
