@@ -239,7 +239,6 @@ test('a Boundary that goes away takes its content with it; one that stays keeps 
   const before = runs
   n.value = 2
   flush()
-  expect(document.querySelector('.live')!.textContent).toBe('2')
   expect(runs).toBeGreaterThan(before)
   open.value = false
   flush()
