@@ -1,9 +1,9 @@
 // Every icon by name: an app that takes names from data pays for the whole set here, and only here.
 import * as all from '@weft/icons'
 import type { IconComponent } from '@weft/icons'
-import { names, type IconName, type IconVariant } from './gen/names'
+import { actions, names, type IconActionName, type IconName, type IconVariant } from './gen/names'
 
-export { names, type IconName, type IconVariant }
+export { actions, names, type IconActionName, type IconName, type IconVariant }
 export { Icon, type IconByNameProps } from './icon'
 const table = all as unknown as Record<string, IconComponent>
 const title = (name: string) => name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())

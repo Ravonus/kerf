@@ -2,9 +2,9 @@
 // the names the app uses (compile.mjs), so nothing here reaches production unless a name is truly dynamic.
 import * as all from '@weft/icons'
 import type { IconComponent } from '@weft/icons'
-import { lookup, type IconName, type IconVariant } from './all'
+import { lookup, type IconActionName, type IconName, type IconVariant } from './all'
 
-export type { IconName, IconVariant }
+export type { IconActionName, IconName, IconVariant }
 export const resolve = lookup
 /** `Icons[id]` for an id only known at runtime. The build's version does the same over what it kept. */
 export const pack = (id: string) => (all as unknown as Record<string, IconComponent>)[id]

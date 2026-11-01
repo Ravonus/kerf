@@ -131,6 +131,13 @@ export function enclosed(grid, wall = c => c === '#') {
   return grid.map((row, y) => row.map((c, x) => !wall(c) && !out[y][x]))
 }
 
+/** Enclosed, or walled on all four sides: the notch and the ring's gap leave a shape open, and its inside is still its inside. */
+export function interior(grid) {
+  const inner = enclosed(grid)
+  const wall = (x, y, i, j) => { for (let k = 1; k < SIZE; k++) { const c = grid[y + j * k]?.[x + i * k]; if (c === undefined) return false; if (c === '#') return true } return false }
+  return grid.map((row, y) => row.map((c, x) => c !== '#' && (inner[y][x] || (wall(x, y, 1, 0) && wall(x, y, -1, 0) && wall(x, y, 0, 1) && wall(x, y, 0, -1)))))
+}
+
 const count = (grid, c) => grid.flat().filter(v => v === c).length
 
 /** A little of the hand set's light: shade inside the lower right edges of the body, never more than the ink, and clear of
@@ -151,8 +158,7 @@ export function hollow(grid) {
 
 /** Filled in: the inside goes to ink, and a detail drawn inside it is cut out so it still reads. */
 export function solid(grid) {
-  const walls = c => c === '#'
-  const inner = enclosed(grid.map(r => r.map(c => (c === '+' ? '.' : c))), walls)
+  const inner = interior(grid.map(r => r.map(c => (c === '+' ? '.' : c))))
   // the largest connected ink is the silhouette; anything else inside it is detail
   const seen = grid.map(r => r.map(() => 0)); let best = 0, bestId = 0, id = 0
   for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
@@ -187,7 +193,7 @@ export const PATTERNS = {
 /** The drawing's insides shaded in a pattern, as `+` cells: ink stays, and the pattern never touches the outside. */
 export function dither(grid, pattern) {
   const on = PATTERNS[pattern]
-  const inner = enclosed(grid.map(r => r.map(c => (c === '+' ? '.' : c))))
+  const inner = interior(grid.map(r => r.map(c => (c === '+' ? '.' : c))))
   return grid.map((row, y) => row.map((c, x) => (c === '#' ? '#' : (inner[y][x] || c === '+') && on(x, y) ? '+' : '.')))
 }
 

@@ -134,3 +134,13 @@ test('findings: unknown is an error code, dynamic and escaped are info codes', (
     expect(findings(root).map(f => f.code).sort()).toEqual(['I001', 'I002', 'I003'])
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
+
+test('an action is a variant, and it keeps its trigger', () => {
+  const out = rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="trash" action="hover" />`, 'a.tsx', catalog)
+  expect(out).toContain('<TrashIconAction'); expect(out).toContain('action="hover"')
+  expect(names(scan({ 'src/a.tsx': `import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="bell" action />` }))).toEqual(['bell:action'])
+})
+test('an icon with no action is an error, at the build and in check', () => {
+  expect(() => rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="heart" action="on" />`, 'a.tsx', catalog)).toThrow(/I001 no action for icon 'heart'/)
+  expect(scan({ 'src/a.tsx': `import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="heart" action />` }).unknown[0].why).toMatch(/no action for icon 'heart'/)
+})

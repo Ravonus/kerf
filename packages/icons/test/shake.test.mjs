@@ -102,3 +102,12 @@ test('a dynamic name: the pack is its own chunk, and the page stays small', asyn
   process.stderr.write(`BYTES dynamic: page ${br(main)} B js, pack chunk ${br(rest.join(''))} B\n`)
   expect(br(main)).toBeLessThan(br(rest.join('')))
 }, 90000)
+
+test('an action costs nothing unless that one is used', async () => {
+  const none = await bundle(forms.named)
+  expect(none.css).not.toContain('weft-')
+  const trash = await bundle(`${render}import { TrashIconAction } from '@weft/icons'\nrender(() => <div><TrashIconAction /></div>, document.body)\n`)
+  expect(trash.css).toContain('weft-trash'); expect(trash.css).not.toContain('weft-bell')
+  expect(trash.css).toContain('prefers-reduced-motion'); expect(trash.css).toContain('--warp-motion-scale')
+  process.stderr.write(`BYTES TrashIconAction: ${br(trash.js)} B js, ${br(trash.css)} B css (plain icon ${br(none.js)} js, ${br(none.css)} css)\n`)
+}, 60000)

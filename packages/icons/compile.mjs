@@ -20,10 +20,10 @@ export const pascal = (name, variant = '') => `${title(name)}Icon${variant ? var
 export const VARIANTS = ['hollow', 'solid', 'dither']
 /** Which variants an element asks for: '' is the plain icon. A flag it can't read may be either. */
 function variants(element) {
-  const out = new Set(), flags = element.attributes.filter(a => a.type === 'JSXAttribute' && VARIANTS.includes(a.name.name))
+  const out = new Set(), flags = element.attributes.filter(a => a.type === 'JSXAttribute' && (VARIANTS.includes(a.name.name) || a.name.name === 'action'))
   for (const a of flags) {
     const v = a.value?.type === 'JSXExpressionContainer' ? unwrap(a.value.expression) : null
-    if (!a.value || v?.value === true) return { set: new Set([a.name.name]), fixed: flags.length === 1 }
+    if (!a.value || v?.value === true || typeof a.value.value === 'string' || (typeof v?.value === 'string' && v.value)) return { set: new Set([a.name.name]), fixed: flags.length === 1 }
     if (v?.value === false) continue
     out.add(a.name.name); out.add('')
   }
@@ -175,7 +175,7 @@ const kebab = s => s.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`).replace(/^-/,
 const TOOLS = new Set(['iconSet'])
 /** `X`, `XHollow`, `XIcon`, `IconX`: a pack member as a name and a variant. */
 function member(id) {
-  const [, base, variant = ''] = /^(.+?)(Hollow|Solid|Dither)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$)/, '').replace(/^Icon(?=[A-Z])/, ''))
+  const [, base, variant = ''] = /^(.+?)(Hollow|Solid|Dither|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$|Action$)/, '').replace(/^Icon(?=[A-Z])/, ''))
   return { name: kebab(base), variant: variant.toLowerCase() }
 }
 function packName(id, catalog, names, missing) {
@@ -341,7 +341,10 @@ export function analyze(root, { catalog }) {
     const r = expression(unit, expr)
     const kinds = element ? variants(element).set : new Set([''])
     for (const v of r.values) {
-      if (known.has(v)) for (const k of kinds) names.add(k ? `${v}:${k}` : v)
+      if (known.has(v)) for (const k of kinds) {
+        if (k === 'action' && !actionList().includes(v)) unknown.push({ name: v, why: actionMessage(v).slice(5), ...where(unit, unwrap(expr).start ?? at) })
+        else names.add(k ? `${v}:${k}` : v)
+      }
       else if (!soft) unknown.push({ name: v, suggest: closest(v, catalog), ...where(unit, unwrap(expr).start ?? at) })
     }
     if (r.dynamic) dynamic.push({ why: r.dynamic, ...where(unit, at) })
@@ -383,7 +386,7 @@ export function namesModule(names, { lazy = false, source } = {}) {
   const id = key => pascal(...key.split(':'))
   const imports = list.length ? `import { ${list.map(id).join(', ')} } from '@weft/icons'\n` : ''
   const table = `const names = { ${list.map(n => `${JSON.stringify(n)}: ${id(n)}`).join(', ')} }\nconst key = (name, variant) => (variant ? name + ':' + variant : name)\n`
-  const member = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Dither)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$)/, '').replace(/^Icon(?=[A-Z])/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
+  const member = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Dither|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Dither$|Action$)/, '').replace(/^Icon(?=[A-Z])/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
   if (source) return `${imports}import { remote } from '@weft/icons/late'\n${table}const get = remote(${JSON.stringify(source)})\nexport const resolve = (name, variant) => names[key(name, variant)] ?? get(name, variant)\n${member}`
   if (lazy) return `${imports}import { late } from '@weft/icons/late'\n${table}const load = () => import('@weft/icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, load)\n${member}`
   return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n${member}`
@@ -428,6 +431,7 @@ export function rewrite(code, file, catalog) {
     if (!use.element.selfClosing) continue
     const wanted = variants(use.element)
     if (!wanted.fixed) continue
+    if (wanted.set.has('action') && !actionList().includes(v.value)) throw Object.assign(new Error(actionMessage(v.value)), { loc: { file, ...line(code, v.start) } })
     const name = pascal(v.value, [...wanted.set][0])
     added.add(name)
     edits.push({ start: use.element.start, end: use.element.name.end, text: `<${name}` }, { start: use.at, end: use.end, text: '' })
@@ -440,8 +444,10 @@ export function rewrite(code, file, catalog) {
   return head + out
 }
 
+export const actionMessage = name => `I001 no action for icon '${name}', did you mean '${closest(name, actionList())}'? The action icons are ${actionList().join(', ')}.`
 export const unknownMessage = (name, catalog) => `I001 no icon '${name}', did you mean '${closest(name, catalog)}'?`
 
+export const actionList = () => [...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').match(/const actions = (\[.*?\])/)[1].matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1])
 export const list = () => [...new Set([...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').split('\n')[1].matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1]))]
 
 /** The vite side, loaded by weft/vite when @weft/icons is in the build. */
@@ -465,7 +471,7 @@ export function findings(root) {
   const catalog = list(), r = analyze(root, { catalog })
   const kb = `${(packCost() / 1024).toFixed(0)} KB`
   return [
-    ...r.unknown.map(u => ({ code: 'I001', file: u.file, line: u.line, column: u.column, why: `no icon '${u.name}', did you mean '${u.suggest}'?` })),
+    ...r.unknown.map(u => ({ code: 'I001', file: u.file, line: u.line, column: u.column, why: u.why ?? `no icon '${u.name}', did you mean '${u.suggest}'?` })),
     ...r.dynamic.map(d => ({ code: 'I002', file: d.file, line: d.line, column: d.column, why: `\`${d.why}\` isn't known until runtime, so this use loads the icon pack lazily (about ${kb} br, only on pages that reach it).` })),
     ...r.escaped.map(d => ({ code: 'I003', file: d.file, line: d.line, column: d.column, why: `${d.why}, so every icon ships with the page (about ${kb} br).` })),
   ]
