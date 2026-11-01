@@ -1,15 +1,16 @@
 import { state } from 'weft'
+import { Button, Card } from '@weft/warp'
 
-function Price(props: { amount: number }) {
-  return <output>{props.amount}</output>
+function Price(props: { dollars: number }) {
+  return <strong>${props.dollars.toFixed(2)}</strong>
 }
 
-export default function Cart() {
-  const amount = state(10)
+export default function Tip() {
+  const bill = state(40)
   return (
-    <>
-      <button onClick={() => amount.value++}>+1</button>
-      <Price amount={amount.value} />
-    </>
+    <Card title="Split the bill">
+      <p>Each of you pays <Price dollars={bill.value / 2} /></p>
+      <Button onClick={() => (bill.value += 10)}>Add a $10 dish</Button>
+    </Card>
   )
 }

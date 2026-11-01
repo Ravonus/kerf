@@ -40,7 +40,7 @@
   [data-site="hero"]::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg, oklch(0.1 0.012 150) 0 38%, oklch(0.1 0.012 150 / 0.72) 58%, oklch(0.1 0.012 150 / 0.1)), linear-gradient(0deg, oklch(0.1 0.012 150), transparent 22%); }
   [data-site="loom"] { opacity: 0; transition: opacity var(--warp-duration-slow) var(--warp-ease-out); }
   [data-site="loom"][data-live] { opacity: 0.85; }
-  [data-site="hero"] [data-part="say"] { display: grid; gap: var(--warp-space-group); max-inline-size: 660px; }
+  [data-site="hero"] [data-part="say"] { display: grid; gap: clamp(1.5rem, 3vh, 2.25rem); max-inline-size: 660px; }
   [data-site="hero"] h1 { font-family: var(--warp-font-sans); font-weight: 700; font-size: clamp(2.75rem, 1.4rem + 4.4vw, 5rem); line-height: 1.02; letter-spacing: -0.04em; color: oklch(0.97 0.03 130); }
   [data-site="hero"] [data-part="say"] > p:not([data-part]) { font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); line-height: 1.5; color: oklch(0.87 0.02 130); }
   [data-part="next"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-group); }
@@ -52,6 +52,7 @@
   [data-part="install"] code { justify-self: start; max-inline-size: 100%; overflow-x: auto; padding: 8px 12px; border: 1px solid oklch(0.3 0.02 150); background: oklch(0.1 0.012 150 / 0.8); font-family: var(--warp-font-mono); font-size: 0.875rem; color: oklch(0.96 0.03 130); }
 
   [data-site="story"] { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(3.5rem, 7vw, 6.5rem); background: oklch(0.1 0.012 150); padding: clamp(3rem, 6vw, 5rem) clamp(1.25rem, 5vw, 5rem) clamp(4rem, 8vw, 7rem); }
+  [data-site="story"] h2, [data-site="story"] section { scroll-margin-block-start: 96px; }
   [data-site="story"] > section, [data-part="reading"] { box-sizing: border-box; inline-size: 100%; max-inline-size: 1120px; margin-inline: auto; }
   [data-site="story"] h2 { font-family: var(--warp-font-sans); font-weight: 700; font-size: clamp(2rem, 1.3rem + 2.4vw, 3.25rem); line-height: 1.08; letter-spacing: -0.03em; color: oklch(0.97 0.03 130); }
   [data-part="intro"] { max-inline-size: 65ch; margin-block: var(--warp-space-group); font-size: 1.125rem; line-height: 1.6; color: oklch(0.85 0.02 130); }

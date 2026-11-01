@@ -1,6 +1,12 @@
 import { state } from 'weft'
+import { Badge, Button, Card } from '@weft/warp'
 
-export default function Counter() {
-  const n = state(0)
-  return <button onClick={() => n.value++}>{n.value}</button>
+export default function Product() {
+  const inCart = state(0)
+  return (
+    <Card eyebrow="Coffee" title="House blend, 250 g">
+      <p>Cart <Badge count>{inCart.value}</Badge></p>
+      <Button onClick={() => inCart.value++}>Add to cart</Button>
+    </Card>
+  )
 }

@@ -1,14 +1,17 @@
 import { derived, state } from 'weft'
+import { Button, Card } from '@weft/warp'
 
-export default function Total() {
-  const price = state(4)
-  const qty = state(2)
-  const total = derived(() => price.value * qty.value)
+export default function Basket() {
+  const price = 12
+  const qty = state(1)
+  const shipping = derived(() => (qty.value >= 3 ? 0 : 4))
+  const total = derived(() => price * qty.value + shipping.value)
   return (
-    <>
-      <button onClick={() => price.value++}>price {price.value}</button>
-      <button onClick={() => qty.value++}>qty {qty.value}</button>
-      <output>{total.value}</output>
-    </>
+    <Card title="Your basket">
+      <p>{qty.value} × $12 · shipping ${shipping.value}</p>
+      <p><strong>Total ${total.value}</strong></p>
+      <Button onClick={() => qty.value++}>Add one</Button>
+      <Button emphasis="ghost" tone="neutral" onClick={() => (qty.value = 1)}>Reset</Button>
+    </Card>
   )
 }

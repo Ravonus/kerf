@@ -1,14 +1,15 @@
 import { state } from 'weft'
+import { Button, Card, Checkbox } from '@weft/warp'
 
-const start = ['warp', 'weft', 'loom', 'shed'].map(id => ({ id }))
+const start = ['Buy beans', 'Grind', 'Brew', 'Drink'].map(id => ({ id }))
 
-export default function Rows() {
-  const rows = state(start)
-  const turn = () => (rows.value = [...rows.value.slice(1), rows.value[0]])
+export default function Tasks() {
+  const tasks = state(start)
+  const later = () => (tasks.value = [...tasks.value.slice(1), tasks.value[0]])
   return (
-    <>
-      <button onClick={turn}>Rotate</button>
-      <ul>{rows.value.map(r => <li key={r.id}>{r.id}</li>)}</ul>
-    </>
+    <Card title="Today">
+      {tasks.value.map(t => <Checkbox key={t.id}>{t.id}</Checkbox>)}
+      <Button emphasis="ghost" tone="neutral" onClick={later}>Do the first one later</Button>
+    </Card>
   )
 }

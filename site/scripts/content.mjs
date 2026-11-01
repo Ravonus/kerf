@@ -348,7 +348,9 @@ export function Counter() {
   return <b>{props.amount}</b>
 }`
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
-  write('showcase.json', { source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+  const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
+  if (!habit) throw new Error('the showcase expects W005')
+  write('showcase.json', { habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
 }
 
 // ------------------------------------------------------------------ agents

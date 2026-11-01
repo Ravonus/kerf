@@ -21,7 +21,7 @@ export function Loom() {
     const build = () => {
       const paint = canvas.getContext('2d', { alpha: true })!
       const rect = canvas.getBoundingClientRect()
-      const CELL = rect.width < 700 ? 10 : 14
+      const CELL = rect.width < 700 ? 8 : 10
       const cols = Math.ceil(rect.width / CELL), rows = Math.ceil(rect.height / CELL)
       canvas.width = cols
       canvas.height = rows

@@ -38,3 +38,5 @@
   [data-site="doc-nav"] { position: static; padding-block-end: 0; max-block-size: none; }
   [data-site="doc-nav"] summary { display: flex; align-items: center; min-block-size: 44px; font-family: var(--warp-font-mono); cursor: pointer; }
     }
+
+[data-scope="prose"] :is(h2, h3), [data-part="fold"] { scroll-margin-block-start: 96px; }
