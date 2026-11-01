@@ -13,7 +13,7 @@ export default function Home() {
       <section data-site="hero">
         <div data-part="poster"></div>
         <Loom />
-        <h1>Touch it.</h1>
+        <h1>weft</h1>
       </section>
       <Arena />
       <Fix />

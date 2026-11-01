@@ -1,5 +1,6 @@
 import { onMount, state, untrack } from 'weft'
 import { Button } from '@weft/warp'
+import '@weft/ui-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
 function Frozen(props: { amount: number }) {
@@ -39,7 +40,7 @@ export function Fix() {
           <p data-part="diag"><b>{show.code}</b> {show.message}</p>
           <p data-part="done">0 diagnostics</p>
         </div>
-        <div data-part="live">
+        <div data-part="play">
           <output aria-live="polite">{step.value < 2 ? <Frozen amount={amount.value} /> : <Live amount={amount.value} />}</output>
           <Button size="lg" onClick={() => amount.value++}>+1</Button>
           <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>Again</Button>
