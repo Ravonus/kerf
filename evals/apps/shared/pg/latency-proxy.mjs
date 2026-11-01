@@ -33,6 +33,9 @@ function frontend(onQuery) {
   }
 }
 
+// How long before the due time a timer is safe. Windows' timers fire on a 15.6 ms tick, so one there can overshoot by that much.
+const EARLY = process.platform === 'win32' ? 17 : 1.2
+
 /** A queue per direction, in order: a timer to just short of the due time, then the event loop, because setTimeout alone overshoots a 1 ms delay. */
 function delayed(to, ms) {
   const q = []
@@ -45,7 +48,7 @@ function delayed(to, ms) {
   const arm = () => {
     armed = true
     const left = q[0].at - now()
-    if (left > 1.5) setTimeout(flush, left - 1.2); else setImmediate(flush)
+    if (left > EARLY + 0.3) setTimeout(flush, left - EARLY); else setImmediate(flush)
   }
   return chunk => { q.push({ at: now() + ms() / 2, chunk }); if (!armed) arm() }
 }
