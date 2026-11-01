@@ -20,6 +20,7 @@ export type SlotId =
   | 'text.measure'
   | 'surface.renderer'
   | 'realtime.bus'
+  | 'server.extension'
   | 'db.adapter'
   | 'pay.rail'
   | `device.${string}`

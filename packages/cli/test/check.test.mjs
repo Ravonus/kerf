@@ -26,6 +26,7 @@ describe('weft check on evals/reference-v3/weft', () => {
       'media.encode': {},
       'media.server': null,
       'pay.rail': {},
+      'server.extension': {},
       'realtime.bus': 'weft:default:memory',
       'surface.renderer': { canvas2d: 'weft:default', webgl2: 'weft:default' },
       'text.measure': null,

@@ -9,6 +9,7 @@ export const slotTable = [
   { id: 'surface.renderer', version: 1, cardinality: 'keyed', sides: ['client'], default: ['canvas2d', 'webgl2'], phase: '2 (Surfaces)' },
   { id: 'realtime.bus', version: 1, cardinality: 'one', sides: ['server'], default: 'memory', phase: '3' },
   { id: 'db.adapter', version: 1, cardinality: 'keyed', sides: ['server'], default: ['drizzle'], phase: '3c' },
+  { id: 'server.extension', version: 1, cardinality: 'keyed', sides: ['server'], default: null, phase: '6c' },
   { id: 'pay.rail', version: 1, cardinality: 'keyed', sides: ['server', 'client', 'native'], default: null, phase: '6c' },
 ]
 
