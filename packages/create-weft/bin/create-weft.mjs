@@ -33,7 +33,7 @@ async function directory() {
   return answer.trim() || 'my-weft-app'
 }
 
-/** Git and the install are conveniences: the app is already written, so a failure here only leaves a step for later. */
+/** The app is already written, so a failure here leaves a step for later; a failed install still fails the command. */
 function step(what, command, args, cwd) {
   try {
     execFileSync(command, args, { cwd, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' }) // npm is npm.cmd there
@@ -62,6 +62,7 @@ try {
   const installed = choices.install && step('The install', choices.pm, ['install'], dir)
   const run = choices.pm === 'npm' ? 'npx' : choices.pm === 'pnpm' ? 'pnpm exec' : choices.pm === 'bun' ? 'bunx' : 'yarn'
   console.log(`\n  cd ${where}${installed ? '' : `\n  ${choices.pm} install`}${choices.db === 'none' || choices.template ? '' : `\n  ${run} weft db generate`}\n  ${run} weft dev\n`)
+  if (choices.install && !installed) process.exitCode = 1
 } catch (e) {
   console.error(`create-weft: ${e.message}`)
   process.exit(1)

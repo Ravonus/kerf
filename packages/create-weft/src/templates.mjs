@@ -47,13 +47,16 @@ export function loadTemplate(name) {
 /** The choices with what the template implies filled in. A choice it can't work with is refused, not ignored. */
 export function withTemplate(options) {
   if (!options.template) return options
-  const { db, auth } = loadTemplate(options.template).requires
+  const { requires: { db, auth }, files } = loadTemplate(options.template)
   const refuse = (flag, wants) => { throw new Error(`the ${options.template} template needs ${flag} ${wants}`) }
   if (![undefined, 'warp'].includes(options.ui)) refuse('--ui', 'warp')
   if (![undefined, 'drizzle'].includes(options.layer)) refuse('--layer', 'drizzle')
   if (![undefined, db].includes(options.db)) refuse('--db', db)
   if (options.auth !== undefined && Boolean(options.auth) !== auth) refuse('sign-in', auth ? 'on' : 'off')
-  return { ...options, ui: 'warp', layer: 'drizzle', db, auth: options.auth ?? auth }
+  // Its fonts and media are plugin options in code, which a json or yaml config has no place for.
+  const config = 'weft.config.ts' in files ? 'ts' : options.config
+  if (![undefined, config].includes(options.config)) refuse('--config', config)
+  return { ...options, ui: 'warp', layer: 'drizzle', db, auth: options.auth ?? auth, ...(config && { config }) }
 }
 
 /**

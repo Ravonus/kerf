@@ -53,10 +53,9 @@ describe.each(written)('--template %s', name => {
     expect((await check(app(name))).diagnostics).toEqual([])
   })
 
-  it.each(['json', 'yaml'])('takes its warp options in a %s config', async format => {
-    const files = template({ template: name, config: format })
-    expect(files[`weft.config.${format}`]).toContain(t.warp.seed.accent)
-    expect((await check(app(name, { config: format }))).diagnostics).toEqual([])
+  it.each(['json', 'yaml'])('refuses a %s config, which has no place for its plugin options', format => {
+    expect(() => withTemplate({ template: name, config: format })).toThrow(`needs --config ts`)
+    expect(withTemplate({ template: name }).config).toBe('ts')
   })
 })
 

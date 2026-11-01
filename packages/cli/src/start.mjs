@@ -60,7 +60,11 @@ export async function devCommand(root, { port } = {}) {
 }
 
 export async function buildCommand(root, { preset, runtime } = {}) {
-  requireTrust(root, await loadConfig(root))
+  const loaded = await loadConfig(root)
+  requireTrust(root, loaded)
+  // A plugin that refused its options contributed nothing: its look or data would go missing from a build that succeeds.
+  const refused = loaded.diagnostics.find(d => d.severity === 'error' && d.owner !== 'core')
+  if (refused) throw Object.assign(new Error(`${refused.code}: ${refused.why}`), { code: 'E_USAGE' })
   const { build } = await start(root, 'app')
   const { writeContract } = await start(root, 'contract')
   const t = performance.now()
@@ -101,7 +105,7 @@ export async function buildCommand(root, { preset, runtime } = {}) {
     if (refused) refuse(refused)
     if (running) shipSidecars(root)
     await writeMap(root)
-    return { ok: true, preset, output, contract: contract.path, functions: contract.functions, diagnostics: [...contract.diagnostics, ...warned].map(d => diagnostic({ file: '.weft/contract.json', ...d })), ms: Math.round(performance.now() - t) }
+    return { ok: true, preset, output, contract: contract.path, functions: contract.functions, notes: loaded.contributions.flatMap(c => c.manifest.notes ?? []), diagnostics: [...contract.diagnostics, ...warned].map(d => diagnostic({ file: '.weft/contract.json', ...d })), ms: Math.round(performance.now() - t) }
   } finally {
     if (held === undefined) delete process.env.WEFT_BUILD
     else process.env.WEFT_BUILD = held

@@ -121,6 +121,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
         if (args.json) print(result)
         say(formatHuman(result.diagnostics))
         say(`weft build: ${result.preset} → ${result.output}, ${result.functions} functions in the contract (${result.ms} ms)`)
+        for (const note of result.notes) say(note)
         return 0
       }
       case 'start':
