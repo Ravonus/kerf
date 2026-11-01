@@ -71,3 +71,15 @@ Bench user for signed-in pages: `bench@weft.dev`, a throwaway local test account
 Cut for now, with reasons in the evidence: blog and SaaS templates, tuned and naive variants, Caddy and open-loop load, agent runs,
 Early Hints, Speculation Rules, a separate `@weft/adk`. So nothing here says agents get optimal code unprompted; that needs real
 agent runs.
+
+## First run
+
+2026-11-01, commit `ecc436e`, yuna-mbp (M3 Pro), 3 samples, peak load 5.5, private Postgres 17 at 2 ms RTT, Chromium headless shell.
+A one-line `BENCH_CHROME` patch was applied on that machine, since full Chrome can't start over ssh on a Mac. Before tuning anything:
+`evals/results/sites/first-run-yuna.json`, summary in `first-run-yuna.txt`. Builders' friction reports: `40-friction.json`.
+
+Where weft loses, all stacks in one run: server throughput on every database page (`/todos` 75 req/s, Solid 568, Next 213;
+`/admin/nested` 20, 502, 266), TTFB, server memory on admin (2.4 GB, 414 MB, 504 MB), first working click during a 2 s stream
+(2,188 ms, 292, 408), hydration on `/todos` (376 ms, 118, 167), HTML brotli (31 KB on `/admin`, 3, 6), DOM nodes (about double), boot
+(about 900 ms, 200, 400), and `race.toggles`, which fails on weft only. Where it wins: mobile LCP on most database pages, and JS
+against Next by 118 to 147 KB. Against Solid, JS is smaller on landing and catalog and larger on admin.
