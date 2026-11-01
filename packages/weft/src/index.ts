@@ -3,7 +3,7 @@
 // Push-pull graph: a write marks observers DIRTY/CHECK; derived values recompute lazily when read;
 // effects are queued and flushed in creation order (parents before children) on a microtask or by `flush()`.
 
-import { LITERAL, MICRO, OWNKEYS, POP, REUSE } from './flags'
+import { CHAIN, INLINE, LITERAL, MICRO, ORDERED, OWNKEYS, POP, REUSE } from './flags'
 
 const CLEAN = 0, CHECK = 1, DIRTY = 2
 /** `effect` of a disposed node: it never runs again, and there's no field for it on the live ones. */
@@ -12,10 +12,13 @@ const DEAD = 3
 /** Dev build: diagnostic text, dev names and dev-only checks. Vite folds it to `false` in production builds. */
 export const DEV: boolean = (import.meta as any).env?.DEV !== false
 
-type Source = { v: any; o: Computation[]; /** a `get(key)` source: its box and key */ b?: Box<any>; key?: PropertyKey }
+type Source = { v: any; /** first reader, then the rest */ f: Computation | undefined; o: Computation[]; /** a `get(key)` source: its box and key */ b?: Box<any>; key?: PropertyKey }
 
 export interface Owner {
-  owned: Computation[] | null
+  /** First owned; `CHAIN` follows `sib`, or a list. */
+  owned: any
+  /** Last owned. */
+  tail?: Computation | null
   cleanups: (() => void)[] | null
   owner: Owner | null
   /** Set by `provide` on its root; everything below finds it through `owner`. */
@@ -23,13 +26,19 @@ export interface Owner {
 }
 
 export interface Computation extends Source, Owner {
+  /** The next computation its owner owns. */
+  sib: Computation | null
   fn: (prev: any) => any
+  /** First source, then the rest. */
+  p: Source | undefined
   s: Source[]
   state: number
   /** 0: derived (lazy), 1: effect (queued), 2: effect whose value is unwrapped (a child hole: functions are called), 3: disposed */
   effect: 0 | 1 | 2 | 3
   /** Effects: writes the computed value, untracked (`apply(value, prev)`). */
-  a: ((value: any, prev: any) => void) | undefined
+  a: ((value: any, prev: any, h: any) => void) | undefined
+  /** What a shared `a` works on. */
+  h: unknown
   id: number
   /** Dev name: the binding (`li.children`), its source location and the component it was created in. */
   n?: string
@@ -47,6 +56,9 @@ let nextId = 0
 /** How many of `listener.s` this run has read again, in order. Those links stay as they are. */
 let at = 0
 let queue: Computation[] = []
+/** The newest queued effect's id, and whether one came out of creation order. */
+let last = 0
+let mixed = false
 /** A flush is on the microtask queue. */
 let scheduled = false
 /** `onMount` callbacks waiting for their nodes to be placed: run after `render` and at the end of each `flush`. */
@@ -102,23 +114,49 @@ function add<T>(list: T[], x: T): T[] {
 function read(node: Source) {
   const l = listener
   if (l) {
-    const s = l.s
-    if (REUSE && s[at] === node) at++
-    else if (!at || at > 8 || s.lastIndexOf(node, at - 1) < 0) { // short lists don't hold one box twice
-      if (at < s.length) unlink(l, at)
+    if (INLINE && !at) {
+      if (l.p !== node) {
+        if (l.p) unlink(l, 0)
+        l.p = node
+        link(node, l)
+      }
+      at = 1
+      return
+    }
+    const s = l.s, r = INLINE ? at - 1 : at
+    if (REUSE && s[r] === node) at++
+    else if (l.p !== node && (!r || r > 8 || s.lastIndexOf(node, r - 1) < 0)) { // short lists don't hold one box twice
+      if (r < s.length) unlink(l, at)
       l.s = add(l.s, node)
-      node.o = add(node.o, l)
+      link(node, l)
       at++
     }
   }
 }
 
+function link(node: Source, reader: Computation) {
+  if (INLINE && !node.f) node.f = reader
+  else node.o = add(node.o, reader)
+}
+
+/** Mark everything that reads `node`. */
+function reach(node: Source, state: number) {
+  if (INLINE && node.f) mark(node.f, state)
+  const o = node.o
+  for (let i = 0; i < o.length; i++) mark(o[i], state)
+}
+
 function mark(node: Computation, state: number) {
   if (node.state >= state) return
-  if (node.state === CLEAN && node.effect) queue.push(node)
+  if (node.state === CLEAN && node.effect) {
+    if (ORDERED) {
+      if (node.id < last) mixed = true
+      last = node.id
+    }
+    queue.push(node)
+  }
   node.state = state
-  const o = node.o
-  for (let i = 0; i < o.length; i++) mark(o[i], CHECK)
+  reach(node, CHECK)
 }
 
 function schedule() {
@@ -133,21 +171,39 @@ function schedule() {
 
 /** Take `node` off its sources from `from` on. */
 function unlink(node: Computation, from: number) {
-  const s = node.s
-  for (let i = s.length - 1; i >= from; i--) {
-    const c = s[i], o = c.o, j = o.indexOf(node)
-    if (POP && j === o.length - 1) o.pop()
-    else if (j >= 0) o.splice(j, 1)
-    if (c.b && !o.length) c.b.k!.delete(c.key!) // its last reader went
+  const s = node.s, rest = INLINE && from ? from - 1 : from
+  for (let i = s.length - 1; i >= rest; i--) drop(s[i], node)
+  if (INLINE && !from && node.p) {
+    drop(node.p, node)
+    node.p = undefined
   }
   if (POP && !from) node.s = NONE
-  else s.length = from
+  else s.length = rest
+}
+
+/** `node` no longer reads `c`. */
+function drop(c: Source, node: Computation) {
+  const o = c.o
+  if (INLINE && c.f === node) c.f = o.pop()
+  else {
+    const j = o.indexOf(node)
+    if (POP && j === o.length - 1) o.pop()
+    else if (j >= 0) o.splice(j, 1)
+  }
+  if (c.b && !c.f && !o.length) c.b.k!.delete(c.key!) // its last reader went
 }
 
 /** Dispose everything `node` owns and run its cleanups (a root's `dispose`). */
 export function clean(node: Owner) {
   if (node.owned) {
-    for (const c of node.owned) dispose(c)
+    if (CHAIN) {
+      const end = node.tail
+      for (let c: Computation = node.owned; ; c = c.sib!) {
+        dispose(c)
+        if (c === end) break
+      }
+      node.tail = null
+    } else for (const c of node.owned) dispose(c)
     node.owned = null
   }
   if (node.cleanups) {
@@ -173,13 +229,14 @@ function run(node: Computation) {
     if (node.effect === 2 && live(v)) {
       // its reads are its own, or a change here would rebuild what `fn` made; a function gets a level of its own, as it
       // may build the very component whose fragment holds the live part
-      settle(typeof v === 'function' ? computation(v as () => unknown, 2, node.a) : computation(() => unwrap(v), 1, node.a))
+      settle(typeof v === 'function' ? computation(v as () => unknown, 2, node.a, node.h) : computation(() => unwrap(v), 1, node.a, node.h))
     } else if (node.a) {
       listener = null
-      node.a(v, node.v)
+      node.a(v, node.v, node.h)
       node.v = v
     } else if (!Object.is(v, node.v)) {
       node.v = v
+      if (INLINE && node.f) node.f.state = DIRTY
       const o = node.o
       for (let i = 0; i < o.length; i++) o[i].state = DIRTY
     }
@@ -187,7 +244,7 @@ function run(node: Computation) {
     if (DEV && node.n && e && typeof e === 'object' && !(e as any).weft) (e as any).weft = node.n // where it threw
     throw e
   } finally {
-    if (at < node.s.length) unlink(node, at) // what this run didn't read
+    if (at < node.s.length + (INLINE && node.p ? 1 : 0)) unlink(node, at) // what this run didn't read
     listener = prevListener
     owner = prevOwner
     at = prevAt
@@ -197,6 +254,7 @@ function run(node: Computation) {
 
 function update(node: Computation) {
   if (node.state === CHECK) {
+    if (INLINE && (node.p as Computation)?.state) update(node.p as Computation)
     const s = node.s
     for (let i = 0; i < s.length; i++) {
       const c = s[i] as Computation
@@ -226,13 +284,24 @@ const live = (v: any): boolean => typeof v === 'function' || (Array.isArray(v) &
 export let flat: unknown = NONE
 export const setFlat = (list: unknown) => { flat = list }
 
-function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a']): Computation {
+function adopt(node: Computation) {
+  if (!CHAIN) owner!.owned = add(owner!.owned ?? NONE, node)
+  else {
+    const t = owner!.tail
+    node.sib = t! // back, while it's the last: `settle` can take it off again
+    if (t) t.sib = node
+    else owner!.owned = node
+    owner!.tail = node
+  }
+}
+
+function computation(fn: (prev: any) => any, effect: 0 | 1 | 2, a?: Computation['a'], h?: unknown): Computation {
   const node: Computation = {
-    fn, v: undefined, o: NONE, s: NONE, state: DIRTY, effect, a, id: nextId++,
-    owned: null, cleanups: null, owner,
+    fn, v: undefined, f: undefined, o: NONE, p: undefined, s: NONE, state: DIRTY, effect, a, h, id: nextId++,
+    owned: null, tail: null, sib: null, cleanups: null, owner,
   }
   if (DEV && devComponent.label) node.n = devComponent.label
-  if (owner) owner.owned = add(owner.owned ?? NONE, node)
+  if (owner) adopt(node)
   return node
 }
 
@@ -241,7 +310,9 @@ export function flush() {
   if (!MICRO) scheduled = false
   do {
     while (queue.length) {
-      const batch = queue.sort((a, b) => a.id - b.id)
+      const batch = !ORDERED || mixed ? queue.sort((a, b) => a.id - b.id) : queue
+      mixed = false
+      last = 0
       queue = []
       for (let i = 0; i < batch.length; i++) update(batch[i])
     }
@@ -313,6 +384,7 @@ const own = (x: any) => Reflect.ownKeys(x).flatMap((k): PropertyKey | PropertyKe
 
 export class Box<T> implements State<T> {
   v: T
+  f: Computation | undefined = undefined
   o: Computation[] = NONE
   // Rarely set, so not own fields of every box (memory).
   /** Per-entry sources for `get(key)`. */
@@ -341,7 +413,7 @@ export class Box<T> implements State<T> {
     if (listener) {
       const k = (this.k ??= new Map())
       let s = k.get(key)
-      if (!s) k.set(key, (s = { v: undefined, o: NONE, b: this, key }))
+      if (!s) k.set(key, (s = { v: undefined, f: undefined, o: NONE, b: this, key }))
       read(s)
     }
     return (this.v as any)?.[key]
@@ -358,11 +430,10 @@ export class Box<T> implements State<T> {
       if (many) this.c = many.length
       for (const key of many || (k.keys() as Iterable<PropertyKey>)) {
         const s = k.get(key)
-        if (s && !Object.is(prev?.[key], (v as any)?.[key])) for (const o of s.o) mark(o, DIRTY)
+        if (s && !Object.is(prev?.[key], (v as any)?.[key])) reach(s, DIRTY)
       }
     }
-    const o = this.o
-    for (let i = 0; i < o.length; i++) mark(o[i], DIRTY)
+    reach(this, DIRTY)
     schedule()
     if (this.h) this.h(this, prev)
   }
@@ -479,13 +550,20 @@ export function effect<T>(compute: (prev?: T) => T, apply: (value: T, prev: T | 
 /** First run. A node that read nothing reactive and owns nothing can never re-run: its owner drops it (memory). */
 function settle(node: Computation) {
   run(node)
-  if (node.s === NONE && !node.owned && !node.cleanups && owner?.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
+  if (!node.p && node.s === NONE && !node.owned && !node.cleanups && owner) {
+    if (!CHAIN) {
+      if (owner.owned?.[owner.owned.length - 1] === node) owner.owned.pop()
+    } else if (owner.tail === node) {
+      owner.tail = node.sib
+      if (!node.sib) owner.owned = null
+    }
+  }
 }
 
 /** A child hole (weft/dom `insert`): `value` is tracked and unwrapped (functions called), `apply` places it. */
-export function hole(value: () => unknown, apply: (value: any) => void) {
+export function hole<H>(value: () => unknown, apply: (value: any, was: any, h: H) => void, h?: H) {
   if (rt.server) return
-  settle(computation(value, 2, apply))
+  settle(computation(value, 2, apply, h))
 }
 
 export function onCleanup(fn: () => void) {
@@ -525,7 +603,7 @@ export function getOwner() {
 }
 
 export function createRoot<T>(fn: (dispose: () => void) => T, parent: Owner | null = owner): T {
-  const root: Owner = { owned: null, cleanups: null, owner: parent }
+  const root: Owner = { owned: null, tail: null, cleanups: null, owner: parent }
   return within(root, () => fn(() => clean(root)))
 }
 

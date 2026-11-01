@@ -159,7 +159,7 @@ test('graph memory: per-key sources go with their last reader; effects that read
     return d
   })
   expect((selected as any).k.size).toBe(2)
-  expect(owner.owned).toHaveLength(2)
+  expect(owner.tail).toBe(owner.owned.sib) // two kept, the one that reads nothing dropped
   dispose()
   expect((selected as any).k.size).toBe(0)
 })

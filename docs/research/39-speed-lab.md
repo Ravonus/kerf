@@ -63,6 +63,14 @@ run, and a gap counts only if the 95% interval of the ratio across runs (bootstr
 - **Skipping the key when a row's item is the same object.** Saves `by()` calls on remove, but a key that changed
   inside a mutated object would keep a stale row. A semantic shortcut; refused.
 
+## The arena's time per update
+
+`evals/speed/arena` builds the site's three arena apps and a plain DOM frame, and runs them the way the site does: three frames ticking in turn at 60 Hz. `harness.js` there is the per-tick meter the deployed page used, kept apart from the site's so a site build can't change what's measured (one did, mid-run, and produced a false threefold win). `run.mjs` also runs flat out, without the observer, and with text writes muted.
+
+Muted runs are only good flat out: at 60 Hz the muted figure came out above the unmuted one, in every framework, so 60 Hz splits come from subtracting the plain DOM frame instead. An idle core isn't the 60 Hz penalty: spinning between beats didn't change the figure. What is hasn't been separated.
+
+`STEADY`, `ORDERED`, `RECORD`, `INLINE` and `CHAIN` came from this work. A queue kept between flushes (no array growth) did nothing for the arena and cost one-cell updates 11 to 13%, so it was refused.
+
 ## Adaptive thresholds
 
 | Where | Rule | Why this number |

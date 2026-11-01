@@ -4,7 +4,7 @@
 // its range. Client-only output imports `tpl` and `child` (dom-next.ts) instead, so none of this ships there.
 
 import { DEV, hole, untrack } from './index'
-import { insert, place } from './dom'
+import { insert, place, write, type Hold } from './dom'
 import { keys, nextKey, under } from './keys'
 import { marks } from './island'
 import { hydration } from './hydrate'
@@ -168,8 +168,9 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
       return void place(parent, adopt(v, current, { i: 0 }, []), current, at)
     }
     let claimed = false
-    hole(v as () => unknown, x => {
-      current = place(parent, claimed ? x : adopt(x, current, { i: 0 }, []), current, at)
+    const h: Hold = { p: parent, m: at, c: current, t: undefined }
+    hole(v as () => unknown, (x, was) => {
+      write(claimed ? x : adopt(x, h.c, { i: 0 }, []), was, h)
       claimed = true
     })
   }

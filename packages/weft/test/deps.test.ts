@@ -1,7 +1,7 @@
 // Runs keep their links when they read the same things: what must hold when they don't.
 import { Box, createRoot, derived, effect, flush, onCleanup, state, stats } from 'weft'
 
-const readers = (box: unknown) => (box as Box<unknown>).o.length
+const readers = (box: unknown) => ((box as Box<unknown>).f ? 1 : 0) + (box as Box<unknown>).o.length
 
 test('a conditional read follows the branch taken, in both directions', () => {
   const on = state(true), a = state(1), b = state(2)

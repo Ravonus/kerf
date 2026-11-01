@@ -3,7 +3,7 @@
 // code imports `render` (or `hydrate`) and nothing else from here.
 
 import { Box, DEV, clean, createRoot, devComponent, getOwner, flat, hole, memo, NONE, onCleanup, rt, runMounts, setFlat, untrack, view, within, type Owner } from './index'
-import { DEFER, ENDS, FLAT, LINEAR, ROWBOX, SCAN, SWAP, TEXT, WIPE } from './flags'
+import { DEFER, ENDS, FLAT, LINEAR, RECORD, ROWBOX, SCAN, STEADY, SWAP, TEXT, WIPE } from './flags'
 import { keys, step, under } from './keys'
 
 export { memo }
@@ -178,7 +178,33 @@ export function insert(parent: Mountable, value: any, marker?: Node | null) {
     place(parent, value, current, at)
     return
   }
-  hole(value, v => { current = place(parent, v, current, at) })
+  const h: Hold = { p: parent, m: at, c: current, t: undefined }
+  if (RECORD) hole(value, write, h)
+  else hole(value, (v, was) => write(v, was, h))
+}
+
+/** A hole: its parent, its marker, its nodes, and its one text node when that's all it holds (then `c` may lag). */
+export interface Hold { p: Mountable; m: Node | null; c: Node[]; t: Text | undefined }
+
+export function write(v: any, was: any, h: Hold) {
+  const primitive = typeof v === 'string' || typeof v === 'number'
+  if (STEADY && h.t && primitive) {
+    if (v !== was) h.t.data = v as string // the DOM converts a number
+    return
+  }
+  if (STEADY) {
+    if (primitive && h.c === EMPTY) {
+      // No list for one text node: `h.c` stays empty until the hole holds something else.
+      if (TEXT && v !== '' && !h.m && !h.p.firstChild) {
+        h.p.textContent = v as string
+        h.t = h.p.firstChild as unknown as Text
+      } else h.t = h.p.insertBefore(document.createTextNode(v as string), h.m)
+      return
+    }
+    if (h.t) h.c = [h.t]
+  }
+  const c = h.c = place(h.p, v, h.c, h.m)
+  if (STEADY) h.t = primitive && c.length === 1 && c[0].nodeType === 3 ? c[0] as Text : undefined
 }
 
 // ---- attributes and properties ---------------------------------------------------------------------------------
@@ -296,8 +322,10 @@ export function addEvent(node: any, name: string, handler: any, delegate?: boole
  */
 class Row {
   v: unknown
+  f: Box<any>['f'] = undefined
   o: Box<any>['o'] = NONE
   owned: Owner['owned'] = null
+  tail: Owner['tail'] = null
   cleanups: Owner['cleanups'] = null
   nodes: any = undefined
   constructor(item: unknown, public key: unknown, public owner: Owner | null, public index: Box<number> | undefined) {
