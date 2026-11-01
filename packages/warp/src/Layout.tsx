@@ -62,6 +62,8 @@ function Element({ as, ...rest }: Box) {
   return <Tag {...rest} />
 }
 
+const MIN_STEPS = new Set(['xs', 'sm', 'md', 'lg'])
+
 /** Vertical flow; the gap is the relationship between the children. */
 export function Stack({ gap, align, divided, ...rest }: Box & { align?: 'start' | 'center' | 'end'; divided?: boolean }) {
   return <Element data-scope="stack" data-gap={gap} data-align={align} data-divided={divided ? '' : undefined} {...rest} />
@@ -72,9 +74,9 @@ export function Row({ gap, justify, align, wrap, reflow, ...rest }: Box & { just
   return <Element data-scope="row" data-gap={gap} data-justify={justify === 'start' ? undefined : justify} data-align={align} data-wrap={wrap === false ? 'none' : undefined} data-reflow={reflow} {...rest} />
 }
 
-/** Intrinsic columns: as many as fit at `min`, never more than `cols`. A child with `data-span="full"` takes the row. */
-export function Grid({ gap, min, cols, ...rest }: Box & { min?: 'xs' | 'sm' | 'md' | 'lg'; cols?: 2 | 3 | 4 | 6 }) {
-  return <Element data-scope="grid" data-gap={gap} data-min={min} data-cols={cols} {...rest} />
+/** Intrinsic columns: as many as fit at `min`, a step or a length like `12rem`, never more than `cols`. A child with `data-span="full"` takes the row. */
+export function Grid({ gap, min, cols, ...rest }: Box & { min?: 'xs' | 'sm' | 'md' | 'lg' | (string & {}); cols?: 2 | 3 | 4 | 6 }) {
+  return <Element data-scope="grid" data-gap={gap} data-min={MIN_STEPS.has(min!) ? min : undefined} data-cols={cols} style={min && !MIN_STEPS.has(min) ? `--_min:${min}` : undefined} {...rest} />
 }
 
 /** A fixed side and a fluid main, stacked below its step. Each child is a container. */

@@ -39,7 +39,7 @@ export interface FormProps<I, O> {
   reset?: boolean
   onSuccess?: (result: O) => void
   onError?: (error: unknown) => void
-  children?: unknown | ((form: FormApi<I, O>) => unknown)
+  children?: ((form: FormApi<I, O>) => unknown) | string | number | boolean | object | null
   [attr: string]: unknown
 }
 

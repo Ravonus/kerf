@@ -1,6 +1,6 @@
 import { ColumnsIcon } from '@weft/icons'
 import { checkState, filterRows, hideRule, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/ui-core'
-import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
+import { type Derived, derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
 import { Button } from './Button'
 import { Checkbox } from './Choice'
 import { Search } from './Field'
@@ -46,7 +46,7 @@ export type TableSort = { id: string; dir: SortDir }
 export type TableStatus = 'ready' | 'loading' | 'empty' | 'error'
 
 export interface TableProps<T> {
-  rows: readonly T[] | State<readonly T[]> | Resource<readonly T[] | ListPage<T>>
+  rows: readonly T[] | State<readonly T[]> | Derived<readonly T[]> | Resource<readonly T[] | ListPage<T>>
   /** Names the table (required, 06 §5). It stays in the accessibility tree when `captionHidden`. */
   caption: string
   captionHidden?: boolean
