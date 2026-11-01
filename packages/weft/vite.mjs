@@ -305,6 +305,8 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
  */
 function icons() {
   const NAMES = '\0weft:icons-names'
+  const ONE = '\0weft:icon/'
+  const drawings = new Map()
   let config, loading
   const load = (ctx, importer) => (loading ??= (async () => {
     const found = await ctx.resolve('@weft/icons/compile', importer, { skipSelf: true })
@@ -334,7 +336,15 @@ function icons() {
           if (/icons\/src\/gen\/all\.tsx/.test(id)) {
             if (config.command !== 'build') return null
             const p = await load(this, id)
-            return p ? p.trimTiers(code, p.stops) : null
+            if (!p) return null
+            // A module per icon, because a module goes in one chunk: as one file, every icon any page uses is on every page.
+            const svg = JSON.stringify(join(dirname(id.replace(/\?.*$/, '')), '../svg.tsx'))
+            const trimmed = p.trimTiers(code, p.stops)
+            const tiers = trimmed.includes("'../tiers.css'") ? `import ${JSON.stringify(join(dirname(id.replace(/\?.*$/, '')), '../tiers.css'))}\n` : ''
+            return trimmed.replace(/^export const (\w+) = (\/\*#__PURE__\*\/ icon\(.*)$/gm, (_, name, drawing) => {
+              drawings.set(name, `${tiers}import { icon } from ${svg}\nexport const ${name} = ${drawing}\n`)
+              return `export * from ${JSON.stringify(ONE + name)}`
+            }).replace(/^export \{ (.*) \};?$/gm, (_, names) => names.split(', ').map(n => `export { ${n} } from ${JSON.stringify(ONE + n.split(' ')[0])}`).join('\n'))
           }
           if (id.includes('node_modules') || /packages\/(icons|warp)\/src\//.test(id)) return null
           const p = await load(this, id)
@@ -346,8 +356,9 @@ function icons() {
       name: 'weft:icons',
       enforce: 'pre',
       resolveId: {
-        filter: { id: /^@weft\/icons(\/names|\/quiet|\/balanced|\/vivid)?$/ },
+        filter: { id: /^(@weft\/icons(\/names|\/quiet|\/balanced|\/vivid)?$|\0weft:icon\/)/ },
         async handler(source, importer) {
+          if (source.startsWith(ONE)) return source
           if (config.command !== 'build' || !importer) return null
           const p = await load(this, importer)
           if (!p) return null
@@ -356,8 +367,11 @@ function icons() {
         },
       },
       load: {
-        filter: { id: /^\0weft:icons-names/ },
-        async handler() { return (await loading).module() },
+        filter: { id: /^\0weft:icon(s-names|\/)/ },
+        async handler(id) {
+          if (id.startsWith(ONE)) return { code: drawings.get(id.slice(ONE.length)), moduleSideEffects: false }
+          return (await loading).module()
+        },
       },
     },
   }

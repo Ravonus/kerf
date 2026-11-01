@@ -35,8 +35,8 @@ const DATA = new Set(['resource', 'Boundary'])
 const BOXES = new Set(['state', 'derived', 'memo', 'defineState'])
 /** Globals work may touch and still be its island's own: nothing here reaches past the island. */
 const SAFE = new Set(`Array BigInt Boolean Date Error Infinity IntersectionObserver Intl JSON Map Math MutationObserver NaN Number Object Promise
-  RegExp ResizeObserver Set String Symbol WeakMap WeakSet cancelAnimationFrame clearInterval clearTimeout console isFinite isNaN matchMedia parseFloat parseInt
-  performance requestAnimationFrame setInterval setTimeout structuredClone undefined`.split(/\s+/))
+  RegExp ResizeObserver Set String Symbol WeakMap WeakSet cancelAnimationFrame clearInterval clearTimeout console decodeURI decodeURIComponent encodeURI encodeURIComponent isFinite isNaN matchMedia parseFloat parseInt
+  performance queueMicrotask requestAnimationFrame setInterval setTimeout structuredClone undefined`.split(/\s+/))
 const isServer = f => /\/src\/server\//.test(f) || /\.server\.[cm]?[jt]sx?$/.test(f)
 
 /**
@@ -72,7 +72,21 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     for (const i of facts.imports) await follow(mod, i.source)
     for (const e of facts.exports) if (e.source) await follow(mod, e.source)
     for (const s of facts.stars) await follow(mod, s)
+    for (const s of facts.side ?? []) await follow(mod, s)
   }
+
+  // An import for its effects counts only if what it runs has some: warp's `./styles` is nothing but CSS.
+  const effect = (mod, seen = new Set()) => {
+    if (mod.facts.effects) return mod.facts.effects
+    if (seen.has(mod)) return undefined
+    seen.add(mod)
+    for (const s of mod.facts.side ?? []) {
+      const m = mods.get(mod.resolved.get(s))
+      if (!m || effect(m, seen)) return `\`import "${s}"\``
+    }
+  }
+  const found = [...mods.values()].map(m => [m, effect(m)])
+  for (const [m, why] of found) m.facts = { ...m.facts, effects: why }
 
   /** What `name` in `mod` is: a node, `true` (needs the client), or `false` (needs nothing). */
   const exported = (mod, name, seen = new Set()) => {

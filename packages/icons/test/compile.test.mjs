@@ -17,7 +17,8 @@ const app = body => ({ 'src/a.tsx': `import { Button, Icon, Chip } from '@weft/w
 const names = r => [...r.names].sort()
 
 test('a literal', () => expect(names(scan(app(`export const A = () => <Icon name="check" />`)))).toEqual(['check']))
-test('a warp icon prop', () => expect(names(scan(app(`export const A = () => <Button icon="search" />`)))).toEqual(['search']))
+test('a warp icon prop that is only known at runtime', () => expect(names(scan(app(`export const A = ({ on }) => <Button icon={on ? 'search' : 'x'} />`)))).toEqual(['search', 'x']))
+test('a literal warp icon prop needs no name: it compiles to the icon', () => expect(names(scan(app(`export const A = () => <Button icon="search" />`)))).toEqual([]))
 test('a conditional', () => expect(names(scan(app(`export const A = ({ on }) => <Icon name={on ? 'check' : 'x'} />`)))).toEqual(['check', 'x']))
 test('a variable', () => expect(names(scan(app(`const n = 'bell'\nexport const A = () => <Icon name={n} />`)))).toEqual(['bell']))
 test('a map over a static list', () => {
@@ -143,4 +144,11 @@ test('an action is a variant, and it keeps its trigger', () => {
 test('an icon with no action is an error, at the build and in check', () => {
   expect(() => rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="heart" action="on" />`, 'a.tsx', catalog)).toThrow(/I001 no action for icon 'heart'/)
   expect(scan({ 'src/a.tsx': `import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="heart" action />` }).unknown[0].why).toMatch(/no action for icon 'heart'/)
+})
+
+test('a literal icon prop on a warp component is the icon itself, and stays out of the name table', () => {
+  const src = `import { Button } from '@weft/warp'\nexport const A = () => <Button icon="search">Go</Button>\n`
+  const out = rewrite(src, 'a.tsx', list())
+  expect(out).toContain('icon={SearchIcon}')
+  expect(out).toContain("import { SearchIcon } from '@weft/icons'")
 })

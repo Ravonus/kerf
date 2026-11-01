@@ -178,7 +178,7 @@ test('a box at module level or a module that runs can\'t wait: nothing else woul
   const box = await at(`import { state } from 'weft'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`)
   expect(box.load).toMatchObject({ when: 'load', why: expect.stringMatching(/module level/) })
   expect(box.diagnostics[0].code).toBe('H010')
-  expect((await at(`import './setup'\nexport function C() { return <p onClick={() => {}} /> }`, { 'setup.ts': `export {}` })).load.when).toBe('load')
+  expect((await at(`import './setup'\nexport function C() { return <p onClick={() => {}} /> }`, { 'setup.ts': `globalThis.x = 1` })).load.when).toBe('load')
 })
 
 test('server data wants to be running once seen, a mutation passed along doesn\'t', async () => {
@@ -203,4 +203,14 @@ test('`lazy: false`: every island loads with the page, as an opt-out', async () 
   const plan = await solve({ entries: [join(root, 'route.tsx')], transform, lazy: false, rel: f => relative(root, f), resolve: async (spec, from) => spec.startsWith('.') ? `${resolve(dirname(from), spec)}.tsx` : undefined })
   expect(plan.loads[0].when).toBe('load')
   expect([...plan.files.values()][0].sites[0].when).toBe('')
+})
+
+test('an import that only brings CSS keeps an island waiting; one that runs code does not', async () => {
+  const route = `import { Tap } from './tap'\nexport default function R() { return <Tap /> }\n`
+  const tap = `export function Tap() { return <button onClick={() => {}}>x</button> }\n`
+  const when = (plan: any) => plan.loads.find((l: any) => l.tag === 'Tap')?.when
+  const css = await project({ 'route.tsx': route, 'tap.tsx': `import './styles'\n${tap}`, 'styles.ts': `import './a.css'\n`, 'a.css': '' })
+  const code = await project({ 'route.tsx': route, 'tap.tsx': `import './styles'\n${tap}`, 'styles.ts': `globalThis.x = 1\n` })
+  expect(when(css.plan)).toBe('interaction')
+  expect(when(code.plan)).toBe('load')
 })

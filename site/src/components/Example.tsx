@@ -3,18 +3,14 @@ import code from '../generated/demos.json'
 import '@weft/ui-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
-function Run(props: { id: string }) {
-  return <>{demos[props.id].run()}</>
-}
-
 /** A live example: what it is, the running result beside its real source, what to try, and why it matters. */
-export function Example(props: { id: string; plain?: boolean }) {
+export function Example(props: { id: string; plain?: boolean; children?: unknown }) {
   return (
     <section data-site="example">
       {!props.plain && <h3>{demos[props.id].title}</h3>}
       <p>{demos[props.id].look}</p>
       <div data-part="pair">
-        <div data-part="run"><Run id={props.id} /></div>
+        <div data-part="run">{props.children}</div>
         <div data-scope="codeblock" innerHTML={code[props.id]}></div>
       </div>
       <dl>
@@ -23,9 +19,4 @@ export function Example(props: { id: string; plain?: boolean }) {
       </dl>
     </section>
   )
-}
-
-/** The example a docs page opens with, if it has one. */
-export function PageExample(props: { slug: string }) {
-  return <>{Object.keys(demos).filter(id => demos[id].page === props.slug).map(id => <Example key={id} id={id} plain />)}</>
 }
