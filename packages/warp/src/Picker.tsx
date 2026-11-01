@@ -3,7 +3,7 @@ import { onMount, state, untrack, watch, type State } from 'weft'
 import { bindable, type Bindable, type Openable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldProps } from './Field'
-import type { IconName } from './Icon'
+import type { IconRef } from './Icon'
 import { Icon } from './Icon'
 import { use } from './use'
 import './fields'
@@ -71,7 +71,7 @@ export function Panel({ label, open, trigger, presentation, align, kind, childre
 }
 
 /** The trigger at the end of a composite: a calendar or clock icon button (aria-haspopup, aria-expanded). */
-export function Trigger({ el, icon, label, open, disabled, onToggle }: { el?: (el: HTMLButtonElement) => void; icon: IconName; label: string; open: boolean; disabled?: boolean; onToggle: () => void }) {
+export function Trigger({ el, icon, label, open, disabled, onToggle }: { el?: (el: HTMLButtonElement) => void; icon: IconRef; label: string; open: boolean; disabled?: boolean; onToggle: () => void }) {
   return (
     <button ref={(n: any) => el?.(n)} type="button" data-part="trigger" aria-haspopup="dialog" aria-expanded={open ? 'true' : 'false'} aria-label={label} disabled={disabled} onClick={onToggle}>
       <Icon name={icon} />

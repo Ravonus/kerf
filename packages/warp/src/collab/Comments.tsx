@@ -1,8 +1,8 @@
+import { IconCheck } from '@weft/icons'
 import { announce, arrivalTracker, installSweep, isSheet, uid, type Peer } from '@weft/ui-core'
 import { derived, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
-import { Icon } from '../Icon'
 import { PeerAvatar, read, SWEEP, type Live } from './peer'
 import '../styles'
 import '@weft/ui-core/styles/app/tokens.css'
@@ -53,7 +53,7 @@ export function CommentThread({ thread, active, onReply, onResolve }: { thread: 
             <div data-part="reply">
               <label data-part="sr-only" for={id}>Reply to {first.value?.author.name}</label>
               <input id={id} placeholder="Reply…" onKeyDown={reply} />
-              <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => flip(true)}><Icon name="check" /> Resolve</Button>
+              <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => flip(true)}><IconCheck /> Resolve</Button>
             </div>
           </>}
     </article>

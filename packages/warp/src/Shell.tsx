@@ -1,7 +1,7 @@
-import { IconLeft, IconMore, IconPanel, IconRight, IconX, type IconComponent } from '@weft/icons'
+import { IconCheck, type IconComponent, IconDown, IconLeft, IconMore, IconPanel, IconRight, IconSearch, IconX } from '@weft/icons'
 import { dialog, installSweep, menu, shell, uid } from '@weft/ui-core'
 import { derived, onMount, state, type State, untrack } from 'weft'
-import { Icon, type IconName } from './Icon'
+import { Icon, type IconRef } from './Icon'
 import { use } from './use'
 import './styles'
 import '@weft/ui-core/styles/components/avatar.css'
@@ -12,7 +12,7 @@ import '@weft/ui-core/styles/layout/base.css'
 import '@weft/ui-core/styles/layout/shell.css'
 import '@weft/ui-core/styles/layout/breadcrumb.css'
 
-export type NavIcon = IconName | (() => any)
+export type NavIcon = IconRef | (() => any)
 export interface NavItem {
   id: string
   label: string
@@ -68,7 +68,7 @@ export interface ShellProps {
 }
 
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
-const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i() : i ? <Icon name={i} /> : null)
+const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i({}) : i ? <Icon name={i} /> : null)
 const TABS = 4
 
 function Item({ item, current, quiet, onPick }: { item: NavItem; current?: string; quiet?: boolean; onPick: () => void }) {
@@ -204,7 +204,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
             {focus.value && step !== undefined && <span style="white-space:nowrap;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">{step}</span>}
             {!focus.value && command && (
               <button type="button" data-part="command" data-sweep="" data-phase="idle" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" onClick={command.onOpen}>
-                {sweepParts()}<Icon name="search" />
+                {sweepParts()}<IconSearch />
                 <span data-part="command-label">{command.label ?? 'Search'}</span>
                 <span data-part="command-hint">{command.hint ?? 'Jump to, or run…'}</span>
                 <kbd aria-hidden="true">{command.shortcut ?? '⌘K'}</kbd>
@@ -228,7 +228,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
                 <span data-part="sr-only">Workspace: </span>
                 <span data-part="org"><b>{workspace.value?.name}</b><small>{workspace.value?.meta}</small></span>
                 <span data-part="sr-only">. Switch workspace</span>
-                <Icon name="down" />
+                <IconDown />
               </button>
             )}
             <ul data-part="nav-list" aria-labelledby={groups.value[0]?.label !== undefined ? `${navId}-g` : undefined}>
@@ -272,7 +272,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
                   <button key={w.id} type="button" data-part="item" role="menuitemradio" tabindex="-1" aria-checked={w.id === switcher.current ? 'true' : 'false'} style="inline-size:100%;border:0;background:none;font:inherit;text-align:start" onClick={() => { switcher.onSwitch(w.id); shut(); from?.focus() }}>
                     <span data-scope="avatar" data-shape="square" data-size="sm" aria-hidden="true">{w.initials}</span>
                     <span data-part="item-label">{w.name}</span>
-                    <span data-part="indicator"><Icon name="check" /></span>
+                    <span data-part="indicator"><IconCheck /></span>
                   </button>
                 ))}
               </div>

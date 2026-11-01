@@ -1,7 +1,7 @@
+import { IconAlert } from '@weft/icons'
 import { derived, state, untrack, watch } from 'weft'
 import { Text } from 'weft/text'
 import { Button } from './Button'
-import { Icon } from './Icon'
 import { VirtualList, type VirtualControl } from './VirtualList'
 import './styles'
 import '@weft/ui-core/styles/app/thread.css'
@@ -77,7 +77,7 @@ export function Thread(props: ThreadProps) {
         </div>
         {mine(m()) && m().state && (
           <span data-part="status">
-            {m().state === 'failed' && <Icon name="alert" />}
+            {m().state === 'failed' && <IconAlert />}
             {STATUS[m().state!]} {m().state !== 'failed' && m().time}
             {m().state === 'failed' && <Button emphasis="link" tone="critical" onClick={() => props.onRetry?.(m())}>Retry</Button>}
           </span>

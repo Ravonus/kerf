@@ -1,38 +1,76 @@
-// The contact sheet: every icon in all three tiers at 16, 24 and 48, light and dark, plus a 20/32 row and forced colours
-// in the check script. Static HTML from the generated art, so it needs no build.
+// The contact sheet: every icon, with controls for tier, variant, size and theme, and a search. One static HTML file built
+// from the art, so it needs no build and no server. The dithering comparison is scripts/dither-sheet.mjs.
 //   node scripts/sheet.mjs [out.html]
-import { writeFileSync } from 'node:fs'
-import { load, draw } from './build.mjs'
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import ACTIONS from '../art/actions/index.mjs'
+import { acting, fragments, load } from './build.mjs'
 
+const dir = new URL('../art/', import.meta.url)
 const icons = await load()
-const svg = (name, art, tier, size) => `<svg data-icon viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">${draw(name, art, tier).replaceAll(' />', '></path>').replaceAll('data-w=""', 'data-w').replace(/transform="scale\(1\.5\)"/g, 'transform="scale(1.5)"')}</svg>`
-const cell = (name, art) => `<figure><div>${['quiet', 'balanced', 'vivid'].map(t => `<span class="${t}">${[16, 24, 48].map(s => svg(name, art, t, s)).join('')}</span>`).join('')}</div><figcaption>${name}</figcaption></figure>`
-const body = Object.entries(icons).map(([n, a]) => cell(n, a)).join('\n')
+const groups = {}
+for (const f of readdirSync(dir).filter(f => f.endsWith('.mjs')).sort()) groups[f.slice(2, -4)] = Object.keys((await import(new URL(f, dir))).default).sort()
+const data = Object.fromEntries(Object.entries(icons).map(([n, e]) => {
+  const f = fragments(n, e), a = ACTIONS[n] && acting(n, e)
+  return [n, { plain: f.line + f.vivid, hollow: f.line + f.hollow, solid: f.solid, dither: f.line + f.dither, ...(a && { action: a.line + a.pixels }) }]
+}))
+const css = ['icons.css', 'tiers.css'].map(f => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8')).join('\n') + Object.keys(ACTIONS).map(n => readFileSync(new URL(`../src/gen/actions/${n}.css`, import.meta.url), 'utf8')).join('\n')
 const out = process.argv[2] ?? new URL('../contact-sheet.html', import.meta.url).pathname
+const pick = (name, label, values, on) => `<fieldset><legend>${label}</legend>${values.map(v => `<label><input type="radio" name="${name}" value="${v}"${v === on ? ' checked' : ''}>${v}</label>`).join('')}</fieldset>`
 
 writeFileSync(out, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>weft icons</title>
 <style>
-:root { --bg: #f6f5f1; --fg: #1c1c1a; --mute: #6b6a64; --line: #dddbd3; color-scheme: light dark; }
+${css}
+:root { --bg: #f6f5f1; --fg: #1c1c1a; --mute: #6b6a64; --line: #dddbd3; color-scheme: light; --warp-icon-knock: var(--bg); }
+:root[data-theme="dark"] { --bg: #111311; --fg: #e8e7e1; --mute: #9b9a92; --line: #2a2c29; color-scheme: dark; }
+[data-tier="quiet"] { --warp-icon-o: inline; --warp-icon-q: inline; --warp-icon-b: none; --warp-icon-v: none; }
+[data-tier="balanced"] { --warp-icon-o: inline; --warp-icon-q: none; --warp-icon-b: inline; --warp-icon-v: none; }
+[data-tier="vivid"] { --warp-icon-o: none; --warp-icon-q: none; --warp-icon-b: none; --warp-icon-v: inline; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.4 ui-sans-serif, system-ui, sans-serif; }
-main[data-theme="dark"] { --bg: #111311; --fg: #e8e7e1; --mute: #9b9a92; --line: #2a2c29; background: var(--bg); color: var(--fg); }
-main { padding: 16px; background: var(--bg); }
-h1 { font-size: 16px; margin: 0 0 4px; } p { margin: 0 0 12px; color: var(--mute); }
-section { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 0; border-block-start: 1px solid var(--line); border-inline-start: 1px solid var(--line); }
-figure { margin: 0; padding: 8px; border-block-end: 1px solid var(--line); border-inline-end: 1px solid var(--line); }
-figure div { display: grid; gap: 6px; }
-figure span { display: flex; align-items: center; gap: 12px; block-size: 48px; }
-figcaption { font: 11px/1.2 ui-monospace, monospace; color: var(--mute); margin-block-start: 6px; }
-svg[data-icon] { flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.balanced [data-w] { stroke-width: 2; }
-</style></head><body>
-<main data-theme="light"><h1>weft icons · light</h1><p>${Object.keys(icons).length} icons. Rows: quiet, balanced, vivid. Columns: 16, 24, 48 px.</p><section>
-${body}
-</section></main>
-<main data-theme="dark"><h1>weft icons · dark</h1><p>Same set on dark.</p><section>
-${body}
-</section></main>
+header { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 12px 16px; background: var(--bg); border-block-end: 1px solid var(--line); }
+h1 { font-size: 15px; margin: 0; } h2 { font-size: 12px; margin: 20px 0 6px; color: var(--mute); font-weight: 500; text-transform: capitalize; }
+fieldset { display: flex; gap: 8px; border: 0; margin: 0; padding: 0; } legend { float: inline-start; color: var(--mute); margin-inline-end: 4px; }
+label { display: inline-flex; gap: 3px; align-items: center; }
+input[type="search"] { font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; inline-size: min(220px, 100%); }
+main { padding: 0 16px 32px; }
+section { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); border-block-start: 1px solid var(--line); border-inline-start: 1px solid var(--line); }
+figure { margin: 0; padding: 10px 8px 6px; min-inline-size: 0; border-block-end: 1px solid var(--line); border-inline-end: 1px solid var(--line); display: grid; gap: 6px; justify-items: center; }
+figure span { display: flex; align-items: center; gap: 10px; min-block-size: 48px; }
+figcaption { font: 10px/1.2 ui-monospace, monospace; color: var(--mute); max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tiny { inline-size: 16px; block-size: 16px; }
+</style></head><body data-tier="balanced">
+<header>
+  <h1>weft icons</h1><span id="count"></span>
+  <input type="search" id="q" placeholder="Search" aria-label="Search icons">
+  ${pick('tier', 'Tier', ['quiet', 'balanced', 'vivid'], 'balanced')}
+  ${pick('variant', 'Variant', ['plain', 'hollow', 'solid', 'dither', 'action'], 'plain')}
+  ${pick('size', 'Size', ['16', '20', '24', '32', '48'], '32')}
+  ${pick('theme', 'Theme', ['light', 'dark'], 'light')}
+</header>
+<main id="main"></main>
+<script type="application/json" id="data">${JSON.stringify({ groups, data })}</script>
+<script>
+const { groups, data } = JSON.parse(document.getElementById('data').textContent)
+const main = document.getElementById('main'), value = n => document.querySelector('input[name="' + n + '"]:checked').value
+const svg = (html, size, cls) => '<svg data-icon viewBox="0 0 24 24" aria-hidden="true"' + (cls ? ' class="' + cls + '"' : ' style="width:' + size + 'px;height:' + size + 'px"') + ' data-act="hover focus press">' + html + '</svg>'
+function draw() {
+  const q = document.getElementById('q').value.trim().toLowerCase(), v = value('variant'), size = value('size')
+  document.body.dataset.tier = value('tier')
+  document.documentElement.dataset.theme = value('theme')
+  let html = '', shown = 0
+  for (const [group, names] of Object.entries(groups)) {
+    const hit = names.filter(n => n.includes(q) && data[n][v])
+    if (!hit.length) continue
+    shown += hit.length
+    html += '<h2>' + group.replaceAll('-', ', ') + '</h2><section>' + hit.map(n => '<figure tabindex="0"><span>' + svg(data[n][v], size) + (size === '16' ? '' : svg(data[n][v], 16, 'tiny')) + '</span><figcaption>' + n + '</figcaption></figure>').join('') + '</section>'
+  }
+  main.innerHTML = html || '<p>No icon matches.</p>'
+  document.getElementById('count').textContent = shown + ' icons'
+}
+document.querySelector('header').addEventListener('input', draw)
+draw()
+</script>
 </body></html>
 `)
 console.log(out)

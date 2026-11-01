@@ -1,6 +1,6 @@
 import { installSweep } from '@weft/ui-core'
 import { derived, onMount, untrack } from 'weft'
-import { Icon, type IconName } from './Icon'
+import { Icon, type IconRef } from './Icon'
 import './styles'
 import '@weft/ui-core/styles/components/button.css'
 import '@weft/ui-core/styles/components/spinner.css'
@@ -17,7 +17,7 @@ export interface ButtonProps {
   fill?: boolean
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
-  icon?: IconName
+  icon?: IconRef
   label?: string
   /** Busy: the label stays the accessible name (hidden by opacity), presses are swallowed, focus stays. */
   loading?: boolean

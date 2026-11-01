@@ -5,22 +5,22 @@
         "domMutations": 2,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 58.67
+        "wallMs": 61.29
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.4
+        "wallMs": 0.51
       },
       "type-3-chars": {
         "domMutations": 158,
         "commits": 33,
         "renderMs": 0,
-        "wallMs": 25.34
+        "wallMs": 30.45
       }
     },
-    "bundleGzBytes": 16160,
+    "bundleGzBytes": 13995,
     "srcFiles": 9,
     "srcLines": 216,
     "effects": 1,
@@ -32,19 +32,19 @@
         "domMutations": 1,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 50.62
+        "wallMs": 53.7
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.93
+        "wallMs": 0.48
       },
       "type-3-chars": {
         "domMutations": 152,
         "commits": 21,
         "renderMs": 0,
-        "wallMs": 15.61
+        "wallMs": 18.25
       }
     },
     "bundleGzBytes": 5444,

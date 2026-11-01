@@ -1,3 +1,4 @@
+import { IconX } from '@weft/icons'
 import { announce, uid } from '@weft/ui-core'
 import { derived, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
@@ -57,7 +58,7 @@ export function Checklist({ title = 'Get set up', subtitle, items, onToggle, don
         </div>
         <div data-scope="row">
         {collapsible && <Button emphasis="ghost" tone="neutral" size="sm" aria-expanded={closed.value ? 'false' : 'true'} aria-controls={`${id}-l`} onClick={() => (closed.value = !closed.value)}>{closed.value ? 'Show' : 'Collapse'}</Button>}
-        {onHide && <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label="Hide checklist" onClick={hide} />}
+        {onHide && <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label="Hide checklist" onClick={hide} />}
         </div>
       </div>
       <div data-part="progress"><Rail value={total.value ? (count.value / total.value) * 100 : 0} role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax={total.value} aria-valuenow={count.value} /></div>

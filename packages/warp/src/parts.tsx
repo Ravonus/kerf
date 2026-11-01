@@ -1,3 +1,4 @@
+import { IconCheck } from '@weft/icons'
 // Small 05 and 02 atoms the app patterns and flows share, each the specimen markup. Internal: not exported from the
 // index, so a pack that needs one pays only for its own CSS.
 import { derived } from 'weft'
@@ -66,7 +67,7 @@ export function Steps({ label, steps, current }: { label: string; steps: Step[];
       <ol aria-label={label}>
         {steps.map((s, i) => (
           <li key={s.id} data-part="item" data-state={s.error ? 'error' : i < current ? 'complete' : i === current ? 'current' : undefined} aria-current={i === current ? 'step' : undefined}>
-            <span data-part="indicator"><Icon name="check" /></span>
+            <span data-part="indicator"><IconCheck /></span>
             <span data-part="title">{s.title}</span>
             {s.description !== undefined && <span data-part="description">{s.description}</span>}
           </li>

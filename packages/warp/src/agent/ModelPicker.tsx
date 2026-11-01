@@ -1,7 +1,7 @@
+import { IconDown } from '@weft/icons'
 import { announce, nextIndex, popover, uid } from '@weft/ui-core'
 import { derived, state } from 'weft'
 import { Badge } from '../Badge'
-import { Icon } from '../Icon'
 import { use } from '../use'
 import { held } from './bits'
 import '../styles'
@@ -41,7 +41,7 @@ export function ModelPicker({ models, value, onChange, compact }: { models: Mode
   return (
     <span data-scope="prompt" style="display:contents">
       <button ref={(n: any) => (chip = n)} type="button" data-part="model" aria-haspopup="listbox" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => (open.value = !open.value)}>
-        <i></i><span data-part="sr-only">Model: </span><span>{compact ? (current.value?.short ?? current.value?.name) : current.value?.name}</span><Icon name="down" />
+        <i></i><span data-part="sr-only">Model: </span><span>{compact ? (current.value?.short ?? current.value?.name) : current.value?.name}</span><IconDown />
       </button>
       <div ref={(n: any) => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" style="padding:4px;min-inline-size:280px">
         <div data-scope="model-menu" role="listbox" aria-label="Model" onKeyDown={onKey}>

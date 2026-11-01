@@ -18,7 +18,7 @@ export function Alert({ tone = 'info', title, live, actions, onDismiss, children
       {title !== undefined && <div data-part="title">{title}</div>}
       {children !== undefined && <div data-part="description">{children}</div>}
       {actions !== undefined && <div data-part="actions">{actions}</div>}
-      {/* <Button emphasis="ghost" tone="neutral" size="sm" icon="x" label="Dismiss"> as its markup: a ghost button needs no JS */}
+      {/* <Button emphasis="ghost" tone="neutral" size="sm" icon={IconX} label="Dismiss"> as its markup: a ghost button needs no JS */}
       {onDismiss && <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-icon-only="" aria-label="Dismiss" data-part="close" data-dismiss="" onClick={onDismiss}><IconX /></button>}
     </div>
   )

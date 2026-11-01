@@ -1,3 +1,4 @@
+import { IconCalendar } from '@weft/icons'
 import { addDays, daysIn, fmt, fmtRange, isoOf, isUnavailable, pickRange, readDate, toIso, daysBetween, defaultPresets, listKey, weekStart, type ChangeReason, type DateRange, type IsoDate, type RangePreset, type SegmentPart } from '@weft/ui-core'
 import { derived, state, untrack } from 'weft'
 import { Button } from './Button'
@@ -55,7 +56,7 @@ export function DateField({ value, defaultValue, onValueChange, open, defaultOpe
       control={() => (
         <>
           <Segments kind="date" locale={env.locale.value} value={v.value} today={env.today.value} clears={clears.value} disabled={disabled} readonly={readonly} onEdit={onEdit} onBlurPartial={() => (own.value = 'Enter a complete date, or pick one from the calendar.')} />
-          <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon="calendar" label={t.value.choose + (v.value ? `, ${fmt(v.value, { dateStyle: 'full' }, env.locale.value)}` : '')} open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} />
+          <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon={IconCalendar} label={t.value.choose + (v.value ? `, ${fmt(v.value, { dateStyle: 'full' }, env.locale.value)}` : '')} open={pop.value} disabled={disabled} onToggle={() => pop.set(!pop.value)} />
           <Hidden name={name} value={() => v.value ?? ''} />
         </>
       )}
@@ -178,7 +179,7 @@ export function DateRangeField({ value, defaultValue, onValueChange, open, defau
           <Segments kind="date" label="Start" locale={env.locale.value} value={v.value.start} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={editStart} />
           <span data-part="range-sep" aria-hidden="true">–</span>
           <Segments kind="date" label="End" locale={env.locale.value} value={v.value.end} today={env.today.value} disabled={disabled} readonly={readonly} onEdit={editEnd} />
-          <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon="calendar" label={t.value.chooseRange + (v.value.start && v.value.end ? `, ${summary.value}` : '')} open={pop.value} disabled={disabled} onToggle={toggle} />
+          <Trigger el={(n: HTMLButtonElement) => (trigger = n)} icon={IconCalendar} label={t.value.chooseRange + (v.value.start && v.value.end ? `, ${summary.value}` : '')} open={pop.value} disabled={disabled} onToggle={toggle} />
           <Hidden name={name} value={() => (v.value.start && v.value.end ? `${v.value.start}/${v.value.end}` : '')} />
         </>
       )}

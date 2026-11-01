@@ -1,6 +1,6 @@
+import { IconMore } from '@weft/icons'
 import { derived, onMount, state, untrack } from 'weft'
 import { announce, installSweep } from '@weft/ui-core'
-import { Icon } from './Icon'
 import { VirtualList, type VirtualControl } from './VirtualList'
 import './styles'
 import '@weft/ui-core/styles/data/kanban.css'
@@ -75,7 +75,7 @@ export function Kanban<T extends KanbanCard>(props: KanbanProps<T>) {
         onDragEnd={() => { dragging.value = null; over.value = null }}
       >
         <h4 data-measure="">{p.card().title}</h4>
-        <button type="button" data-part="move" aria-label={`Move ${p.card().title}`} aria-haspopup="menu" aria-expanded={open() ? 'true' : 'false'} onClick={() => (menu.value = open() ? null : id)}><Icon name="more" /></button>
+        <button type="button" data-part="move" aria-label={`Move ${p.card().title}`} aria-haspopup="menu" aria-expanded={open() ? 'true' : 'false'} onClick={() => (menu.value = open() ? null : id)}><IconMore /></button>
         <div data-part="menu" role="menu" hidden={!open()}>
           {open() && columns.value.map((c, i) => <button key={c.id} type="button" role="menuitem" aria-disabled={at()?.c === i ? 'true' : undefined} onClick={() => { if (at()?.c !== i) move(p.card(), i, 0) }}>{c.title}</button>)}
           {open() && <button type="button" role="menuitem" onClick={() => move(p.card(), at()!.c, at()!.i - 1)}>Move up</button>}

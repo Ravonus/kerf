@@ -1,8 +1,8 @@
+import { IconAlert, IconCheck, IconClock } from '@weft/icons'
 import { announce, firstName, type Peer } from '@weft/ui-core'
 import { derived } from 'weft'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import '../styles'
 import '@weft/ui-core/styles/app/tokens.css'
 import '@weft/ui-core/styles/app/sync.css'
@@ -14,7 +14,7 @@ const SYNC = { saved: 'Saved', saving: 'Saving…', offline: 'Offline · changes
 /** Next to the title (07 §6.1): "Saved", "Saving…", "Offline · changes kept"; map `channel.status` onto it. */
 export function SyncIndicator({ state }: { state: SyncState }) {
   const icon = derived(() => (state === 'saved' ? 'check' : state === 'saving' ? 'clock' : 'alert') as 'check' | 'clock' | 'alert')
-  return <span data-scope="sync" data-state={state} role="status">{icon.value === 'check' ? <Icon name="check" /> : icon.value === 'clock' ? <Icon name="clock" /> : <Icon name="alert" />} {SYNC[state]}</span>
+  return <span data-scope="sync" data-state={state} role="status">{icon.value === 'check' ? <IconCheck /> : icon.value === 'clock' ? <IconClock /> : <IconAlert />} {SYNC[state]}</span>
 }
 
 /**

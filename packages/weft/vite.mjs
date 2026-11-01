@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, globSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { basename, dirname, join, relative, resolve as resolvePath } from 'node:path'
 import { emitGroups, GroupError, resolve as resolveIntent } from './node/css.mjs'
 import { purge, words } from './node/purge.mjs'
@@ -297,6 +298,71 @@ function styleGroups({ taggedParts = false, matrix = !process.env.VITEST } = {})
  * `style.taggedParts`: group parts carry `data-g` as well as `data-part`; `style.matrix: false`: no `.weft/styles.json`
  * (style groups, below).
  */
+/**
+ * @weft/icons' build pass, when the build has the package: only the icons, names and tiers the app uses ship
+ * (packages/icons/compile.mjs). Two hooks, because a rewrite has to see the source before weft compiles it and a resolve
+ * has to run after weft's own, so a server build's importers keep their mode.
+ */
+function icons() {
+  const NAMES = '\0weft:icons-names'
+  let config, loading
+  const load = (ctx, importer) => (loading ??= (async () => {
+    const found = await ctx.resolve('@weft/icons/compile', importer, { skipSelf: true })
+    // an app may reach icons only through warp: the next file, nearer the package, can still find it
+    if (!found) { loading = undefined; return null }
+    const { pass, rewrite, unknownMessage, trimTiers } = await import(pathToFileURL(found.id.replace(/\?.*$/, '')).href)
+    const alias = join(config.root, '.weft', 'tokens', 'icons.alias.json') // icons({ tier }) wrote this: a stop, or the package itself for every tier
+    const options = existsSync(alias) ? JSON.parse(readFileSync(alias, 'utf8')) : {}
+    const named = options['@weft/icons']
+    const out = pass({ root: config.root, command: config.command, tier: named && (named.split('/')[2] ?? 'all'), source: options['@weft/icons/source'] })
+    return { ...out, rewrite, unknownMessage, trimTiers }
+  })())
+  const fail = (ctx, p) => {
+    const first = p.result?.unknown[0]
+    if (first) ctx.error({ message: `${p.unknownMessage(first.name, p.catalog)} (${first.file}:${first.line}:${first.column})`, id: first.abs, loc: { line: first.line, column: first.column } })
+  }
+  return {
+    rewrite: {
+      name: 'weft:icons-rewrite',
+      enforce: 'pre',
+      configResolved(c) { config = c },
+      transform: {
+        filter: { id: /\.[jt]sx?(\?|$)/, code: /@weft\/(icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack/ },
+        async handler(code, id) {
+          // a build reads the pack as a namespace (rewrite), and this default would keep every icon alive
+          if (/icons\/src\/gen\/index\.tsx/.test(id)) return config.command === 'build' ? "export * from './all'\n" : null
+          if (/icons\/src\/gen\/all\.tsx/.test(id)) {
+            if (config.command !== 'build') return null
+            const p = await load(this, id)
+            return p ? p.trimTiers(code, p.stops) : null
+          }
+          if (id.includes('node_modules') || /packages\/(icons|warp)\/src\//.test(id)) return null
+          const p = await load(this, id)
+          return p ? p.rewrite(code, id.replace(/\?.*$/, ''), p.catalog) : null
+        },
+      },
+    },
+    resolve: {
+      name: 'weft:icons',
+      enforce: 'pre',
+      resolveId: {
+        filter: { id: /^@weft\/icons(\/names|\/quiet|\/balanced|\/vivid)?$/ },
+        async handler(source, importer) {
+          if (config.command !== 'build' || !importer) return null
+          const p = await load(this, importer)
+          if (!p) return null
+          fail(this, p)
+          return source === '@weft/icons/names' ? NAMES : null
+        },
+      },
+      load: {
+        filter: { id: /^\0weft:icons-names/ },
+        async handler() { return (await loading).module() },
+      },
+    },
+  }
+}
+
 /*
  * `hmr` (default: when serving, outside vitest): client modules register their components with weft/hmr and accept
  * their own updates (research 21). Never for SSR or hydratable output.
@@ -346,7 +412,8 @@ export default function weft({ dev, hydratable = false, hmr, style: styleOptions
     /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
     api: {},
   }
-  return [main, features, style.plugin, agent(), slots(), tokens(), assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
+  const icon = icons()
+  return [icon.rewrite, main, features, style.plugin, agent(), slots(), tokens(), icon.resolve, assets(), ...(purgeOptions === false ? [] : [purgeCss(purgeOptions?.keep)])]
 }
 
 /**

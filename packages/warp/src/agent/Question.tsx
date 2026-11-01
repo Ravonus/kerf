@@ -1,8 +1,8 @@
+import { IconCheck } from '@weft/icons'
 import { announce, uid, type AgentQuestion } from '@weft/ui-core'
 import { derived, onMount, state, untrack } from 'weft'
 import { Button } from '../Button'
 import { Input } from '../Field'
-import { Icon } from '../Icon'
 import '../styles'
 import '@weft/ui-core/styles/app/question.css'
 
@@ -30,7 +30,7 @@ export function Question({ question, onAnswer, quiet }: { question: AgentQuestio
   // one build per phase: a list around this reads its nodes again as siblings arrive, and picks must survive that
   const done = derived(() => answered.value !== undefined)
   const view = derived(() => (done.value ? (
-    <p><Icon name="check" /> You chose: {said.value}</p>
+    <p><IconCheck /> You chose: {said.value}</p>
   ) : untrack(() => (
         <form ref={(n: any) => (form = n)} data-scope="question" onSubmit={submit}>
           <fieldset disabled={question.closed}>

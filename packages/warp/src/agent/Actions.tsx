@@ -1,9 +1,8 @@
-import { IconBranch, IconCopy, IconRefresh, IconThumbsDown, IconThumbsUp } from '@weft/icons'
+import { IconBranch, IconCopy, IconLeft, IconRefresh, IconRight, IconThumbsDown, IconThumbsUp } from '@weft/icons'
 import { announce, popover } from '@weft/ui-core'
 import { derived, state } from 'weft'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
-import { Icon } from '../Icon'
 import { use } from '../use'
 import { IconButton } from './bits'
 import '../styles'
@@ -19,9 +18,9 @@ export function BranchSwitcher({ index, count, onChange }: { index: number; coun
     <>
       {count > 1 && (
         <span data-scope="branch" role="group" aria-label="Versions">
-          <button type="button" aria-label="Previous version" disabled={index <= 0} onClick={e => go(e, index - 1)}><Icon name="left" /></button>
+          <button type="button" aria-label="Previous version" disabled={index <= 0} onClick={e => go(e, index - 1)}><IconLeft /></button>
           <span data-numeric="">{index + 1}/{count}</span>
-          <button type="button" aria-label="Next version" disabled={index >= count - 1} onClick={e => go(e, index + 1)}><Icon name="right" /></button>
+          <button type="button" aria-label="Next version" disabled={index >= count - 1} onClick={e => go(e, index + 1)}><IconRight /></button>
         </span>
       )}
     </>
