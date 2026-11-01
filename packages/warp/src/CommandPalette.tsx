@@ -294,14 +294,13 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   watch(() => [active.value, rows.value, flag.value] as const, ([, , on]) => queueMicrotask(() => {
     const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')
     if (!face) return
-    face.toggleAttribute('data-on', !!(on && row))
     if (!on) { face.setAttribute('data-instant', ''); face.style.removeProperty('--warp-a'); return }
     if (row) moveShuttle(face, row.offsetTop, row.offsetTop + row.offsetHeight)
     requestAnimationFrame(() => face?.removeAttribute('data-instant'))
   }))
   return (
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
-      <div data-part="input-row" data-sweep="" data-hold={flag.value ? '' : undefined}>
+      <div data-part="input-row" data-sweep="">
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
         <label for={`${id}-in`} data-part="sr-only">{label}</label>
