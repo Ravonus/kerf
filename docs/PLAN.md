@@ -1201,7 +1201,12 @@ Also out of v0:
   this alone**: a page with no islands is 8.2 KB (the router and runtime), and Lemonstand's home adds 18 KB of
   interactive app code it runs at load. Reaching it needs islands hydrated on interaction or visibility, which puts
   about 4.7 KB up front by the spike's estimate, plus event replay for what happens before they arrive. Built: next entry.
-- **Lazy islands are inferred too, with replay (2026-10-31).** LAZY_NUMBERS
+- **Lazy islands are inferred too, with replay (2026-10-31).** On the Lemonstand home (slow 4G, 4× CPU, 5 runs, bytes over the wire), JS that
+  runs before anything happens goes from 27.7 KB to 2.3 KB (entry 1.8, capture script 0.5), and JS fetched up front from
+  27.7 KB to 20.7 KB: the hero's island is in the first view, so its chunks stay preloaded, which the spike's 4.7 KB didn't
+  count. Everything together costs more, 30.4 KB, for the split. TBT doesn't move (85 → 93 ms, within noise; script is
+  8 → 5 ms of the main thread, the rest is parse and layout). A click before the code arrived was lost 5 times in 5, and now
+  lands in 342 ms.
   The rule runs opposite to partial hydration's: there a binding is static until seen doing something; here an island
   loads with the page until seen doing nothing without an event. `solve` walks what each island reaches: handlers alone
   wait for `interaction`; work that starts by itself but touches only `SAFE` globals, or server data, waits until
@@ -1222,7 +1227,8 @@ Also out of v0:
   shift. **Preload** is the one thing guessed, from the HTML: blocks and text before the island, against 900 px. A wrong
   guess costs one fetch. Above that line stays `modulepreload` (fetched, not run), below it isn't. `Save-Data` or
   `prefers-reduced-data`: no lazy preloads, and nothing loads until interaction, so a `visible` island may never run.
-  Trade-offs: a first click costs a client start (LAZY_CLICK); global order can hold a fast island behind a slow
+  Under a CSP that blocks inline scripts nothing can wake an island, so with no script they stop waiting: today's load.
+  Trade-offs: a first click costs a client start (59 ms against 2 on the same setup, with its code preloaded); global order can hold a fast island behind a slow
   one; a custom entry's `await start()` now resolves late (`start(routes, { eager: true })` restores it).
 - **Getter props over Ripple-style plain props.** Research 01 recommended Ripple 0.4's plain props with `Live<T>`
   types. We chose compiler-made live props because agents will write `count={count.value}`, and only live props make

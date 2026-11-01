@@ -218,7 +218,9 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
       later.delete(key)
       if (top) drop(c, close!)
     })
-    if (!held()?.d) watch(r, c)
+    // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.
+    if (!held()) setTimeout(() => run(r))
+    else if (!held()!.d) watch(r, c)
     // Not part of this pass: `hydrate` would call them unclaimed.
     if (DEV) for (const n of siblings(open, close)) if (n.nodeType === 1) for (const el of [n as Element, ...(n as Element).querySelectorAll('[wk]')]) hydration.registry.delete(el.getAttribute('wk')!)
   }

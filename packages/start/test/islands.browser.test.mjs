@@ -436,6 +436,21 @@ test('what can\'t wait runs with the page, beside what can', async () => {
   await page.close()
 })
 
+test('a CSP that blocks the capture script: islands stop waiting, so nothing is left dead', async () => {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.route('**/lazy', async r => {
+    const res = await r.fetch()
+    await r.fulfill({ response: res, headers: { ...res.headers(), 'content-security-policy': "script-src 'self' 'unsafe-eval'" } })
+  })
+  await page.goto(url + '/lazy')
+  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => { const t = document.querySelector('.tap'); return !t.hasAttribute('wk') || t.$k })
+  await page.click('.tap[data-id=one]')
+  expect(await page.textContent('.tap[data-id=one]')).toBe('one: 1')
+  await context.close()
+})
+
 test('the capture script comes before anything else that runs, and says when a page can\'t wait', async () => {
   const lazy = await (await fetch(url + '/lazy')).text()
   expect(lazy.indexOf('__wq')).toBeGreaterThan(0)
