@@ -5,22 +5,22 @@
         "domMutations": 2,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 40.49
+        "wallMs": 44.18
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.45
+        "wallMs": 0.39
       },
       "type-3-chars": {
         "domMutations": 158,
         "commits": 33,
         "renderMs": 0,
-        "wallMs": 25.67
+        "wallMs": 23.18
       }
     },
-    "bundleGzBytes": 12296,
+    "bundleGzBytes": 14270,
     "srcFiles": 9,
     "srcLines": 216,
     "effects": 1,
@@ -32,22 +32,22 @@
         "domMutations": 1,
         "commits": 5,
         "renderMs": 0,
-        "wallMs": 36.98
+        "wallMs": 38
       },
       "price-push": {
         "domMutations": 1,
         "commits": 9,
         "renderMs": 0,
-        "wallMs": 0.58
+        "wallMs": 0.48
       },
       "type-3-chars": {
         "domMutations": 152,
         "commits": 21,
         "renderMs": 0,
-        "wallMs": 17.68
+        "wallMs": 14.46
       }
     },
-    "bundleGzBytes": 5348,
+    "bundleGzBytes": 5444,
     "srcFiles": 8,
     "srcLines": 190,
     "effects": 1,

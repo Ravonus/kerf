@@ -1295,3 +1295,8 @@ Also out of v0:
   which Phase 4 doesn't redesign, and the bar isn't moved after the result. Role drift is a real miss, so `Heading` roles
   and a link style come next ([36](research/36-ds.md)). Those landed: `Heading` picks its role from `level`, warp has `Link`
   and a base `a` colour, and D006 and D007 catch what's left.
+- **warp's CSS is spent on what the app's components can do** (2026-10-31). The dashboard's sheet went from 20.1 to 19.0 KB br:
+  purging now drops dead alternatives inside `:where()` and `:is()`, and closed values and dial tiers no build file names.
+  The rest is spread evenly (tokens 3.3, layout 3.2, data 2.6, inputs 2.3, components 2.2, signature 1.6, base 1.1 KB),
+  and Table, Shell and Field are about 2.4 KB each. Those rules sit behind props the JS can set, so going further
+  needs per-feature CSS and JS in those components, and a tier set from outside the build needs `purge: { keep }`.
