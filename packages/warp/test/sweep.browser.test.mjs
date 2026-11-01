@@ -4,6 +4,8 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
+import { pixelContrast } from '../scripts/a11y.mjs'
+
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 const css = readFileSync(new URL('../../ui-core/styles/warp.css', import.meta.url), 'utf8')
 
@@ -181,4 +183,16 @@ test('forced colours drop the copy, so the label stays whole', async () => {
   await finished(page, part('frame', 'sweep-label'))
   expect(await clip(page, part('frame', 'sweep-label'))).toBe('none')
   await close()
+})
+
+test('the contrast measurer skips text clipped out of sight, and only that', async () => {
+  const page = await browser.newPage()
+  await page.setContent(`<!doctype html><body style="background:#fff;margin:40px">
+    <p data-a11y-px="0" style="color:#eee;clip-path:inset(0 100% 0 0)">Clipped away</p>
+    <p data-a11y-px="1" style="color:#fff;clip-path:inset(0)">The colour of the page</p>
+    <p data-a11y-px="2" style="color:#eee">Faint, with no clip</p>`)
+  expect(await pixelContrast(page, 0)).toBeNull()
+  expect((await pixelContrast(page, 1)).ok).toBe(false)
+  expect((await pixelContrast(page, 2)).ok).toBe(false)
+  await page.close()
 })
