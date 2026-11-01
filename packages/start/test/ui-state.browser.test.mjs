@@ -101,9 +101,10 @@ test('across clients: a real socket; a late joiner gets the snapshot; a refused 
   expect(await person(a, 'left', 'Ana').locator('output').textContent()).toBe('hovering here')
   await sleep(1100)                                    // the sweep has drawn
   const button = person(b, 'left', 'Ana').locator('button'), control = box(b, 'left', 'Ana').locator('[data-part="control"]')
-  console.log('phases', await button.getAttribute('data-phase'), await control.getAttribute('data-phase'), await person(b, 'left', 'Ben').locator('button').getAttribute('data-phase'))
-  expect(await button.getAttribute('data-phase')).toBe('in')
-  expect(await control.getAttribute('data-phase')).toBe('in')
+  const active = l => l.evaluate(el => getComputedStyle(el).getPropertyValue('--_a').trim())
+  expect(await active(button)).toBe('1')                // warp's own switch: the sweep is drawn with no pointer here
+  expect(await active(control)).toBe('1')
+  expect(await active(person(b, 'left', 'Ben').locator('button'))).toBe('0')
   await shot(b, '3-across-clients')
   const three = await browser.newContext()
   const c = await open(three)
