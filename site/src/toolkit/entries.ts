@@ -61,7 +61,7 @@ export const SECTIONS: Section[] = [
       e('table', 'Table', 'Rows of data you can sort and read. On phones it turns into cards.', 'table', true),
       e('ticker', 'Ticker', 'A number that rolls to its new value, so a change is easy to notice.'),
       e('card', 'Card', 'Groups one topic into a box.'),
-      e('badge', 'Badge, Tag and Kbd', 'Small labels: a status, a topic, a keyboard key.'),
+      e('badge', 'Badge, Tag and Kbd', 'Small labels: a status, a topic, a keyboard key.', 'badge', true),
     ],
   },
 ]
