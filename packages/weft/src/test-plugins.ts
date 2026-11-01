@@ -2,6 +2,7 @@
 // `textMeasureSuite` runs in a page, against real layout: a test double can't show a line count is right. A runner loads
 // it in each pinned browser (packages/plugin-text/test/conformance.mjs).
 
+import type { PayRail } from './pay'
 import type { MeasureProvider } from './surface'
 
 export interface Check { name: string; ok: boolean; detail: string }
@@ -320,5 +321,39 @@ export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Che
   check('update: returns the row, and leaves the rest', moved?.title === 'Newer' && moved.rank === 9, JSON.stringify(moved))
   check('update: nothing is null', (await s.update('nope', { title: 'x' })) === null)
   check('remove: true, then gone, then false', (await s.remove('n1')) === true && (await s.get('n1')) === null && (await s.remove('n1')) === false)
+  return out
+}
+
+// ---- pay.rail@1 (research 10 §3): plain Node, no rail's network: `checkout` gets whatever `fetch` the provider was given ----
+
+export interface PayRailSuiteOptions {
+  rail: PayRail
+  /** A delivery the rail would accept, `age` ms old, for a purchase event. Omit `age` for one just sent. */
+  delivery(age?: number): { body: string; headers: Headers }
+  /** How old a delivery may be before a rail refuses it as a replay. Without it the replay check isn't run. */
+  tolerance?: number
+}
+
+/** One Check per requirement of `pay.rail@1`. Any `ok: false` is P119. */
+export async function payRailSuite({ rail, delivery, tolerance }: PayRailSuiteOptions): Promise<Check[]> {
+  const out: Check[] = []
+  const check = (name: string, ok: boolean, detail = '') => void out.push({ name, ok, detail })
+  const refused = async (d: { body: string; headers: Headers }) => {
+    try { await rail.verify(d); return false } catch (e: any) { return e?.code === 'PAY011' }
+  }
+  const good = delivery()
+  const events = await rail.verify(good)
+  const e = events[0]
+  check('a genuine delivery verifies', events.length > 0, `${events.length} events`)
+  check('an event has an id, a time in ms and a purchase', !!e && typeof e.id === 'string' && e.id !== '' && e.at > 1e11 && typeof e.purchase === 'string', JSON.stringify(e))
+  check('the same delivery gives the same id, so a repeat is a no-op', (await rail.verify(good))[0]?.id === e?.id)
+  check('a changed byte is refused', await refused({ body: `${good.body} `, headers: good.headers }))
+  check('no signature is refused', await refused({ body: good.body, headers: new Headers() }))
+  if (tolerance) check('an old delivery is refused as a replay', await refused(delivery(tolerance + 60_000)))
+  const line = { product: 'pro', name: 'Pro', amount: 999, currency: 'usd', mode: 'subscription', plan: 'month', interval: 'month', quantity: 1 } as const
+  const { url } = await rail.checkout({ user: 'u1', line, successUrl: 'https://app.test/ok', cancelUrl: 'https://app.test/no', idempotencyKey: 'k1' })
+  check('`checkout` answers an absolute URL', /^https?:\/\//.test(url), url)
+  const portal = await rail.portal({ customer: 'c1', returnUrl: 'https://app.test/account' })
+  check('`portal` answers an absolute URL', /^https?:\/\//.test(portal.url), portal.url)
   return out
 }

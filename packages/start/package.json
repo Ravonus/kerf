@@ -61,6 +61,7 @@
     "./auth": "./src/auth.ts",
     "./auth/better-auth": "./src/auth/better-auth.ts",
     "./auth/drizzle": "./src/auth/drizzle.ts",
+    "./pay/drizzle": "./src/pay/drizzle.ts",
     "./client": "./src/client.tsx",
     "./server": "./src/server.tsx",
     "./vite": "./src/vite.mjs",

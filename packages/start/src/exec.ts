@@ -10,7 +10,7 @@
 
 import { shapeTree } from './shape.mjs'
 import type { MediaAsset } from 'weft/media'
-import { enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
+import { FnError, enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 import { unavailable } from './db/core'
 
 export interface ScopeEntry {
@@ -63,6 +63,8 @@ export interface ScopeOptions {
   onDiagnostic?: (d: { code: string; severity: string; message: string }) => void
   dev?: boolean
   media?: () => Promise<MediaServer> | undefined
+  /** `src/pay.server.ts`'s default export: what `ctx.entitlements` reads (research 10 §3). */
+  pay?: { forContext(ctx: any): Context['entitlements'] }
 }
 
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
@@ -70,9 +72,20 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
-    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => ({ ...app, request, response: { headers }, media: mediaApi(options) }) as Context, e => { throw dbError(e) })),
+    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => withEntitlements({ ...app, request, response: { headers }, media: mediaApi(options) } as Context, options), e => { throw dbError(e) })),
   }
 }
+
+/** `ctx.entitlements`, for the user this context turned out to be. `context()` may set its own: tests do. */
+function withEntitlements(ctx: Context, options: ScopeOptions): Context {
+  ctx.entitlements ??= options.pay?.forContext(ctx) ?? noRail
+  return ctx
+}
+
+const unbound = (): never => {
+  throw new StartError('P101', '`ctx.entitlements` needs `src/pay.server.ts`', 'run `weft add pay`', { status: 500 })
+}
+const noRail: Context['entitlements'] = { has: unbound, list: unbound }
 
 /** `ctx.media`. A refusal is the user's answer, with its own status; `<Form>` shows it. */
 const mediaApi = (options: ScopeOptions): Context['media'] => ({
@@ -151,7 +164,7 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
   const entry: ScopeEntry = { id: fn.$id, input, tags: [], p: undefined as any }
   entry.p = (async () => {
     const valid = await validate(fn, input)
-    entry.tags = [...(typeof fn.def.tags === 'function' ? fn.def.tags(valid) : fn.def.tags ?? [])]
+    entry.tags = await tagsOf(fn, valid, scope)
     const cached = fn.def.cache
     const store = storeOf(scope)
     // Checked before the shared cache, so a value stored for one user is never answered to no one.
@@ -196,6 +209,16 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
   return entry
 }
 
+/** A query's tags. One that takes `ctx` is one user's, so it reads `ctx`; a signed-out caller fails here, as `guard` would. */
+export async function tagsOf(fn: Fn, input: unknown, scope: Pick<Scope, 'ctx'>): Promise<string[]> {
+  const tags = fn.def.tags
+  if (typeof tags !== 'function') return [...(tags ?? [])]
+  if (tags.length < 2) return [...tags(input)]
+  const ctx = await scope.ctx()
+  guard(fn, ctx)
+  return [...tags(input, ctx)]
+}
+
 const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => x === b[i])
 
 /** A body in another process (research 36): what it adds to the tags and reports it touched arrive with the value. */
@@ -208,6 +231,7 @@ async function callImpl(fn: Fn, input: unknown, ctx: Context, scope: Scope, touc
 
 async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?: Touched, added: string[] = []) {
   guard(fn, ctx)
+  if (fn.def.requires) await entitled(fn, ctx)
   const replaced = scope.options.handlers?.get(fn.$id)
   // Awaited inside the frame: a Drizzle query is a thenable, and only runs when something awaits it.
   const run = async () => await (replaced ? replaced(input, ctx) : fn.def.impl ? callImpl(fn, input, ctx, scope, touched, added) : fn.def.run!({ input, ctx }))
@@ -228,11 +252,17 @@ export function guard(fn: Fn, ctx: Context) {
   if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
 }
 
+/** `requires: ['pro']`: a typed 403, before `run`. */
+async function entitled(fn: Fn, ctx: Context) {
+  for (const id of fn.def.requires!) if (!(await ctx.entitlements.has(id))) throw new FnError({ code: 'ENTITLEMENT_REQUIRED', message: `This needs \`${id}\`` }, 403)
+}
+
 const DOWN = /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|CONNECT_TIMEOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|PROTOCOL_CONNECTION_LOST|P100[12])$/
 
 /** A dropped connection is Q016; a missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
 export function dbError(e: unknown): unknown {
   const cause = (e as any)?.cause ?? e
+  if ((e as any)?.name === 'PayError') return new FnError({ code: (e as any).code, message: (e as any).message }, (e as any).status)
   if (cause instanceof StartError) return cause // Drizzle wraps what a driver throws, the gate's Q016 included
   if (!(e instanceof StartError) && DOWN.test(`${cause?.code ?? (e as any)?.code ?? ''}`)) return unavailable(e)
   const m = `${cause?.message ?? ''}`
@@ -274,8 +304,8 @@ function shared(ctx: Context, fn: Fn): Context {
   const own = fn.def.cache?.scope === 'user'
   return new Proxy(ctx, {
     get(t, k, r) {
-      if (own && (k === 'user' || k === 'session')) return Reflect.get(t, k, r)
-      if (k === 'request' || k === 'response' || k === 'user' || k === 'session')
+      if (own && (k === 'user' || k === 'session' || k === 'entitlements')) return Reflect.get(t, k, r)
+      if (k === 'request' || k === 'response' || k === 'user' || k === 'session' || k === 'entitlements')
         throw new StartError('Q006', `\`${fn.$id}\` is cached (\`cache: { life }\`) and reads \`ctx.${String(k)}\`: its value would be shared by every user`, 'drop `cache`, or pass the value as input')
       return Reflect.get(t, k, r)
     },
@@ -308,7 +338,7 @@ export async function runMutation(scope: Scope, fn: Fn, input: unknown, refresh:
     let qtags: string[]
     try {
       const vi = await validate(q, inp)
-      qtags = [...(typeof q.def.tags === 'function' ? q.def.tags(vi) : q.def.tags ?? [])]
+      qtags = await tagsOf(q, vi, scope)
     } catch {
       continue
     }

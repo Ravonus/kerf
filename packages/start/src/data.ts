@@ -41,6 +41,8 @@ export interface Context {
   response: { headers: Headers }
   /** Uploads and CMS images (research 29 §6): `ingest` stores the original and returns the record `z.media()` validates. */
   media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('weft/media').MediaAsset> }
+  /** What this user holds (research 10 §3), from verified rail events. Await it. `src/pay.server.ts` turns it on. */
+  entitlements: { has(id: string): Promise<boolean>; list(): Promise<string[]> }
 }
 
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
@@ -57,6 +59,8 @@ type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
 type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
 type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
 type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
+/** Read before `run`, for one user's tag: `tags: (_, ctx) => [`entitlements:${ctx.user.id}`]`. */
+type QueryTags<I, A> = Tags<[input: I, ctx: Ctx<A>]>
 
 /** A server function's body in another process: `remote('rust://search')` from `@weft/start/rust` (research 36). */
 export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
@@ -73,7 +77,9 @@ export interface QueryDef<S, O, A = undefined> {
   /** An example result, for what `output` can't say: sizes a pending view (research 31 §2). */
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
-  tags?: Tags<[input: Out<S>]>
+  tags?: QueryTags<Out<S>, A>
+  /** Entitlements this call needs, on the server: a typed 403 otherwise. */
+  requires?: readonly string[]
   /** Turn on the shared server cache (across requests). Omit it and the query runs once per request. */
   cache?: { life?: Life; /** One cached value per signed-in user: `ctx.user` is readable. */ scope?: 'user' }
   /** Named failures, for the client as `FnError.code` and `.data`. */
@@ -94,6 +100,8 @@ export interface MutationDef<S, O, A = undefined> {
   auth?: A
   /** Tags whose queries the response refreshes (single-flight) and whose cached values it drops. */
   invalidates?: Tags<[input: Out<S>, result: Awaited<O>]>
+  /** Entitlements this call needs, on the server: a typed 403 otherwise. */
+  requires?: readonly string[]
   /** Client only: predict the result. Each call's layers are re-applied on new values until it settles. */
   optimistic?: (args: { input: In<S> }, cache: OptimisticCache) => void
   errors?: Errors
@@ -143,7 +151,7 @@ export interface Fn {
   kind: 'query' | 'mutation' | 'stream' | 'channel' | 'shared'
   $id: string
   def: {
-    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; impl?: Impl; errors?: Errors; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
+    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; impl?: Impl; errors?: Errors; requires?: readonly string[]; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
     /** `channel` and `sharedState` (research 32). */
     params?: StandardSchemaV1; authorize?: any; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: any) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
   }
@@ -312,6 +320,8 @@ export const net = () => {
 export interface NetControl {
   latency: number
   ctx?: object
+  /** `fakePay`'s ledger: `ctx.entitlements` in the fake scope. */
+  pay?: any
   online(): boolean
   fails: Map<string, unknown[]>
   handlers: Map<string, (input: any, ctx: any) => unknown>
@@ -674,7 +684,7 @@ export const http: Transport = {
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
 export const fakeScope = (exec: typeof import('./exec'), n: NetControl, request: Request) =>
-  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+  exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, pay: n.pay, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
 
 const inProcess: Transport = {
   query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),
