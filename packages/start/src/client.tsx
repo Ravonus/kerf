@@ -9,7 +9,7 @@
 // the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
-import { enter, hydrate, level as staticLevel } from 'weft/dom'
+import { drain, enter, hydrate, level as staticLevel, wake } from 'weft/dom'
 import { flush } from 'weft'
 import { setHead } from 'weft/head'
 import { applyMatches, client, createRouteState, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
@@ -42,10 +42,16 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   await Promise.all([...page.m.filter(m => !m.s).map(m => chunk(m.id)), ...(page.i ?? []).map(island)])
   const route = createRouteState(page, comps)
   let bag: RoutePayload['b']
-  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined)
+  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined, id => Promise.resolve(island(id)))
   route.around = (_d, _id, body) => enter(body)
   hydrate(() => <App route={route} />, container, { data })
   client.route = route
+  const q = (window as any).__wq
+  if (q) {
+    q.w = wake
+    if (q.l) wake(q.l)
+    drain()
+  }
 
   let current: AbortController | undefined
   async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {

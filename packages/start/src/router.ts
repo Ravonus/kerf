@@ -60,7 +60,7 @@ export interface RoutePayload {
   r?: string
   /** The queries the loaders resolved, for the client cache (navigation only; a page carries `#weft-cache`). */
   c?: Wire[]
-  /** The islands in the static levels, whose code has to be there first. */
+  /** The islands in the static levels that can't wait, whose code has to be there first. */
   i?: string[]
   /** A navigation's page data, for those islands. */
   b?: SsrData | null

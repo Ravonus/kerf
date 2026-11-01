@@ -43,6 +43,7 @@ const V = {
   app: 'virtual:weft/app',
   server: 'virtual:weft/entry-server',
   client: 'virtual:weft/entry-client',
+  full: 'virtual:weft/client-full',
   fns: 'virtual:weft/fns',
   context: 'virtual:weft/context',
   auth: 'virtual:weft/auth',
@@ -75,7 +76,7 @@ export function inlineSheets(outDir, base) {
 }
 
 /**
- * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[], hydration?: 'partial' | 'full' }} [options]
+ * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   let root = options.root ?? process.cwd()
@@ -99,11 +100,11 @@ export default function weftStart(options = {}) {
       if (!p.stamps.some(f => statSync(f, { throwIfNoEntry: false })?.mtimeMs !== facts.get(f)?.mtime)) return p
     }
     const entries = [...manifest.routes, ...manifest.layouts].map(r => abs(r.file))
-    plan = solve({ entries, transform: compile, rel: f => relative(root, f).split('\\').join('/'), cache: facts, resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id })
+    plan = solve({ entries, lazy: (options.hydration ?? 'lazy') === 'lazy', transform: compile, rel: f => relative(root, f).split('\\').join('/'), cache: facts, resolve: async (spec, from) => (await ctx.resolve(spec, from, { skipSelf: true }))?.id })
     const done = await plan
     try {
       mkdirSync(join(root, '.weft'), { recursive: true })
-      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), files: done.report }, null, 2)}\n`)
+      writeFileSync(join(root, '.weft', 'hydration.json'), `${JSON.stringify({ islands: done.islands.map(i => i.id), loads: done.loads, diagnostics: done.diagnostics, files: done.report }, null, 2)}\n`)
     } catch {}
     return done
   }
@@ -129,6 +130,8 @@ export default function weftStart(options = {}) {
     }
   }
   const clientEntry = () => (existsSync(join(root, 'src', 'entry.client.ts')) ? join(root, 'src', 'entry.client.ts') : V.client)
+  /** The default entry, split so a page that's only read loads next to nothing. */
+  const split = () => clientEntry() === V.client && (options.hydration ?? 'lazy') === 'lazy'
 
   return {
     name: 'weft:start',
@@ -246,7 +249,7 @@ export default function weftStart(options = {}) {
         }
         if (which === V.routes) {
           const p = await hydration(this)
-          return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
+          return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p, split())
         }
         if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
         if (which === V.server) return serverEntry(clientEntry(), dev)
@@ -259,7 +262,10 @@ export default function weftStart(options = {}) {
         }
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
         if (which === V.media) return mediaModule(root, dev)
-        if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
+        const app = `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\nstart(routes)\n`
+        if (which === V.full) return app
+        // With lazy islands a page that's only read runs none of it: PLAN §11.
+        if (which === V.client) return !split() ? app : `import { boot } from ${JSON.stringify(join(here, 'boot.ts'))}\nboot(() => import('${V.full}'))\n`
       },
     },
     transform: {
@@ -314,7 +320,7 @@ function usesShapes(root) {
  * the first `)`, which a path can hold). `meta` is read once per level that renders, before the first byte: that's
  * how the entry learns the request's levels (`routeCss`), outermost first, 404 and error pages included.
  */
-function serverRoutes(manifest, abs, dev, plan) {
+function serverRoutes(manifest, abs, dev, plan, full) {
   const files = [...manifest.layouts.map(l => l.file), ...manifest.routes.map(r => r.file), ...manifest.routes.map(r => r.card).filter(Boolean), manifest.defaultCard].filter(Boolean)
   const unique = [...new Set(files)]
   const levels = new Set([...manifest.layouts, ...manifest.routes].map(r => r.file))
@@ -336,8 +342,9 @@ export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? []
     `export const manifest = ${JSON.stringify({ dir: manifest.dir, routes: manifest.routes, layouts: manifest.layouts, defaultCard: manifest.defaultCard })}`,
     // The built-in 404 and error pages have no state, and stand in only when the app has no route file for them.
     `export const statics = ${JSON.stringify(!plan ? [] : [...[...manifest.layouts, ...manifest.routes].filter(r => isStatic(r.file)).map(r => r.id), ...['404', 'error'].filter(id => !manifest.routes.some(r => r.id === id))])}`,
+    `export const lazy = ${!!plan?.loads.some(l => l.when !== 'load')}`,
     // The chunks a page's levels and islands will import, for the document's modulepreloads. Dev has no chunks.
-    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file])].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
+    `export const chunks = ${dev ? '{}' : `{ ${[...[...manifest.layouts, ...manifest.routes].filter(r => !isStatic(r.file) && renders(r.file)).map(r => [r.id, abs(r.file)]), ...(plan?.islands ?? []).map(i => [i.id, i.file]), ...(full ? [['$client', V.full]] : [])].map(([id, file]) => `${JSON.stringify(id)}: ${clientAssets(file)}`).join(', ')} }`}`,
     `export const modules = { ${unique.map((f, i) => `${JSON.stringify(f)}: ${renders(f) ? `styled(m${i}, ${css(f)})` : `m${i}`}`).join(', ')} }`,
   ].join('\n')
 }
@@ -418,7 +425,7 @@ async function assetsOnly(ctx, code, path, root, words) {
 
 function serverEntry(clientEntry, dev) {
   return `import { createHandler } from ${JSON.stringify(join(here, 'server.tsx'))}
-import { chunks, manifest, modules, routeCss, statics } from '${V.routes}'
+import { chunks, lazy, manifest, modules, routeCss, statics } from '${V.routes}'
 import '${V.fns}'
 import context from '${V.context}'
 import auth from '${V.auth}'
@@ -428,7 +435,7 @@ import realtime from '${V.realtime}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-const fetch = createHandler({ manifest, modules, statics, chunks, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
+const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[HQACFMRW]\\d{3}:? /, '')}\`) })
 export default { fetch }
