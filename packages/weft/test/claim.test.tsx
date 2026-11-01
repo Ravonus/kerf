@@ -2,7 +2,7 @@
 // weft-allow T005: framework test of hydration; server markup and node identity are the subject
 import { hydrate } from 'weft/dom'
 import { renderToString } from 'weft/ssr'
-import { createRoot, derived, effect, flush, mergeProps, rt, state } from 'weft'
+import { createRoot, derived, effect, flush, rt, state, view } from 'weft'
 import { hydration } from '../src/hydrate'
 // @ts-expect-error: query imports (vite.mjs)
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
@@ -126,7 +126,7 @@ describe('a view of a getter', () => {
   const sourced = () => {
     const n = state(1)
     const get = vi.fn(() => ({ a: n.value, b: 2 }))
-    return { n, get, v: mergeProps(get) }
+    return { n, get, v: view([get]) }
   }
 
   test('on the client it stays live: every read asks the source, and an effect follows it', () => {
