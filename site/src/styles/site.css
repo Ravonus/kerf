@@ -128,3 +128,6 @@
 
 /* Code wraps rather than hiding the end of a line behind a sideways scroll. */
 main pre, main pre code, main pre [data-part="line"] { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* A long page's sections off screen cost nothing to style or lay out, here or when a route change snapshots the page. */
+[data-site="story"] > section, [data-site="example"], [data-site="arena"], [data-site="fix"] { content-visibility: auto; contain-intrinsic-size: auto 800px; }

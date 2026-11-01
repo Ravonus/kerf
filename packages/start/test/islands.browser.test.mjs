@@ -480,3 +480,26 @@ test('an island inside a client page is just a component: its children are claim
   expect(errors).toEqual([])
   await page.close()
 })
+
+test('a route fade that was slow to start is not asked for again', async () => {
+  const { page, errors } = await open('/about')
+  await page.evaluate(() => {
+    window.__fades = 0
+    document.startViewTransition = fn => {
+      window.__fades++
+      const done = Promise.resolve().then(fn)
+      return { ready: done.then(() => new Promise(r => setTimeout(r, 150))), updateCallbackDone: done }
+    }
+  })
+  const go = async href => {
+    await page.evaluate(h => { window.__link = Object.assign(document.createElement('a'), { href: h }); document.body.append(window.__link); window.__link.click() }, href)
+    await page.waitForURL('**' + href)
+    await page.waitForTimeout(250)
+  }
+  await go('/islands')
+  await go('/about')
+  await go('/islands')
+  expect(await page.evaluate(() => window.__fades)).toBe(1)
+  expect(errors).toEqual([])
+  await page.close()
+})

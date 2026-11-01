@@ -25,6 +25,8 @@ export interface ClientRoutes {
 }
 
 /** Hydrate the page in `#app` and take over its links. Resolves once hydrated. */
+const SLOW_FADE = 100 // ms from asking for a fade to it starting
+
 export async function start(routes: ClientRoutes, options: { container?: Element } = {}) {
   const container = options.container ?? document.getElementById('app')!
   const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent!)
@@ -55,6 +57,8 @@ export async function start(routes: ClientRoutes, options: { container?: Element
 
   let current: AbortController | undefined
   let warm: { path: string; at: number; res: Promise<Response> } | undefined
+  // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
+  let fades = !(navigator.hardwareConcurrency <= 4)
   async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
@@ -93,7 +97,12 @@ export async function start(routes: ClientRoutes, options: { container?: Element
       }
     }
     // The old page stays on screen, as a picture, until the new one is ready to fade in. `hidden`: nothing would show it.
-    if (document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) await document.startViewTransition(swap).updateCallbackDone
+    if (fades && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const started = performance.now()
+      const fade = document.startViewTransition(swap)
+      void fade.ready.then(() => { if (performance.now() - started > SLOW_FADE) fades = false }, () => {})
+      await fade.updateCallbackDone
+    }
     else swap()
   }
   client.navigate = go
