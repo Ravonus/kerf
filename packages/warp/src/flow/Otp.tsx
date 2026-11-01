@@ -56,7 +56,7 @@ export function OtpField({ label = '6-digit code', name, length = 6, hint, error
         <input id={id} name={name} inputmode="numeric" autocomplete="one-time-code" maxlength={n} pattern="[0-9]*" enterkeyhint="done" data-autofocus="" aria-describedby={`${id}-m`} aria-invalid={shown.value ? 'true' : undefined} aria-busy={status === 'checking' ? 'true' : undefined} />
         {cells.map(c => (c.i < 0
           ? <span key={c.k} data-part="sep" aria-hidden="true"></span>
-          : <span key={c.k} data-part="cell" data-sweep="" data-phase="idle" aria-hidden="true" style={`--n:${c.i}`}><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span><b data-part="char"></b></span>))}
+          : <span key={c.k} data-part="cell" data-sweep="" aria-hidden="true" style={`--n:${c.i}`}><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span><b data-part="char"></b></span>))}
       </div>
       <p data-part="message" id={`${id}-m`} role={shown.value ? 'alert' : undefined}>{shown.value ?? hint}</p>
     </div>

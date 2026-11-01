@@ -16,8 +16,12 @@ export interface Site {
   /** `'auto'` = the generated card (§4, not built yet: writes no image), or a path/URL. */
   image?: 'auto' | Image
   twitter?: Twitter
-  /** A build's stylesheets go in the page up to 48 KB, saving a round trip. `false` keeps them as links. */
+  /** `false`: no stylesheet text in the page, just links. */
   inlineCss?: boolean
+  /** `false`: one sheet per chunk, inline up to 48 KB, instead of a first-paint part of the build's one sheet. */
+  criticalCss?: boolean
+  /** Words of selectors a first paint keeps whatever the HTML holds: for a class a head script sets. */
+  criticalKeep?: string[]
   /** Raw HTML for every page's head, before the stylesheets: what has to run before the first paint. Not escaped. */
   head?: string
 }

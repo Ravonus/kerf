@@ -362,6 +362,16 @@ export function Counter() {
   return <b>{props.amount}</b>
 }`
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
+  const plain = s => s.replaceAll('`', '') // the compiler's words, without the terminal's quoting
+  const marked = (text, lines) => {
+    let n = -1
+    return `<pre tabindex="0"><code>${highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => { n++; return lines[n] ? `<span data-part="line" data-${lines[n]}="">` : tag })}</code></pre>`
+  }
+  const diff = `function Price(props: { amount: number }) {
+  const amount = props.amount
+  return <b>{amount}</b>
+  return <b>{props.amount}</b>
+}`
   const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
   const server = `// src/server/shop.ts
@@ -375,7 +385,7 @@ const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
   const size = JSON.parse(readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8')).size
   const kb = n => +(n / 1024).toFixed(2)
-  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: habit.message, fix: habit.help ?? catalog.find(e => e.code === 'W005').fix }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: block(bad, 'tsx'), good: block(good, 'tsx'), code: 'W001', message: report.message, fix: entry.fix })
+  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: plain(habit.message), fix: plain(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'del', 3: 'add' }), code: 'W001', message: plain(report.message), file: 'Price.tsx, line 2', fix: plain(entry.fix) })
 }
 
 // ------------------------------------------------------------------ agents

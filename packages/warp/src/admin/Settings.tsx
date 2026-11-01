@@ -46,11 +46,10 @@ export function SettingsLayout({ label = 'Settings sections', sections, current,
 
 /** A heading, one line, then one bordered group of rows (09 §4.1). `tone="critical"` is the danger zone's border. */
 export function SettingsSection({ id, title, description, tone, as: heading = 'h3', children }: { id: string; title: any; description?: any; tone?: 'critical'; as?: 'h3' | 'h4'; children: any }) {
-  const small = untrack(() => heading === 'h4')
   return (
     <section data-scope="settings-section" id={id} data-tone={tone} aria-labelledby={`${id}-h`}>
       <header>
-        {small ? <h4 id={`${id}-h`} tabindex="-1">{title}</h4> : <h3 id={`${id}-h`} tabindex="-1">{title}</h3>}
+        {heading === 'h4' ? <h4 id={`${id}-h`} tabindex="-1">{title}</h4> : <h3 id={`${id}-h`} tabindex="-1">{title}</h3>}
         {description !== undefined && <p>{description}</p>}
       </header>
       <div data-part="group">{children}</div>
@@ -64,13 +63,13 @@ export function SettingsSection({ id, title, description, tone, as: heading = 'h
  */
 export function SettingRow({ title, description, layout, children }: { title?: any; description?: any; layout?: 'stack'; children: any }) {
   const id = uid('row')
-  const body = untrack(() => (typeof children === 'function' ? children({ label: `${id}-l`, description: `${id}-d` }) : children))
+  const body = () => (typeof children === 'function' ? children({ label: `${id}-l`, description: `${id}-d` }) : children)
   const stacked = untrack(() => title === undefined)
-  if (stacked) return <div data-scope="setting-row" data-layout={layout}>{body}</div>
+  if (stacked) return <div data-scope="setting-row" data-layout={layout}>{body()}</div>
   return (
     <div data-scope="setting-row" data-layout={layout}>
       <div><b id={`${id}-l`}>{title}</b><p id={`${id}-d`}>{description}</p></div>
-      <div data-part="control">{body}</div>
+      <div data-part="control">{body()}</div>
     </div>
   )
 }

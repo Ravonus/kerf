@@ -76,6 +76,11 @@ the mark cut out, and throws a dithered shadow in vivid hollow. `scripts/distinc
 | 24 | scales | 1 cell = 1.5px, uneven on 1×, even on 2× |
 | 32, 48 | scales | exact, 2× and 3× |
 
+An icon picks its form from its own rendered size, in CSS. Each `svg[data-icon]` is a size container. Checker cells and the
+thrown shadow sit in their own path (`data-d`) and show from 20 px: at 16 they read as noise in a control. Under 16 px pixels
+can't land on whole cells, so the vivid tier shows the balanced line. Solid ink shade stays at every size. Straight marks
+(`PLAIN` in `scripts/forms.mjs`) keep their shadow, because at 16 it is all that separates them from the outline tiers.
+
 ## 7. Accessibility
 
 Decorative by default (`aria-hidden`, `focusable="false"`). `label` makes it `role="img"` with that name. Colour is always

@@ -182,12 +182,12 @@
     overflow: hidden; text-overflow: ellipsis; color: var(--warp-color-text-subtle); opacity: 0;
     transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
   }
-:where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible, [data-phase="in"]) [data-part="command-label"]) {
+:where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-label"]) {
     inset-block-start: 0; inset-inline-start: 8px; padding-inline: 4px; font-size: 10px; font-weight: 600;
     font-family: var(--warp-text-display-font); text-transform: uppercase; letter-spacing: 0.12em;
     color: var(--warp-color-accent-text); background: var(--warp-color-surface-raised);
   }
-:where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible, [data-phase="in"]) [data-part="command-hint"]) { opacity: 1; transition-delay: 80ms; }
+:where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-hint"]) { opacity: 1; transition-delay: 80ms; }
 :where([data-scope="shell"] [data-part="command"]:focus-visible) { outline-offset: 3px; }
 :where([data-scope="shell"] [data-part="command"] kbd) {
     position: static; inline-size: auto; block-size: auto; clip-path: none; margin-inline-start: auto;

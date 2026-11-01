@@ -198,3 +198,130 @@ export function purge(sheets, found) {
   const rest = out.map(css => print(parse(css).filter(n => !ANIMATED.test(n.head)))).join('')
   return out.map(css => flatten(dropKeyframes(css, rest, has)))
 }
+
+/** Interaction: a state nothing is in when the page first paints. */
+const STATE = /:(?:hover|active|focus|focus-visible|focus-within|visited|popover-open|modal|-moz-[\w-]+|-webkit-[\w-]+)\b/
+/** Attributes set on the root from outside the HTML, so their rules could match any page. Tier dials are read from the head. */
+const ROOT_DIAL = /^data-(?:theme|motion|pointer)$/ // a stored choice or the OS: any page, any visitor
+
+export { markup } from '../src/markup.mjs'
+
+/** Every `@layer` name in the order the sheet first declares it. The first-paint sheet's order must be the whole sheet's. */
+export function layerOrder(css) {
+  const names = []
+  const walk = nodes => { for (const n of nodes) {
+    const m = /^@layer\b\s*(.*)$/.exec(n.head)
+    if (m) for (const name of m[1].split(',').map(x => x.trim()).filter(Boolean)) if (!names.includes(name)) names.push(name)
+    if (n.body !== undefined && GROUPING.test(n.head)) walk(parse(n.body))
+  } }
+  walk(parse(css))
+  return names
+}
+
+/**
+ * What a selector needs in the HTML: `all` it must hold, and `any`, lists of which one must hold (`:is()`, `:where()`).
+ * Null when it needs a state nothing is in at first paint. Only ever says no on evidence: `:not()` is ignored.
+ */
+function needs(selector) {
+  let rest = selector.replace(/::[\w-]+(\([^)]*\))?/g, '')
+  const any = []
+  for (;;) {
+    const m = /:(not|is|where|has|matches)\(/.exec(rest)
+    if (!m) break
+    const open = m.index + m[0].length - 1, end = closing(rest, open)
+    if (m[1] !== 'not') {
+      const inner = split(rest.slice(open + 1, end), ',').map(needs).filter(Boolean)
+      if (!inner.length) return null
+      if (inner.length === 1) { any.push(...inner[0].any); inner[0].all.forEach(k => any.push([k])) }
+      else if (inner.every(i => i.all.length)) any.push(inner.map(i => i.all[0]))
+    }
+    rest = rest.slice(0, m.index) + rest.slice(end + 1)
+  }
+  if (STATE.test(rest)) return null
+  rest = rest.replace(/:[\w-]+(\([^)]*\))?/g, '')
+  const all = []
+  for (const [whole, name, op, value] of rest.matchAll(/\[([\w:-]+)(?:([~|^$*]?=)["']?([^\]"']*)["']?(?:\s+[is])?)?\]/g)) {
+    rest = rest.replace(whole, '')
+    if (ROOT_DIAL.test(name)) continue
+    all.push(op === '=' ? `[${name}=${value}]` : `[${name}]`)
+  }
+  for (const [word] of rest.matchAll(/[.#]?[A-Za-z_][\w-]*/g)) all.push(/^[.#]/.test(word) ? word : word.toLowerCase())
+  for (const list of any) if (list.length === 1) { all.push(list[0]); list.length = 0 }
+  return { all, any: any.filter(l => l.length) }
+}
+
+/**
+ * Stylesheets as a table a server joins with lookups alone. Each rule that can show in a first paint is a piece, and each
+ * token a keyless rule declares is one. `index` maps a word of HTML (see `markup`) to pieces that might need it; `alts` says
+ * what else each needs; `deps` gives the tokens and keyframes it reads. Hover and focus are not pieces.
+ * @param {[string, string][]} sheets  `[name, css]`, in cascade order
+ */
+export function pieces(sheets, keep = []) {
+  const wraps = [''], list = [], alts = [], reading = [], tokens = new Map(), frames = new Map(), always = []
+  const count = new Map()
+  const all = sheets.map(s => s[1]).join('')
+  for (const m of all.matchAll(/\[[\w:-]+(?:=["']?[^\]"']*["']?)?\]|[.#][A-Za-z_][\w-]*/g)) {
+    const k = m[0].replace(/["']/g, '')
+    count.set(k, (count.get(k) ?? 0) + 1)
+  }
+  const add = (owner, wrap, head, body, name) => {
+    const id = list.length, text = `${head}{${body}}`
+    list.push([owner, wrap, head, body])
+    alts.push(null)
+    const read = new Set(text.replace(/(?<=[{;])\s*--[\w-]+\s*:/g, ':').match(/--[\w-]+/g) ?? [])
+    reading.push({ read, anim: /animation/.test(text) ? text : '' })
+    if (name) tokens.set(name, [...(tokens.get(name) ?? []), id])
+    return id
+  }
+  const wrapOf = heads => {
+    const open = heads.map(h => `${h}{`).join('')
+    if (!wraps.includes(open)) wraps.push(open)
+    return wraps.indexOf(open)
+  }
+  const walk = (owner, nodes, heads) => {
+    for (const n of nodes) {
+      if (n.body === undefined || !n.head || n.head.startsWith('@page') || /^@media\s+print\b/.test(n.head)) continue
+      const wrap = wrapOf(heads)
+      if (n.head.startsWith('@font-face') || /^@(?:-\w+-)?(property|counter-style)\b/.test(n.head)) { always.push(add(owner, wrap, n.head, n.body)); continue }
+      const anim = /^@(?:-\w+-)?keyframes\s+(\S+)/.exec(n.head)
+      if (anim) { frames.set(anim[1], [...(frames.get(anim[1]) ?? []), add(owner, wrap, n.head, n.body)]); continue }
+      if (GROUPING.test(n.head)) { walk(owner, parse(n.body), [...heads, n.head]); continue }
+      if (/\[data-weft=["']?styled/.test(n.head)) continue // the style gate's reveal: only ever in the late sheet
+      const need = split(n.head, ',').map(s => (keep.some(k => s.includes(k)) ? { all: [], any: [] } : needs(s))).filter(Boolean)
+      if (!need.length) continue
+      const open = need.some(k => !k.all.length && !k.any.length)
+      const decls = n.body.includes('{') ? [n.body] : split(n.body, ';').filter(d => d.trim())
+      const named = decls.filter(d => d.trim().startsWith('--'))
+      if (open && named.length && !n.body.includes('{')) {
+        const rest = decls.filter(d => !d.trim().startsWith('--'))
+        if (rest.length) always.push(add(owner, wrap, n.head, rest.join(';')))
+        for (const d of named) add(owner, wrap, n.head, d, d.slice(0, d.indexOf(':')).trim())
+      } else {
+        const id = add(owner, wrap, n.head, n.body)
+        if (open) always.push(id)
+        else alts[id] = need
+      }
+    }
+  }
+  sheets.forEach(([, css], i) => walk(i, parse(css), []))
+  const deps = reading.map(({ read, anim }) => {
+    const out = new Set()
+    for (const t of read) tokens.get(t)?.forEach(i => out.add(i))
+    if (anim) for (const [name, ids] of frames) if (anim.includes(name)) ids.forEach(i => out.add(i))
+    return [...out]
+  })
+  const index = {}
+  const weight = k => (/^[.#[]/.test(k) ? count.get(k) ?? 0 : 1e9) // a tag is everywhere
+  alts.forEach((need, id) => {
+    if (!need) return
+    for (const { all: a, any } of need) {
+      const groups = [...a.map(k => [k]), ...any]
+      const best = groups.reduce((x, y) => (Math.max(...y.map(weight)) < Math.max(...x.map(weight)) ? y : x))
+      for (const k of best) { const l = (index[k] ??= []); if (l.at(-1) !== id) l.push(id) }
+    }
+  })
+  for (const [name, ids] of tokens) (index[name] ??= []).push(...ids)
+  const layers = []
+  for (const [, css] of sheets) for (const n of layerOrder(css)) if (!layers.includes(n)) layers.push(n)
+  return { names: sheets.map(s => s[0]), layers: layers.length ? `@layer ${layers.join(',')};` : '', wraps, pieces: list, always, alts: alts.map(a => a && a.map(x => [x.all, x.any])), deps, index }
+}

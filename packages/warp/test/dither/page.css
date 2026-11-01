@@ -1,0 +1,10 @@
+body { margin: 0; background: var(--warp-color-page); color: var(--warp-color-text); font-family: ui-sans-serif, system-ui, sans-serif; }
+main { display: grid; gap: 40px; max-width: 1200px; margin: auto; padding: 0 24px 80px; }
+[data-demo="hero"] { position: relative; display: grid; align-content: center; justify-items: start; min-height: 520px; padding: 48px; overflow: hidden; }
+[data-demo="hero"] h1 { position: relative; margin: 0; font-size: clamp(40px, 8vw, 88px); line-height: 1; letter-spacing: -.03em; }
+[data-demo="hero"] p { position: relative; max-width: 42ch; font-size: 18px; }
+[data-demo="grid"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+[data-demo="stack"] { display: grid; gap: 20px; }
+[data-demo="raw"] { height: 200px; }
+figure { margin: 0; }
+figcaption, h2 { margin: 8px 0 0; font: 500 13px ui-monospace, monospace; color: var(--warp-color-text-subtle); }

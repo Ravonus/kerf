@@ -94,7 +94,7 @@ export function ComboField<T>({ find, row, onPick, onText, onFail, text, minChar
         <input ref={(n: any) => (input = n)} {...live} data-part="input" id={field} placeholder=" " role="combobox" aria-autocomplete="list" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} aria-activedescendant={open.value && hits.value.length ? `${id}-${active.value}` : undefined} aria-busy={busy.value ? 'true' : undefined} aria-describedby={describedby} aria-invalid={invalid ? 'true' : undefined} autocomplete={live.autocomplete ?? 'off'} value={text()} onInput={e => { const v = (e.currentTarget as HTMLInputElement).value; onText?.(v); run(v) }} onKeyDown={onKey} />
       )}
       end={
-        <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" data-phase="idle" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
+        <div ref={(n: any) => (pop = n)} data-scope="popover" data-kind="combo" data-sweep="" popover="manual" role="presentation" onPointerDown={e => e.preventDefault()}>
           <span data-part="sweep" aria-hidden="true"></span>
           <ul data-part="listbox" role="listbox" id={id} aria-label={rest.label}>
             {rows.value.map(({ at, r }) => (

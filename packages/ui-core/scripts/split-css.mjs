@@ -212,8 +212,8 @@ export function build() {
   const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
   const parts = { components: split('warp-components.css', 'components'), inputs: split('warp-inputs.css', 'inputs'), rich: split('warp-inputs-rich.css', 'rich') }
   for (const p of Object.values(parts)) for (const [k, v] of render(p)) files.set(k, v)
-  const routed = { data: route('warp-data.css', 'data'), layout: route('warp-layout.css', 'layout'), app: route('warp-app.css', 'app'), flows: route('warp-flows.css', 'flows') }
-  for (const p of Object.values(routed)) for (const [k, v] of renderRouted(p)) files.set(k, v)
+  const routed = { data: route('warp-data.css', 'data'), layout: route('warp-layout.css', 'layout'), app: route('warp-app.css', 'app'), flows: route('warp-flows.css', 'flows'), canvas: route('warp-canvas.css', 'canvas') }
+  for (const p of Object.values(routed)) for (const [k, v] of renderRouted(p)) if (k !== 'canvas/tokens.css') files.set(k, v) // canvas has no tokens
   const scopes = {}
   for (const p of Object.values(routed)) for (const name of p.files.keys()) if (name !== 'base') (scopes[name] ??= new Set()).add(`${p.family}/${name}.css`)
   for (const p of Object.values(parts)) for (const [name, list] of p.files) for (const i of list) if (i.kind === 'rule') for (const s of scopesOf(i.text)) (scopes[s] ??= new Set()).add(`${p.family}/${name}.css`)

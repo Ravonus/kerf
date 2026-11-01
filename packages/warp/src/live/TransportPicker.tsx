@@ -55,7 +55,6 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
   let root: HTMLDivElement | undefined
 
   onMount(() => {
-    installSweep()
     const off = sim.subscribe(() => { rev.value++ })
     sim.start()
     onCleanup(() => { off(); sim.destroy() })
@@ -94,7 +93,7 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
           <legend>Wire under test</legend>
           <div data-part="choices" role="radiogroup" aria-label="Wire under test">
             {WIRES.map(w => (
-              <label key={w[0]} data-scope="choice-card" data-sweep="" data-phase="idle">
+              <label key={w[0]} data-scope="choice-card" data-sweep="">
                 <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
                 <input type="radio" name={`${id}-wire`} value={w[0]} checked={cfg.value.wire === w[0]} onChange={() => set({ wire: w[0] })} />
                 <span data-part="label">{w[1]}</span><span data-part="meta">{w[2]}</span><span data-part="hint">{w[3]}</span>
@@ -106,7 +105,7 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
           <legend>Server bus <code>realtime.bus</code></legend>
           <div data-part="choices" role="radiogroup" aria-label="Server bus">
             {BUSES.map(b => (
-              <label key={b[0]} data-scope="choice-card" data-sweep="" data-phase="idle">
+              <label key={b[0]} data-scope="choice-card" data-sweep="">
                 <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
                 <input type="radio" name={`${id}-bus`} value={b[0]} checked={cfg.value.bus === b[0]} disabled={b[0] === 'durable-object' && cfg.value.preset !== 'cf'} aria-describedby={`${id}-h-${b[0]}`} onChange={() => set({ bus: b[0] })} />
                 <span data-part="label"><code>{b[0]}</code></span><span data-part="meta">{b[1]}</span>

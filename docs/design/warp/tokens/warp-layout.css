@@ -89,7 +89,7 @@
 @container (min-width: 1000px)   { :where([data-until="desktop"]) { display: none !important; } }
 
 /* ===========================================================================
-   1b · SWEEP HOOKUPS. The sweep itself (two stacked borders, data-phase
+   1b · SWEEP HOOKUPS. The sweep itself (two stacked borders, --_a
    idle → in → out → idle, never reversing) lives in warp.css
    @layer warp.signature. Layout only says where it goes and how it looks:
      nav items  always (sidebar, rail, bottom bar), base border invisible
@@ -104,7 +104,7 @@
   --warp-color-sweep-base: var(--warp-color-border); --warp-sweep-radius: var(--warp-radius-surface);
   border-color: transparent;
 }
-:where([data-scope="surface"][data-sweep][data-phase="in"]) { --warp-color-sweep-base: var(--warp-color-border-strong); }
+:where([data-scope="surface"][data-sweep]:is(:hover, :focus-visible, :has(:focus-visible))) { --warp-color-sweep-base: var(--warp-color-border-strong); }
 
 /* ===========================================================================
    2 · PRIMITIVES
@@ -446,12 +446,12 @@
     transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
   }
   /* floated: hover, focus, or the sweep is in */
-  :where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible, [data-phase="in"]) [data-part="command-label"]) {
+  :where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-label"]) {
     inset-block-start: 0; inset-inline-start: 8px; padding-inline: 4px; font-size: 10px; font-weight: 600;
     font-family: var(--warp-text-display-font); text-transform: uppercase; letter-spacing: 0.12em;
     color: var(--warp-color-accent-text); background: var(--warp-color-surface-raised);
   }
-  :where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible, [data-phase="in"]) [data-part="command-hint"]) { opacity: 1; transition-delay: 80ms; }
+  :where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-hint"]) { opacity: 1; transition-delay: 80ms; }
   :where([data-scope="shell"] [data-part="command"]:focus-visible) { outline-offset: 3px; }
   :where([data-scope="shell"] [data-part="command"] kbd) {
     position: static; inline-size: auto; block-size: auto; clip-path: none; margin-inline-start: auto;

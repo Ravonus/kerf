@@ -267,6 +267,9 @@ export function designChecks(root, { files, exclude = [], tokens }) {
           const site = headingSite(el, bare)
           if (site && !allowed(f.text).has(`D006:${positions(f.text).lineCol(el.start)[0]}`)) looks.set(site.level, [...(looks.get(site.level) ?? []), { ...site, el, text: f.text, report }])
         }
+        if (el.attr('data-weft')?.value === 'styled' && (/^(?:main|h1|article)$/.test(el.name) || el.attr('role')?.value === 'main' || el.attr('data-vt')?.value === 'main')) {
+          report('D040', el.start, el.tagEnd, `The style gate on <${el.name}>: this is the page's main content, and the first paint would leave it hidden until the stylesheet lands.`, 'Mark a secondary part, or remove `data-weft="styled"`')
+        }
         if (el.name === 'a' && el.attr('href') && !el.attr('class') && !el.attr('className') && !el.attr('style') && !el.attr('data-scope') && !el.attr('data-part') && !el.attrs.some(a => a.kind === 'spread')) {
           const taken = localComponents.has('Link') || scan.imports.some(i => i.local === 'Link' && i.source !== WARP)
           const close = f.text.lastIndexOf('</', el.end - 1)

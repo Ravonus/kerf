@@ -71,7 +71,7 @@ describe('AGENTS.md', () => {
     expect(text).toContain('`weft docs <code>` explains one')
     expect(text).not.toContain('Not reported yet')
     expect(text).not.toContain('Planned, not shipped yet')
-    expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D001–D007, D011, D020–D025, D030–D039, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes\.$/m)
+    expect(text).toMatch(/^## Styling\n\n\*\*Run `weft style find <what it is>` first\*\*.*group\('card'.*D001–D007, D011, D020–D025, D030–D040, W060: `weft docs style`, `weft docs design`; `weft fix` applies the safe fixes\.$/m)
     expect(text).not.toContain('| `weft style` |') // the section covers it
     expect(text).toContain('Test checks (`weft check` on test files): T001–T009, T013.')
     // The installed weft has every planned export now, so the async rule is in and nothing is listed as missing.

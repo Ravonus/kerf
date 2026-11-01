@@ -1,6 +1,6 @@
 import { AlertIcon, SearchIcon, XIcon } from '@weft/icons'
-import { field, installSweep, labelChars, uid } from '@weft/ui-core'
-import { derived, onMount, untrack } from 'weft'
+import { field, labelChars, uid } from '@weft/ui-core'
+import { derived, untrack } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import { use } from './use'
 import './fields'
@@ -53,7 +53,6 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
   // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
   const live = untrack(() => rest)
   let root: HTMLDivElement | undefined
-  onMount(() => installSweep())
   use(field, () => root, () => [live.value, label] as const)
   return (
     <div
@@ -68,7 +67,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
       data-readonly={live.readonly ? '' : undefined}
       {...attrs}
     >
-      <div data-part="control" data-icon={typeof glyph.value === 'string' ? glyph.value : glyph.value ? '' : undefined} data-sweep="" data-phase="idle" data-filled={filled ?? live.value ? '' : undefined} data-hold={hold ? '' : undefined} data-wrap={wrap ? '' : undefined}>
+      <div data-part="control" data-icon={typeof glyph.value === 'string' ? glyph.value : glyph.value ? '' : undefined} data-sweep="" data-filled={filled ?? live.value ? '' : undefined} data-hold={hold ? '' : undefined} data-wrap={wrap ? '' : undefined}>
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         {glyph.value && <span data-part="icon" aria-hidden="true"><span data-part="sweep-base"><Icon name={glyph.value} /></span><span data-part="sweep"><Icon name={glyph.value} /></span></span>}
         <label data-part="label" for={group ? undefined : id} id={group ? `${id}-l` : undefined}>

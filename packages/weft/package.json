@@ -35,6 +35,8 @@
     },
     "./style/matrix": "./node/matrix.mjs",
     "./hydration": "./node/hydration.mjs",
+    "./markup": "./src/markup.mjs",
+    "./node-purge": "./node/purge.mjs",
     "./hmr": "./src/hmr.ts",
     "./plugin": {
       "types": "./src/plugin.d.ts",

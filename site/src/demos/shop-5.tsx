@@ -44,7 +44,7 @@ export default function Shop() {
       <form onSubmit={order}>
         <Input label="Email for the receipt" type="email" />
         <Switch defaultChecked>Gift wrap</Switch>
-        <Button type="submit">
+        <Button type="submit" disabled={total.value === 0}>
           {ordered.value ? 'Order placed' : 'Place order'}
         </Button>
       </form>

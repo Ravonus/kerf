@@ -12,7 +12,7 @@ export const demos: Record<string, Demo> = {
   'shop-2': {
     title: 'The shop, step 2',
     look: 'The total and shipping are new, marked in the code. Neither is set by hand: derived works each one out from count.',
-    tryIt: 'Add three coffees and watch shipping drop to $0 as the total passes $36.',
+    tryIt: 'Add three coffees. Shipping appears at $4, then drops to $0 when the total reaches $36.',
     why: 'You state a rule once and it can never go stale. Carts and forms get most of their bugs from keeping values like these in sync by hand.',
   },
   'shop-3': {
@@ -23,14 +23,14 @@ export const demos: Record<string, Demo> = {
   },
   'shop-4': {
     title: 'The shop, step 4',
-    look: 'A search box. shown is derived from what you type, in one line of ordinary JavaScript.',
+    look: 'A search box. shown is derived from what you type, and the filter is one line of ordinary JavaScript.',
     tryIt: 'Add a coffee, type gr, then clear the box. Your count is still there.',
-    why: 'There is nothing to wire up: no effect, no event bus. Rows keep their state when they leave the list and come back.',
+    why: 'There is nothing to wire up: no effect, no event bus. Each count lives with its product, so it is still there when the row comes back.',
   },
   'shop-5': {
     title: 'The shop, step 5',
     look: 'A checkout form from warp, so the shop now has a labelled field, a switch and a submit button.',
-    tryIt: 'Press Tab to move through the controls, then place the order.',
+    tryIt: 'Add something, press Tab to move through the controls, then place the order. The button stays off while the cart is empty.',
     why: 'Forms, dialogs, tables and menus are in the box with keyboard support, so you do not pick and wire up a component library.',
   },
   'getting-started': {
@@ -42,7 +42,7 @@ export const demos: Record<string, Demo> = {
   rules: {
     page: 'rules', title: 'A basket that adds itself up',
     look: 'A quantity, plus shipping and a total that are worked out from it. Shipping turns free at three items.',
-    tryIt: 'Press Add one three times and watch shipping and the total change together.',
+    tryIt: 'Press Add one twice. At three items shipping drops to $0 and the total changes with it.',
     why: 'You say what the total is once, and it can never go stale. Most bugs in forms and carts come from keeping such values in sync by hand.',
   },
   props: {
@@ -55,7 +55,7 @@ export const demos: Record<string, Demo> = {
     page: 'lists', title: 'A list that keeps its rows',
     look: 'A to-do list where each row has a key, so weft knows which row is which.',
     tryIt: 'Tick Grind, then press Do the first one later a few times. The tick stays with its row.',
-    why: 'Rows are moved, not rebuilt. Anything inside a row, such as a tick, typed text or a playing video, survives a reorder.',
+    why: 'Rows are moved, not rebuilt, so what is inside a row, such as a tick or typed text, survives a reorder.',
   },
   async: {
     page: 'async', title: 'Saving to a server',
@@ -77,9 +77,9 @@ export const demos: Record<string, Demo> = {
   },
   shared: {
     title: 'Two views of one list',
-    look: 'Ana and Ben see the same list. Here both panes are in your browser and share one piece of state, so nothing crosses a network.',
-    tryIt: 'Add a task in either pane, and tick a box.',
-    why: 'New tasks appear in both panes with no sync code. With @weft/start the list comes from a server query, and `.live()` keeps other visitors in step the same way.',
+    look: 'Ana and Ben see the same list. Here both panes are in your browser and share the same state, so nothing crosses a network.',
+    tryIt: 'Add a task in either pane, then tick a box. It ticks in the other pane too.',
+    why: 'Tasks and ticks show in both panes with no sync code. With @weft/start the list comes from a server query, and .live() keeps other visitors in step the same way.',
   },
   habit: {
     title: 'A React habit, caught by the compiler',
@@ -107,7 +107,7 @@ export const demos: Record<string, Demo> = {
   },
   receipt: {
     title: 'The shop, itemised',
-    look: 'What the phase 2 shop app sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
+    look: 'What the shop app in the repo evals sends to the browser, in compressed JavaScript. Measured by evals/warp-exit.mjs with brotli; the app and the results are in the repo.',
     tryIt: 'Compare it with the download sizes on the home page, which measure a larger dashboard.',
     why: 'You pay for the components you use. A page that imports a button doesn\'t bring the rest of warp with it.',
   },

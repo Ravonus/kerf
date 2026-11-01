@@ -1,5 +1,5 @@
-import { announce, arrivals, feed, filterNotes, groupByDay, indicator, installSweep, nextIndex, readOnView, uid, unreadCount, type InboxTab } from '@weft/ui-core'
-import { derived, onMount, state, untrack } from 'weft'
+import { announce, arrivals, feed, filterNotes, groupByDay, indicator, nextIndex, readOnView, uid, unreadCount, type InboxTab } from '@weft/ui-core'
+import { derived, state, untrack } from 'weft'
 import { Avatar, type LiveState } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -83,7 +83,6 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
   let root: HTMLElement | undefined
   const doc = () => root!.ownerDocument
 
-  onMount(() => installSweep())
   use(indicator, () => tablist, () => ({ selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw', at: tab.value }))
   use(feed, () => list, () => ({ items: '[data-scope="notification"]' }))
   use(readOnView, () => list, () => ({ items: '[data-scope="notification"]', active: !!open, onRead: (rid: string) => onRead?.(rid) }))
@@ -130,14 +129,13 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
     return (val(live as any) ?? 'live') === 'connecting' ? 'Connecting…' : 'Up to date'
   })
   const page = derived(() => viewAll)
-  const more = untrack(() => settings)
 
   return (
     <section ref={(n: any) => (root = n)} data-scope="inbox" data-part="root" data-variant={variant} aria-labelledby={`${id}-t`}>
       <div data-part="header">
         <h3 id={`${id}-t`}>{title}</h3>
         <Button emphasis="ghost" tone="neutral" size="sm" onClick={readAll}>Mark all as read</Button>
-        {more && <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" aria-label="Notification settings" onClick={more}><G name="more" /></Button>}
+        {settings && <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" aria-label="Notification settings" onClick={settings}><G name="more" /></Button>}
       </div>
       <div data-scope="tabs" data-part="root">
         <div ref={(n: any) => (tablist = n)} data-part="list" role="tablist" aria-label="Filter" onKeyDown={onTabKey}>
@@ -179,7 +177,7 @@ function Row({ n, at, size, leaving, stop, onKey, onPress, onFocus, onDismiss, o
     <article
       data-scope="notification"
       data-sweep=""
-      data-phase="idle"
+     
       data-id={n.id}
       data-read={n.read ? '' : undefined}
       data-state={leaving ? 'dismissed' : undefined}

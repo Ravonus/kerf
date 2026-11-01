@@ -3,28 +3,15 @@
 /* -- Chip (filter / toggle chip): sweeps on hover, holds while pressed -------------- */
 :where([data-scope="chip"]) {
   position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--warp-space-tight);
-  block-size: var(--warp-control-sm); padding-inline: calc(var(--warp-pad-control) - 2px); margin: 0;
+  block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); margin: 0;
   border: var(--warp-border-hairline) solid var(--warp-color-border-strong); border-radius: var(--warp-radius-round);
   background: var(--warp-color-surface-raised); color: var(--warp-color-text-subtle);
   font: 500 var(--warp-text-caption-size) / 1 var(--warp-text-body-font); cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast);
+  transition: color var(--warp-touch-out), background-color var(--warp-touch-out), scale var(--warp-spring-duration) var(--warp-ease-spring);
 }
 :where([data-scope="chip"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 :where([data-scope="chip"]:hover) { color: var(--warp-color-text); }
 :where([data-scope="chip"] > svg[data-icon]) { inline-size: 12px; block-size: 12px; stroke-width: 2; display: none; }
 :where([data-scope="chip"][aria-pressed="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
 :where([data-scope="chip"][aria-pressed="true"] > svg[data-icon]) { display: block; }
-
-
-
-
-/* ---------------------------------------------------------------- forced colours (01-foundations §12)
-   Every state this file draws with a background opts out of the UA repaint and is redrawn with system
-   colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
-@media (forced-colors: active) {
-/* pressed toggles, chips, the segmented face and its sliding indicator: Highlight fill, HighlightText ink */
-  :where([data-scope="toggle"]:is([aria-pressed="true"], [aria-checked="true"]), [data-scope="chip"][aria-pressed="true"]) {
-    forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; box-shadow: none;
-  }
-}
 }

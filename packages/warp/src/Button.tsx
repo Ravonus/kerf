@@ -1,5 +1,4 @@
-import { installSweep } from '@weft/ui-core'
-import { derived, onMount, untrack } from 'weft'
+import { derived, untrack } from 'weft'
 import type { Interaction } from 'weft/interaction'
 import { Icon, type IconRef } from './Icon'
 import { use } from './use'
@@ -36,13 +35,11 @@ const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
  * wipe); soft and outline append one [data-part="sweep"]; frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
 export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
-  const kind = untrack(() => emphasis)
   let host: HTMLButtonElement | undefined
   const row = untrack(() => ui)
   if (row) use(row.attach, () => host)
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
-  if (swept(kind)) onMount(() => installSweep())
   // a loading or aria-disabled button swallows presses (components.html guard())
   const press = (e: MouseEvent) => {
     const el = e.currentTarget as HTMLElement
@@ -54,15 +51,15 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
     <button
       type={type}
       data-scope="button"
-      data-emphasis={kind === 'solid' ? undefined : kind}
+      data-emphasis={emphasis === 'solid' ? undefined : emphasis}
       data-tone={tone}
       data-size={size === 'md' ? undefined : size}
-      data-fill={kind === 'frame' && fill ? '' : undefined}
+      data-fill={emphasis === 'frame' && fill ? '' : undefined}
       data-full={full ? '' : undefined}
       data-icon-only={glyph.value && !children ? '' : undefined}
       aria-label={label}
-      data-sweep={swept(kind) ? '' : undefined}
-      data-phase={swept(kind) ? 'idle' : undefined}
+      data-sweep={swept(emphasis) ? '' : undefined}
+     
       data-loading={loading ? '' : undefined}
       aria-busy={loading ? 'true' : undefined}
       aria-disabled={loading ? 'true' : undefined}
@@ -70,7 +67,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       {...rest}
       ref={(n: any) => { host = n; ref?.(n) }}
     >
-      {kind === 'frame' ? (
+      {emphasis === 'frame' ? (
         <>
           {fill && <span data-part="sweep-fill" aria-hidden="true"></span>}
           <span data-part="frame-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -85,7 +82,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
         content()
       )}
       {loading && <span data-scope="spinner" data-part="spinner" aria-hidden="true"></span>}
-      {(kind === 'soft' || kind === 'outline') && <span data-part="sweep" aria-hidden="true"></span>}
+      {(emphasis === 'soft' || emphasis === 'outline') && <span data-part="sweep" aria-hidden="true"></span>}
     </button>
   )
 }

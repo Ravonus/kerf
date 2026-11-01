@@ -43,6 +43,48 @@ test('the server writes no keys or markers in the static parts, and props as JSO
   expect(plan.files.find(f => f.file === 'src/components/lazy.tsx').nodes.find(n => n.name === 'Tap').client).toMatch(/onClick/)
 })
 
+test('a row whose key differs between server and client is built whole, works, and says so', async () => {
+  const { page, errors } = await open('/miss')
+  await settled(page)
+  expect((await page.evaluate(() => window.__weft)).misses).toBeGreaterThan(0)
+  expect(errors.join()).toContain('a key differs between server and client')
+  expect(await page.locator('.miss li').count()).toBe(1)
+  const input = page.locator('.miss li input')
+  expect(await input.count()).toBe(1)
+  expect(await input.getAttribute('type')).toBe('checkbox')
+  expect(await input.getAttribute('data-kind')).toBe('spread')
+  expect(await page.locator('.miss li').getAttribute('class')).toBe('row off')
+  expect(await page.locator('.miss li').getAttribute('title')).toBe('off')
+  await page.locator('.miss label').click()
+  await page.waitForFunction(() => document.querySelector('.miss li').className === 'row on')
+  expect(await input.isChecked()).toBe(true)
+  expect(await page.locator('.miss .plain').getAttribute('title')).toBe('on') // before the miss: still bound
+  expect(await page.locator('.miss .after').getAttribute('title')).toBe('on') // after it, on a claimed element
+  await page.close()
+})
+
+test('what was typed before a miss is not overwritten by the first writes after it', async () => {
+  const page = await browser.newPage()
+  const held = []
+  let letGo = go => held.push(go)
+  await page.route(/\.(js|mjs|ts|tsx)(\?|$)/, r => new Promise(go => letGo(go)).then(() => r.continue()))
+  await page.goto(url + '/miss', { waitUntil: 'commit' })
+  await page.locator('.miss .later').waitFor({ state: 'attached' })
+  await page.locator('.miss .typed').fill('before')
+  await page.locator('.miss .ticked').click() // held, then replayed
+  await page.locator('.miss .later').fill('sibling')
+  letGo = go => go()
+  held.forEach(go => go())
+  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await settled(page)
+  expect((await page.evaluate(() => window.__weft)).misses).toBeGreaterThan(0)
+  expect(await page.locator('.miss .typed').inputValue()).toBe('before')
+  expect(await page.locator('.miss .ticked').isChecked()).toBe(true)
+  expect(await page.locator('.miss .later').inputValue()).toBe('sibling')
+  expect(await page.locator('.miss .echo').innerText()).toBe('before|true')
+  await page.close()
+})
+
 test('islands hydrate 0/0, then what only the claim needed goes', async () => {
   const { page, errors } = await open('/islands')
   expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
@@ -412,6 +454,38 @@ test('a visitor who asked for less data loads on interaction only', async () => 
   expect(await page.textContent('.seen')).toBe('waiting')
   await page.click('.tap[data-id=far]')
   await page.waitForFunction(() => document.querySelector('.tap[data-id=far]').textContent === 'far: 1')
+  await context.close()
+})
+
+test('an island whose code fails once is tried again, and a press on it still lands', async () => {
+  const context = await browser.newContext()
+  await context.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true } }))
+  const page = await context.newPage()
+  let failed = 0
+  await page.route('**/components/lazy.tsx*', r => (failed++ ? r.continue() : r.abort()))
+  await page.goto(url + '/lazy')
+  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.click('.tap[data-id=far]')
+  await page.waitForFunction(() => document.querySelector('.tap[data-id=far]').textContent === 'far: 1')
+  await context.close()
+})
+
+test('an island whose code never comes reloads once, then says so instead of staying dead', async () => {
+  const context = await browser.newContext()
+  await context.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true } }))
+  const page = await context.newPage()
+  await page.route('**/components/lazy.tsx*', r => r.abort())
+  let loads = 0
+  page.on('load', () => loads++)
+  await page.goto(url + '/lazy')
+  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.click('.tap[data-id=far]')
+  await page.waitForFunction(() => sessionStorage.length > 0 && document.readyState === 'complete' && window.__weft?.hydrated)
+  await page.waitForTimeout(1500)
+  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.click('.tap[data-id=far]')
+  await page.waitForSelector('[data-weft-stale][role=alert]', { timeout: 5000 })
+  expect(loads).toBe(2)
   await context.close()
 })
 

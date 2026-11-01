@@ -50,7 +50,7 @@ export function ArtifactPanel({ title, versions, version, onVersion, code, onOpe
     choose(versions[to])
   }
   return (
-    <section ref={(n: any) => (root = n)} data-scope="artifact" data-sweep="" data-phase="idle" aria-labelledby={`${id}-n`}>
+    <section ref={(n: any) => (root = n)} data-scope="artifact" data-sweep="" aria-labelledby={`${id}-n`}>
       <Sweep />
       <div data-part="head">
         <b id={`${id}-n`}>{title}</b>

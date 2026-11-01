@@ -22,7 +22,8 @@
     "test": "vitest run",
     "size": "node scripts/size.mjs",
     "a11y": "node scripts/a11y.mjs",
-    "virtual": "node scripts/virtual.mjs"
+    "virtual": "node scripts/virtual.mjs",
+    "dither": "node scripts/dither.mjs"
   },
   "dependencies": {
     "@weft/ui-core": "file:../ui-core",

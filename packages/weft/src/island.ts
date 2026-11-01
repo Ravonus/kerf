@@ -97,13 +97,39 @@ function waiting(el: Element | null | undefined) {
   }
 }
 
-/** Load and claim, once. Code that can't load drops the island: its events then take their defaults. */
-const run = (r: Later) => (r.running ??= r.wait().then(() => {
+/**
+ * Code that won't load, usually a page older than the deploy serving it: the fresh page once, then saying so. An island
+ * that stays quiet looks alive and does nothing.
+ */
+function stale() {
+  const key = `weft:reloaded:${location.pathname}`
+  try {
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1')
+      return location.reload()
+    }
+  } catch {}
+  if (document.querySelector('[data-weft-stale]')) return
+  const note = document.createElement('p')
+  note.setAttribute('data-weft-stale', '')
+  note.setAttribute('role', 'alert')
+  note.style.cssText = 'position:fixed;inset:auto 1rem 1rem;z-index:2147483647;margin:0;padding:.75rem 1rem;background:#111;color:#fff;font:14px/1.4 system-ui,sans-serif'
+  note.textContent = 'Part of this page could not load. Reload to try again.'
+  document.body.append(note)
+}
+
+const RETRY_MS = 800
+
+/** Load and claim, once. Code that can't load is tried again, then `stale`: its held events take their defaults. */
+const run = (r: Later) => (r.running ??= r.wait().catch(() => new Promise(go => setTimeout(go, RETRY_MS)).then(r.wait)).then(() => {
   if (later.get(r.key) === r) {
     later.delete(r.key)
     r.mount()
   }
-}, () => void later.delete(r.key)).catch(console.error).then(drain))
+}, () => {
+  later.delete(r.key)
+  stale()
+}).catch(console.error).then(drain))
 
 export function wake(el: Element) {
   const r = waiting(el)
@@ -163,7 +189,7 @@ function watch(r: Later, c: Comment) {
       near!.unobserve(e.target)
       void (hit.when === 'v' ? run(hit) : hit.wait().catch(() => {}))
     }
-  }, { rootMargin: '200px' })
+  }, { rootMargin: '600px' })
   watched.set(el, r)
   near.observe(el)
 }
@@ -240,13 +266,15 @@ function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
     for (const el of (n as Element).querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
   }
   const was = { d: rt.data, s: rt.state }
+  const missed = hydration.misses
   rt.data = data
   rt.state = data?.s
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
   try {
     fn()
   } finally {
-    Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
+    if (hydration.misses > missed) console.warn('weft: rendered fresh, a key differs between server and client (see `weft docs W044`)')
+    Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = was.d
     rt.state = was.s
     registry.clear()

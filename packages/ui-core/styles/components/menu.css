@@ -14,10 +14,13 @@
        [data-scope="select"] [data-part="item"][data-highlighted], [data-scope="palette"] [data-part="item"][aria-selected="true"]) {
   background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent);
 }
-:where([data-scope="menu"] [data-part="item"]:focus-visible, [data-scope="select"] [data-part="item"][data-highlighted][data-keyboard],
-       [data-scope="palette"] [data-part="item"][aria-selected="true"]) {
+:where([data-scope="menu"] [data-part="item"]:focus-visible, [data-scope="select"] [data-part="item"][data-highlighted][data-keyboard]) {
   box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-focus);
 }
+:where([data-scope="menu"][data-part="content"]:has(> [data-part="shuttle"])) { isolation: isolate; }
+/* with a shuttle the highlight travels: the item itself draws nothing */
+:where([data-scope="menu"]:has(> [data-part="shuttle"]) [data-part="item"]:focus) { background: none; box-shadow: none; }
+:where([data-scope="menu"][data-part="content"] > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 130%), transparent); }
 :where([data-scope="menu"] [data-part="item"][aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); }
 :where([data-scope="menu"] [data-part="item"][data-tone="critical"]) { color: var(--warp-color-critical-text); }
 :where([data-scope="menu"] [data-part="item"] > svg[data-icon], [data-scope="palette"] [data-part="item"] > svg[data-icon]) { color: var(--warp-color-text-subtle); }

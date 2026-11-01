@@ -1,6 +1,6 @@
 import { SearchIcon } from '@weft/icons'
-import { dialog, installSweep, listKey, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
-import { derived, effect, flush, onMount, state, untrack, watch } from 'weft'
+import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@weft/ui-core'
+import { derived, effect, flush, state, untrack, watch } from 'weft'
 import { bindable, type Openable } from './bind'
 import { Icon, type IconRef } from './Icon'
 import { Kbd } from './Kbd'
@@ -166,6 +166,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   const flag = bindable<boolean>(() => open, () => defaultOpen, false, () => o => onOpenChange?.(o))
   const typed = state('')
   const active = state(0)
+  let face: HTMLElement | undefined
   const rows = state<Row[]>([])
   const size = state(0)
   const drill = state<Command[] | undefined>(undefined)
@@ -180,7 +181,6 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
   let shown: Command[] = []
   use(dialog, () => el, () => ({ open: flag.value, onClose: () => flag.set(false) }))
   if (untrack(() => hotkey) !== false) use(paletteHotkey, () => el, () => ({ key: String(hotkey), slash, onPress: () => flag.set(!untrack(() => flag.value)) }))
-  onMount(() => installSweep())
 
   const show = (next: Command[], q: string) => {
     shown = next
@@ -290,9 +290,18 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     answer(e.currentTarget.value)
   }
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
+  // one highlight that travels (redesign §3): it reads the row after the render that moved it
+  watch(() => [active.value, rows.value, flag.value] as const, ([, , on]) => { requestAnimationFrame(() => {
+    if (!face) return
+    if (!on) { face.setAttribute('data-instant', ''); face.style.removeProperty('--warp-a'); return }
+    // the row, not its option: while a row's entrance runs, its translate makes it the option's offsetParent
+    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]')?.parentElement
+    if (row) moveShuttle(face, row.offsetTop, row.offsetTop + row.offsetHeight)
+    requestAnimationFrame(() => face?.removeAttribute('data-instant'))
+  }) })
   return (
     <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
-      <div data-part="input-row" data-sweep="" data-phase="idle" data-hold={flag.value ? '' : undefined}>
+      <div data-part="input-row" data-sweep="">
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
         <label for={`${id}-in`} data-part="sr-only">{label}</label>
@@ -300,6 +309,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
         {mode.value ? <span data-part="mode">{mode.value.label}</span> : <Kbd>esc</Kbd>}
       </div>
       <div ref={(n: any) => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
+        <span ref={(n: any) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {slots.value.map(i => <Slot key={i} id={id} row={() => rows.value[i]} active={() => active.value} onPick={at => run(at, 'pointer')} onHover={at => (active.value = at)} />)}
       </div>
       {flag.value && !items.value.length && !pending.value && <div data-part="empty">{`Nothing matches “${typed.value}”.`}</div>}

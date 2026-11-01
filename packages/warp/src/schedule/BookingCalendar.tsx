@@ -98,7 +98,7 @@ export function BookingCalendar(p: BookingCalendarProps) {
             {date.value && !p.loading && !p.error && !manual.value && (
               <>
                 <div data-part="slots" role="group" aria-label={`Times on ${fmt(date.value, { dateStyle: 'full' }, env.locale.value)}`} onKeyDown={onSlots}>
-                  {list.value.map(x => <button key={x.s} type="button" data-part="slot" data-sweep="" data-phase="idle" aria-pressed={x.s === pick.value ? 'true' : 'false'} disabled={x.disabled} onClick={() => { pick.value = x.s; stage.value = 'pick' }}><SweepParts />{clock(x.s, env.locale.value, p.hourCycle)}</button>)}
+                  {list.value.map(x => <button key={x.s} type="button" data-part="slot" data-sweep="" aria-pressed={x.s === pick.value ? 'true' : 'false'} disabled={x.disabled} onClick={() => { pick.value = x.s; stage.value = 'pick' }}><SweepParts />{clock(x.s, env.locale.value, p.hourCycle)}</button>)}
                 </div>
                 {empty.value && <p class="muted">No times left on this day.</p>}
               </>

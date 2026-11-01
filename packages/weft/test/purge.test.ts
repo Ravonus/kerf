@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { parse, purge, reachable, unnest, words } from '../node/purge.mjs'
+import { layerOrder, markup, parse, pieces, purge, reachable, unnest, words } from '../node/purge.mjs'
 
 const has = (...w: string[]) => words([w.join(' ')])
 const out = (css: string, ...w: string[]) => purge([css], has(...w))[0]
@@ -107,3 +107,47 @@ test("with `base: './'`, a lazy chunk's preload list names the purged stylesheet
   for (const name of named) expect(sheets).toContain(name)
   rmSync(root, { recursive: true, force: true })
 }, 30000)
+
+describe('pieces', () => {
+  const css = `@layer warp.tokens,warp.base;@layer warp.tokens{:root{--warp-a:1px;--warp-b:var(--warp-c);--warp-c:2px;--warp-unused:3px}}@layer warp.base{[data-scope=knob]{width:var(--warp-b);animation:spin 1s}[data-scope=knob]:hover{color:red}[data-scope=dial]{height:1px}[data-theme=dark] b{color:blue}p{margin:0}}@keyframes spin{to{rotate:1turn}}@media print{p{color:#000}}`
+  const lookup = (html: string) => {
+    const t = pieces([['a', css]])
+    const has = markup(html), ids = new Set<number>(), take = (i: number) => { if (!ids.has(i)) { ids.add(i); t.deps[i].forEach(take) } }
+    t.always.forEach(take)
+    for (const k of has) t.index[k]?.forEach((i: number) => { const n = t.alts[i]; if (!n || n.some(([all]: any) => all.every((k: string) => has.has(k)))) take(i) })
+    return [...ids].map(i => t.pieces[i][2] + '{' + t.pieces[i][3]).join('\n')
+  }
+
+  test('a rendered component brings its rules, the tokens they read through others, and their keyframes', () => {
+    const got = lookup('<div data-scope="knob"></div>')
+    expect(got).toContain('[data-scope=knob]{width')
+    expect(got).toContain('--warp-b:')
+    expect(got).toContain('--warp-c:2px')
+    expect(got).toContain('@keyframes spin')
+    expect(got).not.toContain('--warp-unused')
+    expect(got).not.toContain('[data-scope=dial]')
+  })
+
+  test('hover states and print wait for the sheet; a theme on the root stays, since no HTML shows it', () => {
+    const got = lookup('<div data-scope="knob"><b>x</b><p>y</p></div>')
+    expect(got).not.toContain(':hover')
+    expect(got).not.toContain('#000')
+    expect(got).toContain('[data-theme=dark] b')
+  })
+
+  test('a rule needs every word of its selector, not just the rarest', () => {
+    const t = pieces([['a', '[data-scope=k][data-x=y]{color:red}']])
+    const id = Object.values(t.index)[0][0] as number
+    expect(t.alts[id][0][0].sort()).toEqual(['[data-scope=k]', '[data-x=y]'])
+  })
+
+  test('layer order is the whole sheet\'s, whatever a page uses', () => {
+    expect(layerOrder(css)).toEqual(['warp.tokens', 'warp.base'])
+    expect(pieces([['a', css]]).layers).toBe('@layer warp.tokens,warp.base;')
+  })
+
+  test('`keep` holds a selector whatever the HTML has', () => {
+    expect(pieces([['a', '.late{color:red}']], ['late']).always.length).toBe(1)
+    expect(pieces([['a', '.late{color:red}']]).always.length).toBe(0)
+  })
+})

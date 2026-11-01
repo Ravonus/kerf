@@ -82,7 +82,7 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
         <span data-part="level" aria-hidden="true" style={`--level:${level.value}`}><i></i><i></i><i></i></span>
         <span>{mode.value === 'blocked' ? 'Blocked by the browser' : 'Input level'}</span>
       </div>
-      <div data-part="strip" data-sweep="" data-phase="idle" data-pin={on.value ? '' : undefined}>
+      <div data-part="strip" data-sweep="" data-pin={on.value ? '' : undefined}>
         <Sweep />
         <Button data-icon-only="" tone={on.value ? 'critical' : undefined} aria-pressed={on.value ? 'true' : 'false'} label={on.value ? 'Stop dictation' : 'Start dictation'} onClick={toggle}><MicIcon /></Button>
         <span ref={(n: any) => (wave = n)} data-part="wave" data-loop="" aria-hidden="true">{BARS.map(b => <i key={b}></i>)}</span>

@@ -14,7 +14,7 @@ export default function Profile() {
   }
   return (
     <Card title="Profile">
-      <Badge tone="success">Saved {saves.value} times</Badge>
+      <Badge tone="positive">Saves: {saves.value}</Badge>
       <Button disabled={saving.value} onClick={go}>
         {saving.value ? <Spinner /> : 'Save changes'}
       </Button>

@@ -182,14 +182,14 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
       </Card>
       <Card sweep={false}>
         {sent.value
-          ? <div data-arrive="" data-sweep="" data-phase="idle" class="row" role="status"><div><b>Invite sent · {summary.value}</b><p class="muted">{people.value.length} people · added to your calendar · we'll tell you when they answer.</p></div>{p.onUndo && <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => { sent.value = false; p.onUndo?.() }}>Undo</Button>}</div>
+          ? <div data-arrive="" data-sweep="" class="row" role="status"><div><b>Invite sent · {summary.value}</b><p class="muted">{people.value.length} people · added to your calendar · we'll tell you when they answer.</p></div>{p.onUndo && <Button emphasis="ghost" tone="neutral" size="sm" onClick={() => { sent.value = false; p.onUndo?.() }}>Undo</Button>}</div>
           : <div class="stack">
               <div class="row"><h4 id={`${id}-slots`}>Suggested times</h4><span style="flex:1"></span><span class="muted">{slots.value.length ? `Everyone is free · within working hours for ${fit.value} of ${people.value.length}` : 'No time works for everyone'}</span></div>
               {manual.value
                 ? <TimeField label="Start" value={typed} locale={env.locale.value} hourCycle="h23" />
                 : <div data-scope="booking" data-part="root">
                     <div ref={(n: any) => (group = n)} data-part="slots" role="radiogroup" aria-labelledby={`${id}-slots`} onKeyDown={onRadio}>
-                      {slots.value.map(m => <button key={m} type="button" data-part="slot" data-sweep="" data-phase="idle" role="radio" aria-checked={m === chosen.value ? 'true' : 'false'} data-hold={m === chosen.value ? '' : undefined} tabindex={m === chosen.value ? '0' : '-1'} onClick={() => (pick.value = m)}><SweepParts />{time(m)}</button>)}
+                      {slots.value.map(m => <button key={m} type="button" data-part="slot" data-sweep="" role="radio" aria-checked={m === chosen.value ? 'true' : 'false'} data-hold={m === chosen.value ? '' : undefined} tabindex={m === chosen.value ? '0' : '-1'} onClick={() => (pick.value = m)}><SweepParts />{time(m)}</button>)}
                     </div>
                   </div>}
               <div class="row">

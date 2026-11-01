@@ -2,6 +2,7 @@
 // own so a page with only lazy islands can be read without it (`boot.ts`, PLAN §11); a page with work to do has it
 // preloaded, and starts it at once.
 
+import './gate.css'
 import { boot } from './boot'
 import type { ClientRoutes, start as run } from './run'
 

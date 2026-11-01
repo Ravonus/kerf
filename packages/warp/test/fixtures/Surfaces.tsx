@@ -10,6 +10,11 @@ import { MentionsInput } from '../../src/MentionsInput'
 import { LoadMore, PaginationBar } from '../../src/Pagination'
 import { RichTextEditor } from '../../src/RichTextEditor'
 import { Table } from '../../src/Table'
+import { Accordion } from '../../src/Accordion'
+import { RadioGroup } from '../../src/Choice'
+import { Menu } from '../../src/Menu'
+import { Slider } from '../../src/Slider'
+import { Ticker } from '../../src/Ticker'
 
 export const PEOPLE = [{ id: 'ada', label: 'Ada Lovelace' }, { id: 'alan', label: 'Alan Turing' }]
 const search = async (q: string) => PEOPLE.filter(p => p.label.toLowerCase().includes(q.toLowerCase()))
@@ -88,3 +93,10 @@ export function MarkdownEditorCase() {
   const v = state('# Hi')
   return <><MarkdownEditor label="Body" value={v} /><output data-out="">{v.value}</output></>
 }
+
+// the redesign's new components: SSR + hydrate, 0 misses, 0 writes
+export const AccordionCase = () => <Accordion defaultOpen={['a']} items={[{ value: 'a', title: 'One', content: 'first' }, { value: 'b', title: 'Two', content: 'second' }]} />
+export const SliderCase = () => <Slider label="Volume" value={40} onChange={() => {}} />
+export const RadioCase = () => <RadioGroup label="Plan" value="free" onChange={() => {}} options={[{ value: 'free', label: 'Free' }, { value: 'pro', label: 'Pro' }]} />
+export const TickerCase = () => <Ticker value={48120} format={{ style: 'currency', currency: 'USD' }} locale="en-US" />
+export const MenuCase = () => <Menu label="Actions" items={[{ label: 'Rename' }, { separator: true }, { label: 'Delete', tone: 'critical' }]} />

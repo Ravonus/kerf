@@ -198,7 +198,7 @@ become a slow opacity pulse. Loops that should hold their frame read `--warp-loo
 
 Durations scale by stop: × 0.85 / × 1 / × 1.2.
 
-**Enter vs exit.** Exits are 70% of the enter duration, travel half the distance, accelerate (`ease-in`), and
+**Enter vs exit.** Exits are 50% of the enter duration, travel half the distance, accelerate (`ease-in`), and
 **continue the direction of entry** rather than rewinding. Overlays anchored to a trigger leave toward it. This is
 the sweep's rule too: in from the left, out to the right (`old:theme/tokens.css:274-285`).
 

@@ -60,7 +60,7 @@ function Body({ event, props: p, bind }: { event: CalEvent; props: MoveSheetProp
       <div data-scope="booking" data-part="root">
         <div data-part="slots" role="group" aria-label="Start time">
           {slots.value.map(x => (
-            <button key={x.s} type="button" data-part="slot" data-sweep="" data-phase="idle" aria-pressed={x.s === start.value ? 'true' : 'false'} disabled={x.busy} onClick={(ev: MouseEvent) => pick(x.s, ev)}><SweepParts />{clock(x.s, locale.value, p.hourCycle)}</button>
+            <button key={x.s} type="button" data-part="slot" data-sweep="" aria-pressed={x.s === start.value ? 'true' : 'false'} disabled={x.busy} onClick={(ev: MouseEvent) => pick(x.s, ev)}><SweepParts />{clock(x.s, locale.value, p.hourCycle)}</button>
           ))}
         </div>
       </div>

@@ -14,9 +14,13 @@
     display calc(var(--warp-duration-slow) * var(--warp-duration-exit-k)) allow-discrete;
 }
 :where(dialog[data-scope="sheet"]:not([open])) { display: none; }
+/* named rows: the handle is hidden on a side sheet, and the footer stays on the bottom edge whatever the body holds */
+:where(dialog[data-scope="sheet"] > [data-part="header"]) { grid-row: 2; }
+:where(dialog[data-scope="sheet"] > [data-part="body"]) { grid-row: 3; }
+:where(dialog[data-scope="sheet"] > [data-part="footer"]) { grid-row: 4; }
 :where(dialog[data-scope="sheet"][open]) {
   opacity: 1; translate: 0 var(--_drag);
-  transition: translate var(--warp-duration-slow) var(--warp-ease-in-out), opacity var(--warp-duration-slow) var(--warp-ease-out),
+  transition: translate calc(var(--warp-duration-slow) * 1.5) var(--warp-ease-sheet), opacity var(--warp-duration-slow) var(--warp-ease-out),
               overlay var(--warp-duration-slow) allow-discrete, display var(--warp-duration-slow) allow-discrete;
 }
 @starting-style {

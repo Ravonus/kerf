@@ -53,7 +53,7 @@ function Running({ steps, onEnd, onStepChange }: { steps: TourStep[]; onEnd: (do
   }))
   return (
     <div ref={(n: any) => (root = n)} data-scope="tour">
-      <div data-part="spotlight" data-sweep="" data-hold="" data-phase="idle"><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></div>
+      <div data-part="spotlight" data-sweep="" data-hold=""><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></div>
       <div data-part="card" role="dialog" aria-modal="false" aria-labelledby={`${id}-t`} aria-describedby={`${id}-d`}>
         <span data-part="step-count">{many ? `Step ${at.value + 1} of ${list.length}` : 'Tip'}</span>
         <h4 id={`${id}-t`} tabindex="-1" aria-level="2">{step.value.title}</h4>

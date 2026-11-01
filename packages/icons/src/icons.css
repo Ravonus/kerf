@@ -11,6 +11,10 @@
   :where(svg[data-icon] [data-p], svg[data-icon] [data-c]) { stroke: none; transform: scale(1.5); shape-rendering: crispEdges; }
   :where(svg[data-icon] [data-p]) { fill: currentColor; }
   :where(svg[data-icon] [data-p][data-w]) { fill: var(--warp-icon-weft-color, currentColor); }
+  /* An icon picks its form from its own size (10 §6). Dither is depth, and at 16 px it reads as noise, so it needs 20. */
+  :where(svg[data-icon]) { container-type: size; }
+  :where(svg[data-icon] [data-d]) { opacity: 0; }
+  @container (min-width: 20px) { :where(svg[data-icon] [data-d]) { opacity: 1; } }
   /* solid: a filled body, its offset shade, and what's cut from it */
   :where(svg[data-icon] [data-s]) { fill: currentColor; stroke: none; }
   :where(svg[data-icon] [data-sh]) { stroke: currentColor; stroke-width: 1.5; }

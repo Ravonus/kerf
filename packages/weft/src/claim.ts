@@ -32,11 +32,13 @@ export function htpl(html: string, svg?: boolean, place?: string): () => Node {
       const el = hydration.registry.get(key)
       if (el && el.localName === tag.toLowerCase()) {
         hydration.registry.delete(key)
+        keys.miss = false
         hydration.trash.push(el)
         ;(el as any).$k = key
         return el
       }
       hydration.misses++
+      keys.miss = true
       if (DEV) {
         const at = place ?? html.slice(0, 60)
         console.warn(el ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh` : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`)
@@ -162,7 +164,9 @@ export function hchild(parent: Element, value: unknown, marker?: Node | null, ro
       claimed = true
     })
   }
+  const miss = keys.miss // a miss inside this hole ends with it: the template around it goes on as it was
   if (keys.on && root?.$k !== undefined) under(`${root.$k}.${slot}/`, claim)
   else claim()
+  keys.miss = miss
 }
 

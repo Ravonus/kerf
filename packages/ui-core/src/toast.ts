@@ -6,11 +6,13 @@
 import { store, uid } from './store'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
-export interface ToastInput { title: string; description?: string; tone?: Tone; action?: { label: string; onClick(): void }; duration?: number; id?: string }
+export interface ToastInput { title: string; description?: string; tone?: Tone; action?: { label: string; onClick(): void }; duration?: number; id?: string; /** Spinner in place of the icon; it stays until updated. */ loading?: boolean }
 export interface Toast extends ToastInput { id: string; life: number; state?: 'closed' | 'swiped' }
+export interface ToastPromise<T> { pending: string | ToastInput; done: string | ToastInput | ((value: T) => string | ToastInput); error: string | ToastInput | ((reason: unknown) => string | ToastInput) }
 
 /** 5s + 60ms a word; 10s with an action; a critical toast with an action stays until dismissed (life 0). */
 export function lifeOf(t: ToastInput) {
+  if (t.loading) return 0
   if (t.duration !== undefined) return t.duration
   if (t.tone === 'critical' && t.action) return 0
   if (t.action) return 10000
@@ -26,14 +28,22 @@ export function toastStore() {
     list.set(list.get().map(t => (t.id === id ? { ...t, state: how } : t)))
     clearTimeout(timers.get(id))
     // the exit runs on the element (data-state); then it leaves the list
-    timers.set(id, setTimeout(() => { timers.delete(id); list.set(list.get().filter(t => t.id !== id)) }, 400))
+    timers.set(id, setTimeout(() => { timers.delete(id); list.set(list.get().filter(t => t.id !== id)) }, 320))
   }
   const show = (input: ToastInput) => {
     const t: Toast = { ...input, id: input.id ?? uid('toast'), life: lifeOf(input) }
     list.set([t, ...list.get().filter(x => x.id !== t.id)])
     return t.id
   }
-  return { get: list.get, subscribe: list.subscribe, show, dismiss }
+  const shape = (v: string | ToastInput): ToastInput => (typeof v === 'string' ? { title: v } : v)
+  /** One toast through a promise's life: pending, then what it settled to, in place (05 §5). */
+  const promise = <T>(p: Promise<T>, m: ToastPromise<T>) => {
+    const id = show({ ...shape(m.pending), loading: true })
+    const settle = (next: ToastInput) => { list.set(list.get().map(t => (t.id === id ? { ...next, id, life: lifeOf(next) } : t))) }
+    p.then(v => settle({ tone: 'positive', ...shape(typeof m.done === 'function' ? m.done(v) : m.done) }), e => settle({ tone: 'critical', ...shape(typeof m.error === 'function' ? m.error(e) : m.error) }))
+    return p
+  }
+  return { get: list.get, subscribe: list.subscribe, show, dismiss, promise }
 }
 export type ToastStore = ReturnType<typeof toastStore>
 
@@ -76,7 +86,7 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
         y += el.offsetHeight + 8
       } else {
         const k = Math.min(i, 3)
-        el.style.setProperty('--_y', `${-k * 10}px`)
+        el.style.setProperty('--_y', `${-k * 12}px`)
         el.style.setProperty('--_s', String(1 - k * 0.05))
         el.style.setProperty('--_o', i < 3 ? '1' : '0')
       }

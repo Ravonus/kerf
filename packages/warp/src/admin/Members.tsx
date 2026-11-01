@@ -103,7 +103,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
       id: 'name', header: 'Name', rowHeader: true, card: 'title', sort: true,
       cell: m => <span data-scope="row" data-wrap="none"><Avatar name={m.name} size="sm" /><span><b>{m.name}</b>{m.id === me && <>{' '}<Badge>You</Badge></>}<br /><span class="muted">{m.email}</span></span></span>,
     },
-    { id: 'role', header: 'Role', cell: m => <RoleCell member={m} label={`Role for ${m.name}`} roles={roles} locked={locked(m)} onChange={e => change(m, e)} /> },
+    { id: 'role', header: 'Role', cell: m => { const held = derived(() => locked(m)); return <RoleCell member={m} label={`Role for ${m.name}`} roles={roles} locked={held.value} onChange={e => change(m, e)} /> } },
     { id: 'lastActive', header: 'Last active', card: 'hide' },
     {
       id: 'menu', header: 'Actions', value: () => '',

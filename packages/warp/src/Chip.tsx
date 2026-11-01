@@ -1,6 +1,5 @@
 import { CheckIcon } from '@weft/icons'
-import { installSweep } from '@weft/ui-core'
-import { derived, onMount } from 'weft'
+import { derived } from 'weft'
 import { Icon, type IconRef } from './Icon'
 import './fields'
 import '@weft/ui-core/styles/inputs/choice.css'
@@ -12,10 +11,9 @@ const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></spa
 
 /** A filter chip (03 §4 Chips): a toggle button; pressed pins the sweep on accent-soft and draws the check. */
 export function Chip({ pressed, count, icon, children, ...rest }: { pressed?: boolean; count?: any; icon?: IconRef; children?: any; [attr: string]: any }) {
-  onMount(() => installSweep())
   const glyph = derived(() => icon)
   return (
-    <button type="button" data-scope="chip" data-sweep="" data-phase="idle" aria-pressed={pressed ? 'true' : 'false'} {...rest}>
+    <button type="button" data-scope="chip" data-sweep="" aria-pressed={pressed ? 'true' : 'false'} {...rest}>
       {sweepParts()}
       {pressed ? <CheckIcon data-part="check" /> : glyph.value && <Icon name={glyph.value} />}
       {children}

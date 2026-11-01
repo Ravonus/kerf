@@ -1,49 +1,42 @@
-import { onCleanup, onMount } from 'weft'
-import { render } from 'weft/dom'
-import { demos } from '../demos'
-import code from '../generated/demos.json'
-import '@weft/ui-core/styles/components/badge.css' // what a still shows before its demo's chunk brings them
-import '@weft/ui-core/styles/components/surface.css'
+import Later from '../demos/async'
+import Lists from '../demos/lists'
+import Props from '../demos/props'
+import Rules from '../demos/rules'
 import '@weft/ui-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
-const files = import.meta.glob('../demos/*.tsx')
+/** What the route's loader sends for one example; none of it is in the page's script. */
+export type PageExampleData = { id: string; look: string; tryIt: string; why: string; code: string }
 
-/** The running half: its own chunk, fetched as it nears the screen, so a docs page costs what its text costs. It takes the place of the still beside it. */
-/* @weft visible */
-function Late(props: { id: string }) {
-  let box: HTMLElement | undefined
-  onMount(() => {
-    let stop: (() => void) | undefined
-    let gone = false
-    void files[`../demos/${props.id}.tsx`]().then((m: any) => {
-      if (gone) return
-      box!.previousElementSibling?.remove()
-      stop = render(m.default, box!) as () => void
-    })
-    onCleanup(() => {
-      gone = true
-      stop?.()
-    })
-  })
-  return <div data-part="run" ref={(n: any) => (box = n)}></div>
+/**
+ * One JSX site per demo: each is then an island the server renders, and a press before its code has loaded is held and
+ * replayed, like any other island's.
+ */
+function Demo(props: { id: string }) {
+  return (
+    <div data-part="run">
+      {props.id === 'rules' && <Rules />}
+      {props.id === 'props' && <Props />}
+      {props.id === 'lists' && <Lists />}
+      {props.id === 'async' && <Later />}
+    </div>
+  )
 }
 
-/** The example a docs page opens with, if it has one. */
-export function PageExample(props: { slug: string; stills: Record<string, string> }) {
+/** The examples a docs page opens with, if it has any. */
+export function PageExample(props: { examples: PageExampleData[] }) {
   return (
     <>
-      {Object.keys(demos).filter(id => demos[id].page === props.slug).map(id => (
-        <section key={id} data-site="example">
-          <p>{demos[id].look}</p>
+      {props.examples.map(e => (
+        <section key={e.id} data-site="example">
+          <p>{e.look}</p>
           <div data-part="pair">
-            <div data-part="run" inert innerHTML={props.stills[id]}></div>
-            <Late id={id} />
-            <div data-scope="codeblock" innerHTML={code[id]}></div>
+            <Demo id={e.id} />
+            <div data-scope="codeblock" innerHTML={e.code}></div>
           </div>
           <dl>
-            <div><dt>Try this</dt><dd>{demos[id].tryIt}</dd></div>
-            <div><dt>Why it matters</dt><dd>{demos[id].why}</dd></div>
+            <div><dt>Try this</dt><dd>{e.tryIt}</dd></div>
+            <div><dt>Why it matters</dt><dd>{e.why}</dd></div>
           </dl>
         </section>
       ))}

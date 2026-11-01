@@ -47,7 +47,7 @@ export const cases: Record<keyof typeof C, Case> = {
     act: r => { q(r, 'button').dispatchEvent(new FocusEvent('focusin', { bubbles: true })); q(r, 'button').focus() },
     see: r => expect(q(r, 'button').getAttribute('aria-describedby')).toBe(q(r, '[role="tooltip"]').id), budget: 0, runs: 0,
   },
-  PopoverCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-expanded')).toBe('true'), budget: 7, runs: 2 },
+  PopoverCase: { act: r => q(r, 'button').click(), see: r => expect(q(r, 'button').getAttribute('aria-expanded')).toBe('true'), budget: 8, runs: 2 },
   ModalCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 2, runs: 1 },
   DrawerCase: { act: r => q(r, 'button').click(), see: r => expect((q(r, 'dialog') as HTMLDialogElement).open).toBe(true), budget: 3, runs: 1 },
   TableSortCase: {
@@ -70,7 +70,7 @@ export const cases: Record<keyof typeof C, Case> = {
     act: r => q(r, '[aria-haspopup="menu"]').click(),
     see: r => { expect(q(r, '[data-part="menu"]').hidden).toBe(false); expect(document.activeElement!.textContent).toBe('Profile') }, budget: 3, runs: 4,
   },
-  ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 5 },
+  ToastCase: { act: drive, see: r => expect(q(r, '[data-part="root"] [data-part="title"]').textContent).toBe('Saved'), budget: 6, runs: 6 },
   PagesCase: { act: r => [...r.querySelectorAll('button')].find(b => b.textContent === '4')!.click(), see: r => expect(q(r, '[aria-current="page"]').textContent).toBe('4'), budget: 7, runs: 15 },
   PaletteCase: { act: r => q(r, 'button').click(), see: () => expect(document.querySelector('[role="combobox"]')).toBeTruthy(), budget: 9, runs: 24 },
   CodeCase: { act: r => { const a = q(r, 'textarea') as HTMLTextAreaElement; a.value = 'x'; fireEvent.input(a) }, see: r => expect(q(r, '[data-out]').textContent).toBe('x'), budget: 3, runs: 8 },
