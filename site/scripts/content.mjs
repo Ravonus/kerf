@@ -455,7 +455,8 @@ function buildSpeed() {
     const best = Math.min(weft, solid, react)
     return { label, weft, solid, react, fastest: best === weft ? 'weft' : best === solid ? 'Solid' : 'React' }
   })
-  write('speed.json', { machine: run.machine, solid: run.solid, when: run.when.slice(0, 10), rows, wins: rows.filter(r => r.fastest === 'weft').length })
+  const arena = JSON.parse(readFileSync(join(repo, 'evals/speed/arena-site.json'), 'utf8'))
+  write('speed.json', { arena, machine: run.machine, solid: run.solid, when: run.when.slice(0, 10), rows, wins: rows.filter(r => r.fastest === 'weft').length })
 }
 
 // ------------------------------------------------------------------ agents

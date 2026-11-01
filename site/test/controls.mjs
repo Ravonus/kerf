@@ -181,6 +181,8 @@ await behaves('Same page changes in all three', '/', async page => {
   await page.waitForTimeout(300)
   const writes = await stage.locator('dl div:has(dt:text-is("page changes")) dd').allInnerTexts()
   if (new Set(writes).size !== 1 || writes[0] === '0') throw new Error(`page changes differ: ${writes}`)
+  same(await stage.locator('dl div:has(dt:text-is("time per update")) dd').first().innerText(), '–', 'a click is too few to time')
+  same(await page.evaluate(() => [...document.querySelectorAll('[data-site="arena"] iframe')].every(f => f.contentWindow.crossOriginIsolated)), true, 'the frames have the fine clock')
 })
 
 await b.close()

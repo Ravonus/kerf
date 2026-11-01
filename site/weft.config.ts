@@ -4,6 +4,8 @@ import { icons } from '@weft/icons/plugin'
 import { text } from '@weft/plugin-text'
 
 const FILES = 'node_modules/@fontsource'
+// Cross-origin isolation gives the arena's frames a finer clock, and a frame only has it when the page around it does too.
+const ISOLATED = { 'cross-origin-opener-policy': 'same-origin', 'cross-origin-embedder-policy': 'credentialless' }
 
 export default defineConfig({
   // arena/ is its own project: the same page in React, Solid and weft, none of which may load warp or the sizes it compares change.
@@ -13,6 +15,7 @@ export default defineConfig({
   },
   site: {
     name: 'weft',
+    headers: { '/': ISOLATED, '/arena/**': ISOLATED },
     url: process.env.WEFT_SITE_URL,
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',

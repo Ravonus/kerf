@@ -40,6 +40,8 @@ export interface PluginEntry {
 
 /** Page metadata defaults (research 20 §2). Every page writes these as static tags in the server's first response. */
 export interface SiteConfig {
+  /** Response headers by route, static files included: `{ '/arena/**': { 'x-frame-options': 'DENY' } }`. */
+  headers?: Record<string, Record<string, string>>
   name?: string
   /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is H001. */
   url?: string

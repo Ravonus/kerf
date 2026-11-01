@@ -35,6 +35,7 @@ function config({ root, site, hydration, preset, port, logLevel, command, nitro:
         preset,
         // Every app gets this: built assets ship as .br and .gz next to the file, and Nitro picks by Accept-Encoding.
         compressPublicAssets: { gzip: true, brotli: true },
+        ...(site?.headers && { routeRules: Object.fromEntries(Object.entries(site.headers).map(([path, headers]) => [path, { headers }])) }),
         ...(sockets && { features: { websocket: true } }),
         ...(runner && { devServer: { runner } }),
         // Build mode for share cards (research 20 §4.3): the server lists them and Nitro's prerender writes the PNGs.

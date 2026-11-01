@@ -11,12 +11,11 @@ const FRAMES = [
 
 const n = (v: number) => v.toLocaleString('en-US')
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
-const ms = (total: number, updates: number) => {
-  if (!updates) return '–'
-  const each = total / updates
-  return each < 0.1 ? '<0.1 ms' : `${each.toFixed(1)} ms`
-}
+/** Needs a real run: a few presses are too few to compare, so the row stays empty until the 60 a second has run for a while. */
+const ENOUGH = 300
+const ms = (total: number, updates: number) => (updates < ENOUGH ? '–' : `${(total / updates).toFixed(2)} ms`)
 const time = (v: number) => (v < 0.01 ? '<0.01' : v < 10 ? v.toFixed(2) : v.toFixed(1))
+const us = (v: number) => `${Math.round(v)} µs`
 const top = Math.max(...FRAMES.map(f => bytes[f.id]))
 
 /** The same app built three times, each in its own frame. All readouts come from the frames' own harness. */
@@ -93,7 +92,7 @@ export function Arena() {
           </article>
         ))}
       </div>
-      <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. <a href="/arena/shared/harness.txt">How this is measured</a>.</p>
+      <p data-part="note">All three make the same page changes, because they show the same thing. The difference is the work behind it: React re-runs components to find those changes, and ships more code to do so. <a href="/arena/shared/harness.txt">How this is measured</a>: each update at 60 a second is timed on its own, with nothing watching the page, and the times are added up. One update in 30 runs untimed so its page changes can be counted. Time per update stays empty until a run has about five seconds in it, because a few clicks are too few to compare. On an {speed.machine}, 60 updates a second take {us(speed.arena.weft)} each in weft, {us(speed.arena.solid)} in Solid, {us(speed.arena.react)} in React and {us(speed.arena.raw)} in hand-written DOM.</p>
       <h3>Speed, measured in Chromium</h3>
       <p data-part="intro">weft is fastest in {speed.wins} of these {speed.rows.length} rows. The others are marked. Times are milliseconds, the median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.</p>
       <div data-part="table">
