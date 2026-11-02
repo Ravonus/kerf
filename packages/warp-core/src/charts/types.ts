@@ -42,6 +42,11 @@ export type Form<C> = {
   /** Interaction of its own beyond the shared model; returns a cleanup. */
   behave?(api: Api): () => void
 }
-export type Base<D> = { data: D; title: string; /** One sentence for screen readers and the page; generated from the data when absent. */ summary?: string | ((c: { data: D; title: string }) => string) }
+export type Base<D> = {
+  data: D
+  title: string
+  /** One sentence for screen readers and the page; generated from the data when absent. */
+  summary?: string | ((c: { data: D; title: string }) => string)
+}
 export type Fmt = (v: number) => string
 export const tableOf = (head: string[], rows: (string | number)[][]): TableData => ({ head, rows })

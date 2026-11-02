@@ -3,7 +3,7 @@
 export { Stack, Row, Grid, Split, Center, Cover, Frame, Spacer, Inset, type Step } from './Layout'
 export { Heading, Text, Link } from './Type'
 export { Button, type ButtonProps, type Tone, type Emphasis } from './Button'
-export { Toggle } from './Toggle'
+export { Toggle, type ToggleProps } from './Toggle'
 export { Field, Input, Search, Textarea, type FieldProps } from './Field'
 export { NumberField, type NumberFieldProps } from './NumberField'
 export { CompactSelect, Select, type Option, type OptionGroup } from './Select'
