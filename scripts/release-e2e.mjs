@@ -23,7 +23,8 @@ const version = readdirSync(tarballs).find(f => /core-\d/.test(f)).match(/(\d+\.
 
 const env = { ...process.env, NO_COLOR: '1', npm_config_ignore_scripts: 'false', npm_config_min_release_age: '0', npm_config_audit: 'false', npm_config_fund: 'false' }
 if (values['no-rust']) {
-  env.PATH = env.PATH.split(delimiter).filter(d => !['cargo', 'rustc', 'cargo.exe', 'rustc.exe'].some(b => existsSync(join(d, b)))).join(delimiter)
+  const key = Object.keys(env).find(k => k.toUpperCase() === 'PATH') // `Path` on Windows
+  env[key] = env[key].split(delimiter).filter(d => !['cargo', 'rustc', 'cargo.exe', 'rustc.exe'].some(b => existsSync(join(d, b)))).join(delimiter)
   env.CARGO_HOME = join(empty, '.none'); env.RUSTUP_HOME = join(empty, '.none')
 }
 mkdirSync(empty, { recursive: true })
@@ -69,10 +70,12 @@ function serve(cmd, args, cwd, port) {
   return { log: () => log, stop: () => { if (windows) spawnSync('taskkill', ['/pid', String(child.pid), '/f', '/t']); else try { process.kill(-child.pid) } catch {} } }
 }
 
-const runner = { npm: ['npx', []], bun: ['bunx', ['--bun']], deno: ['deno', ['run', '-A', 'npm:@weft-js/cli']] }[pm]
+// Deno holds back packages under a day old by default, and this registry gives no dates.
+const denoAge = ['--minimum-dependency-age=0']
+const runner = { npm: ['npx', []], bun: ['bunx', ['--bun']], deno: ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli']] }[pm]
 const weft = (args, cwd) => sh(runner[0], pm === 'deno' ? [...runner[1], ...args] : [...runner[1], 'weft', ...args], cwd)
 try {
-  const creating = { npm: ['npm', ['create', `@weft-js@${version}`, '--', 'demo', '--yes', '--no-git', '--no-install', '--pm', 'npm']], bun: ['bun', ['x', '--bun', `@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'bun', '--runtime', 'bun']], deno: ['deno', ['run', '-A', `npm:@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'deno', '--runtime', 'deno']] }[pm]
+  const creating = { npm: ['npm', ['create', `@weft-js@${version}`, '--', 'demo', '--yes', '--no-git', '--no-install', '--pm', 'npm']], bun: ['bun', ['x', '--bun', `@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'bun', '--runtime', 'bun']], deno: ['deno', ['run', '-A', ...denoAge, `npm:@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'deno', '--runtime', 'deno']] }[pm]
   await sh(creating[0], creating[1], empty)
   const app = join(empty, 'demo')
   step(`create on ${pm}`, existsSync(join(app, 'package.json')))
@@ -80,7 +83,7 @@ try {
   const wanted = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).filter(n => n.startsWith('@weft-js/'))
   step('the scaffold names only published packages', wanted.every(n => readdirSync(tarballs).some(f => f.startsWith(n.replace('@', '').replace('/', '-')))), wanted.join(' '))
   if (pm !== 'deno') writeFileSync(join(app, '.npmrc'), `registry=${url}\n`)
-  await sh(pm, ['install'], app)
+  await sh(pm, pm === 'deno' ? ['install', ...denoAge] : ['install'], app)
   step(`${pm} install`, true)
   await weft(['agents-md'], app)
   const doctor = JSON.parse(await weft(['doctor', '--json'], app))
@@ -92,13 +95,13 @@ try {
   step('weft build', existsSync(join(app, '.output')) || existsSync(join(app, 'dist')))
 
   const port = await freePort()
-  const dev = serve(...(pm === 'deno' ? ['deno', ['run', '-A', 'npm:@weft-js/cli', 'dev', '--port', String(port)]] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'dev', '--port', String(port)]] : ['npx', ['weft', 'dev', '--port', String(port)]]), app, port)
+  const dev = serve(...(pm === 'deno' ? ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli', 'dev', '--port', String(port)]] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'dev', '--port', String(port)]] : ['npx', ['weft', 'dev', '--port', String(port)]]), app, port)
   const hit = await probe(port)
   dev.stop()
   step('weft dev serves the page', hit.status === 200 && /<html/i.test(hit.text), `HTTP ${hit.status}${hit.status ? '' : ` ${dev.log().slice(-400)}`}`)
 
   const livePort = await freePort()
-  const started = serve(...(pm === 'deno' ? ['deno', ['run', '-A', 'npm:@weft-js/cli', 'start']] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'start']] : ['npx', ['weft', 'start']]), app, livePort)
+  const started = serve(...(pm === 'deno' ? ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli', 'start']] : pm === 'bun' ? ['bunx', ['--bun', 'weft', 'start']] : ['npx', ['weft', 'start']]), app, livePort)
   const live = await probe(livePort)
   started.stop()
   step('the built app serves the page', live.status === 200 && /<html/i.test(live.text), `HTTP ${live.status}${live.status ? '' : ` ${started.log().slice(-400)}`}`)

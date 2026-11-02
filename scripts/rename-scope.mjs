@@ -132,6 +132,7 @@ const patches = [
   ['crates/weft-compiler/src/transform.rs', 't.import("weft", &imports)', `t.import("${CORE}", &imports)`],
   // The Vite plugin. A package in node_modules no longer has `weft` as a path segment.
   ['*', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`, 'any'],
+  ['site/arena/build.mjs', "'../node_modules/weft/vite.mjs'", "'../node_modules/@weft-js/core/vite.mjs'", 'all'],
   ['packages/weft/vite.mjs', R`[\\/]node_modules[\\/]weft[\\/]/`, R`[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/`],
   ['packages/weft/vite.mjs', R`filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ }`, R`filter: { id: /[\\/](?:weft|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ }`],
   ['packages/weft/node/hydration.mjs', "const PURE = { weft: new Set", `const PURE = { '${CORE}': new Set`],
