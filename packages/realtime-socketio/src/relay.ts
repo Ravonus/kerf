@@ -6,13 +6,15 @@ import { roomId, signTicket, verifyTicket } from '@weft-js/multiplayer/server'
 
 const FRAME = 1024
 
+/** Refuses a connection without a good ticket, and fans out each frame to its room under the ticket's subject. */
 export function relay(io: Server, { secret }: { secret: string }) {
-  io.use(async (socket: Socket, next) => {
+  const admit = async (socket: Socket, next: (error?: Error) => void) => {
     const claims = await verifyTicket(socket.handshake.auth?.ticket, secret)
     if (!claims?.sub || !claims.room) return next(new Error('bad ticket'))
     socket.data = { peer: claims.sub, room: claims.room }
     next()
-  })
+  }
+  io.use((socket: Socket, next) => void admit(socket, next))
   io.on('connection', async (socket: Socket) => {
     await socket.join(socket.data.room)
     socket.emit('weft:ok')
@@ -22,6 +24,7 @@ export function relay(io: Server, { secret }: { secret: string }) {
   })
 }
 
+/** Options of `socketioTicket()`. */
 export interface TicketOptions {
   /** Shared with the relay. */
   secret: string

@@ -39,7 +39,7 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
     let got: string[] = []
     for (let i = 0; i < 100 && got.length < 1; i++) {
       got = JSON.parse(await hit('/state?h=b')).got
-      await new Promise(ok => setTimeout(ok, 20))
+      await new Promise(ok => { setTimeout(ok, 20) })
     }
     expect(got).toEqual(['hello'])
     expect(JSON.parse(await hit('/state?h=a')).got).toEqual(['hello'])
@@ -47,41 +47,42 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
 
   test('a lost socket is a gap, then a redial; messages flow again; `close` stops it', async () => {
     vi.useFakeTimers()
-    const sockets: any[] = []
+    type Listener = (e: { data?: unknown }) => void
+    const sockets: { close: ReturnType<typeof vi.fn>; on: Record<string, Listener> }[] = []
     const socket = () => {
-      const on: Record<string, (e?: any) => void> = {}
-      const ws = { accept() {}, send() {}, close: vi.fn(), addEventListener: (t: string, f: any) => { on[t] = f }, on }
+      const on: Record<string, Listener> = {}
+      const ws = { accept() {}, send() {}, close: vi.fn(), addEventListener: (t: string, f: Listener) => { on[t] = f }, on }
       sockets.push(ws)
       return ws
     }
     let down = false
-    const namespace = { idFromName: (n: string) => n, get: () => ({ fetch: async (_: string, init?: RequestInit) => {
-      if (init?.method === 'POST') return new Response(null, { status: 204 })
-      if (down) throw new Error('object restarting')
-      return Object.assign(new Response(null), { webSocket: socket() })
+    const namespace = { idFromName: (n: string) => n, get: () => ({ fetch: (_: string, init?: RequestInit) => {
+      if (init?.method === 'POST') return Promise.resolve(new Response(null, { status: 204 }))
+      if (down) return Promise.reject(new Error('object restarting'))
+      return Promise.resolve(Object.assign(new Response(null), { webSocket: socket() }))
     } }) }
-    const bus = durableObjectBus({ namespace: namespace as any })
+    const bus = durableObjectBus({ namespace })
     const got: string[] = []
     let gaps = 0
     await bus.subscribe('c', m => got.push(m), () => gaps++)
-    sockets[0].on.message({ data: 'one' })
+    sockets[0]!.on.message!({ data: 'one' })
     down = true
-    sockets[0].on.close()
+    sockets[0]!.on.close!({})
     expect(gaps).toBe(1)
     await vi.advanceTimersByTimeAsync(500)
     expect(gaps).toBe(2) // the redial failed, so that's another gap, and a longer wait
     down = false
     await vi.advanceTimersByTimeAsync(1000)
     expect(sockets).toHaveLength(2)
-    sockets[1].on.message({ data: 'two' })
+    sockets[1]!.on.message!({ data: 'two' })
     expect(got).toEqual(['one', 'two'])
-    await bus.close()
-    expect(sockets[1].close).toHaveBeenCalledWith(1000)
+    await bus.close!()
+    expect(sockets[1]!.close).toHaveBeenCalledWith(1000)
     vi.useRealTimers()
   })
 
   test('a refused publish is an error the hub can see', async () => {
-    const namespace = { idFromName: (n: string) => n, get: () => ({ fetch: async () => new Response(null, { status: 500 }) }) }
-    await expect(durableObjectBus({ namespace: namespace as any }).publish('c', 'm')).rejects.toThrow('500')
+    const namespace = { idFromName: (n: string) => n, get: () => ({ fetch: () => Promise.resolve(new Response(null, { status: 500 })) }) }
+    await expect(durableObjectBus({ namespace }).publish('c', 'm')).rejects.toThrow('500')
   })
 })

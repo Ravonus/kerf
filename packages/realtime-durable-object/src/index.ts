@@ -9,9 +9,11 @@ import type { Bus } from '@weft-js/start/bus'
 
 /** The parts of Workers' API used here, so an app doesn't need `@cloudflare/workers-types` for this file. */
 interface Stub { fetch(url: string, init?: RequestInit): Promise<Response & { webSocket?: CfSocket | null }> }
-export interface DurableObjectNamespaceLike { idFromName(name: string): unknown; get(id: any): Stub }
-interface CfSocket { accept(): void; send(m: string): void; close(code?: number): void; addEventListener(t: string, f: (e: any) => void): void }
+/** A Durable Object namespace binding, as far as the bus uses one: `env.WEFT_BUS` fits it. */
+export interface DurableObjectNamespaceLike { idFromName(name: string): unknown; get(id: unknown): Stub }
+interface CfSocket { accept(): void; send(m: string): void; close(code?: number): void; addEventListener(t: string, f: (e: { data?: unknown }) => void): void }
 interface CfState { acceptWebSocket(ws: CfSocket): void; getWebSockets(): CfSocket[] }
+declare const WebSocketPair: new () => [CfSocket, CfSocket]
 
 const BASE = 'https://weft-bus/'
 
@@ -21,7 +23,7 @@ export class WeftBusObject {
 
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('upgrade')?.toLowerCase() === 'websocket') {
-      const pair = new (globalThis as any).WebSocketPair()
+      const pair = new WebSocketPair()
       this.state.acceptWebSocket(pair[1])
       return new Response(null, { status: 101, webSocket: pair[0] } as ResponseInit)
     }
@@ -38,6 +40,7 @@ export class WeftBusObject {
   }
 }
 
+/** The `realtime.bus` for `src/realtime.server.ts`: one `WeftBusObject` per channel, which must be reached from a Durable Object hub. */
 export function durableObjectBus({ namespace }: { namespace: DurableObjectNamespaceLike }): Bus {
   const stub = (channel: string) => namespace.get(namespace.idFromName(channel))
   const open = new Set<() => void>()
@@ -74,8 +77,9 @@ export function durableObjectBus({ namespace }: { namespace: DurableObjectNamesp
       open.add(stop)
       return stop
     },
-    async close() {
+    close() {
       for (const stop of open) stop()
+      return Promise.resolve()
     },
   }
 }

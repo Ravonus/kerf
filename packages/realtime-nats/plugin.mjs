@@ -9,7 +9,7 @@ export const nats = definePlugin({
   version: '0.1.0',
   weft: '*',
   permissions: { net: ['env:NATS_URL'], env: ['NATS_URL', 'WEFT_BUILD'] },
-  contribute: (options = {}) => ({
+  contribute: options => ({
     provides: [provide(slot, { sides: { server: { module: '@weft-js/realtime-nats', export: 'bus', options } } })],
     agents: { title: 'Realtime bus (NATS)', text: '`realtime.bus` is NATS, at `NATS_URL`. Rooms, shared state, `.live` and streams reach every instance. It is at-most-once: anything that must survive is a mutation, and `collect` plus a query covers a gap.' },
     map: [{ want: 'Change the realtime bus', call: 'replace this plugin in `plugins`, or set `bus` in `src/realtime.server.ts`', have: 'NATS' }],

@@ -7,11 +7,13 @@ import type { PeerLink, PeerRoom, PeerTransport } from '@weft-js/multiplayer'
 
 const TOPIC = 'weft'
 
+/** Options of `livekit()`. */
 export interface LivekitOptions {
   /** `wss://…` */
   url: string
 }
 
+/** A peer transport over a LiveKit room, for `presence(conn, { transport })`. The link's `room` carries audio and video too. */
 export function livekit({ url }: LivekitOptions): PeerTransport {
   return {
     name: 'livekit',

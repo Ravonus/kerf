@@ -1,21 +1,22 @@
 // redis against a real server, through the `realtime.bus` suite. `WEFT_TEST_REDIS` is the path to a binary (the test
 // runs its own, so it can restart it); without it the server half skips, which is reported, not hidden.
 import { spawn, type ChildProcess } from 'node:child_process'
-import { createServer } from 'node:net'
+import { createServer, type AddressInfo } from 'node:net'
 import { busSuite } from '@weft-js/core/test/plugins'
 import { bus, redisBus } from '../src/index'
 
-const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as any; s.close(() => ok(port)) }) })
+const freePort = () => new Promise<number>(ok => { const s = createServer().listen(0, () => { const { port } = s.address() as AddressInfo; s.close(() => ok(port)) }) })
 const stop = (c: ChildProcess) => new Promise(ok => { c.once('close', ok); c.kill('SIGKILL') })
 
 const binary = process.env.WEFT_TEST_REDIS
 
+// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`: the suite restarts a real server.
 test.skipIf(!binary)('redisBus passes realtime.bus@1 on a real server, a restart included', async () => {
   const port = await freePort()
   let proc: ChildProcess
   const boot = async () => {
     proc = spawn(binary!, ['--port', String(port), '--save', '', '--appendonly', 'no'], { stdio: 'ignore' })
-    await new Promise(ok => setTimeout(ok, 300))
+    await new Promise(ok => { setTimeout(ok, 300) })
   }
   await boot()
   try {

@@ -5,6 +5,7 @@ import { connect, type NatsConnection } from '@nats-io/transport-node'
 import type { Bus } from '@weft-js/start/bus'
 import { StartError } from '@weft-js/start/data'
 
+/** Options of `natsBus()`: the servers, and the credentials if they ask for any. */
 export interface NatsBusOptions {
   /** `nats://host:4222`, or several. */
   servers: string | string[]
@@ -15,6 +16,7 @@ export interface NatsBusOptions {
 
 const subject = (channel: string) => `weft.${Buffer.from(channel).toString('base64url')}`
 
+/** A `Bus` over core NATS, connecting on first use. Throws Q013 without `servers`, except during a build. */
 export function natsBus(options: NatsBusOptions): Bus {
   if (!options.servers?.length && process.env.WEFT_BUILD) options = { ...options, servers: 'nats://localhost:4222' } // a build never connects
   if (!options.servers?.length)
