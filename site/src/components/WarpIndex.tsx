@@ -15,7 +15,7 @@ function Card(props: { file: string; tile: Tile }) {
   return (
     <Link href={t.href} data-site="tile" data-flow="card" data-name={t.name.toLowerCase()}>
       <div data-part="stage">{t.id && <Preview file={props.file} id={t.id} stage={t.stage} fit={t.fit} width={t.width} tile />}</div>
-      <div data-part="words"><strong>{t.name}</strong></div>
+      <div data-part="words"><strong>{t.name}</strong><span>{t.summary}</span></div>
     </Link>
   )
 }

@@ -288,11 +288,27 @@ for (const path of ['/components', '/blocks', '/charts']) {
     }, viewport)
   }
 }
-for (const path of ['/components', '/blocks']) {
-  await check(`hub is compact on a phone ${path}`, path, async page => {
-    const { cols, tall } = await page.evaluate(() => ({ cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length, tall: document.documentElement.scrollHeight }))
-    same(cols, 2, 'cards to a row')
-    if (tall > 14000) throw new Error(`${tall}px long`)
+// On a phone a hub is a list of short rows: a small preview beside the name and a readable line or two of what it is
+// for, every name and description in full view of its card, and the page not a 25,000px scroll.
+for (const path of ['/components', '/blocks', '/charts']) {
+  await check(`hub rows read on a phone ${path}`, path, async page => {
+    const { cols, tall, bad } = await page.evaluate(() => ({
+      cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length,
+      tall: document.documentElement.scrollHeight,
+      bad: [...document.querySelectorAll('[data-site="tile"]')].flatMap(t => {
+        const card = t.getBoundingClientRect(), name = t.querySelector('strong'), line = t.querySelector('[data-part="words"] span')
+        const out = []
+        if (card.height > 132) out.push(`${Math.round(card.height)}px tall`)
+        if (!line || !line.textContent.trim() || line.getBoundingClientRect().height < 10) out.push('no description')
+        else if (parseFloat(getComputedStyle(line).fontSize) < 12) out.push(`description at ${getComputedStyle(line).fontSize}`)
+        for (const e of [name, line].filter(Boolean)) { const r = e.getBoundingClientRect(); if (r.right > card.right + 1 || r.bottom > card.bottom + 1) out.push(`${e.localName} past the card`) }
+        if (name.scrollWidth > name.clientWidth + 1) out.push('name cut')
+        return out.length ? [`${t.dataset.name}: ${out.join(', ')}`] : []
+      }),
+    }))
+    same(cols, 1, 'cards to a row')
+    same(bad.join('; '), '', 'rows')
+    if (tall > 16000) throw new Error(`${tall}px long`)
   }, PHONE)
 }
 // Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow (warp's prose families, with no

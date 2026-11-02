@@ -157,14 +157,18 @@
 [data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
 [data-site="tile"] [data-part="words"] { padding: var(--warp-space-tight) var(--warp-space-related); }
 [data-site="tile"] strong { font-size: var(--doc-small); font-weight: 600; }
-[data-site="tile"] [data-part="words"] span { font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
-/* A phone shows the hubs two to a row, with short previews: one column of wide empty cards made /components 25,000px long. */
+[data-site="tile"] [data-part="words"] span { display: none; font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
+/* A phone lists the hubs as rows: a small preview beside the name and what it is for, so the words carry the card. A
+   picture squeezed to half a phone's width was too small to read, and one column of full-width pictures ran /components
+   to 25,000px. */
 @media (max-width: 599.98px) {
-  [data-tk="tiles"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--warp-space-related); }
-  [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; }
-  [data-site="tile"] [data-part="mount"] { --tile-zoom: 0.6; }
-  [data-site="tile"] [data-part="words"] { padding: var(--warp-space-hair) var(--warp-space-tight); }
-  [data-site="tile"] strong { display: block; overflow-wrap: anywhere; font-size: var(--doc-micro); }
+  [data-tk="tiles"] { grid-template-columns: minmax(0, 1fr); gap: var(--warp-space-tight); }
+  [data-site="tile"] { grid-template-rows: none; grid-template-columns: 128px minmax(0, 1fr); align-items: center; contain-intrinsic-size: auto 96px; }
+  [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; border-block-end: 0; border-inline-end: var(--warp-border-hairline) solid var(--rule); }
+  [data-site="tile"] [data-part="mount"] { --tile-zoom: 0.6; padding: var(--warp-space-related); }
+  [data-site="tile"] [data-part="words"] { display: grid; gap: var(--warp-space-hair); align-content: center; padding: var(--warp-space-tight) var(--warp-space-related); min-inline-size: 0; }
+  [data-site="tile"] strong { overflow-wrap: anywhere; font-size: var(--doc-small); }
+  [data-site="tile"] [data-part="words"] span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 }
 [data-tk="all"] { margin-block-start: var(--warp-space-group); font-size: var(--doc-small); }
 
