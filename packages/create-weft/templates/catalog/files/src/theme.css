@@ -127,8 +127,6 @@ body { margin: 0; }
 .art[data-material="brass"] { --ink: #a78a2c; --ground: light-dark(#f4edcf, #2d2912); }
 
 .filters { position: sticky; inset-block-start: 5rem; align-self: start; }
-/* warp clips a checkbox's border to the control radius, which at `round` is wider than the box: match it to the mark's */
-[data-scope="checkbox"] > [data-part="control"] { --warp-sweep-radius: var(--warp-radius-mark); }
 .price-range { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-tight); }
 
 .blank { padding-block: var(--warp-space-section); align-items: start; }

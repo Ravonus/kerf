@@ -33,9 +33,6 @@ body { margin: 0; }
 [data-scope="badge"], .filters option, [data-scope="field"] select { text-transform: capitalize; }
 
 [data-scope="table"] { font-variant-numeric: tabular-nums; }
-/* warp's input is a 1px speck under the box: stretched over it, it's the thing a tap or a test really lands on */
-[data-scope="table"] [data-scope="checkbox"] > input { inset: 0; inline-size: 100%; block-size: 100%; pointer-events: auto; cursor: pointer; }
-[data-scope="table"] [data-scope="checkbox"] > [data-part="control"], [data-scope="table"] [data-scope="checkbox"]::after { pointer-events: none; }
 
 .filters { display: grid; grid-template-columns: minmax(0, 24rem) minmax(9rem, 12rem); gap: var(--warp-space-related); align-items: end; }
 @media (max-width: 560px) { .filters { grid-template-columns: 1fr; } }

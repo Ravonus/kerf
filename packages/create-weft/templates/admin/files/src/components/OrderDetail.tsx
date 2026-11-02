@@ -1,7 +1,6 @@
-import { Card, Grid, Heading, Skeleton, Stack, Table, Text, toast, type Column } from '@weft/warp'
+import { Card, Grid, Heading, Select, Skeleton, Stack, Table, Text, toast, type Column } from '@weft/warp'
 import { derived } from 'weft'
 import { StatusBadge } from '#/components/StatusBadge'
-import { StatusSelect } from '#/components/StatusSelect'
 import { date, money, statuses, type Status } from '#/lib/orders'
 import { getOrder, setOrderStatus } from '#/server/orders'
 
@@ -45,7 +44,7 @@ export function OrderDetail({ id }: { id: number }) {
           </Stack>
         </Card>
         <Card eyebrow="Fulfilment">
-          <StatusSelect label="Status" options={options} value={order.value?.status} disabled={setOrderStatus.pending.value} onChange={e => save((e.currentTarget as HTMLSelectElement).value as Status)} />
+          <Select label="Status" options={options} value={order.value?.status} disabled={setOrderStatus.pending.value} onChange={e => save((e.currentTarget as HTMLSelectElement).value as Status)} />
         </Card>
       </Grid>
       <Table caption="Items" rows={items} columns={columns} picker={false} empty={{ title: 'No items', text: 'This order has no line items.' }} />

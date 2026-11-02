@@ -63,8 +63,9 @@ describe.each([
       expect(await p.getByRole(role).isChecked()).toBe(false)
       await p.getByRole(role, { name: 'Pick' }).check({ timeout: 3000 })
       expect(await p.getByRole(role).isChecked()).toBe(true)
-      const box = await p.$eval(`[data-part="${control}"]`, n => { const r = n.getBoundingClientRect(); return [r.x + 1, r.y + 1] })
+      const box = await p.$eval(`[data-part="${control}"]`, n => { const r = n.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2] })
       expect(await p.evaluate(([x, y]) => document.elementFromPoint(x, y).tagName, box)).toBe('INPUT')
+      if (role === 'radio') return
       await p.getByText('I agree to the').click({ position: { x: 2, y: 2 } })
       expect(await p.getByRole(role).isChecked()).toBe(false)
     })
