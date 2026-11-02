@@ -179,7 +179,7 @@ async function measure() {
     cpSync(join(appDir, 'starter', fw), dir, { recursive: true, filter: f => !f.includes('/src') && !f.includes('/tests') })
     cpSync(join(snap, 'src'), join(dir, 'src'), { recursive: true })
     symlinkSync(join(root, 'frameworks', fw, 'node_modules'), join(dir, 'node_modules'))
-    let gz = null
+    let gz
     try {
       await exec('npx', ['vite', 'build', '--logLevel', 'silent'], { cwd: dir, timeout: 300_000 })
       const assets = join(dir, 'dist', 'assets')

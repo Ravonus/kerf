@@ -45,7 +45,7 @@ parts.check = { ok: check.ok === true, summary: check.summary, diagnostics: (che
 
 writeFileSync(join(dir, 'tsconfig.check.json'), JSON.stringify({ extends: './tsconfig.json', compilerOptions: { preserveSymlinks: true }, include: ['src'] }, null, 2))
 const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), ['--noEmit', '-p', 'tsconfig.check.json'])
-const errors = `${tsc.stdout}`.split('\n').filter(l => /error TS/.test(l))
+const errors = tsc.stdout.split('\n').filter(l => /error TS/.test(l))
 const own = errors.filter(l => l.startsWith('src/'))
 parts.types = { ok: !own.length, app: own, packages: errors.length - own.length }
 
@@ -59,11 +59,12 @@ const server = spawn('npx', ['weft', 'start'], { cwd: dir, env: { ...process.env
 const url = `http://127.0.0.1:${port}/`
 for (let i = 0; i < 100; i++) {
   try { if ((await fetch(url)).ok) break } catch {}
-  await new Promise(r => setTimeout(r, 200))
+  await new Promise(r => { setTimeout(r, 200) })
 }
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
 const checks = []
+/** @type {(name: string, pass: unknown, detail?: unknown) => number} */
 const ok = (name, pass, detail = '') => checks.push({ name, ok: !!pass, detail: String(detail) })
 try {
   const html = await (await fetch(url)).text()
@@ -88,12 +89,10 @@ try {
       const d = x.getImageData(0, 0, c.width, c.height).data, counts = new Map()
       for (let i = 0; i < d.length; i += 4) { const k = d[i] << 16 | d[i + 1] << 8 | d[i + 2]; counts.set(k, (counts.get(k) ?? 0) + 1) }
       const background = Math.max(...counts.values())
-      return { colours: counts.size, lit: d.length / 4 - background, hash: [...counts].sort().slice(0, 40).join() }
+      return { colours: counts.size, lit: d.length / 4 - background, hash: [...counts].map(String).sort().slice(0, 40).join() }
     }, png)
   }
   const a = await lit()
-  await page.waitForTimeout(300)
-  const b = await lit()
   ok('it paints stars', a.colours > 1 && a.lit > 0, JSON.stringify({ colours: a.colours, lit: a.lit }))
   const png = async () => (await canvas.screenshot()).toString('base64')
   const s1 = await png(); await page.waitForTimeout(300); const s2 = await png()
@@ -102,7 +101,7 @@ try {
   const slider = page.getByRole('slider').first()
   ok('there is a slider, with a name', await slider.evaluate(s => s.getAttribute('aria-label') || s.labels?.[0]?.textContent || s.getAttribute('aria-labelledby')))
   const bounds = await slider.evaluate(s => [+(s.min || 0), +(s.max || 100)])
-  const set = v => slider.evaluate((s, v) => { s.value = v; s.dispatchEvent(new Event('input', { bubbles: true })); s.dispatchEvent(new Event('change', { bubbles: true })) }, v)
+  const set = v => slider.evaluate((s, to) => { s.value = to; s.dispatchEvent(new Event('input', { bubbles: true })); s.dispatchEvent(new Event('change', { bubbles: true })) }, v)
   await set(bounds[0])
   await page.waitForTimeout(300)
   const few = await lit()
@@ -111,14 +110,14 @@ try {
   const many = await lit()
   ok('the slider changes the density', many.lit > few.lit, `${few.lit} → ${many.lit} lit pixels`)
   const quiet = await page.evaluate(async ([low, high]) => {
-    const host = document.querySelector('[data-surface]'), canvas = host.querySelector('canvas')
+    const host = document.querySelector('[data-surface]'), first = host.querySelector('canvas')
     const records = []
     const seen = new MutationObserver(r => records.push(...r))
     seen.observe(host, { subtree: true, childList: true, attributes: true, characterData: true })
     const s = document.querySelector('input[type=range], [role=slider]')
-    for (const v of [low, high, low, high]) { s.value = v; s.dispatchEvent(new Event('input', { bubbles: true })); await new Promise(r => requestAnimationFrame(r)) }
+    for (const v of [low, high, low, high]) { s.value = v; s.dispatchEvent(new Event('input', { bubbles: true })); await new Promise(r => { requestAnimationFrame(r) }) }
     seen.disconnect()
-    return { mutations: records.length, same: host.querySelector('canvas') === canvas }
+    return { mutations: records.length, same: host.querySelector('canvas') === first }
   }, bounds)
   ok('moving it touches nothing in the surface: the same canvas, 0 DOM writes', quiet.same && quiet.mutations === 0, JSON.stringify(quiet))
   ok('no errors or warnings in the console', !problems.length, problems.join(' | '))
@@ -126,7 +125,7 @@ try {
   ok('the page could be driven', false, error.message.split('\n')[0])
 } finally {
   await browser.close()
-  try { process.kill(-server.pid) } catch {}
+  try { if (server.pid) process.kill(-server.pid) } catch {}
 }
 parts.e2e = { ok: checks.length > 0 && checks.every(c => c.ok), checks }
 

@@ -14,7 +14,7 @@
 //
 // A publish that stops part way is safe to run again: versions already on the registry are skipped.
 import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -73,7 +73,7 @@ function build() {
 function published(pkg, names, version) {
   const ours = name => names.has(name) || name.startsWith('@weft-js/')
   const pin = (deps, range) => deps && Object.fromEntries(Object.entries(deps).filter(([name]) => !name.startsWith('@weft-js/compiler-') || names.has(name)).map(([name, spec]) => [name, ours(name) ? range : spec]))
-  const { devDependencies, scripts, ...rest } = pkg
+  const { devDependencies: _dev, scripts: _scripts, ...rest } = pkg
   return { ...rest, dependencies: pin(pkg.dependencies, version), optionalDependencies: pin(pkg.optionalDependencies, version), peerDependencies: pin(pkg.peerDependencies, `^${version}`) }
 }
 
@@ -125,7 +125,7 @@ function check(tgz, names, version) {
   for (const target of Object.values(pkg.bin ?? {})) if (!has.has(target.replace(/^\.\//, ''))) bad.push(`bin: no ${target}`)
   const declared = new Set(Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies, ...pkg.optionalDependencies }))
   const undeclared = new Set()
-  for (const f of files.filter(f => /\.([cm]?js|[cm]?ts|tsx|jsx)$/.test(f))) {
+  for (const f of files.filter(x => /\.([cm]?js|[cm]?ts|tsx|jsx)$/.test(x))) {
     const text = readFileSync(join(base, f), 'utf8')
     if (SECRET.test(text)) bad.push(`${f} looks like it holds a secret`)
     if (/agorix/i.test(text)) bad.push(`${f} mentions the old name`)

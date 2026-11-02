@@ -61,7 +61,7 @@ const probe = async (port, path = '/', tries = 90) => {
       last = { status: r.status, text: await r.text() }
       if (r.status === 200) return last
     } catch {}
-    await new Promise(ok => setTimeout(ok, 1000))
+    await new Promise(ok => { setTimeout(ok, 1000) })
   }
   return last
 }
@@ -71,7 +71,7 @@ async function hydrates(chrome, port, what) {
   const page = await chrome.page(`http://localhost:${port}/hot`)
   let count, query
   for (let i = 0; i < 120 && !/[1-9]$/.test(count ?? ''); i++) {
-    await new Promise(ok => setTimeout(ok, 500))
+    await new Promise(ok => { setTimeout(ok, 500) })
     try { count = await page.eval(`document.querySelector('#c')?.click(), document.querySelector('#c')?.textContent`); query = await page.eval(`document.querySelector('#q')?.textContent`) } catch {}
   }
   const urls = await page.eval(`performance.getEntriesByType('resource').map(r => r.name)`).catch(() => [])
@@ -83,12 +83,14 @@ function serve(cmd, args, cwd, port) {
   const child = spawn(cmd, args, { cwd, env: { ...env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'], shell: windows, detached: !windows })
   let log = ''
   child.stdout.on('data', d => (log += d)); child.stderr.on('data', d => (log += d))
-  return { log: () => log, stop: () => { if (windows) spawnSync('taskkill', ['/pid', String(child.pid), '/f', '/t']); else try { process.kill(-child.pid) } catch {} } }
+  return { log: () => log, stop: () => { if (windows) spawnSync('taskkill', ['/pid', String(child.pid), '/f', '/t']); else try { if (child.pid) process.kill(-child.pid) } catch {} } }
 }
 
 // Deno holds back packages under a day old by default, and this registry gives no dates.
 const denoAge = ['--minimum-dependency-age=0']
-const runner = { npm: ['npx', []], bun: ['bunx', ['--bun']], deno: ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli']] }[pm]
+/** @type {Record<string, [string, string[]]>} */
+const runners = { npm: ['npx', []], bun: ['bunx', ['--bun']], deno: ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli']] }
+const runner = runners[pm]
 const weft = (args, cwd) => sh(runner[0], pm === 'deno' ? [...runner[1], ...args] : [...runner[1], 'weft', ...args], cwd)
 try {
   const creating = { npm: ['npm', ['create', `@weft-js@${version}`, '--', 'demo', '--yes', '--no-git', '--no-install', '--pm', 'npm']], bun: ['bun', ['x', '--bun', `@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'bun', '--runtime', 'bun']], deno: ['deno', ['run', '-A', ...denoAge, `npm:@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'deno', '--runtime', 'deno']] }[pm]

@@ -41,12 +41,12 @@ const must = (cmd, args, cwd, env) => {
   if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
   return r
 }
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
 const until = async (what, fn, ms = 60_000) => {
   const end = Date.now() + ms
   for (;;) {
-    const v = await fn().catch(() => undefined)
+    const v = await Promise.resolve().then(fn).catch(() => undefined)
     if (v) return v
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
     await sleep(50)
@@ -100,10 +100,10 @@ async function start(runtime, command = [weft(), 'start', '--runtime', runtime])
     url, output: () => output,
     async stop() {
       if (child.exitCode !== null) return
-      try { process.kill(-child.pid, 'SIGTERM') } catch {}
-      const done = new Promise(ok => child.on('close', ok))
+      try { if (child.pid) process.kill(-child.pid, 'SIGTERM') } catch {}
+      const done = new Promise(closed => { child.on('close', closed) })
       await Promise.race([done, sleep(3000)])
-      try { process.kill(-child.pid, 'SIGKILL') } catch {}
+      try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch {}
     },
   }
 }
@@ -168,7 +168,7 @@ async function bench(url) {
   times.sort((a, b) => a - b)
   const t = performance.now()
   let n = 0
-  await Promise.all(Array.from({ length: 32 }, async (_, w) => { for (let i = 0; i < 4; i++) await one(i + w), n++ }))
+  await Promise.all(Array.from({ length: 32 }, async (_, w) => { for (let i = 0; i < 4; i++) { await one(i + w); n++ } }))
   return { p50: +times[50].toFixed(2), p99: +times[98].toFixed(2), perSecond: +(n / ((performance.now() - t) / 1000)).toFixed(1) }
 }
 
@@ -185,7 +185,7 @@ async function variant(name, runtime, results) {
     out.bench = await bench(s.url)
     results[name][runtime] = out
   } catch (e) {
-    throw new Error(`${e.message}\n--- server\n${s.output().slice(-3000)}`)
+    throw new Error(`${e.message}\n--- server\n${s.output().slice(-3000)}`, { cause: e })
   } finally {
     await s.stop()
   }
@@ -262,7 +262,7 @@ const speed = Object.fromEntries(runtimes.filter(r => results.rust[r]).map(r => 
   const ts = results.ts[r].bench, rust = results.rust[r].bench
   return [r, { ts, rust, latency: +(ts.p50 / rust.p50).toFixed(1), throughput: +(rust.perSecond / ts.perSecond).toFixed(1) }]
 }))
-for (const r of runtimes.filter(r => r !== 'deno')) await check(`${r}: the addon beats its TS \`run\` by at least ${REQUIRED}×`, () => {
+for (const r of runtimes.filter(x => x !== 'deno')) await check(`${r}: the addon beats its TS \`run\` by at least ${REQUIRED}×`, () => {
   const s = speed[r]
   ok(s, 'no Rust run')
   ok(s.latency >= REQUIRED, `p50 is only ${s.latency}× (${s.ts.p50} ms to ${s.rust.p50} ms)`)
@@ -289,7 +289,7 @@ for (const r of runtimes) {
       const a = await call(s.url, ID.boom)
       eq([a.status, a.body.e.code], [500, 'R108'], 'the answer')
       ok(!JSON.stringify(a.body).includes('the eval asked'), 'the detail reached the client')
-      await until('the log line', async () => s.output().includes('the eval asked for this'), 3000)
+      await until('the log line', () => s.output().includes('the eval asked for this'), 3000)
       eq((await call(s.url, ID.thumbnail, { seed: 3, width: 64, height: 64 })).status, 200, 'the next call')
     })
     await check(`${r}: past its deadline TS gives up with R107, and the loop stays free`, async () => {
@@ -337,7 +337,7 @@ for (const r of runtimes) {
     })
     await check(`${r}: on WASM a panic ends an instance, and the next call has a new one`, async () => {
       eq((await call(w.url, ID.boom)).body.e.code, 'R108', 'the panic')
-      await until('the log line', async () => w.output().includes('the eval asked for this'), 3000)
+      await until('the log line', () => w.output().includes('the eval asked for this'), 3000)
       eq((await call(w.url, ID.thumbnail, { seed: 3, width: 64, height: 64 })).status, 200, 'the next call')
     })
     await check(`${r}: on WASM \`ctx.remaining()\` runs on the host's clock`, async () => {
@@ -374,7 +374,7 @@ const cleanServer = readFileSync(server, 'utf8'), cleanMain = readFileSync(main,
 
 await check('`weft check` passes the clean app, with no warning', () => {
   const r = weftCheck()
-  eq([r.ok, r.diagnostics?.filter(d => /^R1/.test(d.code))], [true, []], 'check')
+  eq([r.ok, r.diagnostics?.filter(d => d.code.startsWith('R1'))], [true, []], 'check')
   return r.summary
 })
 await check('R103: an edited schema stops cargo at the function it broke, named by id', () => {
@@ -421,14 +421,14 @@ await check('R105: a cached query with tags and no `touch`, at the method', () =
   child.stderr.on('data', d => { output += d })
   const url = `http://localhost:${port}`
   const firstBuild = performance.now()
-  let polling = true
+  const polling = { on: true }
   const polls = []
   const input = { seed: 5, width: 64, height: 64 }
   try {
     await until(`weft dev: ${output}`, async () => (await call(url, ID.thumbnail, input)).status === 200, 240_000)
     const firstMs = Math.round(performance.now() - firstBuild)
     const poller = (async () => {
-      while (polling) {
+      while (polling.on) {
         const a = await call(url, ID.thumbnail, input).catch(e => ({ status: 0, body: { e: { code: e.message } } }))
         polls.push({ status: a.status, code: a.body?.e?.code, checksum: a.body?.v?.checksum, format: a.body?.v?.format })
         await sleep(10)
@@ -440,7 +440,7 @@ await check('R105: a cached query with tags and no `touch`, at the method', () =
       polls.length = 0
       const t = performance.now()
       writeFileSync(main, cleanMain.replace('checksum: format!("{hash:08x}")', 'checksum: format!("v2-{hash:08x}")'))
-      await until('the new library', async () => polls.at(-1)?.checksum?.startsWith('v2-'), 180_000)
+      await until('the new library', () => polls.at(-1)?.checksum?.startsWith('v2-'), 180_000)
       const ms = Math.round(performance.now() - t)
       await sleep(300)
       eq(polls.filter(p => p.status !== 200), [], 'failed polls during the reload')
@@ -451,7 +451,7 @@ await check('R105: a cached query with tags and no `touch`, at the method', () =
     await check('dev: a compile error keeps the old library serving', async () => {
       polls.length = 0
       writeFileSync(main, cleanMain.replace('fn photo(seed: u32', 'fn photo(seed: u33'))
-      await until('R109 in the log', async () => output.includes("`media` doesn't compile"), 120_000)
+      await until('R109 in the log', () => output.includes("`media` doesn't compile"), 120_000)
       await sleep(100)
       eq(polls.filter(p => p.status !== 200), [], 'failed polls')
     })
@@ -460,19 +460,19 @@ await check('R105: a cached query with tags and no `touch`, at the method', () =
       writeFileSync(main, cleanMain)
       writeFileSync(server, cleanServer.replace('const Done = z.object({ checksum: z.string(),', 'const Done = z.object({ checksum: z.string(), format: z.string(),'))
       const said = `R103 error: \`${ID.thumbnail}\`: the Rust no longer matches the contract`
-      await until('R103 from cargo in the log', async () => output.includes(said), 120_000)
+      await until('R103 from cargo in the log', () => output.includes(said), 120_000)
       writeFileSync(main, cleanMain.replace('Ok(ThumbnailOutput { checksum:', 'Ok(ThumbnailOutput { format: "fnv".to_string(), checksum:'))
-      await until('the fixed library', async () => polls.at(-1)?.format === 'fnv', 180_000)
+      await until('the fixed library', () => polls.at(-1)?.format === 'fnv', 180_000)
     })
-    polling = false
+    polling.on = false
     await poller
   } finally {
-    polling = false
+    polling.on = false
     writeFileSync(server, cleanServer)
     writeFileSync(main, cleanMain)
-    try { process.kill(-child.pid, 'SIGINT') } catch {}
-    await Promise.race([new Promise(ok => child.on('close', ok)), sleep(8000)])
-    try { process.kill(-child.pid, 'SIGKILL') } catch {}
+    try { if (child.pid) process.kill(-child.pid, 'SIGINT') } catch {}
+    await Promise.race([new Promise(closed => { child.on('close', closed) }), sleep(8000)])
+    try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch {}
   }
 }
 
@@ -482,7 +482,7 @@ await check('`weft add rust`: a native crate and a sidecar build, check clean an
   must(weft(), ['add', 'rust', 'hasher', '--no-install'])
   must(weft(), ['add', 'rust', 'finder', '--remote', '--no-install'])
   const r = weftCheck()
-  eq([r.ok, r.diagnostics?.filter(d => /^R1/.test(d.code))], [true, []], 'check')
+  eq([r.ok, r.diagnostics?.filter(d => d.code.startsWith('R1'))], [true, []], 'check')
   build('node')
   const s = await start('node')
   try {

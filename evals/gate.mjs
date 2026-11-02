@@ -10,7 +10,7 @@
 //            or --starter)
 //   junk     the tickets diff (fresh without a starter) plus planted junk tests and a weakened baseline test; every
 //            junk test must be caught, and every reference test still accepted
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { formatGate, gate } from '../packages/cli/src/gate.mjs'

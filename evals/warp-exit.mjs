@@ -119,7 +119,7 @@ if (!process.argv.includes('--skip-a11y')) {
   const shop = join(results.size.work, 'warp')
   writeFileSync(join(shop, 'vite.audit.ts'), `import weft from '@weft-js/core/vite'\nexport default { plugins: [weft({ purge: { keep: ${JSON.stringify(DIALS)} } })] }\n`)
   await exec('npx', ['vite', 'build', '--logLevel', 'silent', '--config', 'vite.audit.ts', '--outDir', 'dist-audit'], { cwd: shop, timeout: 300_000 })
-  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(name => ({ name, dir: gallery })), { name: 'shop', dir: join(shop, 'dist-audit') }], { log: l => log(`   ${l}`) })
+  const r = await a11y([{ name: 'gallery', dir: gallery }, { name: 'charts', dir: gallery }, ...Object.keys(scenes).map(scene => ({ name: scene, dir: gallery })), { name: 'shop', dir: join(shop, 'dist-audit') }], { log: l => log(`   ${l}`) })
   const failures = r.results.flatMap(run => [
     ...run.errors.map(e => ({ site: run.site, stop: `${run.expression}/${run.theme}/${run.motion}`, error: e })),
     ...run.states.flatMap(s => [...s.violations.map(v => ({ id: v.id, nodes: v.nodes })), ...s.moving.map(m => ({ id: 'moving at reduce', nodes: [{ target: m }] }))]

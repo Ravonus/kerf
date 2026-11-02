@@ -136,13 +136,13 @@ async function agent(dir) {
   if (process.env.ANTHROPIC_API_KEY) env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
   await pool(sessions(dir), Number(opt('concurrency') ?? 3), id => new Promise(done => {
     const w = join(dir, id), meta = join(w, 'agent.json')
-    if (existsSync(meta)) return done()
+    if (existsSync(meta)) { done(); return }
     const model = id.split('.')[1]
     const args = ['-p', readFileSync(join(w, 'PROMPT.md'), 'utf8'), '--model', model, '--output-format', 'json', '--permission-mode', 'bypassPermissions', '--disallowedTools', 'WebSearch', 'WebFetch', 'Agent', '--max-budget-usd', opt('budget') ?? '4']
     const started = Date.now()
     execFile('claude', args, { cwd: w, env, timeout: 25 * 60_000, maxBuffer: 1 << 26 }, (err, stdout) => {
-      let out = {}
-      try { out = JSON.parse(stdout) } catch { out = { is_error: true, result: String(err ?? stdout).slice(0, 400) } }
+      let out
+      try { out = JSON.parse(stdout) } catch { out = { is_error: true, result: (err?.message ?? stdout).slice(0, 400) } }
       writeFileSync(meta, JSON.stringify({ model, ms: Date.now() - started, cost: out.total_cost_usd, turns: out.num_turns, error: out.is_error ? out.result : undefined }, null, 2))
       console.log(`${out.is_error ? 'ERR ' : 'done'} ${id} $${out.total_cost_usd?.toFixed(2)} ${out.num_turns} turns${out.is_error ? ` ${out.result}` : ''}`)
       done()

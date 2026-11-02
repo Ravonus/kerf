@@ -77,7 +77,7 @@ const shared = ['drizzle-orm', 'drizzle-zod', 'zod', 'better-auth']
 const paths = Object.fromEntries(shared.flatMap(p => [[p, [`./node_modules/${p}`]], [`${p}/*`, [`./node_modules/${p}/*`]]]))
 writeFileSync(join(dir, 'tsconfig.check.json'), JSON.stringify({ extends: './tsconfig.json', compilerOptions: { preserveSymlinks: true, baseUrl: '.', paths }, include: ['src'] }, null, 2))
 const tsc = run(join(repo, 'packages/weft/node_modules/.bin/tsc'), ['--noEmit', '-p', 'tsconfig.check.json'])
-const errors = `${tsc.stdout}`.split('\n').filter(l => /error TS/.test(l))
+const errors = tsc.stdout.split('\n').filter(l => /error TS/.test(l))
 const own = errors.filter(l => l.startsWith('src/'))
 parts.types = { ok: !own.length, app: own, packages: errors.length - own.length }
 

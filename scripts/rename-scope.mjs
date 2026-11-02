@@ -11,7 +11,7 @@
 //
 // A `patch` below that no longer finds its text fails the run: the tree moved under it, and a silent miss here is a
 // package that installs and doesn't work. Fix the patch rather than the output.
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -143,7 +143,7 @@ const patches = [
   ['packages/cli/test/docs.test.mjs', "Status in weft@0\\.0\\.0", "Status in weft@0\\.1\\.0"],
   ['packages/cli/src/agents-md.mjs', "info.exports.weft ?? []", `info.exports['${CORE}'] ?? []`],
   // Where a name is built, not written.
-  ['packages/cli/src/weft.mjs', "out[sub === '.' ? 'weft' : `weft/${sub.slice(2)}`]", `out[sub === '.' ? '${CORE}' : \`${CORE}/\${sub.slice(2)}\`]`],
+  ['packages/cli/src/weft.mjs', `out[sub === '.' ? 'weft' : \`weft/\${sub.slice(2)}\`]`, `out[sub === '.' ? '${CORE}' : \`${CORE}/\${sub.slice(2)}\`]`],
   ['packages/cli/src/tests.mjs', "spec.startsWith('weft/')", `spec.startsWith('${CORE}/')`],
   ['packages/icons/compile.mjs', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`],
   ['packages/weft/vite.mjs', "exclude: ['weft'], include: can ? ['weft > @testing-library/dom', 'weft > @testing-library/user-event', 'weft > dom-accessibility-a", `exclude: ['${CORE}'], include: can ? ['${CORE} > @testing-library/dom', '${CORE} > @testing-library/user-event', '${CORE} > dom-accessibility-a`],
@@ -173,7 +173,7 @@ const patches = [
   // The private repo isn't a link a published package should carry.
   ['packages/weft/scripts/platform-package.mjs', "    repository: { type: 'git', url: 'git+https://github.com/Ravonus/weft.git' },\n", "    publishConfig: { access: 'public' },\n"],
   ['packages/weft/scripts/platform-package.mjs', 'weft installs it by itself', '@weft-js/core installs it by itself'],
-  ['packages/weft/scripts/build-platform.mjs', 'is pinned to ${version}, weft is ${pkg.version}', 'is pinned to ${version}, @weft-js/core is ${pkg.version}', 'any'],
+  ['packages/weft/scripts/build-platform.mjs', `is pinned to \${version}, weft is \${pkg.version}`, `is pinned to \${version}, @weft-js/core is \${pkg.version}`, 'any'],
 ]
 
 /** `import` lines a patch's new code needs. */
