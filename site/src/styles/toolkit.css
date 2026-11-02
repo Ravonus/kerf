@@ -9,9 +9,9 @@
 [data-site="frame"] [data-part="views"] [aria-pressed="false"] { color: var(--dim); }
 /* the Code view: the whole source, and the stage's own tools have nothing to act on */
 [data-site="frame"][data-code] [data-part="stage"], [data-site="frame"][data-code] [data-part="stage-tools"], [data-site="frame"][data-code] [data-act="stage-code"] { display: none; }
-[data-site="frame"][data-code] [data-part="code"] { border-block-start: 0; }
-[data-site="frame"][data-code] [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
-[data-site="frame"][data-code] [data-part="code"][data-fold]::after { display: none; }
+[data-site="frame"][data-code] > [data-part="code"] { border-block-start: 0; }
+[data-site="frame"][data-code] > [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
+[data-site="frame"][data-code] > [data-part="code"][data-fold]::after { display: none; }
 [data-site="frame"] [data-part="spacer"] { flex: 1; }
 [data-site="frame"] [data-part="stage"] {
   --stage-h: 200px;
@@ -35,14 +35,14 @@
 @keyframes stage-wait { from { opacity: 0.45; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { [data-part="wait"] { animation: none; } }
 
-/* code docked under the stage, folded to six lines */
-[data-site="frame"] [data-part="code"] { position: relative; border-block-start: var(--warp-border-hairline) solid var(--rule); }
-[data-site="frame"] [data-part="code"] [data-scope="codeblock"] { border: 0; border-radius: 0; }
-[data-site="frame"] [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: 104px; }
-[data-site="frame"][data-open] [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
-[data-site="frame"] [data-part="code"][data-fold]::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 72px; background: linear-gradient(transparent, var(--warp-color-surface-sunken)); pointer-events: none; }
-[data-site="frame"][data-open] [data-part="code"][data-fold]::after { display: none; }
-[data-site="frame"] [data-part="code"] > [data-act="stage-code"] { position: absolute; z-index: 1; inset-block-end: var(--warp-space-related); inset-inline-start: 50%; translate: -50% 0; }
+/* code docked under the stage, folded to six lines. Child selectors: a component on the stage has its own "code" part. */
+[data-site="frame"] > [data-part="code"] { position: relative; border-block-start: var(--warp-border-hairline) solid var(--rule); }
+[data-site="frame"] > [data-part="code"] [data-scope="codeblock"] { border: 0; border-radius: 0; }
+[data-site="frame"] > [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: 104px; }
+[data-site="frame"][data-open] > [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
+[data-site="frame"] > [data-part="code"][data-fold]::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 72px; background: linear-gradient(transparent, var(--warp-color-surface-sunken)); pointer-events: none; }
+[data-site="frame"][data-open] > [data-part="code"][data-fold]::after { display: none; }
+[data-site="frame"] > [data-part="code"] > [data-act="stage-code"] { position: absolute; z-index: 1; inset-block-end: var(--warp-space-related); inset-inline-start: 50%; translate: -50% 0; }
 
 /* the playground: stage left, knobs right */
 [data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) 248px; }
