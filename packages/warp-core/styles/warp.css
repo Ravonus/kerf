@@ -1436,7 +1436,9 @@
   :where([data-scope="stat"], [data-flow="stat"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; }
   :where([data-scope="chart"], [data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-fade; --_flow-o: 50% 100%; }
   :where([data-scope="gallery"] [data-part="item"], figure, [data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
-  :where([data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-flow="heading"]) { --_flow-in: warp-in-heading; --_flow-out: warp-out-none; }
+  /* a heading leaves as its section's words do, by fading where they fade, without a move: left standing over a section
+     that has gone, it read as a label for nothing */
+  :where([data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-flow="heading"]) { --_flow-in: warp-in-heading; --_flow-out: warp-out-fade; }
   :where([data-scope="codeblock"], [data-flow="code"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; position: relative; overflow: clip; isolation: isolate; }
   /* a bare <pre> in prose fades as code does, but keeps its own scrolling: no clip, no scan */
   :where([data-scope="prose"] > pre) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; }

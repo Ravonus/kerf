@@ -234,3 +234,14 @@ test('prose flows by itself: its paragraphs, lists and quotes as items, tables a
   expect(await timelines(page, 'p-li-p')).toEqual([]) // moves with its list
   await close()
 })
+
+test('a heading leaves with its section: it fades as it goes under the header, with no move, and is whole at rest', async () => {
+  const { page, close } = await stage(`<div style="block-size:60px"></div><h2 data-flow="heading" id="h" style="margin:0;block-size:40px">Heading</h2><div data-flow="item" id="words" style="block-size:300px"></div>${ABOVE}${BELOW}`, { expression: 'vivid' })
+  expect((await timelines(page, 'h')).map(t => t.name)).toEqual(['warp-in-heading', 'warp-out-fade'])
+  await scroll(page, 0)
+  expect(+(await style(page, 'h', 'opacity'))).toBe(1)
+  await scroll(page, 100) // its bottom edge has passed under the bar
+  expect(+(await style(page, 'h', 'opacity'))).toBeLessThan(0.75)
+  expect(await style(page, 'h', 'translate')).toBe('none')
+  await close()
+})
