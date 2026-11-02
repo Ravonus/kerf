@@ -2191,12 +2191,12 @@ exports[`Surfaces: client DOM after mount 1`] = `
 <span data-part="title">Static</span>x<span aria-hidden="true" data-part="sweep">
 </span>
 </div>
-<a data-scope="surface" data-sweep="" href="/x">
+<a data-scope="surface" data-sweep="surface" href="/x">
 <span data-part="eyebrow">E</span>
 <span data-part="title">Link</span>y<span aria-hidden="true" data-part="sweep">
 </span>
 </a>
-<button data-scope="surface" data-sweep="" type="button">
+<button data-scope="surface" data-sweep="surface" type="button">
 <span data-part="title">Press</span>z<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
@@ -2303,12 +2303,12 @@ exports[`Surfaces: server HTML 1`] = `
 <span data-part="title">Static</span>x<span aria-hidden="true" data-part="sweep">
 </span>
 </div>
-<a data-scope="surface" data-sweep="" href="/x">
+<a data-scope="surface" data-sweep="surface" href="/x">
 <span data-part="eyebrow">E</span>
 <span data-part="title">Link</span>y<span aria-hidden="true" data-part="sweep">
 </span>
 </a>
-<button data-scope="surface" data-sweep="" type="button">
+<button data-scope="surface" data-sweep="surface" type="button">
 <span data-part="title">Press</span>z<span aria-hidden="true" data-part="sweep">
 </span>
 </button>
