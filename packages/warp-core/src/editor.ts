@@ -344,21 +344,29 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     report()
     float()
   }
+  // the bubble sits above the selection (below it when there is no room), follows it when the page or a scroller
+  // moves, and hides while the selection is scrolled out of view
   const float = () => {
     const bar = o.bubble
     if (!bar) return
     const s = doc.getSelection()
-    if (!s?.rangeCount || s.isCollapsed) { if (bar.matches(':popover-open')) bar.hidePopover(); return }
+    if (!s?.rangeCount || s.isCollapsed || !ed.contains(s.anchorNode)) { if (bar.matches(':popover-open')) bar.hidePopover(); return }
     if (!bar.matches(':popover-open')) bar.showPopover()
+    const win = doc.defaultView!
     const box = s.getRangeAt(0).getBoundingClientRect()
-    bar.style.insetBlockStart = `${Math.max(8, box.top - bar.offsetHeight - 8)}px`
-    bar.style.insetInlineStart = `${Math.max(8, box.left)}px`
+    const above = box.top - bar.offsetHeight - 8
+    bar.style.insetBlockStart = `${above >= 8 ? above : box.bottom + 8}px`
+    bar.style.insetInlineStart = `${Math.max(8, Math.min(box.left, win.innerWidth - bar.offsetWidth - 8))}px`
+    bar.style.visibility = box.bottom < 0 || box.top > win.innerHeight ? 'hidden' : ''
   }
+  const onMove = () => { if (o.bubble?.matches(':popover-open')) float() }
   ed.addEventListener('input', onInput)
   ed.addEventListener('keydown', onKey)
   ed.addEventListener('paste', onPaste)
   ed.addEventListener('drop', onDrop)
   doc.addEventListener('selectionchange', onSelection)
+  doc.defaultView?.addEventListener('scroll', onMove, { capture: true, passive: true })
+  doc.defaultView?.addEventListener('resize', onMove, { passive: true })
   doc.execCommand?.('defaultParagraphSeparator', false, 'p')
   return {
     update: (next: RichTextOptions) => void (o = next),
@@ -368,6 +376,8 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
       ed.removeEventListener('paste', onPaste)
       ed.removeEventListener('drop', onDrop)
       doc.removeEventListener('selectionchange', onSelection)
+      doc.defaultView?.removeEventListener('scroll', onMove, { capture: true })
+      doc.defaultView?.removeEventListener('resize', onMove)
     },
     run, insertHtml, insertMention, replaceQuery, save, restore,
   }

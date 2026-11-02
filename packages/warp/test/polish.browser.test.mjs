@@ -325,3 +325,39 @@ test('an inline Modal, Drawer, Popover and Tooltip draw their surface open in th
   const end = await page.evaluate(() => Math.abs(document.querySelector('#in-drawer dialog').getBoundingClientRect().right - document.getElementById('in-drawer').getBoundingClientRect().right))
   expect(end).toBeLessThan(1)
 })
+
+test('a bubble toolbar takes the press: no closed tip lies over its tools, and it stays on the selection as the page scrolls', async () => {
+  await page.locator('#rte-bubble').scrollIntoViewIfNeeded()
+  // closed tips and the closed bubble are out of layout, on this editor and anywhere on the page
+  const laid = await page.evaluate(() => [...document.querySelectorAll('[popover]')].filter(p => !p.matches(':popover-open') && getComputedStyle(p).display !== 'none').map(p => p.id || p.textContent))
+  expect(laid).toEqual([])
+  const select = () => page.evaluate(() => {
+    const p = document.querySelector('#rte-bubble [contenteditable] p'), t = p.firstChild, r = document.createRange()
+    p.closest('[contenteditable]').focus()
+    r.setStart(t, 0); r.setEnd(t, 6)
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r)
+  })
+  await select()
+  await page.waitForTimeout(250)
+  const gap = () => page.evaluate(() => {
+    const bar = document.querySelector('#rte-bubble [role="toolbar"]'), r = getSelection().getRangeAt(0).getBoundingClientRect(), b = bar.getBoundingClientRect()
+    return { open: bar.matches(':popover-open'), above: r.top - b.bottom, left: b.left - r.left }
+  })
+  const before = await gap()
+  expect(before.open).toBe(true)
+  expect(before.above).toBeGreaterThanOrEqual(0)
+  expect(before.above).toBeLessThan(16)
+  const bold = page.locator('#rte-bubble [aria-label="Bold"]')
+  const hit = await bold.evaluate(b => { const r = b.getBoundingClientRect(); return b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)) })
+  expect(hit).toBe(true)
+  const r = await bold.boundingBox()
+  await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2)
+  await page.waitForTimeout(100)
+  expect(await bold.getAttribute('aria-pressed')).toBe('true')
+  expect(await page.locator('#rte-bubble [contenteditable]').innerHTML()).toMatch(/<(b|strong)>Select<\/(b|strong)>/)
+  await page.mouse.wheel(0, 200)
+  await page.waitForTimeout(250)
+  const after = await gap()
+  expect(Math.abs(after.above - before.above)).toBeLessThan(2) // it moved with the words, not 200px off them
+  expect(Math.abs(after.left - before.left)).toBeLessThan(2)
+})

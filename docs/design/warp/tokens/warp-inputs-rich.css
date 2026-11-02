@@ -219,23 +219,25 @@
   :where([data-scope="rte"] [data-part="tool"][aria-pressed="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
   :where([data-scope="rte"] [data-part="tool"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
   :where([data-scope="rte"] [data-part="tool"] svg) { inline-size: 16px; block-size: 16px; }
-  :where([data-scope="rte"] [data-part="content"]) {
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"]) {
     display: block; min-block-size: 168px; max-block-size: 320px; overflow: auto; padding: 12px var(--warp-pad-control) 16px; outline: none;
     font-size: max(var(--warp-text-prose-size) - 1px, var(--warp-input-font-min)); line-height: var(--warp-text-prose-leading);
   }
-  :where([data-scope="rte"] [data-part="content"] > *) { margin: 0 0 0.5em; }
-  :where([data-scope="rte"] [data-part="content"] h2) { font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); line-height: 1.3; }
-  :where([data-scope="rte"] [data-part="content"] blockquote) { padding-inline-start: 12px; border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); color: var(--warp-color-text-subtle); }
-  :where([data-scope="rte"] [data-part="content"] code) { padding: 1px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: 0.88em; }
-  :where([data-scope="rte"] [data-part="content"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
-  :where([data-scope="rte"] [data-part="content"] ul, [data-scope="rte"] [data-part="content"] ol) { padding-inline-start: 1.3em; }
-  :where([data-scope="rte"] [data-part="content"] [data-mention]) { padding: 0 3px; border-radius: var(--warp-radius-mark); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-weight: 500; }
-  :where([data-scope="rte"] [data-part="content"]:empty)::before, :where([data-scope="rte"] [data-part="content"] > p:only-child:has(> br:only-child))::before { content: attr(data-placeholder); color: var(--warp-color-text-subtle); pointer-events: none; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] > *) { margin: 0 0 0.5em; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] h2) { font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size); font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking); line-height: 1.3; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] blockquote) { padding-inline-start: 12px; border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); color: var(--warp-color-text-subtle); }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] code) { padding: 1px 4px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: 0.88em; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] ul, [data-scope="rte"] [data-part="frame"] > [data-part="content"] ol) { padding-inline-start: 1.3em; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] [data-mention]) { padding: 0 3px; border-radius: var(--warp-radius-mark); background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-weight: 500; }
+  :where([data-scope="rte"] [data-part="frame"] > [data-part="content"]:empty)::before, :where([data-scope="rte"] [data-part="frame"] > [data-part="content"] > p:only-child:has(> br:only-child))::before { content: attr(data-placeholder); color: var(--warp-color-text-subtle); pointer-events: none; }
   :where([data-scope="rte"] [data-part="linkbar"]) { display: flex; gap: 6px; padding: 6px; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
   :where([data-scope="rte"] [data-part="linkbar"] input) { all: unset; flex: 1; min-inline-size: 0; padding-inline: 8px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: var(--warp-text-control-size); }
   :where([data-scope="rte"] [data-part="slash"]) { position: absolute; z-index: var(--warp-z-menu); inline-size: 240px; }
   :where([data-scope="rte"] [data-part="slash"] [role="option"] small) { margin-inline-start: auto; color: var(--warp-color-text-subtle); font: 400 11px var(--warp-font-mono); }
   :where([data-scope="rte"] [role="toolbar"][data-bubble]) { position: fixed; inset: auto; margin: 0; padding: 4px; border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); background: var(--warp-color-surface-overlay); box-shadow: var(--warp-elevation-2); }
+  /* a closed bubble (and any closed tip inside a toolbar) is out of layout: it never takes space or a press */
+  :where([data-scope="rte"] [role="toolbar"][data-bubble]:not(:popover-open), [data-scope="rte"] [popover]:not(:popover-open)) { display: none; }
   :where([data-scope="rte"] [role="toolbar"][data-docked]) { position: fixed; inset-inline: 0; z-index: var(--warp-z-menu); display: flex; margin: 0; padding: 4px; border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: 0; background: var(--warp-color-surface-overlay); }
   /* phone: the toolbar docks above the keyboard (visualViewport in production) */
   :where([data-form="phone"] [data-scope="rte"] [role="toolbar"]) {

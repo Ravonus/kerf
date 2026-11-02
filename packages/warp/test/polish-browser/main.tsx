@@ -14,6 +14,7 @@ import { Modal } from '../../src/Modal'
 import { Drawer } from '../../src/Drawer'
 import { Popover } from '../../src/Popover'
 import { Tooltip } from '../../src/Tooltip'
+import { RichTextEditor } from '../../src/RichTextEditor'
 
 const rows = [{ id: 'a', name: 'Alpha', cost: 1 }, { id: 'b', name: 'Beta', cost: 2 }]
 const columns = [{ id: 'name', header: 'Name', sort: true }, { id: 'cost', header: 'Cost', sort: true, numeric: true }]
@@ -72,6 +73,7 @@ render(() => (
       <div id="in-popover"><Popover inline label="What is a preview?" title="Preview deploys" description="Every branch gets its own address." /></div>
       <div id="in-tooltip"><Tooltip inline content="Runs on every region"><Button>Deploy everywhere</Button></Tooltip></div>
     </div>
+    {box('rte-bubble', 520, <RichTextEditor label="Release notes" toolbar="bubble" defaultValue="<p>Select some of this text to see the toolbar.</p>" />)}
     {box('week-free', 900, cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }))}
   </>
 ), document.getElementById('app')!)
