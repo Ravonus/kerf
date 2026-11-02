@@ -15,9 +15,9 @@ export default function DocsHome() {
       <div data-part="cards">
         {nav.map((group, i) => (
           <section key={group.section} data-flow="card">
-            <div data-part="thumb"><ArtStage id={ART[i % ART.length]} /></div>
+            <div data-part="thumb"><ArtStage id={ART[i % ART.length]!} /></div>
             <h2>{group.section}</h2>
-            <ul>{group.items.map(i => <li key={i.slug}><Link href={`/docs/${i.slug}`}>{i.title}</Link></li>)}</ul>
+            <ul>{group.items.map(item => <li key={item.slug}><Link href={`/docs/${item.slug}`}>{item.title}</Link></li>)}</ul>
           </section>
         ))}
       </div>

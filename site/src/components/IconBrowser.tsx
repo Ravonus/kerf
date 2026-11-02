@@ -1,19 +1,20 @@
-import { Button, getDial, Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft-js/warp'
+import { Button, getDial, Modal, Search, Segmented, Snippet, Tag, VirtualList, type SegmentedOption } from '@weft-js/warp'
 import { derived, onCleanup, onMount, state } from '@weft-js/core'
 import files from '../generated/icons.json'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'
+type Size = '16' | '24' | '32'
 type Form = 'hollow' | 'solid'
 type Set = Record<string, [string, string]>
 
 const TIERS = [{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]
 const FORMS = [{ value: 'hollow', label: 'Hollow' }, { value: 'solid', label: 'Solid' }]
-const SIZES = [{ value: '16', label: '16' }, { value: '24', label: '24' }, { value: '32', label: '32' }]
+const SIZES: SegmentedOption<Size>[] = [{ value: '16', label: '16' }, { value: '24', label: '24' }, { value: '32', label: '32' }]
 /**
  * Each size gets a cell that fits it: the drawing, and a name over two lines. A name breaks only after a hyphen, so the
  * narrowest cell still holds the longest single word, "accessibility", whole.
  */
-const CELL: Record<string, { width: number; height: number }> = { '16': { width: 112, height: 84 }, '24': { width: 120, height: 92 }, '32': { width: 128, height: 100 } }
+const CELL: Record<Size, { width: number; height: number }> = { '16': { width: 112, height: 84 }, '24': { width: 120, height: 92 }, '32': { width: 128, height: 100 } }
 const pascal = (n: string) => n.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
 const svg = (inner: string) => `<svg data-icon viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`
 
@@ -25,12 +26,13 @@ export function IconBrowser() {
   const tier = state<Tier>('balanced')
   onMount(() => { tier.value = getDial('expression') })
   const form = state<Form>('hollow')
-  const size = state('32')
+  const size = state<Size>('32')
   const width = state(0)
   const cols = derived(() => Math.max(2, Math.floor(width.value / CELL[size.value].width)))
   const open = state(false)
   const picked = state('')
-  let box: HTMLDivElement | undefined
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
+  let box!: HTMLDivElement
   const names = derived(() => {
     const q = query.value.trim().toLowerCase()
     return q ? files.names.filter(n => n.includes(q)) : files.names
@@ -44,7 +46,7 @@ export function IconBrowser() {
   onMount(() => {
     query.value = new URLSearchParams(location.search).get('q') ?? ''
     void fetch(files.url).then(r => r.json()).then(s => (set.value = s))
-    const seen = new ResizeObserver(([e]) => (width.value = e.contentRect.width))
+    const seen = new ResizeObserver(([e]) => (width.value = e!.contentRect.width))
     seen.observe(box)
     onCleanup(() => seen.disconnect())
   })
@@ -65,7 +67,9 @@ export function IconBrowser() {
           <div data-part="line" style={`--cols:${cols.value}`}>
             {row().names.map(n => (
               <Button key={n} emphasis="ghost" tone="neutral" data-part="cell" onClick={() => show(n)} aria-label={n}>
-                <span data-part="glyph" innerHTML={drawing(n, form.value)}></span>
+                <span data-part="glyph"
+                  // oxlint-disable-next-line weft/no-html-sink -- this site's own icon set, wrapped in a fixed svg
+                  innerHTML={drawing(n, form.value)}></span>
                 <span data-part="name">{n.split('-').map((w, i, all) => (i < all.length - 1 ? [`${w}-`, <wbr />] : w))}</span>
               </Button>
             ))}

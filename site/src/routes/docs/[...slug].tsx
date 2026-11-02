@@ -1,5 +1,4 @@
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
-import { Link } from '@weft-js/start'
+import { Link, notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
 import { Button } from '@weft-js/warp'
 import { PageExample } from '../../components/PageExample'
 import { Toc } from '../../components/Toc'
@@ -31,7 +30,9 @@ export default function DocPage(props: RouteProps<typeof load, '/docs/[...slug]'
           <p data-part="crumb">{props.data.parent ? <Link href={`/docs/${props.data.parent.slug}`}>{props.data.parent.title}</Link> : props.data.section}</p>
           <h1>{props.data.title}</h1>
         </header>
-        {props.data.lead && <p data-part="lead" innerHTML={props.data.lead}></p>}
+        {props.data.lead && <p data-part="lead"
+          // oxlint-disable-next-line weft/no-html-sink -- the docs' own Markdown, rendered at build time
+          innerHTML={props.data.lead}></p>}
         <p data-part="actions">
           <Button emphasis="outline" tone="neutral" size="sm" icon="copy" data-act="copy" data-copy-url={`/docs/${props.data.slug}.md`}>Copy as Markdown</Button>
         </p>

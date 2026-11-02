@@ -7,8 +7,8 @@ import '../styles/example.css'
 export function Example(props: { id: string; plain?: boolean; title?: string; lead?: boolean; children?: unknown }) {
   return (
     <section data-site="example" data-flow="card" data-lead={props.lead ? '' : undefined}>
-      {!props.plain && <h2 data-flow="heading">{props.title ?? demos[props.id].title}</h2>}
-      <p>{demos[props.id].look}</p>
+      {!props.plain && <h2 data-flow="heading">{props.title ?? demos[props.id]!.title}</h2>}
+      <p>{demos[props.id]!.look}</p>
       <div data-part="pair">
         <div data-part="run">{props.children}</div>
         <div data-scope="codeblock"

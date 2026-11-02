@@ -62,7 +62,7 @@ export function Arena() {
     const heard = (e: MessageEvent) => { if (e.origin === location.origin && e.data?.arena) read() }
     addEventListener('message', heard)
     const seen = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) for (const r of rows) if (r.frame && !r.frame.src) r.frame.src = `/arena/${r.id}/index.html`
+      if (e!.isIntersecting) for (const r of rows) if (r.frame && !r.frame.src) r.frame.src = `/arena/${r.id}/index.html`
       else if (beat) stop()
     })
     seen.observe(box!)

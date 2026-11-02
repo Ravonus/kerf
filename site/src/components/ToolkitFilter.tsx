@@ -11,7 +11,7 @@ export function ToolkitFilter(props: { noun: string }) {
     for (const g of document.querySelectorAll<HTMLElement>('[data-tk="group"]')) {
       let here = 0
       for (const t of g.querySelectorAll<HTMLElement>('[data-site="tile"]')) {
-        const hit = (!q || (t.getAttribute('data-name') ?? '').includes(q) || t.textContent!.toLowerCase().includes(q))
+        const hit = (!q || (t.getAttribute('data-name') ?? '').includes(q) || t.textContent.toLowerCase().includes(q))
         t.hidden = !hit
         t.toggleAttribute('data-show', hit)
         if (hit) here++

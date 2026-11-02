@@ -5,7 +5,7 @@ import { on } from '@weft-js/core/browser'
 const EXPRESSIONS = ['quiet', 'balanced', 'vivid']
 const THEMES = ['page', 'light', 'dark']
 const WIDTHS = ['full', 'tablet', 'phone']
-const next = (list: string[], at: string | null) => list[(list.indexOf(at ?? list[0]) + 1) % list.length]
+const next = (list: string[], at: string | null) => list[(list.indexOf(at ?? list[0]!) + 1) % list.length]!
 
 /** Sets one stage's width, which warp's scope attributes carry. */
 function width(stage: HTMLElement, v: string) {
