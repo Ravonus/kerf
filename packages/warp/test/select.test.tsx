@@ -138,6 +138,26 @@ describe.each([['no value', undefined, 'c'], ['a value', 'c', 'a']])('a pick bef
   })
 })
 
+test('what Back restored is nobody\'s pick: the server\'s value stands and nothing is heard', async () => {
+  const spy = vi.spyOn(performance, 'getEntriesByType').mockReturnValue([{ type: 'back_forward' }] as any)
+  resetIds()
+  const root = document.body.appendChild(document.createElement('div'))
+  root.innerHTML = renderToString(() => server({ value: 'c' }))
+  const select = root.querySelector('select')!
+  select.value = 'a'
+  const heard: string[] = []
+  root.addEventListener('change', () => heard.push(select.value))
+  resetIds()
+  const dispose = hydrate(() => client({ value: 'c' }), root)
+  await flush()
+  await Promise.resolve()
+  expect(select.value).toBe('c')
+  expect(heard).toEqual([])
+  dispose()
+  root.remove()
+  spy.mockRestore()
+})
+
 test('nothing is heard when no one picked', async () => {
   for (const value of [undefined, 'c']) {
     resetIds()

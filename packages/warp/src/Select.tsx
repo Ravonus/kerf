@@ -31,7 +31,9 @@ export function Select({ options, placeholder, ...props }: FieldProps & { option
     const pick = () => { held = sel.value }
     // On a server page, and not what its HTML or the value says, so someone picked it before this ran.
     const all = [...sel.options], marked = all.findLastIndex(x => x.defaultSelected), usual = marked < 0 ? all.findIndex(x => !x.disabled) : marked
-    const early = landed && sel.selectedIndex !== usual && sel.value !== held
+    // Back and reload bring the browser's own memory of the field, which is nobody's pick: it mustn't run `onChange`.
+    const restored = /back_forward|reload/.test((performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined)?.type ?? '')
+    const early = landed && !restored && sel.selectedIndex !== usual && sel.value !== held
     if (early) pick()
     else if (held === undefined) sel.selectedIndex = usual
     sel.addEventListener('change', pick)
