@@ -3,13 +3,14 @@
 // exact. A lite handle laid out narrower than its widest word needs an emergency break, which only the
 // exact tier models: that layout loads the exact tier and is marked inexact until it has.
 import { inBaseAlphabet } from './alphabet.js'
+import type { exact } from './exact.js'
 import { clearLite, countLite, lineTextLite, prepareLite, setLiteLocale, textFits, walkLite, type LiteHandle } from './lite.js'
 import type { Handle, LayoutResult, LineRange, Pack, PrepareOptions, TextEngine } from './types.js'
 
 declare const __ENGINE__: 'blink' | 'webkit' | 'gecko'
 const EPS = __ENGINE__ === 'webkit' ? 1 / 64 : 0.005
 
-type Exact = typeof import('./exact.js')['exact']
+type Exact = typeof exact
 let X: Exact | null = null
 let exactLoading: Promise<Exact> | null = null
 let locale: string | undefined

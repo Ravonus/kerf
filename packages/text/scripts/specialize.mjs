@@ -52,6 +52,7 @@ function readProfile(engine) {
   const m = fs.readFileSync(path.join(vendor, 'measurement.ts'), 'utf8')
   const body = m.slice(m.indexOf('function buildEngineProfile'))
   const lit = body.slice(body.indexOf('  return {') + 9, body.indexOf('\n  }\n') + 4)
+  // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- `lit` is the object literal in the vendored, pinned Pretext source, and it has to run to fold its reads
   const profile = new Function('engine', 'navigator', 'return ' + lit)(engine, { platform: 'MacIntel' })
   // Runtime on WebKit: macOS/iOS name generic families by language, Linux/Windows WebKit do not.
   const runtime = engine === 'webkit' ? ['namesGenericFamiliesByLanguage'] : []

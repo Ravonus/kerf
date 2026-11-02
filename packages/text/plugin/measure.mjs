@@ -12,6 +12,7 @@ function pretext(P) {
   }
 }
 
+/** The `text.measure` provider: this package's engine, or upstream Pretext behind the same calls. */
 export async function createMeasure({ engine = 'slim' } = {}) {
   if (engine === 'pretext') return pretext(await import('@chenglou/pretext'))
   const { loadTextEngine } = await import('../dist/index.js')

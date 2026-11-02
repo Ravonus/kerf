@@ -69,14 +69,14 @@ describe('createFontBuild().build()', () => {
   beforeEach(() => (cacheDir = mkdtempSync(join(tmpdir(), 'weft-fonts-'))))
   afterEach(() => rmSync(cacheDir, { recursive: true, force: true }))
 
-  const opts = { ...text({
+  const opts = Object.assign({}, text({
     fonts: {
       body: { family: 'Inter', src: inter(400), fallback: 'Arial' },
       heading: { family: 'Inter', src: inter(700), fallback: 'Arial', weight: 700, preload: false },
       label: { family: 'Inter', src: inter(400), fallback: 'Arial' }, // the same face as body: emitted once
     },
     subsets: ['latin', 'latin-ext'],
-  }).contribute({ command: 'build', mode: 'production', root: '' }).provides[0].sides.build.options, trim: false }
+  }).contribute({ command: 'build', mode: 'production', root: '' }).provides[0].sides.build.options, { trim: false })
 
   it('subsets per range, adds one fallback face, preloads the body face only, within budget', async () => {
     const out = await createFontBuild(opts).build({ root: '/', cacheDir, url: n => `/assets/${n}` })
@@ -127,8 +127,8 @@ describe('createFontBuild().build()', () => {
       expect(ranges[0]).toContain('\u2019')
       expect(ranges[0]).not.toContain('\u00e9')
       expect(ranges[1]).toContain('\u00e9')
-      expect([...ranges[0]].filter(c => ranges[1].includes(c))).toEqual([])
-      expect([...ranges.join('')].sort().join('')).toBe([...rangeText(RANGES.latin)].sort().join(''))
+      expect(Array.from(ranges[0]).filter(c => ranges[1].includes(c))).toEqual([])
+      expect(Array.from(ranges.join('')).sort().join('')).toBe(Array.from(rangeText(RANGES.latin)).sort().join(''))
       const all = await createFontBuild({ ...body, trim: false }).build({ root: '/', cacheDir, url: n => n })
       expect(core.bytes.length).toBeLessThan(all.files[0].bytes.length * 0.8)
     })
@@ -180,7 +180,7 @@ describe('axes', () => {
   })
 
   it('treats a value it cannot read as dynamic', () => {
-    for (const s of ['a { font-variation-settings: var(--axes) }', 'el.style.fontVariationSettings = `"SOFT" ${n}`', 'style={{ fontVariationSettings: axes }}', "el.style.setProperty('font-variation-settings', v)"]) {
+    for (const s of ['a { font-variation-settings: var(--axes) }', `el.style.fontVariationSettings = \`"SOFT" \${n}\``, 'style={{ fontVariationSettings: axes }}', "el.style.setProperty('font-variation-settings', v)"]) {
       expect(scanAxes(s).dynamic, s).toBe(true)
     }
   })

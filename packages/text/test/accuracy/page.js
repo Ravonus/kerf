@@ -5,7 +5,7 @@ import { makeCorpus } from './corpus.js'
 const med = a => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)] }
 const now = () => performance.now()
 
-window.domHeights = async function ({ corpus, n, family, size, lh, widths }) {
+window.domHeights = function ({ corpus, n, family, size, lh, widths }) {
   const texts = makeCorpus(corpus, n)
   const host = document.getElementById('host')
   const style = `font:${size}px ${family};line-height:${lh}px;overflow-wrap:break-word;`
@@ -54,7 +54,7 @@ window.libHeights = async function ({ lib, corpus, n, family, size, lh, widths, 
   const tc = [], tw = [], tl = []
   for (let r = 0; r < reps; r++) {
     L.clear()
-    let t0 = now(); hs = texts.map(t => L.prepare(t, font)); tc.push(now() - t0)
+    let t0 = now(); texts.map(t => L.prepare(t, font)); tc.push(now() - t0)
     t0 = now(); hs = texts.map(t => L.prepare(t, font)); tw.push(now() - t0)
     await L.settle(hs)
     t0 = now(); for (const h of hs) L.layout(h, widths[0], lh); tl.push(now() - t0)

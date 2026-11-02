@@ -101,10 +101,10 @@ export async function genEngineData({ upstreamDir, engine, alphabet = null }) {
 
   // --- rule tables: prune states / categories
   const ruleTables = {}
-  const allowedTables = new Set(RULES[engine])
+
   // Apple quote overrides read the categories of U+007B and U+007D, which are in every alphabet here.
   for (const t of RULES[engine]) {
-    const [catCount, dictStart, laSize, states, base] = D.ruleTables[t]
+    const [catCount, dictStart, laSize, states] = D.ruleTables[t]
     const width = catCount + 3
     const rowsOf = (tt) => { const [cc, , , st, b, diff] = D.ruleTables[tt]; return U.unpackStateRows(cc + 3, st, b === null ? null : rowsOf(b), U.unpackVarints(diff)) }
     const rows = rowsOf(t)

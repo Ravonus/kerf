@@ -63,6 +63,7 @@ for (const engine of engines) {
   let missed = 0
   try { await page.evaluate(() => window.drive()) } catch (e) { missed++; console.error(engine, 'driver threw (a pack call?):', e.message.slice(0, 200)) }
   const cov = await page.coverage.stopJSCoverage()
+  /** @type {Set<string>} */
   const ran = new Set()
   for (const entry of cov) for (const fn of entry.functions) if (fn.ranges[0]?.count > 0 && fn.functionName) ran.add(fn.functionName.replace(/\d+$/, ''))
   const out = { engine, note: 'top-level function names that ran over the coverage corpus (scripts/coverage.mjs)', ran: [...ran].sort() }

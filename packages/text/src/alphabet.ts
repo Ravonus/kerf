@@ -9,7 +9,7 @@
 import ranges from './alphabet.json'
 
 const flat: number[] = []
-for (const [lo, hi] of [...(ranges as number[][])].sort((a, b) => a[0]! - b[0]!)) {
+for (const [lo, hi] of [...ranges].sort((a, b) => a[0]! - b[0]!)) {
   if (flat.length && lo! <= flat[flat.length - 1]! + 1) flat[flat.length - 1] = Math.max(flat[flat.length - 1]!, hi!)
   else flat.push(lo!, hi!)
 }

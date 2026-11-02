@@ -26,7 +26,8 @@ declare const __ENGINE__: 'blink' | 'webkit' | 'gecko'
 const EPS = __ENGINE__ === 'webkit' ? 1 / 64 : 0.005
 
 // Characters whose handling in Pretext goes past "segment between breaks, measure, sum".
-const OUTSIDE = /[\0-\x08\x0b\x0e-\x1f\x7f-\xa0\xad\u034f\u2000-\u200c\u200e\u200f\u2011\u2028-\u202f\u205f-\u206f\ufe00-\ufe0e\ufeff]/
+// oxlint-disable-next-line no-control-regex -- control characters are half of what this class is for
+const OUTSIDE = /[\u034f\ufe00-\ufe0e\0-\x08\x0b\x0e-\x1f\x7f-\xa0\xad\u2000-\u200c\u200e\u200f\u2011\u2028-\u202f\u205f-\u206f\ufeff]/
 const EMOJI = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\ufe0f\u20e3]/u
 const QUOTE = /[\u2018\u2019\u201c\u201d]/
 const GENERIC = /(?:^|[\s,])(?:serif|sans-serif|cursive|fantasy|monospace)\s*(?:,|$)/i
@@ -249,7 +250,7 @@ export function walkLite(h: LiteHandle, maxWidth: number, onLine: (width: number
 
 // A line's text, for handles prepared with keepText: its segments as a slice, without the hanging space.
 export function lineTextLite(h: LiteHandle, start: number, end: number): string {
-  return h.source!.slice(h.starts![start]!, end < h.starts!.length ? h.starts![end]! : h.source!.length).trimEnd()
+  return h.source!.slice(h.starts![start], end < h.starts!.length ? h.starts![end] : h.source!.length).trimEnd()
 }
 
 export function setLiteLocale(l?: string): void { locale = l; ctx = null }

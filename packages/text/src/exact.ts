@@ -14,7 +14,7 @@ import {
 } from '@engine/layout.js'
 import { PackMissing } from '@engine/packs.js'
 import { inBaseAlphabet } from './alphabet.js'
-import type { Handle, LayoutResult, LineRange, Pack, PrepareOptions, TextEngine } from './types.js'
+import type { Handle, LayoutResult, LineRange, Pack, PrepareOptions } from './types.js'
 
 type ExactPack = Exclude<Pack, 'exact'>
 
@@ -32,8 +32,7 @@ const done = new Set<ExactPack>()
 const inflight = new Map<ExactPack, Promise<unknown>>()
 
 function load(packs: readonly ExactPack[]): Promise<void> {
-  return Promise.all(packs.map(p => {
-    if (done.has(p)) return null
+  return Promise.all(packs.filter(p => !done.has(p)).map(p => {
     let f = inflight.get(p)
     if (!f) inflight.set(p, f = importers[p]().then(() => { done.add(p) }))
     return f
@@ -88,30 +87,30 @@ function estimate(h: TextHandle, width: number, lineHeight: number): LayoutResul
 }
 
 export const exact = {
-  prepare(text: string, font: string, opts?: PrepareOptions): Handle {
+  prepare: (text: string, font: string, opts?: PrepareOptions): Handle => {
     const h = new TextHandle(text, font, opts)
     build(h)
     return h
   },
-  layout(handle: Handle, width: number, lineHeight: number): LayoutResult {
+  layout: (handle: Handle, width: number, lineHeight: number): LayoutResult => {
     const h = handle as TextHandle
     return h.exact ? pretextLayout(h.p!, width, lineHeight) : estimate(h, width, lineHeight)
   },
-  lines(handle: Handle, width: number): LineRange[] {
+  lines: (handle: Handle, width: number): LineRange[] => {
     const h = handle as TextHandle
     if (!h.exact) return []
     const out: LineRange[] = []
     walkLineRanges(h.p!, width, l => { out.push({ width: l.width, start: l.start, end: l.end }) })
     return out
   },
-  lineText(handle: Handle, line: LineRange): string {
+  lineText: (handle: Handle, line: LineRange): string => {
     const h = handle as TextHandle
     if (!h.exact || !h.opts?.segments) throw new Error('text-engine: lineText needs an exact handle prepared with { segments: true }')
     return materializeLineRange(h.p as PreparedTextWithSegments, line).text
   },
-  clear() { clearCache() },
+  clear: () => { clearCache() },
   needs,
   load,
   loaded: (): ExactPack[] => [...done],
-  setLocale(locale?: string) { pretextSetLocale(locale) },
+  setLocale: (locale?: string) => { pretextSetLocale(locale) },
 }

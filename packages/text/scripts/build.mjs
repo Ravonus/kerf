@@ -35,7 +35,7 @@ function aliasEngine(engine) {
 
 async function terserAll(dir) {
   const { minify } = await import('terser')
-  for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.js'))) {
+  for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.js'))) {
     const p = path.join(dir, f)
     const r = await minify(fs.readFileSync(p, 'utf8'), { module: true, ecma: 2020, compress: { passes: 3, unsafe_arrows: true, unsafe_methods: true, pure_getters: true }, mangle: { toplevel: true }, format: { comments: false } })
     fs.writeFileSync(p, r.code)
@@ -82,7 +82,7 @@ for (const engine of engines) {
     for (const f of from) for (const im of outs[f].imports) if (im.kind === 'dynamic-import') {
       const name = rel(im.path).replace(/-[A-Z0-9]+\.js$/, '')
       if (packs[name]) continue
-      const closure = [...staticDeps(im.path)], extra = closure.filter(f => !have.includes(f))
+      const closure = [...staticDeps(im.path)], extra = closure.filter(c => !have.includes(c))
       packs[name] = { files: extra.map(rel), br: sumBr(extra) }
       visit(closure, [...new Set([...have, ...closure])])
     }

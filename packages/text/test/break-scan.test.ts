@@ -8,7 +8,6 @@ import * as webkit from '../gen/webkit/line-breaks.js'
 import * as gecko from '../gen/gecko/gecko-line-breaks.js'
 import alphabet from '../src/alphabet.json'
 import { inBaseAlphabet } from '../src/alphabet.js'
-// @ts-expect-error plain JS corpus shared with the browser harness
 import { makeCorpus } from './accuracy/corpus.js'
 
 function fuzz(n: number, seed = 7): string[] {
@@ -26,7 +25,7 @@ function fuzz(n: number, seed = 7): string[] {
 }
 
 const texts = [
-  ...['latin', 'latin-hard', 'emoji'].flatMap(c => makeCorpus(c, 400) as string[]),
+  ...['latin', 'latin-hard', 'emoji'].flatMap(c => makeCorpus(c, 400)),
   ...fuzz(4000),
 ].filter(t => inBaseAlphabet(t))
 

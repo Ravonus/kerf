@@ -178,8 +178,8 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         const pins = trimming ? pinned(await readAxes(bytes), f.axes, scan) : {}
         entry.pins = pins
         for (const { subset, text, range } of subsets.flatMap(parts)) {
-          const key = createHash('sha256').update(text).update(JSON.stringify(pins)).digest('hex').slice(0, 8)
-          const cached = join(cacheDir, `${hash}-${subset}-${key}-v${VERSION}.woff2`)
+          const inputs = createHash('sha256').update(text).update(JSON.stringify(pins)).digest('hex').slice(0, 8)
+          const cached = join(cacheDir, `${hash}-${subset}-${inputs}-v${VERSION}.woff2`)
           let out
           if (existsSync(cached)) out = readFileSync(cached)
           else {
@@ -198,8 +198,8 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         for (const file of f.files) {
           rules.push(`@font-face{font-family:"${f.family}";src:url(${url(file.name)}) format("woff2");font-weight:${weight};font-style:${f.style};font-display:${f.display};unicode-range:${file.range}}`)
         }
-        const latin = f.files.find(x => x.subset === 'latin') ?? f.files[0]
-        if (f.preload && latin) preloads.push({ href: url(latin.name), type: 'font/woff2', bytes: latin.bytes })
+        const first = f.files.find(x => x.subset === 'latin') ?? f.files[0]
+        if (f.preload && first) preloads.push({ href: url(first.name), type: 'font/woff2', bytes: first.bytes })
       }
       for (const [family, fb] of fallbacks) {
         rules.push(`@font-face{font-family:"${family} Fallback";src:local("${fb.fallback}");size-adjust:${fb.sizeAdjust};ascent-override:${fb.ascentOverride};descent-override:${fb.descentOverride};line-gap-override:${fb.lineGapOverride}}`)

@@ -1,5 +1,6 @@
 import type { PluginInstance } from '@weft-js/core/plugin'
 
+/** One font file and how it's used. */
 export interface Face {
   family: string
   /** The font file, relative to the project root (woff2, woff, ttf or otf). */
@@ -16,8 +17,10 @@ export interface Face {
   preload?: boolean
 }
 
+/** A Unicode range the fonts are cut to. */
 export type Subset = 'latin' | 'latin-ext' | 'cyrillic' | 'cyrillic-ext' | 'greek' | 'greek-ext' | 'vietnamese'
 
+/** Options of `text()`. */
 export interface TextOptions {
   /** Role → face. The only place font files are declared. */
   fonts?: Record<string, Face>
@@ -31,5 +34,7 @@ export interface TextOptions {
   trim?: boolean
 }
 
+/** Every subset the build can cut. */
 export declare const SUBSETS: Subset[]
+/** The plugin for `weft.config.ts`: fonts, their fallbacks and `text.measure`. */
 export declare function text(options?: TextOptions): PluginInstance<Required<TextOptions>>
