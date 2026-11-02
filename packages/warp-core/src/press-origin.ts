@@ -1,6 +1,6 @@
 let installed = false
 
-/** One delegated listener: a vivid button's fill follows the hand. Without it the fill closes on the middle. */
+/** One delegated listener: a vivid button that asks to follow (data-follow) has its fill follow the hand. */
 export function pressOrigin(doc: Document | undefined = typeof document === 'undefined' ? undefined : document) {
   if (installed || !doc) return
   installed = true
@@ -17,7 +17,7 @@ export function pressOrigin(doc: Document | undefined = typeof document === 'und
   }
   const at = (e: PointerEvent) => { x = (e.clientX - box.left) / box.width * 100; y = (e.clientY - box.top) / box.height * 100 }
   doc.addEventListener('pointerover', (e: PointerEvent) => {
-    const b = (e.target as Element).closest?.('[data-scope="button"]') as HTMLElement | null
+    const b = (e.target as Element).closest?.('[data-scope="button"][data-follow]') as HTMLElement | null
     if (b === host) return
     host = b
     if (!b) return

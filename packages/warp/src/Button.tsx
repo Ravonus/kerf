@@ -17,6 +17,8 @@ export interface ButtonProps {
   size?: 'sm' | 'md' | 'lg'
   /** A frame button with the solid fill sweeping in. */
   fill?: boolean
+  /** At vivid the fill spreads from where the pointer arrives and parts back out, instead of wiping in from the left. Not on frame or link. */
+  follow?: boolean
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
   icon?: IconRef
@@ -33,10 +35,10 @@ const swept = (e: Emphasis) => e !== 'link'
 
 /**
  * A native button (05 §2): all but link and frame append one [data-part="sweep"], and ::before paints the fill (the wipe,
- * or at vivid the two blobs that close on where the hand arrived); frame carries the six-part signature anatomy (SIGNATURE §1b).
+ * or with `follow` at vivid the two blobs that close on where the hand arrived); frame carries the six-part signature anatomy (SIGNATURE §1b).
  */
-export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
-  pressOrigin()
+export function Button({ emphasis = 'solid', tone, size, fill, follow, full, icon, label, loading, type = 'button', onClick, ui, ref, children, ...rest }: ButtonProps) {
+  pressOrigin()   // one listener for the page; it only moves buttons that ask to follow
   let host: HTMLButtonElement | undefined
   useUi(() => ui, () => host)
   const canLoad = derived(() => loading !== undefined)
@@ -56,6 +58,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       data-tone={tone}
       data-size={size === 'md' ? undefined : size}
       data-fill={emphasis === 'frame' && fill ? '' : undefined}
+      data-follow={follow && emphasis !== 'frame' && emphasis !== 'link' ? '' : undefined}
       data-full={full ? '' : undefined}
       data-icon-only={glyph.value && !children ? '' : undefined}
       aria-label={label}

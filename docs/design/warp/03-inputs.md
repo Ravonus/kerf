@@ -199,7 +199,7 @@ type ImageCropProps = Bindable<CropRect> & { src: string; aspect?: number; previ
 ## 3. Text family
 
 Mobile column: `type` · `inputmode` · `enterkeyhint` · `autocomplete`. Every field uses 16px text on a coarse
-pointer, so iOS doesn't zoom. Motion is per stop. The sweep runs 480 / 620 / 700ms (quiet / balanced / vivid); the
+pointer, so iOS doesn't zoom. Motion is per stop. The sweep runs 400 / 520 / 580ms (quiet / balanced / vivid); the
 label float takes `--warp-label-float-duration`. Reduced motion changes colour instantly and fades the label over
 120ms.
 

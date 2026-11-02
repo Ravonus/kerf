@@ -170,17 +170,19 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
               border-color var(--warp-touch-out) var(--warp-ease-out), color var(--warp-touch-out) var(--warp-ease-out);
 }
 :where([data-scope="button"]:hover) { transition-property: scale, translate, box-shadow; }
-/* the touch clock's fill: below vivid the hover layer wipes in L→R at once and leaves through the right, so it never reverses.
-   At vivid (--warp-btn-fill) the wipe stands clear and two blobs of the tone close on where the hand arrived, then part at
-   the seam and leave by their own edges: the ground is revealed, never repainted. --_a is the sweep's switch, so hover,
+/* the touch clock's fill: the hover layer wipes in L→R and leaves through the right, so it never reverses; at vivid
+   (--warp-btn-fill) the wipe carries the tone's fill. A button that asks to follow (data-follow, --_ptr) swaps the wipe at
+   vivid for two blobs of the tone that close on where the hand arrived, then part at the seam and leave by their own edges:
+   the ground is revealed, never repainted. --_a is the sweep's switch, so hover,
    focus, hold, open and touch all arrive free, and the ink edge fades in as the fill lands. */
 :where([data-scope="button"]) {
-  --_x: var(--warp-mx); --_y: var(--warp-my);
+  --_x: var(--warp-mx, 50%); --_y: var(--warp-my, 50%); --_ptr: 0;
   --_pa: var(--_solid-hover);
   --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 9%, var(--_solid-hover));
-  /* the hard offset: ink on light, a deep tint of the fill on dark, where cream would read as a sticker */
-  --_off: light-dark(var(--warp-color-text), color-mix(in oklab, var(--_solid) 42%, var(--warp-color-surface)));
+  /* the hard offset: the page's opposite (--warp-offset-color), so the pull-out reads on any ground */
+  --_off: var(--warp-offset-color);
 }
+:where([data-scope="button"][data-follow]) { --_ptr: 1; }
 :where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 5%, var(--_solid-hover)); }
 /* a solid's fill is lighter, brighter ink than its rest, spreading from the hand: the hover shade (darker in light) next to
    the rest read as nothing happening. The fill leans to the highlight, and on light its lightness stops at 0.53, where the
@@ -226,14 +228,14 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
   --_D: calc(var(--warp-fill-duration) * var(--warp-motion-scale));
   --_fo: calc(1 - var(--_a, 0));
-  --_fr: calc(var(--_a, 0) * 1.3 * var(--warp-btn-fill));
+  --_fr: calc(var(--_a, 0) * 1.3 * var(--warp-btn-fill) * var(--_ptr));
   --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--warp-lead-a, 1));
   --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1));
   --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
   /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
-  background-color: color-mix(in oklab, var(--_layer) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo)) * 100%), transparent));
+  background-color: color-mix(in oklab, var(--_layer) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
   opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
-  transform: scaleX(var(--warp-btn-fill)); transform-origin: right center;
+  transform: scaleX(calc(var(--warp-btn-fill) * var(--_ptr))); transform-origin: right center;
   background-origin: border-box;
   background-image:
     radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),

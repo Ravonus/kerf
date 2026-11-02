@@ -557,10 +557,34 @@ await check('vivid buttons pull out on hover', '/components/button?expression=vi
   const over = await look()
   same(over.t, '-2px -2px', 'hover moves up and left')
   if (over.off === '0 0') throw new Error('hover shows no offset')
+  // the offset is the page's opposite: black on light, white on dark
+  const shade = () => btn.evaluate(e => { const g = document.createElement('canvas').getContext('2d'); g.fillStyle = getComputedStyle(e).boxShadow.match(/^(.*?\)) -?[\d.]+px/)[1]; g.fillRect(0, 0, 1, 1); return [...g.getImageData(0, 0, 1, 1).data.slice(0, 3)].join() })
+  const dark = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches || document.documentElement.dataset.theme === 'dark')
+  same(await shade(), dark ? '255,255,255' : '0,0,0', 'offset colour')
   await page.mouse.down()
   await page.waitForTimeout(100)
   same((await look()).off, '0 0', 'press sets it down')
   await page.mouse.up()
+})
+
+// The fill wipes in from the left by default; only a button with `follow` spreads from the pointer.
+await check('fill wipes by default, follows on request', '/components/button?expression=vivid', async page => {
+  const sec = page.locator('section[data-site="tk-section"]:has(h2:text-is("Fill that follows"))')
+  await sec.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(1500)
+  const wipe = sec.locator('[data-scope="button"]:not([data-follow])').first(), follow = sec.locator('[data-scope="button"][data-follow]').first()
+  const fill = el => el.evaluate(e => { const c = getComputedStyle(e, '::before'); return { t: c.transform, img: c.backgroundImage } })
+  same((await fill(wipe)).t, 'matrix(0, 0, 0, 1, 0, 0)', 'wipe at rest')
+  for (const [el, name] of [[wipe, 'wipe'], [follow, 'follow']]) {
+    const box = await el.boundingBox()
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height / 2)
+    await page.waitForTimeout(900)
+    const f = await fill(el)
+    same(f.t, 'matrix(1, 0, 0, 1, 0, 0)', `${name} covers on hover`)
+    if (name === 'follow' && !/radial-gradient/.test(f.img)) throw new Error('follow draws no spread')
+    await page.mouse.move(5, 5)
+    await page.waitForTimeout(900)
+  }
 })
 
 await b.close()
