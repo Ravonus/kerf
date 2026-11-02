@@ -1,6 +1,6 @@
 // The flow pack's logic: 09 §1.1 steps, §1.3 errors, §2.3 passwords and codes, §3.2 placement, §5 connection, §7 shortcuts.
 import { describe, expect, test, vi } from 'vitest'
-import { clockLabel, connView, createShortcuts, emailError, fieldSummary, filterShortcuts, flowDirection, isPasskeyCancel, isSingleKey, isTextTarget, issueFields, mapFlowError, markParts, otpClean, passwordRules, passwordStrength, secondsClock, shortcutLabels, stepAnnouncement, stepFromSearch, stepUrl, tourPlacement } from '../src/flow'
+import { clockLabel, connView, createShortcuts, emailError, fieldSummary, filterShortcuts, flowDirection, isPasskeyCancel, isSingleKey, isTextTarget, issueFields, mapFlowError, markParts, otpClean, passwordRules, passwordStrength, secondsClock, shortcutLabels, stepAnnouncement, stepFromSearch, stepUrl, tourPlacement } from '../src/flow-pack'
 
 describe('steps', () => {
   const ids = ['cart', 'ship', 'pay', 'done']
