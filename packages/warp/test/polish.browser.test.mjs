@@ -134,7 +134,7 @@ test('vivid: the pointer fill on a solid button is clearly lighter than its rest
   expect(lum(await px(bh))).toBeLessThanOrEqual(lum(await px(br)) + 0.005) // balanced still darkens on hover, as before
 })
 
-test('vivid on light: the hovered solid lands a highlight edge round its fill, and its ink keeps 4.5:1 on the fill', async () => {
+test('vivid on light: the hovered solid draws no rim round its fill, and its ink keeps 4.5:1 on the fill', async () => {
   const lum = c => { const m = c.match(/[\d.]+/g).map(Number); const f = x => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4 }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]) }
   const px = (x, y) => page.screenshot({ clip: { x, y, width: 1, height: 1 } }).then(buf => page.evaluate(async b64 => {
     const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode()
@@ -146,14 +146,14 @@ test('vivid on light: the hovered solid lands a highlight edge round its fill, a
   await page.waitForTimeout(900)
   let box = await b.boundingBox()
   const rimAt = bx => [bx.x + bx.width / 2, bx.y + bx.height - 1.5] // the bottom edge, under no glyph
-  const rest = lum(await px(...rimAt(box)))
   await page.mouse.move(box.x + 4, box.y + box.height / 2)
   await page.waitForTimeout(900)
   box = await b.boundingBox() // it lifts
   const rim = lum(await px(...rimAt(box)))
   const fill = lum(await px(box.x + box.width - 8, box.y + box.height / 2))
   await page.mouse.move(5, 800)
-  expect(rim / rest).toBeGreaterThan(2.5) // a bright line round the fill, not a hue shift
+  expect(await b.evaluate(e => getComputedStyle(e.querySelector('[data-part="sweep"]') ?? e).display)).not.toBe('block') // no edge part drawn
+  expect(rim / fill).toBeLessThan(1.6) // the bottom edge is the fill, not a bright line
   // the computed colour can be oklch(): a canvas resolves it to sRGB
   const ink = await page.evaluate(() => { const g = document.createElement('canvas').getContext('2d'); g.fillStyle = getComputedStyle(document.querySelector('#solid button')).color; g.fillRect(0, 0, 1, 1); const d = g.getImageData(0, 0, 1, 1).data; return `rgb(${d[0]},${d[1]},${d[2]})` })
   const inkL = lum(ink)
