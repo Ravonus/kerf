@@ -19,16 +19,34 @@ function Choice({ o, is }: { o: Option | OptionGroup; is: (value: string) => boo
  * is the scripted list for an app that wants warp's list in every browser.
  */
 export function Select({ options, placeholder, ...props }: FieldProps & { options: (Option | OptionGroup)[]; placeholder?: string; onChange?: (e: Event) => void }) {
-  let el: HTMLSelectElement | undefined
+  let el: HTMLSelectElement | undefined, landed = false
   // `value` lands on the select before its options exist, on the server and on the client: `selected` carries it into the
-  // HTML, and this holds it as the options or the value change. With no value the first option shows.
-  const show = (sel: HTMLSelectElement, value: string | undefined) => {
-    if (value !== undefined) sel.value = String(value)
-    else if (placeholder === undefined) sel.selectedIndex = 0
-  }
+  // HTML. This holds the last thing asked for, by the parent or by a pick, as the options change under it.
   use((sel: HTMLSelectElement, o: readonly [string | undefined, unknown]) => {
-    show(sel, o[0])
-    return { update: next => show(sel, next[0]), destroy() {} }
+    let asked = o[0], held = asked === undefined ? undefined : String(asked)
+    const show = () => {
+      if (held !== undefined) sel.value = held
+      if (sel.selectedIndex < 0) sel.selectedIndex = 0
+    }
+    const pick = () => { held = sel.value }
+    // On a server page, and not what its HTML or the value says, so someone picked it before this ran.
+    const all = [...sel.options], marked = all.findLastIndex(x => x.defaultSelected), usual = marked < 0 ? all.findIndex(x => !x.disabled) : marked
+    const early = landed && sel.selectedIndex !== usual && sel.value !== held
+    if (early) pick()
+    else if (held === undefined) sel.selectedIndex = usual
+    sel.addEventListener('change', pick)
+    show()
+    if (early) sel.dispatchEvent(new Event('change', { bubbles: true }))
+    return {
+      update(next) {
+        if (next[0] !== asked) {
+          asked = next[0]
+          held = asked === undefined ? undefined : String(asked)
+        }
+        show()
+      },
+      destroy: () => sel.removeEventListener('change', pick),
+    }
   }, () => el, () => [props.value, options] as const)
   return (
     <Field
@@ -36,7 +54,7 @@ export function Select({ options, placeholder, ...props }: FieldProps & { option
       filled
       end={<span data-part="indicator" aria-hidden="true"><DownIcon /></span>}
       control={p => (
-        <select ref={(n: any) => (el = n)} data-part="input" id={p.id} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>
+        <select ref={(n: any) => { el = n; landed = n.isConnected }} data-part="input" id={p.id} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>
           {placeholder !== undefined && <option value="">{placeholder}</option>}
           {options.map(o => <Choice key={'group' in o ? o.group : o.value} o={o} is={v => untrack(() => v === String(props.value))} />)}
         </select>
