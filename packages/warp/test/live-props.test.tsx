@@ -10,6 +10,15 @@ import { Inbox, Prejoin, ScheduledLobby } from '../src/live'
 const peer = { id: 'p', name: 'Kofi Mensah' } as any
 
 describe('warp props changed after mount', () => {
+  test('Modal: placement sits on the dialog, and centre has no attribute', async () => {
+    const placement = state<'center' | 'top' | 'full'>('center')
+    const { container: c } = render(() => <Modal open={state(false)} title="Hi" placement={placement.value}>Body</Modal>)
+    const dialog = () => c.querySelector('dialog')!
+    expect(dialog().hasAttribute('data-placement')).toBe(false)
+    placement.value = 'top'
+    await flush()
+    expect(dialog().getAttribute('data-placement')).toBe('top')
+  })
   test('Button: emphasis moves its attribute, its sweep and its frame', async () => {
     const emphasis = state<'solid' | 'outline' | 'frame'>('solid')
     const { container: c } = render(() => <Button emphasis={emphasis.value} fill>Go</Button>)
