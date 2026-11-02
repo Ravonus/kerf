@@ -52,7 +52,15 @@ import { realtime } from '@weft/start'
 export default realtime({ share: ({ ctx, key }) => canSeeTodo(ctx.user, key) })
 ```
 
-The rule runs for each key when a client joins and at each session re-check, and it uses the same `ctx` as a channel's `authorize`. With no `share` the socket refuses every key (R011), and a refused key still works between tabs. `() => true` must be written out.
+That rule runs once per key. If it reads a database, a 200-row list means 200 queries, so answer them together instead. You get up to 400 keys in one call and give back the ones allowed:
+
+```ts
+export default realtime({
+  share: { keys: async ({ ctx, keys }) => ctx.db.visibleKeys(ctx.user.id, keys) },
+})
+```
+
+Either form runs when a client joins and at each session re-check, and uses the same `ctx` as a channel's `authorize`. A rule that throws refuses what it was asked. With no `share` the socket refuses every key (R011), and a refused key still works between tabs. `() => true` must be written out.
 
 Peers see the three bits and an opaque connection id. No name, no pointer position, nothing typed. For names and cursors use `@weft/multiplayer`.
 
@@ -67,3 +75,9 @@ Peers see the three bits and an opaque connection id. No name, no pointer positi
 - **Components that take `ui`:** Button, Checkbox, Switch, Radio, Toggle, Chip, Card. Remote state never touches `aria-*` or focus: it is decoration.
 
 `weft check` flags keys that can't match (U001), keys built from what a user typed (U002), `share` with no rule (U003), writing `remote` (U004) and `ui` on a component that doesn't take it (U005).
+
+## One browser, one socket
+
+All tabs of a browser share one WebSocket, held by one tab, and `share`, `channel` and `live` all ride it. You don't set this up. To your code and to the server each tab is still its own connection: `exceptSelf`, `left`, presence and rate limits work per tab as they did. `limits.connections` now counts browsers.
+
+When the leader tab closes, another takes over within a few milliseconds. Every tab's channels rejoin and its live queries resubscribe, so presence in other tabs may blink once. A browser without Web Locks gives each tab its own socket. A host that can't do WebSockets falls back to `/_weft/rt` over SSE for `live`.

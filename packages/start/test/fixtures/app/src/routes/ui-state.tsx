@@ -1,6 +1,7 @@
 // Research 40: Ana and Ben, two panes, one row per person. `?rows=40` adds rows; `?unshared` is plain boxes.
 import { derived, state, untrack, watch } from 'weft'
 import { interaction, type Interaction } from 'weft/interaction'
+import { linkStats } from '../../../../../src/link'
 import { shareStats } from '../../../../../src/share'
 import '../../../../../../warp/src/ui'
 import { Button } from '../../../../../../warp/src/Button'
@@ -8,7 +9,7 @@ import { Checkbox } from '../../../../../../warp/src/Choice'
 import './ui-state.css'
 
 const query = () => (typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search))
-if (typeof window !== 'undefined') (window as any).__share = shareStats
+if (typeof window !== 'undefined') (window as any).__share = shareStats, (window as any).__link = linkStats
 
 const nameOf = (i: number) => ['Ana', 'Ben', 'Secret'][i] ?? `Row ${i}`
 const keyOf = (name: string) => (name === 'Secret' ? 'secret:row' : `person:${name.toLowerCase()}`)

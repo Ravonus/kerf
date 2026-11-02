@@ -298,12 +298,13 @@ async function recheck(h: Hub, c: Sock) {
 }
 
 /** Open: the hello, the heartbeat watch and the session timer. */
-export async function attach(peer: Peer, request: Request, scope: Scope, h = hub()): Promise<Attached> {
+/** `line`: one tab on a shared socket (mux.ts), which `limits.connections` counted already. */
+export async function attach(peer: Peer, request: Request, scope: Scope, h = hub(), line = false): Promise<Attached> {
   const st = stateOf(h)
   const ctx = await scope.ctx()
   const user = (ctx as { user?: { id?: string } }).user?.id
   const c: Sock = { k: crypto.randomUUID(), peer, request, options: scope.options, ctx, user, joins: new Map(), bucket: { tokens: h.limits.burst, at: Date.now() }, last: Date.now(), timers: [] }
-  if (user !== undefined && [...st.socks].filter(s => s.user === user).length >= h.limits.connections) {
+  if (!line && user !== undefined && [...st.socks].filter(s => s.user === user).length >= h.limits.connections) {
     peer.close(1008, 'too many sockets')
     scope.options.onDiagnostic?.({ code: 'R009', severity: 'error', message: `R009: user \`${user}\` already has ${h.limits.connections} sockets` })
     return { message() {}, close() {}, recheck: async () => {} }
@@ -364,14 +365,15 @@ export function socketRoute(request: Request, scope: Scope, origins: string[] = 
   }
   const origin = request.headers.get('origin')
   if (!origin || (origin !== new URL(request.url).origin && !origins.includes(origin))) return refuse('R010', `R010: origin \`${origin ?? 'none'}\` may not open a socket: list it in \`realtime({ origins })\``, 403)
-  const peers = new Map<string, Promise<Attached>>()
+  const peers = new Map<string, Promise<Pick<Attached, 'message' | 'close'>>>()
+  const mux = new URL(request.url).searchParams.has('mux')
   return hooks({
     open(peer: any) {
       const p: Peer = { send: t => void peer.send(t), close: (code, reason) => peer.close(code, reason), backlog: () => peer.websocket?.bufferedAmount ?? 0 }
-      peers.set(peer.id, attach(p, request, scope).catch(e => {
+      peers.set(peer.id, (mux ? import('./mux').then(m => m.muxed(p, request, scope)) : attach(p, request, scope)).catch(e => {
         scope.options.onDiagnostic?.({ code: 'E_RT', severity: 'error', message: `/_weft/ws: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
         peer.close(1011, 'context failed')
-        return { message() {}, close() {}, recheck: async () => {} }
+        return { message() {}, close() {} }
       }))
     },
     message(peer: any, m: any) { void peers.get(peer.id)?.then(a => a.message(m.text())) },

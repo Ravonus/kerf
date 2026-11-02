@@ -4,8 +4,8 @@ Status: **built on `claude/weft-share`, 2026-11-01. The section below says where
 
 ## As built
 
-- **`share` rides `channel`.** The leader's join is `$share` on `channel.ts`'s own socket, reconnect, park and fakes, so there is no second connection lifecycle. An app's own `channel`s are not moved onto the leader link (§5.7 is not built): a follower tab with its own `channel` still holds its own socket. `/_weft/rt` is untouched too. So "one browser, one socket" holds for `share`, and for the whole app only if it uses no `channel` or `live`.
-- **Server: `share-server.ts`.** One join per socket, `u { add, drop }` and `set { e }`, up to 400 entries a frame. 64 hub rooms by key hash with one listener per instance. Each instance answers a joiner from what its sockets last said, so nobody has an `ask` to answer and there is no `answer` message. `left` and a dropped key say zero. `realtime({ share })` runs per key, on join and at each re-check; no rule refuses the join (R011). `limits.shareKeys` (1000) replaces "capped by `limits.subscriptions`", which is 100 and would refuse a 200-row list.
+- **`share` rides `channel`, and `channel` and `live` ride the link.** §5.7 is built differently from the spec: not one join list on a leader, but a virtual socket per tab. `link.ts` gives a tab a line, the leader holds the one WebSocket (`/_weft/ws?mux=1`), and `mux.ts` gives each line its own `attach` or hub connection. So the server's `Sock.k`, `exceptSelf`, `left`, per-socket buckets and acks don't change meaning, and the 8 tab count is one socket with share, channel and live together. Plain `/_weft/ws` and SSE `/_weft/rt` stay for outside clients and for hosts with no sockets. On handover every line in every tab ends with 4900 and reopens without backoff, so presence blinks once in sibling tabs. A long-lived socket keeps its upgrade's cookies: a tab that didn't dial it posts `{w:1}` to `/_weft/rt` once, compares an opaque id with the leader's, and on a mismatch the leader dials again. `share` keeps its own leader lock, so its leader and the link's can be different tabs.
+- **Server: `share-server.ts`.** One join per socket, `u { add, drop }` and `set { e }`, up to 400 entries a frame. 64 hub rooms by key hash with one listener per instance. Each instance answers a joiner from what its sockets last said, so nobody has an `ask` to answer and there is no `answer` message. `left` and a dropped key say zero. `realtime({ share })` runs per key, or once per frame with `{ keys }`, on join and at each re-check; no rule refuses the join (R011). `limits.shareKeys` (1000) replaces "capped by `limits.subscriptions`", which is 100 and would refuse a 200-row list.
 - **§13 Q2 went the other way.** The compiler isn't changed: `share` takes a function, `` share: () => `todo:${props.id}` ``, which W001 already accepts. Exempting the option means a Rust change and a rebuilt binary for a case a closure covers.
 - **Builds.** Lock and channel names carry a wire version, not a build: two deploys of one wire are one client. Nothing crosses that a version doesn't describe, and the page has no build id to read.
 - **`newest` is gone**, per Q1.
@@ -83,7 +83,7 @@ so "hovering either lights both" needs nothing.
 | `sharedState` | a `channel` with `$set`, `$v`, `$?` | **Keep.** Gets the leader link for free. Stays the only home of shared *data*. Never mixed with UI state. |
 | `topic` | server-side fan-out for streams | **Untouched.** No client half; the browser reaches it through a `stream`. |
 | `@weft/multiplayer` presence, `Cursors` | a `channel` fragment, own throttle, peers by TTL | **Keep; its shape became the template.** `share` copies its answers: no server roster, ask and answer, TTL, volatile. Who-is-this and pointers stay there. `share` is anonymous on purpose. |
-| `/_weft/rt` (SSE, `live`, `stream`) | one connection per tab | **Not touched by this spec, and it is the honest gap in "one client, one socket"** (§13, Q4). |
+| `/_weft/rt` (SSE, `live`, `stream`) | one connection per tab | **Not touched by this spec, and it is the honest gap in "one client, one socket"** (§13, Q4). Closed since: see As built. |
 
 Removed:
 
@@ -100,13 +100,13 @@ real job. Say so plainly rather than count a rename.
 
 | Layer | Knows | Does not know |
 |---|---|---|
-| `@weft/ui-core` `interact(el, flags)` | DOM events; writes to anything with `.value` | weft, boxes, keys, networks |
+| `@weft/warp-core` `interact(el, flags)` | DOM events; writes to anything with `.value` | weft, boxes, keys, networks |
 | `@weft/warp` every component's `ui`, `@weft/warp/ui` | how to draw from any source (`data-hold`, `data-remote`) | where the state came from |
 | `weft/interaction` | boxes, one row per key on a page | tabs, sockets |
 | `@weft/start/share` | tabs, locks, the socket, routing | elements |
 | `realtime({ share })`, `share` room | authorisation, stamping senders | hover; it carries three bits |
 
-`weft` can't import `ui-core`, and a warp component must not import `interact`, or every Button pays. So they meet at seams,
+`weft` can't import `warp-core`, and a warp component must not import `interact`, or every Button pays. So they meet at seams,
 the pattern `features.sync` set: a component calls `ui.attach`, a method on an object only an `interaction()` user has, and
 `weft/interaction` delegates to `seams.attach` (set by `@weft/warp/ui`) and `seams.line` (set by `@weft/start/share`). The
 `weft()` plugin injects those imports where `ui=` and `share:` appear, as it does `weft/sync`. Forgetting them in a non-plugin
@@ -282,7 +282,7 @@ a bare `import '@weft/start/share'` without a sound (the first measurement here 
 
 ## 12. Prototype: what it proves
 
-Marked `PROTOTYPE` in each file: `packages/ui-core/src/interact.ts`, `packages/weft/src/interaction.ts`,
+Marked `PROTOTYPE` in each file: `packages/warp-core/src/interact.ts`, `packages/weft/src/interaction.ts`,
 `packages/warp/src/ui.ts`, `packages/start/src/share.ts`, `share-server.ts`, the `ui` lines in `Button` and `Checkbox`, one
 `[data-hold]` selector each in `warp.css` and `warp-components.css`, and the fixture route `/ui-state`. `socket.ts`, `hub.ts`
 and `channel.ts` are unchanged: the socket path is a plain `channel` speaking the existing wire.

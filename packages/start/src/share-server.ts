@@ -6,6 +6,7 @@
 //   batching  one `u` frame adds and drops many keys and one `set` frame carries many bits; each comes back as one frame.
 //   snapshot  each instance answers for its own sockets, from what those sockets last said, so a joiner costs its
 //             holders nothing on the wire. What's held lives and dies with the connection: nothing outlives a socket.
+//   rule      per key, or `{ keys }` for a whole frame in one call, so a join of up to 400 keys is one database read.
 //   leaving   `left` says zero for what the socket held. Every event is volatile: no ring, no replay.
 //   identity  the sender's connection id is stamped here. Bits and an opaque id, nothing else exists to see.
 
@@ -19,7 +20,10 @@ export const MAX_KEY = 128
 export const MAX_BATCH = 400
 const SHARDS = 64
 
-export type ShareRule = (args: { ctx: Context; key: string }) => boolean | Promise<boolean>
+/** One key at a time, or `{ keys }` to answer a whole join at once: a rule that reads a database runs once for it. */
+export type ShareRule =
+  | ((args: { ctx: Context; key: string }) => boolean | Promise<boolean>)
+  | { keys: (args: { ctx: Context; keys: string[] }) => Iterable<string> | Promise<Iterable<string>> }
 
 type Issue = { issues: { message: string }[] }
 const schema = <T,>(validate: (v: any) => T | Issue): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'weft', validate: (v: unknown) => { const r: any = validate(v); return r?.issues ? r : { value: r } } } }) as any
@@ -121,6 +125,12 @@ function release(h: Hub, st: Sharing, c: Client, keys: string[]) {
 }
 
 async function allowedKeys(rule: ShareRule, ctx: Context, keys: string[]) {
+  if (!keys.length) return keys
+  if (typeof rule !== 'function') {
+    const yes = await Promise.resolve().then(() => rule.keys({ ctx, keys })).catch(() => [])
+    const passed = new Set(yes)
+    return keys.filter(k => passed.has(k))
+  }
   const answers = await Promise.all(keys.map(key => Promise.resolve().then(() => rule({ ctx, key })).catch(() => false)))
   return keys.filter((_, i) => answers[i])
 }

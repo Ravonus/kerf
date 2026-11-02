@@ -44,8 +44,9 @@ test('two pages share a room over a real socket', async () => {
 })
 
 test('a killed socket reconnects and catches up, with nothing doubled', async () => {
-  const ctx = await browser.newContext()
-  const a = await open(ctx, '/chat'), b = await open(ctx, '/chat')
+  // Two browsers: tabs of one share a socket, and these two must each have their own to lose.
+  const ctx = await browser.newContext(), other = await browser.newContext()
+  const a = await open(ctx, '/chat'), b = await open(other, '/chat')
   await open_(a.page), await open_(b.page)
   await say(a.page, 'before')
   await said(b.page, 'before')
@@ -59,20 +60,20 @@ test('a killed socket reconnects and catches up, with nothing doubled', async ()
   expect(items.filter(t => t === 'before')).toEqual(['before'])
   expect(items.filter(t => t === 'during')).toEqual(['during'])
   expect(await b.page.evaluate(() => window.__sockets.length)).toBe(2)
-  await ctx.close()
+  await ctx.close(), await other.close()
 })
 
 test('a page offline for a moment comes back by itself', async () => {
-  const ctx = await browser.newContext()
-  const a = await open(ctx, '/chat'), b = await open(ctx, '/chat')
+  const ctx = await browser.newContext(), other = await browser.newContext()
+  const a = await open(ctx, '/chat'), b = await open(other, '/chat')
   await open_(a.page), await open_(b.page)
-  await ctx.setOffline(true)
+  await other.setOffline(true)
   await b.page.evaluate(() => window.__sockets.at(-1).close())
-  await ctx.setOffline(false)
+  await other.setOffline(false)
   await open_(b.page)
   await say(b.page, 'back')
   await said(a.page, 'back')
-  await ctx.close()
+  await ctx.close(), await other.close()
 })
 
 test('`tabs.channel` and `sync: tabs` cross real tabs; a late tab starts from storage', async () => {

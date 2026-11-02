@@ -16,12 +16,13 @@
 import { createRoot, effect, untrack } from 'weft'
 import { NONE, seams, type Counts, type ShareLine } from 'weft/interaction'
 import { connectBuiltIn, keepOpen, wakeSocket } from './channel'
+import { BEAT, campaign, freeTab, holdTab, probeLink, tab, whenGone, type Campaign } from './link'
 
-export const GAP_TAB = 16, GAP_NET = 60, BEAT = 5000, TTL = 15_000, GRACE = 1500, PONG = 1500, BATCH = 400, IDLE = 5000
+export const GAP_TAB = 16, GAP_NET = 60, TTL = 15_000, GRACE = 1500, BATCH = 400, IDLE = 5000
 
 /** Bump when a message below changes shape: tabs of two shapes then share nothing, and each is its own client. */
 const WIRE = 1
-const CHANNEL = `weft:ui:${WIRE}`, LEADER = `${CHANNEL}:leader`, TAB = `${CHANNEL}:tab:`
+const CHANNEL = `weft:ui:${WIRE}`
 
 type Pair = [key: string, bits: number]
 type Triple = [id: string, key: string, bits: number]
@@ -31,14 +32,14 @@ type Msg =
   | { t: 'shown'; tab: string; shown: boolean }
   | { t: 'net'; s: Triple[] }
   | { t: 'link'; up: boolean }
-  | { t: 'roll' } | { t: 'bye'; tab: string } | { t: 'ping'; tab: string } | { t: 'pong'; to: string }
+  | { t: 'roll' } | { t: 'bye'; tab: string }
 
 interface Client { bits: number; at: number; stale?: boolean }
 
-const tab = typeof crypto === 'undefined' ? '' : crypto.randomUUID().slice(0, 8)
-
 /** What a test reads: `role`, and how much went where. */
 export const shareStats = { role: 'none' as 'none' | 'leader' | 'follower', tab, conn: undefined as string | undefined, handed: 0, steals: 0, frames: 0, keysSent: 0, bc: 0 }
+
+const noLocks = () => typeof navigator === 'undefined' || !navigator.locks
 
 const lines = new Map<string, (c: Counts) => void>()
 const shown = new Map<string, Counts>()
@@ -52,7 +53,7 @@ const siblings = new Set<string>()
 /** key → other clients. Everything the leader joined; a follower keeps what its own lines want. */
 const clients = new Map<string, Map<string, Client>>()
 
-const locks = (): LockManager | undefined => (typeof navigator !== 'undefined' ? navigator.locks : undefined)
+const locks = () => !noLocks()
 const leading = () => shareStats.role === 'leader'
 const looking = () => typeof document === 'undefined' || document.visibilityState !== 'hidden'
 
@@ -60,9 +61,7 @@ let bc: BroadcastChannel | undefined
 let running = false
 let lockReady = false
 const early: Msg[] = []
-let release: (() => void) | undefined
-let abort: AbortController | undefined
-let tabRelease: (() => void) | undefined
+let election: Campaign | undefined
 let timer: ReturnType<typeof setInterval> | undefined
 
 function post(m: Msg) {
@@ -105,7 +104,7 @@ function dropTab(t: string) {
 function watch(t: string) {
   if (t === tab || watched.has(t) || !locks()) return
   watched.add(t)
-  locks()!.request(TAB + t, () => dropTab(t)).catch(() => {})
+  whenGone(t, () => dropTab(t))
 }
 
 function hear(s: Triple[]) {
@@ -173,15 +172,6 @@ function receive(m: Msg) {
   else if (m.t === 'bye') dropTab(m.tab)
   else if (m.t === 'net') hear(m.s)
   else if (m.t === 'link') link(m.up)
-  else if (m.t === 'ping') {
-    if (!leading()) return
-    post({ t: 'pong', to: m.tab })
-    sayHeld() // a hidden leader's own beat is throttled; a sibling's ping isn't
-  }
-  else if (m.t === 'pong' && m.to === tab) {
-    clearTimeout(waiting)
-    waiting = undefined
-  }
 }
 
 const wakeIfLeading = () => { if (leading()) wakeSocket() }
@@ -393,39 +383,6 @@ function lead() {
   reconcile()
 }
 
-function elect(steal = false) {
-  const l = locks()
-  if (!l) return lead()
-  shareStats.role = 'follower'
-  const ctl = new AbortController()
-  abort = ctl
-  l.request(LEADER, steal ? { steal: true } : { signal: ctl.signal }, () => new Promise<void>(ok => {
-    release = ok
-    lead()
-  })).catch(() => {
-    if (!running || abort !== ctl) return // this tab left the queue on purpose
-    if (leading()) { // stolen
-      hangUp()
-      shareStats.role = 'follower'
-    }
-    elect()
-  })
-}
-
-/** A frozen leader keeps its lock and answers nobody. */
-let waiting: ReturnType<typeof setTimeout> | undefined
-function probe() {
-  if (!locks() || leading() || waiting !== undefined || !running) return
-  post({ t: 'ping', tab })
-  waiting = setTimeout(() => {
-    waiting = undefined
-    shareStats.steals++
-    const queued = abort
-    elect(true)
-    queued?.abort()
-  }, PONG)
-}
-
 // ---- the page --------------------------------------------------------------------------------------------------------
 
 function up() {
@@ -434,15 +391,16 @@ function up() {
   bc = new BroadcastChannel(CHANNEL)
   bc.onmessage = e => receive(e.data)
   tabs.set(tab, mine)
-  const l = locks()
-  if (l) {
-    l.request(TAB + tab, () => new Promise<void>(ok => {
-      tabRelease = ok
-      lockReady = true
-      for (const m of early.splice(0)) post(m)
-    })).catch(() => {})
-  }
-  elect()
+  holdTab(() => {
+    lockReady = true
+    for (const m of early.splice(0)) post(m)
+  })
+  shareStats.role = 'follower'
+  election = campaign(CHANNEL, lead, () => {
+    hangUp()
+    shareStats.role = 'follower'
+  }, () => void shareStats.steals++)
+  election.pinged = sayHeld // a hidden leader's own beat is throttled; a sibling's ping isn't
   announce()
   post({ t: 'roll' })
   timer = setInterval(beat, BEAT)
@@ -456,7 +414,6 @@ function beat() {
     for (const [t, at] of tabAt) if (now - at > TTL) dropTab(t)
   }
   if (leading()) sayHeld()
-  else probe()
 }
 
 /** A held bit is said again, so that if this instance's server dies, peers age it out. Nothing held, nothing sent. */
@@ -479,14 +436,12 @@ function halt() {
   hangUp()
   shareStats.role = 'none'
   clearInterval(timer)
-  clearTimeout(waiting)
   clearTimeout(settling)
   clearTimeout(idle)
   idle = undefined
-  waiting = undefined
-  abort?.abort()
-  release?.()
-  tabRelease?.()
+  election?.stop()
+  election = undefined
+  freeTab()
   bc?.close()
   bc = undefined
   tabs.clear()
@@ -519,7 +474,10 @@ seams.line = (key, heard): ShareLine => {
       queueTab(key)
       if (!running) return
       reconcile()
-      if (bits && !leading()) probe()
+      if (bits && !leading()) {
+        election?.probe()
+        probeLink()
+      }
     },
     leave() {
       lines.delete(key)

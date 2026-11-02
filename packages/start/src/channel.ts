@@ -1,9 +1,10 @@
-// `channel` and `sharedState` (research 32): definitions on both sides, and the browser's half. One socket per tab
-// (`/_weft/ws`), one join per id + params, shared by every reader and held by this module, so a remount within `keep`
+// `channel` and `sharedState` (research 32): definitions on both sides, and the browser's half. One line per tab on the
+// browser's one socket (link.ts), one join per id + params, shared by every reader and held by this module, so a remount within `keep`
 // finds its messages. The socket server is socket.ts, and `room.in(params).publish` reaches it through
 // `runtime.channels`, so nothing of the server ships here.
 
 import { Box, DEV, batch, collect as boxes, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
+import { HANDOVER, openLine, socketDown } from './link'
 import { currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track, type Context, type Fn, type Skip, type StandardSchemaV1 } from './data'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
@@ -375,21 +376,9 @@ export interface SocketLink {
   close(): void
 }
 
-/** The browser's WebSocket. `done` gets the close code. */
+/** This tab's line on the browser's one socket (link.ts). `done` gets the close code. */
 function browser(frame: (d: any[]) => void, done: (code: number) => void): SocketLink {
-  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/_weft/ws`)
-  ws.onmessage = e => frame(JSON.parse(e.data))
-  ws.onclose = e => done(e.code)
-  return {
-    send: t => { if (ws.readyState === 1) ws.send(t) },
-    close() {
-      ws.close()
-      // Offline, a closing socket's close event can take as long as it likes, and WebKit's does.
-      if (navigator.onLine !== false) return
-      ws.onmessage = ws.onclose = null
-      done(1006)
-    },
-  }
+  return openLine('c', '', text => frame(JSON.parse(text)), done)
 }
 
 /** weft/test only: an opaque specifier, so a bundler keeps neither the fake nor the socket server (research 30 §10). */
@@ -542,7 +531,7 @@ async function run() {
     if (n) n.reconnects++
     if (code === 4401) for (const j of joins.values()) j.status.value = 'unauthorized'
     else statusAll('reconnecting')
-    if (!n) await sleep(backoff())
+    if (!n) await sleep(code === HANDOVER ? 0 : backoff())
   }
   running = false
   attempt = 0
@@ -573,7 +562,10 @@ function onVisibility() {
 }
 /** A sibling came back while this tab's socket was parked. */
 export const wakeSocket = () => wake()
-const onOffline = () => live?.close()
+const onOffline = () => {
+  socketDown()
+  live?.close()
+}
 
 function listen(on: boolean) {
   if (typeof window === 'undefined') return

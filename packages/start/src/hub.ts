@@ -12,6 +12,7 @@ import type { Bus } from './bus'
 import { memoryBus } from './bus'
 import { createFeed, functionHost, type Feed, type Poke, type Probe, type Source } from './changes'
 import { currentScope, enter, fns, StartError, type Context, type Fn, type LiveMode, type StandardSchemaV1 } from './data'
+import { sessionOf } from './mux-session'
 import type { ShareRule } from './share-server'
 import { createScope, defaultStore, guard, liveQueries, missedFeed, tagsOf, validate, type Scope, type ScopeOptions, type Store } from './exec'
 
@@ -55,7 +56,10 @@ export interface RealtimeOptions {
   maxDuration?: number
   /** Writes from outside the app: `changes: dbChanges(db, [todos])`, or a source of your own. */
   changes?: Source
-  /** Who may share or see a key of `interaction({ share })` with other clients. Left out, nobody: tabs still work. */
+  /**
+   * Who may share or see a key of `interaction({ share })` with other clients. Left out, nobody: tabs still work. One
+   * key at a time, `({ ctx, key }) => boolean`, or `{ keys: ({ ctx, keys }) => allowed }` to answer a whole join at once.
+   */
   share?: ShareRule
 }
 
@@ -163,7 +167,8 @@ export interface Hub {
   channel(name: string): Channel
   replay(ch: Channel, after: string): Ev[] | undefined
   unlisten(ch: Channel, on: (ev: Ev | null) => void): void
-  connect(request: Request, scope: Scope, body: Body, sink: Sink): Promise<Conn>
+  /** `line`: one tab on a shared socket (mux.ts), which `limits.connections` counted already. */
+  connect(request: Request, scope: Scope, body: Body, sink: Sink, line?: boolean): Promise<Conn>
   change(c: Conn, request: Request, options: ScopeOptions, body: Body): Promise<void>
   drain(c: Conn): void
   close(c: Conn): void
@@ -535,11 +540,11 @@ export function createHub(options: HubOptions): Hub {
     }
   }
 
-  async function connect(request: Request, scope: Scope, body: Body, sink: Sink) {
+  async function connect(request: Request, scope: Scope, body: Body, sink: Sink, line = false) {
     const opts = scope.options
     const ctx = await scope.ctx()
     const user = (ctx as { user?: { id?: string } }).user?.id
-    if (user !== undefined && [...conns.values()].filter(c => c.user === user).length >= limits.connections) {
+    if (!line && user !== undefined && [...conns.values()].filter(c => c.user === user).length >= limits.connections) {
       throw new StartError('R009', `user \`${user}\` already has ${limits.connections} realtime connections`, 'close tabs, or raise `limits.connections`', { status: 429 })
     }
     const c: Conn = { k: crypto.randomUUID(), sink, user, subs: new Map(), tags: new Map(), held: new Set(), bytes: 0, timers: [] }
@@ -721,7 +726,7 @@ export function topic<K extends StandardSchemaV1<any, string | number>, M extend
 // ---- the HTTP route -------------------------------------------------------------------------------------------------
 
 const enc = new TextEncoder()
-const validBody = (b: any): b is Body =>
+export const validBody = (b: any): b is Body =>
   !!b && typeof b === 'object' && !Array.isArray(b) &&
   (b.k === undefined || typeof b.k === 'string') && (b.c === undefined || typeof b.c === 'string') &&
   (b.d === undefined || (Array.isArray(b.d) && b.d.every((n: unknown) => typeof n === 'number'))) &&
@@ -749,6 +754,8 @@ export async function rtRoute(request: Request, scope: Scope, origins: string[] 
   } catch {
     return refuse('Q002', 'Q002: `/_weft/rt` got a body that isn\'t JSON', 400)
   }
+  // A tab that didn't dial the shared socket asks who it is now (link.ts).
+  if ((body as { w?: 1 })?.w === 1) return Response.json({ u: await sessionOf(await scope.ctx()) }, { headers: { 'cache-control': 'no-store' } })
   if (!validBody(body)) return refuse('Q002', 'Q002: `/_weft/rt` got a body of the wrong shape', 400)
   if (body.k) {
     const c = h.find(body.k)

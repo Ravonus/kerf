@@ -64,6 +64,36 @@ test('the rule sees the context, per key, and a throw is a no', async () => {
   expect(a.ok()[0].no).toEqual(['boom'])
 })
 
+test('`{ keys }`: one call for a 200-row join and one at re-check, and what it leaves out is refused', async () => {
+  const calls: string[][] = []
+  let open = true
+  configure({ share: { keys: async ({ ctx, keys }: any) => { calls.push(keys); return open ? [...keys.filter((k: string) => k !== 'row:7'), 'never-asked', ctx.user.id] : [] } } })
+  const keys = Array.from({ length: 200 }, (_, i) => `row:${i}`)
+  const a = await client({ user: { id: 'u1' } })
+  await a.join()
+  await a.say('u', { add: keys })
+  expect(calls).toHaveLength(1)
+  expect(calls[0]).toEqual(keys)
+  expect(a.ok()[0].no).toEqual(['row:7'])
+  open = false
+  await a.a.recheck()
+  await wait()
+  expect(calls).toHaveLength(2)
+  expect(calls[1]).toHaveLength(199)
+})
+
+test('`{ keys }` that throws refuses the frame, and no frame of nothing asks at all', async () => {
+  let n = 0
+  configure({ share: { keys: () => { n++; throw new Error('db down') } } })
+  const a = await client()
+  await a.join()
+  await a.say('u', { add: ['a', 'b'] })
+  expect(n).toBe(1)
+  expect(a.ok()[0].no).toEqual(['a', 'b'])
+  await a.say('u', { drop: ['a'] })
+  expect(n).toBe(1)
+})
+
 test('200 rows are one frame in, and a sweep is one frame out', async () => {
   configure({ share: () => true })
   const keys = Array.from({ length: 200 }, (_, i) => `row:${i}`)
