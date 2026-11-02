@@ -135,7 +135,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
           // The server's value stands. This run only tracked the fetcher's reads; its fetch is cancelled.
           hydrated = false
           c.abort()
-          if (thenable(out)) Promise.resolve(out).catch(() => {})
+          if (out instanceof Promise) out.catch(() => {})
           return
         }
         if (!thenable(out)) return settle(out)

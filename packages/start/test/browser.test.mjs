@@ -58,6 +58,65 @@ test('a streamed page: Boundaries swapped in before hydration, then 0/0, and no 
   await page.close()
 })
 
+describe('a client running before the chunks land', () => {
+  async function held() {
+    const fetched = []
+    const page = await browser.newPage()
+    const errors = []
+    page.on('pageerror', e => errors.push(e.message))
+    page.on('request', r => r.url().includes('/_weft/') && fetched.push(r.url()))
+    await page.goto(url + '/held?ms=2500', { waitUntil: 'commit' })
+    await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+    // Not a timing assumption: it's what these tests are of.
+    expect(await page.$('.wait-late')).not.toBeNull()
+    expect(await page.$('.late')).toBeNull()
+    return { page, errors, fetched }
+  }
+
+  test('it claims what the server rendered, and asks for nothing', async () => {
+    const { page, errors, fetched } = await held()
+    await page.waitForSelector('.late')
+    await page.waitForSelector('.inner')
+    await page.waitForSelector('.plain')
+    expect(await page.textContent('.more')).toBe('landed 0')
+    await page.click('.more')
+    await page.waitForFunction(() => document.querySelector('.more').textContent === 'landed 1')
+    expect(await page.textContent('.inner')).toBe('inside')
+    expect(await page.textContent('.plain')).toBe('plain')
+    expect(fetched).toEqual([])
+    await page.waitForTimeout(50)
+    expect(await page.evaluate(() => window.__plain)).toBeUndefined() // nor a plain resource's own fetch
+    expect(await page.$$('template')).toEqual([])
+    const markers = await page.evaluate(() => {
+      const w = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)
+      const out = []
+      for (let n; (n = w.nextNode()); ) if (/^\/?wb:/.test(n.data)) out.push(n.data)
+      return out
+    })
+    expect(markers).toEqual([])
+    expect(errors).toEqual([])
+    await page.close()
+  })
+
+  test('a failure shows the error view, with a retry that asks once and recovers', async () => {
+    const { page, errors, fetched } = await held()
+    await page.waitForSelector('[role=alert]')
+    expect(await page.textContent('[role=alert]')).toContain('no luck')
+    expect(await page.$('.wait-bad')).toBeNull()
+    expect(await page.$('.ok')).toBeNull()
+    expect(fetched).toEqual([]) // a failed Boundary doesn't run its read again on its own
+    await page.waitForSelector('.inner') // the stream's over
+    await (await fetch(url + '/held?ok')).text()
+    await page.click('.again')
+    await page.waitForSelector('.ok')
+    expect(await page.textContent('.ok')).toBe('recovered')
+    expect(await page.$('[role=alert]')).toBeNull()
+    expect(fetched.filter(u => u.includes('/_weft/data'))).toHaveLength(1)
+    expect(errors).toEqual([])
+    await page.close()
+  })
+})
+
 test('navigating between users keeps both layouts and writes only what changed', async () => {
   const { page, errors } = await open('/users/1')
   const section = await page.$('section.users')
