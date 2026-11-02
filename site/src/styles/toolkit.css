@@ -59,7 +59,13 @@
 [data-site="frame"] [data-part="knobs"] > [data-scope="button"] { justify-self: start; }
 [data-site="frame"] [data-part="knob"] { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }
 [data-site="frame"] [data-part="knob"] > [data-part="knob-label"] { font: 400 var(--doc-tiny)/1.4 var(--warp-font-mono); color: var(--dim); }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; overflow-x: auto; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"] { max-inline-size: 100%; }
+/* measured at its natural width, then wrapped when that is wider than the panel (Playground's wrap()) */
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { max-inline-size: none; inline-size: max-content; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { display: flex; flex-wrap: wrap; justify-self: stretch; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label { flex: 1 1 auto; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > [data-part="indicator"] { display: none; }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label:has(input:checked) { background: var(--warp-color-accent-solid); }
 [data-site="frame"] [data-part="knob"][hidden] { display: none; }
 [data-site="frame"] [data-part="presets"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
 

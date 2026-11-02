@@ -179,6 +179,26 @@ for (const path of ['/components/dither', '/components/select', '/charts/line-ch
     if (!code) throw new Error('no code in any description')
   })
 }
+// A knob with a few options is a button per option, and every one of them is on screen inside the panel; a long list
+// is a dropdown.
+for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
+  await check(`few options are buttons at ${viewport.width}`, '/components/button', async page => {
+    await page.locator('[data-play]').scrollIntoViewIfNeeded()
+    await page.waitForSelector('[data-play] [data-part="knob"] [data-scope="segmented"]')
+    await page.waitForTimeout(400)
+    const knobs = await page.evaluate(() => [...document.querySelectorAll('[data-play] [data-part="knob"]:not([hidden])')].map(k => {
+      const seg = k.querySelector('[data-scope="segmented"]'), panel = k.getBoundingClientRect()
+      const out = seg ? [...seg.querySelectorAll('label')].filter(l => { const r = l.getBoundingClientRect(); return r.width < 8 || r.left < panel.left - 1 || r.right > panel.right + 1 }).map(l => l.textContent) : []
+      return { label: k.querySelector('[data-part="knob-label"], label')?.textContent?.trim(), seg: !!seg, options: seg?.querySelectorAll('label').length ?? 0, select: !!k.querySelector('[data-scope="select"], select'), out }
+    }))
+    for (const name of ['Emphasis', 'Tone', 'Size']) {
+      const k = knobs.find(x => x.label === name)
+      if (!k) throw new Error(`no ${name} knob`)
+      same(k.seg && !k.select, true, `${name} is a button per option`)
+      same(k.out.join(), '', `${name} options off the panel`)
+    }
+  }, viewport)
+}
 // Every prop and event in every API table says what it does. The pages are read as served (the tables are in the
 // server's HTML), so one browser page lists the hubs and the rest is fetches. The allowlisted pages are mid-rewrite
 // elsewhere; take each off as it lands.
