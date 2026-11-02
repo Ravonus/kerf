@@ -39,13 +39,13 @@ codegen-units = 1
 strip = "symbols"
 
 [lints.rust]
-unsafe_op_in_unsafe_fn = "warn"
+unsafe_op_in_unsafe_fn = "deny"
 
 [lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-unwrap_used = "warn"
-undocumented_unsafe_blocks = "warn"
-allow_attributes_without_reason = "warn"
+pedantic = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+undocumented_unsafe_blocks = "deny"
+allow_attributes_without_reason = "deny"
 # Pedantic lints that cost more than they catch here. Byte offsets are u32 by Oxc's design; the rest are taste.
 cast_possible_truncation = "allow"
 cast_possible_wrap = "allow"

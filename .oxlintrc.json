@@ -3,7 +3,7 @@
   // Each rule here is on for a reason: a bug it catches, or one way of writing a thing. CONTRIBUTING.md has the short version.
   "jsPlugins": ["./scripts/quality/lint-plugin.mjs"],
   "plugins": ["typescript", "unicorn", "oxc", "import", "vitest", "promise", "node"],
-  "categories": { "correctness": "warn", "suspicious": "warn" },
+  "categories": { "correctness": "error", "suspicious": "error" },
   "ignorePatterns": [
     "**/node_modules/**", "**/dist/**", "**/.weft/**", "**/.output/**", "**/target/**",
     "**/fixture/**", "**/fixtures/**", "**/vendor/**", "**/gallery/assets/**",
@@ -15,78 +15,78 @@
   "globals": { "Bun": "readonly", "Deno": "readonly" },
   "rules": {
     // Bugs: dead code, wrong comparisons, names that hide each other.
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrors": "none" }],
-    "no-shadow": "warn",
-    "eqeqeq": ["warn", "always", { "null": "ignore" }], // `x == null` is how this repo says null or undefined
-    "no-fallthrough": "warn",
-    "no-self-compare": "warn",
-    "no-case-declarations": "warn",
-    "no-redeclare": "warn",
-    "no-unreachable-loop": "warn",
-    "no-useless-assignment": "warn",
-    "array-callback-return": "warn",
-    "no-promise-executor-return": "warn",
-    "no-unused-expressions": ["warn", { "allowShortCircuit": true, "allowTernary": true, "allowTaggedTemplates": true }],
-    "no-use-before-define": ["warn", { "functions": false, "classes": false, "variables": false }],
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrors": "none" }],
+    "no-shadow": "error",
+    "eqeqeq": ["error", "always", { "null": "ignore" }], // `x == null` is how this repo says null or undefined
+    "no-fallthrough": "error",
+    "no-self-compare": "error",
+    "no-case-declarations": "error",
+    "no-redeclare": "error",
+    "no-unreachable-loop": "error",
+    "no-useless-assignment": "error",
+    "array-callback-return": "error",
+    "no-promise-executor-return": "error",
+    "no-unused-expressions": ["error", { "allowShortCircuit": true, "allowTernary": true, "allowTaggedTemplates": true }],
+    "no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false }],
 
     // Async mistakes. These read the types, so they need a tsconfig: `oxlint --type-aware`.
-    "typescript/no-floating-promises": "warn",
-    "typescript/no-misused-promises": "warn",
-    "typescript/await-thenable": "warn",
-    "typescript/require-await": "warn",
-    "typescript/only-throw-error": "warn",
-    "promise/no-multiple-resolved": "warn",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+    "typescript/require-await": "error",
+    "typescript/only-throw-error": "error",
+    "promise/no-multiple-resolved": "error",
 
     // Types.
-    "typescript/consistent-type-imports": "warn",
-    "typescript/consistent-type-exports": "warn",
-    "typescript/no-explicit-any": "warn",
-    "typescript/ban-ts-comment": ["warn", { "ts-ignore": true, "ts-nocheck": true, "ts-check": false, "ts-expect-error": "allow-with-description", "minimumDescriptionLength": 8 }],
-    "typescript/prefer-ts-expect-error": "warn",
-    "typescript/no-unsafe-function-type": "warn",
-    "typescript/no-non-null-asserted-optional-chain": "warn",
-    "typescript/no-unnecessary-type-assertion": "warn",
-    "typescript/switch-exhaustiveness-check": "warn",
+    "typescript/consistent-type-imports": "error",
+    "typescript/consistent-type-exports": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/ban-ts-comment": ["error", { "ts-ignore": true, "ts-nocheck": true, "ts-check": false, "ts-expect-error": "allow-with-description", "minimumDescriptionLength": 8 }],
+    "typescript/prefer-ts-expect-error": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/switch-exhaustiveness-check": "error",
 
     // Consistency: one way of writing each of these.
-    "no-var": "warn",
-    "prefer-const": "warn",
-    "object-shorthand": "warn",
-    "no-useless-return": "warn",
-    "no-useless-computed-key": "warn",
-    "no-lonely-if": "warn",
-    "prefer-object-has-own": "warn",
-    "no-prototype-builtins": "warn",
-    "no-template-curly-in-string": "warn",
-    "import/no-cycle": "warn",
-    "import/no-self-import": "warn",
-    "import/no-duplicates": "warn",
-    "import/first": "warn",
-    "unicorn/prefer-node-protocol": "warn",
-    "unicorn/throw-new-error": "warn",
+    "no-var": "error",
+    "prefer-const": "error",
+    "object-shorthand": "error",
+    "no-useless-return": "error",
+    "no-useless-computed-key": "error",
+    "no-lonely-if": "error",
+    "prefer-object-has-own": "error",
+    "no-prototype-builtins": "error",
+    "no-template-curly-in-string": "error",
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "import/no-duplicates": "error",
+    "import/first": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/throw-new-error": "error",
 
     // Security: no code from strings, no unescaped markup.
-    "no-eval": "warn",
-    "no-new-func": "warn",
-    "no-script-url": "warn",
-    "typescript/no-implied-eval": "warn",
-    "weft/no-html-sink": "warn",
+    "no-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "typescript/no-implied-eval": "error",
+    "weft/no-html-sink": "error",
 
     // Comments.
-    "weft/no-commented-code": "warn",
-    "weft/todo-needs-issue": "warn",
-    "weft/disable-needs-reason": "warn",
-    "weft/public-doc": "warn",
-    "unicorn/no-abusive-eslint-disable": "warn",
+    "weft/no-commented-code": "error",
+    "weft/todo-needs-issue": "error",
+    "weft/disable-needs-reason": "error",
+    "weft/public-doc": "error",
+    "unicorn/no-abusive-eslint-disable": "error",
 
     // Tests.
-    "vitest/no-focused-tests": "warn",
+    "vitest/no-focused-tests": "error",
     "vitest/no-disabled-tests": "off", // weft/skip-needs-reason asks for the reason instead of banning the skip
-    "weft/skip-needs-reason": "warn",
-    "vitest/no-identical-title": "warn",
-    "vitest/no-commented-out-tests": "warn",
-    "vitest/valid-expect": ["warn", { "maxArgs": 2 }], // expect(value, message) is vitest's own form
-    "vitest/valid-describe-callback": "warn",
+    "weft/skip-needs-reason": "error",
+    "vitest/no-identical-title": "error",
+    "vitest/no-commented-out-tests": "error",
+    "vitest/valid-expect": ["error", { "maxArgs": 2 }], // expect(value, message) is vitest's own form
+    "vitest/valid-describe-callback": "error",
 
     // On by category, off here because they are wrong for this repo.
     "no-underscore-dangle": "off", // internal fields are written `_x`
@@ -121,7 +121,7 @@
     {
       // tsc doesn't read .mjs files, so this is what catches a dropped import there.
       "files": ["**/*.mjs", "**/*.cjs"],
-      "rules": { "no-undef": "warn" }
+      "rules": { "no-undef": "error" }
     },
     {
       // Code here runs inside the page, where the demo defines these.
@@ -131,12 +131,12 @@
     {
       // warp-core is framework-agnostic: the framework is only ever reached from bindings/.
       "files": ["packages/warp-core/src/**"],
-      "rules": { "no-restricted-imports": ["warn", { "patterns": [{ "group": ["@weft-js/*", "react", "react-dom", "react/*", "solid-js", "solid-js/*", "vue", "svelte", "svelte/*", "preact", "preact/*"], "message": "warp-core must not import a framework. Put this in bindings/." }] }] }
+      "rules": { "no-restricted-imports": ["error", { "patterns": [{ "group": ["@weft-js/*", "react", "react-dom", "react/*", "solid-js", "solid-js/*", "vue", "svelte", "svelte/*", "preact", "preact/*"], "message": "warp-core must not import a framework. Put this in bindings/." }] }] }
     },
     {
       // Core runs in the browser. The Node side of it is named below and in scripts/quality/boundaries.mjs.
       "files": ["packages/weft/src/**"],
-      "rules": { "no-restricted-imports": ["warn", { "patterns": [{ "group": ["node:*", "fs", "path", "os", "crypto", "child_process", "url", "module"], "message": "Core must not import Node: it ships to browsers." }] }] }
+      "rules": { "no-restricted-imports": ["error", { "patterns": [{ "group": ["node:*", "fs", "path", "os", "crypto", "child_process", "url", "module"], "message": "Core must not import Node: it ships to browsers." }] }] }
     },
     {
       "files": ["packages/weft/src/style/matrix.ts", "packages/weft/src/test.ts", "packages/weft/src/plugin.mjs", "packages/weft/src/config.mjs"],

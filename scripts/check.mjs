@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { jobs, pool } from './jobs.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
-const LEVEL = 'warn'
+const LEVEL = 'error'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const argv = process.argv.slice(2)
 const only = argv.find(a => a.startsWith('--only='))?.slice(7).split(',')
@@ -56,7 +56,7 @@ const STEPS = [
     id: 'lint', covers: 'Oxlint with type-aware rules: bugs, async mistakes, types, comments, tests, code from strings',
     fix: 'Run `npm run fix` for what can be fixed by machine. Each line names the rule. A disable needs a reason: `// oxlint-disable-next-line <rule> -- <why>`, and CONTRIBUTING.md says when one is allowed.',
     async run() {
-      const r = await run(bin('oxlint'), ['--type-aware', '--report-unused-disable-directives-severity=warn', '--format', 'json', ...LINT_PATHS])
+      const r = await run(bin('oxlint'), ['--type-aware', '--report-unused-disable-directives-severity=error', '--format', 'json', ...LINT_PATHS])
       let report
       try { report = JSON.parse(r.out.slice(r.out.indexOf('{'))) } catch { return lines({ code: 1, out: r.out }) }
       return { problems: [...new Set(report.diagnostics.map(d => `${d.filename}:${d.labels?.[0]?.span.line ?? 0} ${d.code ?? 'plugin'} ${d.message.split('\n')[0]}`))] }

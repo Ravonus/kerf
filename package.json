@@ -10,7 +10,8 @@
     "setup": "node scripts/setup.mjs",
     "check": "node scripts/check.mjs",
     "fix": "node scripts/fix.mjs",
-    "hooks": "git config core.hooksPath .githooks"
+    "hooks": "git config core.hooksPath .githooks",
+    "check:prove": "node scripts/quality/prove.mjs"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
