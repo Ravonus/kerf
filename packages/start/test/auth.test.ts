@@ -120,6 +120,22 @@ test('A001: a short or missing secret on a production server; dev and tests pass
   }
 })
 
+test('a build with no secret gives Better Auth one of its own, so a production build loads auth; a server still needs the real one', () => {
+  const options = { database: drizzleAuth(db, schema), baseURL: base }
+  expect(createAuth({ db, options }).options.secret).toBeUndefined()
+  vi.stubEnv('WEFT_BUILD', '1')
+  vi.stubEnv('NODE_ENV', 'production')
+  try {
+    const built = createAuth({ db, options })
+    expect(built.options.secret).toMatch(/^[0-9a-f]{64}$/)
+    expect(createAuth({ db, options }).options.secret).not.toBe(built.options.secret)
+    expect(createAuth({ db, secret, options }).options.secret).toBe(secret)
+    expect(() => built.$weft.check()).toThrow(/A001/)
+  } finally {
+    vi.unstubAllEnvs()
+  }
+})
+
 describe('the handler', () => {
   const ran: string[] = []
   const manifest: Manifest = {

@@ -6,6 +6,7 @@ import { CLIENT_IP, StartError } from '../data'
 import type { DbHandle } from '../db/core'
 
 const SESSION = /(?:^|;\s*)(?:__Secure-)?[\w.-]*session_token=/
+const buildSecret = () => Array.from(crypto.getRandomValues(new Uint8Array(32)), x => x.toString(16).padStart(2, '0')).join('')
 
 /** `createAuth`: the database, the secret, and any Better Auth option on top. */
 export interface AuthOptions<S extends Record<string, unknown>, O extends BetterAuthOptions> {
@@ -24,7 +25,9 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
   if (options?.database) for (const name of ['user', 'session', 'account', 'verification']) handle.exempt.add(name)
   else throw new StartError('A005', 'Better Auth has no store', 'pass `options.database`: `drizzleAuth(db, schema)` from @weft-js/start/auth/drizzle, or your data layer\'s adapter')
   const auth = betterAuth({
-    secret,
+    // A build loads this module with no environment, and in production Better Auth refuses to start without a secret: the
+    // build gets one of its own, since nothing it makes is signed. A server still needs the real one (A001).
+    secret: secret ?? (process.env.WEFT_BUILD ? buildSecret() : undefined),
     // A build's prerender holds no environment; a server takes `BETTER_AUTH_URL`, or the request's origin.
     ...(process.env.WEFT_BUILD && { baseURL: 'http://localhost' }),
     telemetry: { enabled: false },
