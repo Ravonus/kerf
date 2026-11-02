@@ -322,14 +322,27 @@ describe('a handler no call site is seen giving stays client', () => {
     'an alias that is called': `function Pill({ onClick }) { return <button onClick={onClick}>x</button> }\nconst Press = Pill\nexport default function R() { return <main>{Press({ onClick: go })}</main> }`,
     'a wrapper that gives the handler': `const wrap = f => () => f({ onClick: go })\nconst Pill = wrap(({ onClick }) => <button onClick={onClick}>x</button>)\nexport default function R() { return <Pill /> }`,
     'a class method': `class View { Render({ onClick }) { return <button onClick={onClick}>x</button> } }\nexport default function R() { return <main>{new View().Render({ onClick: go })}</main> }`,
+    'a called wrapper that spreads its props onto a tag': `function Btn(props) { return <button {...props}>x</button> }\nfunction Wrap(props) { return <Btn {...props} /> }\nexport default function R() { return <main>{Wrap({ onClick: go })}</main> }`,
+    'a table whose method calls what it holds': `function Btn({ onClick }) { return <button onClick={onClick}>x</button> }\nconst KIT = { btn: Btn, Go() { return this.btn({ onClick: go }) } }\nexport default function R() { return <KIT.Go /> }`,
+    'a dynamic import read as it renders': `const { Pill } = await import('./pill')\nexport default function R() { return <main>{Pill({ onClick: go })}</main> }`,
     'a spread of a literal': `export default function R() { return <button {...{ onClick: go }}>x</button> }`,
     'a spread of a module value': `const a = { onClick: go }\nexport default function R() { return <button {...a}>x</button> }`,
     'a spread of a prop\'s member': `function Div(p) { return <div {...p.attrs}>x</div> }\nexport default function R() { return <Div attrs={{ onClick: go }} /> }`,
     'a spread of a named prop': `function Div({ attrs }) { return <div {...attrs}>x</div> }\nexport default function R() { return <Div attrs={{ onClick: go }} /> }`,
   }
   test.each(Object.keys(shapes))('%s', async name => {
-    const { plan, routeStatic } = await project({ 'route.tsx': go + shapes[name] })
+    const { plan, routeStatic } = await project({ 'route.tsx': go + shapes[name], 'pill.tsx': `export function Pill({ onClick }) { return <button onClick={onClick}>x</button> }` })
     expect(routeStatic && plan.islands.length === 0).toBe(false)
+  })
+
+  test('an `import()` a handler runs waits for that handler', async () => {
+    const { plan, routeStatic } = await project({
+      'open.tsx': `export function Open() { return <button onClick={() => import('./dialog')}>x</button> }`,
+      'dialog.tsx': `export const a = 1`,
+      'route.tsx': `import { Open } from './open'\nexport default function R() { return <main><Open /></main> }`,
+    })
+    expect(routeStatic).toBe(true)
+    expect(plan.loads).toMatchObject([{ tag: 'Open', when: 'interaction' }])
   })
 })
 

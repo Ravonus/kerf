@@ -542,6 +542,15 @@ impl<'a> Visit<'a> for Collect<'_> {
         walk::walk_call_expression(self, it);
     }
 
+    /// What it brings isn't among the files this reads, so it could hold anything.
+    fn visit_import_expression(&mut self, it: &ImportExpression<'a>) {
+        if self.handler == 0 {
+            let line = line_col(self.source, it.span.start).0;
+            self.own(format!("`import()` outside a handler (line {line})"));
+        }
+        walk::walk_import_expression(self, it);
+    }
+
     fn visit_ts_type(&mut self, _: &TSType<'a>) {}
 
     fn visit_function(&mut self, it: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
@@ -604,7 +613,11 @@ impl<'a> Visit<'a> for Collect<'_> {
         for item in &open.attributes {
             match item {
                 JSXAttributeItem::SpreadAttribute(s) => {
-                    handler |= !self.spreads_props(&s.argument);
+                    if self.spreads_props(&s.argument) {
+                        self.passes(format!("a spread on <{}> (line {})", member.as_ref().unwrap_or(&tag), line_col(self.source, s.span.start).0));
+                    } else {
+                        handler = true;
+                    }
                     let f = self.framed(|c| c.visit_expression(&s.argument));
                     attrs.push(Attr { name: "...".into(), kind: "spread".into(), uses: f.uses, own: f.own });
                 }
@@ -716,7 +729,7 @@ impl<'a> Visit<'a> for Loose<'_> {
 
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
         match (&it.id, &it.init) {
-            (BindingPattern::BindingIdentifier(id), Some(init)) if self.holder(id) => {
+            (BindingPattern::BindingIdentifier(id), Some(init)) if self.holder(id) && !reads_this(init) => {
                 let held = std::mem::replace(&mut self.held, true);
                 self.visit_expression(init);
                 self.held = held;
@@ -752,6 +765,20 @@ impl<'a> Visit<'a> for Loose<'_> {
     fn visit_jsx_fragment(&mut self, it: &JSXFragment<'a>) {
         self.free(|l| walk::walk_jsx_fragment(l, it));
     }
+}
+
+/// A table's own method can call what the table holds, and only `this` says so.
+fn reads_this(e: &Expression<'_>) -> bool {
+    #[derive(Default)]
+    struct This(bool);
+    impl<'a> Visit<'a> for This {
+        fn visit_this_expression(&mut self, _: &ThisExpression) {
+            self.0 = true;
+        }
+    }
+    let mut t = This::default();
+    t.visit_expression(e);
+    t.0
 }
 
 fn calls(v: &JSXAttributeValue<'_>) -> bool {
