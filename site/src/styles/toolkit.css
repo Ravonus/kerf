@@ -138,9 +138,19 @@
 [data-site="tile"] [data-part="mount"][data-stage="narrow"] { inline-size: 100%; }
 [data-site="tile"] [data-part="mount"][data-stage="center"] { align-content: safe center; }
 [data-site="tile"] [data-part="mount"] > * { max-inline-size: 100%; }
+/* A bell is one small button: its card draws it larger so there's something to see. */
+[data-site="tile"][data-name="bell"] [data-part="mount"] { zoom: 1.4; }
 [data-site="tile"] [data-part="words"] { padding: var(--warp-space-tight) var(--warp-space-related); }
 [data-site="tile"] strong { font-size: var(--doc-small); font-weight: 600; }
 [data-site="tile"] [data-part="words"] span { font-size: var(--doc-micro); line-height: 1.4; color: var(--dim); }
+/* A phone shows the hubs two to a row, with short previews: one column of wide empty cards made /components 25,000px long. */
+@media (max-width: 599.98px) {
+  [data-tk="tiles"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--warp-space-related); }
+  [data-site="tile"] [data-part="stage"] { aspect-ratio: 4 / 3; }
+  [data-site="tile"] [data-part="mount"] { zoom: 0.6; padding: var(--warp-space-related); }
+  [data-site="tile"] [data-part="words"] { padding: var(--warp-space-hair) var(--warp-space-tight); }
+  [data-site="tile"] strong { display: block; overflow-wrap: anywhere; font-size: var(--doc-micro); }
+}
 [data-tk="all"] { margin-block-start: var(--warp-space-group); font-size: var(--doc-small); }
 
 @media (max-width: 899.98px) {

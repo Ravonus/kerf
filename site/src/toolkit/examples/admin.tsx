@@ -201,6 +201,12 @@ export function SeatsMeterInvite() {
   )
 }
 
+/** The hub's card: short permissions across three roles, so the grid fits a card whole. */
+const TILE_PERMISSIONS: Permission[] = [
+  { id: 'deploy', label: 'Deploy', roles: ['owner', 'admin', 'member'] },
+  { id: 'billing', label: 'Billing', roles: ['owner'] },
+]
+export const RolesMatrixTile = () => <RolesMatrix roles={TEAM_ROLES.slice(0, 3)} permissions={TILE_PERMISSIONS} />
 export const RolesMatrixReadOnly = () => <RolesMatrix roles={TEAM_ROLES} permissions={TEAM_PERMISSIONS} />
 
 export function RolesMatrixEdit() {

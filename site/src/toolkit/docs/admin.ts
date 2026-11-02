@@ -113,6 +113,8 @@ export const admin: DocGroup = {
     {
       component: 'RolesMatrix',
       summary: 'A grid of what each role is allowed to do.',
+      tile: 'RolesMatrixTile',
+      tileStage: 'fill',
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'RolesMatrixReadOnly', title: 'Read only', stage: 'fill', height: 320 },

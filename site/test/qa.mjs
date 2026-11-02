@@ -189,6 +189,30 @@ await check('view code sits under the code on a phone', '/components/select', as
     if (when === 'folded') await frame.getByRole('button', { name: 'View code' }).click()
   }
 }, PHONE)
+// Hub cards: these three previews fit their card (no giant clipped title, no half a table), and a phone gets two
+// short cards to a row instead of one long column.
+await check('hub previews fit their cards', '/blocks', async page => {
+  const out = []
+  for (const name of ['conversation', 'bell', 'rolesmatrix']) {
+    const tile = page.locator(`[data-site="tile"][data-name="${name}"]`)
+    await tile.scrollIntoViewIfNeeded()
+    await page.waitForFunction(n => document.querySelector(`[data-site="tile"][data-name="${n}"] [data-part="mount"][data-ready]`), name, { timeout: 15000 }).catch(() => { throw new Error(`${name} never mounted`) })
+    await page.waitForTimeout(300)
+    out.push(await tile.evaluate((t, name) => {
+      const stage = t.querySelector('[data-part="stage"]').getBoundingClientRect(), shown = t.querySelector('[data-part="mount"]').firstElementChild.getBoundingClientRect()
+      const fits = shown.top >= stage.top - 1 && shown.left >= stage.left - 1 && shown.right <= stage.right + 1 && (name === 'conversation' || shown.bottom <= stage.bottom + 1)
+      return fits ? '' : `${name} ${Math.round(shown.width)}x${Math.round(shown.height)} in ${Math.round(stage.width)}x${Math.round(stage.height)}`
+    }, name))
+  }
+  same(out.filter(Boolean).join(), '', 'previews past their card')
+})
+for (const path of ['/components', '/blocks']) {
+  await check(`hub is compact on a phone ${path}`, path, async page => {
+    const { cols, tall } = await page.evaluate(() => ({ cols: getComputedStyle(document.querySelector('[data-tk="tiles"]')).gridTemplateColumns.split(' ').length, tall: document.documentElement.scrollHeight }))
+    same(cols, 2, 'cards to a row')
+    if (tall > 14000) throw new Error(`${tall}px long`)
+  }, PHONE)
+}
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

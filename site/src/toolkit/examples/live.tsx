@@ -30,6 +30,14 @@ export function ActivityFeedProject() {
   )
 }
 
+/** The hub's card: a count, and one past what the badge spells out. */
+export const BellTile = () => (
+  <Row gap="group">
+    <Bell count={3} />
+    <Bell count={12} />
+  </Row>
+)
+
 export function BellWithInbox() {
   const inbox = useInbox()
   const unread = derived(() => inbox.items.value.filter(n => !n.read).length)

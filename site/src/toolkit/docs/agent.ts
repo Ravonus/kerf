@@ -11,6 +11,7 @@ export const agent: DocGroup = {
       summary: 'The scrolling chat: turns, an optional title bar, and the prompt pinned below.',
       use: { when: ['A full chat with an assistant', 'Anywhere turns keep arriving and the view should follow them'] },
       tile: 'ConversationTile',
+      tileStage: 'fill',
       sections: [
         { kind: 'composition', title: 'In context', examples: [
           { id: 'ConversationDeployHelp', title: 'Deploy help', note: 'Send a message or press a chip: the assistant checks the target, then waits for your approval. The run is scripted.', stage: 'fill', height: 620 },

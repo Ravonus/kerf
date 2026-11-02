@@ -30,13 +30,12 @@ const STARTERS = [
   { title: 'Which project costs the most?', description: 'From this month\'s usage' },
 ]
 
+/** The hub's card: one exchange, without the frame's title, which is sized for a whole pane. */
 export const ConversationTile = () => (
-  <div style="block-size:400px">
-    <Conversation title="mobile-bff deploy" prompt={<Prompt tools={[]} placeholder="Ask about a deploy" />}>
-      <UserMessage text={QUESTION} />
-      <Assistant answer={SHORT} quiet />
-    </Conversation>
-  </div>
+  <Stack gap="related">
+    <UserMessage text={QUESTION} />
+    <Assistant answer={SHORT} quiet />
+  </Stack>
 )
 
 export function ConversationDeployHelp() {
