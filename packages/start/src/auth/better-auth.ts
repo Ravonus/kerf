@@ -75,7 +75,8 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
   const auth = betterAuth({
     secret,
     // A build's prerender holds no environment; a server takes `BETTER_AUTH_URL`, or the request's origin.
-    ...(process.env.WEFT_BUILD && { baseURL: 'http://localhost' }),
+    // Without a secret Better Auth rejects on load in production, which ends the build. It signs nothing there.
+    ...(process.env.WEFT_BUILD && { baseURL: 'http://localhost', secret: secret ?? crypto.randomUUID() + crypto.randomUUID() }),
     telemetry: { enabled: false },
     emailAndPassword: { enabled: true },
     ...options,

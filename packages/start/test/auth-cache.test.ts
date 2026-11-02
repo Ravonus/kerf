@@ -168,6 +168,22 @@ describe('the cookie cache', () => {
   })
 })
 
+describe('a build', () => {
+  // Better Auth reads NODE_ENV once, on import, so its production throw for the default secret can't fire here: this is what stops it.
+  test('hands Better Auth a throwaway secret when it has none, and a server never gets one', () => {
+    const noSecret = () => (createAuth({ db, secret: undefined, options }).options as any).secret
+    expect(noSecret()).toBeUndefined()
+    process.env.WEFT_BUILD = '1'
+    try {
+      expect(noSecret()).toMatch(/.{32}/)
+      expect(noSecret()).not.toBe(noSecret())
+      expect((createAuth({ db, secret, options }).options as any).secret).toBe(secret)
+    } finally {
+      delete process.env.WEFT_BUILD
+    }
+  })
+})
+
 describe('a session read in another request', () => {
   test('leaves that response alone: a socket\'s cookies are not the poker\'s', async () => {
     const admin = await fresh(), victim = await fresh()
