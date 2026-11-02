@@ -81,8 +81,8 @@ export function findProblems() {
     }
   }
   const core = join(root, 'packages/warp-core/src')
-  for (const f of readdirSync(core, { recursive: true }).map(String).filter(f => /\.[cm]?[jt]sx?$/.test(f))) {
-    for (const { spec } of imports(join(core, f))) if (FRAMEWORK.test(spec)) problems.push({ rule: 'warp-core-framework', file: `packages/warp-core/src/${f}`, detail: `imports ${spec}`, fix: 'warp-core stays framework-agnostic: put this in bindings/.' })
+  for (const name of readdirSync(core, { recursive: true }).map(String).filter(f => /\.[cm]?[jt]sx?$/.test(f))) {
+    for (const { spec } of imports(join(core, name))) if (FRAMEWORK.test(spec)) problems.push({ rule: 'warp-core-framework', file: `packages/warp-core/src/${name}`, detail: `imports ${spec}`, fix: 'warp-core stays framework-agnostic: put this in bindings/.' })
   }
   const seen = new Set()
   return problems.filter(p => { const key = `${p.rule}|${p.file}|${p.detail.split(':')[0]}`; if (seen.has(key)) return false; seen.add(key); return true })

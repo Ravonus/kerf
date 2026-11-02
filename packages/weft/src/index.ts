@@ -631,7 +631,6 @@ export function view(sources: unknown[], skip: string[] = []): Record<PropertyKe
   })
 }
 
-// oxlint-disable-next-line import/no-cycle -- linked.ts builds on the core; this re-export is the one public door to it
 export { localProps } from './linked'
 
 /**
@@ -650,9 +649,7 @@ export function restOf<P extends object>(props: P, keys: string[]) {
   return out
 }
 
-// oxlint-disable-next-line import/no-cycle -- async.ts builds on the core; the entry re-exports it so apps import one module
 export { Boundary, resource, type Resource, type ResourceOptions } from './async'
-// oxlint-disable-next-line import/no-cycle -- scope.ts builds on the core; the entry re-exports it so apps import one module
 export { defineState, StateError, type ScopeHandle, type History, type HistoryEntry } from './scope'
 
 /** A component's props, for the rare case inference doesn't cover: `Props<typeof Button>`. Types only. */

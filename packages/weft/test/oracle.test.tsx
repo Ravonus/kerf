@@ -109,7 +109,7 @@ const html = (el: Element) => {
   })
   for (const e of copy.querySelectorAll('*')) {
     const attrs = [...e.attributes].filter(a => a.name !== 'wk' && !(a.name === 'selected' && e.localName === 'option')).map(a => [a.name, norm(a.name, a.value)] as const)
-    // oxlint-disable-next-line unicorn/no-useless-spread -- the copy: attributes is live and this empties it
+    // the copy: attributes is live and this empties it
     for (const a of [...e.attributes]) e.removeAttribute(a.name)
     for (const [n, v] of attrs.sort(([a], [b]) => (a < b ? -1 : 1))) e.setAttribute(n, v)
   }

@@ -10,7 +10,6 @@
 // side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
 // fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-// oxlint-disable-next-line import/no-cycle -- this file builds on the core, and the `weft` entry re-exports it
 import { DEV, context, createRoot, derived, effect, getOwner, memo, onCleanup, rt, state, untrack, watch, type State } from './index'
 import { keys, nextKey, under } from './keys'
 

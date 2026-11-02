@@ -244,7 +244,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
             {extra.value.length > 0 && (
               <div data-part="nav-extra">
                 {extra.value.map(g => (
-                  <div key={g.label!}>
+                  <div key={g.label}>
                     <p data-part="nav-group">{g.label}</p>
                     <ul data-part="nav-list" aria-label={g.label}>{g.items.map(i => <li key={i.id}><Item item={i} current={current} quiet onPick={closeNav} /></li>)}</ul>
                   </div>

@@ -8,7 +8,7 @@
     "**/node_modules/**", "**/dist/**", "**/.weft/**", "**/.output/**", "**/target/**",
     "**/fixture/**", "**/fixtures/**", "**/vendor/**", "**/gallery/assets/**",
     "packages/icons/src/gen/**", "packages/icons/art/**", "packages/text/gen/**", "packages/weft/node/*.mjs", "packages/weft/native/**",
-    "packages/weft/bench/corpus/**", "packages/weft/test/corpus-gen/**", "packages/db/test/generated/**",
+    "packages/weft/bench/corpus/**", "packages/warp-core/scripts/contrast-check.mjs", "packages/weft/test/corpus-gen/**", "packages/db/test/generated/**",
     "docs/**", "spikes/**", "evals/*/**", "site/public/**", "site/content/**", "site/review/**"
   ],
   "rules": {
@@ -83,7 +83,7 @@
     "weft/skip-needs-reason": "warn",
     "vitest/no-identical-title": "warn",
     "vitest/no-commented-out-tests": "warn",
-    "vitest/valid-expect": "warn",
+    "vitest/valid-expect": ["warn", { "maxArgs": 2 }], // expect(value, message) is vitest's own form
     "vitest/valid-describe-callback": "warn",
 
     // On by category, off here because they are wrong for this repo.
@@ -95,6 +95,8 @@
     "unicorn/consistent-function-scoping": "off", // a closure stays by the code it serves
     "unicorn/no-array-sort": "off", // sorting a fresh array in place is fine and faster
     "unicorn/no-array-reverse": "off",
+    "unicorn/no-useless-spread": "off", // `[...set]` is often a snapshot taken on purpose, and its autofix breaks those
+    "unicorn/no-unnecessary-await": "off", // `await 0` is a microtask turn; typescript/await-thenable covers the real mistake
     "unicorn/prefer-add-event-listener": "off",
     "unicorn/require-post-message-target-origin": "off", // only workers and MessagePorts here, which take no origin
     "promise/always-return": "off",
@@ -127,6 +129,11 @@
     {
       "files": ["packages/weft/src/style/matrix.ts", "packages/weft/src/test.ts", "packages/weft/src/plugin.mjs", "packages/weft/src/config.mjs"],
       "rules": { "no-restricted-imports": "off" }
+    },
+    {
+      // The entry and dom.ts are the public doors over modules that build on them. The cycle is the design, and order is tested.
+      "files": ["packages/weft/src/**"],
+      "rules": { "import/no-cycle": "off" }
     },
     {
       // Tests set up the DOM with markup of their own, and may look like anything.

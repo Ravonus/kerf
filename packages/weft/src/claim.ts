@@ -4,12 +4,9 @@
 // its range. Client-only output imports `tpl` and `child` (dom-next.ts) instead, so none of this ships there.
 
 import { DEV, hole, untrack } from './index'
-// oxlint-disable-next-line import/no-cycle -- dom.ts re-exports this file as its public door, and this file calls its shared helpers
 import { insert, place, write, type Hold } from './dom'
 import { keys, nextKey, under } from './keys'
-// oxlint-disable-next-line import/no-cycle -- island.ts and this file both sit behind dom.ts; this reads its marker test
 import { marks } from './island'
-// oxlint-disable-next-line import/no-cycle -- hydrate.ts starts the claim, and the claim records what it swept in hydrate's state
 import { hydration } from './hydrate'
 
 /** A template root while hydrating: `$k` is its key, which its holes scope theirs under. */

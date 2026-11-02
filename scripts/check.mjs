@@ -56,10 +56,10 @@ const STEPS = [
     id: 'lint', covers: 'Oxlint with type-aware rules: bugs, async mistakes, types, comments, tests, code from strings',
     fix: 'Run `npm run fix` for what can be fixed by machine. Each line names the rule. A disable needs a reason: `// oxlint-disable-next-line <rule> -- <why>`, and CONTRIBUTING.md says when one is allowed.',
     async run() {
-      const r = await run(bin('oxlint'), ['--type-aware', '--format', 'json', ...LINT_PATHS])
+      const r = await run(bin('oxlint'), ['--type-aware', '--report-unused-disable-directives-severity=warn', '--format', 'json', ...LINT_PATHS])
       let report
       try { report = JSON.parse(r.out.slice(r.out.indexOf('{'))) } catch { return lines({ code: 1, out: r.out }) }
-      return { problems: report.diagnostics.map(d => `${d.filename}:${d.labels?.[0]?.span.line ?? 0} ${d.code ?? 'plugin'} ${d.message.split('\n')[0]}`) }
+      return { problems: [...new Set(report.diagnostics.map(d => `${d.filename}:${d.labels?.[0]?.span.line ?? 0} ${d.code ?? 'plugin'} ${d.message.split('\n')[0]}`))] }
     },
   },
   {
@@ -70,10 +70,10 @@ const STEPS = [
       const found = new Set()
       await pool(projects, limit, async dir => {
         const r = await run(bin('tsc'), ['-p', dir === '.' ? 'tsconfig.json' : `${dir}/tsconfig.json`, '--pretty', 'false'])
-        // Tests import examples from evals/ and spikes/ to prove they work. Those aren't held to this.
-        for (const line of r.out.split('\n')) if (/error TS\d+/.test(line) && !/^(?:evals|spikes)\//.test(line)) found.add(line)
+        // Tests import examples from evals/ and spikes/ to prove they work, and text's gen/ is vendored code rewritten. Not held to this.
+        for (const line of r.out.split('\n')) if (/error TS\d+/.test(line) && !/^(?:evals|spikes|packages\/text\/gen)\//.test(line)) found.add(line)
       })
-      return { problems: [...found].sort() }
+      return { problems: [...found].toSorted((a, b) => a.localeCompare(b)) }
     },
   },
   {
@@ -95,7 +95,7 @@ const STEPS = [
         const r = await run('cargo', ['clippy', '--all-targets', '--message-format=short', '--', '-D', 'warnings'], c)
         if (r.code !== 0) found.push(...new Set(r.out.split('\n').filter(l => /^\S+\.rs:\d+:\d+: (?:error|warning)/.test(l) || /^error: (?!could not compile)/.test(l)).map(l => `${c}/${l}`)))
       })
-      return { problems: found.sort() }
+      return { problems: found.toSorted((a, b) => a.localeCompare(b)) }
     },
   },
   {

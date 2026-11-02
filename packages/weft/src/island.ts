@@ -12,9 +12,7 @@
 // held, in order: an event on an island still loading holds up those behind it, so a click can't pass the typing before.
 
 import { DEV, flush, getOwner, onCleanup, rt, runMounts, within, type Owner, type SsrData } from './index'
-// oxlint-disable-next-line import/no-cycle -- an island's claim is the page's claim; dom.ts re-exports both
 import { hchild } from './claim'
-// oxlint-disable-next-line import/no-cycle -- an island's claim is the page's claim; dom.ts re-exports both
 import { hydration, sweep } from './hydrate'
 import { keys, under } from './keys'
 

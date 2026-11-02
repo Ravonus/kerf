@@ -4,7 +4,6 @@
 // comes before its own bindings, so they write (`keys.miss`, which each claim and the end of each hole put back).
 
 import { DEV, effect } from './index'
-// oxlint-disable-next-line import/no-cycle -- dom.ts re-exports this file as its public door, and this file calls its shared helpers
 import { addEvent, attrName, className, createComponent, delegateEvents, insert, ref, setAttribute, style } from './dom'
 import { keys } from './keys'
 

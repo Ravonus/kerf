@@ -7,13 +7,9 @@ import { DEFER, ENDS, FLAT, LINEAR, RECORD, ROWBOX, SCAN, STEADY, SWAP, TEXT, WI
 import { keys, step, under } from './keys'
 
 export { memo }
-// oxlint-disable-next-line import/no-cycle -- dom-next.ts calls this module's helpers; this module is its public door
 export { attr, bind, change, child, cls, component, css, delegate, focus, kids, on, spread, tpl } from './dom-next'
-// oxlint-disable-next-line import/no-cycle -- claim.ts calls this module's helpers; this module is its public door
 export { first, hchild, htpl, next } from './claim'
-// oxlint-disable-next-line import/no-cycle -- hydrate.ts starts from claim.ts, which calls this module's helpers
 export { hydrate, hydration } from './hydrate'
-// oxlint-disable-next-line import/no-cycle -- island.ts calls this module's helpers; this module is its public door
 export { drain, enter, level, wake } from './island'
 export { egg } from './egg'
 

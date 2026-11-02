@@ -16,7 +16,7 @@ export function store<S>(initial: S) {
     set(next: S) {
       if (Object.is(next, current)) return
       current = next
-      // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a listener can unsubscribe while it's told
+      // a snapshot: a listener can unsubscribe while it's told
       for (const fn of [...listeners]) fn(current)
     },
     subscribe: (fn: (state: S) => void) => {

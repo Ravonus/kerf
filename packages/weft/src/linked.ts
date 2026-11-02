@@ -1,5 +1,4 @@
 // Separate from the core so an app that writes no prop locals and no `state.linked` doesn't carry them.
-// oxlint-disable-next-line import/no-cycle -- this file builds on the core, and the entry re-exports `localProps`
 import { Box, derived, untrack, type Linked } from './index'
 
 /**

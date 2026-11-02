@@ -27,7 +27,7 @@ function listen(target: EventTarget, type: string, fn: Handler, what?: string): 
   let fns = types.get(type)
   if (!fns) {
     const set: Handlers = (fns = new Set())
-    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a handler can remove itself while this runs
+    // a snapshot: a handler can remove itself while this runs
     set.h = e => { for (const f of [...set]) f(e) }
     types.set(type, set)
     target.addEventListener(type, set.h)
@@ -250,7 +250,7 @@ function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
   let line = lines.get(name)
   if (!line) {
     const made: TabLine = { bc: new BroadcastChannel(`weft:tab:${name}`), refs: 0, fns: new Set() }
-    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a handler can remove itself while this runs
+    // a snapshot: a handler can remove itself while this runs
   made.bc.onmessage = e => { for (const f of [...made.fns]) f(e.data) }
     lines.set(name, (line = made))
   }
@@ -265,7 +265,7 @@ function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
       return
     }
     last.value = ok.value
-    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a handler can remove itself while this runs
+    // a snapshot: a handler can remove itself while this runs
     for (const f of [...handlers]) f(ok.value)
   }
   held.fns.add(receive)

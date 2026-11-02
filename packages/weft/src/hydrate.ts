@@ -8,7 +8,6 @@
 // app has lazy islands: then `@weft-js/start`'s capture script holds them for `drain` (island.ts).
 
 import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
-// oxlint-disable-next-line import/no-cycle -- the claim reads `hydration` here, and this file starts the claim
 import { hchild } from './claim'
 import { keys } from './keys'
 

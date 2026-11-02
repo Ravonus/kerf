@@ -73,7 +73,7 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
-    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => extended({ ...app, request, response: { headers }, media: mediaApi(options) }, options), e => { throw dbError(e) })),
+    ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => extended({ ...app, request, response: { headers }, media: mediaApi(options) } as Context, options), e => { throw dbError(e) })),
   }
 }
 

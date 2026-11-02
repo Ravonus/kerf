@@ -122,7 +122,6 @@ test('a production build: the schema stays on the server, the stub carries its s
   const output = join(root, '.output-test')
   const opts = JSON.stringify({ root, site: { name: 'Shapes', url: 'https://shapes.dev' }, preset: 'node', nitro: { output: { dir: output } }, logLevel: 'error' })
   const r = spawnSync(process.execPath, [join(import.meta.dirname, 'build-app.mjs'), opts], { encoding: 'utf8', env: { ...process.env, NODE_ENV: 'production', WEFT_BUILD: '1' } })
-  // oxlint-disable-next-line vitest/valid-expect -- the second argument is vitest's failure message
   expect(r.status, r.stderr).toBe(0)
   const public_ = join(output, 'public')
   const js = readdirSync(public_, { recursive: true }).filter(f => f.endsWith('.js')).map(f => readFileSync(join(public_, f), 'utf8')).join('\n')

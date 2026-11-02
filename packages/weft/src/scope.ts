@@ -6,7 +6,6 @@
 // A scope is a named setup function over ordinary boxes. It runs once per app instance, lazily, on first access.
 // Functions it returns are actions: each call is one transaction (one undo step), and nested calls join the outer.
 
-// oxlint-disable-next-line import/no-cycle -- this file builds on the core, and the `weft` entry re-exports it
 import { Box, DEV, Memo, collect, context, createRoot, named as graph, rt, untrack, type Derived } from './index'
 
 // ---- diagnostics ------------------------------------------------------------------------------------------------

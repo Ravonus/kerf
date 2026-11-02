@@ -133,7 +133,7 @@ function loop(now: number) {
   if (!tickers.size || !playing.value) { last = 0; return }
   if (last) seconds += Math.min(now - last, 100) / 1000 // capped: a background tab resumes without a jump
   last = now
-  // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a ticker can remove itself while this runs
+  // a snapshot: a ticker can remove itself while this runs
   for (const t of [...tickers]) t()
   raf = requestAnimationFrame(loop)
 }
@@ -149,8 +149,7 @@ export const clock = {
   /** Jump, and paint every animated surface now. */
   seek(to: number) {
     seconds = to
-    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a ticker can remove itself while this runs
-    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a ticker can remove itself while this runs
+    // a snapshot: a ticker can remove itself while this runs
     for (const t of [...tickers]) t(true)
   },
 }
