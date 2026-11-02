@@ -137,7 +137,7 @@ const patches = [
   ['packages/weft/node/hydration.mjs', "const PURE = { weft: new Set", `const PURE = { '${CORE}': new Set`],
   ['packages/weft/node/hydration.mjs', "  weft: new Set(['state'", `  '${CORE}': new Set(['state'`],
   ['packages/weft/test/hmr.test.ts', "  weft: { ...core,", `  '${CORE}': { ...core,`],
-  ['packages/weft/test/style-matrix.test.ts', "external: [/^weft/]", "external: [/^@weft-js\/core/]"],
+  ['packages/weft/test/style-matrix.test.ts', "external: [/^weft/]", R`external: [/^@weft-js\/core/]`],
   ['packages/cli/test/check.test.mjs', "[1, 23, 1, 40]", "[1, 23, 1, 36]"],
   ['packages/cli/test/docs.test.mjs', "Status in weft@0\\.0\\.0", "Status in weft@0\\.1\\.0"],
   ['packages/cli/src/agents-md.mjs', "info.exports.weft ?? []", `info.exports['${CORE}'] ?? []`],

@@ -6,7 +6,7 @@
 //   node release-e2e.mjs <dir of .tgz> <empty dir> [--registry-script <path>] [--pm npm|bun|deno] [--no-rust]
 //
 // --no-rust removes every directory holding cargo or rustc from PATH first, and fails if one is still found.
-import { execFileSync, spawn, spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -30,11 +30,14 @@ if (readdirSync(empty).length) throw new Error(`${empty} is not empty`)
 
 const steps = []
 const step = (name, ok, detail = '') => { steps.push({ name, ok, detail }); console.log(`[e2e] ${ok ? 'pass' : 'FAIL'}: ${name}${detail ? ` (${detail})` : ''}`); if (!ok) { process.exitCode = 1 } }
-const sh = (cmd, args, cwd) => {
-  const r = spawnSync(cmd, args, { cwd, env, encoding: 'utf8', shell: windows, maxBuffer: 1 << 26 })
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')} exited ${r.status}:\n${String(r.stdout).slice(-1500)}\n${String(r.stderr).slice(-1500)}`)
-  return r.stdout
-}
+// Asynchronous on purpose: the registry lives in this process, so a synchronous child would wait forever for its answers.
+const sh = (cmd, args, cwd) => new Promise((ok, fail) => {
+  const child = spawn(cmd, args, { cwd, env, shell: windows, stdio: ['ignore', 'pipe', 'pipe'] })
+  let out = '', err = ''
+  child.stdout.on('data', d => (out += d)); child.stderr.on('data', d => (err += d))
+  child.on('error', fail)
+  child.on('close', code => code === 0 ? ok(out) : fail(new Error(`${cmd} ${args.join(' ')} exited ${code}:\n${out.slice(-1500)}\n${err.slice(-1500)}`)))
+})
 if (values['no-rust']) step('no Rust on PATH', spawnSync('cargo', ['--version'], { env, shell: windows }).status !== 0)
 
 const { serveRegistry } = await import(pathToFileURL(script).href)
@@ -65,22 +68,22 @@ const runner = { npm: ['npx', []], bun: ['bunx', ['--bun']], deno: ['deno', ['ru
 const weft = (args, cwd) => sh(runner[0], pm === 'deno' ? [...runner[1], ...args] : [...runner[1], 'weft', ...args], cwd)
 try {
   const creating = { npm: ['npm', ['create', `@weft-js@${version}`, '--', 'demo', '--yes', '--no-git', '--no-install', '--pm', 'npm']], bun: ['bun', ['x', '--bun', `@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'bun', '--runtime', 'bun']], deno: ['deno', ['run', '-A', `npm:@weft-js/create@${version}`, 'demo', '--yes', '--no-git', '--no-install', '--pm', 'deno', '--runtime', 'deno']] }[pm]
-  sh(creating[0], creating[1], empty)
+  await sh(creating[0], creating[1], empty)
   const app = join(empty, 'demo')
   step(`create on ${pm}`, existsSync(join(app, 'package.json')))
   const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
   const wanted = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).filter(n => n.startsWith('@weft-js/'))
   step('the scaffold names only published packages', wanted.every(n => readdirSync(tarballs).some(f => f.startsWith(n.replace('@', '').replace('/', '-')))), wanted.join(' '))
   if (pm !== 'deno') writeFileSync(join(app, '.npmrc'), `registry=${url}\n`)
-  sh(pm, ['install'], app)
+  await sh(pm, ['install'], app)
   step(`${pm} install`, true)
-  weft(['agents-md'], app)
-  const doctor = JSON.parse(weft(['doctor', '--json'], app))
+  await weft(['agents-md'], app)
+  const doctor = JSON.parse(await weft(['doctor', '--json'], app))
   step('doctor', doctor.ok !== false, `compiler ${doctor.compiler?.kind ?? JSON.stringify(doctor.compiler)}`)
   if (values['expect-backend']) step(`compiler is ${values['expect-backend']}`, doctor.compiler?.kind === values['expect-backend'])
-  const checked = JSON.parse(weft(['check', '--json'], app))
+  const checked = JSON.parse(await weft(['check', '--json'], app))
   step('weft check', checked.ok === true, checked.ok ? '' : JSON.stringify(checked.diagnostics).slice(0, 400))
-  weft(['build'], app)
+  await weft(['build'], app)
   step('weft build', existsSync(join(app, '.output')) || existsSync(join(app, 'dist')))
 
   const port = 3400 + (process.pid % 400)
