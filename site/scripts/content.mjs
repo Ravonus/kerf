@@ -203,7 +203,7 @@ async function buildDocs() {
     const seen = new Map()
     const html = linkify(markdownToHtml(md.replace(/^# [^\n]*\n/, ''), {
       code: codeBlock,
-      heading: (text, depth) => {
+      heading: text => {
         const base = slugify(text) || 'section'
         const n = seen.get(base) ?? 0
         seen.set(base, n + 1)
@@ -421,7 +421,7 @@ function buildToolkit() {
       }
       const { hero, parts: arranged } = arrange(doc)
       const shownHero = hero && example(hero)
-      const sections = arranged.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
+      const shownSections = arranged.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
       const visible = c.props.filter(p => !HIDDEN_PROPS.has(p.name) && !doc.hideProps?.includes(p.name))
       const rows = visible.map(p => propRow(p, doc))
       blank.all += rows.length
@@ -432,12 +432,12 @@ function buildToolkit() {
       const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name), href: hrefs.get(slugFor(name)) }))
       const play = doc.playground && finishKnobs(doc.playground, c.props, c.name)
       if (play && !found.has(play.example)) problems.push(`${c.name}: no export ${play.example}`)
-      const heads = [{ id: 'installation', text: 'Installation' }, { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...(play ? [{ id: 'playground', text: 'Playground' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
+      const heads = [{ id: 'installation', text: 'Installation' }, { id: 'usage', text: 'Usage' }, ...shownSections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...(play ? [{ id: 'playground', text: 'Playground' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
       const i = order.indexOf(c.name)
       const near = n => n && facts.get(n) && areaIn(n) === areaOf(g.file) && { name: n, slug: slugFor(n), href: hrefs.get(slugFor(n)) }
       pages[c.slug] = {
         name: c.name, slug: c.slug, area: areaOf(g.file), group: g.title, usage: codeBlock(usageOf(doc, c.name, found, play), 'tsx'), file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
-        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft-js/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
+        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections: shownSections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft-js/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
       const refs = doc.sections.flatMap(s => s.examples ?? [])
       tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center', fit: doc.tileFit ?? (areaOf(g.file) === 'charts' ? 'contain' : undefined), width: doc.tileWidth })

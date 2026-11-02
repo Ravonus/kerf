@@ -203,10 +203,10 @@ await check('hub previews fit their cards', '/blocks', async page => {
     await tile.scrollIntoViewIfNeeded()
     await page.waitForFunction(n => document.querySelector(`[data-site="tile"][data-name="${n}"] [data-part="mount"][data-ready]`), name, { timeout: 15000 }).catch(() => { throw new Error(`${name} never mounted`) })
     await page.waitForTimeout(300)
-    out.push(await tile.evaluate((t, name) => {
+    out.push(await tile.evaluate((t, which) => {
       const stage = t.querySelector('[data-part="stage"]').getBoundingClientRect(), shown = t.querySelector('[data-part="mount"]').firstElementChild.getBoundingClientRect()
-      const fits = shown.top >= stage.top - 1 && shown.left >= stage.left - 1 && shown.right <= stage.right + 1 && (name === 'conversation' || shown.bottom <= stage.bottom + 1)
-      return fits ? '' : `${name} ${Math.round(shown.width)}x${Math.round(shown.height)} in ${Math.round(stage.width)}x${Math.round(stage.height)}`
+      const fits = shown.top >= stage.top - 1 && shown.left >= stage.left - 1 && shown.right <= stage.right + 1 && (which === 'conversation' || shown.bottom <= stage.bottom + 1)
+      return fits ? '' : `${which} ${Math.round(shown.width)}x${Math.round(shown.height)} in ${Math.round(stage.width)}x${Math.round(stage.height)}`
     }, name))
   }
   same(out.filter(Boolean).join(), '', 'previews past their card')
@@ -234,7 +234,7 @@ for (const path of ['/components', '/blocks', '/charts']) {
         if (chart && r.bottom > st.bottom + 1) out.push('chart cut off')
         // a descendant cut by the card's edge (in it, but running past it), with nothing between them that clips it
         const clips = e => { for (let p = e.parentElement; p && p !== m; p = p.parentElement) if (getComputedStyle(p).overflowX !== 'visible') return true; return false }
-        const past = [...m.querySelectorAll('*')].find(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left < st.right && b.right > Math.min(r.right, st.right) + 2 && !clips(e) })
+        const past = [...m.querySelectorAll('*')].find(e => { const box = e.getBoundingClientRect(); return box.width > 0 && box.left < st.right && box.right > Math.min(r.right, st.right) + 2 && !clips(e) })
         if (past) out.push(`${past.localName}${past.dataset.part ? `[${past.dataset.part}]` : ''} past its edge`)
         return out.length ? [`${t.dataset.name}: ${out.join(', ')}`] : []
       }), path === '/charts')
@@ -298,8 +298,8 @@ for (const [path, least] of [['/components/month-picker', 5], ['/components/week
     const n = await page.evaluate(() => document.querySelectorAll('[data-site="frame"]:not([data-play])').length)
     if (n < least) throw new Error(`${n} examples, want at least ${least}`)
     await mount(page)
-    const failed = await page.evaluate(() => [...document.querySelectorAll('[data-part="mount"]')].filter(m => /failed to load/.test(m.textContent)).length)
-    same(failed, 0, 'examples that failed')
+    const broken = await page.evaluate(() => [...document.querySelectorAll('[data-part="mount"]')].filter(m => /failed to load/.test(m.textContent)).length)
+    same(broken, 0, 'examples that failed')
   })
 }
 // A page with no headings has no contents column, so its words take the room.
