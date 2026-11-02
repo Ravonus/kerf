@@ -2,7 +2,7 @@
 // have to hold (a theme, their pages, migrations in step with the schema) is checked on every one.
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
@@ -26,6 +26,13 @@ function app(name, options = {}) {
   for (const dep of deps.filter(d => /^(weft$|@weft\/)/.test(d))) {
     mkdirSync(join(dir, 'node_modules', '@weft'), { recursive: true })
     symlinkSync(join(pkgs, dep.replace('@weft/', '')), join(dir, 'node_modules', dep), 'dir')
+  }
+  // A link resolves from where it points, and a package with no install of its own can't reach its `weft` peer from there.
+  for (const dep of deps.filter(d => d.startsWith('@weft/plugin-'))) {
+    const home = join(pkgs, dep.replace('@weft/', ''), 'node_modules')
+    if (existsSync(home)) continue
+    rmSync(join(dir, 'node_modules', dep))
+    cpSync(join(pkgs, dep.replace('@weft/', '')), join(dir, 'node_modules', dep), { recursive: true })
   }
   return dir
 }
