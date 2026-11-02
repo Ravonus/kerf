@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { customAuth } from './data.mjs'
-import { classes, context, loginPage, stackDeps, stackFiles, TAILWIND_CSS, TAILWIND_VITE, tailwindPackages, todosPage } from './stack.mjs'
+import { classes, context, loginPage, stackDeps, stackFiles, TAILWIND_CSS, TAILWIND_VITE, tailwindPackages, todosPage, VERSION } from './stack.mjs'
 
 export const UI = ['warp', 'headless', 'tailwind', 'none']
 export const DB = ['sqlite', 'postgres', 'mysql', 'none']

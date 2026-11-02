@@ -4,7 +4,7 @@
 import { driver } from '../driver'
 import { createNative, type Driver, type Row } from './index'
 
-const { createConnection, createPool } = await driver('@weft/db/plugin-native/mysql', 'mysql2', () => import('mysql2/promise'))
+const { createConnection, createPool } = await driver('@weft-js/db/plugin-native/mysql', 'mysql2', () => import('mysql2/promise'))
 
 const LOCK = 'weft_migrations'
 

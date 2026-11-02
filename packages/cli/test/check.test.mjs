@@ -155,7 +155,7 @@ describe('diagnostic shape', () => {
   it('reports P120 for a weft plugin wired straight into vite.config.ts', async () => {
     const dir = project({ 'vite.config.ts': "import { text } from '@weft-js/text'\nexport default { plugins: [text().vite] }\n" })
     const r = await check(dir)
-    expect(r.diagnostics.map(d => [d.code, d.file, d.span])).toEqual([['P120', 'vite.config.ts', [1, 23, 1, 40]]])
+    expect(r.diagnostics.map(d => [d.code, d.file, d.span])).toEqual([['P120', 'vite.config.ts', [1, 23, 1, 36]]])
   })
 
   it('never compiles files under scope.forbid', async () => {

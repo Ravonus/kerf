@@ -26,8 +26,8 @@ export const VERSION = '0.1.0'
 const CORE = `${SCOPE}/core`
 const CREATE = `${SCOPE}/create`
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'target', 'dist', '.output', '.weft', 'coverage', 'native', '.vite'])
-const SKIP_PATHS = [/^evals\/results\//, /^scripts\/rename-scope\.mjs$/, /^scripts\/release\.mjs$/, /^packages\/text-engine\/vendor\//, /^packages\/plugin-surface-keel\/vendor\//, /^packages\/start\/crate\//]
+const SKIP_DIRS = new Set(['node_modules', '.git', 'target', 'dist', '.output', 'coverage', '.vite'])
+const SKIP_PATHS = [/^packages\/weft\/native\//, /^evals\/results\//, /^scripts\/rename-scope\.mjs$/, /^scripts\/release\.mjs$/, /^packages\/text-engine\/vendor\//, /^packages\/plugin-surface-keel\/vendor\//, /^packages\/start\/crate\//]
 const TEXT = /\.(mjs|cjs|js|jsx|ts|tsx|mts|cts|json|jsonc|md|mdx|html|css|rs|toml|yml|yaml|kt|swift|sh|txt)$/
 /** Docs that record what was decided at the time: names change, commands in them aren't run. */
 const HISTORY = /^docs\/(research|design|PLAN|REVIEW)/
@@ -57,6 +57,7 @@ const NOT_DEEPER = String.raw`(?![\w-]|\.\w|/\w)` // `weft/test/fixtures` and `w
 /** Names that aren't just the new scope. Old spellings stay here so a branch merged later still lands right. */
 const RENAMED = [
   [/@weft\/icons\b/g, `${SCOPE}/warp-icons`],
+  [/@weft(-js)?\\\/icons\b/g, `${SCOPE}\\/warp-icons`],
   [/@weft\/plugin-db-(native|prisma)\b/g, `${SCOPE}/db/plugin-$1`],
   [/@weft\/db-(sql|kysely|prisma|mongo|dynamodb|firestore)\b/g, `${SCOPE}/db/$1`],
   [/@weft\/plugin-pay-stripe\b/g, `${SCOPE}/pay/stripe`],
@@ -128,8 +129,17 @@ const patches = [
   // The Rust compiler: what it emits and what it recognises.
   ['crates/weft-compiler/src/transform.rs', 't.import("weft", &imports)', `t.import("${CORE}", &imports)`],
   // The Vite plugin. A package in node_modules no longer has `weft` as a path segment.
+  ['*', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`, 'any'],
   ['packages/weft/vite.mjs', R`[\\/]node_modules[\\/]weft[\\/]/`, R`[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/`],
   ['packages/weft/vite.mjs', R`filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ }`, R`filter: { id: /[\\/](?:weft|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ }`],
+  ['packages/weft/node/hydration.mjs', "const OPAQUE = /^(weft|@weft-js\/start)(\/|$)/", "const OPAQUE = /^@weft-js\/(?:core|start)(\/|$)/"],
+  ['packages/weft/node/hydration.mjs', "const PURE = { weft: new Set", `const PURE = { '${CORE}': new Set`],
+  ['packages/weft/node/hydration.mjs', "  weft: new Set(['state'", `  '${CORE}': new Set(['state'`],
+  ['packages/weft/test/hmr.test.ts', "  weft: { ...core,", `  '${CORE}': { ...core,`],
+  ['packages/weft/test/style-matrix.test.ts', "external: [/^weft/]", "external: [/^@weft-js\/core/]"],
+  ['packages/cli/test/check.test.mjs', "[1, 23, 1, 40]", "[1, 23, 1, 36]"],
+  ['packages/cli/test/docs.test.mjs', "Status in weft@0\\.0\\.0", "Status in weft@0\\.1\\.0"],
+  ['packages/cli/src/agents-md.mjs', "info.exports.weft ?? []", `info.exports['${CORE}'] ?? []`],
   // Where a name is built, not written.
   ['packages/cli/src/weft.mjs', "out[sub === '.' ? 'weft' : `weft/${sub.slice(2)}`]", `out[sub === '.' ? '${CORE}' : \`${CORE}/\${sub.slice(2)}\`]`],
   ['packages/cli/src/tests.mjs', "spec.startsWith('weft/')", `spec.startsWith('${CORE}/')`],
@@ -284,7 +294,7 @@ for (const [rel, line] of imports) {
   const text = out.get(rel)
   if (text === undefined) { missed.push(`${rel}: no file for its import`); continue }
   if (line === 'VERSION') {
-    if (!text.includes('VERSION,') && !/\bVERSION\b[^\n]*from '\.\/stack\.mjs'/.test(text)) {
+    if (!/\bVERSION\b[^\n]*from '\.\/stack\.mjs'/.test(text)) {
       const next = text.replace(/import \{([^}]*)\} from '\.\/stack\.mjs'/, (m, names) => `import {${names.trimEnd().replace(/,$/, '')}, VERSION } from './stack.mjs'`)
       if (next === text) missed.push(`${rel}: no import from ./stack.mjs to add VERSION to`)
       out.set(rel, next)

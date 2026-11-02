@@ -18,3 +18,4 @@ packages/weft/bench/corpus/
 packages/weft/test/corpus-gen/
 **/.weft/*
 !**/.weft/plugins.lock.json
+.release/

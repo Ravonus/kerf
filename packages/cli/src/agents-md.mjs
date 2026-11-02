@@ -43,7 +43,7 @@ export async function agentsMd(root) {
   const info = installed(root)
   const list = await tasks(root)
   const sections = (await loadConfig(root)).contributions.filter(c => c.manifest.agents).map(c => agentsSection(c.manifest.agents))
-  const core = info.exports.weft ?? []
+  const core = info.exports['@weft-js/core'] ?? []
   const missing = planned.filter(n => !core.includes(n))
 
   // Style-group codes (D0xx, W060) and `weft style` belong to the Styling section, which only a weft with @weft-js/core/style gets.

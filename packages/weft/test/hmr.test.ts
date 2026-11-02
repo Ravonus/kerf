@@ -15,7 +15,7 @@ const { transform } = createRequire(import.meta.url)('../compiler.cjs')
 
 type Exports = Record<string, any>
 const modules: Record<string, Exports> = {
-  weft: { ...core, defineState, onCleanup, onMount, state, watch },
+  '@weft-js/core': { ...core, defineState, onCleanup, onMount, state, watch },
   '@weft-js/core/dom': dom,
   '@weft-js/core/hmr': hmr,
 }

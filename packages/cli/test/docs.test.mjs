@@ -48,10 +48,10 @@ describe('docs', () => {
   })
 
   it('explains a code with its status in the installed weft', async () => {
-    expect((await docs(fixture, 'w014')).text).toMatch(/^# W014 \(error\)[\s\S]*Status in weft@0\.0\.0:\*\* reported\./)
+    expect((await docs(fixture, 'w014')).text).toMatch(/^# W014 \(error\)[\s\S]*Status in weft@0\.1\.0:\*\* reported\./)
     expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
     expect((await docs(fixture, 'P004')).text).toContain('reported by weft check')
-    expect((await docs(fixture, 'W054')).text).toMatch(/Status in weft@0\.0\.0:\*\* reported, suggested edit\./)
+    expect((await docs(fixture, 'W054')).text).toMatch(/Status in weft@0\.1\.0:\*\* reported, suggested edit\./)
     expect((await docs(fixture, 'diagnostics')).text).toMatch(/^\| T012 \| error \| .* \| reported by @weft-js\/core\/test after each test \|$/m)
   })
 

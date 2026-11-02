@@ -21,12 +21,12 @@
 
 import { readFileSync, statSync } from 'node:fs'
 
-const PURE = { weft: new Set(['For', 'mergeProps']), '@weft-js/start': new Set(['Link']) }
+const PURE = { '@weft-js/core': new Set(['For', 'mergeProps']), '@weft-js/start': new Set(['Link']) }
 const OPAQUE = /^(weft|@weft-js\/start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
 /** weft API that needs nothing from the page and starts nothing by itself. */
 const QUIET = {
-  weft: new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
+  '@weft-js/core': new Set(['state', 'derived', 'memo', 'untrack', 'batch', 'flush', 'onCleanup', 'For', 'mergeProps', 'name', 'getOwner', 'view', 'omit', 'restOf']),
   '@weft-js/core/style': { has: () => true },
   '@weft-js/start': new Set(['Link', 'Form']),
 }

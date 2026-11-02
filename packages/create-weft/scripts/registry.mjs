@@ -3,7 +3,7 @@
 // Runs on Node, Bun and Deno. Standalone it serves until killed and prints its port:
 //   <runtime> packages/create-weft/scripts/registry.mjs <dir of .tgz> [port]
 import { createHash } from 'node:crypto'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -44,18 +44,34 @@ function published(pkg) {
 /** Serve `dir`'s tarballs. Returns `{ url, close }`. */
 export function serveRegistry(dir, port = 0) {
   const packages = new Map()
-  const manifests = readdirSync(dir).filter(f => f.endsWith('.tgz') && !f.startsWith('._')).map(file => {
+  const manifest = file => {
     const tar = gunzipSync(readFileSync(join(dir, file)))
     return { file, tar, pkg: published(JSON.parse([...entries(tar)].find(e => e.name === 'package/package.json').body.toString())) }
-  })
+  }
+  const manifests = readdirSync(dir).filter(f => f.endsWith('.tgz') && !f.startsWith('._')).map(manifest)
   const here = new Set(manifests.map(m => m.pkg.name))
   for (const { file, tar, pkg } of manifests) {
     // Addons for platforms not packed here: Deno fails an install on any optional dependency it can't find.
     if (pkg.optionalDependencies) pkg.optionalDependencies = Object.fromEntries(Object.entries(pkg.optionalDependencies).filter(([name]) => here.has(name) || !name.startsWith('@weft-js/')))
     packages.set(pkg.name, { file, pkg, tgz: withManifest(tar, pkg) })
   }
+  // `npm publish`, so a release can be rehearsed against this: the body is the packument with the tarball attached.
+  const accept = async req => {
+    const chunks = []
+    for await (const chunk of req) chunks.push(chunk)
+    const { _attachments: attached } = JSON.parse(Buffer.concat(chunks).toString())
+    const [name, { data }] = Object.entries(attached)[0]
+    const file = name.replace('@', '').replace('/', '-')
+    writeFileSync(join(dir, file), Buffer.from(data, 'base64'))
+    const { tar, pkg } = manifest(file)
+    packages.set(pkg.name, { file, pkg, tgz: withManifest(tar, pkg) })
+  }
   const server = createServer(async (req, res) => {
     try {
+      if (req.method === 'PUT') {
+        await accept(req)
+        return res.writeHead(201, { 'content-type': 'application/json' }).end('{"ok":true}')
+      }
       const url = new URL(req.url, 'http://registry')
       const tarball = url.pathname.startsWith('/-/') && [...packages.values()].find(p => p.file === url.pathname.slice(3))
       if (tarball) return res.writeHead(200, { 'content-type': 'application/octet-stream' }).end(tarball.tgz)

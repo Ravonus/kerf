@@ -1,8 +1,8 @@
 // Not compiled in the spike. This is the source an agent writes; app.ts is its hand-lowered form, which is what
 // the `native` compiler backend has to produce. Same file runs on web (dom backend) and native.
 // @ts-nocheck
-import { state, derived } from 'weft'
-import { Stack, Row, Text, Button, Input, Scroll } from '@weft/warp'
+import { state, derived } from '@weft-js/core'
+import { Stack, Row, Text, Button, Input, Scroll } from '@weft-js/warp'
 
 export function ProductRow({ product, left, onAdd }: { product: Product; left: number; onAdd: (id: string) => void }) {
   return (

@@ -5,7 +5,7 @@ import type { Dialect, Kysely } from 'kysely'
 import { driver } from '../driver'
 import type { NativeDb } from './index'
 
-const { MysqlAdapter, MysqlIntrospector, MysqlQueryCompiler, PostgresAdapter, PostgresIntrospector, PostgresQueryCompiler, SqliteAdapter, SqliteIntrospector, SqliteQueryCompiler } = await driver('@weft/db/plugin-native/auth', 'kysely', () => import('kysely'))
+const { MysqlAdapter, MysqlIntrospector, MysqlQueryCompiler, PostgresAdapter, PostgresIntrospector, PostgresQueryCompiler, SqliteAdapter, SqliteIntrospector, SqliteQueryCompiler } = await driver('@weft-js/db/plugin-native/auth', 'kysely', () => import('kysely'))
 
 const PARTS = {
   sqlite: { adapter: SqliteAdapter, compiler: SqliteQueryCompiler, introspector: SqliteIntrospector, type: 'sqlite' },

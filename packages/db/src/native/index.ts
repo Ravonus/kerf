@@ -1,7 +1,7 @@
 // The no-ORM client (research 34 §4): one `sql` tag over any driver. Values always go to the driver as parameters, so
 // a template can't build SQL from a value. An engine file supplies the driver; `createNative` takes your own the same way.
 
-import { gate, register, touch, type DbHandle, type Migration } from '@weft/start/db/core'
+import { gate, register, touch, type DbHandle, type Migration } from '@weft-js/start/db/core'
 
 export type Row = Record<string, unknown>
 

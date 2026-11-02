@@ -133,7 +133,7 @@ describe('the project scan and the Vite build', () => {
     const vitest = process.env.VITEST
     delete process.env.VITEST // the plugin skips its project scan under vitest
     try {
-      await build({ root, logLevel: 'silent', plugins: [weft({ style: { matrix: true } })], build: { write: false, lib: { entry: join(root, 'src/main.tsx'), formats: ['es'] }, rollupOptions: { external: [/^weft/] } } })
+      await build({ root, logLevel: 'silent', plugins: [weft({ style: { matrix: true } })], build: { write: false, lib: { entry: join(root, 'src/main.tsx'), formats: ['es'] }, rollupOptions: { external: [/^@weft-js/core/] } } })
       expect(existsSync(join(root, '.weft/styles.json'))).toBe(true)
       const m = JSON.parse(readFileSync(join(root, '.weft/styles.json'), 'utf8'))
       expect(m.groups.card).toMatchObject({ file: 'src/card.tsx:3', doc: 'A card.', axes: { tone: ['a', 'b'] }, used: [{ file: 'src/main.tsx', line: 2, axes: { tone: ['b', 'a'] } }, { part: 'title' }] })

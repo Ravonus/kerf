@@ -388,7 +388,7 @@ function icons() {
       enforce: 'pre',
       configResolved(c) { config = c },
       transform: {
-        filter: { id: /\.[jt]sx?(\?|$)/, code: /@weft-js\/(icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack/ },
+        filter: { id: /\.[jt]sx?(\?|$)/, code: /@weft-js\/(warp-icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack/ },
         async handler(code, id) {
           // a build reads the pack as a namespace (rewrite), and this default would keep every icon alive
           if (/icons\/src\/gen\/index\.tsx/.test(id)) return config.command === 'build' ? "export * from './all'\n" : null
@@ -415,7 +415,7 @@ function icons() {
       name: 'weft:icons',
       enforce: 'pre',
       resolveId: {
-        filter: { id: /^(@weft-js\/icons(\/names|\/quiet|\/balanced|\/vivid)?$|\0weft:icon\/)/ },
+        filter: { id: /^(@weft-js\/warp-icons(\/names|\/quiet|\/balanced|\/vivid)?$|\0weft:icon\/)/ },
         async handler(source, importer) {
           if (source.startsWith(ONE)) return source
           if (config.command !== 'build' || !importer) return null
