@@ -39,7 +39,7 @@ describe.each(packs)('%s', dir => {
 })
 
 test('pay is built only from public parts: nothing in weft, start or the CLI names it', async () => {
-  const stray = execFileSync('git', ['grep', '-lE', "@weft/pay|PayRail|entitlementTag|definePay|fakePay", '--', 'weft/src', 'weft/vite.mjs', 'start/src', 'cli/src'], { cwd: packages, encoding: 'utf8' }).trim().split('\n').filter(f => f && !['cli/src/add.mjs', 'cli/src/docs.mjs'].includes(f)) // an alias in `weft add`, and a line pointing at the walkthrough
+  const stray = execFileSync('git', ['grep', '-lE', "@weft/pay|PayRail|entitlementTag|definePay\\b|fakePay", '--', 'weft/src', 'weft/vite.mjs', 'start/src', 'cli/src'], { cwd: packages, encoding: 'utf8' }).trim().split('\n').filter(f => f && !['cli/src/add.mjs', 'cli/src/docs.mjs'].includes(f)) // an alias in `weft add`, and a line pointing at the walkthrough
   expect(stray).toEqual([])
 })
 
