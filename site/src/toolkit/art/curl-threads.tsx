@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
 import { fbm, inks, rng, type ArtProps, type Meta } from './shared'
 import code from './curl-threads.tsx?raw'
 
@@ -16,12 +16,12 @@ export default function CurlThreads({ live = true }: ArtProps) {
   function walk(ctx: CanvasRenderingContext2D, from: number, to: number, px: number, py: number, over: boolean) {
     ctx.beginPath()
     for (let i = from; i < to; i++) {
-      const e = 2.5, n1 = potential(x[i], y[i] + e), n2 = potential(x[i], y[i] - e), n3 = potential(x[i] + e, y[i]), n4 = potential(x[i] - e, y[i])
+      const e = 2.5, n1 = potential(x[i]!, y[i]! + e), n2 = potential(x[i]!, y[i]! - e), n3 = potential(x[i]! + e, y[i]!), n4 = potential(x[i]! - e, y[i]!)
       let vx = (n1 - n2) * 130, vy = (n4 - n3) * 130
-      if (over) { const dx = x[i] - px, dy = y[i] - py, d = dx * dx + dy * dy + 900, k = 2400 / d; vx += -dy * k * 0.05; vy += dx * k * 0.05 }
-      const nx = x[i] + vx * STEP, ny = y[i] + vy * STEP
-      if (--age[i] < 0 || nx < -8 || ny < -8 || nx > w + 8 || ny > h + 8) { respawn(i); continue }
-      ctx.moveTo(x[i], y[i])
+      if (over) { const dx = x[i]! - px, dy = y[i]! - py, d = dx * dx + dy * dy + 900, k = 2400 / d; vx += -dy * k * 0.05; vy += dx * k * 0.05 }
+      const nx = x[i]! + vx * STEP, ny = y[i]! + vy * STEP
+      if (--age[i]! < 0 || nx < -8 || ny < -8 || nx > w + 8 || ny > h + 8) { respawn(i); continue }
+      ctx.moveTo(x[i]!, y[i]!)
       ctx.lineTo(nx, ny)
       x[i] = nx
       y[i] = ny

@@ -1,6 +1,8 @@
-//! Helper contract (research 16 §6.3, research 19): every helper weft's back end imports from `weft`, `weft/dom` or
-//! `weft/ssr` must be exported by `packages/weft/src`. Compiles the repo's own components (test fixtures, the v3
+//! Helper contract (research 16 §6.3, research 19): every helper weft's back end imports from `@weft-js/core`, `@weft-js/core/dom` or
+//! `@weft-js/core/ssr` must be exported by `packages/weft/src`. Compiles the repo's own components (test fixtures, the v3
 //! reference app, the size fixtures) in each output mode: DOM, DOM dev, hydratable DOM, and SSR.
+
+#![allow(clippy::unwrap_used, reason = "a panic in a test is the failure report")]
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -15,10 +17,11 @@ use weft_compiler::{Options, compile};
 fn components() -> Vec<(String, String)> {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut out = Vec::new();
-    let mut stack: Vec<_> = ["packages/weft/test/fixtures", "packages/weft/bench/fixtures", "evals/reference-v3/weft/src"]
-        .iter()
-        .map(|d| repo.join(d))
-        .collect();
+    let mut stack: Vec<_> =
+        ["packages/weft/test/fixtures", "packages/weft/bench/fixtures", "evals/reference-v3/weft/src"]
+            .iter()
+            .map(|d| repo.join(d))
+            .collect();
     while let Some(dir) = stack.pop() {
         for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())).flatten() {
             let path = entry.path();
@@ -66,7 +69,7 @@ fn exports_of(file: &Path) -> BTreeSet<String> {
         match declaration {
             Declaration::FunctionDeclaration(f) => names.extend(f.id.as_ref().map(|i| i.name.to_string())),
             Declaration::VariableDeclaration(v) => {
-                names.extend(v.declarations.iter().filter_map(|d| d.id.get_identifier_name().map(|n| n.to_string())))
+                names.extend(v.declarations.iter().filter_map(|d| d.id.get_identifier_name().map(|n| n.to_string())));
             }
             Declaration::ClassDeclaration(c) => names.extend(c.id.as_ref().map(|i| i.name.to_string())),
             _ => {}
@@ -102,9 +105,9 @@ fn imports_of(code: &str) -> BTreeMap<String, BTreeSet<String>> {
 fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/weft/src");
     let modules: BTreeMap<&str, BTreeSet<String>> = [
-        ("weft", exports_of(&runtime.join("index.ts"))),
-        ("weft/dom", exports_of(&runtime.join("dom.ts"))),
-        ("weft/ssr", exports_of(&runtime.join("ssr.ts"))),
+        ("@weft-js/core", exports_of(&runtime.join("index.ts"))),
+        ("@weft-js/core/dom", exports_of(&runtime.join("dom.ts"))),
+        ("@weft-js/core/ssr", exports_of(&runtime.join("ssr.ts"))),
     ]
     .into();
 
@@ -115,7 +118,8 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     let modes = [("dom", false, false), ("dom", true, false), ("dom", false, true), ("ssr", false, true)];
     for (generate, dev, hydratable) in modes {
         for (name, source) in &files {
-            let o = Options { filename: name.clone(), generate: generate.into(), dev, hydratable, ..Default::default() };
+            let o =
+                Options { filename: name.clone(), generate: generate.into(), dev, hydratable, ..Default::default() };
             let out = compile(source, &o);
             let code = out.code.unwrap_or_else(|| panic!("{name} ({generate}): {:?}", out.diagnostics));
             for (from, names) in imports_of(&code) {
@@ -123,7 +127,10 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
                 for n in names {
                     used.insert(format!("{from}:{n}"));
                     if !exports.contains(&n) {
-                        missing.entry(format!("{from}:{n}")).or_default().insert(format!("{name} ({generate}, dev {dev}, hydratable {hydratable})"));
+                        missing
+                            .entry(format!("{from}:{n}"))
+                            .or_default()
+                            .insert(format!("{name} ({generate}, dev {dev}, hydratable {hydratable})"));
                     }
                 }
             }
@@ -131,7 +138,15 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     }
     assert!(missing.is_empty(), "helpers the back end imports but the runtime lacks:\n{missing:#?}");
     // Guard against the check passing vacuously (e.g. the import source changing).
-    for core in ["weft/dom:tpl", "weft/dom:child", "weft/dom:bind", "weft/dom:first", "weft/ssr:ssr", "weft/ssr:hole", "weft/ssr:key"] {
+    for core in [
+        "@weft-js/core/dom:tpl",
+        "@weft-js/core/dom:child",
+        "@weft-js/core/dom:bind",
+        "@weft-js/core/dom:first",
+        "@weft-js/core/ssr:ssr",
+        "@weft-js/core/ssr:hole",
+        "@weft-js/core/ssr:key",
+    ] {
         assert!(used.contains(core), "the components no longer import {core}; used: {used:?}");
     }
 }

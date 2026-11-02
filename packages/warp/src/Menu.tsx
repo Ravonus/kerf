@@ -1,13 +1,14 @@
-import { menu, moveShuttle, uid, type Align, type Side } from '@weft/warp-core'
-import { onCleanup, onMount, state } from 'weft'
+import { menu, moveShuttle, uid, type Align, type Side } from '@weft-js/warp-core'
+import { onCleanup, onMount, state } from '@weft-js/core'
 import { Button, type ButtonProps } from './Button'
 import { Icon, type IconRef } from './Icon'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/menu.css'
+import '@weft-js/warp-core/styles/components/menu.css'
 
+/** One line of a Menu: an item, a group label or a separator. */
 export type MenuEntry =
-  | { label: string; onSelect?: () => void; icon?: IconRef; shortcut?: string; tone?: 'critical'; disabled?: boolean; href?: string }
+  | { label: string; onSelect?: () => void; icon?: IconRef | undefined; shortcut?: string; tone?: 'critical' | undefined; disabled?: boolean | undefined; href?: string }
   | { separator: true }
   | { group: string }
 
@@ -19,12 +20,13 @@ const Row = ({ e }: { e: Extract<MenuEntry, { label: string }> }) => (
   </>
 )
 
+/** Props for Menu. */
 export interface MenuProps {
   /** The trigger's text. */
-  label: any
+  label: unknown
   items: MenuEntry[]
-  trigger?: ButtonProps
-  side?: Side
+  trigger?: ButtonProps | undefined
+  side?: Side | undefined
   align?: Align
 }
 
@@ -45,7 +47,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
     face!.setAttribute('data-on', '')
   }
   onMount(() => {
-    const onToggle = (e: any) => {
+    const onToggle = (e: ToggleEvent) => {
       if (e.newState === 'open') face!.setAttribute('data-instant', '')
       else {
         face!.removeAttribute('data-on')
@@ -85,7 +87,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         {label}
       </Button>
       <div
-        ref={(n: any) => (panel = n)}
+        ref={n => (panel = n)}
         data-scope="menu"
         data-part="content"
         role="menu"
@@ -95,7 +97,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         onFocusIn={(e: FocusEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]'); if (t) follow(t) }}
         onPointerMove={(e: PointerEvent) => { const t = (e.target as HTMLElement).closest?.<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])'); if (t && t !== document.activeElement) t.focus({ preventScroll: true }) }}
       >
-        <span ref={(n: any) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
+        <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {items.map((e, i) => 'separator' in e
           ? <div key={i} data-part="separator" role="separator"></div>
           : 'group' in e

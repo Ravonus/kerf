@@ -1,16 +1,16 @@
-import { XIcon } from '@weft/icons'
-import { derived } from 'weft'
+import { XIcon } from '@weft-js/warp-icons'
+import { derived } from '@weft-js/core'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
 import './styles'
-import '@weft/warp-core/styles/components/button.css' // the close button's markup
-import '@weft/warp-core/styles/components/alert.css'
+import '@weft-js/warp-core/styles/components/button.css' // the close button's markup
+import '@weft-js/warp-core/styles/components/alert.css'
 
 /**
  * An inline alert (05 §5): icon, title, description, actions, close. Status is never colour alone: the icon and the
  * words carry it. `live` makes it role="alert" (only for a NEW error the user must hear).
  */
-export function Alert({ tone = 'info', title, live, actions, onDismiss, children }: { tone?: Tone; title?: any; live?: boolean; actions?: any; onDismiss?: () => void; children?: any }) {
+export function Alert({ tone = 'info', title, live, actions, onDismiss, children }: { tone?: Tone | undefined; title?: unknown; live?: boolean | undefined; actions?: unknown; onDismiss?: () => void; children?: unknown }) {
   const icon = derived(() => toneIcon[tone])
   return (
     <div data-scope="alert" data-tone={tone} role={live ? 'alert' : undefined}>

@@ -16,12 +16,12 @@ export function formReset(el: Element, fn: () => void) {
     const all = set
     doc.addEventListener('reset', e => {
       const form = e.target as Element
-      setTimeout(() => { if (!e.defaultPrevented) for (const x of [...all]) if (form.contains(x.el)) x.fn() })
+      setTimeout(() => { if (!e.defaultPrevented) for (const x of Array.from(all)) if (form.contains(x.el)) x.fn() })
     }, true)
   }
   const entry = { el, fn }
   set.add(entry)
-  return { update(next: () => void) { entry.fn = next }, destroy() { set!.delete(entry) } }
+  return { update(next: () => void) { entry.fn = next }, destroy() { set.delete(entry) } }
 }
 
 type Watch = { el: Element; fn: (message: string | undefined) => void; on: boolean }
@@ -59,7 +59,7 @@ export function formInvalid(el: Element, fn: Watch['fn']) {
   }
   const watch: Watch = { el, fn, on: false }
   set.add(watch)
-  return { update(next: Watch['fn']) { watch.fn = next }, destroy() { set!.delete(watch) } }
+  return { update(next: Watch['fn']) { watch.fn = next }, destroy() { set.delete(watch) } }
 }
 
 /**

@@ -1,5 +1,5 @@
-import { getDial, Icon, setDial, Popover, Segmented } from '@weft/warp'
-import { onMount, state } from 'weft'
+import { getDial, Icon, setDial, Popover, Segmented } from '@weft-js/warp'
+import { onMount, state } from '@weft-js/core'
 import { shownExpression } from '../lib/dial'
 
 type Theme = 'auto' | 'light' | 'dark'
@@ -17,7 +17,7 @@ export function Appearance() {
     motion.value = getDial('motion')
   })
   return (
-    <Popover align="end" label={<Icon name="palette" />} title="Appearance" trigger={{ emphasis: 'ghost', tone: 'neutral', size: 'sm', 'aria-label': 'Appearance' } as any}>
+    <Popover align="end" label={<Icon name="palette" />} title="Appearance" trigger={{ emphasis: 'ghost', tone: 'neutral', size: 'sm', 'aria-label': 'Appearance' }}>
       <div data-site="dials">
         <div data-part="row"><span>Theme</span><Segmented size="sm" label="Theme" value={theme.value} options={[{ value: 'auto', label: 'Auto' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} onChange={v => { theme.value = v; setDial('theme', v, { persist: true }) }} /></div>
         <div data-part="row" data-dial="expression"><span>Expression</span><Segmented size="sm" label="Expression" value={expression.value} options={[{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]} onChange={v => { expression.value = v; setDial('expression', v, { persist: true }) }} /></div>

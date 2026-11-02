@@ -2,11 +2,12 @@
 // closes the top one; an outside press closes non-modal layers above the press; passive layers (tooltips) close on
 // Escape but never eat a press. Placement (05 §3): anchored to a trigger, flips when there is no room, clamped 8px.
 
+/** One open layer on the stack. */
 export interface Layer {
   el: HTMLElement
   close(reason: 'escape' | 'outside'): void
   /** The element that opened it: a press on it is not "outside". */
-  trigger?: Element | null
+  trigger?: Element | null | undefined
   /** Modal layers (dialogs) handle their own outside press (backdrop). */
   modal?: boolean
   /** Tooltips: closed by Escape, ignored by presses. */
@@ -26,16 +27,16 @@ function stackOf(doc: Document) {
   if (stack) return stack
   stacks.set(doc, (stack = []))
   doc.addEventListener('keydown', e => {
-    if (e.key !== 'Escape' || !stack!.length) return
-    const top = stack!.at(-1)!
+    if (e.key !== 'Escape' || !stack.length) return
+    const top = stack.at(-1)!
     e.preventDefault()
     escapedAt = performance.now()
     if (!top.escape?.()) top.close('escape')
   }, true)
   doc.addEventListener('pointerdown', e => {
     const t = e.target as Node
-    for (let i = stack!.length - 1; i >= 0; i--) {
-      const l = stack![i]
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const l = stack[i]!
       if (l.passive) continue
       if (l.modal || l.el.contains(t) || l.trigger?.contains(t)) break
       l.close('outside')
@@ -53,7 +54,7 @@ export function onTopModal(doc: Document, fn: (top: HTMLElement | null) => void)
   set.add(fn)
   const top = stackOf(doc).findLast(l => l.modal)?.el
   if (top) fn(top)
-  return () => void set!.delete(fn)
+  return () => void set.delete(fn)
 }
 
 /** Push a layer; the returned function removes it (call it when the overlay closes, whatever closed it). */
@@ -71,7 +72,9 @@ export function pushLayer(layer: Layer) {
   }
 }
 
+/** The side of its anchor a floating element opens on. */
 export type Side = 'top' | 'bottom' | 'left' | 'right'
+/** How a floating element lines up along its anchor. */
 export type Align = 'start' | 'center' | 'end'
 
 /**

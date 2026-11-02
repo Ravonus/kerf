@@ -1,12 +1,12 @@
-import { XIcon } from '@weft/icons'
-import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft/warp-core'
-import { onCleanup, state } from 'weft'
+import { XIcon } from '@weft-js/warp-icons'
+import { toaster, toastStore, type Toast, type ToastInput, type ToastPromise } from '@weft-js/warp-core'
+import { onCleanup, state } from '@weft-js/core'
 import { Icon, toneIcon } from './Icon'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/button.css' // the action and dismiss buttons' markup
-import '@weft/warp-core/styles/components/spinner.css'
-import '@weft/warp-core/styles/components/toast.css'
+import '@weft-js/warp-core/styles/components/button.css' // the action and dismiss buttons' markup
+import '@weft-js/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/components/toast.css'
 
 let store: ReturnType<typeof toastStore> | undefined
 const toasts = () => (store ??= toastStore())
@@ -34,7 +34,7 @@ export function Toaster({ position }: { /** Which corner or edge. Bottom right b
   use(toaster, () => region, () => toasts())
   return (
     <>
-      <section ref={(n: any) => (region = n)} data-scope="toast" data-part="region" data-position={position === 'bottom-right' ? undefined : position} aria-label="Notifications (F8)" tabindex="-1">
+      <section ref={n => (region = n)} data-scope="toast" data-part="region" data-position={position === 'bottom-right' ? undefined : position} aria-label="Notifications (F8)" tabindex="-1">
         {list.value.map(t => (
           <div key={t.id} data-scope="toast" data-part="root" data-id={t.id} data-tone={t.tone ?? 'neutral'} data-state={t.state} role="group" aria-label={t.title}>
             {t.loading ? <span data-scope="spinner" data-part="icon" aria-hidden="true"></span> : <Icon name={toneIcon[t.tone ?? 'neutral']} data-part="icon" />}

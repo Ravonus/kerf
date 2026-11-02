@@ -1,18 +1,18 @@
-import { ClockIcon, CopyIcon, PlusIcon, RefreshIcon } from '@weft/icons'
-import { announce, copyText, menu, uid } from '@weft/warp-core'
-import { derived, state, untrack, watch } from 'weft'
+import { ClockIcon, CopyIcon, PlusIcon, RefreshIcon } from '@weft-js/warp-icons'
+import { announce, copyText, menu, uid } from '@weft-js/warp-core'
+import { derived, state, untrack, watch } from '@weft-js/core'
 import { Badge } from '../Badge'
-import { Button } from '../Button'
+import { Button, type ButtonProps } from '../Button'
 import { Search, Textarea } from '../Field'
 import { Avatar } from '../parts'
 import { toast } from '../Toast'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/system-page.css'
-import '@weft/warp-core/styles/flows/system-page.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/system-page.css'
+import '@weft-js/warp-core/styles/flows/system-page.css'
 
 const X = [8, 27.5, 47, 66.5, 86, 105.5, 125].map(x => ({ x }))
 const Threads = ({ y2 = 84 }: { y2?: number }) => <>{X.map(t => <line key={t.x} x1={t.x} y1="0" x2={t.x} y2={y2} />)}</>
@@ -40,14 +40,14 @@ const focusTitle = (el: HTMLElement) => {
 }
 
 /** The title and code: every result page's top. */
-function Head({ art, code, title, focus, as }: { art: any; code: any; title: any; focus?: boolean; as?: 'h2' | 'h3' }) {
+function Head({ art, code, title, focus, as }: { art: unknown; code: unknown; title: unknown; focus?: boolean | undefined; as?: 'h2' | 'h3' | undefined }) {
   const h3 = derived(() => as === 'h3')
   let el: HTMLElement | undefined
   if (untrack(() => focus)) use(focusTitle, () => el)
   return <>
     <span data-part="art">{art}</span>
     <span data-part="code">{code}</span>
-    {h3.value ? <h3 ref={(n: any) => (el = n)} data-part="title" tabindex="-1">{title}</h3> : <h2 ref={(n: any) => (el = n)} data-part="title" tabindex="-1">{title}</h2>}
+    {h3.value ? <h3 ref={n => (el = n)} data-part="title" tabindex="-1">{title}</h3> : <h2 ref={n => (el = n)} data-part="title" tabindex="-1">{title}</h2>}
   </>
 }
 
@@ -55,7 +55,8 @@ function RequestId({ id }: { id: string }) {
   return <span data-part="meta">Request ID <code>{id}</code><Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" label="Copy request ID" onClick={async () => { await copyText(document, id); announce(document, 'Copied') }}><CopyIcon /></Button></span>
 }
 
-export interface SwitchAccount { id: string; email: string; detail?: string; hasAccess?: boolean; current?: boolean }
+/** An account to switch to from a no-access page. */
+export interface SwitchAccount { id: string; email: string; detail?: string; hasAccess?: boolean; current?: boolean | undefined }
 
 function AccountMenu({ accounts, onSwitch }: { accounts: SwitchAccount[]; onSwitch?: (id: string | undefined) => void }) {
   const id = uid('accounts')
@@ -64,7 +65,7 @@ function AccountMenu({ accounts, onSwitch }: { accounts: SwitchAccount[]; onSwit
   use(menu, () => list, () => ({ open: open.value, trigger: () => list?.parentElement?.querySelector<HTMLElement>('[data-switch]'), onClose: () => (open.value = false) }))
   const pick = (a: string | undefined) => { open.value = false; list?.parentElement?.querySelector<HTMLElement>('[data-switch]')?.focus(); onSwitch?.(a) }
   return { open, id, press: () => (open.value = !open.value), menu: () => (
-    <ul ref={(n: any) => (list = n)} data-part="accounts" role="menu" id={id} aria-label="Switch account" hidden={!open.value || undefined}>
+    <ul ref={n => (list = n)} data-part="accounts" role="menu" id={id} aria-label="Switch account" hidden={!open.value || undefined}>
       {accounts.map(a => (
         <li key={a.id} role="none">
           <button type="button" role="menuitem" tabindex="-1" onClick={() => pick(a.id)}>
@@ -79,42 +80,44 @@ function AccountMenu({ accounts, onSwitch }: { accounts: SwitchAccount[]; onSwit
   ) }
 }
 
+/** An access request, and how to send and withdraw it. */
 export interface AccessRequest {
   /** The workspace takes access requests (default true). */
   allowed?: boolean
   /** A request is out: from the server, or set here after `onSend`. */
-  pending?: boolean
+  pending?: boolean | undefined
   /** Who answers: "Kofi and Ana". */
   approvers?: string
-  onSend?: (note: string) => unknown
+  onSend?: ((note: string) => unknown) | undefined
   onWithdraw?: () => unknown
   /** "Copy link for the owner". */
   link?: string
 }
 
+/** Props for SystemPage. */
 export interface SystemPageProps {
   kind: '404' | '403' | '500' | 'maintenance' | 'empty'
-  title?: any
-  description?: any
+  title?: unknown
+  description?: unknown
   /** The eyebrow, when the default won't do. */
-  code?: any
+  code?: unknown
   /** The primary action's label and press (or `href`). */
-  primary?: { label: any; onClick?: () => void; href?: string; loading?: boolean }
-  secondary?: { label: any; onClick?: () => void; href?: string }
+  primary?: { label: unknown; onClick?: (() => void) | undefined; href?: string; loading?: boolean | undefined }
+  secondary?: { label: unknown; onClick?: (() => void) | undefined; href?: string }
   /** 404: the search field. */
   onSearch?: (q: string) => void
   /** The 404 search field's label. Default "Search". */
   searchLabel?: string
   /** 500: `retry` from `<Boundary>`. */
-  onRetry?: () => void
+  onRetry?: (() => void) | undefined
   /** The error, for the Boundary form; its message is never shown. */
   error?: unknown
   /** The support line. */
   requestId?: string
   /** Extra support text: a path, an incident. */
-  meta?: any
+  meta?: unknown
   /** Maintenance: "Back at 14:00 UTC", and the local-time line in `description`. */
-  backAt?: any
+  backAt?: unknown
   /** 403: what was asked for and by whom. */
   object?: { title: string; owner?: string }
   /** 403: the signed-in account, as in "You're signed in as ana@tessel.dev". */
@@ -127,17 +130,17 @@ export interface SystemPageProps {
   onSwitch?: (id: string | undefined) => void
   /** 403: access came through: `children` is the object, loaded in place. */
   granted?: boolean
-  as?: 'h2' | 'h3'
+  as?: 'h2' | 'h3' | undefined
   /** Focus the title on load, so the route change is heard (default: 403). */
   autofocus?: boolean
-  children?: any
+  children?: unknown
 }
 
 const TITLES = { 404: "We can't find that page", 403: "You don't have access", 500: 'Something went wrong on our side', maintenance: 'Back soon', empty: 'Nothing here yet' }
 const CODES = { 404: '404 · Not found', 403: '403 · No access', 500: '500 · Server error', maintenance: 'Scheduled maintenance', empty: 'First run' }
 const COPY = { 404: 'The link may be old, or the page has moved. Search for it, or head back to your dashboard.', 403: 'Ask an admin for access, or switch to an account that has it.', 500: "Your work is saved. We've been alerted and are looking at it now.", maintenance: "Nothing is lost, and nothing you saved is affected.", empty: undefined }
 
-function Act({ a, emphasis, tone }: { a: { label: any; onClick?: () => void; href?: string; loading?: boolean }; emphasis?: any; tone?: any }) {
+function Act({ a, emphasis, tone }: { a: { label: unknown; onClick?: (() => void) | undefined; href?: string; loading?: boolean | undefined }; emphasis?: ButtonProps['emphasis'] | undefined; tone?: ButtonProps['tone'] }) {
   const href = derived(() => a.href)
   return <Button emphasis={emphasis} tone={tone} loading={a.loading} role={href.value ? 'link' : undefined} onClick={() => (href.value ? location.assign(href.value) : a.onClick?.())}>{a.label}</Button>
 }
@@ -151,7 +154,7 @@ function Denied(p: SystemPageProps) {
   const name = untrack(() => p.object?.title)
   const titleOf = name ? `You don't have access to ${name}` : TITLES[403]
   const approvers = derived(() => p.request?.approvers ?? p.object?.owner ?? 'the owner')
-  const pending = derived(() => !!(p.request?.pending ?? sent.value))
+  const pending = derived(() => !!(p.request?.pending as unknown ?? sent.value))
   const allowed = derived(() => p.request?.allowed !== false)
   const view = derived(() => (p.granted ? 'granted' : pending.value ? 'pending' : !allowed.value ? 'closed' : compose.value ? 'compose' : 'request'))
   let root: HTMLElement | undefined
@@ -176,7 +179,7 @@ function Denied(p: SystemPageProps) {
   return (
     <>
       {view.value === 'granted' ? p.children : (
-        <div ref={(n: any) => (root = n)} data-scope="system-page">
+        <div ref={n => (root = n)} data-scope="system-page">
           <div data-part="body">
             <Head art={<Locked />} code={p.code ?? CODES[403]} as={p.as} focus={p.autofocus ?? true} title={view.value === 'pending' ? 'Request sent' : (p.title ?? titleOf)} />
             {view.value === 'request' && <p>{p.description ?? <>{p.account ? `You're signed in as ${p.account}. ` : ''}Ask the owner for access, or switch to an account that has it.</>}</p>}
@@ -223,7 +226,7 @@ export function SystemPage(p: SystemPageProps) {
   return (
     <div data-scope="system-page">
       <div data-part="body">
-        <Head art={kind === 'empty' ? <Whole /> : <Broken />} code={p.code ?? CODES[kind]} as={p.as} focus={p.autofocus} title={p.title ?? (kind === 'maintenance' && p.backAt ? `Back at ${p.backAt}` : TITLES[kind])} />
+        <Head art={kind === 'empty' ? <Whole /> : <Broken />} code={p.code ?? CODES[kind]} as={p.as} focus={p.autofocus} title={p.title ?? (kind === 'maintenance' && p.backAt ? `Back at ${p.backAt as string}` : TITLES[kind])} />
         {text.value !== undefined && <p>{text.value}</p>}
         {kind === '404' && p.onSearch && (
           <form data-part="search" novalidate onSubmit={(e: SubmitEvent) => { e.preventDefault(); p.onSearch!(new FormData(e.currentTarget as HTMLFormElement).get('q') as string) }}>

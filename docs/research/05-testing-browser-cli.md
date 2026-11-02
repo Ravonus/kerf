@@ -114,7 +114,7 @@ tests and the agent browser, and one diagnostic catalog (new prefixes `T` for te
 `weft check --json` and MCP. Reuse Vitest, Playwright, and Stryker. Build only the glue and the weft-specific parts.
 
 ### 5.1 `weft test`
-- **Authoring (`weft/test`)**: `render(<C {...props}/>)` returns `screen`-style queries: `getByRole`, `getByLabel`,
+- **Authoring (`@weft-js/core/test`)**: `render(<C {...props}/>)` returns `screen`-style queries: `getByRole`, `getByLabel`,
   `getByText` only. No container, no class/test-id queries by default. User actions go through `user.click/type`, and
   every action ends in `flush()`, so there's nothing to `await waitFor`. `clock` is a deterministic fake clock
   (`clock.advance(ms)`, drives timers, `resource` and rAF). `expect(...).toHaveText/toBeVisible/...`. Snapshots are
@@ -145,7 +145,7 @@ tests and the agent browser, and one diagnostic catalog (new prefixes `T` for te
 Built on Playwright (library, not MCP), attached to the running `weft dev` server. A daemon keeps one session per
 `--session` name, the agent-browser pattern.
 - `open <route>` · `act <role> <name> [click|fill <text>|press <key>|select <v>]`, by role/label only, or by `@ref`
-  from the last snapshot · `assert <role> <name> [visible|text=…|value=…]` with the same matchers as `weft/test`.
+  from the last snapshot · `assert <role> <name> [visible|text=…|value=…]` with the same matchers as `@weft-js/core/test`.
 - `snapshot [--interactive] [--scope <role/name>] [--delta]`: compact aria tree with refs, plus a `graph` section for
   components in scope: state/derived names from the dev naming (`Cart.coupon = "SAVE10"`, `Cart.total = 42.5`), and
   which DOM leaves each feeds. `--graph-only` returns just that. Payloads over ~2K tokens go to a file and the reply
@@ -154,7 +154,7 @@ Built on Playwright (library, not MCP), attached to the running `weft dev` serve
 - `console`, `network [--failed]`, `errors`: since the last call, with weft source-mapped component names.
 - `time pause|advance <ms>|resume` controls the same fake clock as tests in the page. `set <Component.box> <json>`
   writes state through the graph in dev (for reaching a state fast).
-- `record` turns the session's act/assert log into a `weft/test` or e2e file using only role queries, so exploration
+- `record` turns the session's act/assert log into a `@weft-js/core/test` or e2e file using only role queries, so exploration
   becomes a regression test that still has to pass the gate.
 - All subcommands take `--json`. *Reuse:* Playwright's `ariaSnapshot`, locators, tracing; Chrome DevTools MCP stays
   recommended for perf traces (don't rebuild it). *Build:* the daemon, ref compaction and deltas, the graph overlay
@@ -181,10 +181,10 @@ Built on Playwright (library, not MCP), attached to the running `weft dev` serve
 **Reuse:** Vitest (runner, both lanes), Vitest Browser + `@vitest/browser-playwright`, Playwright (library, Test for
 e2e, `ariaSnapshot`), StrykerJS + vitest runner (incremental), `@fast-check/vitest`, `@vitest/eslint-plugin` +
 `eslint-plugin-testing-library` rules, Zod. Point users at Chrome DevTools MCP for perf.
-**Build:** `weft/test` render/flush/clock, gate orchestration (fail-before, diff-scoped mutation, test-diff guard),
+**Build:** `@weft-js/core/test` render/flush/clock, gate orchestration (fail-before, diff-scoped mutation, test-diff guard),
 T002/T003/T006 checks, browser daemon + graph overlay + recorder, manifest schema, `weft tasks`/`run`, P-codes,
 AGENTS.md generation. **Skip:** Playwright CT, Stagehand, our own MCP-only browser, snapshot testing by default.
 
-**Phasing:** Phase 1 (PLAN §9) gets `weft/test` + T001–T009 + `weft tasks --json` + manifest. The browser daemon
+**Phasing:** Phase 1 (PLAN §9) gets `@weft-js/core/test` + T001–T009 + `weft tasks --json` + manifest. The browser daemon
 and the mutation gate come right after, once the dev inspector hook exists. Measure the gate on the eval suite. A
 sound test must pass it, and a planted junk test must be caught.

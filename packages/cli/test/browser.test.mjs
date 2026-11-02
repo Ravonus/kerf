@@ -1,10 +1,10 @@
 // `weft browser` end to end: a Vite dev server with the weft() plugin, a headless Chrome as a plain host page (no
-// automation library), and every command relayed through the dev server to weft/agent in the page.
+// automation library), and every command relayed through the dev server to @weft-js/core/agent in the page.
 import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { browser, cliParams } from '../src/browser/commands.mjs'
 import { findChrome } from '../src/browser/client.mjs'
@@ -26,6 +26,7 @@ describe('cli words', () => {
 
 const chrome = findChrome()
 
+// Drives a real browser, and CI machines and containers may not have Chrome.
 describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => {
   let root, server
   const run = (cmd, p) => browser(root, cmd, p)
@@ -38,7 +39,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     writeFileSync(join(root, 'package.json'), '{ "type": "module", "private": true }')
     server = await createServer({ root, configFile: false, logLevel: 'silent', plugins: [weft()], server: { port: 0, strictPort: false } })
     await server.listen()
-    await new Promise(r => setTimeout(r, 100)) // .weft/dev.json is written on 'listening'
+    await new Promise(r => { setTimeout(r, 100) }) // .weft/dev.json is written on 'listening'
     await run('launch', { route: '/' })
   }, 60_000)
 
@@ -68,7 +69,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
 
   it('pauses the clock from page load: nothing loads until time advances', async () => {
     await run('time', { op: 'pause', reload: true })
-    await new Promise(r => setTimeout(r, 1500))
+    await new Promise(r => { setTimeout(r, 1500) })
     expect(await run('time', { op: 'status' })).toMatchObject({ installed: true })
     expect(await run('assert', { target: { role: 'list', name: 'Products' }, expect: { absent: true }, timeout: 100 })).toMatchObject({ ok: true })
     await run('time', { op: 'advance', ms: 300 })
@@ -81,7 +82,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     expect(await run('net', { op: 'online' })).toMatchObject({ online: true })
   })
 
-  it('records a session into a weft/test test', async () => {
+  it('records a session into a @weft-js/core/test test', async () => {
     await run('record', { op: 'start' })
     await run('act', { target: { role: 'button', name: 'Add Milk' }, action: 'click' })
     await run('assert', { target: { role: 'button', name: 'Add Milk' }, expect: { enabled: true } })

@@ -5,20 +5,23 @@ import { diffuse, levels, quantize, type Diffusion } from './quantize'
 import { palette, tier, type Ramp } from './ramp'
 import { tile, type Pattern } from './tiles'
 
+/** How a tone becomes ink: an ordered pattern or error diffusion. */
 export type Algorithm = Pattern | Diffusion
-export interface Gradient { angle?: number; radial?: boolean; from?: number; to?: number }
+/** A linear or radial tone ramp. */
+export interface Gradient { angle?: number; radial?: boolean; from?: number | undefined; to?: number | undefined }
 
+/** Options for dithering an image or a gradient. */
 export interface ImageOptions {
   /** A loaded or loading image. Without one the surface draws `gradient`. */
-  source?: HTMLImageElement | ImageBitmap | HTMLCanvasElement
-  gradient?: Gradient
-  algorithm?: Algorithm
-  ramp?: Ramp
-  cell?: number
-  inks?: number
-  contrast?: number
+  source?: HTMLImageElement | ImageBitmap | HTMLCanvasElement | undefined
+  gradient?: Gradient | undefined
+  algorithm?: Algorithm | undefined
+  ramp?: Ramp | undefined
+  cell?: number | undefined
+  inks?: number | undefined
+  contrast?: number | undefined
   /** Light parts of the picture take the strongest ink, which suits dark themes. Default: follows the page's lightness. On a gradient, true runs it the other way round. */
-  invert?: boolean
+  invert?: boolean | undefined
 }
 
 const isDiffusion = (a: Algorithm): a is Diffusion => a === 'floyd' || a === 'atkinson'
@@ -29,16 +32,17 @@ export function tones(source: CanvasImageSource, cols: number, rows: number) {
   c.width = cols
   c.height = rows
   const g = c.getContext('2d', { willReadFrequently: true })!
-  const sw = (source as HTMLImageElement).naturalWidth || (source as HTMLCanvasElement).width as number
-  const sh = (source as HTMLImageElement).naturalHeight || (source as HTMLCanvasElement).height as number
+  const sw = (source as HTMLImageElement).naturalWidth || (source as HTMLCanvasElement).width
+  const sh = (source as HTMLImageElement).naturalHeight || (source as HTMLCanvasElement).height
   const k = Math.max(cols / sw, rows / sh), w = sw * k, h = sh * k
   g.imageSmoothingQuality = 'high'
   g.drawImage(source, (cols - w) / 2, (rows - h) / 2, w, h)
   const px = g.getImageData(0, 0, cols, rows).data, out = new Float32Array(cols * rows)
-  for (let i = 0; i < out.length; i++) out[i] = (px[i * 4] * 0.2126 + px[i * 4 + 1] * 0.7152 + px[i * 4 + 2] * 0.0722) / 255
+  for (let i = 0; i < out.length; i++) out[i] = (px[i * 4]! * 0.2126 + px[i * 4 + 1]! * 0.7152 + px[i * 4 + 2]! * 0.0722) / 255
   return out
 }
 
+/** The tones of a gradient over a grid of cells. */
 export function gradientTones({ angle = 115, radial, from = 0, to = 1 }: Gradient, cols: number, rows: number) {
   const out = new Float32Array(cols * rows), a = (angle * Math.PI) / 180, dx = Math.cos(a), dy = Math.sin(a)
   const span = Math.abs(dx) * cols + Math.abs(dy) * rows, far = Math.hypot(cols, rows) / 2
@@ -50,6 +54,7 @@ export function gradientTones({ angle = 115, radial, from = 0, to = 1 }: Gradien
   return out
 }
 
+/** Draws an image or gradient to a canvas in dithered inks. */
 export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): Action<ImageOptions> {
   let o = options
   const host = canvas.parentElement ?? canvas
@@ -59,7 +64,7 @@ export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): A
     if (width !== cols || height !== rows) { cols = width; rows = height; base = undefined }
     inks ??= palette(host, o.ramp ?? 'accent', o.inks ?? tier(host).inks + 1)
     const src = o.source
-    if (src instanceof Object && 'complete' in src && !(src as HTMLImageElement).complete) return
+    if (src instanceof Object && 'complete' in src && !src.complete) return
     try {
       base ??= src ? levels(tones(src, cols, rows), o.contrast ?? 1.1) : gradientTones(o.gradient ?? {}, cols, rows)
     } catch {
@@ -71,7 +76,7 @@ export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): A
     const v = flip ? base.map(x => 1 - x) : base
     if (isDiffusion(algorithm)) {
       const picked = diffuse(v, cols, rows, inks.length, algorithm)
-      for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]]
+      for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]!]!
     } else quantize(v, cols, rows, tile(algorithm), inks, out)
     ctx.clearRect(0, 0, width, height)
     ctx.putImageData(image, 0, 0)

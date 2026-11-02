@@ -8,8 +8,8 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { join, resolve } from 'node:path'
 import sharp from 'sharp'
 import { optimize } from 'svgo'
-import { probe } from 'weft/media-probe'
-import { DEFAULTS, FIXED, encoders, hex, isPhoto, MIME } from './build.mjs'
+import { probe } from '@weft-js/core/media-probe'
+import { DEFAULTS, FIXED, encoders, hex, isPhoto, MIME } from './shared.mjs'
 import { unsafeSvg } from './svg.mjs'
 import { sniff, uploads } from './upload.mjs'
 
@@ -34,6 +34,7 @@ export function negotiate(accept, formats, fallback) {
   return formats.find(f => q.get(MIME[f]) > 0) ?? fallback
 }
 
+/** The media.server@1 provider: `at(root, encode)` is the store for one app, its `ingest` and its `serve`. */
 export function createMediaServer(input = {}) {
   const o = { ...DEFAULTS, ...input, video: { ...DEFAULTS.video, ...input.video } }
   return { at: (root, encode = {}) => storage(o, root, encode) }
@@ -68,7 +69,7 @@ function storage(o, root, encode) {
     if (known) return { ...known.asset, name }
     const kind = sniff(bytes)
     if (kind) {
-      if (!encode['video/h264']) refuse('M018', `${name} is ${kind}, and nothing here encodes it: add \`mediaFfmpeg()\` from @weft/plugin-media-ffmpeg to \`plugins\`, with ffmpeg on the server.`)
+      if (!encode['video/h264']) refuse('M018', `${name} is ${kind}, and nothing here encodes it: add \`mediaFfmpeg()\` from @weft-js/plugin-media-ffmpeg to \`plugins\`, with ffmpeg on the server.`)
       mkdirSync(join(dir, hash), { recursive: true })
       return timed.ingest(hash, bytes, name, kind)
     }

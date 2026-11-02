@@ -1,4 +1,4 @@
-import { Boundary, resource, state, untrack } from 'weft'
+import { Boundary, resource, state, untrack } from '@weft-js/core'
 
 /* @weft client */
 export function Counter(props: { start: number; label: string }) {

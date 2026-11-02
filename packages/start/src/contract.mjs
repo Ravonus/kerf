@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import { literalSecrets, livePlan, refusal, resolveTarget, scanRequired } from './live-target.mjs'
 import { readMigrations } from './migrations.mjs'
 import { shapeTree, toJson } from './shape.mjs'
@@ -280,7 +280,7 @@ export function writeContract({ root, site = {}, preset, rust, live, verify }) {
     const { diagnostics, ...contract } = describe(fns, rust)
     const mod = await server.ssrLoadModule('virtual:weft/realtime')
     const bus = busProblem({ preset, bus: mod.default?.bus?.name ?? 'memory', streams: [...fns.values()].some(f => f.kind === 'stream' || f.kind === 'channel' || f.kind === 'shared'), root })
-    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft/realtime-redis\` or \`@weft/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
+    if (bus) diagnostics.push({ code: 'R002', severity: 'error', why: `${bus}. Add \`@weft-js/realtime-redis\` or \`@weft-js/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.` })
     diagnostics.push(...planOf({ root, preset, realtime: mod.default }).diagnostics)
     let verified = []
     if (verify) {

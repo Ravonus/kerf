@@ -6,7 +6,7 @@ import { createRequire } from 'node:module'
 const { chromium } = createRequire(new URL('../../packages/warp/package.json', import.meta.url))('playwright-core')
 const base = process.argv[2] ?? 'http://localhost:3300'
 const read = f => JSON.parse(readFileSync(new URL(`../src/generated/${f}.json`, import.meta.url), 'utf8'))
-const routes = ['/', '/examples', '/examples/slow', '/components', '/blocks', '/charts', '/art', '/icons', '/nope', ...Object.keys(read('docs')).map(s => `/docs/${s}`), ...Object.values(read('toolkit')).map(p => `/${p.area}/${p.slug}`)]
+const routes = ['/', '/examples', '/examples/slow', '/components', '/blocks', '/charts', '/art', '/icons', '/nope', '/learn', '/reference', ...Object.keys(read('learn')).map(s => `/learn/${s}`), ...Object.keys(read('reference')).map(s => `/reference/${s}`), ...Object.values(read('toolkit')).map(p => `/${p.area}/${p.slug}`)]
 const snap = () => [...document.querySelectorAll('body *')].filter(e => !/^(STYLE|SCRIPT|LINK|TEMPLATE)$/.test(e.tagName)).map(e => {
   const c = getComputedStyle(e), o = { _: `${e.tagName} ${e.getAttribute('data-scope') ?? e.getAttribute('data-part') ?? ''}` }
   if (e.getAnimations().some(a => a.playState === 'running')) return o // an entrance, not the sheet
@@ -21,7 +21,7 @@ const one = async ([width, height, path]) => {
   const g = await c.newPage()
   await g.route('**/*.woff2', r => r.abort())
   const held = []
-  await g.route('**/assets/sheet-*.css', async r => { await new Promise(go => held.push(go)); await r.continue() })
+  await g.route('**/assets/sheet-*.css', async r => { await new Promise(go => { held.push(go) }); await r.continue() })
   await g.goto(base + path, { waitUntil: 'commit' })
   await g.waitForTimeout(500)
   const before = await g.evaluate(snap)

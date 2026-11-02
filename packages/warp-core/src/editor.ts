@@ -6,12 +6,12 @@
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 // text keeps its entities (an editor's innerHTML is full of &nbsp;): in element content they can only ever be text
 const escText = (s: string) => s.replace(/&(?!#?\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const unesc = (s: string) => s.replace(/&(lt|gt|quot|#39|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', '#39': "'", amp: '&' })[e as 'lt']!)
+const unesc = (s: string) => s.replace(/&(lt|gt|quot|#39|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', '#39': "'", amp: '&' })[e as 'lt'])
 
 /** http, https, mailto and relative only (04 Markdown). */
 export const safeUrl = (url: string) => {
   // browsers drop tabs, line breaks and controls before reading a scheme
-  // eslint-disable-next-line no-control-regex
+  // oxlint-disable-next-line no-control-regex -- the point: these are what hide a scheme
   const u = unesc(url).replace(/[\u0000- ]+/g, '')
   return /^(https?:|mailto:|\/(?![/\\])|#|\.)/i.test(u) || !/^[a-z][a-z0-9+.-]*:|^[/\\]{2}/i.test(u) ? u : null
 }
@@ -33,7 +33,7 @@ export function sanitizeHtml(html: string) {
   for (const m of src.matchAll(/<(\/?)([a-z][a-z0-9]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/gi)) {
     out += escText(src.slice(from, m.index))
     from = m.index + m[0].length
-    const tag = ALLOWED[m[2].toLowerCase()]
+    const tag = ALLOWED[m[2]!.toLowerCase()]
     if (!tag) continue
     if (m[1]) {
       const at = open.lastIndexOf(tag)
@@ -43,10 +43,10 @@ export function sanitizeHtml(html: string) {
     }
     if (VOID.has(tag)) { out += `<${tag}>`; continue }
     let attrs = ''
-    if (tag === 'a') { const href = safeUrl(attr(m[3], 'href') ?? ''); if (href) attrs = ` href="${esc(href)}" rel="noopener noreferrer"` }
+    if (tag === 'a') { const href = safeUrl(attr(m[3]!, 'href') ?? ''); if (href) attrs = ` href="${esc(href)}" rel="noopener noreferrer"` }
     if (tag === 'span') {
-      if (!/\bdata-mention\b/i.test(m[3])) { open.push(tag); out += '<span>'; continue }
-      const title = attr(m[3], 'title') ?? ''
+      if (!/\bdata-mention\b/i.test(m[3]!)) { open.push(tag); out += '<span>'; continue }
+      const title = attr(m[3]!, 'title') ?? ''
       attrs = ` data-mention="" contenteditable="false" role="img" aria-label="Mention: ${esc(unesc(title))}"`
     }
     open.push(tag)
@@ -72,8 +72,8 @@ function inline(s: string, target: string) {
     .replace(/(^|[^*])\*(?!\s)(.+?)\*/g, '$1<em>$2</em>')
     .replace(/(^|\W)_(?!\s)(.+?)_(?=\W|$)/g, '$1<em>$2</em>')
     .replace(/~~(.+?)~~/g, '<del>$1</del>')
-  // eslint-disable-next-line no-control-regex
-  return styled.replace(/\u0000(\d+)\u0000/g, (_, i) => held[i])
+  // oxlint-disable-next-line no-control-regex -- NUL is the marker hold() writes
+  return styled.replace(/\u0000(\d+)\u0000/g, (_, i: string) => held[+i] ?? _)
 }
 
 const STARTS = /^(#{1,4}\s|```|>|\|.*\|\s*$|\s*[-*+]\s|\s*\d+[.)]\s|-{3,}\s*$)/
@@ -81,9 +81,9 @@ const TABLE_RULE = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/
 const cells = (row: string) => row.trim().replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, '|'))
 
 export interface MarkdownOptions {
-  linkTarget?: string
+  linkTarget?: string | undefined
   /** Replaces a fenced block's markup: a build's highlighter, say. It gets the raw text, and what it returns isn't escaped. */
-  code?: (text: string, language: string) => string
+  code?: ((text: string, language: string) => string) | undefined
   /** Keep a document's own levels (`#` is h1) and give each heading the id this returns. */
   heading?: (text: string, level: number) => string
 }
@@ -93,40 +93,40 @@ export function markdownToHtml(source: string, { linkTarget = '_self', code, hea
   const L = source.replace(/\r/g, '').split('\n')
   let out = ''
   for (let i = 0; i < L.length;) {
-    const l = L[i]
+    const l = L[i]!
     let m: RegExpExecArray | null
-    if (/^```/.test(l)) {
+    if (l.startsWith('```')) {
       const lang = l.slice(3).trim()
       const buf: string[] = []
-      for (i++; i < L.length && !/^```/.test(L[i]); i++) buf.push(L[i])
+      for (i++; i < L.length && !L[i]!.startsWith('```'); i++) buf.push(L[i]!)
       i++
       if (code) out += code(buf.join('\n'), lang)
       else out += `<pre data-scope="codeblock"${lang ? ` data-lang="${esc(lang)}"` : ''} tabindex="0" aria-label="${esc(lang || 'Code')}"><code>${esc(buf.join('\n'))}</code></pre>`
     } else if ((m = /^(#{1,4})\s+(.*)$/.exec(l))) {
-      const tag = `h${m[1].length + (heading ? 0 : 1)}`
-      out += `<${tag}${heading ? ` id="${esc(heading(m[2], m[1].length))}"` : ''}>${inline(m[2], linkTarget)}</${tag}>`
+      const tag = `h${m[1]!.length + (heading ? 0 : 1)}`
+      out += `<${tag}${heading ? ` id="${esc(heading(m[2]!, m[1]!.length))}"` : ''}>${inline(m[2]!, linkTarget)}</${tag}>`
       i++
     } else if (l.includes('|') && TABLE_RULE.test(L[i + 1] ?? '')) {
       const head = cells(l)
-      const align = cells(L[i + 1]).map(c => (c.endsWith(':') ? ' style="text-align:end"' : ''))
+      const align = cells(L[i + 1]!).map(c => (c.endsWith(':') ? ' style="text-align:end"' : ''))
       i += 2
       const rows: string[] = []
-      for (; i < L.length && L[i].includes('|') && L[i].trim(); i++) rows.push(`<tr>${cells(L[i]).map((c, n) => `<td${align[n] ?? ''}>${inline(c, linkTarget)}</td>`).join('')}</tr>`)
+      for (; i < L.length && L[i]!.includes('|') && L[i]!.trim(); i++) rows.push(`<tr>${cells(L[i]!).map((c, n) => `<td${align[n] ?? ''}>${inline(c, linkTarget)}</td>`).join('')}</tr>`)
       out += `<table><thead><tr>${head.map((c, n) => `<th scope="col"${align[n] ?? ''}>${inline(c, linkTarget)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`
     } else if (/^(-{3,}|\*{3,})\s*$/.test(l)) {
       out += '<hr>'
       i++
     } else if (/^>\s?/.test(l)) {
       const buf: string[] = []
-      while (i < L.length && /^>\s?/.test(L[i])) buf.push(L[i++].replace(/^>\s?/, ''))
+      while (i < L.length && /^>\s?/.test(L[i]!)) buf.push(L[i++]!.replace(/^>\s?/, ''))
       out += `<blockquote>${inline(buf.join(' '), linkTarget)}</blockquote>`
     } else if (/^\s*[-*+]\s+/.test(l) || /^\s*\d+[.)]\s+/.test(l)) {
       const ordered = /^\s*\d/.test(l)
       const re = ordered ? /^\s*\d+[.)]\s+/ : /^\s*[-*+]\s+/
       const items: string[] = []
       while (i < L.length) {
-        if (re.test(L[i])) items.push(L[i++].replace(re, ''))
-        else if (items.length && /^\s+\S/.test(L[i]) && !/^\s*([-*+]|\d+[.)])\s/.test(L[i])) items[items.length - 1] += ` ${L[i++].trim()}` // a wrapped item
+        if (re.test(L[i]!)) items.push(L[i++]!.replace(re, ''))
+        else if (items.length && /^\s+\S/.test(L[i]!) && !/^\s*([-*+]|\d+[.)])\s/.test(L[i]!)) items[items.length - 1] += ` ${L[i++]!.trim()}` // a wrapped item
         else break
       }
       const tag = ordered ? 'ol' : 'ul'
@@ -139,7 +139,7 @@ export function markdownToHtml(source: string, { linkTarget = '_self', code, hea
     } else if (!l.trim()) i++
     else {
       const buf: string[] = []
-      while (i < L.length && L[i].trim() && !STARTS.test(L[i])) buf.push(L[i++])
+      while (i < L.length && L[i]!.trim() && !STARTS.test(L[i]!)) buf.push(L[i++]!)
       out += `<p>${inline(buf.join(' '), linkTarget)}</p>`
     }
   }
@@ -160,13 +160,13 @@ export function htmlToMarkdown(root: Element): string {
       case 'code': return `\`${el.textContent}\``
       case 'a': return `[${kids()}](${el.getAttribute('href') ?? ''})`
       case 'br': return '\n'
-      case 'span': return el.hasAttribute('data-mention') ? el.textContent! : kids()
+      case 'span': return el.hasAttribute('data-mention') ? el.textContent : kids()
       default: return kids()
     }
   }
   const block = (el: Element): string => {
     const tag = el.tagName.toLowerCase()
-    if (/^h[1-6]$/.test(tag)) return `${'#'.repeat(Math.max(1, +tag[1] - 1))} ${walk(el)}`
+    if (/^h[1-6]$/.test(tag)) return `${'#'.repeat(Math.max(1, +tag[1]! - 1))} ${walk(el)}`
     if (tag === 'ul' || tag === 'ol') return [...el.children].map((li, i) => `${tag === 'ol' ? `${i + 1}.` : '-'} ${walk(li).trim()}`).join('\n')
     if (tag === 'blockquote') return walk(el).split('\n').map(l => `> ${l}`).join('\n')
     if (tag === 'pre') return `\`\`\`\n${el.textContent}\n\`\`\``
@@ -176,16 +176,17 @@ export function htmlToMarkdown(root: Element): string {
   return [...root.children].map(block).filter(Boolean).join('\n\n')
 }
 
+/** Options for the rich text editor. */
 export interface RichTextOptions {
   onChange(html: string): void
   /** A character typed that may open a menu: where the query stands, or nothing to close it. */
-  onQuery?(q: { trigger: string; query: string; rect: DOMRect } | null): void
+  onQuery?(q: { trigger: string; query: string; rect: DOMRect } | null): unknown
   /** A shortcut for the Link command, with the selection saved. */
   onLink?(): void
   /** Called on each selection change with the commands in force. */
   onState?(on: Record<string, boolean>): void
   /** A `popover` toolbar to show 8px above a non-empty selection. */
-  bubble?: HTMLElement
+  bubble?: HTMLElement | undefined
 }
 
 const BLOCKS: [RegExp, string, string?][] = [[/^#{1,2}\s$/, 'formatBlock', 'h2'], [/^###\s$/, 'formatBlock', 'h3'], [/^[-*]\s$/, 'insertUnorderedList'], [/^1\.\s$/, 'insertOrderedList'], [/^>\s$/, 'formatBlock', 'blockquote'], [/^```$/, 'formatBlock', 'pre']]
@@ -274,7 +275,7 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     const s = doc.getSelection()
     const block = blockOf(s?.anchorNode ?? null)
     if (!block || block.closest?.('li')) return false // a bare Text in the editor is a block too, with no closest
-    const text = block.textContent!.replace(/ /g, ' ')
+    const text = block.textContent.replace(/ /g, ' ')
     if (text === '---') { block.textContent = ''; exec('insertHorizontalRule'); return true }
     for (const [re, cmd, value] of BLOCKS) {
       if (!re.test(text)) continue
@@ -299,8 +300,8 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     const before = node.nodeValue!.slice(0, s!.anchorOffset)
     const m = /(\*\*([^*]+)\*\*|`([^`]+)`|(?:^|\s)_([^_]+)_)$/.exec(before)
     if (!m) return
-    const inner = m[2] ?? m[3] ?? m[4]
-    const start = before.length - m[1].length + (m[1].startsWith('_') || m[2] || m[3] ? 0 : 1)
+    const inner = (m[2] ?? m[3] ?? m[4])!
+    const start = before.length - m[1]!.length + (m[1]!.startsWith('_') || m[2] || m[3] ? 0 : 1)
     const r = doc.createRange()
     r.setStart(node, start)
     r.setEnd(node, before.length)
@@ -314,8 +315,8 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     const node = s?.anchorNode
     const m = node?.nodeType === 3 && s!.isCollapsed ? /(?:^|\s)([/@])([\w-]*)$/.exec(node.nodeValue!.slice(0, s!.anchorOffset)) : null
     const block = m && blockOf(node!)
-    if (!m || !block || (m[1] === '/' && block.textContent!.trim() !== `/${m[2]}`)) return o.onQuery(null)
-    o.onQuery({ trigger: m[1], query: m[2], rect: s!.getRangeAt(0).getBoundingClientRect() })
+    if (!m || !block || (m[1] === '/' && block.textContent.trim() !== `/${m[2]}`)) return void o.onQuery(null)
+    o.onQuery({ trigger: m[1]!, query: m[2]!, rect: s!.getRangeAt(0).getBoundingClientRect() })
   }
   const onInput = (e: Event) => {
     const type = (e as InputEvent).inputType
@@ -391,7 +392,7 @@ export function keyboardDock(bar: HTMLElement, opts: { editor: () => HTMLElement
   const place = () => {
     const on = !!vv && phone() && opts.editor()?.matches(':focus-within, :focus')
     bar.toggleAttribute('data-docked', on)
-    bar.style.insetBlockEnd = on ? `${win.innerHeight - vv!.height - vv!.offsetTop}px` : ''
+    bar.style.insetBlockEnd = on ? `${win.innerHeight - vv.height - vv.offsetTop}px` : ''
   }
   vv?.addEventListener('resize', place)
   vv?.addEventListener('scroll', place)
@@ -408,4 +409,5 @@ export function keyboardDock(bar: HTMLElement, opts: { editor: () => HTMLElement
   }
 }
 
+/** The handle `richText` returns. */
 export type RichTextHandle = ReturnType<typeof richText>

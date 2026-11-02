@@ -1,6 +1,6 @@
-import { Canvas, Slider, type CanvasFrame as Frame } from '@weft/warp'
-import { palette } from '@weft/warp-core/dither'
-import { state } from 'weft'
+import { Canvas, Slider, type CanvasFrame as Frame } from '@weft-js/warp'
+import { palette } from '@weft-js/warp-core/dither'
+import { state } from '@weft-js/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './token-spectrum.tsx?raw'
 
@@ -39,8 +39,8 @@ export default function TokenSpectrum(_: ArtProps) {
     let settling = false
     const k = Math.min(1, (dt || 0.016) * 7)
     for (let i = 0; i < COUNT; i++) {
-      ls[i] += (tl[i]! - ls[i]!) * k
-      cs[i] += (tc[i]! - cs[i]!) * k
+      ls[i]! += (tl[i]! - ls[i]!) * k
+      cs[i]! += (tc[i]! - cs[i]!) * k
       if (Math.abs(tl[i]! - ls[i]!) + Math.abs(tc[i]! - cs[i]!) > 0.0015) settling = true
     }
     ctx.clearRect(0, 0, width, height)

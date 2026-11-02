@@ -3,6 +3,7 @@ import { Svg, type IconProps } from './svg'
 
 /** What starts it. `on` runs now, and an icon that loops keeps going. Without one: hover, focus and press. */
 export type IconTrigger = 'hover' | 'focus' | 'press' | 'on'
+/** What an icon with a moving part takes: `IconProps`, and what starts it. */
 export type ActionIconProps = IconProps & { action?: IconTrigger | boolean }
 
 /*#__NO_SIDE_EFFECTS__*/

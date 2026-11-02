@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { bin, fixture, project, spreadBug } from './helpers.mjs'
+import { bin, fixture, project, spreadBug, startApp } from './helpers.mjs'
 
 const weft = (...args) => {
   const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
@@ -10,8 +10,8 @@ const weft = (...args) => {
 }
 
 describe('weft (bin)', () => {
-  it('routes and routes --meta read an app with src/routes (@weft/start from the workspace)', () => {
-    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+  it('routes and routes --meta read an app with src/routes (@weft-js/start from the workspace)', () => {
+    const app = startApp()
     const list = JSON.parse(weft('routes', '--json', '--root', app).stdout)
     expect(list.routes.map(r => r.path)).toContain('/users/[id]')
     const r = weft('routes', '--meta', '--json', '--root', app)
@@ -23,7 +23,7 @@ describe('weft (bin)', () => {
   }, 60_000)
 
   it('routes --meta prints a table: each page, its text, its image and where they came from', () => {
-    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const app = startApp()
     const { stdout, stderr } = weft('routes', '--meta', '--root', app)
     const line = name => (stdout + stderr).split('\n').find(l => l.startsWith(name))
     expect(line('/meta/plain')).toMatch(/Harvest & storage notes · Acme\s+Harvest when 5 < 7.*\/_weft\/og\/meta\/plain\.png\s+auto\/auto\/auto/)
@@ -32,7 +32,7 @@ describe('weft (bin)', () => {
   }, 60_000)
 
   it('check reports metadata per route, with the fix an agent can apply', () => {
-    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const app = startApp()
     const { diagnostics } = JSON.parse(weft('check', '--json', '--root', app, 'src/routes/meta/plain.tsx').stdout)
     const d = diagnostics.find(x => x.code === 'H011' && x.route === '/meta/plain')
     expect(d).toMatchObject({ severity: 'warning', file: 'src/routes/meta/plain.tsx', fix: { safe: false, edits: [{ file: 'src/routes/meta/plain.tsx' }] } })
@@ -41,7 +41,7 @@ describe('weft (bin)', () => {
   }, 60_000)
 
   it('check leaves the routes alone when told to, and when no route is among the files', () => {
-    const app = join(import.meta.dirname, '../../start/test/fixtures/app')
+    const app = startApp()
     const { diagnostics } = JSON.parse(weft('check', '--json', '--root', app, 'src/db.ts').stdout)
     expect(diagnostics.filter(d => /^H0(0[1-8]|1[1-6])$/.test(d.code))).toEqual([])
   }, 60_000)
@@ -85,7 +85,7 @@ describe('weft (bin)', () => {
     expect(['native', 'wasm']).toContain(r.compiler.kind)
     expect(r).toMatchObject({ ok: true, rust: { required: false } })
     expect(formatDoctor(r)).toContain('Not needed for weft')
-    expect(compilerLine({ kind: 'wasm', wanted: ['@weft/compiler-x'] })).toContain('Optional, and faster: @weft/compiler-x')
+    expect(compilerLine({ kind: 'wasm', wanted: ['@weft-js/compiler-x'] })).toContain('Optional, and faster: @weft-js/compiler-x')
     expect(compilerLine({ kind: 'wasm', wanted: [] })).toContain('none is needed')
   })
 
@@ -101,10 +101,10 @@ describe('live data on a deploy target', () => {
   const app = join(import.meta.dirname, '../../start/test/fixtures/live-db')
   const codes = out => JSON.parse(out).diagnostics.map(d => d.code)
 
-  // The fixture has its own package.json, so `@weft/start` isn't a self-import and a checkout has nothing to find.
+  // The fixture has its own package.json, so `@weft-js/start` isn't a self-import and a checkout has nothing to find.
   beforeAll(() => {
-    const start = join(app, 'node_modules/@weft/start')
-    mkdirSync(join(app, 'node_modules/@weft'), { recursive: true })
+    const start = join(app, 'node_modules/@weft-js/start')
+    mkdirSync(join(app, 'node_modules/@weft-js'), { recursive: true })
     rmSync(start, { recursive: true, force: true })
     symlinkSync(join(import.meta.dirname, '../../start'), start)
   })

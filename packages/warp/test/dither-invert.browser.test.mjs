@@ -26,12 +26,12 @@ async function coverage(script, arg) {
   await page.addScriptTag({ content: bundle })
   await page.evaluate(script, arg)
   await page.waitForFunction(() => document.getElementById('host').getAttribute('data-state') === 'live')
-  const shares = await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => {
+  const shares = await page.evaluate(() => new Promise(done => { requestAnimationFrame(() => requestAnimationFrame(() => {
     const c = document.getElementById('c'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
     const half = c.width / 2, sum = [0, 0], all = [0, 0]
     for (let i = 0; i < d.length; i += 4) { const side = (i / 4) % c.width < half ? 0 : 1; all[side]++; if (d[i] > 127) sum[side]++ }
     done(sum.map((n, i) => n / all[i]))
-  }))))
+  })) }))
   await page.close()
   return shares
 }

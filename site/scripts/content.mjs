@@ -33,8 +33,9 @@ const repo = join(site, '..')
 const out = join(site, 'src/generated')
 const pub = join(site, 'public')
 rmSync(join(pub, 'search'), { recursive: true, force: true })
-rmSync(join(pub, 'docs'), { recursive: true, force: true })
-for (const d of [out, join(pub, 'search'), join(pub, 'docs/codes')]) mkdirSync(d, { recursive: true })
+// `docs/` held the twins before the section became Learn and Reference: old addresses now redirect (src/routes/docs).
+for (const d of ['docs', 'learn', 'reference']) rmSync(join(pub, d), { recursive: true, force: true })
+for (const d of [out, join(pub, 'search'), join(pub, 'learn'), join(pub, 'reference/codes')]) mkdirSync(d, { recursive: true })
 /** warp's three areas of the site, by the group's file. Everything else is core components. */
 const AREAS = { charts: 'charts', agent: 'blocks', admin: 'blocks', collab: 'blocks', flow: 'blocks', live: 'blocks', schedule: 'blocks' }
 const areaOf = file => AREAS[file] ?? 'components'
@@ -76,47 +77,84 @@ const LEADS = {
   rules: 'Nine rules cover how every weft component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
   lists: 'Lists and conditionals work as they do in React: `.map` with a `key`, `&&` and ternaries. This page covers the mistakes to avoid and the few habits that keep a long list fast.',
   async: 'Load data with `resource`, and say what to show while it loads with `Boundary`. On the server, weft can wait for that data so the first page arrives filled in.',
-  start: '`@weft/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
-  browser: "`weft/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
-  testing: '`weft/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
+  start: '`@weft-js/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
+  browser: "`@weft-js/core/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
+  testing: '`@weft-js/core/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
 }
 
-/** The nav. A page's source is `weft docs <topic>` wherever one exists, so the site and the CLI read one file. */
+/**
+ * Reference: exact API, commands, config and codes. A page's source is `weft docs <topic>` wherever one exists, so the site
+ * and the CLI read one file. Teaching goes in Learn (LEARN below), never here.
+ */
 const SECTIONS = [
-  ['Start', [
-    ['getting-started', 'Getting started', file('site/content/getting-started.md')],
+  ['Core', [
     ['rules', 'The rules', topic('rules')],
+    ['state', 'State', topic('state')],
     ['props', 'Props', topic('props')],
     ['lists', 'Lists', topic('lists')],
     ['async', 'Async', topic('async')],
+    ['browser', 'Browser APIs', topic('browser')],
+    ['ui-state', 'Shared UI state', topic('ui-state')],
+    ['testing', 'Testing', topic('testing')],
   ]],
-  ['Learn', [
+  ['Full stack', [
     ['start', 'Full stack', topic('start')],
     ['meta', 'Metadata and cards', topic('meta')],
+    ['rust', 'Rust', topic('rust')],
+    ['pay', 'Payments', file('packages/pay/docs/pay.md')],
+  ]],
+  ['Styling', [
     ['style', 'Style groups', topic('style')],
     ['design', 'Design language', topic('design')],
     ['icons', 'Icons', topic('icons')],
     ['fonts', 'Fonts', topic('fonts')],
-    ['browser', 'Browser APIs', topic('browser')],
-    ['ui-state', 'Shared UI state', topic('ui-state')],
     ['surface', 'Surfaces', topic('surface')],
-    ['testing', 'Testing', topic('testing')],
   ]],
-  ['Extend', [
-    ['plugins', 'Plugins', topic('plugins')],
-    ['rust', 'Rust sidecars', topic('rust')],
-    ['pay', 'Payments', file('packages/pay/docs/pay.md')],
-  ]],
-  ['Reference', [
+  ['Tooling', [
     ['config', 'Configuration', topic('config')],
-    ['diagnostics', 'Diagnostics', () => diagnosticsIndex()],
-  ]],
-  ['Agents', [
+    ['plugins', 'Plugins', topic('plugins')],
     ['verify', 'Check your work', topic('verify')],
     ['agents', 'AGENTS.md', topic('agents')],
+    ['diagnostics', 'Diagnostics', () => diagnosticsIndex()],
   ]],
   ['Migrate', [
     ['react', 'From React', file('docs/react-props.md')],
+  ]],
+]
+
+/** Learn: the tutorial, in teaching order. Each page is `site/content/learn/<slug>.md`, read top to bottom. */
+const LEARN = [
+  ['Get started', [
+    ['installation', 'Installation'],
+  ]],
+  ['Describing the UI', [
+    ['your-first-component', 'Your first component'],
+    ['passing-props', 'Passing props'],
+    ['lists-and-conditions', 'Lists and conditions'],
+  ]],
+  ['Adding interactivity', [
+    ['responding-to-events', 'Responding to events'],
+    ['state', 'State'],
+    ['bind', 'Writing to a parent with bind:'],
+  ]],
+  ['Managing state', [
+    ['derived', 'Derived values'],
+    ['sharing-state', 'Sharing state'],
+    ['entries', 'Reading one entry'],
+    ['ui-state', 'Hover, focus and press'],
+  ]],
+  ['Data and the server', [
+    ['loading-data', 'Loading data'],
+    ['full-stack', 'Routes and server functions'],
+    ['live-data', 'Live data'],
+  ]],
+  ['Styling and warp', [
+    ['styling', 'Styling'],
+    ['warp', 'Using warp'],
+  ]],
+  ['Escape hatches', [
+    ['effects', 'Effects and refs'],
+    ['rust', 'Rust, when you want it'],
   ]],
 ]
 
@@ -140,20 +178,20 @@ const unmark = b => cleanText(decode(b.replace(/<[^>]+>/g, ' ').replace(/\[([^\]
 
 /** The sentences a page's `meta` can open with: from the start, up to the first that a reader wouldn't want. */
 function opening(text, skip) {
-  const out = []
+  const kept = []
   for (const s of text.match(/\S.*?[.!?](?=\s+[A-Z"“`]|\s*$)/g) ?? []) {
     if (skip?.test(s) || descriptionProblem(s) || s.length < 25) break
-    out.push(s)
+    kept.push(s)
   }
-  const said = truncate(out.join(' '))
+  const said = truncate(kept.join(' '))
   return descriptionProblem(said) ? '' : said
 }
 
 /** A docs page's `meta`: the opening of its first paragraph of prose that has one. */
 function summary(md) {
   const blocks = md.replace(/```[\s\S]*?```/g, '\n\n').split(/\n\s*\n/).map(b => b.trim())
-  for (const b of blocks.filter(b => b && !/^(?:#|[-*+] |\d+[.)] |\||>|<|:::)/.test(b))) {
-    const text = opening(unmark(b))
+  for (const para of blocks.filter(b => b && !/^(?:#|[-*+] |\d+[.)] |\||>|<|:::)/.test(b))) {
+    const text = opening(unmark(para))
     if (text.length >= 40) return text
   }
   return ''
@@ -184,47 +222,121 @@ function linkify(html, slugs) {
       return part
     }
     return part
-      .replace(CODE, c => (known.has(c) ? `<a href="/docs/codes/${c}">${c}</a>` : c))
-      .replace(/weft docs ([a-z-]+)/g, (m, t) => (slugs.has(t) ? `<a href="/docs/${t}">${m}</a>` : m))
+      .replace(CODE, c => (known.has(c) ? `<a href="/reference/codes/${c}">${c}</a>` : c))
+      .replace(/weft docs ([a-z-]+)/g, (m, t) => (slugs.has(t) ? `<a href="/reference/${t}">${m}</a>` : m))
   }).join('')
 }
 
 /** Headings numbered by hand become steps: the number leaves the words for the page's gutter. */
 const steps = html => html.replace(/<h2([^>]*)>(\d+)\. /g, '<h2$1 data-step="$2">')
 
-async function buildDocs() {
+/** One page's Markdown to HTML, with heading ids unique across every call, and the contents list they make. */
+function renderer(slugs) {
+  const toc = []
+  const seen = new Map()
+  const html = md => steps(linkify(markdownToHtml(md, {
+    code: codeBlock,
+    heading: (text, depth) => {
+      const base = slugify(text) || 'section'
+      const n = seen.get(base) ?? 0
+      seen.set(base, n + 1)
+      const id = n ? `${base}-${n}` : base
+      if (depth === 2) toc.push({ id, text: plain(text).replace(/^\d+\.\s+/, '') })
+      if (depth === 3 && toc.length) toc.push({ id, text: plain(text), depth: 3 })
+      return id
+    },
+  }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`))
+  return { html, toc }
+}
+
+/** Reference: `weft docs` topics, the diagnostics index and one page per code. */
+async function buildReference() {
   const nav = []
   const pages = {}
   const flat = SECTIONS.flatMap(([section, items]) => items.map(([slug, title, source]) => ({ section, slug, title, source })))
   const slugs = new Set(flat.map(p => p.slug))
   for (const p of flat) p.md = await p.source()
   const render = (slug, title, section, md) => {
-    const toc = []
-    const seen = new Map()
-    const html = linkify(markdownToHtml(md.replace(/^# [^\n]*\n/, ''), {
-      code: codeBlock,
-      heading: (text, level) => {
-        const base = slugify(text) || 'section'
-        const n = seen.get(base) ?? 0
-        seen.set(base, n + 1)
-        const id = n ? `${base}-${n}` : base
-        if (level === 2) toc.push({ id, text: plain(text).replace(/^\d+\.\s+/, '') })
-        if (level === 3 && toc.length) toc.push({ id, text: plain(text), depth: 3 })
-        return id
-      },
-    }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
-    const twin = slug.replace(/^codes\//, 'codes/')
-    writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: steps(html), toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft docs.` }
+    const r = renderer(slugs)
+    const html = r.html(md.replace(/^# [^\n]*\n/, ''))
+    writeFileSync(join(pub, 'reference', `${slug}.md`), md)
+    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html, toc: r.toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft reference.` }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
   })
   for (const e of catalog) {
     const { text } = await weftDocs(site, e.code)
-    pages[`codes/${e.code}`] = { ...render(`codes/${e.code}`, e.code, 'Reference', text), description: opening(unmark(`${e.catches}.`)) || `${e.code}: what this weft diagnostic means and how to fix it.`, parent: { slug: 'diagnostics', title: 'Diagnostics' } }
+    pages[`codes/${e.code}`] = { ...render(`codes/${e.code}`, e.code, 'Diagnostics', text), description: opening(unmark(`${e.catches}.`)) || `${e.code}: what this weft diagnostic means and how to fix it.`, parent: { slug: 'diagnostics', title: 'Diagnostics' } }
   }
   for (const [section, items] of SECTIONS) nav.push({ section, items: items.map(([slug, title]) => ({ slug, title })) })
+  return { nav, pages, flat, slugs }
+}
+
+/**
+ * A Learn page's blocks. Plain Markdown, plus four fences of our own, each opened by a line that starts `:::` and closed
+ * by a line that is only `:::`:
+ *   :::learn          the "You will learn" box (a list)
+ *   :::demo <id>      a live demo from src/demos, beside its own source (one line, no closing fence)
+ *   :::note           an aside
+ *   :::challenge <t>  a "Try it" task; a `:::solution` line inside starts its hidden answer
+ */
+function learnBlocks(md, slugs, demoIds) {
+  const r = renderer(slugs)
+  const blocks = []
+  let box = ''
+  let buf = []
+  let challenges = 0
+  const flush = () => { if (buf.join('').trim()) blocks.push({ html: r.html(buf.join('\n')) }); buf = [] }
+  const lines = md.replace(/^# [^\n]*\n/, '').split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i]
+    const fence = /^:::(learn|demo|note|challenge)\s*(.*)$/.exec(l)
+    if (!fence) { buf.push(l); continue }
+    const [, kind, arg] = fence
+    if (kind === 'demo') {
+      if (!demoIds.has(arg)) throw new Error(`learn: no demo called ${arg} in src/components/LearnDemo.tsx`)
+      flush()
+      blocks.push({ demo: arg })
+      continue
+    }
+    const inner = []
+    for (i++; i < lines.length && lines[i] !== ':::'; i++) inner.push(lines[i])
+    if (i >= lines.length) throw new Error(`learn: :::${kind} is never closed`)
+    const plainHtml = text => linkify(markdownToHtml(text, { code: codeBlock }), slugs)
+    if (kind === 'learn') { box = plainHtml(inner.join('\n')); continue }
+    flush()
+    if (kind === 'note') { blocks.push({ html: `<aside data-site="note">${plainHtml(inner.join('\n'))}</aside>` }); continue }
+    const at = inner.indexOf(':::solution')
+    const task = at < 0 ? inner : inner.slice(0, at)
+    const answer = at < 0 ? [] : inner.slice(at + 1)
+    challenges++
+    blocks.push({ html: `<section data-site="challenge"><p data-part="label">Challenge ${challenges}</p><h3>${esc(arg)}</h3>${plainHtml(task.join('\n'))}${answer.length ? `<details><summary>Show the solution</summary>${plainHtml(answer.join('\n'))}</details>` : ''}</section>` })
+  }
+  flush()
+  return { box, blocks, toc: r.toc }
+}
+const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/** Learn: the tutorial pages, in order, with prev and next running straight through the chapters. */
+function buildLearn(reference) {
+  // A demo shows only where src/components/LearnDemo.tsx has a JSX site for it.
+  const demoIds = new Set([...readFileSync(join(site, 'src/components/LearnDemo.tsx'), 'utf8').matchAll(/props\.id === '([a-z0-9-]+)'/g)].map(m => m[1]))
+  const flat = LEARN.flatMap(([section, items]) => items.map(([slug, title]) => ({ section, slug, title, md: readFileSync(join(site, 'content/learn', `${slug}.md`), 'utf8') })))
+  const pages = {}
+  flat.forEach((p, i) => {
+    const { box, blocks, toc } = learnBlocks(p.md, reference.slugs, demoIds)
+    if (!box) throw new Error(`learn/${p.slug}.md has no :::learn box`)
+    writeFileSync(join(pub, 'learn', `${p.slug}.md`), p.md)
+    const body = p.md.replace(/^# [^\n]*\n/, '').replace(/^:::learn[\s\S]*?^:::$/m, '')
+    pages[p.slug] = {
+      slug: p.slug, title: p.title, section: p.section, box, blocks, toc,
+      description: summary(body) || `${p.title}: ${p.section} in Learn weft.`,
+      prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title },
+      next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title },
+    }
+  })
+  const nav = LEARN.map(([section, items]) => ({ section, items: items.map(([slug, title]) => ({ slug, title })) }))
   return { nav, pages, flat }
 }
 
@@ -244,7 +356,8 @@ function sections(md) {
   return parts
 }
 
-const GROUP = { Start: 'Guides', Learn: 'Guides', Extend: 'Guides', Agents: 'Guides', Migrate: 'Guides', Reference: 'API' }
+/** Search groups: Learn is the guide, Reference is the API. */
+const GROUP = { learn: 'Guides', reference: 'API' }
 
 /** Every name `weft` exports, pointing at the section that first uses it, so "state" finds `state` before prose about it. */
 function symbols(docs) {
@@ -255,9 +368,9 @@ function symbols(docs) {
     for (const name of names) {
       const uses = new RegExp(`\\b${name.replace(/\$/g, '\\$')}\\b`)
       for (const p of docs.flat) {
-        const s = sections(p.md.replace(/^# [^\n]*\n/, '')).find(s => uses.test(s.lines.join('\n')))
+        const s = sections(p.md.replace(/^# [^\n]*\n/, '')).find(x => uses.test(x.lines.join('\n')))
         if (!s) continue
-        rows.push({ title: name, url: `/docs/${p.slug}${s.heading ? `#${slugify(s.heading)}` : ''}`, group: 'API', rank: 0.95, parent: s.heading ? `${p.title} / ${s.heading}` : p.title, text: from })
+        rows.push({ title: name, url: `/reference/${p.slug}${s.heading ? `#${slugify(s.heading)}` : ''}`, group: 'API', rank: 0.95, parent: s.heading ? `${p.title} / ${s.heading}` : p.title, text: from })
         break
       }
     }
@@ -265,22 +378,23 @@ function symbols(docs) {
   return rows
 }
 
-function buildSearch(docs, extra = []) {
+function buildSearch(docs, learn, extra = []) {
   const t0 = []
   const t1 = []
-  for (const p of docs.flat) {
-    const group = GROUP[p.section]
-    t0.push({ title: p.title, url: `/docs/${p.slug}`, group, rank: 1, keywords: p.slug })
-    const rendered = docs.pages[p.slug]
-    for (const h of rendered.toc) t0.push({ title: h.text, url: `/docs/${p.slug}#${h.id}`, group, rank: 0.6, parent: p.title })
-    for (const s of sections(p.md.replace(/^# [^\n]*\n/, ''))) {
+  const pages = [...learn.flat.map(p => ({ ...p, base: 'learn', toc: learn.pages[p.slug].toc })), ...docs.flat.map(p => ({ ...p, base: 'reference', toc: docs.pages[p.slug].toc }))]
+  for (const p of pages) {
+    const group = GROUP[p.base]
+    const url = `/${p.base}/${p.slug}`
+    t0.push({ title: p.title, url, group, rank: p.base === 'learn' ? 1 : 0.98, keywords: p.slug })
+    for (const h of p.toc) t0.push({ title: h.text, url: `${url}#${h.id}`, group, rank: 0.6, parent: p.title })
+    for (const s of sections(p.md.replace(/^# [^\n]*\n/, '').replace(/^:::.*$/gm, ''))) {
       const body = plain(s.lines.join('\n'))
       if (body.length < 12) continue
       const id = s.heading ? slugify(s.heading) : ''
-      t1.push({ title: s.heading || p.title, url: `/docs/${p.slug}${id ? `#${id}` : ''}`, group, rank: 0.5, parent: s.heading ? p.title : undefined, text: body.slice(0, 120), keywords: body })
+      t1.push({ title: s.heading || p.title, url: `${url}${id ? `#${id}` : ''}`, group, rank: 0.5, parent: s.heading ? p.title : undefined, text: body.slice(0, 120), keywords: body })
     }
   }
-  for (const e of catalog) t0.push({ title: e.code, url: `/docs/codes/${e.code}`, group: 'Diagnostics', rank: 0.9, text: e.catches.slice(0, 90), keywords: e.fix })
+  for (const e of catalog) t0.push({ title: e.code, url: `/reference/codes/${e.code}`, group: 'Diagnostics', rank: 0.9, text: e.catches.slice(0, 90), keywords: e.fix })
   t0.push(...symbols(docs), ...extra)
   const emit = (name, wire) => {
     const text = JSON.stringify(wire)
@@ -302,7 +416,7 @@ const PROP_WORDS = {
   value: 'The current value, when you own the state.', defaultValue: 'The starting value, when the component owns the state.', defaultChecked: 'Starts checked.', checked: 'Whether it is on.', onChange: 'Called with the new value.', onInput: 'Called on each keystroke.',
   onClick: 'Called when pressed.', onSelect: 'Called with what was picked.', onClose: 'Called after it closes.', onOpen: 'Called after it opens.', open: 'A state box that holds whether it is open.', disabled: 'Turns it off, and takes it out of the tab order.', readOnly: 'Shows the value but does not let it change.', required: 'The form will not submit without it.',
   name: 'The name it posts under in a form.', id: 'The element id. One is made for you if you leave it out.', placeholder: 'Sample text shown while empty. Never a substitute for a label.', tone: 'What it means: neutral, accent, positive, caution, critical or info.', size: 'Control size. `md` by default.', emphasis: 'How loud it is.',
-  icon: 'An icon name from `@weft/icons`, or a component.', title: 'The heading.', description: 'One supporting line under the title.', footer: 'What sits at the bottom, usually actions.', options: 'What can be picked.', items: 'The rows it shows.', rows: 'The data, one object per row.', columns: 'One definition per column.', caption: 'Names the table for screen readers.',
+  icon: 'An icon name from `@weft-js/warp-icons`, or a component.', title: 'The heading.', description: 'One supporting line under the title.', footer: 'What sits at the bottom, usually actions.', options: 'What can be picked.', items: 'The rows it shows.', rows: 'The data, one object per row.', columns: 'One definition per column.', caption: 'Names the table for screen readers.',
   data: 'The series to draw.', format: 'Turns a value into the text shown.', min: 'The lowest allowed value.', max: 'The highest allowed value.', step: 'How far one key press moves it.', loading: 'Shows that work is under way.', full: 'Takes the whole width of its container.', side: 'Which edge it sits on.', align: 'How it lines up with what opened it.', placement: 'Where it opens relative to what opened it.',
   height: 'Its height, in pixels.', width: 'Its width.', ratio: 'Width to height.', gap: 'The space between children, from warp\'s space scale.', as: 'The element it renders as.', variant: 'Which form it takes.', count: 'The number it shows.', locale: 'The language and region used to format values.', href: 'Where it links.', ui: 'A row from `interaction()`, which it fills and draws.', onSubmit: 'Called with the values when submitted.', onSave: 'Called with the result when saved.', onCancel: 'Called when dismissed.', onDelete: 'Called when deleted.', onRemove: 'Called when removed.',
 }
@@ -339,7 +453,7 @@ function arrange(doc) {
 
 /** The shortest thing that shows a component in use, for the Usage heading. */
 function usageOf(doc, name, found, play) {
-  const line = `import { ${name} } from '@weft/warp'`
+  const line = `import { ${name} } from '@weft-js/warp'`
   const from = play && !play.code.includes('{children}') ? null : play?.code
   const start = play && Object.fromEntries(play.knobs.map(k => [k.prop, k.initial]))
   const kids = String(start?.children ?? '')
@@ -425,7 +539,7 @@ function buildToolkit() {
       }
       const { hero, parts: arranged } = arrange(doc)
       const shownHero = hero && example(hero)
-      const sections = arranged.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
+      const shownSections = arranged.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
       const visible = c.props.filter(p => !HIDDEN_PROPS.has(p.name) && !doc.hideProps?.includes(p.name))
       const rows = visible.map(p => propRow(p, doc))
       blank.all += rows.length
@@ -436,12 +550,12 @@ function buildToolkit() {
       const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name), href: hrefs.get(slugFor(name)) }))
       const play = doc.playground && finishKnobs(doc.playground, c.props, c.name)
       if (play && !found.has(play.example)) problems.push(`${c.name}: no export ${play.example}`)
-      const heads = [{ id: 'installation', text: 'Installation' }, ...(play ? [{ id: 'playground', text: 'Try it' }] : []), { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
+      const heads = [{ id: 'installation', text: 'Installation' }, ...(play ? [{ id: 'playground', text: 'Try it' }] : []), { id: 'usage', text: 'Usage' }, ...shownSections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
       const i = order.indexOf(c.name)
       const near = n => n && facts.get(n) && areaIn(n) === areaOf(g.file) && { name: n, slug: slugFor(n), href: hrefs.get(slugFor(n)) }
       pages[c.slug] = {
         name: c.name, slug: c.slug, area: areaOf(g.file), group: g.title, usage: codeBlock(usageOf(doc, c.name, found, play), 'tsx'), file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
-        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
+        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections: shownSections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft-js/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
       const refs = doc.sections.flatMap(s => s.examples ?? [])
       tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center', fit: doc.tileFit ?? (areaOf(g.file) === 'charts' ? 'contain' : undefined), width: doc.tileWidth })
@@ -529,19 +643,19 @@ function buildArt() {
 
 /** The landing's code moment and diagnostic, from the real compiler. */
 function buildShowcase() {
-  const { transform } = loadCompiler(resolveWeft(site))
-  const source = `import { state } from 'weft'
+  const compiler = loadCompiler(resolveWeft(site))
+  const source = `import { state } from '@weft-js/core'
 
 export function Counter() {
   const n = state(0)
   return <button onClick={() => n.value++}>{n.value}</button>
 }`
-  const compiled = transform(source, { filename: 'Counter.tsx' }).code.trim()
+  const compiled = compiler.transform(source, { filename: 'Counter.tsx' }).code.trim()
   const bad = `function Total(props: { count: number }) {
   const total = props.count * 5
   return <b>{total}</b>
 }`
-  const report = transform(bad, { filename: 'Total.tsx' }).diagnostics.find(d => d.code === 'W001')
+  const report = compiler.transform(bad, { filename: 'Total.tsx' }).diagnostics.find(d => d.code === 'W001')
   if (!report) throw new Error('the showcase expects W001')
   const entry = catalog.find(e => e.code === 'W001')
   const good = `function Total(props: { count: number }) {
@@ -549,7 +663,7 @@ export function Counter() {
   return <b>{total.value}</b>
 }`
   const block = (text, lang) => `<pre tabindex="0"><code>${highlight(text, lang)}</code></pre>`
-  const plain = s => s.replaceAll('`', '') // the compiler's words, without the terminal's quoting
+  const unquoted = s => s.replaceAll('`', '') // the compiler's words, without the terminal's quoting
   const marked = (text, lines) => {
     let n = -1
     return `<pre tabindex="0"><code>${highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => { n++; return lines[n] ? `<span data-part="line" data-${lines[n]}="">` : tag })}</code></pre>`
@@ -560,7 +674,7 @@ export function Counter() {
   return <b>{total}</b>
   return <b>{total.value}</b>
 }`
-  const habit = transform(`import { state } from 'weft'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
+  const habit = compiler.transform(`import { state } from '@weft-js/core'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`, { filename: 'Price.tsx' }).diagnostics.find(d => d.code === 'W005')
   if (!habit) throw new Error('the showcase expects W005')
   const server = `// src/server/shop.ts
 export const products = query({
@@ -573,7 +687,7 @@ const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
   const size = JSON.parse(readFileSync(join(repo, 'evals/results/v3-warp-exit/exit.json'), 'utf8')).size
   const kb = n => +(n / 1024).toFixed(2)
-  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: plain(habit.message), fix: plain(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'add', 3: 'del', 4: 'add' }), code: 'W001', message: plain(report.message), file: `Total.tsx, line ${report.line}`, fix: plain(entry.fix) })
+  write('showcase.json', { receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) }, server: block(server, 'tsx'), habit: { code: 'W005', message: unquoted(habit.message), fix: unquoted(habit.help ?? catalog.find(e => e.code === 'W005').fix) }, source: block(source, 'tsx'), compiled: block(compiled, 'ts'), bad: marked(bad, { 1: 'bad' }), good: block(good, 'tsx'), diff: marked(diff, { 1: 'del', 2: 'add', 3: 'del', 4: 'add' }), code: 'W001', message: unquoted(report.message), file: `Total.tsx, line ${report.line}`, fix: unquoted(entry.fix) })
 }
 
 /** The arena's table: evals/speed's numbers whichever way they fall, including the rows weft loses. */
@@ -597,19 +711,22 @@ function buildSpeed() {
 
 // ------------------------------------------------------------------ agents
 
-function buildLlms(docs) {
-  const lines = ['# weft', '', '> TSX compiled to direct DOM bindings, with warp, its UI toolkit, and a compiler that explains errors to agents.', '', 'Every docs page has a Markdown twin: add `.md` to its URL. `weft docs <topic>` prints the same text.', '']
-  for (const { section, items } of docs.nav) {
-    lines.push(`## ${section}`, '')
-    for (const i of items) lines.push(`- [${i.title}](/docs/${i.slug}.md)`)
-    lines.push('')
+function buildLlms(docs, learn) {
+  const lines = ['# weft', '', '> TSX compiled to direct DOM bindings, with warp, its UI toolkit, and a compiler that explains errors to agents.', '', 'Every Learn and Reference page has a Markdown twin: add `.md` to its URL. `weft docs <topic>` prints the Reference text.', '']
+  for (const [base, nav] of [['learn', learn.nav], ['reference', docs.nav]]) {
+    for (const { section, items } of nav) {
+      lines.push(`## ${base === 'learn' ? 'Learn' : 'Reference'}: ${section}`, '')
+      for (const i of items) lines.push(`- [${i.title}](/${base}/${i.slug}.md)`)
+      lines.push('')
+    }
   }
-  lines.push('## Files', '', '- [All docs in one file](/llms-full.txt)', '- [Every title on the site](/search.json)', '')
+  lines.push('## Files', '', '- [All of Learn and Reference in one file](/llms-full.txt)', '- [Every title on the site](/search.json)', '')
   writeFileSync(join(pub, 'llms.txt'), lines.join('\n'))
-  writeFileSync(join(pub, 'llms-full.txt'), docs.flat.map(p => p.md).join('\n\n---\n\n'))
+  writeFileSync(join(pub, 'llms-full.txt'), [...learn.flat, ...docs.flat].map(p => p.md).join('\n\n---\n\n'))
 }
 
-const docs = await buildDocs()
+const docs = await buildReference()
+const learn = buildLearn(docs)
 const toolkit = buildToolkit()
 buildArt()
 buildShowcase()
@@ -634,8 +751,10 @@ if (!arena.frames || !arena.graph) console.warn('[content] arena not built: its 
 write('arena-built.json', arena)
 write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), demoHtml(f)])))
 write('numbers.json', numbers())
-write('docs-nav.json', docs.nav)
-write('docs.json', docs.pages)
-const search = buildSearch(docs, [...toolkit, ...buildIcons()])
-buildLlms(docs)
-console.log(`[content] ${Object.keys(docs.pages).length} pages; T0 ${search.counts.t0} rows ${(search.t0.br / 1024).toFixed(1)} KB br; T1 ${search.counts.t1} rows ${(search.t1.br / 1024).toFixed(1)} KB br`)
+write('reference-nav.json', docs.nav)
+write('reference.json', docs.pages)
+write('learn-nav.json', learn.nav)
+write('learn.json', learn.pages)
+const search = buildSearch(docs, learn, [...toolkit, ...buildIcons()])
+buildLlms(docs, learn)
+console.log(`[content] ${Object.keys(learn.pages).length} Learn and ${Object.keys(docs.pages).length} Reference pages; T0 ${search.counts.t0} rows ${(search.t0.br / 1024).toFixed(1)} KB br; T1 ${search.counts.t1} rows ${(search.t1.br / 1024).toFixed(1)} KB br`)

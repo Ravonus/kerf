@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { state, watch } from 'weft'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { state, watch } from '@weft-js/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './long-thread.tsx?raw'
 

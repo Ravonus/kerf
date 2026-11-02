@@ -1,8 +1,8 @@
 {
-  "name": "@weft/realtime-durable-object",
-  "version": "0.0.0",
+  "name": "@weft-js/realtime-durable-object",
+  "version": "0.1.0",
   "private": true,
-  "description": "@weft/realtime-durable-object: a Cloudflare Durable Object as the realtime bus, on cloudflare_durable",
+  "description": "@weft-js/realtime-durable-object: a Cloudflare Durable Object as the realtime bus, on cloudflare_durable",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -13,14 +13,31 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@weft/start": "*",
-    "weft": "*"
+    "@weft-js/start": "*",
+    "@weft-js/core": "*"
   },
   "devDependencies": {
-    "@weft/start": "file:../start",
+    "@weft-js/start": "file:../start",
     "vitest": "5.0.5",
-    "weft": "file:../weft",
+    "@weft-js/core": "file:../weft",
     "miniflare": "^4.20260730.0",
     "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "README.md",
+    "LICENSE"
+  ],
+  "overrides": {
+    "undici": "7.30.1",
+    "sharp": "0.35.5"
   }
 }

@@ -13,14 +13,14 @@ const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
 const arg = (k, d) => process.argv.find(a => a.startsWith(`--${k}=`))?.split('=')[1] ?? d
 const N = Number(arg('n', 10000)), which = arg('browser', 'chromium'), noEngine = process.argv.includes('--no-engine')
-const engine = resolve(pkg, '../text-engine/dist/index.js')
-if (!existsSync(engine)) throw new Error('build ../text-engine first: npm run build --prefix ../text-engine')
+const engine = resolve(pkg, '../text/dist/index.js')
+if (!existsSync(engine)) throw new Error('build ../text first: npm run build --prefix ../text')
 
 async function build(outDir) {
-  const { build } = await import('vite')
-  const { default: weft } = await import('weft/vite')
+  const vite = await import('vite')
+  const { default: weft } = await import('@weft-js/core/vite')
   const slot = { name: 'measure-slot', enforce: 'pre', resolveId: s => (s === 'weft:slot/text.measure' && !noEngine ? '\0measure' : null), load: i => (i === '\0measure' ? `export const provider = 'slim'\nexport const load = () => import(${JSON.stringify(engine)}).then(m => m.loadTextEngine())\n` : null) }
-  await build({ root: join(pkg, 'test/virtual'), base: './', logLevel: 'silent', plugins: [slot, weft()], build: { outDir, emptyOutDir: true } })
+  await vite.build({ root: join(pkg, 'test/virtual'), base: './', logLevel: 'silent', plugins: [slot, weft()], build: { outDir, emptyOutDir: true } })
 }
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
@@ -61,7 +61,7 @@ const COVERED = ({ scroller, row }) => {
   return { rows: rows.length, overlap: +overlap.toFixed(2), gap: +gap.toFixed(2) }
 }
 
-const launch = async () => {
+const launch = () => {
   const pw = require('playwright-core')
   return pw[which].launch()
 }
@@ -116,7 +116,7 @@ const page = await sweep('list', 'list', LIST)
 const narrow = await page.evaluate(async () => {
   const el = document.querySelector('[data-scope="virtual"]')
   el.scrollTop = 200000
-  await new Promise(r => setTimeout(r, 200))
+  await new Promise(r => { setTimeout(r, 200) })
   const rowsTop = () => [...el.querySelectorAll('[data-part="row"]')].map(r => r.getBoundingClientRect()).filter(b => b.bottom > el.getBoundingClientRect().top)[0]?.top
   const t = performance.now()
   el.style.inlineSize = '700px'
@@ -127,12 +127,12 @@ out.list.resize = narrow
 await page.waitForTimeout(100)
 out.list.resizeWrites = await page.evaluate(async () => {
   const el = document.querySelector('[data-scope="virtual"]')
-  await new Promise(r => setTimeout(r, 150))
+  await new Promise(r => { setTimeout(r, 150) })
   let writes = 0
   const seen = new MutationObserver(l => { writes += l.length }); seen.observe(el, { subtree: true, attributes: true, childList: true, characterData: true })
   const rendered = el.querySelectorAll('[data-part="row"]:not([data-probe])').length
   el.style.inlineSize = '680px'
-  await new Promise(r => setTimeout(r, 150))
+  await new Promise(r => { setTimeout(r, 150) })
   seen.disconnect()
   return { writes, rendered }
 })
@@ -141,11 +141,11 @@ out.list.afterResize = await page.evaluate(COVERED, LIST)
 must(out.list.afterResize.overlap <= 1, `list after resize: overlap ${out.list.afterResize.overlap}`)
 out.list.driftAfterResize = await page.evaluate(() => window.drift.length)
 const far = Math.floor(N * 0.7777)
-out.list.jump = await page.evaluate(async far => {
-  window.control.scrollTo(far)
-  await new Promise(r => setTimeout(r, 200))
+out.list.jump = await page.evaluate(async to => {
+  window.control.scrollTo(to)
+  await new Promise(r => { setTimeout(r, 200) })
   const el = document.querySelector('[data-scope="virtual"]')
-  const row = el.querySelector(`[aria-posinset="${far + 1}"]`)
+  const row = el.querySelector(`[aria-posinset="${to + 1}"]`)
   return { offBy: row ? +(row.getBoundingClientRect().top - el.getBoundingClientRect().top - el.clientTop).toFixed(2) : null }
 }, far)
 must(out.list.jump.offBy !== null && Math.abs(out.list.jump.offBy) <= 1, `list: jump to row landed ${out.list.jump.offBy}px off`)
@@ -156,19 +156,19 @@ out.chat.live = await chat.evaluate(async () => {
   const el = document.querySelector('[role="log"]')
   const frame = () => new Promise(requestAnimationFrame)
   el.scrollTop = 1e9
-  await new Promise(r => setTimeout(r, 200))
+  await new Promise(r => { setTimeout(r, 200) })
   // append: it stays at the end
   window.say('warming up the row kinds')
-  await new Promise(r => setTimeout(r, 200))
+  await new Promise(r => { setTimeout(r, 200) })
   let writes = 0
   const count = new MutationObserver(l => { for (const r of l) if (!r.target.closest?.('[data-probe]')) writes++ }); count.observe(el, { subtree: true, childList: true, attributes: true, characterData: true })
   window.say('hello there')
-  await new Promise(r => setTimeout(r, 120))
+  await new Promise(r => { setTimeout(r, 120) })
   count.disconnect()
   const atEnd = el.scrollHeight - el.clientHeight - el.scrollTop
   // stream 200 tokens: nothing above the tail moves up
   window.stream()
-  await new Promise(r => setTimeout(r, 120))
+  await new Promise(r => { setTimeout(r, 120) })
   let upward = 0, last = null
   for (let i = 0; i < 200; i++) {
     window.append('word ')
@@ -180,11 +180,11 @@ out.chat.live = await chat.evaluate(async () => {
   const endGap = el.scrollHeight - el.clientHeight - el.scrollTop
   // scrolled away: a prepend doesn't move the page
   el.scrollTop = 40000
-  await new Promise(r => setTimeout(r, 300))
+  await new Promise(r => { setTimeout(r, 300) })
   const row = [...el.querySelectorAll('[data-part="row"]:not([data-probe])')].find(r => r.getBoundingClientRect().top > el.getBoundingClientRect().top + 40)
   const before = row.getBoundingClientRect().top
   window.older(200)
-  await new Promise(r => setTimeout(r, 300))
+  await new Promise(r => { setTimeout(r, 300) })
   const shift = row.isConnected ? row.getBoundingClientRect().top - before : null
   return { appendWrites: writes, atEnd, streamUpward: +upward.toFixed(2), endGap, prependShift: shift === null ? null : +shift.toFixed(2) }
 })
@@ -201,7 +201,7 @@ out.kanban.move = await board.evaluate(async () => {
   const title = card.querySelector('h4').textContent
   card.focus()
   card.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true, bubbles: true }))
-  await new Promise(r => setTimeout(r, 300))
+  await new Promise(r => { setTimeout(r, 300) })
   const second = document.querySelectorAll('[data-part="column"]')[1]
   return { inColumn: !!second.querySelector('h4') && [...second.querySelectorAll('h4')].some(h => h.textContent === title), focusIn: second.contains(document.activeElement) }
 })
@@ -212,9 +212,9 @@ const grid = await sweep('grid', 'grid', { scroller: '[data-scope="scroll-grid"]
 out.grid.keys = await grid.evaluate(async () => {
   const el = document.querySelector('[data-scope="scroll-grid"]')
   el.scrollTop = 0; el.focus()
-  await new Promise(r => setTimeout(r, 100))
+  await new Promise(r => { setTimeout(r, 100) })
   el.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', ctrlKey: true, bubbles: true }))
-  await new Promise(r => setTimeout(r, 200))
+  await new Promise(r => { setTimeout(r, 200) })
   const id = el.getAttribute('aria-activedescendant')
   const cell = document.getElementById(id)
   return { id, exists: !!cell, cellsAtEnd: el.querySelectorAll('[role="gridcell"]').length }

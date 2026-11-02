@@ -1,4 +1,4 @@
-// Research 40: shared UI state in a real browser. Real pointer, real tabs, real sockets, real locks.
+// Research 45: shared UI state in a real browser. Real pointer, real tabs, real sockets, real locks.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
@@ -20,7 +20,7 @@ afterEach(async () => {
   await sleep(100)
 })
 
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 
 async function open(context, path = '/ui-state', init) {
   const page = await context.newPage()
@@ -41,11 +41,11 @@ async function open(context, path = '/ui-state', init) {
 const person = (page, pane, name) => page.getByTestId(`${pane}-${name}`)
 const box = (page, pane, name) => person(page, pane, name).locator('label[data-scope="checkbox"]')
 const hold = l => l.evaluate(el => el.hasAttribute('data-hold'))
-const lit = (l, on = true) => expect.poll(() => hold(l), { timeout: 5000, interval: 10 }).toBe(on)
-const remote = (l, on = true) => expect.poll(() => l.evaluate(el => el.hasAttribute('data-remote')), { timeout: 5000, interval: 10 }).toBe(on)
+const lit = async (l, on = true) => { await expect.poll(() => hold(l), { timeout: 5000, interval: 10 }).toBe(on) }
+const remote = async (l, on = true) => { await expect.poll(() => l.evaluate(el => el.hasAttribute('data-remote')), { timeout: 5000, interval: 10 }).toBe(on) }
 const stats = page => page.evaluate(() => ({ ...window.__share }))
 const leaderOf = async pages => { for (const p of pages) if ((await stats(p)).role === 'leader') return p }
-const settled = (page, n = 1) => expect.poll(async () => (await stats(page)).conn ? 1 : 0, { timeout: 10_000 }).toBe(n)
+const settled = async (page, n = 1) => { await expect.poll(async () => (await stats(page)).conn ? 1 : 0, { timeout: 10_000 }).toBe(n) }
 const away = page => page.mouse.move(2, 2)
 const shot = async (page, name) => { if (shots) await page.screenshot({ path: `${shots}/${name}.png` }) }
 
@@ -93,7 +93,8 @@ test('across tabs: a sibling lights, marked remote, through one socket', async (
 test('across clients: a real socket; a late joiner gets the snapshot; a refused key joins nothing', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'right', 'Ana').hover()
   await lit(box(b, 'left', 'Ana'))
   await remote(box(b, 'left', 'Ana'))
@@ -111,9 +112,12 @@ test('across clients: a real socket; a late joiner gets the snapshot; a refused 
   await lit(box(c, 'left', 'Ana'))                     // snapshot: asked, and a holder answered
   await box(c, 'left', 'Ana').hover()
   await expect.poll(() => person(b, 'left', 'Ana').locator('output').textContent()).toBe('2 elsewhere')
-  await away(a), await away(c)
+  await away(a)
+  await away(c)
   await lit(box(b, 'left', 'Ana'), false)
-  await one.close(), await two.close(), await three.close()
+  await one.close()
+  await two.close()
+  await three.close()
 })
 
 test('a closed leader hands over: one new socket, nothing flashes, and it clears when it should', async () => {
@@ -148,7 +152,8 @@ test('a closed leader hands over: one new socket, nothing flashes, and it clears
   await lit(box(b, 'left', 'Ana'))
   await away(follower)
   await lit(box(b, 'left', 'Ana'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 onlyChromium('killing the leader mid-hover: no stuck hover anywhere', async () => {
@@ -169,7 +174,8 @@ onlyChromium('killing the leader mid-hover: no stuck hover anywhere', async () =
   await lit(box(b, 'left', 'Ana'), false)
   console.log(`crash to clear: ${Date.now() - t0} ms`)
   await expect.poll(async () => (await stats(other)).role, { timeout: 5000 }).toBe('leader')
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('a follower that dies mid-hover clears too', async () => {
@@ -186,30 +192,35 @@ test('a follower that dies mid-hover clears too', async () => {
   await follower.close({ runBeforeUnload: false })
   await lit(box(leader, 'left', 'Ben'), false)
   await lit(box(b, 'left', 'Ben'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('an element removed under the pointer lets go', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'gone', 'Row 7').hover()
   await lit(box(b, 'gone', 'Row 7'))
   await a.getByLabel('remove row').evaluate(el => el.click())  // the pointer hasn't moved: no pointerleave will come
   await expect.poll(() => a.getByTestId('gone-Row 7').count()).toBe(0)
   await lit(box(b, 'gone', 'Row 7'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('a navigation away mid-hover clears the row for everyone else', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'left', 'Ana').hover()
   await lit(box(b, 'left', 'Ana'))
   await a.goto(url + '/about')
   await lit(box(b, 'left', 'Ana'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('no echo: one hover in, one hover out, and the wire goes quiet', async () => {
@@ -233,20 +244,23 @@ test('no echo: one hover in, one hover out, and the wire goes quiet', async () =
 test('a local effect never runs for a remote hover', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'left', 'Ana').hover()
   await lit(box(b, 'left', 'Ana'))
   await sleep(200)
   expect(await person(b, 'left', 'Ana').locator('output').textContent()).toBe('1 elsewhere')
   expect(await b.evaluate(() => window.__localHover ?? 0)).toBe(0)
   expect(await a.evaluate(() => window.__localHover)).toBe(2)  // one watch in each pane's Row, on the one box
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('touch: a tap leaves hover false, here and everywhere', async () => {
   const phone = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 700 } }), two = await browser.newContext()
   const a = await open(phone), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   const seen = box(b, 'left', 'Ana')
   await seen.evaluate(el => { window.__lit = 0; new MutationObserver(() => { if (el.hasAttribute('data-hold')) window.__lit++ }).observe(el, { attributes: true }) })
   await person(a, 'left', 'Ana').locator('button').tap()
@@ -254,7 +268,8 @@ test('touch: a tap leaves hover false, here and everywhere', async () => {
   expect(await person(a, 'left', 'Ana').locator('output').textContent()).toBe('idle')
   expect(await a.evaluate(() => window.__localHover ?? 0)).toBe(0)
   await expect.poll(() => seen.evaluate(el => !el.hasAttribute('data-hold'))).toBe(true) // a tap presses, then lets go
-  await phone.close(), await two.close()
+  await phone.close()
+  await two.close()
 })
 
 // Playwright's WebKit keeps `navigator.onLine` true under `setOffline` and lets a new socket straight back in, so there
@@ -263,10 +278,12 @@ test('touch: a tap leaves hover false, here and everywhere', async () => {
 test('offline, with a close event that never comes: clears past the grace, and comes back with the link', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'left', 'Ana').hover()
   await lit(box(b, 'left', 'Ana'))
   await b.evaluate(() => {
+    // oxlint-disable-next-line typescript/unbound-method -- kept to be called with a socket as `this`
     window.__close = WebSocket.prototype.close
     WebSocket.prototype.close = function () {}
     Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false })
@@ -281,13 +298,15 @@ test('offline, with a close event that never comes: clears past the grace, and c
     window.dispatchEvent(new Event('online'))
   })
   await lit(box(b, 'left', 'Ana'))
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 onlyChromium('offline, by the browser itself', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'left', 'Ana').hover()
   await lit(box(b, 'left', 'Ana'))
   await two.setOffline(true)
@@ -297,14 +316,16 @@ onlyChromium('offline, by the browser itself', async () => {
   await b.evaluate(() => { window.dispatchEvent(new Event('online')) })
   await settled(b)
   await lit(box(b, 'left', 'Ana'))
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('no Web Locks: one socket per tab, and a sibling still counts once', async () => {
   const noLocks = () => Object.defineProperty(Navigator.prototype, 'locks', { get: () => undefined })
   const one = await browser.newContext()
   const a = await open(one, '/ui-state', noLocks), b = await open(one, '/ui-state', noLocks)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   expect((await stats(a)).role).toBe('leader')
   expect((await stats(b)).role).toBe('leader')
   await sleep(200)
@@ -337,13 +358,15 @@ test('a stuck leader: a tab that gets no pong steals it, and hover flows again',
   expect((await stats(other)).steals).toBe(1)
   await expect.poll(async () => (await stats(leader)).role, { timeout: 5000 }).toBe('follower')
   await expect.poll(() => leader.evaluate(() => window.__sockets.filter(s => s.readyState === 1).length), { timeout: 5000 }).toBe(0)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('a sweep across 40 rows stays under the socket limit', async () => {
   const one = await browser.newContext({ viewport: { width: 900, height: 2400 } }), two = await browser.newContext()
   const a = await open(one, '/ui-state?rows=40'), b = await open(two, '/ui-state?rows=40')
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await sleep(500)
   const first = await box(a, 'left', 'Ana').boundingBox()
   for (let i = 0; i < 300; i++) await a.mouse.move(first.x + 10, first.y + (i * 7) % 1900)
@@ -352,7 +375,8 @@ test('a sweep across 40 rows stays under the socket limit', async () => {
   expect(await a.evaluate(() => window.__sockets.length)).toBe(1)
   expect(await a.evaluate(() => window.__sockets[0].readyState)).toBe(1)
   await expect.poll(() => b.locator('[data-remote]').count(), { timeout: 5000 }).toBe(0)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 // Playwright turns bfcache off, so this browser turns it back on. Whether Chrome keeps a page is logged, not asserted:
@@ -361,7 +385,8 @@ onlyChromium('bfcache: back to a page that left comes back live', async () => {
   const cached = await engines.chromium.launch({ ignoreDefaultArgs: ['--disable-back-forward-cache'], args: ['--enable-features=BackForwardCache'] })
   const ctx = await cached.newContext(), two = await browser.newContext()
   const a = await open(ctx), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await a.evaluate(() => { window.__mark = 1; addEventListener('pageshow', e => { window.__restored = e.persisted }) })
   await a.goto(url + '/about')
   await sleep(300)
@@ -377,7 +402,8 @@ onlyChromium('bfcache: back to a page that left comes back live', async () => {
 test('a 200-row join is a frame, not a flood, and every row still works', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one, '/ui-state?rows=200'), b = await open(two, '/ui-state?rows=200')
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await sleep(400)
   const frames = await a.evaluate(() => window.__share.frames)
   expect(frames).toBeLessThan(5)                       // the prototype took 400, paced over 24 seconds
@@ -389,7 +415,9 @@ test('a 200-row join is a frame, not a flood, and every row still works', async 
   await lit(box(c, 'left', 'Row 150'))                 // a joiner's snapshot, for one key of 200
   await away(a)
   await lit(box(b, 'left', 'Row 150'), false)
-  await one.close(), await two.close(), await c.context().close()
+  await one.close()
+  await two.close()
+  await c.context().close()
 })
 
 test('a key the server refuses stays in this browser', async () => {
@@ -406,13 +434,15 @@ test('a key the server refuses stays in this browser', async () => {
   await box(a1, 'left', 'Secret').hover()
   await sleep(300)
   await lit(box(b, 'left', 'Secret'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('a killed socket reconnects: state comes back in both directions', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(a, 'left', 'Ana').hover()
   await lit(box(b, 'left', 'Ana'))
   await b.evaluate(() => window.__sockets.at(-1).close())
@@ -426,7 +456,8 @@ test('a killed socket reconnects: state comes back in both directions', async ()
   await lit(box(b, 'left', 'Ana'))                     // re-said by the holder on its new connection
   await away(a)
   await lit(box(b, 'left', 'Ana'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('no rows left, no socket; rows again, a socket', async () => {
@@ -441,24 +472,27 @@ test('no rows left, no socket; rows again, a socket', async () => {
 test('a tab opened late sees what the socket already knows', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await box(b, 'left', 'Ben').hover()
   await lit(box(a, 'left', 'Ben'))
   const a2 = await open(one)
   await lit(box(a2, 'left', 'Ben'))
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 test('high-frequency hover: throttled, latest value kept', async () => {
   const one = await browser.newContext(), two = await browser.newContext()
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   await sleep(300)
   const before = (await stats(a)).frames
   await a.evaluate(async () => {
     const el = document.querySelector('[data-testid="left-Ana"] label')
     const over = n => el.dispatchEvent(new PointerEvent(n, { pointerType: 'mouse' }))
-    for (let i = 0; i < 400; i++) { over('pointerenter'); over('pointerleave'); if (i % 8 === 0) await new Promise(ok => setTimeout(ok, 1)) }
+    for (let i = 0; i < 400; i++) { over('pointerenter'); over('pointerleave'); if (i % 8 === 0) await new Promise(ok => { setTimeout(ok, 1) }) }
     over('pointerenter')                               // ends on
   })
   await lit(box(b, 'left', 'Ana'))
@@ -467,7 +501,8 @@ test('high-frequency hover: throttled, latest value kept', async () => {
   expect(await a.evaluate(() => window.__sockets[0].readyState)).toBe(1)
   await a.evaluate(() => document.querySelector('[data-testid="left-Ana"] label').dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' })))
   await lit(box(b, 'left', 'Ana'), false)
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 })
 
 // ---- measurements: `UI_STATE_MEASURE=<file>` -----------------------------------------------------------------------
@@ -511,7 +546,8 @@ test.runIf(process.env.UI_STATE_MEASURE)('latency per route, and sockets per cli
   const one = await browser.newContext(), two = await browser.newContext()
   const out = {}
   const a = await open(one), b = await open(two)
-  await settled(a), await settled(b)
+  await settled(a)
+  await settled(b)
   const samePage = await measure(a, a)
   await a.close()
   const a1 = await open(one), a2 = await open(one)
@@ -548,7 +584,7 @@ test.runIf(process.env.UI_STATE_MEASURE)('latency per route, and sockets per cli
       window.__bye = window.__hello = 0
       new BroadcastChannel('weft:ui:1').onmessage = e => { if (e.data.t === 'bye') window.__bye ||= performance.now() }
       const Real = window.WebSocket
-      window.WebSocket = class extends Real { constructor(...a) { super(...a); this.addEventListener('message', () => { window.__hello ||= performance.now() }) } }
+      window.WebSocket = class extends Real { constructor(...args) { super(...args); this.addEventListener('message', () => { window.__hello ||= performance.now() }) } }
     })
     await l.close()
     await o.waitForFunction(() => window.__hello && window.__bye, null, { timeout: 5000 })
@@ -559,7 +595,8 @@ test.runIf(process.env.UI_STATE_MEASURE)('latency per route, and sockets per cli
   out.handover = { n: hand.length, p50: q(hand, 0.5), max: q(hand, 1) }
   writeFileSync(process.env.UI_STATE_MEASURE, JSON.stringify(out, null, 2))
   console.log(JSON.stringify(out))
-  await one.close(), await two.close()
+  await one.close()
+  await two.close()
 }, 300_000)
 
 // ---- one browser, one socket: share, channel and live on the leader's link ---------------------------------------------
@@ -580,7 +617,7 @@ const say = async (p, text) => {
   await label(p, 'draft').fill(text)
   await p.getByRole('button', { name: 'send', exact: true }).click()
 }
-const heard = (p, text) => expect.poll(() => label(p, 'said').textContent(), { timeout: 10_000 }).toContain(text)
+const heard = async (p, text) => { await expect.poll(() => label(p, 'said').textContent(), { timeout: 10_000 }).toContain(text) }
 
 test('8 tabs with share, channel and live: one socket, and all three work from every tab', async () => {
   const ctx = await browser.newContext()
@@ -684,7 +721,7 @@ measuring('latency of live and channel, sender and receiver leader or follower',
   let leader
   for (const p of pages) if (await p.evaluate(() => window.__sockets.some(s => s.readyState === 1))) leader = leader ?? p
   const followers = pages.filter(p => p !== leader)
-  const pct = (a, q) => [...a].sort((x, y) => x - y)[Math.floor(a.length * q)]
+  const pct = (list, at) => [...list].sort((x, y) => x - y)[Math.floor(list.length * at)]
   const out = { sockets: await socketsOpen(pages) }
   const watch = (p, name) => p.evaluate(n => {
     const el = document.querySelector(`[aria-label="${n}"]`)
@@ -693,13 +730,13 @@ measuring('latency of live and channel, sender and receiver leader or follower',
     o.observe(el, { childList: true, subtree: true, characterData: true })
     window.__stop = () => o.disconnect()
   }, name)
-  const fire = (p, kind, i) => p.evaluate(([kind, i]) => {
+  const fire = (p, what, n) => p.evaluate(([kind, i]) => {
     const input = document.querySelector('[aria-label="draft"]')
     if (kind === 'chat') { input.value = `m${i}`; input.dispatchEvent(new Event('input', { bubbles: true })) }
     const t = performance.timeOrigin + performance.now()
     ;[...document.querySelectorAll('button')].find(b => b.textContent === (kind === 'chat' ? 'send' : 'bump')).click()
     return t
-  }, [kind, i])
+  }, [what, n])
   for (const [kind, name] of [['live', 'hits'], ['chat', 'said']]) {
     for (const [route, from, to] of [['l-f', leader, followers[0]], ['f-l', followers[0], leader], ['f-f', followers[1], followers[2]]]) {
       await watch(to, name)

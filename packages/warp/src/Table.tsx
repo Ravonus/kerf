@@ -1,104 +1,108 @@
-import { ColumnsIcon } from '@weft/icons'
-import { checkState, filterRows, hideRule, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, type Resource, type State, untrack, watch } from 'weft'
+import { ColumnsIcon } from '@weft-js/warp-icons'
+import { checkState, filterRows, hideRule, pageSlice, popover, pushLayer, rangeOf, sortRows, table, uid, type SortDir } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, type Derived, type Resource, type State, untrack, watch } from '@weft-js/core'
 import { Button } from './Button'
 import { Checkbox } from './Choice'
 import { Search } from './Field'
 import { Select } from './Select'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/popover.css' // the Columns panel
-import '@weft/warp-core/styles/data/tokens.css'
-import '@weft/warp-core/styles/data/base.css'
-import '@weft/warp-core/styles/data/table.css'
-import '@weft/warp-core/styles/data/desc.css'
+import '@weft-js/warp-core/styles/components/popover.css' // the Columns panel
+import '@weft-js/warp-core/styles/data/tokens.css'
+import '@weft-js/warp-core/styles/data/base.css'
+import '@weft-js/warp-core/styles/data/table.css'
+import '@weft-js/warp-core/styles/data/desc.css'
 
+/** One Table column. */
 export interface Column<T> {
   id: string
   /** Text: it also labels the cell on a phone card and the Columns checkbox. */
   header: string
   /** What the cell holds, sorts by and filters on. Default `row[id]`. */
-  value?: (row: T) => any
+  value?: ((row: T) => unknown) | undefined
   /** How the cell draws it. Default the value as text. */
-  cell?: (row: T) => any
+  cell?: ((row: T) => unknown) | undefined
   /** `true` sorts by `value`; a function sorts by what it returns. */
-  sort?: boolean | ((row: T) => unknown)
-  numeric?: boolean
+  sort?: (boolean | ((row: T) => unknown)) | undefined
+  numeric?: boolean | undefined
   /** Sticky at the inline start. */
-  pin?: boolean
-  rowHeader?: boolean
+  pin?: boolean | undefined
+  rowHeader?: boolean | undefined
   /** 2 hides under 760px of table width, 3 under 1000px; a row's details still list it. */
-  priority?: 2 | 3
+  priority?: 2 | 3 | undefined
   /** Where it goes on a phone card. */
-  card?: 'title' | 'badge' | 'hide'
-  resize?: boolean
+  card?: 'title' | 'badge' | 'hide' | undefined
+  resize?: boolean | undefined
   /** Inline edit: `true` commits the text, a function turns the text into the value. */
-  edit?: boolean | ((text: string) => unknown)
+  edit?: (boolean | ((text: string) => unknown)) | undefined
   /** `true`, or the message to show: an invalid value never commits. */
-  validate?: (value: any) => true | string | boolean
+  validate?: ((value: unknown) => string | boolean) | undefined
   /** A number that ticks: the cell flashes on change and the row is never rebuilt. */
-  live?: boolean
+  live?: boolean | undefined
 }
 
 /** The V2 list envelope. `next`/`prev` are cursors; absent means there is no such page. */
 export type ListPage<T> = { items: T[]; total?: number; next?: unknown; prev?: unknown }
+/** The column a table is sorted by, and which way. */
 export type TableSort = { id: string; dir: SortDir }
+/** What a table is showing in place of, or along with, its rows. */
 export type TableStatus = 'ready' | 'loading' | 'empty' | 'error'
 
+/** Props for Table. */
 export interface TableProps<T> {
-  rows: readonly T[] | State<readonly T[]> | Resource<readonly T[] | ListPage<T>>
+  rows: readonly T[] | State<readonly T[]> | Derived<readonly T[]> | Resource<readonly T[] | ListPage<T>>
   /** Names the table (required, 06 §5). It stays in the accessibility tree when `captionHidden`. */
   caption: string
   /** Hides the caption on screen. Screen readers still hear it. */
-  captionHidden?: boolean
+  captionHidden?: boolean | undefined
   columns: Column<T>[]
   /** The field that identifies a row, or how to get it. Default `id`. */
-  rowKey?: string | ((row: T) => string)
+  rowKey?: (string | ((row: T) => string)) | undefined
   /** `cards` stacks each row in a container under 480px wide; `columns` scrolls sideways instead. */
-  phone?: 'cards' | 'columns'
-  density?: 'compact' | 'cozy' | 'comfortable'
+  phone?: 'cards' | 'columns' | undefined
+  density?: 'compact' | 'cozy' | 'comfortable' | undefined
   /** Show the filter field, labelled this. */
-  filter?: string
+  filter?: string | undefined
   /** A state holding the filter text, so you can read or set it. */
-  query?: State<string>
+  query?: State<string> | undefined
   /** A state holding the sorted column and direction, so you can read or set it. */
   sort?: State<TableSort | undefined>
   /** Called with the column and direction when someone sorts. */
-  onSortChange?: (sort: TableSort) => void
+  onSortChange?: ((sort: TableSort) => void) | undefined
   /** The rows arrive sorted, filtered and paged (a Resource's are): the table only reports what's asked. */
-  server?: boolean
+  server?: boolean | undefined
   /** Checkboxes, Shift-click ranges and the bulk bar. */
-  selection?: boolean | State<Record<string, boolean>>
+  selection?: boolean | State<Record<string, boolean>> | undefined
   /** Called with the keys of every selected row after each change. */
-  onSelectionChange?: (keys: string[]) => void
+  onSelectionChange?: ((keys: string[]) => void) | undefined
   /** The bulk bar's actions. */
-  bulk?: (keys: string[]) => any
-  page?: { size: number }
+  bulk?: ((keys: string[]) => unknown) | undefined
+  page?: { size: number } | undefined
   /** Called on Next or Previous, with the page or server cursor to load. */
-  onPageChange?: (to: unknown, reason: 'next' | 'prev') => void
+  onPageChange?: ((to: unknown, reason: 'next' | 'prev') => void) | undefined
   /** A row's details. Default a list of every column. */
-  expand?: (row: T) => any
+  expand?: ((row: T) => unknown) | undefined
   /** inline (default): they slide open in place at every width. sheet: a panel over the table below 1000px. */
-  details?: 'inline' | 'sheet'
+  details?: 'inline' | 'sheet' | undefined
   /** Called with the row, the column's id and the new value when a cell edit is committed. */
-  onEdit?: (row: T, column: string, value: any) => void
+  onEdit?: ((row: T, column: string, value: unknown) => void) | undefined
   /** The toolbar's own actions. */
-  actions?: any
+  actions?: unknown
   /** The Columns disclosure. */
-  picker?: boolean
+  picker?: boolean | undefined
   /** Columns hidden from the start, in the server's HTML too. Bind a State to keep what people choose. */
-  hiddenColumns?: readonly string[] | State<readonly string[]>
+  hiddenColumns?: readonly string[] | State<readonly string[]> | undefined
   /** Forces a state; a Resource's own is used otherwise. */
-  status?: TableStatus
+  status?: TableStatus | undefined
   /** What to show when there are no rows: a title, a line of text and an action. */
-  empty?: { title?: any; text?: any; action?: any }
-  error?: { title?: any; text?: any }
+  empty?: { title?: unknown; text?: unknown; action?: unknown } | undefined
+  error?: { title?: unknown; text?: unknown } | undefined
   /** Called by the error state's Retry. A Resource refreshes itself as well. */
-  onRetry?: () => void
+  onRetry?: (() => void) | undefined
   /** A CSS height past which the body scrolls under a sticky header, such as `480px`. */
-  maxHeight?: string
+  maxHeight?: string | undefined
   /** The outline level of the table's state and sheet headings, under the page's h1. */
-  heading?: number
+  heading?: number | undefined
 }
 
 export const chevron = () => <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
@@ -110,15 +114,15 @@ const SKELETON_ROWS = 6
 const CARDS_BELOW = 480
 const DETAILS_FROM = 1000 // table width: below it `details="sheet"` opens the sheet (06 §5)
 
-const isResource = (r: any): r is Resource<any> => typeof r?.refresh === 'function'
-const isState = (r: any): r is State<any> => r != null && !Array.isArray(r) && 'value' in r
+const isResource = (r: unknown): r is Resource<unknown> => typeof (r as Resource<unknown> | null | undefined)?.refresh === 'function'
+const isState = (r: object | null | undefined): r is State<unknown> => r != null && !Array.isArray(r) && 'value' in r
 
 type Ctx<T> = {
   id: string
   level: number
   cols: () => Column<T>[]
   keyOf: (row: T) => string
-  read: (c: Column<T>, row: T) => any
+  read: (c: Column<T>, row: T) => unknown
   sel: State<Record<string, boolean>> | undefined
   open: State<Record<string, boolean>>
   details: boolean
@@ -126,8 +130,8 @@ type Ctx<T> = {
   title: (row: T) => string
   pick: (key: string, e: MouseEvent) => void
   toggle: (row: T, from: HTMLElement) => void
-  body: (row: T) => any
-  edit?: (row: T, column: string, value: any) => void
+  body: (row: T) => unknown
+  edit?: ((row: T, column: string, value: unknown) => void) | undefined
 }
 
 /** Every column as a list: what a sheet and a detail row show by default. */
@@ -135,14 +139,14 @@ function Fields<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
   return <dl data-scope="desc">{ctx.cols().map(c => <div key={c.id}><dt>{c.header}</dt><dd>{(c.cell ?? ((r: T) => ctx.read(c, r)))(row)}</dd></div>)}</dl>
 }
 
-export function Editor({ label, start, onDone, onLeave, invalid, describedby }: { label: string; start: string; onDone: (save: boolean, text: string) => void; onLeave?: (save: boolean, text: string) => void; invalid?: boolean; describedby?: string }) {
+export function Editor({ label, start, onDone, onLeave, invalid, describedby }: { label: string; start: string; onDone: (save: boolean, text: string) => void; onLeave?: (save: boolean, text: string) => void; invalid?: boolean; describedby?: string | undefined }) {
   let input: HTMLInputElement | undefined
   onMount(() => { input?.focus(); input?.select() })
   return (
     <label>
       <span data-part="sr-only">{label}</span>
       <input
-        ref={(n: any) => (input = n)}
+        ref={n => (input = n)}
         data-part="editor"
         aria-invalid={invalid ? 'true' : undefined}
         aria-describedby={describedby}
@@ -160,7 +164,7 @@ export function Editor({ label, start, onDone, onLeave, invalid, describedby }: 
 }
 
 // its own component: a new value patches this one text node, and flipping `editing` is the only thing that swaps it
-function Shown<T>({ row, col, value }: { row: T; col: Column<T>; value: () => any }) {
+function Shown<T>({ row, col, value }: { row: T; col: Column<T>; value: () => unknown }) {
   const c = untrack(() => col)
   if (c.live) return <><span data-part="dir" aria-hidden="true"></span>{c.cell ? c.cell(row) : value()}</>
   return <>{c.cell ? c.cell(row) : value()}</>
@@ -176,11 +180,11 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
   let td: HTMLElement | undefined
   if (c.live) watch(value, (now, was) => {
     if (was === undefined || now === was) return
-    const dir = now > was ? 'up' : 'down'
+    const dir = (now as number) > (was as number) ? 'up' : 'down'
     delta.value = delta.value === dir ? `${dir}2` : dir // two names per direction, so the flash replays
   })
   let seed = ''
-  const begin = () => { if (c.edit && !editing.value) { seed = String(untrack(value) ?? ''); problem.value = ''; editing.value = true } }
+  const begin = () => { if (c.edit && !editing.value) { seed = String((untrack(value) as string | number | null | undefined) ?? ''); problem.value = ''; editing.value = true } }
   const done = (save: boolean, text: string) => {
     if (!editing.value) return
     if (save) {
@@ -195,7 +199,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
   }
   return (
     <td
-      ref={(n: any) => (td = n)}
+      ref={n => (td = n)}
       role={c.rowHeader ? 'rowheader' : 'cell'}
       data-col={c.id}
       data-label={c.header}
@@ -210,7 +214,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
       tabindex={c.edit ? '0' : undefined}
       aria-description={c.edit ? 'Press Enter to edit' : undefined}
       onDblClick={c.edit ? begin : undefined}
-      onKeyDown={c.edit ? (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === 'F2')) { e.preventDefault(); begin() } } : undefined}
+      onKeyDown={(c.edit ? (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === 'F2')) { e.preventDefault(); begin() } } : undefined)!}
     >
       {editing.value
         ? <><Editor label={`${c.header} for ${ctx.title(row)}`} start={seed} onDone={done} />{problem.value && <span data-part="sr-only" id={message()} role="alert">{problem.value}</span>}</>
@@ -222,15 +226,15 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
 function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
   const key = () => ctx.keyOf(row)
   const on = () => !!ctx.sel?.get(key())
-  const opened = () => !!ctx.open.get(key())
+  const opened = () => !!(ctx.open.get(key()) as boolean | undefined)
   const detail = () => `${ctx.id}-d-${key()}`
   // a closing row stays until it has slid shut. A timer, because transitionend never comes
   // when the transition is skipped, and that would strand an empty row
   const mounted = state(untrack(opened))
   let tr: HTMLElement | undefined
   const settle = () => { if (!untrack(opened)) mounted.value = false }
-  watch(opened, on => {
-    if (on) return void (mounted.value = true)
+  watch(opened, now => {
+    if (now) return void (mounted.value = true)
     if (!mounted.value) return
     queueMicrotask(() => {
       const slide = tr?.nextElementSibling?.querySelector('[data-part="slide"]')
@@ -243,7 +247,7 @@ function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
   }
   return (
     <>
-      <tr ref={(n: any) => (tr = n)} role="row" data-id={key()} data-selected={on() ? '' : undefined} data-clickable={ctx.details ? '' : undefined} onClick={ctx.details ? click : undefined}>
+      <tr ref={n => (tr = n)} role="row" data-id={key()} data-selected={on() ? '' : undefined} data-clickable={ctx.details ? '' : undefined} onClick={(ctx.details ? click : undefined)!}>
         {ctx.sel && <td role="cell" data-part="select" data-pinned="first"><label data-scope="checkbox"><input type="checkbox" checked={ctx.sel.get(key())} aria-label={`Select ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.pick(key(), e)} /><span data-part="control"><svg viewBox="0 0 24 24" aria-hidden="true"><path data-part="check" pathLength="1" d="M5 12.5 L9.5 17 L19 7" /></svg></span></label></td>}
         {ctx.details && <td role="cell" style="padding-inline:4px"><button type="button" data-part="expand" aria-expanded={opened() ? 'true' : 'false'} aria-controls={mounted.value ? detail() : undefined} aria-label={`Details for ${ctx.title(row)}`} onClick={(e: MouseEvent) => ctx.toggle(row, e.currentTarget as HTMLElement)}>{chevron()}</button></td>}
         {ctx.cols().map(c => <Cell key={c.id} row={row} col={c} ctx={ctx} />)}
@@ -263,10 +267,10 @@ function Sheet<T>({ row, ctx, onClose }: { row: T; ctx: Ctx<T>; onClose: (restor
   })
   const id = () => `${ctx.id}-sh`
   return (
-    <div ref={(n: any) => (el = n)} data-part="sheet" role="dialog" aria-modal="false" aria-labelledby={id()}>
+    <div ref={n => (el = n)} data-part="sheet" role="dialog" aria-modal="false" aria-labelledby={id()}>
       <header>
         <h4 id={id()} aria-level={ctx.level} style="margin:0">{ctx.title(row)}</h4>
-        <Button emphasis="ghost" tone="neutral" ref={(n: any) => (close = n)} onClick={() => onClose(true)}>Close</Button>
+        <Button emphasis="ghost" tone="neutral" ref={n => (close = n)} onClick={() => onClose(true)}>Close</Button>
       </header>
       <div tabindex="0" role="group" aria-labelledby={id()}>{ctx.body(row)}</div>
     </div>
@@ -277,8 +281,8 @@ export function ColumnsPanel<T>({ id, open, trigger, items, shown, flip }: { id:
   let panel: HTMLDivElement | undefined
   use(popover, () => panel, () => ({ open: open.value, trigger: trigger(), side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
-    <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" id={id} role="group" aria-label="Visible columns">
-      {items.map(c => <div key={c.id}><Checkbox checked={shown(c)} onChange={(e: any) => flip(c, e.currentTarget.checked)}>{c.header}</Checkbox></div>)}
+    <div ref={n => (panel = n)} data-scope="popover" data-part="content" popover="manual" id={id} role="group" aria-label="Visible columns">
+      {items.map(c => <div key={c.id}><Checkbox checked={shown(c)} onChange={(e: Event) => flip(c, (e.currentTarget as HTMLInputElement).checked)}>{c.header}</Checkbox></div>)}
     </div>
   )
 }
@@ -294,10 +298,10 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const id = uid('tbl')
   const level = untrack(() => heading)
   const cols = derived(() => columns)
-  const keyOf = (r: T) => String(typeof rowKey === 'function' ? rowKey(r) : (r as any)[rowKey])
-  const read = (c: Column<T>, r: T) => (c.value ? c.value(r) : (r as any)[c.id])
+  const keyOf = (r: T) => String(typeof rowKey === 'function' ? rowKey(r) : (r as Record<string, unknown>)[rowKey])
+  const read = (c: Column<T>, r: T) => (c.value ? c.value(r) : (r as Record<string, unknown>)[c.id])
   const named = derived(() => cols.value.find(c => c.rowHeader) ?? cols.value[0])
-  const title = (r: T) => String(read(named.value, r) ?? '')
+  const title = (r: T) => String((read(named.value!, r) as string | number | null | undefined) ?? '')
 
   const typed = untrack(() => query) ?? state('')
   const order = untrack(() => sort) ?? state<TableSort | undefined>(undefined)
@@ -319,10 +323,10 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const small = derived(() => width.value !== undefined && width.value < CARDS_BELOW)
   const shape = derived(() => (phone === 'cards' && (width.value ?? 0) >= CARDS_BELOW ? 'columns' : phone))
 
-  const source = () => { const r: any = rows; return isResource(r) ? r.value : isState(r) ? r.value : r }
+  const source = () => (isResource(rows) ? rows.value : isState(rows) ? rows.value : rows) as readonly T[] | ListPage<T> | undefined
   const remote = derived(() => !!server || isResource(rows))
-  const list = derived<readonly T[]>(() => { const v: any = source(); return Array.isArray(v) ? v : v?.items ?? [] })
-  const envelope = derived<ListPage<T> | undefined>(() => { const v: any = source(); return v && !Array.isArray(v) ? v : undefined })
+  const list = derived<readonly T[]>(() => { const v = source(); return Array.isArray(v) ? v as readonly T[] : (v as ListPage<T> | undefined)?.items ?? [] })
+  const envelope = derived<ListPage<T> | undefined>(() => { const v = source(); return v && !Array.isArray(v) ? v as ListPage<T> : undefined })
   const shown = derived(() => {
     if (remote.value) return list.value
     const c = cols.value
@@ -339,7 +343,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const visible = derived(() => paged.value?.rows ?? shown.value)
   const phase = derived<TableStatus>(() => {
     if (status) return status
-    const r: any = rows
+    const r = rows
     if (isResource(r)) {
       if (r.error) return 'error'
       if (r.value === undefined) return 'loading'
@@ -359,7 +363,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
     anchor = key
     write(next)
   }
-  const headerCheck = derived(() => (sel ? checkState(keys.value, k => !!sel.get(k)) : 'none'))
+  const headerCheck = derived(() => (sel ? checkState(keys.value, k => !!(sel.get(k) as boolean | undefined)) : 'none'))
   const pickAll = () => {
     const next = { ...sel!.value }
     const off = headerCheck.value === 'all'
@@ -369,7 +373,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
 
   const askSort = (c: Column<T>, dir?: SortDir) => {
     const now = order.value
-    const next = { id: c.id, dir: dir ?? (now?.id === c.id && now.dir === 'ascending' ? 'descending' : 'ascending') } as TableSort
+    const next = { id: c.id, dir: dir ?? (now?.id === c.id && now.dir === 'ascending' ? 'descending' : 'ascending') }
     order.value = next
     onSortChange?.(next)
   }
@@ -410,32 +414,34 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
   const count = derived(() => (phase.value === 'ready' && !remote.value ? `${shown.value.length} of ${list.value.length}` : ''))
   const footer = derived(() => page !== undefined || isResource(rows))
 
-  const retry = () => { onRetry?.(); const r: any = rows; if (isResource(r)) r.refresh() }
+  const retry = () => { onRetry?.(); if (isResource(rows))  rows.refresh() }
   const clear = () => (typed.value = '')
   const noticeTitle = derived(() => (phase.value === 'error' ? error?.title ?? 'This couldn’t load' : typed.value ? `No rows match “${typed.value}”` : empty?.title ?? 'Nothing here yet'))
   const noticeText = derived(() => {
-    if (phase.value === 'error') { const r: any = rows; return error?.text ?? (isResource(r) && r.error instanceof Error ? r.error.message : 'Try again in a moment.') }
+    if (phase.value === 'error') { return error?.text ?? (isResource(rows) && rows.error instanceof Error ? rows.error.message : 'Try again in a moment.') }
     return typed.value ? 'Try a shorter term, or clear the filter.' : empty?.text
   })
 
   use(table, () => el, () => ({ hidden: hidden.value, rows: visible.value, onWidth: w => (width.value = w) }))
   onCleanup(() => (sheet.value = undefined))
 
-  const toolbar = derived(() => filter !== undefined || actions !== undefined || !!picker)
+  const toolbar = derived(() => filter !== undefined || actions !== undefined || !!(picker as unknown))
   const hideable = derived(() => cols.value.filter(c => !c.pin))
-  const flip = (c: Column<T>, shown: boolean) => { hidden.value = shown ? hidden.value.filter(x => x !== c.id) : [...hidden.value, c.id] }
+  const flip = (c: Column<T>, show: boolean) => { hidden.value = show ? hidden.value.filter(x => x !== c.id) : [...hidden.value, c.id] }
   return (
-    <div ref={(n: any) => (el = n)} data-scope="table" data-phone={shape.value} data-state={phase.value} data-density={density} id={id}>
-      {untrack(() => hidden.value.length > 0) && <style data-part="hide" innerHTML={untrack(() => hideRule(id, hidden.value))}></style>}
+    <div ref={n => (el = n)} data-scope="table" data-phone={shape.value} data-state={phase.value} data-density={density} id={id}>
+      {untrack(() => hidden.value.length > 0) && <style data-part="hide"
+        // oxlint-disable-next-line weft/no-html-sink -- hideRule builds a CSS rule from escaped column ids, no markup
+        innerHTML={untrack(() => hideRule(id, hidden.value))}></style>}
       {toolbar.value && (
         <div data-part="toolbar">
-          {filter !== undefined && <Search label={filter} value={typed.value} onInput={(e: any) => (typed.value = e.currentTarget.value)} />}
+          {filter !== undefined && <Search label={filter} value={typed.value} onInput={(e: Event) => (typed.value = (e.currentTarget as HTMLInputElement).value)} />}
           <span data-part="count" aria-live="polite">{count.value}</span>
           <span data-part="spacer"></span>
           {actions}
           {picker && (
             <div>
-              <Button emphasis="outline" tone="neutral" ref={(n: any) => (columnsButton = n)} aria-expanded={picking.value ? 'true' : 'false'} aria-controls={picked.value ? `${id}-cols` : undefined} onClick={() => { picked.value = true; picking.value = !picking.value }}>{columnsIcon()}Columns</Button>
+              <Button emphasis="outline" tone="neutral" ref={n => (columnsButton = n)} aria-expanded={picking.value ? 'true' : 'false'} aria-controls={picked.value ? `${id}-cols` : undefined} onClick={() => { picked.value = true; picking.value = !picking.value }}>{columnsIcon()}Columns</Button>
               {picked.value && <ColumnsPanel id={`${id}-cols`} open={picking} trigger={() => columnsButton!} items={hideable.value} shown={c => !hidden.value.includes(c.id)} flip={flip} />}
             </div>
           )}
@@ -450,7 +456,7 @@ export function Table<T>({ rows, caption, captionHidden, columns, rowKey = 'id',
       )}
       {phone === 'cards' && small.value && sortable.value.length > 0 && (
         <div data-part="sortbar">
-          <Select label="Sort by" size="sm" value={order.value?.id ?? ''} placeholder="None" options={sortable.value.map(c => ({ value: c.id, label: c.header }))} onChange={(e: any) => { const c = cols.value.find(x => x.id === e.currentTarget.value); if (c) askSort(c, order.value?.dir ?? 'ascending') }} />
+          <Select label="Sort by" size="sm" value={order.value?.id ?? ''} placeholder="None" options={sortable.value.map(c => ({ value: c.id, label: c.header }))} onChange={(e: Event) => { const c = cols.value.find(x => x.id === (e.currentTarget as HTMLInputElement).value); if (c) askSort(c, order.value?.dir ?? 'ascending') }} />
           <Button emphasis="outline" tone="neutral" size="sm" aria-label="Toggle sort direction" disabled={!order.value} onClick={() => { const c = cols.value.find(x => x.id === order.value?.id); if (c) askSort(c, order.value!.dir === 'ascending' ? 'descending' : 'ascending') }}>{order.value?.dir === 'ascending' ? '↑' : '↓'}</Button>
         </div>
       )}

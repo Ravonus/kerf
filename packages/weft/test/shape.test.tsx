@@ -1,9 +1,9 @@
 // Shape variants and placeholders (research 31): <Boundary pending="shape"> renders the compiled variant of its
 // children from a resource's shape, in warp's SkeletonScope markup, and none of the component's behaviour runs.
 // weft-allow T004, T005: fake timers drive the Boundary's timing; the skeleton's structure is the behaviour under test
-import { fakeMeasure, flush, render } from 'weft/test'
-import { fill, mask, placeholder, shapeAny, shapeText } from 'weft/shape'
-import { streamBlocks, Text } from 'weft/text'
+import { fakeMeasure, flush, render } from '@weft-js/core/test'
+import { fill, mask, placeholder, shapeAny, shapeText } from '@weft-js/core/shape'
+import { streamBlocks, Text } from '@weft-js/core/text'
 import { Page } from './fixtures/shape/Page'
 import type { Post } from './fixtures/shape/Feed'
 
@@ -28,11 +28,11 @@ test('pending="shape": the same markup, with its text in skeleton spans, busy an
   expect((scope as HTMLElement).style.display).toBe('contents')
   const rows = [...scope.querySelectorAll('ul > li.row')]
   expect(rows).toHaveLength(2)
-  expect(rows[0].querySelector('h3 [data-skeleton]')!.textContent).toBe('Xnnnn nnnnn')
-  expect(rows[0].querySelector('p [data-skeleton]')!.textContent).toBe('nnnnn nnnnn nnnnn')
-  expect(rows[0].querySelector('img')!.getAttribute('width')).toBe('40')
-  expect(rows[0].querySelector('img')!.hasAttribute('src')).toBe(false)
-  expect(rows[1].querySelector('img')).toBeNull()
+  expect(rows[0]!.querySelector('h3 [data-skeleton]')!.textContent).toBe('Xnnnn nnnnn')
+  expect(rows[0]!.querySelector('p [data-skeleton]')!.textContent).toBe('nnnnn nnnnn nnnnn')
+  expect(rows[0]!.querySelector('img')!.getAttribute('width')).toBe('40')
+  expect(rows[0]!.querySelector('img')!.hasAttribute('src')).toBe(false)
+  expect(rows[1]!.querySelector('img')).toBeNull()
   // The typical branch, from the placeholder data, and the variant's static text.
   expect(scope.querySelector('.more')).not.toBeNull()
   expect(scope.querySelector('.empty')).toBeNull()
@@ -70,18 +70,18 @@ test('fill: a tree to placeholders, with counts from limit, then .max(), then 5 
   expect(fill({ $a: 2, $of: 0 }, 4)).toHaveLength(4)
   expect(fill({ $a: 900, $of: 0 })).toHaveLength(50)
   expect(warn).not.toHaveBeenCalled()
-  expect(fill({ items: { $of: 0 } }).items).toHaveLength(5)
-  expect(warn.mock.calls[0][0]).toMatch(/X032 a skeleton repeats `items`/)
+  expect((fill({ items: { $of: 0 } }) as { items: unknown[] }).items).toHaveLength(5)
+  expect(warn.mock.calls[0]![0]).toMatch(/X032 a skeleton repeats `items`/)
 })
 
 test('X036 fires when a hintless string is shown, not when it is only filled', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const v = fill({ note: { $u: 17 }, other: { $s: 3 } })
+  const v = fill({ note: { $u: 17 }, other: { $s: 3 } }) as { note: string; other: string }
   expect(warn).not.toHaveBeenCalled()
   shapeText(() => v.other)
   expect(warn).not.toHaveBeenCalled()
   shapeText(() => v.note)
-  expect(warn.mock.calls[0][0]).toMatch(/X036 a skeleton shows `note`/)
+  expect(warn.mock.calls[0]![0]).toMatch(/X036 a skeleton shows `note`/)
 })
 
 test('mask: same widths and word breaks, none of the text', () => {
@@ -102,7 +102,7 @@ test('shapeAny reads as anything; shapeText survives what throws', () => {
 
 test('<Text reserve>: a placeholder in the real element, then one swap', async () => {
   vi.useRealTimers()
-  const { state } = await import('weft')
+  const { state } = await import('@weft-js/core')
   const text = state<string | undefined>(undefined)
   render(() => <Text as="h2" class="t" reserve={11}>{text.value}</Text>)
   await flush()
@@ -119,7 +119,7 @@ test('<Text reserve>: a placeholder in the real element, then one swap', async (
 
 test('<Text stream>: the height only grows', async () => {
   vi.useRealTimers()
-  const { state } = await import('weft')
+  const { state } = await import('@weft-js/core')
   const text = state('Hello')
   let height = 40
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({ height }) as DOMRect)
@@ -138,7 +138,7 @@ test('<Text stream>: the height only grows', async () => {
 
 test('<Text stream>: tokens land once a frame, in whole lines, and complete blocks are never rewritten', async () => {
   vi.useRealTimers()
-  const { state } = await import('weft')
+  const { state } = await import('@weft-js/core')
   const text = state('# One')
   let height = 25
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({ height, width: 300 }) as DOMRect)
@@ -162,6 +162,7 @@ test('<Text stream>: tokens land once a frame, in whole lines, and complete bloc
   expect(el.querySelectorAll('[data-block="done"]')).toHaveLength(2)
   expect(el.querySelector('[data-block="tail"]')!.textContent).toBe('Three')
   height = 50
+  // oxlint-disable-next-line typescript/unbound-method -- a spy, handed to vi.mocked and never called from here
   vi.mocked(Element.prototype.getBoundingClientRect).mockImplementation(() => ({ height, width: 200 }) as DOMRect)
   text.value += '!'
   await flush()
@@ -175,9 +176,9 @@ test('streamBlocks: a blank line inside a code fence does not end a block', () =
 })
 
 test('measure, lines and fit: exact boxes from the slot, null with none bound', async () => {
-  const { measure, lines, fit } = await import('weft/text')
+  const { measure, lines, fit } = await import('@weft-js/core/text')
   const spec = { font: '16px Inter', lineHeight: 20, width: 80 }
-  let box: any, rows: any, size: any
+  let box!: ReturnType<typeof measure>, rows!: ReturnType<typeof lines>, size!: ReturnType<typeof fit>
   function Probe() {
     box = measure('one two three four', spec)
     rows = lines('one two three four', spec)
@@ -188,6 +189,6 @@ test('measure, lines and fit: exact boxes from the slot, null with none bound', 
   await flush()
   await flush()
   expect(box.value).toEqual({ height: 40, lineCount: 2 })
-  expect(rows.value.map((l: any) => l.text)).toEqual(['one two', 'three four'])
+  expect(rows.value!.map(l => l.text)).toEqual(['one two', 'three four'])
   expect(size.value).toBe(200) // the fake's width doesn't depend on size
 })

@@ -2,20 +2,22 @@
 import { pushLayer } from './layers'
 import { announce } from './toast'
 
+/** Options for the app shell. */
 export interface ShellOptions {
   /** The overlay sidebar is open (tablet rail expand, or the hidden mode's edge tab). */
   navOpen: boolean
   /** The route: a change draws the route line, replays the page's enter and announces the new h1. */
-  current?: string
+  current?: string | undefined
   onToggle(): void
   onCloseNav(): void
   /** The shell's own width crossed 1000px (a container step, never the window). */
   onWide(wide: boolean): void
-  onCommand?(): void
+  onCommand?: (() => void) | undefined
 }
 
 const ROUTE_MS = 1200
 
+/** The app shell's sidebar, keyboard and viewport behaviour. */
 export function shell(root: HTMLElement, opts: ShellOptions) {
   let o = opts
   let remove: (() => void) | undefined

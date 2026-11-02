@@ -1,5 +1,5 @@
 // The rich inputs, with "today" and the locale pinned so a server render and a hydration agree on every cell.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { InlineCalendar } from '../../src/Calendar'
 import { DateField, DateRangeField } from '../../src/DateField'
 import { DurationField } from '../../src/DurationField'

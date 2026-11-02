@@ -19,7 +19,7 @@ const SERVERS = {
   deno: ['deno', ['run', '-A', '.output/server/index.mjs']],
 }
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 const kids = new Set()
 const start = (cmd, args, opts) => { const c = spawn(cmd, args, { stdio: 'ignore', ...opts }); kids.add(c); return c }
 
@@ -37,15 +37,19 @@ async function instance(runtime, env) {
 async function cross(url1, url2) {
   const room = fnId('room'), roomId = `r${Date.now()}`
   const a = await open(url1), b = await open(url2)
-  await a.until('h'), await b.until('h')
-  a.send('j', 1, room, { roomId }), b.send('j', 1, room, { roomId })
-  await a.until('j'), await b.until('j')
+  await a.until('h')
+  await b.until('h')
+  a.send('j', 1, room, { roomId })
+  b.send('j', 1, room, { roomId })
+  await a.until('j')
+  await b.until('j')
   a.send('m', 1, 1, 'say', { text: 'a to b' })
   if ((await b.until('m'))[4].text !== 'a to b') throw new Error('a to b')
   await a.until('m')
   b.send('m', 1, 1, 'say', { text: 'b to a' })
   if ((await a.until('m'))[4].text !== 'b to a') throw new Error('b to a')
-  a.close(), b.close()
+  a.close()
+  b.close()
 }
 
 let failed = false
@@ -57,7 +61,7 @@ try {
   for (const runtime of values.runtimes.split(',')) {
     const built = spawnSync(join(app, 'node_modules/.bin/weft'), ['build', '--runtime', runtime], { cwd: app, encoding: 'utf8', env: { ...process.env, NODE_ENV: 'production' } })
     if (built.status !== 0) throw new Error(`${runtime} build:\n${built.stdout}${built.stderr}`)
-    for (const [bus, env] of [['redis', { WEFT_RT_REDIS: `redis://127.0.0.1:${redisPort}` }], ['nats', { WEFT_RT_NATS: `127.0.0.1:${natsPort}` }]]) {
+    for (const { bus, env } of [{ bus: 'redis', env: { WEFT_RT_REDIS: `redis://127.0.0.1:${redisPort}` } }, { bus: 'nats', env: { WEFT_RT_NATS: `127.0.0.1:${natsPort}` } }]) {
       const live = new Set(kids)
       try {
         await cross(await instance(runtime, env), await instance(runtime, env))
@@ -66,7 +70,11 @@ try {
         failed = true
         console.log(`[buses] ${runtime} ${bus}: FAIL ${e.message}`)
       }
-      for (const k of kids) if (!live.has(k)) (k.kill('SIGKILL'), kids.delete(k))
+      for (const k of kids) {
+    if (live.has(k)) continue
+    k.kill('SIGKILL')
+    kids.delete(k)
+  }
     }
   }
 } finally {

@@ -3,7 +3,9 @@
 // back to 1vw where container units are missing. This is a checked mirror of those numbers (test/type.test.mjs
 // parses warp.css), so a binding, a Surface or the CLI can compute with them without re-deriving the spec.
 
+/** The type roles that scale fluidly. */
 export type FluidRole = 'display' | 'title'
+/** How strongly a fluid role scales. */
 export type Stop = 'quiet' | 'balanced' | 'vivid'
 
 /** One fluid size in the spec's form: min/b/max in rem, m in fluid units (1cqi = 1% of the container). */
@@ -42,7 +44,7 @@ const round = (n: number, places = 4) => Math.round(n * 10 ** places) / 10 ** pl
  * A fluid size from `minPx` at `from` to `maxPx` at `to` (CSS px; 1rem = 16px), in the spec's form.
  * `fluid(34, 52)` is balanced display: { min: 2.125, b: 1.659, m: 1.989, max: 3.25 }.
  */
-export function fluid(minPx: number, maxPx: number, range: { from?: number; to?: number } = {}): Fluid {
+export function fluid(minPx: number, maxPx: number, range: { from?: number | undefined; to?: number | undefined } = {}): Fluid {
   const { from = FLUID_RANGE.from, to = FLUID_RANGE.to } = range
   if (!(to > from)) throw new RangeError('fluid(): `to` must be wider than `from`')
   const slope = (maxPx - minPx) / (to - from) // px per px of width

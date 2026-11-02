@@ -1,15 +1,16 @@
-import { uid } from '@weft/warp-core'
-import { derived, untrack, type State } from 'weft'
+import { uid } from '@weft-js/warp-core'
+import { derived, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Input } from '../Field'
 import { Modal } from '../Modal'
 import { FormError, useStepForm, type FlowForm } from './kit'
 import { PasskeyButton } from './Sso'
 
+/** Props for ReauthDialog. */
 export interface ReauthProps extends Omit<FlowForm<{ password: string }>, 'form' | 'onSubmit'> {
   open: State<boolean>
   /** Why it asks: "Deleting a project needs your password." */
-  reason?: any
+  reason?: unknown
   /** With the password; close `open` when it's accepted. */
   onConfirm?: (password: string) => void
   /** Shows "Use a passkey"; WebAuthn is the app's. */
@@ -37,7 +38,7 @@ export function ReauthDialog(p: ReauthProps) {
         <Button type="submit" form={id} loading={foot.value}>Confirm</Button>
       </>}
     >
-      <form ref={(n: any) => ctl.bind(n)} id={id} data-scope="stack" novalidate onSubmit={ctl.submit}>
+      <form ref={n => ctl.bind(n)} id={id} data-scope="stack" novalidate onSubmit={ctl.submit}>
         <FormError ctl={ctl} />
         <Input label="Password" name="password" type="password" autocomplete="current-password" hint="" autofocus error={ctl.errors.value.password} />
       </form>

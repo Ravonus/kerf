@@ -1,5 +1,5 @@
-import { Segmented } from '@weft/warp'
-import { state } from 'weft'
+import { Segmented } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 
 const STOPS = [{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]
 

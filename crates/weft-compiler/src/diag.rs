@@ -51,6 +51,7 @@ impl Diagnostic {
         Self { code, severity, message: message.into(), help: help.into(), start, end, line, column, fix: None }
     }
 
+    #[must_use]
     pub fn with_fix(mut self, fix: Fix) -> Self {
         self.fix = Some(fix);
         self

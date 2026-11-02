@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Badge, Button, Card, Input } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Badge, Button, Card, Input } from '@weft-js/warp'
 
 const products = [
   { id: 1, name: 'Coffee', price: 12, count: state(0) },
@@ -24,7 +24,7 @@ export default function Shop() {
       <Input
         label="Search"
         value={search.value}
-        onInput={(e: any) => (search.value = e.currentTarget.value)}
+        onInput={e => (search.value = e.currentTarget.value)}
       />
       {shown.value.map(p => (
         <p key={p.id}>

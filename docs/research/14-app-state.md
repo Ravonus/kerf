@@ -156,7 +156,7 @@ primitive would add a choice without removing either one. The rules in §3, and 
 
 ```ts
 // app/state/cart.ts
-import { defineState, state, derived } from 'weft'
+import { defineState, state, derived } from '@weft-js/core'
 import { getCart, setLine, placeOrder } from '~/server/cart'
 
 export const cart = defineState('cart', () => {
@@ -195,7 +195,7 @@ an optimistic mutation (`setLine`, whose `optimistic` lives on its declaration, 
 | Setup | Runs **once per app instance**, lazily, on first access, like a component body. Same rules as setup: no W001 reads in the body outside `derived`/`watch`/actions |
 | Return value | An object of boxes, `derived`s, resources and functions. Functions are **actions** (§2.5). Every returned box gets a dev name `cart.<key>` |
 | Private boxes | Allowed. Unlike Pinia, devtools and SSR see a box by its compiler name, not by being returned. Private persisted boxes are named `cart.#<local name>` |
-| App instance | One per `mount()` on the client (one per tab), **one per request on the server**, one per `render()` in `weft/test` |
+| App instance | One per `mount()` on the client (one per tab), **one per request on the server**, one per `render()` in `@weft-js/core/test` |
 | Access | `import { cart } from '~/state/cart'`, then `cart.count.value` and `cart.add(id)` anywhere an owner exists: components, `derived`, `watch`, handlers, other scopes' setup. The export is a typed handle that resolves the current app instance through the owner |
 | Outside an owner | Client: resolves the single root instance (a plain `onclick` in a script works). Server: **throws S002**, and `weft check` reports static cases at the line |
 | Lifetime | `keep: 'app'` by default (lives as long as the tab or request). `keep: '5m'` disposes the instance that long after its last reader unmounts. Persisted boxes are write-through, so disposal loses nothing. Query references inside are released, so the client cache can drop them after its own `keep` |
@@ -323,7 +323,7 @@ const dense = state(false, { persist: 'local' })              // short form only
 - **Writes** are coalesced to one per microtask per key and flushed on `pagehide`.
 - **Never persisted:** values whose schema contains a `secret()`-branded field (auth tokens, payment data) are
   **S008**. Server-owned boxes (`sharedState`, query values) can't take `persist`, also S008.
-- **`weft/browser`'s `storage(key, schema)` is folded in.** PLAN §4.2 lists it as a separate persisted `State`.
+- **`@weft-js/core/browser`'s `storage(key, schema)` is folded in.** PLAN §4.2 lists it as a separate persisted `State`.
   Keeping both would be two ways to persist. `storage()` goes; the `persist` option is the one way (§9.2).
 
 ### 2.8 Cross-tab sync
@@ -388,7 +388,7 @@ board.$snapshot()                // plain frozen JSON of all boxes (devtools, bu
 
 ### 2.11 Test isolation
 
-- `weft/test`'s `render()` creates an app instance, so every scope is fresh per test with no `beforeEach` reset.
+- `@weft-js/core/test`'s `render()` creates an app instance, so every scope is fresh per test with no `beforeEach` reset.
 - Persistence uses `memory` in the fast lane. `render(<App />, { storage })` shares one fake storage across
   `app.reload()` and `tabs.open()`, so reload and multi-tab tests are deterministic.
 - **Seeding is typed:** `render(<App />, { state: { cart: { note: 'hi' } } })` is checked against each scope's
@@ -787,7 +787,7 @@ export const guestCart = defineState('guestCart', () => {
 ### 7.3 Tests
 
 ```ts
-import { render, user, clock, server, storage, tabs, scope } from 'weft/test'
+import { render, user, clock, server, storage, tabs, scope } from '@weft-js/core/test'
 
 test('optimistic add rolls back only the failed call', async () => {
   server.use(getCart, () => cartWith({ apple: 2 }))
@@ -1091,7 +1091,7 @@ and the default persist version handling is the migration bug. If agents pass al
 >   named setup scope that returns ordinary `state`/`derived` boxes and functions. It adds a lifetime (per tab, per
 >   request, per test) and a name (devtools, persistence keys, undo), never a second way to hold a value. Server data
 >   stays in the query cache. Copying it into state is S001. Optimistic updates are overlay layers on the cache,
->   declared on the `mutation` ([14](research/14-app-state.md)).
+>   declared on the `mutation` ([14](14-app-state.md)).
 
 ### 9.2 Section-by-section changes
 
@@ -1101,7 +1101,7 @@ and the default persist version handling is the migration bug. If agents pass al
 | §3.2 | Add the §4.1 block as AGENTS rule 8 (or the App state section) |
 | §3.5 | Add S001–S013. Change W030's fix to "wrap in `defineState`" (autofix) |
 | §4 | `mutation({ optimistic })` and `cache.update`; `skip` for conditional args; `mutation.pending`/`.error` |
-| §4.2 | Remove `storage(key, schema)` from `weft/browser` (replaced by `persist`). `tabs.channel` gains the internal `weft:state` channel |
+| §4.2 | Remove `storage(key, schema)` from `@weft-js/core/browser` (replaced by `persist`). `tabs.channel` gains the internal `weft:state` channel |
 | §4.2 / 07 | `sharedState(…).connect()` returns a `State<T>` box |
 | §7b | `weft browser state [--json]`, `state goto/undo/redo`, `set <scope.box>`; the recorder logs actions |
 | §7c / 13 slot table | Add `state.persist@1` (keyed; client, native). Reserve `cache.sync@1` (Later) |
@@ -1113,7 +1113,7 @@ and the default persist version handling is the migration bug. If agents pass al
 
 | Phase | Ships |
 |---|---|
-| **1. Core** | `defineState` (client instance, `keep`, names, `$reset`, `$snapshot`), actions as transactions, `history`, `persist` with `local`/`session`/`memory`, the lockfile, `weft/test` `render({ state, storage })`, `scope()`, `app.reload()`. S003–S010 (S001 static patterns that don't need server types: `state(await …)`, `watch` copies). `weft browser state` (read-only) |
+| **1. Core** | `defineState` (client instance, `keep`, names, `$reset`, `$snapshot`), actions as transactions, `history`, `persist` with `local`/`session`/`memory`, the lockfile, `@weft-js/core/test` `render({ state, storage })`, `scope()`, `app.reload()`. S003–S010 (S001 static patterns that don't need server types: `state(await …)`, `watch` copies). `weft browser state` (read-only) |
 | **1b. Verify loop** | Time travel over the action log, the graph overlay labels, the recorder's action lane. Eval task `v4-cart-persist` (client half) |
 | **2. UI** | The `state.persist@1` slot formalised with the plugin API. `idb` built in; `@weft/plugin-persist-opfs` |
 | **3. Start** | Per-request instances, the SSR state payload, the `cookie` backend, S002, S013, `mutation({ optimistic })` overlays + rebase, S011, S001 with server-value taint, `state.linked({ key })` + S012. Eval tasks `v4-optimistic` and `v4-ssr-isolation` on weft |
@@ -1191,8 +1191,8 @@ by S001, the query cache and overlays, which no store library draws for you.
 ## 11. Phase 1 implementation (2026-10-29)
 
 Built in `packages/weft` on branch `phase1-define-state`: `src/scope.ts` (`defineState`, app instances, `$reset`,
-`$snapshot`), `src/history.ts` (`weft/history`), `src/persist.ts` (`weft/persist`), `src/memory.ts`, keyed reads and
-state options in `src/index.ts`, and per-render apps in `weft/test`. Tests: `test/state.test.tsx` (21),
+`$snapshot`), `src/history.ts` (`@weft-js/core/history`), `src/persist.ts` (`@weft-js/core/persist`), `src/memory.ts`, keyed reads and
+state options in `src/index.ts`, and per-render apps in `@weft-js/core/test`. Tests: `test/state.test.tsx` (21),
 `test/features.test.ts` (2), two new v3 budget tests, one `context` regression test. **(measured)** below means run for
 this section on an M4 Max.
 
@@ -1227,7 +1227,7 @@ production build:
 | Diagnostic text, dev names, S004/S009/S010 checks | 0 KB in prod | 0 KB in prod |
 
 - **How 0 KB unused works:** `persist` and `history` are separate modules that register with the core. The `weft()`
-  Vite plugin adds `import 'weft/persist'` / `import 'weft/history'` to app files that use the option, with a
+  Vite plugin adds `import '@weft-js/core/persist'` / `import '@weft-js/core/history'` to app files that use the option, with a
   filtered transform hook on id and code (`persist:`, `history: {`). The package marks only those two modules as
   side-effectful. Without the plugin, using the option throws S008/S009 in dev with the one-line import as its fix.
 - **Dev-only text:** every message is behind `DEV` (`import.meta.env?.DEV !== false`), which Vite folds to `false`, so
@@ -1239,7 +1239,7 @@ production build:
 ### 11.3 Where the implementation differs from §2
 
 - **Scopes resolve through the owner's app.** A handle read inside a binding uses the app its owner was rendered in
-  (a `context` set by `weft/test`'s `render()`); outside any owner it uses the current app. Two apps rendered in one
+  (a `context` set by `@weft-js/core/test`'s `render()`); outside any owner it uses the current app. Two apps rendered in one
   test therefore stay separate, but an event handler (which runs with no owner) uses the most recent app. On the
   client there is one app per tab, so this only matters in tests.
 - **History stores each changed box's before and after values**, not patches. `.set(draft)` copies shallowly, so the
@@ -1247,11 +1247,11 @@ production build:
 - **Async actions:** the transaction is the synchronous part. Writes after an `await` aren't named `cart.checkout#2`
   yet: they group per microtask as `<scope>.write`, like any write outside an action. Naming the later segments
   needs the compiler's async boundaries.
-- **Actions are plain functions unless `weft/history` is loaded.** The transaction wrapper only matters for undo
+- **Actions are plain functions unless `@weft-js/core/history` is loaded.** The transaction wrapper only matters for undo
   steps, so it lives in that module.
 - **Private persisted boxes need `name`** (`state(0, { persist: 'local', name: 'draft' })`) until the compiler hands
   the runtime dev names. Returned boxes are named by their key.
-- **`weft/test`'s `render(Comp, props, { state, storage, name })`** takes the component and props separately (the
+- **`@weft-js/core/test`'s `render(Comp, props, { state, storage, name })`** takes the component and props separately (the
   spike's signature), not JSX as §2.11 and §4.1 write it.
 - **Not in Phase 1:** `cookie`/`idb` persistence and the S013/S002 server paths (with SSR, Phase 3); `sync: 'tabs'`
   (3b); `keep: '5m'`; the dev action log and `weft browser state`.
@@ -1269,7 +1269,7 @@ production build:
 
 ### 11.5 Other fixes made on the way
 
-- `weft/dom` gained `addEvent`, which Solid's back end emits for a handler that isn't an inline function
+- `@weft-js/core/dom` gained `addEvent`, which Solid's back end emits for a handler that isn't an inline function
   (`onClick={onAdd}`). The spike's app never used that form, so this is the first case of the helper-contract gap
   [16 §6](16-compiler-spike.md) item 3 predicted.
 - `context().provide()` now disposes its subtree with its parent. Before, a provided subtree outlived an unmount, so

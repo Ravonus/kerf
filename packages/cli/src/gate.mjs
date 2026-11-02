@@ -100,7 +100,7 @@ export async function gate(root, options = {}) {
   // The tests this change has to prove.
   // `// weft-allow T010: <reason>` / T011 on a test keeps it (shown in the result, for the reviewer).
   const allowFns = new Map(tests.filter(c => c.after != null).map(c => [c.rel, allowances(c.after, parse(c.after, c.rel))]))
-  const allowed = (code, file, line) => allowFns.get(file)?.(code, line) ?? false
+  const allowed = (rule, file, line) => allowFns.get(file)?.(rule, line) ?? false
   const cases = tests.filter(c => c.after != null).flatMap(c => changedCases(c.before, c.after, c.rel).map(t => ({ file: c.rel, name: t.name, line: t.line, end: t.end, dynamic: t.dynamic })))
   const testFiles = [...new Set(cases.map(c => c.file))]
   const result = {
@@ -143,7 +143,7 @@ export async function gate(root, options = {}) {
     for (const f of testFiles) {
       const mine = cases.filter(c => c.file === f)
       const keys = [...res.tests.keys()].filter(k => k.startsWith(`${f}::`))
-      for (const c of mine.filter(c => !c.dynamic)) out.set(`${f}::${c.name}`, res.loadErrors.has(f) ? { status: 'failed', message: res.loadErrors.get(f), load: true } : res.tests.get(`${f}::${c.name}`) ?? { status: 'missing' })
+      for (const c of mine.filter(x => !x.dynamic)) out.set(`${f}::${c.name}`, res.loadErrors.has(f) ? { status: 'failed', message: res.loadErrors.get(f), load: true } : res.tests.get(`${f}::${c.name}`) ?? { status: 'missing' })
       if (mine.some(c => c.dynamic)) for (const k of keys) if (!out.has(k)) out.set(k, res.tests.get(k))
     }
     return out

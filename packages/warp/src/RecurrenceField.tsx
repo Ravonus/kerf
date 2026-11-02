@@ -1,12 +1,12 @@
-import { addDays, fmt, formReset, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft/warp-core'
-import { derived, flush, state } from 'weft'
+import { addDays, fmt, formReset, occurrences, parseRule, ruleSentence, stringifyRule, weekOrder, weekdayName, weekdayOrdinal, DAYS, dow, ymd, type Frequency, type IsoDate, type Rule } from '@weft-js/warp-core'
+import { derived, flush, state } from '@weft-js/core'
 import { Chip } from './Chip'
 import { DateField } from './DateField'
 import { Textarea } from './Field'
 import { NumberField } from './NumberField'
 import { bindable, usePickerEnv, type Bindable } from './Picker'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/recurrence.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/recurrence.css'
 
 const FREQS: Frequency[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']
 const titled = (s: string) => s[0] + s.slice(1).toLowerCase()
@@ -19,24 +19,25 @@ function ChipRadios<V extends string>({ label, value, options, onChange }: { lab
     if (!d) return
     e.preventDefault()
     const at = options.findIndex(o => o.value === value)
-    onChange(options[(at + d + options.length) % options.length].value)
+    onChange(options[(at + d + options.length) % options.length]!.value)
     flush()
     box?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus()
   }
   return (
-    <div ref={(n: any) => (box = n)} role="radiogroup" aria-label={label} class="chips" onKeyDown={move}>
+    <div ref={n => (box = n)} role="radiogroup" aria-label={label} class="chips" onKeyDown={move}>
       {options.map(o => <button key={o.value} type="button" data-scope="chip" role="radio" aria-checked={o.value === value ? 'true' : 'false'} tabindex={o.value === value ? '0' : '-1'} onClick={() => onChange(o.value)}>{o.label}</button>)}
     </div>
   )
 }
 
+/** Props for RecurrenceField. */
 export type RecurrenceFieldProps = Bindable<string | null> & {
   label: string
   dtstart: IsoDate
   preview?: number
   frequencies?: Frequency[]
-  locale?: string
-  name?: string
+  locale?: string | undefined
+  name?: string | undefined
 }
 
 /**
@@ -56,12 +57,12 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
   const monthly = derived(() => {
     const [, , d] = ymd(dtstart)
     const { nth, last } = weekdayOrdinal(dtstart)
-    const day = DAYS[dow(dtstart)]
-    const name = weekdayName(day, env.locale.value)
+    const day = DAYS[dow(dtstart)]!
+    const dayName = weekdayName(day, env.locale.value)
     return [
       { value: 'day', label: `On day ${d}`, patch: { BYMONTHDAY: d, BYDAY: [] } },
-      { value: 'nth', label: `On the ${['', 'first', 'second', 'third', 'fourth', 'fifth'][nth]} ${name}`, patch: { BYDAY: [`${nth}${day}`], BYMONTHDAY: null } },
-      ...(last ? [{ value: 'last', label: `On the last ${name}`, patch: { BYDAY: [`-1${day}`], BYMONTHDAY: null } }] : []),
+      { value: 'nth', label: `On the ${['', 'first', 'second', 'third', 'fourth', 'fifth'][nth]} ${dayName}`, patch: { BYDAY: [`${nth}${day}`], BYMONTHDAY: null } },
+      ...(last ? [{ value: 'last', label: `On the last ${dayName}`, patch: { BYDAY: [`-1${day}`], BYMONTHDAY: null } }] : []),
       { value: 'end', label: 'On the last day', patch: { BYMONTHDAY: -1, BYDAY: [] } },
     ]
   })
@@ -73,11 +74,11 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
     const on = rule.value.BYDAY
     set({ BYDAY: on.includes(d) ? (on.length > 1 ? on.filter(x => x !== d) : on) : [...on, d] })
   }
-  const setEnd = (m: 'never' | 'count' | 'until') => set(m === 'count' ? { COUNT: 10, UNTIL: null } : m === 'until' ? { COUNT: null, UNTIL: addDays(dtstart, 60) as IsoDate } : { COUNT: null, UNTIL: null })
+  const setEnd = (m: 'never' | 'count' | 'until') => set(m === 'count' ? { COUNT: 10, UNTIL: null } : m === 'until' ? { COUNT: null, UNTIL: addDays(dtstart, 60) } : { COUNT: null, UNTIL: null })
   let root: HTMLDivElement | undefined
   use(formReset, () => root, () => () => { v.reset(); asText.value = false })
   return (
-    <div ref={(n: any) => (root = n)} role="group" aria-label={label} class="stack">
+    <div ref={n => (root = n)} role="group" aria-label={label} class="stack">
       {name && <input type="hidden" name={name} value={v.value ?? ''} />}
       {custom.value || asText.value ? (
         <>
@@ -102,7 +103,7 @@ export function RecurrenceField({ value, defaultValue, onValueChange, label, dts
               {rule.value.FREQ === 'MONTHLY' && <ChipRadios label="On" value={monthlyNow.value} options={monthly.value} onChange={m => set(monthly.value.find(o => o.value === m)!.patch)} />}
               <ChipRadios label="Ends" value={endMode.value} options={[{ value: 'never', label: 'Never ends' }, { value: 'count', label: 'After…' }, { value: 'until', label: 'On date…' }]} onChange={setEnd} />
               {endMode.value === 'count' && <NumberField label="Occurrences" min={1} max={999} value={rule.value.COUNT} onValueChange={n => set({ COUNT: n ?? 1 })} />}
-              {endMode.value === 'until' && <DateField label="Last date" value={(rule.value.UNTIL ?? null) as IsoDate | null} onValueChange={d => { if (d) set({ UNTIL: d }) }} />}
+              {endMode.value === 'until' && <DateField label="Last date" value={rule.value.UNTIL ?? null} onValueChange={d => { if (d) set({ UNTIL: d }) }} />}
             </div>
             <div class="stack">
               <p class="dt-cap">Next {preview}</p>

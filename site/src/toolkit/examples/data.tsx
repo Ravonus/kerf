@@ -1,6 +1,6 @@
-import { onCleanup, onMount, state } from 'weft'
-import { Badge, Button, DataGrid, Feed, Kanban, PivotTable, Row, ScrollGrid, Stack, Table, Text, Toggle, VirtualList } from '@weft/warp'
-import type { Column, GridColumn, GridTree, GridView, KanbanCardData, KanbanColumn, PivotMeasure, TableSort, VirtualControl } from '@weft/warp'
+import { onCleanup, onMount, state } from '@weft-js/core'
+import { Badge, Button, DataGrid, Feed, Kanban, PivotTable, Row, ScrollGrid, Stack, Table, Text, Toggle, VirtualList } from '@weft-js/warp'
+import type { Column, GridColumn, GridTree, GridView, KanbanCardData, KanbanColumn, PivotMeasure, TableSort, VirtualControl } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, TONE_OF, type Status } from '../world'
 
 type Project = (typeof PROJECTS)[number]
@@ -104,13 +104,13 @@ export const TableSticky = () => <Table caption="Projects" captionHidden rows={P
 const PRICED: Column<Project>[] = [
   { id: 'name', header: 'Project', rowHeader: true, edit: true, validate: v => String(v).trim() !== '' || 'A project needs a name' },
   { id: 'owner', header: 'Owner', edit: true },
-  { id: 'cost', header: 'Budget', numeric: true, cell: p => money(p.cost), edit: text => Number(text.replace(/[$,]/g, '')), validate: v => Number.isFinite(v) && v >= 0 || 'Enter an amount' },
+  { id: 'cost', header: 'Budget', numeric: true, cell: p => money(p.cost), edit: text => Number(text.replace(/[$,]/g, '')), validate: v => (typeof v === 'number' && Number.isFinite(v) && v >= 0) || 'Enter an amount' },
 ]
 
 export function TableEdit() {
   const rows = state(PROJECTS.slice(0, 5))
   const last = state('Double-click a cell, or focus it and press Enter.')
-  const save = (row: Project, column: string, value: any) => {
+  const save = (row: Project, column: string, value: unknown) => {
     rows.value = rows.value.map(p => (p.id === row.id ? { ...p, [column]: value } : p))
     last.value = `Saved ${column} for ${row.name}.`
   }
@@ -133,7 +133,7 @@ export function TableLive() {
   ]
   const tick = () => {
     const next = { ...ms.value }
-    for (const id in next) next[id] = Math.max(12, next[id] + Math.round(Math.random() * 24 - 12))
+    for (const id in next) next[id] = Math.max(12, next[id]! + Math.round(Math.random() * 24 - 12))
     ms.value = next
   }
   onMount(() => {
@@ -196,7 +196,7 @@ const GRID: GridColumn<Project>[] = [
   { id: 'region', header: 'Region', sort: true, filter: 'select', options: REGION_NAMES },
   { id: 'owner', header: 'Owner', sort: true, filter: 'text' },
   { id: 'deploys', header: 'Deploys', numeric: true, sort: true, filter: 'min', aggregate: 'sum' },
-  { id: 'cost', header: 'Cost', numeric: true, sort: true, filter: 'min', aggregate: 'sum', format: money },
+  { id: 'cost', header: 'Cost', numeric: true, sort: true, filter: 'min', aggregate: 'sum', format: v => money(Number(v)) },
 ]
 
 const spend = (rows: Project[]) => `Total ${money(rows.reduce((n, p) => n + p.cost, 0))}`
@@ -206,7 +206,7 @@ const GROUPED_GRID: GridColumn<Project>[] = [
   { id: 'status', header: 'Status', sort: true, filter: 'select', options: STATUSES, cell: badge },
   { id: 'region', header: 'Region', sort: true, filter: 'select', options: REGION_NAMES },
   { id: 'owner', header: 'Owner', sort: true },
-  { id: 'cost', header: 'Cost', numeric: true, sort: true, format: money },
+  { id: 'cost', header: 'Cost', numeric: true, sort: true, format: v => money(Number(v)) },
 ]
 
 export const DataGridPlay = (p: { density?: Density; groupBy?: string; exportName?: string }) => (
@@ -219,15 +219,15 @@ const NUMBERS: GridColumn<Project>[] = [
   { id: 'name', header: 'Project', rowHeader: true, sort: true, edit: true, validate: v => String(v).trim() !== '' || 'A project needs a name' },
   { id: 'owner', header: 'Owner', sort: true, edit: true },
   { id: 'deploys', header: 'Deploys', numeric: true, sort: true, aggregate: 'sum' },
-  { id: 'cost', header: 'Budget', numeric: true, sort: true, aggregate: 'sum', format: money, edit: text => Number(text.replace(/[$,]/g, '')), validate: v => (Number.isFinite(v) && v >= 0) || 'Enter an amount' },
+  { id: 'cost', header: 'Budget', numeric: true, sort: true, aggregate: 'sum', format: v => money(Number(v)), edit: text => Number(text.replace(/[$,]/g, '')), validate: v => (typeof v === 'number' && Number.isFinite(v) && v >= 0) || 'Enter an amount' },
 ]
 
 export function DataGridEdit() {
   const rows = state(PROJECTS)
   const last = state('Nothing changed yet.')
-  const save = (row: Project, column: string, value: any) => {
+  const save = (row: Project, column: string, value: unknown) => {
     rows.value = rows.value.map(p => (p.id === row.id ? { ...p, [column]: value } : p))
-    last.value = `${row.name}: ${column} is now ${value}.`
+    last.value = `${row.name}: ${column} is now ${String(value)}.`
   }
   return (
     <Stack gap="related">
@@ -250,7 +250,7 @@ export const DataGridGroups = () => <DataGrid caption="Projects by region" capti
 
 const GROUPED: Record<string, GridView> = { 'By region': { order: ['name', 'status', 'region', 'owner', 'cost'], hidden: [], filters: {}, group: true } }
 
-type Spend = { id: string; name: string; deploys: number; cost: number; kids?: Spend[]; hasChildren?: boolean }
+type Spend = { id: string; name: string; deploys: number; cost: number; kids?: Spend[] | undefined; hasChildren?: boolean }
 
 const leaf = (p: Project): Spend => ({ id: p.id, name: p.name, deploys: p.deploys, cost: p.cost })
 const team = (name: string, ...ids: string[]): Spend => ({ id: name, name, deploys: 0, cost: 0, kids: PROJECTS.filter(p => ids.includes(p.id)).map(leaf) })
@@ -265,7 +265,7 @@ const SPEND: Spend[] = [
 const SPEND_COLUMNS: GridColumn<Spend>[] = [
   { id: 'name', header: 'Team and project', sort: true },
   { id: 'deploys', header: 'Deploys', numeric: true, sort: true, aggregate: 'sum' },
-  { id: 'cost', header: 'Cost', numeric: true, sort: true, aggregate: 'sum', format: money },
+  { id: 'cost', header: 'Cost', numeric: true, sort: true, aggregate: 'sum', format: v => money(Number(v)) },
 ]
 
 const OWN_KIDS: GridTree<Spend> = {}
@@ -277,7 +277,7 @@ const LAZY: Spend[] = SPEND.map(t => ({ ...t, kids: undefined, hasChildren: true
 const LOAD: GridTree<Spend> = {
   branch: row => !!row.hasChildren,
   load: async row => {
-    await new Promise(done => setTimeout(done, 700))
+    await new Promise(done => { setTimeout(done, 700) })
     return SPEND.find(t => t.id === row.id)?.kids ?? []
   },
 }
@@ -310,11 +310,11 @@ const HOURS = Array.from({ length: 24 }, (_, h) => ({ id: String(h), header: `${
 const latency = (r: number, h: number) => 40 + ((r + 3) * 37 + h * h * 11) % 260
 
 export const ScrollGridLatency = () => (
-  <ScrollGrid label="Latency by hour, in milliseconds" corner="Route" rows={2000} columns={HOURS} rowHeader={r => `${PROJECTS[r % 10].name}/${r}`} cell={(r, c) => latency(r, Number(c.id))} height="400px" />
+  <ScrollGrid label="Latency by hour, in milliseconds" corner="Route" rows={2000} columns={HOURS} rowHeader={r => `${PROJECTS[r % 10]!.name}/${r}`} cell={(r, c) => latency(r, Number(c.id))} height="400px" />
 )
 
 export const ScrollGridPlay = (p: { rows: number; headerWidth: number }) => (
-  <ScrollGrid label="Latency by hour, in milliseconds" corner="Route" rows={p.rows} headerWidth={p.headerWidth} columns={HOURS} rowHeader={r => `${PROJECTS[r % 10].name}/${r}`} cell={(r, c) => latency(r, Number(c.id))} height="360px" />
+  <ScrollGrid label="Latency by hour, in milliseconds" corner="Route" rows={p.rows} headerWidth={p.headerWidth} columns={HOURS} rowHeader={r => `${PROJECTS[r % 10]!.name}/${r}`} cell={(r, c) => latency(r, Number(c.id))} height="360px" />
 )
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -323,17 +323,17 @@ const swing = (r: number, m: number) => (((r + 2) * 53 + (m + 1) * 29) % 41) - 1
 const showSwing = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n)}%`
 
 export const ScrollGridNegative = () => (
-  <ScrollGrid label="Change in spend by month" corner="Project" rows={500} columns={MONTH_COLUMNS} rowHeader={r => `${PROJECTS[r % 10].name}-${r}`} cell={(r, c) => showSwing(swing(r, Number(c.id)))} negative={(r, c) => swing(r, Number(c.id)) < 0} height="320px" />
+  <ScrollGrid label="Change in spend by month" corner="Project" rows={500} columns={MONTH_COLUMNS} rowHeader={r => `${PROJECTS[r % 10]!.name}-${r}`} cell={(r, c) => showSwing(swing(r, Number(c.id)))} negative={(r, c) => swing(r, Number(c.id)) < 0} height="320px" />
 )
 
 const SIZED = [{ id: 'owner', header: 'Owner', width: 170 }, { id: 'region', header: 'Region', width: 110 }, { id: 'status', header: 'Status', width: 96 }, { id: 'cost', header: 'Cost', width: 96 }]
 const fieldOf = (r: number, id: string) => {
-  const p = PROJECTS[r % 10]
+  const p = PROJECTS[r % 10]!
   return id === 'cost' ? money(p.cost + r) : p[id as 'owner']
 }
 
 export const ScrollGridWidths = () => (
-  <ScrollGrid label="Projects" corner="Project" rows={1000} columns={SIZED} rowHeader={r => `${PROJECTS[r % 10].name}-${r}`} cell={(r, c) => fieldOf(r, c.id)} headerWidth={160} height="300px" />
+  <ScrollGrid label="Projects" corner="Project" rows={1000} columns={SIZED} rowHeader={r => `${PROJECTS[r % 10]!.name}-${r}`} cell={(r, c) => fieldOf(r, c.id)} headerWidth={160} height="300px" />
 )
 
 /* -- VirtualList -- */
@@ -361,7 +361,7 @@ export const VirtualListLog = () => (
 )
 
 const NOTES = Array.from({ length: 2000 }, (_, i) => {
-  const d = DEPLOYS[i % 6]
+  const d = DEPLOYS[i % 6]!
   return { id: i, who: d.author, text: `${d.message}. ${'Rolled out to every region after the checks passed, with the old version kept warm for an hour. '.repeat(i % 4)}`.trim() }
 })
 
@@ -394,7 +394,7 @@ export function VirtualListKeys() {
   const picked = state(0)
   return (
     <Stack gap="related">
-      <Text subtle>Press Tab into the list, then the arrow keys, Home and End. Picked: {PROJECTS[picked.value].name}.</Text>
+      <Text subtle>Press Tab into the list, then the arrow keys, Home and End. Picked: {PROJECTS[picked.value]!.name}.</Text>
       <VirtualList label="Projects" items={PROJECTS} rowKey={p => p.id} estimate={38} height="240px" roving onRowKey={(e, c) => { if (e.key === 'Enter') picked.value = PROJECTS.findIndex(p => p.id === c.active()) }}>
         {p => <Row justify="between" gap="tight"><Text inline>{p().name}</Text><Text inline role="caption" subtle>{p().region}</Text></Row>}
       </VirtualList>
@@ -407,7 +407,7 @@ export function VirtualListTail() {
   const paused = state(false)
   const stuck = state(true)
   let list: VirtualControl | undefined
-  const arrive = () => { if (!paused.value) lines.value = [...lines.value, LINES[lines.value.length]] }
+  const arrive = () => { if (!paused.value) lines.value = [...lines.value, LINES[lines.value.length]!] }
   onMount(() => {
     const timer = setInterval(arrive, 700)
     onCleanup(() => clearInterval(timer))
@@ -428,14 +428,14 @@ export function VirtualListLoadMore() {
   const busy = state(false)
   const more = async () => {
     busy.value = true
-    await new Promise(done => setTimeout(done, 600))
+    await new Promise(done => { setTimeout(done, 600) })
     shown.value = LINES.slice(0, shown.value.length + 30)
     busy.value = false
   }
   return (
     <Stack gap="related">
       <Text subtle>{shown.value.length} of {LINES.length} loaded{busy.value ? ', loading more' : ''}.</Text>
-      <VirtualList label="Request log" items={shown.value} rowKey={l => l.id} estimate={38} height="280px" busy={busy.value} onEnd={more}>{logLine}</VirtualList>
+      <VirtualList label="Request log" items={shown.value} rowKey={l => l.id} estimate={38} height="280px" busy={busy.value} onEnd={() => void more()}>{logLine}</VirtualList>
     </Stack>
   )
 }
@@ -447,7 +447,7 @@ const verb: Record<string, string> = { Live: 'shipped', Building: 'started', Fai
 const hoursAgo = (i: number) => (i < 24 ? `${i + 1}h` : `${Math.floor(i / 24)}d`)
 
 const ACTIVITY = Array.from({ length: 300 }, (_, i) => {
-  const d = DEPLOYS[i % 6]
+  const d = DEPLOYS[i % 6]!
   return { id: i, what: `${d.author} ${verb[d.status]} ${d.project}`, when: hoursAgo(i), detail: `${d.message}. ${d.branch} at ${d.commit}.`, tone: toneOf(d.status) }
 })
 
@@ -461,14 +461,14 @@ export function FeedLoadMore() {
   const more = async () => {
     if (items.value.length >= ACTIVITY.length) return
     busy.value = true
-    await new Promise(done => setTimeout(done, 700))
+    await new Promise(done => { setTimeout(done, 700) })
     items.value = ACTIVITY.slice(0, items.value.length + 20)
     busy.value = false
   }
   return (
     <Stack gap="related">
       <Text subtle>{items.value.length} of {ACTIVITY.length} events{busy.value ? ', loading more' : ''}.</Text>
-      <Feed label="Activity" items={items.value} height="340px" busy={busy.value} onEnd={more} />
+      <Feed label="Activity" items={items.value} height="340px" busy={busy.value} onEnd={() => void more()} />
     </Stack>
   )
 }
@@ -479,7 +479,7 @@ export const FeedCustom = () => (
       <>
         <span data-part="knot" style={`--_dc:var(--warp-color-${item().tone}-solid)`}></span>
         <span data-part="what">{item().what}</span>
-        <Badge tone={item().tone as 'positive'}>{item().when}</Badge>
+        <Badge tone={item().tone}>{item().when}</Badge>
         <span data-part="detail" data-measure="">{item().detail}</span>
       </>
     )}
@@ -581,7 +581,7 @@ const SPRINT: KanbanColumn[] = ['Backlog', 'Next', 'Doing'].map((title, c) => ({
   id: title,
   title,
   color: c + 1,
-  cards: Array.from({ length: 2000 }, (_, i) => ({ id: `${title}-${i}`, title: `${DEPLOYS[(i + c) % 6].message} (${i + 1})`, meta: DEPLOYS[(i + c) % 6].project })),
+  cards: Array.from({ length: 2000 }, (_, i) => ({ id: `${title}-${i}`, title: `${DEPLOYS[(i + c) % 6]!.message} (${i + 1})`, meta: DEPLOYS[(i + c) % 6]!.project })),
 }))
 
 export function KanbanLong() {

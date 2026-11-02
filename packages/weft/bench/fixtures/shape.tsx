@@ -1,5 +1,5 @@
-import { Boundary, resource, state } from 'weft'
-import { render } from 'weft/dom'
+import { Boundary, resource, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 
 const load = () => fetch('/x').then(r => r.json() as Promise<{ id: number; name: string }[]>)
 

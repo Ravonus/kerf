@@ -1,4 +1,4 @@
-import { Button, Kbd } from '@weft/warp'
+import { Button, Kbd } from '@weft-js/warp'
 import { warmBody } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 

@@ -1,4 +1,4 @@
-// One browser, one socket (research 40 §5). Every tab gets the same thing it always had, a duplex line of text frames,
+// One browser, one socket (research 45 §5). Every tab gets the same thing it always had, a duplex line of text frames,
 // and only one tab, the leader, holds the WebSocket under them all. `channel.ts`, `live.ts` and `share.ts` ride it and
 // know nothing about tabs: a line is a socket to them, and to the server, which gives each its own connection (mux.ts).
 // That is why `id`, `exceptSelf`, `left`, `limits` and acks all mean what they did: per tab.
@@ -21,7 +21,8 @@ const PONG = 1500
 /** The line went because the leader did: not the network's fault, so reopen at once. */
 export const HANDOVER = 4900
 
-export const tab = typeof crypto === 'undefined' ? '' : crypto.randomUUID().slice(0, 8)
+// getRandomValues, not randomUUID: a page on plain http (a LAN address) has no randomUUID, and this runs on import.
+export const tab = typeof crypto === 'undefined' ? '' : crypto.getRandomValues(new Uint32Array(1))[0]!.toString(36)
 const locks = (): LockManager | undefined => (typeof navigator !== 'undefined' ? navigator.locks : undefined)
 export const shareable = () => !!locks() && typeof BroadcastChannel !== 'undefined'
 
@@ -33,7 +34,7 @@ export const linkStats = { role: 'none' as 'none' | 'leader' | 'follower', steal
 export interface Campaign { probe(): void; stop(): void; leading(): boolean; pinged?: () => void }
 
 /** `lead` when this tab takes the lock; `lose` when another tab takes it from under this one. */
-export function campaign(name: string, lead: () => void, lose: () => void, stolen?: () => void): Campaign {
+export function campaign(name: string, won: () => void, lose: () => void, stolen?: () => void): Campaign {
   const l = locks()
   const lockName = `${name}:leader`
   let on = true, leads = false
@@ -41,14 +42,14 @@ export function campaign(name: string, lead: () => void, lose: () => void, stole
   let abort: AbortController | undefined
   let waiting: ReturnType<typeof setTimeout> | undefined
   let pongAt = 0
-  const take = () => {
+  const hold = () => {
     leads = true
     clearTimeout(waiting) // a ping that went out before there was anyone to answer it
     waiting = undefined
-    lead()
+    won()
   }
   if (!l || typeof BroadcastChannel === 'undefined') {
-    queueMicrotask(() => { if (on) take() })
+    queueMicrotask(() => { if (on) hold() })
     return { probe() {}, leading: () => leads, stop() { on = leads = false } }
   }
   const bc = new BroadcastChannel(`${name}:e`)
@@ -94,7 +95,7 @@ export function campaign(name: string, lead: () => void, lose: () => void, stole
     abort = ctl
     l!.request(lockName, steal ? { steal: true } : { signal: ctl.signal }, () => new Promise<void>(ok => {
       release = ok
-      take()
+      hold()
     })).catch(() => {
       if (!on || abort !== ctl) return // this tab left the queue on purpose
       if (leads) {
@@ -158,7 +159,7 @@ function end(l: Mine, code: number, reason?: string) {
   lines.delete(l.id)
   l.closed(code, reason)
 }
-const endAll = (code: number) => { for (const l of [...lines.values()]) end(l, code) }
+const endAll = (code: number) => { for (const l of Array.from(lines.values())) end(l, code) }
 
 function arrive(text: string) {
   const at = text.indexOf(':', 2)
@@ -282,7 +283,7 @@ const opened = new Map<string, Set<string>>()
 const ears = new Map<string, BroadcastChannel>()
 let upFrom: BroadcastChannel | undefined
 
-const offline = () => navigator.onLine === false
+const offline = () => ! navigator.onLine
 const send = (line: string) => {
   if (open) ws!.send(line)
   else {

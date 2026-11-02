@@ -38,7 +38,9 @@ export async function pluginChecks(root, loaded, { files, exclude = [] }) {
     if (!hook || typeof hook.run !== 'function') continue
     const include = hook.include ?? ['**/*.{tsx,jsx}']
     const wanted = matcher(include)
-    const rels = [...new Set([...files.map(f => f.rel).filter(wanted), ...discover(root, { include, exclude })])].sort()
+    /** @type {Set<string>} */
+    const chosen = new Set([...files.map(f => f.rel).filter(wanted), ...discover(root, { include, exclude })])
+    const rels = [...chosen].sort()
     const declared = new Map((c.manifest.diagnostics ?? []).map(d => [d.code, d]))
     const ctx = Object.freeze({
       root,

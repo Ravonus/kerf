@@ -1,5 +1,5 @@
 // Prop inference while `weft dev` runs. A listener of its own, hooked at file-change: it posts the changed name to a
-// worker and goes back to serving, so nothing here is on the HMR or request path (research 41 §7).
+// worker and goes back to serving, so nothing here is on the HMR or request path (research 44 §7).
 
 import { Worker } from 'node:worker_threads'
 

@@ -21,11 +21,11 @@ export const xLabels = (labels: string[], at: (i: number) => number, y: number, 
 /** A focusable mark: `role="img"`, its label the same text the tooltip shows, and its place in the x / series walk. */
 export const mark = (tag: string, xi: number, si: number, label: string, a: Attrs) => s(tag, { 'data-mark': true, 'data-xi': xi, 'data-si': si, role: 'img', 'aria-label': label, ...a })
 
-export const refLine = (x0: number, x1: number, y: number, label: string, at: number, anchor?: string) => [
+export const refLine = (x0: number, x1: number, y: number, label: string, at: number, anchor?: string  ) => [
   s('line', { class: 'ref', x1: x0, x2: x1, y1: y, y2: y }),
   s('text', { class: 'ref-t', x: at, y: y - 6, dy: -2, 'text-anchor': anchor }, label),
 ]
-export const anno = (x: number, y0: number, y1: number, label: string, tx: number, ty: number, anchor?: string, band?: [number, number]) =>
+export const anno = (x: number, y0: number, y1: number, label: string, tx: number, ty: number, anchor?: string  , band?: [number, number]) =>
   s('g', { class: 'anno', 'aria-hidden': 'true' },
     band && s('rect', { class: 'band', x: band[0], y: y0, width: band[1] - band[0], height: y1 - y0 }),
     s('line', { x1: x, x2: x, y1: y0, y2: y1 }), s('text', { x: tx, y: ty, 'text-anchor': anchor }, label))

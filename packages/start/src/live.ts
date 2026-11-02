@@ -5,33 +5,36 @@
 //
 // A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
 
-import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
+import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from '@weft-js/core'
 import type { AuthScope, Context, Fn, LiveApi, LiveMode, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from './data'
 import type { Body, SubEntry, Tracked } from './hub'
 import { HANDOVER, noSockets, openLine, type Line } from './link'
 
 // `data.ts` hands these over (`use`). A static import would close a cycle with its `import('./live')`, and the bundler
 // would then keep this chunk, the hub and the split they force in apps that never read `.live`.
-let cache: LiveApi['cache'], currentScope: LiveApi['currentScope'], fakeScope: LiveApi['fakeScope'], fns: LiveApi['fns'], FnError: LiveApi['FnError'], keyOf: LiveApi['keyOf'], net: LiveApi['net'], rt: LiveApi['rt'], runtime: LiveApi['runtime'], skip: LiveApi['skip'], StartError: LiveApi['StartError'], track: LiveApi['track']
-export const use = (api: LiveApi) => void ({ cache, currentScope, fakeScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track } = api)
+let cache: LiveApi['cache'], currentScope: LiveApi['currentScope'], fns: LiveApi['fns'], FnError: LiveApi['FnError'], keyOf: LiveApi['keyOf'], net: LiveApi['net'], rt: LiveApi['rt'], runtime: LiveApi['runtime'], skip: LiveApi['skip'], StartError: LiveApi['StartError'], track: LiveApi['track']
+export const use = (api: LiveApi) => void ({ cache, currentScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track } = api)
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
 
-type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
-type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
+type In<S> = S extends StandardSchemaV1<infer I, unknown> ? I : void
+type Out<S> = S extends StandardSchemaV1<unknown, infer O> ? O : undefined
 
+/** Where a stream stands; `done` is the end of a generator. */
 export type StreamStatus = LiveStatus | 'done'
 
+/** `stream()`: the input, the message schema and the generator. */
 export interface StreamDef<S, M, A = undefined> {
   input?: S
   /** Checked in dev and tests (C002), and the contract's `message`. */
-  message?: StandardSchemaV1<any, M>
+  message?: StandardSchemaV1<unknown, M>
   auth?: A
   /** `lastEventId`: the last `tracked` id the client saw, on a resume. Stop when `signal` aborts. */
   run: (args: { input: Out<S>; ctx: Context; signal: AbortSignal; lastEventId?: string }) => AsyncIterable<M | Tracked<M>>
   $id?: string
 }
 
+/** `.live()` on a stream: what the value starts as, and how messages fold into it. */
 export interface StreamOptions<M, T> extends LiveOptions {
   /** Keep every message: `fold(acc, message)`. Its state lives in the cache, so a remount finds it. */
   fold?: (acc: T, message: M) => T
@@ -40,6 +43,7 @@ export interface StreamOptions<M, T> extends LiveOptions {
   buffer?: number
 }
 
+/** A stream as a page reads it. */
 export interface Stream<T> {
   /** The latest message, or the fold. */
   readonly value: T
@@ -47,6 +51,7 @@ export interface Stream<T> {
   readonly error: unknown
 }
 
+/** What `stream()` returns. */
 export interface StreamFn<I, M> {
   (input: Arg<I>): Stream<M | undefined>
   <T>(input: Arg<I>, options: StreamOptions<M, T> & { initial: T }): Stream<T>
@@ -61,23 +66,23 @@ let auto = 0
 
 export function stream<M, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: StreamDef<S, M, A>): StreamFn<In<S>, M> {
   const id = def.$id ?? `s${++auto}`
-  const fn: Fn = { kind: 'stream', $id: id, def: def as Fn['def'] }
+  const fn: Fn = { kind: 'stream', $id: id, def: def as unknown as Fn['def'] }
   fns.set(id, fn)
-  return Object.assign((input: unknown, options?: StreamOptions<any, any>) => read(fn, input, options), { kind: 'stream', $id: id, [FN]: fn }) as any
+  return Object.assign((input: unknown, options?: StreamOptions<never, unknown>) => read(fn, input, options), { kind: 'stream', $id: id, [FN]: fn }) as unknown as StreamFn<In<S>, M>
 }
 
 // ---- subscriptions --------------------------------------------------------------------------------------------------
 
-interface View { fold?: (acc: any, m: any) => any; initial: unknown; box: State<unknown> }
+interface View { fold?: ((acc: never, m: never) => unknown) | undefined; initial: unknown; box: State<unknown> }
 interface Sub {
   n: number
   key: string
   fn: Fn
   input: unknown
   refs: number
-  timer?: ReturnType<typeof setTimeout>
+  timer?: ReturnType<typeof setTimeout> | undefined
   /** Stream: the last id, sent back on a resume. Query: its tags, from the ack. */
-  cursor?: string
+  cursor?: string | undefined
   tags: string[]
   buffer?: number
   acked: boolean
@@ -94,7 +99,7 @@ const KEEP = 30_000
 const ms = (keep: string | number = KEEP): number => {
   if (typeof keep === 'number') return keep
   const m = /^(\d+)(ms|s|m)$/.exec(keep)
-  return m ? +m[1] * { ms: 1, s: 1000, m: 60_000 }[m[2] as 'ms' | 's' | 'm'] : Infinity // 'session'
+  return m ? +m[1]! * { ms: 1, s: 1000, m: 60_000 }[m[2] as 'ms' | 's' | 'm'] : Infinity // 'session'
 }
 
 function acquire(fn: Fn, input: unknown): Sub {
@@ -144,7 +149,7 @@ export function hold(fn: Fn, input: unknown, options?: LiveOptions): () => void 
   return held(acquire(fn, input), options?.keep)
 }
 
-function read(fn: Fn, input: unknown, o: StreamOptions<any, any> = {}): Stream<any> {
+function read(fn: Fn, input: unknown, o: StreamOptions<never, unknown> = {}): Stream<unknown> {
   if (!getOwner())
     throw new StartError('W051', DEV ? `\`${fn.$id}()\` (a stream) was called outside a component or scope: nothing would close it` : fn.$id, DEV ? 'call it in a component, a `defineState` setup or `createRoot(dispose => …)`' : undefined)
   const scope = currentScope()
@@ -168,7 +173,7 @@ function read(fn: Fn, input: unknown, o: StreamOptions<any, any> = {}): Stream<a
       return { s, v }
     })
   }, now => { view.value = now })
-  const status = derived(() => (view.value?.s.done.value ? 'done' : rt.status.value) as StreamStatus)
+  const status = derived(() => (view.value?.s.done.value ? 'done' : rt.status.value))
   return {
     get value() { const now = view.value; return now ? now.v.box.value : o.initial },
     status,
@@ -178,17 +183,18 @@ function read(fn: Fn, input: unknown, o: StreamOptions<any, any> = {}): Stream<a
 
 // ---- the connection ---------------------------------------------------------------------------------------------------
 
+/** How the client reaches `/_weft/rt`: SSE, a shared socket, or a fake under test. */
 export interface Link {
   /** Resolves when the connection ends. */
-  open(body: Body, frame: (event: string, data: any) => void, signal: AbortSignal, alive: () => void): Promise<void>
+  open(body: Body, frame: (event: string, data: unknown) => void, signal: AbortSignal, alive: () => void): Promise<void>
   change(body: Body): Promise<void>
 }
 
 const post = (body: Body, signal?: AbortSignal) =>
-  fetch('/_weft/rt', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-weft': '1' }, body: JSON.stringify(body), signal })
+  fetch('/_weft/rt', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-weft': '1' }, body: JSON.stringify(body), ...(signal && { signal }) })
 
 const http: Link = {
-  async open(body, frame, signal, alive) {
+  async open(body, heard, signal, alive) {
     const res = await post(body, signal)
     if (!res.ok) {
       const { e } = await res.json().catch(() => ({ e: {} }))
@@ -205,7 +211,7 @@ const http: Link = {
       for (let i; (i = buf.indexOf('\n\n')) >= 0; buf = buf.slice(i + 2)) {
         if (buf[0] === ':') continue
         const line = buf.indexOf('\n')
-        frame(buf.slice(7, line), JSON.parse(buf.slice(line + 7, i)))
+        heard(buf.slice(7, line), JSON.parse(buf.slice(line + 7, i)))
       }
     }
   },
@@ -218,12 +224,12 @@ const http: Link = {
 /** A line on the browser's one socket (link.ts): the same events, and `/_weft/rt`'s SSE is for a host with no sockets. */
 let line: Line | undefined
 const socket: Link = {
-  open(body, frame, signal, alive) {
+  open(body, heard, signal, alive) {
     return new Promise<void>((done, fail) => {
       const l = (line = openLine('r', JSON.stringify(body), text => {
         alive()
         const at = text.indexOf(':'), event = text.slice(0, at)
-        if (event !== 'ping') frame(event, JSON.parse(text.slice(at + 1)))
+        if (event !== 'ping') heard(event, JSON.parse(text.slice(at + 1)))
       }, (code, reason) => {
         if (line === l) line = undefined
         if (code === HANDOVER) retry = 0
@@ -233,22 +239,23 @@ const socket: Link = {
       signal.addEventListener('abort', () => l.close())
     })
   },
-  async change(body) {
-    if (!line) throw new FnError({}, 503)
+  change(body) {
+    if (!line) return Promise.reject(new FnError({}, 503))
     line.send(JSON.stringify(body))
+    return Promise.resolve()
   },
 }
 
 /**
- * weft/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
+ * @weft-js/core/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
  * fake, and through it the hub, as chunks of every app, used or not.
  */
 const FAKE = './live-fake.ts'
 const fake: Link = {
-  open(body, frame, signal) {
+  open(body, heard, signal) {
     let up!: () => void
-    track(new Promise<void>(ok => (up = ok))) // `net.settle()` waits for the connection, not for its end
-    return import(/* @vite-ignore */ FAKE).then(m => m.open(body, frame, signal, up, subs, (close: () => unknown) => (closeHub = close))).finally(up)
+    void track(new Promise<void>(ok => { up = ok })) // `net.settle()` waits for the connection, not for its end
+    return import(/* @vite-ignore */ FAKE).then(m => m.open(body, heard, signal, up, subs, (close: () => unknown) => (closeHub = close))).finally(up)
   },
   change: async body => (await import(/* @vite-ignore */ FAKE)).change(body),
 }
@@ -283,17 +290,21 @@ let pokeTimer: ReturnType<typeof setTimeout> | undefined
 function readPage() {
   const el = document.getElementById('weft-rt')
   if (!el) return
-  const page = JSON.parse(el.textContent!) as { c?: string; b?: string }
+  const page = JSON.parse(el.textContent) as { c?: string; b?: string }
   el.remove()
   cursor = page.c
   build = page.b
   seeded = !!cursor
 }
 
-const entry = (s: Sub): SubEntry => (s.fn.kind === 'query' ? [s.n, 'q', s.fn.$id, s.input] : [s.n, 's', s.fn.$id, s.input, s.cursor, s.buffer])
+const entry = (s: Sub): SubEntry => (s.fn.kind === 'query' ? [s.n, 'q', s.fn.$id, s.input] : [s.n, 's', s.fn.$id, s.input, s.cursor ?? '', s.buffer ?? 0])
 const set = (status: LiveStatus) => { rt.status.value = status }
+interface Linked { m: LiveMode; d?: 1 }
+/** What's positional in a frame: `[subscription, ...]`. What the rest of the fields mean goes by the event. */
+type Row = { 0: number; 1: never; 2: unknown }
+
 /** The connection is up: how live that is depends on the server's feed. */
-function linked(l?: { m: LiveMode; d?: 1 }) {
+function linked(l?: Linked) {
   rt.mode.value = l?.m ?? 'app'
   set(l?.d ? 'reconnecting' : l?.m === 'poll' || l?.m === 'off' ? 'degraded' : 'live')
   if (DEV && l && l.m !== 'feed' && l.m !== 'external' && !warned) {
@@ -302,16 +313,17 @@ function linked(l?: { m: LiveMode; d?: 1 }) {
   }
 }
 let warned = false
-const offline = () => navigator.onLine === false
+const offline = () => ! navigator.onLine
 
 function flushPokes() {
   const tags = [...pokes]
   pokes = new Set()
   pokeTimer = undefined
-  cache.invalidate(...tags)
+  void cache.invalidate(...tags)
 }
 
-function frame(event: string, d: any) {
+function frame(event: string, data: unknown) {
+  const d = data as Row & Record<'b' | 'k' | 'c', string> & { l?: Linked; t: string[]; retry: number }
   batch(() => {
     if (event === 'h') {
       if (build && d.b && d.b !== build) rt.stale.value = true
@@ -328,7 +340,7 @@ function frame(event: string, d: any) {
       s.error.value = undefined
       if (DEV && !s.tags.length) console.warn(`weft: W053 \`${s.fn.$id}\` is read with \`.live()\` but declares no \`tags\`: no mutation can ever poke it.\n  fix: add \`tags\` to the query`)
       // Data older than the subscription may have missed a write. A page's first connect is covered by its cursor.
-      if (!s.acked && !seeded && s.tags.length) cache.invalidate(...s.tags)
+      if (!s.acked && !seeded && s.tags.length) void cache.invalidate(...s.tags)
       s.acked = true
     } else if (event === 'p') {
       cursor = d.c
@@ -337,13 +349,13 @@ function frame(event: string, d: any) {
       else pokeTimer ??= setTimeout(flushPokes, 50 + Math.random() * 250)
     } else if (event === 'R') {
       cursor = d.c
-      cache.invalidate(...[...subs.values()].flatMap(s => s.tags))
+      void cache.invalidate(...[...subs.values()].flatMap(s => s.tags))
     } else if (event === 'm') {
       const s = byN.get(d[0])
       if (!s) return
       if (d[1] !== null) s.cursor = d[1]
       s.error.value = undefined
-      for (const v of s.views.values()) v.box.value = v.fold ? v.fold(v.box.value, d[2]) : d[2]
+      for (const v of s.views.values()) v.box.value = v.fold ? v.fold(v.box.value as never, d[2] as never) : d[2]
     } else if (event === 'r') {
       const s = byN.get(d[0])
       if (!s) return
@@ -354,8 +366,8 @@ function frame(event: string, d: any) {
       if (s) s.done.value = true
     } else if (event === 'e') {
       const s = byN.get(d[0])
-      if (s) s.error.value = new FnError(d[1], d[1].code === 'A002' ? 401 : 500)
-    } else if (event === 'L') linked(d)
+      if (s) s.error.value = new FnError(d[1], (d[1] as { code?: string }).code === 'A002' ? 401 : 500)
+    } else if (event === 'L') linked(d as unknown as Linked)
     else if (event === 'b') retry = d.retry
   })
 }
@@ -381,7 +393,7 @@ async function run() {
       continue
     }
     const ac = new AbortController()
-    const live: Live = (conn = { ac, sent: new Set(byN.keys()) })
+    conn = { ac, sent: new Set(byN.keys()) }
     let dead: ReturnType<typeof setTimeout> | undefined
     const alive = () => {
       clearTimeout(dead)
@@ -430,7 +442,7 @@ function sync() {
       live.ac.abort()
     }
   })
-  track(changing)
+  void track(changing)
 }
 
 // ---- the page -------------------------------------------------------------------------------------------------------
@@ -467,7 +479,7 @@ function listen(on: boolean) {
   if (!on) clearTimeout(hiddenAt)
 }
 
-/** weft/test, after each test. */
+/** @weft-js/core/test, after each test. */
 function reset() {
   for (const s of subs.values()) clearTimeout(s.timer)
   subs.clear()

@@ -1,6 +1,6 @@
-import { TimerIcon } from '@weft/icons'
-import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft/warp-core'
-import { derived, state, untrack } from 'weft'
+import { TimerIcon } from '@weft-js/warp-icons'
+import { balance, formatDuration, pad, parseDuration, totalSeconds, type DurationParts, type IsoDuration } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
 import { bindable, Composite, Hidden, usePickerEnv, type Bindable, type RichFieldProps } from './Picker'
 
 type Unit = 'd' | 'h' | 'm' | 's'
@@ -10,9 +10,10 @@ const SHORT = { d: 'd', h: 'h', m: 'min', s: 's' } as const
 const SIZE = { d: 86400, h: 3600, m: 60, s: 1 } as const
 const MAX = { d: 99, h: 99, m: 59, s: 59 } as const
 
+/** Props for DurationField. */
 export type DurationFieldProps = RichFieldProps & Bindable<IsoDuration | null> & {
   units?: Unit[]
-  max?: IsoDuration
+  max?: IsoDuration | undefined
   step?: Partial<Record<'h' | 'm' | 's', number>>
   balance?: boolean
 }
@@ -78,7 +79,7 @@ export function DurationField({ value, defaultValue, onValueChange, units = ['h'
       filled={totalSeconds(parts.value) > 0}
       control={() => (
         <>
-          <div ref={(n: any) => (group = n)} data-part="segments" onKeyDown={onKey} onFocusOut={() => (buf.value = '')}>
+          <div ref={n => (group = n)} data-part="segments" onKeyDown={onKey} onFocusOut={() => (buf.value = '')}>
             {units.map(u => {
               const n = derived(() => parts.value[u])
               return (

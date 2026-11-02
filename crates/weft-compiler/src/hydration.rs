@@ -23,9 +23,15 @@
 //! rendering, and `early`, what must run with the page (`autofocus`, a `ref` callback that does more than keep the node).
 
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    ArrowFunctionExpression, BindingPattern, CallExpression, Declaration, ExportDefaultDeclarationKind, Expression,
+    Function, IdentifierReference, ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXElementName, JSXFragment, JSXMemberExpressionObject,
+    ObjectPropertyKind, Program, Statement, StaticMemberExpression, TSType, VariableDeclarator,
+};
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
 use oxc_semantic::{Scoping, SemanticBuilder};
@@ -170,7 +176,7 @@ fn attr_name(a: &JSXAttribute<'_>) -> String {
 struct Closed<'s> {
     scoping: &'s Scoping,
     span: Span,
-    closed: bool,
+    reads_only_module: bool,
     code: bool,
 }
 
@@ -178,8 +184,10 @@ impl<'a> Visit<'a> for Closed<'_> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         let Some(sym) = it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()) else { return };
         let at = self.scoping.symbol_span(sym);
-        if self.scoping.symbol_scope_id(sym) != self.scoping.root_scope_id() && !(at.start >= self.span.start && at.end <= self.span.end) {
-            self.closed = false;
+        if self.scoping.symbol_scope_id(sym) != self.scoping.root_scope_id()
+            && !(at.start >= self.span.start && at.end <= self.span.end)
+        {
+            self.reads_only_module = false;
         }
     }
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
@@ -203,19 +211,26 @@ impl<'a> Visit<'a> for Closed<'_> {
 /// A value that reads the same on both sides: no calls, so `Date.now()` is the server's and travels.
 fn plain_shape(e: &Expression<'_>) -> bool {
     match e.get_inner_expression() {
-        Expression::Identifier(_) | Expression::StringLiteral(_) | Expression::NumericLiteral(_) | Expression::BooleanLiteral(_) | Expression::NullLiteral(_) => true,
+        Expression::Identifier(_)
+        | Expression::StringLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::BooleanLiteral(_)
+        | Expression::NullLiteral(_) => true,
         Expression::StaticMemberExpression(m) => plain_shape(&m.object),
         Expression::ArrayExpression(a) => a.elements.iter().all(|x| x.as_expression().is_some_and(plain_shape)),
-        Expression::ObjectExpression(o) => o.properties.iter().all(|p| matches!(p, ObjectPropertyKind::ObjectProperty(p) if !p.computed && plain_shape(&p.value))),
+        Expression::ObjectExpression(o) => o
+            .properties
+            .iter()
+            .all(|p| matches!(p, ObjectPropertyKind::ObjectProperty(p) if !p.computed && plain_shape(&p.value))),
         _ => false,
     }
 }
 
 fn attr_kind(scoping: &Scoping, a: &JSXAttribute<'_>) -> &'static str {
     let check = |visit: &dyn Fn(&mut Closed)| {
-        let mut c = Closed { scoping, span: a.span, closed: true, code: false };
+        let mut c = Closed { scoping, span: a.span, reads_only_module: true, code: false };
         visit(&mut c);
-        (c.closed, c.code)
+        (c.reads_only_module, c.code)
     };
     let (closed, code, plain) = match &a.value {
         None | Some(JSXAttributeValue::StringLiteral(_)) => return "lit",
@@ -229,7 +244,13 @@ fn attr_kind(scoping: &Scoping, a: &JSXAttribute<'_>) -> &'static str {
         }
         Some(JSXAttributeValue::ExpressionContainer(c)) => {
             let Some(e) = c.expression.as_expression() else { return "lit" };
-            if matches!(e.get_inner_expression(), Expression::StringLiteral(_) | Expression::NumericLiteral(_) | Expression::BooleanLiteral(_) | Expression::NullLiteral(_)) {
+            if matches!(
+                e.get_inner_expression(),
+                Expression::StringLiteral(_)
+                    | Expression::NumericLiteral(_)
+                    | Expression::BooleanLiteral(_)
+                    | Expression::NullLiteral(_)
+            ) {
                 return "lit";
             }
             let (closed, code) = check(&|v| v.visit_expression(e));
@@ -240,18 +261,24 @@ fn attr_kind(scoping: &Scoping, a: &JSXAttribute<'_>) -> &'static str {
         (true, true) => "closed",
         (true, false) => "closure",
         // A handler that isn't written here is still a function, so it can't travel.
-        (false, _) if is_handler(&attr_name(a)) => if closed && plain { "closed" } else { "closure" },
+        (false, _) if is_handler(&attr_name(a)) => {
+            if closed && plain {
+                "closed"
+            } else {
+                "closure"
+            }
+        }
         (false, true) if plain => "closed",
         (false, _) => "value",
     }
 }
 
 fn kids_closed(scoping: &Scoping, el: &JSXElement<'_>) -> bool {
-    let mut c = Closed { scoping, span: el.span, closed: true, code: false };
+    let mut c = Closed { scoping, span: el.span, reads_only_module: true, code: false };
     for k in &el.children {
         c.visit_jsx_child(k);
     }
-    c.closed
+    c.reads_only_module
 }
 
 fn has_kids(el: &JSXElement<'_>) -> bool {
@@ -278,7 +305,8 @@ fn add(list: &mut Vec<String>, name: String) {
 }
 
 /// Methods whose call moves the user: they can't wait, whatever island they're in.
-const MOVES: &[&str] = &["focus", "scrollIntoView", "scrollTo", "scrollBy", "showModal", "showPopover", "requestFullscreen", "select"];
+const MOVES: &[&str] =
+    &["focus", "scrollIntoView", "scrollTo", "scrollBy", "showModal", "showPopover", "requestFullscreen", "select"];
 const WINDOW: &[&str] = &["window", "globalThis", "self"];
 
 #[derive(Default)]
@@ -301,27 +329,30 @@ struct Collect<'s> {
 }
 
 impl Collect<'_> {
+    fn frame(&mut self) -> &mut Frame {
+        self.frames.last_mut().expect("`facts` visits only through `framed`")
+    }
+
     fn own(&mut self, reason: String) {
-        let f = self.frames.last_mut().unwrap();
-        f.own.get_or_insert(reason);
+        self.frame().own.get_or_insert(reason);
     }
 
     fn early(&mut self, reason: String) {
-        self.frames.last_mut().unwrap().early.get_or_insert(reason);
+        self.frame().early.get_or_insert(reason);
     }
 
     /// An attribute on a plain element: a handler's value runs on its event.
-    fn attribute<'a>(&mut self, a: &JSXAttributeItem<'a>) {
+    fn attribute(&mut self, a: &JSXAttributeItem<'_>) {
         let on = matches!(a, JSXAttributeItem::Attribute(a) if attr_name(a) != "ref" && is_handler(&attr_name(a)));
-        self.handler += on as u32;
+        self.handler += u32::from(on);
         self.visit_jsx_attribute_item(a);
-        self.handler -= on as u32;
+        self.handler -= u32::from(on);
     }
 
     fn framed(&mut self, f: impl FnOnce(&mut Self)) -> Frame {
         self.frames.push(Frame::default());
         f(self);
-        let frame = self.frames.pop().unwrap();
+        let frame = self.frames.pop().expect("pushed above, and `f` leaves the stack as it found it");
         if let Some(up) = self.frames.last_mut() {
             up.early = up.early.take().or(frame.early.clone());
             for g in &frame.globals {
@@ -336,7 +367,7 @@ impl Collect<'_> {
 
     fn global(&mut self, name: &str) {
         if self.handler == 0 {
-            add(&mut self.frames.last_mut().unwrap().globals, name.to_string());
+            add(&mut self.frame().globals, name.to_string());
         }
     }
 
@@ -350,7 +381,9 @@ impl Collect<'_> {
         match name {
             JSXElementName::IdentifierReference(id) => (self.top(id).unwrap_or_default(), None),
             JSXElementName::MemberExpression(m) => match &m.object {
-                JSXMemberExpressionObject::IdentifierReference(id) => (self.top(id).unwrap_or_default(), Some(m.property.name.to_string())),
+                JSXMemberExpressionObject::IdentifierReference(id) => {
+                    (self.top(id).unwrap_or_default(), Some(m.property.name.to_string()))
+                }
                 _ => (String::new(), None),
             },
             _ => (String::new(), None),
@@ -361,14 +394,17 @@ impl Collect<'_> {
 impl<'a> Visit<'a> for Collect<'_> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
         if let Some(name) = self.top(it) {
-            add(&mut self.frames.last_mut().unwrap().uses, name);
-        } else if it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_none() && !WINDOW.contains(&it.name.as_str()) {
+            add(&mut self.frame().uses, name);
+        } else if it.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_none()
+            && !WINDOW.contains(&it.name.as_str())
+        {
             self.global(&it.name);
         }
     }
 
     fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
-        if matches!(it.object.get_inner_expression(), Expression::Identifier(id) if WINDOW.contains(&id.name.as_str())) {
+        if matches!(it.object.get_inner_expression(), Expression::Identifier(id) if WINDOW.contains(&id.name.as_str()))
+        {
             self.global(&it.property.name);
         }
         walk::walk_static_member_expression(self, it);
@@ -379,7 +415,7 @@ impl<'a> Visit<'a> for Collect<'_> {
             match it.callee.get_inner_expression() {
                 Expression::Identifier(id) => {
                     if let Some(name) = self.top(id) {
-                        add(&mut self.frames.last_mut().unwrap().calls, name);
+                        add(&mut self.frame().calls, name);
                     }
                 }
                 Expression::StaticMemberExpression(m) => {
@@ -389,7 +425,7 @@ impl<'a> Visit<'a> for Collect<'_> {
                     if let Expression::Identifier(id) = m.object.get_inner_expression()
                         && let Some(name) = self.top(id)
                     {
-                        add(&mut self.frames.last_mut().unwrap().calls, name);
+                        add(&mut self.frame().calls, name);
                     }
                 }
                 _ => {}
@@ -448,11 +484,11 @@ impl<'a> Visit<'a> for Collect<'_> {
                     }
                     let f = self.framed(|c| {
                         let on = name != "ref" && is_handler(&name);
-                        c.handler += on as u32;
+                        c.handler += u32::from(on);
                         if let Some(v) = &a.value {
                             c.visit_jsx_attribute_value(v);
                         }
-                        c.handler -= on as u32;
+                        c.handler -= u32::from(on);
                     });
                     attrs.push(Attr { name, kind, uses: f.uses, own: f.own });
                 }
@@ -513,7 +549,18 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
         let line = line_col(source, span.start).0;
         let mut node = |c: &mut Collect, name: String, value: bool, visit: &dyn Fn(&mut Collect)| {
             let f = c.framed(|c| visit(c));
-            out.nodes.push(Node { name, line, own: f.own, force: force.clone(), uses: f.uses, sites: std::mem::take(&mut c.sites), value, early: f.early, globals: f.globals, calls: f.calls });
+            out.nodes.push(Node {
+                name,
+                line,
+                own: f.own,
+                force: force.clone(),
+                uses: f.uses,
+                sites: std::mem::take(&mut c.sites),
+                value,
+                early: f.early,
+                globals: f.globals,
+                calls: f.calls,
+            });
         };
         match stmt {
             Statement::ImportDeclaration(i) => {
@@ -527,19 +574,28 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                     Some(list) => {
                         for s in list {
                             let (imported, kind_type) = match s {
-                                ImportDeclarationSpecifier::ImportSpecifier(n) => (n.imported.name().to_string(), n.import_kind.is_type()),
+                                ImportDeclarationSpecifier::ImportSpecifier(n) => {
+                                    (n.imported.name().to_string(), n.import_kind.is_type())
+                                }
                                 ImportDeclarationSpecifier::ImportDefaultSpecifier(_) => ("default".to_string(), false),
                                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => ("*".to_string(), false),
                             };
                             if !kind_type {
-                                out.imports.push(Import { local: s.local().name.to_string(), source: source_name.clone(), imported });
+                                out.imports.push(Import {
+                                    local: s.local().name.to_string(),
+                                    source: source_name.clone(),
+                                    imported,
+                                });
                             }
                         }
                         continue;
                     }
                 }
                 let plain = source_name.split('?').next().unwrap_or("");
-                if !NOT_CODE.iter().any(|x| plain.ends_with(x)) && !source_name.starts_with("weft:") && !source_name.starts_with("virtual:") {
+                if !NOT_CODE.iter().any(|x| plain.ends_with(x))
+                    && !source_name.starts_with("weft:")
+                    && !source_name.starts_with("virtual:")
+                {
                     out.side.push(source_name.clone());
                 }
             }
@@ -560,20 +616,36 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
             }
             Statement::ExportDefaultDeclaration(e) => match &e.declaration {
                 ExportDefaultDeclarationKind::Identifier(id) => {
-                    out.exports.push(Export { exported: "default".into(), local: Some(id.name.to_string()), ..Default::default() });
+                    out.exports.push(Export {
+                        exported: "default".into(),
+                        local: Some(id.name.to_string()),
+                        ..Default::default()
+                    });
                 }
                 ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
                     let name = f.id.as_ref().map_or("default".to_string(), |i| i.name.to_string());
-                    out.exports.push(Export { exported: "default".into(), local: Some(name.clone()), ..Default::default() });
+                    out.exports.push(Export {
+                        exported: "default".into(),
+                        local: Some(name.clone()),
+                        ..Default::default()
+                    });
                     node(&mut c, name, false, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
                 }
                 ExportDefaultDeclarationKind::ClassDeclaration(k) => {
-                    out.exports.push(Export { exported: "default".into(), local: Some("default".into()), ..Default::default() });
+                    out.exports.push(Export {
+                        exported: "default".into(),
+                        local: Some("default".into()),
+                        ..Default::default()
+                    });
                     node(&mut c, "default".into(), false, &|c| c.visit_class(k));
                 }
                 d => {
                     if let Some(x) = d.as_expression() {
-                        out.exports.push(Export { exported: "default".into(), local: Some("default".into()), ..Default::default() });
+                        out.exports.push(Export {
+                            exported: "default".into(),
+                            local: Some("default".into()),
+                            ..Default::default()
+                        });
                         node(&mut c, "default".into(), false, &|c| c.visit_expression(x));
                     }
                 }
@@ -581,21 +653,35 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
             Statement::ExportDeclaration(e) => match &e.declaration {
                 Declaration::FunctionDeclaration(f) => {
                     let name = f.id.as_ref().map_or(String::new(), |i| i.name.to_string());
-                    out.exports.push(Export { exported: name.clone(), local: Some(name.clone()), ..Default::default() });
+                    out.exports.push(Export {
+                        exported: name.clone(),
+                        local: Some(name.clone()),
+                        ..Default::default()
+                    });
                     node(&mut c, name, false, &|c| c.visit_function(f, oxc_syntax::scope::ScopeFlags::empty()));
                 }
                 Declaration::VariableDeclaration(v) => {
                     for d in &v.declarations {
                         let names = binding_names(&d.id);
                         for n in &names {
-                            out.exports.push(Export { exported: n.clone(), local: Some(n.clone()), ..Default::default() });
+                            out.exports.push(Export {
+                                exported: n.clone(),
+                                local: Some(n.clone()),
+                                ..Default::default()
+                            });
                         }
-                        node(&mut c, names.first().cloned().unwrap_or_default(), holds_value(d), &|c| c.visit_variable_declarator(d));
+                        node(&mut c, names.first().cloned().unwrap_or_default(), holds_value(d), &|c| {
+                            c.visit_variable_declarator(d);
+                        });
                     }
                 }
                 Declaration::ClassDeclaration(k) => {
                     let name = k.id.as_ref().map_or(String::new(), |i| i.name.to_string());
-                    out.exports.push(Export { exported: name.clone(), local: Some(name.clone()), ..Default::default() });
+                    out.exports.push(Export {
+                        exported: name.clone(),
+                        local: Some(name.clone()),
+                        ..Default::default()
+                    });
                     node(&mut c, name, false, &|c| c.visit_class(k));
                 }
                 Declaration::TSEnumDeclaration(k) => {
@@ -621,7 +707,12 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
                 if !e.export_kind.is_type() {
                     for s in &e.specifiers {
                         if !s.export_kind.is_type() {
-                            out.exports.push(Export { exported: s.exported.name().to_string(), local: None, source: Some(e.source.value.to_string()), imported: Some(s.local.name().to_string()) });
+                            out.exports.push(Export {
+                                exported: s.exported.name().to_string(),
+                                local: None,
+                                source: Some(e.source.value.to_string()),
+                                imported: Some(s.local.name().to_string()),
+                            });
                         }
                     }
                 }
@@ -629,12 +720,20 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
             Statement::ExportAllDeclaration(e) => {
                 if !e.export_kind.is_type() {
                     match &e.exported {
-                        Some(n) => out.exports.push(Export { exported: n.name().to_string(), local: None, source: Some(e.source.value.to_string()), imported: Some("*".into()) }),
+                        Some(n) => out.exports.push(Export {
+                            exported: n.name().to_string(),
+                            local: None,
+                            source: Some(e.source.value.to_string()),
+                            imported: Some("*".into()),
+                        }),
                         None => out.stars.push(e.source.value.to_string()),
                     }
                 }
             }
-            Statement::TSTypeAliasDeclaration(_) | Statement::TSInterfaceDeclaration(_) | Statement::TSEnumDeclaration(_) | Statement::EmptyStatement(_) => {}
+            Statement::TSTypeAliasDeclaration(_)
+            | Statement::TSInterfaceDeclaration(_)
+            | Statement::TSEnumDeclaration(_)
+            | Statement::EmptyStatement(_) => {}
             other => {
                 out.effects.get_or_insert(format!("a top-level statement (line {line})"));
                 node(&mut c, "(module)".into(), false, &|c| c.visit_statement(other));
@@ -645,7 +744,9 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
 }
 
 fn holds_value(d: &VariableDeclarator<'_>) -> bool {
-    !d.init.as_ref().is_some_and(|e| matches!(e.get_inner_expression(), Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)))
+    !d.init.as_ref().is_some_and(|e| {
+        matches!(e.get_inner_expression(), Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))
+    })
 }
 
 fn binding_names(p: &BindingPattern<'_>) -> Vec<String> {
@@ -697,18 +798,20 @@ impl<'a> Visit<'a> for Hoist<'_> {
                     }
                     attrs.push(' ');
                     if attr_kind(self.scoping, a) == "value" {
-                        attrs.push_str(&format!("{name}={{_p.v[{k}]}}"));
+                        let _ = write!(attrs, "{name}={{_p.v[{k}]}}");
                         k += 1;
                     } else {
                         attrs.push_str(text(a.span));
                     }
                 }
                 let body = match (&it.closing_element, has_kids(it)) {
-                    (Some(close), true) if site.hoist => text(Span::new(it.opening_element.span.end, close.span.start)).to_string(),
+                    (Some(close), true) if site.hoist => {
+                        text(Span::new(it.opening_element.span.end, close.span.start)).to_string()
+                    }
                     (_, true) => "{_p.s}".to_string(),
                     _ => String::new(),
                 };
-                self.out.push_str(&format!("\nexport const $i{index} = (_p) => <{tag}{attrs}>{body}</{tag}>;\n"));
+                let _ = writeln!(self.out, "\nexport const $i{index} = (_p) => <{tag}{attrs}>{body}</{tag}>;");
             }
         }
         walk::walk_jsx_element(self, it);
@@ -739,12 +842,22 @@ impl<'a> VisitMut<'a> for Mark<'a, '_> {
                     .attributes
                     .iter()
                     .filter_map(|a| match a {
-                        JSXAttributeItem::Attribute(a) if attr_name(a) != "key" && attr_kind(self.scoping, a) == "value" => Some(attr_name(a)),
+                        JSXAttributeItem::Attribute(a)
+                            if attr_name(a) != "key" && attr_kind(self.scoping, a) == "value" =>
+                        {
+                            Some(attr_name(a))
+                        }
                         _ => None,
                     })
                     .collect();
                 let slot = !site.hoist && has_kids(it);
-                let value = format!("{}#{index}|{}|{}|{}", self.islands.id, values.join(","), if slot { "s" } else { "" }, site.when);
+                let value = format!(
+                    "{}#{index}|{}|{}|{}",
+                    self.islands.id,
+                    values.join(","),
+                    if slot { "s" } else { "" },
+                    site.when
+                );
                 let ast = oxc_ast::builder::AstBuilder::new(self.allocator);
                 let name = JSXAttributeName::new_identifier(SPAN, ISLAND, &ast);
                 let lit = JSXAttributeValue::new_string_literal(SPAN, self.allocator.alloc_str(&value), None, &ast);

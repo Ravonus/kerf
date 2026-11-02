@@ -58,7 +58,7 @@ const NOISE = 256, grid = new Float32Array(NOISE * NOISE)
 export function noise(x: number, y: number) {
   const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy)
   const x0 = ix & 255, x1 = (x0 + 1) & 255, y0 = (iy & 255) << 8, y1 = (y0 + 256) & 65535
-  const a = grid[y0 + x0], b = grid[y0 + x1], c = grid[y1 + x0], d = grid[y1 + x1]
+  const a = grid[y0 + x0]!, b = grid[y0 + x1]!, c = grid[y1 + x0]!, d = grid[y1 + x1]!
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v
 }
 

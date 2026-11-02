@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer, parseSync } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import weftStart, { startDir } from './vite.mjs'
 import { deployUrl, descriptionProblem } from './derive.mjs'
 import { filePath, scanRoutes } from './routes.mjs'
@@ -27,7 +27,7 @@ const links = html => [...html.matchAll(/\shref="(\/[^"#?]*)/g)].map(m => m[1])
 /** @param {string} code @param {string} file `{ present, reads }`: does the module export `meta`, and does it read `data` or `params`? */
 export function metaExport(code, file) {
   let ast
-  try { ast = parseSync(file, code, { lang: /x$/.test(file) ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return { present: true, reads: true } }
+  try { ast = parseSync(file, code, { lang: file.endsWith('x') ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return { present: true, reads: true } }
   for (const node of ast.program.body) {
     if (node.type !== 'ExportNamedDeclaration') continue
     if (node.specifiers?.some(s => (s.exported?.name ?? s.exported?.value) === 'meta')) return { present: true, reads: true } // from elsewhere: can't tell
@@ -75,7 +75,7 @@ export async function routesMeta({ root, site = {}, preset }) {
   try {
     const { manifest, modules } = await server.ssrLoadModule('virtual:weft/routes')
     const { createHandler, cardPath } = await server.ssrLoadModule(join(startDir, 'server.tsx'))
-    const { mergeMeta, headTags } = await server.ssrLoadModule('weft/ssr')
+    const { mergeMeta, headTags } = await server.ssrLoadModule('@weft-js/core/ssr')
     await server.ssrLoadModule('virtual:weft/fns').catch(() => {})
     // An app's server code often validates its environment as it loads, and this may not be that environment. Its pages
     // can still be looked at: one that needs it answers 500, which is H016.
@@ -267,7 +267,7 @@ function placeholder(path) {
  */
 export function h006(code, file, report) {
   let ast
-  try { ast = parseSync(file, code, { lang: /x$/.test(file) ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return }
+  try { ast = parseSync(file, code, { lang: file.endsWith('x') ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return }
   for (const node of ast.program.body) {
     if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue
     const d = node.declaration

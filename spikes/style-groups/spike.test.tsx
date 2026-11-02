@@ -4,7 +4,7 @@
 // weft-allow T005: measures DOM mutations and serialized markup; the DOM is the subject
 import { screen, within } from '@testing-library/dom'
 import { writeFileSync } from 'node:fs'
-import { touches } from 'weft/test'
+import { touches } from '@weft-js/core/test'
 import { start, type Product } from './helpers'
 
 const out: Record<string, unknown> = {}

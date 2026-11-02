@@ -70,8 +70,8 @@ app's job (a mutation and a query).
 and no `history`, which is what research 14 §3.6 wants. Reading a server echo while a local write is pending keeps the
 local value; the last ack settles it, and a rejected write puts back the last server value and sets `.error`.
 
-**`sync: 'tabs'` is its own module.** `weft/sync`, imported by the `weft()` plugin where `sync: 'tabs'` appears, like
-`weft/persist`. Research 14 §2.8 says patches per path. `Box.set` gives no patches, so the module diffs top-level keys
+**`sync: 'tabs'` is its own module.** `@weft-js/core/sync`, imported by the `weft()` plugin where `sync: 'tabs'` appears, like
+`@weft-js/core/persist`. Research 14 §2.8 says patches per path. `Box.set` gives no patches, so the module diffs top-level keys
 of plain objects between the last broadcast and the current value (other values replace whole). That is what "adding
 two different products in two tabs merges" needs. Conflicts: last writer by `(at, tab)`, per key. Writes coalesce per
 microtask. An incoming write skips the write hook (no echo, no undo step) and asks `persist` to write the merged value,
@@ -79,7 +79,7 @@ or tab B's flush would drop what tab A added. The merged value must pass the box
 from another deploy can't corrupt this one. `sync: 'tabs'` needs `persist` with `local`, `cookie` or `memory`; `session`
 or none is S008.
 
-**`tabs.channel` is typed and validated in both directions.** It's in `weft/browser`, one `BroadcastChannel` per name
+**`tabs.channel` is typed and validated in both directions.** It's in `@weft-js/core/browser`, one `BroadcastChannel` per name
 per document, refcounted, removed with the owner, T012-tracked. A received message that fails the schema is dropped
 (another deploy's tab), with a dev warning. On the server it's inert. `.post(msg)`, `.on(fn)`, and `.value`, the last
 message received. A browser without `BroadcastChannel` makes `.post` a no-op.
@@ -111,7 +111,7 @@ chat.status.value                                                         // 'co
 export const deckSlide = sharedState('deck-slide', { key: z.string(), value: z.number(), initial: 0, authorize: { read, write } })
 const slide = deckSlide.connect(() => (id.value ? id.value : skip))       // State<number> & { status, error }
 
-// weft/browser and state
+// @weft-js/core/browser and state
 const bus = tabs.channel('cart', z.object({ count: z.number() }))         // .post .on .value
 const lines = state<Lines>({}, { persist: { in: 'local', schema, version: 1 }, sync: 'tabs' })
 ```
@@ -162,12 +162,12 @@ curve as `live.ts`, so neither module pulls in the other), reconnect is immediat
 
 All three implement research 30's `Bus` and carry its gap contract: first connect is not a gap, every later one is.
 
-- **`redisBus({ url })`**, `@weft/realtime-redis`, peer `ioredis`. Two connections (a subscriber can't publish).
+- **`redisBus({ url })`**, `@weft-js/realtime-redis`, peer `ioredis`. Two connections (a subscriber can't publish).
   `ready` after the first is the gap. A channel maps 1:1 to a Redis channel, prefix `weft:`.
-- **`natsBus({ servers })`**, `@weft/realtime-nats`, peer `@nats-io/transport-node`. Subjects can't hold `*`, `>` or
+- **`natsBus({ servers })`**, `@weft-js/realtime-nats`, peer `@nats-io/transport-node`. Subjects can't hold `*`, `>` or
   spaces, and channels come from tags and keys, so the subject is `weft.<base64url of the channel>`. A `reconnect` status
   is the gap.
-- **`durableObjectBus({ namespace })`**, `@weft/realtime-durable-object`, with `WeftBusObject`, the class the app
+- **`durableObjectBus({ namespace })`**, `@weft-js/realtime-durable-object`, with `WeftBusObject`, the class the app
   exports and binds. One object per channel. It has no state of its own beyond its sockets: a publish POSTs to the object,
   which writes to every socket, using the hibernation API (`acceptWebSocket`). A subscribe is a WebSocket to the object;
   a close is the gap, then it reconnects. No platform account: tested on workerd through Miniflare, locally.
@@ -182,11 +182,11 @@ whose WebSockets run in one. On `cloudflare_module` the build refuses it, as R00
 which is how all three plug in, so the slot adds nothing today. It stays declared, and a real third-party bus decides
 what it needs.
 
-## 7. Fake transport (`weft/test`)
+## 7. Fake transport (`@weft-js/core/test`)
 
 `channel-fake.ts`, behind an opaque specifier like `live-fake.ts`: the real `socket.ts` and hub, frames through JSON.
 Controls: `net.publish(room, params, name, msg)` (as another user would), `net.sent(room)` (what this client sent),
-`net.drop()` and `net.offline()` cut it too, `net.session(ctx)` swaps the context and re-checks now. `tabs` from `weft/test` fakes
+`net.drop()` and `net.offline()` cut it too, `net.session(ctx)` swaps the context and re-checks now. `tabs` from `@weft-js/core/test` fakes
 `BroadcastChannel`: `tabs.post(name, msg)` as another tab, `tabs.posted(name)`. Two `render()`s are two tabs for
 `sync: 'tabs'`: each gets its own `BroadcastChannel`, and a shared `storage` is the shared `localStorage`.
 
@@ -203,7 +203,7 @@ Controls: `net.publish(room, params, name, msg)` (as another user would), `net.s
 | R010 | start | also a refused upgrade |
 | R011 | start | a join `authorize` refused (new) |
 | S008 | start | `sync: 'tabs'` without `persist`, or with `session` |
-| T012 | `weft/test` | an open join or `tabs.channel` at the end of a test |
+| T012 | `@weft-js/core/test` | an open join or `tabs.channel` at the end of a test |
 
 W055 (`send` with a wrong payload) stays in research 07's list: TypeScript reports it, and the client has no schema to
 check with. R007's fix text moves to `channel`.
@@ -238,5 +238,5 @@ The design above held. What changed or was learned:
   instance left the value is `initial`. A value that must last is a mutation.
 - **The Durable Object bus needs `cloudflare_durable`:** a Worker's socket belongs to the request that opened it, so a
   stateless hub can't hold it. `busProblem` refuses the others (R002). Only workerd via Miniflare has run it.
-- **Size:** channel code sits behind `/_weft/ws` and `features.sync` in `weft/sync`, reached only through the `weft()`
+- **Size:** channel code sits behind `/_weft/ws` and `features.sync` in `@weft-js/core/sync`, reached only through the `weft()`
   FEATURES filter. A scaffold's client bundle is byte-identical to before; the server output grew 17.5 KB.

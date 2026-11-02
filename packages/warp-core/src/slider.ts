@@ -2,17 +2,19 @@
 // the track. The binding renders the parts; this writes --_v, --_v0, --_v1 and the ARIA values.
 import { formReset } from './form'
 
+/** Options for a slider. */
 export interface SliderOptions {
   values: number[]
   min: number
   max: number
   step: number
   format(v: number): string
-  names?: string[]
-  disabled?: boolean
+  names?: string[] | undefined
+  disabled?: boolean | undefined
   onChange(values: number[]): void
 }
 
+/** A slider's pointer and keyboard behaviour. */
 export function slider(el: HTMLElement, opts: SliderOptions) {
   let o = opts
   let vals = [...o.values]
@@ -26,19 +28,19 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
   }
   function paint() {
     thumbs().forEach((t, i) => {
-      t.style.setProperty('--_v', String(pct(vals[i])))
+      t.style.setProperty('--_v', String(pct(vals[i]!)))
       t.setAttribute('aria-valuenow', String(vals[i]))
-      const text = o.format(vals[i])
+      const text = o.format(vals[i]!)
       t.setAttribute('aria-valuetext', o.names?.[i] && vals.length > 1 ? `${o.names[i]}, ${text}` : text)
       const bubble = t.querySelector('[data-part="bubble"]')
       if (bubble) bubble.textContent = text
     })
-    el.style.setProperty('--_v0', String(vals.length === 2 ? pct(vals[0]) : 0))
+    el.style.setProperty('--_v0', String(vals.length === 2 ? pct(vals[0]!) : 0))
     el.style.setProperty('--_v1', String(pct(vals.at(-1)!)))
   }
   function set(i: number, v: number) {
     let next = snap(v)
-    if (vals.length === 2) next = i === 0 ? Math.min(next, vals[1]) : Math.max(next, vals[0])
+    if (vals.length === 2) next = i === 0 ? Math.min(next, vals[1]!) : Math.max(next, vals[0]!)
     if (next === vals[i]) return
     vals = vals.with(i, next)
     paint()
@@ -52,8 +54,8 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
   const onDown = (e: PointerEvent) => {
     if (o.disabled) return
     const v = at(e.clientX)
-    const i = vals.length === 2 && Math.abs(v - vals[1]) < Math.abs(v - vals[0]) ? 1 : 0
-    const t = thumbs()[i]
+    const i = vals.length === 2 && Math.abs(v - vals[1]!) < Math.abs(v - vals[0]!) ? 1 : 0
+    const t = thumbs()[i]!
     e.preventDefault()
     t.focus({ preventScroll: true })
     t.setAttribute('data-dragging', '')
@@ -77,7 +79,7 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
     // the arrows go the way they point: the track runs right to left in RTL
     const along = getComputedStyle(el).direction === 'rtl' ? -o.step : o.step
     const d = ({ ArrowRight: along, ArrowUp: o.step, ArrowLeft: -along, ArrowDown: -o.step, PageUp: big, PageDown: -big } as Record<string, number>)[e.key]
-    if (d !== undefined) { e.preventDefault(); set(i, vals[i] + d) }
+    if (d !== undefined) { e.preventDefault(); set(i, vals[i]! + d) }
     if (e.key === 'Home') { e.preventDefault(); set(i, o.min) }
     if (e.key === 'End') { e.preventDefault(); set(i, o.max) }
   }

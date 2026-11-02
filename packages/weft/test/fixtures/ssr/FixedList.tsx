@@ -1,5 +1,5 @@
 // A list over an array nothing re-reads: a plain `.map`, with live cells.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 
 const cells = Array.from({ length: 3 }, (_, i) => state(i))
 

@@ -1,8 +1,8 @@
 // A shared document: presence, cursors, a relay, one shared value, and the room's own message beside them.
-import { channel, sharedState, type StandardSchemaV1 } from '@weft/start'
-import { multiplayer } from '@weft/multiplayer/server'
-import { socketioTicket } from '@weft/realtime-socketio/relay'
-import { livekitTicket } from '@weft/realtime-livekit/server'
+import { channel, sharedState, type StandardSchemaV1 } from '@weft-js/start'
+import { multiplayer } from '@weft-js/multiplayer/server'
+import { socketioTicket } from '@weft-js/realtime-socketio/relay'
+import { livekitTicket } from '@weft-js/realtime-livekit/server'
 
 const object = <T,>(check: (v: any) => boolean): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'fixture', validate: v => (check(v) ? { value: v as T } : { issues: [{ message: 'bad' }] }) } }) as any
 const Params = object<{ id: string }>(v => typeof v?.id === 'string' && v.id.length <= 64)

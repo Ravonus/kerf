@@ -2,20 +2,23 @@
 // shows and is called, and which day a key moves to. A binding renders it and owns view, cursor and hover.
 import { addDays, addMonths, daysIn, dow, fmt, messages, pad, weekOf, weekendDays, ymd, type DateRange, type IsoDate, type IsoWeek } from './temporal'
 
+/** What a calendar holds, by mode. */
 export type CalendarValue = IsoDate | IsoDate[] | DateRange | IsoWeek | null
+/** How a calendar picks: one date, several, a range, or a week. */
 export type CalendarMode = 'single' | 'multiple' | 'range' | 'week'
 
+/** What deciding one day's state needs from the calendar around it. */
 export interface CalendarContext {
   mode: CalendarMode
   value: CalendarValue
   /** A second range, painted in info-soft (date range comparison). */
-  compare?: DateRange | null
+  compare?: DateRange | null | undefined
   today: string
   locale: string
   hover?: string | null
-  min?: string
-  max?: string
-  isDateUnavailable?: (d: IsoDate) => boolean
+  min?: string | undefined
+  max?: string | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
 }
 
 /** The month's weeks: seven entries each, blank days (outside the month) null. Always the rows the month needs. */
@@ -41,16 +44,19 @@ export const weekdays = (weekStartsOn: number, locale: string) => Array.from({ l
   return [fmt(ref, { weekday: 'long' }, locale), fmt(ref, { weekday: locale.startsWith('ja') ? 'narrow' : 'short' }, locale).replace(/\.$/, ''), (weekStartsOn + c) % 7] as const
 })
 
+/** Whether `iso` falls outside the calendar's min or max. */
 export const isOutOfBounds = (iso: string, c: Pick<CalendarContext, 'min' | 'max'>) => !!((c.min && iso < c.min) || (c.max && iso > c.max))
+/** Whether `iso` can't be picked: out of bounds, or refused by the app. */
 export const isUnavailable = (iso: string, c: CalendarContext) => isOutOfBounds(iso, c) || !!c.isDateUnavailable?.(iso as IsoDate)
 
 const ordered = (a: string, b: string) => (a <= b ? [a, b] : [b, a])
 
+/** Everything a day cell shows and says about itself. */
 export interface DayState {
   selected: boolean
   /** The gridcell's aria-selected: the ends and the band of a range too. */
   cellSelected: boolean
-  range?: 'start' | 'mid' | 'end' | 'solo'
+  range?: 'start' | 'mid' | 'end' | 'solo' | undefined
   preview: boolean
   compare: boolean
   today: boolean
@@ -60,6 +66,7 @@ export interface DayState {
   name: string
 }
 
+/** The state of one day in the calendar. */
 export function dayState(iso: IsoDate, c: CalendarContext): DayState {
   const t = messages(c.locale)
   const words: string[] = []
@@ -77,7 +84,7 @@ export function dayState(iso: IsoDate, c: CalendarContext): DayState {
     if (v?.start) {
       let e = v.end
       if (!e && c.hover) { e = c.hover as IsoDate; previewing = true }
-      const [lo, hi] = ordered(v.start, e ?? v.start)
+      const [lo, hi] = ordered(v.start, e ?? v.start) as [string, string]
       if (iso === lo || iso === hi) selected = !previewing || iso === v.start
       if (lo !== hi && iso >= lo && iso <= hi) {
         range = iso === lo ? 'start' : iso === hi ? 'end' : 'mid'
@@ -99,7 +106,7 @@ export function dayState(iso: IsoDate, c: CalendarContext): DayState {
 }
 
 /** The day a key moves the cursor to; "pick" for Enter/Space; null when the key isn't the grid's. */
-export function gridKey(key: string, shift: boolean, cursor: string, weekStartsOn: number, rtl: boolean): string | 'pick' | null {
+export function gridKey(key: string, shift: boolean, cursor: string, weekStartsOn: number, rtl: boolean): string | null {
   switch (key) {
     case 'ArrowLeft': return addDays(cursor, rtl ? 1 : -1)
     case 'ArrowRight': return addDays(cursor, rtl ? -1 : 1)
@@ -120,4 +127,5 @@ export function pickRange(v: DateRange, iso: IsoDate): DateRange {
   return iso < v.start ? { start: iso, end: v.start } : { start: v.start, end: iso }
 }
 
+/** Whether `weekday` (0 is Sunday) is a weekend day in `locale`. */
 export const isWeekend = (weekday: number, locale: string) => weekendDays(locale).includes(weekday)

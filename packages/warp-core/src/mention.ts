@@ -1,13 +1,15 @@
 // MentionsInput's text model (04 MentionsInput; inputs-rich.html:2367). The textarea shows names; the value keeps tokens
 // as `@[Ada Lovelace](user:ada)`. These helpers map one to the other, and keep tokens in step as the text is edited.
 
-export interface MentionItem { id: string; label: string; meta?: string; kind?: string }
+/** Something that can be mentioned. */
+export interface MentionItem { id: string; label: string; meta?: string; kind?: string | undefined }
 /** A token in the shown text: `[start, end)` of `@Ada Lovelace`, with what it stands for. */
 export interface MentionMark { start: number; end: number; token: string }
 
 const TOKEN = /([^\s\w])\[([^\]]+)\]\(([^)]+)\)/g
 const KINDS: Record<string, string> = { '@': 'user', '#': 'channel' }
 
+/** The markup a mention serializes to. */
 export const mentionToken = (trigger: string, item: MentionItem) => `${trigger}[${item.label.replace(/[\][]/g, '')}](${item.kind ?? KINDS[trigger] ?? 'item'}:${item.id})`
 
 /** A value's shown text and where its tokens landed in it. */
@@ -17,7 +19,7 @@ export function parseMentions(value: string) {
   let from = 0
   for (const m of value.matchAll(TOKEN)) {
     text += value.slice(from, m.index)
-    const shown = m[1] + m[2]
+    const shown = m[1]! + m[2]!
     marks.push({ start: text.length, end: text.length + shown.length, token: m[0] })
     text += shown
     from = m.index + m[0].length
@@ -25,6 +27,7 @@ export function parseMentions(value: string) {
   return { text: text + value.slice(from), marks }
 }
 
+/** `text` with its marks written as mention markup. */
 export function serializeMentions(text: string, marks: readonly MentionMark[]) {
   let out = ''
   let from = 0
@@ -51,10 +54,10 @@ export function shiftMarks(marks: readonly MentionMark[], was: string, now: stri
 export function findTrigger(text: string, caret: number, triggers: readonly string[], marks: readonly MentionMark[] = []) {
   const before = text.slice(0, caret)
   const m = /(?:^|\s)(\S)([\w-]*)$/.exec(before)
-  if (!m || !triggers.includes(m[1])) return undefined
-  const at = caret - m[2].length - 1
+  if (!m || !triggers.includes(m[1]!)) return undefined
+  const at = caret - m[2]!.length - 1
   if (marks.some(k => at >= k.start && at < k.end)) return undefined
-  return { trigger: m[1], query: m[2], at }
+  return { trigger: m[1]!, query: m[2]!, at }
 }
 
 const MIRRORED = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing', 'wordSpacing', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'boxSizing', 'tabSize', 'textIndent', 'textTransform'] as const

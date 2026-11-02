@@ -1,4 +1,4 @@
-// U001–U005 in `weft check` (research 40 §10): `interaction({ share })` and `ui`. TypeScript's parser only, no type
+// U001–U005 in `weft check` (research 45 §10): `interaction({ share })` and `ui`. TypeScript's parser only, no type
 // checking: what's read is the call's own text, and a name counts as an interaction row only if this file made it.
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -24,7 +24,7 @@ const rowsOf = sf => {
 const warpNames = sf => {
   const names = new Map()
   for (const n of sf.statements) {
-    if (!ts.isImportDeclaration(n) || !/^@weft\/warp/.test(n.moduleSpecifier.text) || !n.importClause?.namedBindings || !ts.isNamedImports(n.importClause.namedBindings)) continue
+    if (!ts.isImportDeclaration(n) || !n.moduleSpecifier.text.startsWith('@weft-js/warp') || !n.importClause?.namedBindings || !ts.isNamedImports(n.importClause.namedBindings)) continue
     for (const s of n.importClause.namedBindings.elements) names.set(s.name.text, (s.propertyName ?? s.name).text)
   }
   return names
@@ -34,7 +34,7 @@ export function shareChecks(root, { files }) {
   const out = []
   let sharesIn
   for (const { rel, text } of files) {
-    const usesRow = text.includes('weft/interaction')
+    const usesRow = text.includes('@weft-js/core/interaction')
     if (!usesRow && !/\bui=\{/.test(text)) continue
     const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, /\.[jt]sx$/.test(rel) ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
     const pos = positions(text)

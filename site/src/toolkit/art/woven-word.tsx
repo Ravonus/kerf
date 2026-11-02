@@ -1,4 +1,4 @@
-import { DitherGlyph } from '@weft/warp'
+import { DitherGlyph } from '@weft-js/warp'
 import { type ArtProps, type Meta } from './shared'
 import code from './woven-word.tsx?raw'
 

@@ -67,7 +67,7 @@ test('what was typed before a miss is not overwritten by the first writes after 
   const page = await browser.newPage()
   const held = []
   let letGo = go => held.push(go)
-  await page.route(/\.(js|mjs|ts|tsx)(\?|$)/, r => new Promise(go => letGo(go)).then(() => r.continue()))
+  await page.route(/\.(js|mjs|ts|tsx)(\?|$)/, r => new Promise(go => { letGo(go) }).then(() => r.continue()))
   await page.goto(url + '/miss', { waitUntil: 'commit' })
   await page.locator('.miss .later').waitFor({ state: 'attached' })
   await page.locator('.miss .typed').fill('before')
@@ -229,7 +229,7 @@ async function stalled(path = '/lazy', options) {
   const errors = []
   page.on('pageerror', e => errors.push(e.message))
   let release
-  const gate = new Promise(ok => (release = ok))
+  const gate = new Promise(ok => { release = ok })
   await page.route(CODE, async r => { await gate; await r.continue() })
   await page.goto(url + path)
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
@@ -582,7 +582,7 @@ test('a route fade that was slow to start is not asked for again', async () => {
     document.startViewTransition = fn => {
       window.__fades++
       const done = Promise.resolve().then(fn)
-      return { ready: done.then(() => new Promise(r => setTimeout(r, 150))), updateCallbackDone: done }
+      return { ready: done.then(() => new Promise(r => { setTimeout(r, 150) })), updateCallbackDone: done }
     }
   })
   const go = async href => {

@@ -1,17 +1,18 @@
-import { contextLevel, formatTokens } from '@weft/warp-core'
-import { derived } from 'weft'
+import { contextLevel, formatTokens } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { Button } from '../Button'
 import { Tooltip } from '../Tooltip'
 import '../styles'
-import '@weft/warp-core/styles/app/context-meter.css'
+import '@weft-js/warp-core/styles/app/context-meter.css'
 
-export type ContextUse = { used: number; limit: number; parts?: { label: string; tokens: number }[] }
+/** How full the context window is, and optionally what with. */
+export type ContextUse = { used: number; limit: number; parts?: { label: string; tokens: number }[] | undefined }
 
 /**
  * ContextMeter (07 §1.2): a ring and a number, caution at 80%, critical at 95%, where `onCompact` offers /compact. The
  * tooltip lists what fills it. `showTokens` adds the count beside the percent.
  */
-export function ContextMeter({ used, limit, parts, showTokens, onCompact }: ContextUse & { showTokens?: boolean; onCompact?: () => void }) {
+export function ContextMeter({ used, limit, parts, showTokens, onCompact }: ContextUse & { showTokens?: boolean; onCompact?: (() => void) | undefined }) {
   const ratio = derived(() => Math.min(1, limit > 0 ? used / limit : 0))
   const level = derived(() => contextLevel(ratio.value))
   const pct = derived(() => Math.round(ratio.value * 100))

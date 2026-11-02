@@ -18,7 +18,7 @@
 // runtimes, packages/weft's native compiler built, and each package's dependencies installed.
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -42,12 +42,12 @@ const must = (cmd, args, cwd, env) => {
   if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${r.stdout}\n${r.stderr}`)
   return r
 }
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
 const until = async (what, fn, ms = 60_000) => {
   const end = Date.now() + ms
   for (;;) {
-    const v = await fn().catch(() => undefined)
+    const v = await Promise.resolve().then(fn).catch(() => undefined)
     if (v) return v
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
     await sleep(50)
@@ -118,10 +118,10 @@ async function start(runtime) {
     url, output: () => output,
     async stop() {
       if (child.exitCode !== null) return
-      try { process.kill(-child.pid, 'SIGTERM') } catch {}
-      const done = new Promise(ok => child.on('close', ok))
+      try { if (child.pid) process.kill(-child.pid, 'SIGTERM') } catch {}
+      const done = new Promise(closed => { child.on('close', closed) })
       await Promise.race([done, sleep(3000)])
-      try { process.kill(-child.pid, 'SIGKILL') } catch {}
+      try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch {}
     },
   }
 }
@@ -204,7 +204,7 @@ async function bench(url) {
   times.sort((a, b) => a - b)
   const t = performance.now()
   let n = 0
-  await Promise.all(Array.from({ length: 32 }, async (_, w) => { for (let i = 0; i < 250; i++) await one(queries[(i + w) % 5]), n++ }))
+  await Promise.all(Array.from({ length: 32 }, async (_, w) => { for (let i = 0; i < 250; i++) { await one(queries[(i + w) % 5]); n++ } }))
   return { p50: +times[750].toFixed(2), p99: +times[1485].toFixed(2), perSecond: Math.round(n / ((performance.now() - t) / 1000)) }
 }
 
@@ -222,7 +222,7 @@ async function variant(name, runtime, results) {
     results[name][runtime] = out
     return s.output()
   } catch (e) {
-    throw new Error(`${e.message}\n--- server\n${s.output().slice(-3000)}`)
+    throw new Error(`${e.message}\n--- server\n${s.output().slice(-3000)}`, { cause: e })
   } finally {
     await s.stop()
   }
@@ -235,7 +235,7 @@ log(`scaffold in ${dir}`)
 must('node', [join(repo, 'packages/create-weft/bin/create-weft.mjs'), dir, '--db', 'none', '--ui', 'none', '--name', 'search'], repo)
 const pkgFile = join(dir, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'))
-for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === 'weft' || name.startsWith('@weft/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft/', ''))}`
+for (const deps of [pkg.dependencies, pkg.devDependencies]) for (const name of Object.keys(deps ?? {})) if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = `file:${join(repo, 'packages', name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', ''))}`
 pkg.dependencies.zod = '4.6.7'
 writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
 must('npm', ['install', '--no-audit', '--no-fund'])
@@ -410,13 +410,13 @@ await check('R109: a compile error no function explains is told apart', () => {
   child.stderr.on('data', d => { output += d })
   const url = `http://localhost:${port}`
   const firstBuild = performance.now()
-  let polling = true
+  const polling = { on: true }
   const polls = []
   try {
     await until(`weft dev: ${output}`, async () => (await call(url, ID.search, { q: 'lantern', limit: 1 })).status === 200, 240_000)
     const firstMs = Math.round(performance.now() - firstBuild)
-    const poller = (async () => {
-      while (polling) {
+    void (async () => {
+      while (polling.on) {
         const a = await call(url, ID.search, { q: 'lantern', limit: 1 }).catch(e => ({ status: 0, body: { e: { code: e.message } } }))
         polls.push({ status: a.status, code: a.body?.e?.code, title: a.body?.v?.[0]?.title, lang: a.body?.v?.[0]?.lang })
         await sleep(10)
@@ -428,7 +428,7 @@ await check('R109: a compile error no function explains is told apart', () => {
       polls.length = 0
       const t = performance.now()
       writeFileSync(main, cleanMain.replace('title: doc.title.clone(), score', 'title: format!("v2 {}", doc.title), score'))
-      await until('the new binary', async () => polls.at(-1)?.title?.startsWith('v2 '), 120_000)
+      await until('the new binary', () => polls.at(-1)?.title?.startsWith('v2 '), 120_000)
       const ms = Math.round(performance.now() - t)
       await sleep(300)
       const bad = polls.filter(p => p.status !== 200)
@@ -439,10 +439,10 @@ await check('R109: a compile error no function explains is told apart', () => {
     await check('dev: a schema edit is reported as R103 with the id, and fixing the Rust recovers', async () => {
       writeFileSync(docs, cleanDocs.replace("score: z.number() })", "score: z.number(), lang: z.string() })"))
       const said = `R103 error: \`${ID.search}\`: the Rust no longer matches the contract`
-      await until('R103 from cargo in the log', async () => output.includes(said), 120_000)
+      await until('R103 from cargo in the log', () => output.includes(said), 120_000)
       const noted = output.slice(output.indexOf(said)).split('\n')[0]
       writeFileSync(main, cleanMain.replace('title: doc.title.clone(), score: (s * 1e6).round() / 1e6 }', 'title: doc.title.clone(), score: (s * 1e6).round() / 1e6, lang: "en".to_string() }'))
-      await until('the fixed sidecar', async () => polls.at(-1)?.lang === 'en', 120_000)
+      await until('the fixed sidecar', () => polls.at(-1)?.lang === 'en', 120_000)
       return { noted: noted.slice(0, 140) }
     })
 
@@ -451,18 +451,18 @@ await check('R109: a compile error no function explains is told apart', () => {
       const { pid } = await (await fetch(`http://${addr}/_weft/health`)).json()
       polls.length = 0
       process.kill(pid, 'SIGKILL')
-      await until('a failure', async () => polls.some(p => p.status !== 200), 5000)
+      await until('a failure', () => polls.some(p => p.status !== 200), 5000)
       polls.length = 0
-      await until('a success', async () => polls.at(-1)?.status === 200, 30_000)
+      await until('a success', () => polls.at(-1)?.status === 200, 30_000)
     })
   } finally {
-    polling = false
+    polling.on = false
     writeFileSync(docs, cleanDocs)
     writeFileSync(main, cleanMain)
     const addr = [...output.matchAll(/search: listening on (\S+)/g)].at(-1)?.[1]
-    try { process.kill(-child.pid, 'SIGINT') } catch {}
-    await Promise.race([new Promise(ok => child.on('close', ok)), sleep(8000)])
-    try { process.kill(-child.pid, 'SIGKILL') } catch {}
+    try { if (child.pid) process.kill(-child.pid, 'SIGINT') } catch {}
+    await Promise.race([new Promise(closed => { child.on('close', closed) }), sleep(8000)])
+    try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch {}
     await check('stopping `weft dev` stops the sidecar', async () => {
       ok(addr, 'never listened')
       await until('the port to close', async () => {

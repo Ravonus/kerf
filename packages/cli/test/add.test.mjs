@@ -1,5 +1,5 @@
 // `weft add` (research 34 §7): one insert into any config format, and no change at all when it can't be sure.
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -7,7 +7,7 @@ import { addCommand, pinned } from '../src/add.mjs'
 import { loadConfig } from '../src/load-config.mjs'
 import { project } from './helpers.mjs'
 
-const plugin = "import { definePlugin } from 'weft/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
+const plugin = "import { definePlugin } from '@weft-js/core/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
 const acme = { 'node_modules/acme/package.json': JSON.stringify({ name: 'acme', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/acme/plugin.mjs': plugin }
 const add = (dir, name = 'acme') => addCommand(dir, name, { install: false })
 const read = (dir, file) => readFileSync(join(dir, file), 'utf8')
@@ -21,7 +21,7 @@ describe('weft add rust', () => {
     const dir = app()
     const r = await rust(dir, 'image-tools')
     expect(r).toMatchObject({ ok: true, service: 'image-tools', kind: 'native' })
-    expect(read(dir, 'src/server/rust.ts')).toContain("import { native } from '@weft/start/rust'")
+    expect(read(dir, 'src/server/rust.ts')).toContain("import { native } from '@weft-js/start/rust'")
     expect(read(dir, 'src/server/rust.ts')).toContain("export const imageTools = native('image-tools')")
     expect(read(dir, 'src/server/image-tools.ts')).toContain('impl: imageTools')
     expect(read(dir, 'crates/image-tools/Cargo.toml')).toMatch(/crate-type = \["cdylib"\]/)
@@ -55,7 +55,7 @@ describe('weft add rust', () => {
 
 describe('weft add', () => {
   it.each([
-    ['an existing plugins array', "import { defineConfig } from 'weft/config'\n\nexport default defineConfig({\n  plugins: [],\n})\n"],
+    ['an existing plugins array', "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({\n  plugins: [],\n})\n"],
     ['no plugins key', "export default {\n  site: { name: 'A' },\n}\n"],
     ['an empty config', 'export default {}\n'],
   ])('edits weft.config.ts with %s', async (_, text) => {
@@ -156,15 +156,15 @@ describe('weft add', () => {
 })
 
 describe('weft add tailwind', () => {
-  const app = (deps = {}, extra = {}) => project({ 'package.json': JSON.stringify({ dependencies: deps }), 'src/routes/_layout.tsx': "import { Link } from '@weft/start'\n", ...extra })
+  const app = (deps = {}, extra = {}) => project({ 'package.json': JSON.stringify({ dependencies: deps }), 'src/routes/_layout.tsx': "import { Link } from '@weft-js/start'\n", ...extra })
   const addTw = (dir, o = {}) => addCommand(dir, 'tailwind', { install: false, ...o })
 
   it('leaves the reset out of a warp app, whose components it would override', async () => {
-    const dir = app({ '@weft/warp': '0.0.0' })
+    const dir = app({ '@weft-js/warp': '0.0.0' })
     await addTw(dir)
     const css = read(dir, 'src/app.css')
     expect(css).toContain('@layer warp, theme, base, components, utilities;')
-    expect(css).toContain('@import "@weft/warp/tailwind.css"')
+    expect(css).toContain('@import "@weft-js/warp/tailwind.css"')
     expect(css).not.toContain('@import "tailwindcss";')
     expect(read(dir, 'src/routes/_layout.tsx').startsWith("import '../app.css'\n")).toBe(true)
     expect(read(dir, 'vite.config.ts')).toContain('tailwindcss()')
@@ -203,13 +203,13 @@ describe('weft add db', () => {
   const addDb = (dir, o = {}) => addCommand(dir, 'db', { install: false, ...o })
 
   it('writes the wiring and no todo app; a layer brings its plugin', async () => {
-    const dir = app({ 'weft.config.ts': 'export default {}\n', 'node_modules/@weft/plugin-db-native/package.json': JSON.stringify({ name: '@weft/plugin-db-native', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/@weft/plugin-db-native/plugin.mjs': "import { definePlugin } from 'weft/plugin'\nexport const native = definePlugin({ name: '@weft/plugin-db-native', contribute: () => ({}) })\n" })
+    const dir = app({ 'weft.config.ts': 'export default {}\n', 'node_modules/@weft-js/db/package.json': JSON.stringify({ name: '@weft-js/db', type: 'module', exports: { './plugin-native/plugin': './plugin-native/plugin.mjs' } }), 'node_modules/@weft-js/db/plugin-native/plugin.mjs': "import { definePlugin } from '@weft-js/core/plugin'\nexport const native = definePlugin({ name: '@weft-js/db/plugin-native', contribute: () => ({}) })\n" })
     const r = await addDb(dir, { engine: 'mysql', layer: 'native' })
     expect(r.package).toBe('native on mysql')
-    expect(read(dir, 'src/db/index.server.ts')).toContain('@weft/plugin-db-native/mysql')
+    expect(read(dir, 'src/db/index.server.ts')).toContain('@weft-js/db/plugin-native/mysql')
     expect(read(dir, '.env')).toContain('mysql://')
     expect(() => read(dir, 'src/server/todos.ts')).toThrow()
-    expect(await names(dir)).toEqual(['@weft/plugin-db-native'])
+    expect(await names(dir)).toEqual(['@weft-js/db/plugin-native'])
   })
 
   it('keeps an .env, and refuses an app that has a database or a file in the way', async () => {
@@ -230,18 +230,18 @@ describe('weft add db', () => {
 
   it('installs a package an app has as a local tarball from that tarball', () => {
     const dir = mkdtempSync(join(tmpdir(), 'weft-add-'))
-    writeFileSync(join(dir, 'package.json'), JSON.stringify({ overrides: { '@weft/warp': 'file:/x/warp.tgz', zod: '4.0.0' } }))
-    expect(pinned(dir, ['@weft/warp@0.0.0', 'zod@4.6.7'])).toEqual(['zod@4.6.7'])
-    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@weft/warp': 'file:/x/warp.tgz' })
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ overrides: { '@weft-js/warp': 'file:/x/warp.tgz', zod: '4.0.0' } }))
+    expect(pinned(dir, ['@weft-js/warp@0.0.0', 'zod@4.6.7'])).toEqual(['zod@4.6.7'])
+    expect(JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies).toEqual({ '@weft-js/warp': 'file:/x/warp.tgz' })
   })
 
   describe('a plugin with `setup`', () => {
-    const source = "import { definePlugin } from 'weft/plugin'\nconst setup = { needs: ['db'], with: ['helper'], run: ({ engine, read }) => ({ files: { 'src/kit.server.ts': `// ${engine}\\n` }, edits: { 'src/env.server.ts': read('src/env.server.ts') + '// kit\\n' }, env: { KIT_KEY: 'placeholder' }, next: ['`weft kit`'] }) }\nexport default definePlugin({ name: 'kit', contribute: () => ({ setup }) })\n"
-    const pkg = (name, plugin) => ({ [`node_modules/${name}/package.json`]: JSON.stringify({ name, type: 'module', exports: { './plugin': './plugin.mjs' } }), [`node_modules/${name}/plugin.mjs`]: plugin })
-    const app = (extra = {}) => project({ ...pkg('kit', source), ...pkg('helper', plugin.replace("'acme'", "'helper'")), 'weft.config.ts': 'export default {}\n', 'src/db/schema.ts': "export {}\n", 'drizzle.config.ts': "import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: 'sqlite', schema: './src/db/schema.ts', out: './drizzle' })\n", 'src/db/index.server.ts': "import { createDb } from '@weft/start/db/sqlite'\nexport const db = createDb({ schema: {}, url: 'file:a.db' })\n", 'src/env.server.ts': '// env\n', '.env': 'A=1\n', ...extra })
+    const source = `import { definePlugin } from '@weft-js/core/plugin'\nconst setup = { needs: ['db'], with: ['helper'], run: ({ engine, read }) => ({ files: { 'src/kit.server.ts': \`// \${engine}\\n\` }, edits: { 'src/env.server.ts': read('src/env.server.ts') + '// kit\\n' }, env: { KIT_KEY: 'placeholder' }, next: ['\`weft kit\`'] }) }\nexport default definePlugin({ name: 'kit', contribute: () => ({ setup }) })\n`
+    const pkg = (name, text) => ({ [`node_modules/${name}/package.json`]: JSON.stringify({ name, type: 'module', exports: { './plugin': './plugin.mjs' } }), [`node_modules/${name}/plugin.mjs`]: text })
+    const withKit = (extra = {}) => project({ ...pkg('kit', source), ...pkg('helper', plugin.replace("'acme'", "'helper'")), 'weft.config.ts': 'export default {}\n', 'src/db/schema.ts': "export {}\n", 'drizzle.config.ts': "import { defineConfig } from 'drizzle-kit'\n\nexport default defineConfig({ dialect: 'sqlite', schema: './src/db/schema.ts', out: './drizzle' })\n", 'src/db/index.server.ts': "import { createDb } from '@weft-js/start/db/sqlite'\nexport const db = createDb({ schema: {}, url: 'file:a.db' })\n", 'src/env.server.ts': '// env\n', '.env': 'A=1\n', ...extra })
 
     it('adds what it comes with, writes its files and placeholder env, and says what is next', async () => {
-      const dir = app()
+      const dir = withKit()
       const r = await addCommand(dir, 'kit', { install: false })
       expect(await names(dir)).toEqual(['kit', 'helper'])
       expect(read(dir, 'src/kit.server.ts')).toBe('// sqlite\n')
@@ -253,17 +253,25 @@ describe('weft add db', () => {
 
     it('stops with nothing changed when it lacks what it needs, or a file is taken', async () => {
       await expect(addCommand(project({ ...pkg('kit', source), 'weft.config.ts': 'export default {}\n' }), 'kit', { install: false })).rejects.toThrow('weft add db')
-      const dir = app({ 'src/kit.server.ts': 'mine\n' })
+      const dir = withKit({ 'src/kit.server.ts': 'mine\n' })
       await expect(addCommand(dir, 'kit', { install: false })).rejects.toThrow('already exist')
       expect(read(dir, 'weft.config.ts')).toBe('export default {}\n')
       expect(read(dir, 'src/kit.server.ts')).toBe('mine\n')
     })
 
     it('a dry run lists the same and writes nothing', async () => {
-      const dir = app()
+      const dir = withKit()
       const r = await addCommand(dir, 'kit', { install: false, dryRun: true })
       expect(r.actions).toContain('write src/kit.server.ts')
       expect(existsSync(join(dir, 'src/kit.server.ts'))).toBe(false)
     })
   })
+})
+
+it('an add-on not on npm yet says so, by its short name or its package name, and changes nothing', async () => {
+  const dir = project({ 'weft.config.ts': "export default {}\n", 'package-lock.json': '{}' })
+  for (const name of ['redis', 'realtime-redis', '@weft-js/realtime-redis']) {
+    await expect(addCommand(dir, name)).rejects.toThrow("@weft-js/realtime-redis isn't on npm yet")
+  }
+  expect(read(dir, 'weft.config.ts')).toBe('export default {}\n')
 })

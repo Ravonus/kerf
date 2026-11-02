@@ -1,7 +1,7 @@
 // Every warp component on one page for the a11y suite (scripts/a11y.mjs): fixtures/Variants.tsx's branches, plus the
 // three components it doesn't render. `?part=` picks what is mounted, since an open modal makes the rest inert:
 // static (everything in flow), overlays (Variants' open Modal and Drawer, a closed Popover), toasts, charts, rich (the rich inputs), virtual.
-import { render } from 'weft/dom'
+import { render } from '@weft-js/core/dom'
 import * as Rest from '../fixtures/Surfaces'
 import * as Rich from '../fixtures/Rich'
 import { Accordion } from '../../src/Accordion'
@@ -31,7 +31,7 @@ import { Dashboard, Tables } from '../fixtures/Data'
 import { Virtuals } from '../fixtures/Virtual'
 import { Alerts, Buttons, Choices, Fields, Icons, Overlays, Surfaces, Tabbed, Toasts, Toggles, seedToasts } from '../fixtures/Variants'
 // after the components: the first import fixes the order of warp's CSS layers
-import '@weft/warp-core/styles/data/panel.css'
+import '@weft-js/warp-core/styles/data/panel.css'
 
 // The redesign's components and the canvas pack. Menu's and Select's open states are audited from a11y.mjs.
 function Added() {
@@ -116,7 +116,7 @@ function RichInputs() {
 
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
-const PACKS: Record<string, () => any> = { added: Added, agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
+const PACKS: Record<string, () => unknown> = { added: Added, agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
 const View = PACKS[part] ? PACKS[part] : part === 'virtual' ? Virtuals : part === 'surfaces' ? Remaining : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
 // the shell brings its own main
 const host = document.getElementById('root')!

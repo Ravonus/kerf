@@ -1,6 +1,6 @@
 # 36. Rust sidecars: `remote()`, the `weft` crate and the supervisor
 
-Status: built for Phase 5a, 2026-10-31. `native()` is [37](37-rust-native.md). It refines PLAN §4.3 and research 06. Spike:
+Status: built for Phase 5a, 2026-10-31. `native()` is [39](39-rust-native.md). It refines PLAN §4.3 and research 06. Spike:
 `spikes/rust-remote/`. Exit check: `evals/phase5a-exit.mjs`, results in `evals/results/phase5a-exit.md`.
 
 **Goal:** a server function's body can be Rust, and nothing on the client can tell. TS keeps the public edge.
@@ -64,7 +64,7 @@ query sends no user at all.
 
 ## 5. The supervisor
 
-It lives in the CLI's side of `@weft/start` (`sidecar.mjs`), and never in the server bundle, so `remote()` stays `fetch` and
+It lives in the CLI's side of `@weft-js/start` (`sidecar.mjs`), and never in the server bundle, so `remote()` stays `fetch` and
 edge presets can call a sidecar run elsewhere.
 
 - **dev:** a small HTTP proxy holds a stable port. A rebuild starts a new child, waits for health, swaps, and drains the
@@ -80,7 +80,7 @@ timeout would expire in a queue of ~20 s, and a first request that fails is wors
 
 | Decision | Why | One setting away |
 |---|---|---|
-| `@weft/start/rust`, not `weft/rust` | `weft` has no server; every server export lives here | |
+| `@weft-js/start/rust`, not `weft/rust` | `weft` has no server; every server export lives here | |
 | The address is env, not config | It differs per deployment, and it sits next to the secret | `url` on `remote()` |
 | External sidecars | Some belong on another host | `rust.services.<name>.external` |
 | Another crate path | `crates/<name>` is the default | `rust.services.<name>.crate` |
@@ -122,14 +122,14 @@ isn't reliably faster (Node's p50 was worse in this run, and on 2,000 documents 
 | R108 | A panic or `weft::Error` | start |
 | R109 | A compile error no function explains, no crate, no `cargo` | cargo |
 
-R104 and R105 are in [37 §8](37-rust-native.md). Cargo's JSON messages are mapped to a function by the generated
+R104 and R105 are in [39 §8](39-rust-native.md). Cargo's JSON messages are mapped to a function by the generated
 names, so R103 names the id and the place in the Rust.
 
 ## 9. Not done
 
 - The crate isn't on crates.io, and no check has been made that the name `weft` is free. An app uses a path dependency.
-- ~~No `weft add rust`, and no template.~~ Done in 5b ([37](37-rust-native.md)).
+- ~~No `weft add rust`, and no template.~~ Done in 5b ([39](39-rust-native.md)).
 - `remote(…)` on `channel` (PLAN §4.3's `world`) isn't built. It wasn't in 5a's list, and Rust owning a socket is another design.
 - `otel` is only unit-tested on parsing a `traceparent`; no real collector has seen a span.
 - `remote()` hasn't been run on an edge preset, or a sidecar on Windows.
-- ~~R105 waits for 5b.~~ Done ([37 §8](37-rust-native.md)).
+- ~~R105 waits for 5b.~~ Done ([39 §8](39-rust-native.md)).

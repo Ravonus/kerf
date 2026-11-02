@@ -263,7 +263,7 @@ The compiler's jobs:
     chunk** (Phase 3).
 - **Tree-shaking the runtime:**
   - The compiler imports only the helpers it emits.
-  - The runtime is split by subpath (`weft`, `weft/dom`, `weft/ssr`, `weft/hydrate`, `weft/dev`) and marked
+  - The runtime is split by subpath (`weft`, `@weft-js/core/dom`, `@weft-js/core/ssr`, `weft/hydrate`, `weft/dev`) and marked
     `sideEffects: false`.
   - Dev names, graph inspection and the HMR cache sit behind `import.meta.env.DEV`. Solid states production output is
     byte-identical with `sourceNames` on or off; keep that property and test it.
@@ -272,7 +272,7 @@ The compiler's jobs:
   importers. Adopt them once stable.
 - **CSS:**
   - Tailwind v4 via `@tailwindcss/vite` 4.3.3 (Oxide).
-  - weft/ds tokens are static CSS variables in cascade layers, so there is no runtime CSS-in-JS.
+  - @weft-js/core/ds tokens are static CSS variables in cascade layers, so there is no runtime CSS-in-JS.
   - Lightning CSS minifies.
 - **Preload:**
   - Vite emits `<link rel="modulepreload">` for entry dependencies.
@@ -329,7 +329,7 @@ The compiler's jobs:
 | Gate | Tool | How |
 |---|---|---|
 | Runtime and app size | Build plus brotli on `dist/assets` | Fixtures: hello, counter, the js-framework-benchmark app, v3 shop app. Budget per fixture and per runtime subpath. Fail on overage; ratchet down on wins |
-| DOM work per interaction | `weft/test` `expect(fn).toTouchAtMost(n)` | The eval probe (`evals/tasks-v3/shop/hidden/probe.test.tsx`: a MutationObserver over `body` plus `flush()`) promoted into the test API. Reference scenarios become required tests: v3 shop price-push ≤ 1 mutation, add-one ≤ 3 |
+| DOM work per interaction | `@weft-js/core/test` `expect(fn).toTouchAtMost(n)` | The eval probe (`evals/tasks-v3/shop/hidden/probe.test.tsx`: a MutationObserver over `body` plus `flush()`) promoted into the test API. Reference scenarios become required tests: v3 shop price-push ≤ 1 mutation, add-one ≤ 3 |
 | Compiler throughput | `cargo bench` / napi bench on a generated corpus | `bench/gen --components 1000` (realistic TSX: props, lists, conditionals). Instruction-count CI (CodSpeed simulation mode, as Oxc uses) for low-noise regressions |
 | Build time, cold start, HMR | Playwright plus `performance.now()` | Generated 1k- and 5k-component apps. Cold start = `weft dev` spawn → first `load`. HMR = file write → MutationObserver sees the edited text. Prod build = `weft build` wall time |
 | Runtime CPU | js-framework-benchmark (keyed), weft entry | Run **in the same session as Solid** and report the ratio. Absolute timings on a shared machine are noise |
@@ -355,7 +355,7 @@ The compiler's jobs:
     the state/derived naming pass.
   - `diag`: W-codes with spans and autofix edits.
   - `solid` (forked back end): template extraction, bindings, SSR, hydration keys, refresh, server extraction.
-- **Packaging:** exposed through napi-rs as `weft/compiler` with prebuilt binaries for darwin-arm64/x64,
+- **Packaging:** exposed through napi-rs as `@weft-js/core/compiler` with prebuilt binaries for darwin-arm64/x64,
   linux-x64/arm64-gnu and win32-x64, plus wasm32-wasi.
 - **Input and output:** text in; code, map and diagnostics as JSON out. ASTs never cross the boundary.
 

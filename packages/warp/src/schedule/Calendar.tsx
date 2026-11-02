@@ -1,6 +1,6 @@
-import { GlobeIcon, LeftIcon, PlusIcon, RightIcon } from '@weft/icons'
-import { allDayBars, announce, at, edges, calendarDrag, clock, clockRange, conflicts, countByDay, dateOf, daySegments, dayState, dow, dstShift, eventKey, eventName, eventsOn, fmt, gridKey, indicator, isoWeek, isWeekend, laneKey, layoutDay, longDuration, minuteOf, monthCells, monthStart, monthWeeks, moveKey, nextIndex, overflow, popover, shownIn, slotOf, slotTimes, stepDate, toZone, uid, viewDays, weekStart, weekdays, ymd, zoneCity, type CalEvent, type CalView, type DragPreview, type IsoDate, type DaySegment, type Slot } from '@weft/warp-core'
-import { derived, flush, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
+import { GlobeIcon, LeftIcon, PlusIcon, RightIcon } from '@weft-js/warp-icons'
+import { allDayBars, announce, at, edges, calendarDrag, clock, clockRange, conflicts, countByDay, dateOf, daySegments, dayState, dow, dstShift, eventKey, eventName, eventsOn, fmt, gridKey, indicator, isoWeek, isWeekend, laneKey, layoutDay, longDuration, minuteOf, monthCells, monthStart, monthWeeks, moveKey, nextIndex, overflow, popover, shownIn, slotOf, slotTimes, stepDate, toZone, uid, viewDays, weekStart, weekdays, ymd, zoneCity, type CalEvent, type CalView, type DragPreview, type IsoDate, type DaySegment, type Slot } from '@weft-js/warp-core'
+import { derived, flush, onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Modal } from '../Modal'
 import { LiveStatus, type LiveState } from '../parts'
@@ -9,89 +9,92 @@ import { Popover } from '../Popover'
 import { TimeZoneSelect } from '../RichSelect'
 import { Segmented } from '../Choice'
 import { Tooltip } from '../Tooltip'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { AgendaDay } from './Agenda'
 import { RepeatGlyph, SweepParts, confirmSweep, tint, useNow, useWidth } from './bits'
 import { EventEditor, type CalendarSource } from './EventEditor'
 import { EventPopover } from './EventPopover'
 import { MoveSheet } from './MoveSheet'
 import { YearView } from './YearView'
-import '@weft/warp-core/styles/components/tabs.css'
-import '@weft/warp-core/styles/app/calendar.css'
-import '@weft/warp-core/styles/layout/edges.css'
+import '@weft-js/warp-core/styles/components/tabs.css'
+import '@weft-js/warp-core/styles/app/calendar.css'
+import '@weft-js/warp-core/styles/layout/edges.css'
 
+/** Which occurrences of a repeating event a change covers. */
 export type RecurrenceScope = 'this' | 'following' | 'all'
-export type EventChange = { start: string; end: string; resource?: string; scope?: RecurrenceScope }
+/** Where an edited event lands: its new times, its timeline row, and which occurrences of a repeat it covers. */
+export type EventChange = { start: string; end: string; resource?: string | undefined; scope?: RecurrenceScope | undefined }
 /** A timeline row: a room or a person. `meta` is the quiet line under its name ("8 seats"). */
 export type Resource = { id: string; name: string; meta?: string }
 type Reason = 'pointer' | 'keyboard' | 'touch'
 
+/** Props for Calendar. */
 export type CalendarProps = {
   /** The events to show, in every view. Times are wall-clock ISO strings (`2026-11-04T09:30`), or dates for all-day ones. */
   events: CalEvent[]
   /** The calendars events belong to (an event's `cal`): the rail lists them with a checkbox each, and the editor offers them. */
-  calendars?: CalendarSource[]
+  calendars?: CalendarSource[] | undefined
   /** The view showing: a State to share it, or a value. */
-  view?: State<CalView> | CalView
+  view?: State<CalView> | CalView | undefined
   /** The view it opens on when `view` isn't given. Week without either. */
-  defaultView?: CalView
+  defaultView?: CalView | undefined
   /** Hears every change of view, by tab, key or the mini month. */
-  onViewChange?: (v: CalView) => void
+  onViewChange?: ((v: CalView) => void) | undefined
   /** The views offered as tabs, in this order. All six without it. */
-  views?: CalView[]
+  views?: CalView[] | undefined
   /** The date the view is on (`2026-11-04`): a State to share it, or a value. */
-  date?: State<string> | string
+  date?: State<string> | string | undefined
   /** The date it opens on when `date` isn't given. Today without either. */
-  defaultDate?: string
+  defaultDate?: string | undefined
   /** Hears the new date when the arrows, Today, the mini month or a drill-in move it. */
-  onDateChange?: (d: string) => void
+  onDateChange?: ((d: string) => void) | undefined
   /** The toolbar chip's zone. Without one, wall times show as they are. */
-  timeZone?: State<string | null> | string
+  timeZone?: State<string | null> | string | undefined
   /** Hears a zone picked from the toolbar chip, or null for wall times. */
-  onTimeZoneChange?: (z: string | null) => void
+  onTimeZoneChange?: ((z: string | null) => void) | undefined
   /** Secondary zones in the rail. */
-  zones?: { label: string; zone: string }[]
+  zones?: { label: string; zone: string }[] | undefined
   /** Today's date (`2026-11-02`), marked in every view. The browser's date after mount without it, so hydration writes nothing. */
-  today?: string
+  today?: string | undefined
   /** The now line's wall time; the browser's clock after mount without it. */
-  now?: string
+  now?: string | undefined
   /** The locale for day and month names, times and the first day of the week. The browser's without it. */
-  locale?: string
+  locale?: string | undefined
   /** `h12` or `h23` to force a clock; the locale's without it. */
-  hourCycle?: string
+  hourCycle?: string | undefined
   /** The week's first day, 0 for Sunday to 6 for Saturday. The locale's without it. */
-  firstDayOfWeek?: number
+  firstDayOfWeek?: number | undefined
   /** Minutes a drag or resize snaps to. 15 without it. */
-  snap?: number
+  snap?: number | undefined
   /**
    * Working hours as minutes from midnight, `[start, end]`: `[540, 1020]` is 09:00 to 17:00 (not `[9, 17]`). The rest of
    * the day is banded, and Week and Day open scrolled to just before `start`. 08:00 to 18:00 without it.
    */
-  workingHours?: [number, number]
+  workingHours?: [number, number] | undefined
   /** The toolbar LiveStatus. */
-  live?: LiveState
+  live?: LiveState | undefined
   /** Timeline rows; events point at one with `resource`. */
-  resources?: Resource[]
+  resources?: Resource[] | undefined
   /** The timeline's span, in minutes from midnight like `workingHours`: `[480, 1080]` (08:00 to 18:00) without it. */
-  timeline?: [number, number]
+  timeline?: [number, number] | undefined
   /** Year view's counts; from `events` without it. */
-  counts?: Record<string, number>
+  counts?: Record<string, number> | undefined
   /** Turns off dragging, resizing, creating and the keyboard move mode. Events still open their popover. */
-  readOnly?: boolean
+  readOnly?: boolean | undefined
   /** A rejected promise puts the event back and announces why (07 §2.6). */
-  onMove?: (e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>
+  onMove?: ((e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>) | undefined
   /** An event's edge dragged to a new time. A rejected promise puts it back and announces why. */
-  onResize?: (e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>
+  onResize?: ((e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>) | undefined
   /** A new event saved from the editor, after a drag over empty time, a press on a slot or New event. */
-  onCreate?: (e: CalEvent) => void
+  onCreate?: ((e: CalEvent) => void) | undefined
   /** An event saved from the editor; `scope` says which of a repeating event's occurrences. */
-  onEdit?: (e: CalEvent, scope?: RecurrenceScope) => void
+  onEdit?: ((e: CalEvent, scope?: RecurrenceScope) => void) | undefined
   /** An event deleted after its confirmation; `scope` says which of a repeating event's occurrences. */
-  onDelete?: (e: CalEvent, scope?: RecurrenceScope) => void
+  onDelete?: ((e: CalEvent, scope?: RecurrenceScope) => void) | undefined
   /** An event's popover opened, by press or Enter. */
-  onOpen?: (e: CalEvent) => void
+  onOpen?: ((e: CalEvent) => void) | undefined
   /** Join pressed in the popover of an event with a `video` link. */
-  onJoin?: (e: CalEvent) => void
+  onJoin?: ((e: CalEvent) => void) | undefined
 }
 
 const LABEL: Record<CalView, string> = { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda', timeline: 'Timeline', year: 'Year' }
@@ -104,9 +107,9 @@ type Ctx = ReturnType<typeof useCalendar>
 
 function useCalendar(p: CalendarProps) {
   const env = usePickerEnv(() => p.locale, () => p.today)
-  const view = bindable<CalView>(() => p.view, () => p.defaultView, 'week', () => p.onViewChange as any)
-  const date = bindable<string>(() => p.date, () => p.defaultDate, untrack(() => env.today.value), () => p.onDateChange as any)
-  const zone = bindable<string | null>(() => p.timeZone as any, () => null, null, () => p.onTimeZoneChange as any)
+  const view = bindable<CalView>(() => p.view, () => p.defaultView, 'week', () => p.onViewChange)
+  const date = bindable<string>(() => p.date, () => p.defaultDate, untrack(() => env.today.value), () => p.onDateChange)
+  const zone = bindable<string | null>(() => p.timeZone, () => null, null, () => p.onTimeZoneChange)
   const tz = () => zone.value ?? undefined
   const now = useNow(() => p.now, tz)
   const first = derived(() => p.firstDayOfWeek ?? weekStart(env.locale.value))
@@ -149,22 +152,22 @@ function useCalendar(p: CalendarProps) {
   const askDelete = state(false)
   const scopeOpen = state(false)
   const scope = state<RecurrenceScope>('this')
-  const pendingScope = state<{ run: (s: RecurrenceScope) => void; undo?: () => void; verb: string } | null>(null)
-  const askScope = (verb: string, run: (s: RecurrenceScope) => void, undo?: () => void) => { pendingScope.value = { run, undo, verb }; scope.value = 'this'; scopeOpen.value = true }
+  const pendingScope = state<{ run: (s: RecurrenceScope) => void; undo?: (() => void) | undefined; verb: string } | null>(null)
+  const askScope = (verb: string, run: (s: RecurrenceScope) => void, undo?: (() => void)  ) => { pendingScope.value = { run, undo, verb }; scope.value = 'this'; scopeOpen.value = true }
 
   const settle = (e: CalEvent, slot: Slot, verb: 'move' | 'resize', reason: Reason, chosen?: RecurrenceScope) => {
     const from = e.tz && tz() && e.tz !== tz() ? { start: toZone(at(slot.date, slot.s), tz()!, e.tz), end: toZone(at(slot.date, slot.e), tz()!, e.tz) } : slotTimes(slot)
     overlay.value = { ...overlay.value, [e.id]: slot }
     waiting.add(e.id)
     const put = () => { waiting.delete(e.id) }
-    const back = (err: any) => {
+    const back = (err: unknown) => {
       put()
       const { [e.id]: _, ...rest } = overlay.value
       overlay.value = rest
-      say(`Couldn't ${verb} ${e.title}: ${err?.message ?? 'try again'}`, true)
+      say(`Couldn't ${verb} ${e.title}: ${(err as Error | undefined)?.message ?? 'try again'}`, true)
     }
-    let r: any
-    try { r = (verb === 'move' ? p.onMove : p.onResize)?.(e, { ...from, resource: slot.resource, scope: chosen }, reason) } catch (err) { back(err); return }
+    let r: PromiseLike<unknown> | undefined
+    try { r = (verb === 'move' ? p.onMove : p.onResize)?.(e, { ...from, resource: slot.resource, scope: chosen }, reason) as PromiseLike<unknown> | undefined } catch (err) { back(err); return }
     if (r?.then) r.then(put, back)
     else put()
     const hit = conflicts(all.value, e, slot)
@@ -181,7 +184,7 @@ function useCalendar(p: CalendarProps) {
     overlay.value = { ...overlay.value, [e.id]: slot }
     askScope(verb === 'move' ? 'Move' : 'Change', s => settle(e, slot, verb, reason, s), () => { const { [e.id]: _, ...rest } = overlay.value; overlay.value = rest })
   }
-  const newEvent = (start: string, end: string, resource?: string) => {
+  const newEvent = (start: string, end: string, resource?: string  ) => {
     draft.value = { event: { id: uid('new'), title: '', start, end, cal: p.calendars?.[0]?.id ?? 1, resource }, isNew: true }
     editing.value = true
   }
@@ -305,8 +308,8 @@ function Column({ day, c, stop, weekend }: { day: string; c: Ctx; stop: string |
   })
   return (
     <div data-part="col" role="gridcell" data-date={day} data-weekend={weekend ? '' : undefined} aria-current={today.value ? 'date' : undefined}>
-      <span data-part="off-hours" style={`--_top:0px;--_h:${hours(hrs.value[0])}`}></span>
-      <span data-part="off-hours" style={`--_top:${hours(hrs.value[1])};--_h:${hours(1440 - hrs.value[1])}`}></span>
+      <span data-part="off-hours" style={`--_top:0px;--_h:${hours(hrs.value[0]!)}`}></span>
+      <span data-part="off-hours" style={`--_top:${hours(hrs.value[1]!)};--_h:${hours(1440 - hrs.value[1]!)}`}></span>
       {ghost.value && <span data-part="ghost" style={`--_top:${hours(ghost.value.s)};--_h:${hours(ghost.value.e - ghost.value.s)}`}></span>}
       {segs.value.map(s => <EventBlock key={s.id} seg={s} lane={lanes.value.get(s.id) ?? { col: 0, cols: 1, span: 1 }} c={c} stop={stop === s.id} />)}
       {draft.value && <span data-part="draft" style={`--_top:${hours(draft.value.s)};--_h:${hours(draft.value.e - draft.value.s)}`}>New event · {c.span(draft.value.s, draft.value.e)}</span>}
@@ -443,8 +446,8 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { days: days.value, next: (k, id) => eventKey(k, id, list.value, getComputedStyle(e.target as Element).direction === 'rtl') })
   const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
-    <div data-scope="edges" data-part="grid" data-view="time" role="grid" aria-label={fmt(days.value[0], { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length};--warp-edges-start:var(--warp-cal-gutter);${tracks.value}`} onKeyDown={onKey}>
-      <div ref={(n: any) => (scroller = n)} data-part="scroller">
+    <div data-scope="edges" data-part="grid" data-view="time" role="grid" aria-label={fmt(days.value[0]!, { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length};--warp-edges-start:var(--warp-cal-gutter);${tracks.value}`} onKeyDown={onKey}>
+      <div ref={(n: HTMLDivElement) => (scroller = n)} data-part="scroller">
         <div data-part="top">
           <div data-part="head" role="row">
             <span data-part="corner" aria-hidden="true"></span>
@@ -456,7 +459,7 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
             {bars.value.map(b => <div key={b.id} data-part="chip" data-cal={b.event.cal ?? 1} data-id={b.id} role="gridcell" tabindex={stop.value === b.id ? '0' : '-1'} aria-label={c.name(b.event)} style={`${tint(b.event.cal)};grid-column:${b.col + 2} / span ${b.span};grid-row:${b.row + 1}`}>{b.event.title}</div>)}
           </div>
         </div>
-        <div ref={(n: any) => (cols = n)} data-part="cols" role="row">
+        <div ref={(n: HTMLDivElement) => (cols = n)} data-part="cols" role="row">
           <div data-part="gutter" aria-hidden="true">
             {Array.from({ length: 23 }, (_, i) => i + 1).map(h => <span key={h} data-part="hour" style={`top:${hours(h * 60)}`}>{c.time(h * 60)}</span>)}
             {nowAt.value !== null && <span data-part="now-label" style={`--_top:${hours(nowAt.value)}`}>{c.time(nowAt.value)}</span>}
@@ -546,7 +549,7 @@ function MonthGrid({ c }: { c: Ctx }) {
       <div data-part="head" aria-hidden="true"><span></span>{heads.value.map(h => <div key={h[0]} data-part="dayhead"><span>{h[1]}</span></div>)}</div>
       <span aria-hidden="true"></span>
       <div data-part="scroller">
-        <div ref={(n: any) => (grid = n)} data-part="month" role="grid" aria-label={fmt(c.date.value, { month: 'long', year: 'numeric' }, c.env.locale.value)} aria-describedby={hint} onKeyDown={onKey} onClick={onClick}>
+        <div ref={n => (grid = n)} data-part="month" role="grid" aria-label={fmt(c.date.value, { month: 'long', year: 'numeric' }, c.env.locale.value)} aria-describedby={hint} onKeyDown={onKey} onClick={onClick}>
           {weeks.value.map(w => (
             <div key={w.key} role="row">
               {w.cells.map(x => (
@@ -562,7 +565,7 @@ function MonthGrid({ c }: { c: Ctx }) {
         </div>
       </div>
       <span class="sr" id={hint}>Arrow keys move between days, Home and End to the week's ends, Page Up and Page Down by month, Enter opens the day.</span>
-      <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label={more.value ? fmt(more.value.iso, { month: 'long', day: 'numeric' }, c.env.locale.value) : 'Events'}>
+      <div ref={n => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label={more.value ? fmt(more.value.iso, { month: 'long', day: 'numeric' }, c.env.locale.value) : 'Events'}>
         {more.value && <div class="stack">{more.value.list.map(e => <Button key={e.id} emphasis="ghost" tone="neutral" size="sm" onClick={() => { moreOpen.value = false; c.say(c.name(e)); openDay(dateOf(e.start)) }}>{e.title}</Button>)}</div>}
       </div>
     </div>
@@ -592,7 +595,7 @@ const STEP = 5 // a timeline lane's column, in minutes
 /** Timeline (07 §2.5): rows of rooms or people over hours, one roving stop, the same drag on the x axis. */
 function Timeline({ c }: { c: Ctx }) {
   const hint = uid('tl')
-  const range = derived(() => c.p.timeline ?? [480, 1080])
+  const range = derived((): [number, number] => c.p.timeline ?? [480, 1080])
   const width = derived(() => range.value[1] - range.value[0])
   const slots = derived(() => Math.round(width.value / 60))
   const marks = derived(() => Array.from({ length: slots.value }, (_, i) => range.value[0] + i * 60))
@@ -626,9 +629,9 @@ function Timeline({ c }: { c: Ctx }) {
     const titles = () => [...box!.querySelectorAll<HTMLElement>('[data-part="lane"] [data-part="event-title"]')].filter(t => t.offsetWidth)
     const cut = () => titles().some(t => { const r = doc.createRange(); r.selectNodeContents(t); const w = r.getBoundingClientRect(), b = t.getBoundingClientRect(); return w.right > b.right + 0.5 || w.left < b.left - 0.5 })
     box.style.removeProperty('--_fit')
-    const lane = box.querySelector<HTMLElement>('[data-part="lane"]')
-    if (!lane) return
-    let hour = lane.getBoundingClientRect().width / Math.max(1, untrack(() => slots.value))
+    const first = box.querySelector<HTMLElement>('[data-part="lane"]')
+    if (!first) return
+    let hour = first.getBoundingClientRect().width / Math.max(1, untrack(() => slots.value))
     for (let i = 0; i < 24 && cut(); i++) box.style.setProperty('--_fit', `${(hour += 8)}px`)
   }
   let frame = 0
@@ -639,7 +642,7 @@ function Timeline({ c }: { c: Ctx }) {
     void box?.ownerDocument.fonts?.ready.then(refit)
     if (typeof ResizeObserver === 'undefined' || !scroller) return
     let w = 0
-    const ro = new ResizeObserver(r => { const n = Math.round(r[0].contentRect.width); if (n !== w) { w = n; refit() } })
+    const ro = new ResizeObserver(r => { const n = Math.round(r[0]!.contentRect.width); if (n !== w) { w = n; refit() } })
     ro.observe(scroller)
     onCleanup(() => { ro.disconnect(); cancelAnimationFrame(frame) })
   })
@@ -648,8 +651,8 @@ function Timeline({ c }: { c: Ctx }) {
   // times under it, its whole name, or only the start time when it is too narrow for a word
   return (
     <div data-scope="edges" data-part="timeline-edges">
-      <div ref={(n: any) => (scroller = n)} data-part="scroller">
-        <div ref={(n: any) => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey} style={`--_slots:${slots.value}`}>
+      <div ref={n => (scroller = n)} data-part="scroller">
+        <div ref={n => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey} style={`--_slots:${slots.value}`}>
           <span data-part="corner" aria-hidden="true"></span>
           <div data-part="marks" class="muted" aria-hidden="true" style={`display:grid;grid-template-columns:repeat(${marks.value.length},1fr)`}>{marks.value.map(m => <span key={m}>{c.time(m)}</span>)}</div>
           {rows.value.map(r => (
@@ -709,7 +712,7 @@ function MiniMonth({ c }: { c: Ctx }) {
         <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label="Previous month" onClick={() => (cursor.value = stepDate('month', cursor.value, -1))} />
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
       </div>
-      <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest?.<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
+      <div ref={n => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest?.<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
         <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><span aria-hidden="true">{h[0][0]}</span><span class="sr">{h[0]}</span></span>)}</div>
         {weeks.value.map(w => (
           <div key={w.key} role="row">
@@ -735,8 +738,8 @@ function ZoneChip({ c }: { c: Ctx }) {
   use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <>
-      <Tooltip content={`Times shown in ${c.zone.value}`}><button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button></Tooltip>
-      <div ref={(n: any) => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
+      <Tooltip content={`Times shown in ${c.zone.value}`}><button ref={n => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button></Tooltip>
+      <div ref={n => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
         {built.value && <TimeZoneSelect label="Time zone" value={c.zone.value} referenceDate={c.date.value} today={c.env.today.value} locale={c.env.locale.value} onValueChange={(z: string | null) => { c.zone.set(z); open.value = false; c.say(`Times shown in ${z}`) }} />}
       </div>
     </>
@@ -776,7 +779,7 @@ export function Calendar(p: CalendarProps) {
     const to = nextIndex(e.key, list.indexOf(c.view.value), list.length, { rtl: getComputedStyle(e.currentTarget as Element).direction === 'rtl' })
     if (to < 0) return
     e.preventDefault()
-    setView(list[to])
+    setView(list[to]!)
     flush()
     tabs?.querySelector<HTMLElement>('[aria-selected="true"]')?.focus()
   }
@@ -795,7 +798,7 @@ export function Calendar(p: CalendarProps) {
   }
   const zoneNow = (z: string) => { const n = c.now.value; return n ? c.time(minuteOf(c.tz() ? toZone(n, c.tz()!, z) : n)) : '' }
   return (
-    <div ref={(n: any) => { root = n; c.bindRoot(n) }} data-scope="calendar" data-part="root">
+    <div ref={n => { root = n; c.bindRoot(n) }} data-scope="calendar" data-part="root">
       <div data-part="app-bar" class="row">
         <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label={`Previous ${unit.value}`} onClick={() => step(-1)} />
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label={`Next ${unit.value}`} onClick={() => step(1)} />
@@ -807,7 +810,7 @@ export function Calendar(p: CalendarProps) {
         {p.live && <LiveStatus state={p.live} label="Calendar sync">{p.live === 'live' ? 'Synced' : undefined}</LiveStatus>}
         {c.zone.value && <ZoneChip c={c} />}
         <div data-scope="tabs" data-variant="pill" data-part="root">
-          <div ref={(n: any) => (tabs = n)} data-part="list" role="tablist" aria-label="Calendar view" onKeyDown={onTabKey}>
+          <div ref={n => (tabs = n)} data-part="list" role="tablist" aria-label="Calendar view" onKeyDown={onTabKey}>
             {views.value.map(v => <button key={v} type="button" data-part="trigger" role="tab" id={`${id}-${v}`} aria-controls={`${id}-main`} aria-selected={v === c.view.value ? 'true' : 'false'} tabindex={v === c.view.value ? undefined : '-1'} onClick={() => setView(v)}>{LABEL[v]}</button>)}
             <span data-part="indicator" aria-hidden="true" data-instant=""></span>
           </div>
@@ -820,7 +823,7 @@ export function Calendar(p: CalendarProps) {
           {p.calendars && (
             <div class="stack">
               <span data-part="eyebrow">My calendars</span>
-              <ul data-part="sources">{p.calendars.map(s => <li key={s.id}><label data-cal={s.id}><input type="checkbox" checked={!c.off.value.includes(s.id)} onChange={(e: any) => toggle(s.id, e.currentTarget.checked)} />{s.name}</label></li>)}</ul>
+              <ul data-part="sources">{p.calendars.map(s => <li key={s.id}><label data-cal={s.id}><input type="checkbox" checked={!c.off.value.includes(s.id)} onChange={(e: Event) => toggle(s.id, (e.currentTarget as HTMLInputElement).checked)} />{s.name}</label></li>)}</ul>
             </div>
           )}
           {p.zones && (

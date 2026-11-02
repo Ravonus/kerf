@@ -31,6 +31,7 @@ const EDGES = {
   'empty.tsx': '',
   'bom.tsx': '﻿export const A = () => <p>x</p>\n',
   'crlf.tsx': 'export function A() {\r\n  return <p>a</p>\r\n}\r\n',
+  // oxlint-disable-next-line no-template-curly-in-string -- the `${` is the case: source text the compilers have to agree on
   'unicode.tsx': 'export const A = () => <p title="日本語 🎉 é">שלום 𝒳   x</p>\n/* 🎉 */ const b = <div>{`é${1}🎉`}</div>\n',
   'lone-surrogate.tsx': 'export const s = "\\ud800"; export const A = () => <p>{"\uD800"}</p>\n',
   'syntax-error.tsx': 'export const A = () => <div><span></div>\n',
@@ -41,13 +42,14 @@ const EDGES = {
   'parens.ts': `export const a = ${'('.repeat(500)}1${')'.repeat(500)}\n`,
 }
 
-const GROUP = `import { group } from 'weft/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
+const GROUP = `import { group } from '@weft-js/core/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
 const GROUP_USE = `import { card } from './card'\nexport const Row = () => <p {...card({ status: 'late' })}>x</p>\n`
 
 function walk(dir, out) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     if (e.isDirectory()) {
-      if (!SKIP.has(e.name)) walk(join(dir, e.name), out)
+      // .tmp-* are other packages' test scratch dirs, made and removed while this runs alongside them
+      if (!SKIP.has(e.name) && !e.name.startsWith('.tmp-')) walk(join(dir, e.name), out)
     } else if (e.name.endsWith('.tsx') && !e.name.endsWith('.d.tsx')) out.push(join(dir, e.name))
   }
   return out

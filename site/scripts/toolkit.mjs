@@ -3,7 +3,7 @@
 // own source, so the code on a page is the code running on it.
 import { createRequire } from 'node:module'
 import { dirname, join, relative } from 'node:path'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))
 const ts = require('typescript')
@@ -13,7 +13,7 @@ const oneLine = text => text.replace(/\s+/g, ' ').trim()
 
 export function readToolkit(repo) {
   const warp = join(repo, 'packages/warp')
-  const parsed = ts.parseJsonConfigFileContent({ compilerOptions: { jsx: 'preserve', target: 'esnext', module: 'esnext', moduleResolution: 'bundler', skipLibCheck: true, noEmit: true, strict: true, types: [], allowImportingTsExtensions: true, paths: { weft: ['../weft/src/index.ts'], 'weft/*': ['../weft/src/*'], '@weft/warp-core': ['../warp-core/src/index.ts'], '@weft/icons': ['../icons/src/gen/index.tsx'] } }, files: ['src/index.ts'] }, ts.sys, warp)
+  const parsed = ts.parseJsonConfigFileContent({ compilerOptions: { jsx: 'preserve', target: 'esnext', module: 'esnext', moduleResolution: 'bundler', skipLibCheck: true, noEmit: true, strict: true, types: [], allowImportingTsExtensions: true, paths: { weft: ['../weft/src/index.ts'], 'weft/*': ['../weft/src/*'], '@weft-js/warp-core': ['../warp-core/src/index.ts'], '@weft-js/warp-icons': ['../icons/src/gen/index.tsx'] } }, files: ['src/index.ts'] }, ts.sys, warp)
   const program = ts.createProgram(parsed.fileNames, parsed.options)
   const checker = program.getTypeChecker()
   const entry = program.getSourceFile(join(warp, 'src/index.ts'))
@@ -59,7 +59,7 @@ export function readToolkit(repo) {
           name: p.name,
           type: oneLine(checker.typeToString(t, undefined, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope)).replace(/ \| undefined$/, ''),
           required: !(p.flags & ts.SymbolFlags.Optional),
-          default: defaults.get(p.name) ?? p.getJsDocTags(checker).find(t => t.name === 'default')?.text?.map(x => x.text).join('').trim(),
+          default: defaults.get(p.name) ?? p.getJsDocTags(checker).find(tag => tag.name === 'default')?.text?.map(x => x.text).join('').trim(),
           worked: worked.has(p.name) && !defaults.has(p.name) ? true : undefined,
           doc: oneLine(ts.displayPartsToString(p.getDocumentationComment(checker))),
         })
@@ -135,9 +135,9 @@ export function readExamples(path) {
     const all = [body, ...local].join('\n')
     const direct = new Set(imports.flatMap(i => i.names))
     const typed = (world?.imports ?? []).filter(i => !direct.has(i.name) && uses(all, i.name))
-    const head = [...imports.flatMap(({ from, names, type }) => {
-      const used = names.filter(n => uses(all, n))
-      return used.length ? [`import ${type ? 'type ' : ''}{ ${used.join(', ')} } from '${from}'`] : []
+    const head = [...imports.flatMap(({ from: module, names: imported, type }) => {
+      const used = imported.filter(n => uses(all, n))
+      return used.length ? [`import ${type ? 'type ' : ''}{ ${used.join(', ')} } from '${module}'`] : []
     }), ...[...new Set(typed.map(i => i.from))].map(f => `import type { ${typed.filter(i => i.from === f).map(i => i.name).join(', ')} } from '${f}'`)]
     out.set(name, { name, stateless, body, head, local })
   }

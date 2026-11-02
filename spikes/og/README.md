@@ -8,7 +8,7 @@ package's dependencies.
 ```
 cards/*.tsx          the cards, as ordinary weft TSX: Default (title, description, site), Avatar (image, two fonts,
                      radius, border, shadow), Stress (CSS outside the flex subset; quality only, not timed)
-build-cards.mjs      weft's native compiler (`generate: 'ssr'`, not hydratable) + weft/ssr → build/cards.mjs, one ES
+build-cards.mjs      weft's native compiler (`generate: 'ssr'`, not hydratable) + @weft-js/core/ssr → build/cards.mjs, one ES
                      module that runs on Node, Bun and workerd
 renderers.mjs        the two pipelines behind `renderCard(html, size, fonts) → PNG`, given each runtime's modules
 html-to-vnode.mjs    weft HTML → Satori's element shape (satori-html crashes on Bun and drops inline whitespace)

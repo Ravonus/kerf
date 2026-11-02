@@ -7,10 +7,11 @@ import type { DbHandle } from '../db/core'
 
 const PROVIDER = { sqlite: 'sqlite', postgresql: 'pg', mysql: 'mysql' } as const
 
+/** Better Auth's store on a Weft database, for `createAuth`'s `options.database`. */
 export function drizzleAuth(db: { $weft: DbHandle }, schema?: Record<string, unknown>) {
   for (const name of ['user', 'session', 'account', 'verification']) {
     const t = schema?.[name]
     if (isTable(t)) db.$weft.exempt.add(getTableName(t))
   }
-  return drizzleAdapter(db as any, { provider: PROVIDER[db.$weft.dialect as keyof typeof PROVIDER], schema })
+  return drizzleAdapter(db, { provider: PROVIDER[db.$weft.dialect], schema })
 }

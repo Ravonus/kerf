@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })
@@ -26,7 +26,7 @@ beforeAll(async () => {
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise(r => server.once('listening', r))
+  await new Promise(r => { server.once('listening', r) })
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.on('pageerror', e => errors.push(e.message))
@@ -38,8 +38,8 @@ afterAll(async () => { await browser?.close(); server?.close(); if (dist) rmSync
 afterEach(() => { expect(errors.splice(0)).toEqual([]) })
 
 test('a 598px table has headers to press; a 342px one is cards', async () => {
-  const look = id => page.evaluate(id => {
-    const t = document.querySelector(`#${id} [data-scope="table"]`)
+  const look = id => page.evaluate(which => {
+    const t = document.querySelector(`#${which} [data-scope="table"]`)
     return { phone: t.dataset.phone, head: getComputedStyle(t.querySelector('thead')).display, sort: t.querySelector('thead [data-part="sort"]').getBoundingClientRect().width, bar: !!t.querySelector('[data-part="sortbar"]') }
   }, id)
   const wide = await look('desktop')

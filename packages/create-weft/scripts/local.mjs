@@ -7,7 +7,7 @@
 //   node packages/create-weft/scripts/local.mjs refresh [dir] [--packed]   that, then put the new tarballs in an app
 //                                                                          (--packed: the store's as they are, no pack)
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -30,9 +30,9 @@ function buildNative() {
   run('npm', ['run', '--silent', 'build:native'], join(pkgs, 'weft'))
 }
 
-/** dist/ is gitignored and it's all @weft/text-engine exports, so it's built every time rather than trusted. */
+/** dist/ is gitignored and it's all @weft-js/text/engine exports, so it's built every time rather than trusted. */
 function buildTextEngine() {
-  const dir = join(pkgs, 'text-engine')
+  const dir = join(pkgs, 'text')
   if (!existsSync(join(dir, 'node_modules'))) run('npm', ['ci', '--silent'], dir)
   run('npm', ['run', '--silent', 'build'], dir)
 }
@@ -73,7 +73,7 @@ function refresh(dir, packed) {
   const other = OTHER_LOCKS.find(lock => existsSync(join(app, lock)))
   if (other) throw new Error(`${app} has ${other}; this works with npm only`)
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  if (!pkg.dependencies?.weft && !pkg.devDependencies?.weft) throw new Error(`${app} doesn't depend on weft; start one with \`local.mjs new\``)
+  if (!pkg.dependencies?.['@weft-js/core'] && !pkg.devDependencies?.['@weft-js/core']) throw new Error(`${app} doesn't depend on @weft-js/core; start one with \`local.mjs new\``)
   const tarballs = packed ? JSON.parse(readFileSync(join(store, 'tarballs.json'), 'utf8')) : pack()
   forget(app, tarballs)
   writeFileSync(file, JSON.stringify(pin(pkg, tarballs), null, 2))

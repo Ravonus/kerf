@@ -10,11 +10,13 @@ export function indented(text: string, start: number, end: number, size: number,
   const lines = text.slice(from, stop).split('\n')
   const next = lines.map(l => (outdent ? l.replace(new RegExp(`^ {1,${size}}`), '') : pad + l))
   const insert = next.join('\n')
-  const first = next[0].length - lines[0].length
+  const first = next[0]!.length - lines[0]!.length
   return { from, to: stop, insert, start: Math.max(from, start + first), end: end + insert.length - (stop - from) }
 }
 
+/** The kinds of span the highlighter colours. */
 export type CodeToken = 'string' | 'number' | 'keyword' | 'comment'
+/** A coloured stretch of text, by offset. */
 export interface CodeSpan { kind: CodeToken; start: number; end: number }
 
 const KEYWORDS = 'import|from|export|default|const|let|var|function|return|if|else|for|while|class|new|await|async|type|interface|select|where|insert|update|delete|join|order|group|by|true|false|null|undefined'
@@ -25,7 +27,7 @@ const RULES: Record<string, RegExp> = {
 
 /** The spans to colour. Keys of a JSON object stay plain, so its values read first. */
 export function tokenize(text: string, language = 'code') {
-  const rule = RULES[language] ?? RULES.code
+  const rule = RULES[language] ?? RULES.code!
   const spans: CodeSpan[] = []
   for (const m of text.matchAll(rule)) {
     const kind: CodeToken | undefined = m[1] ? (m[2] ? undefined : 'string') : m[3] ? 'number' : m[4] ? 'keyword' : m[5] ? 'comment' : undefined
@@ -35,7 +37,7 @@ export function tokenize(text: string, language = 'code') {
 }
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' }
-const esc = (s: string) => s.replace(/[&<>]/g, c => HTML_ESCAPES[c])
+const esc = (s: string) => s.replace(/[&<>]/g, c => HTML_ESCAPES[c]!)
 const TSX_KEYWORDS = 'import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|class|extends|new|await|async|type|interface|typeof|keyof|as|try|catch|throw|yield'
 const SHELL = /(#[^\n]*)|("[^"\n]*"|'[^'\n]*')|(?<![\w-])(--?[\w-]+)|^(\s*\w[\w-]*)/gm
 const TSX = new RegExp(
@@ -78,6 +80,7 @@ export function highlight(text: string, language = 'tsx') {
   }, { lines: [], open: '' }).lines.join('')
 }
 
+// oxlint-disable-next-line no-control-regex -- a JSON string may not hold a raw control character
 const JSON_ATOM = /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[\da-fA-F]{4}))*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y
 
 /** Where JSON stops being JSON. V8 names a position only sometimes and short text never, so this walks it itself. */
@@ -124,21 +127,21 @@ export function jsonProblem(text: string) {
   }
 }
 
-const shared = new Map<CodeToken, any>() // one Highlight per kind: the registry is per document, the rule per name
+const shared = new Map<CodeToken, Highlight>() // one Highlight per kind: the registry is per document, the rule per name
 
 /**
  * The colour layer: `layer` is a `<pre aria-hidden>` behind a transparent textarea, holding the same text. Without the
  * API (or before it runs) the textarea paints its own text, so `data-painted` turns the swap on only where it works.
  */
-export function codeLayer(root: HTMLElement, opts: { text: string; language?: string }) {
+export function codeLayer(root: HTMLElement, opts: { text: string; language?: string | undefined }) {
   let o = opts
   const doc = root.ownerDocument
-  const win = doc.defaultView as any
+  const win = doc.defaultView!
   const layer = root.querySelector<HTMLElement>('[data-part="layer"]')!
   const area = root.querySelector('textarea')!
   const gutter = root.querySelector<HTMLElement>('[data-part="lines"]')
   const on = typeof win.Highlight === 'function' && !!win.CSS?.highlights
-  let mine: [any, Range][] = []
+  let mine: [Highlight, Range][] = []
   let frame = 0
   const clear = () => { for (const [h, r] of mine) h.delete(r); mine = [] }
   const draw = () => {

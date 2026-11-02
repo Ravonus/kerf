@@ -1,9 +1,9 @@
-// @weft/warp: the weft binding of warp. Each component renders the spec's specimen markup with weft's compiled
+// @weft-js/warp: the weft binding of warp. Each component renders the spec's specimen markup with weft's compiled
 // templates and attaches warp-core's behaviour; each imports only its own CSS (warp-core/styles, split per component).
 export { Stack, Row, Grid, Split, Center, Cover, Frame, Spacer, Inset, type Step } from './Layout'
 export { Heading, Text, Link } from './Type'
 export { Button, type ButtonProps, type Tone, type Emphasis } from './Button'
-export { Toggle } from './Toggle'
+export { Toggle, type ToggleProps } from './Toggle'
 export { Field, Input, Search, Textarea, type FieldProps } from './Field'
 export { NumberField, type NumberFieldProps } from './NumberField'
 export { CompactSelect, Select, type Option, type OptionGroup } from './Select'
@@ -66,7 +66,7 @@ export * from './admin/index'
 export { VirtualList, type VirtualListProps, type VirtualControl } from './VirtualList'
 export { Feed, type FeedProps, type FeedItem } from './Feed'
 export { ScrollGrid, type ScrollGridProps, type GridColumn as ScrollGridColumn } from './ScrollGrid'
-export type { Address, MentionItem } from '@weft/warp-core'
-export type { Peer, CursorPeer, IntegrityStats, ChatMessage, MessageReaction } from '@weft/warp-core'
-export type { IsoDate, IsoTime, IsoDateTime, IsoMonth, IsoWeek, IsoDuration, IsoZoned, TimeZoneId, DateRange, ChangeReason } from '@weft/warp-core'
-export { sweep, setDial, getDial } from '@weft/warp-core'
+export type { Address, MentionItem } from '@weft-js/warp-core'
+export type { Peer, CursorPeer, IntegrityStats, ChatMessage, MessageReaction } from '@weft-js/warp-core'
+export type { IsoDate, IsoTime, IsoDateTime, IsoMonth, IsoWeek, IsoDuration, IsoZoned, TimeZoneId, DateRange, ChangeReason } from '@weft-js/warp-core'
+export { sweep, setDial, getDial } from '@weft-js/warp-core'

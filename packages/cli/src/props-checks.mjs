@@ -1,4 +1,4 @@
-// Prop inference in `weft check` and `weft tsc` (research 41). `W080`–`W085` come from the engine; a `TS` code is the
+// Prop inference in `weft check` and `weft tsc` (research 44). `W080`–`W085` come from the engine; a `TS` code is the
 // compiler's own error, reported at the source position with the inferred types applied.
 
 import { existsSync, readFileSync } from 'node:fs'

@@ -68,8 +68,10 @@ const tipHTML = ({ title, rows = [] }: Tip) =>
 export const tableHTML = ({ head, rows }: TableData) =>
   `<table><thead><tr>${head.map(h => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => (i ? `<td>${esc(String(c))}</td>` : `<th scope="row">${esc(String(c))}</th>`)).join('')}</tr>`).join('')}</tbody></table>`
 
+/** What `chart` draws: a form, its config, and an id for the marks. */
 export type ChartOptions<C> = { form: Form<C>; cfg: C; id: string }
 
+/** Takes over a chart's rendered figure and from then on owns its plot, tooltip, keyboard and legend. */
 export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   const $ = (q: string) => fig.querySelector(q)!
   const svg = $('svg[data-part="svg"]') as SVGSVGElement, area = $('[data-part="plot"]') as HTMLElement, tip = $('[data-part="chart-tip"]') as HTMLElement
@@ -122,6 +124,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     if (active && active !== m) active.removeAttribute('data-active')
     active = m
     m.setAttribute('data-active', '')
+    // oxlint-disable-next-line weft/no-html-sink -- tipHTML escapes every value it writes
     tip.innerHTML = tipHTML(plot.tip?.(xi(m), si(m), m) ?? { title: m.getAttribute('aria-label') ?? '' })
     tip.setAttribute('data-open', '')
     fig.setAttribute('data-hot', '')
@@ -156,10 +159,10 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     const x = xi(m), y = si(m), find = (fx: number, fs: number) => marks.find(n => xi(n) === fx && si(n) === fs)
     const xs = [...new Set(marks.map(xi))], ys = [...new Set(marks.map(si))], px = xs.indexOf(x), py = ys.indexOf(y), i = marks.indexOf(m)
     let next: Element | undefined
-    if (e.key === 'ArrowRight') next = find(xs[Math.min(xs.length - 1, px + 1)], y) ?? marks[Math.min(marks.length - 1, i + 1)]
-    else if (e.key === 'ArrowLeft') next = find(xs[Math.max(0, px - 1)], y) ?? marks[Math.max(0, i - 1)]
-    else if (e.key === 'ArrowUp') next = find(x, ys[Math.max(0, py - 1)])
-    else if (e.key === 'ArrowDown') next = find(x, ys[Math.min(ys.length - 1, py + 1)])
+    if (e.key === 'ArrowRight') next = find(xs[Math.min(xs.length - 1, px + 1)]!, y) ?? marks[Math.min(marks.length - 1, i + 1)]
+    else if (e.key === 'ArrowLeft') next = find(xs[Math.max(0, px - 1)]!, y) ?? marks[Math.max(0, i - 1)]
+    else if (e.key === 'ArrowUp') next = find(x, ys[Math.max(0, py - 1)]!)
+    else if (e.key === 'ArrowDown') next = find(x, ys[Math.min(ys.length - 1, py + 1)]!)
     else if (e.key === 'Home') next = marks[0]
     else if (e.key === 'End') next = marks[marks.length - 1]
     else if (e.key === 'Escape') return hide()
@@ -213,7 +216,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   // The markup arrives with data-enter="wait" and its motion already playing. Off screen that would be wasted, so it
   // is taken off until the chart is a quarter in view: once, on first view, never again on a resize redraw.
   const seen = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(es => {
-    if (es[es.length - 1].isIntersecting) { enter(); seen!.disconnect() } else fig.removeAttribute('data-enter')
+    if (es[es.length - 1]!.isIntersecting) { enter(); seen!.disconnect() } else fig.removeAttribute('data-enter')
   }, { threshold: 0.25 })
   const size = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
     const w = Math.round(area.clientWidth)
@@ -246,7 +249,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
 
   return {
     update(n: ChartOptions<C>) {
-      const swap = (n.cfg as any).layout !== (cfg as any).layout
+      const swap = (n.cfg as { layout?: unknown }).layout !== (cfg as { layout?: unknown }).layout
       form = n.form
       cfg = n.cfg
       if (swap) enter(true)
@@ -294,15 +297,16 @@ export function spark(el: SVGSVGElement, input: SparkInput) {
     const r = el.getBoundingClientRect(), dot = el.querySelector('.dot')
     if (!dot || !r.width || !list.length) return
     const pts = sparkPoints(list, r.width), x = e.clientX - r.left
-    const i = pts.reduce((best, p, n) => (Math.abs(p[0] - x) < Math.abs(pts[best][0] - x) ? n : best), 0)
+    const i = pts.reduce((best, p, n) => (Math.abs(p[0] - x) < Math.abs(pts[best]![0] - x) ? n : best), 0)
+    const [px, py] = pts[i]!, value = list[i]!
     home ??= [dot.getAttribute('cx'), dot.getAttribute('cy')]
-    dot.setAttribute('cx', f1(pts[i][0]))
-    dot.setAttribute('cy', f1(pts[i][1]))
-    const left = pts[i][0] < r.width / 2
-    note.textContent = format ? format(list[i]) : String(list[i])
+    dot.setAttribute('cx', f1(px))
+    dot.setAttribute('cy', f1(py))
+    const left = px < r.width / 2
+    note.textContent = format ? format(value) : String(value)
     note.setAttribute('text-anchor', left ? 'start' : 'end')
-    note.setAttribute('x', f1(pts[i][0] + (left ? 6 : -6)))
-    note.setAttribute('y', f1(Math.max(10, pts[i][1] - 6)))
+    note.setAttribute('x', f1(px + (left ? 6 : -6)))
+    note.setAttribute('y', f1(Math.max(10, py - 6)))
     el.append(note)
   }
   const rest = () => {

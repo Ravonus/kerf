@@ -79,7 +79,8 @@ function raw(g, words) {
       const dx = x - o[0], dy = y - o[1], d = Math.hypot(dx, dy) || 1, r = Math.max(rx, d / 2)
       const h = Math.sqrt(Math.max(0, r * r - d * d / 4)) * (large === sweep ? -1 : 1)
       const cx = (o[0] + x) / 2 - h * dy / d, cy = (o[1] + y) / 2 + h * dx / d
-      let a0 = Math.atan2(o[1] - cy, o[0] - cx), a1 = Math.atan2(y - cy, x - cx)
+      const a0 = Math.atan2(o[1] - cy, o[0] - cx)
+      let a1 = Math.atan2(y - cy, x - cx)
       if (sweep && a1 < a0) a1 += Math.PI * 2
       if (!sweep && a1 > a0) a1 -= Math.PI * 2
       arc(g, cx, cy, r, a0, a1); cur = [x, y]

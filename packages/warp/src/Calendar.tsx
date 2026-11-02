@@ -1,10 +1,10 @@
-import { LeftIcon, RightIcon } from '@weft/icons'
-import { addMonths, dayState, fmt, gridKey, isoWeek, isWeekend, isUnavailable, messages, monthEnd, monthStart, monthWeeks, ymd, weekStart, weekdays, type CalendarContext, type CalendarMode, type CalendarValue, type ChangeReason, type DateRange, type IsoDate } from '@weft/warp-core'
-import { derived, flush, state, untrack, watch } from 'weft'
+import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
+import { addMonths, dayState, fmt, gridKey, isoWeek, isWeekend, isUnavailable, messages, monthEnd, monthStart, monthWeeks, ymd, weekStart, weekdays, type CalendarContext, type CalendarMode, type CalendarValue, type ChangeReason, type DateRange, type IsoDate } from '@weft-js/warp-core'
+import { derived, flush, state, untrack, watch } from '@weft-js/core'
 import { Button } from './Button'
 import { bindable, uid, usePickerEnv, type Bindable } from './Picker'
 import './styles'
-import '@weft/warp-core/styles/rich/calendar-grid.css'
+import '@weft-js/warp-core/styles/rich/calendar-grid.css'
 
 export interface GridProps {
   mode: CalendarMode
@@ -13,11 +13,11 @@ export interface GridProps {
   compare?: () => DateRange | null | undefined
   locale: string
   today: string
-  min?: string
-  max?: string
-  isDateUnavailable?: (d: IsoDate) => boolean
-  firstDayOfWeek?: number
-  weekNumbers?: boolean
+  min?: string | undefined
+  max?: string | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
+  firstDayOfWeek?: number | undefined
+  weekNumbers?: boolean | undefined
   /** Marks the focused day `data-initial`, so a panel opens onto it. */
   autofocus?: boolean
   onPick: (iso: IsoDate, reason: ChangeReason) => void
@@ -25,7 +25,7 @@ export interface GridProps {
   onUnavailable?: (iso: IsoDate) => void
   /** A cursor from outside (a preset moved the months). */
   goTo?: () => string | null | undefined
-  children?: any
+  children?: unknown
 }
 
 const startOf = (v: CalendarValue, today: string, mode: CalendarMode) => (mode === 'range' ? (v as DateRange)?.start : mode === 'multiple' ? [...((v as IsoDate[]) ?? [])].sort()[0] : mode === 'week' ? null : (v as string | null)) ?? today
@@ -83,7 +83,7 @@ export function CalendarGrid(p: GridProps) {
   const page = (d: number) => { anim.value = d > 0 ? 'next' : 'prev'; view.value = addMonths(view.value, d); cursor.value = addMonths(cursor.value, d) }
   watch(() => p.goTo?.(), iso => { if (iso) moveTo(iso) })
   return (
-    <div ref={(n: any) => (box = n)} data-scope="calendar" data-part="root">
+    <div ref={n => (box = n)} data-scope="calendar" data-part="root">
       <Button emphasis="ghost" size="sm" icon={LeftIcon} label={t.value.prev} data-part="nav" data-dir="prev" data-icon="" onClick={() => page(-1)} />
       <Button emphasis="ghost" size="sm" icon={RightIcon} label={t.value.next} data-part="nav" data-dir="next" data-icon="" onClick={() => page(1)} />
       <div data-part="months" data-anim={anim.value} onKeyDown={onKey} onClick={onClick} onPointerOver={onOver} onPointerLeave={onLeave}>
@@ -94,7 +94,7 @@ export function CalendarGrid(p: GridProps) {
   )
 }
 
-function Month({ month, heads, first, weekNumbers, locale, wholeWeek, ctx, cursor, initial }: { month: string; heads: readonly (readonly [string, string, number])[]; first: number; weekNumbers?: boolean; locale: string; wholeWeek: boolean; ctx: () => CalendarContext; cursor: string; initial?: boolean }) {
+function Month({ month, heads, first, weekNumbers, locale, wholeWeek, ctx, cursor, initial }: { month: string; heads: readonly (readonly [string, string, number])[]; first: number; weekNumbers?: boolean | undefined; locale: string; wholeWeek: boolean; ctx: () => CalendarContext; cursor: string; initial?: boolean | undefined }) {
   const cap = uid('cap')
   const weeks = derived(() => monthWeeks(month, first).map(days => ({ days: days.map((iso, c) => ({ iso, k: iso ?? `b${c}`, weekday: (first + c) % 7 })), k: days.find(Boolean)!, week: isoWeek(days.find(Boolean)!).week })))
   return (
@@ -120,7 +120,7 @@ function Month({ month, heads, first, weekNumbers, locale, wholeWeek, ctx, curso
   )
 }
 
-function Day({ iso, weekend, locale, ctx, cursor, initial }: { iso: IsoDate; weekend: boolean; locale: string; wholeWeek: boolean; ctx: () => CalendarContext; cursor: string; initial?: boolean }) {
+function Day({ iso, weekend, locale, ctx, cursor, initial }: { iso: IsoDate; weekend: boolean; locale: string; wholeWeek: boolean; ctx: () => CalendarContext; cursor: string; initial?: boolean | undefined }) {
   const s = derived(() => dayState(iso, ctx()))
   const n = derived(() => new Intl.NumberFormat(locale).format(ymd(iso)[2]))
   return (
@@ -136,7 +136,7 @@ export type InlineCalendarValue = IsoDate | IsoDate[] | DateRange | null
  * InlineCalendar (04 §2): the same grid, standalone, for availability and booking. 1–3 months; `single`, `multiple`
  * (toggles days, announces the count) or `range`. No field shell: `aria-label` names it.
  */
-export function InlineCalendar({ selection = 'single', months = 1, value, defaultValue, onValueChange, min, max, isDateUnavailable, firstDayOfWeek, weekNumbers, locale, today, ...rest }: Bindable<InlineCalendarValue> & { selection?: 'single' | 'multiple' | 'range'; months?: 1 | 2 | 3; min?: string; max?: string; isDateUnavailable?: (d: IsoDate) => boolean; firstDayOfWeek?: number; weekNumbers?: boolean; locale?: string; today?: string; 'aria-label': string }) {
+export function InlineCalendar({ selection = 'single', months = 1, value, defaultValue, onValueChange, min, max, isDateUnavailable, firstDayOfWeek, weekNumbers, locale, today, ...rest }: Bindable<InlineCalendarValue> & { selection?: 'single' | 'multiple' | 'range'; months?: 1 | 2 | 3; min?: string | undefined; max?: string | undefined; isDateUnavailable?: ((d: IsoDate) => boolean) | undefined; firstDayOfWeek?: number | undefined; weekNumbers?: boolean | undefined; locale?: string | undefined; today?: string | undefined; 'aria-label': string }) {
   const env = usePickerEnv(() => locale, () => today)
   const empty = (): InlineCalendarValue => (selection === 'multiple' ? [] : selection === 'range' ? { start: null, end: null } : null)
   const v = bindable<InlineCalendarValue>(() => value, () => defaultValue, untrack(empty), () => onValueChange)

@@ -13,7 +13,7 @@ const { chromium } = createRequire(import.meta.url)('playwright-core')
 const { DIRECT, TX, SESSION } = process.env
 const fixture = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.url))
 const bin = fileURLToPath(new URL('../../cli/bin/weft.mjs', import.meta.url))
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 const failed = []
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed.push(what) }
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
@@ -39,10 +39,12 @@ async function boot(env) {
   child.stderr.on('data', d => { log += d })
   child.on('exit', c => { code = c ?? 'signal' })
   const base = `http://localhost:${port}`
+  // oxlint-disable-next-line no-unmodified-loop-condition -- the child's exit handler sets `code` during the wait
   for (let i = 0; i < 200 && code === undefined; i++) {
     if (await fetch(`${base}/`).then(r => r.status < 600, () => false)) break
     await wait(100)
   }
+  // oxlint-disable-next-line no-unmodified-loop-condition -- the child's handlers set `code` and `log` during the wait
   for (let i = 0; i < 80 && code === undefined && !/weft live:/.test(log); i++) await wait(100) // the probe takes its 1.5 s
   await wait(300)
   return { child, base, log: () => log, code: () => code, stop: () => (child.kill(), wait(200)) }

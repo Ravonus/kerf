@@ -2,8 +2,11 @@
 // sentence. Anything else in a rule lands in `unknown`, and a binding then shows the raw text rather than dropping it.
 import { addDays, daysIn, dow, fmt, toIso, weekStart, ymd, type IsoDate } from './temporal'
 
+/** How often a rule repeats. */
 export type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+/** The RRULE weekday codes, Sunday first. */
 export const DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'] as const
+/** An RRULE, read into fields; what it doesn't know stays in `unknown`. */
 export interface Rule {
   FREQ: Frequency
   INTERVAL: number
@@ -18,8 +21,10 @@ export interface Rule {
   unknown: string[]
 }
 
+/** A rule with nothing set: weekly, on the start date's day. */
 export const emptyRule = (): Rule => ({ FREQ: 'WEEKLY', INTERVAL: 1, BYDAY: [], BYMONTHDAY: null, BYMONTH: null, COUNT: null, UNTIL: null, unknown: [] })
 
+/** An RRULE string as a rule. */
 export function parseRule(text: string | null | undefined): Rule {
   const r = emptyRule()
   for (const part of (text ?? '').replace(/^RRULE:/i, '').split(';').filter(Boolean)) {
@@ -36,6 +41,7 @@ export function parseRule(text: string | null | undefined): Rule {
   return r
 }
 
+/** A rule as an RRULE string. */
 export function stringifyRule(r: Rule) {
   return [
     `FREQ=${r.FREQ}`,
@@ -50,7 +56,7 @@ export function stringifyRule(r: Rule) {
 }
 
 const weekNo = (iso: string) => Math.floor((Date.parse(iso) / 864e5 + 3) / 7) // weeks since a Monday
-const weekday = (iso: string) => DAYS[dow(iso)]
+const weekday = (iso: string) => DAYS[dow(iso)]!
 /** Which of its weekday in the month a date is: 2 for the second Wednesday; `last` when no later one fits. */
 export const weekdayOrdinal = (iso: string) => {
   const [y, m, d] = ymd(iso)
@@ -94,11 +100,12 @@ export function occurrences(r: Rule, dtstart: string, n: number): IsoDate[] {
   return out
 }
 
-const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') => fmt(addDays('2024-01-07', DAYS.indexOf(code as any)), { weekday: style }, locale)
+/** `code`'s weekday name in `locale`. */
+const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') => fmt(addDays('2024-01-07', DAYS.indexOf(code as (typeof DAYS)[number])), { weekday: style }, locale)
 const NTH = ['', 'first', 'second', 'third', 'fourth', 'fifth']
 
 /** The weekday codes in the locale's week order. */
-export const weekOrder = (locale: string) => { const s = weekStart(locale); return Array.from({ length: 7 }, (_, i) => DAYS[(s + i) % 7]) }
+export const weekOrder = (locale: string) => { const s = weekStart(locale); return Array.from({ length: 7 }, (_, i) => DAYS[(s + i) % 7]!) }
 
 /** "Every 2 weeks on Tuesday and Thursday, until Dec 31, 2026." */
 export function ruleSentence(r: Rule, dtstart: string, locale: string) {
@@ -109,8 +116,8 @@ export function ruleSentence(r: Rule, dtstart: string, locale: string) {
   if (r.FREQ === 'MONTHLY') {
     if (r.BYMONTHDAY === -1) s += ' on the last day'
     else if (r.BYDAY.length) {
-      const n = parseInt(r.BYDAY[0])
-      s += ` on the ${n < 0 ? 'last' : NTH[n]} ${dayName(r.BYDAY[0].slice(-2), locale)}`
+      const n = parseInt(r.BYDAY[0]!)
+      s += ` on the ${n < 0 ? 'last' : NTH[n]} ${dayName(r.BYDAY[0]!.slice(-2), locale)}`
     } else s += ` on day ${r.BYMONTHDAY ?? ymd(dtstart)[2]}`
   }
   if (r.FREQ === 'YEARLY') s += ` on ${fmt(dtstart, { month: 'long', day: 'numeric' }, locale)}`

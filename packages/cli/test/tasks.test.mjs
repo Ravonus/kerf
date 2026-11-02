@@ -16,7 +16,7 @@ describe('weft tasks', () => {
 
   it('runs a project task at the project root and passes its exit code on', async () => {
     const dir = project({
-      'weft.config.ts': `import { defineConfig } from 'weft/config'
+      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'
 export default defineConfig({ tasks: {
   ok: { run: 'test -f weft.config.ts', description: 'Passes at the root', sideEffects: [] },
   no: { run: 'exit 3', description: 'Fails', sideEffects: [] },
@@ -29,7 +29,7 @@ export default defineConfig({ tasks: {
 
   it('adds project tasks with args as JSON Schema (plain or Zod), side effects and environments', async () => {
     const dir = project({
-      'weft.config.ts': `import { defineConfig } from 'weft/config'
+      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'
 import { z } from 'zod'
 export default defineConfig({
   scope: { write: ['src/**'], forbid: ['.env*'] },

@@ -3,8 +3,12 @@
 // nodes, and sort, filter and resize never rebuild marks). A node's identity is its tag, class, series and mark index.
 
 export type Attrs = Record<string, string | number | boolean | null | undefined>
+/** An SVG node as plain data: tag, attributes, children. */
 export type Scene = { t: string; a: Attrs; c: Child[] }
+/** What a scene node holds once tidied: a node or text. */
 export type Child = Scene | string
+/** What a form may hand a node: falsy entries vanish and nested lists flatten. */
+export type Kid = Child | number | boolean | null | undefined | readonly Kid[]
 type Tween = { el: Element; name: string; from: number[]; to: number[]; bits: string[]; end: string }
 
 const SVG = 'http://www.w3.org/2000/svg'
@@ -17,29 +21,30 @@ const text = (v: string | number | boolean) => (v === true ? '' : typeof v === '
 const on = (v: unknown): v is string | number | true => v !== null && v !== undefined && v !== false
 
 /** A scene node. Falsy children vanish and nested lists flatten, so a form reads like the markup it writes. */
-export function s(t: string, a: Attrs = {}, ...c: any[]): Scene {
+export function s(t: string, a: Attrs = {}, ...c: Kid[]): Scene {
   return { t, a, c: tidy(c) }
 }
-const tidy = (c: any[]): Child[] => c.flat(5).filter(x => x !== null && x !== undefined && x !== false && x !== '').map(x => (typeof x === 'number' ? String(x) : x))
+const tidy = (c: readonly Kid[]): Child[] => (c.flat(5) as (Child | number | boolean | null | undefined)[]).filter(x => x !== null && x !== undefined && x !== false && x !== '').map(x => (typeof x === 'number' ? String(x) : x as Child))
 
-export function toHTML(nodes: any[]): string {
+/** A scene as markup, for the server. */
+export function toHTML(nodes: readonly Kid[]): string {
   let out = ''
   for (const n of tidy(nodes)) {
     if (typeof n === 'string') { out += esc(n); continue }
     out += `<${n.t}`
-    for (const k in n.a) if (on(n.a[k])) out += ` ${k}="${esc(text(n.a[k] as string))}"`
+    for (const k in n.a) if (on(n.a[k])) out += ` ${k}="${esc(text(n.a[k]))}"`
     out += `>${toHTML(n.c)}</${n.t}>`
   }
   return out
 }
 
-const idOf = (t: string, get: (k: string) => unknown) => `${t}|${get('class') ?? ''}|${get('data-series') ?? ''}|${get('data-xi') ?? ''}|${get('data-si') ?? ''}|${get('data-h') ?? ''}`
+const idOf = (t: string, get: (k: string) => string | number | boolean | null | undefined) => `${t}|${get('class') ?? ''}|${get('data-series') ?? ''}|${get('data-xi') ?? ''}|${get('data-si') ?? ''}|${get('data-h') ?? ''}`
 
 function write(el: Element, a: Attrs, tweens?: Tween[]) {
   for (const name of el.getAttributeNames()) if (!on(a[name]) && !runtime.has(name)) el.removeAttribute(name)
   for (const name in a) {
     if (!on(a[name])) continue
-    const to = text(a[name] as string), from = el.getAttribute(name)
+    const to = text(a[name]), from = el.getAttribute(name)
     if (from === to) continue
     if (tweens && from !== null && animated.has(name) && from.replace(NUMBER, '#') === to.replace(NUMBER, '#'))
       tweens.push({ el, name, from: from.match(NUMBER)!.map(Number), to: to.match(NUMBER)!.map(Number), bits: to.split(NUMBER), end: to })
@@ -48,7 +53,7 @@ function write(el: Element, a: Attrs, tweens?: Tween[]) {
 }
 
 /** Make `parent`'s children match `next`. Attribute changes join `tweens` instead when one is passed and they can. */
-export function patch(parent: Element, body: any[], tweens?: Tween[]) {
+export function patch(parent: Element, body: readonly Kid[], tweens?: Tween[]) {
   const old = new Map<string, Element[]>()
   for (const el of parent.children) {
     const id = idOf(el.localName, k => el.getAttribute(k))
@@ -59,7 +64,7 @@ export function patch(parent: Element, body: any[], tweens?: Tween[]) {
   let at: Element | null = parent.firstElementChild
   for (const n of next) {
     if (typeof n === 'string') continue
-    const el = old.get(idOf(n.t, k => (on(n.a[k]) ? text(n.a[k] as string) : undefined)))?.shift() ?? parent.ownerDocument.createElementNS(SVG, n.t)
+    const el = old.get(idOf(n.t, k => (on(n.a[k]) ? text(n.a[k]) : undefined)))?.shift() ?? parent.ownerDocument.createElementNS(SVG, n.t)
     write(el, n.a, el.parentNode ? tweens : undefined)
     patch(el, n.c, tweens)
     if (el === at) at = at.nextElementSibling
@@ -76,7 +81,7 @@ export function play(tweens: Tween[], ms: number) {
   let frame = requestAnimationFrame(function step(now) {
     const k = Math.min(1, (now - t0) / ms), e = 1 - (1 - k) ** 3
     if (k >= 1) return land()
-    for (const t of tweens) t.el.setAttribute(t.name, t.bits.reduce((out, b, i) => out + b + (i < t.to.length ? t.from[i] + (t.to[i] - t.from[i]) * e : ''), ''))
+    for (const t of tweens) t.el.setAttribute(t.name, t.bits.reduce((out, b, i) => out + b + (i < t.to.length ? t.from[i]! + (t.to[i]! - t.from[i]!) * e : ''), ''))
     frame = requestAnimationFrame(step)
   })
   return () => { cancelAnimationFrame(frame); land() }

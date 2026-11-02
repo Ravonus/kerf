@@ -1,9 +1,9 @@
 import { onTestFinished } from 'vitest'
 // The collab pack driven as a user would (07 §5, §6; 06 §10).
 import { fireEvent } from '@testing-library/dom'
-import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft/warp-core'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import type { ChatMessage, CursorPeer, FormOp, Peer } from '@weft-js/warp-core'
+import { state, type State } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Toaster } from '../src/Toast'
 import { AutoTrack } from '../src/collab/AutoTrack'
 import { CommentAnchor, CommentRail, CommentThread, type CommentThreadData } from '../src/collab/Comments'
@@ -29,16 +29,16 @@ const msg = (id: string, author: Peer, text: string, extra: Partial<ChatMessage>
 
 const q = <T extends HTMLElement = HTMLElement>(r: ParentNode, s: string) => r.querySelector<T>(s)!
 const qa = <T extends HTMLElement = HTMLElement>(r: ParentNode, s: string) => [...r.querySelectorAll<T>(s)]
-const button = (r: ParentNode, name: string) => qa<HTMLButtonElement>(r, 'button').find(b => (b.getAttribute('aria-label') ?? b.textContent!.trim()) === name)!
+const button = (r: ParentNode, name: string) => qa<HTMLButtonElement>(r, 'button').find(b => (b.getAttribute('aria-label') ?? b.textContent.trim()) === name)!
 const type = (el: HTMLTextAreaElement | HTMLInputElement, v: string) => { el.value = v; el.setSelectionRange?.(v.length, v.length); fireEvent.input(el) }
 const polite = () => q(document, '[data-scope="announcer"][aria-live="polite"]').textContent
 const loud = () => q(document, '[data-scope="announcer"][aria-live="assertive"]').textContent
-const wait = (ms = 80) => new Promise(r => setTimeout(r, ms))
+const wait = (ms = 80) => new Promise(r => { setTimeout(r, ms) })
 const tick = async () => { await Promise.resolve(); await flush(); await Promise.resolve() }
 
 describe('Thread', () => {
   const base = () => [msg('a', ana, 'One', { at: 0 }), msg('b', ana, 'Two', { at: 60_000 }), msg('c', mei, 'Three @you', { at: 120_000, mentions: ['you'], reactions: [{ emoji: '👍', label: 'Thumbs up', count: 2, mine: true, names: ['you', 'Ana'] }] }), msg('d', me, 'Mine', { mine: true, state: 'read', readAt: '09:52', at: 180_000 })]
-  const mount = (list: any, props: Record<string, any> = {}) => render(() => <><Thread label="c" messages={list} composer={{ label: 'Message' }} onSend={() => {}} {...props} /><Toaster /></>).container
+  const mount = (list: ChatMessage[] | State<ChatMessage[]>, props: Record<string, unknown> = {}) => render(() => <><Thread label="c" messages={list} composer={{ label: 'Message' }} onSend={() => {}} {...props} /><Toaster /></>).container
 
   test('a log of articles with dividers, grouping, mention chips, reactions and one Read', async () => {
     const c = mount(base(), { unreadFrom: 'c' })
@@ -86,8 +86,8 @@ describe('Thread', () => {
   })
 
   test('Q quotes: the draft, focus to the textarea, Escape removes it; a bare quote never sends', async () => {
-    const sent: any[] = []
-    const c = mount(base(), { onSend: (x: any) => sent.push(x) })
+    const sent: { text: string; quote?: unknown }[] = []
+    const c = mount(base(), { onSend: (x: { text: string }) => sent.push(x) })
     await tick()
     q(c, '[data-mid="c"]').focus()
     fireEvent.keyDown(q(c, '[data-mid="c"]'), { key: 'q' })
@@ -105,8 +105,8 @@ describe('Thread', () => {
     type(ta, 'Yes')
     fireEvent.keyDown(ta, { key: 'Enter' })
     await flush()
-    expect(sent[0].text).toBe('Yes')
-    expect(sent[0].quote).toMatchObject({ ref: 'c', author: 'Mei Tanaka' })
+    expect(sent[0]!.text).toBe('Yes')
+    expect(sent[0]!.quote).toMatchObject({ ref: 'c', author: 'Mei Tanaka' })
     expect(c.querySelector('[data-part="quote-draft"]')).toBeNull()
     fireEvent.keyDown(q(c, '[data-mid="c"]'), { key: 'q' })
     await flush()
@@ -133,7 +133,7 @@ describe('Thread', () => {
     const c = mount(list, { onRetry: (m: ChatMessage) => retried.push(m.id) })
     await tick()
     expect(q(c, '[data-part="status"]').textContent).toContain('Sending…')
-    list.value = [{ ...list.value[0], state: 'failed' }]
+    list.value = [{ ...list.value[0]!, state: 'failed' }]
     await flush(); await wait()
     expect(loud()).toBe('Message not sent')
     q(c, '[data-mid="a"] [data-part="status"] button').click()
@@ -178,7 +178,7 @@ describe('Thread', () => {
 })
 
 describe('Composer', () => {
-  test('Enter sends and clears, Shift+Enter does not, an empty box does nothing', async () => {
+  test('Enter sends and clears, Shift+Enter does not, an empty box does nothing', () => {
     const sent: string[] = []
     const { container: c } = render(() => <Composer label="Message" onSend={m => sent.push(m.text)} />)
     const ta = q<HTMLTextAreaElement>(c, 'textarea')
@@ -200,10 +200,10 @@ describe('Composer', () => {
     type(ta, 'hey @')
     await flush()
     expect(qa(c, '[role="option"]').length).toBe(3)
-    expect(ta.getAttribute('aria-activedescendant')).toBe(qa(c, '[role="option"]')[0].id)
+    expect(ta.getAttribute('aria-activedescendant')).toBe(qa(c, '[role="option"]')[0]!.id)
     fireEvent.keyDown(ta, { key: 'ArrowDown' })
     await flush()
-    expect(qa(c, '[role="option"]')[1].getAttribute('aria-selected')).toBe('true')
+    expect(qa(c, '[role="option"]')[1]!.getAttribute('aria-selected')).toBe('true')
     fireEvent.keyDown(ta, { key: 'Enter' })
     await flush()
     expect(ta.value).toBe('hey @Ana ')
@@ -217,7 +217,7 @@ describe('Composer', () => {
     expect(c.querySelector('[role="listbox"]')).toBeNull()
   })
 
-  test('the slots: attach calls out, emoji inserts at the caret, a file can be removed', async () => {
+  test('the slots: attach calls out, emoji inserts at the caret, a file can be removed', () => {
     let attached = 0
     const removed: string[] = []
     const { container: c } = render(() => <Composer label="Message" onSend={() => {}} onAttach={() => attached++} onEmoji={insert => insert('🎉')} files={[{ id: 'f', name: 'a.png' }]} onRemoveFile={f => removed.push(f.id)} />)
@@ -240,18 +240,18 @@ describe('ConversationList', () => {
     const opts = qa(c, '[role="option"]')
     expect(q(c, '[role="listbox"]').getAttribute('aria-label')).toBe('Conversations')
     expect(opts.map(o => o.tabIndex)).toEqual([0, -1, -1])
-    expect(opts[0].getAttribute('aria-selected')).toBe('true')
-    expect(opts[0].textContent).toContain('2 unread')
-    expect(opts[2].hasAttribute('data-muted')).toBe(true)
-    opts[0].focus()
-    fireEvent.keyDown(opts[0], { key: 'ArrowDown' })
+    expect(opts[0]!.getAttribute('aria-selected')).toBe('true')
+    expect(opts[0]!.textContent).toContain('2 unread')
+    expect(opts[2]!.hasAttribute('data-muted')).toBe(true)
+    opts[0]!.focus()
+    fireEvent.keyDown(opts[0]!, { key: 'ArrowDown' })
     expect(document.activeElement).toBe(opts[1])
-    opts[1].click()
+    opts[1]!.click()
     await flush()
     expect(value.value).toBe('b')
     expect(picked).toEqual(['b'])
-    expect(opts[1].getAttribute('aria-selected')).toBe('true')
-    expect(opts[1].tabIndex).toBe(0)
+    expect(opts[1]!.getAttribute('aria-selected')).toBe('true')
+    expect(opts[1]!.tabIndex).toBe(0)
   })
 })
 
@@ -262,8 +262,8 @@ describe('presence', () => {
     const { container: c } = render(() => <><PresenceStack peers={peers} max={1} onFollow={p => got.push(p)} following="mei" /><Toaster /></>)
     await tick()
     const follow = qa<HTMLButtonElement>(c, 'button[aria-pressed]')[0]
-    expect(follow.getAttribute('aria-pressed')).toBe('true')
-    follow.click()
+    expect(follow!.getAttribute('aria-pressed')).toBe('true')
+    follow!.click()
     expect(got).toEqual([null])
     expect(q(c, '[data-part="more"]').textContent).toBe('+1')
     q(c, '[data-part="more"]').click()
@@ -306,7 +306,7 @@ describe('presence', () => {
     const anchor = q(c, '[data-anchor]')
     anchor.getBoundingClientRect = () => ({ left: 100, top: 40, width: 200, height: 20 }) as DOMRect
     q(c, '[data-scope="cursors"]').getBoundingClientRect = () => ({ left: 0, top: 0, width: 500, height: 300 }) as DOMRect
-    peers.value = [{ ...peers.value[0], cursor: { anchor: 'p', x: 0.25, y: 0.5 } }, peers.value[1]]
+    peers.value = [{ ...peers.value[0]!, cursor: { anchor: 'p', x: 0.25, y: 0.5 } }, peers.value[1]!]
     await flush(); await tick()
     const cur = q(c, '[data-peer="mei"]')
     expect(cur.style.getPropertyValue('--_x')).toBe('150px')
@@ -318,7 +318,7 @@ describe('presence', () => {
     vi.useRealTimers()
   })
 
-  test('a locked field is readonly, not disabled, and described by the chip', async () => {
+  test('a locked field is readonly, not disabled, and described by the chip', () => {
     const { container: c } = render(() => <LockedField peer={kofi} label="Owner" value="Kofi" />)
     const input = q<HTMLInputElement>(c, 'input')
     expect(input.readOnly).toBe(true)
@@ -327,7 +327,7 @@ describe('presence', () => {
     expect(q(c, '[data-scope="lock"]').textContent).toContain('Kofi is editing')
   })
 
-  test('the rail is a picture, or jump buttons; section peers name who is here', async () => {
+  test('the rail is a picture, or jump buttons; section peers name who is here', () => {
     const jumped: string[] = []
     const { container: c } = render(() => <><ViewportRail peers={[{ ...mei, top: 0.1, height: 0.2 }]} onJump={p => jumped.push(p.id)} /><ViewportRail peers={[]} label="Still" /><SectionPeers peers={[mei, ana]} /></>)
     const box = q(c, '[data-scope="viewport-rail"] i')
@@ -335,7 +335,7 @@ describe('presence', () => {
     fireEvent.keyDown(box, { key: 'Enter' })
     box.click()
     expect(jumped).toEqual(['mei', 'mei'])
-    expect(qa(c, '[data-scope="viewport-rail"]')[1].getAttribute('role')).toBe('img')
+    expect(qa(c, '[data-scope="viewport-rail"]')[1]!.getAttribute('role')).toBe('img')
     expect(q(c, '[data-scope="section-peers"]').getAttribute('aria-label')).toBe('Mei and Ana are here')
   })
 })
@@ -413,7 +413,7 @@ describe('ShareDialog', () => {
     const open = state(true)
     const members = state<ShareMember[]>([{ ...me, email: 'jo@x', role: 'owner' }, { ...mei, email: 'mei@x', role: 'editor' }])
     const link = state<ShareLink>({ access: 'restricted', role: 'viewer' })
-    const log: any[] = []
+    const log: unknown[] = []
     const { container: c } = render(() => <><ShareDialog open={open} title="Q4" members={members} link={link} url="https://x" onInvite={(e, r) => log.push(['invite', e, r])} onRoleChange={(m, r) => log.push(['role', m.id, r])} onLinkAccess={l => { link.value = l; log.push(['link', l.access]) }} /><Toaster /></>)
     return { c, members, log, open }
   }
@@ -432,16 +432,16 @@ describe('ShareDialog', () => {
     expect(c.querySelector('[data-scope="tag"]')).toBeNull()
     members.value = [...members.value, { ...ana, email: 'new@x.co', role: 'editor' }]
     await flush()
-    expect(qa(c, '[data-part="person"]')[2].hasAttribute('data-arrive')).toBe(true)
-    expect(qa(c, '[data-part="person"]')[1].hasAttribute('data-arrive')).toBe(false)
+    expect(qa(c, '[data-part="person"]')[2]!.hasAttribute('data-arrive')).toBe(true)
+    expect(qa(c, '[data-part="person"]')[1]!.hasAttribute('data-arrive')).toBe(false)
   })
 
   test('the owner has no select; a role change and Remove report; link access opens its role', async () => {
     const { c, log } = setup()
     await tick()
     const people = qa(c, '[data-part="person"]')
-    expect(people[0].querySelector('[role="combobox"]')).toBeNull()
-    const sel = q<HTMLElement>(people[1], '[role="combobox"]')
+    expect(people[0]!.querySelector('[role="combobox"]')).toBeNull()
+    const sel = q<HTMLElement>(people[1]!, '[role="combobox"]')
     expect(sel.textContent).toBe('Editor')
     const pick = (t: HTMLElement, label: string) => { t.click(); [...t.parentElement!.querySelectorAll<HTMLElement>('[role="option"]')].find(o => o.textContent === label)!.click() }
     pick(sel, 'Viewer')
@@ -469,13 +469,13 @@ describe('VersionHistory', () => {
     const { container: c } = render(() => <><VersionHistory versions={versions} preview={v => <input aria-label={v.title} />} onRestore={v => restored.push(v.id)} /><Toaster /></>)
     await tick()
     const lis = qa(c, 'li')
-    expect(lis[0].getAttribute('aria-current')).toBe('true')
-    expect(lis[1].hasAttribute('data-named')).toBe(true)
-    expect(lis[0].querySelector('button')).toBeNull()
+    expect(lis[0]!.getAttribute('aria-current')).toBe('true')
+    expect(lis[1]!.hasAttribute('data-named')).toBe(true)
+    expect(lis[0]!.querySelector('button')).toBeNull()
     button(c, 'Preview Draft').click()
     await flush(); await tick()
     expect(q(c, 'dialog [inert] input')).toBeTruthy()
-    qa(c, 'dialog')[0].querySelector<HTMLElement>('[data-part="footer"] button')!.click()
+    qa(c, 'dialog')[0]!.querySelector<HTMLElement>('[data-part="footer"] button')!.click()
     await flush(); await tick()
     expect(restored).toEqual([])
     expect(q(c, '[role="alertdialog"]').textContent).toContain('Restoring creates a new version')
@@ -492,7 +492,7 @@ describe('Kanban', () => {
     { id: 'b', title: 'Doing', limit: 1, cards: [{ id: '3', title: 'Three' }, { id: '4', title: 'Four' }] },
   ]
   const mount = () => {
-    const moves: any[] = []
+    const moves: unknown[] = []
     const { container: c } = render(() => <><Kanban columns={data()} onMove={(id, col, i) => moves.push([id, col, i])} /><Toaster /></>)
     const titles = () => qa(c, '[data-part="column"]').map(col => qa(col, '[data-part="row"]').sort((a, b) => Number(a.getAttribute('aria-posinset')) - Number(b.getAttribute('aria-posinset'))).map(r => r.querySelector('h4')!.textContent))
     const card = (id: string) => q(c, `[data-part="card"][data-id="${id}"]`)
@@ -503,10 +503,10 @@ describe('Kanban', () => {
     await tick()
     const cols = qa(c, 'section[data-part="column"]')
     expect(cols.length).toBe(2)
-    expect(q(cols[1], '[data-part="count"]').textContent).toBe('2 / 1')
-    expect(cols[1].hasAttribute('data-over-limit')).toBe(true)
-    expect(cols[0].hasAttribute('data-over-limit')).toBe(false)
-    expect(q(cols[0], 'ol li [data-part="card"]').getAttribute('draggable')).toBe('true')
+    expect(q(cols[1]!, '[data-part="count"]').textContent).toBe('2 / 1')
+    expect(cols[1]!.hasAttribute('data-over-limit')).toBe(true)
+    expect(cols[0]!.hasAttribute('data-over-limit')).toBe(false)
+    expect(q(cols[0]!, 'ol li [data-part="card"]').getAttribute('draggable')).toBe('true')
   })
 
   test('Alt + arrows move and announce; the same node reorders; focus follows across columns', async () => {
@@ -549,7 +549,7 @@ describe('Kanban', () => {
     await tick()
     fireEvent.keyDown(card('1'), { key: 'Escape' })
     await tick()
-    expect(titles()[1].indexOf('One')).toBe(0)
+    expect(titles()[1]!.indexOf('One')).toBe(0)
     expect(card('1').hasAttribute('data-dragging')).toBe(false)
   })
 
@@ -560,8 +560,8 @@ describe('Kanban', () => {
     await flush(); await tick()
     const items = qa(card('1'), '[role="menuitem"]')
     expect(items.map(i => i.textContent)).toEqual(['Move to To do', 'Move to Doing', 'Move up', 'Move down'])
-    expect(items[0].getAttribute('aria-disabled')).toBe('true')
-    items[1].click()
+    expect(items[0]!.getAttribute('aria-disabled')).toBe('true')
+    items[1]!.click()
     await flush(); await wait(20)
     expect(titles()[1]).toEqual(['Three', 'Four', 'One'])
     expect(document.activeElement).toBe(q(c, '[data-id="1"]'))
@@ -587,15 +587,15 @@ describe('Kanban', () => {
     const dt = { setData() {}, effectAllowed: '' }
     fireEvent.dragStart(card('1'), { dataTransfer: dt })
     const col = qa(c, '[data-part="column"]')[1]
-    fireEvent.dragOver(q(col, 'ol'), { dataTransfer: dt, clientY: 0 })
-    expect(col.hasAttribute('data-drop')).toBe(true)
-    expect(q(col, '[data-part="placeholder"]')).toBeTruthy()
-    fireEvent.drop(q(col, 'ol'), { dataTransfer: dt })
+    fireEvent.dragOver(q(col!, 'ol'), { dataTransfer: dt, clientY: 0 })
+    expect(col!.hasAttribute('data-drop')).toBe(true)
+    expect(q(col!, '[data-part="placeholder"]')).toBeTruthy()
+    fireEvent.drop(q(col!, 'ol'), { dataTransfer: dt })
     fireEvent.dragEnd(card('1'))
     await flush()
     expect(titles()[1]).toContain('One')
     expect(c.querySelector('[data-part="placeholder"]')).toBeNull()
-    expect(col.hasAttribute('data-drop')).toBe(false)
+    expect(col!.hasAttribute('data-drop')).toBe(false)
   })
 
   test('quick add calls out with the column', async () => {
@@ -613,7 +613,7 @@ describe('Kanban', () => {
 describe('SyncedForm, DataIntegrity, AutoTrack', () => {
   test('a form applies ops from a signal and sends local edits', async () => {
     const ops = state<FormOp[]>([])
-    const sent: any[] = []
+    const sent: unknown[] = []
     const { container: c } = render(() => <SyncedForm ops={ops} label="Copy" onSend={(n, v) => sent.push([n, v])}><input name="t" aria-label="T" /></SyncedForm>)
     await tick()
     ops.value = [{ seq: 1, name: 't', value: 'hi', peer: ana }]
@@ -630,7 +630,7 @@ describe('SyncedForm, DataIntegrity, AutoTrack', () => {
     const { container: c } = render(() => <DataIntegrity channel="x" stats={{ sent: 1, received: 1, duplicate: 1, outOfOrder: 2, lagP95: 9 }} events={[{ id: 'a', seq: 1, kind: 't', route: 'r', note: 'n', lag: 3 }]} onReset={() => hits++} />)
     const dds = qa(c, 'dd')
     expect(dds.map(d => d.dataset.tone)).toEqual([undefined, undefined, 'caution', 'critical', undefined])
-    expect(dds[4].textContent).toBe('9 ms')
+    expect(dds[4]!.textContent).toBe('9 ms')
     expect(q(c, 'ol li').textContent).toContain('r · n')
     button(c, 'Reset counts').click()
     expect(hits).toBe(1)
@@ -643,7 +643,7 @@ describe('SyncedForm, DataIntegrity, AutoTrack', () => {
     expect(status.textContent).toContain('Following Kofi · presenting')
     const region = q(c, '[role="region"]')
     const scrolled = vi.fn()
-    region.scrollTo = scrolled as any
+    region.scrollTo = scrolled as typeof region.scrollTo
     fireEvent.wheel(region)
     await flush()
     expect(status.dataset.state).toBe('paused')

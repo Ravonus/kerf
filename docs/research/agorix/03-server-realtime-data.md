@@ -40,7 +40,7 @@ separate doc.
      Origin allowlist, size and rate caps.
    - Agorix contributes: the SSE+POST fallback for `channel`, leader election (rebuilt on Web Locks), delivery
      classes, batching/coalescing, DB watchers that emit **tags** (not rows), the list/cursor contract, DB adapters and
-     LiveKit/WebRTC/socket.io as packs, and presence/cursors as `@weft/multiplayer`.
+     LiveKit/WebRTC/socket.io as packs, and presence/cursors as `@weft-js/multiplayer`.
 4. **One data concept.** `defineResource` / `useResource` / `createMutation` / `useRealtimeInvalidation` collapse into
    `query` / `mutation` / `.live`. A `crud()` generator gives the Agorix ergonomics back as plain queries and mutations.
 5. **Fix production first.** Velatis and agorix-discord run this code today. Five issues need hotfixes in Agorix
@@ -263,12 +263,12 @@ design (the winner is named) · **Pack** = optional package · **Drop**.
 | `createAutoAdapter` parallel legs | **Merge, reduced** | No parallel wire legs (each event once over one wire). BC stays for `tabs.channel`. **Leader election moves from 07 "Later" to Phase 3b, rebuilt on Web Locks;** the follower relay protocol is reused. The presence gate is dropped (spoofable, M3; the saving is marginal). |
 | `transportIntent` (importance/syncIntent) | **Merge (Agorix idea, 07 strictness)** | Declared statically per channel message as `delivery: 'reliable' \| 'latest' \| 'ephemeral'`. Not runtime payload keys. |
 | `broadcastChannelAdapter` | **Merge → `tabs.channel`** | 07 adds schema validation. |
-| socket.io / WebRTC DC / LiveKit adapters | **Pack** | `@weft/realtime-socketio`, `@weft/realtime-webrtc`, `@weft/realtime-livekit` (meet). Ephemeral `channel` messages may ride them **only when the message is declared `trust: 'peers'`** (it bypasses server `authorize` and validation: R007). |
+| socket.io / WebRTC DC / LiveKit adapters | **Pack** | `@weft-js/realtime-socketio`, `@weft-js/realtime-webrtc`, `@weft-js/realtime-livekit` (meet). Ephemeral `channel` messages may ride them **only when the message is declared `trust: 'peers'`** (it bypasses server `authorize` and validation: R007). |
 | `createRealtimeStore` / `createRealtimeEvent` / `useRealtimeChannel` | **Port** | Map onto `channel` + boxes: `chat.latest('x')`, `chat.on`, `chat.collect`. Three overlapping APIs become one. |
 | `useSyncedState` | **Port, redesigned** | `shared(key, schema)`, backed by a server-declared `sharedState` with `authorize`, server-side LWW compaction (one value per key, not a ring) and fixed echo handling (H4). |
-| `SyncedDom` (class/scroll/attr/hash) | **Pack** `@weft/multiplayer` | In weft, sync **the box, not the DOM**; fine-grained rendering makes DOM mirroring redundant. Keep `syncedScroll`/`syncedHash`. Attribute sync only through an allowlist. |
+| `SyncedDom` (class/scroll/attr/hash) | **Pack** `@weft-js/multiplayer` | In weft, sync **the box, not the DOM**; fine-grained rendering makes DOM mirroring redundant. Keep `syncedScroll`/`syncedHash`. Attribute sync only through an allowlist. |
 | `SyncedTree` (MutationObserver mirror) | **Drop** | C3. Replace it with `shared()` state bound to the components. |
-| `InteractionRelay`, `PageCursorsLayer`, `usePageCursors`, `MultiplayerProvider`, `LiveCursorsOverlay`, `LiveHover/Click` | **Pack** `@weft/multiplayer` | Presence + cursors on `channel` with `delivery:'latest'`. Adopt `resolveCursorPosition`/`applyCursorEvent` as-is (pure). Remote events go to a typed callback; no synthetic native events (M5). |
+| `InteractionRelay`, `PageCursorsLayer`, `usePageCursors`, `MultiplayerProvider`, `LiveCursorsOverlay`, `LiveHover/Click` | **Pack** `@weft-js/multiplayer` | Presence + cursors on `channel` with `delivery:'latest'`. Adopt `resolveCursorPosition`/`applyCursorEvent` as-is (pure). Remote events go to a typed callback; no synthetic native events (M5). |
 | `viewScope` | **Drop** | Channel params are typed (`params: {roomId}`); the route is known to the router. No history patching. |
 | `useRealtimeInvalidation` | **Drop** | Subsumed by `.live` + tags. |
 | `useSmoothNumber` | **Port** → `weft/motion` (or ds) | Not real-time; a spring `Derived`. |
@@ -277,10 +277,10 @@ design (the winner is named) · **Pack** = optional package · **Drop**.
 | List/cursor contract (`parseListParams`, `parseCursorParams`, `buildListResultV2`, `buildCursorResult`, `AgorixError`/`STATUS_FOR_CODE`, `defineColumns`, `expect*Endpoint` validators) | **Adopt** → `weft/start/list` | **Change one default:** allowlists are required and derived from the Drizzle table (closes H6). weft has no pagination contract today; this fills the gap. |
 | `createListHandler` / `createCursorHandler` | **Port** | `query({ input: listInput(table, {...}) })`. No separate handler type. |
 | Drizzle adapter | **Adopt** (core) | Already dependency-free. |
-| Kysely / Prisma / SQL / Mongo / Firestore / DynamoDB adapters | **Pack** `@weft/db-*` | Beyond 07's Drizzle-only plan. `@weft/db-sql` requires maps (H6). |
+| Kysely / Prisma / SQL / Mongo / Firestore / DynamoDB adapters | **Pack** `@weft-js/db-*` | Beyond 07's Drizzle-only plan. `@weft-js/db/sql` requires maps (H6). |
 | `rest` DataSource | **Drop** | The typed client replaces it (keep it in the compat shim only). |
 | `RealtimeBus` + `createInMemoryBus` | **Merge (07 wins)** | 07's `realtime.bus: memory→postgres→redis\|nats\|durable-object` with replay in weft. Agorix's id-dedupe window survives as an option. |
-| Postgres trigger SQL + watcher; Mongo change stream | **Merge (Agorix wins on scope)** | They answer "writes outside `mutation`" (cron, other services, psql), which 07 left to R003. **Emit tags, never rows**: `projects`, `projects:<id>`. Postgres in core; Mongo in `@weft/db-mongo`. |
+| Postgres trigger SQL + watcher; Mongo change stream | **Merge (Agorix wins on scope)** | They answer "writes outside `mutation`" (cron, other services, psql), which 07 left to R003. **Emit tags, never rows**: `projects`, `projects:<id>`. Postgres in core; Mongo in `@weft-js/db/mongo`. |
 | vault `ChannelTransform` (per-subscriber redaction) | **Merge** | A `channel` server option `filter({ msg, ctx }) → msg \| null`, fail-closed. |
 | `rts` / Go / Rust reference servers | **Drop as product; adopt as fixtures** | They become a **protocol conformance suite**. A Rust/Go server for weft is 06's `remote()` and must speak weft's protocol. |
 | `data/scheduler` booking contract | **Drop** (move to an agorix-discord package) | App domain. |
@@ -362,7 +362,7 @@ export const meet = channel({
   params: z.object({ id: z.string().uuid() }),
   authorize: ({ ctx, params }) => isParticipant(ctx, params.id),        // required (R001)
   client: {
-    cursor: { schema: CursorPayload, delivery: 'latest', trust: 'peers' }, // may ride @weft/realtime-livekit
+    cursor: { schema: CursorPayload, delivery: 'latest', trust: 'peers' }, // may ride @weft-js/realtime-livekit
     slide:  { schema: z.object({ n: z.number().int().min(0).max(999) }), delivery: 'reliable' },
   },
   server: { slide: z.object({ n: z.number().int(), by: z.string() }) },
@@ -404,12 +404,12 @@ realtime: {
 weft/start            query · mutation · .live · topic · stream · channel · sharedState · crud · listInput
                       list/cursor contract (adopted) · buses memory+postgres · postgres watcher (tags)
                       transports: sse-fetch, ws, sse+post · drizzle list adapter
-weft/browser          tabs.channel (BC) · online/visible/lifecycle (07)  · leader election (Web Locks, 3b)
-weft/test             fake transport + protocol conformance suite (ported from rts/go/rust behaviours)
-@weft/realtime-redis | -nats | -durable-object        buses (07)
-@weft/realtime-livekit | -webrtc | -socketio          transport packs for `trust:'peers'` / interop
-@weft/multiplayer     presence · cursors (anchor) · interaction relay (typed) · syncedScroll/Hash
-@weft/db-kysely | -prisma | -sql | -mongo (+change stream) | -firestore | -dynamodb   list adapters (+ watchers)
+@weft-js/core/browser          tabs.channel (BC) · online/visible/lifecycle (07)  · leader election (Web Locks, 3b)
+@weft-js/core/test             fake transport + protocol conformance suite (ported from rts/go/rust behaviours)
+@weft-js/realtime-redis | -nats | -durable-object        buses (07)
+@weft-js/realtime-livekit | -webrtc | -socketio          transport packs for `trust:'peers'` / interop
+@weft-js/multiplayer     presence · cursors (anchor) · interaction relay (typed) · syncedScroll/Hash
+@weft-js/db/kysely | -prisma | -sql | -mongo (+change stream) | -firestore | -dynamodb   list adapters (+ watchers)
 @weft/agorix-compat   server bridge speaking the Agorix wire on top of weft topics + codemods (temporary)
 ```
 
@@ -430,10 +430,10 @@ migration. It enforces `authorize` and the frame caps, and it strips row payload
 | Phase | Adds from Agorix |
 |---|---|
 | **Now (Agorix 0.2.x hotfix, outside weft)** | C1 server allowlist + authorize hook; C2 epoch in seq + client reset; C3 attr allowlist + presenter check, or disable `SyncedTree`; H1 watchers strip rows; H5 Origin on vault WS; H6 require maps in `sql`. Add WS/hybrid/resume tests against `rts`. |
-| **1. Core** | `tabs.channel` semantics (validated BC) are designed alongside `weft/browser`. Nothing else. |
-| **3. Start** | `crud()`, `listInput()`, the adopted list/cursor contract, the Drizzle adapter, the Postgres watcher → tags, the protocol fixes above, and the conformance suite in `weft/test`. |
-| **3b. Channels** | `channel` with SSE+POST fallback, `sharedState`, `filter`, delivery classes, Web Locks leader election, the redis bus, and `@weft/multiplayer` (presence, cursors). R007, R008. |
-| **3c. Agorix packs + migration** (new) | `@weft/realtime-livekit/-webrtc/-socketio`, `@weft/db-*`, `@weft/agorix-compat`, codemods, P008. Exit check: Velatis live sessions and vault whiteboards run on the weft server with the compat bridge, and pass the conformance and security suites. |
+| **1. Core** | `tabs.channel` semantics (validated BC) are designed alongside `@weft-js/core/browser`. Nothing else. |
+| **3. Start** | `crud()`, `listInput()`, the adopted list/cursor contract, the Drizzle adapter, the Postgres watcher → tags, the protocol fixes above, and the conformance suite in `@weft-js/core/test`. |
+| **3b. Channels** | `channel` with SSE+POST fallback, `sharedState`, `filter`, delivery classes, Web Locks leader election, the redis bus, and `@weft-js/multiplayer` (presence, cursors). R007, R008. |
+| **3c. Agorix packs + migration** (new) | `@weft-js/realtime-livekit/-webrtc/-socketio`, `@weft-js/db-*`, `@weft/agorix-compat`, codemods, P008. Exit check: Velatis live sessions and vault whiteboards run on the weft server with the compat bridge, and pass the conformance and security suites. |
 | **Later** | Values attached to pokes (07). Compact binary frames if `weft browser net` shows the need. |
 
 ### 7.6 Migration path for consumer apps
@@ -450,7 +450,7 @@ migration. It enforces `authorize` and the frame caps, and it strips row payload
      framework-agnostic real-time client core. Move to the weft runtime only if the app is rewritten.
 - **agorix-discord web + vault (Fastify):** vault's sessions, 4401 and ACL transforms map cleanly to `authorize` +
   `filter`. Mount the web-standard handlers in Fastify, convert `defineSyncedResource` call sites to `crud()` + tags,
-  and move LiveKit to `@weft/realtime-livekit` with messages declared `trust:'peers'` (anonymous meeting guests ride
+  and move LiveKit to `@weft-js/realtime-livekit` with messages declared `trust:'peers'` (anonymous meeting guests ride
   RTC today precisely to skip server auth, `ui/realtime/useSyncedState.ts:36-41`; that becomes explicit). The booking
   `scheduler` contract moves to a vault/web shared package.
 

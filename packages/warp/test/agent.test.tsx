@@ -1,8 +1,8 @@
 // The agent pack driven as a user would: keyboard paths, states, focus moves and announcements.
 import { fireEvent } from '@testing-library/dom'
-import { foldAnswer, type AgentEvent, type AgentTool, type DictationEngine, type DictationEvents } from '@weft/warp-core'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
+import { foldAnswer, type AgentEvent, type AgentQuestion, type AgentTool, type PlanStep, type DictationEngine, type DictationEvents } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
 import { Toaster } from '../src/Toast'
 import { BranchSwitcher, MessageActions } from '../src/agent/Actions'
 import { AgentPlan } from '../src/agent/AgentPlan'
@@ -23,7 +23,7 @@ import { ToolCall } from '../src/agent/ToolCall'
 import { TraceViewer } from '../src/agent/TraceViewer'
 
 const said = (c: Element, urgent = false) => document.querySelector(`[data-scope="announcer"][aria-live="${urgent ? 'assertive' : 'polite'}"]`)?.textContent ?? c.textContent
-const wait = (ms = 80) => new Promise(r => setTimeout(r, ms))
+const wait = (ms = 80) => new Promise(r => { setTimeout(r, ms) })
 const button = (c: Element, name: string) => [...c.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent)?.trim() === name) as HTMLButtonElement
 const key = (el: Element, k: string, o: object = {}) => fireEvent.keyDown(el, { key: k, ...o })
 const type = (el: HTMLTextAreaElement, v: string) => { el.value = v; el.setSelectionRange(v.length, v.length); fireEvent.input(el) }
@@ -69,22 +69,22 @@ test('the end of a turn is announced once; Stop keeps what arrived', async () =>
 
 test('rows keep their nodes as the turn grows: a question keeps its picks, plan steps patch in place', async () => {
   const log = state<AgentEvent[]>([{ kind: 'question', id: 'q', prompt: 'P', options: ['a', 'b'] }])
-  const steps = state([{ id: 'a', title: 'A', state: 'running' as const }])
-  const { container: c } = render(() => <><Assistant answer={foldAnswer(log.value)} quiet /><AgentPlan steps={steps.value as any} /></>)
+  const steps = state<PlanStep[]>([{ id: 'a', title: 'A', state: 'running' }])
+  const { container: c } = render(() => <><Assistant answer={foldAnswer(log.value)} quiet /><AgentPlan steps={steps.value} /></>)
   const form = c.querySelector('form')!
   const b = c.querySelectorAll<HTMLInputElement>('input[type="radio"]')[1]
-  b.click(); await flush()
+  b!.click(); await flush()
   const row = c.querySelector('li')
   log.value = [...log.value, { kind: 'text', text: 'later' }, { kind: 'source', title: 'S' }]
-  steps.value = [{ id: 'a', title: 'A', state: 'done' as any }]
+  steps.value = [{ id: 'a', title: 'A', state: 'done' }]
   await flush()
   expect(c.querySelector('form')).toBe(form)
-  expect(b.checked).toBe(true)
+  expect(b!.checked).toBe(true)
   expect(c.querySelector('li')).toBe(row)
   expect(row!.getAttribute('data-state')).toBe('done')
 })
 
-test('an error shows why and Retry regenerates', async () => {
+test('an error shows why and Retry regenerates', () => {
   const again = vi.fn()
   const a = foldAnswer([{ kind: 'error', message: 'Dropped' }])
   const { container: c } = render(() => <Assistant answer={a} onRegenerate={again} />)
@@ -121,7 +121,7 @@ test('a citation jumps to its numbered source', async () => {
   expect(card.querySelector('i')!.textContent).toBe('1')
 })
 
-const tool = (state: AgentTool['state'], more: Partial<AgentTool> = {}): AgentTool => ({ id: 't', name: 'run_tests', args: '{"a":1}', state, ...more })
+const tool = (st: AgentTool['state'], more: Partial<AgentTool> = {}): AgentTool => ({ id: 't', name: 'run_tests', args: '{"a":1}', state: st, ...more })
 
 test('ToolCall names its state in the summary, every state', () => {
   const name = (t: AgentTool) => [...render(() => <ToolCall call={t} quiet />).container.querySelector('summary')!.querySelectorAll('span:not([aria-hidden])')].map(s => s.textContent).join('')
@@ -222,7 +222,7 @@ test('Send and Stop are one button, Escape stops, and a busy send queues', async
   expect(said(c)).toContain('Queued')
 })
 
-test('offline: Send says why and does nothing', async () => {
+test('offline: Send says why and does nothing', () => {
   const sent = vi.fn()
   const { container: c } = render(() => <Prompt onSubmit={sent} blocked="You're offline" value="hi" />)
   const send = c.querySelector<HTMLElement>('[data-part="send"]')!
@@ -320,11 +320,11 @@ test('ModelPicker: grouped options, keys, a pick closes and returns focus', asyn
   const opts = [...c.querySelectorAll<HTMLElement>('[role="option"]')]
   expect(c.querySelectorAll('[role="listbox"] [role="group"]').length).toBe(2)
   expect(document.activeElement).toBe(opts[0])
-  expect(opts[0].textContent).toContain('tools')
-  expect(opts[0].textContent).toContain('200k · $$$')
-  key(opts[0], 'ArrowDown')
+  expect(opts[0]!.textContent).toContain('tools')
+  expect(opts[0]!.textContent).toContain('200k · $$$')
+  key(opts[0]!, 'ArrowDown')
   expect(document.activeElement).toBe(opts[1])
-  key(opts[1], 'Enter')
+  key(opts[1]!, 'Enter')
   await flush()
   expect(seen).toEqual(['b'])
   expect(chip.getAttribute('aria-expanded')).toBe('false')
@@ -367,7 +367,7 @@ test('Message: Edit opens a textarea in place, Save reports, Escape cancels, foc
 })
 
 test('message actions: thumbs toggle, bad opens a reason, and the reason is reported', async () => {
-  const seen: any[][] = []
+  const seen: unknown[][] = []
   const { container: c } = render(() => <><Toaster /><MessageActions onFeedback={(v, r) => seen.push([v, r])} /></>)
   await flush()
   const good = button(c, 'Good answer'), bad = button(c, 'Bad answer')
@@ -403,16 +403,16 @@ test('Suggestions send what was picked; chips are the chip variant', () => {
 })
 
 test('Question: a fieldset, single choice by default, free text, and read back once answered', async () => {
-  const got: any[] = []
-  const q = state<any>({ id: 'q', prompt: 'Which?', options: ['a', 'b'], free: true })
+  const got: unknown[] = []
+  const q = state<AgentQuestion>({ id: 'q', prompt: 'Which?', options: ['a', 'b'], free: true })
   const { container: c } = render(() => <><Toaster /><Question question={q.value} onAnswer={a => got.push(a)} /></>)
   await flush(); await wait()
   expect(said(c, true)).toContain('question')
   expect(c.querySelector('legend')!.textContent).toBe('Which?')
   expect(c.textContent).toContain('Waiting for you')
   const radios = c.querySelectorAll<HTMLInputElement>('input[type="radio"]')
-  expect(radios[0].checked).toBe(true)
-  radios[2].click()
+  expect(radios[0]!.checked).toBe(true)
+  radios[2]!.click()
   await flush()
   const text = c.querySelector<HTMLInputElement>('input[data-part="input"]')!
   text.value = 'c'; fireEvent.input(text)
@@ -426,30 +426,30 @@ test('Question: a fieldset, single choice by default, free text, and read back o
 })
 
 test('a multiple question gives every pick; a question closed by Stop is disabled', async () => {
-  const got: any[] = []
+  const got: unknown[] = []
   const { container: c } = render(() => <><Question quiet question={{ id: 'm', prompt: 'P', options: ['a', 'b'], multiple: true }} onAnswer={a => got.push(a)} /><Question quiet question={{ id: 'n', prompt: 'Q', options: ['a'], closed: true }} /></>)
   const boxes = c.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
-  boxes[0].click(); boxes[1].click()
+  boxes[0]!.click(); boxes[1]!.click()
   await flush()
   fireEvent.submit(c.querySelector('form')!)
   expect(got).toEqual([['a', 'b']])
-  expect(c.querySelectorAll('fieldset')[1].disabled).toBe(true)
+  expect(c.querySelectorAll('fieldset')[1]!.disabled).toBe(true)
 })
 
-test('Checkpoint restores; ContextMeter levels and /compact', async () => {
+test('Checkpoint restores; ContextMeter levels and /compact', () => {
   const restore = vi.fn(), compact = vi.fn()
   const { container: c } = render(() => <><Checkpoint label="Before" onRestore={restore} /><ContextMeter used={10} limit={100} /><ContextMeter used={80} limit={100} onCompact={compact} /><ContextMeter used={95} limit={100} /></>)
   button(c, 'Restore').click()
   expect(restore).toHaveBeenCalled()
   const m = [...c.querySelectorAll<HTMLElement>('[data-scope="context-meter"]')]
   expect(m.map(x => x.dataset.level)).toEqual([undefined, 'high', 'full'])
-  expect(m[1].getAttribute('role')).toBe('meter')
-  expect(m[1].getAttribute('aria-valuenow')).toBe('80')
+  expect(m[1]!.getAttribute('role')).toBe('meter')
+  expect(m[1]!.getAttribute('aria-valuenow')).toBe('80')
   button(c, '/compact').click()
   expect(compact).toHaveBeenCalled()
 })
 
-test('AgentPlan shows each state, counts done, and removes from the queue', async () => {
+test('AgentPlan shows each state, counts done, and removes from the queue', () => {
   const gone: string[] = []
   const { container: c } = render(() => <AgentPlan steps={[{ id: 'a', title: 'A', state: 'done' }, { id: 'b', title: 'B', state: 'running' }, { id: 'c', title: 'C', state: 'blocked' }, { id: 'd', title: 'D', state: 'pending' }]} queue={[{ id: 'q', text: 'later' }]} onRemoveQueued={id => gone.push(id)} />)
   expect([...c.querySelectorAll('li')].map(l => l.getAttribute('data-state'))).toEqual(['done', 'running', 'blocked', 'pending'])
@@ -467,21 +467,21 @@ test('TraceViewer is a treegrid: one tab stop, arrows move and fold, Enter toggl
   const grid = c.querySelector('[role="treegrid"]')!
   expect(rows().length).toBe(3)
   expect(rows().filter(r => r.tabIndex === 0).length).toBe(1)
-  expect(rows()[0].getAttribute('aria-expanded')).toBe('true')
-  expect(rows()[1].getAttribute('aria-level')).toBe('2')
-  expect(rows()[0].getAttribute('aria-label')).toBe('turn, 1.0 s · 2k tok · $0.010')
-  rows()[0].focus()
-  key(rows()[0], 'ArrowDown')
+  expect(rows()[0]!.getAttribute('aria-expanded')).toBe('true')
+  expect(rows()[1]!.getAttribute('aria-level')).toBe('2')
+  expect(rows()[0]!.getAttribute('aria-label')).toBe('turn, 1.0 s · 2k tok · $0.010')
+  rows()[0]!.focus()
+  key(rows()[0]!, 'ArrowDown')
   await flush(); await wait(0)
   expect(document.activeElement).toBe(rows()[1])
   key(grid, 'ArrowLeft')
   await flush(); await wait(0)
   expect(document.activeElement).toBe(rows()[0])
-  key(rows()[0], 'ArrowLeft')
+  key(rows()[0]!, 'ArrowLeft')
   await flush()
   expect(rows().length).toBe(1)
-  expect(rows()[0].getAttribute('aria-expanded')).toBe('false')
-  key(rows()[0], 'Enter')
+  expect(rows()[0]!.getAttribute('aria-expanded')).toBe('false')
+  key(rows()[0]!, 'Enter')
   await flush()
   expect(rows().length).toBe(3)
 })
@@ -495,22 +495,22 @@ test('ArtifactPanel: APG tabs, a versions listbox, Code follows the version', as
   const tabs = [...c.querySelectorAll<HTMLElement>('[role="tab"]')]
   const panels = () => [...c.querySelectorAll<HTMLElement>('[role="tabpanel"]')].map(p => p.hidden)
   expect(panels()).toEqual([false, true, true])
-  tabs[0].focus()
-  key(tabs[0], 'ArrowRight')
+  tabs[0]!.focus()
+  key(tabs[0]!, 'ArrowRight')
   await flush()
   expect(document.activeElement).toBe(tabs[1])
   expect(panels()).toEqual([true, false, true])
   expect(c.querySelector('pre')!.textContent).toBe('two')
-  key(tabs[1], 'End')
+  key(tabs[1]!, 'End')
   await flush()
-  expect(tabs[2].getAttribute('aria-selected')).toBe('true')
+  expect(tabs[2]!.getAttribute('aria-selected')).toBe('true')
   const opts = [...c.querySelectorAll<HTMLElement>('[role="option"]')]
-  expect(opts[0].getAttribute('aria-current')).toBe('true')
-  opts[0].focus()
-  key(opts[0], 'ArrowDown')
+  expect(opts[0]!.getAttribute('aria-current')).toBe('true')
+  opts[0]!.focus()
+  key(opts[0]!, 'ArrowDown')
   await flush(); await wait()
   expect(seen).toEqual(['v1'])
-  expect(opts[1].getAttribute('aria-selected')).toBe('true')
+  expect(opts[1]!.getAttribute('aria-selected')).toBe('true')
   expect(document.activeElement).toBe(opts[1])
   expect(c.querySelector('pre')!.textContent).toBe('one')
   expect(said(c)).toContain('v1 · old')

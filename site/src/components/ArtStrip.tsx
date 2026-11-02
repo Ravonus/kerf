@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 import { ArtStage } from '../toolkit/art/stage'
 import '../styles/art.css'
 

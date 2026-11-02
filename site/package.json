@@ -10,11 +10,11 @@
     "content": "weft run content"
   },
   "dependencies": {
-    "@weft/icons": "file:../packages/icons",
-    "@weft/start": "file:../packages/start",
-    "@weft/warp": "file:../packages/warp",
-    "@weft/warp-core": "file:../packages/warp-core",
-    "weft": "file:../packages/weft",
+    "@weft-js/warp-icons": "file:../packages/icons",
+    "@weft-js/start": "file:../packages/start",
+    "@weft-js/warp": "file:../packages/warp",
+    "@weft-js/warp-core": "file:../packages/warp-core",
+    "@weft-js/core": "file:../packages/weft",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -22,8 +22,8 @@
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
-    "@weft/cli": "file:../packages/cli",
-    "@weft/plugin-text": "file:../packages/plugin-text",
+    "@weft-js/cli": "file:../packages/cli",
+    "@weft-js/text": "file:../packages/text",
     "typescript": "7.0.2"
   }
 }

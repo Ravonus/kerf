@@ -13,7 +13,7 @@ export function typeahead() {
       const k = key.toLowerCase()
       typed = now - typedAt < WINDOW_MS ? typed + k : k
       typedAt = now
-      const prefix = [...typed].every(c => c === k) ? k : typed
+      const prefix = Array.from(typed).every(c => c === k) ? k : typed
       const from = prefix.length === 1 ? at + 1 : Math.max(at, 0)
       return [...items.slice(from), ...items.slice(0, from)].find(i => text(i).trim().toLowerCase().startsWith(prefix))
     },

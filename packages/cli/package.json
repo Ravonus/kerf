@@ -1,8 +1,7 @@
 {
-  "name": "@weft/cli",
-  "version": "0.0.0",
-  "private": true,
-  "description": "weft's Phase 1 agent layer: weft.config.ts, `weft check --json`, `weft tasks --json`, generated AGENTS.md and the `weft mcp` server",
+  "name": "@weft-js/cli",
+  "version": "0.1.0",
+  "description": "The weft command: dev, build, check, the agent layer and the MCP server",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -19,16 +18,30 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "create-weft": "file:../create-weft",
+    "@weft-js/create": "file:../create-weft",
     "typescript": "6.0.3",
     "yaml": "2.9.1",
     "zod": "4.6.7"
   },
   "peerDependencies": {
-    "weft": "*"
+    "@weft-js/core": "*"
   },
   "devDependencies": {
     "vitest": "5.0.5",
-    "weft": "file:../weft"
-  }
+    "@weft-js/core": "file:../weft"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "weft"
+  ],
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "ts-plugin",
+    "README.md",
+    "LICENSE"
+  ]
 }

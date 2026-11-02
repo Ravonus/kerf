@@ -1,17 +1,17 @@
-import { CheckIcon } from '@weft/icons'
-import { announce, uid, type AgentQuestion } from '@weft/warp-core'
-import { derived, onMount, state, untrack } from 'weft'
+import { CheckIcon } from '@weft-js/warp-icons'
+import { announce, uid, type AgentQuestion } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox, Radio } from '../Choice'
 import { Input } from '../Field'
 import '../styles'
-import '@weft/warp-core/styles/app/question.css'
+import '@weft-js/warp-core/styles/app/question.css'
 
 /**
  * Question (07 §1.3): the run pauses and asks. A fieldset with the question as legend, radios or checkboxes, optional
  * free text; Continue is the solid. Once answered it reads back the choice.
  */
-export function Question({ question, onAnswer, quiet }: { question: AgentQuestion; onAnswer?: (answer: string | string[]) => void; quiet?: boolean }) {
+export function Question({ question, onAnswer, quiet }: { question: AgentQuestion; onAnswer?: (answer: string | string[]) => void; quiet?: boolean | undefined }) {
   const name = uid('q')
   const type = derived(() => (question.multiple ? 'checkbox' : 'radio'))
   const picks = state<string[]>(untrack(() => (question.multiple ? [] : question.options.slice(0, 1))))
@@ -26,20 +26,20 @@ export function Question({ question, onAnswer, quiet }: { question: AgentQuestio
   const submit = (e: Event) => {
     e.preventDefault()
     const chosen = picks.value.map(p => (p === other ? free.value.trim() : p)).filter(Boolean)
-    if (chosen.length) onAnswer?.(question.multiple ? chosen : chosen[0])
+    if (chosen.length) onAnswer?.(question.multiple ? chosen : chosen[0]!)
   }
   // one build per phase: a list around this reads its nodes again as siblings arrive, and picks must survive that
   const done = derived(() => answered.value !== undefined)
   const view = derived(() => (done.value ? (
     <p><CheckIcon /> You chose: {said.value}</p>
   ) : untrack(() => (
-        <form ref={(n: any) => (form = n)} data-scope="question" onSubmit={submit}>
+        <form ref={n => (form = n)} data-scope="question" onSubmit={submit}>
           <fieldset disabled={question.closed}>
             <legend>{question.prompt}</legend>
             {options.value.map(o => (
               type.value === 'radio'
-                ? <Radio key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: any) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Radio>
-                : <Checkbox key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: any) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Checkbox>
+                ? <Radio key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: Event & { currentTarget: HTMLInputElement }) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Radio>
+                : <Checkbox key={o.value} name={name} checked={picks.value.includes(o.value)} onChange={(e: Event & { currentTarget: HTMLInputElement }) => toggle(o.value, e.currentTarget.checked)}>{o.label}</Checkbox>
             ))}
             {picks.value.includes(other) && <Input label="Your answer" value={free.value} onInput={e => (free.value = e.currentTarget.value)} />}
           </fieldset>

@@ -1,13 +1,13 @@
 // The collections on the server: first rows as HTML, nothing touching a browser API, and hydration adopting them.
-import { resetIds } from '@weft/warp-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
-// @ts-expect-error: query imports (weft/vite)
-import * as server from './fixtures/Virtual.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/Virtual.tsx?weft-hydrate'
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const server = await import('./fixtures/Virtual.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/Virtual.tsx?weft-hydrate')
 
 test('server HTML holds a window of each collection; hydration claims it all and writes nothing', async () => {
   resetIds()

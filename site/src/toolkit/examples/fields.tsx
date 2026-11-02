@@ -1,10 +1,11 @@
-import { state } from 'weft'
-import { AddressField, Button, Card, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft/warp'
-import type { ProviderAppearance, ProviderField } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { AddressField, Button, Card, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft-js/warp'
+import type { Place, ProviderAppearance, ProviderField, SignatureValue } from '@weft-js/warp'
+import type { E164 } from '@weft-js/warp-core'
 import { PEOPLE, PROJECTS } from '../world'
 
 /** One state in a States grid: its name, then the field. */
-const Cell = (p: { name: string; children?: any }) => (
+const Cell = (p: { name: string; children?: unknown }) => (
   <Stack gap="tight">
     <Text role="caption" subtle>{p.name}</Text>
     {p.children}
@@ -16,7 +17,7 @@ const Cell = (p: { name: string; children?: any }) => (
 const TEAM_COUNTRIES = ['US', 'GB', 'DE', 'FR', 'SE', 'JP', 'IN', 'BR']
 
 export function PhoneFieldBasic() {
-  const phone = state<any>(null)
+  const phone = state<E164 | null>(null)
   return (
     <Stack gap="related">
       <PhoneField label="Mobile number" hint="We'll text you when a deploy fails." value={phone} />
@@ -165,7 +166,7 @@ const PRICED = Object.keys(PLAN_PRICE)
 
 export function CurrencySelectPrice() {
   const cur = state<string | null>('EUR')
-  const price = () => new Intl.NumberFormat('en', { style: 'currency', currency: cur.value ?? 'EUR', maximumFractionDigits: 0 }).format(PLAN_PRICE[cur.value ?? 'EUR'])
+  const price = () => new Intl.NumberFormat('en', { style: 'currency', currency: cur.value ?? 'EUR', maximumFractionDigits: 0 }).format(PLAN_PRICE[cur.value ?? 'EUR']!)
   return (
     <Stack gap="group">
       <CurrencySelect label="Pay in" options={PRICED} value={cur} />
@@ -187,8 +188,8 @@ const STREETS = [
   { id: 'c', label: '350 Fifth Avenue', secondary: 'New York, NY 10118', address: { country: 'US', lines: ['350 Fifth Avenue'], locality: 'New York', region: 'NY', postalCode: '10118' } },
 ]
 const streetProvider = {
-  suggest: async (q: string) => STREETS.filter(s => s.label.toLowerCase().includes(q.toLowerCase())),
-  resolve: async (id: string) => STREETS.find(s => s.id === id)!.address,
+  suggest: (q: string) => Promise.resolve(STREETS.filter(s => s.label.toLowerCase().includes(q.toLowerCase()))),
+  resolve: (id: string) => Promise.resolve(STREETS.find(s => s.id === id)!.address),
 }
 
 export const AddressFieldBasic = () => <AddressField label="Billing address" defaultValue={OFFICE} />
@@ -221,7 +222,7 @@ export function FormBilling() {
 
 /* ---- PlaceLookupInput ---- */
 
-const PLACES = [
+const PLACES: Place[] = [
   { id: 'sto', displayName: 'Stockholm, Sweden', category: 'City', lat: 59.3293, lng: 18.0686, timezone: 'Europe/Stockholm' },
   { id: 'ber', displayName: 'Berlin, Germany', category: 'City', lat: 52.52, lng: 13.405, timezone: 'Europe/Berlin' },
   { id: 'lis', displayName: 'Lisbon, Portugal', category: 'City', lat: 38.7223, lng: -9.1393, timezone: 'Europe/Lisbon' },
@@ -229,11 +230,11 @@ const PLACES = [
   { id: 'tok', displayName: 'Tokyo, Japan', category: 'City', lat: 35.6762, lng: 139.6503, timezone: 'Asia/Tokyo' },
   { id: 'arn', displayName: 'Stockholm Arlanda Airport', category: 'Airport', lat: 59.6498, lng: 17.9238, timezone: 'Europe/Stockholm' },
   { id: 'lhr', displayName: 'London Heathrow Airport', category: 'Airport', lat: 51.47, lng: -0.4543, timezone: 'Europe/London' },
-] as any[]
+]
 const PLACE_KINDS = [{ id: 'city', label: 'Cities', default: true }, { id: 'air', label: 'Airports' }]
 
 const findPlace = async (q: string, o: { bias: Record<string, boolean> }) => {
-  await new Promise(done => setTimeout(done, 200))
+  await new Promise(done => { setTimeout(done, 200) })
   const kinds = [o.bias.city && 'City', o.bias.air && 'Airport']
   return PLACES.filter(p => kinds.includes(p.category) && p.displayName.toLowerCase().includes(q.toLowerCase()))
 }
@@ -241,7 +242,7 @@ const findPlace = async (q: string, o: { bias: Record<string, boolean> }) => {
 export const PlaceLookupInputBasic = () => <PlaceLookupInput label="Office location" hint="Try Stockholm or Lima." search={findPlace} biases={PLACE_KINDS} />
 
 export function PlaceLookupInputPicked() {
-  const place = state<any>(PLACES[0])
+  const place = state<Place | null>(PLACES[0] ?? null)
   return (
     <Stack gap="related">
       <PlaceLookupInput label="Nearest office" search={findPlace} value={place} />
@@ -253,11 +254,11 @@ export function PlaceLookupInputPicked() {
 export const PlaceLookupInputStates = () => (
   <Grid cols={3} gap="group">
     <Cell name="Empty"><PlaceLookupInput label="Office location" search={findPlace} /></Cell>
-    <Cell name="Filled"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]} /></Cell>
+    <Cell name="Filled"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]!} /></Cell>
     <Cell name="Hint"><PlaceLookupInput label="Office location" search={findPlace} hint="Used to pick a region." /></Cell>
     <Cell name="Invalid"><PlaceLookupInput label="Office location" search={findPlace} error="Pick a place from the list." /></Cell>
-    <Cell name="Disabled"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]} disabled /></Cell>
-    <Cell name="Read-only"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]} readonly /></Cell>
+    <Cell name="Disabled"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]!} disabled /></Cell>
+    <Cell name="Read-only"><PlaceLookupInput label="Office location" search={findPlace} defaultValue={PLACES[1]!} readonly /></Cell>
   </Grid>
 )
 
@@ -286,7 +287,7 @@ function testProvider(el: HTMLElement, look: ProviderAppearance): ProviderField 
 
 const failedProvider = (el: HTMLElement, look: ProviderAppearance) => {
   const field = testProvider(el, look)
-  return { ...field, on: (event: any, send: any) => (event === 'change' ? queueMicrotask(() => send({ error: 'This card was declined.' })) : field.on(event, send)) }
+  return { ...field, on: (event: Parameters<ProviderField['on']>[0], send: Parameters<ProviderField['on']>[1]) => (event === 'change' ? queueMicrotask(() => send({ error: 'This card was declined.' })) : field.on(event, send)) }
 }
 
 export const PaymentCardInputBasic = () => <PaymentCardInput label="Card details" mount={testProvider} />
@@ -395,7 +396,7 @@ const CONFIG = `{
 }`
 
 const BAD_CONFIG = CONFIG.replace('3', '"three"')
-const checkConfig = (v: any) => (typeof v.copies === 'number' && v.copies > 0 ? null : '"copies" must be a number above zero.')
+const checkConfig = (v: unknown) => (typeof v === 'object' && v !== null && 'copies' in v && typeof v.copies === 'number' && v.copies > 0 ? null : '"copies" must be a number above zero.')
 
 export const JsonEditorBasic = () => <JsonEditor label="tessel.json" defaultValue={CONFIG} rows={7} />
 
@@ -446,7 +447,7 @@ export const KeyValueEditorStates = () => (
 const MEMBERS = PEOPLE.map(p => ({ id: p.id, label: p.name, meta: p.team }))
 const REPOS = PROJECTS.map(p => ({ id: p.id, label: p.name, meta: p.region, kind: 'project' }))
 const matching = (list: typeof MEMBERS, q: string) => list.filter(i => i.label.toLowerCase().includes(q.toLowerCase())).slice(0, 5)
-const MENTIONS = { '@': async (q: string) => matching(MEMBERS, q), '#': async (q: string) => matching(REPOS, q) }
+const MENTIONS = { '@': (q: string) => Promise.resolve(matching(MEMBERS, q)), '#': (q: string) => Promise.resolve(matching(REPOS, q)) }
 
 export const MentionsInputBasic = () => <MentionsInput label="Comment" hint="Type @ for people, # for projects." triggers={MENTIONS} />
 
@@ -482,7 +483,7 @@ export const MentionsInputStates = () => (
 
 const NOTES = '<h2>October release</h2><p>Product images now come from the <strong>edge</strong>, about 40% faster.</p><ul><li>Apple Pay on the last checkout step</li><li>A shorter stale window</li></ul>'
 const NOTES_MD = '## October release\n\nProduct images now come from the **edge**.\n\n- Apple Pay at checkout\n- A shorter stale window\n'
-const people = { search: async (q: string) => matching(MEMBERS, q) }
+const people = { search: (q: string) => Promise.resolve(matching(MEMBERS, q)) }
 
 export const RichTextEditorBasic = () => <RichTextEditor label="Release notes" defaultValue={NOTES} mentions={people} />
 
@@ -541,7 +542,7 @@ export const MarkdownEditorStates = () => (
 /* ---- SignaturePad ---- */
 
 export function SignaturePadBasic() {
-  const signature = state<any>(null)
+  const signature = state<SignatureValue | null>(null)
   return (
     <Stack gap="related">
       <SignaturePad label="Signature" value={signature} />
@@ -561,7 +562,7 @@ export const SignaturePadStates = () => (
 )
 
 export function FormDataAgreement() {
-  const signature = state<any>(null)
+  const signature = state<SignatureValue | null>(null)
   const tried = state(false)
   const done = state(false)
   const submit = (e: Event) => {

@@ -58,10 +58,8 @@ pub struct FileView<'f> {
 /// Upgrade W014 warnings whose box reaches a keyed list in another component. `resolve(from, specifier)` maps an
 /// import to a file path (the project view owns module resolution); a same-file component needs none.
 pub fn link_w014(files: &mut [FileView<'_>], resolve: impl Fn(&str, &str) -> Option<String>) {
-    let keyed: Vec<(String, KeyedProp)> = files
-        .iter()
-        .flat_map(|f| f.facts.keyed_props.iter().map(|k| (f.path.to_string(), k.clone())))
-        .collect();
+    let keyed: Vec<(String, KeyedProp)> =
+        files.iter().flat_map(|f| f.facts.keyed_props.iter().map(|k| (f.path.to_string(), k.clone()))).collect();
     for file in files.iter_mut() {
         for spread in &file.facts.spread_props {
             let target = match &spread.import {

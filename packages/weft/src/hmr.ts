@@ -1,4 +1,4 @@
-// weft/hmr: hot updates for dev builds (PLAN §3.6, research 21). Only compiled dev modules import it (the compiler's
+// @weft-js/core/hmr: hot updates for dev builds (PLAN §3.6, research 21). Only compiled dev modules import it (the compiler's
 // `hmr` option, set by the weft() Vite plugin when serving); production builds never do.
 //
 // Each top-level component is registered under `file#Name` with a hash of its source. A registered component mounts
@@ -12,7 +12,7 @@ import { Box, derived, flush, getOwner, untrack, type Owner, type State } from '
 import { createComponent } from './dom'
 import { hmr as scopes } from './scope'
 
-type Comp = (props: any) => unknown
+type Comp = (props: never) => unknown
 
 interface Entry {
   name: string
@@ -27,12 +27,12 @@ interface Frame {
   /** The owner a body-level `state()` call runs under (the instance's derived node). */
   node: Owner | null
   /** Boxes by key, this run's and the previous run's. */
-  boxes: Map<string, Box<any>>
-  from?: Map<string, Box<any>>
+  boxes: Map<string, Box<unknown>>
+  from?: Map<string, Box<unknown>> | undefined
   /** Registered children created during this run, by entry, in order; and the previous run's, to inherit from. */
   kids: Map<Entry, Frame[]>
-  old?: Map<Entry, Frame[]>
-  seen?: Map<Entry, number>
+  old?: Map<Entry, Frame[]> | undefined
+  seen?: Map<Entry, number> | undefined
 }
 
 const entries = new Map<string, Entry>()
@@ -52,7 +52,7 @@ export function hot(file: string, comps: Record<string, [Comp, string]>) {
   const mine: Entry[] = [], changed: Entry[] = []
   let reran = false
   for (const name in comps) {
-    const [fn, hash] = comps[name]
+    const [fn, hash] = comps[name]!
     const id = `${file}#${name}`
     let e = entries.get(id)
     if (!e) entries.set(id, (e = { name, fn, hash, v: new Box(0) }))
@@ -65,7 +65,7 @@ export function hot(file: string, comps: Record<string, [Comp, string]>) {
     mine.push(e)
     // Old and new function objects both route to the entry, so importers holding either mount the latest.
     const entry = e
-    ;(fn as any).$$h = (props: unknown, n?: string, loc?: string) => mount(entry, props, n, loc)
+    ;(fn as Comp & { $$h?: unknown }).$$h = (props: unknown, n?: string, loc?: string) => mount(entry, props, n, loc)
   }
   if (!reran) return
   const restore = capture()
@@ -120,7 +120,7 @@ function capture() {
 
 function mount(e: Entry, props: unknown, name?: string, loc?: string) {
   const parent = frame
-  let from: Map<string, Box<any>> | undefined
+  let from: Map<string, Box<unknown>> | undefined
   if (parent?.old) {
     const n = parent.seen!.get(e) ?? 0
     parent.seen!.set(e, n + 1)
@@ -135,7 +135,7 @@ function mount(e: Entry, props: unknown, name?: string, loc?: string) {
   let last: unknown
   let runs = 0
   const d = derived(() => {
-    e.v.value
+    void e.v.value
     const outer = frame
     f.node = getOwner()
     f.from = f.boxes
@@ -146,7 +146,7 @@ function mount(e: Entry, props: unknown, name?: string, loc?: string) {
     frame = f
     if (runs++) hmrStats.reruns++
     try {
-      return (last = createComponent(e.fn, props, name, loc))
+      return (last = createComponent(e.fn, props as never, name, loc))
     } catch (err) {
       if (runs === 1) throw err
       console.error(`weft hmr: <${e.name}> threw while updating; keeping its last output until the next edit\n`, err)
@@ -165,8 +165,8 @@ export function keep<T>(box: State<T>, comp: string, key: string): State<T> {
   const f = frame
   if (f && f.e.name === comp && getOwner() === f.node) {
     const old = f.from?.get(key)
-    if (old) (box as Box<T>).v = old.v
-    f.boxes.set(key, box as Box<T>)
+    if (old) (box as Box<T>).v = old.v as T
+    f.boxes.set(key, box as Box<unknown>)
   }
   return box
 }

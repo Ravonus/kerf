@@ -1,17 +1,18 @@
-import { MicIcon } from '@weft/icons'
-import { announce, dictation, formatClock, listMics, speechWave, type DictationEngine, type DictationEvents, type DictationState } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
+import { MicIcon } from '@weft-js/warp-icons'
+import { announce, dictation, formatClock, listMics, speechWave, type DictationEngine, type DictationEvents, type DictationState } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Select } from '../Select'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { Sweep, useSweep } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/app/speech.css'
+import '@weft-js/warp-core/styles/app/speech.css'
 
 const BARS = Array.from({ length: 40 }, (_, i) => i)
 const DEFAULT_MIC = [{ value: '', label: 'Default microphone' }]
 
+/** Props for SpeechInput. */
 export interface SpeechInputProps {
   /** Writes the transcript somewhere: the Prompt's `control.insert`. Nothing is sent until then. */
   onInsert?: (text: string) => void
@@ -19,7 +20,7 @@ export interface SpeechInputProps {
   /** Replaces the browser's speech recognition. */
   engine?: (on: DictationEvents) => DictationEngine
   /** The state and words to start from (a demo, a test). */
-  initial?: { state?: DictationState; final?: string; interim?: string; seconds?: number }
+  initial?: { state?: DictationState | undefined; final?: string; interim?: string; seconds?: number } | undefined
 }
 
 /**
@@ -76,8 +77,8 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
   const clear = () => { if (on.value) live?.stop(); final.value = interim.value = '' }
   const insert = () => { onInsert?.(words.value); clear() }
   return (
-    <div ref={(n: any) => (root = n)} data-scope="speech" data-state={mode.value}>
-      <Select label="Microphone" options={options.value} onChange={(e: Event) => { const s = e.currentTarget as HTMLSelectElement; mic.value = s.value; say(`Microphone: ${s.selectedOptions[0].textContent}`) }} />
+    <div ref={n => (root = n)} data-scope="speech" data-state={mode.value}>
+      <Select label="Microphone" options={options.value} onChange={(e: Event) => { const s = e.currentTarget as HTMLSelectElement; mic.value = s.value; say(`Microphone: ${s.selectedOptions[0]!.textContent}`) }} />
       <div data-part="mic">
         <span data-part="level" aria-hidden="true" style={`--level:${level.value}`}><i></i><i></i><i></i></span>
         <span>{mode.value === 'blocked' ? 'Blocked by the browser' : 'Input level'}</span>
@@ -85,7 +86,7 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
       <div data-part="strip" data-sweep="" data-pin={on.value ? '' : undefined}>
         <Sweep />
         <Button data-icon-only="" tone={on.value ? 'critical' : undefined} aria-pressed={on.value ? 'true' : 'false'} label={on.value ? 'Stop dictation' : 'Start dictation'} onClick={toggle}><MicIcon /></Button>
-        <span ref={(n: any) => (wave = n)} data-part="wave" data-loop="" aria-hidden="true">{BARS.map(b => <i key={b}></i>)}</span>
+        <span ref={n => (wave = n)} data-part="wave" data-loop="" aria-hidden="true">{BARS.map(b => <i key={b}></i>)}</span>
         <span data-part="time" role="timer" aria-label="Recording time" data-numeric="">{formatClock(seconds.value)}</span>
       </div>
       <div data-part="transcript" role="log" aria-live="polite" aria-label="Transcript">

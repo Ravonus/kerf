@@ -1,12 +1,12 @@
 // The markup every component renders, pinned (fixtures/Variants.tsx): the server HTML, and the client DOM once its
 // actions have attached. Attributes are sorted (their order means nothing) and weft's hole markers and hydration keys dropped, so a refactor for size passes only if no
 // part, attribute, ARIA wire or state moved.
-import { resetIds } from '@weft/warp-core'
-import { renderToString } from 'weft/ssr'
-import { flush, render } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush, render } from '@weft-js/core/test'
 import * as client from './fixtures/Variants'
-// @ts-expect-error: query import (weft/vite)
-import * as server from './fixtures/Variants.tsx?weft-ssr'
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const server = await import('./fixtures/Variants.tsx?weft-ssr')
 
 const tidy = (html: string) => {
   const t = document.createElement('template')
@@ -20,9 +20,9 @@ const tidy = (html: string) => {
   t.content.normalize()
   const walk = (el: Element) => {
     // wk is weft's hydration key: bookkeeping too
-    const attrs = [...el.attributes].filter(a => a.name !== 'wk').map(a => [a.name, a.value]).sort(([a], [b]) => (a < b ? -1 : 1))
-    for (const { name } of [...el.attributes]) el.removeAttribute(name)
-    for (const [n, v] of attrs) el.setAttribute(n, v)
+    const attrs = [...el.attributes].filter(a => a.name !== 'wk').map(a => [a.name, a.value]).sort(([a], [b]) => (a! < b! ? -1 : 1))
+    for (const { name } of Array.from(el.attributes)) el.removeAttribute(name)
+    for (const [n, v] of attrs) el.setAttribute(n!, v!)
     for (const c of el.children) walk(c)
   }
   for (const c of t.content.children) walk(c)
@@ -39,11 +39,11 @@ test.each(names)('%s: server HTML', name => {
 test.each(names)('%s: client DOM after mount', async name => {
   if (name === 'Toasts') client.seedToasts()
   resetIds()
-  const { container, unmount } = render(client[name] as any)
+  const { container, unmount } = render((client as Record<string, () => unknown>)[name]!)
   await flush()
   // actions attach a microtask after mount and measure over the next frames (the indicator drops data-instant after two)
-  for (let i = 0; i < 4; i++) await new Promise(r => requestAnimationFrame(r))
-  await new Promise(r => setTimeout(r, 20))
+  for (let i = 0; i < 4; i++) await new Promise(r => { requestAnimationFrame(r) })
+  await new Promise(r => { setTimeout(r, 20) })
   expect(tidy(container.innerHTML)).toMatchSnapshot()
   unmount?.()
 })

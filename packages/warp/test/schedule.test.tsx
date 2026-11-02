@@ -1,8 +1,8 @@
 // The schedule pack driven as a user would: views, keyboard move, the card, dialogs, rollback, and the fields paths (07 §2, §6.4).
 import { readFileSync } from 'node:fs'
-import { state } from 'weft'
-import { flush, render } from 'weft/test'
-import type { CalEvent } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import { flush, render } from '@weft-js/core/test'
+import type { CalEvent } from '@weft-js/warp-core'
 import { Agenda } from '../src/schedule/Agenda'
 import { AvailabilityEditor } from '../src/schedule/AvailabilityEditor'
 import { BookingCalendar } from '../src/schedule/BookingCalendar'
@@ -26,7 +26,7 @@ const key = (el: Element, k: string, init: KeyboardEventInit = {}) => el.dispatc
 const button = (name: string | RegExp, root: ParentNode = document) => [...root.querySelectorAll<HTMLElement>('button')].find(b => (typeof name === 'string' ? (b.getAttribute('aria-label') ?? b.textContent ?? '').trim() === name : name.test(b.textContent ?? '')))!
 const tab = (c: Element, name: string) => [...c.querySelectorAll<HTMLElement>('[role="tab"]')].find(t => t.textContent === name)!
 const ev = (c: Element, id: string) => c.querySelector<HTMLElement>(`[data-id="${id}"]`)!
-const said = async (assertive = false) => { await new Promise(r => setTimeout(r, 70)); return document.querySelector(`[data-scope="announcer"][aria-live="${assertive ? 'assertive' : 'polite'}"]`)!.textContent }
+const said = async (assertive = false) => { await new Promise(r => { setTimeout(r, 70) }); return document.querySelector(`[data-scope="announcer"][aria-live="${assertive ? 'assertive' : 'polite'}"]`)!.textContent }
 
 function calendar(over: Partial<Parameters<typeof Calendar>[0]> = {}) {
   const onMove = vi.fn(), onResize = vi.fn(), onDelete = vi.fn(), onEdit = vi.fn(), onCreate = vi.fn()
@@ -114,15 +114,15 @@ describe('Calendar', () => {
     key(ev(c, 'a'), 'Enter')
     await flush()
     expect(onMove).toHaveBeenCalledOnce()
-    expect(onMove.mock.calls[0][1]).toMatchObject({ start: '2026-10-26T10:15', end: '2026-10-26T11:15' })
-    expect(onMove.mock.calls[0][2]).toBe('keyboard')
+    expect(onMove.mock.calls[0]![1]).toMatchObject({ start: '2026-10-26T10:15', end: '2026-10-26T11:15' })
+    expect(onMove.mock.calls[0]![2]).toBe('keyboard')
     expect(await said()).toMatch(/Moved Design crit to Monday/)
     expect(document.activeElement).toBe(ev(c, 'a'))
   })
 
   test('a rejected move puts the event back and says why, assertively', async () => {
     let refuse!: (e: Error) => void
-    const { container: c } = calendar({ onMove: () => new Promise((_, no) => (refuse = no)) })
+    const { container: c } = calendar({ onMove: () => new Promise((_, no) => { refuse = no }) })
     ev(c, 'a').focus()
     key(ev(c, 'a'), 'm')
     await flush()
@@ -132,7 +132,7 @@ describe('Calendar', () => {
     await flush()
     expect(ev(c, 'a').querySelector('.sr')!.textContent).toMatch(/10:15/)
     refuse(new Error('Room is taken'))
-    await new Promise(r => setTimeout(r))
+    await new Promise(r => { setTimeout(r) })
     await flush()
     expect(ev(c, 'a').querySelector('.sr')!.textContent).toMatch(/10:00/)
     expect(await said(true)).toMatch(/Couldn't move Design crit: Room is taken/)
@@ -164,7 +164,7 @@ describe('Calendar', () => {
     button('Delete', dialog).click()
     await flush()
     expect(onDelete).toHaveBeenCalledOnce()
-    expect(onDelete.mock.calls[0][0].id).toBe('a')
+    expect(onDelete.mock.calls[0]![0].id).toBe('a')
   })
 
   test('a repeating event asks for the scope before it moves', async () => {
@@ -182,7 +182,7 @@ describe('Calendar', () => {
     button('Move', dialog).click()
     await flush()
     expect(onMove).toHaveBeenCalledOnce()
-    expect(onMove.mock.calls[0][1].scope).toBe('this')
+    expect(onMove.mock.calls[0]![1].scope).toBe('this')
   })
 
   test('the editor refuses an empty title, focuses it, then saves', async () => {
@@ -207,7 +207,7 @@ describe('Calendar', () => {
     button('Save').click()
     await flush()
     expect(onEdit).toHaveBeenCalledOnce()
-    expect(onEdit.mock.calls[0][0]).toMatchObject({ id: 'a', title: 'Crit', start: '2026-10-26T10:00', end: '2026-10-26T11:00' })
+    expect(onEdit.mock.calls[0]![0]).toMatchObject({ id: 'a', title: 'Crit', start: '2026-10-26T10:00', end: '2026-10-26T11:00' })
   })
 
   test('read-only events neither lift nor show a resize handle', async () => {
@@ -222,7 +222,7 @@ describe('Calendar', () => {
 describe('MoveSheet', () => {
   test('a colliding start is disabled; Move sends the chosen slot', async () => {
     const open = state(true), onMove = vi.fn()
-    render(() => <MoveSheet open={open} event={EVENTS[0]} events={[{ id: 'x', title: 'Busy', start: '2026-10-26T13:00', end: '2026-10-26T14:00' }]} firstDayOfWeek={1} onMove={onMove} />)
+    render(() => <MoveSheet open={open} event={EVENTS[0]!} events={[{ id: 'x', title: 'Busy', start: '2026-10-26T13:00', end: '2026-10-26T14:00' }]} firstDayOfWeek={1} onMove={onMove} />)
     await flush()
     const slots = [...document.querySelectorAll<HTMLButtonElement>('[data-part="slot"]')]
     expect(slots.some(s => s.disabled)).toBe(true)
@@ -231,7 +231,7 @@ describe('MoveSheet', () => {
     button('Move event').click()
     await flush()
     expect(onMove).toHaveBeenCalledOnce()
-    const to = onMove.mock.calls[0][1]
+    const to = onMove.mock.calls[0]![1]
     expect(to.e - to.s).toBe(60)
     expect(open.value).toBe(false)
   })
@@ -270,21 +270,21 @@ describe('YearView', () => {
     const c = year()
     expect(stop(c).length).toBe(1)
     expect(c.querySelectorAll('[data-part="year-month"]').length).toBe(12)
-    key(stop(c)[0], 'ArrowRight')
+    key(stop(c)[0]!, 'ArrowRight')
     await flush()
-    expect(stop(c)[0].dataset.day).toBe('2026-10-29')
-    key(stop(c)[0], 'PageDown')
+    expect(stop(c)[0]!.dataset.day).toBe('2026-10-29')
+    key(stop(c)[0]!, 'PageDown')
     await flush()
-    expect(stop(c)[0].dataset.day).toBe('2026-11-29')
-    key(stop(c)[0], 't')
+    expect(stop(c)[0]!.dataset.day).toBe('2026-11-29')
+    key(stop(c)[0]!, 't')
     await flush()
-    expect(stop(c)[0].dataset.day).toBe(TODAY)
+    expect(stop(c)[0]!.dataset.day).toBe(TODAY)
   })
 
   test('Enter hands the day to the Calendar; otherwise the detail reports it', async () => {
     const openDay = vi.fn(() => true)
     const c = year({ openDay })
-    key(stop(c)[0], 'Enter')
+    key(stop(c)[0]!, 'Enter')
     await flush()
     expect(openDay).toHaveBeenCalledWith(TODAY)
     const d = year()
@@ -313,7 +313,7 @@ describe('BookingCalendar', () => {
     expect(document.activeElement!.textContent).toContain('Confirm')
     button('Confirm', c).click()
     await flush()
-    await new Promise(r => setTimeout(r))
+    await new Promise(r => { setTimeout(r) })
     await flush()
     expect(onBook).toHaveBeenCalledWith({ date: '2026-10-28', s: 540, e: 570, manual: false })
     expect(c.textContent).toContain('Booked')
@@ -323,7 +323,7 @@ describe('BookingCalendar', () => {
     const { container: c } = render(() => <BookingCalendar slots={SLOTS} defaultDate="2026-10-28" today={TODAY} locale="en-US" onBook={() => Promise.reject(new Error('Just taken'))} />)
     await pick(c)
     button('Confirm', c).click()
-    await new Promise(r => setTimeout(r))
+    await new Promise(r => { setTimeout(r) })
     await flush()
     expect(c.textContent).toContain('Just taken')
     expect(c.querySelector('[data-confirm-step]')).toBeTruthy()
@@ -341,17 +341,17 @@ describe('BookingCalendar', () => {
 
 describe('MeetingPlanner', () => {
   const PEOPLE = [{ id: 'y', name: 'You', organizer: true, busy: [[540, 600]] as [number, number][] }, { id: 'a', name: 'Ana', busy: [[600, 660]] as [number, number][] }]
-  const planner = (onSubmit: any = () => undefined) => render(() => <MeetingPlanner date={TODAY} attendees={PEOPLE} title="Review" today={TODAY} locale="en-US" onSubmit={onSubmit} />).container
+  const planner = (onSubmit: Parameters<typeof MeetingPlanner>[0]['onSubmit'] = () => undefined) => render(() => <MeetingPlanner date={TODAY} attendees={PEOPLE} title="Review" today={TODAY} locale="en-US" onSubmit={onSubmit} />).container
 
   test('suggestions are a radiogroup with one stop; arrows pick', async () => {
     const c = planner()
     const radios = () => [...c.querySelectorAll<HTMLElement>('[role="radio"]')]
     expect(radios().length).toBe(3)
     expect(radios().filter(r => r.tabIndex === 0).length).toBe(1)
-    radios()[0].focus()
-    key(radios()[0], 'ArrowRight')
+    radios()[0]!.focus()
+    key(radios()[0]!, 'ArrowRight')
     await flush()
-    expect(radios()[1].getAttribute('aria-checked')).toBe('true')
+    expect(radios()[1]!.getAttribute('aria-checked')).toBe('true')
     expect(document.activeElement).toBe(radios()[1])
   })
 
@@ -359,10 +359,10 @@ describe('MeetingPlanner', () => {
     const onSubmit = vi.fn()
     const c = planner(onSubmit)
     button(/Send invite/, c).click()
-    await new Promise(r => setTimeout(r))
+    await new Promise(r => { setTimeout(r) })
     await flush()
     expect(onSubmit).toHaveBeenCalledOnce()
-    expect(onSubmit.mock.calls[0][0]).toMatchObject({ title: 'Review', date: TODAY, s: 660, e: 690 })
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ title: 'Review', date: TODAY, s: 660, e: 690 })
     expect(c.textContent).toContain('Invite sent')
   })
 
@@ -378,14 +378,14 @@ describe('MeetingPlanner', () => {
 
 describe('AvailabilityEditor', () => {
   const week = [{ day: 1, on: true, ranges: [[540, 1020]] as [number, number][] }, { day: 2, on: false, ranges: [[540, 720]] as [number, number][] }]
-  const editor = (onSave: any) => render(() => <AvailabilityEditor defaultValue={{ week, overrides: [] }} today={TODAY} locale="en-US" onSave={onSave} />).container
+  const editor = (onSave: Parameters<typeof AvailabilityEditor>[0]['onSave']) => render(() => <AvailabilityEditor defaultValue={{ week, overrides: [] }} today={TODAY} locale="en-US" onSave={onSave} />).container
   const pickSelect = async (s: HTMLSelectElement, v: string) => { s.value = v; s.dispatchEvent(new Event('change', { bubbles: true })); await flush() }
 
   test('a backwards range shows at once, blocks Save and takes focus', async () => {
     const onSave = vi.fn()
     const c = editor(onSave)
     const [from] = c.querySelectorAll<HTMLSelectElement>('[data-part="range"] select')
-    await pickSelect(from, '1080')
+    await pickSelect(from!, '1080')
     expect(c.querySelector('[data-part="range"][data-invalid]')).toBeTruthy()
     expect(c.querySelector('[data-part="error"]')).toBeTruthy()
     button('Save availability', c).click()
@@ -403,9 +403,9 @@ describe('AvailabilityEditor', () => {
     expect(onSave).not.toHaveBeenCalled()
     expect(c.textContent).toContain('Unsaved changes')
     button('Save availability', c).click()
-    await new Promise(r => setTimeout(r))
+    await new Promise(r => { setTimeout(r) })
     await flush()
-    expect(onSave.mock.calls[0][0].week[1]).toMatchObject({ day: 2, on: true, ranges: [[540, 1020]] })
+    expect(onSave.mock.calls[0]![0].week[1]).toMatchObject({ day: 2, on: true, ranges: [[540, 1020]] })
     expect(c.textContent).toContain('Saved')
   })
 

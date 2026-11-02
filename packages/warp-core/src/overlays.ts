@@ -5,6 +5,7 @@ import { justEscaped, place, pushLayer, type Align, type Side } from './layers'
 
 const focusable = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
 
+/** Options for a dialog. */
 export interface DialogOptions {
   open: boolean
   /** Called on every close path the user takes (Escape, backdrop, [data-close]); the binding writes open = false. */
@@ -73,12 +74,13 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   }
 }
 
+/** Options for a popover. */
 export interface PopoverOptions {
   open: boolean
   trigger: HTMLElement
   onClose(): void
-  side?: Side
-  align?: Align
+  side?: Side | undefined
+  align?: Align | undefined
 }
 
 /**
@@ -152,7 +154,7 @@ let current: (() => void) | null = null
  * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
  * (a passive layer: presses pass through).
  */
-export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side; align?: Align }) {
+export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: Side | undefined; align?: Align | undefined }) {
   let o = opts
   let timer: ReturnType<typeof setTimeout> | undefined
   let remove: (() => void) | undefined
@@ -176,7 +178,7 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
   }
   const later = (fn: () => void, ms: number) => { clearTimeout(timer); timer = setTimeout(fn, ms) }
   const t = () => o.trigger
-  const on: [EventTarget, string, (e: any) => void][] = [
+  const on: [EventTarget, string, (e: never) => void][] = [
     [t(), 'pointerenter', (e: PointerEvent) => { if (e.pointerType === 'mouse') later(show, performance.now() < warmUntil ? 0 : 500) }],
     [t(), 'pointerleave', () => later(() => { if (!t().matches(':hover') && !tip.matches(':hover')) hide() }, 100)],
     [tip, 'pointerleave', () => later(() => { if (!t().matches(':hover') && !tip.matches(':hover')) hide() }, 100)],
@@ -190,11 +192,11 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
     [t(), 'pointerup', (e: PointerEvent) => { if (e.pointerType === 'touch' && !open()) clearTimeout(timer) }],
     [t(), 'pointercancel', () => clearTimeout(timer)],
   ]
-  for (const [target, type, fn] of on) target.addEventListener(type, fn)
+  for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)
   return {
     update: (next: typeof opts) => void (o = next),
     destroy() {
-      for (const [target, type, fn] of on) target.removeEventListener(type, fn)
+      for (const [target, type, fn] of on) target.removeEventListener(type, fn as EventListener)
       hide()
     },
   }

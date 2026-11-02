@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })
@@ -27,7 +27,7 @@ beforeAll(async () => {
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise(r => server.once('listening', r))
+  await new Promise(r => { server.once('listening', r) })
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.on('pageerror', e => errors.push(e.message))
@@ -59,8 +59,8 @@ test('a toggle released from pressed keeps no stroke once the pointer leaves', a
   expect(await t.evaluate(b => getComputedStyle(b.querySelector('[data-part="sweep"]')).getPropertyValue('--_sr').trim())).toBe('0%')
 })
 
-const clearOfChevron = sel => page.evaluate(sel => {
-  const f = document.querySelector(sel)
+const clearOfChevron = sel => page.evaluate(s => {
+  const f = document.querySelector(s)
   const v = f.querySelector('[data-part="value"]'), i = f.querySelector('[data-part="indicator"]')
   const r = document.createRange(); r.selectNodeContents(v)
   return { text: v.textContent, textEnd: r.getBoundingClientRect().right, chevron: i.getBoundingClientRect().left, clipped: v.scrollWidth > v.clientWidth + 0.5 }
@@ -184,8 +184,8 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
 const calendarIn = id => `#${id} [data-scope="calendar"][data-part="root"]`
 
 // every booking's whole name shows inside its box, and no word is split across lines
-const timelineNames = sel => page.evaluate(sel => {
-  const root = document.querySelector(sel), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
+const timelineNames = sel => page.evaluate(at => {
+  const root = document.querySelector(at), sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
   const events = [...root.querySelectorAll('[data-part="lane"] [data-part="event"]')].map(e => {
     const t = e.querySelector('[data-part="event-title"]'), st = e.querySelector('[data-part="event-start"]')
     const shown = el => getComputedStyle(el).display !== 'none'
@@ -236,8 +236,8 @@ test('a desktop timeline shows every name whole, and the now line runs under the
 test('a phone week keeps all seven days at a readable width and scrolls sideways, with the hours and day heads in place', async () => {
   const sel = calendarIn('week-phone')
   await page.locator(sel).scrollIntoViewIfNeeded()
-  const m = await page.evaluate(sel => {
-    const root = document.querySelector(sel), sc = root.querySelector('[data-view="time"] > [data-part="scroller"]')
+  const m = await page.evaluate(at => {
+    const root = document.querySelector(at), sc = root.querySelector('[data-view="time"] > [data-part="scroller"]')
     const cols = [...root.querySelectorAll('[data-part="col"]')].map(c => c.getBoundingClientRect().width)
     const titles = [...root.querySelectorAll('[data-part="col"] [data-part="event"] [data-part="event-title"]')].map(t => ({ name: t.textContent, w: t.getBoundingClientRect().width, shown: t.getBoundingClientRect().width >= t.scrollWidth - 1 }))
     const gutter = root.querySelector('[data-part="cols"] > [data-part="gutter"]')

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Phase 4's exit check (PLAN §9, "4. Design"; research 36): weft/ds against raw Tailwind on consistency and a11y, from
+// Phase 4's exit check (PLAN §9, "4. Design"; research 37): @weft-js/core/ds against raw Tailwind on consistency and a11y, from
 // one brief given to a fresh agent, and repeated on every stack in evals/compare (CLAUDE.md).
 //
 //   node evals/ds-exit.mjs prepare <dir> [--models sonnet,haiku] [--samples 3]    one workspace per stack × model under <dir>
@@ -8,7 +8,7 @@
 //   node evals/ds-exit.mjs keep <dir>     copy the Sonnet apps to compare/design, which measure.mjs re-audits on every run
 //
 // The brief names no accessibility or consistency goal, on purpose: prompting for them is known not to help (research
-// 03 §1.1), and the claim is that the good result comes by construction. Exit 1 if weft/ds doesn't beat raw Tailwind.
+// 03 §1.1), and the claim is that the good result comes by construction. Exit 1 if @weft-js/core/ds doesn't beat raw Tailwind.
 import { execFile, execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -26,19 +26,19 @@ const TAILWIND = { tailwindcss: '4.3.3', '@tailwindcss/vite': '4.3.3' }
 const REACT = { react: '19.3.1', 'react-dom': '19.3.1' }
 const reactVite = (...more) => `import react from '@vitejs/plugin-react'\n${more.includes('tw') ? "import tailwindcss from '@tailwindcss/vite'\n" : ''}import { defineConfig } from 'vite'\nexport default defineConfig({ plugins: [react()${more.includes('tw') ? ', tailwindcss()' : ''}] })\n`
 const page = entry => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Northwind</title></head><body><div id="root"></div><script type="module" src="${entry}"></script></body></html>\n`
-const WEFT_MAIN = `import { render } from 'weft/dom'\nimport { App } from './App'\nrender(() => <App />, document.getElementById('root')!)\n`
+const WEFT_MAIN = `import { render } from '@weft-js/core/dom'\nimport { App } from './App'\nrender(() => <App />, document.getElementById('root')!)\n`
 const WEFT_APP = `export function App() {\n  return <main>Replace me</main>\n}\n`
-const TSX = { compilerOptions: { target: 'ES2022', module: 'ESNext', moduleResolution: 'bundler', jsx: 'preserve', jsxImportSource: 'weft', strict: true, skipLibCheck: true, noEmit: true }, include: ['src'] }
+const TSX = { compilerOptions: { target: 'ES2022', module: 'ESNext', moduleResolution: 'bundler', jsx: 'preserve', jsxImportSource: '@weft-js/core', strict: true, skipLibCheck: true, noEmit: true }, include: ['src'] }
 const CSS_TW = `@import "tailwindcss";\n`
 
 export const STACKS = {
   'weft-ds': {
-    label: 'weft/ds (weft + warp)', tool: 'weft + @weft/warp',
-    deps: { weft: pkg('weft'), '@weft/warp': pkg('warp'), '@weft/warp-core': pkg('warp-core'), '@weft/cli': pkg('cli') },
+    label: '@weft-js/core/ds (weft + warp)', tool: 'weft + @weft-js/warp',
+    deps: { '@weft-js/core': pkg('weft'), '@weft-js/warp': pkg('warp'), '@weft-js/warp-core': pkg('warp-core'), '@weft-js/cli': pkg('cli') },
     dev: { vite: '8.3.5' },
     files: {
-      'vite.config.ts': `import { defineConfig } from 'vite'\nimport weft from 'weft/vite'\nexport default defineConfig({ plugins: [weft()] })\n`,
-      'weft.config.ts': `import { defineConfig } from 'weft/config'\nimport warp from '@weft/warp/plugin'\nexport default defineConfig({ plugins: [warp()] })\n`,
+      'vite.config.ts': `import { defineConfig } from 'vite'\nimport weft from '@weft-js/core/vite'\nexport default defineConfig({ plugins: [weft()] })\n`,
+      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\nimport warp from '@weft-js/warp/plugin'\nexport default defineConfig({ plugins: [warp()] })\n`,
       'src/main.tsx': WEFT_MAIN, 'src/App.tsx': WEFT_APP, 'tsconfig.json': JSON.stringify(TSX, null, 2),
     },
     note: 'This is a weft app using warp. Read AGENTS.md first, then `npx weft docs design`. Run `npx weft check --json` after changes and `npx weft fix` for the safe fixes.',
@@ -46,10 +46,10 @@ export const STACKS = {
   },
   'weft-tailwind': {
     label: 'Raw Tailwind (weft + Tailwind)', tool: 'weft + Tailwind',
-    deps: { weft: pkg('weft'), '@weft/cli': pkg('cli') },
+    deps: { '@weft-js/core': pkg('weft'), '@weft-js/cli': pkg('cli') },
     dev: { vite: '8.3.5', ...TAILWIND },
     files: {
-      'vite.config.ts': `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\nimport weft from 'weft/vite'\nexport default defineConfig({ plugins: [weft(), tailwindcss()] })\n`,
+      'vite.config.ts': `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\nimport weft from '@weft-js/core/vite'\nexport default defineConfig({ plugins: [weft(), tailwindcss()] })\n`,
       'src/main.tsx': `import './app.css'\n${WEFT_MAIN}`, 'src/App.tsx': WEFT_APP, 'src/app.css': CSS_TW, 'tsconfig.json': JSON.stringify(TSX, null, 2),
     },
     note: 'This is a weft app styled with Tailwind v4 utility classes. Read AGENTS.md first. Run `npx weft check --json` after changes.',
@@ -136,13 +136,13 @@ async function agent(dir) {
   if (process.env.ANTHROPIC_API_KEY) env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
   await pool(sessions(dir), Number(opt('concurrency') ?? 3), id => new Promise(done => {
     const w = join(dir, id), meta = join(w, 'agent.json')
-    if (existsSync(meta)) return done()
+    if (existsSync(meta)) { done(); return }
     const model = id.split('.')[1]
     const args = ['-p', readFileSync(join(w, 'PROMPT.md'), 'utf8'), '--model', model, '--output-format', 'json', '--permission-mode', 'bypassPermissions', '--disallowedTools', 'WebSearch', 'WebFetch', 'Agent', '--max-budget-usd', opt('budget') ?? '4']
     const started = Date.now()
     execFile('claude', args, { cwd: w, env, timeout: 25 * 60_000, maxBuffer: 1 << 26 }, (err, stdout) => {
-      let out = {}
-      try { out = JSON.parse(stdout) } catch { out = { is_error: true, result: String(err ?? stdout).slice(0, 400) } }
+      let out
+      try { out = JSON.parse(stdout) } catch { out = { is_error: true, result: (err?.message ?? stdout).slice(0, 400) } }
       writeFileSync(meta, JSON.stringify({ model, ms: Date.now() - started, cost: out.total_cost_usd, turns: out.num_turns, error: out.is_error ? out.result : undefined }, null, 2))
       console.log(`${out.is_error ? 'ERR ' : 'done'} ${id} $${out.total_cost_usd?.toFixed(2)} ${out.num_turns} turns${out.is_error ? ` ${out.result}` : ''}`)
       done()
@@ -225,7 +225,7 @@ async function verify(dir) {
   const verdict = { a11y: ds.axe < tw.axe, consistency: ds.distinct < tw.distinct && ds.drift <= tw.drift, brief: ds.brief >= tw.brief }
   const pass = Object.values(verdict).every(Boolean)
   writeFileSync(join(here, 'results/ds-exit.json'), JSON.stringify({ at: new Date().toISOString(), verdict, pass, ds, tailwind: tw, results }, null, 1) + '\n')
-  const md = [`# Phase 4 exit check: weft/ds vs raw Tailwind`, '', `Run ${new Date().toISOString().slice(0, 10)}. ${ids.length} fresh-agent sessions, one brief. **${pass ? 'Met' : 'Not met'}.** a11y: ${verdict.a11y ? 'yes' : 'no'} (${ds.axe?.toFixed(1)} vs ${tw.axe?.toFixed(1)} axe nodes), consistency: ${verdict.consistency ? 'yes' : 'no'} (${ds.distinct?.toFixed(0)} vs ${tw.distinct?.toFixed(0)} distinct values, ${ds.drift?.toFixed(0)} vs ${tw.drift?.toFixed(0)} role looks), brief: ${verdict.brief ? 'yes' : 'no'} (${ds.brief?.toFixed(1)} vs ${tw.brief?.toFixed(1)}).`, '', 'Means per stack over its sessions, lower is better except Brief and dark screens. Axe counts every screen in light and dark, at 1280 and 390, plus the invalid form and the open dialog.', '', table(results), '']
+  const md = [`# Phase 4 exit check: @weft-js/core/ds vs raw Tailwind`, '', `Run ${new Date().toISOString().slice(0, 10)}. ${ids.length} fresh-agent sessions, one brief. **${pass ? 'Met' : 'Not met'}.** a11y: ${verdict.a11y ? 'yes' : 'no'} (${ds.axe?.toFixed(1)} vs ${tw.axe?.toFixed(1)} axe nodes), consistency: ${verdict.consistency ? 'yes' : 'no'} (${ds.distinct?.toFixed(0)} vs ${tw.distinct?.toFixed(0)} distinct values, ${ds.drift?.toFixed(0)} vs ${tw.drift?.toFixed(0)} role looks), brief: ${verdict.brief ? 'yes' : 'no'} (${ds.brief?.toFixed(1)} vs ${tw.brief?.toFixed(1)}).`, '', 'Means per stack over its sessions, lower is better except Brief and dark screens. Axe counts every screen in light and dark, at 1280 and 390, plus the invalid form and the open dialog.', '', table(results), '']
   for (const [id, r] of Object.entries(results)) if (r.build) md.push(`- ${id}: build failed: ${r.build.split('\n')[0]}`)
   writeFileSync(join(here, 'results/ds-exit.md'), md.join('\n') + '\n')
   console.log(md.join('\n'))

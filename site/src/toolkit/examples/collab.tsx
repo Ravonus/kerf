@@ -1,12 +1,12 @@
-import { onCleanup, onMount, state } from 'weft'
+import { onCleanup, onMount, state } from '@weft-js/core'
 import {
   AutoTrack, Button, Card, CommentAnchor, CommentRail, CommentThread, Composer, ConflictAlert, ConversationList, Cursors, DataIntegrity, Following, Heading, Input, LockIndicator, LockedField,
   Message, PeerMark, PeerSelection, PresenceStack, Row, SectionPeers, Segmented, Select, ShareDialog, Spacer, Stack, Switch, SyncIndicator, SyncedForm, Text, Textarea, Thread, Toaster, TypingIndicator, VersionHistory, ViewportRail,
-} from '@weft/warp'
-import type { ChatConversation, CommentThreadData, ComposerFile, ComposerSend, IntegrityEvent, ShareLink, ShareMember, ShareRole, SyncState, Version, ChatMessage, CursorPeer, MessageReaction, Peer } from '@weft/warp'
-import { CHAT, COMMENT_OWNER, COMMENT_TIMEOUTS, CONVERSATIONS, CURSOR_PEERS, INES, INTEGRITY_EVENTS, INTEGRITY_STATS, JUN, LENA, MARA, NOOR, PEERS, PRIYA, SAM, SHARE_MEMBERS, SHARE_PEOPLE, TOMAS, VERSIONS, VIEWPORT_PEERS } from '../world'
+} from '@weft-js/warp'
+import type { CommentThreadData, ComposerFile, ComposerSend, IntegrityEvent, ShareLink, ShareMember, ShareRole, SyncState, Version, ChatMessage, CursorPeer, MessageReaction, Peer } from '@weft-js/warp'
+import { CHAT, COMMENT_OWNER, COMMENT_TIMEOUTS, CONVERSATIONS, CURSOR_PEERS, INTEGRITY_EVENTS, INTEGRITY_STATS, JUN, LENA, MARA, PEERS, PRIYA, SAM, SHARE_MEMBERS, SHARE_PEOPLE, VERSIONS, VIEWPORT_PEERS } from '../world'
 
-const wait = (ms: number) => new Promise(done => setTimeout(done, ms))
+const wait = (ms: number) => new Promise(done => { setTimeout(done, ms) })
 
 const IN_CHANNEL = [SAM, JUN, LENA]
 const EARLY_CHAT = CHAT.slice(0, 3)
@@ -39,14 +39,14 @@ export function ThreadIncident() {
       unreadFrom="m5"
       typing={typing}
       header={<><Text role="label"># incidents</Text><Spacer /><PresenceStack peers={IN_CHANNEL} label="In this channel" /></>}
-      onSend={send}
+      onSend={m => void send(m)}
       onReact={react}
       composer={{ label: 'Message #incidents', placeholder: 'Message #incidents', mentions: PEERS }}
     />
   )
 }
 
-export const ThreadTile = () => <Message message={CHAT[2]} />
+export const ThreadTile = () => <Message message={CHAT[2]!} />
 
 export const ThreadReadOnly = () => <Thread label="Deploy d-4819 discussion" height="240px" messages={EARLY_CHAT} />
 
@@ -67,9 +67,9 @@ export function MessageKinds() {
   const retried = state(false)
   return (
     <Stack gap="related">
-      <Message message={CHAT[1]} />
-      <Message message={CHAT[5]} source={CHAT[1]} />
-      <Message message={CHAT[7]} />
+      <Message message={CHAT[1]!} />
+      <Message message={CHAT[5]!} source={CHAT[1]} />
+      <Message message={CHAT[7]!} />
       <Message message={retried.value ? { ...FAILED, state: 'sent' } : FAILED} last onRetry={() => (retried.value = true)} />
     </Stack>
   )
@@ -183,7 +183,7 @@ export const LockIndicatorPeople = () => (
 )
 
 // The rail fills its parent, so the parent sets the height.
-const RailHeight = ({ children }: { children: any }) => <div style="display:grid;block-size:180px">{children}</div>
+const RailHeight = ({ children }: { children: unknown }) => <div style="display:grid;block-size:180px">{children}</div>
 
 export const ViewportRailDocument = () => <RailHeight><ViewportRail peers={VIEWPORT_PEERS} self={{ top: 0.02, height: 0.3 }} /></RailHeight>
 
@@ -252,7 +252,7 @@ const versionPreview = (v: Version) => <Text>{PREVIEW_LINES[v.id] ?? v.meta}</Te
 export function VersionHistoryRunbook() {
   const versions = state(VERSIONS)
   const restore = (v: Version) => {
-    const [now, ...older] = versions.value
+    const [now, ...older] = versions.value as [Version, ...Version[]]
     versions.value = [{ id: `v${versions.value.length + 1}`, title: 'Current', meta: `Restored from "${v.title}"`, current: true }, { ...now, title: 'Before the restore', current: false }, ...older]
   }
   return <VersionHistory versions={versions} preview={versionPreview} onRestore={restore} />
@@ -263,7 +263,7 @@ export function ShareDialogRunbook() {
   const members = state<ShareMember[]>(SHARE_MEMBERS)
   const link = state<ShareLink>({ access: 'restricted', role: 'viewer' })
   const invite = (emails: string[], role: ShareRole) => {
-    const added = emails.map(email => ({ id: email, name: email.split('@')[0], email, role }))
+    const added = emails.map(email => ({ id: email, name: email.split('@')[0]!, email, role }))
     members.value = [...members.value, ...added]
   }
   const change = (m: ShareMember, role: ShareRole | null) => {

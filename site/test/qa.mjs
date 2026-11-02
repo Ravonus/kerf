@@ -47,7 +47,9 @@ for (const path of ['/blocks/notification-preferences', '/blocks/push-soft-ask',
         return [...s.querySelectorAll('[data-scope="calendar"] [data-part="months"], [data-scope="tool-call"], textarea')].filter(e => e.getBoundingClientRect().right > edge + 1).map(e => e.dataset.scope ?? e.dataset.part ?? e.localName)
       }),
     }))
-    same(over, 0, 'page overflow')
+    // Below 0 is no overflow: headless Chromium hides scrollbars but html's `scrollbar-gutter: stable` still keeps
+    // their 15px, so the content is narrower than clientWidth reports. Only a positive difference scrolls sideways.
+    same(Math.max(0, over), 0, 'page overflow')
     same(stages.join(), '', 'past the stage edge')
   }, PHONE)
 }
@@ -126,7 +128,7 @@ for (const [path, frames] of [['/', '[data-site="arena"] iframe'], ['/examples',
 }
 
 // The contents list reaches the last heading at the end of a page, and comes back.
-await check('scroll spy reaches the end', '/docs/getting-started', async page => {
+await check('scroll spy reaches the end', '/learn/installation', async page => {
   const current = () => page.locator('[data-site="toc"] [aria-current]').innerText()
   const first = await current()
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
@@ -297,10 +299,10 @@ await check('hub previews fit their cards', '/blocks', async page => {
     await tile.scrollIntoViewIfNeeded()
     await page.waitForFunction(n => document.querySelector(`[data-site="tile"][data-name="${n}"] [data-part="mount"][data-ready]`), name, { timeout: 15000 }).catch(() => { throw new Error(`${name} never mounted`) })
     await page.waitForTimeout(300)
-    out.push(await tile.evaluate((t, name) => {
+    out.push(await tile.evaluate((t, which) => {
       const stage = t.querySelector('[data-part="stage"]').getBoundingClientRect(), shown = t.querySelector('[data-part="mount"]').firstElementChild.getBoundingClientRect()
-      const fits = shown.top >= stage.top - 1 && shown.left >= stage.left - 1 && shown.right <= stage.right + 1 && (name === 'conversation' || shown.bottom <= stage.bottom + 1)
-      return fits ? '' : `${name} ${Math.round(shown.width)}x${Math.round(shown.height)} in ${Math.round(stage.width)}x${Math.round(stage.height)}`
+      const fits = shown.top >= stage.top - 1 && shown.left >= stage.left - 1 && shown.right <= stage.right + 1 && (which === 'conversation' || shown.bottom <= stage.bottom + 1)
+      return fits ? '' : `${which} ${Math.round(shown.width)}x${Math.round(shown.height)} in ${Math.round(stage.width)}x${Math.round(stage.height)}`
     }, name))
   }
   same(out.filter(Boolean).join(), '', 'previews past their card')
@@ -338,7 +340,7 @@ for (const path of ['/components', '/blocks', '/charts']) {
         if (r.top < st.top - 1) out.push('starts above the card')
         // a descendant cut by the card's edge (in it, but running past it), with nothing between them that clips it
         const clips = e => { for (let p = e.parentElement; p && p !== m; p = p.parentElement) if (getComputedStyle(p).overflowX !== 'visible') return true; return false }
-        const past = [...m.querySelectorAll('*')].find(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left < st.right && b.right > Math.min(r.right, st.right) + 2 && !clips(e) })
+        const past = [...m.querySelectorAll('*')].find(e => { const box = e.getBoundingClientRect(); return box.width > 0 && box.left < st.right && box.right > Math.min(r.right, st.right) + 2 && !clips(e) })
         if (past) out.push(`${past.localName}${past.dataset.part ? `[${past.dataset.part}]` : ''} past its edge`)
         return out.length ? [`${t.dataset.name}: ${out.join(', ')}`] : []
       }), [path === '/charts', least])
@@ -369,10 +371,10 @@ for (const path of ['/components', '/blocks', '/charts']) {
         if (stage.height > 242) out.push(`picture ${Math.round(stage.height)}px tall`)
         const drawn = e => { if (!e.firstElementChild || /^(svg|img|canvas|input|textarea|select|video)$/.test(e.localName)) return true; const c = getComputedStyle(e); return c.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderBottomWidth) > 0 }
         let top = Infinity, bottom = -Infinity
-        const cover = b => { if (b.width && b.height) { top = Math.min(top, Math.max(b.top, stage.top)); bottom = Math.max(bottom, Math.min(b.bottom, stage.bottom)) } }
-        const mount = t.querySelector('[data-part="mount"]')
-        for (const e of mount.querySelectorAll('*')) if (!(e.closest('svg') && e.localName !== 'svg') && drawn(e) && getComputedStyle(e).visibility !== 'hidden') cover(e.getBoundingClientRect())
-        const texts = document.createTreeWalker(mount, NodeFilter.SHOW_TEXT)
+        const cover = r => { if (r.width && r.height) { top = Math.min(top, Math.max(r.top, stage.top)); bottom = Math.max(bottom, Math.min(r.bottom, stage.bottom)) } }
+        const holder = t.querySelector('[data-part="mount"]')
+        for (const e of holder.querySelectorAll('*')) if (!(e.closest('svg') && e.localName !== 'svg') && drawn(e) && getComputedStyle(e).visibility !== 'hidden') cover(e.getBoundingClientRect())
+        const texts = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT)
         for (let n; (n = texts.nextNode());) if (n.textContent.trim()) { const r = document.createRange(); r.selectNodeContents(n); cover(r.getBoundingClientRect()) }
         const blank = stage.height - Math.max(0, bottom - top)
         if (blank > 24 && blank > stage.height * 0.4) out.push(`${Math.round(blank)} of ${Math.round(stage.height)}px blank`)
@@ -389,7 +391,7 @@ for (const path of ['/components', '/blocks', '/charts']) {
 }
 // Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow (warp's prose families, with no
 // attribute from the build), and below the fold they wait. Check the animation, not markup.
-for (const path of ['/docs/rules', '/docs/lists']) {
+for (const path of ['/reference/rules', '/reference/lists', '/learn/passing-props']) {
   await check(`docs content flows ${path}`, path, async page => {
     const { blocks, moving } = await page.evaluate(() => {
       const els = [...document.querySelectorAll('[data-scope="prose"] > :is(p, ul, ol, dl, blockquote, table)')]
@@ -436,8 +438,8 @@ for (const [path, least] of [['/components/month-picker', 5], ['/components/week
     const n = await page.evaluate(() => document.querySelectorAll('[data-site="frame"]:not([data-play])').length)
     if (n < least) throw new Error(`${n} examples, want at least ${least}`)
     await mount(page)
-    const failed = await page.evaluate(() => [...document.querySelectorAll('[data-part="mount"]')].filter(m => /failed to load/.test(m.textContent)).length)
-    same(failed, 0, 'examples that failed')
+    const broken = await page.evaluate(() => [...document.querySelectorAll('[data-part="mount"]')].filter(m => /failed to load/.test(m.textContent)).length)
+    same(broken, 0, 'examples that failed')
   })
 }
 // Every Canvas example paints something, on screen: a blank or zero-sized canvas is a broken example.
@@ -458,11 +460,49 @@ await check('canvas examples draw', '/components/canvas', async page => {
   same(blank.filter(Boolean).join(', '), '', 'canvases')
 })
 // A page with no headings has no contents column, so its words take the room.
-for (const path of ['/docs/rules', '/docs/lists', '/docs/async', '/docs/browser']) {
+for (const path of ['/reference/rules', '/reference/lists', '/reference/async', '/reference/browser']) {
   await check(`no empty contents column ${path}`, path, async page => {
     const { toc, links } = await page.evaluate(() => ({ toc: document.querySelectorAll('[data-site="toc"]').length, links: document.querySelectorAll('[data-site="toc"] a').length }))
     if (toc && !links) throw new Error('an empty contents column')
   }, { width: 1440, height: 900 })
+}
+// Learn: the landing and every chapter fit a 375 px phone, open with "You will learn", and end with a pager.
+for (const path of ['/learn', '/learn/installation', '/learn/passing-props', '/learn/bind', '/learn/entries', '/learn/full-stack', '/learn/effects']) {
+  await check(`learn fits 375 px ${path}`, path, async page => {
+    await mount(page)
+    // Past the viewport, not past clientWidth: a classic scrollbar makes clientWidth narrower than the page can be.
+    same(await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth)), 0, 'page overflow')
+  }, { width: 375, height: 812 })
+  if (path === '/learn') continue
+  await check(`learn page parts ${path}`, path, async page => {
+    const parts = await page.evaluate(() => ({ box: document.querySelector('[data-site="you-will-learn"] li')?.textContent ?? '', pager: document.querySelectorAll('[data-part="pager"] a').length, nav: !!document.querySelector('[data-site="doc-nav"] a[aria-current]') }))
+    if (!parts.box) throw new Error('no "You will learn" box')
+    same(parts.pager, 2, 'pager links')
+    same(parts.nav, true, 'the rail marks this page')
+  })
+}
+// A challenge's solution stays hidden until asked for.
+await check('learn challenges hide their solution', '/learn/passing-props', async page => {
+  const sol = page.locator('[data-site="challenge"] details').first()
+  same(await sol.evaluate(d => d.open), false, 'open at first')
+  await sol.locator('summary').click()
+  same(await sol.evaluate(d => d.open), true, 'open after a click')
+})
+// A Learn demo runs: the stepper writes the parent's box through bind:.
+await check('learn bind demo writes the parent', '/learn/bind', async page => {
+  await mount(page)
+  const run = page.locator('[data-site="example"] [data-part="run"]').first()
+  await run.getByRole('button', { name: '+' }).click()
+  await page.waitForFunction(() => /Booked for 3 people/.test(document.querySelector('[data-site="example"] [data-part="run"]')?.textContent ?? ''), null, { timeout: 4000 })
+})
+// Every old /docs address answers a permanent redirect to its new home, `.md` twins included.
+for (const [from, to] of [['/docs', '/learn'], ['/docs/getting-started', '/learn/installation'], ['/docs/rules', '/reference/rules'], ['/docs/codes/W001', '/reference/codes/W001'], ['/docs/props.md', '/reference/props.md']]) {
+  await check(`old ${from} redirects`, '/learn', async page => {
+    const r = await page.request.get(base + from, { maxRedirects: 0 })
+    same(r.status(), 308, 'status')
+    same(new URL(r.headers().location, base).pathname, to, 'location')
+    same((await page.request.get(base + to)).status(), 200, 'the new page')
+  })
 }
 // A demo missing from the build shows its notice in a pane its own size, not a tall empty one.
 await check('a missing demo closes its pane around the notice', '/examples', async page => {

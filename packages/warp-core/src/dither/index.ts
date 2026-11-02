@@ -1,4 +1,4 @@
-// @weft/warp-core/dither: dithering as plain TS (08 §6.7). tiles and quantize are pure and draw any tone to any palette; ramp
+// @weft-js/warp-core/dither: dithering as plain TS (08 §6.7). tiles and quantize are pure and draw any tone to any palette; ramp
 // reads inks from warp's tokens; field and image are the actions a binding attaches to a <canvas>.
 export { tile, type Pattern, type Tile } from './tiles'
 export { quantize, diffuse, levels, type Diffusion } from './quantize'

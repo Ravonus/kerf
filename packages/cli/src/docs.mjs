@@ -13,25 +13,27 @@ import { exportsOf, loadCompiler, resolveWeft } from './weft.mjs'
 const docsDir = fileURLToPath(new URL('../docs/', import.meta.url))
 const fileTopics = Object.fromEntries(readdirSync(docsDir).filter(f => f.endsWith('.md')).map(f => [f.slice(0, -3), f]))
 
+/** What `weft docs` can show, with the line that says what each topic covers. */
 export const topics = {
-  rules: 'The seven rules: boxes, derived, live JSX and props, run-once bodies (start here)',
+  rules: 'The nine rules: boxes, derived, live JSX and props, run-once bodies (start here)',
+  state: 'Every reactive function (state, derived, watch, untrack, flush, batch, context) and defineState with persist, sync and history; S001, S002, S008, S009, S012, S013',
   props: 'How props stay live; W001, W005, W006',
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
-  async: 'resource, <Boundary pending error>, weft/ssr and hydrate; W012',
+  async: 'resource, <Boundary pending error>, @weft-js/core/ssr and hydrate; W012',
   start: 'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A004, C001–C002, F001–F003, R001–R023',
   rust: 'Rust bodies: native() addons with a WASM fallback, remote() sidecars, weft add rust, impl, the weft crate, build.rs, Ctx, touch, weft dev reload, deployment; R101–R109',
-  plugins: 'Build a plugin: slots, server extensions, check hooks, docs, `weft add`, conformance. Walks through how @weft/pay is built',
-  testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
-  browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
+  plugins: 'Build a plugin: slots, server extensions, check hooks, docs, `weft add`, conformance. Walks through how @weft-js/pay is built',
+  testing: '@weft-js/core/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
+  browser: '@weft-js/core/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
   'ui-state': 'Hover, press and focus as state: interaction(), the ui prop, sharing across tabs and clients, realtime({ share }); U001–U005',
-  surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
+  surface: '@weft-js/core/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
-  icons: '@weft/icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
-  fonts: 'Fonts with @weft/plugin-text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
+  icons: '@weft-js/warp-icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
+  fonts: 'Fonts with @weft-js/text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
   meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `weft routes --meta`; H001–H008, H011–H016',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   design: 'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `weft fix`, `weft tokens`; D001–D007, D011, D030–D039',
-  style: 'Style groups (weft/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',
+  style: 'Style groups (@weft-js/core/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',
   diagnostics: 'Every W-, T-, P-, H- and D-code, and which ones the installed weft reports',
   commands: "This project's commands and tasks (from `weft tasks`)",
   agents: 'The generated AGENTS.md',
@@ -50,10 +52,10 @@ function status(code, info) {
   const e = entry(code)
   const st = info.status[e.code]
   if (e.by === 'compiler') return st?.implemented ? `reported${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
-  if (e.by === 'test') return 'reported by weft/test after each test'
+  if (e.by === 'test') return 'reported by @weft-js/core/test after each test'
   if (e.by === 'gate') return 'reported by `weft test --gate` on a diff'
-  if (/^T/.test(e.code)) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
-  if (e.by === 'start') return 'reported by @weft/start when it serves or renders the route, and by weft check and `weft routes --meta`'
+  if (e.code.startsWith('T')) return st?.implemented ? `reported by weft check on test files${st.autofix ? ', safe autofix' : st.suggestion ? ', suggested edit' : ''}` : 'not reported by this weft yet'
+  if (e.by === 'start') return 'reported by @weft-js/start when it serves or renders the route, and by weft check and `weft routes --meta`'
   if (e.by === 'cli' && e.code.startsWith('H')) return 'reported by weft check and by `weft routes --meta`, per route, on what the routes produce'
   if (e.by === 'cli') return e.proposed ? 'reported by weft check (proposed code, research 17)' : 'reported by weft check'
   if (e.by === 'runtime') return 'reported in dev by the runtime (a console warning)'
@@ -65,8 +67,8 @@ function codePage(code, info) {
   const e = entry(code)
   const lines = [`# ${code} (${e.severity})`, '', e.catches + '.', '', `**Fix:** ${e.fix}.`, '', `**Status in weft@${info.weft.version}:** ${status(code, info)}.`]
   if (e.example) lines.push('', 'Triggers it:', '', '```tsx', e.example, '```')
-  if (/^T/.test(code)) lines.push('', 'A test that needs it on purpose keeps it with a reason: `// weft-allow ' + code + ': <why>` in the file header (whole file) or on the line above.')
-  const topic = Object.entries(topics).find(([, d]) => d.includes(code)) ?? (/^T/.test(code) ? ['testing'] : undefined)
+  if (code.startsWith('T')) lines.push('', 'A test that needs it on purpose keeps it with a reason: `// weft-allow ' + code + ': <why>` in the file header (whole file) or on the line above.')
+  const topic = Object.entries(topics).find(([, d]) => d.includes(code)) ?? (code.startsWith('T') ? ['testing'] : undefined)
   if (topic) lines.push('', `More: \`weft docs ${topic[0]}\`.`)
   return lines.join('\n')
 }

@@ -1,6 +1,6 @@
 // The page overlays.browser.test.mjs drives: overlays near the viewport's edges, and inside a Modal.
-import { render } from 'weft/dom'
-import { state } from 'weft'
+import { render } from '@weft-js/core/dom'
+import { state } from '@weft-js/core'
 import { Button, DateField, Drawer, Menu, Modal, Slider, Toaster, toast } from '../../src/index'
 import { ComboField } from '../../src/Combobox'
 
@@ -10,9 +10,10 @@ const long = [{ label: 'A long enough menu item' }]
 
 function App() {
   const modal = state(false), modal2 = state(false), drawer = state(false), sheet = state(false), text = state(''), v = state(50), submitted = state(0)
-  ;(window as any).api = { modal, modal2, drawer, sheet, text, submitted, toast, undone: 0 }
-  const raise = (o = {}) => toast.show({ title: 'Saved', action: { label: 'Undo', onClick: () => (window as any).api.undone++ }, ...o })
-  ;(window as any).api.raise = raise
+  const api: Record<string, unknown> & { undone: number } = { modal, modal2, drawer, sheet, text, submitted, toast, undone: 0 }
+  const raise = (o = {}) => toast.show({ title: 'Saved', action: { label: 'Undo', onClick: () => api.undone++ }, ...o })
+  api.raise = raise
+;(window as unknown as { api: typeof api }).api = api
   return (
     <div style="min-block-size:3000px;padding:20px">
       <Toaster />
@@ -21,7 +22,7 @@ function App() {
       <Modal open={modal} title="One">
         <Button onClick={() => (modal2.value = true)}>Open second</Button>
         <Modal open={modal2} title="Two"><p>nested</p></Modal>
-        <ComboField label="Fruit" text={() => text.value} onText={t => (text.value = t)} minChars={1} find={async q => fruits.filter(f => f.toLowerCase().startsWith(q.toLowerCase()))} row={(f: string) => ({ main: f })} onPick={(f: string) => (text.value = f)} />
+        <ComboField label="Fruit" text={() => text.value} onText={t => (text.value = t)} minChars={1} find={q => Promise.resolve(fruits.filter(f => f.toLowerCase().startsWith(q.toLowerCase())))} row={(f: string) => ({ main: f })} onPick={(f: string) => (text.value = f)} />
       </Modal>
       <Drawer open={drawer} title="Sheet" side="bottom"><p>hi</p></Drawer>
       <div style="margin-block-start:120px;inline-size:300px"><DateField label="Sheet date" open={sheet} presentation="sheet" locale="en-US" today="2026-01-15" /></div>

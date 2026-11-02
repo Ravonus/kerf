@@ -1,18 +1,18 @@
-import { firstName, peerColor, uid, type Peer } from '@weft/warp-core'
+import { firstName, peerColor, uid, type Peer } from '@weft-js/warp-core'
 import { Input } from '../Field'
 import { PeerAvatar } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/lock.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/lock.css'
 
 /** The chip on a field another peer holds (07 §6.1): "Kofi is editing". */
-export function LockIndicator({ peer, ...rest }: { peer: Peer; [attr: string]: any }) {
+export function LockIndicator({ peer, ...rest }: { peer: Peer; [attr: string]: unknown }) {
   return <span data-scope="lock" data-presence-color={peerColor(peer)} {...rest}><PeerAvatar peer={peer} />{firstName(peer.name)} is editing</span>
 }
 
 /** A text field held by a peer: `readonly`, not disabled, so it stays readable and focusable; the chip describes it. */
-export function LockedField({ peer, ...field }: { peer: Peer | null; label: string; value?: string; [attr: string]: any }) {
+export function LockedField({ peer, ...field }: { peer: Peer | null; label: string; value?: string; [attr: string]: unknown }) {
   const id = uid('lock')
   return (
     <div data-locked-by={peer?.id}>

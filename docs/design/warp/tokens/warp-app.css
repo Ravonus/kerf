@@ -790,7 +790,7 @@
 
 /* composer: one field, the signature sweep on its border, grows to 8 lines, stays above the keyboard */
 :where([data-scope="composer"]) {
-  position: relative; display: grid; gap: 6px; margin: 0 var(--warp-space-group) var(--warp-space-group);
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0 var(--warp-space-group) var(--warp-space-group);
   padding: 8px; border-radius: calc(var(--warp-radius-surface) + 2px); background: var(--warp-color-surface-raised);
 }
 /* the composer is a field: it keeps the ink base (sweep vs base >= 3:1), no override */

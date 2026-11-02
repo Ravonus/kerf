@@ -1,26 +1,25 @@
 ```tsx
-import { state, derived } from 'weft'
+import { derived } from '@weft-js/core'
 
-export function Cart({ items, taxRate }: { items: Item[]; taxRate: number }) {
-  const coupon = state<string | null>(null)
+export function Cart({ items, taxRate }: { items: { id: string; name: string; price: number }[]; taxRate: number }) {
   const subtotal = derived(() => items.reduce((s, i) => s + i.price, 0))
   const total = derived(() => subtotal.value * (1 + taxRate))
   return (
     <section>
-      <ul>{items.map(item => <Row key={item.id} item={item} />)}</ul>
-      {coupon.value && <b>{coupon.value}</b>}
-      <p>{format(total.value)}</p>
-      <CouponInput value={coupon} />
+      <ul>{items.map(item => <li key={item.id}>{item.name}</li>)}</ul>
+      <p>{total.value.toFixed(2)}</p>
     </section>
   )
 }
 ```
 
 1. **State is a box. Read and write `.value`.** Everywhere, JSX included (W015).
-2. **Anything computed from other values is `derived`.** Never in a `watch`, never in the component body (W001). Only naming a prop is fine: `const x = props.y` stays live.
+2. **Anything computed from other values is `derived`.** Not in a `watch` or the component body (W001).
 3. **JSX is always live.** Every `{expr}` and attribute re-evaluates when what it reads changes.
 4. **Props are always current.** Destructure them (one level, W006). Read them in `derived`, `watch`, JSX or handlers.
-5. **The component body runs once.** No early returns on state, no `let` counters. Branch in JSX.
+   `const x = props.y` is a live read-only alias. `let x = props.y` and `props.y =` write locally; only `bind:y={box}`
+   writes out.
+5. **The component body runs once.** No early returns on state (W040), no `let` counters (W041). Branch in JSX.
 6. **Pass a box only to give write access** (`value={coupon}`, child prop typed `State<string | null>`), or so list
    rows can read one entry: `cart.get(p.id)` re-runs one row, `cart[p.id]` or `cart.value[p.id]` re-runs them all
    (W017), in the list and in the row component alike.

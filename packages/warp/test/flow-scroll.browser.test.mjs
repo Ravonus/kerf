@@ -11,7 +11,7 @@ vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
 const read = file => readFileSync(join(styles, file), 'utf8')
-const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/table.css'].filter(f => { try { return read(f) } catch {} }).map(read).join('\n')
+const css = ['warp.css', 'components/base.css', 'components/surface.css', 'data/table.css'].filter(f => { try { return read(f) } catch { return false } }).map(read).join('\n')
 
 const rows = Array.from({ length: 4 }, (_, i) => `<tr id="row-${i}"><td>Row ${i}</td></tr>`).join('')
 const PAGE = `
@@ -45,7 +45,7 @@ async function open(options, expression = 'balanced') {
 }
 
 test('warp clips with overflow: clip; only the page lock is overflow: hidden', () => {
-  const files = readdirSync(styles, { recursive: true }).filter(f => f.endsWith('.css'))
+  const files = readdirSync(styles, { recursive: true, encoding: 'utf8' }).filter(f => f.endsWith('.css'))
   const hidden = files.flatMap(f => read(f).split('\n').filter(l => /(^|[^-\w])overflow:\s*hidden/.test(l) && !/html/.test(l)).map(l => `${f}: ${l.trim()}`))
   expect(hidden).toEqual([])
 })
@@ -115,7 +115,7 @@ test('a Shell deep in the page gates its own host, not the page: flow keeps runn
 
 test('a code block resting at the fold finishes its scan, and the scan runs under its text, never over it', async () => {
   const { page, close } = await stage(`<div style="block-size:560px"></div>
-    <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft/warp'; ".repeat(4)}</pre></figure>
+    <figure data-scope="codeblock" id="code" style="margin:0;block-size:240px;inline-size:600px"><pre id="pre" style="margin:0;overflow:clip">${"import { Button } from '@weft-js/warp'; ".repeat(4)}</pre></figure>
     <div style="block-size:3000px"></div>`)
   await page.waitForTimeout(1200) // the scan plays once on a timer; it never rests part way
   const m = await page.evaluate(() => {

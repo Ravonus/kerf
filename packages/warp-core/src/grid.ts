@@ -7,7 +7,7 @@ export function pageList(cur: number, total: number): (number | 'gap')[] {
   const near = [...new Set([1, cur - 1, cur, cur + 1, total])].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
   const out: (number | 'gap')[] = []
   near.forEach((p, i) => {
-    const skip = i ? p - near[i - 1] : 1
+    const skip = i ? p - near[i - 1]! : 1
     if (skip === 2) out.push(p - 1) // a gap of one page is that page
     else if (skip > 2) out.push('gap')
     out.push(p)
@@ -16,14 +16,15 @@ export function pageList(cur: number, total: number): (number | 'gap')[] {
 }
 
 /** Load more as `el`, the sentinel, comes within 120px of view (06 §8). The button beside it is the fallback. */
-export function infiniteScroll(el: HTMLElement, opts: { onReach(): void; root?: HTMLElement | null }) {
+export function infiniteScroll(el: HTMLElement, opts: { onReach(): void; root?: HTMLElement | null | undefined }) {
   let o = opts
   const Observer = el.ownerDocument.defaultView?.IntersectionObserver
-  const seen = Observer && new Observer(([e]) => { if (e.isIntersecting) o.onReach() }, { root: o.root ?? null, rootMargin: '120px' })
+  const seen = Observer && new Observer(([e]) => { if (e!.isIntersecting) o.onReach() }, { root: o.root ?? null, rootMargin: '120px' })
   seen?.observe(el)
   return { update: (next: typeof opts) => void (o = next), destroy: () => seen?.disconnect() }
 }
 
+/** How a filter row reads its value. */
 export type GridFilter = 'text' | 'select' | 'min'
 
 /** A cell against a filter row's value: contains, equals or at least. A blank filter keeps everything. */
@@ -31,6 +32,7 @@ export function matchFilter(kind: GridFilter | undefined, wanted: string, value:
   if (!kind || wanted === '') return true
   if (kind === 'select') return String(value) === wanted
   if (kind === 'min') return Number(value) >= Number(wanted)
+  // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
   return String(value ?? '').toLowerCase().includes(wanted.toLowerCase())
 }
 
@@ -46,6 +48,7 @@ export function groupRows<T>(rows: readonly T[], key: (row: T) => string) {
   return groups
 }
 
+/** The aggregates a grid column can show. */
 export type Aggregate = 'sum' | 'avg' | 'count' | 'min' | 'max'
 
 /** A column's aggregate over `values`; blanks don't count towards an average. */
@@ -57,8 +60,10 @@ export function aggregate(kind: Aggregate, values: readonly unknown[]) {
   return kind === 'sum' ? sum : kind === 'avg' ? sum / n.length : kind === 'min' ? Math.min(...n) : Math.max(...n)
 }
 
-export interface TreeEntry<T> { row: T; key: string; level: number; size: number; pos: number; parent?: string; branch: boolean; context?: boolean; hit?: boolean }
+/** A tree row flattened for the grid, with the place it holds among its siblings. */
+export interface TreeEntry<T> { row: T; key: string; level: number; size: number; pos: number; parent?: string | undefined; branch: boolean; context?: boolean | undefined; hit?: boolean | undefined }
 
+/** How a grid reads a tree out of the app's rows. */
 export interface TreeSource<T> {
   key(row: T): string
   /** What's loaded under a row: undefined when it hasn't loaded yet, [] for a leaf. */
@@ -68,7 +73,7 @@ export interface TreeSource<T> {
   open(key: string): boolean
   /** A closed branch stays closed during a query (06 §6 Filter). */
   closed?(key: string): boolean
-  match?(row: T): boolean
+  match?: ((row: T) => boolean) | undefined
 }
 
 /**
@@ -110,6 +115,7 @@ export function leaves<T>(row: T, kids: (row: T) => readonly T[] | undefined): T
   return under?.length ? under.flatMap(k => leaves(k, kids)) : [row]
 }
 
+/** One pivot cell: the value and its share of the row. */
 export interface PivotCell { value: number; share: number }
 
 /** rows × columns × measure (06 §6): cells with their share of the largest (the heat), totals both ways. */
@@ -129,15 +135,19 @@ export function pivotTable<T>(rows: readonly T[], rowKey: (r: T) => string, colK
 }
 
 /** A copied range. Tabs and line breaks inside a cell would split it, so they become spaces. */
+// oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
 export const toTSV = (rows: readonly (readonly unknown[])[]) => rows.map(r => r.map(c => String(c ?? '').replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n')
+/** A pasted TSV as rows of cells. */
 export const parseTSV = (text: string) => text.replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n').map(l => l.split('\t'))
 
 const csvCell = (c: unknown) => {
+  // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
   const s = String(c ?? '')
   // a leading = + - @ runs as a formula when a spreadsheet opens the file
   const safe = /^[=+\-@\t\r]/.test(s) && typeof c !== 'number' ? `'${s}` : s
   return /[",\n\r]/.test(safe) || safe !== s ? `"${safe.replace(/"/g, '""')}"` : safe
 }
+/** Rows as CSV, with cells a spreadsheet would run as formulas made safe. */
 export const toCSV = (head: readonly unknown[], rows: readonly (readonly unknown[])[]) => [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
 
 /** Move `item` so it sits at `to`, in a copy. */
@@ -147,6 +157,7 @@ export function moved<T>(list: readonly T[], item: T, to: number) {
   return rest
 }
 
+/** Options for the data grid's keyboard, selection and clipboard. */
 export interface GridOptions {
   /** Grouped or tree data: role=treegrid, where a row takes focus too. */
   tree?: boolean
@@ -198,7 +209,7 @@ export function grid(root: HTMLElement, opts: GridOptions) {
         const cell = cells(all[r])[c]
         if (!cell) continue
         cell.setAttribute('aria-selected', 'true')
-        touched.add(all[r].dataset.row!)
+        touched.add(all[r]!.dataset.row!)
       }
     }
     o.onSelect?.([...touched])
@@ -213,21 +224,21 @@ export function grid(root: HTMLElement, opts: GridOptions) {
   const copy = async () => {
     const picked = selected()
     const lines = new Map<Element, string[]>()
-    for (const c of picked.length ? picked : [target(at)].filter(Boolean)) {
+    for (const c of picked.length ? picked : [target(at)].filter(Boolean) as Element[]) {
       const line = lines.get(c.parentElement!) ?? []
-      line.push(c.textContent!.trim())
+      line.push(c.textContent.trim())
       lines.set(c.parentElement!, line)
     }
     const table = [...lines.values()]
     if (!table.length) return
     await doc.defaultView!.navigator.clipboard?.writeText(toTSV(table)).catch(() => {})
     for (const c of picked) { c.removeAttribute('data-copied'); void c.offsetWidth; c.setAttribute('data-copied', '') }
-    o.onStatus?.(`Copied ${table.length} × ${table[0].length} cells`)
+    o.onStatus?.(`Copied ${table.length} × ${table[0]!.length} cells`)
   }
 
   const parentOf = (i: number, all: HTMLElement[]) => {
-    const level = +all[i].getAttribute('aria-level')!
-    for (let j = i - 1; j >= 0; j--) if (+all[j].getAttribute('aria-level')! < level) return j
+    const level = +all[i]!.getAttribute('aria-level')!
+    for (let j = i - 1; j >= 0; j--) if (+all[j]!.getAttribute('aria-level')! < level) return j
     return -1
   }
   const onKey = (e: KeyboardEvent) => {
@@ -345,8 +356,8 @@ export function grid(root: HTMLElement, opts: GridOptions) {
   }
   const onDragEnd = () => { dragged = undefined; clearDrop() }
 
-  const on: [string, (e: any) => void][] = [['keydown', onKey], ['click', place], ['dblclick', onDouble], ['paste', onPaste], ['dragstart', onDragStart], ['dragover', onDragOver], ['drop', onDrop], ['dragend', onDragEnd]]
-  for (const [type, fn] of on) root.addEventListener(type, fn)
+  const on: [string, (e: never) => void][] = [['keydown', onKey], ['click', place], ['dblclick', onDouble], ['paste', onPaste], ['dragstart', onDragStart], ['dragover', onDragOver], ['drop', onDrop], ['dragend', onDragEnd]]
+  for (const [type, fn] of on) root.addEventListener(type, fn as EventListener)
   settle()
   return {
     update(next: GridOptions) {
@@ -358,13 +369,13 @@ export function grid(root: HTMLElement, opts: GridOptions) {
       // the row that held focus may have moved: find it again, so the tab stop stays on it
       const live = current?.isConnected ? current : undefined
       if (live) {
-        const tr = (live.closest('tr[data-row]') ?? live) as HTMLElement
+        const tr = live.closest<HTMLElement>('tr[data-row]') ?? live
         at = [rows().indexOf(tr), tr === live ? -1 : cells(tr).indexOf(live)]
       }
       settle()
     },
     /** Focus returns here after an edit. */
     refocus() { settle()?.focus() },
-    destroy() { for (const [type, fn] of on) root.removeEventListener(type, fn) },
+    destroy() { for (const [type, fn] of on) root.removeEventListener(type, fn as EventListener) },
   }
 }

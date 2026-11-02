@@ -21,7 +21,7 @@ import { loadConfig } from './load-config.mjs'
 import { listSurfaces } from './surface-checks.mjs'
 import { runTask, tasks } from './tasks.mjs'
 import { formatGate, gate } from './gate.mjs'
-import { browserCommand, browserUsage } from './browser/cli.mjs'
+import { browserCommand } from './browser/cli.mjs'
 import { metaTable } from './meta-table.mjs'
 import { buildCommand, dbCommand, devCommand, doctorCommand, routesCommand, startCommand } from './start.mjs'
 import { explainTarget, findGroups, formatExplain, formatFind, styleMatrix, writeMatrixFile } from './style.mjs'
@@ -97,8 +97,8 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
     switch (args.command) {
       case 'lsp': {
         const { lsp } = await import('./infer/lsp.mjs')
-        const out = await lsp(args.root)
-        return await new Promise(ok => out.server.on('exit', () => ok(0)))
+        const out = lsp(args.root)
+        return await new Promise(ok => { out.server.on('exit', () => ok(0)) })
       }
       case 'tsc': {
         const { propTsc } = await import('./props-checks.mjs')
@@ -145,7 +145,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       case 'dev': {
         const server = await devCommand(args.root, { port: args.flags.port && Number(args.flags.port) })
         say(`weft dev: ${server.resolvedUrls.local[0]}`)
-        await new Promise(ok => process.once('SIGINT', ok))
+        await new Promise(ok => { process.once('SIGINT', ok) })
         await server.close()
         return 0
       }
@@ -210,7 +210,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
       }
       case 'icons': {
         if (args.positional[0] !== 'publish' || !args.positional[1]) { say('usage: weft icons publish <dir>'); return 1 }
-        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft/icons/compile')).href)
+        const { publish } = await import(pathToFileURL(createRequire(join(args.root, 'package.json')).resolve('@weft-js/warp-icons/compile')).href)
         const out = await publish(resolve(args.root, args.positional[1]))
         if (args.json) print(out)
         else say(`${out.files} files for ${out.icons} icons in ${out.dir}. Nothing was uploaded: host that folder, then set icons({ source }).`)
@@ -260,7 +260,7 @@ export async function main(argv, io = { stdout: process.stdout, stderr: process.
           else say([...(result.written ? result.approved : result.pending).map(formatTrust), result.written ? `${result.lock}: ${result.approved.length} approved` : result.pending.length ? 'nothing written: name a plugin, or pass --all' : 'nothing waiting', ...result.written ? result.pending.map(p => `still waiting: ${p.name}`) : [], ...(result.gitignore ? ['.gitignore: the lock is no longer ignored, so commit it'] : [])].join('\n'))
           return result.ok ? 0 : 1
         }
-        throw Object.assign(new Error(`unknown plugins subcommand ${sub}`), { code: 'E_USAGE' })
+        throw Object.assign(new Error(`unknown plugins subcommand ${String(sub)}`), { code: 'E_USAGE' })
       }
       case 'fix': {
         const result = await fix(args.root, { files: args.positional })

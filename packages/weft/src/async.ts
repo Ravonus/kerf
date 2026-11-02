@@ -15,6 +15,7 @@ import { keys, nextKey, under } from './keys'
 
 export const timing = { showAfter: 150, hold: 400 }
 
+/** An async value: what it holds now, whether a fetch is in flight, and how it last failed. */
 export interface Resource<T> {
   readonly value: T | undefined
   /** A fetch is in flight (the first or a refresh). */
@@ -23,14 +24,15 @@ export interface Resource<T> {
   /** Fetch again. The current value stays until the new one lands. */
   refresh(): void
   /** A placeholder value of the result's type (research 31 §2): what a pending view sizes itself from. */
-  readonly shape?: T
+  readonly shape?: T | undefined
 }
 
+/** How a resource starts and transfers. */
 export interface ResourceOptions<T> {
   initial?: T
   /**
    * `false`: the value isn't written into the page's data or read back from it, because the caller's own cache
-   * transfers it (@weft/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
+   * transfers it (@weft-js/start's query cache, research 27 §4). The fetcher is called on every server pass (return the
    * value synchronously once it's known) and during hydration (return the transferred value synchronously, so the
    * resource settles as it's created and hydration writes nothing).
    */
@@ -39,12 +41,12 @@ export interface ResourceOptions<T> {
   shape?: { of: unknown; read(): T | undefined }
 }
 
-type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void; shape?: ResourceOptions<any>['shape'] }
+type Tracked = { first: State<boolean>; err: State<unknown>; refresh(): void; shape?: ResourceOptions<unknown>['shape'] }
 const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
-/** While a Boundary's `pending` renders: the resources it's waiting for (weft/shape). */
+/** While a Boundary's `pending` renders: the resources it's waiting for (@weft-js/core/shape). */
 export const waiting = context<Tracked[] | undefined>(undefined)
 
-const thenable = (v: any): v is PromiseLike<any> => v != null && typeof v.then === 'function'
+const thenable = (v: unknown): v is PromiseLike<unknown> => v != null && typeof (v as PromiseLike<unknown>).then === 'function'
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /**
@@ -117,7 +119,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
     let hydrated = !!saved
     effect(
       () => {
-        version.value
+        void version.value
         ctrl?.abort()
         const c = (ctrl = new AbortController())
         let out: Promise<T> | T
@@ -156,7 +158,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
  * `<Boundary pending={<Skeleton />} error={(e, retry) => …}>…</Boundary>`. Without `error`, a failure renders
  * nothing (dev builds log it).
  */
-export function Boundary(props: { pending?: any; /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => any; error?: (e: unknown, retry: () => void) => any; children?: any }) {
+export function Boundary(props: { pending?: unknown; /** What `pending="shape"` compiles to: a variant, its place reserved from the first paint. */ shape?: () => unknown; error?: (e: unknown, retry: () => void) => unknown; children?: unknown }) {
   const parent = getOwner()
   const list: Tracked[] = []
   const added = state(0)
@@ -164,9 +166,10 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   const track = { add(r: Tracked) { list.push(r); untrack(() => added.value++) } }
   const loading = derived(() => (added.value, list.some(r => r.first.value && r.err.value === undefined)))
   const failure = derived(() => {
-    added.value
+    void added.value
     if (thrown.value !== undefined) return thrown.value
     for (const r of list) if (r.err.value !== undefined) return r.err.value
+    return undefined
   })
 
   const key = keys.on ? nextKey() : undefined
@@ -176,7 +179,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   /** Run `fn` in the content (`c`) or fallback (`f`) scope while keys are on; fresh otherwise. */
   const scoped = <T,>(side: 'c' | 'f', fn: () => T): T => (keys.on && key !== undefined ? under(key + side + '/', fn) : fn())
 
-  let content: any
+  let content: unknown
   let disposeContent: (() => void) | undefined
   const build = () => {
     disposeContent?.()
@@ -191,7 +194,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
             const c = props.children
             return rt.server ? { t: rt.resolve!(c) } : c // resolve now: lazily created resources register here
           } catch (e) {
-            if (DEV && e && typeof e === 'object' && (e as any).weft) console.error(`weft: <Boundary> caught an error in ${(e as any).weft}`)
+            if (DEV && e && typeof e === 'object' && (e as { weft?: string }).weft) console.error(`weft: <Boundary> caught an error in ${(e as { weft?: string }).weft}`)
             thrown.value = e
             return null
           }
@@ -211,7 +214,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       if (status === 'e') data.r[key] = { e: message(untrack(() => failure.value)) }
     }
     if (status === 'p') show.value = 'fallback'
-    else if (status === 'c' && key !== undefined) rt.stream?.set(key, content?.t ?? '')
+    else if (status === 'c' && key !== undefined) rt.stream?.set(key, (content as { t?: string } | null | undefined)?.t ?? '')
   } else {
     let timer: ReturnType<typeof setTimeout> | undefined
     let shownAt = 0
@@ -243,15 +246,15 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
     for (const r of list) if (untrack(() => r.err.value) !== undefined) r.refresh()
   }
 
-  let side: { kind: 'p' | 'e'; node: any; dispose: () => void } | undefined
+  let side: { kind: 'p' | 'e'; node: unknown; dispose: () => void } | undefined
   const pendingView = () => waiting.provide(list, () => {
     const v = props.shape ? props.shape() : props.pending
     return rt.server ? { t: rt.resolve!(v) } : v
   })
-  const sideView = (kind: 'p' | 'e', make: () => any) => {
+  const sideView = (kind: 'p' | 'e', make: () => unknown) => {
     if (side?.kind === kind && kind === 'p') return side.node
     side?.dispose()
-    const s: { kind: 'p' | 'e'; node: any; dispose: () => void } = { kind, node: null, dispose: () => {} }
+    const s: { kind: 'p' | 'e'; node: unknown; dispose: () => void } = { kind, node: null, dispose: () => {} }
     s.node = createRoot(d => ((s.dispose = d), scoped('f', () => untrack(make))), parent)
     side = s
     return s.node
@@ -275,7 +278,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
     if (s === 'fallback' || (s === 'wait' && props.shape)) {
       // A shape holds its place unseen until the 150 ms are up, so showing it moves nothing (research 11 §7.4).
       const n = sideView('p', pendingView)
-      if (props.shape && !rt.server) n.style.visibility = s === 'wait' ? 'hidden' : ''
+      if (props.shape && !rt.server) (n as HTMLElement).style.visibility = s === 'wait' ? 'hidden' : ''
       return n
     }
     if (side) {

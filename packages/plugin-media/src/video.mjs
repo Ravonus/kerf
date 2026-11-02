@@ -1,5 +1,5 @@
 // Video, audio and GIF-to-video for media.build@1 (research 15 §3.3–3.4), through whichever providers media.encode@1
-// has bound (`@weft/plugin-media-ffmpeg`).
+// has bound (`@weft-js/plugin-media-ffmpeg`).
 //   Keep what is already delivered: an H.264 source at or under the top width is remuxed, not re-encoded, and an
 //   efficient codec has to beat the H.264 file by 15% to ship (re-encoding a lossy source can't win at a fixed target).
 //   Quality: a CRF search at the top width, sampled SSIMULACRA2 frames with mean ≥ target and worst frame ≥ target − 5.
@@ -20,7 +20,7 @@ export const AUDIO = /\.(mp3|wav|flac|ogg|oga|opus|m4a|aac)$/i
 const SMALLER = 0.85
 const COMPATIBLE = 'video/h264'
 const short = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
-const need = (o, key) => ({ code: 'P101', severity: 'error', message: `${o} needs \`media.encode\` for ${key}, and nothing provides it. Add \`mediaFfmpeg()\` from @weft/plugin-media-ffmpeg to \`plugins\` in weft.config.ts.` })
+const need = (o, key) => ({ code: 'P101', severity: 'error', message: `${o} needs \`media.encode\` for ${key}, and nothing provides it. Add \`mediaFfmpeg()\` from @weft-js/plugin-media-ffmpeg to \`plugins\` in weft.config.ts.` })
 const errored = (name, e) => ({ asset: null, files: [], diagnostics: [{ code: e.code ?? 'M019', severity: 'error', message: `${name}: ${e.message}` }] })
 
 /** A temp file for ffmpeg to read: `work(path)` runs with the bytes on disk. */
@@ -140,19 +140,19 @@ function chosen(sets) {
   return [...winners, compatible]
 }
 
-function finish(asset, sets, poster, diagnostics) {
+function finish(asset, sets, cover, diagnostics) {
   const files = sets.flatMap(s => s.rungs.map(r => ({ name: r.name, bytes: r.bytes })))
-  if (poster) files.push(poster.file)
+  if (cover) files.push(cover.file)
   const compatible = sets.at(-1)
   const top = compatible.rungs.at(-1)
-  const out = { ...asset, ...poster?.asset, src: top.name, sources: sets.map(s => ({ type: s.type, srcset: s.rungs.map(r => `${r.name} ${r.width}w`).join(', ') })) }
+  const out = { ...asset, ...cover?.asset, src: top.name, sources: sets.map(s => ({ type: s.type, srcset: s.rungs.map(r => `${r.name} ${r.width}w`).join(', ') })) }
   return { asset: out, files, diagnostics }
 }
 
 /** The compatible copy `encoder: 'compatible'` swaps in, and M014 with what it adds. */
 function withCopy(out, o, name, copy) {
   if (o.encoder !== 'compatible' || !copy) return out
-  const efficient = out.files.filter(f => f.name !== copy.src && /\.webm$/.test(f.name)).at(-1)?.bytes.length ?? copy.bytes
+  const efficient = out.files.filter(f => f.name !== copy.src && f.name.endsWith('.webm')).at(-1)?.bytes.length ?? copy.bytes
   out.asset.copy = { src: copy.src, type: copy.type, bytes: copy.bytes, ratio: Math.round((copy.bytes / efficient) * 100) / 100 }
   out.asset.swap = o.swap ?? 'intent'
   out.diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'compatible'\` adds ${Math.round((copy.added ?? 0) / 1024)} KB for the compatible copy.` })
@@ -221,7 +221,7 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
   const keep = o.gif?.keepUnder ?? 8192
   if (!audio && (bytes.length < keep || frames < 4)) return null
   const opaque = (await sharp(bytes, { animated: true }).stats()).isOpaque
-  if (!opaque) return audio ? null : alphaWebp({ bytes, name, stem, width, height }, o)
+  if (!opaque) return audio ? null : alphaWebp({ bytes, name, stem, width, height })
   try {
     return await onDisk(name, bytes, async source => {
       const probe = encode[COMPATIBLE]
@@ -255,7 +255,7 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
   }
 }
 
-async function alphaWebp({ bytes, name, stem, width, height }, o) {
+async function alphaWebp({ bytes, name, stem, width, height }) {
   const webp = await sharp(bytes, { animated: true }).webp({ quality: 80, effort: 5 }).toBuffer()
   if (webp.length > bytes.length * SMALLER) return null
   const fileName = `${stem}-${short(webp)}.webp`

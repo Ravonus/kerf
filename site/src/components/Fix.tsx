@@ -1,6 +1,6 @@
-import { derived, onMount, state } from 'weft'
-import { Button } from '@weft/warp'
-import '@weft/warp-core/styles/rich/codeblock.css'
+import { derived, onMount, state } from '@weft-js/core'
+import { Button } from '@weft-js/warp'
+import '@weft-js/warp-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
 const START = 2
@@ -42,13 +42,13 @@ export function Fix() {
   }
   onMount(() => {
     const seen = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { play(); seen.disconnect() }
+      if (e!.isIntersecting) { play(); seen.disconnect() }
     }, { threshold: 0.35 })
     seen.observe(box!)
     return () => { seen.disconnect(); stop() }
   })
   return (
-    <section data-site="fix" data-step={step.value} ref={(n: any) => (box = n)}>
+    <section data-site="fix" data-step={step.value} ref={el => (box = el)}>
       <h2>When your agent makes a mistake, weft catches it</h2>
       <p data-part="intro">The compiler stops the mistake before it ships and says how to fix it, in words your agent can act on.</p>
       <ol data-part="steps">
@@ -64,10 +64,16 @@ export function Fix() {
         <div data-part="code">
           <p data-part="say">{SAY[step.value]}</p>
           <div data-part="panels">
-            <div data-show="0" data-scope="codeblock" innerHTML={show.bad}></div>
+            <div data-show="0" data-scope="codeblock"
+              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+              innerHTML={show.bad}></div>
             <div data-show="1" data-part="diag"><b>{show.code}</b> {show.message}<small>{show.file}. Fix: {show.fix}</small></div>
-            <div data-show="2" data-scope="codeblock" innerHTML={show.diff}></div>
-            <div data-show="3" data-scope="codeblock" innerHTML={show.good}></div>
+            <div data-show="2" data-scope="codeblock"
+              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+              innerHTML={show.diff}></div>
+            <div data-show="3" data-scope="codeblock"
+              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+              innerHTML={show.good}></div>
           </div>
         </div>
         <div data-part="play">

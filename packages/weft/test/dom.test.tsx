@@ -1,8 +1,8 @@
 // weft-allow T005: framework test of keyed rows; it reads the row nodes and the key attribute the runtime writes
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { createRoot, onCleanup, onMount, state, untrack } from 'weft'
-import { flush, render, touches } from 'weft/test'
+import { createRoot, onCleanup, onMount, state, untrack } from '@weft-js/core'
+import { flush, render, touches } from '@weft-js/core/test'
 
 function Counter({ step = 1 }: { step?: number }) {
   const n = state(0)
@@ -40,7 +40,7 @@ test('keyed list: a new object under the same key updates the row in place', asy
   const t = await touches(() => { items.value = items.value.map(i => (i.id === 'a' ? { ...i, n: 9 } : i)) })
   expect(t.mutations).toBe(1)
   expect(screen.getAllByRole('listitem')[0]).toBe(first)
-  expect(first.textContent).toBe('9')
+  expect(first!.textContent).toBe('9')
 })
 
 test('keyed list: reorder moves rows instead of rebuilding them', async () => {
@@ -98,21 +98,21 @@ test('keyed list: rows are found by key in a short middle and a long one, NaN ke
   render(() => <ul>{items.value.map(x => <li key={x.k}>{String(x.k)}</li>)}</ul>)
   const [a, b, c] = screen.getAllByRole('listitem')
   const [x, y, z] = untrack(() => items.value)
-  items.value = [y, z, x]
+  items.value = [y!, z!, x!]
   await flush()
   expect(screen.getAllByRole('listitem')).toEqual([b, c, a])
   const long = Array.from({ length: 12 }, (_, k) => ({ k: k + 10 }))
-  items.value = [...long, y]
+  items.value = [...long, y!]
   await flush()
   expect(screen.getAllByRole('listitem').at(-1)).toBe(b)
   const lis = screen.getAllByRole('listitem')
-  items.value = [y, ...long.toReversed()]
+  items.value = [y!, ...long.toReversed()]
   await flush()
   expect(screen.getAllByRole('listitem')).toEqual([lis[12], ...lis.slice(0, 12).reverse()])
 })
 
 test('a text hole that is its parent\'s only child: empty, then text, then a node, then text', async () => {
-  const v = state<any>('')
+  const v = state<unknown>('')
   render(() => <p data-testid="p">{v.value}</p>)
   const p = screen.getByTestId('p')
   expect(p.childNodes.length).toBe(1)
@@ -181,7 +181,7 @@ test('keyed list: one removal adds nothing to the list of keys and keeps every o
 })
 
 test('a plain object with a nodeType field is a value, not a node', async () => {
-  const v = state<any>({ nodeType: 1 })
+  const v = state<unknown>({ nodeType: 1 })
   render(() => <p>a{v.value}b</p>)
   await flush()
   expect(document.querySelector('p')!.textContent).toBe('a[object Object]b')
@@ -217,14 +217,15 @@ test('a keyed row with an index reads it live; its key is written once', async (
   const { container } = render(() => <ul>{items.value.map((x, i) => <li key={x.id} data-id={x.id}>{i}:{x.id}:{x.n}</li>)}</ul>)
   const text = () => [...container.querySelectorAll('li')].map(li => `${li.dataset.id} ${li.textContent}`)
   expect(text()).toEqual(['a 0:a:1', 'b 1:b:2'])
-  items.value = [{ id: 'b', n: 3 }, items.value[0]]
+  items.value = [{ id: 'b', n: 3 }, items.value[0]!]
   await flush()
   expect(text()).toEqual(['b 0:b:3', 'a 1:a:1'])
 })
 
 test('a fragment holding children with live parts updates them; a spread of an undefined prop is empty', async () => {
   const n = state(0)
-  function Wrap({ children, attrs }: { children?: any; attrs?: Record<string, any> }) {
+  function Wrap({ children, attrs }: { children?: unknown; attrs?: Record<string, unknown> }) {
+    // oxlint-disable-next-line no-constant-binary-expression -- a constant false in a fragment is the case under test
     return <b {...attrs}><>{false && <i />}{children}</></b>
   }
   const { container } = render(() => <Wrap>Added {n.value}</Wrap>)
@@ -235,7 +236,7 @@ test('a fragment holding children with live parts updates them; a spread of an u
 
 test('children with a live part: one text write when the part changes (the list reuses its text nodes)', async () => {
   const n = state(0)
-  function Label({ children }: { children?: any }) {
+  function Label({ children }: { children?: unknown }) {
     return <b>{children}</b>
   }
   const { container } = render(() => <Label>Cart ({n.value})</Label>)
@@ -256,6 +257,7 @@ test('ARIA booleans are written as true/false; other booleans add or remove the 
 test('onMount runs once the nodes are placed: refs assigned, the element in the document', async () => {
   const seen: string[] = []
   function Field({ name }: { name: string }) {
+    // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
     let input!: HTMLInputElement
     onMount(() => {
       seen.push(`${name}:${input?.isConnected}`)

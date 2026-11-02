@@ -1,6 +1,6 @@
-import { KeyIcon } from '@weft/icons'
-import { agoText, usedWithinDay } from '@weft/warp-core'
-import { derived, state, type State } from 'weft'
+import { KeyIcon } from '@weft-js/warp-icons'
+import { agoText, usedWithinDay } from '@weft-js/warp-core'
+import { derived, state, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
@@ -13,21 +13,24 @@ import { ConfirmDialog, TypeToConfirm } from './Danger'
 import { SecretReveal, useReveal } from './Secret'
 import { afterFlush, guarded, latch, read } from './atoms'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
-import '@weft/warp-core/styles/flows/api-key.css'
-import '@weft/warp-core/styles/flows/choice.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/api-key.css'
+import '@weft-js/warp-core/styles/flows/choice.css'
 
+/** An API key as listed: never the secret, only its prefix. */
 export type ApiKey = { id: string; name: string; prefix: string; scopes: string[]; created: string; lastUsed?: string }
+/** What the create form hands to `onCreate`. */
 export type KeyDraft = { name: string; scopes: string[]; expires: string }
 
+/** Props for ApiKeys. */
 export interface ApiKeysProps {
   keys: readonly ApiKey[] | State<readonly ApiKey[]>
-  kind?: 'test' | 'live'
+  kind?: 'test' | 'live' | undefined
   /** Now, for "last used" and the 24-hour revoke rule. */
   now: string
   scopes?: { value: string; label: string }[]
@@ -63,7 +66,7 @@ export function ApiKeys({ keys, kind = 'test', now, scopes = SCOPES, expiries = 
   const plainOpen = state(false)
   let opener: HTMLElement | undefined
   let form: HTMLElement | undefined
-  const list = derived(() => read(keys) as readonly ApiKey[])
+  const list = derived(() => read(keys))
   const title = derived(() => (kind === 'live' ? 'live' : 'test'))
 
   const start = async (e: MouseEvent) => {
@@ -109,19 +112,19 @@ export function ApiKeys({ keys, kind = 'test', now, scopes = SCOPES, expiries = 
     : <><Button emphasis="frame" data-close="">Cancel</Button><Button loading={busy.value} onClick={make}>Create key</Button></>))
   return (
     <div data-scope="stack">
-      <Table caption={`${title.value === 'live' ? 'Live' : 'Test'} API keys`} captionHidden rows={list as any} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No keys yet', text: 'Create one to call the API.' }} />
+      <Table caption={`${title.value === 'live' ? 'Live' : 'Test'} API keys`} captionHidden rows={list} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No keys yet', text: 'Create one to call the API.' }} />
       {armed.value && (
         <Modal open={dialog} alert={!!secret.value} title={secret.value ? 'Copy your new key' : `Create a ${title.value} key`} description={secret.value ? 'You won’t see it again. Store it in your secrets manager now.' : 'Give it a name you’ll recognise in the audit log.'} footer={<>{footer.value}</>}>
           {secret.value
             ? <SecretReveal label={name.value} secret={secret.value} done={seen} ack="I’ve saved this key somewhere safe" />
             : (
-              <form ref={(n: any) => (form = n)} data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => { e.preventDefault(); make() }}>
+              <form ref={n => (form = n)} data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => { e.preventDefault(); void make() }}>
                 <Input label="Key name" placeholder="e.g. CI deploys" autofocus value={name.value} error={nameError.value} onInput={e => { name.value = e.currentTarget.value; nameError.value = '' }} />
                 <fieldset data-scope="choice">
                   <legend>Scopes</legend>
-                  {scopes.map(s => <Checkbox key={s.value} checked={chosen.value.includes(s.value)} error={s === scopes[0] && scopeError.value ? scopeError.value : undefined} onChange={(e: any) => toggle(s.value, e.currentTarget.checked)}>{s.label}</Checkbox>)}
+                  {scopes.map(s => <Checkbox key={s.value} checked={chosen.value.includes(s.value)} error={s === scopes[0] && scopeError.value ? scopeError.value : undefined} onChange={(e: Event) => toggle(s.value, (e.currentTarget as HTMLInputElement).checked)}>{s.label}</Checkbox>)}
                 </fieldset>
-                <Select label="Expires" options={expiries} value={expires.value} onChange={(e: any) => (expires.value = e.currentTarget.value)} />
+                <Select label="Expires" options={expiries} value={expires.value} onChange={(e: Event) => (expires.value = (e.currentTarget as HTMLInputElement).value)} />
               </form>
             )}
         </Modal>

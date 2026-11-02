@@ -2,6 +2,7 @@
 import { place, pushLayer, type Align, type Side } from './layers'
 import { typeahead } from './typeahead'
 
+/** Options for a menu. */
 export interface MenuOptions {
   open: boolean
   /** The trigger that opened it: focus goes back here. */
@@ -9,8 +10,8 @@ export interface MenuOptions {
   /** Which item takes focus on open (↑ on a trigger opens at the last). */
   at?: 'first' | 'last'
   /** Anchor it to the trigger while open (placed once shown, followed through scroll and resize). */
-  side?: Side
-  align?: Align
+  side?: Side | undefined
+  align?: Align | undefined
   onClose(): void
 }
 
@@ -60,7 +61,7 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
     if (e.key === 'Tab') { o.trigger()?.focus(); return o.onClose() } // no preventDefault: Tab moves on from the trigger
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); return all[at]?.click() }
     if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
-    const hit = typed.next(e.key, all, at, i => i.textContent!)
+    const hit = typed.next(e.key, all, at, i => i.textContent)
     if (hit) { e.preventDefault(); hit.focus() }
   }
   el.addEventListener('keydown', onKey)

@@ -1,10 +1,10 @@
 // KEEL's scaffold demo (keel-engine packages/react/examples/KeelDemo.tsx), ported. The React version needs a memoised
 // recipe, a hoisted `setup` so the GL context isn't rebuilt, and `onReady` to reach the clock. Here `setup` runs once and
 // the button reads a box.
-import { onMount } from 'weft'
-import { clock, defineSurface, Surface } from 'weft/surface'
-import { recipeTheme, themeTokens } from '@weft/plugin-surface-keel/theme'
-import '@weft/plugin-surface-keel/styles.css'
+import { onMount } from '@weft-js/core'
+import { clock, defineSurface, Surface } from '@weft-js/core/surface'
+import { recipeTheme, themeTokens } from '@weft-js/plugin-surface-keel/theme'
+import '@weft-js/plugin-surface-keel/styles.css'
 
 const recipe = { seed: 'keel/react-demo', culture: 'clean' }
 const theme = recipeTheme(recipe)

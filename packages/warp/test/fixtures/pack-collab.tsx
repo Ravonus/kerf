@@ -1,7 +1,7 @@
 // The collab pack on the a11y gallery (?part=collab): rendered by test/a11y/gallery.tsx. `?share`, `?history`, `?quote`
 // open those states. Fixtures import per file: the query imports only follow .tsx.
-import { state } from 'weft'
-import type { ChatMessage, CursorPeer, FormOp, IntegrityStats, Peer } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import type { ChatMessage, CursorPeer, FormOp, IntegrityStats, Peer } from '@weft-js/warp-core'
 import { Input } from '../../src/Field'
 import { Select } from '../../src/Select'
 import { Switch } from '../../src/Choice'

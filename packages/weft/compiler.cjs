@@ -28,7 +28,7 @@ function prebuilt() {
   const version = require('./package.json').version
   const skipped = []
   for (const { name } of forHost()) {
-    const pkg = `@weft/compiler-${name}`
+    const pkg = `@weft-js/compiler-${name}`
     try {
       const found = require(`${pkg}/package.json`).version
       // Pinned exactly by weft's optionalDependencies; an override that breaks that gets the WASM build, which matches.
@@ -68,7 +68,7 @@ function load() {
     throw new Error(`weft: no compiler at ${wasm}${want === null ? '' : '; run `npm run build:native` in packages/weft'}`)
   }
   checkStamp(wasm)
-  return { binding: loadWasm(wasm), wasm: true, info: { kind: 'wasm', file: wasm, wanted: forHost().map(p => `@weft/compiler-${p.name}`), skipped } }
+  return { binding: loadWasm(wasm), wasm: true, info: { kind: 'wasm', file: wasm, wanted: forHost().map(p => `@weft-js/compiler-${p.name}`), skipped } }
 }
 
 const { binding, wasm: isWasm, info } = load()

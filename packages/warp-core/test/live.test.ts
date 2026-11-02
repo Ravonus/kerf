@@ -3,10 +3,10 @@ import { describe, expect, test, vi } from 'vitest'
 import {
   applyPrefs, arrivals, backoffCap, bellCount, bellLabel, connectionAnnouncement, countdownLabel, countdownParts, dayLabel, filterNotes, formatMs, freshIds, galleryCols,
   groupByDay, hueOf, latencyTone, levelMeter, litBars, liveState, newHands, notifyPolicy, percentile, pipStep, prefCell, speakerFollow, tileLabel, toggleChanges, transportError,
-  transportSim, triState, unreadCount, worstLive, type PrefEvent, type TransportConfig,
+  transportSim, triState, unreadCount, worstLive, type NotifyPolicyOptions, type PrefEvent, type TransportConfig,
 } from '../src/live'
 
-const tickMO = () => new Promise(r => setTimeout(r, 0))
+const tickMO = () => new Promise(r => { setTimeout(r, 0) })
 const list = (ids: string[]) => {
   const el = document.createElement('ul')
   el.innerHTML = ids.map(i => `<li data-id="${i}"></li>`).join('')
@@ -87,7 +87,7 @@ describe('notes', () => {
 describe('notifyPolicy', () => {
   const setup = (open = false) => {
     let n = 0
-    const o = { open: () => open, show: vi.fn((t: any) => t.id ?? `t${++n}`), dismiss: vi.fn(), announce: vi.fn() }
+    const o = { open: () => open, show: vi.fn((t: Parameters<NotifyPolicyOptions['show']>[0]) => t.id ?? `t${++n}`), dismiss: vi.fn(), announce: vi.fn() }
     return { o, p: notifyPolicy(o) }
   }
   test('inbox open: no toast, one summary after a second of quiet', () => {

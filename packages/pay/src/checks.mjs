@@ -7,7 +7,7 @@
 
 import ts from 'typescript'
 
-const isServer = rel => /^src\/server\//.test(rel) || /\.server\.[cm]?[jt]sx?$/.test(rel)
+const isServer = rel => rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 
 const KEY = /\b(?:(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{6,}|whsec_[A-Za-z0-9]{6,})\b/g
 const PLACEHOLDER = /placeholder|example|your|xxxx/i
@@ -162,15 +162,15 @@ function clientReads(rel, sf, reads) {
 
 /** A server entry in the client graph: it would carry the ledger, and it can't run there. */
 function serverImports(rel, text, out) {
-  for (const m of text.matchAll(/from\s+['"](@weft\/pay\/(?:server|drizzle))['"]/g)) out.push({ code: 'PAY017', ...spanOf(rel, m.index, m[0].length), why: `\`${m[1]}\` is imported in client code: the ledger runs on the server only.` })
+  for (const m of text.matchAll(/from\s+['"](@weft-js\/pay\/(?:server|drizzle))['"]/g)) out.push({ code: 'PAY017', ...spanOf(rel, m.index, m[0].length), why: `\`${m[1]}\` is imported in client code: the ledger runs on the server only.` })
 }
 
-/** @param {import('weft/plugin').CheckContext} ctx */
+/** @param {import('@weft-js/core/plugin').CheckContext} ctx */
 export function run(ctx) {
   const out = []
   const rels = ctx.files.filter(r => r.startsWith('src/') && !isTest(r) && !r.endsWith('.d.ts'))
   const rails = Object.entries(ctx.slots['pay.rail'] ?? {}).filter(([, name]) => name)
-  const payFile = ['ts', 'mts', 'js', 'mjs'].map(x => `src/pay.server.${x}`).find(ctx.exists)
+  const payFile = ['ts', 'mts', 'js', 'mjs'].map(x => `src/pay.server.${x}`).find(rel => ctx.exists(rel))
   const known = new Set()
   const reads = []
 
@@ -179,7 +179,7 @@ export function run(ctx) {
     const server = isServer(rel)
     secrets(rel, text, server, out)
     if (!server) serverImports(rel, text, out)
-    if (!(/@weft\/pay|entitlements|requires:|\bcheckout\b|\bproduct\(|PayRail|price_|prod_|plink_/.test(text) || STRIPE_EVENT.test(text))) continue
+    if (!(/@weft-js\/pay|entitlements|requires:|\bcheckout\b|\bproduct\(|PayRail|price_|prod_|plink_/.test(text) || STRIPE_EVENT.test(text))) continue
     const sf = parse(rel, text)
     webhooks(rel, text, sf, out)
     money(rel, sf, out)
@@ -201,7 +201,7 @@ export function run(ctx) {
     out.push({ code: 'PAY013', ...at(r.sf, r.rel, r.node), why: `\`${r.id}\` is checked only on the client: no \`requires\` or \`ctx.entitlements.has\` on the server names it, so a request made by hand gets the same thing as a paying user.`, help: `Add \`requires: ['${r.id}']\` to the query or mutation it protects, or check \`await ctx.entitlements.has('${r.id}')\` in the route's \`load\`` })
   }
 
-  for (const rel of ctx.files.filter(r => /^weft\.config\./.test(r))) {
+  for (const rel of ctx.files.filter(r => r.startsWith('weft.config.'))) {
     const text = ctx.read(rel)
     secrets(rel, text, true, out)
     const m = SECRET_OPTION.exec(text)
@@ -213,7 +213,7 @@ export function run(ctx) {
     for (const m of text.matchAll(/\b(?:sk|rk)_live_\w+/g)) out.push({ code: 'PAY031', ...spanOf(rel, m.index, m[0].length), why: 'A live key in a test: it charges real cards, and it is now in git.' })
   }
 
-  const config = ctx.files.find(r => /^weft\.config\./.test(r)) ?? 'weft.config.ts'
+  const config = ctx.files.find(r => r.startsWith('weft.config.')) ?? 'weft.config.ts'
   if (!payFile) {
     out.push({ code: 'PAY014', file: config, why: 'This plugin is in `plugins`, but there is no `src/pay.server.ts`: no webhook is mounted, so a payment would grant nothing.' })
     return out
@@ -223,7 +223,7 @@ export function run(ctx) {
   const m = /memoryPayStore\(/.exec(text)
   if (m) out.push({ code: 'PAY016', ...spanOf(payFile, m.index, m[0].length - 1), why: 'The ledger is in memory: purchases are gone on restart, and a production server refuses to start with it.' })
   if (rails.some(([key]) => key === 'stripe')) {
-    const env = ['.env.example', 'src/env.server.ts'].map(ctx.read).join('\n')
+    const env = ['.env.example', 'src/env.server.ts'].map(rel => ctx.read(rel)).join('\n')
     if (!env.includes('STRIPE_WEBHOOK_SECRET')) out.push({ code: 'PAY011', file: payFile, why: 'Nothing declares `STRIPE_WEBHOOK_SECRET`. Without it the rail refuses every webhook, so no purchase ever lands.', help: 'Add `STRIPE_WEBHOOK_SECRET` to `.env.example` and `src/env.server.ts`' })
   }
   return out

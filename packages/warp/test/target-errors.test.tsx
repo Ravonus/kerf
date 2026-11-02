@@ -2,12 +2,12 @@
 import { fireEvent } from '@testing-library/dom'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { Kanban } from '../src/collab/Kanban'
 import { Select } from '../src/Select'
 import { RichTextEditor } from '../src/RichTextEditor'
 
-const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))
+const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 
 // A throw in a listener reaches window's error event, not the test.

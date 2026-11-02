@@ -1,5 +1,5 @@
 // The last warp components, with fixed data so a server render and a hydration agree.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Button } from '../../src/Button'
 import { CodeInput, JsonEditor } from '../../src/CodeInput'
 import { CommandPalette } from '../../src/CommandPalette'

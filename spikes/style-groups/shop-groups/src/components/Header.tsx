@@ -1,4 +1,4 @@
-import { group } from 'weft/style'
+import { group } from '@weft-js/core/style'
 
 /** The bar across the top: the tabs. */
 export const topBar = group('top-bar', {

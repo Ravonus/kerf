@@ -1,6 +1,6 @@
-import { Boundary, derived, onCleanup, onMount, resource, state, untrack } from 'weft'
-import { Alert, Badge, Button, Card, Grid, Heading, Input, LiveStatus, Progress, Row, Shape, Skeleton, Spinner, Stack, Text, Toaster, toast } from '@weft/warp'
-import type { LiveState } from '@weft/warp'
+import { Boundary, derived, onCleanup, onMount, resource, state } from '@weft-js/core'
+import { Alert, Button, Card, Grid, Heading, Input, LiveStatus, Progress, Row, Shape, Skeleton, Spinner, Stack, Text, Toaster, toast } from '@weft-js/warp'
+import type { LiveState } from '@weft-js/warp'
 import { PROJECTS } from '../world'
 
 type ToastTone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
@@ -45,7 +45,7 @@ export function ToasterUndo() {
   )
 }
 
-const wait = (ms: number) => new Promise(done => setTimeout(done, ms))
+const wait = (ms: number) => new Promise(done => { setTimeout(done, ms) })
 
 export const ToasterPromise = () => {
   const deploy = () => toast.promise(wait(2200), {
@@ -291,7 +291,7 @@ export const ShapeTable = () => <Stack><Shape kind="table" rows={4} cols={4} /><
 
 export const ShapeMedia = () => <Stack><Shape kind="media" media="21/9" /></Stack>
 
-const later = <T,>(value: T) => new Promise<T>(done => setTimeout(done, 1800, value))
+const later = <T,>(value: T) => new Promise<T>(done => { setTimeout(done, 1800, value) })
 
 function Team() {
   const list = resource(() => later(PROJECTS.slice(0, 4)))

@@ -1,5 +1,5 @@
-import { meterParts, money, planPrice, prorate, uid, type BillingInterval, type Proration } from '@weft/warp-core'
-import { derived, state, type State, untrack } from 'weft'
+import { meterParts, money, planPrice, prorate, uid, type BillingInterval, type Proration } from '@weft-js/warp-core'
+import { derived, state, type State, untrack } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
@@ -8,21 +8,23 @@ import { Segmented } from '../Choice'
 import { toast } from '../Toast'
 import { Sweep, latch } from './atoms'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
-import '@weft/warp-core/styles/flows/plans.css'
-import '@weft/warp-core/styles/flows/plan-card.css'
-import '@weft/warp-core/styles/flows/lines.css'
-import '@weft/warp-core/styles/flows/usage.css'
-import '@weft/warp-core/styles/flows/meter.css'
-import '@weft/warp-core/styles/flows/confirm.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/plans.css'
+import '@weft-js/warp-core/styles/flows/plan-card.css'
+import '@weft-js/warp-core/styles/flows/lines.css'
+import '@weft-js/warp-core/styles/flows/usage.css'
+import '@weft-js/warp-core/styles/flows/meter.css'
+import '@weft-js/warp-core/styles/flows/confirm.css'
 
-export type BillingPlan = { id: string; name: string; /** Per seat, per month. */ price: number; description?: string; features: string[]; limits?: Record<string, number> }
+/** A plan on offer. */
+export type BillingPlan = { id: string; name: string; /** Per seat, per month. */ price: number; description?: string | undefined; features: string[]; limits?: Record<string, number> }
 
+/** Props for PlanPicker. */
 export interface PlanPickerProps {
   /** The plans to compare, one card each. */
   plans: BillingPlan[]
@@ -92,7 +94,7 @@ export function PlanPicker({ plans, current, selected, interval, seats, daysLeft
   const lost = derived(() => (up.value || same.value ? [] : losses?.(next.value) ?? []))
   return (
     <div data-scope="stack">
-      <div data-scope="row"><Segmented label="Billing period" value={cycle.value} onChange={v => (cycle.value = v as BillingInterval)} size="sm" options={[{ value: 'month', label: 'Monthly' }, { value: 'year', label: 'Annual · save 20%' }]} /></div>
+      <div data-scope="row"><Segmented label="Billing period" value={cycle.value} onChange={v => (cycle.value = v)} size="sm" options={[{ value: 'month', label: 'Monthly' }, { value: 'year', label: 'Annual · save 20%' }]} /></div>
       <div data-scope="plans">
         <div data-part="grid" role="radiogroup" aria-label="Plan">
           {plans.map(p => (
@@ -130,16 +132,17 @@ export function PlanPicker({ plans, current, selected, interval, seats, daysLeft
   )
 }
 
+/** Props for UsageMeter. */
 export interface UsageMeterProps {
   label: string
   value: number
   limit: number
-  format?: (n: number) => string
+  format?: ((n: number) => string) | undefined
   /** Past the limit: "+ $12.40 overage". */
   overage?: string
   note?: string
   /** A link to the plan picker preselected on the next tier. */
-  action?: any
+  action?: unknown
 }
 
 /** A usage meter (09 §4.3): the warning tick at 80%, caution from 80%, critical at 100%, stripes past the limit. */
@@ -161,4 +164,4 @@ export function UsageMeter({ label, value, limit, format = String, overage, note
 }
 
 /** The group of usage meters. */
-export const UsageMeters = ({ children }: { children: any }) => <div data-scope="usage">{children}</div>
+export const UsageMeters = ({ children }: { children: unknown }) => <div data-scope="usage">{children}</div>

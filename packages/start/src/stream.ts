@@ -4,9 +4,10 @@
 import { liveApi } from './data'
 import { stream as define, use } from './live'
 
-export const stream: typeof define = (def: any) => {
+/** `stream()`, with the realtime half connected on first use. */
+export const stream = ((def: never) => {
   use(liveApi)
   return define(def)
-}
+}) as typeof define
 
 export { backoff, hold, type Link, type Stream, type StreamDef, type StreamFn, type StreamOptions, type StreamStatus } from './live'

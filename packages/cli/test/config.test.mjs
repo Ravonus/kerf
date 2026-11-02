@@ -3,7 +3,7 @@ import { loadConfig } from '../src/load-config.mjs'
 import { bindSlots } from '../src/slots.mjs'
 import { project } from './helpers.mjs'
 
-const withConfig = body => project({ 'weft.config.ts': `import { defineConfig } from 'weft/config'\n${body}` })
+const withConfig = body => project({ 'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\n${body}` })
 const codes = r => r.diagnostics.map(d => [d.code, d.span[0]])
 
 describe('weft.config.ts', () => {
@@ -12,7 +12,7 @@ describe('weft.config.ts', () => {
     expect(r).toMatchObject({ file: null, config: {}, diagnostics: [] })
   })
 
-  it('loads TypeScript (including non-erasable syntax) through defineConfig from weft/config', async () => {
+  it('loads TypeScript (including non-erasable syntax) through defineConfig from @weft-js/core/config', async () => {
     const dir = withConfig(`enum Env { Dev = 'dev' }
 const lanes: Array<'fast'> = ['fast']
 export default defineConfig({
@@ -32,7 +32,7 @@ export default defineConfig({
     const { writeFileSync } = await import('node:fs')
     const dir = withConfig('export default defineConfig({ environments: { dev: {} } })\n')
     expect(Object.keys((await loadConfig(dir)).config.environments)).toEqual(['dev'])
-    writeFileSync(`${dir}/weft.config.ts`, "import { defineConfig } from 'weft/config'\nexport default defineConfig({ environments: { ci: {} } })\n")
+    writeFileSync(`${dir}/weft.config.ts`, "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ environments: { ci: {} } })\n")
     expect(Object.keys((await loadConfig(dir)).config.environments)).toEqual(['ci'])
   })
 
@@ -69,7 +69,7 @@ export default defineConfig({
     const r = await loadConfig(
       withConfig(`export default defineConfig({
   plugins: [
-    { name: '@weft/plugin-text', provides: ['text.measure', 'font.build'] },
+    { name: '@weft-js/text', provides: ['text.measure', 'font.build'] },
     { name: 'pretext-measure', provides: ['text.measure'] },
     { name: 'pretext-measure' },
     { name: 'bus', provides: [{ slot: 'surface.renderer', key: 'keel-pixel' }] },
@@ -81,7 +81,7 @@ export default defineConfig({
     expect(r.diagnostics.map(d => d.code)).toEqual(['P116', 'P008', 'P009'])
     expect(r.slots).toMatchObject({
       'text.measure': 'pretext-measure',
-      'font.build': '@weft/plugin-text',
+      'font.build': '@weft-js/text',
       'realtime.bus': 'weft:default:memory',
       'surface.renderer': { canvas2d: 'weft:default', 'keel-pixel': 'bus', webgl2: 'weft:default' },
     })
@@ -174,7 +174,7 @@ describe('slot binding (research 13 §2.2)', () => {
 })
 
 describe('JSON and YAML config (research 34 §2)', () => {
-  const plugin = "import { definePlugin } from 'weft/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
+  const plugin = "import { definePlugin } from '@weft-js/core/plugin'\nexport default definePlugin({ name: 'acme', options: o => o ?? {}, contribute: () => ({}) })\n"
   const files = { 'node_modules/acme/package.json': JSON.stringify({ name: 'acme', type: 'module', exports: { './plugin': './plugin.mjs' } }), 'node_modules/acme/plugin.mjs': plugin }
   const site = { name: 'Acme', title: '%s · Acme', description: 'Tools.' }
 

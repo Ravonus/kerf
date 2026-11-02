@@ -1,8 +1,8 @@
-import { Snippet, Tabs } from '@weft/warp'
-import { state } from 'weft'
+import { Snippet, Tabs } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 
 const MANAGERS = [{ value: 'npm', label: 'npm' }, { value: 'pnpm', label: 'pnpm' }, { value: 'bun', label: 'bun' }] as const
-const COMMAND = { npm: 'npm install @weft/warp', pnpm: 'pnpm add @weft/warp', bun: 'bun add @weft/warp' }
+const COMMAND = { npm: 'npm install @weft-js/warp', pnpm: 'pnpm add @weft-js/warp', bun: 'bun add @weft-js/warp' }
 
 /* @weft visible */
 /** The install line, for the reader's package manager. */

@@ -2,6 +2,7 @@
 // its chrome: they live as data-* on a scope root (<html> by default), "auto" removes the attribute so the OS or the
 // stop decides, and a page can deep-link them with ?expression=&fields=&theme=&density=&motion=&flair=.
 
+/** Every dial with its allowed values: the settings a page's look and motion read. */
 export const DIALS = {
   expression: { values: ['quiet', 'balanced', 'vivid'], initial: 'balanced' },
   fields: { values: ['floating', 'classic'], initial: 'floating' },
@@ -11,10 +12,12 @@ export const DIALS = {
   flair: { values: ['auto', 'sweep', 'none'], initial: 'auto' },
 } as const
 
+/** The name of a dial. */
 export type Dial = keyof typeof DIALS
+/** The values dial `D` allows. */
 export type DialValue<D extends Dial> = (typeof DIALS)[D]['values'][number]
 const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair'])
-// `dialScript` in @weft/warp/plugin reads this key before the first paint.
+// `dialScript` in @weft-js/warp/plugin reads this key before the first paint.
 const KEY = 'warp:dials'
 // Only an "auto" that removes the attribute goes unsaid. Any other value is kept as chosen, the initial one too: a page
 // can set its own default (a head script, `warp({ dials })`), so leaving `balanced` out would hand it back to that default.
@@ -41,7 +44,7 @@ export function getDial<D extends Dial>(name: D, root: HTMLElement = document.do
 export function setDial<D extends Dial>(
   name: D,
   value: DialValue<D>,
-  { root = document.documentElement, url = false, persist = false, transition }: { root?: HTMLElement; url?: boolean; persist?: boolean; transition?: (write: () => void) => void } = {},
+  { root = document.documentElement, url = false, persist = false, transition }: { root?: HTMLElement | undefined; url?: boolean; persist?: boolean; transition?: (write: () => void) => void } = {},
 ) {
   if (!(DIALS[name].values as readonly string[]).includes(value)) throw new RangeError(`${name} is one of ${DIALS[name].values.join(', ')}`)
   let done = false

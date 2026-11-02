@@ -1,6 +1,6 @@
-import { CopyIcon, LinkIcon } from '@weft/icons'
-import { announce, arrivalTracker, installSweep, type Peer } from '@weft/warp-core'
-import { derived, state, untrack, type State } from 'weft'
+import { CopyIcon, LinkIcon } from '@weft-js/warp-icons'
+import { announce, arrivalTracker, installSweep, type Peer } from '@weft-js/warp-core'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { ComboField } from '../Combobox'
 import { Modal } from '../Modal'
@@ -8,18 +8,23 @@ import { CompactSelect } from '../Select'
 import { Tag } from '../Tag'
 import { PeerAvatar, read, type Live } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/share.css'
-import '@weft/warp-core/styles/components/share.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/share.css'
+import '@weft-js/warp-core/styles/components/share.css'
 
 
+/** What someone may do with the document. */
 export type ShareRole = 'viewer' | 'commenter' | 'editor' | 'owner'
 const ROLES: [ShareRole, string][] = [['viewer', 'Viewer'], ['commenter', 'Commenter'], ['editor', 'Editor']]
+/** Someone the document is shared with. */
 export type ShareMember = Peer & { email: string; role: ShareRole }
+/** Someone it could be shared with. */
 export type ShareContact = Peer & { email: string }
+/** Who a link lets in, and as what. */
 export interface ShareLink { access: 'restricted' | 'anyone'; role: ShareRole }
 
+/** Props for ShareDialog. */
 export interface ShareDialogProps {
   open: State<boolean>
   /** The object's title: "Q4 brief". */
@@ -59,6 +64,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
     if (e && !chips.value.includes(e)) chips.value = [...chips.value, e]
     typed.value = ''
   }
+  // oxlint-disable-next-line typescript/require-await -- `find` is typed to return a promise, and Promise.resolve costs bytes for nothing
   const find = async (q: string) => untrack(() => (people ?? []).filter(p => `${p.name} ${p.email}`.toLowerCase().includes(q.toLowerCase())))
   const invite = () => {
     const all = typed.value.includes('@') ? [...new Set([...chips.value, typed.value.trim()])] : chips.value
@@ -75,7 +81,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
           <div style="flex:1;min-inline-size:0">
             <ComboField label="Add people or email" minChars={1} text={() => typed.value} onText={t => (typed.value = t)} find={find} row={(p: ShareContact) => ({ main: p.name, sub: p.email })} onPick={(p: ShareContact) => add(p.email)} />
           </div>
-          <CompactSelect label="Role for new people" value={role.value} options={ROLE_OPTIONS} onValueChange={v => (role.value = v as any)} />
+          <CompactSelect label="Role for new people" value={role.value} options={ROLE_OPTIONS} onValueChange={v => (role.value = v as ShareRole)} />
           <Button onClick={invite}>Invite</Button>
         </form>
         {chips.value.length > 0 && <div style="display:flex;flex-wrap:wrap;gap:6px;margin-block-start:8px">{chips.value.map(c => <Tag key={c} onRemove={() => (chips.value = chips.value.filter(x => x !== c))}>{c}</Tag>)}</div>}
@@ -87,17 +93,17 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
               {m.role === 'owner'
                 ? <span>Owner</span>
                 : <>
-                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={MEMBER_OPTIONS} onValueChange={v => onRoleChange(m, v === 'remove' ? null : v as any)} />
+                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={MEMBER_OPTIONS} onValueChange={v => onRoleChange(m, v === 'remove' ? null : (v as ShareRole))} />
                   </>}
             </div>
           ))}
         </div>
         <div data-part="link">
           <LinkIcon />
-          <CompactSelect label="Link access" value={access.value.access} options={ACCESS_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, access: v as any })} />
-          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={ROLE_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, role: v as any })} />}
+          <CompactSelect label="Link access" value={access.value.access} options={ACCESS_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, access: v as ShareLink['access'] })} />
+          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={ROLE_OPTIONS} onValueChange={v => onLinkAccess({ ...access.value, role: v as ShareRole })} />}
           <span data-part="spacer" style="flex:1"></span>
-          <span ref={(n: any) => (copy = n)} style="display:contents">
+          <span ref={n => (copy = n)} style="display:contents">
             <Button emphasis="outline" tone="neutral" size="sm" onClick={(e: MouseEvent) => {
               void navigator.clipboard?.writeText(url).catch(() => {})
               copied.value = true

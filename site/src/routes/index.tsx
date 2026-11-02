@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft/start'
+import { Link, type Meta } from '@weft-js/start'
 import { Arena } from '../components/Arena'
 import { Example } from '../components/Example'
 import numbers from '../generated/numbers.json'
@@ -30,7 +30,7 @@ export default function Home() {
           <h1>The TypeScript framework for fast web apps.</h1>
           <p>Write components in TSX, as you would in React. weft compiles them into small, direct page updates, and comes with routing, data, a UI kit and errors your coding agent can act on.</p>
           <div data-part="next">
-            <Link data-scope="button" data-size="lg" href="/docs/getting-started">Get started</Link>
+            <Link data-scope="button" data-size="lg" href="/learn">Get started</Link>
             <Link data-part="quiet" href="/examples">See examples</Link>
           </div>
           <p data-part="install"><code>node packages/create-weft/scripts/local.mjs new my-app</code><span>weft is not on npm yet, so run this from a checkout of the repo.</span></p>
@@ -69,10 +69,12 @@ export default function Home() {
 
         <section>
           <h2 data-flow="heading">One project, front to back</h2>
-          <p data-part="intro">A real shop keeps its products in a database. With <code>@weft/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
-          <div data-part="server" data-scope="codeblock" innerHTML={show.server}></div>
+          <p data-part="intro">A real shop keeps its products in a database. With <code>@weft-js/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
+          <div data-part="server" data-scope="codeblock"
+            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            innerHTML={show.server}></div>
           <dl data-part="files">{FILES.map(([file, what]) => <div key={file}><dt>{file}</dt><dd>{what}</dd></div>)}</dl>
-          <p data-part="more"><Link href="/docs/start">Read about full-stack weft</Link></p>
+          <p data-part="more"><Link href="/learn/full-stack">Read about full-stack weft</Link></p>
         </section>
 
         <Arena />
@@ -81,7 +83,7 @@ export default function Home() {
           <h2 data-flow="heading">Pages load fast because there is less to download</h2>
           <p data-part="intro">The same dashboard app, built with a UI kit in each framework. Less JavaScript means pages are ready sooner, most of all on phones and slow connections.</p>
           <ul data-part="sizes">
-            {SIZES.map(([name, bytes]) => <li key={name} style={`--share:${bytes / SIZES[SIZES.length - 1][1]}`}><span>{name}</span><i></i><b>{(bytes / 1024).toFixed(1)} KB</b></li>)}
+            {SIZES.map(([name, bytes]) => <li key={name} style={`--share:${bytes / SIZES[SIZES.length - 1]![1]}`}><span>{name}</span><i></i><b>{(bytes / 1024).toFixed(1)} KB</b></li>)}
           </ul>
           <p data-part="note">JavaScript sent to the browser, compressed with brotli, from this repo's <a href="https://github.com/Ravonus/weft/tree/main/evals/compare" rel="external">comparison app</a>.</p>
         </section>
@@ -90,10 +92,10 @@ export default function Home() {
 
         <section data-part="end">
           <h2 data-flow="heading">Build something</h2>
-          <p data-part="intro">Set up a project in a couple of minutes, then work through the short guides.</p>
+          <p data-part="intro">Make an app from a checkout, then work through Learn a chapter at a time.</p>
           <div data-part="next">
-            <Link data-scope="button" data-size="lg" href="/docs/getting-started">Get started</Link>
-            <Link data-part="quiet" href="/docs">Read the docs</Link>
+            <Link data-scope="button" data-size="lg" href="/learn">Get started</Link>
+            <Link data-part="quiet" href="/reference">Read the reference</Link>
           </div>
         </section>
       </div>

@@ -18,3 +18,18 @@ packages/weft/bench/corpus/
 packages/weft/test/corpus-gen/
 **/.weft/*
 !**/.weft/plugins.lock.json
+.release/
+# Secrets. scripts/quality/tarballs.mjs fails if any of these stops being ignored.
+.env
+.env.*
+!.env.example
+netlify.env
+.neon
+.mcp.json
+.npmrc
+*.pem
+*.key
+*.p12
+
+# cli tests check a copy of start's fixture here (packages/cli/test/helpers.mjs startApp).
+packages/start/test/.tmp/

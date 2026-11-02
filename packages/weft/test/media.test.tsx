@@ -1,23 +1,23 @@
-// weft/media (research 26 §2): the header probe, <Media>'s markup, and weft/vite's `?media` and `weft:fonts` loaders,
+// @weft-js/core/media (research 26 §2): the header probe, <Media>'s markup, and @weft-js/core/vite's `?media` and `weft:fonts` loaders,
 // with and without a build-side provider.
 // weft-allow T005: the markup is the contract here (srcset, sizes, dimensions), so the test reads attributes
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { render } from 'weft/test'
-import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from 'weft/media'
-import { flush } from 'weft'
+import { render } from '@weft-js/core/test'
+import { Media, mediaSizes, timedSources, timeline, type MediaAsset } from '@weft-js/core/media'
+import { flush } from '@weft-js/core'
 import { probe } from '../media-probe.mjs'
 import { assets, readSources } from '../assets.mjs'
 
 const u32 = (n: number) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]
-const bytes = (...parts: (number[] | string)[]) => new Uint8Array(parts.flatMap(p => (typeof p === 'string' ? [...p].map(c => c.charCodeAt(0)) : p)))
+const bytes = (...parts: (number[] | string)[]) => new Uint8Array(parts.flatMap(p => (typeof p === 'string' ? Array.from(p, c => c.charCodeAt(0)) : p)))
 
 const PNG = bytes([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], u32(13), 'IHDR', u32(1200), u32(735), [8, 6, 0, 0, 0])
 const GIF = bytes('GIF89a', [0x40, 0x01, 0xf0, 0x00])
 const jpeg = (orientation?: number) => {
   const exif = orientation
-    ? [0xff, 0xe1, 0, 34, ...[...'Exif'].map(c => c.charCodeAt(0)), 0, 0, ...[...'MM'].map(c => c.charCodeAt(0)), 0, 42, ...u32(8), 0, 1, 0x01, 0x12, 0, 3, ...u32(1), 0, orientation, 0, 0, ...u32(0)]
+    ? [0xff, 0xe1, 0, 34, ...Array.from('Exif', c => c.charCodeAt(0)), 0, 0, ...Array.from('MM', c => c.charCodeAt(0)), 0, 42, ...u32(8), 0, 1, 0x01, 0x12, 0, 3, ...u32(1), 0, orientation, 0, 0, ...u32(0)]
     : []
   return bytes([0xff, 0xd8], exif, [0xff, 0xc0, 0, 17, 8], [0x01, 0xe0, 0x02, 0x80], [3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1])
 }
@@ -82,7 +82,7 @@ test('<Media> GIF as video: muted autoplay loop as an image; a pause control pas
   let v = document.querySelector('video')!
   expect(v.getAttribute('role')).toBe('img')
   expect(v.hasAttribute('autoplay') && v.hasAttribute('loop')).toBe(true)
-  expect((v as HTMLVideoElement).muted).toBe(true)
+  expect(v.muted).toBe(true)
   expect(v.hasAttribute('controls')).toBe(false)
   unmount()
   render(() => <Media src={{ ...gif, duration: 6 }} alt="Spinner" />)
@@ -106,6 +106,7 @@ class Fake extends EventTarget {
   currentTime = 0
   plays = 0
   block = false
+  // oxlint-disable-next-line require-await -- HTMLMediaElement.play rejects, it never throws
   async play() {
     if (this.block) throw new Error('NotAllowedError')
     this.paused = false
@@ -129,14 +130,14 @@ class Fake extends EventTarget {
 test('timeline: writes are commands, frames write time, cues fire on crossing and not on a seek', async () => {
   const t = timeline(clip, { cues: { drop: 1.2, chorus: 3 } })
   const el = new Fake()
-  t.bind(el as any)
+  t.bind(el as never)
   const fired: string[] = []
   t.on('drop', () => fired.push('drop'))
   t.on('chorus', () => fired.push('chorus'))
 
   t.playing.value = true
   flush()
-  await 0
+  await Promise.resolve()
   expect(el.plays).toBe(1)
   el.present(1)
   expect(t.currentTime.value).toBe(1)
@@ -165,11 +166,11 @@ test('timeline: a blocked play() leaves it paused, with the error in a box', asy
   const t = timeline(clip)
   const el = new Fake()
   el.block = true
-  t.bind(el as any)
+  t.bind(el as never)
   t.playing.value = true
   flush()
-  await 0
-  await 0
+  await Promise.resolve()
+  await Promise.resolve()
   flush()
   expect(t.playing.value).toBe(false)
   expect(t.error.value?.message).toBe('NotAllowedError')
@@ -208,7 +209,7 @@ test('<Media> of a single-file asset (a vector, or no provider) is one img, with
   expect(img.getAttribute('style')).not.toContain('background')
 })
 
-describe('weft/vite assets', () => {
+describe('@weft-js/core/vite assets', () => {
   let root: string
   const provider = join(import.meta.dirname, 'fixtures', 'media', 'provider.mjs')
   beforeEach(() => {
@@ -218,12 +219,20 @@ describe('weft/vite assets', () => {
   })
   afterEach(() => rmSync(root, { recursive: true, force: true }))
 
+  type Emitted = { type: string; fileName: string; source: unknown }
+  type Hooks = {
+    configResolved(config: object): void
+    load: { handler(this: object, id: string): Promise<string> }
+    configureServer(server: { middlewares: { use(fn: (req: { url: string }, res: unknown, next: () => void) => void): void } }): void
+    transform: { filter: { id: RegExp }; handler(this: object, code: string): unknown }
+    transformIndexHtml: { order: string; handler(): unknown }
+  }
   function plugin(command: 'build' | 'serve') {
-    const p: any = assets()
+    const p = assets() as unknown as Hooks
     p.configResolved({ root, command, base: '/' })
-    const emitted: any[] = []
+    const emitted: Emitted[] = []
     const warnings: string[] = []
-    const ctx = { emitFile: (f: any) => emitted.push(f), addWatchFile() {}, warn: (m: string) => warnings.push(m), error: (m: string) => { throw new Error(m) } }
+    const ctx = { emitFile: (f: Emitted) => emitted.push(f), addWatchFile() {}, warn: (m: string) => warnings.push(m), error: (m: string) => { throw new Error(m) } }
     const load = (id: string) => p.load.handler.call(ctx, id)
     return { p, load, emitted, warnings }
   }
@@ -263,14 +272,14 @@ describe('weft/vite assets', () => {
     expect(a.sources[0].srcset).toBe('/@weft-assets/hero-320.avif 320w, /@weft-assets/hero-640.avif 640w')
     expect(emitted).toEqual([]) // dev serves from memory
     expect(warnings).toEqual(['M004 hero.png is large (dev)'])
-    let served: any
-    const res = { setHeader: (k: string, v: string) => ((served ??= {})[k] = v), end: (b: Buffer) => (served.body = [...b]) }
-    p.configureServer({ middlewares: { use: (fn: any) => fn({ url: '/@weft-assets/hero-320.avif' }, res, () => {}) } })
+    let served: Record<string, unknown> | undefined
+    const res = { setHeader: (k: string, v: string) => ((served ??= {})[k] = v), end: (b: Buffer) => (served!.body = [...b]) }
+    p.configureServer({ middlewares: { use: fn => fn({ url: '/@weft-assets/hero-320.avif' }, res, () => {}) } })
     expect(served).toEqual({ 'content-type': 'image/avif', 'cache-control': 'no-cache', body: [PNG.length] })
   })
 
   test('weft:fonts: empty without font.build; with it, the CSS, the preloads, the files and .weft/fonts.json', async () => {
-    let { load } = plugin('build')
+    const { load } = plugin('build')
     expect(await load('\0weft:fonts.css')).toBe('')
     expect(await load('\0weft:fonts/preloads')).toBe('export const preloads = []\n')
 
@@ -283,7 +292,7 @@ describe('weft/vite assets', () => {
   })
 
   test('with a font build the client imports weft:fonts itself: a Start entry, or an HTML page', () => {
-    const entry = (p: any, id: string, consumer = 'client') => (p.transform.filter.id.test(id) ? p.transform.handler.call({ environment: { config: { consumer } } }, 'start()\n') : undefined)
+    const entry = (p: Hooks, id: string, consumer = 'client') => (p.transform.filter.id.test(id) ? p.transform.handler.call({ environment: { config: { consumer } } }, 'start()\n') : undefined)
     const before = plugin('build').p
     expect(entry(before, '\0virtual:weft/entry-client')).toBeUndefined()
     expect(before.transformIndexHtml.handler()).toBeUndefined()
@@ -301,7 +310,7 @@ describe('weft/vite assets', () => {
   test('every environment emits the font files, whichever asked first', async () => {
     bind('font.build', { export: 'createFontBuild', options: { family: 'Inter' } })
     const { p } = plugin('build')
-    const emit = (out: any[], name: string) => ({ environment: { name }, emitFile: (f: any) => out.push(f.fileName) })
+    const emit = (out: string[], name: string) => ({ environment: { name }, emitFile: (f: Emitted) => out.push(f.fileName) })
     const ssr: string[] = [], client: string[] = []
     await p.load.handler.call(emit(ssr, 'ssr'), '\0weft:fonts/preloads')
     await p.load.handler.call(emit(client, 'client'), '\0weft:fonts.css')

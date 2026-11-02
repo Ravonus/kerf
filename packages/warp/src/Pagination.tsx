@@ -1,15 +1,16 @@
-import { infiniteScroll, pageList, uid } from '@weft/warp-core'
-import { derived, flush, untrack, type State } from 'weft'
+import { infiniteScroll, pageList, uid } from '@weft-js/warp-core'
+import { derived, flush, untrack, type State } from '@weft-js/core'
 import { Button } from './Button'
 import { bindable } from './bind'
 import { CompactSelect } from './Select'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/data/tokens.css'
-import '@weft/warp-core/styles/data/base.css'
-import '@weft/warp-core/styles/data/pagination.css'
-import '@weft/warp-core/styles/data/load-more.css'
+import '@weft-js/warp-core/styles/data/tokens.css'
+import '@weft-js/warp-core/styles/data/base.css'
+import '@weft-js/warp-core/styles/data/pagination.css'
+import '@weft-js/warp-core/styles/data/load-more.css'
 
+/** Props for PaginationBar. */
 export type PaginationBarProps = {
   /** The nav landmark's name; give each bar on a page its own. */
   label?: string
@@ -84,7 +85,7 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
   // "Go to" and its box are one item, so the bar never wraps between them: the pair moves to the next line together
   return (
-    <nav ref={(n: any) => (nav = n)} data-scope="pagination" aria-label={label}>
+    <nav ref={n => (nav = n)} data-scope="pagination" aria-label={label}>
       <span data-part="field">
         <span aria-hidden="true">Rows<span data-part="long"> per page</span></span>
         <CompactSelect label="Rows per page" value={String(per.value)} options={sizes.map(s => ({ value: String(s), label: String(s) }))} onValueChange={v => { per.set(+v); at.set(1) }} />
@@ -108,12 +109,12 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
  * Load more (06 §8): a sentinel watched with a 120px margin, and a button that is always there as the fallback. Set
  * `loading` while a page is on its way (the list shows its skeletons and `aria-busy`); `done` swaps in the end message.
  */
-export function LoadMore({ onLoad, loading, done, message, auto = true, root }: { onLoad: () => void; loading?: boolean; done?: boolean; message?: any; auto?: boolean; root?: () => HTMLElement | null }) {
+export function LoadMore({ onLoad, loading, done, message, auto = true, root }: { onLoad: () => void; loading?: boolean | undefined; done?: boolean; message?: unknown; auto?: boolean; root?: (() => HTMLElement | null) | undefined }) {
   let el: HTMLDivElement | undefined
   const reach = () => { if (auto && !loading && !done) onLoad() }
   use(infiniteScroll, () => el, () => ({ onReach: reach, root: root?.() }))
   return (
-    <div ref={(n: any) => (el = n)} data-scope="load-more">
+    <div ref={n => (el = n)} data-scope="load-more">
       <span aria-live="polite">{loading ? 'Loading…' : message}</span>
       {!done && <Button emphasis="outline" tone="neutral" disabled={!!loading} onClick={onLoad}>Load more</Button>}
     </div>

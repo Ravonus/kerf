@@ -1,12 +1,12 @@
 // The live pack, server-rendered and hydrated: every node claimed, nothing written, as in hydrate.test.tsx.
-import { resetIds } from '@weft/warp-core'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
+import { resetIds } from '@weft-js/warp-core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
 import { hydration } from '../../weft/src/hydrate'
-// @ts-expect-error: query imports (weft/vite)
-import * as server from './fixtures/pack-live.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/pack-live.tsx?weft-hydrate'
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const server = await import('./fixtures/pack-live.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/pack-live.tsx?weft-hydrate')
 
 test.each(Object.keys(client).filter(n => n.endsWith('Case')))('%s: SSR + hydrate, 0 misses, 0 writes', name => {
   resetIds()

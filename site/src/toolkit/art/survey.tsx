@@ -1,4 +1,4 @@
-import { DitherField } from '@weft/warp'
+import { DitherField } from '@weft-js/warp'
 import { clamp, fbm, smooth, type ArtProps, type Meta } from './shared'
 import code from './survey.tsx?raw'
 
@@ -24,7 +24,7 @@ export default function Survey({ live = true }: ArtProps) {
     if (x > aspect) aspect = x
     if (t !== stamp) survey(t)
     const fx = clamp(x / aspect) * (W - 1.001), fy = y * (H - 1.001), ix = fx | 0, iy = fy | 0, kx = fx - ix, ky = fy - iy, i = iy * W + ix
-    const h = (hills[i] * (1 - kx) + hills[i + 1] * kx) * (1 - ky) + (hills[i + W] * (1 - kx) + hills[i + W + 1] * kx) * ky
+    const h = (hills[i]! * (1 - kx) + hills[i + 1]! * kx) * (1 - ky) + (hills[i + W]! * (1 - kx) + hills[i + W + 1]! * kx) * ky
     // distance to the nearest contour, divided by the slope, so a line keeps its weight on steep ground and on flat
     const sx = Math.abs(hills[i + 1]! - hills[i]!) * (W - 1), sy = Math.abs(hills[i + W]! - hills[i]!) * (H - 1), slope = Math.hypot(sx, sy) * RINGS + 0.4
     const band = h * RINGS, f = band - Math.floor(band), line = smooth(1.5, 0.7, (Math.min(f, 1 - f) / slope) * 300)

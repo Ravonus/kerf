@@ -2,12 +2,12 @@
 // they drop and create their tables. `WEFT_TEST_PGBOUNCER`: the same database through pgBouncer in transaction mode.
 import postgres from 'postgres'
 import { changeStatements } from '../src/changes-sql.mjs'
-import { createFeed, type Probe, type Sink, type Source } from '../src/changes'
+import { createFeed, type Poke, type Probe, type Sink, type Source } from '../src/changes'
 import { postgresChanges } from '../src/db/changes-postgres'
 
 const url = process.env.WEFT_TEST_POSTGRES!
 const bouncer = process.env.WEFT_TEST_PGBOUNCER
-const wait = (ms = 0) => new Promise(ok => setTimeout(ok, ms))
+const wait = (ms = 0) => new Promise(ok => { setTimeout(ok, ms) })
 async function until(ok: () => boolean, ms = 5000) {
   const end = Date.now() + ms
   while (!ok() && Date.now() < end) await wait(5)
@@ -18,12 +18,13 @@ function source(sql: ReturnType<typeof postgres>, tables = ['live_a', 'live_b'],
   return { name: 'postgresql', tables, ...postgresChanges({ url, client: sql, tables, heartbeat: 100, interval: 100, ...extra }) }
 }
 function sinkless(s: Source, how?: Probe, throttle = 25) {
-  const pokes: any[] = []
+  const pokes: Poke[] = []
   const status: (string | undefined)[] = []
   const feed = createFeed(s, { emit: p => pokes.push(p), status: d => status.push(d) }, { hold: 25, throttle })
   return { pokes, status, feed, start: async () => feed.start(how ?? (await s.probe())) }
 }
 
+// Needs a Postgres server, named by WEFT_TEST_POSTGRES.
 describe.skipIf(!url)('postgres change feed', () => {
   let sql: ReturnType<typeof postgres>
   beforeAll(async () => {
@@ -43,8 +44,8 @@ describe.skipIf(!url)('postgres change feed', () => {
   test('a write from another connection is a poke of table and row, and no column', async () => {
     const f = sinkless(source(sql))
     await f.start()
-    const other = postgres(url, { max: 1, application_name: 'not-weft' })
-    const [{ id }] = await other`insert into live_a (secret) values ('hunter2') returning id`
+    const other = postgres(url, { max: 1, connection: { application_name: 'not-weft' } })
+    const [{ id } = { id: '' }] = await other<{ id: string }[]>`insert into live_a (secret) values ('hunter2') returning id`
     await until(() => f.pokes.length > 0)
     expect(f.pokes).toEqual([{ t: ['live_a', `live_a:${id}`] }])
     expect(JSON.stringify(f.pokes)).not.toContain('hunter2')
@@ -74,7 +75,7 @@ describe.skipIf(!url)('postgres change feed', () => {
     expect(f.pokes).toEqual([])
     await sql`insert into live_b values (1, 2)`
     await until(() => f.pokes.length > 0)
-    expect(f.pokes[0].t).toEqual(['live_b', 'live_b:1:2'])
+    expect(f.pokes[0]!.t).toEqual(['live_b', 'live_b:1:2'])
     await f.feed.stop()
   })
 
@@ -177,6 +178,8 @@ describe.skipIf(!url)('postgres change feed', () => {
     await sql.unsafe('revoke all on live_plain from live_ro; revoke all on database ' + new URL(url).pathname.slice(1) + ' from live_ro; drop role live_ro')
   })
 
+  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
+  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
   test.skipIf(!bouncer)('pgBouncer in transaction mode: a LISTEN that hears nothing is found out', async () => {
     const pooled = postgres(bouncer!, { max: 2, prepare: false, onnotice: () => {} })
     const s = { name: 'postgresql', tables: ['live_a'], ...postgresChanges({ url: bouncer!, client: pooled, tables: ['live_a'] }) }
@@ -187,6 +190,8 @@ describe.skipIf(!url)('postgres change feed', () => {
     await pooled.end()
   })
 
+  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
+  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
   test.skipIf(!bouncer)('the app through the pooler, the listener direct: a full feed', async () => {
     const pooled = postgres(bouncer!, { max: 2, prepare: false, onnotice: () => {} })
     const s = { name: 'postgresql', tables: ['live_a'], ...postgresChanges({ url: bouncer!, listenUrl: url, client: pooled, tables: ['live_a'] }) }

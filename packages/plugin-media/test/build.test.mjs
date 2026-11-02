@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createMediaBuild, findScorer, FIXED } from '../src/build.mjs'
+import { createMediaBuild, findScorer } from '../src/build.mjs'
+import { FIXED } from '../src/shared.mjs'
 import { media } from '../src/index.mjs'
 
 /** A photo-like test image: gradients plus fine texture, softened like a lens (pure pixel noise is the one case
@@ -34,6 +35,7 @@ beforeEach(() => (cacheDir = mkdtempSync(join(tmpdir(), 'weft-media-'))))
 afterEach(() => rmSync(cacheDir, { recursive: true, force: true }))
 
 describe('photos', () => {
+  // The search needs the libjxl `ssimulacra2` tool on PATH; without it the build falls back to FIXED, tested elsewhere.
   it.skipIf(!scorer)('searches AVIF and JPEG to SSIMULACRA2 ≥ 80 at the largest width, then encodes the ladder', async () => {
     const bytes = await photo(1100, 700)
     const { asset, files } = await createMediaBuild({ widths: [320, 640, 1280] }).build({ file: '/x/hero.jpg', bytes }, { cacheDir })

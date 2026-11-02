@@ -162,7 +162,7 @@ describe('share cards', () => {
     expect(res.headers.get('content-type')).toBe('image/png')
     expect(res.headers.get('cache-control')).toBe('no-store') // dev: edits show on reload
     const png = new Uint8Array(await res.arrayBuffer())
-    expect([...png.slice(1, 4)].map(c => String.fromCharCode(c)).join('')).toBe('PNG')
+    expect(Array.from(png.slice(1, 4), c => String.fromCharCode(c)).join('')).toBe('PNG')
     const view = new DataView(png.buffer)
     expect([view.getUint32(16), view.getUint32(20)]).toEqual([1200, 630])
   })

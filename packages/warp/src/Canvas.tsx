@@ -1,10 +1,11 @@
-import { surface, type Frame, type SurfaceOptions } from '@weft/warp-core/canvas'
-import { use } from '@weft/warp-core/weft'
+import { surface, type Frame, type SurfaceOptions } from '@weft-js/warp-core/canvas'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/canvas/canvas.css'
+import '@weft-js/warp-core/styles/canvas/canvas.css'
 
-export type { Frame, Pointer } from '@weft/warp-core/canvas'
+export type { Frame, Pointer } from '@weft-js/warp-core/canvas'
 
+/** Props for Canvas. */
 export interface CanvasProps {
   /** Paints one frame: `ctx` is already scaled to CSS pixels. Return true to be called again without `animate`. */
   draw: (frame: Frame) => boolean | void
@@ -21,7 +22,7 @@ export interface CanvasProps {
   /** Track the pointer into `frame.pointer`, and repaint when it moves over the canvas. */
   pointer?: boolean
   /** Names the drawing (role="img"). Without one it is decorative. */
-  label?: string
+  label?: string | undefined
   [attr: string]: unknown
 }
 
@@ -29,5 +30,5 @@ export interface CanvasProps {
 export function Canvas({ draw, animate, fps, cell, context, onTheme, pointer, label, ...rest }: CanvasProps) {
   let node: HTMLCanvasElement | undefined
   use(surface, () => node, () => ({ draw, animate, fps, cell, context, onTheme, pointer }))
-  return <div {...rest} data-scope="canvas"><canvas ref={(n: any) => (node = n)} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}></canvas></div>
+  return <div {...rest} data-scope="canvas"><canvas ref={n => (node = n)} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}></canvas></div>
 }

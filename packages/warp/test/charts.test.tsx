@@ -1,17 +1,17 @@
 // Every chart form through SSR + hydrate (0 misses, 0 writes), then the one interaction model on the adopted markup.
 import { fireEvent } from '@testing-library/dom'
-import { resetIds } from '@weft/warp-core'
-import { state } from 'weft'
-import { hydrate } from 'weft/dom'
-import { renderToString } from 'weft/ssr'
-import { flush, render } from 'weft/test'
+import { resetIds } from '@weft-js/warp-core'
+import { state } from '@weft-js/core'
+import { hydrate } from '@weft-js/core/dom'
+import { renderToString } from '@weft-js/core/ssr'
+import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import { BarChart, LineChart, Sparkline, StreamChart } from '../src/Charts'
 import { revenue, seats } from './fixtures/ChartData'
-// @ts-expect-error: query imports (weft/vite)
-import * as server from './fixtures/ChartCases.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/ChartCases.tsx?weft-hydrate'
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const server = await import('./fixtures/ChartCases.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/ChartCases.tsx?weft-hydrate')
 
 test.each(Object.keys(server).filter(n => !n.endsWith('$shape')))('%s: SSR + hydrate, 0 misses, 0 writes', async name => {
   resetIds()
@@ -53,8 +53,8 @@ test('one tab stop; arrows walk x and series, Home and End jump, Escape closes t
   const marks = [...c.querySelectorAll<SVGElement>('[data-mark]')]
   expect(marks.filter(m => m.getAttribute('tabindex') === '0')).toHaveLength(1)
   const at = () => { const a = document.activeElement!; return [a.getAttribute('data-xi'), a.getAttribute('data-si')] }
-  marks[0].focus()
-  key(marks[0], 'ArrowRight'); expect(at()).toEqual(['1', '0'])
+  marks[0]!.focus()
+  key(marks[0]!, 'ArrowRight'); expect(at()).toEqual(['1', '0'])
   key(document.activeElement!, 'ArrowDown'); expect(at()).toEqual(['1', '1'])
   key(document.activeElement!, 'ArrowUp'); expect(at()).toEqual(['1', '0'])
   key(document.activeElement!, 'End'); expect(at()).toEqual(['11', '1'])
@@ -75,21 +75,21 @@ test('a data change rewrites attributes on the same nodes', async () => {
   const mark = c.querySelector('[data-mark][data-xi="3"]')!, before = c.querySelector('.s-line')!.getAttribute('d')
   rows.value = cheaper
   await flush()
-  await new Promise(r => setTimeout(r, 30))
+  await new Promise(r => { setTimeout(r, 30) })
   expect(c.querySelector('[data-mark][data-xi="3"]')).toBe(mark)
   expect(c.querySelector('.s-line')!.getAttribute('d')).not.toBe(before)
-  expect(c.querySelector('[data-part="table"] tbody td')!.textContent).toBe((revenue[0].subs * 0.9).toLocaleString('en-US'))
+  expect(c.querySelector('[data-part="table"] tbody td')!.textContent).toBe((revenue[0]!.subs * 0.9).toLocaleString('en-US'))
 })
 
 test('the legend hides a series, and the last one stays', async () => {
   const c = figure(); await flush()
   const [subs, usage] = c.querySelectorAll<HTMLButtonElement>('[data-scope="legend"] button')
-  subs.click()
-  expect(subs.getAttribute('aria-pressed')).toBe('false')
+  subs!.click()
+  expect(subs!.getAttribute('aria-pressed')).toBe('false')
   expect(c.querySelector('[data-series="0"]')).toBeNull()
-  usage.click()
-  expect(usage.getAttribute('aria-pressed')).toBe('true')
-  subs.click()
+  usage!.click()
+  expect(usage!.getAttribute('aria-pressed')).toBe('true')
+  subs!.click()
   expect(c.querySelector('[data-series="0"]')).not.toBeNull()
 })
 

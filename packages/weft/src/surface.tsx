@@ -1,18 +1,21 @@
-// weft/surface: canvas and WebGL as layout children (PLAN §5, research 33). `setup` runs once on the client, props are
+// @weft-js/core/surface: canvas and WebGL as layout children (PLAN §5, research 33). `setup` runs once on the client, props are
 // live, and a paint reads boxes like a binding does: when one changes, one paint is booked on the next frame and nothing
 // else runs. No app pays for this unless it imports it.
+// oxlint-disable-next-line typescript/triple-slash-reference -- slots.d.ts declares a wildcard module, so it has no exports for an `import` to name
 /// <reference path="./slots.d.ts" />
 
-import { createRoot, DEV, effect, flush, getOwner, onCleanup, onMount, state, untrack, within, type StandardSchema, type State } from 'weft'
+import { createRoot, DEV, effect, flush, getOwner, onCleanup, onMount, state, untrack, within, type StandardSchema, type State } from '@weft-js/core'
 import { surfaceText, type PaintedText, type SurfaceText, type TextHost, type TextOptions } from './surface-text'
 
 export type { MeasureHandle, MeasureLine, MeasureProvider, SurfaceText, TextOptions } from './surface-text'
 
+/** Where a frame sits: its number, the seconds since the start, and the seconds since the last one. */
 export interface FrameTime { frame: number; seconds: number; delta: number }
 
 /** A token's live value: `css` for canvas2d, `linear` (0–1, linear sRGB, then alpha) for shaders. */
 export interface Token { css: string; linear: [number, number, number, number] }
 
+/** What every surface's `setup` gets, whatever its kind. */
 export interface SurfaceBase {
   canvas: HTMLCanvasElement
   /** The host element. Put pointer handlers here: mirrors sit above the canvas. */
@@ -43,8 +46,10 @@ export interface SurfaceKinds {
   webgl2: { gl: WebGL2RenderingContext }
 }
 
-export type SurfaceContext<K extends string> = SurfaceBase & (K extends keyof SurfaceKinds ? SurfaceKinds[K] : Record<string, any>)
+/** `SurfaceBase` and what the kind `K` adds to it. */
+export type SurfaceContext<K extends string> = SurfaceBase & (K extends keyof SurfaceKinds ? SurfaceKinds[K] : Record<string, unknown>)
 
+/** A surface: its kind, its props' schema, and what it draws. */
 export interface SurfaceDef<P = {}, K extends string = string> {
   name: string
   kind: K
@@ -65,8 +70,9 @@ export interface SurfaceDef<P = {}, K extends string = string> {
 
 /** `surface.renderer@1`: what a kind provides. */
 export interface SurfaceRenderer {
-  context(canvas: HTMLCanvasElement, def: SurfaceDef<any, any>): SurfaceBackend | null
+  context(canvas: HTMLCanvasElement, def: Mounting): SurfaceBackend | null
 }
+/** What a renderer gives a mounted surface: the fields its kind adds, and how it resizes and starts a frame. */
 export interface SurfaceBackend {
   /** Fields merged into `s`: `{ ctx }`, `{ gl }`, a provider's own. */
   fields: Record<string, unknown>
@@ -76,6 +82,7 @@ export interface SurfaceBackend {
   dispose?(): void
 }
 
+/** Declares a surface, for `<Surface use={…}>`. */
 export function defineSurface<P = {}, const K extends string = string>(def: SurfaceDef<P, K>): SurfaceDef<P, K> {
   return def
 }
@@ -90,7 +97,7 @@ export function integerFit(width: number, height: number, availableWidth: number
 
 const canvas2d: SurfaceRenderer = {
   context(canvas, def) {
-    const ctx = canvas.getContext('2d', def.context as any) as CanvasRenderingContext2D | null
+    const ctx = canvas.getContext('2d', def.context) as CanvasRenderingContext2D | null
     if (!ctx) return null
     let w = 0, h = 0
     return {
@@ -103,7 +110,7 @@ const canvas2d: SurfaceRenderer = {
 
 const webgl2: SurfaceRenderer = {
   context(canvas, def) {
-    const gl = canvas.getContext('webgl2', def.context as any) as WebGL2RenderingContext | null
+    const gl = canvas.getContext('webgl2', def.context) as WebGL2RenderingContext | null
     if (!gl) return null
     return {
       fields: { gl },
@@ -126,6 +133,7 @@ function loop(now: number) {
   if (!tickers.size || !playing.value) { last = 0; return }
   if (last) seconds += Math.min(now - last, 100) / 1000 // capped: a background tab resumes without a jump
   last = now
+  // a snapshot: a ticker can remove itself while this runs
   for (const t of [...tickers]) t()
   raf = requestAnimationFrame(loop)
 }
@@ -141,6 +149,7 @@ export const clock = {
   /** Jump, and paint every animated surface now. */
   seek(to: number) {
     seconds = to
+    // a snapshot: a ticker can remove itself while this runs
     for (const t of [...tickers]) t(true)
   },
 }
@@ -156,14 +165,14 @@ const linear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) 
 
 function rgba(css: string): [number, number, number, number] {
   const m = /^rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(css)
-  if (m) return [+m[1] / 255, +m[2] / 255, +m[3] / 255, m[4] === undefined ? 1 : +m[4]]
+  if (m) return [+m[1]! / 255, +m[2]! / 255, +m[3]! / 255, m[4] === undefined ? 1 : +m[4]]
   const ctx = scratch() // oklch(), color(), anything else the page can compute
   if (!ctx) return [0, 0, 0, 1]
   ctx.clearRect(0, 0, 1, 1)
   ctx.fillStyle = css
   ctx.fillRect(0, 0, 1, 1)
   const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
-  return a ? [r / a, g / a, b / a, a / 255] : [0, 0, 0, 0]
+  return a ? [r! / a, g! / a, b! / a, a / 255] : [0, 0, 0, 0]
 }
 
 function tokensOf(host: HTMLElement): Record<string, Token> {
@@ -175,7 +184,7 @@ function tokensOf(host: HTMLElement): Record<string, Token> {
   return new Proxy({}, {
     get(_, name): Token | undefined {
       if (typeof name !== 'string') return undefined
-      theme.value
+      void theme.value
       if (!watching) {
         watching = true
         const seen = new MutationObserver(bump)
@@ -196,12 +205,14 @@ function tokensOf(host: HTMLElement): Record<string, Token> {
       }
       return token
     },
-  }) as Record<string, Token>
+  })
 }
 
 // ---- mounting ------------------------------------------------------------------------------------------------------
 
-function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) {
+type Mounting = SurfaceDef<Record<string, unknown>, string>
+
+function mountSurface(def: Mounting, props: Record<string, unknown> & { label?: string; decorative?: boolean }, host: HTMLElement) {
   const fps = def.fps ?? 60
   const canvas = document.createElement('canvas')
   canvas.style.cssText = def.pixel ? 'position:absolute;inset:0;margin:auto;image-rendering:pixelated' : 'position:absolute;inset:0;width:100%;height:100%'
@@ -218,8 +229,8 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
 
   if (DEV && def.props) {
     effect(() => ({ ...props }), value => {
-      const result = def.props!['~standard'].validate(value) as { issues?: readonly { message: string; path?: readonly any[] }[] }
-      for (const i of result.issues ?? []) console.warn(`weft: <Surface use={${def.name}}> prop \`${(i.path ?? []).map(p => p?.key ?? p).join('.')}\`: ${i.message}`)
+      const result = def.props!['~standard'].validate(value) as { issues?: readonly { message: string; path?: readonly (PropertyKey | { key: PropertyKey })[] }[] }
+      for (const i of result.issues ?? []) console.warn(`weft: <Surface use={${def.name}}> prop \`${(i.path ?? []).map(p => String(((p as { key?: PropertyKey })?.key ?? p) as PropertyKey)).join('.')}\`: ${i.message}`)
     })
   }
 
@@ -299,7 +310,7 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
           else stale = true
         }
 
-        const textHost: TextHost = { el: host, ctx: backend.fields.ctx as any, invalidate, paint }
+        const textHost: TextHost = { el: host, ctx: backend.fields.ctx as TextHost['ctx'], invalidate, paint }
         const s = {
           ...backend.fields,
           canvas, el: host, size, dpr, scale, clock, tokens: tokensOf(host),
@@ -309,7 +320,7 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
             if (!tickers.has(ticker)) { tickers.add(ticker); onCleanup(() => tickers.delete(ticker)); if (playing.value) run() }
           },
           invalidate,
-          text(text: any, options: any) { const t = surfaceText(textHost, text, options); texts.push(t); return t },
+          text(text: Parameters<typeof surfaceText>[1], options: Parameters<typeof surfaceText>[2]) { const t = surfaceText(textHost, text, options); texts.push(t); return t },
           decorative: <T,>(fn: () => T) => fn(),
         }
 
@@ -319,7 +330,7 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
         // Paint and tracking are one effect: `tick` starts a paint, and a run with `painting` false means a source changed.
         painting = true
         effect(() => {
-          tick.value
+          void tick.value
           if (!painting) return invalidate()
           backend.begin?.()
           for (const d of draws) d()
@@ -331,7 +342,7 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
 
         if (typeof IntersectionObserver === 'function') {
           const io = new IntersectionObserver(entries => {
-            seen = entries[entries.length - 1].isIntersecting
+            seen = entries[entries.length - 1]!.isIntersecting
             if (seen && stale) { stale = false; paint() }
           })
           io.observe(host)
@@ -344,7 +355,7 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
     fit(box.width, box.height)
     if (typeof ResizeObserver === 'function') {
       const ro = new ResizeObserver(entries => {
-        const e = entries[entries.length - 1]
+        const e = entries[entries.length - 1]!
         const dp = e.devicePixelContentBoxSize?.[0]
         const exact = dp && Math.abs(dp.inlineSize - e.contentRect.width * devicePixelRatio) < 2 // emulated dpr: the box is in other units
         fit(e.contentRect.width, e.contentRect.height, exact ? dp.inlineSize : undefined, exact ? dp.blockSize : undefined)
@@ -363,8 +374,7 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
   const known = builtin[def.kind]
   if (known) start(known)
   else {
-    // @ts-ignore a generated module (`weft plugins sync`), declared in .weft/slots.d.ts once bound
-    import('weft:slot/surface.renderer').then((m: any) => m.load(def.kind)).then((r: SurfaceRenderer) => within(owner, () => start(r)), (error: unknown) => {
+    import('weft:slot/surface.renderer').then(m => m.load(def.kind) as Promise<SurfaceRenderer>).then(r => within(owner, () => start(r)), (error: unknown) => {
       console.error(error)
       host.setAttribute('data-surface-error', def.kind)
     })
@@ -373,8 +383,9 @@ function mountSurface(def: SurfaceDef<any, any>, props: any, host: HTMLElement) 
 
 // ---- <Surface> -----------------------------------------------------------------------------------------------------
 
+/** `<Surface>`'s props: the surface's own, and those of its place on the page. */
 export type SurfaceProps<P> = P & {
-  use: SurfaceDef<P, any>
+  use: SurfaceDef<P, string>
   /** `16/9`. Default: the `pixel` target's ratio, else `2/1`. */
   aspect?: string
   /** What the surface shows, for assistive tech. Required unless `decorative` (X009). */
@@ -388,7 +399,7 @@ export type SurfaceProps<P> = P & {
 export function Surface<P>(props: SurfaceProps<P>) {
   let host!: HTMLElement
   const def = untrack(() => props.use)
-  onMount(() => mountSurface(def, props, host))
+  onMount(() => mountSurface(def as unknown as Mounting, props, host))
   const ratio = () => props.aspect ?? (def.pixel ? `${def.pixel.width}/${def.pixel.height}` : '2/1')
   return <div ref={(e: HTMLElement) => (host = e)} data-surface={def.name} class={props.class} style={`position:relative;aspect-ratio:${ratio()};${props.style ?? ''}`}></div>
 }

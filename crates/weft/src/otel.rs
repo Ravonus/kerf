@@ -1,8 +1,8 @@
 //! With the `otel` feature, a call's span continues the trace TS started: the app installs an OpenTelemetry layer, and
 //! the envelope's `traceparent` becomes the parent. Without one, `trace_id` and `parent_id` are plain span fields.
 
-use opentelemetry::trace::{SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState};
 use opentelemetry::Context;
+use opentelemetry::trace::{SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub(crate) fn parent(traceparent: &str) -> Option<SpanContext> {
@@ -38,7 +38,13 @@ mod tests {
 
     #[test]
     fn refuses_what_isnt_one() {
-        for bad in ["", "junk", "01-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01", "00-00000000000000000000000000000000-00f067aa0ba902b7-01", "00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01"] {
+        for bad in [
+            "",
+            "junk",
+            "01-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+            "00-00000000000000000000000000000000-00f067aa0ba902b7-01",
+            "00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01",
+        ] {
             assert!(parent(bad).is_none(), "{bad}");
         }
     }

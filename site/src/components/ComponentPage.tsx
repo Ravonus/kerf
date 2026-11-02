@@ -1,5 +1,5 @@
-import { Link } from '@weft/start'
-import { Kbd } from '@weft/warp'
+import { Link } from '@weft-js/start'
+import { Kbd } from '@weft-js/warp'
 import { ExampleFrame, type ShownExample } from './ExampleFrame'
 import { Install } from './Install'
 import { Playground, type ShownPlayground } from './Playground'
@@ -36,7 +36,9 @@ function Example(props: { file: string; example: ShownExample; alone: boolean; f
   return (
     <section id={ex.id} data-site="ex">
       {!props.alone && <h3 data-flow="heading">{ex.title}</h3>}
-      {ex.note && <p data-part="note" data-flow="item" innerHTML={ex.note}></p>}
+      {ex.note && <p data-part="note" data-flow="item"
+        // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+        innerHTML={ex.note}></p>}
       <ExampleFrame file={props.file} example={ex} flow={props.flow} />
     </section>
   )
@@ -47,8 +49,12 @@ function DocSection(props: { file: string; section: Section; flow: string }) {
   return (
     <section id={slugOf(s.title)} data-site="tk-section">
       <h2 data-flow="heading">{s.title}</h2>
-      {s.html && <div data-scope="prose" innerHTML={s.html}></div>}
-      {s.intro && <p data-part="note" data-flow="item" innerHTML={s.intro}></p>}
+      {s.html && <div data-scope="prose"
+        // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+        innerHTML={s.html}></div>}
+      {s.intro && <p data-part="note" data-flow="item"
+        // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+        innerHTML={s.intro}></p>}
       {s.examples?.map(e => <Example key={e.id} file={props.file} example={e} alone={s.examples!.length === 1} flow={props.flow} />)}
     </section>
   )
@@ -63,7 +69,7 @@ export function ComponentPage(props: { data: Page }) {
         <header>
           <h1>{d.name}</h1>
           <p data-part="lede">{d.summary}</p>
-          <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft/warp</code></span>{d.playground && <a href="#playground">Try it</a>}</p>
+          <p data-part="links"><Link href={d.source} rel="external">Source</Link><span>Package <code data-scope="code">@weft-js/warp</code></span>{d.playground && <a href="#playground">Try it</a>}</p>
         </header>
         {d.hero && <section id="preview" data-site="tk-default"><ExampleFrame file={d.file} example={d.hero} hero flow={FLOW[d.area as Area]} /></section>}
         <section id="installation" data-site="tk-section"><h2 data-flow="heading">Installation</h2><Install /></section>
@@ -74,7 +80,9 @@ export function ComponentPage(props: { data: Page }) {
             <Playground file={d.file} name={d.name} play={d.playground} flow={FLOW[d.area as Area]} />
           </section>
         )}
-        <section id="usage" data-site="tk-section"><h2 data-flow="heading">Usage</h2><div innerHTML={d.usage}></div></section>
+        <section id="usage" data-site="tk-section"><h2 data-flow="heading">Usage</h2><div
+          // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+          innerHTML={d.usage}></div></section>
         {d.sections.map(s => <DocSection key={s.title} file={d.file} section={s} flow={FLOW[d.area as Area]} />)}
         {d.use && (
           <section id="when-to-use" data-site="tk-section">
@@ -93,7 +101,9 @@ export function ComponentPage(props: { data: Page }) {
                 {d.keyboard.map(([keys, does]) => <div key={keys}><dt>{chords(keys).map((alt, i) => <span key={i} data-part="chord">{i > 0 && <span data-part="key-word">or</span>}{alt.map((t, j) => (t.kind === 'key' ? <Kbd key={j}>{t.text}</Kbd> : <span key={j} data-part="key-word">{t.text}</span>))}</span>)}</dt><dd>{does}</dd></div>)}
               </dl>
             )}
-            {d.a11yNotes && <ul data-part="notes" data-flow="item">{d.a11yNotes.map(n => <li key={n} innerHTML={n}></li>)}</ul>}
+            {d.a11yNotes && <ul data-part="notes" data-flow="item">{d.a11yNotes.map(n => <li key={n}
+              // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+              innerHTML={n}></li>)}</ul>}
           </section>
         )}
         <section id="api-reference" data-site="tk-section">

@@ -18,13 +18,13 @@ const JOINING = /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Nko}\p{Script=Mong
 /** The label's letters, as the anatomy renders them (one `<span data-char data-c>` each). */
 export function labelChars(text: string): string[] {
   const clean = text.replace(/ /g, ' ').replace(/\s+/g, ' ').trim()
-  if (typeof Intl === 'undefined' || !Intl.Segmenter) return [...clean]
+  if (typeof Intl === 'undefined' || !Intl.Segmenter) return Array.from(clean)
   const seg = new Intl.Segmenter(undefined, { granularity: JOINING.test(clean) ? 'word' : 'grapheme' })
   return Array.from(seg.segment(clean), s => s.segment)
 }
 
-const parts = (field: Element) => {
-  const box = field.querySelector<HTMLElement>(':scope > [data-part="control"]')
+const parts = (host: Element) => {
+  const box = host.querySelector<HTMLElement>(':scope > [data-part="control"]')
   const label = box?.querySelector<HTMLElement>(':scope > [data-part="label"]')
   return { box, label }
 }
@@ -35,16 +35,16 @@ function probe(el: Element, prop: string, expr: string) {
   t.style.cssText = `position:absolute;visibility:hidden;${prop}:${expr}`
   el.append(t)
   const cs = getComputedStyle(t)
-  const v = parseFloat((cs as any)[prop.replace(/-(\w)/g, (_, c) => c.toUpperCase())])
+  const v = parseFloat(cs[prop.replace(/-(\w)/g, (_, c: string) => c.toUpperCase()) as 'width'])
   t.remove()
   return v || 0
 }
 
 // each letter starts when the sweep reaches it: its offset across the control, as a share of the sweep's duration
-function delays(field: Element) {
-  const { box, label } = parts(field)
+function delays(host: Element) {
+  const { box, label } = parts(host)
   if (!box || !label) return
-  const dur = installSweep(field.ownerDocument).duration(box) || 620
+  const dur = installSweep(host.ownerDocument).duration(box) || 620
   const w = box.offsetWidth
   if (!w) return
   for (const c of label.querySelectorAll<HTMLElement>('[data-char]')) c.style.setProperty('--d', `${Math.max(0, ((label.offsetLeft + c.offsetLeft) / w) * dur).toFixed(0)}ms`)
@@ -55,9 +55,9 @@ function delays(field: Element) {
 // bits, as the canvas read it once was (so 0.99 still counts as see-through)
 function alpha(c: string) {
   const m = /^rgba\(.*,\s*([\d.]+)\)$|\/\s*([\d.]+)(%?)\s*\)$/.exec(c)
-  return m ? Math.round((+(m[1] ?? m[2]) / (m[3] ? 100 : 1)) * 255) / 255 : 1
+  return m ? Math.round((+(m[1] ?? m[2])! / (m[3] ? 100 : 1)) * 255) / 255 : 1
 }
-const docOffset = (el: HTMLElement) => {
+const docOffset = (el: HTMLElement): [number, number] => {
   let x = 0, y = 0
   for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) {
     x += n.offsetLeft + (n === el ? 0 : n.clientLeft)
@@ -67,10 +67,10 @@ const docOffset = (el: HTMLElement) => {
 }
 
 // the notch shows exactly what is behind the field: a colour, or a pixel-aligned window onto a gradient or image
-function notch(field: Element) {
-  const { box, label } = parts(field)
+function notch(host: Element) {
+  const { box, label } = parts(host)
   if (!box || !label) return
-  let anc = field.parentElement
+  let anc = host.parentElement
   for (; anc; anc = anc.parentElement) {
     const cs = getComputedStyle(anc)
     if ((cs.backgroundImage !== 'none' && !anc.classList.contains('diagram')) || alpha(cs.backgroundColor) >= 0.99) break
@@ -131,18 +131,18 @@ function onTheme(doc: Document, measure: () => void) {
  * the label's size settles (font swap, float), the field resizes or the theme changes, and keeps `data-filled` on the control in step
  * with the input's value.
  */
-export function floatingLabel(field: HTMLElement) {
-  const { box, label } = parts(field)
+export function floatingLabel(host: HTMLElement) {
+  const { box, label } = parts(host)
   if (!box || !label) return { update() {}, destroy() {} }
-  const win = field.ownerDocument.defaultView!
+  const win = host.ownerDocument.defaultView!
   const input = box.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('[data-part="input"]')
   const fill = () => {
     if (!input) return
     if (input instanceof win.HTMLSelectElement) box.toggleAttribute('data-filled', !!input.value || !!input.selectedOptions[0]?.text)
     else if (!box.querySelector('[data-scope="tag"]')) box.toggleAttribute('data-filled', input.value.length > 0)
   }
-  const measure = () => { delays(field); notch(field) }
-  const onSize = (e: TransitionEvent) => { if (e.propertyName === 'font-size') delays(field) }
+  const measure = () => { delays(host); notch(host) }
+  const onSize = (e: TransitionEvent) => { if (e.propertyName === 'font-size') delays(host) }
   label.addEventListener('transitionend', onSize)
   input?.addEventListener('input', fill)
   input?.addEventListener('change', fill)
@@ -151,7 +151,7 @@ export function floatingLabel(field: HTMLElement) {
   let frame = win.requestAnimationFrame(() => { wait = win.setTimeout(measure) })
   const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { win.clearTimeout(wait); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) }) : null
   resize?.observe(box)
-  const unwatch = onTheme(field.ownerDocument, () => notch(field))
+  const unwatch = onTheme(host.ownerDocument, () => notch(host))
   return {
     /** Re-measure (after a dial change) and re-read the value (after a programmatic write). */
     update() { fill(); win.cancelAnimationFrame(frame); frame = win.requestAnimationFrame(measure) },
@@ -193,6 +193,7 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
   const grow = () => { if (grows && input) { input.style.height = 'auto'; input.style.height = `${input.scrollHeight + 2}px` } }
   const onInput = () => { count(); grow() }
   // a value the binding holds stands: the native reset only knows the markup's
+  // oxlint-disable-next-line typescript/no-base-to-string -- the bound value is the app's: a control takes its text
   const reset = formReset(el, () => { if (input && held != null) input.value = String(held); onInput() })
   const onClick = (e: MouseEvent) => {
     if (!(e.target as Element).closest?.('[data-part="clear"]') || !input) return

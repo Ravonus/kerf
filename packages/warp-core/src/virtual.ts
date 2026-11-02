@@ -3,7 +3,9 @@
 // them. Rows sit at a known offset, so what's above the viewport can change without the viewport moving: a size change
 // above the anchor row moves `scrollTop` by the same amount, before paint.
 
+/** What identifies a row. */
 export type VirtualKey = string | number
+/** Where a row lands when scrolled to. */
 export type VirtualAlign = 'start' | 'center' | 'end'
 
 /** Sizes with O(log n) offsets (a Fenwick tree): set one, read the offset of any index, find the index at an offset. */
@@ -32,19 +34,19 @@ export class Sizes {
     for (let i = 1; i < tree.length; i++) {
       const size = this.all[i - 1] ?? 0
       this.sum += size
-      tree[i] += size
+      tree[i]! += size
       const up = i + (i & -i)
-      if (up < tree.length) tree[up] += tree[i]
+      if (up < tree.length) tree[up]! += tree[i]!
     }
     this.tree = tree
   }
 
   set(i: number, size: number) {
-    const delta = size - this.all[i]
+    const delta = size - this.all[i]!
     if (!delta) return 0
     this.all[i] = size
     this.sum += delta
-    for (let at = i + 1; at < this.tree.length; at += at & -at) this.tree[at] += delta
+    for (let at = i + 1; at < this.tree.length; at += at & -at) this.tree[at]! += delta
     return delta
   }
 
@@ -57,7 +59,7 @@ export class Sizes {
   /** The sum of the sizes before `i`. */
   offset(i: number) {
     let sum = 0
-    for (let at = Math.min(i, this.all.length); at > 0; at -= at & -at) sum += this.tree[at]
+    for (let at = Math.min(i, this.all.length); at > 0; at -= at & -at) sum += this.tree[at]!
     return sum
   }
 
@@ -68,12 +70,13 @@ export class Sizes {
     let at = 0, left = y
     for (let step = 1 << (31 - Math.clz32(this.tree.length - 1)); step; step >>= 1) {
       const next = at + step
-      if (next < this.tree.length && next <= n && this.tree[next] <= left) { at = next; left -= this.tree[next] }
+      if (next < this.tree.length && next <= n && this.tree[next]! <= left) { at = next; left -= this.tree[next]! }
     }
     return Math.min(at, n - 1)
   }
 }
 
+/** Options for the virtualizer. */
 export interface VirtualOptions {
   /** Each item's identity, in order: sizes and the anchor follow a key through inserts, prepends and removals. */
   keys: readonly VirtualKey[]
@@ -84,9 +87,9 @@ export interface VirtualOptions {
   /** The size known before render, for the current cross-axis size: exact text heights. `undefined` = not known yet. */
   size?: (index: number, width: number) => number | undefined
   /** Added to every size, between rows. */
-  gap?: number
+  gap?: number | undefined
   /** Pixels rendered past each edge of the viewport. Default: one viewport, at least 200. */
-  overscan?: number
+  overscan?: number | undefined
   /** `'x'` virtualises columns. Default `'y'`. */
   axis?: 'x' | 'y'
   /** A sticky header inside the spacer, before the first row: rows sit below it and it isn't viewport. */
@@ -94,9 +97,9 @@ export interface VirtualOptions {
   /** The sizes are the truth and the virtualizer writes them to each row, so rows aren't watched. */
   sized?: boolean
   /** Keep the end in view while the user is within this many pixels of it (a chat log). */
-  stick?: number
+  stick?: number | undefined
   /** Start at the end, not the start. */
-  from?: 'start' | 'end'
+  from?: 'start' | 'end' | undefined
   /** Also render these, wherever they are: the focused row, so focus and `aria-activedescendant` have a node. */
   pinned?: () => readonly VirtualKey[]
   /** The rows to render changed: ascending indices. */
@@ -109,11 +112,12 @@ export interface VirtualOptions {
   onScroll?: (position: number) => void
 }
 
+/** What a virtualized list can do. */
 export interface Virtualizer {
   /** New keys or options. Row sizes stay with their keys; the anchor row stays where it is on screen. */
   update(options: Partial<VirtualOptions>): void
   /** Ask `size` again for `[from, to)`: more text has been prepared. Default everything. */
-  refresh(from?: number, to?: number): void
+  refresh(from?: number  , to?: number  ): void
   /** Take this element as `key`'s row: it's positioned and watched. Returns the release. */
   attach(el: HTMLElement, key: VirtualKey): () => void
   scrollTo(index: number, align?: VirtualAlign): void
@@ -127,6 +131,7 @@ export interface Virtualizer {
 
 const FALLBACK_VIEWPORT = 600 // nothing's laid out yet (SSR, a hidden parent): render about a screen
 
+/** Keeps only the rows near the viewport in the DOM, measuring them as they arrive. */
 export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualizer {
   const o = { ...initial }
   const horizontal = o.axis === 'x'
@@ -158,7 +163,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   const head = () => o.head ?? 0
   const room = () => (viewport || FALLBACK_VIEWPORT) - head()
   const sizeFor = (i: number) => {
-    const seen = known.get(keys[i])
+    const seen = known.get(keys[i]!)
     if (seen && seen.cross === cross) return seen.size + gap()
     return (o.size?.(i, cross) ?? seen?.size ?? estimate(i)) + gap()
   }
@@ -177,7 +182,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       row.el.style.transform = horizontal ? `translateX(${at}px)` : `translateY(${at}px)`
     }
     if (!o.sized) return
-    const size = sizes.get(i) - gap()
+    const size = sizes.get(i)! - gap()
     if (size === row.size) return
     row.size = size
     if (horizontal) row.el.style.inlineSize = `${size}px`
@@ -241,13 +246,13 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
     while (same < shared && old[same] === next[same]) same++
     keys = next
     if (same === old.length) { // the common case, a growing list: nothing above moves
-      for (let i = same; i < next.length; i++) { index.set(next[i], i); sizes.push(sizeFor(i)) }
+      for (let i = same; i < next.length; i++) { index.set(next[i]!, i); sizes.push(sizeFor(i)) }
       bounds()
       if (o.stick != null && stuck) end()
       range()
       return
     }
-    const at = position(), held = sizes.at(at), key = old[held], within = at - sizes.offset(held)
+    const at = position(), held = sizes.at(at), key = old[held]!, within = at - sizes.offset(held)
     renamed = true
     index = new Map(next.map((k, i) => [k, i]))
     sizes.fill(next.map((_, i) => sizeFor(i)))
@@ -274,10 +279,10 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       const size = rowBox(e)
       if (!size) continue // display: none, or a detached row
       known.set(key, { size, cross })
-      if (Math.abs(size + gap() - sizes.get(i)) > 0.01) changed.push([i, key, size])
+      if (Math.abs(size + gap() - sizes.get(i)!) > 0.01) changed.push([i, key, size])
     }
     if (!changed.length) return
-    anchored(() => { for (const [i, , size] of changed) { o.onDrift?.(i, sizes.get(i) - gap(), size); sizes.set(i, size + gap()) } })
+    anchored(() => { for (const [i, , size] of changed) { o.onDrift?.(i, sizes.get(i)! - gap(), size); sizes.set(i, size + gap()) } })
   }) : null
 
   const measure = () => {

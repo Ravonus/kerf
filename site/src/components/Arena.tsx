@@ -1,8 +1,12 @@
-import { onMount, state } from 'weft'
-import { Button } from '@weft/warp'
+import { onMount, state } from '@weft-js/core'
+import { Button } from '@weft-js/warp'
 import bytes from '../generated/arena.json'
 import built from '../generated/arena-built.json'
 import speed from '../generated/speed.json'
+
+/** What each frame's harness puts on its window. */
+type Harness = { read: () => { renders: number; runs: number; writes: number; updates: number; ms: number }; tick: (k: number) => void; click: () => void }
+const harness = (r: { frame: HTMLIFrameElement | undefined }) => (r.frame?.contentWindow as { arena?: Harness } | null | undefined)?.arena
 
 const FRAMES = [
   { id: 'weft', name: 'weft' },
@@ -11,7 +15,7 @@ const FRAMES = [
 ] as const
 
 const n = (v: number) => v.toLocaleString('en-US')
-const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
+const kb = (size: number) => `${(size / 1024).toFixed(1)} KB`
 /** Needs a real run: a few presses are too few to compare, so the row stays empty until the 60 a second has run for a while. */
 const ENOUGH = 300
 const ms = (total: number, updates: number) => (updates < ENOUGH ? '–' : `${(total / updates).toFixed(2)} ms`)
@@ -28,13 +32,13 @@ export function Arena() {
   let turn = 0
 
   const live = () => {
-    const order = rows.map((_, i) => rows[(i + turn) % rows.length])
+    const order = rows.map((_, i) => rows[(i + turn) % rows.length]!)
     turn++
-    return order.map(r => ({ row: r, arena: (r.frame?.contentWindow as any)?.arena })).filter(r => r.arena)
+    return order.map(harness).filter(arena => arena !== undefined)
   }
   const read = () => {
     for (const r of rows) {
-      const arena = (r.frame?.contentWindow as any)?.arena
+      const arena = harness(r)
       if (arena) r.out.value = arena.read()
     }
   }
@@ -49,7 +53,7 @@ export function Arena() {
     hot.value = true
     beat = window.setInterval(() => {
       k++
-      for (const { arena } of live()) arena.tick(k)
+      for (const arena of live()) arena.tick(k)
       if (k % 6 === 0) read()
     }, 1000 / 60)
   }
@@ -58,7 +62,7 @@ export function Arena() {
     const heard = (e: MessageEvent) => { if (e.origin === location.origin && e.data?.arena) read() }
     addEventListener('message', heard)
     const seen = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) for (const r of rows) if (r.frame && !r.frame.src) r.frame.src = `/arena/${r.id}/index.html`
+      if (e!.isIntersecting) for (const r of rows) if (r.frame && !r.frame.src) r.frame.src = `/arena/${r.id}/index.html`
       else if (beat) stop()
     })
     seen.observe(box!)
@@ -70,20 +74,20 @@ export function Arena() {
   })
 
   return (
-    <section data-site="arena" ref={(n: any) => (box = n)}>
+    <section data-site="arena" ref={el => (box = el)}>
       <h2>The same app in weft, Solid and React</h2>
       {!built.frames && <p data-part="missing" role="status">The live comparison isn't in this build: its three frames come from <code>arena/build.mjs</code>, which hasn't been run. The measured table below doesn't need them.</p>}
       {built.frames && <>
       <p data-part="intro">These are three real production builds of one small app, running in your browser now: a counter and a grid of 1,000 cells. Press the buttons and compare what each one had to do.</p>
       <div data-part="actions">
-        <Button size="lg" onClick={() => { for (const { arena } of live()) arena.click(); read() }}>Click all three</Button>
+        <Button size="lg" onClick={() => { for (const arena of live()) arena.click(); read() }}>Click all three</Button>
         <Button size="lg" emphasis="ghost" tone="neutral" aria-pressed={hot.value ? 'true' : 'false'} onClick={() => (beat ? stop() : start())}>{hot.value ? 'Stop' : 'Run 60 updates a second'}</Button>
       </div>
       <div data-part="stage">
         {rows.map(r => (
           <article key={r.id}>
             <h3>{r.name}<a href={`/arena/${r.id}/source.txt`}>source</a></h3>
-            <iframe ref={(n: any) => (r.frame = n)} title={`${r.name} counter`} scrolling="no"></iframe>
+            <iframe ref={el => (r.frame = el)} title={`${r.name} counter`} scrolling="no"></iframe>
             <div data-part="weight" style={`--share:${bytes[r.id] / top}`}></div>
             <dl>
               <div><dt>download size</dt><dd>{kb(bytes[r.id])}</dd></div>

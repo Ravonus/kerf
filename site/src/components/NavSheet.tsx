@@ -1,6 +1,6 @@
-import { Button } from '@weft/warp'
-import { state } from 'weft'
-import { render } from 'weft/dom'
+import { Button } from '@weft-js/warp'
+import { state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 
 const fetchSheet = () => import('./NavDrawer')
 
@@ -20,7 +20,7 @@ export function NavSheet() {
   return (
     <>
       <Button data-site="menu" emphasis="ghost" tone="neutral" size="sm" icon="menu" label="Menu" onClick={show} onPointerDown={fetchSheet} />
-      <span ref={(n: any) => (box = n)}></span>
+      <span ref={el => (box = el)}></span>
     </>
   )
 }

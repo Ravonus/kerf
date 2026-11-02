@@ -1,6 +1,6 @@
-import { AlertIcon, GlobeIcon, PlusIcon, XIcon } from '@weft/icons'
-import { announce, fmt, hhmm, nextRange, rangeIssues, timeOptions, uid, weekValid, type IsoDate, type Override, type Range, type WeekDay } from '@weft/warp-core'
-import { derived, flush, state, untrack } from 'weft'
+import { AlertIcon, GlobeIcon, PlusIcon, XIcon } from '@weft-js/warp-icons'
+import { announce, fmt, hhmm, nextRange, rangeIssues, timeOptions, uid, weekValid, type IsoDate, type Override, type Range, type WeekDay } from '@weft-js/warp-core'
+import { derived, flush, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
 import { Switch } from '../Choice'
 import { DateField } from '../DateField'
@@ -8,25 +8,27 @@ import { Input } from '../Field'
 import { usePickerEnv } from '../Picker'
 import { Select } from '../Select'
 import { confirmSweep } from './bits'
-import '@weft/warp-core/styles/app/availability.css'
+import '@weft-js/warp-core/styles/app/availability.css'
 
+/** A person's bookable hours: the usual week and its exceptions. */
 export type Availability = { week: WeekDay[]; overrides: Override[] }
+/** Props for AvailabilityEditor. */
 export type AvailabilityEditorProps = {
   defaultValue: Availability
   /** "New York (EDT)". */
-  zoneLabel?: string
+  zoneLabel?: string | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
-  locale?: string
+  today?: string | undefined
+  locale?: string | undefined
   /** Times on offer, minutes. */
-  from?: number
-  to?: number
-  step?: number
+  from?: number | undefined
+  to?: number | undefined
+  step?: number | undefined
   /** Rejecting says so and keeps the changes. */
   onSave: (v: Availability) => void | Promise<unknown>
 }
 
-const optionsOf = (from?: number, to?: number, step?: number) => timeOptions(from, to, step).map(m => ({ value: String(m), label: hhmm(m) }))
+const optionsOf = (from?: number  , to?: number  , step?: number) => timeOptions(from, to, step).map(m => ({ value: String(m), label: hhmm(m) }))
 
 /**
  * AvailabilityEditor (07 §6.4): a Switch and From/To ranges per weekday, "Copy Monday to weekdays", date overrides. Ranges
@@ -54,7 +56,7 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
   const dirty = () => (status.value = 'Unsaved changes')
   const patch = (day: number, f: (d: WeekDay) => WeekDay) => { week.value = week.value.map(d => (d.day === day ? f(d) : d)); dirty() }
   const setTime = (day: number, at: number, side: 0 | 1, v: number) => {
-    patch(day, d => ({ ...d, ranges: d.ranges.map((r, i) => (i === at ? (side ? [r[0], v] : [v, r[1]]) as Range : r)) }))
+    patch(day, d => ({ ...d, ranges: d.ranges.map((r, i) => (i === at ? (side ? [r[0], v] : [v, r[1]]) : r)) }))
     const err = rangeIssues(week.value.find(d => d.day === day)!.ranges)[at]
     if (err) say(`${dayName(day)}: ${err}`, true)
   }
@@ -92,14 +94,14 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
       status.value = 'Saved · booking pages updated'
       confirmSweep(saveBtn)
       say('Availability saved')
-    } catch (err: any) {
-      status.value = `Couldn't save: ${err?.message ?? 'try again'}`
+    } catch (err) {
+      status.value = `Couldn't save: ${(err as Error | undefined)?.message ?? 'try again'}`
       say(status.value, true)
     } finally { busy.value = false }
   }
   const hours = (o: Override) => (o.ranges ? o.ranges.map(r => `${hhmm(r[0])}–${hhmm(r[1])}`).join(', ') : 'Unavailable')
   return (
-    <div ref={(n: any) => (root = n)} data-scope="availability">
+    <div ref={n => (root = n)} data-scope="availability">
       <div class="row">
         {p.zoneLabel && <span class="muted"><GlobeIcon /> Times in {p.zoneLabel}</span>}
         <span style="flex:1"></span>
@@ -122,8 +124,8 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
         {adding.value
           ? <div class="stack" role="group" aria-label="New override">
               <DateField label="Date" value={newDate} today={env.today.value} locale={env.locale.value} />
-              <Switch checked={off.value} onChange={(e: any) => (off.value = e.currentTarget.checked)}>Unavailable all day</Switch>
-              {!off.value && <div class="row"><Select label="From" options={options.value} value={newFrom.value} onChange={(e: any) => (newFrom.value = e.currentTarget.value)} /><Select label="To" options={options.value} value={newTo.value} onChange={(e: any) => (newTo.value = e.currentTarget.value)} /></div>}
+              <Switch checked={off.value} onChange={(e: Event) => (off.value = (e.currentTarget as HTMLInputElement).checked)}>Unavailable all day</Switch>
+              {!off.value && <div class="row"><Select label="From" options={options.value} value={newFrom.value} onChange={(e: Event) => (newFrom.value = (e.currentTarget as HTMLInputElement).value)} /><Select label="To" options={options.value} value={newTo.value} onChange={(e: Event) => (newTo.value = (e.currentTarget as HTMLInputElement).value)} /></div>}
               <Input label="Note" value={newNote.value} onInput={e => (newNote.value = e.currentTarget.value)} />
               <div class="row"><Button size="sm" disabled={!newDate.value} onClick={addOverride}>Add</Button><Button emphasis="ghost" tone="neutral" size="sm" onClick={() => (adding.value = false)}>Cancel</Button></div>
             </div>
@@ -143,13 +145,13 @@ function Day({ day, id, name, options, onToggle, onTime, onAdd, onRemove }: { da
   const rows = derived(() => day.ranges.map((r, at) => ({ r, at, k: `${day.day}-${at}`, error: issues.value[at] })))
   return (
     <li data-part="day" data-day-of={day.day}>
-      <Switch checked={day.on} onChange={(e: any) => onToggle(e.currentTarget.checked)}>{name}</Switch>
+      <Switch checked={day.on} onChange={(e: Event) => onToggle((e.currentTarget as HTMLInputElement).checked)}>{name}</Switch>
       <div data-part="ranges">
         {day.on
           ? rows.value.map(x => (
               <div key={x.k} data-part="range" data-invalid={x.error ? '' : undefined} role="group" aria-label={`${name}, range ${x.at + 1}`}>
-                <Select label="From" size="sm" options={options} value={String(x.r[0])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: any) => onTime(day.day, x.at, 0, +e.currentTarget.value)} />
-                <Select label="To" size="sm" options={options} value={String(x.r[1])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: any) => onTime(day.day, x.at, 1, +e.currentTarget.value)} />
+                <Select label="From" size="sm" options={options} value={String(x.r[0])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: Event) => onTime(day.day, x.at, 0, +(e.currentTarget as HTMLInputElement).value)} />
+                <Select label="To" size="sm" options={options} value={String(x.r[1])} aria-invalid={x.error ? 'true' : undefined} aria-describedby={x.error ? `${id}-${x.k}-e` : undefined} hold={!!x.error} onChange={(e: Event) => onTime(day.day, x.at, 1, +(e.currentTarget as HTMLInputElement).value)} />
                 {day.ranges.length > 1 && <Button emphasis="ghost" tone="neutral" size="sm" icon={XIcon} label={`Remove ${name} range ${x.at + 1}`} onClick={() => onRemove(day.day, x.at)} />}
                 {x.at === day.ranges.length - 1 && <Button emphasis="ghost" tone="neutral" size="sm" label={`Add a range on ${name}`} data-icon-only="" data-add={day.day} onClick={() => onAdd(day.day)}><PlusIcon /></Button>}
                 {x.error && <span data-part="error" id={`${id}-${x.k}-e`}><AlertIcon /> {x.error}</span>}

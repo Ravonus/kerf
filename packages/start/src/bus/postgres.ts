@@ -6,6 +6,7 @@ import postgres from 'postgres'
 import type { Bus } from '../bus'
 import { StartError } from '../data'
 
+/** `postgresBus`: the database to send NOTIFY through. */
 export interface PostgresBusOptions {
   /** `postgres://…`, direct: pgBouncer in transaction mode breaks LISTEN. */
   url: string
@@ -15,10 +16,11 @@ const CHANNEL = 'weft_bus'
 const WHOLE = 7_900
 const CHUNK = 7_800
 
+/** A bus on Postgres NOTIFY, for several instances with no broker beside the database. */
 export function postgresBus({ url }: PostgresBusOptions): Bus {
   if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
-    throw new StartError('Q013', `\`postgresBus\` needs a \`postgres://\` URL, not \`${String(url).replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or leave `bus` out for the memory bus on one instance')
+    throw new StartError('Q013', `\`postgresBus\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``, 'set `DATABASE_URL`, or leave `bus` out for the memory bus on one instance')
   let sql: ReturnType<typeof postgres> | undefined
   const client = () => (sql ??= postgres(url, { max: 2, idle_timeout: 20, onnotice: () => {} }))
   const listeners = new Map<string, Set<(message: string) => void>>()
@@ -35,10 +37,11 @@ export function postgresBus({ url }: PostgresBusOptions): Bus {
   const received = (payload: string) => {
     if (payload[0] === '=') return deliver(payload.slice(1))
     const [id, i, n, body] = payload.slice(1).split(':')
+    if (id === undefined || i === undefined || n === undefined || body === undefined) return undefined
     const got = parts.get(id) ?? []
     got[+i] = body
     parts.set(id, got)
-    if (Object.keys(got).length < +n) return
+    if (Object.keys(got).length < +n) return undefined
     parts.delete(id)
     deliver(Buffer.from(got.join(''), 'base64').toString())
   }

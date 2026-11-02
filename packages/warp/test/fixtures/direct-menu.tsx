@@ -1,6 +1,6 @@
-import { menu } from '@weft/warp-core'
-import { use } from '@weft/warp-core/weft'
-import { state } from 'weft'
+import { menu } from '@weft-js/warp-core'
+import { use } from '@weft-js/warp-core/weft'
+import { state } from '@weft-js/core'
 
 export function AccountMenu() {
   const open = state(false)

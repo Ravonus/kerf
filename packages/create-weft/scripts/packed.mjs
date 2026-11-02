@@ -6,10 +6,10 @@
 import { execFile, execFileSync, spawn } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { createServer } from 'node:http'
-import { promisify } from 'node:util'
+import { promisify, parseEnv } from 'node:util'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { parseEnv } from 'node:util'
+
 import { scaffold } from '../src/index.mjs'
 import { fnId } from '../../start/src/vite.mjs'
 import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
@@ -22,7 +22,7 @@ if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
 const root = resolve(process.argv.slice(2).find(a => !a.startsWith('--')))
 if (existsSync(root) && readdirSync(root).length) throw new Error(`${root} is not empty`)
 const run = (cmd, args, cwd, env) => promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26 })
-const sh = (cmd, args, cwd) => run(cmd, args, cwd, process.env)
+const shell = (cmd, args, cwd) => run(cmd, args, cwd, process.env)
 
 const tarballs = packWithAddon(join(root, 'tgz'))
 const hostAddon = `compiler-${hostPlatform().name}`
@@ -43,14 +43,14 @@ async function mediaApp(app, weft, log, sh) {
   await ff('-f', 'lavfi', '-i', 'testsrc2=s=640x360:d=1', '-frames:v', '1', '-q:v', '2', 'src/routes/hero.jpg')
   await ff('-f', 'lavfi', '-i', 'testsrc2=s=320x180:d=1', '-frames:v', '1', 'src/routes/card.png')
   mkdirSync(join(app, 'src/server'), { recursive: true })
-  writeFileSync(join(app, 'src/server/upload.ts'), `import { mutation, query } from '@weft/start'
-import { z } from '@weft/start/media'
+  writeFileSync(join(app, 'src/server/upload.ts'), `import { mutation, query } from '@weft-js/start'
+import { z } from '@weft-js/start/media'
 
 let last: unknown = null
 export const lastUpload = query({ tags: ['upload'], output: z.media().nullable(), run: () => last as any })
 export const upload = mutation({ input: z.object({ file: z.file() }), invalidates: ['upload'], run: async ({ input, ctx }) => (last = await ctx.media.ingest(input.file)) })
 `)
-  writeFileSync(join(app, 'src/routes/media.tsx'), `import { Media, timeline } from 'weft/media'
+  writeFileSync(join(app, 'src/routes/media.tsx'), `import { Media, timeline } from '@weft-js/core/media'
 import hero from './hero.jpg?media'
 import card from './card.png?media'
 import loop from './loop.gif?media'
@@ -74,11 +74,11 @@ export default function Page() {
 `)
 }
 
-/** `weft add rust` on a packed install: the crate comes with @weft/start, and `weft check` passes without an edit. */
+/** `weft add rust` on a packed install: the crate comes with @weft-js/start, and `weft check` passes without an edit. */
 async function rustApp(app, weft, log, sh) {
   await sh(weft, ['add', 'rust', 'hasher'], app)
   const cargo = readFileSync(join(app, 'crates/hasher/Cargo.toml'), 'utf8')
-  if (!cargo.includes('path = "../../node_modules/@weft/start/crate"')) throw new Error(`rust: the crate isn't the one @weft/start shipped:\n${cargo}`)
+  if (!cargo.includes('path = "../../node_modules/@weft-js/start/crate"')) throw new Error(`rust: the crate isn't the one @weft-js/start shipped:\n${cargo}`)
   const checked = JSON.parse((await sh(weft, ['check', '--json'], app)).stdout)
   if (!checked.ok) throw new Error(`rust: weft check: ${JSON.stringify(checked.diagnostics)}`)
   log('weft add rust, check: pass')
@@ -146,8 +146,8 @@ async function payApp(app, weft, mock, log, sh) {
   if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) await sh(weft, ['plugins', 'sync'], app)
   if (!readFileSync(join(app, '.weft/slots/pay.rail.ts'), 'utf8').includes(`127.0.0.1:${mock}`)) throw new Error('pay: the rail is not pointed at the mock')
   writeFileSync(join(app, 'no-network.mjs'), LOOPBACK_ONLY)
-  writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
-  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from '@weft/pay'
+  writeFileSync(join(app, 'src/server/report.ts'), `import { query } from '@weft-js/start'\n\nexport const report = query({ auth: 'user', requires: ['pro'], run: () => 'the numbers' })\n`)
+  writeFileSync(join(app, 'src/routes/pricing.tsx'), `import { price } from '@weft-js/pay'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements } from '#/server/pay'
 
@@ -208,7 +208,7 @@ function mockStripe(port, sessions) {
       res.end(JSON.stringify({ id: 'cs_1', url: `http://127.0.0.1:${port}/hosted` }))
     })
   })
-  return new Promise(ok => server.listen(port, '127.0.0.1', () => ok(server)))
+  return new Promise(ok => { server.listen(port, '127.0.0.1', () => ok(server)) })
 }
 
 /** PATH for an app with no Rust: only the tools the gate calls, so `cargo` can't be found by anything it runs. */
@@ -238,7 +238,7 @@ async function devServed(app, weft, port, env, log) {
     let status
     for (let i = 0; i < 120 && status !== 200; i++) {
       status = await fetch(`http://localhost:${port}/`).then(r => r.status, () => undefined)
-      if (status !== 200) await new Promise(ok => setTimeout(ok, 250))
+      if (status !== 200) await new Promise(ok => { setTimeout(ok, 250) })
     }
     if (status !== 200) throw new Error(`weft dev answered ${status}`)
     log('weft dev: pass')
@@ -266,20 +266,20 @@ const apps = [
 ]
 const clients = {}
 
-await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ name, dir, options, theme, add, css, media, rust, pay, wasm }, i) => {
+await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ name, dir, options, theme: themed, add, css, media, rust, pay, wasm }, i) => {
   const app = join(root, dir ?? name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
   const sh = (cmd, args, cwd) => run(cmd, args, cwd, rust ? process.env : noRust)
   scaffold(app, options)
   writeFileSync(join(app, 'package.json'), JSON.stringify(pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs), null, 2))
-  if (theme) {
+  if (themed) {
     const file = join(app, 'weft.config.ts')
-    writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${theme})`))
+    writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${themed})`))
   }
 
   await sh('npm', ['install', '--silent'], app)
   const weft = join(app, 'node_modules/.bin/weft')
-  if (wasm) rmSync(join(app, 'node_modules/@weft', hostAddon), { recursive: true, force: true })
+  if (wasm) rmSync(join(app, 'node_modules/@weft-js', hostAddon), { recursive: true, force: true })
   const { compiler } = JSON.parse((await sh(weft, ['doctor', '--json'], app)).stdout)
   if (compiler.kind !== (wasm ? 'wasm' : 'native')) throw new Error(`${name}: compiling with ${JSON.stringify(compiler)}`)
   log(`compiler ${compiler.kind}: pass`)
@@ -304,7 +304,7 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
   const client = readdirSync(join(app, '.output/public/assets')).filter(f => f.endsWith('.js')).map(f => readFileSync(join(app, '.output/public/assets', f), 'utf8')).join('')
   if (/STRIPE_|api\.stripe\.com|checkout\/sessions/.test(client)) throw new Error(`${name}: a rail reached the client`)
   clients[name] = Object.fromEntries(readdirSync(join(app, '.output/public/assets')).sort().map(f => [f, readFileSync(join(app, '.output/public/assets', f), 'utf8')]))
-  if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft/pay is in the bundle of an app that sells nothing`)
+  if (!pay && /PayError|ENTITLEMENT_REQUIRED/.test(client)) throw new Error(`${name}: @weft-js/pay is in the bundle of an app that sells nothing`)
 
   // Production takes the host's environment, so the scaffold's .env goes in by hand.
   const envFile = join(app, '.env')
@@ -314,9 +314,9 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
   const server = spawn(process.execPath, [...(pay ? ['--import', './no-network.mjs'] : []), '.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port), BETTER_AUTH_URL: `http://localhost:${port}` }, stdio: 'ignore' })
   try {
     let status
-    for (let i = 0; i < 80 && !status; i++) {
+    for (let tries = 0; tries < 80 && !status; tries++) {
       status = await fetch(`http://localhost:${port}/`).then(r => r.status, () => undefined)
-      if (!status) await new Promise(ok => setTimeout(ok, 250))
+      if (!status) await new Promise(ok => { setTimeout(ok, 250) })
     }
     if (status !== 200) throw new Error(`${name}: the built server answered ${status}`)
     log('built server: pass')
@@ -341,11 +341,11 @@ const browsers = join(pkgs, 'multiplayer/scripts/e2e-browsers.mjs')
 writeFileSync(join(root, 'tgz/tarballs.json'), JSON.stringify(tarballs))
 // A person's path through the bin: the install, then the AGENTS.md of the weft that install brought.
 const person = join(root, 'person')
-await sh('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'npm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
+await shell('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'npm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
 if (!readFileSync(join(person, 'AGENTS.md'), 'utf8').includes('weft check')) throw new Error('create-weft left no AGENTS.md')
 console.log('[packed] create-weft: AGENTS.md at scaffold: pass')
-await sh('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
-await sh('node', [browsers, 'run', room, '--runtimes', 'node'], root)
-await sh('node', [browsers, 'run', room, '--runtimes', 'node', '--via', 'webrtc'], root)
+await shell('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
+await shell('node', [browsers, 'run', room, '--runtimes', 'node'], root)
+await shell('node', [browsers, 'run', room, '--runtimes', 'node', '--via', 'webrtc'], root)
 console.log('[packed] room: two browsers: pass')
 console.log('[packed] all pass')

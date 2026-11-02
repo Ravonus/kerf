@@ -90,9 +90,9 @@ const board = () => [{ id: 'a', title: 'A', cards: [{ id: '1', title: 'One' }, {
 test('moving a card keeps the object, clamps, and leaves untouched columns alone', () => {
   const b = board()
   const next = moveCard(b, '1', 1, 9)
-  expect(next[1].cards.map(c => c.id)).toEqual(['3', '1'])
-  expect(next[1].cards[1]).toBe(b[0].cards[0])
-  expect(moveCard(b, '1', 0, 1)[0].cards.map(c => c.id)).toEqual(['2', '1'])
+  expect(next[1]!.cards.map(c => c.id)).toEqual(['3', '1'])
+  expect(next[1]!.cards[1]).toBe(b[0]!.cards[0])
+  expect(moveCard(b, '1', 0, 1)[0]!.cards.map(c => c.id)).toEqual(['2', '1'])
   expect(moveCard(b, 'nope', 0, 0)).toEqual(b)
   expect(moveLine(next, '1')).toBe('Moved One to B, position 2 of 2')
   expect(findCard(next, '3')).toEqual({ col: 1, index: 0 })

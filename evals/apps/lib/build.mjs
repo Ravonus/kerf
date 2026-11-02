@@ -69,8 +69,8 @@ function installedIsPacked(root, store) {
   try {
     execFileSync('tar', ['-xzf', tgz, '-C', tmp])
     let n = 0, wrong = []
-    walk(join(tmp, 'package'), f => { const r = relative(join(tmp, 'package'), f), i = join(root, 'node_modules/weft', r); n++; if (r !== 'package.json' && (!existsSync(i) || sha(readFileSync(f)) !== sha(readFileSync(i)))) wrong.push(r) })
-    if (wrong.length) throw new Error(`node_modules/weft doesn't match the packed tarball: ${wrong.slice(0, 3).join(', ')}`)
+    walk(join(tmp, 'package'), f => { const r = relative(join(tmp, 'package'), f), i = join(root, 'node_modules/@weft-js/core', r); n++; if (r !== 'package.json' && (!existsSync(i) || sha(readFileSync(f)) !== sha(readFileSync(i)))) wrong.push(r) })
+    if (wrong.length) throw new Error(`node_modules/@weft-js/core doesn't match the packed tarball: ${wrong.slice(0, 3).join(', ')}`)
     return { tgz: sha(readFileSync(tgz)).slice(0, 12), files: n }
   } finally { rmSync(tmp, { recursive: true, force: true }) }
 }

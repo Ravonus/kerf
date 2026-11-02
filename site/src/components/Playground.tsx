@@ -1,7 +1,7 @@
-import { Button, Input, Segmented, Select, Slider, Switch } from '@weft/warp'
-import { highlight } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from 'weft'
-import { render } from 'weft/dom'
+import { Button, Input, Segmented, Select, Slider, Switch } from '@weft-js/warp'
+import { highlight } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { previews } from '../generated/previews'
 import type { Knob, Playground as Play } from '../toolkit/types'
 
@@ -16,9 +16,10 @@ function print(play: ShownPlayground, name: string, v: Values) {
     const x = v[k.prop]
     return x === true ? ` ${k.prop}` : typeof x === 'string' ? ` ${k.prop}="${x}"` : ` ${k.prop}={${JSON.stringify(x)}}`
   }).join('')
-  const kids = String(v.children ?? '')
+  const c = v.children
+  const kids = c == null ? '' : typeof c === 'string' ? c : JSON.stringify(c)
   const line = (kids ? play.code : play.code.replace(/>\{children\}<\/[\w.]+>/, ' />')).replace('{props}', () => attrs).replace('{children}', () => kids)
-  return `import { ${name} } from '@weft/warp'\n\n${line}`
+  return `import { ${name} } from '@weft-js/warp'\n\n${line}`
 }
 
 const shown = (k: Knob, v: Values) => !k.when || k.when.is.includes(v[k.when.prop])
@@ -30,7 +31,7 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
   const k = untrack(() => props.knob)
   const options = (k.options ?? []).map(o => ({ value: String(o), label: String(o) }))
   const value = derived(() => props.values.value[k.prop])
-  const text = derived(() => String(value.value ?? ''))
+  const text = derived(() => (value.value == null ? '' : String(value.value as string | number | boolean)))
   const number = derived(() => Number(value.value))
   if (k.control === 'switch') return <Switch checked={!!value.value} onChange={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).checked)}>{k.label}</Switch>
   // A button per option, with the same choice as a dropdown beside it for when no even grid of them fits (wrap()).
@@ -51,8 +52,9 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   const play = props.play
   const seed = untrack(() => startOf(props.play))
   const values = state<Values>(seed)
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
-  let Case: any
+  let Case: ((values: Record<string, unknown>) => unknown) | undefined
   let stop: (() => void) | undefined
   let frame = 0
   let gone = false
@@ -62,7 +64,8 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
     stop?.()
     host.replaceChildren()
     const v = Object.fromEntries(play.knobs.filter(k => shown(k, values.value)).map(k => [k.prop, values.value[k.prop]]))
-    stop = render(() => <Case {...v} />, host) as any
+    const Shown = Case
+    stop = render(() => <Shown {...v} />, host)
     host.toggleAttribute('data-ready', true)
   }
   const sync = () => {
@@ -85,12 +88,13 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
       if (raw !== null) given[k.prop] = k.control === 'switch' ? raw === 'true' : k.control === 'slider' ? +raw : option(k, raw)
     }
     if (Object.keys(given).length) values.value = { ...values.value, ...given }
-    previews[props.file]!().then(m => { Case = m[play.example]; show() })
+    void previews[props.file]!().then(m => { Case = m[play.example] as typeof Case; show() })
   })
   // A button per option, on one row while they fit. A group too wide for the panel lays its options out as an even grid
   // (equal columns that divide them: six as 3×2, four as 2×2; the sliding indicator gives way to a filled pick), never a
   // ragged wrap that ends a row mid-group. When no even grid fits (five long options), the knob shows its dropdown.
   // Measured from the widest option, since the options share one width: fonts arriving late re-measure.
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let knobs!: HTMLDivElement
   const wrap = () => {
     for (const seg of knobs.querySelectorAll<HTMLElement>('[data-part="knob"] > [data-scope="segmented"]')) {
@@ -163,7 +167,9 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
             <span class="sp"></span>
             <Button emphasis="ghost" tone="neutral" size="sm" icon="copy" label="Copy code" data-act="copy" data-copy="" data-copy-text={code.value} />
           </div>
-          <pre tabindex="0"><code innerHTML={html.value}></code></pre>
+          <pre tabindex="0"><code
+            // oxlint-disable-next-line weft/no-html-sink -- highlight escapes every character of the code it marks up
+            innerHTML={html.value}></code></pre>
         </figure>
       </div>
     </div>

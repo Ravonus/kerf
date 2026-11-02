@@ -1,10 +1,10 @@
 // durableObject() for weft.config.ts: declares what the bus reaches. A binding only exists at run time, so unlike the
 // other buses it can't be built from options: `src/realtime.server.ts` sets `durableObjectBus({ namespace })`.
-import { definePlugin } from 'weft/plugin'
+import { definePlugin } from '@weft-js/core/plugin'
 
 export const durableObject = definePlugin({
-  name: '@weft/realtime-durable-object',
-  version: '0.0.0',
+  name: '@weft-js/realtime-durable-object',
+  version: '0.1.0',
   weft: '*',
   permissions: { net: ['binding:WEFT_BUS'] },
   contribute: () => ({

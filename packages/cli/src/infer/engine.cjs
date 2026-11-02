@@ -1,4 +1,4 @@
-// Prop inference (research 41). Facts come from syntax; the types come from whichever checker the host wraps, asked
+// Prop inference (research 44). Facts come from syntax; the types come from whichever checker the host wraps, asked
 // about the call sites in the program's own terms. A round writes each component's annotation into its file's shadow;
 // the next round sees the types that made possible (a prop forwarded to another inferred component, a component passed
 // as a prop). Rounds stop when nothing changes, and a project with nothing to infer never starts a checker.
@@ -223,12 +223,11 @@ class Engine {
     const prev = this.state.get(c.id) ?? {}
     const st = { keys: new Map(), sites: sites.length, pins: prev.pins ?? new Map(), shape: prev.shape, anyFrom: [], noCallers: false }
     if (this.routes(c.file) && c.isDefault) {
-      st.type = `import('@weft/start').RouteProps${facts.exportsLoad ? '<typeof load>' : ''}`
+      st.type = `import('@weft-js/start').RouteProps${facts.exportsLoad ? '<typeof load>' : ''}`
       st.route = true
       return st
     }
     const outer = sites.filter(s => !(s.site.in === c.name && s.file === c.file))
-    const counted = outer.length ? outer : sites
     if (!outer.length) st.noCallers = true
 
     const memo = new Map()

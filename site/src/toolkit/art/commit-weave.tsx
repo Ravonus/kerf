@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { state } from 'weft'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 import { inks, mix, rng, type ArtProps, type Meta } from './shared'
 import code from './commit-weave.tsx?raw'
 
@@ -19,7 +19,7 @@ const year = (() => {
 })()
 const peak = Math.max(...year), total = year.reduce((a, b) => a + b, 0)
 
-export default function CommitWeave(_: ArtProps) {
+export default function CommitWeave(_props: ArtProps) {
   const found = state('')
   const draw = ({ ctx, width, height, pointer }: Frame) => {
     const c = colours(ctx.canvas), mx = 18, my = 26, cw = (width - mx * 2) / WEEKS, ch = (height - my * 2) / DAYS

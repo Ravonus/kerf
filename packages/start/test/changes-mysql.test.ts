@@ -1,17 +1,18 @@
 // The change feed on a real MySQL. `WEFT_TEST_MYSQL=mysql://…`, a database that's yours to lose.
 import { createPool } from 'mysql2/promise'
-import { createFeed } from '../src/changes'
+import { createFeed, type Poke } from '../src/changes'
 import { changeStatements } from '../src/changes-sql.mjs'
 import { mysqlChanges } from '../src/db/changes-mysql'
 
 const url = process.env.WEFT_TEST_MYSQL!
-const wait = (ms = 0) => new Promise(ok => setTimeout(ok, ms))
+const wait = (ms = 0) => new Promise(ok => { setTimeout(ok, ms) })
 async function until(ok: () => boolean, ms = 6000) {
   const end = Date.now() + ms
   while (!ok() && Date.now() < end) await wait(5)
   expect(ok()).toBe(true)
 }
 
+// Needs a MySQL server, named by WEFT_TEST_MYSQL.
 describe.skipIf(!url)('mysql change feed', () => {
   const pool = url ? createPool({ uri: url, connectionLimit: 4 }) : (undefined as never)
   const source = () => ({ name: 'mysql', tables: ['live_a'], ...mysqlChanges({ pool, tables: ['live_a'], interval: 25 }) })
@@ -26,7 +27,7 @@ describe.skipIf(!url)('mysql change feed', () => {
     await pool.end()
   })
   const on = () => {
-    const pokes: any[] = []
+    const pokes: Poke[] = []
     const s = source()
     return { pokes, s, feed: createFeed(s, { emit: p => pokes.push(p), status() {} }, { hold: 25, throttle: 25 }) }
   }
@@ -36,10 +37,10 @@ describe.skipIf(!url)('mysql change feed', () => {
     const how = await f.s.probe()
     expect(how).toMatchObject({ mode: 'feed', via: 'mysql-log' })
     await f.feed.start(how)
-    const [r] = (await pool.query(`insert into live_a (secret) values ('hunter2')`)) as any
+    const [r] = (await pool.query(`insert into live_a (secret) values ('hunter2')`)) as [{ insertId: number }, unknown]
     await until(() => f.pokes.length > 0)
     expect(f.pokes).toEqual([{ t: ['live_a', `live_a:${r.insertId}`] }])
-    const [cols] = (await pool.query('select * from __weft_changes')) as any
+    const [cols] = await pool.query('select * from __weft_changes')
     expect(JSON.stringify(cols)).not.toContain('hunter2')
     await f.feed.stop()
   })

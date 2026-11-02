@@ -1,13 +1,13 @@
-import { derived, state } from 'weft'
+import { derived, state } from '@weft-js/core'
 import {
   AuthDone, AuthScreen, Badge, Button, Card, Checklist, Coachmark, ConnBanner, Flow, Heading, Input, InviteAccept, MagicLinkSent, MfaSetup, OtpField, OtpStep, PasskeyButton, PasswordMeter, RateLimited, ReauthDialog, ResetPassword, Row,
   Segmented, Select, ShortcutsOverlay, SignGate, SignGateBadge, SignIn, SignUp, SsoButtons, Stack, SystemPage, Text, Toaster, Tour,
-} from '@weft/warp'
-import type { SignInValues, SignStatus, SignUpValues } from '@weft/warp'
-import { createShortcuts } from '@weft/warp-core'
+} from '@weft-js/warp'
+import type { SignInValues, SignStatus, SignUpValues } from '@weft-js/warp'
+import { createShortcuts } from '@weft-js/warp-core'
 import { PEOPLE, PROJECTS } from '../world'
 
-const wait = (ms: number) => new Promise(done => setTimeout(done, ms))
+const wait = (ms: number) => new Promise(done => { setTimeout(done, ms) })
 
 const PROVIDERS = [{ id: 'google', label: 'Google', glyph: 'M12 3a9 9 0 1 0 8.5 12H12' }, { id: 'github', label: 'GitHub', glyph: 'M9 8l-5 4 5 4M15 8l5 4-5 4' }]
 const SSO = [...PROVIDERS, { id: 'saml', label: 'SAML', name: 'single sign-on' }]
@@ -27,7 +27,7 @@ export function SignInTessel() {
     <>
       {who.value
         ? <AuthDone heading="h3" title="You're in" lede={`Signed in as ${who.value}.`} delay={2400} onContinue={() => (who.value = '')} />
-        : <SignIn heading="h3" name="Tessel" title="Sign in to Tessel" lede="Any email and password work here." providers={PROVIDERS} pending={pending.value} onSubmit={submit} onProvider={() => wait(900)} onPasskey={() => wait(900)} onForgot={() => {}} onMagicLink={() => {}} onSignUp={() => {}} />}
+        : <SignIn heading="h3" name="Tessel" title="Sign in to Tessel" lede="Any email and password work here." providers={PROVIDERS} pending={pending.value} onSubmit={v => void submit(v)} onProvider={() => wait(900)} onPasskey={() => wait(900)} onForgot={() => {}} onMagicLink={() => {}} onSignUp={() => {}} />}
     </>
   )
 }
@@ -45,7 +45,7 @@ export const SignInFailed = () => <SignIn heading="h3" title="Sign in to Tessel"
 export function AuthScreenSplit() {
   return (
     <AuthScreen name="Tessel" quote="We moved forty services in a quarter and never missed a deploy." cite="Mara Lindqvist · Tessel">
-      <SignIn heading="h3" title="Welcome back" lede="Sign in to your workspace." providers={PROVIDERS} onSubmit={() => wait(900)} onForgot={() => {}} onSignUp={() => {}} />
+      <SignIn heading="h3" title="Welcome back" lede="Sign in to your workspace." providers={PROVIDERS} onSubmit={() => void wait(900)} onForgot={() => {}} onSignUp={() => {}} />
     </AuthScreen>
   )
 }
@@ -63,7 +63,7 @@ export function SignUpTessel() {
     <>
       {made.value
         ? <AuthDone heading="h3" title={`Welcome, ${made.value}`} lede="Your workspace is ready." delay={2400} onContinue={() => (made.value = '')} />
-        : <SignUp heading="h3" title="Create your workspace" lede="Sample values only: nothing is sent." terms="I agree to the terms" providers={PROVIDERS} pending={pending.value} onSubmit={submit} onSignIn={() => {}} />}
+        : <SignUp heading="h3" title="Create your workspace" lede="Sample values only: nothing is sent." terms="I agree to the terms" providers={PROVIDERS} pending={pending.value} onSubmit={v => void submit(v)} onSignIn={() => {}} />}
     </>
   )
 }
@@ -94,7 +94,7 @@ export function OtpFieldCheck() {
     status.value = code === '123456' ? 'success' : 'idle'
     error.value = code === '123456' ? undefined : "That code didn't work. Try 123456."
   }
-  return <OtpField hint="The sample code is 123456." status={status.value} error={error.value} autoSubmit={false} onComplete={check} />
+  return <OtpField hint="The sample code is 123456." status={status.value} error={error.value} autoSubmit={false} onComplete={c => void check(c)} />
 }
 
 export const OtpFieldFour = () => <OtpField label="4-digit PIN" length={4} masked autoSubmit={false} />
@@ -110,11 +110,11 @@ export function OtpStepAuthenticator() {
     error.value = code === '123456' ? undefined : { code: 'WRONG_CODE', data: { attemptsLeft: 2 } }
     if (code === '123456') status.value = 'success'
   }
-  return <OtpStep heading="h3" title="Enter your code" lede="Open your authenticator app. The sample code is 123456." status={status.value} pending={pending.value} error={error.value} onSubmit={submit} onResend={() => {}} onOtherMethod={() => {}} onBack={() => (status.value = 'idle')} />
+  return <OtpStep heading="h3" title="Enter your code" lede="Open your authenticator app. The sample code is 123456." status={status.value} pending={pending.value} error={error.value} onSubmit={v => void submit(v)} onResend={() => {}} onOtherMethod={() => {}} onBack={() => (status.value = 'idle')} />
 }
 
 export function MagicLinkSentInbox() {
-  const email = PEOPLE[2].email
+  const email = PEOPLE[2]!.email
   const changing = state(false)
   return (
     <>
@@ -324,8 +324,8 @@ export function FlowNewProject() {
       <Text role="label">Step {at() + 1} of 3</Text>
       <Flow steps={steps} step={step} />
       <Row gap="related" justify="end">
-        <Button emphasis="ghost" tone="neutral" aria-disabled={at() === 0 ? 'true' : undefined} onClick={() => { if (at() > 0) step.value = WIZARD[at() - 1] }}>Back</Button>
-        <Button onClick={() => (step.value = WIZARD[(at() + 1) % 3])}>{at() === 2 ? 'Deploy' : 'Continue'}</Button>
+        <Button emphasis="ghost" tone="neutral" aria-disabled={at() === 0 ? 'true' : undefined} onClick={() => { if (at() > 0) step.value = WIZARD[at() - 1]! }}>Back</Button>
+        <Button onClick={() => (step.value = WIZARD[(at() + 1) % 3]!)}>{at() === 2 ? 'Deploy' : 'Continue'}</Button>
       </Row>
     </Stack>
   )
@@ -344,7 +344,7 @@ export const SystemPageTile = () => (
 export const SystemPage404 = () => <SystemPage as="h3" kind="404" onSearch={() => {}} searchLabel="Search Tessel" primary={{ label: 'Go to dashboard' }} secondary={{ label: 'Report a broken link' }} meta="/projects/9921 · ref req_8f2a1c" />
 
 const ACCOUNTS = [{ id: 'mara', email: 'mara@tessel.dev', detail: 'Tessel · this workspace', current: true }, { id: 'side', email: 'mara@sample.dev', detail: 'Sample Co · has access', hasAccess: true }]
-const PROJECT = { title: PROJECTS[3].name, owner: PROJECTS[3].owner }
+const PROJECT = { title: PROJECTS[3]!.name, owner: PROJECTS[3]!.owner }
 
 export function SystemPage403() {
   const pending = state(false)
@@ -368,7 +368,7 @@ export function ConnBannerOffline() {
   }
   return (
     <Stack gap="related">
-      <ConnBanner online={online.value} retryIn={4} changes={3} onRetry={reconnect} />
+      <ConnBanner online={online.value} retryIn={4} changes={3} onRetry={() => void reconnect()} />
       <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (online.value = !online.value)}>{online.value ? 'Go offline' : 'Come back online'}</Button>
     </Stack>
   )

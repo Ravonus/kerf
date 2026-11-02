@@ -1,5 +1,5 @@
 // A shadow is the source with a few spans replaced (annotations in, `bind:` out). Nothing else moves, so mapping a
-// position is a binary search over the edits, in both directions, and it never needs a source map. Research 41 §5.
+// position is a binary search over the edits, in both directions, and it never needs a source map. Research 44 §5.
 
 /** @param {string} text @param {{ start: number, end: number, text: string }[]} edits sorted, not overlapping */
 function shadow(text, edits) {

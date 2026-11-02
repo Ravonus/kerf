@@ -4,9 +4,10 @@
 //
 //   presence(chat, { transport: webrtc({ iceServers: [{ urls: 'stun:stun.example.com' }] }) })
 
-import { createRoot, derived, effect, state, untrack } from 'weft'
-import type { PeerLink, PeerRoom, PeerTransport } from '@weft/multiplayer'
+import { createRoot, derived, effect, state, untrack } from '@weft-js/core'
+import type { PeerLink, PeerRoom, PeerTransport } from '@weft-js/multiplayer'
 
+/** Options of `webrtc()`. */
 export interface WebRtcOptions {
   /** STUN and TURN. Default none: peers on one network. */
   iceServers?: RTCIceServer[]
@@ -15,7 +16,9 @@ export interface WebRtcOptions {
 }
 
 interface Conn { pc: RTCPeerConnection; dc?: RTCDataChannel; makingOffer: boolean }
+interface Signal { description?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit }
 
+/** A peer transport over a mesh of WebRTC data channels, for `presence(conn, { transport })`. */
 export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTransport {
   return {
     name: 'webrtc',
@@ -50,24 +53,26 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
           }
           return c
         }
-        const stop = room.onSignal(async (from, data: any) => {
+        const answer = async (from: string, data: unknown) => {
           if (!untrack(() => room.peers.value).includes(from) || typeof data !== 'object' || !data) return
+          const { description, candidate } = data as Signal
           const c = connect(from)
           try {
-            if (data.description) {
+            if (description) {
               // Perfect negotiation: the lower id gives way when both offer at once.
-              const collision = data.description.type === 'offer' && (c.makingOffer || c.pc.signalingState !== 'stable')
+              const collision = description.type === 'offer' && (c.makingOffer || c.pc.signalingState !== 'stable')
               if (collision && room.self > from) return
-              await c.pc.setRemoteDescription(data.description)
-              if (data.description.type === 'offer') {
+              await c.pc.setRemoteDescription(description)
+              if (description.type === 'offer') {
                 await c.pc.setLocalDescription()
                 room.signal(from, { description: c.pc.localDescription!.toJSON() })
               }
-            } else if (data.candidate) await c.pc.addIceCandidate(data.candidate).catch(() => {})
+            } else if (candidate) await c.pc.addIceCandidate(candidate).catch(() => {})
           } catch {
             // A bad frame from a peer costs that peer its link: frames for it stay on the socket.
           }
-        })
+        }
+        const stop = room.onSignal((from, data) => void answer(from, data))
         const close = (id: string) => {
           conns.get(id)?.pc.close()
           conns.delete(id)
@@ -80,10 +85,10 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
             const c = connect(id)
             if (room.self < id) channel(id, c, c.pc.createDataChannel('weft', { ordered: false, maxRetransmits: 0 }))
           }
-          for (const id of [...conns.keys()]) if (!ids.includes(id)) close(id)
+          for (const id of conns.keys()) if (!ids.includes(id)) close(id)
         })
         const up = derived(() => {
-          open.value
+          void open.value
           const ids = room.peers.value
           return ids.length > 0 && ids.length <= max && ids.every(id => conns.get(id)?.dc?.readyState === 'open')
         })
@@ -92,7 +97,7 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
           send(text) { for (const c of conns.values()) if (c.dc?.readyState === 'open') c.dc.send(text) },
           close() {
             stop()
-            for (const id of [...conns.keys()]) close(id)
+            for (const id of conns.keys()) close(id)
             dispose()
           },
         }

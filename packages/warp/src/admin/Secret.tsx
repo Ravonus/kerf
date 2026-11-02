@@ -1,15 +1,15 @@
-import { state, type State, watch } from 'weft'
+import { state, type State, watch } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Input } from '../Field'
 import { toast } from '../Toast'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
 
 /**
  * A secret shown once (09 §4.2, §4.6): a read-only field with Copy, and a checkbox the Done button waits on. Shared by
@@ -22,9 +22,9 @@ export function SecretReveal({ label, secret, done, ack }: { label: string; secr
   }
   return (
     <div data-scope="stack" style="padding-block-start:var(--warp-space-related)">
-      <Input label={label} readonly value={secret} autofocus spellcheck="false" onFocus={(e: any) => e.currentTarget.select()} />
+      <Input label={label} readonly value={secret} autofocus spellcheck="false" onFocus={(e: Event) => (e.currentTarget as HTMLInputElement).select()} />
       <div><Button emphasis="frame" onClick={copy}>Copy</Button></div>
-      <Checkbox checked={done.value} onChange={(e: any) => (done.value = e.currentTarget.checked)}>{ack}</Checkbox>
+      <Checkbox checked={done.value} onChange={(e: Event) => (done.value = (e.currentTarget as HTMLInputElement).checked)}>{ack}</Checkbox>
     </div>
   )
 }

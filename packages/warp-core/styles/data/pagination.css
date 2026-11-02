@@ -13,7 +13,8 @@
 :where([data-scope="pagination"] [data-part="page"][aria-current="page"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
 :where([data-scope="pagination"] [data-part="page"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
 :where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
-:where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
+/* the spacer gives back its own column gap, so an empty spacer never pushes Go to onto the next line */
+:where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; margin-inline-end: -14px; }
 /* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
    hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
    Logical edges, so RTL flips; a vertical group does the same with top and bottom. */

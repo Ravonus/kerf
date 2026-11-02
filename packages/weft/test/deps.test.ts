@@ -1,5 +1,6 @@
 // Runs keep their links when they read the same things: what must hold when they don't.
-import { Box, createRoot, derived, effect, flush, onCleanup, state, stats } from 'weft'
+import type { Box } from '@weft-js/core'
+import { createRoot, derived, effect, flush, onCleanup, state, stats } from '@weft-js/core'
 
 const readers = (box: unknown) => ((box as Box<unknown>).f ? 1 : 0) + (box as Box<unknown>).o.length
 
@@ -29,20 +30,20 @@ test('sources read later than the first change are dropped, however many there w
   const n = state(4)
   const list = Array.from({ length: 12 }, (_, i) => state(i))
   let runs = 0
-  createRoot(() => effect(() => { runs++; let sum = 0; for (let i = 0; i < n.value; i++) sum += list[i].value; return sum }, () => {}))
+  createRoot(() => effect(() => { runs++; let sum = 0; for (let i = 0; i < n.value; i++) sum += list[i]!.value; return sum }, () => {}))
   expect(list.map(readers).filter(Boolean)).toHaveLength(4)
   n.value = 2
   flush()
   expect(list.map(readers)).toEqual([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-  list[3].value = 99
+  list[3]!.value = 99
   flush()
   expect(runs).toBe(2)
   n.value = 12
   flush()
-  expect(list.map(readers)).toEqual(new Array(12).fill(1))
+  expect(list.map(readers)).toEqual(Array.from({ length: 12 }, () => 1))
   n.value = 0
   flush()
-  expect(list.map(readers)).toEqual(new Array(12).fill(0))
+  expect(list.map(readers)).toEqual(Array.from({ length: 12 }, () => 0))
 })
 
 test('a change of read order keeps every link once and sees every write', () => {
@@ -179,7 +180,7 @@ test('a disposed derived keeps its value and stops computing', () => {
   let d!: { value: number }
   createRoot(dispose => {
     d = derived(() => (runs++, a.value))
-    d.value
+    void d.value
     dispose()
   })
   a.value = 2
@@ -221,7 +222,7 @@ test('per-key reads: a run that stops reading a key leaves no source behind, and
   createRoot(() => effect(() => box.get(key.value), v => seen.push(v)))
   key.value = 'b'
   flush()
-  expect([...(box as any).k.keys()]).toEqual(['b'])
+  expect([...(box as object as { k: Map<unknown, unknown> }).k.keys()]).toEqual(['b'])
   key.value = 'a'
   flush()
   box.value = { a: 9, b: 2 }
@@ -257,9 +258,9 @@ test('a flush by hand leaves the scheduled one harmless, and later writes still 
 })
 
 describe('per-key reads between plain objects', () => {
-  function rows(box: { get(k: any): unknown }, keys: unknown[]) {
+  function rows(box: { get(k: never): unknown }, keys: unknown[]) {
     const seen: unknown[] = []
-    createRoot(() => keys.forEach(k => effect(() => box.get(k), v => seen.push([k, v]))))
+    createRoot(() => keys.forEach(k => effect(() => box.get(k as never), v => seen.push([k, v]))))
     seen.length = 0
     return seen
   }
@@ -268,7 +269,7 @@ describe('per-key reads between plain objects', () => {
     const keys = Array.from({ length: 1000 }, (_, i) => i)
     const box = state<Record<number, boolean>>({ 5: true })
     const seen = rows(box, keys)
-    const k = (box as any).k as Map<unknown, unknown>
+    const k = (box as object as { k: Map<unknown, unknown> }).k
     const visits = vi.spyOn(k, 'keys')
     const at = stats.runs
     box.value = { 7: true }
@@ -280,7 +281,7 @@ describe('per-key reads between plain objects', () => {
 
   test('string, number and symbol keys, and a key that went', () => {
     const s = Symbol('s')
-    const box = state<any>({ 1: 'a', b: 'b', [s]: 'c' })
+    const box = state<unknown>({ 1: 'a', b: 'b', [s]: 'c' })
     const seen = rows(box, [1, '1', 'b', s, 'gone', ...Array.from({ length: 20 }, (_, i) => `x${i}`)])
     box.value = { b: 'b2', [s]: 'c2' }
     flush()
@@ -289,7 +290,7 @@ describe('per-key reads between plain objects', () => {
 
   test('a non-enumerable key, and an inherited key shadowed then not', () => {
     const hidden = (v: number) => Object.defineProperty({}, 'h', { value: v, enumerable: false })
-    const box = state<any>(hidden(1))
+    const box = state<unknown>(hidden(1))
     const seen = rows(box, ['h', 'toString'])
     box.value = hidden(2)
     flush()
@@ -300,17 +301,17 @@ describe('per-key reads between plain objects', () => {
     flush()
     box.value = {}
     flush()
-    expect(seen.map((x: any) => x[0])).toEqual(['h', 'toString', 'toString'])
+    expect(seen.map(x => (x as unknown[])[0])).toEqual(['h', 'toString', 'toString'])
   })
 
   test('values that are not plain objects still compare every key read', () => {
     class Cart { constructor(public a: number, public b: number) {} get total() { return this.a + this.b } }
-    const cart = state<any>(new Cart(1, 2))
+    const cart = state<unknown>(new Cart(1, 2))
     const seen = rows(cart, ['total', 'a'])
     cart.value = new Cart(1, 3)
     flush()
     expect(seen).toEqual([['total', 4]])
-    const list = state<any>([1, 2])
+    const list = state<unknown>([1, 2])
     const lengths = rows(list, ['length', 0])
     list.value = [1, 2, 3]
     flush()

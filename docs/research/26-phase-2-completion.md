@@ -11,8 +11,8 @@ left in the Phase 2 row, and records each place where the build differs from the
 
 | Piece | PLAN row text | Built as |
 |---|---|---|
-| Media | `<Media>` for stills, `@weft/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013 | `weft/media` (the component and the `?media` record type), `@weft/plugin-media` (the `media.build` provider and the M-code check), `?media` in `weft/vite` (§2) |
-| Fonts | the font build step (subsets, matched fallbacks, preloads) | `@weft/plugin-text` providing `font.build@1`, consumed by `weft/vite` as `weft:fonts` (§3) |
+| Media | `<Media>` for stills, `@weft-js/plugin-media` (sharp + SVGO, AVIF + fallback, SSIMULACRA2 search, placeholders, layout-solved `sizes`), M001–M013 | `@weft-js/core/media` (the component and the `?media` record type), `@weft-js/plugin-media` (the `media.build` provider and the M-code check), `?media` in `@weft-js/core/vite` (§2) |
+| Fonts | the font build step (subsets, matched fallbacks, preloads) | `@weft-js/text` providing `font.build@1`, consumed by `@weft-js/core/vite` as `weft:fonts` (§3) |
 | Skeletons | skeleton shapes for `<Boundary pending>` | `skeletonShape()` geometry in warp-core, `<Shape>` in warp over the spec's Skeleton CSS, and X031 measured in dev (§4) |
 | Type | fluid `cqi` type tokens | the spec CSS already has them. warp-core gets the typed token layer: `fluid()`, `TYPE_SCALE`, and a test that ties both to the CSS (§5) |
 | Scaffold | `create-weft --ui` | `packages/create-weft`: `create-weft <dir> --ui warp\|headless\|none` (§6) |
@@ -20,18 +20,18 @@ left in the Phase 2 row, and records each place where the build differs from the
 
 Out of scope, as research 15 §8.2 and 11 §8.6 already phase them: GIF → video, video ladders and `timeline()`
 (3c, with ffmpeg), `z.media()` and the server route (3), `encoder: 'background'` (3c), the compiler's shape variant
-and `pending="shape"` from query schemas (3), and `weft/text` measurement (Surfaces).
+and `pending="shape"` from query schemas (3), and `@weft-js/core/text` measurement (Surfaces).
 
 ## 2. Media
 
 ### 2.1 Where the pieces live
 
-- **`weft/media`** is a subpath of the `weft` package, not a new package. It holds `<Media>` and the `MediaAsset`
+- **`@weft-js/core/media`** is a subpath of the `weft` package, not a new package. It holds `<Media>` and the `MediaAsset`
   type: a component and a type, no encoder, no IO. PLAN §8 lists `media` as its own package. That split pays off
   once `timeline()` and the swap runtime exist (3c). Until then a separate package would only add an install step.
-- **`@weft/plugin-media`** provides the build: probe, resize, encode, quality search, placeholders. It also owns the
+- **`@weft-js/plugin-media`** provides the build: probe, resize, encode, quality search, placeholders. It also owns the
   M-codes and ships their checker as a plugin `check` hook (§2.5).
-- **`weft/vite`** owns the `?media` import. It is the consumer of the slot, the same way the CSS pipeline is the
+- **`@weft-js/core/vite`** owns the `?media` import. It is the consumer of the slot, the same way the CSS pipeline is the
   consumer of `font.build`. It emits the files the provider returns and turns the record into a module.
 
 ### 2.2 One slot, not four
@@ -73,7 +73,7 @@ interface MediaAsset {
 }
 ```
 
-### 2.4 The pipeline (`@weft/plugin-media`)
+### 2.4 The pipeline (`@weft-js/plugin-media`)
 
 1. **Probe** with sharp (`metadata()`, auto-orient). SVG goes through SVGO (`preset-default`, keeping `viewBox`).
    M012 (script, `foreignObject`, `on*=`, external `href`) fails the build before SVGO runs, because sanitising it
@@ -106,7 +106,7 @@ interface MediaAsset {
 `CheckHook`. `weft check` calls `run` once with the matching files and a `ctx` that has `jsx(file)`, the shared JSX
 scanner (elements, attributes, ancestors, `?media`/`?url` imports), plus `read(rel)` and `exists(rel)`. Diagnostics
 come back with the plugin as `owner`, and a code outside the plugin's namespace is P111, as for declared codes.
-`@weft/plugin-media` claims the namespace `M`.
+`@weft-js/plugin-media` claims the namespace `M`.
 
 All of M001–M013 are reported statically in Phase 2. Where research 15 needed runtime data, this is the static
 part:
@@ -133,7 +133,7 @@ with the phases that bring their data.
 ### 2.6 `<Media>` and `sizes`
 
 ```tsx
-import { Media } from 'weft/media'
+import { Media } from '@weft-js/core/media'
 import hero from './hero.jpg?media'
 
 <Media src={hero} alt="Studio gallery at night" priority />      // eager, fetchpriority=high, sizes from `width`
@@ -158,9 +158,9 @@ import hero from './hero.jpg?media'
 - **`focus={[x, y]}`** becomes `object-position`.
 - **No warp wrapper yet.** The spec's Image anatomy styles `[data-scope=image] > img`, which doesn't reach the
   `<img>` inside a `<picture>`. Wrapping `Media` would mean changing the spec selector, and warp is ported from the
-  spec, not redesigned. So apps use `weft/media` directly until the spec grows a `picture` case.
+  spec, not redesigned. So apps use `@weft-js/core/media` directly until the spec grows a `picture` case.
 
-## 3. Fonts: `@weft/plugin-text` and `font.build@1`
+## 3. Fonts: `@weft-js/text` and `font.build@1`
 
 ```ts
 // weft.config.ts
@@ -194,8 +194,8 @@ plugins: [text({ fonts: {
   - `metrics` (`.weft/fonts.json`): cap height, x-height, ascent, descent and line gap per family. The per-character
     advance tables in research 11 are the SSR estimator for `<Text reserve>`, a Phase 3 consumer, so they wait
     for it.
-- **Consumption:** `import 'weft:fonts'` (CSS) and `import { preloads } from 'weft:fonts/preloads'` in `weft/vite`.
-  `@weft/start` writes the preloads into the document head. With no provider, both modules are empty.
+- **Consumption:** `import 'weft:fonts'` (CSS) and `import { preloads } from 'weft:fonts/preloads'` in `@weft-js/core/vite`.
+  `@weft-js/start` writes the preloads into the document head. With no provider, both modules are empty.
 - **Budget gates** (research 11 §8.4):
   - the generated CSS is ≤ 1.5 KB br;
   - preloaded latin bytes are ≤ 100 KB. Over budget is X022, reported from the build's report in
@@ -208,7 +208,7 @@ Phase 2's plugin runtime ran only `contribute()`. A build-side slot now needs it
 - `weft plugins sync` (which `weft check`, `weft dev` and `weft build` run) writes `.weft/slots/<id>.build.json`
   for each bound slot that has a `build` side: `{ plugin, version, module, export, options }`. The module path is
   resolved from the project root.
-- `weft/vite` reads that JSON and calls `import(module)[export](options)`. The slot's TS module stays the client
+- `@weft-js/core/vite` reads that JSON and calls `import(module)[export](options)`. The slot's TS module stays the client
   surface. The JSON exists because Node can't import the generated `.ts` file.
 - **Permissions are declared, not yet enforced** (research 13 §4 puts enforcement with the trust tooling in 3c).
   `weft plugins list` shows them.
@@ -220,7 +220,7 @@ Phase 2's part is research 11 §7.1's fourth source, **declared static estimates
 skeleton CSS:
 
 ```tsx
-import { Shape } from '@weft/warp'
+import { Shape } from '@weft-js/warp'
 <Boundary pending={<Shape kind="list" rows={5} />}>…</Boundary>
 <Boundary pending={<Shape kind="card" media="16/9" lines={2} />}>…</Boundary>
 <Boundary pending={<Shape kind="text" lines={4} />}>…</Boundary>
@@ -256,30 +256,30 @@ TS side had no view of them, so a binding, the CLI or a Surface had to re-derive
 
 ## 6. `create-weft --ui`
 
-`packages/create-weft` (bin `create-weft`) scaffolds a `@weft/start` app:
+`packages/create-weft` (bin `create-weft`) scaffolds a `@weft-js/start` app:
 
 ```
 create-weft my-app [--ui warp|headless|none] [--name <name>]
   weft.config.ts      plugins: [warp()] for warp; site defaults
   package.json        scripts are `weft …` aliases only (no P002)
-  tsconfig.json       jsxImportSource weft, types weft/client (`?media`, `weft:fonts`)
+  tsconfig.json       jsxImportSource weft, types @weft-js/core/client (`?media`, `weft:fonts`)
   src/routes/_layout.tsx, index.tsx, about.tsx
   src/app.css         (none/headless only; warp brings its tokens)
 ```
 
-- **`warp`:** `@weft/warp`, wired through `warp()`. The index page is a `Card` with a `Badge` counter and a
+- **`warp`:** `@weft-js/warp`, wired through `warp()`. The index page is a `Card` with a `Badge` counter and a
   `Button`.
-- **`headless`:** `@weft/warp-core` only. The layout imports warp-core's `warp.css` (tokens, base, signature) and the
+- **`headless`:** `@weft-js/warp-core` only. The layout imports warp-core's `warp.css` (tokens, base, signature) and the
   app's own markup uses the tokens, including the fluid title size.
 - **`none`:** weft and start only, with a small stylesheet.
-- **Nothing generated is written.** AGENTS.md, `.weft/` and the slot modules come from `weft` on the first
+- **Nothing generated is written.** AGENTS.md, `.weft/` and the slot modules come from `@weft-js/core` on the first
   `weft dev` or `weft check`, so a scaffold can't go stale against the CLI. It doesn't install either; it prints
   the next steps.
 - **The test** scaffolds each variant into a temp dir, links the workspace packages, and runs `weft check`, which
   must be clean. Then it starts `weft dev` and server-renders `/` for every variant.
 - Writing it surfaced a start bug: an app with no `src/entry.client.ts` got a 500, because start's `load` hook
   answered `virtual:weft/entry-client?assets=client` itself instead of leaving it to Nitro's assets plugin. The
-  start fixture has an `entry.client.ts`, so its tests never took that path. Fixed in `@weft/start`'s `vite.mjs`.
+  start fixture has an `entry.client.ts`, so its tests never took that path. Fixed in `@weft-js/start`'s `vite.mjs`.
 
 `weft create` is reserved in `builtinNames` and becomes an alias once `create-weft` is published. Phase 3's
 `create-weft` (auth, db, the T3 template) builds on the same templates.
@@ -311,7 +311,7 @@ Measured with brotli q11, minified production builds:
 
 | What | Size | How |
 |---|---|---|
-| `<Media>` page (`weft/media`, one photo with AVIF + JPEG sources) | 3.57 KB br total; hello world is 1.21 KB, so `<Media>` adds about 2.4 KB | `packages/weft/scripts/size.mjs`, row `<Media> (weft/media)` |
+| `<Media>` page (`@weft-js/core/media`, one photo with AVIF + JPEG sources) | 3.57 KB br total; hello world is 1.21 KB, so `<Media>` adds about 2.4 KB | `packages/weft/scripts/size.mjs`, row `<Media> (@weft-js/core/media)` |
 | warp `Shape` | 1.38 KB own JS (712 B marginal on the full kit page), 244 B own CSS (the skeleton CSS it shares with `Skeleton`) | `packages/warp/scripts/size.mjs` |
 | X031 measurement in `<Boundary>` | 0 B in production (behind `DEV`) | |
 | Font and media build code | 0 B in the client (runs at build time) | |

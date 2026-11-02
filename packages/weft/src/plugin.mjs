@@ -1,4 +1,4 @@
-// weft/plugin: typed slots and declared contributions (PLAN §7c, research 13 §2.2–2.3).
+// @weft-js/core/plugin: typed slots and declared contributions (PLAN §7c, research 13 §2.2–2.3).
 // Plain JS with no dependencies: weft.config.ts loads it in Node, so nothing here may need a bundler.
 
 const freeze = value => {
@@ -78,7 +78,7 @@ export function definePlugin(def) {
       contribute: { value: contribute },
       weft: { value: def.weft ?? '*' },
       namespace: { value: namespace },
-      permissions: { value: freeze({ ...(def.permissions ?? {}) }) },
+      permissions: { value: freeze({ ...def.permissions }) },
     })
     return instance
   }

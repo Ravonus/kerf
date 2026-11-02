@@ -1,6 +1,7 @@
 // The token, for `multiplayer({ ticket })`: signed with the room's identity, so no client can name itself to LiveKit.
-import { roomId, signTicket } from '@weft/multiplayer/server'
+import { roomId, signTicket } from '@weft-js/multiplayer/server'
 
+/** Options of `livekitTicket()`. */
 export interface LivekitTicketOptions {
   /** Default `LIVEKIT_API_KEY`. */
   key?: string
@@ -12,6 +13,7 @@ export interface LivekitTicketOptions {
   media?: boolean
 }
 
+/** For `multiplayer({ ticket })`: a LiveKit token that names the connection and its room. Refuses to run without a key and secret. */
 export const livekitTicket = ({ key = process.env.LIVEKIT_API_KEY, secret = process.env.LIVEKIT_API_SECRET, ttl = 3600, media = false }: LivekitTicketOptions = {}) => async ({ id, user, params }: { id: string; user: { name?: string }; params: unknown }) => {
   if (!key || !secret) throw new Error('`livekitTicket` needs `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`')
   const now = Math.floor(Date.now() / 1000)

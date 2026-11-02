@@ -1,6 +1,6 @@
 // A name only known at runtime: the icon holds its box while it loads, on the server too, and fills in on the client. If it
 // can't load, the box stays, marked data-failed, and the page carries on.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import type { IconComponent, IconProps } from './svg'
 import { icon, Svg } from './svg'
 

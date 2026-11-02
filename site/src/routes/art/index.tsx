@@ -1,5 +1,5 @@
-import { Link, type Meta } from '@weft/start'
-import { CodeBlock } from '@weft/warp'
+import { Link, type Meta } from '@weft-js/start'
+import { CodeBlock } from '@weft-js/warp'
 import { ROOMS } from '../../toolkit/art'
 import { ArtDial, ArtStage } from '../../toolkit/art/stage'
 import '../../styles/art.css'
@@ -10,9 +10,9 @@ export const meta: Meta = { title: 'Art', description: 'Twenty-eight pieces draw
 
 /** Two to a row, so a piece left without a partner, before a wide one or at the end, takes the row. */
 const alone = (pieces: [string, { wide?: boolean }][], i: number) => {
-  if (pieces[i + 1] && !pieces[i + 1][1].wide) return false
+  if (pieces[i + 1] && !pieces[i + 1]![1].wide) return false
   let run = 0
-  for (let n = i; n >= 0 && !pieces[n][1].wide; n--) run++
+  for (let n = i; n >= 0 && !pieces[n]![1].wide; n--) run++
   return run % 2 === 1
 }
 

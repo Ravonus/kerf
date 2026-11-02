@@ -1,4 +1,4 @@
-// The dev listener's thread (research 41 §7). It takes file names, waits out a burst of saves, and works out what they
+// The dev listener's thread (research 44 §7). It takes file names, waits out a burst of saves, and works out what they
 // changed. HMR never waits on it: the main thread only posts a name here, and TypeScript runs in its own process.
 
 const { createHash } = require('node:crypto')
@@ -52,7 +52,7 @@ function rested() {
 async function first() {
   running = true
   try { await report(performance.now()) } catch (e) { parentPort.postMessage({ type: 'failed', message: e.stack }) } finally { running = false }
-  drain()
+  await drain()
 }
 
 async function report(t, files) {
@@ -90,8 +90,8 @@ parentPort.on('message', msg => {
   if (msg === 'close') { clearTimeout(timer); clearTimeout(writes); session.close(); process.exit(0) }
   pending.add(msg)
   clearTimeout(timer)
-  timer = setTimeout(drain, debounce)
+  timer = setTimeout(() => void drain(), debounce)
 })
 
 parentPort.postMessage({ type: 'ready', needed: session.engine.needed() })
-if (session.engine.needed()) first()
+if (session.engine.needed()) void first()

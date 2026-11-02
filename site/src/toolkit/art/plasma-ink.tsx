@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { palette, quantize, tile } from '@weft/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { palette, quantize, tile } from '@weft-js/warp-core/dither'
 import { type ArtProps, type Meta } from './shared'
 import code from './plasma-ink.tsx?raw'
 

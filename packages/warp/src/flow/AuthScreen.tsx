@@ -1,11 +1,11 @@
-import { WeaveIcon } from '@weft/icons'
+import { WeaveIcon } from '@weft-js/warp-icons'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/flows/auth.css'
 
 const THREADS = Array.from({ length: 24 }, (_, i) => ({ x: 12 + i * 26 }))
-const WEFT = [[180, 0.15, 0.75], [300, 0.35, 0.95], [420, 0.05, 0.55], [560, 0.25, 0.85]].map(([y, a, b], i) => ({ i, d: `M${a * 640} ${y} H${b * 640}` }))
+const WEFT = [[180, 0.15, 0.75], [300, 0.35, 0.95], [420, 0.05, 0.55], [560, 0.25, 0.85]].map(([y, a, b], i) => ({ i, d: `M${a! * 640} ${y} H${b! * 640}` }))
 
 /** The woven lines of the brand panel: warp threads, and weft that draws once. */
 const WeaveArt = () => (
@@ -17,13 +17,13 @@ const WeaveArt = () => (
 
 
 /** The product's mark: a logo of the app's, or warp's woven square. */
-export const AuthLogo = ({ logo, name }: { logo?: any; name?: any }) => <span data-part="logo">{logo ?? <WeaveIcon />}{name}</span>
+export const AuthLogo = ({ logo, name }: { logo?: unknown; name?: unknown }) => <span data-part="logo">{logo ?? <WeaveIcon />}{name}</span>
 
 /**
  * The auth layout (09 §2.2), by its own width: full-bleed under 600, a 420 card on the page at 600–999, split with the
  * brand panel from 1000. The panel is decorative, so it is hidden from assistive tech; quiet flattens it by token.
  */
-export function AuthScreen({ logo, name, quote, cite, brand, children, ...rest }: { logo?: any; name?: any; quote?: any; cite?: any; brand?: any; children?: any; [attr: string]: any }) {
+export function AuthScreen({ logo, name, quote, cite, brand, children, ...rest }: { logo?: unknown; name?: unknown; quote?: unknown; cite?: unknown; brand?: unknown; children?: unknown; [attr: string]: unknown }) {
   return (
     <div data-scope="auth" {...rest}>
       <div data-part="layout">

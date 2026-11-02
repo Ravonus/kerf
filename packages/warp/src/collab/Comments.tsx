@@ -1,16 +1,18 @@
-import { CheckIcon } from '@weft/icons'
-import { announce, arrivalTracker, isSheet, uid, type Peer } from '@weft/warp-core'
-import { derived, onMount, state, untrack, watch, type State } from 'weft'
+import { CheckIcon } from '@weft-js/warp-icons'
+import { announce, arrivalTracker, isSheet, uid, type Peer } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { PeerAvatar, read, SWEEP, type Live } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/comment-thread.css'
-import '@weft/warp-core/styles/app/comment-anchor.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/comment-thread.css'
+import '@weft-js/warp-core/styles/app/comment-anchor.css'
 
+/** One comment in a thread. */
 export interface Comment { id: string; author: Peer; time: string; text: string }
+/** A comment thread and whether it's resolved. */
 export interface CommentThreadData { id: string; comments: Comment[]; resolved?: boolean }
 
 /**
@@ -39,7 +41,7 @@ export function CommentThread({ thread, active, onReply, onResolve }: { thread: 
     el.value = ''
   }
   return (
-    <article ref={(n: any) => (root = n)} data-scope="comment-thread" data-c={data.value.id} data-sweep="surface" data-active={active ? '' : undefined} data-pin={active ? '' : undefined} data-resolved={resolved.value ? '' : undefined} aria-label={`Comment from ${first.value?.author.name}`}>
+    <article ref={n => (root = n)} data-scope="comment-thread" data-c={data.value.id} data-sweep="surface" data-active={active ? '' : undefined} data-pin={active ? '' : undefined} data-resolved={resolved.value ? '' : undefined} aria-label={`Comment from ${first.value?.author.name}`}>
       <SWEEP />
       {resolved.value
         ? <div data-part="reply"><span>{first.value?.author.name}: {first.value?.text}</span><Button emphasis="ghost" tone="neutral" size="sm" onClick={() => flip(false)}>Reopen</Button></div>
@@ -60,7 +62,7 @@ export function CommentThread({ thread, active, onReply, onResolve }: { thread: 
 }
 
 /** The highlighted range a thread hangs from (07 §6.2): activates its thread on press and on focus. */
-export function CommentAnchor({ thread, active, children }: { thread: string; active: State<string | null>; children?: any }) {
+export function CommentAnchor({ thread, active, children }: { thread: string; active: State<string | null>; children?: unknown }) {
   const on = () => (active.value = thread)
   return <span data-scope="comment-anchor" data-c={thread} data-active={active.value === thread ? '' : undefined} role="button" tabindex="0" aria-pressed={active.value === thread ? 'true' : 'false'} onClick={on} onFocus={on} onKeyDown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); on() } }}>{children}</span>
 }
@@ -69,7 +71,7 @@ export function CommentAnchor({ thread, active, children }: { thread: string; ac
  * The margin rail of anchored threads (07 §6.2): a complementary landmark of articles. On a phone the rail gives way
  * to a bottom Sheet holding the active thread.
  */
-export function CommentRail({ threads, active, onReply, onResolve, label = 'Comments' }: { threads: Live<CommentThreadData[]>; active: State<string | null>; onReply?: (thread: string, text: string) => void; onResolve?: (thread: string, resolved: boolean) => void; label?: string }) {
+export function CommentRail({ threads, active, onReply, onResolve, label = 'Comments' }: { threads: Live<CommentThreadData[]>; active: State<string | null>; onReply?: (thread: string, text: string) => void; onResolve?: (thread: string, resolved: boolean) => void; label?: string | undefined }) {
   const list = derived(() => read(threads))
   const phone = state(false)
   let rail: HTMLElement | undefined
@@ -83,7 +85,7 @@ export function CommentRail({ threads, active, onReply, onResolve, label = 'Comm
   const body = (t: CommentThreadData) => <CommentThread thread={t} active={active.value === t.id} onReply={x => onReply?.(t.id, x)} onResolve={r => onResolve?.(t.id, r)} />
   return (
     <>
-      <aside ref={(n: any) => (rail = n)} aria-label={label} hidden={phone.value}>
+      <aside ref={n => (rail = n)} aria-label={label} hidden={phone.value}>
         {!phone.value && list.value.map(t => <div key={t.id}>{body(t)}</div>)}
       </aside>
       {phone.value && <Drawer open={sheet} title={label} side="bottom">{open.value ? body(open.value) : null}</Drawer>}

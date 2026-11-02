@@ -5,7 +5,7 @@
 //   T003 asserts what it set   T006 mocks weft or the unit   T009 `.only` / `.skip`
 //   T013 a real socket
 //
-// Syntax only (TypeScript's parser, no type checker), like the project view. `weft/test` adds a runtime T001 for
+// Syntax only (TypeScript's parser, no type checker), like the project view. `@weft-js/core/test` adds a runtime T001 for
 // assertions this pass can't see. A finding a test needs on purpose is kept with a written reason:
 //
 //   // weft-allow T004, T005: hydration tests read the server DOM and wait for real timers
@@ -32,7 +32,7 @@ const loopCallbacks = new Set(['forEach', 'map', 'flatMap', 'filter', 'some', 'e
 const timerCalls = new Set(['setTimeout', 'setInterval', 'requestAnimationFrame', 'setImmediate'])
 const exts = ['', '.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs', '/index.ts', '/index.tsx', '/index.js']
 
-const kindOf = file => (/\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.jsx$/.test(file) ? ts.ScriptKind.JSX : /\.[mc]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS)
+const kindOf = file => (file.endsWith('.tsx') ? ts.ScriptKind.TSX : file.endsWith('.jsx') ? ts.ScriptKind.JSX : /\.[mc]?ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS)
 export const parse = (text, file) => ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kindOf(file))
 const isFn = n => n && (ts.isArrowFunction(n) || ts.isFunctionExpression(n) || ts.isFunctionDeclaration(n))
 export const norm = n => n.getText().replace(/\s+/g, ' ').replace(/;$/, '')
@@ -126,7 +126,7 @@ export function testCall(call) {
   if (!ts.isIdentifier(n) || !testRoots.has(n.text)) return null
   const root = n.text
   const fn = [...call.arguments].reverse().find(a => ts.isArrowFunction(a) || ts.isFunctionExpression(a))
-  // `fit` with no test body is someone's function (weft/text's), not a focused test
+  // `fit` with no test body is someone's function (@weft-js/core/text's), not a focused test
   if (root === 'fit' && !fn) return null
   return { root, rootNode: n, mods, fn, suite: suiteRoots.has(root), call }
 }
@@ -233,7 +233,7 @@ export function checkTestFile(text, rel, options = {}) {
   }
   const helperAsserting = new Set()
   const helperCache = new Map()
-  for (const [local, imp] of imports) {
+  for (const [binding, imp] of imports) {
     if (!imp.abs || /\.(test|spec)\./.test(imp.abs)) continue
     if (!helperCache.has(imp.abs)) {
       let names = new Set()
@@ -243,7 +243,7 @@ export function checkTestFile(text, rel, options = {}) {
       } catch {}
       helperCache.set(imp.abs, names)
     }
-    if (helperCache.get(imp.abs).has(imp.name)) helperAsserting.add(local)
+    if (helperCache.get(imp.abs).has(imp.name)) helperAsserting.add(binding)
   }
   const asserting = assertingFunctions(sf, helperAsserting)
 
@@ -273,7 +273,7 @@ export function checkTestFile(text, rel, options = {}) {
     const t = resolveImport(abs, spec)
     return t ? units.has(moduleKey(t)) : unitSpecs.has(specKey(spec))
   }
-  const isWeftSpec = spec => spec === 'weft' || spec.startsWith('weft/') || spec.startsWith('@weft/')
+  const isWeftSpec = spec => spec === '@weft-js/core' || spec.startsWith('@weft-js/core/') || spec.startsWith('@weft-js/')
   const fakeTimers = contains(sf, n => ts.isPropertyAccessExpression(n) && (n.name.text === 'useFakeTimers' || (n.name.text === 'install' && rootName(n) === 'clock')))
 
   // ---- per test: T001, T003, T008, T009 ---------------------------------------------------------------------------
@@ -327,7 +327,7 @@ export function checkTestFile(text, rel, options = {}) {
       else if (why.loop) looped.push([m.call, why.text])
       else report('T008', m.call, `This \`expect\` only runs ${why.text}, so the test can pass without checking anything.`)
     })
-    if (!always) for (const [call, text] of looped) report('T008', call, `Every \`expect\` in this test runs ${text}, so the test can pass without checking anything.`)
+    if (!always) for (const [call, how] of looped) report('T008', call, `Every \`expect\` in this test runs ${how}, so the test can pass without checking anything.`)
 
     if (ts.isBlock(body)) assertsWhatItSet(body.statements, report)
   }
@@ -387,7 +387,7 @@ export function checkTestFile(text, rel, options = {}) {
             fix,
           })
         } else if (!fakeTimers && !insideFakeApi(n))
-          report('T004', c, `\`${name}\` runs on the real clock in a test.`, { help: 'Call `clock.install()` from weft/test first and drive time with `await clock.advance(ms)`' })
+          report('T004', c, `\`${name}\` runs on the real clock in a test.`, { help: 'Call `clock.install()` from @weft-js/core/test first and drive time with `await clock.advance(ms)`' })
       }
 
       // T006: mocking weft or the unit under test.
@@ -405,7 +405,7 @@ export function checkTestFile(text, rel, options = {}) {
 
     // T013: a real socket in the fast lane.
     if (ts.isNewExpression(n) && ts.isIdentifier(n.expression) && ['WebSocket', 'EventSource'].includes(n.expression.text))
-      report('T013', n, `\`new ${n.expression.text}\` opens a real socket in a fast test.`, { help: "Render the `.live()` or stream against weft/test's fake transport: `await net.push(stream, message)`, `await net.poke('tag')`, `await net.drop()`" })
+      report('T013', n, `\`new ${n.expression.text}\` opens a real socket in a fast test.`, { help: "Render the `.live()` or stream against @weft-js/core/test's fake transport: `await net.push(stream, message)`, `await net.poke('tag')`, `await net.drop()`" })
 
     if (ts.isPropertyAccessExpression(n) && n.name.text === 'container' && !(ts.isCallExpression(n.parent) && n.parent.expression === n)) {
       const obj = unwrap(n.expression)
@@ -435,7 +435,7 @@ function conditional(a, node) {
   return undefined
 }
 
-/** `expect(cart.items.value)` with `cart` imported from app code, in a component test. (`scope(cart)` from weft/test is the way to test a scope.) */
+/** `expect(cart.items.value)` with `cart` imported from app code, in a component test. (`scope(cart)` from @weft-js/core/test is the way to test a scope.) */
 function readsInternalState(subject, imports) {
   const s = unwrap(subject)
   if (!ts.isPropertyAccessExpression(s) || s.name.text !== 'value') return false
@@ -470,19 +470,19 @@ function insideFakeApi(timer) {
   return false
 }
 
-/** Replace a zero-delay sleep with `flush()`, importing it from weft/test when the file doesn't. */
+/** Replace a zero-delay sleep with `flush()`, importing it from @weft-js/core/test when the file doesn't. */
 function flushFix(sf, sleep, edit) {
   const edits = [edit(sleep.getStart(sf), sleep.getEnd(), 'flush()')]
   const hasFlush = sf.statements.some(st => ts.isImportDeclaration(st) && st.importClause?.namedBindings && ts.isNamedImports(st.importClause.namedBindings) && st.importClause.namedBindings.elements.some(e => e.name.text === 'flush'))
   if (!hasFlush) {
-    const weftTest = sf.statements.find(st => ts.isImportDeclaration(st) && ts.isStringLiteral(st.moduleSpecifier) && st.moduleSpecifier.text === 'weft/test' && st.importClause?.namedBindings && ts.isNamedImports(st.importClause.namedBindings))
+    const weftTest = sf.statements.find(st => ts.isImportDeclaration(st) && ts.isStringLiteral(st.moduleSpecifier) && st.moduleSpecifier.text === '@weft-js/core/test' && st.importClause?.namedBindings && ts.isNamedImports(st.importClause.namedBindings))
     if (weftTest) {
       const el = weftTest.importClause.namedBindings.elements
       edits.push(edit(el[el.length - 1].getEnd(), el[el.length - 1].getEnd(), ', flush'))
     } else {
       const last = [...sf.statements].reverse().find(st => ts.isImportDeclaration(st))
       const at = last ? last.getEnd() : 0
-      edits.push(edit(at, at, `${last ? '\n' : ''}import { flush } from 'weft/test'${last ? '' : '\n'}`))
+      edits.push(edit(at, at, `${last ? '\n' : ''}import { flush } from '@weft-js/core/test'${last ? '' : '\n'}`))
     }
   }
   return { description: 'Replace the sleep with `flush()`', safe: false, edits }
@@ -564,7 +564,7 @@ export const isTestFile = rel => /\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)
 export function probeTests(catalog) {
   const out = {}
   for (const e of catalog) {
-    if (!/^T\d{3}$/.test(e.code) || e.by !== 'cli') continue // T012 is weft/test's runtime check
+    if (!/^T\d{3}$/.test(e.code) || e.by !== 'cli') continue // T012 is @weft-js/core/test's runtime check
     const hit = e.example && checkTestFile(e.example, 'probe.test.tsx').find(d => d.code === e.code)
     out[e.code] = { implemented: Boolean(hit), autofix: hit?.fix?.safe === true, suggestion: Boolean(hit?.fix?.edits) && hit.fix.safe !== true }
   }

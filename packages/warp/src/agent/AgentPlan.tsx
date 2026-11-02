@@ -1,18 +1,19 @@
-import { CheckIcon, ClockIcon, HandIcon, XIcon } from '@weft/icons'
-import type { PlanStep } from '@weft/warp-core'
-import { derived } from 'weft'
+import { CheckIcon, ClockIcon, HandIcon, XIcon } from '@weft-js/warp-icons'
+import type { PlanStep } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { Bar, IconButton } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/components/spinner.css'
-import '@weft/warp-core/styles/app/plan.css'
+import '@weft-js/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/app/plan.css'
 
+/** A message waiting for the agent to finish. */
 export type QueuedMessage = { id: string; text: string }
 
 /**
  * Plan: the task list and the Queue (07 §1.1, §1.2). Steps are pending, running, done or blocked; messages sent during
  * a run wait in order under them and can be removed. Named AgentPlan so it can't be mistaken for a billing plan.
  */
-export function AgentPlan({ steps, queue, title = 'Plan', onRemoveQueued }: { steps: PlanStep[]; queue?: QueuedMessage[]; title?: any; onRemoveQueued?: (id: string) => void }) {
+export function AgentPlan({ steps, queue, title = 'Plan', onRemoveQueued }: { steps: PlanStep[]; queue?: QueuedMessage[]; title?: unknown; onRemoveQueued?: (id: string) => void }) {
   const done = derived(() => steps.filter(s => s.state === 'done').length)
   const waiting = derived(() => queue ?? [])
   const note = (s: PlanStep) => s.note ?? (s.state === 'blocked' ? 'Waiting for your approval' : s.state === 'running' ? 'In progress' : undefined)

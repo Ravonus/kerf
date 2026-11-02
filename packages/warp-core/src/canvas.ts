@@ -1,4 +1,4 @@
-// @weft/warp-core/canvas: a canvas that looks after itself (08 §6.7). It tracks size and pixel ratio, stops off screen and in
+// @weft-js/warp-core/canvas: a canvas that looks after itself (08 §6.7). It tracks size and pixel ratio, stops off screen and in
 // a hidden tab, gives reduced motion one still frame, and shares one requestAnimationFrame between every surface on the
 // page. With nothing to paint there is no frame scheduled at all, so an idle page costs nothing.
 import { tier, type Tier } from './dither/ramp'
@@ -14,6 +14,7 @@ export interface Pointer {
   in: boolean
 }
 
+/** What a canvas's draw function gets each frame. */
 export interface Frame {
   ctx: CanvasRenderingContext2D
   /** CSS pixels, or cells when the surface has a `cell`. */
@@ -31,21 +32,23 @@ export interface Frame {
   pointer: Pointer
 }
 
+/** Options for a canvas surface. */
 export interface SurfaceOptions {
   /** Paints one frame. Return true to be called again next frame, for work that settles on its own. */
   draw: (frame: Frame) => boolean | void
-  animate?: boolean
-  fps?: number
+  animate?: boolean | undefined
+  fps?: number | undefined
   /** Whole-cell mode: one backing pixel per cell, scaled up without smoothing and snapped to device pixels. */
-  cell?: number
-  maxDpr?: number
-  context?: CanvasRenderingContext2DSettings
+  cell?: number | undefined
+  maxDpr?: number | undefined
+  context?: CanvasRenderingContext2DSettings | undefined
   /** Track the pointer into `Frame.pointer`, and paint when it moves over the canvas. */
-  pointer?: boolean
+  pointer?: boolean | undefined
   /** Called when a theme, tier or motion dial changes around the canvas, before the repaint. */
-  onTheme?: () => void
+  onTheme?: (() => void) | undefined
 }
 
+/** A canvas surface: the action, plus repainting on request and telling if it's seen. */
 export interface Surface extends Action<SurfaceOptions> {
   /** Paint once, in the next shared frame. */
   invalidate(): void
@@ -59,6 +62,7 @@ let raf = 0
 
 function pump(now: number) {
   raf = 0
+  // a snapshot: a run can add or drop itself mid-loop
   for (const run of [...queue]) run(now)
   if (queue.size) raf = requestAnimationFrame(pump)
 }
@@ -171,13 +175,13 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
   }
   const listen = () => {
     if (o.pointer && !untrack) untrack = track(follow)
-    else if (!o.pointer && untrack) untrack = void untrack()
+    else if (!o.pointer && untrack) { untrack(); untrack = undefined }
   }
 
   const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => { sized = false; invalidate() })
   size?.observe(box)
   const seer = typeof IntersectionObserver === 'undefined' ? undefined : new IntersectionObserver(([e]) => {
-    seen = e.isIntersecting
+seen = e!.isIntersecting
     box.toggleAttribute('data-fx-offscreen', !seen)
     last = 0
     wake()

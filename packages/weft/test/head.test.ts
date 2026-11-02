@@ -2,8 +2,8 @@
 // page fetched as plain HTML (what a link-preview crawler sees: no JS runs) carrying every tag.
 // weft-allow T005, T007: the output is head tags, not UI; the snapshot is research 20 §2's tag set, reviewed
 import { createServer, get } from 'node:http'
-import { headTags, key, mergeMeta, metaTags, renderToString, renderToStringAsync, ssr, type Site } from 'weft/ssr'
-import { setHead } from 'weft/head'
+import { headTags, key, mergeMeta, metaTags, renderToString, renderToStringAsync, ssr, type Site } from '@weft-js/core/ssr'
+import { setHead } from '@weft-js/core/head'
 
 const site: Site = {
   name: 'Acme',
@@ -102,14 +102,14 @@ describe('renderToString head option', () => {
       res.setHeader('content-type', 'text/html; charset=utf-8')
       res.end(renderToString(app, { head: { site, meta: { title: 'Pricing', description: 'Plans & prices.' }, path: req.url! } }))
     })
-    await new Promise<void>(r => server.listen(0, '127.0.0.1', r))
+    await new Promise<void>(r => { server.listen(0, '127.0.0.1', r) })
     const { port } = server.address() as { port: number }
-    const body = await new Promise<string>((resolve, reject) =>
+    const body = await new Promise<string>((resolve, reject) => {
       get(`http://127.0.0.1:${port}/pricing?utm=x`, { headers: { 'user-agent': 'Twitterbot/1.0' } }, res => {
         let s = ''
         res.setEncoding('utf8').on('data', c => (s += c)).on('end', () => resolve(s))
-      }).on('error', reject),
-    )
+      }).on('error', reject)
+    })
     server.close()
     const head = body.slice(0, body.indexOf('</head>'))
     const expected = [

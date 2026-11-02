@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // `tabs.channel` and `sync: 'tabs'` (research 32 §1): a `render()` is a tab, a shared `storage` is the shared
-// `localStorage`, and weft/test's BroadcastChannel carries the messages.
+// `localStorage`, and @weft-js/core/test's BroadcastChannel carries the messages.
 import { createRoot, state } from '../src/index'
 import { defineState } from '../src/scope'
 import '../src/persist'
@@ -8,8 +8,8 @@ import '../src/sync'
 import { tabs as browser } from '../src/browser'
 import { flush, leaks, memoryStorage, render, screen, tabs, user } from '../src/test'
 
-const count = { '~standard': { validate: (v: any) => (typeof v?.count === 'number' ? { value: v } : { issues: [{ message: 'no count' }] }) } }
-const lines = { '~standard': { validate: (v: any) => (v && typeof v === 'object' && Object.values(v).every(n => typeof n === 'number') ? { value: v } : { issues: [{ message: 'not lines' }] }) } }
+const count = { '~standard': { validate: (v: unknown) => (typeof (v as { count?: unknown } | undefined)?.count === 'number' ? { value: v as { count: number } } : { issues: [{ message: 'no count' }] }) } }
+const lines = { '~standard': { validate: (v: unknown) => (v && typeof v === 'object' && Object.values(v).every(n => typeof n === 'number') ? { value: v as Record<string, number> } : { issues: [{ message: 'not lines' }] }) } }
 
 describe('tabs.channel', () => {
   function Cart() {
@@ -36,14 +36,14 @@ describe('tabs.channel', () => {
     render(Cart)
     await tabs.post('cart', { count: 'x' })
     expect(screen.getByLabelText('last').textContent).toBe('none')
-    expect(warn.mock.calls[0][0]).toContain('dropped')
+    expect(warn.mock.calls[0]![0]).toContain('dropped')
     warn.mockRestore()
   })
 
   test('post reaches other tabs, not this one', async () => {
     render(Cart)
     const other = render(Cart)
-    await user.click(screen.getAllByRole('button')[0])
+    await user.click(screen.getAllByRole('button')[0]!)
     await flush()
     expect(tabs.posted('cart')).toEqual([{ count: 7 }])
     expect(screen.getAllByLabelText('last').map(e => e.textContent)).toEqual(['none', 'none'])
@@ -53,7 +53,7 @@ describe('tabs.channel', () => {
   test('a wrong post throws in dev', () => {
     createRoot(dispose => {
       const bus = browser.channel('cart', count)
-      expect(() => bus.post({ count: 'x' } as any)).toThrow('schema')
+      expect(() => bus.post({ count: 'x' } as never)).toThrow('schema')
       dispose()
     })
   })
@@ -97,6 +97,18 @@ describe("sync: 'tabs'", () => {
   }
   const lineText = (n: string) => screen.getByLabelText(`lines ${n}`).textContent
 
+  test('tabs sync on plain http, where the browser has no crypto.randomUUID', async () => {
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true })
+    try {
+      two()
+      await user.click(screen.getByRole('button', { name: 'note a' }))
+      await flush()
+      expect(screen.getByLabelText('note b').textContent).toBe('a')
+    } finally {
+      Reflect.deleteProperty(crypto, 'randomUUID')
+    }
+  })
+
   test('a write reaches the other tab and only touches its readers', async () => {
     two()
     await user.click(screen.getByRole('button', { name: 'note a' }))
@@ -109,8 +121,8 @@ describe("sync: 'tabs'", () => {
     await Promise.all([user.click(screen.getByRole('button', { name: 'add a' })), user.click(screen.getByRole('button', { name: 'add b' }))])
     await flush()
     await flush()
-    expect(JSON.parse(lineText('a')!)).toEqual({ a: 1, b: 1 })
-    expect(JSON.parse(lineText('b')!)).toEqual({ a: 1, b: 1 })
+    expect(JSON.parse(lineText('a'))).toEqual({ a: 1, b: 1 })
+    expect(JSON.parse(lineText('b'))).toEqual({ a: 1, b: 1 })
     expect(JSON.parse(storage.getItem('weft:app:cart-sync.lines')!).data).toEqual({ a: 1, b: 1 })
   })
 
@@ -130,7 +142,7 @@ describe("sync: 'tabs'", () => {
     await flush()
     bc.close()
     expect(lineText('a')).toBe('{}')
-    expect(error.mock.calls[0][0]).toContain('S008')
+    expect(error.mock.calls[0]![0]).toContain('S008')
     error.mockRestore()
   })
 
@@ -142,7 +154,7 @@ describe("sync: 'tabs'", () => {
     bc.postMessage({ s: 'cart-sync.lines', at: now + 1000, t: 'y', p: { k: 1, j: 1 }, d: [] })
     await flush()
     bc.close()
-    expect(JSON.parse(lineText('a')!)).toEqual({ k: 2, j: 1 })
+    expect(JSON.parse(lineText('a'))).toEqual({ k: 2, j: 1 })
   })
 
   test("`session`, or no persist, is S008", () => {

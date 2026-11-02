@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "paths": { "@engine/*": ["./gen/blink/*"] }
+  },
+  "include": ["src", "test", "scripts", "plugin", "*.mjs", "*.ts"],
+  "exclude": ["**/node_modules/**", "**/vendor/**", "**/dist/**", "gen/**"]
+}

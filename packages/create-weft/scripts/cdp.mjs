@@ -18,17 +18,31 @@ export const findChrome = () => PLACES.find(p => p && existsSync(p))
 export async function launch(exe = findChrome()) {
   const profile = mkdtempSync(join(tmpdir(), 'weft-chrome-'))
   const chrome = spawn(exe, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-first-run', `--user-data-dir=${profile}`, '--remote-debugging-port=0', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] })
-  const url = await new Promise((ok, no) => {
-    let log = ''
-    chrome.stderr.on('data', d => {
-      log += d
-      const m = log.match(/ws:\/\/\S+/)
-      if (m) ok(m[0])
+  /** Chrome and its profile go whenever the caller is done with them, or a launch didn't get that far. */
+  const stop = async () => {
+    chrome.kill('SIGKILL')
+    await new Promise(ok => { setTimeout(ok, 300) })
+    rmSync(profile, { recursive: true, force: true, maxRetries: 5 })
+  }
+  let ws
+  try {
+    const url = await new Promise((ok, no) => {
+      let log = ''
+      const timer = setTimeout(() => no(new Error(`Chrome didn't start: ${log.slice(-400)}`)), 30000)
+      chrome.on('error', e => { clearTimeout(timer); no(e) })
+      chrome.on('exit', code => { clearTimeout(timer); no(new Error(`Chrome exited with ${code} before it started: ${log.slice(-400)}`)) })
+      chrome.stderr.on('data', d => {
+        log += d
+        const m = log.match(/ws:\/\/\S+/)
+        if (m) { clearTimeout(timer); ok(m[0]) }
+      })
     })
-    setTimeout(() => no(new Error(`Chrome didn't start: ${log.slice(-400)}`)), 30000)
-  })
-  const ws = new WebSocket(url)
-  await new Promise((ok, no) => { ws.onopen = ok; ws.onerror = () => no(new Error('no Chrome debugger')) })
+    ws = new WebSocket(url)
+    await new Promise((ok, no) => { ws.onopen = ok; ws.onerror = () => no(new Error('no Chrome debugger')) })
+  } catch (e) {
+    await stop()
+    throw e
+  }
   let id = 0
   const waiting = new Map(), listeners = new Set()
   ws.onmessage = e => {
@@ -68,9 +82,7 @@ export async function launch(exe = findChrome()) {
     },
     async close() {
       ws.close()
-      chrome.kill('SIGKILL')
-      await new Promise(ok => setTimeout(ok, 300))
-      rmSync(profile, { recursive: true, force: true, maxRetries: 5 })
+      await stop()
     },
   }
 }

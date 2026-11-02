@@ -7,16 +7,16 @@ export type ExampleRef = {
   id: string
   title: string
   /** One sentence. `code` in backticks. */
-  note?: string
+  note?: string | undefined
   /** center: centred cluster (default). narrow: one column, 360 wide, for fields. start: top left. fill: the whole stage. */
-  stage?: Stage
+  stage?: Stage | undefined
   /** The stage's height while it loads, and its minimum after. */
-  height?: number
-  codeOpen?: boolean
+  height?: number | undefined
+  codeOpen?: boolean | undefined
   /** Pin this example's scope, whatever the page bar says. */
-  scope?: { expression?: 'quiet' | 'balanced' | 'vivid'; theme?: 'light' | 'dark'; form?: 'phone' | 'tablet' }
+  scope?: { expression?: 'quiet' | 'balanced' | 'vivid'; theme?: 'light' | 'dark'; form?: 'phone' | 'tablet' } | undefined
   /** Show a Replay button: for toasts and entrances. */
-  replay?: boolean
+  replay?: boolean | undefined
 }
 
 export type Section =

@@ -28,7 +28,7 @@ becomes (the template and bindings as before, plus):
 ```js
 const count = _$keep(state(0), "Counter", "count:29a8d9ffc2ad4575")   // name : hash of `state(0)`
 …
-import { hot as _$hot, keep as _$keep } from "weft/hmr";
+import { hot as _$hot, keep as _$keep } from "@weft-js/core/hmr";
 if (import.meta.hot) {
   _$hot("/src/Counter.tsx", { Counter: [Counter, "eeea01f2fac753a2"] });   // file#name, source hash
   import.meta.hot.accept();
@@ -47,7 +47,7 @@ if (import.meta.hot) {
   Vite passes the update to the importers, which re-run it. The entry reloads the page, as in Solid.
 - `_$keep` is a pass-through when nothing is hot, so a module compiled with `hmr` behaves the same without Vite.
 
-## 2. What the runtime does (`weft/hmr`, dev only)
+## 2. What the runtime does (`@weft-js/core/hmr`, dev only)
 
 - `hot(file, comps)` keeps one entry per `file#name`: the latest function, its hash and a version box. It also sets
   `fn.$$h` on the new function. `component()` (dom-next.ts) checks `DEV && Comp.$$h`, so importers that still hold
@@ -67,7 +67,7 @@ if (import.meta.hot) {
 - Dev only, one more change in `insert`: a static array holding hot components (`<><A /><B /></>`) is bound
   reactively, since those components are now accessors.
 
-Production cost: **0 bytes**. Every hook is behind `DEV` and folds away; `weft/hmr` is never imported. `size.mjs`
+Production cost: **0 bytes**. Every hook is behind `DEV` and folds away; `@weft-js/core/hmr` is never imported. `size.mjs`
 reports the same bytes as before the change (runtime 5.80 KB br, v3 4.00 / 4.68 / 4.71 KB).
 
 ## 3. Measured (2026-10-29, this Mac, 1-minute load 5–8)

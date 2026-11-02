@@ -1,24 +1,26 @@
-import { emailError, uid } from '@weft/warp-core'
-import { derived, untrack } from 'weft'
+import { emailError, uid } from '@weft-js/warp-core'
+import { derived, untrack } from '@weft-js/core'
 import { Input } from '../Field'
 import { Switch } from '../Choice'
 import { AuthLogo } from './AuthScreen'
 import { FormError, StepFrame, Submit, TextLink, Title, useStepForm, type FlowForm } from './kit'
 import { PasskeyButton, SsoButtons, type SsoProvider } from './Sso'
 import '../styles'
-import '@weft/warp-core/styles/flows/auth.css'
-import '@weft/warp-core/styles/flows/sso.css'
+import '@weft-js/warp-core/styles/flows/auth.css'
+import '@weft-js/warp-core/styles/flows/sso.css'
 
+/** What the sign-in form submits. */
 export interface SignInValues { email: string; password: string; remember?: string }
 
+/** Props for SignIn. */
 export interface SignInProps extends FlowForm<SignInValues> {
-  title?: any
-  lede?: any
-  logo?: any
-  name?: any
-  submitLabel?: any
+  title?: unknown
+  lede?: unknown
+  logo?: unknown
+  name?: unknown
+  submitLabel?: unknown
   providers?: SsoProvider[]
-  onProvider?: (id: string) => unknown
+  onProvider?: ((id: string) => unknown) | undefined
   /** Shows the passkey button; run WebAuthn here. */
   onPasskey?: () => unknown
   onForgot?: () => void
@@ -58,7 +60,7 @@ export function SignIn(p: SignInProps) {
       )}
       {hasSso.value && <div data-part="divider">or with email</div>}
       <FormError ctl={ctl} actions={p.onForgot && <TextLink onClick={p.onForgot}>Reset your password</TextLink>} />
-      <Input label="Work email" name="email" type="email" autocomplete="username webauthn" inputmode="email" value={p.form?.value?.('email')} hint="" error={ctl.errors.value.email} onBlur={(e: FocusEvent) => ctl.flag('email', emailError((e.target as HTMLInputElement).value))} />
+      <Input label="Work email" name="email" type="email" autocomplete="username webauthn" inputmode="email" value={p.form?.value?.('email') as string | undefined} hint="" error={ctl.errors.value.email} onBlur={(e: FocusEvent) => ctl.flag('email', emailError((e.target as HTMLInputElement).value))} />
       <Input label="Password" name="password" type="password" autocomplete="current-password" hint="" error={ctl.errors.value.password} />
       <div data-part="row">
         <Switch size="sm" name="remember" checked={p.remember ?? true}>Keep me signed in</Switch>

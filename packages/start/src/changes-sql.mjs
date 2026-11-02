@@ -92,7 +92,7 @@ export function changeStatements(dialect, tables) {
   if (dialect === 'postgresql') return postgres(tables)
   if (dialect === 'sqlite') return sqlite(tables)
   if (dialect === 'mysql') return mysql(tables)
-  throw new Error(`no change triggers for ${dialect}`)
+  throw new Error(`no change triggers for ${String(dialect)}`)
 }
 
 /** A migration file, in drizzle-kit's format. */

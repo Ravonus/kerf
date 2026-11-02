@@ -15,6 +15,7 @@ import { native } from './native.mjs'
 
 /** Applied to every card, in the PNG and in the preview. Takumi lays out border-box by default; browsers don't. */
 export const PREFLIGHT = '*,*::before,*::after{box-sizing:border-box}'
+/** The size of a generated card. */
 export const SIZE = { width: 1200, height: 630 }
 const TYPES = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp', svg: 'image/svg+xml' }
 
@@ -30,6 +31,11 @@ const renderers = new Map() // fonts array → the renderer registered with them
  * The one seam the server uses (research 20 §4.2): HTML at `size`, drawn with `fonts`, to PNG bytes. Diagnostics (H005
  * styles, H008 images) go to `onDiagnostic`; `strict` (dev, `weft build`) throws on an error instead. Native Takumi;
  * the edge build (`@takumi-rs/wasm`) plugs in here when an edge preset needs it.
+ *
+ * @param {string} html
+ * @param {{ width?: number; height?: number }} [size]
+ * @param {{ name: string; data: Uint8Array; weight?: number; style?: 'normal' | 'italic' }[]} [fonts]
+ * @param {{ strict?: boolean; onDiagnostic?: (d: { code: string; severity: string; message: string }) => void; images?: unknown }} [options]
  */
 export async function renderCard(html, size = SIZE, fonts = [], { strict = false, onDiagnostic, images } = {}) {
   let r = renderers.get(fonts)

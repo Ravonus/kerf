@@ -1,5 +1,5 @@
-import { defineState, state } from 'weft'
-import { tabs } from 'weft/browser'
+import { defineState, state } from '@weft-js/core'
+import { tabs } from '@weft-js/core/browser'
 import { object } from '../schema'
 
 const Cart = defineState('cart', () => ({ lines: state<Record<string, number>>({}, { persist: { in: 'local', schema: { '~standard': { version: 1, vendor: 'x', validate: (value: unknown) => ({ value }) } } as any, version: 1 }, sync: 'tabs' }) }))

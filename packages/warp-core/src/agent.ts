@@ -5,19 +5,28 @@ import { place, pushLayer } from './layers'
 import { announce } from './toast'
 import { installSweep } from './sweep'
 
+/** Where a tool call stands. */
 export type ToolState = 'running' | 'done' | 'failed' | 'approval' | 'denied'
+/** Where a plan step stands. */
 export type TaskState = 'pending' | 'running' | 'done' | 'blocked'
+/** Where an answer stands, from waiting to finished. */
 export type AnswerState = 'waiting' | 'streaming' | 'approval' | 'done' | 'stopped' | 'error'
 
-export interface AgentSource { id?: string; title: string; path?: string; snippet?: string; url?: string }
-export interface AgentTool { id: string; name: string; args: string; state: ToolState; output?: string; ms?: number; exit?: number; startedAt?: number }
-export interface AgentQuestion { id: string; prompt: string; options: string[]; multiple?: boolean; free?: boolean; answer?: string | string[]; closed?: boolean }
-export interface PlanStep { id: string; title: string; state: TaskState; note?: string }
+/** Something an answer cites. */
+export interface AgentSource { id?: string | undefined; title: string; path?: string; snippet?: string; url?: string }
+/** One tool call in an answer, from its arguments to its output. */
+export interface AgentTool { id: string; name: string; args: string; state: ToolState; output?: string | undefined; ms?: number | undefined; exit?: number | undefined; startedAt?: number | undefined }
+/** A question the agent put to the user, and the answer once there is one. */
+export interface AgentQuestion { id: string; prompt: string; options: string[]; multiple?: boolean | undefined; free?: boolean | undefined; answer?: string | string[] | undefined; closed?: boolean }
+/** One step of the agent's plan. */
+export interface PlanStep { id: string; title: string; state: TaskState; note?: string | undefined }
+/** One piece of an answer, in the order it arrived. */
 export type AnswerBlock =
-  | { kind: 'reasoning'; id: string; text: string; streaming: boolean; seconds?: number; startedAt?: number }
+  | { kind: 'reasoning'; id: string; text: string; streaming: boolean; seconds?: number | undefined; startedAt?: number | undefined }
   | { kind: 'text'; id: string; text: string }
   | { kind: 'tool'; id: string }
   | { kind: 'question'; id: string; question: AgentQuestion }
+/** An agent's answer as the events have folded it so far. */
 export interface Answer { state: AnswerState; blocks: AnswerBlock[]; tools: AgentTool[]; sources: AgentSource[]; plan: PlanStep[]; error?: string }
 
 /** 07 §1.7. `at` is a timestamp in ms, kept in the event so a replay computes the same durations. */
@@ -26,16 +35,17 @@ export type AgentEvent =
   | { kind: 'text'; text: string; at?: number }
   /** A tool starts; the same id again (after an approval) runs it. */
   | { kind: 'tool'; id: string; name?: string; args?: string; at?: number }
-  | { kind: 'tool-result'; id: string; output?: string; exit?: number; failed?: boolean; denied?: boolean; ms?: number; at?: number }
+  | { kind: 'tool-result'; id: string; output?: string | undefined; exit?: number | undefined; failed?: boolean; denied?: boolean; ms?: number | undefined; at?: number }
   | { kind: 'approval'; id: string; name?: string; args?: string; at?: number }
   /** A question asked; the same id with `answer` closes it. */
-  | { kind: 'question'; id: string; prompt?: string; options?: string[]; multiple?: boolean; free?: boolean; answer?: string | string[]; at?: number }
+  | { kind: 'question'; id: string; prompt?: string; options?: string[]; multiple?: boolean | undefined; free?: boolean | undefined; answer?: string | string[] | undefined; at?: number }
   | ({ kind: 'source'; at?: number } & AgentSource)
   /** The whole plan (`steps`), or one step's change (`id`, `state`, `note`). */
-  | { kind: 'plan'; steps?: PlanStep[]; id?: string; state?: TaskState; note?: string; at?: number }
+  | { kind: 'plan'; steps?: PlanStep[]; id?: string | undefined; state?: TaskState | undefined; note?: string | undefined; at?: number }
   | { kind: 'done'; stopped?: boolean; at?: number }
   | { kind: 'error'; message: string; at?: number }
 
+/** An answer before its first event. */
 export const emptyAnswer = (): Answer => ({ state: 'waiting', blocks: [], tools: [], sources: [], plan: [] })
 
 const seal = (b: AnswerBlock, at?: number): AnswerBlock => {
@@ -128,7 +138,9 @@ export function foldAnswer(a: AgentEvent[] | Answer | undefined, e?: AgentEvent)
 
 // ---- text: a minimal safe default until warp has a Markdown component ----------------------------------------------
 
+/** A block of answer text once parsed. */
 export type TextBlock = { kind: 'p'; at: number; text: string } | { kind: 'ul'; at: number; items: { at: number; text: string }[] } | { kind: 'code'; at: number; lang: string; text: string; open: boolean }
+/** A run of inline answer text: plain, code, or a citation number. */
 export type Inline = { kind: 'text' | 'code'; at: number; text: string } | { kind: 'cite'; at: number; n: number }
 
 /** Paragraphs, `- ` lists and code fences. A fence with no close yet is already a code block (07 §1.3). */
@@ -136,13 +148,13 @@ export function parseText(text: string): TextBlock[] {
   const out: TextBlock[] = []
   const lines = text.split('\n')
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = lines[i]!
     const fence = /^```(\S*)/.exec(line)
     if (fence) {
       const body: string[] = []
       let j = i + 1
-      while (j < lines.length && !/^```\s*$/.test(lines[j])) body.push(lines[j++])
-      out.push({ kind: 'code', at: i, lang: fence[1], text: body.join('\n'), open: j >= lines.length })
+      while (j < lines.length && !/^```\s*$/.test(lines[j]!)) body.push(lines[j++]!)
+      out.push({ kind: 'code', at: i, lang: fence[1]!, text: body.join('\n'), open: j >= lines.length })
       i = j
     } else if (/^[-*] /.test(line)) {
       const last = out.at(-1)
@@ -151,7 +163,7 @@ export function parseText(text: string): TextBlock[] {
       else out.push({ kind: 'ul', at: i, items: [item] })
     } else if (line.trim()) {
       const last = out.at(-1)
-      if (last?.kind === 'p' && lines[i - 1].trim()) last.text += `\n${line}`
+      if (last?.kind === 'p' && lines[i - 1]!.trim()) last.text += `\n${line}`
       else out.push({ kind: 'p', at: i, text: line })
     }
   }
@@ -177,8 +189,11 @@ export const answerText = (a: Answer) => a.blocks.flatMap(b => (b.kind === 'text
 
 // ---- small rules -----------------------------------------------------------------------------------------------------
 
+/** Milliseconds as seconds, to a tenth. */
 export const formatSeconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`
+/** Seconds as m:ss. */
 export const formatClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`
+/** A token count, shortened to k or M. */
 export const formatTokens = (n: number) => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n))
 
 /** What a ToolCall says: the short status at its end, and the words only a screen reader gets before it. */
@@ -197,14 +212,14 @@ export const contextLevel = (ratio: number) => (ratio >= 0.95 ? 'full' : ratio >
 export function argsDiff(before: string, after: string): string[] {
   if (before === after) return []
   const a = before.split('\n'), b = after.split('\n')
-  const lcs = a.map(() => new Array<number>(b.length + 1).fill(0))
-  lcs.push(new Array<number>(b.length + 1).fill(0))
-  for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1])
+  const lcs = a.map(() => Array<number>(b.length + 1).fill(0))
+  lcs.push(Array<number>(b.length + 1).fill(0))
+  for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) lcs[i]![j] = a[i] === b[j] ? lcs[i + 1]![j + 1]! + 1 : Math.max(lcs[i + 1]![j]!, lcs[i]![j + 1]!)
   const out: string[] = []
   let i = 0, j = 0
   while (i < a.length || j < b.length) {
     if (i < a.length && j < b.length && a[i] === b[j]) { i++; j++ }
-    else if (j >= b.length || (i < a.length && lcs[i + 1][j] >= lcs[i][j + 1])) out.push(`- ${a[i++]}`)
+    else if (j >= b.length || (i < a.length && lcs[i + 1]![j]! >= lcs[i]![j + 1]!)) out.push(`- ${a[i++]}`)
     else out.push(`+ ${b[j++]}`)
   }
   return out
@@ -213,8 +228,8 @@ export function argsDiff(before: string, after: string): string[] {
 /** The open `/` or `@` token at the caret: `/` only at the start of the message, `@` at the start of a word. */
 export function suggestQuery(text: string, caret: number) {
   const m = /(^|\s)([/@])([^\s/@]*)$/.exec(text.slice(0, caret))
-  if (!m || (m[2] === '/' && m.index + m[1].length !== 0)) return null
-  return { trigger: m[2] as '/' | '@', query: m[3].toLowerCase(), start: m.index + m[1].length }
+  if (!m || (m[2] === '/' && m.index + m[1]!.length !== 0)) return null
+  return { trigger: m[2] as '/' | '@', query: m[3]!.toLowerCase(), start: m.index + m[1]!.length }
 }
 
 /** Replace the token from `start` to the caret with `value` plus a space. */
@@ -225,8 +240,10 @@ export function applySuggest(text: string, start: number, caret: number, value: 
 
 // ---- trace ---------------------------------------------------------------------------------------------------------
 
-export interface TraceSpan { id: string; name: string; start: number; ms: number; tokens?: number; cost?: number; children?: TraceSpan[] }
-export interface TraceRow { id: string; name: string; ms: number; tokens?: number; cost?: number; level: number; pos: number; size: number; parent?: string; branch: boolean; open: boolean; x: number; w: number; color: number }
+/** One span of an agent run, with its children. */
+export interface TraceSpan { id: string; name: string; start: number; ms: number; tokens?: number | undefined; cost?: number | undefined; children?: TraceSpan[] }
+/** A span flattened for the tree grid, carrying its level and place among its siblings. */
+export interface TraceRow { id: string; name: string; ms: number; tokens?: number | undefined; cost?: number | undefined; level: number; pos: number; size: number; parent?: string | undefined; branch: boolean; open: boolean; x: number; w: number; color: number }
 
 /** The visible rows of a span tree in order, on one time axis: x and w are fractions of the whole run. */
 export function traceRows(spans: TraceSpan[], collapsed: ReadonlySet<string> = new Set()): TraceRow[] {
@@ -246,22 +263,24 @@ export function traceRows(spans: TraceSpan[], collapsed: ReadonlySet<string> = n
   return rows
 }
 
+/** A span's time, tokens and cost as one line. */
 export const traceSummary = (r: Pick<TraceRow, 'ms' | 'tokens' | 'cost'>) =>
   [formatSeconds(r.ms), r.tokens !== undefined ? `${formatTokens(r.tokens)} tok` : undefined, r.cost !== undefined ? `$${r.cost.toFixed(3)}` : undefined].filter(Boolean).join(' · ')
 
 /** APG treegrid keys over visible rows: which row to focus, or which branch to toggle. */
-export function traceKey(key: string, rows: TraceRow[], at: number, rtl = false): { focus?: string; toggle?: string } | null {
-  const row = rows[at]
+export function traceKey(key: string, rows: TraceRow[], at: number, rtl = false): { focus?: string | undefined; toggle?: string } | null {
+  const row = rows[at]!
   const [open, close] = rtl ? ['ArrowLeft', 'ArrowRight'] : ['ArrowRight', 'ArrowLeft']
   if (key === 'Enter' || key === ' ') return row.branch ? { toggle: row.id } : {}
   if (key === open) return row.branch && !row.open ? { toggle: row.id } : row.branch ? { focus: rows[at + 1]?.id } : {}
   if (key === close) return row.branch && row.open ? { toggle: row.id } : row.parent ? { focus: row.parent } : {}
   const to = nextIndex(key, at, rows.length, { orientation: 'vertical' })
-  return to < 0 ? null : { focus: rows[to].id }
+  return to < 0 ? null : { focus: rows[to]!.id }
 }
 
 // ---- actions ---------------------------------------------------------------------------------------------------------
 
+/** Options for sticking to the bottom: how near counts, and who hears when the reader moves away. */
 export interface StickOptions { threshold?: number; onAway(away: boolean): void }
 
 /**
@@ -288,6 +307,7 @@ export function stick(el: HTMLElement, opts: StickOptions) {
   }
 }
 
+/** Options for a citation link: the panel it opens, and who hears when it does. */
 export interface CiteOptions { panel: HTMLElement; onOpen(open: boolean): void }
 
 /** The preview of a citation (07 §1.3): opens on hover and keyboard focus, stays while the pointer or focus is in it. */
@@ -317,11 +337,11 @@ export function citePreview(link: HTMLElement, opts: CiteOptions) {
   const enter = (e: PointerEvent) => { if (e.pointerType !== 'touch') later(show, 250) }
   const focus = () => { if (link.matches(':focus-visible')) show() }
   const out = (e: FocusEvent) => { if (!inside(e.relatedTarget)) hide() }
-  const on: [EventTarget, string, (e: any) => void][] = [[link, 'pointerenter', enter], [link, 'pointerleave', leave], [o.panel, 'pointerleave', leave], [link, 'focusin', focus], [link, 'focusout', out], [o.panel, 'focusout', out], [link, 'click', hide]]
-  for (const [t, n, f] of on) t.addEventListener(n, f)
+  const on: [EventTarget, string, (e: never) => void][] = [[link, 'pointerenter', enter], [link, 'pointerleave', leave], [o.panel, 'pointerleave', leave], [link, 'focusin', focus], [link, 'focusout', out], [o.panel, 'focusout', out], [link, 'click', hide]]
+  for (const [t, n, f] of on) t.addEventListener(n, f as EventListener)
   return {
     update(next: CiteOptions) { o = next },
-    destroy() { for (const [t, n, f] of on) t.removeEventListener(n, f); clearTimeout(timer); remove?.() },
+    destroy() { for (const [t, n, f] of on) t.removeEventListener(n, f as EventListener); clearTimeout(timer); remove?.() },
   }
 }
 
@@ -352,15 +372,18 @@ export function speechWave(el: HTMLElement, _level?: number) {
   const push = (v: number) => {
     values.pop()
     values.unshift(v)
-    bars.forEach((b, i) => b.style.setProperty('--a', values[i].toFixed(2)))
+    bars.forEach((b, i) => b.style.setProperty('--a', values[i]!.toFixed(2)))
   }
   return { update: push, destroy() {} }
 }
 
 // ---- dictation: the browser's speech recognition behind SpeechInput ---------------------------------------------------
 
+/** What dictation is doing. */
 export type DictationState = 'idle' | 'listening' | 'blocked' | 'unsupported'
+/** What dictation reports: its state, the words so far, and the mic level. */
 export interface DictationEvents { onState(s: DictationState): void; onTranscript(final: string, interim: string): void; onLevel(level: number): void }
+/** Dictation's controls. */
 export interface DictationEngine { start(mic?: string): void; stop(): void }
 
 /** The audio inputs the browser will name (labels are empty until the mic has been allowed once). */
@@ -369,16 +392,28 @@ export async function listMics(win: Window) {
   return all.filter(d => d.kind === 'audioinput' && d.deviceId).map(d => ({ value: d.deviceId, label: d.label || 'Microphone' }))
 }
 
+/** The Web Speech recogniser, which the DOM types don't carry: only what dictation touches. */
+export interface Recognizer {
+  continuous: boolean
+  interimResults: boolean
+  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null
+  onerror: ((e: { error: string }) => void) | null
+  onend: (() => void) | null
+  start(): void
+  stop(): void
+  abort?(): void
+}
+
 /** Web Speech for words, a mic stream and an analyser for the level. Blocked and unsupported are states, not throws. */
-export function dictation(win: Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any; AudioContext?: any }, on: DictationEvents): DictationEngine {
-  let rec: any
+export function dictation(win: Window & { SpeechRecognition?: new () => Recognizer; webkitSpeechRecognition?: new () => Recognizer; AudioContext?: typeof AudioContext }, on: DictationEvents): DictationEngine {
+  let rec: Recognizer | undefined
   let stream: MediaStream | undefined
-  let audio: any
+  let audio: AudioContext | undefined
   let raf = 0
   const release = () => {
     win.cancelAnimationFrame(raf)
     stream?.getTracks().forEach(t => t.stop())
-    audio?.close?.()
+    void audio?.close?.()
     stream = audio = undefined
     on.onLevel(0)
   }
@@ -392,7 +427,7 @@ export function dictation(win: Window & { SpeechRecognition?: any; webkitSpeechR
     const buf = new Uint8Array(an.fftSize)
     const tick = () => {
       an.getByteTimeDomainData(buf)
-      on.onLevel(Math.min(1, Math.max(...buf.map((v: number) => Math.abs(v - 128))) / 64))
+      on.onLevel(Math.min(1, Math.max(...buf.map(v => Math.abs(v - 128))) / 64))
       raf = win.requestAnimationFrame(tick)
     }
     tick()
@@ -405,16 +440,16 @@ export function dictation(win: Window & { SpeechRecognition?: any; webkitSpeechR
       rec = new Speech()
       rec.continuous = true
       rec.interimResults = true
-      rec.onresult = (e: any) => {
+      rec.onresult = e => {
         let interim = ''
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const r = e.results[i]
-          if (r.isFinal) final += r[0].transcript
-          else interim += r[0].transcript
+          const r = e.results[i]!
+          if (r.isFinal) final += r[0]!.transcript
+          else interim += r[0]!.transcript
         }
         on.onTranscript(final, interim)
       }
-      rec.onerror = (e: any) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { rec = undefined; release(); on.onState('blocked') } }
+      rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { rec = undefined; release(); on.onState('blocked') } }
       rec.onend = () => { if (rec) { rec = undefined; release(); on.onState('idle') } }
       rec.start()
       on.onState('listening')

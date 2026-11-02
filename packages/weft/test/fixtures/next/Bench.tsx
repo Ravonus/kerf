@@ -1,5 +1,5 @@
 // The js-framework-benchmark entry (~/work/jfb/frameworks/keyed/weft/src/main.tsx) without its render call.
-import { state, type State } from 'weft'
+import { state, type State } from '@weft-js/core'
 
 const adjectives = ["pretty", "large", "big", "small", "tall", "short", "long", "handsome", "plain", "quaint", "clean", "elegant", "easy", "angry", "crazy", "helpful", "mushy", "odd", "unsightly", "adorable", "important", "inexpensive", "cheap", "expensive", "fancy"] // prettier-ignore
 const colors = ["red", "yellow", "blue", "green", "pink", "brown", "purple", "brown", "white", "black", "orange"] // prettier-ignore
@@ -35,15 +35,15 @@ export function Main() {
   const add = () => (data.value = [...data.value, ...buildData(1_000)])
   const update = () => {
     const d = data.value
-    for (let i = 0; i < d.length; i += 10) d[i].label.value += ' !!!'
+    for (let i = 0; i < d.length; i += 10) d[i]!.label.value += ' !!!'
   }
   const clear = () => (data.value = [])
   const swapRows = () => {
     const list = data.value.slice()
     if (list.length > 998) {
       const item = list[1]
-      list[1] = list[998]
-      list[998] = item
+      list[1] = list[998]!
+      list[998] = item!
       data.value = list
     }
   }

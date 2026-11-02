@@ -21,16 +21,16 @@ function app(ui, options = {}) {
   const dir = join(tmp, `app-${ui}`)
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { ui, ...options })
-  const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft/cli': 1 })
-  for (const name of deps.filter(d => /^(weft$|@weft\/)/.test(d))) {
-    mkdirSync(join(dir, 'node_modules', '@weft'), { recursive: true })
-    symlinkSync(join(pkgs, name.replace('@weft/', '')), join(dir, 'node_modules', name), 'dir')
+  const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft-js/cli': 1 })
+  for (const name of deps.filter(d => d.startsWith('@weft-js/'))) {
+    mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
+    symlinkSync(join(pkgs, name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', '')), join(dir, 'node_modules', name), 'dir')
   }
   return dir
 }
 
 describe.each([
-  ['warp', /data-scope="surface"[^>]*><span[^>]*data-part="eyebrow">weft \+ warp<\/span><span[^>]*data-part="title">Welcome to App Warp</, /<button[^>]*data-scope="button">/],
+  ['warp', /data-scope="surface"[^>]*><span[^>]*data-part="eyebrow">weft \+ warp<\/span><span[^>]*data-part="title">Welcome to App Warp</, /<button[^>]*data-scope="button"[^>]*>/],
   ['headless', /<section[^>]*class="card"><h1>Welcome to App Headless<\/h1>/, /<button type="button">Clicked <!--\[-->0<!--\]--> times/],
   ['none', /<section[^>]*class="card"><h1>Welcome to App None<\/h1>/, /<button type="button">Clicked <!--\[-->0<!--\]--> times/],
 ])('--ui %s', (ui, card, button) => {
@@ -104,13 +104,13 @@ it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async 
 
 it('the template: warp() only for warp, a stylesheet otherwise, and only weft scripts', () => {
   const warp = template({ ui: 'warp', name: 'shop' })
-  expect(warp['weft.config.ts']).toContain("import { warp } from '@weft/warp/plugin'")
+  expect(warp['weft.config.ts']).toContain("import { warp } from '@weft-js/warp/plugin'")
   expect(warp['weft.config.ts']).toContain('plugins: [warp()]')
   expect(warp['src/app.css']).toBeUndefined()
   expect(JSON.parse(warp['package.json']).scripts).toEqual({ dev: 'weft dev', build: 'weft build', check: 'weft check', typecheck: 'weft tsc', start: 'weft start' })
   const headless = template({ ui: 'headless' })
-  expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual(['weft', '@weft/start', '@weft/warp-core'])
-  expect(headless['src/routes/_layout.tsx']).toContain("import '@weft/warp-core/styles/warp.css'")
+  expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual(['@weft-js/core', '@weft-js/start', '@weft-js/warp-core'])
+  expect(headless['src/routes/_layout.tsx']).toContain("import '@weft-js/warp-core/styles/warp.css'")
   expect(template({ ui: 'none' })['weft.config.ts']).not.toContain('plugins')
   expect(() => template({ ui: 'bootstrap' })).toThrow('--ui must be one of warp, headless, tailwind, none')
 })
@@ -123,7 +123,7 @@ describe('--db, --auth, --runtime', () => {
     expect(Object.keys(pkg(t).dependencies)).toEqual(expect.arrayContaining(['drizzle-orm', 'drizzle-zod', 'zod']))
     expect(pkg(t).dependencies.postgres).toBeUndefined()
     expect(pkg(t).scripts['db:generate']).toBe('weft db generate')
-    expect(t['src/db/index.server.ts']).toContain("from '@weft/start/db/sqlite'")
+    expect(t['src/db/index.server.ts']).toContain("from '@weft-js/start/db/sqlite'")
     expect(t['src/db/schema.ts']).toContain('sqliteTable')
     expect(t['src/server/todos.ts']).toContain('schemasOf')
     expect(t['src/server/todos.ts']).not.toContain("auth: 'user'")
@@ -133,7 +133,7 @@ describe('--db, --auth, --runtime', () => {
   it('--db postgres: the postgres driver, its schema, a URL to fill in', () => {
     const t = template({ ui: 'none', db: 'postgres' })
     expect(pkg(t).dependencies.postgres).toBeDefined()
-    expect(t['src/db/index.server.ts']).toContain("from '@weft/start/db/postgres'")
+    expect(t['src/db/index.server.ts']).toContain("from '@weft-js/start/db/postgres'")
     expect(t['src/db/schema.ts']).toContain('pgTable')
     expect(t['.env.example']).toContain('DATABASE_URL=postgres')
   })
@@ -173,15 +173,15 @@ it('--ui tailwind writes what `weft add tailwind` writes', async () => {
   expect(JSON.parse(files['package.json']).devDependencies).toMatchObject(packages)
   expect(files['src/routes/index.tsx']).toContain('rounded-lg')
   expect(files['src/routes/_layout.tsx']).toContain('<nav class="flex gap-4 p-4">')
-  expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('@weft/warp')
+  expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('@weft-js/warp')
 })
 
 describe('--layer', () => {
   it.each([
-    ['native', 'mysql', 'migrations/0000_todos.sql', '@weft/plugin-db-native/mysql', 'mysql2'],
+    ['native', 'mysql', 'migrations/0000_todos.sql', '@weft-js/db/plugin-native/mysql', 'mysql2'],
     ['prisma', 'mysql', 'prisma/schema.prisma', '@prisma/adapter-mariadb', '@prisma/client'],
     ['prisma', 'sqlite', 'prisma/schema.prisma', '@prisma/adapter-libsql', '@prisma/client'],
-    ['drizzle', 'mysql', 'drizzle.config.ts', '@weft/start/db/mysql', 'mysql2'],
+    ['drizzle', 'mysql', 'drizzle.config.ts', '@weft-js/start/db/mysql', 'mysql2'],
   ])('%s on %s has its files, driver and plugin', (layer, db, file, entry, dep) => {
     const files = template({ db, layer })
     expect(files).toHaveProperty([file])

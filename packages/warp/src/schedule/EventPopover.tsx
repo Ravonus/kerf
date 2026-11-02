@@ -1,29 +1,30 @@
-import { ClockIcon, InfoIcon, PinIcon, RepeatIcon, UsersIcon, VideoIcon } from '@weft/icons'
-import { clockRange, dateOf, fmt, longDuration, popover, ruleSentence, parseRule, slotOf, type Align, type CalEvent, type Side } from '@weft/warp-core'
-import { derived, type State } from 'weft'
+import { ClockIcon, InfoIcon, PinIcon, RepeatIcon, UsersIcon, VideoIcon } from '@weft-js/warp-icons'
+import { clockRange, dateOf, fmt, longDuration, popover, ruleSentence, parseRule, slotOf, type Align, type CalEvent, type Side } from '@weft-js/warp-core'
+import { derived, type State } from '@weft-js/core'
 import { Avatar } from '../parts'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/components/popover.css'
-import '@weft/warp-core/styles/app/avatar-stack.css'
-import '@weft/warp-core/styles/app/event-card.css'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/components/popover.css'
+import '@weft-js/warp-core/styles/app/avatar-stack.css'
+import '@weft-js/warp-core/styles/app/event-card.css'
 
+/** Props for EventPopover. */
 export type EventPopoverProps = {
   event: CalEvent | null
   open: State<boolean>
   /** The element it hangs from; focus returns there. */
   anchor: () => HTMLElement | undefined
   /** "New York (EDT)". */
-  zoneLabel?: string
-  locale?: string
+  zoneLabel?: string | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
-  side?: Side
-  align?: Align
-  onEdit?: (e: CalEvent) => void
-  onDelete?: (e: CalEvent) => void
-  onJoin?: (e: CalEvent) => void
+  hourCycle?: string | undefined
+  side?: Side | undefined
+  align?: Align | undefined
+  onEdit?: ((e: CalEvent) => void) | undefined
+  onDelete?: ((e: CalEvent) => void) | undefined
+  onJoin?: ((e: CalEvent) => void) | undefined
 }
 
 /** The event card (07 §2.1, `#ev-pop`): a non-modal dialog on the event; Escape returns to it. */
@@ -40,7 +41,7 @@ export function EventPopover(p: EventPopoverProps) {
   use(popover, () => panel, () => ({ open: p.open.value, trigger: p.anchor()!, side: p.side ?? 'right', align: p.align ?? 'start', onClose: close }))
   const act = (f?: (e: CalEvent) => void) => () => { const e = p.event!; close(); f?.(e) }
   return (
-    <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Event details">
+    <div ref={n => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Event details">
       {p.event && (
         <div data-scope="event-card" data-cal={p.event.cal ?? 1}>
           <h4 data-part="title">{p.event.title}</h4>

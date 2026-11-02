@@ -13,6 +13,7 @@ export const lockFile = '.weft/plugins.lock.json'
 
 const refused = message => Object.assign(new Error(message), { code: 'E_TRUST' })
 const posix = p => p.split(sep).join('/')
+/** @param {string[]} list */
 const sorted = list => [...new Set(list)].sort()
 
 /** Permissions as flat strings, one per grant, so a lock diff reads line by line: `fs.read:fonts/**`, `native`. */
@@ -34,10 +35,13 @@ function readLock(root) {
   }
 }
 
-/** Where a plugin is installed: the nearest `node_modules/<name>`, through its symlink. Null for one defined in the config. */
+/** The package a plugin name is in: `@weft-js/db/mongo` is a subpath of `@weft-js/db`. */
+export const packageOf = name => name.split('/').slice(0, name.startsWith('@') ? 2 : 1).join('/')
+
+/** Where a plugin is installed: the nearest `node_modules/<package>`, through its symlink. Null for one defined in the config. */
 function packageDir(root, name) {
   for (let dir = root; ; dir = dirname(dir)) {
-    const at = join(dir, 'node_modules', name)
+    const at = join(dir, 'node_modules', packageOf(name))
     if (existsSync(join(at, 'package.json'))) return realpathSync(at)
     if (dirname(dir) === dir) return null
   }
@@ -99,8 +103,8 @@ function scanFile(text, file) {
 }
 
 const EXTENSIONS = ['', '.mjs', '.js', '.cjs', '.ts', '.tsx', '.mts', '/index.mjs', '/index.js', '/index.ts']
-const source = /\.(?:[cm]?[jt]s|[jt]sx)$/
-const onDisk = path => EXTENSIONS.map(e => path + e).find(p => source.test(p) && existsSync(p)) ?? null
+const sourceFile = /\.(?:[cm]?[jt]s|[jt]sx)$/
+const onDisk = path => EXTENSIONS.map(e => path + e).find(p => sourceFile.test(p) && existsSync(p)) ?? null
 
 /** A package export's file for this runtime. */
 function exportTarget(value) {
@@ -122,7 +126,9 @@ function entryFile(dir, pkg, subpath) {
  */
 export function audit(root, dir, contribution) {
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
-  const roots = [entryFile(dir, pkg, './plugin') ?? entryFile(dir, pkg, '.')]
+  // A package can hold several plugins, `<package>/<sub>/plugin`, and each answers for its own files.
+  const sub = contribution.name?.startsWith(`${pkg.name}/`) ? contribution.name.slice(pkg.name.length) : ''
+  const roots = [entryFile(dir, pkg, `.${sub}/plugin`) ?? entryFile(dir, pkg, `.${sub}`)]
   for (const ref of contribution.manifest.provides ?? []) {
     for (const [side, { module }] of Object.entries(ref.sides ?? {})) {
       if (side === 'client') continue
@@ -133,6 +139,7 @@ export function audit(root, dir, contribution) {
   const seen = new Set()
   const queue = roots.filter(f => f && !relative(dir, f).startsWith('..'))
   const uses = []
+  /** @type {Set<string>} */
   const dependencies = new Set()
   while (queue.length) {
     const file = queue.pop()

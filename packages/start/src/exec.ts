@@ -1,6 +1,6 @@
 // The server's executor for queries and mutations (research 27 §3–§4). No runtime imports beyond data.ts, so the
 // same code runs in the request handler (server.tsx, which finds the scope through AsyncLocalStorage) and in
-// weft/test's in-process fake transport.
+// @weft-js/core/test's in-process fake transport.
 //
 //   request scope  key → entry (promise, then value and tags): a query runs at most once per request; loaders, every
 //                  render pass of a streamed page and a mutation's refreshes share it. Its resolved entries are the
@@ -9,7 +9,7 @@
 //                  bumps the versions of the tags it invalidates).
 
 import { shapeTree } from './shape.mjs'
-import type { MediaAsset } from 'weft/media'
+import type { MediaAsset } from '@weft-js/core/media'
 import type { ServerExtension } from './extension'
 import { FnError, enter, fns, isRedirect, keyOf, runtime, StartError, type Answer, type Context, type Fn, type Life, type SchemaIssue, type Wire } from './data'
 import { unavailable } from './db/core'
@@ -47,9 +47,9 @@ export interface Scope {
 
 export interface Touched { read: Set<string>; write: Set<string> }
 
-export interface FormFailure { id: string; key?: string; values: Record<string, unknown>; errors: Record<string, string>; message?: string; status: number }
+export interface FormFailure { id: string; key?: string; values: Record<string, unknown>; errors: Record<string, string>; message?: string | undefined; status: number }
 
-/** The `media.server@1` provider (`@weft/plugin-media/server`, research 29 §6). */
+/** The `media.server@1` provider (`@weft-js/plugin-media/server`, research 29 §6). */
 export interface MediaServer {
   ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
   serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{ bytes: Uint8Array; type: string; width: number; format: string; negotiated: boolean; temporary?: boolean } | null>
@@ -57,15 +57,15 @@ export interface MediaServer {
 
 export interface ScopeOptions {
   /** The app's context (`src/context.server.ts`). */
-  context?: (args: { request: Request }) => object | Promise<object>
-  store?: Store
-  /** Tests (weft/test `net.handle`): a replacement `run` by function id. */
-  handlers?: Map<string, (input: any, ctx: any) => unknown>
-  onDiagnostic?: (d: { code: string; severity: string; message: string }) => void
-  dev?: boolean
-  media?: () => Promise<MediaServer> | undefined
+  context?: ((args: { request: Request }) => object | Promise<object>) | undefined
+  store?: Store | undefined
+  /** Tests (@weft-js/core/test `net.handle`): a replacement `run` by function id. */
+  handlers?: Map<string, (input: unknown, ctx: Context) => unknown>
+  onDiagnostic?: ((d: { code: string; severity: string; message: string }) => void) | undefined
+  dev?: boolean | undefined
+  media?: (() => Promise<MediaServer> | undefined) | undefined
   /** What plugins add through `server.extension` (extension.ts). */
-  extensions?: ServerExtension[]
+  extensions?: ServerExtension[] | undefined
 }
 
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
@@ -73,6 +73,7 @@ export function createScope(request: Request, options: ScopeOptions = {}): Scope
   let ctx: Promise<Context> | undefined
   return {
     request, entries: new Map(), invalidated: new Set(), headers, options,
+    // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- needed where a plugin such as pay adds required fields to Context
     ctx: () => (ctx ??= Promise.resolve().then(() => options.context?.({ request }) ?? {}).then(app => extended({ ...app, request, response: { headers }, media: mediaApi(options) } as Context, options), e => { throw dbError(e) })),
   }
 }
@@ -87,12 +88,13 @@ function extended(ctx: Context, options: ScopeOptions): Context {
 const mediaApi = (options: ScopeOptions): Context['media'] => ({
   async ingest(file, { name } = {}) {
     const server = await options.media?.()
-    if (!server) throw new StartError('M017', '`ctx.media` needs a `media.server` provider', 'add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts', { status: 500 })
+    if (!server) throw new StartError('M017', '`ctx.media` needs a `media.server` provider', 'add `media()` from `@weft-js/plugin-media` to `plugins` in weft.config.ts', { status: 500 })
     const bytes = file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
     try {
       return await server.ingest(bytes, { name: name ?? (file as File).name })
-    } catch (e: any) {
-      throw e?.code ? new StartError(e.code, e.message, undefined, { status: 422 }) : e
+    } catch (e) {
+      const { code, message } = e as Error & { code?: string }
+      throw code ? new StartError(code, message, undefined, { status: 422 }) : e
     }
   },
 })
@@ -123,7 +125,7 @@ export function memoryStore(): Store {
   }
 }
 
-const LIFE: Record<string, number> = { seconds: 1, minutes: 60, hours: 3600, days: 86_400, max: Infinity }
+const LIFE: Record<Exclude<Life, number>, number> = { seconds: 1, minutes: 60, hours: 3600, days: 86_400, max: Infinity }
 const seconds = (life: Life = 'minutes') => (typeof life === 'number' ? life : LIFE[life])
 export const defaultStore = memoryStore()
 const storeOf = (scope: Scope) => scope.options.store ?? defaultStore
@@ -134,7 +136,7 @@ const storeOf = (scope: Scope) => scope.options.store ?? defaultStore
 export function readQuery(scope: Scope, fn: Fn, input: unknown): unknown {
   const e = fetchEntry(scope, fn, input)
   if (!e.done) return e.p.then(x => x.v)
-  if (e.e !== undefined) throw e.e
+  if (e.e !== undefined) throw e.e as Error
   return e.v
 }
 
@@ -155,9 +157,9 @@ export const fetchQuery = (scope: Scope, fn: Fn, input: unknown): Promise<ScopeE
 function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
   if (fn.kind !== 'query') throw new StartError('Q009', `\`${fn.$id}\` is a mutation, not a query`, 'call it as a function, from a handler')
   const key = keyOf(fn.$id, input)
-  let e = scope.entries.get(key)
+  const e = scope.entries.get(key)
   if (e) return e
-  const entry: ScopeEntry = { id: fn.$id, input, tags: [], p: undefined as any }
+  const entry: ScopeEntry = { id: fn.$id, input, tags: [], p: undefined as never }
   entry.p = (async () => {
     const valid = await validate(fn, input)
     entry.tags = await tagsOf(fn, valid, scope)
@@ -166,7 +168,7 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     // Checked before the shared cache, so a value stored for one user is never answered to no one.
     const early = fn.def.auth || cached?.scope ? await scope.ctx() : undefined
     if (early) guard(fn, cached ? shared(early, fn, scope) : early)
-    const stored = cached?.scope ? `${key}@${(early as any).user?.id ?? ''}` : key
+    const stored = cached?.scope ? `${key}@${String((early as { user?: { id?: string | number } } | undefined)?.user?.id ?? '')}` : key
     if (cached) {
       const hit = await store.get(stored)
       if (hit && hit.expires > Date.now() && same(hit.versions, await store.versions(hit.tags))) return hit.v
@@ -253,6 +255,7 @@ async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?
   } catch (e) {
     throw dbError(e)
   }
+  // oxlint-disable-next-line typescript/only-throw-error -- a returned redirect takes the same path as a thrown one
   if (isRedirect(v)) throw v
   return v
 }
@@ -261,21 +264,26 @@ async function call(scope: Scope, fn: Fn, input: unknown, ctx: Context, touched?
 export function guard(fn: Fn, ctx: Context) {
   if (fn.def.auth !== 'user') return
   if (!('user' in ctx)) throw new StartError('A003', `\`${fn.$id}\` has \`auth: 'user'\`, but \`ctx\` has no \`user\``, 'spread `session(auth, request)` into what `src/context.server.ts` returns', { status: 500 })
-  if (!(ctx as any).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
+  if (!(ctx as { user?: unknown }).user) throw new StartError('A002', `\`${fn.$id}\` needs a signed-in user`, 'sign in first, or guard the route with `redirect()` in its `load`', { status: 401 })
 }
 
 const DOWN = /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|CONNECT_TIMEOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|PROTOCOL_CONNECTION_LOST|P100[12])$/
 
+interface Failure { cause?: Failure | null; answer?: { message?: string; code?: string; status: number }; code?: string | number; message?: string }
+
 /** A dropped connection is Q016; a missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
 export function dbError(e: unknown): unknown {
-  const cause = (e as any)?.cause ?? e
-  if ((e as any)?.answer) return new FnError((e as any).answer, (e as any).answer.status)
+  const failure = e as Failure | null | undefined
+  const cause = failure?.cause ?? failure
+  if (failure?.answer) return new FnError(failure.answer, failure.answer.status)
   if (cause instanceof StartError) return cause // Drizzle wraps what a driver throws, the gate's Q016 included
-  if (!(e instanceof StartError) && DOWN.test(`${cause?.code ?? (e as any)?.code ?? ''}`)) return unavailable(e)
-  const m = `${cause?.message ?? ''}`
+  if (!(e instanceof StartError) && DOWN.test(String(cause?.code ?? failure?.code ?? ''))) return unavailable(e)
+  const m = cause?.message ?? ''
   if (e instanceof StartError || !(/no such (table|column)|has no column named/.test(m) || cause?.code === '42P01' || cause?.code === '42703')) return e
   return new StartError('Q014', `the database doesn't match the schema: ${m}`, 'run `weft db generate`, then reload (new migrations apply on the next request)', { status: 500 })
 }
+
+type Obj = Record<PropertyKey, unknown>
 
 const tracker = (scope: Scope): Touched | undefined => (scope.options.dev ? { read: new Set(), write: new Set() } : undefined)
 
@@ -401,8 +409,8 @@ export async function validate(fn: Fn, input: unknown): Promise<unknown> {
 const plainPath = (i: SchemaIssue) => (i.path ?? []).map(p => (typeof p === 'object' ? p.key : p))
 
 function rejected(fn: Fn, list: readonly SchemaIssue[]) {
-  const issues = list.map(i => ({ message: i.message, path: i.path && plainPath(i) })) as SchemaIssue[]
-  const where = issues.map(i => `${i.path?.length ? i.path.join('.') + ': ' : ''}${i.message}`).join('; ')
+  const issues = list.map(i => ({ message: i.message, path: i.path && plainPath(i) })) as (SchemaIssue & { path?: PropertyKey[] })[]
+  const where = issues.map(i => `${i.path?.length ? i.path.map(String).join('.') + ': ' : ''}${i.message}`).join('; ')
   return new StartError('Q002', `\`${fn.$id}\` rejected its input: ${where}`, 'pass what the schema accepts', { status: 400, issues })
 }
 
@@ -419,10 +427,10 @@ function reading(s: string): unknown {
  * on a string tries its obvious reading, then the input is validated again. Fields a reading fixed report nothing; the
  * rest report what the schema says of what was typed (an empty field: its "required", not "expected a string").
  */
-async function formInput(fn: Fn, input: any): Promise<unknown> {
+async function formInput(fn: Fn, input: unknown): Promise<unknown> {
   const schema = fn.def.input
   if (!schema || !input || typeof input !== 'object') return validate(fn, input)
-  const value = { ...input }
+  const value: Obj = { ...input }
   let left: readonly SchemaIssue[] = []
   for (let i = 0; i < 3; i++) {
     const r = await schema['~standard'].validate(value)
@@ -432,16 +440,19 @@ async function formInput(fn: Fn, input: any): Promise<unknown> {
     for (const issue of r.issues) {
       const path = plainPath(issue)
       if (!path.length) continue
-      let at: any = value
+      let at: Obj | undefined = value
       for (const p of path.slice(0, -1)) {
-        if (!at?.[p] || typeof at[p] !== 'object') { at = undefined; break }
-        at = at[p] = Array.isArray(at[p]) ? [...at[p]] : { ...at[p] }
+        const inner: unknown = at?.[p]
+        if (!inner || typeof inner !== 'object') { at = undefined; break }
+        at = at[p] = (Array.isArray(inner) ? [...inner] : { ...inner }) as Obj
       }
       const k = path.at(-1)!
-      if (typeof at?.[k] !== 'string') continue
-      const next = reading(at[k])
-      if (next === at[k]) continue
-      next === undefined ? delete at[k] : (at[k] = next)
+      const typed = at?.[k]
+      if (typeof typed !== 'string') continue
+      const next = reading(typed)
+      if (next === typed) continue
+      if (next === undefined) delete at![k]
+      else at![k] = next
       changed = true
     }
     if (!changed) break
@@ -462,10 +473,10 @@ async function checked(v: unknown, fn: Fn, scope: Scope) {
 
 /** Q005 (dev): what JSON would change on the way to the client. */
 function serializable(v: unknown, fn: Fn, scope: Scope) {
-  const bad = (x: any, path: string): string | undefined => {
-    if (x === null || typeof x === 'string' || typeof x === 'boolean') return
+  const bad = (x: unknown, path: string): string | undefined => {
+    if (x === null || typeof x === 'string' || typeof x === 'boolean') return undefined
     if (typeof x === 'number') return Number.isFinite(x) ? undefined : `${path} is ${x}`
-    if (x === undefined) return
+    if (x === undefined) return undefined
     if (typeof x !== 'object') return `${path} is a ${typeof x}`
     if (Array.isArray(x)) {
       for (let i = 0; i < x.length; i++) {
@@ -473,14 +484,15 @@ function serializable(v: unknown, fn: Fn, scope: Scope) {
         const b = bad(x[i], `${path}[${i}]`)
         if (b) return b
       }
-      return
+      return undefined
     }
-    const proto = Object.getPrototypeOf(x)
-    if (proto !== Object.prototype && proto !== null) return `${path} is a ${x.constructor?.name ?? 'class instance'}`
+    const proto: unknown = Object.getPrototypeOf(x)
+    if (proto !== Object.prototype && proto !== null) return `${path} is a ${(x as { constructor?: { name?: string } }).constructor?.name ?? 'class instance'}`
     for (const k of Object.keys(x)) {
-      const b = bad(x[k], `${path}.${k}`)
+      const b = bad((x as Obj)[k], `${path}.${k}`)
       if (b) return b
     }
+    return undefined
   }
   const b = bad(v, 'result')
   if (b) scope.options.onDiagnostic?.({ code: 'Q005', severity: 'warning', message: `\`${fn.$id}\`'s ${b}: the client gets a different value than the server rendered with. Send plain data (ISO strings, arrays, objects)` })
@@ -491,17 +503,17 @@ function serializable(v: unknown, fn: Fn, scope: Scope) {
  * with an input whose every field reads `*`, so `todo:${id}` declares `todo:*`.
  */
 export function checkTags(report: (d: { code: string; severity: string; message: string }) => void) {
-  const any: any = new Proxy({}, { get: (_, k) => (k === Symbol.toPrimitive ? () => '*' : '*') })
+  const star: unknown = new Proxy({}, { get: (_, k) => (k === Symbol.toPrimitive ? () => '*' : '*') })
   const declared: string[] = []
   for (const f of fns.values()) {
     if (f.kind !== 'query') continue
-    try { declared.push(...(typeof f.def.tags === 'function' ? f.def.tags(any) : f.def.tags ?? [])) } catch {}
+    try { declared.push(...(typeof f.def.tags === 'function' ? f.def.tags(star) : f.def.tags ?? [])) } catch {}
   }
   const matches = (tag: string) => declared.some(d => d === tag || (d.includes('*') && new RegExp(`^${d.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^]*')}$`).test(tag)) || (tag.includes('*') && d.startsWith(tag.slice(0, tag.indexOf('*')))))
   for (const f of fns.values()) {
     if (f.kind !== 'mutation' || !f.def.invalidates) continue
-    let tags: readonly string[] = []
-    try { tags = typeof f.def.invalidates === 'function' ? f.def.invalidates(any, any) : f.def.invalidates } catch { continue }
+    let tags: readonly string[]
+    try { tags = typeof f.def.invalidates === 'function' ? f.def.invalidates(star, star) : f.def.invalidates } catch { continue }
     for (const t of tags) if (!matches(t)) report({ code: 'Q008', severity: 'warning', message: `\`${f.$id}\` invalidates \`${t}\`, a tag no query declares: nothing refreshes. Fix the tag, or add it to the query's \`tags\`` })
   }
 }

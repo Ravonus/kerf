@@ -1,34 +1,39 @@
-import { derived } from 'weft'
-import type { Interaction } from 'weft/interaction'
-import { pressOrigin } from '@weft/warp-core'
+import { derived } from '@weft-js/core'
+import type { Interaction } from '@weft-js/core/interaction'
+import { pressOrigin } from '@weft-js/warp-core'
 import { Icon, type IconRef } from './Icon'
 import { useUi } from './use-ui'
 import './styles'
-import '@weft/warp-core/styles/components/button.css'
-import '@weft/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/components/button.css'
+import '@weft-js/warp-core/styles/components/spinner.css'
 
+/** The colour role a control speaks in. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+/** How much weight a control carries, from solid down to a plain link. */
 export type Emphasis = 'solid' | 'soft' | 'outline' | 'ghost' | 'frame' | 'link'
 
+/** Props for Button; anything else lands on the <button>. */
 export interface ButtonProps {
   /** solid (default) · soft · outline · ghost · frame (the signature) · link. Fixed at creation: it picks the anatomy. */
-  emphasis?: Emphasis
-  tone?: Tone
-  size?: 'sm' | 'md' | 'lg'
+  emphasis?: Emphasis | undefined
+  tone?: Tone | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
   /** A frame button with the solid fill sweeping in. */
   fill?: boolean
   /** At vivid the fill spreads from where the pointer arrives and parts back out, instead of wiping in from the left. Not on frame or link. */
   follow?: boolean
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
-  icon?: IconRef
-  label?: string
+  icon?: IconRef | undefined
+  ref?: ((el: HTMLButtonElement) => unknown) | undefined
+  onClick?: ((e: MouseEvent) => unknown) | undefined
+  label?: string | undefined
   /** Busy: the label stays the accessible name (hidden by opacity), presses are swallowed, focus stays. */
-  loading?: boolean
+  loading?: boolean | undefined
   /** `interaction()`'s row: real events fill it, and it draws whoever set it. */
   ui?: Interaction
-  children?: any
-  [attr: string]: any
+  children?: unknown
+  [attr: string]: unknown
 }
 
 const swept = (e: Emphasis) => e !== 'link'
@@ -69,7 +74,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, follow, full, ico
       aria-disabled={loading ? 'true' : undefined}
       onClick={press}
       {...rest}
-      ref={(n: any) => { host = n; ref?.(n) }}
+      ref={n => { host = n; ref?.(n) }}
     >
       {emphasis === 'frame' ? (
         <>

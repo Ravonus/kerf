@@ -1,26 +1,27 @@
-import { LeftIcon, RightIcon } from '@weft/icons'
-import { clock, clockRange, dateOf, fmt, longDuration, moveSlots, slotOf, weekDates, type CalEvent, type Slot } from '@weft/warp-core'
-import { derived, state, untrack, type State } from 'weft'
+import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
+import { clock, clockRange, dateOf, fmt, longDuration, moveSlots, slotOf, weekDates, type CalEvent, type Slot } from '@weft-js/warp-core'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Chip } from '../Chip'
 import { Drawer } from '../Drawer'
 import { SweepParts, confirmSweep } from './bits'
-import '@weft/warp-core/styles/app/booking.css'
+import '@weft-js/warp-core/styles/app/booking.css'
 
+/** Props for MoveSheet. */
 export type MoveSheetProps = {
   open: State<boolean>
   event: CalEvent | null
   /** Everything else on the calendar: a start that collides is disabled. */
   events: CalEvent[]
   /** The day the week strip starts on, 0 for Sunday to 6. Default 1, Monday. */
-  firstDayOfWeek?: number
-  locale?: string
+  firstDayOfWeek?: number | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
-  step?: number
+  hourCycle?: string | undefined
+  step?: number | undefined
   onMove: (e: CalEvent, to: Slot) => void
-  onClose?: () => void
+  onClose?: (() => void) | undefined
 }
 
 /** The move sheet (07 §2.2, `#move-sheet`): a bottom Sheet with day, start and duration, the touch path for a drag. */

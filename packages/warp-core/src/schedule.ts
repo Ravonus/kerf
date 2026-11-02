@@ -2,8 +2,9 @@
 // overlaps, and the pointer actions a binding attaches. Wall times are `YYYY-MM-DDTHH:MM` strings, minutes are minutes
 // since midnight on a day. No framework, and nothing here reads the clock unless it is asked to.
 import { gridKey } from './calendar'
-import { addDays, addMonths, clamp, daysBetween, dow, fmt, fmtTime, fromMinutes, minutes, monthEnd, monthStart, offsetAt, pad, toIso, type IsoDate, type IsoTime } from './temporal'
+import { addDays, addMonths, clamp, daysBetween, dow, fmt, fmtTime, fromMinutes, minutes, monthEnd, monthStart, offsetAt, pad, toIso, type IsoDate } from './temporal'
 
+/** The calendar's views. */
 export type CalView = 'month' | 'week' | 'day' | 'agenda' | 'timeline' | 'year'
 
 /** 07 §2.2. `start`/`end` are wall date-times; an all-day event holds dates and its `end` is its last day. */
@@ -16,36 +17,47 @@ export interface CalEvent {
   /** The source, 1–8 (`data-cal`). */
   cal?: number
   tentative?: boolean
-  locked?: boolean
+  locked?: boolean | undefined
   declined?: boolean
   /** An RRULE. */
   recurrence?: string | null
   /** The zone `start` and `end` are written in, when it isn't the calendar's. */
-  tz?: string
-  location?: string
+  tz?: string | undefined
+  location?: string | undefined
   attendees?: string[]
   video?: string | boolean
   /** Timeline row. */
-  resource?: string
+  resource?: string | undefined
 }
-export type Slot = { date: string; s: number; e: number; resource?: string }
+/** A span of time on a day, in minutes from midnight. */
+export type Slot = { date: string; s: number; e: number; resource?: string | undefined }
+/** An event's piece on one day. */
 export type DaySegment = { event: CalEvent; id: string; s: number; e: number; head: boolean; tail: boolean }
+/** An event's place among the ones it overlaps. */
 export type Lane = { col: number; cols: number; span: number }
 /** A pair of minutes, start then end. */
 export type Range = [number, number]
 
+/** Minutes in a day. */
 export const DAY = 1440
+/** The date of an ISO date-time. */
 export const dateOf = (iso: string) => iso.slice(0, 10) as IsoDate
+/** The minute of the day of an ISO date-time; 0 for a bare date. */
 export const minuteOf = (iso: string) => (iso.length > 10 ? minutes(iso.slice(11, 16)) : 0)
 /** A wall date-time from a date and minutes, which may run past either end of the day. */
 export const at = (date: string, m: number) => { const d = Math.floor(m / DAY); return `${addDays(date, d)}T${fromMinutes(m - d * DAY)}` }
+/** Minutes from `a` to `b`. */
 export const spanMinutes = (a: string, b: string) => daysBetween(dateOf(a), dateOf(b)) * DAY + minuteOf(b) - minuteOf(a)
+/** An event as a slot. */
 export const slotOf = (e: CalEvent): Slot => ({ date: dateOf(e.start), s: minuteOf(e.start), e: minuteOf(e.start) + spanMinutes(e.start, e.end), resource: e.resource })
+/** A slot's start and end as date-times. */
 export const slotTimes = (s: Slot) => ({ start: at(s.date, s.s), end: at(s.date, s.e) })
+/** Minutes as "1 h 30 m", or "45 min". */
 export const longDuration = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} m` : ''}` : `${m} min`)
 /** 24-hour by default, as in the specimen; `hourCycle` follows the locale's when `auto`. */
 export const clock = (m: number, locale: string, hourCycle = 'h23') => fmtTime(fromMinutes(((m % DAY) + DAY) % DAY), locale, hourCycle)
-export const clockRange = (a: number, b: number, locale: string, hourCycle?: string) => `${clock(a, locale, hourCycle)}–${clock(b, locale, hourCycle)}`
+/** Two minutes of the day as a clock range. */
+export const clockRange = (a: number, b: number, locale: string, hourCycle?: string  ) => `${clock(a, locale, hourCycle)}–${clock(b, locale, hourCycle)}`
 
 // -- zones ------------------------------------------------------------------------------------------------------------
 
@@ -57,15 +69,15 @@ const stamp = (ms: number) => new Date(ms).toISOString().slice(0, 16)
 /** A wall time in one zone, as a wall time in another. */
 export const toZone = (iso: string, from: string, to: string) => { if (from === to) return iso.slice(0, 16); const t = instant(iso, from); return stamp(t + offsetAt(to, t) * 6e4) }
 /** The event as the calendar's zone shows it. */
-export const shownIn = (e: CalEvent, zone?: string): CalEvent => (e.allDay || !zone || !e.tz || e.tz === zone ? e : { ...e, start: toZone(e.start, e.tz, zone), end: toZone(e.end, e.tz, zone) })
+export const shownIn = (e: CalEvent, zone?: string  ): CalEvent => (e.allDay || !zone || !e.tz || e.tz === zone ? e : { ...e, start: toZone(e.start, e.tz, zone), end: toZone(e.end, e.tz, zone) })
 /** Minutes the clocks change by inside the event, 0 when they don't. */
-export function dstShift(e: CalEvent, zone?: string) {
+export function dstShift(e: CalEvent, zone?: string  ) {
   const z = e.tz ?? zone
   if (e.allDay || !z) return 0
   return offsetAt(z, instant(e.end, z)) - offsetAt(z, instant(e.start, z))
 }
 /** The wall time now in `zone` (the browser's own without one). Never call it during render. */
-export function nowIn(zone?: string, when = Date.now()) {
+export function nowIn(zone?: string  , when = Date.now()) {
   const t = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(when))
   const of = (k: string) => t.find(p => p.type === k)!.value
   return `${of('year')}-${of('month')}-${of('day')}T${of('hour')}:${of('minute')}`
@@ -73,6 +85,7 @@ export function nowIn(zone?: string, when = Date.now()) {
 
 // -- ranges, overlap, layout ------------------------------------------------------------------------------------------
 
+/** Whether two timed events overlap. */
 export const overlaps = (a: CalEvent, b: CalEvent) => a.id !== b.id && !a.allDay && !b.allDay && a.start < b.end && b.start < a.end
 /** The events that collide with `e` at `slot` (or where it is). */
 export function conflicts(events: CalEvent[], e: CalEvent, slot?: Slot) {
@@ -131,7 +144,7 @@ export function layoutDay<T extends { id: string; s: number; e: number }>(list: 
 export function allDayBars(events: CalEvent[], days: string[]) {
   const rows: number[] = []
   const bars: { event: CalEvent; id: string; col: number; span: number; row: number }[] = []
-  const first = days[0], last = days[days.length - 1]
+  const first = days[0]!, last = days[days.length - 1]!
   const list = events.filter(e => e.allDay && dateOf(e.start) <= last && dateOf(e.end) >= first).sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : a.end > b.end ? -1 : 1))
   for (const event of list) {
     const col = Math.max(0, daysBetween(first, dateOf(event.start)))
@@ -163,7 +176,9 @@ export function mergeRanges(list: Range[]) {
 
 // -- views ------------------------------------------------------------------------------------------------------------
 
+/** The first day of `date`'s week. */
 export const startOfWeek = (date: string, weekStartsOn: number) => addDays(date, -((dow(date) - weekStartsOn + 7) % 7))
+/** The seven days of `date`'s week. */
 export const weekDates = (date: string, weekStartsOn: number) => { const a = startOfWeek(date, weekStartsOn); return Array.from({ length: 7 }, (_, i) => addDays(a, i)) }
 /** The columns of a time grid. `count` narrows a week (a phone shows 3 days from `date`). */
 export function viewDays(view: CalView, date: string, weekStartsOn: number, count = 7) {
@@ -179,6 +194,7 @@ export function viewRange(view: CalView, date: string, weekStartsOn: number) {
   const a = startOfWeek(date, weekStartsOn)
   return { start: a, end: addDays(a, 6) }
 }
+/** The date one step on in `view`, `dir` being 1 or -1. */
 export function stepDate(view: CalView, date: string, dir: number) {
   if (view === 'month') return addMonths(date, dir)
   if (view === 'year') return addMonths(date, 12 * dir)
@@ -187,11 +203,11 @@ export function stepDate(view: CalView, date: string, dir: number) {
 /** Six weeks round a month. */
 export function monthCells(date: string, weekStartsOn: number) {
   const a = startOfWeek(monthStart(date), weekStartsOn), first = monthStart(date), last = monthEnd(date)
-  return Array.from({ length: 6 }, (_, r) => ({ key: addDays(a, r * 7), cells: Array.from({ length: 7 }, (_, c) => { const iso = addDays(a, r * 7 + c); return { iso, outside: iso < first || iso > last } }) }))
+  return Array.from({ length: 6 }, (_, r) => ({ key: addDays(a, r * 7), cells: Array.from({ length: 7 }, (__, c) => { const iso = addDays(a, r * 7 + c); return { iso, outside: iso < first || iso > last } }) }))
 }
 
 /** "Design crit, Monday 10:00 to 11:30, Studio, tentative". */
-export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
+export function eventName(e: CalEvent, locale: string, hourCycle?: string  ) {
   const day = fmt(dateOf(e.start), { weekday: 'long' }, locale)
   const s = slotOf(e)
   return [
@@ -207,13 +223,16 @@ export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
 
 // -- snapping, drags, keyboard moves ----------------------------------------------------------------------------------
 
+/** `m` to the nearest `step`. */
 export const snapTo = (m: number, step = 15) => Math.round(m / step) * step
 
-export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string): Slot {
+/** A slot moved by `dm` minutes onto `date`, snapped, keeping its length. */
+export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string  ): Slot {
   const len = origin.e - origin.s
   const s = clamp(snapTo(origin.s + dm, step), 0, DAY - Math.min(len, DAY))
   return { date, s, e: s + len, resource: resource ?? origin.resource }
 }
+/** A slot with its end moved by `dm` minutes, snapped, never shorter than a step. */
 export function dragResize(origin: Slot, dm: number, step = 15): Slot {
   return { ...origin, e: clamp(snapTo(origin.e + dm, step), origin.s + step, DAY) }
 }
@@ -224,12 +243,13 @@ export function dragCreate(date: string, anchor: number, current: number, step =
   return { date, s, e: clamp(Math.max(a + (c >= a ? 0 : step), c), s + step, DAY) }
 }
 
+/** What a key does during a keyboard move: drop, cancel, a new slot, or nothing. */
 export type MoveKey = 'drop' | 'cancel' | Slot | null
 /**
  * Keyboard move mode (07 §2.2): ↑↓ by `step`, ←→ by a day within `days`, Shift+↑↓ resizes, Enter drops, Escape cancels.
  * On a timeline (`resources`) ←→ move along the lane and ↑↓ between rows.
  */
-export function moveKey(key: string, shift: boolean, slot: Slot, opts: { step?: number; days?: string[]; rtl?: boolean; resources?: string[] } = {}): MoveKey {
+export function moveKey(key: string, shift: boolean, slot: Slot, opts: { step?: number; days?: string[] | undefined; rtl?: boolean; resources?: string[] | undefined } = {}): MoveKey {
   const { step = 15, days, rtl, resources } = opts
   const len = slot.e - slot.s
   const by = (d: number): Slot => { const s = clamp(slot.s + d, 0, DAY - len); return { ...slot, s, e: s + len } }
@@ -256,48 +276,50 @@ export function eventKey(key: string, id: string, events: CalEvent[], rtl = fals
   if (i < 0) return null
   if (key === 'ArrowDown') return order[i + 1]?.id ?? null
   if (key === 'ArrowUp') return order[i - 1]?.id ?? null
-  if (key === 'Home') return order[0].id
-  if (key === 'End') return order[order.length - 1].id
+  if (key === 'Home') return order[0]!.id
+  if (key === 'End') return order[order.length - 1]!.id
   if (key !== 'ArrowLeft' && key !== 'ArrowRight') return null
   const forward = (key === 'ArrowRight') !== rtl
-  const day = dateOf(order[i].start), m = minuteOf(order[i].start)
+  const day = dateOf(order[i]!.start), m = minuteOf(order[i]!.start)
   const days = [...new Set(order.map(e => dateOf(e.start)))].filter(d => (forward ? d > day : d < day))
   const to = forward ? days[0] : days[days.length - 1]
   if (!to) return null
-  return order.filter(e => dateOf(e.start) === to).sort((a, b) => Math.abs(minuteOf(a.start) - m) - Math.abs(minuteOf(b.start) - m))[0].id
+  return order.filter(e => dateOf(e.start) === to).sort((a, b) => Math.abs(minuteOf(a.start) - m) - Math.abs(minuteOf(b.start) - m))[0]!.id
 }
 
 /** ←→ along a lane, ↑↓ to the nearest booking in the next row (07 §2.5). */
 export function laneKey(key: string, id: string, rows: { id: string; s: number }[][]) {
   const r = rows.findIndex(l => l.some(x => x.id === id))
   if (r < 0) return null
-  const lane = rows[r], i = lane.findIndex(x => x.id === id)
+  const lane = rows[r]!, i = lane.findIndex(x => x.id === id)
   if (key === 'ArrowRight') return lane[i + 1]?.id ?? null
   if (key === 'ArrowLeft') return lane[i - 1]?.id ?? null
-  if (key === 'Home') return lane[0].id
-  if (key === 'End') return lane[lane.length - 1].id
+  if (key === 'Home') return lane[0]!.id
+  if (key === 'End') return lane[lane.length - 1]!.id
   if (key !== 'ArrowDown' && key !== 'ArrowUp') return null
   const d = key === 'ArrowDown' ? 1 : -1
-  for (let n = r + d; n >= 0 && n < rows.length; n += d) if (rows[n].length) return [...rows[n]].sort((a, b) => Math.abs(a.s - lane[i].s) - Math.abs(b.s - lane[i].s))[0].id
+  for (let n = r + d; n >= 0 && n < rows.length; n += d) if (rows[n]!.length) return [...rows[n]!].sort((a, b) => Math.abs(a.s - lane[i]!.s) - Math.abs(b.s - lane[i]!.s))[0]!.id
   return null
 }
 
-export type DragPreview = Slot & { mode: 'move' | 'resize' | 'create'; id?: string; origin?: Slot }
+/** The slot under a drag, and what kind of drag it is. */
+export type DragPreview = Slot & { mode: 'move' | 'resize' | 'create'; id?: string | undefined; origin?: Slot | undefined }
+/** Options for dragging events and slots on the calendar. */
 export interface CalendarDragOptions {
   /** `x` for a timeline: lanes, with time running across and `from`..`to` minutes on it. */
   axis?: 'x' | 'y'
-  from?: number
-  to?: number
+  from?: number | undefined
+  to?: number | undefined
   step?: number
-  readOnly?: boolean
+  readOnly?: boolean | undefined
   /** The event's slot; `null` for one that can't be dragged (locked). */
   slot(id: string): Slot | null
   onPreview(p: DragPreview | null): void
   onDrop(p: DragPreview): void
   onPress(id: string, el: HTMLElement): void
-  onLongPress?(id: string, el: HTMLElement): void
+  onLongPress?: ((id: string, el: HTMLElement) => void) | undefined
   /** A double-click on an empty slot. */
-  onSlot?(date: string, minute: number, resource?: string): void
+  onSlot?(date: string, minute: number, resource?: string  ): void
 }
 
 const LONG_PRESS = 400
@@ -310,7 +332,7 @@ const LONG_PRESS = 400
 export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
   let o = opts
   const doc = el.ownerDocument
-  type Drag = { mode: DragPreview['mode']; pointer: number; x0: number; y0: number; id?: string; origin?: Slot; date: string; anchor: number; resource?: string; moved: boolean; preview?: DragPreview }
+  type Drag = { mode: DragPreview['mode']; pointer: number; x0: number; y0: number; id?: string | undefined; origin?: Slot | undefined; date: string; anchor: number; resource?: string | undefined; moved: boolean; preview?: DragPreview }
   let drag: Drag | null = null
   let press: { timer: ReturnType<typeof setTimeout>; x: number; y: number } | null = null
   let swallow = false
@@ -425,7 +447,7 @@ export function longPress(el: HTMLElement, opts: { selector: string; onPress(row
     row = r
     start = { x: e.clientX, y: e.clientY }
     r.dataset.pressing = ''
-    timer = setTimeout(() => { const at = row!; clear(); el.ownerDocument.defaultView?.navigator.vibrate?.(8); o.onPress(at) }, LONG_PRESS)
+    timer = setTimeout(() => { const hit = row!; clear(); el.ownerDocument.defaultView?.navigator.vibrate?.(8); o.onPress(hit) }, LONG_PRESS)
   }
   const move = (e: PointerEvent) => { if (row && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) clear() }
   const menu = (e: Event) => { if ((e.target as Element).closest?.(o.selector)) e.preventDefault() }
@@ -509,6 +531,7 @@ export function slide(track: HTMLElement, dx: string, land: () => void) {
 
 // -- agenda -----------------------------------------------------------------------------------------------------------
 
+/** One row of the agenda view. */
 export type AgendaItem =
   | { kind: 'allday'; key: string; event: CalEvent }
   | { kind: 'event'; key: string; event: CalEvent; s: number; e: number }
@@ -553,6 +576,7 @@ export function countByDay(events: CalEvent[]) {
   }
   return out
 }
+/** A month's total, as a sentence. */
 export function monthSummary(counts: Record<string, number>, month: string) {
   let total = 0, busiest: string | null = null, most = 0
   for (let d: string = monthStart(month); d <= monthEnd(month); d = addDays(d, 1)) {
@@ -562,6 +586,7 @@ export function monthSummary(counts: Record<string, number>, month: string) {
   }
   return { total, busiest, most }
 }
+/** All the events counted in `year`. */
 export const yearTotal = (counts: Record<string, number>, year: number) => Object.entries(counts).reduce((t, [d, n]) => (d.startsWith(`${year}-`) ? t + n : t), 0)
 /** The twelve first-of-months of a year. */
 export const yearMonths = (year: number) => Array.from({ length: 12 }, (_, m) => toIso(year, m + 1, 1))
@@ -574,8 +599,10 @@ export function yearKey(key: string, shift: boolean, cursor: string, weekStartsO
 
 // -- planner ----------------------------------------------------------------------------------------------------------
 
-export interface Attendee { id: string; name: string; zone?: string; organizer?: boolean; busy?: Range[]; hours?: Range }
+/** Someone a meeting is being found for. */
+export interface Attendee { id: string; name: string; zone?: string | undefined; organizer?: boolean; busy?: Range[] | undefined; hours?: Range }
 
+/** Whether everyone is free from `s` for `len` minutes. */
 export const isFree = (busy: Range[][], s: number, len: number) => busy.every(list => !list.some(([a, b]) => a < s + len && b > s))
 /** Time everyone has, merged, from `from` to `to`. */
 export function sharedFree(busy: Range[][], from: number, to: number, step = 15) {
@@ -590,7 +617,7 @@ export function zoneMinute(date: string, m: number, from: string | undefined, to
   return minuteOf(t) + daysBetween(date, dateOf(t)) * DAY
 }
 /** How many attendees have `s`..`s + len` inside their working hours, each in their own zone. */
-export function withinHours(people: Attendee[], date: string, s: number, len: number, zone?: string) {
+export function withinHours(people: Attendee[], date: string, s: number, len: number, zone?: string  ) {
   return people.filter(p => {
     const [a, b] = p.hours ?? [540, 1020]
     const m = zoneMinute(date, s, zone, p.zone)
@@ -601,12 +628,12 @@ export function withinHours(people: Attendee[], date: string, s: number, len: nu
  * Suggested times: free for everyone, at least `gap` apart, the ones inside the most people's working hours first, then
  * earliest; `limit` of them, in time order.
  */
-export function suggestSlots(people: Attendee[], date: string, opts: { len: number; from?: number; to?: number; step?: number; gap?: number; limit?: number; zone?: string }) {
+export function suggestSlots(people: Attendee[], date: string, opts: { len: number; from?: number | undefined; to?: number | undefined; step?: number; gap?: number | undefined; limit?: number | undefined; zone?: string | undefined }) {
   const { len, from = 480, to = 1080, step = 15, gap = 60, limit = 3, zone } = opts
   const busy = people.map(p => p.busy ?? [])
   const list: { s: number; fit: number }[] = []
   for (let s = from; s + len <= to; s += step) {
-    if (!isFree(busy, s, len) || (list.length && s - list[list.length - 1].s < gap)) continue
+    if (!isFree(busy, s, len) || (list.length && s - list[list.length - 1]!.s < gap)) continue
     list.push({ s, fit: withinHours(people, date, s, len, zone) })
   }
   return list.sort((a, b) => b.fit - a.fit || a.s - b.s).slice(0, limit).map(x => x.s).sort((a, b) => a - b)
@@ -614,17 +641,23 @@ export function suggestSlots(people: Attendee[], date: string, opts: { len: numb
 
 // -- availability -----------------------------------------------------------------------------------------------------
 
+/** One weekday's working hours. */
 export interface WeekDay { day: number; on: boolean; ranges: Range[] }
-export interface Override { id: string; date: string; ranges: Range[] | null; note?: string }
+/** A date whose hours differ from the week's; null ranges means closed. */
+export interface Override { id: string; date: string; ranges: Range[] | null; note?: string | undefined }
 
 /** One message per range, '' when it's fine (07 §6.4). */
 export const rangeIssues = (ranges: Range[]) => ranges.map((r, i) => (r[1] <= r[0] ? 'Ends before it starts' : ranges.some((q, j) => j !== i && r[0] < q[1] && q[0] < r[1]) ? 'Overlaps another range' : ''))
+/** Whether every day that's on has valid ranges. */
 export const weekValid = (week: WeekDay[]) => week.every(d => !d.on || rangeIssues(d.ranges).every(x => !x))
 /** The next range after a day's last one: an hour on, two long, inside the select's last time. */
 export function nextRange(ranges: Range[], last = 1320): Range {
   const s = Math.min(last - 30, (ranges[ranges.length - 1]?.[1] ?? 480) + 60)
   return [s, Math.min(last, s + 120)]
 }
+/** The minutes a time picker offers. */
 export const timeOptions = (from = 360, to = 1320, step = 30) => { const out: number[] = []; for (let m = from; m <= to; m += step) out.push(m); return out }
+/** Minutes as h:mm. */
 export const hhmm = (m: number) => `${Math.floor(m / 60)}:${pad(m % 60)}`
-export const asTime = (m: number) => fromMinutes(m) as IsoTime
+/** Minutes from midnight as an ISO time. */
+export const asTime = (m: number) => fromMinutes(m)

@@ -1,14 +1,16 @@
-import { DownIcon } from '@weft/icons'
-import { flush, derived, omit, state, untrack, type State } from 'weft'
-import { formReset, listbox, uid, type ChangeReason, type ListItem, type Presentation } from '@weft/warp-core'
+import { DownIcon } from '@weft-js/warp-icons'
+import { flush, derived, omit, untrack, type State } from '@weft-js/core'
+import { listbox, uid, type ChangeReason, type ListItem, type Presentation } from '@weft-js/warp-core'
 import { bindable } from './bind'
 import { Field, type FieldProps } from './Field'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './fields'
-import '@weft/warp-core/styles/components/listbox.css'
-import '@weft/warp-core/styles/inputs/choice.css' // the select and the field's chevron
+import '@weft-js/warp-core/styles/components/listbox.css'
+import '@weft-js/warp-core/styles/inputs/choice.css' // the select and the field's chevron
 
+/** One Select choice. */
 export type Option = { value: string; label: string; disabled?: boolean; /** A second, quieter line of text in the row. */ hint?: string }
+/** A labelled group of Select choices. */
 export type OptionGroup = { group: string; options: Option[] }
 
 /** Past this many options a Select searches (03 §4); `searchable` says so either way. */
@@ -50,11 +52,11 @@ const OWN = ['options', 'placeholder', 'value', 'defaultValue', 'onValueChange',
  * `el.value` back still works.
  */
 function useList(props: ListProps) {
-  const v = bindable<string | null>(() => props.value as any, () => props.defaultValue ?? undefined, null, () => props.onValueChange as any)
-  const shown = bindable<boolean>(() => props.open, () => props.defaultOpen, false, () => props.onOpenChange as any)
+  const v = bindable<string | null>(() => props.value, () => props.defaultValue ?? undefined, null, () => props.onValueChange as ((v: string | null, r: ChangeReason) => void) | undefined)
+  const shown = bindable<boolean>(() => props.open, () => props.defaultOpen, false, () => props.onOpenChange)
   const items = derived<ListItem[]>(() => [
     ...(props.placeholder !== undefined ? [{ value: '', label: props.placeholder }] : []),
-    ...props.options.flatMap(o => ('group' in o ? o.options.map(x => ({ value: x.value, label: x.label, disabled: x.disabled, hint: x.hint, group: o.group })) : [o])),
+    ...props.options.flatMap<ListItem>(o => ('group' in o ? o.options.map(x => ({ value: x.value, label: x.label, disabled: x.disabled, hint: x.hint, group: o.group })) : [o])),
   ])
   // with no value the first option shows, as a select does
   const current = derived(() => v.value ?? items.value.find(i => !i.disabled)?.value ?? '')
@@ -96,12 +98,12 @@ function useList(props: ListProps) {
     text,
     /** Code that wrote the select with no event: the trigger catches up on focus. */
     refresh: read,
-    onReset() {
+    onReset: () => {
       if (untrack(() => props.value) === undefined) v.reset()
       hold()
     },
-    trigger: (n: any) => (trigger = n),
-    carrier: (n: any) => (carrier = n),
+    trigger: (n: HTMLButtonElement) => (trigger = n),
+    carrier: (n: HTMLSelectElement) => (carrier = n),
     focusTrigger: () => trigger?.focus(),
   }
 }
@@ -120,6 +122,7 @@ export function Select(props: Omit<FieldProps, 'value' | 'defaultValue'> & ListP
   return (
     <Field
       {...omit(props, OWN)}
+      label={props.label}
       filled
       labelled
       reset={list.onReset}
@@ -154,8 +157,8 @@ export function Select(props: Omit<FieldProps, 'value' | 'defaultValue'> & ListP
             required={p.rest.required}
             autocomplete={p.rest.autocomplete}
             disabled={p.rest.disabled}
-            onChange={(e: Event) => p.rest.onChange?.(e)}
-            onInput={(e: Event) => p.rest.onInput?.(e)}
+            onChange={(e: Event) => (p.rest.onChange as ((e: Event) => void) | undefined)?.(e)}
+            onInput={(e: Event) => (p.rest.onInput as ((e: Event) => void) | undefined)?.(e)}
             onFocus={list.focusTrigger}
           >
             {props.placeholder !== undefined && <option value="" selected={untrack(() => list.current.value) === ''}>{props.placeholder}</option>}
@@ -171,7 +174,7 @@ export function Select(props: Omit<FieldProps, 'value' | 'defaultValue'> & ListP
  * The Select of a table row, a pager or a toolbar (03 §4): the same list with no floating label, `label` its accessible
  * name. It carries no <option> until it opens, and no <select> at all unless `name` puts it in a form.
  */
-export function CompactSelect(props: ListProps & { name?: string; id?: string; disabled?: boolean; describedby?: string }) {
+export function CompactSelect(props: ListProps & { name?: string | undefined; id?: string | undefined; disabled?: boolean | undefined; describedby?: string | undefined }) {
   const list = useList(untrack(() => props)) // the props object is live; only its reads track
   const id = untrack(() => props.id) ?? uid('sel')
   return (

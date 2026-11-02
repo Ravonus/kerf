@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Button, Card, Checkbox } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Button, Card, Checkbox } from '@weft-js/warp'
 
 const start = ['Buy beans', 'Grind', 'Brew', 'Drink'].map(id => ({ id }))
 
@@ -7,7 +7,7 @@ export default function Tasks() {
   const tasks = state(start)
   const later = () => {
     const [first, ...rest] = tasks.value
-    tasks.value = [...rest, first]
+    tasks.value = [...rest, first!]
   }
   return (
     <Card title="Today">

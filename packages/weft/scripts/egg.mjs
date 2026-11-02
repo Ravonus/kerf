@@ -17,8 +17,8 @@ const noise = n => {
   for (let i = 0; out.length < n; i++) out += createHash('sha256').update(`weft ${i}`).digest('base64url')
   return out.slice(0, n)
 }
-const write = n => writeFileSync(file, `// Not code. The owner likes 13.37 KB, and this pads the full runtime to it (scripts/egg.mjs). It's an export nothing
-// reads, so no app ships it and it does nothing at runtime.
+const write = n => writeFileSync(file, `/** Not code. The owner likes 13.37 KB, and this pads the full runtime to it (scripts/egg.mjs). It's an export nothing
+ * reads, so no app ships it and it does nothing at runtime. */
 export const egg = '${noise(n)}'
 `)
 const measure = n => {

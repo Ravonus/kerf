@@ -2,10 +2,10 @@
 // weft-allow T004: persistence writes land on a macrotask; `tick` waits for that, not for an update
 import { screen } from '@testing-library/dom'
 import { z } from 'zod'
-import { defineState, derived, flush as flushGraph, state, StateError } from 'weft'
-import { flush, memoryStorage, render, scope, touches } from 'weft/test'
+import { defineState, derived, flush as flushGraph, state, StateError } from '@weft-js/core'
+import { flush, memoryStorage, render, scope, touches } from '@weft-js/core/test'
 
-const tick = () => new Promise(r => setTimeout(r))
+const tick = () => new Promise(r => { setTimeout(r) })
 
 describe('keyed reads: box.get(key)', () => {
   test('a reader of one entry re-runs only when that entry changes', () => {
@@ -14,12 +14,12 @@ describe('keyed reads: box.get(key)', () => {
     const ra = derived(() => (a++, cart.get('a')))
     const rb = derived(() => (b++, cart.get('b')))
     const rall = derived(() => (all++, Object.keys(cart.value).length))
-    ra.value; rb.value; rall.value
+    void ra.value; void rb.value; void rall.value
     cart.set(d => { d.a = 2 })
     expect([ra.value, rb.value, rall.value]).toEqual([2, 1, 2])
     expect([a, b, all]).toEqual([2, 1, 2])
     cart.set(d => { d.c = 1 })
-    ra.value; rb.value; rall.value
+    void ra.value; void rb.value; void rall.value
     expect([a, b, all]).toEqual([2, 1, 3])
   })
 
@@ -56,7 +56,7 @@ describe('defineState', () => {
     a.toggle()
     a.toggle()
     expect(runs).toBe(1)
-    expect((a.open as any).n).toBe('names.open')
+    expect((a.open as object as { n: string }).n).toBe('names.open')
     expect(a.toggle.name).toBe('names.toggle')
     expect(s.$name).toBe('names')
   })
@@ -130,15 +130,15 @@ describe('defineState', () => {
   test('S009: duplicate names and setup cycles', () => {
     defineState('dup', () => ({}))
     expect(() => defineState('dup', () => ({}))).toThrow(/S009/)
-    const loop: any = defineState('loop', () => ({ x: loop.x }))
-    expect(() => scope(loop)).toThrow(/S009.*cycle/)
+    const loop: { x: unknown } = defineState('loop', () => ({ x: loop.x }))
+    expect(() => scope(loop as never)).toThrow(/S009.*cycle/)
   })
 
   test('S004: a god scope is reported', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
     const big = defineState('big', () => Object.fromEntries(Array.from({ length: 13 }, (_, i) => [`b${i}`, state(i)])))
     scope(big)
-    expect(err.mock.calls[0][0]).toMatch(/^S004/)
+    expect(err.mock.calls[0]![0]).toMatch(/^S004/)
     err.mockRestore()
   })
 })
@@ -185,7 +185,7 @@ describe('persist', () => {
     const qty = defineState('qty', () => ({ n: state(1, { persist: { in: 'memory', schema: z.number().min(0) } }) }))
     expect(scope(qty, { storage }).n.value).toBe(1)
     expect(storage.getItem('weft:app:qty.n:corrupt')).toContain('-5')
-    expect(err.mock.calls[0][0]).toMatch(/^S003/)
+    expect(err.mock.calls[0]![0]).toMatch(/^S003/)
     err.mockRestore()
   })
 
@@ -195,7 +195,7 @@ describe('persist', () => {
     storage.setItem('weft:app:mig.n', JSON.stringify({ v: 1, at: 0, data: 3 }))
     const mig = defineState('mig', () => ({ n: state(0, { persist: { in: 'memory', version: 3, migrate: { 1: (v: number) => v } } }) }))
     expect(scope(mig, { storage }).n.value).toBe(0)
-    expect(err.mock.calls[0][0]).toMatch(/no migrate\[2\]/)
+    expect(err.mock.calls[0]![0]).toMatch(/no migrate\[2\]/)
     err.mockRestore()
   })
 
@@ -207,7 +207,7 @@ describe('persist', () => {
     expect(() => scope(priv)).toThrow(/S008.*name/)
     const named = defineState('named', () => { const hidden = state(4, { persist: 'memory', name: 'hidden' }); return { read: () => hidden.value } })
     expect(scope(named).read()).toBe(4)
-    const idb = defineState('idb', () => ({ c: state('', { persist: { in: 'idb' as any } }) }))
+    const idb = defineState('idb', () => ({ c: state('', { persist: { in: 'idb' as never } }) }))
     expect(() => scope(idb)).toThrow(/S008.*idb/)
   })
 
@@ -218,7 +218,7 @@ describe('persist', () => {
     const w = scope(when, { storage })
     w.at.value = new Date(0)
     await tick()
-    expect(err.mock.calls[0][0]).toMatch(/^S010.*Date/)
+    expect(err.mock.calls[0]![0]).toMatch(/^S010.*Date/)
     expect(storage.getItem('weft:app:when.at')).toBeNull()
     err.mockRestore()
   })

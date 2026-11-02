@@ -1,22 +1,22 @@
-import { BagIcon, MinusIcon, PlusIcon } from '@weft/icons'
-import { cartCount, cartTotals, money, type CartLine } from '@weft/warp-core'
-import { derived, type State } from 'weft'
+import { BagIcon, MinusIcon, PlusIcon } from '@weft-js/warp-icons'
+import { cartCount, cartTotals, money, type CartLine } from '@weft-js/warp-core'
+import { derived, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { toast } from '../Toast'
 import { afterFlush } from './atoms'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
-import '@weft/warp-core/styles/app/badge.css' // the count's bump
-import '@weft/warp-core/styles/flows/line-item.css'
-import '@weft/warp-core/styles/flows/lines.css'
-import '@weft/warp-core/styles/flows/qty.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/app/badge.css' // the count's bump
+import '@weft-js/warp-core/styles/flows/line-item.css'
+import '@weft-js/warp-core/styles/flows/lines.css'
+import '@weft-js/warp-core/styles/flows/qty.css'
 
 export const setQuantity = (cart: State<CartLine[]>, id: string, quantity: number) => (cart.value = cart.value.map(l => (l.id === id ? { ...l, quantity } : l)))
 
@@ -28,7 +28,7 @@ export function removeLine(cart: State<CartLine[]>, line: CartLine) {
 }
 
 /** One line: thumb, name, variant, stepper, price (09 §6.1). The stepper's minus at 1 removes, asks nothing, gives Undo. */
-export function LineItem({ line, cart, currency, locale, problem }: { line: CartLine; cart: State<CartLine[]>; currency?: string; locale?: string; problem?: any }) {
+export function LineItem({ line, cart, currency, locale, problem }: { line: CartLine; cart: State<CartLine[]>; currency?: string | undefined; locale?: string | undefined; problem?: unknown }) {
   const down = () => (line.quantity <= 1 ? removeLine(cart, line) : setQuantity(cart, line.id, line.quantity - 1))
   return (
     <div data-scope="line-item" data-id={line.id}>
@@ -61,11 +61,12 @@ export function CartButton({ count, onClick }: { count: number; onClick: () => v
   )
 }
 
+/** Props for CartDrawer. */
 export interface CartDrawerProps {
   open: State<boolean>
   cart: State<CartLine[]>
-  currency?: string
-  locale?: string
+  currency?: string | undefined
+  locale?: string | undefined
   onCheckout: () => void
 }
 

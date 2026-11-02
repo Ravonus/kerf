@@ -1,5 +1,5 @@
-import { derived, state, untrack } from 'weft'
-import { Accordion, Badge, Button, Card, Grid, Heading, Input, Link, LoadMore, Nav, PaginationBar, Row, Shape, Split, Stack, Switch, Tabs, Text } from '@weft/warp'
+import { derived, state, untrack } from '@weft-js/core'
+import { Accordion, Badge, Button, Card, Grid, Heading, Input, Link, LoadMore, Nav, PaginationBar, Row, Shape, Split, Stack, Switch, Tabs, Text } from '@weft-js/warp'
 import { DEPLOYS, PROJECTS, TONE_OF } from '../world'
 
 const SECTIONS = [
@@ -388,7 +388,7 @@ export const LinkExternal = () => <Link external href="https://example.com">Open
 
 export const LinkFooter = () => (
   <Row gap="group" justify="center">
-    <Link subtle href="/docs">Docs</Link>
+    <Link subtle href="/learn">Learn</Link>
     <Link subtle href="/toolkit">Components</Link>
     <Link subtle external href="https://example.com">Status</Link>
   </Row>

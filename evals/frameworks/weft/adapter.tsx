@@ -1,6 +1,6 @@
 // Framework adapter: hidden tests only talk to the DOM through these helpers.
-import { state, stats as graph } from 'weft'
-import { flush as flushWeft, render } from 'weft/test'
+import { state, stats as graph } from '@weft-js/core'
+import { flush as flushWeft, render } from '@weft-js/core/test'
 import { vi } from 'vitest'
 
 export const framework = 'weft'

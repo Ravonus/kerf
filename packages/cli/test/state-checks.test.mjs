@@ -6,10 +6,10 @@ import { check } from '../src/check.mjs'
 import { project } from './helpers.mjs'
 
 const server = {
-  'src/server/notes.ts': "import { mutation, query } from '@weft/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
+  'src/server/notes.ts': "import { mutation, query } from '@weft-js/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
 }
 const s = r => r.diagnostics.filter(d => ['S001', 'S012'].includes(d.code)).map(d => [d.code, d.file, d.span[0]])
-const line = (name, body) => [`src/state/${name}.ts`, `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from 'weft'\n${body}\n`]
+const line = (name, body) => [`src/state/${name}.ts`, `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from '@weft-js/core'\n${body}\n`]
 
 describe('S001', () => {
   it.each([

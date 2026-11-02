@@ -1,5 +1,5 @@
 // Card's sweep is opt-in (SIGNATURE §3): by default, pressable or not, it only carries the flair marker.
-import { render } from 'weft/test'
+import { render } from '@weft-js/core/test'
 import { Card } from '../src/Card'
 
 const attr = (c: Element) => {

@@ -1,5 +1,5 @@
 // `weft lsp`: TypeScript 7 loads no plugins and its content mappers refuse `.tsx`, so the one place left to stand is
-// between the editor and `tsc --lsp`. Buffers go in as their shadows; positions are mapped both ways (research 41 §6).
+// between the editor and `tsc --lsp`. Buffers go in as their shadows; positions are mapped both ways (research 44 §6).
 
 import { spawn } from 'node:child_process'
 import { realpathSync } from 'node:fs'
@@ -42,7 +42,7 @@ const positionAt = (text, offset) => {
   return { line, character: offset - (head.lastIndexOf('\n') + 1) }
 }
 
-export async function lsp(root, { input = process.stdin, output = process.stdout } = {}) {
+export function lsp(root, { input = process.stdin, output = process.stdout } = {}) {
   const dir = projectTypescript(root)
   if (!dir) throw Object.assign(new Error('`weft lsp` needs TypeScript 7 in the project; older versions use the tsserver plugin'), { code: 'E_USAGE' })
   const exe = join(dirname(createRequire(join(realpathSync(dir), 'package.json')).resolve(`@typescript/typescript-${process.platform}-${process.arch}/package.json`)), 'lib', process.platform === 'win32' ? 'tsc.exe' : 'tsc')

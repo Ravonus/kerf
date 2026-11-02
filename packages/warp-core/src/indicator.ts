@@ -3,6 +3,7 @@
 // and re-measures on resize are instant (data-instant, dropped after two frames).
 import { moveShuttle } from './shuttle'
 
+/** Options for the sliding tab indicator. */
 export interface IndicatorOptions {
   /** The selected item, inside the container (Segmented: the checked radio's label; Tabs: the selected tab). */
   selected: string
@@ -11,6 +12,7 @@ export interface IndicatorOptions {
   w?: string
 }
 
+/** Slides an indicator under a tab list's selected item. */
 export function indicator(container: HTMLElement, opts: IndicatorOptions) {
   let o = opts
   const win = container.ownerDocument.defaultView!

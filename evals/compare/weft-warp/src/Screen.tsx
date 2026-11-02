@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Badge, Button, Table, type Column } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Badge, Button, Table, type Column } from '@weft-js/warp'
 import { money, pageSize, projects, type Project } from '../../shared/data'
 
 const LABEL = 'Projects'

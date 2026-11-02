@@ -1,6 +1,6 @@
-import { derived, onCleanup, state } from 'weft'
-import { render } from 'weft/dom'
-import { graph } from 'weft/devtools'
+import { derived, onCleanup, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
+import { graph } from '@weft-js/core/devtools'
 
 function Todos() {
   const todos = state(['Buy beans', 'Brew'])

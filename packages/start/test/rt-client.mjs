@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 const headers = { 'content-type': 'application/json', 'x-weft': '1' }
 
 /** Ids are `<export>.<hash of the file>`, and the fixture's and the matrix app's module is `src/server/feed.ts`. */
-export const frameId = async (_url, name, file = 'src/server/feed.ts') => `${name}.${createHash('sha256').update(file).digest('hex').slice(0, 6)}`
+export const frameId = (_url, name, file = 'src/server/feed.ts') => `${name}.${createHash('sha256').update(file).digest('hex').slice(0, 6)}`
 
 export const rpc = async (url, id, input) => {
   const res = await fetch(`${url}/_weft/fn/${id}`, { method: 'POST', headers, body: JSON.stringify({ i: input }) })
@@ -24,7 +24,7 @@ export async function connect(url, body) {
   if (!res.ok) throw new Error(`/_weft/rt: ${res.status} ${await res.text()}`)
   const frames = []
   const waiting = new Set()
-  ;(async () => {
+  void (async () => {
     const decoder = new TextDecoder()
     let buf = ''
     try {

@@ -1,8 +1,8 @@
 import { fireEvent } from '@testing-library/dom'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { Sparkline } from '../src/Charts'
 
-const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))
+const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 
 describe('Sparkline hover', () => {
@@ -40,7 +40,7 @@ describe('Sparkline hover', () => {
     const { SparklineColors } = await import('../../../site/src/toolkit/examples/charts')
     const { container: c } = render(() => <SparklineColors />)
     await settle()
-    const svg = c.querySelector('svg[data-part="spark"]')! as SVGSVGElement
+    const svg = c.querySelector<SVGSVGElement>('svg[data-part="spark"]')!
     svg.getBoundingClientRect = () => ({ left: 0, width: 208, top: 0, height: 36, right: 208, bottom: 36, x: 0, y: 0 }) as DOMRect
     fireEvent.pointerMove(svg, { clientX: 0 })
     expect(svg.querySelector('text')!.textContent).toMatch(/^\d+(\.\d+)?%$/)

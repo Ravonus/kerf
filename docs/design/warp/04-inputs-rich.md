@@ -59,7 +59,7 @@ polyfill; and it's Temporal's own format, so `Temporal.PlainDate.from(v)` is one
 predecessor's ranges off by one at DST boundaries.
 
 ```ts
-import type { State } from "weft";
+import type { State } from "@weft-js/core";
 type IsoDate      = `${number}-${number}-${number}`;                 // Temporal.PlainDate      2026-10-28
 type IsoTime      = `${number}:${number}` | `${number}:${number}:${number}`; // PlainTime   14:30
 type IsoDateTime  = `${IsoDate}T${IsoTime}`;                          // PlainDateTime (wall time, no zone)

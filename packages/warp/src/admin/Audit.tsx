@@ -1,5 +1,5 @@
-import { agoText, announce, plural } from '@weft/warp-core'
-import { derived, onCleanup, state, type State } from 'weft'
+import { agoText, announce, plural } from '@weft-js/warp-core'
+import { derived, onCleanup, state, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { LiveStatus, type LiveState } from '../parts'
 import { Tooltip } from '../Tooltip'
@@ -8,21 +8,23 @@ import { Select } from '../Select'
 import { Table, type Column } from '../Table'
 import { read } from './atoms'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
 
+/** One line of the audit log. */
 export type AuditEvent = { id: string; at: string; actor: string; category: string; verb: string; target: string; href?: string; ip: string; diff?: { field: string; from: string; to: string }[] }
 
+/** Props for AuditLog. */
 export interface AuditLogProps {
   events: readonly AuditEvent[] | State<readonly AuditEvent[]>
   now: string
   categories?: { value: string; label: string }[]
   /** The realtime pill, when the rows come from a live query. */
-  live?: LiveState
+  live?: LiveState | undefined
   /** Resolve with `{ retryAfter }` (seconds) when rate limited (§5.5). */
   onExport?: () => Promise<{ retryAfter?: number } | void>
 }
@@ -35,12 +37,13 @@ const RANGES = [{ value: 'all', label: 'Any time', hours: Infinity }, { value: '
  */
 const stamp = (at: string) => at.replace('T', ' ').replace(/:\d\dZ$/, ' UTC')
 
+/** The audit log: who did what and when, filtered by category and actor, with an export. */
 export function AuditLog({ events, now, categories = [{ value: 'all', label: 'All' }], live, onExport }: AuditLogProps) {
   const category = state('all')
   const actor = state('all')
   const range = state('all')
   const wait = state(0)
-  const list = derived(() => read(events) as readonly AuditEvent[])
+  const list = derived(() => read(events))
   const actors = derived(() => [{ value: 'all', label: 'Everyone' }, ...[...new Set(list.value.map(e => e.actor))].map(a => ({ value: a, label: a }))])
   const shown = derived(() => {
     const hours = RANGES.find(r => r.value === range.value)!.hours
@@ -74,17 +77,17 @@ export function AuditLog({ events, now, categories = [{ value: 'all', label: 'Al
     : <span class="muted">No field changes were recorded.</span>)
   const hasLive = derived(() => live !== undefined)
   return (
-    <div data-scope="stack">
+    <div ref={n => (root = n)} data-scope="stack">
       <div data-scope="row" data-justify="between">
         <Segmented label="Filter events" size="sm" value={category.value} options={categories} onChange={v => { category.value = v; refilter() }} />
         {hasLive.value && <LiveStatus state={live!} label="Audit log" />}
       </div>
       <div data-scope="row">
-        <div data-grow=""><Select label="Actor" size="sm" options={actors.value} value={actor.value} onChange={(e: any) => { actor.value = e.currentTarget.value; refilter() }} /></div>
-        <div data-grow=""><Select label="Date range" size="sm" options={RANGES} value={range.value} onChange={(e: any) => { range.value = e.currentTarget.value; refilter() }} /></div>
+        <div data-grow=""><Select label="Actor" size="sm" options={actors.value} value={actor.value} onChange={(e: Event) => { actor.value = (e.currentTarget as HTMLInputElement).value; refilter() }} /></div>
+        <div data-grow=""><Select label="Date range" size="sm" options={RANGES} value={range.value} onChange={(e: Event) => { range.value = (e.currentTarget as HTMLInputElement).value; refilter() }} /></div>
         {onExport && <Button emphasis="frame" aria-disabled={wait.value > 0 ? 'true' : undefined} onClick={exportIt}>{wait.value > 0 ? `Try again in ${wait.value}s` : 'Export CSV'}</Button>}
       </div>
-      <Table caption="Recent events" captionHidden rows={shown as any} columns={columns} picker={false} heading={3} details="sheet" expand={diff} empty={{ title: 'Nothing matches', text: 'Try a wider filter.' }} />
+      <Table caption="Recent events" captionHidden rows={shown} columns={columns} picker={false} heading={3} details="sheet" expand={diff} empty={{ title: 'Nothing matches', text: 'Try a wider filter.' }} />
     </div>
   )
 }

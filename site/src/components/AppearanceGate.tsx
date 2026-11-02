@@ -1,5 +1,5 @@
-import { Button } from '@weft/warp'
-import { render } from 'weft/dom'
+import { Button } from '@weft-js/warp'
+import { render } from '@weft-js/core/dom'
 
 const fetchMenu = () => import('./Appearance')
 
@@ -13,7 +13,7 @@ export function AppearanceGate() {
     box!.querySelector('button')!.click()
   }
   return (
-    <span data-site="gate" ref={(n: any) => (box = n)}>
+    <span data-site="gate" ref={n => (box = n)}>
       <Button emphasis="ghost" tone="neutral" size="sm" icon="palette" label="Appearance" onClick={open} onPointerEnter={fetchMenu} onFocus={fetchMenu} />
     </span>
   )

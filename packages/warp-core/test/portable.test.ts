@@ -4,7 +4,7 @@
 import { dialog, indicator, nextIndex, overflow, toastStore, toaster } from '../src'
 
 afterEach(() => document.body.replaceChildren())
-const frames = () => new Promise(r => setTimeout(r, 100)) // three animation frames: place, then drop data-instant two frames later
+const frames = () => new Promise(r => { setTimeout(r, 100) }) // three animation frames: place, then drop data-instant two frames later
 
 test('tabs: arrow keys select and focus with one tab stop, panels follow, the indicator moves', async () => {
   document.body.innerHTML = `
@@ -29,7 +29,7 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
       i === j ? t.removeAttribute('tabindex') : t.setAttribute('tabindex', '-1')
       document.getElementById(`p${j}`)!.hidden = i !== j
     })
-    tabs[i].focus()
+    tabs[i]!.focus()
     face.update()
     scroll.update(tabs[i])
   }
@@ -42,11 +42,11 @@ test('tabs: arrow keys select and focus with one tab stop, panels follow, the in
   expect(bar.style.getPropertyValue('--warp-b')).toMatch(/px$/)
   expect(bar.hasAttribute('data-instant')).toBe(false)
 
-  tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
+  tabs[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
   expect(document.activeElement).toBe(tabs[2])
   expect(document.getElementById('p2')!.hidden).toBe(false)
-  tabs[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }))
-  expect(tabs[0].getAttribute('aria-selected')).toBe('true')
+  tabs[2]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }))
+  expect(tabs[0]!.getAttribute('aria-selected')).toBe('true')
   expect(list.querySelectorAll('[role="tab"]:not([tabindex="-1"])')).toHaveLength(1)
   face.destroy()
   scroll.destroy()
@@ -94,7 +94,7 @@ test('toasts: a store, a hand-written render, and the toaster action (stacking, 
   expect([...region.querySelectorAll('[data-part="title"]')].map(t => t.textContent)).toEqual(['Copied', 'Saved'])
   region.querySelector<HTMLElement>('[data-x]')!.click()
   expect(region.querySelector('[data-part="root"]')!.getAttribute('data-state')).toBe('closed')
-  await new Promise(r => setTimeout(r, 450))
+  await new Promise(r => { setTimeout(r, 450) })
   expect(region.querySelectorAll('[data-part="root"]')).toHaveLength(1)
   action.destroy()
   unsubscribe()

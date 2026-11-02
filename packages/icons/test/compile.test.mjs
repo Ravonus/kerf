@@ -13,7 +13,8 @@ function scan(files) {
     return analyze(root, { catalog })
   } finally { rmSync(root, { recursive: true, force: true }) }
 }
-const app = body => ({ 'src/a.tsx': `import { Button, Icon, Chip } from '@weft/warp'\n${body}` })
+const app = body => ({ 'src/a.tsx': `import { Button, Icon, Chip } from '@weft-js/warp'\n${body}` })
+/** @param {{ names: Iterable<string> }} r */
 const names = r => [...r.names].sort()
 
 test('a literal', () => expect(names(scan(app(`export const A = () => <Icon name="check" />`)))).toEqual(['check']))
@@ -34,11 +35,11 @@ test('a lookup table', () => {
   expect(names(r)).toEqual(['check', 'x']); expect(r.dynamic).toEqual([])
 })
 test('across a component boundary', () => {
-  const r = scan({ 'src/a.tsx': `import { Row } from './row'\nexport const A = () => <><Row glyph="bell" /><Row glyph="mail" /></>`, 'src/row.tsx': `import { Icon } from '@weft/warp'\nexport function Row({ glyph }) { return <Icon name={glyph} /> }` })
+  const r = scan({ 'src/a.tsx': `import { Row } from './row'\nexport const A = () => <><Row glyph="bell" /><Row glyph="mail" /></>`, 'src/row.tsx': `import { Icon } from '@weft-js/warp'\nexport function Row({ glyph }) { return <Icon name={glyph} /> }` })
   expect(names(r)).toEqual(['bell', 'mail']); expect(r.dynamic).toEqual([])
 })
 test('across a file, through an import', () => {
-  const r = scan({ 'src/a.tsx': `import { Icon } from '@weft/warp'\nimport { NAV } from './nav'\nexport const A = () => <div>{NAV.map(n => <Icon name={n.icon} />)}</div>`, 'src/nav.ts': `export const NAV = [{ icon: 'home' }, { icon: 'mail' }]` })
+  const r = scan({ 'src/a.tsx': `import { Icon } from '@weft-js/warp'\nimport { NAV } from './nav'\nexport const A = () => <div>{NAV.map(n => <Icon name={n.icon} />)}</div>`, 'src/nav.ts': `export const NAV = [{ icon: 'home' }, { icon: 'mail' }]` })
   expect(names(r)).toEqual(['home', 'mail'])
 })
 test('object data handed to warp', () => expect(names(scan(app(`export const O = [{ value: 1, icon: 'pin' }]\nexport const A = () => <Chip />`)))).toEqual(['pin']))
@@ -64,17 +65,17 @@ test('stops: balanced alone unless the app asks', () => {
 test('the names module holds those names, and the pack only when a name escaped', () => {
   const plain = namesModule(['check']), lazy = namesModule(['check'], { lazy: true })
   expect(plain).toContain('CheckIcon'); expect(plain).not.toContain('import(')
-  expect(lazy).toContain("import('@weft/icons/all')")
+  expect(lazy).toContain("import('@weft-js/warp-icons/all')")
 })
 test('<Icon name> becomes the same element a named import gives', () => {
-  const out = rewrite(`import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="arrow-right" label="Next" />`, 'a.tsx', catalog)
-  expect(out).toContain('<ArrowRightIcon  label="Next" />'); expect(out).toContain("import { ArrowRightIcon } from '@weft/icons'")
+  const out = rewrite(`import { Icon } from '@weft-js/warp'\nexport const A = () => <Icon name="arrow-right" label="Next" />`, 'a.tsx', catalog)
+  expect(out).toContain('<ArrowRightIcon  label="Next" />'); expect(out).toContain("import { ArrowRightIcon } from '@weft-js/warp-icons'")
 })
 test('rewrite refuses an unknown literal, in dev too', () => {
-  expect(() => rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="chekc" />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'chekc', did you mean 'check'/)
+  expect(() => rewrite(`import { Icon } from '@weft-js/warp'\nconst a = <Icon name="chekc" />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'chekc', did you mean 'check'/)
 })
 test('a variant flag picks the export', () => {
-  const out = rewrite(`import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="bell" solid />`, 'a.tsx', catalog)
+  const out = rewrite(`import { Icon } from '@weft-js/warp'\nexport const A = () => <Icon name="bell" solid />`, 'a.tsx', catalog)
   expect(out).toContain('<BellIconSolid'); expect(out).not.toContain('solid />')
 })
 test('a variant ships only itself', () => expect(names(scan(app(`export const A = () => <Icon name="bell" solid />`)))).toEqual(['bell:solid']))
@@ -84,17 +85,17 @@ test('one stop drops the switch and the other drawings', () => {
   const src = `import '../tiers.css'\nicon('<path data-t="o" d="M1"/><path data-t="v" data-p="" d="M4"/>')`
   expect(trimTiers(src, new Set(['balanced']))).toBe(`icon('<path d="M1"/>')`)
 })
-test('a dynamic name is left alone', () => expect(rewrite(`import { Icon } from '@weft/warp'\nconst a = n => <Icon name={n} />`, 'a.tsx', catalog)).toBeNull())
+test('a dynamic name is left alone', () => expect(rewrite(`import { Icon } from '@weft-js/warp'\nconst a = n => <Icon name={n} />`, 'a.tsx', catalog)).toBeNull())
 test('trimTiers keeps what the stops show', () => {
   const src = `icon('<path data-t="o" d="M1"/><path data-t="q" d="M2"/><path data-t="b" d="M3"/><path data-t="v" d="M4"/>')`
   expect(trimTiers(src, new Set(['quiet', 'balanced']))).toBe(`icon('<path data-t="o" d="M1"/><path data-t="q" d="M2"/><path data-t="b" d="M3"/>')`)
   expect(trimTiers(src, new Set(['balanced', 'vivid']))).toBe(`icon('<path data-t="o" d="M1"/><path data-t="b" d="M3"/><path data-t="v" d="M4"/>')`)
 })
 
-const pack = body => ({ 'src/a.tsx': `import Icons from '@weft/icons'\n${body}` })
+const pack = body => ({ 'src/a.tsx': `import Icons from '@weft-js/warp-icons'\n${body}` })
 test('a pack member is that icon', () => expect(names(scan(pack(`export const A = () => <Icons.Bell />`)))).toEqual(['bell']))
 test('a pack variant', () => expect(names(scan(pack(`export const A = () => <Icons.ArrowRightSolid />`)))).toEqual(['arrow-right:solid']))
-test('a namespace import works the same', () => expect(names(scan({ 'src/a.tsx': `import * as Icons from '@weft/icons'\nexport const A = () => <Icons.BellIcon />` }))).toEqual(['bell']))
+test('a namespace import works the same', () => expect(names(scan({ 'src/a.tsx': `import * as Icons from '@weft-js/warp-icons'\nexport const A = () => <Icons.BellIcon />` }))).toEqual(['bell']))
 test('an unknown pack member is an error', () => expect(scan(pack(`export const A = () => <Icons.Bel />`)).unknown[0]).toMatchObject({ name: 'Bel', suggest: 'Bell' }))
 test('a bounded pack lookup ships that set', () => {
   const r = scan(pack(`export const A = ({ on }) => { const C = Icons[on ? 'Bell' : 'Mail']; return <C /> }`))
@@ -106,17 +107,17 @@ test('an open pack lookup is dynamic, and legal', () => {
 })
 test('the pack passed as a value is reported', () => expect(scan(pack(`export const A = () => use(Icons)`)).escaped).toHaveLength(1))
 test('a default import of the pack becomes the namespace, so members shake', () => {
-  const out = rewrite(`import Icons from '@weft/icons'\nexport const A = () => <Icons.Bell />`, 'a.tsx', catalog)
-  expect(out).toContain("import * as Icons from '@weft/icons'")
+  const out = rewrite(`import Icons from '@weft-js/warp-icons'\nexport const A = () => <Icons.Bell />`, 'a.tsx', catalog)
+  expect(out).toContain("import * as Icons from '@weft-js/warp-icons'")
 })
 test('an open lookup goes through the names module', () => {
-  const out = rewrite(`import Icons from '@weft/icons'\nexport const A = n => Icons[n]`, 'a.tsx', catalog)
-  expect(out).toContain('__icon(n)'); expect(out).toContain("import { pack as __icon } from '@weft/icons/names'")
+  const out = rewrite(`import Icons from '@weft-js/warp-icons'\nexport const A = n => Icons[n]`, 'a.tsx', catalog)
+  expect(out).toContain('__icon(n)'); expect(out).toContain("import { pack as __icon } from '@weft-js/warp-icons/names'")
 })
-test('rewrite refuses an unknown member', () => expect(() => rewrite(`import Icons from '@weft/icons'\nconst a = <Icons.Bel />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'Bel', did you mean 'Bell'/))
+test('rewrite refuses an unknown member', () => expect(() => rewrite(`import Icons from '@weft-js/warp-icons'\nconst a = <Icons.Bel />`, 'a.tsx', catalog)).toThrow(/I001 no icon 'Bel', did you mean 'Bell'/))
 test('a remote source fetches singles, with no pack in the build', () => {
   const m = namesModule(['check'], { source: 'https://cdn.example.com/icons/' })
-  expect(m).toContain('remote("https://cdn.example.com/icons/")'); expect(m).not.toContain('@weft/icons/all')
+  expect(m).toContain('remote("https://cdn.example.com/icons/")'); expect(m).not.toContain('@weft-js/warp-icons/all')
 })
 test('publish writes each variant as a static file, and uploads nothing', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'icons-pub-'))
@@ -131,24 +132,24 @@ test('findings: unknown is an error code, dynamic and escaped are info codes', (
   const root = mkdtempSync(join(tmpdir(), 'icons-find-'))
   try {
     mkdirSync(join(root, 'src'))
-    writeFileSync(join(root, 'src/a.tsx'), `import { Icon } from '@weft/warp'\nimport * as I from '@weft/icons'\nexport const A = ({ r }) => <><Icon name="chekc" /><Icon name={load(r)} />{use(I)}</>`)
+    writeFileSync(join(root, 'src/a.tsx'), `import { Icon } from '@weft-js/warp'\nimport * as I from '@weft-js/warp-icons'\nexport const A = ({ r }) => <><Icon name="chekc" /><Icon name={load(r)} />{use(I)}</>`)
     expect(findings(root).map(f => f.code).sort()).toEqual(['I001', 'I002', 'I003'])
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 
 test('an action is a variant, and it keeps its trigger', () => {
-  const out = rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="trash" action="hover" />`, 'a.tsx', catalog)
+  const out = rewrite(`import { Icon } from '@weft-js/warp'\nconst a = <Icon name="trash" action="hover" />`, 'a.tsx', catalog)
   expect(out).toContain('<TrashIconAction'); expect(out).toContain('action="hover"')
-  expect(names(scan({ 'src/a.tsx': `import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="bell" action />` }))).toEqual(['bell:action'])
+  expect(names(scan({ 'src/a.tsx': `import { Icon } from '@weft-js/warp'\nexport const A = () => <Icon name="bell" action />` }))).toEqual(['bell:action'])
 })
 test('an icon with no action is an error, at the build and in check', () => {
-  expect(() => rewrite(`import { Icon } from '@weft/warp'\nconst a = <Icon name="heart" action="on" />`, 'a.tsx', catalog)).toThrow(/I001 no action for icon 'heart'/)
-  expect(scan({ 'src/a.tsx': `import { Icon } from '@weft/warp'\nexport const A = () => <Icon name="heart" action />` }).unknown[0].why).toMatch(/no action for icon 'heart'/)
+  expect(() => rewrite(`import { Icon } from '@weft-js/warp'\nconst a = <Icon name="heart" action="on" />`, 'a.tsx', catalog)).toThrow(/I001 no action for icon 'heart'/)
+  expect(scan({ 'src/a.tsx': `import { Icon } from '@weft-js/warp'\nexport const A = () => <Icon name="heart" action />` }).unknown[0].why).toMatch(/no action for icon 'heart'/)
 })
 
 test('a literal icon prop on a warp component is the icon itself, and stays out of the name table', () => {
-  const src = `import { Button } from '@weft/warp'\nexport const A = () => <Button icon="search">Go</Button>\n`
+  const src = `import { Button } from '@weft-js/warp'\nexport const A = () => <Button icon="search">Go</Button>\n`
   const out = rewrite(src, 'a.tsx', list())
   expect(out).toContain('icon={SearchIcon}')
-  expect(out).toContain("import { SearchIcon } from '@weft/icons'")
+  expect(out).toContain("import { SearchIcon } from '@weft-js/warp-icons'")
 })

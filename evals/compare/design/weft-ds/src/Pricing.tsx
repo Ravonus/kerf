@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Grid, Heading, Stack, Text } from '@weft/warp'
+import { Badge, Button, Card, Grid, Heading, Stack, Text } from '@weft-js/warp'
 
 const plans = [
   { name: 'Starter', price: '$19', blurb: 'For individuals getting going.', features: ['Up to 3 projects', '1 GB storage', 'Email support'], cta: 'Start free trial', featured: false },

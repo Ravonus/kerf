@@ -1,7 +1,8 @@
-import { Link } from '@weft/start'
-import { Drawer } from '@weft/warp'
-import { type State } from 'weft'
-import docs from '../generated/docs-nav.json'
+import { Link } from '@weft-js/start'
+import { Drawer } from '@weft-js/warp'
+import { type State } from '@weft-js/core'
+import learn from '../generated/learn-nav.json'
+import reference from '../generated/reference-nav.json'
 import { warpGroups } from '../lib/warp-nav'
 import { NAV } from './Header'
 
@@ -9,7 +10,8 @@ import { NAV } from './Header'
 /** What the left rail holds, for the section this page is in. */
 function section() {
   const path = location.pathname
-  if (path.startsWith('/docs')) return docs.map(g => ({ title: g.section, items: g.items.map(i => ({ href: `/docs/${i.slug}`, label: i.title })) }))
+  if (path.startsWith('/learn')) return learn.map((g, n) => ({ title: `${n + 1}. ${g.section}`, items: g.items.map(i => ({ href: `/learn/${i.slug}`, label: i.title })) }))
+  if (path.startsWith('/reference')) return reference.map(g => ({ title: g.section, items: g.items.map(i => ({ href: `/reference/${i.slug}`, label: i.title })) }))
   for (const area of ['components', 'blocks', 'charts'] as const) if (path.startsWith(`/${area}`)) return warpGroups(area)
   return []
 }

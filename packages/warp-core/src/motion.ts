@@ -1,6 +1,7 @@
-// @weft/warp-core/motion: enter/exit presets on WAAPI, timed from warp's motion tokens and always honouring reduced
+// @weft-js/warp-core/motion: enter/exit presets on WAAPI, timed from warp's motion tokens and always honouring reduced
 // motion (PLAN §6.1, 00 §8). Exits are 70% of the enter, travel half the distance, and continue the entry's direction.
 
+/** The entrance presets. */
 export type Preset = 'fade' | 'rise' | 'pop' | 'slide-left' | 'slide-right' | 'slide-up' | 'slide-down'
 
 /** True under `prefers-reduced-motion` or a `data-motion="reduce"` scope (and false under `data-motion="full"`). */

@@ -1,13 +1,14 @@
-import { AlertIcon, CheckIcon, RightIcon, XIcon } from '@weft/icons'
-import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft/warp-core'
-import { derived, onMount, state, untrack, watch } from 'weft'
+import { AlertIcon, CheckIcon, RightIcon, XIcon } from '@weft-js/warp-icons'
+import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft-js/warp-core'
+import { derived, onMount, state, untrack, watch } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Sweep } from './bits'
 import '../styles'
-import '@weft/warp-core/styles/components/spinner.css'
-import '@weft/warp-core/styles/app/tool-call.css'
+import '@weft-js/warp-core/styles/components/spinner.css'
+import '@weft-js/warp-core/styles/app/tool-call.css'
 
+/** Props for ToolCall. */
 export interface ToolCallProps {
   call: AgentTool
   /** Called with the arguments as edited, and whether "always allow" is ticked. Approval never auto-runs. */
@@ -15,9 +16,9 @@ export interface ToolCallProps {
   /** Called when the call is denied. */
   onDeny?: () => void
   /** The "always allow" line, scoped to tool and resource: "Always allow edits in src/calendar". */
-  alwaysAllow?: string
+  alwaysAllow?: string | undefined
   /** Was there on load: takes no focus and announces nothing. */
-  quiet?: boolean
+  quiet?: boolean | undefined
 }
 
 /**
@@ -50,10 +51,10 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
   })
   const leave = (then: () => void) => { head?.focus({ preventScroll: true }); then() }
   return (
-    <div ref={(n: any) => (frame = n)} data-part="tool-frame" data-sweep="">
+    <div ref={n => (frame = n)} data-part="tool-frame" data-sweep="">
       <Sweep />
       <details data-scope="tool-call" data-state={st.value} open={st.value === 'approval'}>
-        <summary ref={(n: any) => (head = n)}>
+        <summary ref={n => (head = n)}>
           <span>
             {st.value === 'running' && <span data-scope="spinner" style="--_size:13px;color:var(--warp-color-accent-text)"></span>}
             {st.value === 'done' && <CheckIcon style="color:var(--warp-color-positive-text)" />}
@@ -75,12 +76,12 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
         {st.value === 'approval' && (
           <div data-part="approve" role="group" aria-label={`Approve ${call.name}`}>
             <span data-part="eyebrow" id={`${id}-a`}>Arguments · editable</span>
-            <textarea aria-labelledby={`${id}-a`} spellcheck="false" value={args.value} onInput={e => (args.value = (e.currentTarget as HTMLTextAreaElement).value)}></textarea>
+            <textarea aria-labelledby={`${id}-a`} spellcheck="false" value={args.value} onInput={e => (args.value = (e.currentTarget).value)}></textarea>
             {diff.value && <section data-part="io"><span>Your edit</span><pre>{diff.value}</pre></section>}
             <div>
-              <Button size="sm" ref={(n: any) => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><CheckIcon />Approve</Button>
+              <Button size="sm" ref={n => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><CheckIcon />Approve</Button>
               <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>Deny</Button>
-              {alwaysAllow !== undefined && <Checkbox checked={always.value} onChange={(e: any) => (always.value = e.currentTarget.checked)}>{alwaysAllow}</Checkbox>}
+              {alwaysAllow !== undefined && <Checkbox checked={always.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (always.value = e.currentTarget.checked)}>{alwaysAllow}</Checkbox>}
             </div>
           </div>
         )}

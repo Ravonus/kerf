@@ -1,4 +1,4 @@
-import type { RouteProps } from '@weft/start'
+import type { RouteProps } from '@weft-js/start'
 import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { SpotlightGate } from '../components/SpotlightGate'

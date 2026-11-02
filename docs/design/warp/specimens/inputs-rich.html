@@ -2262,8 +2262,8 @@ function CodeBlock({ code, lang, filename, lineNumbers = false, wrap = false }) 
 }
 function CodeDemo(host) {
   host.className = "stack";
-  host.append(CodeBlock({ code: "pnpm add @weft/warp", lang: "sh" }));
-  host.append(CodeBlock({ filename: "app.ts", lang: "ts", lineNumbers: true, code: `import { warp } from "@weft/warp";\n\n// one switch: the signature float or a classic label\nexport const ui = warp({\n  expression: "balanced",\n  fields: "floating",\n});\n\nconst due = state<IsoDate | null>(null); // "2026-11-14"` }));
+  host.append(CodeBlock({ code: "pnpm add @weft-js/warp", lang: "sh" }));
+  host.append(CodeBlock({ filename: "app.ts", lang: "ts", lineNumbers: true, code: `import { warp } from "@weft-js/warp";\n\n// one switch: the signature float or a classic label\nexport const ui = warp({\n  expression: "balanced",\n  fields: "floating",\n});\n\nconst due = state<IsoDate | null>(null); // "2026-11-14"` }));
 }
 
 /* ================================================================= Markdown */
@@ -2503,7 +2503,7 @@ function ProseDemo(host) {
 }
 
 /* =================================================== code tabs + snippet */
-const PM = { pnpm: "pnpm add @weft/warp", npm: "npm install @weft/warp", yarn: "yarn add @weft/warp", bun: "bun add @weft/warp" };
+const PM = { pnpm: "pnpm add @weft-js/warp", npm: "npm install @weft-js/warp", yarn: "yarn add @weft-js/warp", bun: "bun add @weft-js/warp" };
 function CodeTabs(host) {
   let cur = "pnpm"; try { cur = localStorage.getItem("warp-pm") || "pnpm"; } catch {}
   const id = nid("ct");
@@ -2588,7 +2588,7 @@ function LogViewer(host) {
 
 /* ============================================= stack trace · test results */
 function StackTrace(host) {
-  const frames = [["parseDate", "src/time/parse.ts", 42, 11, false], ["Segments.onPaste", "src/fields/segments.ts", 118, 5, false], ["HTMLElement.dispatch", "node_modules/weft/dist/runtime.js", 2201, 14, true], ["flush", "node_modules/weft/dist/runtime.js", 1840, 9, true], ["batch", "node_modules/weft/dist/runtime.js", 1799, 3, true], ["DateField.paste", "src/fields/date-field.ts", 77, 3, false], ["invokeTask", "node_modules/zone/zone.js", 402, 31, true]];
+  const frames = [["parseDate", "src/time/parse.ts", 42, 11, false], ["Segments.onPaste", "src/fields/segments.ts", 118, 5, false], ["HTMLElement.dispatch", "node_modules/@weft-js/core/dist/runtime.js", 2201, 14, true], ["flush", "node_modules/@weft-js/core/dist/runtime.js", 1840, 9, true], ["batch", "node_modules/@weft-js/core/dist/runtime.js", 1799, 3, true], ["DateField.paste", "src/fields/date-field.ts", 77, 3, false], ["invokeTask", "node_modules/zone/zone.js", 402, 31, true]];
   host.innerHTML = `<div data-scope="stack"><p data-part="error"><b>RangeError</b>: Invalid date "2026-02-30" (day exceeds 28)</p><div class="chips"><button type="button" data-scope="chip" data-int aria-pressed="false">Show library frames</button><button type="button" data-scope="button" data-emphasis="ghost" data-size="sm" data-copy>${icon("copy")}<span>Copy trace</span></button></div><ol data-part="frames"></ol></div>`;
   let showInt = false; const ol = $("ol", host);
   function paint() {

@@ -1,4 +1,4 @@
-import { derived, state, untrack, watch } from 'weft'
+import { derived, state, untrack, watch } from '@weft-js/core'
 import { money, pageSize, projects, type Project } from '../../shared/data'
 
 export type Column = { id: keyof Project; header: string; cell?: (r: Project) => any }

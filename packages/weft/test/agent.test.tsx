@@ -1,10 +1,10 @@
 // weft-allow T004, T005: the bridge's clock replaces the page's timers itself, and one test clicks the raw DOM the way another browser tool would
-// weft/agent and weft/devtools: what an agent sees and does in the running app (research 22). No weft/test here: the
+// @weft-js/core/agent and @weft-js/core/devtools: what an agent sees and does in the running app (research 22). No @weft-js/core/test here: the
 // bridge brings its own page fakes (clock, network), and these tests check them.
-import { derived, onCleanup, state } from 'weft'
-import { render } from 'weft/dom'
-import { act, assert, clock, net, record, run, snapshot } from 'weft/agent'
-import { graph, set } from 'weft/devtools'
+import { derived, onCleanup, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
+import { act, assert, clock, net, record, run, snapshot } from '@weft-js/core/agent'
+import { graph, set } from '@weft-js/core/devtools'
 
 function Stock(props: { stock: number }) {
   const qty = state(0)
@@ -27,7 +27,7 @@ function Later() {
 }
 
 let dispose: (() => void) | undefined
-const mount = (fn: () => any) => {
+const mount = (fn: () => unknown) => {
   const el = document.body.appendChild(document.createElement('div'))
   const stop = render(fn, el)
   dispose = () => { stop(); el.remove() }
@@ -36,7 +36,7 @@ afterEach(() => { dispose?.(); dispose = undefined; record.stop(); clock.resume(
 
 test('snapshot: roles, names, refs and the named graph', async () => {
   mount(() => <Stock stock={2} />)
-  const s: any = await snapshot()
+  const s = await snapshot()
   expect(s.tree).toContain('- status [ref=')
   expect(s.tree).toContain(': Only 2 left')
   expect(s.tree).toMatch(/- button "Add" \[ref=e\d+\]/)
@@ -44,7 +44,7 @@ test('snapshot: roles, names, refs and the named graph', async () => {
   expect(s.graph).toContain('Stock.left = 2 ← Stock.qty')
   const nodes = graph('Stock')
   expect(nodes.map(n => n.name)).toEqual(['Stock.left', 'Stock.qty'])
-  expect(nodes[1].feeds).toContain('Stock.left')
+  expect(nodes[1]!.feeds).toContain('Stock.left')
 })
 
 test('act clicks like a user and returns what changed; assert retries what the user sees', async () => {
@@ -60,15 +60,15 @@ test('act clicks like a user and returns what changed; assert retries what the u
 
 test('acting by a snapshot ref, and a clear error when a name is ambiguous', async () => {
   mount(() => <><Stock stock={1} /><Stock stock={3} /></>)
-  const s: any = await snapshot({ interactive: true, graph: false })
-  const ref = /button "Add" \[ref=(e\d+)\]/.exec(s.tree)![1]
+  const s = await snapshot({ interactive: true, graph: false })
+  const ref = /button "Add" \[ref=(e\d+)\]/.exec(s.tree as string)![1]
   await act(`@${ref}`, 'click')
   expect(document.body.textContent).toContain('Out of stock')
   await expect(act({ role: 'button', name: 'Add' }, 'click')).rejects.toThrow(/2 elements match button "Add"/)
   expect(graph('Stock').map(n => n.name)).toEqual(['Stock#1.left', 'Stock#1.qty', 'Stock#2.left', 'Stock#2.qty'])
 })
 
-test('set writes state by its graph name; derived values refuse', async () => {
+test('set writes state by its graph name; derived values refuse', () => {
   mount(() => <Stock stock={5} />)
   expect(set('Stock.qty', 5)).toMatchObject({ name: 'Stock.qty', value: 5 })
   expect(document.body.textContent).toContain('Out of stock')
@@ -76,7 +76,7 @@ test('set writes state by its graph name; derived values refuse', async () => {
   expect(() => set('Nope.x', 1)).toThrow(/no state named Nope\.x/)
 })
 
-test('record turns acts and asserts into a weft/test test', async () => {
+test('record turns acts and asserts into a @weft-js/core/test test', async () => {
   mount(() => <Stock stock={2} />)
   record.start()
   await act({ role: 'button', name: 'Add' }, 'click')
@@ -86,7 +86,7 @@ test('record turns acts and asserts into a weft/test test', async () => {
   const { code, asserts } = record.code({ component: 'Stock', from: './Stock', props: '{ stock: 2 }' })
   expect(asserts).toBe(2)
   expect(code).toBe(`import { expect, test } from 'vitest'
-import { render, screen, user } from 'weft/test'
+import { render, screen, user } from '@weft-js/core/test'
 import { Stock } from "./Stock"
 
 test("recorded: /", async () => {

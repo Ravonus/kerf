@@ -2,11 +2,12 @@
 
 `weft.config.ts` is the default. `weft.config.json` and `weft.config.yaml` take the same keys, and `weft check` writes
 `.weft/config.schema.json` for editor completion. In JSON and YAML a plugin is a package name or `[name, options]`, like
-`["@weft/warp", { "fields": "classic" }]`; anything that needs a function belongs in `weft.config.ts`. Keep one file:
+`["@weft-js/warp", { "fields": "classic" }]`; anything that needs a function belongs in `weft.config.ts`. Keep one file:
 two is P010. `weft add <plugin>` installs a plugin and adds it to whichever format you use; `weft add tailwind` sets up Tailwind, `weft add db mysql --layer native` adds a database, and `weft add auth` adds Better Auth to it.
 
 ```ts
-import { defineConfig } from 'weft/config'
+import { defineConfig } from '@weft-js/core/config'
+import { dialScript, warp } from '@weft-js/warp/plugin'
 
 export default defineConfig({
   scope: { write: ['src/**', 'test/**'], forbid: ['.env*'] },
@@ -14,41 +15,47 @@ export default defineConfig({
     seed: { run: 'node scripts/seed.mjs', description: 'Load demo products into the dev db', sideEffects: ['db'], env: ['dev'] },
   },
   environments: { dev: { url: 'http://localhost:5173' } },
-  site: {        // page metadata defaults: static tags in the server's first response (research 20)
+  site: {        // page metadata defaults: static tags in the server's first response (weft docs meta)
     name: 'Acme',
     url: 'https://acme.dev',
     title: '%s · Acme',
     description: 'Tools for builders.',
     locale: 'en_US',
-    image: { url: '/og.png', width: 1200, height: 630 },   // or 'auto' (generated card, not built yet)
+    image: { url: '/og.png', width: 1200, height: 630 },   // default 'auto': a generated card (weft docs meta); false: none
     twitter: { card: 'summary_large_image', site: '@acme' },
     inlineCss: false, // default true: each page carries what its first paint needs; false keeps plain links
     criticalCss: false, // default true: one hashed sheet plus a first-paint part; false splits by chunk and inlines up to 48 KB
     criticalKeep: ['theme-x'], // words of selectors a first paint keeps, for classes a head script sets
-    head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft/warp/plugin restores `setDial(…, { persist: true })` before the first paint
+    head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft-js/warp/plugin restores `setDial(…, { persist: true })` before the first paint
   },
-  plugins: [warp()],   // plugin factories (weft/plugin); a plain `{ name, provides }` entry is data only
+  plugins: [warp()],   // plugin factories (@weft-js/core/plugin); a plain `{ name, provides }` entry is data only
   slots: {},           // names the winner when two plugins provide one slot
 })
 ```
 
-| Key | Checked by `weft check` |
+| Key | What it holds, and what `weft check` reports |
 |---|---|
-| `scope` | `forbid` globs are never compiled or written. `write` is the boundary for `weft fix` (P005, planned) |
-| `tasks` | P003 duplicate name or command, P004 missing `description` or `sideEffects` |
-| `plugins` | P116 duplicate name; P100 two entries `provides` one `one` slot; P115 bad options; P117 impure `contribute()`; P111 code outside the plugin's namespace; P112 AGENTS section over 1 KB; P113 token-namespace or catalog collision; a code a plugin throws from `contribute()` (e.g. warp's D010) |
-| `site` | P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 no `url` with a relative image; H003 no `description`; H004 title over 60 or description over 160 (warnings) |
-| `site.card` | P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `weft docs meta` has the rest |
-| `check.routes` | `false` skips the route pass of `weft check`: H001–H007, H011–H016, which run the app's loaders once |
+| `scope` | `write`, `read` and `forbid` globs. `forbid` is never compiled or written. `write` will bound `weft fix` (P005, not reported yet) |
+| `tasks` | Project commands for `weft run` and `weft tasks`. P003 duplicate name or command, P004 missing `description` or `sideEffects` |
+| `environments` | Named places the app runs, with a `url` |
+| `test` | `include` (default `**/*.{test,spec}.*`), `lanes`, and `gate: { mutationBudgetSec, maxMutants }` for `weft test --gate` |
+| `check` | `include` and `exclude` globs; `design: false` turns off the D-codes, `routes: false` the route pass (H001–H007, H011–H016, which run the app's loaders once), `props: false` or `'manual'` the prop inference (`weft docs props`) |
+| `plugins` | P116 duplicate name; P100 two entries provide one `one` slot; P115 bad options; P117 impure `contribute()`; P111 code outside the plugin's namespace; P112 AGENTS section over 1 KB; P113 token-namespace or catalog collision; and the codes plugins report themselves (e.g. warp's D010) |
+| `slots` | Which plugin wins a slot two provide. P008 unknown slot id, P009 winner not in `plugins` or not providing the slot |
+| `site` | Page metadata defaults and CSS delivery. P007 `url` not absolute http(s), `title` without `%s`, `locale` not `en_US` style; H001 no `url`; H003 no `description`; H004 a title over 60 or a description over 160 (warnings) |
+| `site.card` | The generated share card's colours and fonts. P007 a colour that isn't `#rrggbb`, a font family that isn't a name. `weft docs meta` has the rest |
+| `site.headers` | Response headers by route pattern |
+| `runtime` | `node`, `bun` or `deno`: what `weft build` targets (`weft docs start`) |
+| `rust` | `unions` and `services` for Rust bodies (`weft docs rust`) |
+| `live` | `targets` for a live query's `verify` (`weft docs start`) |
 | `trust` | `'enforce'` (default) or `'warn'`: see P109 and P110 under Plugins |
-| `slots` | P008 unknown slot id, P009 winner not in `plugins` or not providing the slot |
 | anything else | P007: unknown key or wrong type, with the path |
 
 `package.json` scripts may only alias `weft …` (P002). Project commands live in `tasks`.
 
 ## Plugins
 
-A plugin is a factory made with `definePlugin` from `weft/plugin`. Its pure `contribute(options, env)` returns what it
+A plugin is a factory made with `definePlugin` from `@weft-js/core/plugin`. Its pure `contribute(options, env)` returns what it
 adds: slot providers, `tokens` (`--<namespace>-*`), one AGENTS.md section (≤ 1 KB), catalog entries and diagnostic
 codes in its namespace. Components stay normal imports.
 
@@ -73,7 +80,7 @@ records what you approved, plus a hash of each installed plugin's files. Commit 
   monorepo, check the ignore file at the repository root yourself.
 - `weft add` never approves. It tells you what the plugin asks for, and the next `weft check` stops until you do.
 - A plugin that asks for nothing and passes the audit needs no approval, and `approve` pins it if you want that.
-- `create-weft` approves the plugins you pick. It can't hash code before the install, so run
+- `npm create @weft-js` approves the plugins you pick. It can't hash code before the install, so run
   `weft plugins approve --all` once to pin them.
 - `trust: 'warn'` in the config turns P109 and P110 into warnings, for a project that vets dependencies some other way.
 

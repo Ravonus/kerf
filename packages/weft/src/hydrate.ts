@@ -1,16 +1,17 @@
-// Hydration (weft/dom): adopt the DOM `renderToString` produced instead of building it. Each template root the
+// Hydration (@weft-js/core/dom): adopt the DOM `renderToString` produced instead of building it. Each template root the
 // server wrote carries its key (` wk="0.1/0"`, research 19 §2.4); compiled hydratable output claims elements by
 // key (`tpl`), walks over the server's hole ranges (`first`/`next`) and adopts their nodes (`child`). A key with no
 // server element is a miss: dev builds warn, every build counts it in `hydration.misses`, and the client renders
 // that template fresh so the app still works.
 //
 // Hydration is one synchronous pass over the whole container. Events fired before it finishes are dropped, unless the
-// app has lazy islands: then `@weft/start`'s capture script holds them for `drain` (island.ts).
+// app has lazy islands: then `@weft-js/start`'s capture script holds them for `drain` (island.ts).
 
 import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
 import { hchild } from './claim'
 import { keys } from './keys'
 
+/** One hydration's state: the elements awaiting a claim, what's left to sweep, and how many keys missed. */
 export const hydration = { misses: 0, registry: new Map<string, Element>(), /** What only the claim needed. */ trash: [] as (ChildNode | Element)[] }
 
 /**
@@ -24,7 +25,7 @@ export function sweep() {
     for (const n of list) {
       if (n.nodeType === 1) {
         ;(n as Element).removeAttribute('wk')
-        delete (n as any).$k
+        delete (n as Element & { $k?: string }).$k
       } else n.remove()
     }
   })
@@ -34,13 +35,13 @@ export function sweep() {
  * Hydrate `container`'s server HTML with `code` (the same `() => <App />` the server rendered). The page data is the
  * container's trailing `<script data-weft>`, or `options.data` when the page sends it elsewhere (a stream, research 25).
  */
-export function hydrate(code: () => any, container: Element, options: { data?: SsrData | null } = {}): () => void {
+export function hydrate(code: () => unknown, container: Element, options: { data?: SsrData | null | undefined } = {}): () => void {
   const registry = hydration.registry
   for (const el of container.querySelectorAll('[wk]')) registry.set(el.getAttribute('wk')!, el)
   hydration.misses = 0
   // The server's data (resources, boundary states) stays where it is: the app hydrates the nodes before it.
   const script = container.querySelector(':scope > script[data-weft]')
-  rt.data = options.data ?? (script ? JSON.parse(script.textContent!) : undefined)
+  rt.data = options.data ?? (script ? JSON.parse(script.textContent) : undefined)
   rt.state = rt.data?.s
   let dispose!: () => void
   Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })

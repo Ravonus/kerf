@@ -1,9 +1,9 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6, §10 (H001–H008, H011–H016), PLAN §12 (H009, H010, partial hydration), research 23 §3 (D020–D025, style groups), research 36 (D001–D039, the design language),
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6, §10 (H001–H008, H011–H016), PLAN §12 (H009, H010, partial hydration), research 23 §3 (D020–D025, style groups), research 37 (D001–D039, the design language),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
 // research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
-// 30 §8 (W052, W053, T013, R001–R023, realtime), research 36 §8 and 37 (R101–R109, Rust), plus the codes proposed in research 17 (marked `proposed`).
+// 30 §8 (W052, W053, T013, R001–R023, realtime), research 36 §8 and 39 (R101–R109, Rust), plus the codes proposed in research 17 (marked `proposed`).
 //
 // W-codes come from the compiler. Each has an `example` that should trigger it; `probe()` runs the installed
 // compiler over the examples, so AGENTS.md and `docs` only claim what this weft version actually reports. T-codes
@@ -28,19 +28,19 @@ export const catalog = [
   },
   {
     code: 'W002', severity: 'error', by: 'compiler', catches: 'Writing state inside `derived`', fix: 'Move the write to a handler, or make the target `derived`',
-    example: "import { state, derived } from 'weft'\nexport function A() { const a = state(0); const b = state(0); const d = derived(() => { b.value = a.value; return a.value }); return <p>{d.value}</p> }",
+    example: "import { state, derived } from '@weft-js/core'\nexport function A() { const a = state(0); const b = state(0); const d = derived(() => { b.value = a.value; return a.value }); return <p>{d.value}</p> }",
   },
   {
     code: 'W003', severity: 'error', by: 'compiler', catches: '`watch` writes state that its own source reads (cycle)', fix: 'Use `derived`',
-    example: "import { state, watch } from 'weft'\nexport function A() { const a = state(0); watch(() => a.value, v => { a.value = v + 1 }); return <p>{a.value}</p> }",
+    example: "import { state, watch } from '@weft-js/core'\nexport function A() { const a = state(0); watch(() => a.value, v => { a.value = v + 1 }); return <p>{a.value}</p> }",
   },
   {
     code: 'W004', severity: 'warning', by: 'compiler', catches: '`watch` that only copies one value into another', fix: 'Replace with `derived`',
-    example: "import { state, watch } from 'weft'\nexport function A() { const a = state(0); const b = state(0); watch(() => a.value, v => { b.value = v }); return <p>{b.value}</p> }",
+    example: "import { state, watch } from '@weft-js/core'\nexport function A() { const a = state(0); const b = state(0); watch(() => a.value, v => { b.value = v }); return <p>{b.value}</p> }",
   },
   {
     code: 'W005', severity: 'error', by: 'compiler', catches: "`state(prop)`: React's `useState(prop)` bug, the box never follows the prop", fix: '`state.linked(() => prop)`, or `untrack` for a one-time copy',
-    example: "import { state } from 'weft'\nexport function A({ v }: any) { const s = state(v); return <p>{s.value}</p> }",
+    example: "import { state } from '@weft-js/core'\nexport function A({ v }: any) { const s = state(v); return <p>{s.value}</p> }",
   },
   {
     code: 'W006', severity: 'error', by: 'compiler', catches: "Nested prop destructuring (`({ user: { name } })`) can't stay live", fix: 'Read at the use site: `user.name`',
@@ -58,7 +58,7 @@ export const catalog = [
   },
   {
     code: 'W012', severity: 'error', by: 'compiler', catches: '`derived(async …)`, or reads after `await` in `resource` (untracked)', fix: 'Use `resource`; read before the `await`',
-    example: "import { derived } from 'weft'\nexport function A() { const d = derived(async () => 1); return <p>{d.value}</p> }",
+    example: "import { derived } from '@weft-js/core'\nexport function A() { const d = derived(async () => 1); return <p>{d.value}</p> }",
   },
   {
     code: 'W013', severity: 'error', by: 'compiler', catches: 'Early `return` inside a JSX `.map` callback', fix: 'Filter first: `xs.filter(…).map(…)`',
@@ -68,11 +68,11 @@ export const catalog = [
     code: 'W014', severity: 'error', by: 'compiler',
     catches: 'Identity-breaking `.map(p => ({ ...p, … }))` feeding a keyed list: every row re-runs on every change (in-file, and across files via props in `weft check`)',
     fix: 'Replace only the changed item (`p.id === id ? { ...p, price } : p`), or read the changing field live',
-    example: "import { state } from 'weft'\nexport function A() { const xs = state([{ id: 'a', price: 1 }]); const push = (price: number) => { xs.value = xs.value.map(p => ({ ...p, price })) }; return <ul onClick={() => push(2)}>{xs.value.map(p => <li key={p.id}>{p.price}</li>)}</ul> }",
+    example: "import { state } from '@weft-js/core'\nexport function A() { const xs = state([{ id: 'a', price: 1 }]); const push = (price: number) => { xs.value = xs.value.map(p => ({ ...p, price })) }; return <ul onClick={() => push(2)}>{xs.value.map(p => <li key={p.id}>{p.price}</li>)}</ul> }",
   },
   {
     code: 'W015', severity: 'error', by: 'compiler', catches: 'A box rendered without `.value` in JSX (a child, or a native attribute)', fix: 'Add `.value`',
-    example: "import { state } from 'weft'\nexport function A() { const n = state(0); return <p>{n}</p> }",
+    example: "import { state } from '@weft-js/core'\nexport function A() { const n = state(0); return <p>{n}</p> }",
   },
   {
     code: 'W017', severity: 'warning', by: 'compiler',
@@ -84,7 +84,7 @@ export const catalog = [
     code: 'W018', severity: 'warning', by: 'compiler',
     catches: '`const x = untrack(() => …reactive…)` in a component body that only the JSX reads: it renders the setup-time value and never updates',
     fix: '`derived(() => …)` and render `x.value`; `untrack` only for a value meant to stay fixed',
-    example: "import { untrack, type State } from 'weft'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
+    example: "import { untrack, type State } from '@weft-js/core'\nexport function A({ id, live }: { id: string; live: State<Record<string, number>> }) { const n = untrack(() => live.get(id)); return <p>{n}</p> }",
   },
   {
     code: 'W019', severity: 'error', by: 'compiler', catches: 'Unsupported row pattern', fix: 'Read from one item param',
@@ -98,7 +98,7 @@ export const catalog = [
   { code: 'W030', severity: 'error', by: 'compiler', catches: 'Module-level `state` reachable from the server entry graph (leaks across requests)', fix: '`context`, or mark `state.global`' },
   {
     code: 'W040', severity: 'error', by: 'compiler', catches: 'Early `return` in a component body that depends on state (runs once, never re-checked)', fix: 'Branch in JSX',
-    example: "import { state } from 'weft'\nexport function A() { const n = state(0); if (n.value > 1) return null; return <p>{n.value}</p> }",
+    example: "import { state } from '@weft-js/core'\nexport function A() { const n = state(0); if (n.value > 1) return null; return <p>{n.value}</p> }",
   },
   {
     code: 'W041', severity: 'error', by: 'compiler', catches: '`let` variable mutated in a handler and read in JSX (never updates)', fix: 'Make it `state`',
@@ -112,45 +112,45 @@ export const catalog = [
   {
     code: 'W050', severity: 'error', by: 'compiler',
     catches: 'Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup (it outlives the component)',
-    fix: '`on(target, type, fn)` / `interval(ms, fn)` from weft/browser, or clean it up in `onCleanup`',
+    fix: '`on(target, type, fn)` / `interval(ms, fn)` from @weft-js/core/browser, or clean it up in `onCleanup`',
     example: "export function A() { window.addEventListener('keydown', () => {}); return <p /> }",
   },
   {
     code: 'W051', severity: 'error', by: 'compiler',
-    catches: 'A weft/browser value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await`',
+    catches: 'A @weft-js/core/browser value, `on` or `interval` created outside an owner: module scope, a timer or promise callback, an event handler, after `await`',
     fix: "Create it in a component's (or `defineState`'s) setup, or inside `createRoot(dispose => …)`",
-    example: "import { online } from 'weft/browser'\nexport const up = online()",
+    example: "import { online } from '@weft-js/core/browser'\nexport const up = online()",
   },
   {
     code: 'W052', severity: 'error', by: 'compiler',
     catches: '`watch` folding a stream by hand',
     fix: '`fold` + `initial` where it is read: kept in the cache',
-    example: "import { state, watch } from 'weft'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
+    example: "import { state, watch } from '@weft-js/core'\nimport { prices } from './server/prices'\nexport function A() { const tick = prices({}); const list = state([]); watch(() => tick.value, m => { list.value = [...list.value, m] }); return <p>{list.value.length}</p> }",
   },
   { code: 'W053', severity: 'error', by: 'start', catches: '`.live()` on a query with no `tags` (dev): no mutation can ever poke it', fix: 'Add `tags` to the query, and the same tag to the mutations that change it' },
   {
     code: 'W054', severity: 'error', by: 'compiler',
     catches: '`media(query)` without `ssr` in a server-rendered component (hydration mismatch); a warning when `weft check` cannot tell',
     fix: "Pass the server value: `media(query, { ssr: false })`",
-    example: "import { media } from 'weft/browser'\nexport function A() { const dark = media('(prefers-color-scheme: dark)'); return <p>{dark.value ? 'dark' : 'light'}</p> }",
+    example: "import { media } from '@weft-js/core/browser'\nexport function A() { const dark = media('(prefers-color-scheme: dark)'); return <p>{dark.value ? 'dark' : 'light'}</p> }",
   },
   {
-    code: 'W056', severity: 'warning', by: 'compiler', catches: '`watch` that copies a live value (a weft/browser value, `.live()`) into `state`',
+    code: 'W056', severity: 'warning', by: 'compiler', catches: '`watch` that copies a live value (a @weft-js/core/browser value, `.live()`) into `state`',
     fix: 'Read `live.value` directly, or `derived(() => live.value)`',
-    example: "import { state, watch } from 'weft'\nimport { online } from 'weft/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
+    example: "import { state, watch } from '@weft-js/core'\nimport { online } from '@weft-js/core/browser'\nexport function A() { const isOnline = online(); const up = state(true); watch(() => isOnline.value, v => { up.value = v }); return <p>{up.value}</p> }",
   },
   {
-    code: 'W060', severity: 'error', by: 'compiler', catches: "A `group()` from weft/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
+    code: 'W060', severity: 'error', by: 'compiler', catches: "A `group()` from @weft-js/core/style that can't be evaluated at build: a value that isn't a literal (named with its path), a `group()` outside a top-level `const`, or an accent that isn't literal tokens",
     fix: 'Inline the token name or literal; define groups as `export const x = group(\'x\', { … })`; raw CSS goes in `css: { … }`',
-    example: "import { group } from 'weft/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
+    example: "import { group } from '@weft-js/core/style'\nconst px = 13\nexport const g = group('g', { base: { pad: px } })",
   },
   {
     code: 'W061', severity: 'error', by: 'compiler', catches: '`bind:x` on a native element, or `bind:x`/`bind(box)` with something that isn\'t a box or that isn\'t a component prop',
     fix: 'Write `<Card bind:person={name} />`. A form element takes `value` and `onChange`',
-    example: "import { bind, state } from 'weft'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
+    example: "import { bind, state } from '@weft-js/core'\nexport function A() { const n = state(1); return <input value={bind(n)} /> }",
   },
 
-  // The design language (PLAN §6, research 36): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
+  // The design language (PLAN §6, research 37): tokens and layout where the app has warp's tokens, contrast and accessibility everywhere.
   { code: 'D001', severity: 'error', by: 'cli', catches: 'A raw colour in `style`, app CSS, or a Tailwind arbitrary or palette class, in an app with warp\'s tokens: it won\'t follow the theme, the dials or dark mode', fix: 'Use a colour token or a `tone`. No autofix: a token follows the theme, the raw value didn\'t' },
   { code: 'D002', severity: 'error', by: 'cli', catches: 'Spacing off the scale, or a scale step written by hand (`padding: 16px`, `p-[13px]`, `gap-3`)', fix: 'A step of `hair tight related group section page`; autofix when the value is exactly one' },
   { code: 'D003', severity: 'warning', by: 'cli', catches: 'Raw type, radius or shadow (`font-size`, `text-lg`, `rounded-[7px]`, `box-shadow`)', fix: '`<Heading role>` / `<Text role>`, the radius tokens, `--warp-elevation-*`; autofix for an exact radius' },
@@ -183,19 +183,19 @@ export const catalog = [
     code: 'D024', severity: 'error', by: 'compiler',
     catches: 'Styles that fight with no order: two group roots spread on one element; two compounds that can match at once and set one property differently, or an accent that sets what the site\'s own axis value sets (`weft check`)',
     fix: 'One group per element (nest an element, or make it an axis); exclusive compound `when`s; drop the accent or make it an axis value',
-    example: "import { group } from 'weft/style'\nconst a = group('a', { base: { pad: 'group' } })\nconst b = group('b', { base: { gap: 'related' } })\nexport function X() { return <li {...a()} {...b()} /> }",
+    example: "import { group } from '@weft-js/core/style'\nconst a = group('a', { base: { pad: 'group' } })\nconst b = group('b', { base: { gap: 'related' } })\nexport function X() { return <li {...a()} {...b()} /> }",
   },
   {
     code: 'D025', severity: 'error', by: 'compiler',
     catches: "Unknown name in a style group: an axis value, axis, state or part a call site uses that the group doesn't have, or an intent or token that isn't in the vocabulary (also a type error)",
     fix: 'Use one of the names listed (the closest come first); `weft style explain <group>` shows them all',
-    example: "import { group } from 'weft/style'\nconst card = group('card', { axes: { status: { open: {}, late: {} } } })\nexport function X() { return <article {...card({ status: 'lost' })} /> }",
+    example: "import { group } from '@weft-js/core/style'\nconst card = group('card', { axes: { status: { open: {}, late: {} } } })\nexport function X() { return <article {...card({ status: 'lost' })} /> }",
   },
 
   {
-    code: 'T001', severity: 'error', by: 'cli', catches: 'A test with no assertion (or an `expect(x)` with no matcher): it passes as long as nothing throws. `weft/test` also fails such a test at runtime',
+    code: 'T001', severity: 'error', by: 'cli', catches: 'A test with no assertion (or an `expect(x)` with no matcher): it passes as long as nothing throws. `@weft-js/core/test` also fails such a test at runtime',
     fix: 'Assert what the user sees: `expect(screen.getByRole(…)).toHaveTextContent(…)`',
-    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\ntest('renders', () => { render(Cart) })",
+    example: "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\ntest('renders', () => { render(Cart) })",
   },
   {
     code: 'T002', severity: 'error', by: 'cli', catches: 'Tautology: `expect` on a literal, or a value compared with itself', fix: 'Assert on the output of the code under test',
@@ -204,24 +204,24 @@ export const catalog = [
   {
     code: 'T003', severity: 'error', by: 'cli', catches: 'Asserting a value the test just set (`n.value = 5; expect(n.value).toBe(5)`) without going through the UI or the graph',
     fix: 'Act through the UI (`await user.click(…)`) or assert on what depends on the value',
-    example: "import { state } from 'weft'\ntest('count', () => { const n = state(0); n.value = 5; expect(n.value).toBe(5) })",
+    example: "import { state } from '@weft-js/core'\ntest('count', () => { const n = state(0); n.value = 5; expect(n.value).toBe(5) })",
   },
   {
-    code: 'T004', severity: 'error', by: 'cli', catches: 'Sleeps, real timers or `waitFor` polling in a test', fix: '`await flush()`; for time, `clock.install()` and `await clock.advance(ms)` from weft/test',
+    code: 'T004', severity: 'error', by: 'cli', catches: 'Sleeps, real timers or `waitFor` polling in a test', fix: '`await flush()`; for time, `clock.install()` and `await clock.advance(ms)` from @weft-js/core/test',
     example: "test('later', async () => { await new Promise(r => setTimeout(r, 100)); expect(1 + 1).toBe(2) })",
   },
   {
     code: 'T005', severity: 'warning', by: 'cli', catches: 'Implementation query: `container`, CSS selectors, classes, `innerHTML`, test ids, or app state read directly in a component test',
     fix: 'Query by role, label or text (`screen.getByRole`, `getByLabelText`, `getByText`)',
-    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\ntest('total', () => { const { container } = render(Cart); expect(container.querySelector('.total')!.textContent).toBe('$0') })",
+    example: "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\ntest('total', () => { const { container } = render(Cart); expect(container.querySelector('.total')!.textContent).toBe('$0') })",
   },
   {
-    code: 'T006', severity: 'error', by: 'cli', catches: 'Mocking weft (`vi.mock(\'weft\')`) or the unit under test, so the test checks the mock', fix: 'Fake the edges (network, storage) and render the real component',
-    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\nvi.mock('./Cart')\ntest('cart', () => { render(Cart); expect(document.body.textContent).toBe('') })",
+    code: 'T006', severity: 'error', by: 'cli', catches: 'Mocking weft (`vi.mock(\'@weft-js/core\')`) or the unit under test, so the test checks the mock', fix: 'Fake the edges (network, storage) and render the real component',
+    example: "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\nvi.mock('./Cart')\ntest('cart', () => { render(Cart); expect(document.body.textContent).toBe('') })",
   },
   {
     code: 'T007', severity: 'error', by: 'cli', catches: 'Snapshot without approval: it records today\'s output and passes against it', fix: 'Assert the behavior with role/label/text queries, or approve it with `// weft-allow T007: <reason>`',
-    example: "import { render } from 'weft/test'\nimport { Cart } from './Cart'\ntest('cart', () => { render(Cart); expect(document.body.innerHTML).toMatchSnapshot() })",
+    example: "import { render } from '@weft-js/core/test'\nimport { Cart } from './Cart'\ntest('cart', () => { render(Cart); expect(document.body.innerHTML).toMatchSnapshot() })",
   },
   {
     code: 'T008', severity: 'error', by: 'cli', catches: 'Conditional `expect` (`if`, `?:`, `&&`, `catch`), or a test whose only `expect`s are in a loop', fix: 'Make the condition its own assertion, then assert unconditionally; `expect(fn).toThrow()` for errors',
@@ -240,7 +240,7 @@ export const catalog = [
     fix: "Assert what the changed code computes; the gate's surviving mutants say what to check",
   },
   {
-    code: 'T012', severity: 'error', by: 'test', catches: 'A test ends with weft/browser listeners, intervals or subscribed values still open (checked by weft/test after each test)',
+    code: 'T012', severity: 'error', by: 'test', catches: 'A test ends with @weft-js/core/browser listeners, intervals or subscribed values still open (checked by @weft-js/core/test after each test)',
     fix: 'Unmount what the test created (dispose any `createRoot`), or fix the leak',
   },
 
@@ -264,7 +264,7 @@ export const catalog = [
   { code: 'P008', severity: 'error', by: 'cli', proposed: true, catches: '`slots` names a slot id weft does not define', fix: 'Use an id from `weft check --json` `slots`' },
   { code: 'P009', severity: 'error', by: 'cli', proposed: true, catches: '`slots` picks a winner that is not in `plugins` (or does not provide that slot)', fix: 'Add the plugin, or pick one that provides the slot' },
 
-  // Metadata and share cards (research 20 §6; H for head, M is media). `start`: reported by @weft/start at request or
+  // Metadata and share cards (research 20 §6; H for head, M is media). `start`: reported by @weft-js/start at request or
   // render time, and by `weft routes --meta` for every route.
   { code: 'H009', severity: 'error', by: 'runtime', catches: 'A prop of an island is something JSON can\'t carry (a function, a Date, a class instance), found as the server renders', fix: 'Pass plain data, or put `/* @weft client */` on the component that renders it' },
   { code: 'H010', severity: 'info', by: 'cli', catches: 'An island has to load with the page for a reason its code could avoid: work that reaches past it, a module that runs as it loads, a box at module level, code the compiler can\'t see into. `.weft/hydration.json` says why for every island', fix: '`/* @weft visible */` above the component when its work only matters on screen; otherwise the fix the diagnostic names' },
@@ -283,7 +283,7 @@ export const catalog = [
   { code: 'H007', severity: 'error', by: 'start', catches: '`meta` (or a card) reads a deferred (streamed) field of the loader\'s data: the request fails with 500 instead of a page with missing tags', fix: 'Await the field in `load`, or leave it out of `meta`' },
   { code: 'H008', severity: 'warning', by: 'start', catches: 'A card\'s `<img>` didn\'t load (timeout, HTTP error, not an image, too large, host not allowed); the card renders without it', fix: 'Fix the URL, or embed the image with an import' },
 
-  // Server functions and the query cache (research 27 §6; Q for query). `start`: reported by @weft/start while serving
+  // Server functions and the query cache (research 27 §6; Q for query). `start`: reported by @weft-js/start while serving
   // (the server log, and the error the call rejects with); `runtime`: thrown or warned by the client runtime.
   { code: 'Q001', severity: 'error', by: 'runtime', catches: '`q()` (a live query, a Resource) called with no owner: in `load`, a handler, a timer or module scope', fix: '`await q.fetch(input)` there; `q()` in components and defineState scopes' },
   { code: 'Q002', severity: 'error', by: 'start', catches: 'A query\'s or mutation\'s input failed its schema (400, with the issues and their paths)', fix: 'Pass what the schema accepts' },
@@ -292,13 +292,13 @@ export const catalog = [
   { code: 'Q005', severity: 'warning', by: 'start', catches: 'A server function\'s result doesn\'t survive JSON (`Date`, `Map`, `Set`, a class, `undefined` in an array, a function, `NaN`): the client sees another value', fix: 'Send plain data (ISO strings, arrays, objects)' },
   { code: 'Q006', severity: 'error', by: 'start', catches: 'A cached (`cache: { life }`) query reads `ctx.request`, `ctx.response` or `ctx.user`: its value is shared by every user', fix: 'Drop `cache`, or pass the value as input' },
   { code: 'Q007', severity: 'error', by: 'start', catches: '`redirect()` after the page started streaming (a component\'s query): the status is already sent', fix: 'Call the query in the route\'s `load`, which runs before the first byte' },
-  { code: 'Q008', severity: 'warning', by: 'start', catches: 'A mutation `invalidates` a tag no query declares (`todo:*` covers `todo:${id}`): nothing refreshes', fix: 'Fix the tag name, or add it to the query\'s `tags`' },
+  { code: 'Q008', severity: 'warning', by: 'start', catches: `A mutation \`invalidates\` a tag no query declares (\`todo:*\` covers \`todo:\${id}\`): nothing refreshes`, fix: 'Fix the tag name, or add it to the query\'s `tags`' },
   { code: 'Q009', severity: 'error', by: 'start', catches: '`/_weft/fn/<id>` names no function: the page is older than the server, or the module isn\'t a server module', fix: 'Reload; keep `query`/`mutation` exports in server modules' },
   { code: 'Q010', severity: 'error', by: 'start', catches: 'A mutation request without the CSRF proof (POST, JSON, `x-weft: 1`, same origin): 403', fix: 'Call mutations through their stub, not a hand-made `fetch` or form' },
   { code: 'S011', severity: 'warning', by: 'runtime', catches: '`mutation({ optimistic })` updated a query its invalidated tags didn\'t cover: the prediction has no fresh value to land on (held until a refetch)', fix: 'Add one of the query\'s tags to `invalidates`' },
   { code: 'S001', severity: 'error', by: 'cli', catches: 'A server object or array (`q().value`, `await q.fetch()`, or a map, filter or spread of one) copied into `state`: it goes stale and its rows lose their identity', fix: 'Reference the query and `derived` from it; store ids; `state.linked` for edits, `untrack` for a deliberate snapshot' },
   { code: 'S002', severity: 'error', by: 'runtime', catches: 'A `defineState` scope reached on the server outside a render (module scope, `load`, a server function, a timer): it would be shared by every request', fix: 'Read it in a component, a handler or a `derived`; pass values into server code as arguments' },
-  { code: 'U001', severity: 'error', by: 'cli', catches: 'A `share` key built from `Math.random`, `Date.now` or `crypto.randomUUID`: no other tab or client will ever have the same one', fix: 'Build it from a stable id: `share: () => `todo:${props.id}``' },
+  { code: 'U001', severity: 'error', by: 'cli', catches: 'A `share` key built from `Math.random`, `Date.now` or `crypto.randomUUID`: no other tab or client will ever have the same one', fix: `Build it from a stable id: \`share: () => \`todo:\${props.id}\`\`` },
   { code: 'U002', severity: 'warning', by: 'cli', catches: 'A `share` key taken from the URL or something typed: `realtime({ share })` then authorises a string the user chose', fix: 'Build it from data the server knows, and have the rule check it' },
   { code: 'U003', severity: 'warning', by: 'cli', catches: '`interaction({ share })` in an app with no `realtime({ share })`: tabs work, and other clients are refused (R011)', fix: 'Add `share: ({ ctx, key }) => …` to `realtime()` in `src/realtime.server.ts`, or leave it if tabs are all you want' },
   { code: 'U004', severity: 'error', by: 'cli', catches: 'Writing `row.remote`: it is what others are doing, and only the network writes it', fix: 'Write `row.hover`, or keep your own `state`' },
@@ -309,8 +309,8 @@ export const catalog = [
   { code: 'F002', severity: 'error', by: 'start', catches: 'A form POST without the same-origin proof (`Origin`, or `Sec-Fetch-Site: same-origin`): 403', fix: 'Submit through a `<Form>` on the same origin; behind a proxy, forward the host so the origins match' },
   { code: 'F003', severity: 'error', by: 'start', catches: 'A form POST naming no known mutation: the page is older than the server', fix: 'Reload; keep `mutation` exports in server modules' },
   { code: 'Q011', severity: 'warning', by: 'start', catches: 'A function read or wrote a table its `tags`/`invalidates` don\'t name (dev): a mutation of that table won\'t refresh it', fix: 'Add the table\'s name (or `table:…`) to `tags`/`invalidates`' },
-  { code: 'Q012', severity: 'error', by: 'start', catches: '`@weft/start/db*` or `@weft/start/auth` reached the client graph', fix: 'Import it from a server module (`src/server/**`, `*.server.ts`) or a route\'s `load`' },
-  { code: 'Q013', severity: 'error', by: 'start', catches: 'A database URL the driver can\'t open (a `postgres://` URL given to the SQLite entry, or the reverse)', fix: 'Use the matching `createDb`: `@weft/start/db/sqlite` or `@weft/start/db/postgres`' },
+  { code: 'Q012', severity: 'error', by: 'start', catches: '`@weft-js/start/db*` or `@weft-js/start/auth` reached the client graph', fix: 'Import it from a server module (`src/server/**`, `*.server.ts`) or a route\'s `load`' },
+  { code: 'Q013', severity: 'error', by: 'start', catches: 'A database URL the driver can\'t open (a `postgres://` URL given to the SQLite entry, or the reverse)', fix: 'Use the matching `createDb`: `@weft-js/start/db/sqlite` or `@weft-js/start/db/postgres`' },
   { code: 'Q014', severity: 'error', by: 'start', catches: 'The database doesn\'t match the schema: a table or column is missing', fix: 'Run `weft db generate`, then reload (new migrations apply on the next request)' },
   { code: 'I001', severity: 'error', by: 'cli', catches: '`<Icon name="as">`, or `Icons.As`, where no such icon exists', fix: 'Use the name it suggests. `weft docs icons` has the set; an editor completes it from the type.' },
   { code: 'I002', severity: 'info', by: 'cli', catches: 'An icon name only known at runtime, so that use loads the pack', fix: 'Nothing to do if the name comes from data. To fetch single icons instead, set `icons({ source })`. A list of literals, or a map over one, ships only those.' },
@@ -342,7 +342,7 @@ export const catalog = [
   { code: 'R014', severity: 'warning', by: 'cli', catches: '`changes` on a preset with no long-running process: writes from outside the app won\'t reach `.live()`, which shows `degraded`', fix: 'Run `weft db listen` on an always-on host and set `listener: \'external\'`, or deploy to a server preset' },
   { code: 'R015', severity: 'error', by: 'start', catches: 'A required live query, and the server\'s startup probe found no real change feed (a pooler, no trigger, no trigger permission, a Mongo without a replica set): the server stops rather than serve stale data, and dev answers 503', fix: 'What the error names: `dbChanges(db, tables, { listenUrl })` for a direct connection, `weft db live` for triggers' },
   { code: 'R016', severity: 'warning', by: 'start', catches: 'The server settled on a degraded live mode (`poll` or `off`), or a working feed went down: `.live()` shows `degraded` or `reconnecting`', fix: 'What the log line names; `weft doctor` lists the options' },
-  { code: 'R017', severity: 'error', by: 'start', catches: '`dbChanges` on a client it can\'t watch or something that isn\'t a table, or `weft db listen` on the memory bus, which stops at that process', fix: 'Use a client from `@weft/start/db/*` or `mongoChanges`; set `bus` in `src/realtime.server.ts`' },
+  { code: 'R017', severity: 'error', by: 'start', catches: '`dbChanges` on a client it can\'t watch or something that isn\'t a table, or `weft db listen` on the memory bus, which stops at that process', fix: 'Use a client from `@weft-js/start/db/*` or `mongoChanges`; set `bus` in `src/realtime.server.ts`' },
   { code: 'R019', severity: 'error', by: 'cli', catches: 'A query\'s `live: { verify }` round trip failed against its target (`weft check`, `weft build`): the message names the link that broke, from `trigger` to `cleanup`', fix: 'What the link says: `weft db live` for a trigger, the app\'s log for a poke, `verify.row` for a row the query can\'t see' },
   { code: 'R020', severity: 'error', by: 'cli', catches: 'A connection string with a password in source, in a `verify` or a target: it would be committed', fix: 'Read it from the environment: `verify: { db: process.env.STAGING_DATABASE_URL }`' },
   { code: 'R021', severity: 'error', by: 'cli', catches: 'A `verify` target isn\'t available here: fails `weft build`, and `weft check` warns and skips', fix: 'Set `WEFT_STAGING_URL`, `STAGING_DATABASE_URL`, or the variable its target names' },
@@ -371,7 +371,7 @@ export const catalog = [
   { code: 'X010', severity: 'error', by: 'cli', catches: '`fillText` or `strokeText` in a surface: text only the canvas knows, with no selection, find, translation or screen reader', fix: 'Use `s.text()`, or wrap it in `s.decorative()` if it is truly decoration' },
   { code: 'X011', severity: 'error', by: 'cli', catches: 'A surface text mirror hidden from assistive tech: `aria-hidden` on `<Surface>` or `s.el`, or `display: none`/`visibility: hidden` on `[data-surface-text]` (also checked in dev)', fix: 'Leave the mirror to weft; use `decorative` for a surface with nothing to read' },
   { code: 'X012', severity: 'error', by: 'cli', catches: 'CSS that defeats a surface\'s text fallback: `forced-color-adjust: none`, or a print rule hiding `[data-surface-text]`', fix: 'Remove it: the mirror is what forced-colours mode and print show' },
-  { code: 'X020', severity: 'warning', by: 'cli', catches: 'A hand-written `@font-face` for a local file with no `"<Family> Fallback"` face: the font swap shifts layout', fix: 'Declare the font in `text({ fonts })` (@weft/plugin-text), which generates a metric-matched fallback' },
+  { code: 'X020', severity: 'warning', by: 'cli', catches: 'A hand-written `@font-face` for a local file with no `"<Family> Fallback"` face: the font swap shifts layout', fix: 'Declare the font in `text({ fonts })` (@weft-js/text), which generates a metric-matched fallback' },
   { code: 'X021', severity: 'error', by: 'cli', catches: '`font-display: block` or `auto`: text is invisible while the font loads', fix: '`swap` (autofix), or `optional` for faces that may skip' },
   { code: 'X022', severity: 'warning', by: 'cli', catches: 'A local `@font-face` without `unicode-range` (not subset), or the font build\'s preloads over the 100 KB budget', fix: '`text({ fonts })` subsets every face; preload fewer faces' },
   { code: 'X023', severity: 'warning', by: 'cli', catches: 'A `<link rel="preload" as="font">` whose file no `@font-face` uses', fix: 'Remove the preload' },
@@ -383,28 +383,28 @@ export const catalog = [
   { code: 'X040', severity: 'warning', by: 'cli', catches: 'Per-grapheme DOM spans over a string known to exceed 200 graphemes', fix: 'Use word-level motion or a Surface' },
   { code: 'X041', severity: 'warning', by: 'cli', catches: 'Per-character spans without `aria-hidden`, or a parent with no accessible name: a screen reader spells the word out', fix: '`aria-hidden` on each span and `aria-label` with the whole text on the parent' },
 
-  // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft/plugin-media's check hook.
-  { code: 'X035', severity: 'warning', by: 'cli', catches: 'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it', fix: 'Render it with `<Text stream>` from weft/text: the height only grows' },
+  // Media (research 15 §7.5, static rules in research 26 §2.5): reported by @weft-js/plugin-media's check hook.
+  { code: 'X035', severity: 'warning', by: 'cli', catches: 'Streamed text written straight into a scroll container: a reflowing tail moves the lines above it', fix: 'Render it with `<Text stream>` from @weft-js/core/text: the height only grows' },
   { code: 'X036', severity: 'warning', by: 'runtime', catches: 'A skeleton shows a string from `output` with no length hint, so its bar is a guess', fix: 'Add `.max()`, `.length()` or `.meta({ example })` to the schema, or an example in the query\'s `shape`' },
 
-  { code: 'M001', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)', fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`' },
-  { code: 'M002', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer', fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`' },
-  { code: 'M003', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A raw `<img>` whose file is wider than its `width` × 2 (DPR) × 1.25: bytes nobody sees', fix: '`<Media>`, which resizes' },
-  { code: 'M004', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A GIF over 256 KB rendered raw', fix: '`<Media>` with `mediaFfmpeg()` in `plugins`, which turns GIFs into video when that saves 15%' },
-  { code: 'M005', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video autoplay>` without `muted`: browsers block it, and sound before a gesture is hostile', fix: 'Add `muted` (autofix)' },
-  { code: 'M006', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video>` without `poster`: a blank box until the first frame decodes', fix: 'Add a `poster` image' },
-  { code: 'M007', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'Missing `alt` on `<Media>`/`<img>`, `<Media alt="">` without `decorative`, or `alt` equal to the file name', fix: 'Describe what the image shows; `alt="" decorative` for purely visual media' },
-  { code: 'M008', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A route\'s first media is `loading="lazy"`, or `priority` media is lazy: the likely LCP image loads late', fix: 'Mark the hero `priority` and drop `loading="lazy"`' },
-  { code: 'M009', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`priority` on more than 2 media in one route: they compete for the first bytes', fix: 'Keep `priority` on the one hero image' },
-  { code: 'M010', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A `priority` `<Media>` without `width` or `sizes`: eager images can\'t use `sizes="auto"`, so the browser assumes 100vw', fix: 'Pass `width="1/2"` (a viewport fraction or CSS length) or `sizes`' },
-  { code: 'M011', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<video autoplay loop>` without `controls`, or a GIF in a raw `<img>`: endless motion with no pause (WCAG 2.2.2)', fix: '`<Media>` (pause control, poster under reduced motion), or add `controls`' },
-  { code: 'M012', severity: 'error', by: 'plugin', owner: '@weft/plugin-media', catches: 'An SVG with `<script>`, `foreignObject`, `on*=` handlers or external references, used as an image', fix: 'Sanitise the file; the build refuses to optimise it' },
-  { code: 'M013', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'A file in `public/` referenced by string: untracked, unoptimised, no dimensions', fix: 'Move it next to the code and `import x from \'./x.jpg?media\'`' },
-  { code: 'M014', severity: 'info', by: 'plugin', owner: '@weft/plugin-media', catches: "What `encoder: 'compatible'` adds to the build for compatible copies", fix: 'Nothing: it says what the toggle costs' },
-  { code: 'M015', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: 'An HDR or over-8-bit video that comes out 8-bit SDR', fix: 'Convert the source on purpose, or accept the flattening' },
-  { code: 'M016', severity: 'warning', by: 'plugin', owner: '@weft/plugin-media', catches: '`<Media src>` given a string: nothing knows its size before it loads, so the page shifts', fix: 'Import it with `?media`, or store what `ctx.media.ingest` returns and type the field `z.media()`' },
-  { code: 'M017', severity: 'error', by: 'start', catches: '`ctx.media` or a `/_weft/m/` URL used with no `media.server` provider', fix: 'Add `media()` from `@weft/plugin-media` to `plugins` in weft.config.ts' },
-  { code: 'M019', severity: 'error', by: 'plugin', owner: '@weft/plugin-media-ffmpeg', catches: 'ffmpeg did not run, is not the pinned binary, or has no encoder for a codec', fix: 'Install ffmpeg, or give `mediaFfmpeg({ binary })` its path' },
+  { code: 'M001', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'Raw `<img>`/`<video>` without `width`/`height` or `aspect-ratio`, outside a `<Boundary>` (inside it is X030)', fix: 'Insert the intrinsic `width`/`height` (autofix for an imported file), or use `<Media>`' },
+  { code: 'M002', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'An image rendered through a `?url` import or a string path, bypassing the optimizer', fix: '`import x from \'./x.jpg?media\'` and `<Media src={x} alt="…" />`' },
+  { code: 'M003', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'A raw `<img>` whose file is wider than its `width` × 2 (DPR) × 1.25: bytes nobody sees', fix: '`<Media>`, which resizes' },
+  { code: 'M004', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'A GIF over 256 KB rendered raw', fix: '`<Media>` with `mediaFfmpeg()` in `plugins`, which turns GIFs into video when that saves 15%' },
+  { code: 'M005', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: '`<video autoplay>` without `muted`: browsers block it, and sound before a gesture is hostile', fix: 'Add `muted` (autofix)' },
+  { code: 'M006', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: '`<video>` without `poster`: a blank box until the first frame decodes', fix: 'Add a `poster` image' },
+  { code: 'M007', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'Missing `alt` on `<Media>`/`<img>`, `<Media alt="">` without `decorative`, or `alt` equal to the file name', fix: 'Describe what the image shows; `alt="" decorative` for purely visual media' },
+  { code: 'M008', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'A route\'s first media is `loading="lazy"`, or `priority` media is lazy: the likely LCP image loads late', fix: 'Mark the hero `priority` and drop `loading="lazy"`' },
+  { code: 'M009', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: '`priority` on more than 2 media in one route: they compete for the first bytes', fix: 'Keep `priority` on the one hero image' },
+  { code: 'M010', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'A `priority` `<Media>` without `width` or `sizes`: eager images can\'t use `sizes="auto"`, so the browser assumes 100vw', fix: 'Pass `width="1/2"` (a viewport fraction or CSS length) or `sizes`' },
+  { code: 'M011', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: '`<video autoplay loop>` without `controls`, or a GIF in a raw `<img>`: endless motion with no pause (WCAG 2.2.2)', fix: '`<Media>` (pause control, poster under reduced motion), or add `controls`' },
+  { code: 'M012', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'An SVG with `<script>`, `foreignObject`, `on*=` handlers or external references, used as an image', fix: 'Sanitise the file; the build refuses to optimise it' },
+  { code: 'M013', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'A file in `public/` referenced by string: untracked, unoptimised, no dimensions', fix: 'Move it next to the code and `import x from \'./x.jpg?media\'`' },
+  { code: 'M014', severity: 'info', by: 'plugin', owner: '@weft-js/plugin-media', catches: "What `encoder: 'compatible'` adds to the build for compatible copies", fix: 'Nothing: it says what the toggle costs' },
+  { code: 'M015', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: 'An HDR or over-8-bit video that comes out 8-bit SDR', fix: 'Convert the source on purpose, or accept the flattening' },
+  { code: 'M016', severity: 'warning', by: 'plugin', owner: '@weft-js/plugin-media', catches: '`<Media src>` given a string: nothing knows its size before it loads, so the page shifts', fix: 'Import it with `?media`, or store what `ctx.media.ingest` returns and type the field `z.media()`' },
+  { code: 'M017', severity: 'error', by: 'start', catches: '`ctx.media` or a `/_weft/m/` URL used with no `media.server` provider', fix: 'Add `media()` from `@weft-js/plugin-media` to `plugins` in weft.config.ts' },
+  { code: 'M019', severity: 'error', by: 'plugin', owner: '@weft-js/plugin-media-ffmpeg', catches: 'ffmpeg did not run, is not the pinned binary, or has no encoder for a codec', fix: 'Install ffmpeg, or give `mediaFfmpeg({ binary })` its path' },
   { code: 'M018', severity: 'error', by: 'start', catches: 'An upload refused: it isn\'t an image weft can read, or it\'s over the size limit (422)', fix: 'Raise `media({ server: { maxBytes } })`, or check the file on the client first' },
 
   { code: 'P010', severity: 'error', by: 'cli', catches: 'More than one weft.config file', fix: 'Keep one: `.ts`, `.json` or `.yaml`' },

@@ -10,6 +10,7 @@ export function freshIds(seen: Set<string>, next: Iterable<string>) {
   return fresh
 }
 
+/** Options for arrivals: how new rows join a list without moving what's being read. */
 export interface ArrivalOptions {
   /** The rows inside the host. Default: every child with a [data-id]. */
   items?: string
@@ -76,16 +77,20 @@ export function bump(el: Element, attr = 'data-bump') {
 
 // -- notifications (07 §4) ---------------------------------------------------------------------------------------------
 
+/** The inbox's tabs. */
 export type InboxTab = 'all' | 'unread' | 'mentions'
-export interface NoteLike { id: string; read?: boolean; kind?: string; day?: string }
+/** The least an inbox item needs. */
+export interface NoteLike { id: string; read?: boolean | undefined; kind?: string | undefined; day?: string | undefined }
 
+/** The items on one inbox tab. */
 export const filterNotes = <T extends NoteLike>(items: readonly T[], tab: InboxTab) =>
   items.filter(n => tab === 'all' || (tab === 'unread' ? !n.read : n.kind === 'mention'))
 
+/** How many items are unread. */
 export const unreadCount = (items: readonly NoteLike[]) => items.filter(n => !n.read).length
 
 /** Items by their `day` label, in order of first appearance (a list is newest first). */
-export function groupByDay<T extends { day?: string }>(items: readonly T[], fallback = 'Today') {
+export function groupByDay<T extends { day?: string | undefined }>(items: readonly T[], fallback = 'Today') {
   const days = new Map<string, T[]>()
   for (const n of items) {
     const d = n.day ?? fallback
@@ -106,6 +111,7 @@ export function dayLabel(iso: string, today: string, locale = 'en-US') {
 
 /** The bell's name and badge text. */
 export const bellLabel = (count: number) => (count ? `Notifications, ${count} unread` : 'Notifications')
+/** A bell's badge text. */
 export const bellCount = (count: number) => (count > 9 ? '9+' : String(count))
 
 /**
@@ -146,7 +152,7 @@ export function feed(el: HTMLElement, opts: { items: string }) {
  */
 export function readOnView(el: HTMLElement, opts: { items: string; active?: boolean; hold?: number; onRead(id: string): void }) {
   let o = opts
-  const win = el.ownerDocument.defaultView as (Window & typeof globalThis) | null
+  const win = el.ownerDocument.defaultView
   if (!win?.IntersectionObserver) return { update: (n: typeof opts) => void (o = n), destroy() {} }
   const timers = new Map<Element, ReturnType<typeof setTimeout>>()
   const stop = (row: Element) => { clearTimeout(timers.get(row)); timers.delete(row) }
@@ -174,21 +180,23 @@ export function readOnView(el: HTMLElement, opts: { items: string; active?: bool
   }
 }
 
-export interface NotifyItem { id?: string; title: string; description?: string; tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'; urgent?: boolean; action?: { label: string; onClick(): void } }
+/** One arrival to notify about. */
+export interface NotifyItem { id?: string | undefined; title: string; description?: string | undefined; tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' | undefined; urgent?: boolean; action?: { label: string; onClick(): void } | undefined }
+/** What the notify policy calls, and its limits. */
 export interface NotifyPolicyOptions {
   /** Is the inbox on screen? Then nothing toasts and arrivals are only announced. */
   open(): boolean
-  show(t: NotifyItem & { id?: string }): string
+  show(t: NotifyItem & { id?: string | undefined }): string
   dismiss(id: string): void
   announce(text: string, assertive?: boolean): void
   /** How many arrivals inside `quiet` make a burst. */
   burst?: number
   /** A burst ends after this long with no arrival; it is also the announcement's collapse window (07 §0). */
-  quiet?: number
+  quiet?: number | undefined
   /** At most this many toasts from this policy are up at once. */
-  max?: number
+  max?: number | undefined
   /** "3 new notifications". */
-  summary?(n: number): string
+  summary?: (n: number) => string
 }
 
 /**
@@ -239,11 +247,12 @@ export function notifyPolicy(o: NotifyPolicyOptions) {
 
 // -- connection status (07 §4.4) ---------------------------------------------------------------------------------------
 
+/** The four states every live surface reads as. */
 export type LiveState = 'connecting' | 'live' | 'reconnecting' | 'offline'
 
 /** `.live`, `stream().status` and `channel.status`, mapped to the four states (07 §4.5, §4.7). */
 export function liveState(status: string | undefined | null): LiveState {
-  switch (status) {
+  switch (status!) {
     case 'live': case 'open': case 'streaming': case 'done': return 'live'
     case 'reconnecting': return 'reconnecting'
     case 'offline': case 'closed': case 'unauthorized': case 'error': return 'offline'
@@ -265,17 +274,25 @@ export function connectionAnnouncement(prev: LiveState | undefined, next: LiveSt
 
 // -- notification preferences (07 §4.6) --------------------------------------------------------------------------------
 
+/** Who's on for what: channels by event. */
 export type PrefValues = Record<string, Record<string, boolean>>
+/** One event people can opt in or out of. */
 export interface PrefEvent { id: string; label: string; hint?: string; instant?: boolean }
+/** A named group of events. */
 export interface PrefGroup { id: string; label: string; events: PrefEvent[] }
-export interface PrefRules { offered?: Record<string, string[]>; locked?: Record<string, string[]> }
+/** Which channels each event offers, and which are locked on. */
+export interface PrefRules { offered?: Record<string, string[]> | undefined; locked?: Record<string, string[]> | undefined }
+/** One toggled cell. */
 export interface PrefChange { event: string; channel: string; on: boolean }
+/** What one cell of the preferences grid shows. */
 export type PrefCell = 'on' | 'off' | 'locked' | 'na'
+/** What a whole row or column of toggles reads as. */
 export type TriState = 'on' | 'off' | 'mixed'
 
 const isOffered = (r: PrefRules, ev: string, ch: string) => !r.offered?.[ev] || r.offered[ev].includes(ch)
 const isLocked = (r: PrefRules, ev: string, ch: string) => !!r.locked?.[ev]?.includes(ch)
 
+/** The cell for `event` on `channel`. */
 export function prefCell(v: PrefValues, rules: PrefRules, event: string, channel: string): PrefCell {
   if (isLocked(rules, event, channel)) return 'locked'
   if (!isOffered(rules, event, channel)) return 'na'
@@ -300,6 +317,7 @@ export function toggleChanges(v: PrefValues, events: readonly PrefEvent[], rules
   return movable(events, rules, channel).map(e => ({ event: e.id, channel, on }))
 }
 
+/** The preferences with `changes` applied. */
 export function applyPrefs(v: PrefValues, changes: readonly PrefChange[]): PrefValues {
   const next = { ...v }
   for (const c of changes) next[c.event] = { ...next[c.event], [c.channel]: c.on }
@@ -318,11 +336,11 @@ export function gridNav(el: HTMLElement, opts: { rows?: string; targets: string 
     const g = grid()
     let r = g.findIndex(row => row.includes(e.target as HTMLElement))
     if (r < 0) return
-    let c = g[r].indexOf(e.target as HTMLElement)
+    let c = g[r]!.indexOf(e.target as HTMLElement)
     const rtl = getComputedStyle(el).direction === 'rtl'
     const ctrl = e.ctrlKey || e.metaKey
     const last = g.length - 1
-    const end = g[r].length - 1
+    const end = g[r]!.length - 1
     if (e.key === 'ArrowRight') c += rtl ? -1 : 1
     else if (e.key === 'ArrowLeft') c += rtl ? 1 : -1
     else if (e.key === 'ArrowDown') r++
@@ -333,7 +351,7 @@ export function gridNav(el: HTMLElement, opts: { rows?: string; targets: string 
     e.preventDefault()
     r = Math.max(0, Math.min(last, r))
     c = Math.max(0, Math.min(end, c))
-    const t = g[r][c]
+    const t = g[r]![c]!
     rove(t)
     t.focus()
   }
@@ -348,6 +366,7 @@ export function gridNav(el: HTMLElement, opts: { rows?: string; targets: string 
 
 // -- meetings (07 §3) --------------------------------------------------------------------------------------------------
 
+/** The least a call participant needs. */
 export interface ParticipantLike { id: string; name: string; role?: string; isSpeaking?: boolean; isMuted?: boolean; handRaised?: boolean; network?: 'good' | 'poor' }
 
 /** "Kofi Mensah, host, speaking" / "Ana Ruiz, muted" (07 §3.4). */
@@ -411,7 +430,7 @@ export function speakingOut(el: HTMLElement, on: boolean | undefined) {
 
 /** Off-screen tiles pause their <video> (07 §3.2); only what this paused plays again. */
 export function pauseOffscreen(el: HTMLElement) {
-  const win = el.ownerDocument.defaultView as (Window & typeof globalThis) | null
+  const win = el.ownerDocument.defaultView
   if (!win?.IntersectionObserver) return { update() {}, destroy() {} }
   const paused = new WeakSet<HTMLVideoElement>()
   const io = new win.IntersectionObserver(entries => {
@@ -428,6 +447,7 @@ export function pauseOffscreen(el: HTMLElement) {
   return { update() {}, destroy() { io.disconnect(); mo.disconnect() } }
 }
 
+/** Where a picture-in-picture window docks. */
 export type PipCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 /** The corner an arrow key sends the self view to. */
 export function pipStep(corner: PipCorner, key: string): PipCorner {
@@ -487,12 +507,12 @@ export function pip(el: HTMLElement, opts: { corner?: PipCorner; onMove?(corner:
     e.preventDefault()
     if (to !== corner) snap(to)
   }
-  const on: [string, (e: any) => void][] = [['pointerdown', onDown], ['pointermove', onMove], ['pointerup', onUp], ['pointercancel', onUp], ['keydown', onKey]]
-  for (const [t, fn] of on) el.addEventListener(t, fn)
+  const on: [string, (e: never) => void][] = [['pointerdown', onDown], ['pointermove', onMove], ['pointerup', onUp], ['pointercancel', onUp], ['keydown', onKey]]
+  for (const [t, fn] of on) el.addEventListener(t, fn as EventListener)
   if (o.corner && o.corner !== corner) snap(o.corner, true)
   return {
     update(next: typeof opts) { o = next; if (o.corner && o.corner !== corner) snap(o.corner, true) },
-    destroy() { for (const [t, fn] of on) el.removeEventListener(t, fn) },
+    destroy() { for (const [t, fn] of on) el.removeEventListener(t, fn as EventListener) },
   }
 }
 
@@ -540,6 +560,7 @@ export function countdownParts(ms: number) {
   const parts = [{ unit: 'min', value: pad(Math.floor((s % 3600) / 60)) }, { unit: 'sec', value: pad(s % 60) }]
   return h ? [{ unit: 'hr', value: pad(h) }, ...parts] : parts
 }
+/** What's left, as a countdown. */
 export const countdownLabel = (ms: number) => {
   const m = Math.ceil(Math.max(0, ms) / 60000)
   return `Starts in ${m} ${m === 1 ? 'minute' : 'minutes'}`
@@ -547,13 +568,20 @@ export const countdownLabel = (ms: number) => {
 
 // -- transport picker (07 §4.7) ----------------------------------------------------------------------------------------
 
+/** How the demo transport reaches the browser. */
 export type TransportWire = 'default' | 'tabs' | 'fake'
+/** The bus a demo transport fans out over. */
 export type TransportBus = 'memory' | 'postgres' | 'redis' | 'nats' | 'durable-object'
+/** A named set of transport settings. */
 export type TransportPreset = 'single' | 'multi' | 'cf'
+/** The network conditions the demo simulates. */
 export type TransportNetwork = 'good' | 'slow' | 'lossy' | 'wsblock' | 'offline'
+/** The three kinds of live data in the demo. */
 export type LaneId = 'live' | 'stream' | 'channel'
+/** The transport a simulation runs. */
 export interface TransportConfig { wire: TransportWire; bus: TransportBus; preset: TransportPreset; network: TransportNetwork }
 
+/** The latency each bus adds, in ms. */
 export const BUS_MS: Record<TransportBus, number> = { memory: 0, postgres: 4, redis: 2, nats: 1, 'durable-object': 8 }
 
 /** The build's own check (07 §4.7): null when the pair is valid. */
@@ -569,13 +597,18 @@ export function percentile(xs: readonly number[], p: number) {
   const s = [...xs].sort((a, b) => a - b)
   return s[Math.min(s.length - 1, Math.floor(p * s.length))]
 }
+/** The tone for a latency: slow and very slow only. */
 export const latencyTone = (ms: number | null) => (ms === null ? undefined : ms >= 1000 ? 'critical' : ms >= 250 ? 'caution' : undefined)
+/** A latency in ms, a dash when unknown. */
 export const formatMs = (ms: number | null) => (ms === null ? '—' : ms < 10 ? `${ms.toFixed(1)} ms` : `${Math.round(ms)} ms`)
 /** Full-jitter backoff: attempt n waits a random time up to min(30 s, 0.5 s × 2ⁿ). */
 export const backoffCap = (attempt: number) => Math.min(30, 0.5 * 2 ** attempt)
 
+/** One lane of the simulation as it stands. */
 export interface SimLane { state: LiveState; samples: number[]; cursor: string; wire: string; note: string }
+/** One line of the simulation's log. */
 export interface SimLog { at: number; who: string; text: string }
+/** What a simulation can be given, to run under a test. */
 export interface SimEnv { random?: () => number; now?: () => number; pace?: (ms: number) => number }
 type Conn = { state: LiveState; attempt: number; retryAt: number; epoch: number; seq: number; behind: boolean; timer?: ReturnType<typeof setTimeout> }
 
@@ -602,7 +635,7 @@ export function transportSim(initial: TransportConfig, env: SimEnv = {}) {
   const logOf = (who: string, text: string) => { log = [...log, { at: (now() - start) / 1000, who, text }].slice(-40) }
   const name = (cid: 'sse' | 'ws') => (cid === 'ws' ? 'channel' : 'sse')
   const invalid = () => transportError(cfg)
-  const wireOf = (cid: 'sse' | 'ws') => (cfg.wire === 'tabs' ? 'BroadcastChannel' : cfg.wire === 'fake' ? 'weft/test fake pair' : cid === 'sse' ? 'SSE · POST /_weft/rt' : 'WebSocket · crossws')
+  const wireOf = (cid: 'sse' | 'ws') => (cfg.wire === 'tabs' ? 'BroadcastChannel' : cfg.wire === 'fake' ? '@weft-js/core/test fake pair' : cid === 'sse' ? 'SSE · POST /_weft/rt' : 'WebSocket · crossws')
   const blocked = (cid: 'sse' | 'ws') => cfg.wire !== 'tabs' && (cfg.network === 'offline' || (cfg.network === 'wsblock' && cid === 'ws' && cfg.wire === 'default'))
   const note = (cid: 'sse' | 'ws', text: string) => { for (const [k, , c] of LANES) if (c === cid) notes[k] = text }
   const sample = () => {
@@ -676,7 +709,7 @@ export function transportSim(initial: TransportConfig, env: SimEnv = {}) {
           note: c.state === 'reconnecting' && c.retryAt ? `Retry ${c.attempt} in ${Math.max(0, (c.retryAt - at) / 1000).toFixed(1)} s` : notes[k],
         }
       }
-      return { live: lane(LANES[0]), stream: lane(LANES[1]), channel: lane(LANES[2]) }
+      return { live: lane(LANES[0]!), stream: lane(LANES[1]!), channel: lane(LANES[2]!) }
     },
     start() { restart(); emit() },
     configure(next: Partial<TransportConfig>) {
@@ -739,7 +772,7 @@ export function transportSim(initial: TransportConfig, env: SimEnv = {}) {
 export function whileSeen(el: HTMLElement, opts: { ms: number; tick(): void }) {
   let o = opts
   const doc = el.ownerDocument
-  const win = doc.defaultView as (Window & typeof globalThis) | null
+  const win = doc.defaultView
   let seen = !win?.IntersectionObserver
   let timer: ReturnType<typeof setInterval> | undefined
   const sync = () => {
@@ -769,8 +802,8 @@ export function toolbar(el: HTMLElement, opts: { items: string }) {
     const to = nextIndex(e.key, at, list.length, { rtl: getComputedStyle(el).direction === 'rtl' })
     if (to < 0) return
     e.preventDefault()
-    rove(list[to])
-    list[to].focus()
+    rove(list[to]!)
+    list[to]!.focus()
   }
   const onFocus = (e: FocusEvent) => { if ((e.target as Element).matches?.(o.items)) rove(e.target as HTMLElement) }
   el.addEventListener('keydown', onKey)

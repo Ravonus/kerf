@@ -1,6 +1,6 @@
-import { derived } from 'weft'
-import { interaction } from 'weft/interaction'
-import { Card, Checkbox } from '@weft/warp'
+import { derived } from '@weft-js/core'
+import { interaction } from '@weft-js/core/interaction'
+import { Card, Checkbox } from '@weft-js/warp'
 
 function Row(props: { id: string; text: string }) {
   // Drop `share` and it is plain hover state for one row.

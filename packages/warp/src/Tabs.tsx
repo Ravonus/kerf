@@ -1,10 +1,11 @@
-import { indicator, nextIndex, overflow, uid } from '@weft/warp-core'
-import { untrack } from 'weft'
-import { use } from '@weft/warp-core/weft'
+import { indicator, nextIndex, overflow, uid } from '@weft-js/warp-core'
+import { untrack } from '@weft-js/core'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/tabs.css'
+import '@weft-js/warp-core/styles/components/tabs.css'
 
-export type TabOption<V extends string> = { value: V; label: any; disabled?: boolean }
+/** One tab. */
+export type TabOption<V extends string> = { value: V; label: unknown; disabled?: boolean | undefined }
 
 /**
  * Tabs (05 §4; components.html:660-706, 1821-1849): line (default) · pill · enclosed. APG automatic activation:
@@ -12,7 +13,7 @@ export type TabOption<V extends string> = { value: V; label: any; disabled?: boo
  * through the rail on the sweep curve; a list wider than its box scrolls with edge fades and keeps the selected tab
  * in view. `children(value)` renders a panel; a pill strip filters one shared panel.
  */
-export function Tabs<V extends string>({ label, value, onChange, options, variant, children }: { label: string; value: V; onChange: (v: V) => void; options: TabOption<V>[]; variant?: 'line' | 'pill' | 'enclosed'; children?: (value: V) => any }) {
+export function Tabs<V extends string>({ label, value, onChange, options, variant, children }: { label: string; value: V; onChange: (v: V) => void; options: TabOption<V>[]; variant?: 'line' | 'pill' | 'enclosed' | undefined; children?: (value: V) => unknown }) {
   const base = uid('tabs')
   const kind = untrack(() => variant)
   const tab = (i: number) => `${base}-t${i}`
@@ -27,13 +28,13 @@ export function Tabs<V extends string>({ label, value, onChange, options, varian
     const to = nextIndex(e.key, at, tabs.length, { rtl })
     if (to < 0) return
     e.preventDefault()
-    onChange(tabs[to].value)
-    ;(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')[options.findIndex(o => o.value === tabs[to].value)]?.focus() // by position: a hydrated server id isn't this side's
+    onChange(tabs[to]!.value)
+    ;(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')[options.findIndex(o => o.value === tabs[to]!.value)]?.focus() // by position: a hydrated server id isn't this side's
   }
   const selected = () => options.findIndex(o => o.value === value)
   return (
     <div data-scope="tabs" data-part="root" data-variant={kind === 'line' ? undefined : kind}>
-      <div ref={(n: any) => (list = n)} data-part="list" role="tablist" aria-label={label} onKeyDown={onKey}>
+      <div ref={n => (list = n)} data-part="list" role="tablist" aria-label={label} onKeyDown={onKey}>
         {options.map((o, i) => (
           <button
             key={o.value}

@@ -285,7 +285,7 @@ Sources: https://zod.dev/v4 · https://app.unpkg.com/zod@4.6.7/files/src/v4/clas
 
 ## 8. Testing (`weft test`, `weft browser`)
 
-- **Fake transport, same protocol.** `weft/test` swaps the network layer for an in-memory pair that speaks weft's
+- **Fake transport, same protocol.** `@weft-js/core/test` swaps the network layer for an in-memory pair that speaks weft's
   real-time protocol. There are no sockets in the fast lane: a real `WebSocket` or `EventSource` there is T013.
   ```ts
   const app = render(<Todos />, { server })        // server = in-memory weft/start handlers + memory bus
@@ -402,7 +402,7 @@ await chat.send('say', { text: draft.value })           // typed by the schema; 
 **Browser values.** Each is called in setup, shares one listener per document, and is removed with its owner.
 
 ```ts
-import { online, visible, lifecycle, media, storage, tabs, on, interval } from 'weft/browser'
+import { online, visible, lifecycle, media, storage, tabs, on, interval } from '@weft-js/core/browser'
 
 const isOnline = online()                                        // Derived<boolean>, ssr: true
 const dark = media('(prefers-color-scheme: dark)', { ssr: false }) // Derived<boolean>; ssr is required in SSR graphs
@@ -464,7 +464,7 @@ Compiler (W), server/build (R, new prefix for real-time), tests (T), project (P)
 - **R005** unbounded client→server schema (string or array without `.max`) → add a bound.
 - **R006** `stream` handler that reads a backlog before subscribing (the tRPC gap) → use `topic.subscribe({ after })`.
 - **T012** test ends with open subscriptions, listeners or intervals → unmount, or fix the leak.
-- **T013** real `WebSocket` / `EventSource` / network in the fast lane → use `server` from `weft/test`.
+- **T013** real `WebSocket` / `EventSource` / network in the fast lane → use `server` from `@weft-js/core/test`.
 - **P007** app depends on `ws`, `socket.io-client`, `reconnecting-websocket` or `@microsoft/fetch-event-source`
   → use `channel` / `stream`.
 
@@ -472,9 +472,9 @@ Compiler (W), server/build (R, new prefix for real-time), tests (T), project (P)
 
 | Phase | Adds |
 |---|---|
-| **1. Core** | `weft/browser`: `on`, `interval`, `online`, `visible`, `lifecycle`, `media`, `storage`. Shared refcounted listeners. W050, W051, W054, W056, T012. These need no server and directly target the v3 bug class |
+| **1. Core** | `@weft-js/core/browser`: `on`, `interval`, `online`, `visible`, `lifecycle`, `media`, `storage`. Shared refcounted listeners. W050, W051, W054, W056, T012. These need no server and directly target the v3 bug class |
 | **1b. Verify loop** | `weft browser net …`, `time advance` driving reconnects; subscription list in `snapshot` |
-| **3. Start** | `.live` (SSE, poke + refetch), `topic`, `stream`, the fake transport in `weft/test` (T013), buses `memory` + `postgres`, the defaults table, schema hash and `app.stale`, R002, R003, R005, R006, W052, W053, P007 |
+| **3. Start** | `.live` (SSE, poke + refetch), `topic`, `stream`, the fake transport in `@weft-js/core/test` (T013), buses `memory` + `postgres`, the defaults table, schema hash and `app.stale`, R002, R003, R005, R006, W052, W053, P007 |
 | **3b. Channels** (new, after the Phase 3 exit check) | `channel` over crossws, Origin + `authorize` + session re-check (R001, R004), `redis` / `nats` / `durable-object` buses, `tabs.channel`, `geolocation`, W055 |
 | **Later** | values attached to pokes for shared-scope queries; multi-tab leader election (Web Locks + BroadcastChannel); offline mutation queue with idempotency keys; sync-engine adapters (TanStack DB / Electric / Zero) outside core; WebTransport |
 

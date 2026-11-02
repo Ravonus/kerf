@@ -1,6 +1,6 @@
 # warp 10 — Icons
 
-The rules every drawing in `@weft/icons` is held to. Every icon is original: nothing is copied, traced or adapted from
+The rules every drawing in `@weft-js/warp-icons` is held to. Every icon is original: nothing is copied, traced or adapted from
 another set, and nothing here carries another set's licence. Source art is `packages/icons/art/`.
 
 ## 1. Three tiers, one dial

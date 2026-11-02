@@ -68,13 +68,13 @@ test.todo('later')`
   })
 
   it('T004: a zero-delay sleep gets a flush() edit that imports it', () => {
-    const src = `import { render } from 'weft/test'\ntest('a', async () => { await new Promise(r => setTimeout(r)); expect(f()).toBe(1) })`
+    const src = `import { render } from '@weft-js/core/test'\ntest('a', async () => { await new Promise(r => setTimeout(r)); expect(f()).toBe(1) })`
     const [d] = checkTestFile(src, 'x.test.tsx')
     expect(d.code).toBe('T004')
     expect(d.fix.safe).toBe(false)
-    expect(apply(src, d.fix)).toBe(`import { render, flush } from 'weft/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`)
+    expect(apply(src, d.fix)).toBe(`import { render, flush } from '@weft-js/core/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`)
     const bare = `test('a', async () => { await new Promise(r => setTimeout(r)); expect(f()).toBe(1) })`
-    expect(apply(bare, checkTestFile(bare, 'x.test.ts')[0].fix)).toBe(`import { flush } from 'weft/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`)
+    expect(apply(bare, checkTestFile(bare, 'x.test.ts')[0].fix)).toBe(`import { flush } from '@weft-js/core/test'\ntest('a', async () => { await flush(); expect(f()).toBe(1) })`)
   })
 
   it('T005: container, selectors, classes, test ids, app state', () => {
@@ -90,10 +90,10 @@ test.todo('later')`
   })
 
   it('T006: mocking weft or the unit under test', () => {
-    expect(codes(`vi.mock('weft')\ntest('a', () => { expect(f()).toBe(1) })`)).toEqual(['T006'])
-    expect(codes(`vi.mock('weft/dom', () => ({}))\ntest('a', () => { expect(f()).toBe(1) })`)).toEqual(['T006'])
+    expect(codes(`vi.mock('@weft-js/core')\ntest('a', () => { expect(f()).toBe(1) })`)).toEqual(['T006'])
+    expect(codes(`vi.mock('@weft-js/core/dom', () => ({}))\ntest('a', () => { expect(f()).toBe(1) })`)).toEqual(['T006'])
     expect(codes(`import { Cart } from './Cart'\nvi.mock('./Cart')\ntest('a', () => { render(Cart); expect(screen.getByRole('list')).toBeTruthy() })`)).toEqual(['T006'])
-    expect(codes(`import * as weft from 'weft'\ntest('a', () => { vi.spyOn(weft, 'state'); expect(f()).toBe(1) })`)).toEqual(['T006'])
+    expect(codes(`import * as weft from '@weft-js/core'\ntest('a', () => { vi.spyOn(weft, 'state'); expect(f()).toBe(1) })`)).toEqual(['T006'])
     // Faking an edge is fine.
     expect(codes(`import { Cart } from './Cart'\nvi.mock('./api')\ntest('a', () => { render(Cart); expect(screen.getByRole('list')).toBeTruthy() })`)).toEqual([])
   })
@@ -152,7 +152,7 @@ describe('T-codes stay quiet on the repo’s own tests', () => {
 describe('weft check reports T-codes', () => {
   it('lints test files next to the components, and the reference stays clean', async () => {
     const dir = project({
-      'src/Header.test.tsx': `import { render } from 'weft/test'
+      'src/Header.test.tsx': `import { render } from '@weft-js/core/test'
 import { Header } from './components/Header'
 test.only('header', () => { render(Header, { count: 1 } as any) })
 `,

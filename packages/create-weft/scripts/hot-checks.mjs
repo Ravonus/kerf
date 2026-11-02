@@ -5,18 +5,18 @@ import { join } from 'node:path'
 import { findChrome, launch } from './cdp.mjs'
 
 const FILES = {
-  'src/components/HotCounter.tsx': `import { state } from 'weft'
+  'src/components/HotCounter.tsx': `import { state } from '@weft-js/core'
 export function HotCounter() {
   const n = state(0)
   return <button id="c" onClick={() => n.value++}>one {n.value}</button>
 }
 `,
-  'src/server/hot.ts': `import { query } from '@weft/start'
+  'src/server/hot.ts': `import { query } from '@weft-js/start'
 export const who = query({ run: () => 'S1' })
 `,
   'src/routes/hot.css': `#t { color: rgb(1, 2, 3) }
 `,
-  'src/routes/hot.tsx': `import { state } from 'weft'
+  'src/routes/hot.tsx': `import { state } from '@weft-js/core'
 import { HotCounter } from '#/components/HotCounter'
 import { who } from '#/server/hot'
 import './hot.css'
@@ -43,7 +43,7 @@ export function prepare(app) {
   for (const file in FILES) writeFileSync(join(app, file), FILES[file])
 }
 
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 async function until(what, ms, test) {
   const end = Date.now() + ms
   let last
@@ -79,8 +79,11 @@ export async function hotChecks(app, base, log, pass) {
     const page = await chrome.page(`${base}/hot`)
     await until('the page hydrates', 60000, async () => {
       await page.eval(`document.querySelector('#c')?.click()`)
-      return /[1-9]$/.test(await page.eval(`${text('c')}`))
+      return /[1-9]$/.test(await page.eval(text('c')))
     })
+    const loaded = await page.eval(`performance.getEntriesByType('resource').map(r => r.name)`)
+    const twice = loaded.filter(u => /\.[jt]sx?(\?|$)/.test(u)).map(u => u.replace(/\?.*$/, '')).filter((u, i, all) => all.indexOf(u) !== i)
+    if (twice.length) throw new Error(`a module loaded under two URLs: ${twice.slice(0, 3).join(', ')}`)
     await page.eval(`document.querySelector('#c').click(); window.__same = 1; document.querySelector('#i').focus()`)
     await page.type('hello')
     await page.eval(`document.querySelector('#raw').value = 'by hand'; document.querySelector('#i').focus(); document.querySelector('#i').setSelectionRange(2, 2); document.querySelector('#box').scrollTop = 120; document.scrollingElement.scrollTop = 400`)

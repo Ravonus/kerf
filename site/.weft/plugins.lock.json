@@ -1,14 +1,14 @@
 {
   "version": 1,
   "plugins": {
-    "@weft/icons": {
+    "@weft-js/warp-icons": {
       "version": "0.0.0",
       "integrity": null,
       "permissions": [],
       "provides": [],
       "undeclared": []
     },
-    "@weft/plugin-text": {
+    "@weft-js/text": {
       "version": "0.0.0",
       "integrity": null,
       "permissions": [
@@ -19,11 +19,11 @@
       ],
       "undeclared": []
     },
-    "@weft/warp": {
+    "@weft-js/warp": {
       "version": "0.0.0",
       "integrity": null,
       "permissions": [
-        "fs.read:node_modules/@weft/warp-core/**",
+        "fs.read:node_modules/@weft-js/warp-core/**",
         "fs.write:$TMPDIR/warp-seed-*",
         "spawn:node"
       ],

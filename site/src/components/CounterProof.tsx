@@ -1,5 +1,5 @@
-import { onMount, state, stats } from 'weft'
-import { Button } from '@weft/warp'
+import { onMount, state, stats } from '@weft-js/core'
+import { Button } from '@weft-js/warp'
 
 /** The hero's claim, live: press it and the counts come from this page's own MutationObserver and weft's own counter. */
 export function CounterProof() {
@@ -17,7 +17,7 @@ export function CounterProof() {
   return (
     <div data-site="proof">
       <div data-part="counter">
-        <Button size="lg" onClick={() => count.value++}><span ref={(n: any) => (shown = n)}>{count.value}</span></Button>
+        <Button size="lg" onClick={() => count.value++}><span ref={el => (shown = el)}>{count.value}</span></Button>
         <dl>
           <div><dt>Component runs</dt><dd>1</dd></div>
           <div><dt>Reactive runs</dt><dd>{runs.value}</dd></div>

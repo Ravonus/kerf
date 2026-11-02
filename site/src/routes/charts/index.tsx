@@ -1,4 +1,4 @@
-import type { Meta } from '@weft/start'
+import type { Meta } from '@weft-js/start'
 import { WarpIndex } from '../../components/WarpIndex'
 
 export const prerender = true

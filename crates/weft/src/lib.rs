@@ -1,4 +1,4 @@
-//! The Rust side of weft's `remote()` and `native()` (PLAN §4.3, research 36 and 37). A sidecar or an addon implements
+//! The Rust side of weft's `remote()` and `native()` (PLAN §4.3, research 36 and 39). A sidecar or an addon implements
 //! server functions declared in TypeScript: Zod stays the source of truth, `.weft/contract.json` carries it, and `weft::build::generate` turns it into
 //! serde types, a typed error enum per function and one `Service` trait, so a change on the TS side stops `cargo` exactly
 //! where the Rust no longer matches.
@@ -35,18 +35,27 @@
 pub mod build;
 
 #[cfg(feature = "core")]
+#[cfg_attr(
+    not(any(feature = "server", feature = "native")),
+    allow(dead_code, reason = "`core` alone is what generated code names; the rest is for `server` and `native`")
+)]
 mod ctx;
 #[cfg(feature = "server")]
 mod envelope;
 #[cfg(feature = "core")]
+#[cfg_attr(
+    not(any(feature = "server", feature = "native")),
+    allow(dead_code, reason = "`core` alone is what generated code names; the rest is for `server` and `native`")
+)]
 mod functions;
 #[cfg(feature = "native")]
 #[doc(hidden)]
+#[cfg_attr(test, allow(dead_code, reason = "Node-API registers exports outside test builds"))]
 pub mod native;
-#[cfg(feature = "server")]
-mod server;
 #[cfg(feature = "otel")]
 mod otel;
+#[cfg(feature = "server")]
+mod server;
 
 #[cfg(feature = "core")]
 pub use ctx::{Base, Ctx, Envelope, FromBase, SharedCtx, User, UserCtx};

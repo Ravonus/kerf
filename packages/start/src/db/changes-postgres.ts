@@ -24,13 +24,13 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
     const sql = postgres(direct, { ...opts, max: 1 })
     const token = `?${crypto.randomUUID()}`
     let heard!: () => void
-    const got = new Promise<void>(ok => (heard = ok))
+    const got = new Promise<void>(ok => { heard = ok })
     try {
       await sql.listen(CHANNEL, p => { if (p === token) heard() })
       await client.notify(CHANNEL, token)
-      return await Promise.race([got.then(() => true), new Promise<boolean>(ok => setTimeout(ok, PROBE, false))])
-    } catch (e: any) {
-      return e?.message ?? String(e)
+      return await Promise.race([got.then(() => true), new Promise<boolean>(ok => { setTimeout(ok, PROBE, false) })])
+    } catch (e) {
+      return (e as Error | null)?.message ?? String(e)
     } finally {
       void sql.end({ timeout: 0 }).catch(() => {})
     }
@@ -61,12 +61,12 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
     let have: string[]
     try {
       have = await triggers()
-    } catch (e: any) {
-      return { mode: 'off', via: 'none', why: `the database didn't answer: ${String(e?.message ?? e).replace(SECRET, '//…@')}`, fix: 'check `DATABASE_URL`' }
+    } catch (e) {
+      return { mode: 'off', via: 'none', why: `the database didn't answer: ${((e as Error | null)?.message ?? String(e)).replace(SECRET, '//…@')}`, fix: 'check `DATABASE_URL`' }
     }
     const missing = tables.filter(t => !have.includes(t))
     if (missing.length) {
-      const allowed = await mayCreate(missing[0])
+      const allowed = await mayCreate(missing[0]!)
       return poll(`no trigger on ${missing.map(t => `\`${t}\``).join(', ')}`, allowed ? 'run `weft db live`, then apply the migration' : `run \`weft db live\`, and apply the migration as a role that may create triggers: this one has no TRIGGER on \`${missing[0]}\``)
     }
     const ok = await hears()
@@ -107,12 +107,12 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
       }
       await client.notify(CHANNEL, token).catch(() => sink.down('the database is not answering'))
       if (stopped) return
-      timer = setTimeout(check, heartbeat)
-      ;(timer as any).unref?.()
+      timer = setTimeout(() => void check(), heartbeat)
+      ;(timer as { unref?(): void }).unref?.()
     }
     await connect().catch(e => sink.down(`the database listener can't connect: ${String(e?.message ?? e).replace(SECRET, '//…@')}`))
-    timer = setTimeout(check, heartbeat)
-    ;(timer as any).unref?.()
+    timer = setTimeout(() => void check(), heartbeat)
+    ;(timer as { unref?(): void }).unref?.()
     return async () => {
       stopped = true
       clearTimeout(timer)
@@ -138,8 +138,8 @@ export function postgresChanges({ url, listenUrl, client, tables, interval = 200
       } catch {
         sink.down('the database is not answering')
       }
-      timer = setTimeout(look, interval)
-      ;(timer as any).unref?.()
+      timer = setTimeout(() => void look(), interval)
+      ;(timer as { unref?(): void }).unref?.()
     }
     return look().then(() => () => {
       stopped = true

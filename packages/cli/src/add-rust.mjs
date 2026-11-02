@@ -1,6 +1,6 @@
 // `weft add rust [name]`: a crate, its server module and one working function, so `weft check` passes on the first run.
 // `native()` by default (one hot function in this process); `--remote` for a sidecar, the same crate behind HTTP. The
-// `weft` crate isn't on crates.io: it comes with @weft/start, so the app's crate and its TS can't disagree on a version.
+// `weft` crate isn't on crates.io: it comes with @weft-js/start, so the app's crate and its TS can't disagree on a version.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -63,7 +63,7 @@ async fn main() -> std::io::Result<()> {
 weft::native!(contract::functions(${pascal(name)}));
 `}`
 
-const fn = (name, binding, file) => `import { query } from '@weft/start/data'
+const fn = (name, binding) => `import { query } from '@weft-js/start/data'
 import { z } from 'zod'
 import { ${binding} } from './rust'
 
@@ -75,11 +75,11 @@ export const digest = query({
 })
 `
 
-/** The path Cargo gets. `crate/` is in a packed @weft/start; a linked one is in this repository, next to the crates. */
+/** The path Cargo gets. `crate/` is in a packed @weft-js/start; a linked one is in this repository, next to the crates. */
 async function weftCrate(root, dir) {
   const { startDir } = await start(root, 'vite')
   const found = [join(startDir, '..', 'crate'), join(startDir, '..', '..', '..', 'crates', 'weft')].find(d => existsSync(join(d, 'Cargo.toml')))
-  if (!found) throw refused('this @weft/start has no `weft` crate in it. Nothing was changed.')
+  if (!found) throw refused('this @weft-js/start has no `weft` crate in it. Nothing was changed.')
   return relative(dir, found).replaceAll('\\', '/')
 }
 
@@ -96,8 +96,8 @@ export async function addRust(root, name = 'media', { remote = false, dryRun = f
   const rustFile = join(root, 'src', 'server', 'rust.ts')
   const had = existsSync(rustFile) ? readFileSync(rustFile, 'utf8') : '// The only place Rust targets are named.\n'
   if (new RegExp(`\\b${binding}\\b`).test(had)) throw refused(`src/server/rust.ts already names \`${binding}\`. Nothing was changed.`)
-  const imported = new RegExp(`import\\s*\\{[^}]*\\b${factory}\\b[^}]*\\}\\s*from\\s*['"]@weft/start/rust['"]`).test(had)
-  const nextRust = `${imported ? had : had.replace(/^((?:\/\/.*\n)*)/, `$1import { ${factory} } from '@weft/start/rust'\n`)}${had.endsWith('\n') ? '' : '\n'}\nexport const ${binding} = ${call}\n`
+  const imported = new RegExp(`import\\s*\\{[^}]*\\b${factory}\\b[^}]*\\}\\s*from\\s*['"]@weft-js/start/rust['"]`).test(had)
+  const nextRust = `${imported ? had : had.replace(/^((?:\/\/.*\n)*)/, `$1import { ${factory} } from '@weft-js/start/rust'\n`)}${had.endsWith('\n') ? '' : '\n'}\nexport const ${binding} = ${call}\n`
 
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const needsZod = !pkg.dependencies?.zod && !pkg.devDependencies?.zod

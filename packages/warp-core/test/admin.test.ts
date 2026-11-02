@@ -123,7 +123,7 @@ test('proration: an upgrade pays the difference, a downgrade waits', () => {
   const up = prorate({ from: free, to: big, seats: 3, daysLeft: 15, periodDays: 30 })
   expect(up.due).toBe('today')
   expect(up.total).toBe(60)
-  expect(up.lines[1].amount).toBe(-30)
+  expect(up.lines[1]!.amount).toBe(-30)
   const down = prorate({ from: big, to: free, seats: 3, daysLeft: 15, periodDays: 30 })
   expect(down).toMatchObject({ due: 'next', total: 60 })
   expect(planPrice(25, 'year')).toBe(20)

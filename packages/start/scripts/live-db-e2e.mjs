@@ -18,7 +18,7 @@ const fixture = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.ur
 const url = process.env.DATABASE_URL
 const isPg = url.startsWith('postgres')
 const run = promisify(execFile)
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 const say = (...a) => console.log(...a)
 const failed = []
 const check = (ok, what) => { say(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed.push(what) }
@@ -48,9 +48,9 @@ async function setup() {
 }
 
 const env = { ...process.env, NODE_ENV: 'production' }
-// A fixture inside the package has no `@weft/start` of its own.
-mkdirSync(`${fixture}/node_modules/@weft`, { recursive: true })
-if (!existsSync(`${fixture}/node_modules/@weft/start`)) symlinkSync(fileURLToPath(new URL('..', import.meta.url)), `${fixture}/node_modules/@weft/start`)
+// A fixture inside the package has no `@weft-js/start` of its own.
+mkdirSync(`${fixture}/node_modules/@weft-js`, { recursive: true })
+if (!existsSync(`${fixture}/node_modules/@weft-js/start`)) symlinkSync(fileURLToPath(new URL('..', import.meta.url)), `${fixture}/node_modules/@weft-js/start`)
 if (!process.env.SKIP_BUILD) {
   const b = spawnSync(process.execPath, ['test/build-app.mjs', JSON.stringify({ root: fixture, site: { name: 'x', url: 'http://localhost' }, preset: 'node_server', logLevel: 'error' })], { cwd: new URL('..', import.meta.url), env: { ...env, WEFT_BUILD: '1' }, stdio: 'inherit' })
   if (b.status) throw new Error('build failed')
@@ -105,9 +105,9 @@ for (let i = 0; i < 20; i++) {
   const body = `outside ${i} ${Date.now()}`
   const { stdout } = await outside(`insert into notes (owner, body) values ('alice', '${body}')`)
   const t = +stdout
-  const hit = await until(async () => (await alice1.page.evaluate(b => window.__seen[b], body)) && (await alice2.page.evaluate(b => window.__seen[b], body)))
+  const hit = await until(async () => (await alice1.page.evaluate(said => window.__seen[said], body)) && (await alice2.page.evaluate(said => window.__seen[said], body)))
   if (!hit) { check(false, `sample ${i} never arrived`); continue }
-  samples.push(Math.max(await alice1.page.evaluate(b => window.__seen[b], body), await alice2.page.evaluate(b => window.__seen[b], body)) - t)
+  samples.push(Math.max(await alice1.page.evaluate(said => window.__seen[said], body), await alice2.page.evaluate(said => window.__seen[said], body)) - t)
   await wait(400)
 }
 samples.sort((x, y) => x - y)

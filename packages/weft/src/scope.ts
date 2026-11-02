@@ -1,15 +1,16 @@
 // weft app state: defineState (PLAN §4.5, research 14 §2). Phase 1: client instances, names, $reset, $snapshot.
-// History (weft/history, which also owns action transactions) and persistence (weft/persist) are separate modules
+// History (@weft-js/core/history, which also owns action transactions) and persistence (@weft-js/core/persist) are separate modules
 // that register here; the weft() Vite plugin imports each one into the modules that use its option, so an app that
 // uses neither ships neither. Diagnostic text, dev names and the S004/S010 checks are dev-only.
 //
 // A scope is a named setup function over ordinary boxes. It runs once per app instance, lazily, on first access.
 // Functions it returns are actions: each call is one transaction (one undo step), and nested calls join the outer.
 
-import { Box, DEV, Memo, collect, context, createRoot, named as graph, rt, untrack, type Derived, type State } from './index'
+import { Box, DEV, Memo, collect, context, createRoot, named as graph, rt, untrack, type Derived } from './index'
 
 // ---- diagnostics ------------------------------------------------------------------------------------------------
 
+/** A misuse of state, with its code and how to fix it. */
 export class StateError extends Error {
   constructor(public code: string, message: string, fix: string) {
     super(`${code}: ${message}\n  fix: ${fix}`)
@@ -41,8 +42,8 @@ export interface AppOptions {
 export interface App {
   name: string
   seed: Record<string, Record<string, unknown>>
-  storage?: StorageLike
-  cookies?: AppOptions['cookies']
+  storage?: StorageLike | undefined
+  cookies?: AppOptions['cookies'] | undefined
   instances: Map<ScopeDef, Instance>
 }
 
@@ -52,7 +53,7 @@ export function createApp(options: AppOptions = {}): App {
 
 /**
  * Which app a handle means: the one its owner was rendered in, else the current one. The client has one app per tab;
- * `weft/test` makes a fresh one per `render()`, and weft/ssr one per render pass (one request, never shared).
+ * `@weft-js/core/test` makes a fresh one per `render()`, and @weft-js/core/ssr one per render pass (one request, never shared).
  */
 let current: App = createApp()
 const root = current
@@ -76,13 +77,13 @@ export function withApp<T>(app: App, fn: () => T): T {
   return appContext.provide(app, fn)
 }
 
-/** End an app: dispose every scope instance's owner (weft/test, when a render unmounts). */
+/** End an app: dispose every scope instance's owner (@weft-js/core/test, when a render unmounts). */
 export function disposeApp(app: App) {
   for (const inst of app.instances.values()) inst.dispose()
   app.instances.clear()
 }
 
-// ---- features: weft/history and weft/persist register here -------------------------------------------------------
+// ---- features: @weft-js/core/history and @weft-js/core/persist register here -------------------------------------------------------
 
 export interface Timeline {
   clear(): void
@@ -95,15 +96,15 @@ export const features: {
     /** Wraps a returned function: one transaction per call, nested calls join the outer. */
     action<F extends Fn>(name: string, fn: F): F
     /** A write to a box in a scope with history. */
-    record(inst: Instance, box: Box<any>, before: unknown): void
+    record(inst: Instance, box: Box<unknown>, before: unknown): void
     /** Write without recording (undo, redo, reset). */
     replay(fn: () => void): void
   }
-  persist?: { load(inst: Instance, box: Box<any>, name: string): void; write(inst: Instance, box: Box<any>): void }
-  sync?: { attach(inst: Instance, box: Box<any>, name: string): void; write(inst: Instance, box: Box<any>): void }
+  persist?: { load(inst: Instance, box: Box<unknown>, name: string): void; write(inst: Instance, box: Box<unknown>): void }
+  sync?: { attach(inst: Instance, box: Box<unknown>, name: string): void; write(inst: Instance, box: Box<unknown>): void }
 } = {}
 
-function onWrite(box: Box<any>, before: unknown) {
+function onWrite(box: Box<unknown>, before: unknown) {
   const inst = owners.get(box)!
   if (inst.history) features.history!.record(inst, box, before)
   if (box.opts?.persist) features.persist!.write(inst, box)
@@ -112,11 +113,13 @@ function onWrite(box: Box<any>, before: unknown) {
 
 // ---- scopes -----------------------------------------------------------------------------------------------------
 
-type Fn = (...args: any[]) => any
-type ScopeShape = Record<string, State<any> | Derived<any> | Fn | unknown>
+type Fn = (...args: never[]) => unknown
+type ScopeShape = Record<string, unknown>
 
+/** One step of a scope's undo history: what happened, and when. */
 export interface HistoryEntry { action: string; at: number }
 
+/** A scope's undo log. */
 export interface History {
   undo(): void
   redo(): void
@@ -126,6 +129,7 @@ export interface History {
   readonly entries: Derived<readonly HistoryEntry[]>
 }
 
+/** What `defineState` returns: the setup's values, and the scope's name, reset and history. */
 export type ScopeHandle<N extends string, T> = T & {
   readonly $name: N
   /** Every box back to its initial value; persisted boxes rewritten; history cleared. */
@@ -143,17 +147,17 @@ interface ScopeDef {
   h?: unknown
 }
 
-/** Set by weft/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
+/** Set by @weft-js/core/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
 export const hmr = { on: false }
 
 const defs = new Map<string, ScopeDef>()
-export const owners = new WeakMap<Box<any>, Instance>()
+export const owners = new WeakMap<Box<unknown>, Instance>()
 const building = new Set<ScopeDef>()
 
 export class Instance {
   api: Record<string, unknown> = {}
-  boxes: Box<any>[]
-  inits = new Map<Box<any>, unknown>()
+  boxes: Box<unknown>[]
+  inits = new Map<Box<unknown>, unknown>()
   history?: Timeline
   name: string
   /** Disposes the setup's owner: its watchers and the browser values it reads (`disposeApp`). */
@@ -163,18 +167,18 @@ export class Instance {
     this.name = def.name
     if (def.options.history) {
       if (DEV && !features.history)
-        throw new StateError('S009', `\`${def.name}\` sets \`history\`, but weft/history isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/history'`")
+        throw new StateError('S009', `\`${def.name}\` sets \`history\`, but @weft-js/core/history isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/history'`")
       this.history = features.history!.create(this, def.options.history.limit)
     }
     const [shape, boxes] = collect(() => createRoot(d => ((this.dispose = d), def.setup()), null))
     this.boxes = boxes
 
-    const named = new Map<Box<any>, string>()
+    const named = new Map<Box<unknown>, string>()
     let writable = 0, actions = 0
     for (const [key, v] of Object.entries(shape)) {
       if (DEV && key[0] === '$') throw new StateError('S009', `\`${def.name}\` returns \`${key}\`; $-names are reserved`, `rename \`${key}\``)
       if (v instanceof Box) { named.set(v, key); if (DEV) writable++ }
-      // Actions are transactions only where weft/history is loaded; otherwise an action is the function itself.
+      // Actions are transactions only where @weft-js/core/history is loaded; otherwise an action is the function itself.
       if (typeof v === 'function') { if (DEV) actions++; this.api[key] = features.history ? features.history.action(`${def.name}.${key}`, v as Fn) : v }
       else this.api[key] = v
     }
@@ -190,21 +194,21 @@ export class Instance {
       owners.set(box, this)
       if (box.opts?.persist) {
         if (DEV && !features.persist)
-          throw new StateError('S008', `\`${def.name}\` persists a box, but weft/persist isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/persist'`")
+          throw new StateError('S008', `\`${def.name}\` persists a box, but @weft-js/core/persist isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/persist'`")
         if (DEV && !name) throw new StateError('S008', `\`${def.name}\` persists a box it doesn't return or name`, "return it from the setup, or give it `name: '…'`")
         features.persist!.load(this, box, name!)
       }
       if (name && name in seed) box.v = seed[name] // before setup returns: nothing has read it yet
       if (box.opts?.sync) {
-        if (DEV && !features.sync) throw new StateError('S008', `\`${def.name}\` syncs a box, but weft/sync isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import 'weft/sync'`")
+        if (DEV && !features.sync) throw new StateError('S008', `\`${def.name}\` syncs a box, but @weft-js/core/sync isn't loaded`, "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/sync'`")
         if (DEV && !name) throw new StateError('S008', `\`${def.name}\` syncs a box it doesn't return or name`, "return it from the setup, or give it `name: '…'`")
         features.sync!.attach(this, box, name!)
       }
       box.h = onWrite
     }
     if (DEV) {
-      // The dev graph (weft/devtools): the scope's boxes and returned derived values, until the app ends.
-      const nodes: (Box<any> | Memo<any>['node'])[] = [...boxes]
+      // The dev graph (@weft-js/core/devtools): the scope's boxes and returned derived values, until the app ends.
+      const nodes: (Box<unknown> | Memo<unknown>['node'])[] = [...boxes]
       for (const [key, v] of Object.entries(this.api)) if (v instanceof Memo) { v.node.n = `${def.name}.${key}`; nodes.push(v.node) }
       for (const n of nodes) graph.add(n)
       const dispose = this.dispose
@@ -231,7 +235,7 @@ export function unserializable(v: unknown, path: string): string | void {
   if (typeof v === 'number') return Number.isFinite(v) ? undefined : `${path} is ${v}`
   if (typeof v !== 'object') return `${path} is a ${typeof v}`
   const proto = Object.getPrototypeOf(v)
-  if (!Array.isArray(v) && proto !== Object.prototype && proto !== null) return `${path} is a ${(v as object).constructor?.name ?? 'class instance'}`
+  if (!Array.isArray(v) && proto !== Object.prototype && proto !== null) return `${path} is a ${(v).constructor?.name ?? 'class instance'}`
   for (const [k, x] of Object.entries(v)) {
     const bad = unserializable(x, `${path}.${k}`)
     if (bad) return bad
@@ -335,7 +339,7 @@ export function scope<H extends { readonly $name: string }>(handle: H, options: 
     get(_, key) {
       const prev = useApp(app)
       try {
-        const v = (handle as any)[key]
+        const v = (handle as Record<PropertyKey, unknown>)[key]
         if (typeof v !== 'function') return v
         const run = (...a: unknown[]) => { const p = useApp(app); try { return v(...a) } finally { useApp(p) } }
         return Object.defineProperty(run, 'name', { value: v.name })

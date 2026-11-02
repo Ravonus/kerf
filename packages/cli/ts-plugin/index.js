@@ -1,6 +1,6 @@
 // A tsserver plugin: the editor's language service sees each file's shadow, and every position in and out is mapped, so
 // inferred props hover, complete and report at the source. TypeScript 7 doesn't load plugins and ignores the entry in
-// tsconfig without a word, which is safe: research 41 §6 says what an editor on tsgo gets instead.
+// tsconfig without a word, which is safe: research 44 §6 says what an editor on tsgo gets instead.
 
 const { Engine } = require('../src/infer/engine.cjs')
 const { languageHost } = require('../src/infer/hosts.cjs')

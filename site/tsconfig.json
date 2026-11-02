@@ -1,30 +1,8 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2022",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "jsx": "preserve",
-    "jsxImportSource": "weft",
-    "lib": [
-      "es2023",
-      "dom",
-      "dom.iterable"
-    ],
-    "paths": {
-      "#/*": [
-        "./src/*"
-      ]
-    },
-    "types": [
-      "weft/client"
-    ]
+    "paths": { "#/*": ["./src/*"] },
+    "types": ["node", "@weft-js/core/client"]
   },
-  "include": [
-    "src",
-    "weft.config.ts",
-    ".weft/*.d.ts"
-  ]
+  "include": ["src", "test", "scripts", "weft.config.ts", ".weft/*.d.ts"]
 }

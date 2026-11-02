@@ -1,4 +1,4 @@
-import { DitherField } from '@weft/warp'
+import { DitherField } from '@weft-js/warp'
 import { rng, clamp, type ArtProps, type Meta } from './shared'
 import code from './turing-cloth.tsx?raw'
 
@@ -18,9 +18,9 @@ export default function TuringCloth({ live = true }: ArtProps) {
         const up = (y === 0 ? H - 1 : y - 1) * W, down = (y === H - 1 ? 0 : y + 1) * W, here = y * W
         for (let x = 0; x < W; x++, i++) {
           const l = x === 0 ? W - 1 : x - 1, r = x === W - 1 ? 0 : x + 1
-          const A = a[i], B = b[i], abb = A * B * B
-          a2[i] = A + (a[here + l] + a[here + r] + a[up + x] + a[down + x] - 4 * A) * 0.2 - abb + FEED * (1 - A)
-          b2[i] = B + (b[here + l] + b[here + r] + b[up + x] + b[down + x] - 4 * B) * 0.1 + abb - (KILL + FEED) * B
+          const A = a[i]!, B = b[i]!, abb = A * B * B
+          a2[i] = A + (a[here + l]! + a[here + r]! + a[up + x]! + a[down + x]! - 4 * A) * 0.2 - abb + FEED * (1 - A)
+          b2[i] = B + (b[here + l]! + b[here + r]! + b[up + x]! + b[down + x]! - 4 * B) * 0.1 + abb - (KILL + FEED) * B
         }
       }
       ;[a, a2] = [a2, a]
@@ -37,7 +37,7 @@ export default function TuringCloth({ live = true }: ArtProps) {
     if (x > aspect) aspect = x
     const fx = (x / aspect) * (W - 1), fy = y * (H - 1), ix = fx | 0, iy = fy | 0, kx = fx - ix, ky = fy - iy
     const i = iy * W + ix, j = i + 1, m = iy < H - 1 ? i + W : i, n = m + 1
-    return clamp(((b[i] * (1 - kx) + b[j] * kx) * (1 - ky) + (b[m] * (1 - kx) + b[n] * kx) * ky) * 2.9)
+    return clamp(((b[i]! * (1 - kx) + b[j]! * kx) * (1 - ky) + (b[m]! * (1 - kx) + b[n]! * kx) * ky) * 2.9)
   }
   const press = (e: PointerEvent) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect()

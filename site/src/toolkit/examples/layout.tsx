@@ -1,20 +1,21 @@
-import { state, untrack } from 'weft'
-import { Badge, Button, Card, Center, Cover, Frame, Grid, Heading, Input, Inset, Nav, Progress, Row, Segmented, Shell, Spacer, Split, Stack, Switch, Text, Toggle } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Badge, Button, Card, Center, Cover, Frame, Grid, Heading, Input, Inset, Nav, Progress, Row, Segmented, Shell, Spacer, Split, Stack, Switch, Text, Toggle } from '@weft-js/warp'
+import type { IconName, ShellProps } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS, TONE_OF, TRAFFIC } from '../world'
 
 // Layout has no look of its own, so each box is a small project card.
 const BOX = 'display:grid;align-content:center;gap:2px;padding:var(--warp-space-related);border:var(--warp-border-hairline) solid var(--warp-color-border);border-radius:var(--warp-radius-surface);background:var(--warp-color-surface);color:var(--warp-color-text);font-size:var(--warp-text-caption-size);min-inline-size:0'
 
 /** A box given only a number shows that project. */
-const projectOf = (c: any) => {
+const projectOf = (c: unknown) => {
   const n = Number(typeof c === 'function' ? c() : c)
   return Number.isInteger(n) && n > 0 ? PROJECTS[(n - 1) % PROJECTS.length] : undefined
 }
 
-function Box({ tall, children, ...rest }: { tall?: number; children?: any; [attr: string]: any }) {
+function Box({ tall, children, ...rest }: { tall?: number; children?: unknown; [attr: string]: unknown }) {
   return (
     <div style={tall ? `${BOX};min-block-size:${tall}px` : BOX} {...rest}>
-      {projectOf(children) ? <><strong>{projectOf(children).name}</strong><span style="color:var(--warp-color-text-subtle)">{projectOf(children).region}</span></> : children}
+      {projectOf(children) ? <><strong>{projectOf(children)!.name}</strong><span style="color:var(--warp-color-text-subtle)">{projectOf(children)!.region}</span></> : children}
     </div>
   )
 }
@@ -86,7 +87,7 @@ export const GridGaps = () => (
   </Grid>
 )
 
-const now = TRAFFIC[11], before = TRAFFIC[10]
+const now = TRAFFIC[11]!, before = TRAFFIC[10]!
 const change = (a: number, b: number) => `${a >= b ? '+' : ''}${((a - b) / b * 100).toFixed(1)}%`
 const STATS = [
   { label: 'Requests', value: `${now.requests}M`, delta: change(now.requests, before.requests), good: true },
@@ -671,17 +672,17 @@ export const SpacerCardFooter = () => (
 /* -- Shell -- */
 
 // A shell fills the screen, so a preview sets what "the screen" means: a height, and a box that holds its overlays.
-function AppWindow({ height, wide, children }: { height: number; wide?: number; children?: any }) {
+function AppWindow({ height, wide, children }: { height: number; wide?: number; children?: unknown }) {
   const box = () => `--warp-viewport-block:${height}px;block-size:${height}px;${wide ? `inline-size:min(100%,${wide}px);margin-inline:auto;` : ''}overflow:auto;contain:layout paint;border:var(--warp-border-hairline) solid var(--warp-color-border);border-radius:var(--warp-radius-surface)`
   return <div style={box()}>{children}</div>
 }
 
 const MARK = () => <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" fill="var(--warp-color-accent-solid)" /><rect x="13" y="13" width="8" height="8" rx="2" fill="var(--warp-color-accent-solid)" /></svg>
-const ME = PEOPLE[0]
-const ACCOUNT = { name: ME.name, email: ME.email, initials: ME.initials, items: [{ label: 'Profile', icon: 'user' }, { label: 'Preferences', icon: 'settings' }, 'separator', { label: 'Sign out', icon: 'log-out', tone: 'critical' }] } as any
+const ME = PEOPLE[0]!
+const ACCOUNT: ShellProps['account'] = { name: ME.name, email: ME.email, initials: ME.initials, items: [{ label: 'Profile', icon: 'user' }, { label: 'Preferences', icon: 'settings' }, 'separator', { label: 'Sign out', icon: 'log-out', tone: 'critical' }] }
 
 function tesselNav(go: (id: string) => void) {
-  const item = (id: string, label: string, icon: string, count?: number) => ({ id, label, icon: icon as any, count, onSelect: () => go(id) })
+  const item = (id: string, label: string, icon: IconName, count?: number) => ({ id, label, icon, count, onSelect: () => go(id) })
   return [
     { label: 'Workspace', items: [item('projects', 'Projects', 'layers'), item('deploys', 'Deploys', 'rocket', 2), item('activity', 'Activity', 'activity'), item('team', 'Team', 'users'), item('billing', 'Billing', 'folder')] },
     { label: 'Saved views', items: [item('failed', 'Failed builds', 'filter', 1)] },
@@ -699,15 +700,15 @@ export function ShellApp() {
         island
         label="Tessel"
         brand={{ name: 'Tessel', mark: <MARK /> }}
-        title={pageOf[page.value]}
-        crumbs={[{ label: 'Acme', href: '#' }, { label: pageOf[page.value] }]}
+        title={pageOf[page.value]!}
+        crumbs={[{ label: 'Acme', href: '#' }, { label: pageOf[page.value]! }]}
         nav={nav}
         foot={[{ id: 'settings', label: 'Settings', icon: 'settings', onSelect: () => (page.value = 'settings') }]}
         current={page.value}
         actions={<Button size="sm" icon="rocket">Deploy</Button>}
         account={ACCOUNT}
       >
-        <Heading level={1} role="heading">{pageOf[page.value]}</Heading>
+        <Heading level={1} role="heading">{pageOf[page.value]!}</Heading>
         <Grid min="sm" gap="related">
           {PROJECTS.slice(0, 6).map(p => (
             <Card key={p.id}>
@@ -729,8 +730,8 @@ export function ShellRail() {
   const nav = tesselNav(id => (page.value = id))
   return (
     <AppWindow height={420}>
-      <Shell island label="Tessel" brand={{ name: 'Tessel', mark: <MARK /> }} crumbs={[{ label: pageOf[page.value] }]} nav={nav} current={page.value} collapsed={folded} account={ACCOUNT}>
-        <Heading level={1} role="heading">{pageOf[page.value]}</Heading>
+      <Shell island label="Tessel" brand={{ name: 'Tessel', mark: <MARK /> }} crumbs={[{ label: pageOf[page.value]! }]} nav={nav} current={page.value} collapsed={folded} account={ACCOUNT}>
+        <Heading level={1} role="heading">{pageOf[page.value]!}</Heading>
         <Text subtle>The rail keeps icons and short labels. Its toggle opens the full sidebar.</Text>
       </Shell>
     </AppWindow>
@@ -742,8 +743,8 @@ export function ShellPhone() {
   const nav = tesselNav(id => (page.value = id))
   return (
     <AppWindow height={560} wide={375}>
-      <Shell island label="Tessel" brand={{ name: 'Tessel', mark: <MARK /> }} title={pageOf[page.value]} nav={nav} current={page.value} account={ACCOUNT}>
-        <Heading level={1} role="heading">{pageOf[page.value]}</Heading>
+      <Shell island label="Tessel" brand={{ name: 'Tessel', mark: <MARK /> }} title={pageOf[page.value]!} nav={nav} current={page.value} account={ACCOUNT}>
+        <Heading level={1} role="heading">{pageOf[page.value]!}</Heading>
         <Stack divided gap="related">
           {PROJECTS.slice(0, 5).map(p => <Row key={p.id} justify="between" gap="tight"><Text>{p.name}</Text><Badge tone={TONE_OF[p.status]} dot>{p.status}</Badge></Row>)}
         </Stack>

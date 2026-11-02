@@ -1,13 +1,13 @@
-// weft/agent: drive and inspect the running app from inside the page, in whatever browser the agent already has
+// @weft-js/core/agent: drive and inspect the running app from inside the page, in whatever browser the agent already has
 // (Claude's browser pane, Claude in Chrome, Codex's browser, a headless Chrome). Dev builds only; the weft() Vite
 // plugin loads it when serving. Two ways in, one implementation:
 //
 //   - the agent's own browser runs JS: `await __weft__.agent.snapshot()`, `await __weft__.agent.act({ role: 'button', name: 'Add' }, 'click')`
 //   - `weft browser …` / the `weft mcp` browser tools: the dev server relays each command to the open tab (vite.mjs)
 //
-// Queries and actions are weft/test's own (Testing Library role/label/text queries, user-event), so what an agent does
-// here records straight into a `weft/test` test. Snapshots are the page's roles and names with refs, plus the reactive
-// graph with real names (weft/devtools). The clock and the network are faked in the page, like weft/test's `clock` and
+// Queries and actions are @weft-js/core/test's own (Testing Library role/label/text queries, user-event), so what an agent does
+// here records straight into a `@weft-js/core/test` test. Snapshots are the page's roles and names with refs, plus the reactive
+// graph with real names (@weft-js/core/devtools). The clock and the network are faked in the page, like @weft-js/core/test's `clock` and
 // `net`, for reconnect and timeout scenarios.
 
 import { getConfig, screen, within } from '@testing-library/dom'
@@ -24,7 +24,7 @@ const real = {
   Date: globalThis.Date, now: performance.now.bind(performance), fetch: globalThis.fetch?.bind(globalThis),
   WebSocket: globalThis.WebSocket, EventSource: globalThis.EventSource,
 }
-const sleep = (ms: number) => new Promise<void>(r => real.setTimeout(r, ms))
+const sleep = (ms: number) => new Promise<void>(r => { real.setTimeout(r, ms) })
 
 /** Let the app settle: weft's queue, microtasks, then one real task. */
 async function settle() {
@@ -55,14 +55,14 @@ function findAll(t: Target): Element[] {
     const el = refs.get(t.replace(/^@/, ''))?.deref()
     return el?.isConnected ? [el] : []
   }
-  if ('role' in t) return screen.queryAllByRole(t.role as any, t.name === undefined ? {} : { name: t.exact === false ? (n: string) => n.includes(t.name!) : t.name })
+  if ('role' in t) return screen.queryAllByRole(t.role, t.name === undefined ? {} : { name: t.exact === false ? (n: string) => n.includes(t.name!) : t.name })
   if ('label' in t) return screen.queryAllByLabelText(t.label, { exact: t.exact ?? true })
   return screen.queryAllByText(t.text, { exact: t.exact ?? true })
 }
 
 function find(t: Target): Element {
   const all = findAll(t)
-  if (all.length === 1) return all[0]
+  if (all.length === 1) return all[0]!
   if (!all.length) throw new Error(`nothing matches ${describe(t)}${typeof t === 'string' ? ' (refs come from the latest snapshot)' : ''}. Take a snapshot to see the roles and names on the page`)
   throw new Error(`${all.length} elements match ${describe(t)}: ${all.slice(0, 5).map(e => `@${ref(e)}`).join(', ')}. Use a ref, or narrow the name`)
 }
@@ -72,6 +72,7 @@ function find(t: Target): Element {
 const interactive = new Set(['button', 'link', 'textbox', 'searchbox', 'checkbox', 'radio', 'combobox', 'listbox', 'option', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'tab', 'switch', 'slider', 'spinbutton', 'treeitem'])
 const landmarks = new Set(['heading', 'dialog', 'alert', 'alertdialog', 'status', 'list', 'listitem', 'table', 'row', 'cell', 'navigation', 'main', 'form', 'region', 'tabpanel', 'img', 'progressbar', 'log', 'group', 'article', 'banner', 'contentinfo', 'columnheader', 'rowheader', 'grid', 'gridcell', 'menu', 'menubar', 'tablist', 'tree', 'radiogroup', 'search', 'paragraph', 'meter'])
 
+/** What a snapshot covers: which elements, how deep, and whether it carries the state graph. */
 export interface SnapshotOptions {
   /** Only interactive elements (and nothing else): the smallest tree to act from. */
   interactive?: boolean
@@ -80,7 +81,7 @@ export interface SnapshotOptions {
   /** Return only the lines that changed since the previous snapshot. */
   delta?: boolean
   /** `false`: no graph; `'only'`: only the graph. A string other than 'only' filters it by name (`'Cart'`). */
-  graph?: boolean | 'only' | string
+  graph?: boolean | string
 }
 
 let last: string[] = []
@@ -154,6 +155,7 @@ function diff(a: string[], b: string[]) {
   return out
 }
 
+/** The page as an agent reads it: a tree of roles and names, each with a ref to act on. */
 export async function snapshot(options: SnapshotOptions = {}) {
   await settle()
   const root = options.scope ? find(options.scope) : document.body
@@ -176,6 +178,7 @@ export async function snapshot(options: SnapshotOptions = {}) {
 
 // ---- act and assert -----------------------------------------------------------------------------------------------
 
+/** What `act` can do to an element. */
 export type Action = 'click' | 'dblclick' | 'hover' | 'focus' | 'clear' | 'fill' | 'type' | 'press' | 'select' | 'check' | 'uncheck'
 
 const user = userEvent.setup({ delay: null, document })
@@ -198,7 +201,7 @@ export async function act(target: Target, action: Action, value?: string) {
       case 'select': await user.selectOptions(el, value ?? ''); break
       case 'check': if (!(el as HTMLInputElement).checked) await user.click(el); break
       case 'uncheck': if ((el as HTMLInputElement).checked) await user.click(el); break
-      default: throw new Error(`unknown action ${action}: click, dblclick, hover, focus, clear, fill, type, press, select, check, uncheck`)
+      default: throw new Error(`unknown action ${action as string}: click, dblclick, hover, focus, clear, fill, type, press, select, check, uncheck`)
     }
     await settle()
   } finally { quiet = false }
@@ -209,7 +212,7 @@ export async function act(target: Target, action: Action, value?: string) {
 }
 
 /**
- * What an assertion checks, in weft/test's words: `visible`, `absent`, `text` (contains), `exactText`, `value`,
+ * What an assertion checks, in @weft-js/core/test's words: `visible`, `absent`, `text` (contains), `exactText`, `value`,
  * `checked`, `unchecked`, `disabled`, `enabled`, `focused`, `count`.
  */
 export type Expectation = { visible: true } | { absent: true } | { text: string } | { exactText: string } | { value: string } | { checked: true } | { unchecked: true } | { disabled: true } | { enabled: true } | { focused: true } | { count: number }
@@ -224,9 +227,9 @@ function check(target: Target, e: Expectation): { ok: boolean; actual: unknown }
   if ('text' in e) return { ok: (el.textContent ?? '').includes(e.text), actual: clip(el.textContent?.trim() ?? '', 200) }
   if ('exactText' in e) return { ok: (el.textContent ?? '').trim() === e.exactText, actual: clip(el.textContent?.trim() ?? '', 200) }
   if ('value' in e) return { ok: el.value === e.value, actual: el.value }
-  if ('checked' in e) return { ok: !!el.checked, actual: el.checked }
+  if ('checked' in e) return { ok: el.checked, actual: el.checked }
   if ('unchecked' in e) return { ok: !el.checked, actual: el.checked }
-  if ('disabled' in e) return { ok: !!el.disabled, actual: el.disabled }
+  if ('disabled' in e) return { ok: el.disabled, actual: el.disabled }
   if ('enabled' in e) return { ok: !el.disabled, actual: el.disabled ? 'disabled' : 'enabled' }
   if ('focused' in e) return { ok: document.activeElement === el, actual: document.activeElement === el }
   throw new Error(`unknown expectation ${JSON.stringify(e)}`)
@@ -246,9 +249,9 @@ export async function assert(target: Target, expectation: Expectation, { timeout
 
 // ---- recorder ------------------------------------------------------------------------------------------------------
 
-type Query = { by: 'role'; role: string; name?: string } | { by: 'label'; label: string } | { by: 'text'; text: string } | { by: 'ref'; ref: string }
+type Query = { by: 'role'; role: string; name?: string | undefined } | { by: 'label'; label: string } | { by: 'text'; text: string } | { by: 'ref'; ref: string }
 type Step =
-  | { kind: 'act'; target: Query; action: Action; value?: string }
+  | { kind: 'act'; target: Query; action: Action; value?: string | undefined }
   | { kind: 'assert'; target: Query | Target; expectation: Expectation }
   | { kind: 'clock'; op: 'install' | 'advance' | 'uninstall'; ms?: number }
   | { kind: 'net'; op: 'offline' | 'online' }
@@ -266,7 +269,7 @@ function describeFor(el: Element, given?: Target): Query {
   const role = getRole(el)
   if (role) {
     const name = computeAccessibleName(el)
-    if (screen.queryAllByRole(role as any, name ? { name } : {}).length === 1) return name ? { by: 'role', role, name } : { by: 'role', role }
+    if (screen.queryAllByRole(role, name ? { name } : {}).length === 1) return name ? { by: 'role', role, name } : { by: 'role', role }
   }
   const labels = (el as HTMLInputElement).labels
   const label = labels?.[0]?.textContent?.trim()
@@ -322,6 +325,7 @@ const q = (t: Query | Target): string => {
   return `screen.getByText(${s(t.text)})`
 }
 
+/** How `record.code` writes the steps it recorded. */
 export interface CodeOptions {
   /** The component the test renders (default `App`), and where it comes from (default `./App`). */
   component?: string
@@ -332,7 +336,7 @@ export interface CodeOptions {
   name?: string
 }
 
-/** The recorded steps as a `weft/test` test: role/label/text queries, user actions, clock and net, real assertions. */
+/** The recorded steps as a `@weft-js/core/test` test: role/label/text queries, user actions, clock and net, real assertions. */
 export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
   const comp = o.component ?? 'App'
   const used = new Set(['render', 'screen'])
@@ -351,7 +355,7 @@ export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
       const el = get(st.target)
       const v = JSON.stringify(st.value ?? '')
       if (st.action === 'fill') body.push(`await user.clear(${el})`, `await user.type(${q(st.target)}, ${v})`)
-      else if (st.action === 'press') body.push(`${el.startsWith('await') ? `${el.replace(/^await /, '(await ')}).focus()` : `${el}.focus()`}`, `await user.keyboard(${v})`)
+      else if (st.action === 'press') body.push((el.startsWith('await') ? `${el.replace(/^await /, '(await ')}).focus()` : `${el}.focus()`), `await user.keyboard(${v})`)
       else if (st.action === 'select') body.push(`await user.selectOptions(${el}, ${v})`)
       else if (st.action === 'type') body.push(`await user.type(${el}, ${v})`)
       else if (st.action === 'check' || st.action === 'uncheck' || st.action === 'click') body.push(`await user.click(${el})`)
@@ -361,7 +365,7 @@ export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
       else if (st.action === 'focus') body.push(`${el}.focus()`)
     } else if (st.kind === 'assert') {
       asserts++
-      const e = st.expectation as any
+      const e = st.expectation
       const el = get(st.target)
       const one = el.startsWith('await') ? `(${el})` : el
       const all = q(st.target).replace('screen.getBy', 'screen.queryAllBy')
@@ -386,7 +390,7 @@ export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
   body.splice(renderAt, 0, `render(${comp}${o.props ? `, ${o.props}` : ''})`)
   const lines = [
     `import { expect, test } from 'vitest'`,
-    `import { ${[...used].sort().join(', ')} } from 'weft/test'`,
+    `import { ${[...used].sort().join(', ')} } from '@weft-js/core/test'`,
     `import { ${comp} } from ${JSON.stringify(o.from ?? `./${comp}`)}`,
     ...(o.imports ?? []),
     '',
@@ -399,6 +403,7 @@ export function code(steps: Step[] = recording.steps, o: CodeOptions = {}) {
   return { code: lines.join('\n'), steps: steps.length, asserts }
 }
 
+/** Records what people do on the page, as steps that can be replayed or written out as a test. */
 export const record = {
   start() { recording.on = true; recording.steps = []; if (clock.status().installed) log({ kind: 'clock', op: 'install' }); return { recording: true } },
   stop() { recording.on = false; return { recording: false, steps: recording.steps.length } },
@@ -409,17 +414,18 @@ export const record = {
 
 // ---- clock ---------------------------------------------------------------------------------------------------------
 
-type Timer = { id: number; at: number; fn: Function; args: unknown[]; every?: number }
+type Callback = (...args: unknown[]) => void
+type Timer = { id: number; at: number; fn: Callback; args: unknown[]; every?: number | undefined }
 const timers = new Map<number, Timer>()
 let fakeNow = 0
 let installedAt = 0
 let nextTimer = 1
 let installed = false
 
-const g = globalThis as any
+const g = globalThis as unknown as Record<string, unknown>
 
 /**
- * The page's clock, faked like weft/test's `clock`: `pause()` stops time for timers, intervals, rAF, `Date` and
+ * The page's clock, faked like @weft-js/core/test's `clock`: `pause()` stops time for timers, intervals, rAF, `Date` and
  * `performance.now`; `advance(ms)` runs what falls due, in order; `resume()` hands pending timers back to real time.
  * Timers scheduled before `pause()` stay on real time: pass `{ reload: true }` to pause from the next page load.
  */
@@ -461,20 +467,20 @@ function install() {
   installed = true
   fakeNow = real.Date.now()
   installedAt = real.now()
-  const add = (fn: Function, ms = 0, args: unknown[], every?: number) => {
+  const add = (fn: Callback, ms = 0, args: unknown[], every?: number) => {
     const id = nextTimer++
     timers.set(id, { id, at: fakeNow + Math.max(0, ms), fn, args, every: every === undefined ? undefined : Math.max(1, every) })
     return id
   }
-  g.setTimeout = (fn: Function, ms?: number, ...args: unknown[]) => add(fn, ms, args)
-  g.setInterval = (fn: Function, ms?: number, ...args: unknown[]) => add(fn, ms, args, ms ?? 0)
+  g.setTimeout = (fn: Callback, ms?: number, ...args: unknown[]) => add(fn, ms, args)
+  g.setInterval = (fn: Callback, ms?: number, ...args: unknown[]) => add(fn, ms, args, ms ?? 0)
   g.clearTimeout = g.clearInterval = (id: number) => { timers.delete(id) }
   g.requestAnimationFrame = (fn: FrameRequestCallback) => add(() => fn(performance.now()), 16, [])
   g.cancelAnimationFrame = (id: number) => { timers.delete(id) }
   const RealDate = real.Date
   g.Date = class extends RealDate {
-    constructor(...args: any[]) { super(...((args.length ? args : [fakeNow]) as [])) }
-    static now() { return fakeNow }
+    constructor(...args: unknown[]) { super(...((args.length ? args : [fakeNow]) as [])) }
+    static override now() { return fakeNow }
   }
   const from = fakeNow
   performance.now = () => installedAt + (fakeNow - from)
@@ -502,7 +508,7 @@ const netState = { online: true, latency: 0 }
 /**
  * The network as the app sees it: `offline()` makes `navigator.onLine` false, fires `offline`, fails `fetch` and new
  * sockets, and drops open WebSockets and EventSources; `latency(ms)` delays every `fetch`; `drop()` closes the open
- * sockets without going offline (a server restart). Same words as weft/test's `net`. The dev server's own socket is
+ * sockets without going offline (a server restart). Same words as @weft-js/core/test's `net`. The dev server's own socket is
  * never touched.
  */
 export const net = {
@@ -526,7 +532,7 @@ export const net = {
   drop() {
     for (const s of sockets) {
       if (s instanceof real.WebSocket) s.close(4000, 'weft: connection dropped')
-      else { (s as EventSource).close(); s.dispatchEvent(new Event('error')) }
+      else { (s).close(); s.dispatchEvent(new Event('error')) }
     }
     sockets.clear()
     return net.status()
@@ -578,7 +584,7 @@ const safe = (v: unknown) => { try { return JSON.stringify(v) } catch { return S
 // ---- the bridge ----------------------------------------------------------------------------------------------------
 
 /** Every command the dev server relays, by name; each returns JSON. */
-export const commands: Record<string, (args: any) => unknown> = {
+export const commands: Record<string, (args: never) => unknown> = {
   snapshot: (a: SnapshotOptions) => snapshot(a),
   act: (a: { target: Target; action: Action; value?: string }) => act(a.target, a.action, a.value),
   assert: (a: { target: Target; expect: Expectation; timeout?: number }) => assert(a.target, a.expect, { timeout: a.timeout }),
@@ -589,31 +595,35 @@ export const commands: Record<string, (args: any) => unknown> = {
   time: (a: { op: 'pause' | 'advance' | 'resume' | 'status'; ms?: number; reload?: boolean }) =>
     a.op === 'pause' ? clock.pause({ reload: a.reload }) : a.op === 'advance' ? clock.advance(a.ms ?? 0) : a.op === 'resume' ? clock.resume() : clock.status(),
   net: (a: { op: 'offline' | 'online' | 'latency' | 'drop' | 'reset' | 'status'; ms?: number }) =>
-    a.op === 'latency' ? net.latency(a.ms ?? 0) : a.op === 'status' ? net.status() : (net as any)[a.op](),
+    a.op === 'latency' ? net.latency(a.ms ?? 0) : a.op === 'status' ? net.status() : net[a.op](),
   record: (a: { op: 'start' | 'stop' | 'steps' | 'code' | 'note'; text?: string } & CodeOptions) =>
-    a.op === 'code' ? record.code(a) : a.op === 'note' ? record.note(a.text ?? '') : (record as any)[a.op](),
+    a.op === 'code' ? record.code(a) : a.op === 'note' ? record.note(a.text ?? '') : record[a.op](),
   logs: () => ({ console: consoleLog.splice(0), errors: errors() }),
   overlay: (a: { show?: boolean }) => ({ shown: overlay(a.show) }),
   info: () => ({ url: location.href, title: document.title, visible: document.visibilityState === 'visible', focused: document.hasFocus(), clock: clock.status(), net: net.status(), recording: recording.on }),
 }
 
+/** Runs the command `name`, as the dev server's relay and MCP do. */
+// oxlint-disable-next-line typescript/require-await -- the relay awaits this: an unknown name has to come back as a rejection, not a throw at the call
 export async function run(name: string, args: unknown = {}) {
   const fn = commands[name]
   if (!fn) throw new Error(`unknown command ${name}: ${Object.keys(commands).join(', ')}`)
-  return fn(args ?? {})
+  return (fn as (a: unknown) => unknown)(args ?? {})
 }
 
-if (typeof window !== 'undefined' && !(window as any).__weft_agent__) {
-  ;(window as any).__weft_agent__ = true
-  getConfig() // the queries are configured once, like weft/test's
+type Page = Window & { __weft_agent__?: boolean; __weft__?: object }
+
+if (typeof window !== 'undefined' && !(window as Page).__weft_agent__) {
+  ;(window as Page).__weft_agent__ = true
+  getConfig() // the queries are configured once, like @weft-js/core/test's
   patchNetwork()
   patchConsole()
   listen()
   if (sessionStorage.getItem('weft:clock') === 'paused') install()
   const api = { snapshot, act, assert, record, clock, net, run, commands, within, version: 1 }
-  ;(window as any).__weft__ = Object.assign((window as any).__weft__ ?? {}, { agent: api })
+  ;(window as Page).__weft__ = Object.assign((window as Page).__weft__ ?? {}, { agent: api })
   // The dev server relays `weft browser` and MCP commands to this tab over Vite's own socket (vite.mjs).
-  const hot = (import.meta as any).hot
+  const hot = (import.meta as { hot?: { send(event: string, data: unknown): void; on<T>(event: string, fn: (data: T) => void): void } }).hot
   if (hot) {
     const tab = sessionStorage.getItem('weft:tab') ?? `t${Math.random().toString(36).slice(2, 8)}`
     sessionStorage.setItem('weft:tab', tab)
@@ -622,10 +632,11 @@ if (typeof window !== 'undefined' && !(window as any).__weft_agent__) {
     addEventListener('focus', hello)
     document.addEventListener('visibilitychange', hello)
     hot.on('vite:ws:connect', hello)
-    hot.on('weft:cmd', async (msg: { id: string; tab?: string; cmd: string; args: unknown }) => {
+    const relay = async (msg: { id: string; tab?: string; cmd: string; args: unknown }) => {
       if (msg.tab && msg.tab !== tab) return
       try { hot.send('weft:reply', { id: msg.id, tab, ok: true, result: await run(msg.cmd, msg.args) }) }
       catch (e) { hot.send('weft:reply', { id: msg.id, tab, ok: false, error: (e as Error).message }) }
-    })
+    }
+    hot.on('weft:cmd', (msg: Parameters<typeof relay>[0]) => void relay(msg))
   }
 }

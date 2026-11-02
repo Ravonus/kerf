@@ -16,7 +16,7 @@ import ts from 'typescript'
  * @returns {{ imports: Import[], elements: Element[], functions: Map<string, string> }}
  */
 export function scanJsx(text, file = 'file.tsx') {
-  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, /\.jsx$/.test(file) ? ts.ScriptKind.JSX : ts.ScriptKind.TSX)
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith('.jsx') ? ts.ScriptKind.JSX : ts.ScriptKind.TSX)
   const imports = []
   const elements = []
   const functions = new Map()

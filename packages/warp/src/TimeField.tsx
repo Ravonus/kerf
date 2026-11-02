@@ -1,14 +1,14 @@
-import { CalendarIcon, ClockIcon } from '@weft/icons'
-import { daysIn, dayPeriods, fieldName, fmt, fmtTime, fromMinutes, hour12, isoOf, listKey, minutes, pad, readDate, readTime, uid, wallTimeIssue, type ChangeReason, type IsoDate, type IsoDateTime, type IsoTime, type SegmentPart, type TimeZoneId } from '@weft/warp-core'
-import { derived, flush, onMount, state, untrack } from 'weft'
+import { CalendarIcon, ClockIcon } from '@weft-js/warp-icons'
+import { daysIn, dayPeriods, fieldName, fmt, fmtTime, fromMinutes, hour12, isoOf, listKey, minutes, pad, readDate, readTime, uid, wallTimeIssue, type ChangeReason, type IsoDate, type IsoDateTime, type IsoTime, type SegmentPart, type TimeZoneId } from '@weft-js/warp-core'
+import { derived, flush, onMount, state, untrack } from '@weft-js/core'
 import { CalendarGrid } from './Calendar'
 import { Composite, Hidden, isSheet, messages, Panel, Trigger, bindable, useOpen, usePickerEnv, type Bindable, type Openable, type RichFieldProps } from './Picker'
 import { Segments, type SegmentState } from './Segments'
-import '@weft/warp-core/styles/rich/listbox.css'
-import '@weft/warp-core/styles/rich/datetime.css'
+import '@weft-js/warp-core/styles/rich/listbox.css'
+import '@weft-js/warp-core/styles/rich/datetime.css'
 
 /** The slot list (04 TimeField): a listbox with an active option, not a row of tab stops. */
-function Slots({ slots, selected, locale, hourCycle, label, onPick, meta }: { slots: string[]; selected: string | null; locale: string; hourCycle?: string; label: string; onPick: (t: string, r: ChangeReason) => void; meta?: boolean }) {
+function Slots({ slots, selected, locale, hourCycle, label, onPick, meta }: { slots: string[]; selected: string | null; locale: string; hourCycle?: string | undefined; label: string; onPick: (t: string, r: ChangeReason) => void; meta?: boolean | undefined }) {
   const id = uid('slots')
   const near = () => Math.max(0, slots.findIndex(x => x >= (untrack(() => selected) ?? '09:00')))
   const active = state(untrack(near))
@@ -18,24 +18,24 @@ function Slots({ slots, selected, locale, hourCycle, label, onPick, meta }: { sl
     const m = listKey(e.key, active.value, slots.length)
     if (!m.handled) return
     e.preventDefault()
-    if (m.pick) return onPick(slots[active.value], 'keyboard')
+    if (m.pick) return onPick(slots[active.value]!, 'keyboard')
     active.value = m.to
     flush()
     show('nearest')
   }
   onMount(() => show('center'))
   return (
-    <ul ref={(n: any) => (list = n)} data-part="listbox" role="listbox" tabindex="0" data-initial="" aria-label={label} aria-activedescendant={`${id}-${active.value}`} onKeyDown={onKey}>
+    <ul ref={n => (list = n)} data-part="listbox" role="listbox" tabindex="0" data-initial="" aria-label={label} aria-activedescendant={`${id}-${active.value}`} onKeyDown={onKey}>
       {slots.map((x, n) => <Slot key={x} id={`${id}-${n}`} time={x} text={fmtTime(x, locale, hourCycle)} selected={x === selected} active={n === active.value} meta={meta} onPick={onPick} />)}
     </ul>
   )
 }
-const Slot = ({ id, time, text, selected, active, meta, onPick }: { id: string; time: string; text: string; selected: boolean; active: boolean; meta?: boolean; onPick: (t: string, r: ChangeReason) => void }) => (
+const Slot = ({ id, time, text, selected, active, meta, onPick }: { id: string; time: string; text: string; selected: boolean; active: boolean; meta?: boolean | undefined; onPick: (t: string, r: ChangeReason) => void }) => (
   <li role="option" id={id} aria-selected={selected ? 'true' : 'false'} data-active={active ? '' : undefined} onClick={() => onPick(time, 'pointer')}>{text}{meta && <span data-part="opt-meta">{time}</span>}</li>
 )
 
 /** The wheel sheet of a phone (04 §1.2): scroll-snap columns; arrows and presses work too. */
-function Wheels({ value, locale, hourCycle, onChange }: { value: string | null; locale: string; hourCycle?: 'h12' | 'h23' | 'auto'; onChange: (t: IsoTime) => void }) {
+function Wheels({ value, locale, hourCycle, onChange }: { value: string | null; locale: string; hourCycle?: 'h12' | 'h23' | 'auto' | undefined; onChange: (t: IsoTime) => void }) {
   const h12 = untrack(() => hour12(locale, hourCycle))
   const start = untrack(() => value) ?? '09:30'
   const h0 = +start.slice(0, 2), m0 = Math.round(+start.slice(3, 5) / 5) * 5 % 60
@@ -46,9 +46,9 @@ function Wheels({ value, locale, hourCycle, onChange }: { value: string | null; 
     ...(h12 ? [{ key: 'dayPeriod', name: untrack(() => fieldName('dayPeriod', locale)), vals: [0, 1], cur: state(h0 >= 12 ? 1 : 0), show: (v: number) => periods[v] }] : []),
   ]
   const commit = () => {
-    let h = cols[0].cur.value
-    if (h12) h = h % 12 + (cols[2].cur.value ? 12 : 0)
-    onChange(`${pad(h)}:${pad(cols[1].cur.value)}` as IsoTime)
+    let h = cols[0]!.cur.value
+    if (h12) h = h % 12 + (cols[2]!.cur.value ? 12 : 0)
+    onChange(`${pad(h)}:${pad(cols[1]!.cur.value)}` as IsoTime)
   }
   return (
     <div data-scope="wheels">
@@ -58,8 +58,8 @@ function Wheels({ value, locale, hourCycle, onChange }: { value: string | null; 
         const row = () => (list!.firstElementChild as HTMLElement | null)?.getBoundingClientRect().height || 40
         const select = (i: number, smooth: boolean) => {
           i = Math.max(0, Math.min(c.vals.length - 1, i))
-          c.cur.value = c.vals[i]
-          list?.scrollTo?.({ top: i * row(), behavior: smooth ? 'smooth' : 'instant' as ScrollBehavior })
+          c.cur.value = c.vals[i]!
+          list?.scrollTo?.({ top: i * row(), behavior: smooth ? 'smooth' : 'instant' })
           commit()
         }
         onMount(() => list?.scrollTo?.({ top: c.vals.indexOf(c.cur.value) * row(), behavior: 'instant' as ScrollBehavior }))
@@ -77,7 +77,7 @@ function Wheels({ value, locale, hourCycle, onChange }: { value: string | null; 
           select(c.vals.indexOf(c.cur.value) + d, true)
         }
         return (
-          <ul key={c.key} ref={(n: any) => (list = n)} role="listbox" tabindex="0" aria-label={c.name} onScroll={onScroll} onKeyDown={onKey}>
+          <ul key={c.key} ref={n => (list = n)} role="listbox" tabindex="0" aria-label={c.name} onScroll={onScroll} onKeyDown={onKey}>
             {c.vals.map(v => <li key={v} role="option" aria-selected={c.cur.value === v ? 'true' : 'false'} onClick={() => select(c.vals.indexOf(v), true)}>{c.show(v)}</li>)}
           </ul>
         )
@@ -86,25 +86,26 @@ function Wheels({ value, locale, hourCycle, onChange }: { value: string | null; 
   )
 }
 
-export const stepSlots = (step: number, min?: string, max?: string) => {
+export const stepSlots = (step: number, min?: string  , max?: string  ) => {
   const from = min ? minutes(min) : 0, to = max ? minutes(max) : 1439
   const out: string[] = []
   for (let m = from; m <= to; m += step) out.push(fromMinutes(m))
   return out
 }
 
+/** Props for TimeField. */
 export type TimeFieldProps = RichFieldProps & Bindable<IsoTime | null> & Openable & {
   /** `h12` shows AM and PM, `h23` a 24-hour clock, `auto` the locale's. */
-  hourCycle?: 'h12' | 'h23' | 'auto'
-  step?: number
+  hourCycle?: 'h12' | 'h23' | 'auto' | undefined
+  step?: number | undefined
   /** Adds a seconds segment. */
-  seconds?: boolean
-  min?: IsoTime
-  max?: IsoTime
-  slots?: IsoTime[]
+  seconds?: boolean | undefined
+  min?: IsoTime | undefined
+  max?: IsoTime | undefined
+  slots?: IsoTime[] | undefined
   /** Only for the DST hint. */
-  date?: IsoDate
-  timeZone?: TimeZoneId
+  date?: IsoDate | undefined
+  timeZone?: TimeZoneId | undefined
 }
 
 /**
@@ -166,14 +167,15 @@ export function TimeField({ value, defaultValue, onValueChange, open, defaultOpe
   )
 }
 
+/** Props for DateTimeField. */
 export type DateTimeFieldProps = RichFieldProps & Bindable<IsoDateTime | null> & Openable & {
-  min?: IsoDate
-  max?: IsoDate
+  min?: IsoDate | undefined
+  max?: IsoDate | undefined
   /** Return true for a day that can't be picked: it shows struck through. */
-  isDateUnavailable?: (d: IsoDate) => boolean
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
   /** The day each calendar row starts on, 0 for Sunday to 6. The locale's otherwise. */
-  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6
-  step?: number
+  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined
+  step?: number | undefined
 }
 
 /**

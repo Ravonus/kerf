@@ -1,6 +1,6 @@
-import { ArrowUpRightIcon } from '@weft/icons'
-import { httpsEndpoint, uid } from '@weft/warp-core'
-import { derived, state, type State, untrack, watch } from 'weft'
+import { ArrowUpRightIcon } from '@weft-js/warp-icons'
+import { httpsEndpoint, uid } from '@weft-js/warp-core'
+import { derived, state, type State, untrack, watch } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Badge } from '../Badge'
 import { Button, type Tone } from '../Button'
@@ -13,26 +13,29 @@ import { toast } from '../Toast'
 import { SecretReveal, useReveal } from './Secret'
 import { afterFlush, guarded, latch, read } from './atoms'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
-import '@weft/warp-core/styles/flows/integrations.css'
-import '@weft/warp-core/styles/flows/integration.css'
-import '@weft/warp-core/styles/flows/choice.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/integrations.css'
+import '@weft-js/warp-core/styles/flows/integration.css'
+import '@weft-js/warp-core/styles/flows/choice.css'
 
+/** Where an integration stands. */
 export type IntegrationState = 'connected' | 'error' | 'off' | 'pending'
-export type Integration = { id: string; name: string; summary: string; state: IntegrationState; detail?: string; failure?: string; can?: string[] }
+/** One card of the integrations grid. */
+export type Integration = { id: string; name: string; summary: string; state: IntegrationState; detail?: string | undefined; failure?: string | undefined; can?: string[] | undefined }
 const BADGE: Record<IntegrationState, [string, Tone | undefined, boolean]> = { connected: ['Connected', 'positive', true], error: ['Needs attention', 'critical', true], off: ['Not connected', undefined, false], pending: ['Connecting…', 'caution', true] }
 
+/** Props for IntegrationsGrid. */
 export interface IntegrationsGridProps {
   items: readonly Integration[] | State<readonly Integration[]>
   /** Open the provider's consent page; the card's `state` then comes back through `items`. */
   onConnect: (item: Integration) => void
   /** The Configure sheet's fields. */
-  settings?: (item: Integration) => any
+  settings?: ((item: Integration) => unknown) | undefined
   onSave?: (item: Integration) => void
   onDisconnect: (item: Integration) => void
   onRestore?: (item: Integration) => void
@@ -59,7 +62,7 @@ function Card({ item, onConnect, onConfigure }: { item: Integration; onConnect: 
       <span data-part="actions">
         {item.state === 'off' && <Button emphasis="frame" size="sm" aria-describedby={id} onClick={onConnect}>Connect</Button>}
         {item.state === 'error' && <Button size="sm" tone="critical" aria-describedby={id} onClick={onConnect}>Reconnect</Button>}
-        {item.state === 'connected' && <Button ref={(n: any) => (configure = n)} emphasis="ghost" tone="neutral" size="sm" aria-describedby={id} onClick={onConfigure}>Configure</Button>}
+        {item.state === 'connected' && <Button ref={n => (configure = n)} emphasis="ghost" tone="neutral" size="sm" aria-describedby={id} onClick={onConfigure}>Configure</Button>}
       </span>
     </li>
   )
@@ -70,7 +73,7 @@ function Card({ item, onConnect, onConfigure }: { item: Integration; onConnect: 
  * border and the page's only critical solid. Connect lists what the provider can do, then leaves for its consent page.
  */
 export function IntegrationsGrid({ items, onConnect, settings, onSave, onDisconnect, onRestore }: IntegrationsGridProps) {
-  const list = derived(() => read(items) as readonly Integration[])
+  const list = derived(() => read(items))
   const connecting = state(false)
   const configuring = state(false)
   const armedC = latch(connecting)
@@ -106,8 +109,10 @@ export function IntegrationsGrid({ items, onConnect, settings, onSave, onDisconn
   )
 }
 
+/** One webhook endpoint. */
 export type Webhook = { id: string; url: string; events: string[]; lastDelivery?: string; healthy: boolean }
 
+/** Props for Webhooks. */
 export interface WebhooksProps {
   hooks: readonly Webhook[] | State<readonly Webhook[]>
   events: string[]
@@ -141,7 +146,7 @@ export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
   const eventError = state('')
   const tried = state(false)
   const busy = state(false)
-  const list = derived(() => read(hooks) as readonly Webhook[])
+  const list = derived(() => read(hooks))
   const check = () => { urlError.value = !url.value.trim() ? 'Enter the URL we should call.' : httpsEndpoint(url.value) ? '' : 'Use a full https:// URL.' }
   const test = async (h: Webhook) => {
     try {
@@ -174,17 +179,17 @@ export function Webhooks({ hooks, events, onAdd, onTest }: WebhooksProps) {
     : <><Button emphasis="frame" data-close="">Cancel</Button><Button loading={busy.value} onClick={save}>Add endpoint</Button></>))
   return (
     <div data-scope="stack">
-      <Table caption="Webhook endpoints" captionHidden rows={list as any} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No webhooks yet', text: 'Add an endpoint to get events.' }} />
+      <Table caption="Webhook endpoints" captionHidden rows={list} columns={columns} picker={false} heading={3} actions={tools.value} empty={{ title: 'No webhooks yet', text: 'Add an endpoint to get events.' }} />
       {armed.value && (
         <Modal open={dialog} alert={!!secret.value} size="sm" title={secret.value ? 'Copy your signing secret' : 'Add a webhook endpoint'} description={secret.value ? 'You won’t see it again. Use it to verify our signature.' : 'We POST JSON to this URL for each event you pick.'} footer={<>{footer.value}</>}>
           {secret.value
             ? <SecretReveal label="Signing secret" secret={secret.value} done={seen} ack="I’ve saved this secret somewhere safe" />
             : (
-              <form data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => { e.preventDefault(); save() }}>
+              <form data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => { e.preventDefault(); void save() }}>
                 <Input label="Endpoint URL" type="url" inputmode="url" placeholder="https://" autofocus hint="Must be https." value={url.value} error={urlError.value} onInput={e => { url.value = e.currentTarget.value; if (tried.value) check() }} />
                 <fieldset data-scope="choice">
                   <legend>Events</legend>
-                  {events.map(v => <Checkbox key={v} checked={picked.value.includes(v)} error={v === events[0] && eventError.value ? eventError.value : undefined} onChange={(e: any) => { picked.value = e.currentTarget.checked ? [...picked.value, v] : picked.value.filter(x => x !== v); eventError.value = '' }}><code>{v}</code></Checkbox>)}
+                  {events.map(v => <Checkbox key={v} checked={picked.value.includes(v)} error={v === events[0] && eventError.value ? eventError.value : undefined} onChange={(e: Event) => { picked.value = (e.currentTarget as HTMLInputElement).checked ? [...picked.value, v] : picked.value.filter(x => x !== v); eventError.value = '' }}><code>{v}</code></Checkbox>)}
                 </fieldset>
               </form>
             )}

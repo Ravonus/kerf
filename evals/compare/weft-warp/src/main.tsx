@@ -1,6 +1,6 @@
-import { state } from 'weft'
-import { render } from 'weft/dom'
-import { Shell } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
+import { Shell } from '@weft-js/warp'
 import { NAV } from '../../shared/data'
 import { screens } from './screens'
 

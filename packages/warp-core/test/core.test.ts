@@ -10,7 +10,6 @@ import { installSweep } from '../src/sweep'
 afterEach(() => { installSweep().destroy(); document.body.replaceChildren(); document.documentElement.removeAttribute('data-expression') })
 
 const html = (s: string) => { document.body.innerHTML = s; return document.body.firstElementChild as HTMLElement }
-const pointer = (type: string, el: Element, init: PointerEventInit = {}) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'mouse', ...init }))
 
 test('sweep: pin holds a host, and confirm holds it for one pass', async () => {
   const b = html('<button data-sweep style="--warp-sweep-duration: 10ms">Go</button>')
@@ -21,7 +20,7 @@ test('sweep: pin holds a host, and confirm holds it for one pass', async () => {
   expect(b.hasAttribute('data-pin')).toBe(false)
   m.confirm(b)
   expect(b.hasAttribute('data-confirm')).toBe(true)
-  await new Promise(r => setTimeout(r, 30))
+  await new Promise(r => { setTimeout(r, 30) })
   expect(b.hasAttribute('data-confirm')).toBe(false)
 })
 
@@ -33,7 +32,7 @@ test('sweep: duration reads the token, in s or ms', () => {
 })
 
 test('labelChars: grapheme clusters stay whole, whitespace collapses', () => {
-  expect(labelChars('  Full  name ')).toEqual([...'Full name'])
+  expect(labelChars('  Full  name ')).toEqual('Full name'.split(''))
   expect(labelChars('Hi 👩‍💻')).toEqual(['H', 'i', ' ', '👩‍💻'])
 })
 
@@ -51,25 +50,25 @@ test('roving: one tab stop, arrows move focus and report where it landed, disabl
   const moved: number[] = []
   const r = roving(g, { items: 'button', onMove: (_, i) => moved.push(i) })
   const [a, , c] = g.querySelectorAll('button')
-  a.focus()
-  a.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+  a!.focus()
+  a!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
   expect(document.activeElement).toBe(c)
   expect(moved).toEqual([1])
   r.destroy()
-  c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+  c!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
   expect(document.activeElement).toBe(c)
 })
 
 test('dials: written on <html>, auto removes the attribute, bad values throw, changes are announced', () => {
   const seen: string[] = []
-  document.addEventListener('warp:dial', (e: any) => seen.push(`${e.detail.name}=${e.detail.value}`))
+  document.addEventListener('warp:dial', (e: Event) => seen.push(`${(e as CustomEvent).detail.name}=${(e as CustomEvent).detail.value}`))
   expect(getDial('expression')).toBe(DIALS.expression.initial)
   setDial('expression', 'vivid')
   expect(document.documentElement.dataset.expression).toBe('vivid')
   setDial('theme', 'dark')
   setDial('theme', 'auto')
   expect(document.documentElement.hasAttribute('data-theme')).toBe(false)
-  expect(() => setDial('expression', 'loud' as any)).toThrow(RangeError)
+  expect(() => setDial('expression', 'loud' as 'quiet')).toThrow(RangeError)
   expect(seen).toEqual(['expression=vivid', 'theme=dark', 'theme=auto'])
 })
 
@@ -91,7 +90,7 @@ test('dials: a persisted initial value is kept, so a page whose own default diff
 })
 
 test('copy: a refused clipboard write is caught and shows a failed state', async () => {
-  const writeText = vi.fn(async () => { throw new DOMException('Write permission denied.', 'NotAllowedError') })
+  const writeText = vi.fn(() => Promise.reject(new DOMException('Write permission denied.', 'NotAllowedError')))
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
   const unhandled = vi.fn()
   process.on('unhandledRejection', unhandled)
@@ -99,7 +98,7 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
   const stop = copyButtons()
   const b = document.querySelector<HTMLElement>('[data-act="copy"]')!
   b.click()
-  await new Promise(r => setTimeout(r, 80))
+  await new Promise(r => { setTimeout(r, 80) })
   expect(writeText).toHaveBeenCalledWith('x')
   expect(b.hasAttribute('data-failed')).toBe(true)
   expect(b.hasAttribute('data-done')).toBe(false)
@@ -110,11 +109,11 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
   // no clipboard at all fails the same way, and a later copy that lands clears it
   Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
   b.click()
-  await new Promise(r => setTimeout(r, 0))
+  await new Promise(r => { setTimeout(r, 0) })
   expect(b.dataset.state).toBe('failed')
   Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(async () => {}) }, configurable: true })
   b.click()
-  await new Promise(r => setTimeout(r, 0))
+  await new Promise(r => { setTimeout(r, 0) })
   expect(b.hasAttribute('data-failed')).toBe(false)
   expect(b.dataset.state).toBe('copied')
   stop()
@@ -122,7 +121,7 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
 
 test('copy: a refusal on a page with no announcer still says so, aloud and in words beside the button', async () => {
   vi.useFakeTimers()
-  Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(async () => { throw new DOMException('denied', 'NotAllowedError') }) }, configurable: true })
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(() => Promise.reject(new DOMException('denied', 'NotAllowedError'))) }, configurable: true })
   html('<div data-scope="codeblock"><div data-part="head"><button data-act="copy" data-copy="" aria-label="Copy code"><span data-part="indicator"></span></button></div><code>x</code></div>')
   const stop = copyButtons()
   const b = document.querySelector<HTMLElement>('[data-act="copy"]')!

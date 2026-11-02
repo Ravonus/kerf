@@ -1,11 +1,11 @@
-import { RightIcon } from '@weft/icons'
-import { derived } from 'weft'
+import { RightIcon } from '@weft-js/warp-icons'
+import { derived } from '@weft-js/core'
 import { Shimmer } from './Shimmer'
 import '../styles'
-import '@weft/warp-core/styles/app/reasoning.css'
+import '@weft-js/warp-core/styles/app/reasoning.css'
 
 /** Reasoning (07 §1.2): a native details. "Thinking…" while it streams, open; it folds itself and keeps the duration. */
-export function Reasoning({ text, streaming, seconds }: { text: string; streaming?: boolean; seconds?: number }) {
+export function Reasoning({ text, streaming, seconds }: { text: string; streaming?: boolean | undefined; seconds?: number | undefined }) {
   const label = derived(() => (seconds !== undefined ? `Thought for ${seconds} s` : 'Thought'))
   return (
     <details data-scope="reasoning" data-state={streaming ? 'streaming' : 'done'} open={!!streaming}>

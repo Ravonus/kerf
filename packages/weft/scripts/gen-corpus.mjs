@@ -30,7 +30,7 @@ function component(i) {
           </li>
         ))}
       </ul>`).join('')
-  return `import { derived, state, watch } from 'weft'
+  return `import { derived, state, watch } from '@weft-js/core'
 import { format } from './format'
 
 type Item = { id: string; ${fields.map(x => `${x}: string | number`).join('; ')} }

@@ -1,5 +1,6 @@
 // Inks come from warp's tokens, read through the cascade from the element itself, so a ramp follows theme, seed, and any
 // `data-theme` island around it. Every tone ramp runs from the page outward: faint to strong in light and in dark alike.
+/** A theme tone inks can be drawn from. */
 export type Tone = 'accent' | 'neutral' | 'positive' | 'caution' | 'critical' | 'info' | 'highlight'
 /** A tone, or your own inks: tokens (`--warp-color-x`), any CSS colour, or `none`, faintest first. */
 export type Ramp = Tone | string[]
@@ -26,7 +27,7 @@ let scratch: CanvasRenderingContext2D | null | undefined
 /** One computed colour as packed RGBA. Modern colours serialise as oklch() or color(), so a canvas does the conversion. */
 export function pack(css: string) {
   const m = css.match(/^rgba?\((\d+)[ ,]+(\d+)[ ,]+(\d+)(?:[ ,/]+([\d.]+))?\)$/)
-  if (m) return ((Math.round((m[4] === undefined ? 1 : +m[4]) * 255) << 24) | (+m[3] << 16) | (+m[2] << 8) | +m[1]) >>> 0
+  if (m) return ((Math.round((m[4] === undefined ? 1 : +m[4]) * 255) << 24) | (+m[3]! << 16) | (+m[2]! << 8) | +m[1]!) >>> 0
   if (scratch === undefined) {
     const c = document.createElement('canvas')
     c.width = c.height = 1
@@ -37,7 +38,7 @@ export function pack(css: string) {
   scratch.fillStyle = css
   scratch.fillRect(0, 0, 1, 1)
   const d = scratch.getImageData(0, 0, 1, 1).data
-  return ((d[3] << 24) | (d[2] << 16) | (d[1] << 8) | d[0]) >>> 0
+  return ((d[3]! << 24) | (d[2]! << 16) | (d[1]! << 8) | d[0]!) >>> 0
 }
 
 /** The ramp as packed RGBA, resolved where `el` sits. */
@@ -55,6 +56,7 @@ export function palette(el: Element, ramp: Ramp, inks?: number) {
   return out
 }
 
+/** A dither tier's numbers: how many inks, how fast it moves, how far a touch reaches, and its gain. */
 export interface Tier { inks: number; speed: number; reach: number; gain: number }
 
 /** The tier's numbers, from warp's own `--warp-x` where `el` sits; a `--warp-dither-*` set in CSS overrides one. */

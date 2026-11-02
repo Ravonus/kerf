@@ -2,7 +2,7 @@
 //!
 //! Every top-level component (`function Card`, `const Card = () => …`, exported or not) is registered under
 //! `file#Card` with a hash of its own source mixed with the rest of the module's, so a new module version swaps the
-//! implementation in place and re-renders only the components whose hash changed (weft/hmr).
+//! implementation in place and re-renders only the components whose hash changed (@weft-js/core/hmr).
 //!
 //! A component's body-level `const x = state(init)` becomes `_$keep(state(init), "Card", "x:<hash of init>")`: an
 //! edit that keeps the name and the initializer keeps the value; renaming the box or changing its initializer resets it.
@@ -10,8 +10,13 @@
 //! The module accepts its own updates only when every export is a component and it doesn't call `render`/`hydrate`
 //! at the top level (an entry). Otherwise Vite passes the update to its importers, which re-run it.
 
+use std::fmt::Write as _;
+
 use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrowFunctionBody, BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Function,
+    FunctionBody, Program, Statement, VariableDeclaration,
+};
 use oxc_ast::builder::AstBuilder;
 use oxc_span::{GetSpan, SPAN, Span};
 
@@ -23,7 +28,7 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
     let mut rest = Fnv::new();
     let mut accept = true;
     let mut keeps = false;
-    for stmt in program.body.iter_mut() {
+    for stmt in &mut program.body {
         let span = stmt.span();
         let mixed = match &*stmt {
             // `export const Card = () => …, other = 1`
@@ -58,8 +63,11 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, source: &s
     }
     let rest = rest.0;
     let list: Vec<String> = comps.iter().map(|(n, h)| format!("{n}: [{n}, \"{:x}\"]", h ^ rest)).collect();
-    let mut out = format!("\nimport {{ hot as _$hot{} }} from \"weft/hmr\";\n", if keeps { ", keep as _$keep" } else { "" });
-    out.push_str(&format!("if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});\n", list.join(", ")));
+    let mut out = format!(
+        "\nimport {{ hot as _$hot{} }} from \"@weft-js/core/hmr\";\n",
+        if keeps { ", keep as _$keep" } else { "" }
+    );
+    let _ = writeln!(out, "if (import.meta.hot) {{\n\t_$hot({file:?}, {{ {} }});", list.join(", "));
     if accept {
         out.push_str("\timport.meta.hot.accept();\n");
     }
@@ -80,7 +88,7 @@ fn components<'s, 'a>(stmt: &'s mut Statement<'a>) -> Vec<(String, Option<&'s mu
         },
         Statement::ExportDefaultDeclaration(e) => {
             if let ExportDefaultDeclarationKind::FunctionDeclaration(f) = &mut e.declaration {
-                function(f, &mut out)
+                function(f, &mut out);
             }
         }
         _ => {}
@@ -102,13 +110,13 @@ fn function<'s, 'a>(f: &'s mut Function<'a>, out: &mut Vec<(String, Option<&'s m
 }
 
 fn variables<'s, 'a>(v: &'s mut VariableDeclaration<'a>, out: &mut Vec<(String, Option<&'s mut FunctionBody<'a>>)>) {
-    for d in v.declarations.iter_mut() {
+    for d in &mut v.declarations {
         let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
         if !is_component(&id.name) {
             continue;
         }
         let name = id.name.to_string();
-        match d.init.as_mut().map(|e| e.get_inner_expression_mut()) {
+        match d.init.as_mut().map(oxc_ast::ast::Expression::get_inner_expression_mut) {
             Some(Expression::ArrowFunctionExpression(a)) => {
                 if let ArrowFunctionBody::FunctionBody(body) = &mut a.body {
                     out.push((name, Some(body)));
@@ -127,11 +135,17 @@ fn variables<'s, 'a>(v: &'s mut VariableDeclaration<'a>, out: &mut Vec<(String, 
 }
 
 /// `const x = state(…)` at the body's top level → `const x = _$keep(state(…), "Comp", "x:<hash>")`.
-fn wrap_state<'a>(ast: &AstBuilder<'a>, allocator: &'a Allocator, body: &mut FunctionBody<'a>, comp: &str, source: &str) -> bool {
+fn wrap_state<'a>(
+    ast: &AstBuilder<'a>,
+    allocator: &'a Allocator,
+    body: &mut FunctionBody<'a>,
+    comp: &str,
+    source: &str,
+) -> bool {
     let mut any = false;
-    for stmt in body.statements.iter_mut() {
+    for stmt in &mut body.statements {
         let Statement::VariableDeclaration(v) = stmt else { continue };
-        for d in v.declarations.iter_mut() {
+        for d in &mut v.declarations {
             let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
             let Some(init) = &mut d.init else { continue };
             let Expression::CallExpression(call) = &*init else { continue };
@@ -159,20 +173,24 @@ fn exports_only_types(stmt: &Statement) -> bool {
     match stmt {
         Statement::ExportDeclaration(e) => match &e.declaration {
             Declaration::FunctionDeclaration(f) => f.id.as_ref().is_some_and(|i| is_component(&i.name)),
-            Declaration::VariableDeclaration(_) => true, // counted against the components found in it
             Declaration::ClassDeclaration(_) | Declaration::TSEnumDeclaration(_) => false,
-            _ => true, // types
+            _ => true, // types, and variables: those are counted against the components found in them
         },
         Statement::ExportNamedDeclaration(e) => {
-            e.export_kind.is_type() || e.specifiers.iter().all(|s| s.export_kind.is_type() || is_component(&s.local.name()))
+            e.export_kind.is_type()
+                || e.specifiers.iter().all(|s| s.export_kind.is_type() || is_component(&s.local.name()))
         }
         Statement::ExportDefaultDeclaration(e) => match &e.declaration {
-            ExportDefaultDeclarationKind::FunctionDeclaration(f) => f.id.as_ref().is_some_and(|i| is_component(&i.name)),
+            ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
+                f.id.as_ref().is_some_and(|i| is_component(&i.name))
+            }
             ExportDefaultDeclarationKind::TSInterfaceDeclaration(_) => true,
             ExportDefaultDeclarationKind::Identifier(i) => is_component(&i.name),
             _ => false,
         },
-        Statement::ExportAllDeclaration(_) | Statement::ExportFromDeclaration(_) | Statement::TSExportAssignment(_) => false,
+        Statement::ExportAllDeclaration(_) | Statement::ExportFromDeclaration(_) | Statement::TSExportAssignment(_) => {
+            false
+        }
         _ => true,
     }
 }
@@ -198,11 +216,11 @@ struct Fnv(u64);
 
 impl Fnv {
     fn new() -> Self {
-        Self(0xcbf29ce484222325)
+        Self(0xcbf2_9ce4_8422_2325)
     }
     fn add(&mut self, s: &str) {
         for b in s.bytes() {
-            self.0 = (self.0 ^ b as u64).wrapping_mul(0x100000001b3);
+            self.0 = (self.0 ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3);
         }
     }
 }
@@ -214,7 +232,7 @@ pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str
     let ast = AstBuilder::new(allocator);
     let stem = std::path::Path::new(file).file_stem().and_then(|s| s.to_str()).unwrap_or("module").to_string();
     let mut any = false;
-    for stmt in program.body.iter_mut() {
+    for stmt in &mut program.body {
         if let Statement::VariableDeclaration(v) = &mut *stmt {
             any |= name_decls(&ast, allocator, v, &stem);
         } else if let Statement::ExportDeclaration(e) = &mut *stmt
@@ -224,19 +242,24 @@ pub fn names<'a>(allocator: &'a Allocator, program: &mut Program<'a>, file: &str
         }
         for (comp, body) in components(stmt) {
             let Some(body) = body else { continue };
-            for s in body.statements.iter_mut() {
+            for s in &mut body.statements {
                 if let Statement::VariableDeclaration(v) = s {
                     any |= name_decls(&ast, allocator, v, &comp);
                 }
             }
         }
     }
-    any.then(|| "\nimport { name as _$name } from \"weft\";\n".to_string())
+    any.then(|| "\nimport { name as _$name } from \"@weft-js/core\";\n".to_string())
 }
 
-fn name_decls<'a>(ast: &AstBuilder<'a>, allocator: &'a Allocator, v: &mut VariableDeclaration<'a>, owner: &str) -> bool {
+fn name_decls<'a>(
+    ast: &AstBuilder<'a>,
+    allocator: &'a Allocator,
+    v: &mut VariableDeclaration<'a>,
+    owner: &str,
+) -> bool {
     let mut any = false;
-    for d in v.declarations.iter_mut() {
+    for d in &mut v.declarations {
         let BindingPattern::BindingIdentifier(id) = &d.id else { continue };
         let Some(init) = &mut d.init else { continue };
         if !reactive_init(init) {
@@ -246,7 +269,14 @@ fn name_decls<'a>(ast: &AstBuilder<'a>, allocator: &'a Allocator, v: &mut Variab
         let inner = init.take_in(ast);
         let str = Expression::new_string_literal(SPAN, allocator.alloc_str(&label), None, ast);
         let args = ArenaVec::from_iter_in([inner, str].into_iter().map(Argument::from), ast);
-        *init = Expression::new_call_expression(SPAN, Expression::new_identifier(SPAN, "_$name", ast), None, args, false, ast);
+        *init = Expression::new_call_expression(
+            SPAN,
+            Expression::new_identifier(SPAN, "_$name", ast),
+            None,
+            args,
+            false,
+            ast,
+        );
         any = true;
     }
     any
@@ -258,7 +288,9 @@ fn reactive_init(e: &Expression) -> bool {
     match &call.callee {
         Expression::Identifier(c) if c.name == "state" || c.name == "derived" => true,
         Expression::Identifier(c) if c.name == "_$keep" => true,
-        Expression::StaticMemberExpression(m) => matches!(&m.object, Expression::Identifier(o) if o.name == "state") && m.property.name == "linked",
+        Expression::StaticMemberExpression(m) => {
+            matches!(&m.object, Expression::Identifier(o) if o.name == "state") && m.property.name == "linked"
+        }
         _ => false,
     }
 }

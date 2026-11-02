@@ -25,7 +25,7 @@ and a sibling overlap, §6 says which one decides.
    (65) → `ref={el}`, `forwardRef` (58) deleted. The rest need judgment: 167 effects, 76 custom hooks, 20 `cloneElement`/`Children` uses, and 44 framer-motion
    files. **zustand (2 files) and next-themes (3 files) are trivial.**
 3. **Port strategy: headless core plus skin, produced by codemod and then a manual pass** (options 2+4).
-   - Behaviour moves into `@weft/warp-core`, using native elements first and Zag for the hard widgets.
+   - Behaviour moves into `@weft-js/warp-core`, using native elements first and Zag for the hard widgets.
    - The Agorix look becomes `@weft/ui`, which keeps Agorix's component and prop names.
    - **No React compat layer.** It would bring back the ~58 KB gz React floor that v3 measured.
 4. **Motion:** compile Agorix's preset data to CSS transitions plus WAAPI, behind a `<Presence>` primitive and a ~1 KB
@@ -132,10 +132,10 @@ the `weft-compiler` crate, which already parses TSX):
 - **Flagged, not rewritten:** every effect (a `// PORT:` comment carrying its §1 class), `cloneElement`/`Children`,
   motion values, and spreads into keyed lists (the v3 identity bug).
 - **Then:** move behaviour into `warp-core` and inline classes into recipes by hand. **A component is "ported" only when**
-  it passes `weft check` with no W-codes, its original vitest suite is translated to `weft/test` role queries, and
+  it passes `weft check` with no W-codes, its original vitest suite is translated to `@weft-js/core/test` role queries, and
   it has a `toTouchAtMost` budget for its main interaction.
 
-**Behaviour sources for `@weft/warp-core`:**
+**Behaviour sources for `@weft-js/warp-core`:**
 - **Native first** (PLAN §6): `<dialog>`, `popover`, form controls.
 - **Not** Agorix's own focus/dismiss/floating hooks: 02 §5 found none handles layering, touch, RTL or typeahead,
   so Zag and the native top layer replace them. Only visual measurement (`useSlidingIndicator`, sweeps) ports.
@@ -150,7 +150,7 @@ Three candidates: vanilla `motion` (14.7.1, the merged Motion One/framer line; a
 scheduler, so optional adapter only); **CSS transitions + WAAPI** (`el.animate`, ~1–2 KB of glue: the default, since
 the presets are already data); and pure CSS, which already covers Agorix's hover/press sweeps.
 
-**Plan: `@weft/warp-core/motion`.**
+**Plan: `@weft-js/warp-core/motion`.**
 
 - **Enter/exit.** `<Presence when={open.value} motion="modal">` delays node removal until `animation.finished` resolves.
   This is the one runtime hook framer's `AnimatePresence` gave Agorix, and it covers 79 sites.
@@ -168,7 +168,7 @@ the presets are already data); and pure CSS, which already covers Agorix's hover
   in `@agorix/realtime`, implemented without any library. `@agorix/react` binds it with `useSyncExternalStore`.
   weft binds it as a `state` box (`.set(draft)` for `history` appends); 03 decides whether weft keeps this store
   or replaces it with its own channel state.
-- **next-themes → `weft/ds` theme.** An inline no-flash script sets `data-theme` and `color-scheme` before paint
+- **next-themes → `@weft-js/core/ds` theme.** An inline no-flash script sets `data-theme` and `color-scheme` before paint
   (needs Start's SSR), a `state` box holds the mode, and `light-dark()` does the rest. Token mapping belongs to 01.
 
 ---
@@ -184,12 +184,12 @@ the presets are already data); and pure CSS, which already covers Agorix's hover
  │ Agorix skin (npm)       │ (registry: agorix | plain | tw)   │ (Tailwind, CSS modules, …)   │
  └─────────────┬───────────┴──────────────┬────────────────────┴──────────────┬──────────────┘
                ▼                          ▼                                   ▼
- ┌─ @weft/warp-core  (headless, weft-only) ─────────────────────────────────────────────────────┐
+ ┌─ @weft-js/warp-core  (headless, weft-only) ─────────────────────────────────────────────────────┐
  │ createDialog/Tabs/Switch/Select…  → live prop getters + data-state/data-part attributes    │
  │ /motion (Presence, presets→WAAPI)  on @weft/zag machines · native top layer · portal  │
  └─────────────┬──────────────────────────────────────────────────────────────────────────────┘
-               ▼                              ▲ (optional, per 03) weft/start query/crud, @weft/multiplayer,
- weft  ·  weft/ds (tokens → --weft-* vars, Stack/Row/Grid…)      @weft/db-*, @weft/realtime-* → Resource/State boxes
+               ▼                              ▲ (optional, per 03) weft/start query/crud, @weft-js/multiplayer,
+ weft  ·  @weft-js/core/ds (tokens → --weft-* vars, Stack/Row/Grid…)      @weft-js/db-*, @weft/realtime-* → Resource/State boxes
  ══════════════════ framework line: nothing below imports weft or React ═══════════════════════
  @agorix/tokens      tokens.css · defineTheme · *.styles recipes · motion preset data
  @agorix/data        contract · defineResource · handlers · 9 adapters · watchers   (transitional, see 03)
@@ -200,7 +200,7 @@ the presets are already data); and pure CSS, which already covers Agorix's hover
 ```
 
 **The three contracts every skin uses** (and the only things a different kit has to honour):
-1. **CSS variables.** `--weft-*` roles from `weft/ds`, with Agorix's names aliased (01 owns the mapping).
+1. **CSS variables.** `--weft-*` roles from `@weft-js/core/ds`, with Agorix's names aliased (01 owns the mapping).
 2. **State attributes.** `data-state="open|closed|checked|on"`, `data-disabled`, `data-highlighted`,
    `data-orientation`. These are the same names Zag, Ark, Radix and Kobalte use, so their CSS and Tailwind
    `data-[state=open]:` habits carry over.
@@ -232,11 +232,11 @@ the presets are already data); and pure CSS, which already covers Agorix's hover
 ```
 --ui agorix     (default) @weft/ui + warp-core, styles.css imported, AGENTS.md lists the Agorix catalog
 --ui headless   warp-core only, `weft add --style plain|tailwind` enabled, AGENTS.md documents getters
---ui none       nothing above weft; weft/ds tokens optional (--ds / --no-ds)
+--ui none       nothing above weft; @weft-js/core/ds tokens optional (--ds / --no-ds)
 --data / --realtime   independent of --ui (packages per 03)
 ```
 
-`weft check` gets one P-code: a skin file that imports `@weft/warp-core` internals or re-implements keyboard handling
+`weft check` gets one P-code: a skin file that imports `@weft-js/warp-core` internals or re-implements keyboard handling
 (`onKeyDown` with arrow keys on a `data-part` element) gets "use the getter".
 
 ---
@@ -265,7 +265,7 @@ commit dated 2026-06-20. The vendoring exists because Next/Turbopack won't resol
    - `@agorix/react` (today's kit);
    - `@agorix/ui`, a thin alias re-exporting `@agorix/react`, `./server*` and the CSS, so existing imports keep working.
 
-   weft's own packages (`@weft/warp-core`, `@weft/ui`) live in the weft monorepo and depend on `@agorix/tokens` and
+   weft's own packages (`@weft-js/warp-core`, `@weft/ui`) live in the weft monorepo and depend on `@agorix/tokens` and
    `@agorix/charts-core` at a pinned version. `@agorix/data`/`realtime` serve the React apps until 03's weft
    packages and `@weft/agorix-compat` replace them; `data/scheduler` goes to agorix-discord (03 §7).
 2. **Reconcile once.** Rebuild from a clean commit and diff it against each of the 3 vendored builds. Land Velatis's
@@ -290,7 +290,7 @@ commit dated 2026-06-20. The vendoring exists because Next/Turbopack won't resol
    `useHydrated` (17 imports). It has no weft equivalent (client-only branches go in `onMount`), so `to-weft` flags
    each site rather than rewriting it.
 
-**weft versioning:** `@weft/ui` and `@weft/warp-core` form a fixed group with `peerDependencies: { weft: "^x.y" }`.
+**weft versioning:** `@weft/ui` and `@weft-js/warp-core` form a fixed group with `peerDependencies: { '@weft-js/core': "^x.y" }`.
 Registry items carry the version they were cut from, so `weft add --diff` knows its base.
 
 ---
@@ -305,14 +305,14 @@ Registry items carry the version they were cut from, so `weft add --diff` knows 
 | `@agorix/validation` | validators | zod | agorix repo |
 | `@agorix/charts-core` | scales, line/area paths, donut segments, gauge arcs (pure functions) | — | agorix repo |
 | `@agorix/react` (+ `@agorix/ui` alias) | today's React kit, maintenance-only once weft parity lands | the framework-free packages, react | agorix repo |
-| `@weft/warp-core` | behaviours, prop getters, `/motion`, Portal | weft, `@weft/zag` (the ~200-line Zag binding) + `@zag-js/*` | weft repo |
-| `@weft/ui` | Agorix skin, Agorix names and props, `styles.css`, `tailwind.css`, registry items | warp-core, weft/ds, @agorix/tokens | weft repo |
+| `@weft-js/warp-core` | behaviours, prop getters, `/motion`, Portal | weft, `@weft/zag` (the ~200-line Zag binding) + `@zag-js/*` | weft repo |
+| `@weft/ui` | Agorix skin, Agorix names and props, `styles.css`, `tailwind.css`, registry items | warp-core, @weft-js/core/ds, @agorix/tokens | weft repo |
 
 **The same component three ways.** The example is `Modal`, the most-imported overlay in the consumer apps.
 
 ```tsx
 // 1. Default skin: Agorix names and the React kit's exact props (open, onClose, motionPreset)
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Modal, ModalHeader, ModalBody, Button } from '@weft/ui'
 
 export function DeleteItem({ name, onConfirm }: { name: string; onConfirm: () => void }) {
@@ -331,9 +331,9 @@ export function DeleteItem({ name, onConfirm }: { name: string; onConfirm: () =>
 
 ```tsx
 // 2. Headless: same behaviour (focus trap, Esc, scroll lock, aria-*, data-state, exit animation), your markup
-import { state } from 'weft'
-import { createDialog } from '@weft/warp-core'
-import { Presence } from '@weft/warp-core/motion'
+import { state } from '@weft-js/core'
+import { createDialog } from '@weft-js/warp-core'
+import { Presence } from '@weft-js/warp-core/motion'
 
 export function DeleteItem({ name, onConfirm }: { name: string; onConfirm: () => void }) {
   const open = state(false)
@@ -355,7 +355,7 @@ export function DeleteItem({ name, onConfirm }: { name: string; onConfirm: () =>
 
 ```tsx
 // 3. Fully custom: no kit, native <dialog> only. Nothing from @weft/ui* or @agorix/* installed.
-import { state, watch } from 'weft'
+import { state, watch } from '@weft-js/core'
 
 export function DeleteItem({ name, onConfirm }: { name: string; onConfirm: () => void }) {
   const open = state(false)
@@ -389,12 +389,12 @@ in a skin; D-codes (Design phase) check skins, never `warp-core`.
 | **New Phase 2: "UI"** (before Surfaces) | `warp-core` + `/motion` + `@weft/zag`. **Tier 1 skin** (~20 components): Button, Badge, Card*, Text, Stat, Kbd, Callout/Alert, Input/SearchInput/Textarea, Switch, Segmented, Tabs, Select, Tooltip, Popover, Modal*, Drawer, Toast, Spinner/Skeleton. The ds token subset that Agorix needs is pulled forward from Design. `create-weft --ui` flag (client-only) | **The v3 shop app rebuilt on weft + `@weft/ui`** passes its 23 hidden tests, price-push ≤ 1 DOM mutation, total JS within the 08 §9.3 budget plus a measured kit allowance |
 | Phase 3 (Surfaces, renumbered) | Parallax, TiltCard and CountUp become surfaces on the shared clock | — |
 | Phase 4 (Start, renumbered) | SSR theme script, 03's data/realtime bindings, **tier 2**: Markdown, CodeBlock, NavList, AnchorNav, Slider, QRCode, data table, forms | **A Velatis page slice on weft** via `to-weft` (03 keeps its live-session UI on React for now), with the visual diff against the React build within tolerance |
-| Phase 5 (Design, renumbered) | D-checks over skins, `weft add --style tailwind`, registry `--diff` | weft/ds + Agorix vs raw Tailwind (PLAN's existing exit check) |
+| Phase 5 (Design, renumbered) | D-checks over skins, `weft add --style tailwind`, registry `--diff` | @weft-js/core/ds + Agorix vs raw Tailwind (PLAN's existing exit check) |
 | Later | Tier 3: calendars/scheduler, charts, meet (LiveKit), multiplayer, marketing, carousel. `@agorix/react` frozen | — |
 
 **Why Agorix moves ahead of Surfaces:** v3 moved the thesis to efficiency at app scale, and an app needs a kit where
 a canvas demo doesn't. The real apps that would prove weft (shop, Velatis, rr-store) all use Agorix and none needs a
-surface first. And `weft/ds` overlaps Agorix on tokens, so doing the token subset early prevents two vocabularies.
+surface first. And `@weft-js/core/ds` overlaps Agorix on tokens, so doing the token subset early prevents two vocabularies.
 
 **Risks:**
 - **Two repos.** Token changes need an agorix release first; canary tags and the fixed version group keep that cheap.
@@ -407,13 +407,13 @@ surface first. And `weft/ds` overlaps Agorix on tokens, so doing the token subse
 
 ## 6. Overlaps with 02 and 03, and who decides
 
-- **Package names (02 §7).** 02 puts the components in `weft/ds` with `weft/ds/headless` and `@weft/ds-*` packs. The
-  layering is the same (`@weft/warp-core` = `weft/ds/headless`, `@weft/ui` = the `weft/ds` components, `@agorix/charts-core`
+- **Package names (02 §7).** 02 puts the components in `@weft-js/core/ds` with `weft/ds/headless` and `@weft/ds-*` packs. The
+  layering is the same (`@weft-js/warp-core` = `weft/ds/headless`, `@weft/ui` = the `@weft-js/core/ds` components, `@agorix/charts-core`
   = the math under `@weft/ds-charts`). I recommend separate packages so `--ui none` installs nothing, the skin can
-  release on its own cadence, and `weft/ds` tokens stay useful without Agorix. **02 decides the component set and
+  release on its own cadence, and `@weft-js/core/ds` tokens stay useful without Agorix. **02 decides the component set and
   behaviour engine; this doc decides packaging.**
-- **Data and realtime (03 §7).** 03 owns the weft side (`weft/start` `crud()`/tags, `@weft/db-*`, `@weft/realtime-*`,
-  `@weft/multiplayer`, `@weft/agorix-compat`). This doc only extracts `@agorix/data`/`realtime` so the React apps
+- **Data and realtime (03 §7).** 03 owns the weft side (`weft/start` `crud()`/tags, `@weft-js/db-*`, `@weft/realtime-*`,
+  `@weft-js/multiplayer`, `@weft/agorix-compat`). This doc only extracts `@agorix/data`/`realtime` so the React apps
   stop vendoring now. They freeze once 03's packages and compat bridge ship (its Phase 3c).
-- **Motion.** `@weft/warp-core/motion` is only `<Presence>` plus the preset runtime overlays need. 02's `-motion` pack
+- **Motion.** `@weft-js/warp-core/motion` is only `<Presence>` plus the preset runtime overlays need. 02's `-motion` pack
   (Typewriter, ScrambleText, CountUp, …) sits on top of it.

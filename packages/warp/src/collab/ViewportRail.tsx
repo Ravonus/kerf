@@ -1,20 +1,21 @@
-import { firstName, joinNames, peerColor, type Peer } from '@weft/warp-core'
-import { derived } from 'weft'
+import { firstName, joinNames, peerColor, type Peer } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { PeerAvatar, read, type Live } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/avatar.css'
-import '@weft/warp-core/styles/app/viewport-rail.css'
-import '@weft/warp-core/styles/app/section-peers.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/avatar.css'
+import '@weft-js/warp-core/styles/app/viewport-rail.css'
+import '@weft-js/warp-core/styles/app/section-peers.css'
 
+/** A peer's place in the document. */
 export type ViewportPeer = Peer & { /** Viewport top and height, 0–1 of the document. */ top: number; height: number }
 
 /**
  * LiveViewport (07 §6.1): a rail of the document with a box per viewport in the peer's colour. A picture, unless
  * `onJump` makes each box a button.
  */
-export function ViewportRail({ peers, self, onJump, label = 'Where people are looking' }: { peers: Live<ViewportPeer[]>; self?: { top: number; height: number }; onJump?: (p: ViewportPeer) => void; label?: string }) {
+export function ViewportRail({ peers, self, onJump, label = 'Where people are looking' }: { peers: Live<ViewportPeer[]>; self?: { top: number; height: number }; onJump?: (p: ViewportPeer) => void; label?: string | undefined }) {
   const list = derived(() => read(peers))
   const canJump = derived(() => onJump !== undefined)
   return (

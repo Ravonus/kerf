@@ -1,4 +1,4 @@
-import { Link } from '@weft/start'
+import { Link } from '@weft-js/start'
 import index from '../generated/toolkit-index.json'
 import { type Area, FLOW } from '../lib/pages'
 import { DialSwitch } from './DialSwitch'
@@ -27,7 +27,9 @@ export function WarpIndex(props: { area: Area; title: string; lede: string }) {
     <article data-site="doc" data-home="" data-area={props.area}>
       <header>
         <h1>{props.title}</h1>
-        <p data-part="lede" innerHTML={props.lede}></p>
+        <p data-part="lede"
+          // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+          innerHTML={props.lede}></p>
       </header>
       <div data-site="tk-bar"><ToolkitFilter noun={NOUN[props.area]} /><DialSwitch /></div>
       {groups.map(g => (

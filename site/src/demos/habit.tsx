@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Alert, Button, Card } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Alert, Button, Card } from '@weft-js/warp'
 import show from '../generated/showcase.json'
 
 export default function Habit() {

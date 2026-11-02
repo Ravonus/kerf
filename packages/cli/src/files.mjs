@@ -32,6 +32,7 @@ export const matcher = globs => {
 export function discover(root, { include = ['**/*.{tsx,jsx}'], exclude = [] } = {}) {
   const inc = matcher(include)
   const exc = matcher(exclude)
+  /** @type {string[]} */
   const out = []
   const walk = rel => {
     for (const ent of readdirSync(join(root, rel), { withFileTypes: true })) {

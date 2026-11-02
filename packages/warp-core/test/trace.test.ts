@@ -46,7 +46,7 @@ test('field shell: a scripted session', async () => {
   await step('select b', () => { const s = $('#f2 select') as HTMLSelectElement; s.value = 'b'; s.dispatchEvent(new Event('change', { bubbles: true })) })
   await step('press control', () => { i1.blur(); pointer('pointerdown', $('#f1 [data-part="control"]')) })
   trace.push(`focus after press: ${document.activeElement?.id}`)
-  await step('programmatic write + update', () => { i1.value = 'xy'; actions[0].update() }, 20)
+  await step('programmatic write + update', () => { i1.value = 'xy'; actions[0]!.update() }, 20)
   await step('font-size settles', () => $('#f1 [data-part="label"]').dispatchEvent(new TransitionEvent('transitionend', { propertyName: 'font-size' })))
   actions.forEach(a => a.destroy())
   await step('destroyed: input no longer counted', () => { i1.value = 'abcdefgh'; i1.dispatchEvent(new Event('input', { bubbles: true })) })

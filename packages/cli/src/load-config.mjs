@@ -9,7 +9,7 @@ import ts from 'typescript'
 import { z } from 'zod'
 import { diagnostic, locate } from './diag.mjs'
 import { checkSite } from './site.mjs'
-import { contributions } from './plugins.mjs'
+import { contributions } from './contributions.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = ['weft.config.ts', 'weft.config.mts', 'weft.config.js', 'weft.config.mjs', 'weft.config.json', 'weft.config.yaml', 'weft.config.yml']
@@ -31,7 +31,7 @@ const transpile = path =>
 
 /**
  * Sync module hooks, so loading is Node's own `require(esm)` and works inside test runners' vm contexts too.
- * `weft/config` resolves to the project's weft when it ships one, else to ours; `.ts` is transpiled, not stripped.
+ * `@weft-js/core/config` resolves to the project's weft when it ships one, else to ours; `.ts` is transpiled, not stripped.
  */
 function hook() {
   if (hooked) return
@@ -39,7 +39,7 @@ function hook() {
   registerHooks({
     resolve(specifier, context, next) {
       if (tag.test(specifier)) return { url: pathToFileURL(specifier).href, format: 'module', shortCircuit: true }
-      if (specifier === 'weft/config' || specifier === '@weft/cli/config') {
+      if (specifier === '@weft-js/core/config' || specifier === '@weft-js/cli/config') {
         try {
           return next(specifier, context)
         } catch {
@@ -63,16 +63,16 @@ function hook() {
 
 /**
  * The config on Bun and Deno: their own TypeScript, with a query for a fresh module per load. When the project has no
- * `weft/config` of its own, a copy next to the config, so its relative imports still resolve, imports ours instead.
+ * `@weft-js/core/config` of its own, a copy next to the config, so its relative imports still resolve, imports ours instead.
  */
 async function importConfig(file) {
   try {
     return (await import(`${pathToFileURL(file).href}?weft-load=${generation++}`)).default ?? {}
   } catch (error) {
-    if (!/weft\/config|@weft\/cli\/config/.test(error.message)) throw error
+    if (!/weft\/config|@weft-js\/cli\/config/.test(error.message)) throw error
   }
   const copy = `${file}.weft-load-${generation++}.mjs`
-  writeFileSync(copy, transpile(file).replace(/(['"])(?:weft\/config|@weft\/cli\/config)\1/g, JSON.stringify(configModule)))
+  writeFileSync(copy, transpile(file).replace(/(['"])(?:weft\/config|@weft-js\/cli\/config)\1/g, JSON.stringify(configModule)))
   try {
     return (await import(pathToFileURL(copy).href)).default ?? {}
   } finally {
@@ -169,8 +169,8 @@ export function writeConfigSchema(root) {
   writeFileSync(join(root, '.weft', 'config.schema.json'), `${JSON.stringify(z.toJSONSchema(dataSchema, { unrepresentable: 'any' }), null, 2)}\n`)
 }
 
-/** `@weft/plugin-text` → `text`, the name a plugin's named export goes by. */
-export const pluginName = pkg => pkg.replace(/^@[^/]+\//, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
+/** `@weft-js/text` → `text`, `@weft-js/db/plugin-native` → `native`: the name a plugin's named export goes by. */
+export const pluginName = pkg => pkg.replace(/^@[^/]+\/(?:[^/]+\/)?/, '').replace(/^plugin-/, '').replace(/[^a-zA-Z0-9]+(.)?/g, (_, c = '') => c.toUpperCase())
 
 /** A plugin module's factory, and its import name: the default, or a named export (`surface-keel` may export `keel`). */
 export function pluginFactory(mod, pkg) {
@@ -201,7 +201,7 @@ function loadPlugin(root, entry) {
 /** A JSON or YAML config as what a `.ts` one evaluates to. */
 function readDataConfig(root, file, text) {
   const data = file.endsWith('.json') ? JSON.parse(text) : nativeRequire('yaml').parse(text)
-  const { $schema, ...config } = data ?? {}
+  const { $schema: _schema, ...config } = data ?? {}
   if (Array.isArray(config.plugins)) config.plugins = config.plugins.map(p => loadPlugin(root, p))
   return config
 }
@@ -227,7 +227,7 @@ export async function loadConfig(root) {
     try {
       config = isDataConfig(file) ? readDataConfig(root, file, text) : registerHooks ? (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {}) : await importConfig(file)
     } catch (error) {
-      // A plugin factory rejecting its options throws while the config module evaluates (weft/plugin).
+      // A plugin factory rejecting its options throws while the config module evaluates (@weft-js/core/plugin).
       if (error?.code === 'P115') report('P115', error.message.split('\n')[0], error.message.match(/^`([^`]+)`/)?.[1] ?? null)
       else report('P007', `weft.config could not be loaded: ${error.message.split('\n')[0]}`, null)
       return { file, config: {}, diagnostics, slots: bindSlots({}, () => {}), contributions: [] }

@@ -1,5 +1,5 @@
-import { DitherField } from '@weft/warp'
-import { state } from 'weft'
+import { DitherField } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 import { clamp, type ArtProps, type Meta } from './shared'
 import code from './sand-table.tsx?raw'
 
@@ -34,7 +34,7 @@ export default function SandTable(_: ArtProps) {
       const d = rake[i]! - sand[i]!
       if (Math.abs(d) < 0.004) continue
       moved++
-      sand[i] += d * 0.012 + (sand[i - 1]! + sand[i + 1]! + sand[i - W]! + sand[i + W]! - 4 * sand[i]!) * 0.05
+      sand[i]! += d * 0.012 + (sand[i - 1]! + sand[i + 1]! + sand[i - W]! + sand[i + W]! - 4 * sand[i]!) * 0.05
     }
     return moved
   }

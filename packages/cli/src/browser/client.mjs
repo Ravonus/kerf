@@ -1,4 +1,4 @@
-// The `weft browser` transport: commands go to the dev server, which relays them to an open tab of the app (weft/agent
+// The `weft browser` transport: commands go to the dev server, which relays them to an open tab of the app (@weft-js/core/agent
 // in the page). No browser automation library: the page is whatever browser the agent or person already has open. When
 // there is none (CI, a sandbox), `launch` starts a plain headless Chrome on the app as a host page, and `screenshot`
 // reads it over the DevTools protocol.
@@ -55,7 +55,7 @@ export async function waitForTab(root, { url, ms = 15_000 } = {}) {
       if (t.tabs.length) return t
     } catch (e) { if (Date.now() > until) throw e }
     if (Date.now() > until) throw fail('E_NO_TAB', 'no tab connected in time')
-    await new Promise(r => setTimeout(r, 150))
+    await new Promise(r => { setTimeout(r, 150) })
   }
 }
 
@@ -75,11 +75,11 @@ export function findChrome() {
 
 const stateFile = root => join(root, '.weft', 'browser', 'chrome.json')
 
-/** Start a headless Chrome on `route` (a plain page; weft/agent in it connects back to the dev server). */
+/** Start a headless Chrome on `route` (a plain page; @weft-js/core/agent in it connects back to the dev server). */
 export async function launch(root, route = '/', { url, headed = false } = {}) {
   const exe = findChrome()
   if (!exe) throw fail('E_NO_CHROME', 'no Chrome or Chromium found; open the app in your own browser instead, or set WEFT_CHROME')
-  await close(root)
+  close(root)
   const base = await devUrl(root, url)
   const profile = join(root, '.weft', 'browser', 'profile')
   mkdirSync(profile, { recursive: true })
@@ -91,7 +91,7 @@ export async function launch(root, route = '/', { url, headed = false } = {}) {
   return { launched: true, pid: child.pid, headless: !headed, ...t }
 }
 
-export async function close(root) {
+export function close(root) {
   const file = stateFile(root)
   if (!existsSync(file)) return { closed: false }
   const { pid } = JSON.parse(readFileSync(file, 'utf8'))
@@ -112,7 +112,7 @@ export async function screenshot(root, out) {
   const ws = new WebSocket(page.webSocketDebuggerUrl)
   await new Promise((ok, no) => { ws.onopen = ok; ws.onerror = () => no(fail('E_CDP', 'could not reach the page over the DevTools protocol')) })
   const data = await new Promise((ok, no) => {
-    ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id === 1) m.error ? no(fail('E_CDP', m.error.message)) : ok(m.result.data) }
+    ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id !== 1) return; if (m.error) no(fail('E_CDP', m.error.message)); else ok(m.result.data) }
     ws.send(JSON.stringify({ id: 1, method: 'Page.captureScreenshot', params: { format: 'png' } }))
   })
   ws.close()

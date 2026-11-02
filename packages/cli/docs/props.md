@@ -6,8 +6,12 @@ Leave a component's props unannotated. weft infers them from its callers and its
 `tsconfig.json`), `weft check`, `weft tsc` and `weft dev`. Nothing is left at run time.
 
 ```tsx
-function Row(props) { return <li onClick={props.onPick}>{props.label.toUpperCase()}</li> }
-export default function List() { return <Row label="One" onPick={() => go(1)} /> }
+function Row(props) {
+  return <li><button type="button" onClick={props.onPick}>{props.label.toUpperCase()}</button></li>
+}
+export default function List() {
+  return <ul><Row label="One" onPick={() => console.log('picked one')} /></ul>
+}
 ```
 
 | Case | What you get |

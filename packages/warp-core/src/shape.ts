@@ -5,10 +5,12 @@
 // Text bars sit in a line box of the role's leading (the spec bar is 0.7em tall), so n lines are as tall as n lines
 // of body text. Containers are flex columns, so the bars' margins never collapse.
 
+/** The content a skeleton can stand in for. */
 export type ShapeKind = 'text' | 'list' | 'card' | 'media' | 'table'
 
+/** What a skeleton should look like. */
 export interface ShapeSpec {
-  kind?: ShapeKind
+  kind?: ShapeKind | undefined
   /** text and card: lines of body text (default 3 for text, 2 for card). */
   lines?: number
   /** list and table: rows (default 3; table 5). */
@@ -21,7 +23,9 @@ export interface ShapeSpec {
   avatar?: boolean
 }
 
+/** One skeleton piece. */
 export type SkeletonPart = { shape: 'text' | 'circle' | 'block'; style: string }
+/** A box of skeleton pieces. */
 export type SkeletonBox = { style: string; children: (SkeletonPart | SkeletonBox)[] }
 
 const LINE = 'calc(var(--warp-text-body-leading, 1.55) * 1em)'
@@ -36,6 +40,7 @@ function lines(n: number, widths?: string[]): SkeletonBox {
 
 const ratio = (r: string | number) => (typeof r === 'number' ? String(r) : r.replace(/\s*[:/]\s*/, ' / '))
 
+/** The skeleton for `spec`, as data a binding renders. */
 export function skeletonShape(spec: ShapeSpec = {}): SkeletonBox {
   const kind = spec.kind ?? 'text'
   switch (kind) {
@@ -72,4 +77,5 @@ export function skeletonShape(spec: ShapeSpec = {}): SkeletonBox {
   }
 }
 
+/** Whether a skeleton node is a piece, not a box. */
 export const isPart = (x: SkeletonPart | SkeletonBox): x is SkeletonPart => 'shape' in x

@@ -1,5 +1,5 @@
-import { onMount, state } from 'weft'
-import { Button, Card } from '@weft/warp'
+import { onMount, state } from '@weft-js/core'
+import { Button, Card } from '@weft-js/warp'
 
 const rows = Array.from({ length: 1000 }, (_, i) => ({
   id: i,
@@ -10,7 +10,7 @@ export default function Market() {
   const live = state(false)
   onMount(() => {
     const beat = setInterval(() => {
-      if (live.value) rows[(Math.random() * 1000) | 0].price.value++
+      if (live.value) rows[(Math.random() * 1000) | 0]!.price.value++
     }, 16)
     return () => clearInterval(beat)
   })

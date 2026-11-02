@@ -1,6 +1,5 @@
-import { onCleanup, onMount } from 'weft'
-import { on } from 'weft/browser'
-import { render } from 'weft/dom'
+import { onCleanup, onMount } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { previews } from '../generated/previews'
 
 /** The narrowest a card lays each kind of stage out at: a chart or a form squeezed into a card's width breaks apart. */
@@ -28,8 +27,10 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
   if (!W || !H) return
   const zoom = parseFloat(css.getPropertyValue('--tile-zoom')) || 0.8
   const readable = parseFloat(css.getPropertyValue('--tile-readable')) || READABLE
-  const vw = width ?? Math.max(W / zoom, LEAST[host.dataset.stage ?? 'center'] ?? 0)
+  let vw = width ?? Math.max(W / zoom, LEAST[host.dataset.stage ?? 'center'] ?? 0)
   host.style.setProperty('--tile-w', `${vw}px`)
+  // An example with a least width of its own past that one is laid out at it, so the picture holds all of it.
+  if (host.scrollWidth > vw + 1) { vw = host.scrollWidth; host.style.setProperty('--tile-w', `${vw}px`) }
   const ch = host.offsetHeight
   let s = W / vw
   let crop = false
@@ -54,22 +55,23 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
  * One example, running. Its group's file loads as it nears the view, and until then the box holds its height with a
  * skeleton, so nothing below it moves. `Replay` on the frame sends `stage:replay` here.
  */
-export function Preview({ file, id, stage = 'center', tile, fit, width }: { file: string; id: string; stage?: string; tile?: boolean; fit?: string; width?: number }) {
+export function Preview({ file, id, stage = 'center', tile, fit, width }: { file: string; id: string; stage?: string | undefined; tile?: boolean; fit?: string | undefined; width?: number | undefined }) {
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
   let stop: (() => void) | undefined
   let gone = false
   let watch: ResizeObserver | undefined
-  const show = (Case: any) => {
+  const show = (Case: () => unknown) => {
     stop?.()
     host.replaceChildren()
-    stop = render(() => <Case />, host) as any
+    stop = render(() => <Case />, host)
     host.toggleAttribute('data-ready', true)
     if (tile) fitTile(host, fit, width)
   }
-  let loaded: any
-  const replay = () => loaded && show(loaded)
+  let loaded: (() => unknown) | undefined
+  const replay = () => { if (loaded) show(loaded) }
   onMount(() => {
-    on(host, 'stage:replay' as any, replay)
+    host.addEventListener('stage:replay', replay)
     if (tile) {
       // The card's width and the example's height both move it: a chart draws after it measures, a phone turns.
       let queued = false
@@ -83,8 +85,9 @@ export function Preview({ file, id, stage = 'center', tile, fit, width }: { file
     }
     previews[file]!().then(m => {
       if (gone) return
-      loaded = m[id]
-      show(loaded)
+      const shown = m[id] as () => unknown
+      loaded = shown
+      show(shown)
     }).catch(e => {
       console.error(e)
       host.textContent = 'This example failed to load.'
@@ -92,7 +95,7 @@ export function Preview({ file, id, stage = 'center', tile, fit, width }: { file
       if (tile) fitTile(host, fit, width)
     })
   })
-  onCleanup(() => { gone = true; watch?.disconnect(); stop?.() })
+  onCleanup(() => { gone = true; host?.removeEventListener('stage:replay', replay); watch?.disconnect(); stop?.() })
   return (
     <div data-part="mount" data-stage={stage} inert={tile ? true : undefined} ref={host}>
       <span data-part="wait" aria-hidden="true"></span>

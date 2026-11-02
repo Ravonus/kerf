@@ -1,5 +1,5 @@
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll } from 'vitest'
 
@@ -13,7 +13,7 @@ afterAll(() => {
 })
 
 /**
- * A copy of the v3 reference app inside this package (so `zod` and `weft/config` resolve from it), with edits.
+ * A copy of the v3 reference app inside this package (so `zod` and `@weft-js/core/config` resolve from it), with edits.
  * @param {Record<string, string>} files extra or replaced files
  * @param {(src: Record<string, string>) => void} [edit]
  */
@@ -26,6 +26,22 @@ export function project(files = {}) {
     mkdirSync(join(dir, rel, '..'), { recursive: true })
     writeFileSync(join(dir, rel), text)
   }
+  return dir
+}
+
+const startFixture = fileURLToPath(new URL('../../start/test/fixtures/app/', import.meta.url))
+const startTmp = fileURLToPath(new URL('../../start/test/.tmp/', import.meta.url))
+
+/**
+ * A copy of start's fixture app, beside it in packages/start so `@weft-js/start` still resolves from the workspace.
+ * `weft check` rewrites `.weft/slots`, and start's suite binds the media route there while its dev server runs: checking
+ * the original while both suites run at once unbinds that route, and start's upload tests get a 500.
+ */
+export function startApp() {
+  mkdirSync(startTmp, { recursive: true })
+  const dir = mkdtempSync(join(startTmp, 'app-'))
+  made.push(dir)
+  cpSync(startFixture, dir, { recursive: true, filter: src => basename(src) !== '.weft' })
   return dir
 }
 

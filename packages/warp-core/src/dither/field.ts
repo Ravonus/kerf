@@ -10,37 +10,39 @@ import { quantize } from './quantize'
 import { palette, tier, type Ramp } from './ramp'
 import { tile, type Pattern } from './tiles'
 
+/** Options for an animated dither field. */
 export interface FieldOptions {
   /** A named field, or your own function of (x, y, t). */
-  kind?: FieldName | Field
+  kind?: FieldName | Field | undefined
   /** Your own `kind` is smooth: evaluate it on a sparse lattice and interpolate, as the named fields do. */
-  smooth?: boolean
-  ramp?: Ramp
+  smooth?: boolean | undefined
+  ramp?: Ramp | undefined
   /** Inks a disturbed cell takes instead, so a push shows in a second colour. */
-  spark?: Ramp
-  pattern?: Pattern
+  spark?: Ramp | undefined
+  pattern?: Pattern | undefined
   /** CSS pixels per cell. */
-  cell?: number
+  cell?: number | undefined
   /** How many inks of a tone ramp to use. Default: the tier's. */
-  inks?: number
+  inks?: number | undefined
   /** Multiplies the tier's speed. 0 holds one frame. */
-  speed?: number
+  speed?: number | undefined
   /** Tone gain, around 1. Default: the tier's. */
-  gain?: number
+  gain?: number | undefined
   /** Where a held frame sits in the field's time, in seconds. */
-  seed?: number
+  seed?: number | undefined
   /** How much of the step between inks the pattern may cross, 0–1. */
-  spread?: number
-  pointer?: PointerMode | PointerMode[]
+  spread?: number | undefined
+  pointer?: PointerMode | PointerMode[] | undefined
   /** The field shows through this shape. */
-  mask?: MaskSource
+  mask?: MaskSource | undefined
   /** Dissolves the field toward a side, so type can sit on clean ground, or into the page on every edge. */
-  fade?: Fade
+  fade?: Fade | undefined
   /** Seconds a mask takes to draw itself on, left to right, with a flash where it lands. Needs motion. */
-  reveal?: number
-  fps?: number
+  reveal?: number | undefined
+  fps?: number | undefined
 }
 
+/** The edge a field fades out from. */
 export type Fade = 'left' | 'right' | 'top' | 'bottom' | 'edges'
 const HOT = 0.32
 const smooth = (v: number) => { const k = v < 0 ? 0 : v > 1 ? 1 : v; return k * k * (3 - 2 * k) }
@@ -50,6 +52,7 @@ const family = (el: Element) => getComputedStyle(el).fontFamily || 'sans-serif'
 /** The fx state a host shows (08 §1.2): `on` moves, `still` holds a frame. */
 export const fxState = (el: Element, speed: number) => (speed > 0 && !reducedMotion(el) ? 'on' : 'still')
 
+/** A canvas of dithered, animated noise that the pointer can disturb. */
 export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {}): Action<FieldOptions> {
   let o = options
   const host = canvas.parentElement ?? canvas
@@ -101,7 +104,7 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
     }
   }
 
-  function compose(clock: number, stirred: boolean) {
+  function compose(now: number, stirred: boolean) {
     const gain = o.gain ?? dials.gain, m = mask, p = stirred ? push : undefined, g = ground, sweep = moves() && !reducedMotion(host) ? o.reveal ?? 0 : 0
     hot = false
     for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) {
@@ -111,12 +114,12 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
         energy = p.energy
         if (energy) at = clamp(Math.round(y + p.oy), rows - 1) * cols + clamp(Math.round(x + p.ox), cols - 1)
       }
-      const tone = tones[at]
-      let v = tone * tone * 0.95 * gain * (g ? g[i] : 1) + energy * 0.55
+      const tone = tones[at]!
+      let v = tone * tone * 0.95 * gain * (g ? g[i]! : 1) + energy * 0.55
       if (m) {
-        const age = sweep ? clock - (x / cols) * sweep : 1
-        const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5, flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at] : 0
-        v = v * 0.42 + m.halo[at] * 0.34 * gain * on + m.shape[at] * (0.46 + tone * 0.72) * on + flash
+        const age = sweep ? now - (x / cols) * sweep : 1
+        const on = age <= 0 ? 0 : age >= 0.2 ? 1 : age * 5, flash = age > 0 && age < 0.3 ? (0.3 - age) * 2 * m.shape[at]! : 0
+        v = v * 0.42 + m.halo[at]! * 0.34 * gain * on + m.shape[at]! * (0.46 + tone * 0.72) * on + flash
       }
       shown[i] = v
       heat[i] = energy
@@ -127,9 +130,9 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
   /** Disturbed cells take the spark inks at the level they already dithered to. */
   function ignite() {
     const top = inks.length - 1, n = pattern.n, bits = n - 1, spread = o.spread ?? 0.9, shift = (1 - spread) / 2
-    for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) if (heat[i] > HOT) {
-      const level = shown[i] * top + pattern.t[(y & bits) * n + (x & bits)] * spread + shift
-      if (level >= 1) out[i] = sparks![Math.min(sparks!.length - 1, (level | 0) + 1)]
+    for (let y = 0, i = 0; y < rows; y++) for (let x = 0; x < cols; x++, i++) if (heat[i]! > HOT) {
+      const level = shown[i]! * top + pattern.t[(y & bits) * n + (x & bits)]! * spread + shift
+      if (level >= 1) out[i] = sparks![Math.min(sparks!.length - 1, (level | 0) + 1)]!
     }
   }
 

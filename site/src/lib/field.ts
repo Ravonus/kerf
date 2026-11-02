@@ -9,9 +9,9 @@ export const PALETTE: [number, number, number, number][] = [
 const wave = (u: number, v: number, t: number) =>
   Math.sin(u * 0.9 + t * 0.7) * 0.5 + Math.sin(v * 1.7 - t * 0.5 + Math.sin(u * 0.6 + t * 0.3) * 1.4) * 0.5 + Math.sin((u + v) * 2.3 + t) * 0.22
 
-/** Level 0–5 of cell (x, y) at time `t`; `lift` adds light (a pointer, a letter). */
+/** Level 0–5 of cell (x, y) at time `t`; `lift` adds light (a pointer, a letter) and can take it away (the shed), never below level 0. */
 export function level(x: number, y: number, cols: number, rows: number, t: number, lift = 0) {
   const n = (wave((x / cols) * 7, (y / rows) * 4.4, t) + 1.1) / 2.2
-  const threshold = BAYER[(y & 7) * 8 + (x & 7)] / 64
-  return Math.min(PALETTE.length - 1, Math.floor((n * n * 0.62 + lift) * (PALETTE.length - 1) + threshold * 0.9))
+  const threshold = BAYER[(y & 7) * 8 + (x & 7)]! / 64
+  return Math.max(0, Math.min(PALETTE.length - 1, Math.floor((n * n * 0.62 + lift) * (PALETTE.length - 1) + threshold * 0.9)))
 }

@@ -5,20 +5,20 @@ import { createRequire } from 'node:module'
 
 const { chromium } = createRequire(new URL('../../packages/warp/package.json', import.meta.url))('playwright-core')
 const base = process.argv[2] ?? 'http://localhost:3300'
-const docs = Object.keys(JSON.parse(readFileSync(new URL('../src/generated/docs.json', import.meta.url), 'utf8'))).map(s => `/docs/${s}`)
-const pages = [...docs, '/', '/examples']
+const read = f => Object.keys(JSON.parse(readFileSync(new URL(`../src/generated/${f}.json`, import.meta.url), 'utf8')))
+const pages = [...read('learn').map(s => `/learn/${s}`), ...read('reference').map(s => `/reference/${s}`), '/learn', '/', '/examples']
 const SCOPE = '[data-site="example"] [data-part="run"]'
 const CONTROLS = `${SCOPE} button:not([disabled]), ${SCOPE} input:not([disabled]), ${SCOPE} [role="checkbox"], ${SCOPE} [role="switch"], ${SCOPE} label`
 const NEUTRAL = /^(reset|clear|cancel|close)$/i // nothing to undo on a fresh example
 
-const look = (page, i) => page.evaluate(([sel, i]) => {
-  const c = document.querySelectorAll(sel)[i]
+const look = (page, i) => page.evaluate(([sel, at]) => {
+  const c = document.querySelectorAll(sel)[at]
   if (!c?.closest('[data-part="run"]')) return ''
   const box = document.body // a press can answer outside its example: a popover, a toast, or the caret landing in the field
   const fields = [...box.querySelectorAll('input,select,textarea')].map(f => `${f.checked}|${f.value}`)
   const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}${e.matches(':popover-open')}`)
   const focused = document.activeElement === c || document.activeElement === c.control
-  return `${box.innerText}\n${fields}\n${attrs}\n${box.querySelectorAll('*').length}\n${focused}`
+  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}\n${focused}`
 }, [sel_(), i])
 const sel_ = () => CONTROLS
 
@@ -67,7 +67,7 @@ const behaves = async (name, path, test) => {
 const same = (got, want, what) => { if (String(got) !== String(want)) throw new Error(`${what}: got ${got}, want ${want}`) }
 const until = async (check, what, ms = 8000) => {
   const end = Date.now() + ms
-  while (Date.now() < end) { if (await check()) return; await new Promise(r => setTimeout(r, 50)) }
+  while (Date.now() < end) { if (await check()) return; await new Promise(r => { setTimeout(r, 50) }) }
   throw new Error(`timed out: ${what}`)
 }
 const text = (page, sel) => page.locator(sel).innerText()
@@ -88,13 +88,13 @@ await behaves('Two views of one list', '/examples', async page => {
   await pane(1).locator('label').nth(2).click()
   await until(() => boxes(0).nth(2).isChecked(), 'a tick on the new task shows in Ana')
 })
-await behaves('Hover shared across tabs', '/docs/ui-state', async probe => {
+await behaves('Hover shared across tabs', '/reference/ui-state', async _probe => {
   const box = 'section[data-site="example"] [data-part="run"]'
   const row = (p, pane, i) => p.locator(`${box} [data-scope="surface"]`).nth(pane).locator('label').nth(i)
   const browser = await b.newContext({ viewport: { width: 1280, height: 900 } })
   const page = await browser.newPage()
   try {
-    await page.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await page.goto(`${base}/reference/ui-state`, { waitUntil: 'load' })
     await page.locator(box).scrollIntoViewIfNeeded()
     await page.waitForTimeout(500)
     await row(page, 0, 0).hover()
@@ -102,7 +102,7 @@ await behaves('Hover shared across tabs', '/docs/ui-state', async probe => {
     same(await row(page, 1, 0).evaluate(el => el.hasAttribute('data-remote')), false, 'that is this page, not someone else')
     same(await row(page, 1, 1).evaluate(el => el.hasAttribute('data-hold')), false, 'the other row stays dark')
     const other = await browser.newPage()
-    await other.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await other.goto(`${base}/reference/ui-state`, { waitUntil: 'load' })
     await other.locator(box).scrollIntoViewIfNeeded()
     await until(() => row(other, 0, 0).evaluate(el => el.hasAttribute('data-remote')), 'a second tab sees the hover, marked remote')
     await until(async () => /1 elsewhere/.test(await text(other, box)), 'and says so')
@@ -110,7 +110,7 @@ await behaves('Hover shared across tabs', '/docs/ui-state', async probe => {
     await until(async () => !(await row(other, 0, 0).evaluate(el => el.hasAttribute('data-hold'))), 'it clears when the pointer leaves')
     // Another browser, across the socket: it may share `demo:` keys and nothing else (src/realtime.server.ts).
     const elsewhere = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage()
-    await elsewhere.goto(`${base}/docs/ui-state`, { waitUntil: 'load' })
+    await elsewhere.goto(`${base}/reference/ui-state`, { waitUntil: 'load' })
     await elsewhere.locator(box).scrollIntoViewIfNeeded()
     await elsewhere.waitForTimeout(800)
     await row(page, 0, 1).hover()
@@ -195,7 +195,7 @@ await behaves('Chat that survives a cut wire', '/examples', async page => {
 await behaves('The agent story', '/', async page => {
   const box = page.locator('[data-site="fix"]')
   await box.scrollIntoViewIfNeeded()
-  const shown = async () => box.locator('output').innerText()
+  const shown = () => box.locator('output').innerText()
   const step = n => box.locator('[data-part="steps"] button').nth(n)
   await step(0).click()
   await box.getByRole('button', { name: '+1' }).click()

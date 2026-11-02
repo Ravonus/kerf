@@ -2,15 +2,17 @@
 // items, and grows out through the trailing edge, so an entry and an exit never run the same way backwards. A stroke
 // that has started finishes before it leaves (`usePhaseSweep`'s rule). Only `transform` moves.
 
+/** Options for the sliding nav indicator. */
 export interface NavIndicatorOptions {
   /** `x`: a bar under a row of links. `y`: a bar beside a column. */
   axis?: 'x' | 'y'
   /** Light the link whose `#target` is on screen, for a table of contents. */
-  spy?: boolean
+  spy?: boolean | undefined
 }
 
 type Phase = 'idle' | 'in' | 'out'
 
+/** Slides an indicator to the hovered, focused or current nav item. */
 export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const axis = opts.axis ?? 'x'
   const win = nav.ownerDocument.defaultView!
@@ -88,8 +90,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const start = () => {
     const now = current()
     if (now) {
-      const { start, size } = place(now)
-      jump(start, size)
+      const { start: at, size } = place(now)
+      jump(at, size)
       phase = 'in'
       face.dataset.phase = 'in'
     }
@@ -100,9 +102,9 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
 
   const seen = new win.MutationObserver(settle)
   seen.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] })
-  const resized = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { const t = hovered ?? focused ?? current(); if (t) { const { start, size } = place(t); jump(start, size) } }) : undefined
+  const resized = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { const t = hovered ?? focused ?? current(); if (t) { const { start: at, size } = place(t); jump(at, size) } }) : undefined
   resized?.observe(nav)
-  const onDial = () => win.requestAnimationFrame(() => { const t = current(); if (t) { const { start, size } = place(t); jump(start, size) } })
+  const onDial = () => win.requestAnimationFrame(() => { const t = current(); if (t) { const { start: at, size } = place(t); jump(at, size) } })
   doc.addEventListener('warp:dial', onDial)
 
   // The last heading past the top of the reading band, or the last of all once the page can't scroll further: the

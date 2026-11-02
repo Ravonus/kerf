@@ -1,19 +1,20 @@
-import { uid, type IntegrityStats } from '@weft/warp-core'
-import { derived } from 'weft'
+import { uid, type IntegrityStats } from '@weft-js/warp-core'
+import { derived } from '@weft-js/core'
 import { Button } from '../Button'
 import { LiveStatus, type LiveState } from '../parts'
 import { read, type Live } from './peer'
 import '../styles'
-import '@weft/warp-core/styles/app/tokens.css'
-import '@weft/warp-core/styles/app/integrity.css'
+import '@weft-js/warp-core/styles/app/tokens.css'
+import '@weft-js/warp-core/styles/app/integrity.css'
 
+/** One event of a replication trace. */
 export interface IntegrityEvent { id: string; seq: number; kind: string; route: string; note?: string; lag: number }
 
 /**
  * The dev-tools panel on a channel (07 §6.4): Sent, Received, Duplicate (caution), Out of order (critical), Lag p95, a
  * recent-events log, and inject and reset controls for testing a client's dedupe. `integrityCounter` keeps the counts.
  */
-export function DataIntegrity({ channel, stats, events, live, onInjectDuplicate, onInjectReorder, onReset }: { channel: string; stats: Live<IntegrityStats>; events: Live<IntegrityEvent[]>; live?: LiveState; onInjectDuplicate?: () => void; onInjectReorder?: () => void; onReset?: () => void }) {
+export function DataIntegrity({ channel, stats, events, live, onInjectDuplicate, onInjectReorder, onReset }: { channel: string; stats: Live<IntegrityStats>; events: Live<IntegrityEvent[]>; live?: LiveState | undefined; onInjectDuplicate?: () => void; onInjectReorder?: () => void; onReset?: () => void }) {
   const id = uid('integrity')
   const s = derived(() => read(stats))
   const log = derived(() => read(events))

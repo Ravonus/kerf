@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
-// `.live`, `stream` and reconnects over weft/test's fake transport (research 30 §7): the real hub, the real client, a
+// `.live`, `stream` and reconnects over @weft-js/core/test's fake transport (research 30 §7): the real hub, the real client, a
 // memory bus, no sockets.
-import { state, untrack, watch } from 'weft'
-import { clock, flush, net, page, render, screen } from 'weft/test'
-import { createRoot } from 'weft'
-import { mutation, query, skip, stale, stream, topic, tracked, type StandardSchemaV1 } from '@weft/start'
-import { backoff } from '@weft/start/live'
-import { configure, hub } from '@weft/start/hub'
-import { seed } from '@weft/start/data'
+import { createRoot, state, untrack, watch } from '@weft-js/core'
+import { clock, flush, net, page, render, screen } from '@weft-js/core/test'
+import { mutation, query, skip, stale, stream, topic, tracked, type StandardSchemaV1 } from '@weft-js/start'
+import { backoff } from '@weft-js/start/live'
+import { configure, hub } from '@weft-js/start/hub'
+import { seed } from '@weft-js/start/data'
 
 type Todo = { id: string; title: string }
-const any: StandardSchemaV1<any> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const any: StandardSchemaV1<unknown> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
+const typed = <T,>() => any as StandardSchemaV1<T>
+type Price = { symbol?: string; price: number }
 
 let db: Todo[]
 let runs: number
@@ -20,9 +21,9 @@ beforeEach(() => {
 })
 
 const listTodos = query({ $id: 'live.list', tags: ['todos'], run: () => (runs++, db.map(t => ({ ...t }))) })
-const byList = query({ $id: 'live.by', input: any, tags: ({ id }: { id: string }) => [`list:${id}`], run: ({ input }) => (runs++, `list ${input.id}`) })
+const byList = query({ $id: 'live.by', input: typed<{ id: string }>(), tags: ({ id }) => [`list:${id}`], run: ({ input }) => (runs++, `list ${input.id}`) })
 const untagged = query({ $id: 'live.none', run: () => 1 })
-const rename = mutation({ $id: 'live.rename', input: any, invalidates: ['todos'], run: ({ input }) => { db.find(t => t.id === input.id)!.title = input.title } })
+const rename = mutation({ $id: 'live.rename', input: typed<{ id: string; title: string }>(), invalidates: ['todos'], run: ({ input }) => { db.find(t => t.id === input.id)!.title = input.title } })
 
 function List() {
   const todos = listTodos.live()
@@ -41,7 +42,7 @@ describe('.live', () => {
     render(List)
     await net.settle()
     let release!: () => void
-    const held = new Promise<void>(ok => (release = ok))
+    const held = new Promise<void>(ok => { release = ok })
     let first = true
     net.handle(listTodos, async () => {
       const snapshot = db.map(t => ({ ...t })) // read now, answered later: what a slow query does
@@ -52,11 +53,11 @@ describe('.live', () => {
       return snapshot
     })
     void net.poke('todos') // the first write: a refetch starts, and reads
-    await new Promise(ok => setTimeout(ok, 5))
+    await new Promise(ok => { setTimeout(ok, 5) })
     expect(first).toBe(false)
-    db[1].title = 'Second write'
+    db[1]!.title = 'Second write'
     void net.poke('todos') // arrives while that refetch is out
-    await new Promise(ok => setTimeout(ok, 5))
+    await new Promise(ok => { setTimeout(ok, 5) })
     release()
     await net.settle()
     expect(items()).toEqual(['One', 'Second write'])
@@ -68,7 +69,7 @@ describe('.live', () => {
     expect(status()).toBe('live')
     expect(items()).toEqual(['One', 'Two'])
     const before = runs
-    db[1].title = 'Changed'
+    db[1]!.title = 'Changed'
     await expect(() => net.poke('todos')).toTouchAtMost(1)
     expect(items()).toEqual(['One', 'Changed'])
     expect(runs).toBe(before + 1)
@@ -162,7 +163,7 @@ describe('.live', () => {
   test('a live query that leaks past its test is T012', async () => {
     const stop = createRoot(dispose => { listTodos.live(); return dispose })
     await net.settle()
-    const { leaks } = await import('weft/test')
+    const { leaks } = await import('@weft-js/core/test')
     expect(leaks().join()).toContain('live.list')
     stop()
     expect(leaks()).toEqual([])
@@ -175,7 +176,7 @@ describe('reconnects', () => {
     await net.settle()
     await net.offline()
     expect(status()).toBe('offline')
-    db[0].title = 'While away'
+    db[0]!.title = 'While away'
     await net.poke('todos')
     await net.online()
     await net.settle()
@@ -190,7 +191,7 @@ describe('reconnects', () => {
     await net.drop()
     await vi.waitFor(() => expect(status()).toBe('live'))
     expect(net.reconnects()).toBe(1)
-    db[0].title = 'After'
+    db[0]!.title = 'After'
     await net.poke('todos')
     expect(items()).toEqual(['After', 'Two'])
   })
@@ -214,12 +215,17 @@ describe('reconnects', () => {
   })
 })
 
-const priceTopic = topic('prices', { key: any as StandardSchemaV1<any, string>, message: any })
-const prices = stream({ $id: 'live.prices', input: any, message: any, async *run({ input, signal, lastEventId }) { yield* priceTopic.subscribe(input.symbols as string[], { signal, after: lastEventId }) } })
+const priceTopic = topic('prices', { key: any as StandardSchemaV1<unknown, string>, message: typed<Price>() })
+const prices = stream({ $id: 'live.prices', input: typed<{ symbols: string[] }>(), message: typed<Price>(), async *run({ input, signal, lastEventId }) { yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId }) } })
+// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
 const counter = stream({ $id: 'live.count', async *run({ lastEventId }) { let n = Number(lastEventId ?? 0); for (;;) { yield tracked(String(++n), n); if (n % 2 === 0) return } } })
+// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
 const secret = stream({ $id: 'live.secret', auth: 'user', async *run() { yield 'hidden' } })
+// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
 const once = stream({ $id: 'live.once', async *run() { yield 1; yield 2 } })
-const broken = stream({ $id: 'live.broken', message: { '~standard': { version: 1, vendor: 't', validate: (v: any) => (typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] }) } } as StandardSchemaV1<any, number>, async *run() { yield 'nope' as any } })
+const numeric: StandardSchemaV1<unknown, number> = { '~standard': { version: 1, vendor: 't', validate: v => (typeof v === 'number' ? { value: v } : { issues: [{ message: 'not a number' }] }) } }
+// oxlint-disable-next-line typescript/require-await -- `run` is an async generator whatever its body does
+const broken = stream({ $id: 'live.broken', message: numeric, async *run() { yield 'nope' as unknown as number } })
 
 function Tick() {
   const tick = prices({ symbols: ['A'] })
@@ -340,11 +346,11 @@ describe('stream', () => {
 })
 
 describe('the page\'s cursor (#weft-rt)', () => {
-  const carry = (page: object) => {
+  const carry = (payload: object) => {
     const el = document.createElement('script')
     el.id = 'weft-rt'
     el.type = 'application/json'
-    el.textContent = JSON.stringify(page)
+    el.textContent = JSON.stringify(payload)
     document.body.append(el)
   }
   const rendered = async () => {

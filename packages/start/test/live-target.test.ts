@@ -30,7 +30,7 @@ describe.each(FUNCTIONS)('%s, functions', preset => {
     expect(plan.options.join()).toMatch(/server preset/)
   })
   test('required is R013, naming the query and the options', () => {
-    const [d] = livePlan({ preset, source, required }).diagnostics
+    const d = livePlan({ preset, source, required }).diagnostics[0]!
     expect(d).toMatchObject({ code: 'R013', severity: 'error' })
     expect(d.why).toMatch(/`listTodos` requires/)
     expect(d.why).toContain(preset)
@@ -52,7 +52,7 @@ describe('scanRequired', () => {
     mkdirSync(join(dir, 'src/server'), { recursive: true })
     writeFileSync(join(dir, 'src/server/a.ts'), `export const one = query({ tags: ['a'], run: () => 1 })\nexport const two = query({ live: { required: true }, run: () => 1 })\n`)
     writeFileSync(join(dir, 'src/page.tsx'), `const x = three.live({ id }, { required: true })\nconst y = four.live()\n`)
-    expect(scanRequired(dir).map(r => r.name).sort()).toEqual(['three', 'two'])
+    expect(scanRequired(dir).map(r => r.name).sort((a, b) => a.localeCompare(b))).toEqual(['three', 'two'])
   })
 })
 
@@ -60,16 +60,16 @@ describe('verify targets', () => {
   test('`true` finds the two variables, and tells a newcomer what to set', () => {
     expect(resolveTarget(true, { env: { WEFT_STAGING_URL: 'https://staging.x.dev' } })).toMatchObject({ url: 'https://staging.x.dev', db: undefined })
     expect(resolveTarget(true, { env: { STAGING_DATABASE_URL: 'postgres://u@staging/x' } })).toMatchObject({ db: 'postgres://u@staging/x' })
-    expect(resolveTarget(true, { env: {} }).missing).toMatch(/WEFT_STAGING_URL.*STAGING_DATABASE_URL/s)
+    expect((resolveTarget(true, { env: {} }) as { missing: string }).missing).toMatch(/WEFT_STAGING_URL.*STAGING_DATABASE_URL/s)
   })
   test('a name reads `live.targets`; its `db` is a variable', () => {
     const targets = { staging: { url: 'https://s.x.dev', db: 'S_DB', production: false } }
     expect(resolveTarget('staging', { targets, env: { S_DB: 'postgres://u@h/x' } })).toEqual({ name: 'staging', url: 'https://s.x.dev', db: 'postgres://u@h/x', marked: true })
-    expect(resolveTarget('staging', { targets, env: {} }).missing).toMatch(/`S_DB`/)
-    expect(resolveTarget('qa', { targets, env: {} }).missing).toMatch(/live: \{ targets/)
+    expect((resolveTarget('staging', { targets, env: {} }) as { missing: string }).missing).toMatch(/`S_DB`/)
+    expect((resolveTarget('qa', { targets, env: {} }) as { missing: string }).missing).toMatch(/live: \{ targets/)
   })
   test('`{ db: undefined }` is an unset variable, not a target', () => {
-    expect(resolveTarget({ db: undefined }, { env: {} }).missing).toMatch(/env var/)
+    expect((resolveTarget({ db: undefined }, { env: {} }) as { missing: string }).missing).toMatch(/env var/)
   })
   test.each([
     ['https://prod.acme.com'], ['https://app-production.acme.com'], ['https://www.acme.com'], ['https://live.acme.com'],

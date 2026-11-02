@@ -1,5 +1,5 @@
-import { Button, Canvas, Dither, DitherField, DitherGlyph, Grid, Heading, Inset, Row, Stack, Text } from '@weft/warp'
-import type { CanvasFrame, DitherFieldProps, DitherGlyphProps, DitherProps } from '@weft/warp'
+import { Button, Canvas, Dither, DitherField, DitherGlyph, Grid, Heading, Inset, Row, Stack, Text } from '@weft-js/warp'
+import type { CanvasFrame, DitherFieldProps, DitherGlyphProps, DitherProps } from '@weft-js/warp'
 import { TRAFFIC } from '../world'
 
 const STAGE = 'block-size:240px'
@@ -65,17 +65,17 @@ export const CanvasCells = () => <Canvas draw={drawCells} animate fps={12} cell=
 // The pointer's recent path, fading as it ages: `pointer` repaints on every move, and `animate` finishes the fade.
 function drawTrail({ ctx, width, height, time, pointer }: CanvasFrame, trail: { x: number; y: number; at: number }[]) {
   if (pointer.in) trail.push({ x: pointer.x, y: pointer.y, at: time })
-  while (trail.length && (time - trail[0].at > 1.2 || trail.length > 120)) trail.shift()
+  while (trail.length && (time - trail[0]!.at > 1.2 || trail.length > 120)) trail.shift()
   ctx.clearRect(0, 0, width, height)
   ctx.strokeStyle = token(ctx, '--warp-color-accent-solid')
   ctx.lineCap = 'round'
   for (let i = 1; i < trail.length; i++) {
-    const age = (time - trail[i].at) / 1.2
+    const age = (time - trail[i]!.at) / 1.2
     ctx.globalAlpha = 1 - age
     ctx.lineWidth = 2 + (1 - age) * 10
     ctx.beginPath()
-    ctx.moveTo(trail[i - 1].x, trail[i - 1].y)
-    ctx.lineTo(trail[i].x, trail[i].y)
+    ctx.moveTo(trail[i - 1]!.x, trail[i - 1]!.y)
+    ctx.lineTo(trail[i]!.x, trail[i]!.y)
     ctx.stroke()
   }
   ctx.globalAlpha = 1
@@ -93,7 +93,7 @@ export const CanvasTrail = () => {
 function drawRipples({ ctx, width, height, time, pointer }: CanvasFrame, rings: { x: number; y: number; at: number }[], held: { down: boolean }) {
   if (pointer.down && !held.down) rings.push({ x: pointer.x, y: pointer.y, at: time })
   held.down = pointer.down
-  while (rings.length && (time - rings[0].at > 1.6 || rings.length > 8)) rings.shift()
+  while (rings.length && (time - rings[0]!.at > 1.6 || rings.length > 8)) rings.shift()
   ctx.clearRect(0, 0, width, height)
   ctx.strokeStyle = token(ctx, '--warp-color-info-solid')
   ctx.lineWidth = 2
@@ -249,7 +249,7 @@ function drawLife({ ctx, width, height }: CanvasFrame, life: { cells: Uint8Array
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       let n = 0
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) n += life.cells[((y + dy + height) % height) * width + ((x + dx + width) % width)]
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) n += life.cells[((y + dy + height) % height) * width + ((x + dx + width) % width)]!
       next[y * width + x] = n === 3 || (n === 2 && life.cells[y * width + x]) ? 1 : 0
     }
   }

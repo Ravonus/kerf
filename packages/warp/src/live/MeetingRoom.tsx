@@ -1,21 +1,23 @@
-import { ChatIcon, HandIcon, ScreenIcon, SmileIcon, UsersIcon } from '@weft/icons'
-import { announce, floatReaction, galleryCols, hueOf, installSweep, newHands, pauseOffscreen, pip, speakerFollow, speakingOut, tileLabel, toolbar, type LiveState, type ParticipantLike, type PipCorner } from '@weft/warp-core'
-import { derived, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
+import { ChatIcon, HandIcon, ScreenIcon, SmileIcon, UsersIcon } from '@weft-js/warp-icons'
+import { announce, floatReaction, galleryCols, hueOf, newHands, pauseOffscreen, pip, speakerFollow, speakingOut, tileLabel, toolbar, type LiveState, type ParticipantLike, type PipCorner } from '@weft-js/warp-core'
+import { derived, onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Avatar, LiveStatus } from '../parts'
 import { Button } from '../Button'
 import { Segmented } from '../Choice'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import { avatarTint, G, held, val, type GlyphName } from './shared'
 import '../styles'
-import '@weft/warp-core/styles/app/base.css'
-import '@weft/warp-core/styles/app/room.css'
-import '@weft/warp-core/styles/app/tile.css'
-import '@weft/warp-core/styles/app/pip.css'
-import '@weft/warp-core/styles/app/call-controls.css'
+import '@weft-js/warp-core/styles/app/base.css'
+import '@weft-js/warp-core/styles/app/room.css'
+import '@weft-js/warp-core/styles/app/tile.css'
+import '@weft-js/warp-core/styles/app/pip.css'
+import '@weft-js/warp-core/styles/app/call-controls.css'
 
+/** How the room arranges its tiles. */
 export type MeetingLayout = 'gallery' | 'speaker' | 'presentation' | 'board'
+/** Someone in the room. */
 export interface Participant extends ParticipantLike { isCamOn?: boolean }
-type Video = (p: Participant) => any
+type Video = (p: Participant) => unknown
 
 const LAYOUTS: [MeetingLayout, string, GlyphName][] = [['gallery', 'Gallery', 'grid'], ['speaker', 'Speaker', 'speaker'], ['presentation', 'Presentation', 'present'], ['board', 'Board', 'board']]
 
@@ -30,7 +32,7 @@ function LayoutPicker(props: { value: MeetingLayout; onChange: (l: MeetingLayout
  * the sweep: `data-speaking`, then `data-speaking-out` until it has left. The bars read `--level`: set it on the tile
  * (`[data-pid]`) at whatever rate the audio arrives; nothing re-renders.
  */
-export function Tile({ p, self, video, role = 'group' }: { p: Participant; self?: boolean; video?: Video; role?: string }) {
+export function Tile({ p, self, video, role = 'group' }: { p: Participant; self?: boolean; video?: Video | undefined; role?: string }) {
   let el: HTMLDivElement | undefined
   use(speakingOut, () => el, () => !!p.isSpeaking)
   const label = derived(() => tileLabel(self ? { ...p, name: `${p.name}, you` } : p))
@@ -38,7 +40,7 @@ export function Tile({ p, self, video, role = 'group' }: { p: Participant; self?
   const camera = derived(() => !!slot && p.isCamOn !== false)
   return (
     <div
-      ref={(n: any) => (el = n)}
+      ref={n => (el = n)}
       data-scope="tile"
       role={role}
       tabindex="-1"
@@ -65,22 +67,23 @@ export function Tile({ p, self, video, role = 'group' }: { p: Participant; self?
   )
 }
 
+/** Props for ControlBar. */
 export interface ControlBarProps {
   mic: boolean
   camera: boolean
-  sharing?: boolean
-  hand?: boolean
-  side?: 'people' | 'chat' | null
+  sharing?: boolean | undefined
+  hand?: boolean | undefined
+  side?: 'people' | 'chat' | null | undefined
   /** Icons only, no Chat or People (they go in More), and Leave icon-only (07 §3.3). */
-  compact?: boolean
+  compact?: boolean | undefined
   onToggle: (control: 'mic' | 'camera' | 'share' | 'hand' | 'react' | 'chat' | 'people' | 'more') => void
-  onLeave?: () => void
+  onLeave?: (() => void) | undefined
   /** Stands in for the control's name while a control has an open menu of its own. */
-  more?: string
+  more?: string | undefined
 }
 
 // the visible label is inside the name (WCAG 2.5.3), and the name stays when the label hides
-function Control({ c, name, icon, pressed, device, label, first, onToggle }: any) {
+function Control({ c, name, icon, pressed, device, label, first, onToggle }: { c: Parameters<ControlBarProps['onToggle']>[0]; name: string; icon: Parameters<typeof G>[0]['name']; pressed?: boolean | undefined; device?: boolean; label: string; first?: boolean; onToggle: ControlBarProps['onToggle'] }) {
   return (
     <button type="button" data-part="control" data-kind={device ? 'device' : undefined} aria-pressed={pressed ? 'true' : 'false'} aria-label={name} tabindex={first ? '0' : '-1'} onClick={() => onToggle(c)}>
       <G name={icon} /><span data-part="label">{label}</span>
@@ -93,7 +96,7 @@ export function ControlBar({ mic, camera, sharing, hand, side, compact, onToggle
   let bar: HTMLDivElement | undefined
   use(toolbar, () => bar, () => ({ items: '[data-part="control"], [data-part="leave"]' }))
   return (
-    <div ref={(n: any) => (bar = n)} data-scope="call-controls" role="toolbar" aria-label="Meeting controls">
+    <div ref={n => (bar = n)} data-scope="call-controls" role="toolbar" aria-label="Meeting controls">
       <div data-part="group">
         <Control onToggle={onToggle} c="mic" name={mic ? 'Microphone, mute' : 'Microphone, unmute'} icon={mic ? 'mic' : 'micoff'} pressed={mic} device label={mic ? 'Mute' : 'Unmute'} first />
         <Control onToggle={onToggle} c="camera" name={camera ? 'Camera, stop video' : 'Camera, start video'} icon={camera ? 'cam' : 'camoff'} pressed={camera} device label={camera ? 'Stop video' : 'Start video'} />
@@ -111,61 +114,62 @@ export function ControlBar({ mic, camera, sharing, hand, side, compact, onToggle
   )
 }
 
+/** Props for MeetingRoom. */
 export interface MeetingRoomProps {
   title: string
   participants: Participant[] | { value: Participant[] } | (() => Participant[])
   self: Participant
-  layout?: State<MeetingLayout> | MeetingLayout
+  layout?: State<MeetingLayout> | MeetingLayout | undefined
   /** Called with the layout picked in the switcher. */
-  onLayoutChange?: (l: MeetingLayout) => void
+  onLayoutChange?: ((l: MeetingLayout) => void) | undefined
   /** Elapsed time, already formatted (the caller owns the clock). */
-  timer?: any
+  timer?: unknown
   /** Shows a Rec badge in the header. */
-  recording?: boolean
+  recording?: boolean | undefined
   /** The room's connection: `room.status`, mapped. */
-  live?: string | (() => string)
+  live?: string | (() => string) | undefined
   /** Phone: speaker layout, no switcher, icon-only Leave. Unset: decided by the room's own width after mount. */
-  compact?: boolean
+  compact?: boolean | undefined
   /** Dark island by default (07 §7). */
-  theme?: 'dark' | 'light'
+  theme?: 'dark' | 'light' | undefined
   /** Media is the caller's: warp never touches getUserMedia. Return the <video> for a participant. */
-  video?: Video
+  video?: Video | undefined
   /** The shared screen, for presentation layout. */
-  share?: () => any
-  presenter?: string
+  share?: (() => unknown) | undefined
+  presenter?: string | undefined
   /** What is being shared, in the presentation header. Default "Shared screen". */
-  shareTitle?: string
-  board?: () => any
+  shareTitle?: string | undefined
+  board?: (() => unknown) | undefined
   /** The Chat panel's body. */
-  chat?: () => any
+  chat?: (() => unknown) | undefined
   /** Below People: "Invite people". */
-  invite?: () => any
+  invite?: (() => unknown) | undefined
   /** Whether your mic is on: a state the room writes, or a value with `onMic`. */
-  mic?: State<boolean> | boolean
+  mic?: State<boolean> | boolean | undefined
   /** Whether your camera is on: a state the room writes, or a value with `onCamera`. */
-  camera?: State<boolean> | boolean
+  camera?: State<boolean> | boolean | undefined
   /** Whether your hand is raised: a state the room writes, or a value with `onHand`. */
-  hand?: State<boolean> | boolean
+  hand?: State<boolean> | boolean | undefined
   /** Whether you are sharing your screen: a state the room writes, or a value with `onShare`. */
-  sharing?: State<boolean> | boolean
+  sharing?: State<boolean> | boolean | undefined
   /** The open side panel, `people` or `chat`, or null for none. */
-  sidebar?: State<'people' | 'chat' | null> | 'people' | 'chat' | null
+  sidebar?: State<'people' | 'chat' | null> | 'people' | 'chat' | null | undefined
   /** The emoji the React button sends. Default 🎉. */
-  reaction?: string
+  reaction?: string | undefined
   /** Called with the mic's new state. Start or stop the track here. */
-  onMic?: (on: boolean) => void
+  onMic?: ((on: boolean) => void) | undefined
   /** Called with the camera's new state. Start or stop the track here. */
-  onCamera?: (on: boolean) => void
+  onCamera?: ((on: boolean) => void) | undefined
   /** Called with `true` when you raise your hand and `false` when you lower it. */
-  onHand?: (on: boolean) => void
+  onHand?: ((on: boolean) => void) | undefined
   /** Called with `true` to start sharing your screen and `false` to stop. */
-  onShare?: (on: boolean) => void
+  onShare?: ((on: boolean) => void) | undefined
   /** Called with the emoji when you react. */
-  onReact?: (emoji: string) => void
+  onReact?: ((emoji: string) => void) | undefined
   /** Called when Leave is pressed. */
-  onLeave?: () => void
+  onLeave?: (() => void) | undefined
   /** More: replaces the phone's default, which opens the People and Chat panel. */
-  onMore?: () => void
+  onMore?: (() => void) | undefined
 }
 
 /**
@@ -173,7 +177,7 @@ export interface MeetingRoomProps {
  * follows the active speaker with a 1.5 s hold, off-screen video pauses, hands are announced and speakers aren't.
  */
 export function MeetingRoom({ title, participants, self, layout, onLayoutChange, timer, recording, live = 'live', compact, theme = 'dark', video, share, presenter, shareTitle = 'Shared screen', board, chat, invite, mic, camera, hand, sharing, sidebar, reaction = '🎉', onMic, onCamera, onHand, onShare, onReact, onLeave, onMore }: MeetingRoomProps) {
-  const people = derived(() => (val(participants as any) ?? []) as Participant[])
+  const people = derived(() => val<Participant[]>(participants) ?? [])
   const narrow = state(false)
   const phone = derived(() => compact ?? narrow.value)
   const chosen = held<MeetingLayout>(() => layout, untrack(() => compact) ? 'speaker' : 'gallery', () => onLayoutChange)
@@ -189,13 +193,12 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
   const others = derived(() => people.value.filter(p => p.id !== main.value?.id))
   const me = derived<Participant>(() => ({ ...self, isMuted: !micOn.value, handRaised: handUp.value, isCamOn: camOn.value }))
   const cols = derived(() => galleryCols(people.value.length))
-  const network = derived<LiveState>(() => { const s = val(live as any); return s === 'open' || s === 'live' ? 'live' : s === 'reconnecting' ? 'reconnecting' : s === 'connecting' ? 'connecting' : 'offline' })
+  const network = derived<LiveState>(() => { const s = val<string>(live); return s === 'open' || s === 'live' ? 'live' : s === 'reconnecting' ? 'reconnecting' : s === 'connecting' ? 'connecting' : 'offline' })
   const netWords = derived(() => (network.value === 'live' ? 'Good connection' : network.value === 'reconnecting' ? 'Reconnecting…' : network.value === 'connecting' ? 'Connecting…' : 'Offline'))
   const presenterText = derived(() => (sharingOn.value ? 'You are presenting' : `${presenter ?? 'Someone'} is presenting`))
   const v = untrack(() => video)
   let root: HTMLDivElement | undefined
   let stage: HTMLDivElement | undefined
-  let box: HTMLElement | undefined
 
   const say = (text: string) => announce(root!.ownerDocument, text)
   onMount(() => {
@@ -204,9 +207,9 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
     watch(() => speaking.value, s => follow.update(s))
     watch(() => people.value, (next, prev) => { if (prev) for (const p of newHands(prev, next)) say(`${p.name} raised a hand`) })
     onCleanup(() => follow.destroy())
-    const RO = (root!.ownerDocument.defaultView as any).ResizeObserver
+    const RO = (root!.ownerDocument.defaultView as Window & typeof globalThis).ResizeObserver
     if (RO && untrack(() => compact) === undefined) {
-      const ro = new RO((es: any[]) => { narrow.value = es[0].contentRect.width < 600 })
+      const ro = new RO(es => { narrow.value = es[0]!.contentRect.width < 600 })
       ro.observe(root!)
       onCleanup(() => ro.disconnect())
     }
@@ -231,16 +234,16 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
   use(pip, () => pipEl, () => ({ corner: pipStart.value, onMove: (c: PipCorner) => say(`Self view moved to ${c.replace('-', ' ')}`) }))
 
   return (
-    <div ref={(n: any) => (root = n)} data-scope="room" data-part="root" data-theme={theme} role="region" aria-label={`${title} meeting`}>
+    <div ref={n => (root = n)} data-scope="room" data-part="root" data-theme={theme} role="region" aria-label={`${title} meeting`}>
       <div data-part="header">
         <b>{title}</b>
         {timer !== undefined && <span data-numeric="">{timer}</span>}
         {recording && <span data-part="rec"><span data-scope="status-dot" data-tone="critical"></span>Rec</span>}
         <span data-part="spacer"></span>
-        {!phone.value && <LayoutPicker value={L.value} onChange={(l: MeetingLayout) => { chosen.set(l); if (sharingOn.value) sharingOn.set(false); say(`${l[0].toUpperCase()}${l.slice(1)} layout`) }} />}
+        {!phone.value && <LayoutPicker value={L.value} onChange={(l: MeetingLayout) => { chosen.set(l); if (sharingOn.value) sharingOn.set(false); say(`${l[0]!.toUpperCase()}${l.slice(1)} layout`) }} />}
         <LiveStatus state={network.value} label="Connection">{phone.value ? '' : netWords.value}</LiveStatus>
       </div>
-      <div ref={(n: any) => (stage = n)} data-part="stage" data-layout={L.value} style={`--_cols:${cols.value}`} role="group" aria-label="Participants">
+      <div ref={n => (stage = n)} data-part="stage" data-layout={L.value} style={`--_cols:${cols.value}`} role="group" aria-label="Participants">
         {L.value === 'gallery' && <div data-part="tiles" role="list" aria-label="Participants">{people.value.map(p => <Tile key={p.id} p={p} video={v} role="listitem" />)}</div>}
         {L.value === 'speaker' && main.value && <Tile key={main.value.id} p={main.value} video={v} />}
         {L.value === 'speaker' && <div data-part="strip" role="list" aria-label="Other participants">{others.value.map(p => <Tile key={p.id} p={p} video={v} role="listitem" />)}</div>}
@@ -257,11 +260,11 @@ export function MeetingRoom({ title, participants, self, layout, onLayoutChange,
           </div>
         )}
         {(L.value === 'presentation' || L.value === 'board') && <div data-part="rail" role="list" aria-label="Participants">{people.value.map(p => <Tile key={p.id} p={p} video={v} role="listitem" />)}</div>}
-        <div ref={(n: any) => (pipEl = n)} data-scope="pip" role="group" aria-roledescription="draggable self view" aria-label="Self view. Arrow keys move it to a corner." tabindex="0">
+        <div ref={n => (pipEl = n)} data-scope="pip" role="group" aria-roledescription="draggable self view" aria-label="Self view. Arrow keys move it to a corner." tabindex="0">
           <Tile p={me.value} self video={v} />
         </div>
       </div>
-      <aside ref={(n: any) => (box = n)} data-part="sidebar" hidden={!side.value} aria-label={side.value === 'chat' ? 'Chat' : 'People'} onKeyDown={sideKey}>
+      <aside data-part="sidebar" hidden={!side.value} aria-label={side.value === 'chat' ? 'Chat' : 'People'} onKeyDown={sideKey}>
         <div data-part="app-bar">
           <b>{side.value === 'chat' ? 'Chat' : `People · ${people.value.length + 1}`}</b>
           <span data-part="spacer"></span>

@@ -1,9 +1,14 @@
-import { derived, state, untrack } from 'weft'
-import { Badge, Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
+import { derived, state, untrack } from '@weft-js/core'
+import { Badge, Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft-js/warp'
+import type { SegmentedOption } from '@weft-js/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../world'
 
+// The playground hands each `...Play` case whatever its knobs are set to.
+// oxlint-disable-next-line typescript/no-explicit-any -- knob values are checked by the playground's own schema, not here
+type Knobs = any
+
 /** One state in a States grid: its name, then the field. */
-const Cell = (p: { name: string; children?: any }) => (
+const Cell = (p: { name: string; children?: unknown }) => (
   <Stack gap="tight">
     <Text role="caption" subtle>{p.name}</Text>
     {p.children}
@@ -26,7 +31,7 @@ const TARGET_OPTIONS = [
 
 /* ---- Input ---- */
 
-export const InputPlay = (p: any) => <Input {...p} hint={p.hint || undefined} />
+export const InputPlay = (p: Knobs) => <Input {...p} hint={p.hint || undefined} />
 
 export const InputVariants = () => (
   <Grid cols={3} gap="group">
@@ -109,7 +114,7 @@ export function FormProjectSettings() {
         </Grid>
         <Textarea label="Description" value={about.value} counter={120} onInput={e => (about.value = e.currentTarget.value)} />
         <Slider label="Copies" value={copies.value} min={1} max={8} onChange={v => (copies.value = v)} />
-        <Checkbox checked={onPush.value} hint="Every push to main goes live." onChange={e => (onPush.value = e.currentTarget.checked)}>Deploy on push</Checkbox>
+        <Checkbox checked={onPush.value} hint="Every push to main goes live." onChange={(e: Event & { currentTarget: HTMLInputElement }) => (onPush.value = e.currentTarget.checked)}>Deploy on push</Checkbox>
         <Row gap="related" justify="end">
           <Button emphasis="ghost" tone="neutral">Cancel</Button>
           <Button type="submit">Save changes</Button>
@@ -122,7 +127,7 @@ export function FormProjectSettings() {
 
 /* ---- Textarea ---- */
 
-export const TextareaPlay = (p: any) => <Textarea {...p} hint={p.hint || undefined} />
+export const TextareaPlay = (p: Knobs) => <Textarea {...p} hint={p.hint || undefined} />
 
 export const TextareaRows = () => (
   <Stack gap="group">
@@ -174,7 +179,7 @@ export function TextareaReleaseNote() {
 
 /* ---- Search ---- */
 
-export const SearchPlay = (p: any) => <Search {...p} />
+export const SearchPlay = (p: Knobs) => <Search {...p} />
 
 export const SearchSizes = () => (
   <Stack gap="group">
@@ -221,7 +226,7 @@ export function SearchProjects() {
 
 /* ---- Select ---- */
 
-export const SelectPlay = (p: any) => <Select options={REGION_OPTIONS} {...p} hint={p.hint || undefined} />
+export const SelectPlay = (p: Knobs) => <Select options={REGION_OPTIONS} {...p} hint={p.hint || undefined} />
 
 export const SelectBasic = () => <Select label="Region" options={REGION_OPTIONS} defaultValue="eu-west" />
 
@@ -294,19 +299,19 @@ export function FormInvite() {
 
 /* ---- Checkbox ---- */
 
-export function CheckboxPlay(p: any) {
+export function CheckboxPlay(p: Knobs) {
   const on = state(untrack(() => !!p.checked))
-  return <Checkbox {...p} hint={p.hint || undefined} checked={on.value} onChange={e => (on.value = e.currentTarget.checked)}>{p.children}</Checkbox>
+  return <Checkbox {...p} hint={p.hint || undefined} checked={on.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (on.value = e.currentTarget.checked)}>{p.children}</Checkbox>
 }
 
 export function CheckboxBasic() {
   const on = state(true)
-  return <Checkbox checked={on.value} onChange={e => (on.value = e.currentTarget.checked)}>Deploy on push</Checkbox>
+  return <Checkbox checked={on.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (on.value = e.currentTarget.checked)}>Deploy on push</Checkbox>
 }
 
 export function CheckboxHint() {
   const on = state(false)
-  return <Checkbox checked={on.value} hint="Failed checks stop the deploy." onChange={e => (on.value = e.currentTarget.checked)}>Require checks to pass</Checkbox>
+  return <Checkbox checked={on.value} hint="Failed checks stop the deploy." onChange={(e: Event & { currentTarget: HTMLInputElement }) => (on.value = e.currentTarget.checked)}>Require checks to pass</Checkbox>
 }
 
 export const CheckboxStates = () => (
@@ -347,7 +352,7 @@ export function CheckboxConfirm() {
   return (
     <Stack gap="group">
       <Text>{gone.value ? 'reports was deleted.' : 'Deleting reports removes its 41 deploys and all its logs.'}</Text>
-      <Checkbox checked={sure.value} error={tried.value && !sure.value ? 'Tick this first.' : undefined} onChange={e => (sure.value = e.currentTarget.checked)}>I understand this can't be undone</Checkbox>
+      <Checkbox checked={sure.value} error={tried.value && !sure.value ? 'Tick this first.' : undefined} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (sure.value = e.currentTarget.checked)}>I understand this can't be undone</Checkbox>
       <Row justify="end"><Button tone="critical" onClick={remove}>Delete project</Button></Row>
     </Stack>
   )
@@ -355,7 +360,7 @@ export function CheckboxConfirm() {
 
 /* ---- Radio and RadioGroup ---- */
 
-export function RadioPlay(p: any) {
+export function RadioPlay(p: Knobs) {
   const on = state('a')
   return (
     <Stack gap="tight">
@@ -393,7 +398,7 @@ const WINDOWS = [
 
 export function RadioGroupWindow() {
   const when = state<'now' | 'night' | 'weekend'>('now')
-  return <RadioGroup label="Maintenance window" value={when.value} options={WINDOWS as any} onChange={v => (when.value = v)} />
+  return <RadioGroup label="Maintenance window" value={when.value} options={[...WINDOWS]} onChange={v => (when.value = v)} />
 }
 
 const PLANS = [
@@ -412,7 +417,7 @@ export function RadioGroupPlan() {
       <Slider label="Seats" value={seats.value} min={1} max={40} onChange={v => (seats.value = v)} />
       <Row justify="between">
         <Text subtle>Per month</Text>
-        <Text role="heading">€{SEAT[plan.value] * seats.value}</Text>
+        <Text role="heading">€{SEAT[plan.value]! * seats.value}</Text>
       </Row>
     </Stack>
   )
@@ -427,7 +432,7 @@ export function RadioGroupPlain() {
 const LATENCY = { 'eu-west': 18, 'us-east': 94, 'ap-south': 162 } as Record<string, number>
 const NEAR = Object.keys(LATENCY).map(r => ({
   value: r,
-  label: <Row gap="related">{r}<Badge tone={LATENCY[r] < 50 ? 'positive' : LATENCY[r] < 120 ? 'caution' : 'critical'}>{LATENCY[r]} ms</Badge></Row>,
+  label: <Row gap="related">{r}<Badge tone={LATENCY[r]! < 50 ? 'positive' : LATENCY[r]! < 120 ? 'caution' : 'critical'}>{LATENCY[r]} ms</Badge></Row>,
   hint: r === 'eu-west' ? 'Closest to you.' : undefined,
 }))
 
@@ -449,7 +454,7 @@ export function RadioGroupForm() {
   const sent = state('')
   const save = (e: Event) => {
     e.preventDefault()
-    sent.value = `digest=${new FormData(e.currentTarget as HTMLFormElement).get('digest')}`
+    sent.value = `digest=${(new FormData(e.currentTarget as HTMLFormElement).get('digest') as string | null) ?? ''}`
   }
   return (
     <Stack as="form" gap="group" onSubmit={save}>
@@ -465,14 +470,14 @@ export function RadioGroupForm() {
 
 /* ---- Switch ---- */
 
-export function SwitchPlay(p: any) {
+export function SwitchPlay(p: Knobs) {
   const on = state(untrack(() => !!p.checked))
-  return <Switch {...p} hint={p.hint || undefined} checked={on.value} onChange={e => (on.value = e.currentTarget.checked)}>{p.children}</Switch>
+  return <Switch {...p} hint={p.hint || undefined} checked={on.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (on.value = e.currentTarget.checked)}>{p.children}</Switch>
 }
 
 export function SwitchBasic() {
   const on = state(true)
-  return <Switch checked={on.value} onChange={e => (on.value = e.currentTarget.checked)}>Preview deploys</Switch>
+  return <Switch checked={on.value} onChange={(e: Event & { currentTarget: HTMLInputElement }) => (on.value = e.currentTarget.checked)}>Preview deploys</Switch>
 }
 
 export const SwitchSizes = () => (
@@ -508,9 +513,9 @@ export function SwitchSettings() {
   const say = (title: string, on: boolean) => toast.show({ title: `${title} ${on ? 'on' : 'off'}` })
   return (
     <Stack gap="group" divided>
-      <Switch checked={previews.value} hint="Every pull request gets its own address." onChange={e => say('Preview deploys', (previews.value = e.currentTarget.checked))}>Preview deploys</Switch>
-      <Switch checked={analytics.value} hint="Adds about 1 KB to each page." onChange={e => say('Web analytics', (analytics.value = e.currentTarget.checked))}>Web analytics</Switch>
-      <Switch checked={paused.value} hint="Takes the project offline until you switch it back." onChange={e => say('Pause', (paused.value = e.currentTarget.checked))}>Pause project</Switch>
+      <Switch checked={previews.value} hint="Every pull request gets its own address." onChange={(e: Event & { currentTarget: HTMLInputElement }) => say('Preview deploys', (previews.value = e.currentTarget.checked))}>Preview deploys</Switch>
+      <Switch checked={analytics.value} hint="Adds about 1 KB to each page." onChange={(e: Event & { currentTarget: HTMLInputElement }) => say('Web analytics', (analytics.value = e.currentTarget.checked))}>Web analytics</Switch>
+      <Switch checked={paused.value} hint="Takes the project offline until you switch it back." onChange={(e: Event & { currentTarget: HTMLInputElement }) => say('Pause', (paused.value = e.currentTarget.checked))}>Pause project</Switch>
       <Toaster />
     </Stack>
   )
@@ -518,9 +523,9 @@ export function SwitchSettings() {
 
 /* ---- Slider ---- */
 
-export function SliderPlay(p: any) {
+export function SliderPlay(p: Knobs) {
   const v = state(4)
-  return <Slider {...p} value={v.value} onChange={next => (v.value = next)} />
+  return <Slider {...p} value={v.value} onChange={(next: number) => (v.value = next)} />
 }
 
 const gigabytes = (v: number) => `${v} GB`
@@ -566,10 +571,10 @@ export function SliderAutoscale() {
 /* ---- Segmented ---- */
 
 const PERIODS = [{ value: 'day', label: 'Day' }, { value: 'week', label: 'Week' }, { value: 'month', label: 'Month' }]
-const VIEWS = [{ value: 'list', label: 'List', icon: 'list' }, { value: 'grid', label: 'Grid', icon: 'grid' }] as any[]
+const VIEWS: SegmentedOption<'list' | 'grid'>[] = [{ value: 'list', label: 'List', icon: 'list' }, { value: 'grid', label: 'Grid', icon: 'grid' }]
 const LOGS = [{ value: 'all', label: 'All' }, { value: 'info', label: 'Info' }, { value: 'trace', label: 'Trace', disabled: true }]
 
-export function SegmentedPlay(p: any) {
+export function SegmentedPlay(p: Knobs) {
   const v = state('week')
   return <Segmented {...p} value={v.value} options={PERIODS} onChange={next => (v.value = next)} />
 }
@@ -621,7 +626,7 @@ export function SegmentedDeploys() {
 
 /* ---- Field ---- */
 
-export const FieldPlay = (p: any) => <Input {...p} hint={p.hint || undefined} error={p.error || undefined} icon={p.icon || undefined} prefix={p.prefix || undefined} suffix={p.suffix || undefined} />
+export const FieldPlay = (p: Knobs) => <Input {...p} hint={p.hint || undefined} error={p.error || undefined} icon={p.icon || undefined} prefix={p.prefix || undefined} suffix={p.suffix || undefined} />
 
 export const FieldAnatomy = () => (
   <Stack gap="group">
@@ -668,7 +673,7 @@ export const FieldForm = () => (
 
 /* ---- CompactSelect ---- */
 
-export function CompactSelectPlay(p: any) {
+export function CompactSelectPlay(p: Knobs) {
   return <CompactSelect options={REGION_OPTIONS} {...p} placeholder={p.placeholder || undefined} />
 }
 

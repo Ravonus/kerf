@@ -2,8 +2,8 @@
 // query.shape and last-seen shapes (research 31): the same app code on the fake transport. A skeleton for new args
 // takes the query's last value, masked; with nothing seen it comes from the `output` schema and a declared `shape`.
 // weft-allow T004, T005: fake timers drive the Boundary's timing; the skeleton's structure is the behaviour under test
-import { Boundary } from 'weft'
-import { flush, net, render } from 'weft/test'
+import { Boundary } from '@weft-js/core'
+import { flush, net, render } from '@weft-js/core/test'
 import { z } from 'zod'
 import { cache, query, runtime } from '../src/data'
 import { schemaTree, shapeTree } from '../src/shape.mjs'
@@ -66,7 +66,7 @@ test('the same args hold their value: no skeleton at all', async () => {
   expect(bars()).toEqual([])
 })
 
-test('q.shape(input), and a declared example', async () => {
+test('q.shape(input), and a declared example', () => {
   expect(list.shape({ limit: 1 })).toEqual([{ id: 0, title: 'nnnnn nnnn' }])
   expect(declared.shape()).toEqual([{ title: 'Release notes for 0.4' }, { title: 'Two' }])
   expect(cache.get(declared)).toBeUndefined()

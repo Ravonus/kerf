@@ -1,5 +1,5 @@
-import { state } from 'weft'
-import { Button, Card, Input, Switch } from '@weft/warp'
+import { state } from '@weft-js/core'
+import { Button, Card, Input, Switch } from '@weft-js/warp'
 
 export default function Billing() {
   const saved = state(false)

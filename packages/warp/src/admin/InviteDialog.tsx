@@ -1,5 +1,5 @@
-import { adminEmail, inviteProblem } from '@weft/warp-core'
-import { state, type State, untrack, watch } from 'weft'
+import { adminEmail, inviteProblem } from '@weft-js/warp-core'
+import { state, type State, untrack, watch } from '@weft-js/core'
 import { Button } from '../Button'
 import { Modal } from '../Modal'
 import { Select } from '../Select'
@@ -7,13 +7,14 @@ import { toast } from '../Toast'
 import { afterFlush, latch } from './atoms'
 import { TagsInput } from './TagsInput'
 import '../styles'
-import '@weft/warp-core/styles/flows/tokens.css'
-import '@weft/warp-core/styles/flows/base.css'
-import '@weft/warp-core/styles/rich/helpers.css'
-import '@weft/warp-core/styles/layout/tokens.css'
-import '@weft/warp-core/styles/layout/row.css'
-import '@weft/warp-core/styles/layout/stack.css'
+import '@weft-js/warp-core/styles/flows/tokens.css'
+import '@weft-js/warp-core/styles/flows/base.css'
+import '@weft-js/warp-core/styles/rich/helpers.css'
+import '@weft-js/warp-core/styles/layout/tokens.css'
+import '@weft-js/warp-core/styles/layout/row.css'
+import '@weft-js/warp-core/styles/layout/stack.css'
 
+/** Props for InviteDialog. */
 export interface InviteDialogProps {
   open: State<boolean>
   roles: { value: string; label: string }[]
@@ -52,9 +53,9 @@ export function InviteDialog({ open, roles, defaultRole, seatsLeft, onSend }: In
     <>
       {armed.value && (
         <Modal open={open} title="Invite people" description="They get an email with a link that works for 7 days." footer={<><Button emphasis="frame" data-close="">Cancel</Button><Button loading={busy.value} onClick={send}>Send invites</Button></>}>
-          <form ref={(n: any) => (root = n)} data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => e.preventDefault()}>
-            <TagsInput label="Email addresses" autofocus hint="Enter or comma adds one. Paste a list to add many." error={error.value} value={emails} valid={adminEmail} onEdit={() => (error.value = '')} onSubmit={send} />
-            <Select label="Role" options={roles} value={role.value} onChange={(e: any) => (role.value = e.currentTarget.value)} />
+          <form ref={n => (root = n)} data-scope="stack" style="padding-block-start:var(--warp-space-related)" novalidate onSubmit={(e: Event) => e.preventDefault()}>
+            <TagsInput label="Email addresses" autofocus hint="Enter or comma adds one. Paste a list to add many." error={error.value} value={emails} valid={adminEmail} onEdit={() => (error.value = '')} onSubmit={() => void send()} />
+            <Select label="Role" options={roles} value={role.value} onChange={(e: Event) => (role.value = (e.currentTarget as HTMLInputElement).value)} />
           </form>
         </Modal>
       )}

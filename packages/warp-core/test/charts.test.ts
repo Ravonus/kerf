@@ -1,5 +1,5 @@
 // The chart math, the scene, and the behaviour on plain DOM: nothing here needs a framework.
-import { bar, chart, labelWindow, line, monotone, niceTicks, patch, quantile, s, sparkScene, squarify, toHTML } from '../src/charts'
+import { type BarConfig, type Form, type Scene, bar, chart, labelWindow, line, monotone, niceTicks, patch, quantile, s, sparkScene, squarify, toHTML } from '../src/charts'
 
 test('niceTicks lands on round steps around the data', () => {
   expect(niceTicks(0, 98, 4)).toEqual([0, 20, 40, 60, 80, 100])
@@ -11,7 +11,7 @@ test('labelWindow keeps both ends and never crowds the last', () => {
   const w = [...labelWindow(12, 5)].sort((a, b) => a - b)
   expect(w[0]).toBe(0)
   expect(w[w.length - 1]).toBe(11)
-  for (let i = 1; i < w.length; i++) expect(w[i] - w[i - 1]).toBeGreaterThanOrEqual(2)
+  for (let i = 1; i < w.length; i++) expect(w[i]! - w[i - 1]!).toBeGreaterThanOrEqual(2)
 })
 
 test('a monotone line never overshoots the data', () => {
@@ -33,7 +33,7 @@ test('toHTML escapes and drops what is off', () => {
   expect(toHTML([s('text', { x: 1.256, hidden: false, 'data-mark': true, 'aria-label': 'a"<b' }, 'x & y')])).toBe('<text x="1.26" data-mark="" aria-label="a&quot;&lt;b">x &amp; y</text>')
 })
 
-function host(body: any[]) {
+function host(body: Scene[]) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.innerHTML = toHTML(body)
   return svg
@@ -65,10 +65,10 @@ test('patch leaves what the running chart wrote', () => {
 
 const data = ['Jan', 'Feb', 'Mar'].map((m, i) => ({ m, a: i + 1, b: 3 - i }))
 const cfg = { title: 'T', data, x: 'm', series: ['a', 'b'] }
-function mount<C>(form: any, c: C) {
+function mount<C>(form: Form<C>, c: C) {
   const ctx = { id: 'c', hidden: new Set<number>(), r: 3 }, p = form.plot(c, 640, ctx)
   const fig = document.body.appendChild(document.createElement('figure'))
-  fig.innerHTML = `<ul data-scope="legend">${form.legend(c).map((_: unknown, i: number) => `<li><button aria-pressed="true" data-si="${i}"></button></li>`).join('')}</ul><div data-part="plot"><div data-part="chart-tip"></div><svg data-part="svg" width="640" height="${p.h}"></svg></div>`
+  fig.innerHTML = `<ul data-scope="legend">${form.legend!(c).map((_: unknown, i: number) => `<li><button aria-pressed="true" data-si="${i}"></button></li>`).join('')}</ul><div data-part="plot"><div data-part="chart-tip"></div><svg data-part="svg" width="640" height="${p.h}"></svg></div>`
   fig.querySelector('svg')!.innerHTML = toHTML(p.body)
   return { fig, action: chart(fig, { form, cfg: c, id: 'c' }) }
 }
@@ -77,9 +77,9 @@ test('the action runs on plain DOM: one tab stop, walk, tooltip, legend', () => 
   const { fig, action } = mount(line, cfg)
   const marks = () => [...fig.querySelectorAll<SVGElement>('[data-mark]')]
   expect(marks().filter(m => m.getAttribute('tabindex') === '0')).toHaveLength(1)
-  marks()[0].focus()
+  marks()[0]!.focus()
   expect(fig.querySelector('[data-part="chart-tip"]')!.textContent).toContain('Jan')
-  marks()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))
+  marks()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))
   expect(document.activeElement!.getAttribute('data-xi')).toBe('2')
   fig.querySelector<HTMLElement>('[data-si="1"]')!.click()
   expect(fig.querySelector('[data-series="1"]')).toBeNull()
@@ -88,7 +88,7 @@ test('the action runs on plain DOM: one tab stop, walk, tooltip, legend', () => 
 })
 
 test('bars stay the same nodes across a layout swap', () => {
-  const { fig, action } = mount(bar, { ...cfg, layout: 'grouped' as const })
+  const { fig, action } = mount<BarConfig>(bar, { ...cfg, layout: 'grouped' })
   const m = fig.querySelector('[data-xi="1"][data-si="1"]')!
   action.update({ form: bar, cfg: { ...cfg, layout: 'stacked' as const }, id: 'c' })
   expect(fig.querySelector('[data-xi="1"][data-si="1"]')).toBe(m)
@@ -97,6 +97,6 @@ test('bars stay the same nodes across a layout swap', () => {
 })
 
 test('a sparkline ends on its last value', () => {
-  const [, , dot] = sparkScene([1, 2, 3], 100) as any[]
-  expect(dot.a.cx).toBe('96.0')
+  const [, , dot] = sparkScene([1, 2, 3], 100)
+  expect(dot!.a.cx).toBe('96.0')
 })

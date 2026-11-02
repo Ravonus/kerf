@@ -45,11 +45,11 @@ test('C002: dev and tests check the value against `output`; production doesn\'t'
 test('Q012: the database or auth in the client graph stops the build; on the server it passes through', () => {
   const plugin = weftStart({ root: import.meta.dirname }).find?.(p => p.resolveId?.handler) ?? weftStart({ root: import.meta.dirname })
   const { handler, filter } = plugin.resolveId
-  for (const id of ['@weft/start/db', '@weft/start/db/sqlite', '@weft/start/db/postgres', '@weft/start/auth']) expect(filter.id.test(id)).toBe(true)
-  expect(filter.id.test('@weft/start/data')).toBe(false)
+  for (const id of ['@weft-js/start/db', '@weft-js/start/db/sqlite', '@weft-js/start/db/postgres', '@weft-js/start/auth']) expect(filter.id.test(id)).toBe(true)
+  expect(filter.id.test('@weft-js/start/data')).toBe(false)
   const ctx = consumer => ({ environment: { config: { consumer } }, error(m) { throw new Error(m) } })
-  expect(() => handler.call(ctx('client'), '@weft/start/db/sqlite', `${import.meta.dirname}/page.tsx`)).toThrow(/^Q012: .*page\.tsx/)
-  expect(handler.call(ctx('server'), '@weft/start/auth', 'x')).toBeUndefined()
+  expect(() => handler.call(ctx('client'), '@weft-js/start/db/sqlite', `${import.meta.dirname}/page.tsx`)).toThrow(/^Q012: .*page\.tsx/)
+  expect(handler.call(ctx('server'), '@weft-js/start/auth', 'x')).toBeUndefined()
 })
 
 test('a stream is in the contract, with its message; R005: an unbounded input warns', () => {
@@ -78,9 +78,9 @@ test('R002: `durableObjectBus` outside `cloudflare_durable`', () => {
 })
 
 test('R001 at build, with the line; a client stub keeps `initial` and drops the rest', () => {
-  const code = `import { channel, sharedState } from '@weft/start'\nexport const room = channel({ client: {} })\n`
+  const code = `import { channel, sharedState } from '@weft-js/start'\nexport const room = channel({ client: {} })\n`
   expect(() => withIds(code, 'chat.ts', 'src/server/chat.ts')).toThrow(/R001: src\/server\/chat.ts:2 `room`/)
-  const ok = `import { channel, sharedState } from '@weft/start'\nimport { db } from './db'\nexport const room = channel({ authorize: () => db.ok(), on: { say: () => db.write() } })\nexport const n = sharedState('n', { key: k, value: v, initial: { a: 1 }, authorize: { read, write } })\n`
+  const ok = `import { channel, sharedState } from '@weft-js/start'\nimport { db } from './db'\nexport const room = channel({ authorize: () => db.ok(), on: { say: () => db.write() } })\nexport const n = sharedState('n', { key: k, value: v, initial: { a: 1 }, authorize: { read, write } })\n`
   expect(withIds(ok, 'chat.ts', 'src/server/chat.ts')).toContain('$id: "room.')
   const stub = clientStubs(ok, 'chat.ts', 'src/server/chat.ts')
   expect(stub).toMatch(/channel\(\{ \$id: "room\.\w+", \$stub: 1 \}\)/)
@@ -98,7 +98,7 @@ test('R002: the memory bus on a multi-instance preset, only in an app that uses 
 })
 
 test('a stream gets a client stub, and a topic stays on the server', () => {
-  const source = `import { stream, topic } from '@weft/start'\nimport { db } from '../db'\nexport const t = topic('t', { message: db })\nexport const s = stream({ async *run() { yield* t.subscribe('k') } })\n`
+  const source = `import { stream, topic } from '@weft-js/start'\nimport { db } from '../db'\nexport const t = topic('t', { message: db })\nexport const s = stream({ async *run() { yield* t.subscribe('k') } })\n`
   const out = clientStubs(source, 'x.ts', 'src/server/x.ts')
   expect(out).toContain('stream({ $id: "s.')
   expect(out).not.toContain('topic(')
@@ -106,7 +106,7 @@ test('a stream gets a client stub, and a topic stays on the server', () => {
 })
 
 test('types keep no value: a schema read only by `z.infer` stays out of the stub, and zod with it', () => {
-  const source = `import { mutation } from '@weft/start'
+  const source = `import { mutation } from '@weft-js/start'
 import { z } from 'zod'
 const input = z.object({ title: z.string() })
 export type Input = z.infer<typeof input>
@@ -121,7 +121,7 @@ export const save = mutation({ input, run: ({ input }) => input })
 })
 
 test('a stub keeps what `optimistic` reads, not what its parameters, property names or annotations spell', () => {
-  const source = `import { mutation } from '@weft/start'
+  const source = `import { mutation } from '@weft-js/start'
 import { z } from 'zod'
 import { pick } from './pick'
 const input = z.object({ title: z.string() })
@@ -140,7 +140,7 @@ export const save = mutation({ input, optimistic: ({ input }, cache) => cache.ti
 })
 
 test('a value read inside a type-free position still keeps its import', () => {
-  const source = `import { mutation } from '@weft/start'
+  const source = `import { mutation } from '@weft-js/start'
 import { z } from 'zod'
 import Icon from './icon'
 const input = z.object({ title: z.string() })

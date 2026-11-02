@@ -1,19 +1,20 @@
-import { navigate } from '@weft/start'
-import type { SearchHit } from '@weft/warp-core'
-import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft/icons'
-import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource } from '@weft/warp'
-import { onMount } from 'weft'
+import { navigate } from '@weft-js/start'
+import type { SearchHit } from '@weft-js/warp-core'
+import { BookIcon, BoxIcon, ClipboardIcon, FileTextIcon, GridIcon, HashIcon, MoonIcon, PlayIcon, SlidersIcon, StarIcon, SunIcon } from '@weft-js/warp-icons'
+import { CommandPalette, setDial, type Command, type CommandMode, type CommandSource, type IconRef } from '@weft-js/warp'
+import { onMount } from '@weft-js/core'
 import { body, loadTitles, titles } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 
-const go = (href: string) => () => navigate(href)
+const go = (href: string) => () => void navigate(href)
 const ORDER = ['Recent', 'Go to', 'API', 'Guides', 'Components', 'Diagnostics', 'Examples', 'Icons', 'In the text', 'Commands']
-const ICON: Record<string, any> = { API: BoxIcon, Guides: BookIcon, Components: GridIcon, Diagnostics: HashIcon, Examples: PlayIcon, Icons: StarIcon, 'In the text': FileTextIcon }
+const ICON: Record<string, IconRef> = { API: BoxIcon, Guides: BookIcon, Components: GridIcon, Diagnostics: HashIcon, Examples: PlayIcon, Icons: StarIcon, 'In the text': FileTextIcon }
 const PER_GROUP = 4
 const RECENT = 'weft:recent'
 
 const PAGES: Command[] = [
-  { label: 'Docs', group: 'Go to', icon: BookIcon, href: '/docs', run: go('/docs') },
+  { label: 'Learn', group: 'Go to', icon: BookIcon, href: '/learn', run: go('/learn') },
+  { label: 'Reference', group: 'Go to', icon: BoxIcon, href: '/reference', run: go('/reference') },
   { label: 'Examples', group: 'Go to', icon: PlayIcon, href: '/examples', run: go('/examples') },
   { label: 'Components', group: 'Go to', icon: GridIcon, href: '/components', run: go('/components') },
   { label: 'Icons', group: 'Go to', icon: StarIcon, href: '/icons', run: go('/icons') },
@@ -27,7 +28,7 @@ const COMMANDS: Command[] = [
   { label: 'Expression: vivid', group: 'Commands', icon: SlidersIcon, run: () => setDial('expression', 'vivid', { persist: true }) },
   {
     label: 'Copy this page as Markdown', group: 'Commands', icon: ClipboardIcon,
-    run: () => { if (location.pathname.startsWith('/docs/')) void fetch(`${location.pathname}.md`).then(r => r.text()).then(t => navigator.clipboard?.writeText(t)) },
+    run: () => { if (/^\/(learn|reference)\/./.test(location.pathname)) void fetch(`${location.pathname}.md`).then(r => r.text()).then(t => navigator.clipboard?.writeText(t)) },
   },
   ...PAGES.map(p => ({ ...p, label: `Go to ${p.label}`, group: 'Commands' })),
 ]
@@ -48,7 +49,11 @@ function remember(c: Command) {
   } catch {}
 }
 
-const row = (h: SearchHit): Command => ({ label: h.title, group: h.group, icon: ICON[h.group], hint: h.fuzzy ? `Closest match${h.parent ? `, ${h.parent}` : ''}` : h.parent ?? h.text, href: h.url, run: go(h.url), id: h.url })
+const row = (h: SearchHit): Command => {
+  const icon = ICON[h.group]
+  const hint = h.fuzzy ? `Closest match${h.parent ? `, ${h.parent}` : ''}` : h.parent ?? h.text
+  return { label: h.title, group: h.group, ...(icon && { icon }), ...(hint !== undefined && { hint }), href: h.url, run: go(h.url), id: h.url }
+}
 
 /** At most four to a group, and a row that opens the rest in place. */
 function capped(hits: SearchHit[]) {
@@ -56,7 +61,7 @@ function capped(hits: SearchHit[]) {
   for (const h of hits) by.has(h.group) ? by.get(h.group)!.push(h) : by.set(h.group, [h])
   return [...by.values()].flatMap(list => {
     const rows = list.slice(0, PER_GROUP).map(row)
-    if (list.length > PER_GROUP) rows.push({ label: `Show all ${list.length} in ${list[0].group}`, group: list[0].group, children: () => list.map(row) })
+    if (list.length > PER_GROUP) rows.push({ label: `Show all ${list.length} in ${list[0]!.group}`, group: list[0]!.group, children: () => list.map(row) })
     return rows
   })
 }

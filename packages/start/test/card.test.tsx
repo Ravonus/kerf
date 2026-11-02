@@ -3,9 +3,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import { renderToString } from 'weft/ssr'
+import { renderToString } from '@weft-js/core/ssr'
 import { DefaultCard } from '../src/og/DefaultCard'
-import { renderCard } from '../src/og/index.mjs'
+import { createCardRenderer, renderCard } from '../src/og/index.mjs'
+import { native, wasmBackend } from '../src/og/native.mjs'
 import { cardTitleSize } from '../src/derive.mjs'
 
 const require = createRequire(import.meta.url)
@@ -21,10 +22,10 @@ const cases = {
 }
 const out = process.env.CARD_OUT
 
-async function draw(name: string, props: any) {
-  const found: any[] = []
+async function draw(name: string, props: Parameters<typeof DefaultCard>[0]) {
+  const found: unknown[] = []
   const html = renderToString(() => <DefaultCard {...props} />, { hydratable: false })
-  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: any) => found.push(d) })
+  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: unknown) => found.push(d) })
   if (out) { mkdirSync(out, { recursive: true }); writeFileSync(join(out, `${name}.png`), png) }
   return { png, html, found }
 }
@@ -43,6 +44,13 @@ test('the same input draws the same bytes', async () => {
   const a = await draw('same-a', { ...cases.short, site })
   const b = await draw('same-b', { ...cases.short, site })
   expect(Buffer.compare(a.png, b.png)).toBe(0)
+})
+
+test('the wasm renderer, which a Windows build uses, draws the same bytes as the addon', async () => {
+  const html = renderToString(() => <DefaultCard title="Same bytes" description="" site={site} />)
+  const [addon, wasm] = await Promise.all([native(), wasmBackend(join(import.meta.dirname, '..'))])
+  const paint = async (backend: unknown) => (await (await createCardRenderer({ backend: backend as never, fonts: fonts as never })).render(html, { width: 1200, height: 630 })).body
+  expect(Buffer.from(await paint(wasm)).equals(Buffer.from(await paint(addon)))).toBe(true)
 })
 
 test('the template is off the title: the card shows the name on its own', async () => {

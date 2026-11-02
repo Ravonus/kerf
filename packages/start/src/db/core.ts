@@ -1,11 +1,14 @@
 // What every data layer shares (research 28 §2, 34 §4): the gate that applies the server's migrations before a database's
 // first statement, and the touched-tables record behind Q011. A provider is any client with a `$weft` handle made through
-// `register`. No driver imports, so `@weft/start/db/sqlite` doesn't load Postgres, or the other way round.
+// `register`. No driver imports, so `@weft-js/start/db/sqlite` doesn't load Postgres, or the other way round.
 
 import { currentScope, runtime, StartError } from '../data'
+import type { Probe, Sink } from '../changes'
 
+/** One migration file: its name and the SQL. */
 export interface Migration { tag: string; sql: string }
 
+/** What every Weft database carries on `$weft`, whichever driver is under it. */
 export interface DbHandle {
   dialect: 'sqlite' | 'postgresql' | 'mysql'
   /** Apply what's new in `list`, in order. */
@@ -13,7 +16,7 @@ export interface DbHandle {
   /** Tables Q011 doesn't report (Better Auth's). */
   exempt: Set<string>
   /** `dbChanges`'s source: loaded on the first use, so a database with no live tables loads none of it. */
-  changes?(tables: string[], options: { listenUrl?: string; interval?: number }): Promise<{ probe(): Promise<any>; start(sink: any, how: any): Promise<() => unknown>; settle?(tags: string[]): Promise<void> }>
+  changes?(tables: string[], options: { listenUrl?: string; interval?: number }): Promise<{ probe(): Promise<Probe>; start(sink: Sink, how: Probe): Promise<() => unknown>; settle?(tags: string[]): Promise<void> }>
 }
 
 /** Attach weft's handle to a client. */
@@ -53,7 +56,7 @@ export function touch(handle: DbHandle, sql: string) {
   if (!t) return
   const target = /^\s*(?:insert\s+into|update|delete\s+from)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/i.exec(sql)?.[1]
   if (target && !handle.exempt.has(target)) t.write.add(target)
-  for (const m of sql.matchAll(/\b(?:from|join)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/gi)) if (m[1] !== target && !handle.exempt.has(m[1])) t.read.add(m[1])
+  for (const m of sql.matchAll(/\b(?:from|join)\s+(?:["`]?\w+["`]?\.)?["`]?([\w$]+)/gi)) if (m[1] !== target && !handle.exempt.has(m[1]!)) t.read.add(m[1]!)
 }
 
 /** A migration file's statements (drizzle-kit separates them with this marker). */

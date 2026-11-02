@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
-import { state } from 'weft'
+import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { state } from '@weft-js/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './shuttle.tsx?raw'
 
@@ -12,7 +12,7 @@ const colours = inks({ warp: '--warp-color-border-strong', soft: '--warp-color-a
 const band = (r: number) => { const k = (r % 64) / 64; return k < 0.44 ? 0 : k < 0.5 ? 2 : k < 0.72 ? 1 : k < 0.75 ? 2 : k < 0.94 ? 0 : 1 }
 
 export default function Shuttle({ live = true }: ArtProps) {
-  let cloth: HTMLCanvasElement | undefined, g: CanvasRenderingContext2D, row = 0, across = 0, w = 0, h = 0, dpr = 1, top = 0
+  let cloth: HTMLCanvasElement | undefined, g: CanvasRenderingContext2D, row = 0, across = 0, w = 0, h = 0, dpr = 1
   const hurry = state(false)
   const rows = () => Math.floor((h - 8) / ROW)
 

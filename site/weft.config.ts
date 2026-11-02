@@ -1,7 +1,7 @@
-import { defineConfig } from 'weft/config'
-import { dialScript, warp } from '@weft/warp/plugin'
-import { icons } from '@weft/icons/plugin'
-import { text } from '@weft/plugin-text'
+import { defineConfig } from '@weft-js/core/config'
+import { dialScript, warp } from '@weft-js/warp/plugin'
+import { icons } from '@weft-js/warp-icons/plugin'
+import { text } from '@weft-js/text'
 
 const FILES = 'node_modules/@fontsource'
 // The site's expression, vivid unless the reader chose another stop (src/lib/dial.ts says the same for the dials'
@@ -27,7 +27,7 @@ export default defineConfig({
   site: {
     name: 'weft',
     headers: { '/': ISOLATED, '/arena/**': ISOLATED },
-    url: process.env.WEFT_SITE_URL,
+    ...(process.env.WEFT_SITE_URL === undefined ? {} : { url: process.env.WEFT_SITE_URL }),
     title: '%s · weft',
     description: 'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',

@@ -1,4 +1,4 @@
-import type { RouteProps } from '@weft/start'
+import type { RouteProps } from '@weft-js/start'
 import { Counter, Fold, Label, Reveal, Stocked, Twice } from '../components/islands'
 
 export const load = async () => ({ start: 5, note: 'From the server', items: [{ id: 'a', n: 1 }, { id: 'b', n: 2 }] })

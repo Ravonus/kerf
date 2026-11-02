@@ -43,7 +43,7 @@ const FRAMEWORK = {
   react: 'React 19 + TypeScript (function components and hooks)',
   solid: 'SolidJS 1.9 + TypeScript (`solid-js`)',
   weft: 'weft + TypeScript (`weft`)',
-  warp: 'weft + warp (@weft/warp UI kit) + TypeScript',
+  warp: 'weft + warp (@weft-js/warp UI kit) + TypeScript',
 }
 // Framework-specific setup notes appended to ticket 1's intro; the tickets themselves are identical across frameworks.
 const SETUP = {
@@ -179,7 +179,7 @@ async function measure() {
     cpSync(join(appDir, 'starter', fw), dir, { recursive: true, filter: f => !f.includes('/src') && !f.includes('/tests') })
     cpSync(join(snap, 'src'), join(dir, 'src'), { recursive: true })
     symlinkSync(join(root, 'frameworks', fw, 'node_modules'), join(dir, 'node_modules'))
-    let gz = null
+    let gz
     try {
       await exec('npx', ['vite', 'build', '--logLevel', 'silent'], { cwd: dir, timeout: 300_000 })
       const assets = join(dir, 'dist', 'assets')

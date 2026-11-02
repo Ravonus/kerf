@@ -1,5 +1,6 @@
-import type { PluginInstance } from 'weft/plugin'
+import type { PluginInstance } from '@weft-js/core/plugin'
 
+/** Options of `mediaFfmpeg()`: which ffmpeg to run, and how far to trust it. */
 export interface MediaFfmpegOptions {
   /** 'system' (the default) runs `ffmpeg` and `ffprobe` from PATH; otherwise the path of ffmpeg. */
   binary?: string
@@ -11,5 +12,7 @@ export interface MediaFfmpegOptions {
   timeout?: number
 }
 
+/** The media.encode@1 keys this plugin provides, one per codec. */
 export declare const KEYS: string[]
+/** The plugin for `weft.config.ts`: encodes video and audio with ffmpeg for `@weft-js/plugin-media`. */
 export declare function mediaFfmpeg(options?: MediaFfmpegOptions): PluginInstance<MediaFfmpegOptions>

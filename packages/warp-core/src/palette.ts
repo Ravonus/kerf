@@ -30,7 +30,7 @@ export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; s
   // initials: each letter of the query starts a word, in order
   const initials: number[] = []
   for (let i = 0; i < t.length && initials.length < q.length; i++) if (starts(t, i) && t[i] === q[initials.length]) initials.push(i)
-  if (initials.length === q.length && !/\s/.test(q)) return { tier: 2, score: 50 - initials[0], hits: initials }
+  if (initials.length === q.length && !/\s/.test(q)) return { tier: 2, score: 50 - initials[0]!, hits: initials }
   // each word of the query starts a word of the text, in order
   const words = q.split(/\s+/).filter(Boolean)
   if (words.length > 1) {
@@ -43,7 +43,7 @@ export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; s
       hits.push(...Array.from({ length: w.length }, (_, k) => at + k))
       from = at + w.length
     }
-    if (hits.length) return { tier: 2, score: 50 - hits[0], hits }
+    if (hits.length) return { tier: 2, score: 50 - hits[0]!, hits }
   }
   const inside = t.indexOf(q)
   if (inside >= 0) return { tier: 1, score: 20 - inside, hits: run(inside) }
@@ -51,7 +51,9 @@ export function matchStrength(q: string, text: string): { tier: 0 | 1 | 2 | 3; s
   return loose && { tier: 0, ...loose }
 }
 
-export interface Rankable { label: string; group?: string; keywords?: string[] }
+/** What the command palette ranks by. */
+export interface Rankable { label: string; group?: string | undefined; keywords?: string[] }
+/** An item that matched, with the letters that hit. */
 export interface Ranked<C> { item: C; hits: number[] }
 
 /**
@@ -88,13 +90,13 @@ export function marked(label: string, hits: readonly number[]) {
   for (let i = 0; i < label.length; i++) {
     const hit = on.has(i)
     if (runs.at(-1)?.hit === hit) runs.at(-1)!.text += label[i]
-    else runs.push({ text: label[i], hit })
+    else runs.push({ text: label[i]!, hit })
   }
   return runs
 }
 
 /** ⌘K or Ctrl+K anywhere in the document (05 §3). */
-export function paletteHotkey(el: HTMLElement, opts: { key: string; slash?: boolean; onPress(): void }) {
+export function paletteHotkey(el: HTMLElement, opts: { key: string; slash?: boolean | undefined; onPress(): void }) {
   let o = opts
   const doc = el.ownerDocument
   const onKey = (e: KeyboardEvent) => {

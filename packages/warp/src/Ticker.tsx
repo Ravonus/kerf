@@ -1,12 +1,13 @@
-import { derived } from 'weft'
+import { derived } from '@weft-js/core'
 import './styles'
-import '@weft/warp-core/styles/components/ticker.css'
+import '@weft-js/warp-core/styles/components/ticker.css'
 
+/** Props for Ticker. */
 export interface TickerProps {
   value: number
   /** Passed to Intl.NumberFormat: `{ style: 'currency', currency: 'USD' }`. */
-  format?: Intl.NumberFormatOptions
-  locale?: string
+  format?: Intl.NumberFormatOptions | undefined
+  locale?: string | undefined
 }
 
 /**
@@ -18,6 +19,7 @@ export function Ticker({ value, format, locale }: TickerProps) {
   const fmt = derived(() => new Intl.NumberFormat(locale, format)) // apart from the text: a tick mustn't rebuild it
   const text = derived(() => fmt.value.format(value))
   const parts = derived(() => {
+    // oxlint-disable-next-line typescript/no-misused-spread -- code points are what it wants: a glyph per step, and Intl.Segmenter would cost a hot loop
     const s = [...text.value]
     return s.map((c, i) => ({ c, at: s.length - i }))
   })

@@ -1,9 +1,9 @@
-// weft/test itself: user actions and the clock end in flush(), and a test that never asserts fails (T001).
+// @weft-js/core/test itself: user actions and the clock end in flush(), and a test that never asserts fails (T001).
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { resource, state } from 'weft'
-import { interval } from 'weft/browser'
-import { clock, render, screen, user } from 'weft/test'
+import { resource, state } from '@weft-js/core'
+import { interval } from '@weft-js/core/browser'
+import { clock, render, screen, user } from '@weft-js/core/test'
 
 function Counter() {
   const n = state(0)
@@ -37,10 +37,10 @@ test('screen has role, label and text queries only', () => {
 
 test('clock drives timers and the resources that wait on them', async () => {
   clock.install()
-  const load = () => new Promise<string>(ok => setTimeout(() => ok('Ada'), 500))
+  const load = () => new Promise<string>(ok => { setTimeout(() => ok('Ada'), 500) })
   function Profile() {
-    const user = resource(load)
-    return <p>{user.pending ? 'loading' : user.value}</p>
+    const person = resource(load)
+    return <p>{person.pending ? 'loading' : person.value}</p>
   }
   render(Profile)
   await clock.advance(499)
@@ -74,8 +74,9 @@ test('a test that never asserts fails with T001; asserting and test.fails tests 
   let out = ''
   try {
     execFileSync(process.execPath, ['node_modules/vitest/vitest.mjs', 'run', '--config', 'test/fixtures/runtime/vitest.config.ts'], { cwd, encoding: 'utf8', stdio: 'pipe' })
-  } catch (e: any) {
-    out = `${e.stdout}${e.stderr}`
+  } catch (e) {
+    const failed = e as { stdout: string; stderr: string }
+    out = `${failed.stdout}${failed.stderr}`
   }
   expect(out).toContain('T001: "never asserts" made no assertion')
   expect(out).toMatch(/1 failed \| 1 passed \| 1 expected fail/)

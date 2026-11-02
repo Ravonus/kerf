@@ -2,8 +2,8 @@
 //! over the program, after `analyze`.
 //!
 //! - W050: a raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no
-//!   matching cleanup. Listeners and intervals in an owned place get an edit to `on`/`interval` (weft/browser).
-//! - W051: a weft/browser value, listener or interval created where there is no owner: module scope, a timer, a
+//!   matching cleanup. Listeners and intervals in an owned place get an edit to `on`/`interval` (@weft-js/core/browser).
+//! - W051: a @weft-js/core/browser value, listener or interval created where there is no owner: module scope, a timer, a
 //!   promise callback, an event handler, or after `await`.
 //! - W052: `watch(() => tick.value, m => { list.value = [...list.value, m] })`: a stream folded by hand into a
 //!   component's `state`, which is lost when the component unmounts (the v3 bug). A stream is a call of something
@@ -14,7 +14,12 @@
 
 use std::collections::{HashMap, HashSet};
 
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrowFunctionBody, ArrowFunctionExpression, AssignmentOperator, AssignmentTarget, AwaitExpression,
+    BindingIdentifier, BindingPattern, CallExpression, Expression, Function, IdentifierReference,
+    ImportDeclarationSpecifier, JSXAttribute, JSXAttributeName, JSXAttributeValue, NewExpression, ObjectPropertyKind,
+    Program, Statement, VariableDeclarator,
+};
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::{Scoping, SymbolId};
 use oxc_span::{GetSpan, Span};
@@ -22,19 +27,19 @@ use oxc_syntax::scope::ScopeFlags;
 
 use crate::diag::{Diagnostic, Edit, Fix, Severity};
 
-pub const MODULE: &str = "weft/browser";
+pub const MODULE: &str = "@weft-js/core/browser";
 const VALUES: [&str; 4] = ["online", "visible", "lifecycle", "media"];
 
 /// Whether the file is server-rendered, for W054: `Some(true)` for SSR and hydratable output, `None` when only
 /// checking (it may be), `Some(false)` for a client-only build.
 pub type Ssr = Option<bool>;
 
-/// Local bindings of weft/browser's values (`online`, `visible`, `lifecycle`, `media`): their results are boxes.
+/// Local bindings of @weft-js/core/browser's values (`online`, `visible`, `lifecycle`, `media`): their results are boxes.
 pub fn value_imports(program: &Program<'_>) -> HashSet<SymbolId> {
     imports(program).into_iter().filter(|(_, (name, _))| VALUES.contains(&name.as_str())).map(|(s, _)| s).collect()
 }
 
-/// weft/browser import bindings: symbol → (imported name, local name).
+/// @weft-js/core/browser import bindings: symbol → (imported name, local name).
 fn imports(program: &Program<'_>) -> HashMap<SymbolId, (String, String)> {
     let mut out = HashMap::new();
     for stmt in &program.body {
@@ -79,8 +84,11 @@ pub fn check(program: &Program<'_>, scoping: &Scoping, source: &str, ssr: Ssr) -
                 }
             }
             if d.source.value == MODULE && d.import_kind.is_value() {
-                let last =
-                    d.specifiers.iter().flatten().filter(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_))).last();
+                let last = d
+                    .specifiers
+                    .iter()
+                    .flatten()
+                    .rfind(|s| matches!(s, ImportDeclarationSpecifier::ImportSpecifier(_)));
                 if let Some(s) = last {
                     browser_import = Some(s.span().end);
                 }
@@ -154,9 +162,9 @@ struct Checker<'s> {
     imports: HashMap<SymbolId, (String, String)>,
     bound: HashMap<String, u32>,
     last_import: Option<u32>,
-    /// The end of the last specifier of a weft/browser import, where a fix adds a name.
+    /// The end of the last specifier of a @weft-js/core/browser import, where a fix adds a name.
     browser_import: Option<u32>,
-    /// Symbols holding a live value: a weft/browser value, or `query.live(…)`.
+    /// Symbols holding a live value: a @weft-js/core/browser value, or `query.live(…)`.
     live: HashSet<SymbolId>,
     /// Bindings imported from a server module: calling one in a component reads a query or a stream.
     server_imports: HashSet<SymbolId>,
@@ -191,7 +199,7 @@ impl<'s> Checker<'s> {
         &self.source[span.start as usize..span.end as usize]
     }
 
-    /// The weft/browser export this callee is, if it is one.
+    /// The @weft-js/core/browser export this callee is, if it is one.
     fn browser_fn(&self, callee: &Expression<'_>) -> Option<&str> {
         let Expression::Identifier(id) = callee.without_parentheses() else {
             return None;
@@ -206,15 +214,14 @@ impl<'s> Checker<'s> {
             if f.awaited {
                 return Role::Unowned("after `await`");
             }
-            match f.role {
-                Role::Inherit => continue,
-                r => return r,
+            if f.role != Role::Inherit {
+                return f.role;
             }
         }
         Role::Unowned("at module scope")
     }
 
-    /// The local name to call weft/browser's `name` by, and the import edit it needs; `None` when the name is taken.
+    /// The local name to call @weft-js/core/browser's `name` by, and the import edit it needs; `None` when the name is taken.
     fn browser_name(&self, name: &str) -> Option<(String, Option<Edit>)> {
         if let Some((_, local)) = self.imports.values().find(|(n, _)| n == name) {
             return Some((local.clone(), None));
@@ -230,7 +237,7 @@ impl<'s> Checker<'s> {
         Some((name.to_string(), Some(edit)))
     }
 
-    fn fix(&self, name: &str, call: Span, args: String, description: String) -> Option<Fix> {
+    fn fix(&self, name: &str, call: Span, args: &str, description: String) -> Option<Fix> {
         let (local, import) = self.browser_name(name)?;
         let mut edits = vec![Edit { start: call.start, end: call.end, text: format!("{local}({args})") }];
         edits.extend(import);
@@ -247,7 +254,7 @@ impl<'s> Checker<'s> {
         f(self);
         self.fns.pop();
         if component {
-            let c = self.comps.pop().unwrap();
+            let c = self.comps.pop().expect("pushed above, and `f` leaves the stack as it found it");
             self.finish_component(c);
         } else if let Some(c) = self.comps.last_mut() {
             c.fn_depth -= 1;
@@ -277,7 +284,9 @@ impl<'s> Checker<'s> {
                 format!(
                     "`{target}.addEventListener({ty}, …)` in a component is never removed: it outlives the component and fires after it unmounts."
                 ),
-                format!("Use `on({target}, {ty}, …)` from weft/browser: its owner removes it. Or remove it in `onCleanup`."),
+                format!(
+                    "Use `on({target}, {ty}, …)` from @weft-js/core/browser: its owner removes it. Or remove it in `onCleanup`."
+                ),
             );
             if let Some(f) = fix {
                 d = d.with_fix(f);
@@ -292,7 +301,7 @@ impl<'s> Checker<'s> {
                     Severity::Error,
                     (span.start, span.end),
                     "`setInterval` in a component is never cleared: it keeps running after the component unmounts.",
-                    "Use `interval(ms, fn)` from weft/browser: its owner clears it. Or `clearInterval` in `onCleanup`.",
+                    "Use `interval(ms, fn)` from @weft-js/core/browser: its owner clears it. Or `clearInterval` in `onCleanup`.",
                 );
                 if let Some(f) = fix {
                     d = d.with_fix(f);
@@ -314,6 +323,10 @@ impl<'s> Checker<'s> {
         }
     }
 
+    fn comp(&mut self) -> &mut Comp {
+        self.comps.last_mut().expect("`raw` returns when no component encloses the call")
+    }
+
     /// W050: raw listeners and intervals, recorded on the enclosing component and judged when it ends.
     fn raw(&mut self, call: &CallExpression<'_>) {
         if self.comps.is_empty() {
@@ -328,29 +341,28 @@ impl<'s> Checker<'s> {
             Some(o) => Some(self.text(o.span())),
         };
         let args = &call.arguments;
-        let arg = |i: usize| args.get(i).map(|a| self.text(a.span()));
         let owned = self.ownership() == Role::Owned;
         match name {
             "addEventListener" if args.len() >= 2 => {
                 let target = target.unwrap_or("window").to_string();
-                let ty = arg(0).unwrap().to_string();
+                let ty = self.text(args[0].span()).to_string();
                 let all = Span::new(args[0].span().start, args[args.len() - 1].span().end);
                 let fix = (owned && args.len() <= 3)
                     .then(|| {
                         self.fix(
                             "on",
                             call.span,
-                            format!("{target}, {}", self.text(all)),
+                            &format!("{target}, {}", self.text(all)),
                             format!("Listen with `on({target}, {ty}, …)` (removed with its owner)"),
                         )
                     })
                     .flatten();
-                self.comps.last_mut().unwrap().listens.push((call.span, target, ty, fix));
+                self.comp().listens.push((call.span, target, ty, fix));
             }
             "removeEventListener" if !args.is_empty() => {
                 let target = target.unwrap_or("window").to_string();
-                let ty = arg(0).unwrap().to_string();
-                self.comps.last_mut().unwrap().removes.insert((target, ty));
+                let ty = self.text(args[0].span()).to_string();
+                self.comp().removes.insert((target, ty));
             }
             "setInterval" if object.is_none() || target.is_some_and(|t| GLOBALS.contains(&t)) => {
                 let fix = (owned && args.len() == 2 && !args.iter().any(|a| matches!(a, Argument::SpreadElement(_))))
@@ -358,20 +370,20 @@ impl<'s> Checker<'s> {
                         self.fix(
                             "interval",
                             call.span,
-                            format!("{}, {}", arg(1).unwrap(), arg(0).unwrap()),
+                            &format!("{}, {}", self.text(args[1].span()), self.text(args[0].span())),
                             "Use `interval(ms, fn)` (cleared with its owner)".into(),
                         )
                     })
                     .flatten();
-                self.comps.last_mut().unwrap().intervals.push((call.span, fix));
+                self.comp().intervals.push((call.span, fix));
             }
-            "clearInterval" => self.comps.last_mut().unwrap().clears = true,
-            "close" if object.is_some() => self.comps.last_mut().unwrap().closes = true,
+            "clearInterval" => self.comp().clears = true,
+            "close" if object.is_some() => self.comp().closes = true,
             _ => {}
         }
     }
 
-    /// W051 and W054 on a call of a weft/browser export.
+    /// W051 and W054 on a call of a @weft-js/core/browser export.
     fn browser_call(&mut self, call: &CallExpression<'_>, name: &str) {
         if let Role::Unowned(why) = self.ownership() {
             let what = if VALUES.contains(&name) {
@@ -399,7 +411,12 @@ impl<'s> Checker<'s> {
         let Some(query) = call.arguments.first() else {
             return;
         };
-        let edit = match call.arguments.get(1).and_then(|a| a.as_expression()).map(|e| e.without_parentheses()) {
+        let edit = match call
+            .arguments
+            .get(1)
+            .and_then(|a| a.as_expression())
+            .map(oxc_ast::ast::Expression::without_parentheses)
+        {
             None if call.arguments.len() == 1 => {
                 Edit { start: query.span().end, end: query.span().end, text: ", { ssr: false }".into() }
             }
@@ -420,7 +437,11 @@ impl<'s> Checker<'s> {
         };
         let q = self.text(query.span());
         let severity = if self.ssr == Some(true) { Severity::Error } else { Severity::Warning };
-        let maybe = if self.ssr == Some(true) { "This file is server-rendered" } else { "If this component is server-rendered" };
+        let maybe = if self.ssr == Some(true) {
+            "This file is server-rendered"
+        } else {
+            "If this component is server-rendered"
+        };
         let d = Diagnostic::new(
             self.source,
             "W054",
@@ -479,7 +500,10 @@ impl<'s> Checker<'s> {
         let copies_param = matches!((param.map(|p| &p.pattern), a.right.without_parentheses()),
             (Some(BindingPattern::BindingIdentifier(p)), Expression::Identifier(r)) if p.name == r.name);
         let copies_value = self.text(a.right.span()) == self.text(read.span);
-        if target.property.name != "value" || a.operator != AssignmentOperator::Assign || !(copies_param || copies_value) {
+        if target.property.name != "value"
+            || a.operator != AssignmentOperator::Assign
+            || !(copies_param || copies_value)
+        {
             return;
         }
         let (live, boxed) = (live.name.as_str(), boxed.name.as_str());
@@ -538,22 +562,22 @@ fn single_expression<'b, 'a>(f: &'b Expression<'a>) -> Option<&'b Expression<'a>
     let statements = match f.without_parentheses() {
         Expression::ArrowFunctionExpression(f) => match &f.body {
             ArrowFunctionBody::FunctionBody(body) => &body.statements,
-            body => return body.as_expression().map(|e| e.without_parentheses()),
+            body => return body.as_expression().map(oxc_ast::ast::Expression::without_parentheses),
         },
         Expression::FunctionExpression(f) => &f.body.as_ref()?.statements,
         _ => return None,
     };
     match statements.as_slice() {
         [Statement::ExpressionStatement(s)] => Some(s.expression.without_parentheses()),
-        [Statement::ReturnStatement(r)] => r.argument.as_ref().map(|e| e.without_parentheses()),
+        [Statement::ReturnStatement(r)] => r.argument.as_ref().map(oxc_ast::ast::Expression::without_parentheses),
         _ => None,
     }
 }
 
-impl<'a, 's> Visit<'a> for Checker<'s> {
+impl<'a> Visit<'a> for Checker<'_> {
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
         if let BindingPattern::BindingIdentifier(id) = &it.id
-            && let Some(init) = it.init.as_ref().map(|e| e.without_parentheses())
+            && let Some(init) = it.init.as_ref().map(oxc_ast::ast::Expression::without_parentheses)
         {
             if is_fn(init) {
                 self.pending_name = Some(id.name.to_string());

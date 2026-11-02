@@ -24,7 +24,8 @@ import { stateChecks } from './state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
-import { dbLayer, routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
+import { dbLayer } from './db-layer.mjs'
+import { routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
 
 const posix = p => p.split('\\').join('/')
 
@@ -37,12 +38,12 @@ function schemaDrift(root, layer) {
   return [diagnostic({ code: 'Q015', file: layer.schema, why: existsSync(file) ? 'The schema changed since the last `weft db generate`: the database will not match it.' : 'No migrations yet: the first request that reads a table fails with Q014.' })]
 }
 
-/** I001–I003: the walk a build does (@weft/icons/compile), when the project has the package. */
+/** I001–I003: the walk a build does (@weft-js/warp-icons/compile), when the project has the package. */
 async function iconChecks(root) {
   const require = createRequire(join(root, 'package.json'))
   let compile
-  for (const from of [() => require.resolve('@weft/icons/compile'), () => createRequire(require.resolve('@weft/warp'))
-    .resolve('@weft/icons/compile')]) {
+  for (const from of [() => require.resolve('@weft-js/warp-icons/compile'), () => createRequire(require.resolve('@weft-js/warp'))
+    .resolve('@weft-js/warp-icons/compile')]) {
     try { compile = from(); break } catch { /* not this way */ }
   }
   if (!compile) return []
@@ -50,7 +51,7 @@ async function iconChecks(root) {
   return findings(root).map(f => diagnostic({ code: f.code, file: f.file, span: [f.line, f.column, f.line, f.column], why: f.why }))
 }
 
-/** H010: what the last build or `weft dev` found keeps an island from waiting (`.weft/hydration.json`, weft/hydration). */
+/** H010: what the last build or `weft dev` found keeps an island from waiting (`.weft/hydration.json`, @weft-js/core/hydration). */
 function hydrationChecks(root) {
   const file = join(root, '.weft', 'hydration.json')
   if (!existsSync(file)) return []
@@ -104,7 +105,7 @@ export async function check(root, options = {}) {
   // Style groups (research 23): the project's definitions first, so each file compiles with the groups it imports.
   const style = await styleModule(weft)
   const sfiles = style ? styleFiles(root, config) : []
-  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('weft/style')) ? style.scanProject(root, sfiles, compiler.transform) : null
+  const scan = sfiles.some(f => readFileSync(join(root, f), 'utf8').includes('@weft-js/core/style')) ? style.scanProject(root, sfiles, (...a) => compiler.transform(...a)) : null
 
   const files = []
   const posByAbs = new Map()
@@ -116,7 +117,7 @@ export async function check(root, options = {}) {
     const groups = scan ? style.importedGroups(abs, text, f => scan.groups.filter(g => join(root, g.file) === f)) : {}
     const out = compiler.transform(text, Object.keys(groups).length ? { filename: abs, checkOnly: true, groups } : { filename: rel, checkOnly: true })
     const diagnostics = out.diagnostics.map(d => {
-      const start = pos.fromByte(d.start)
+      const from = pos.fromByte(d.start)
       const end = pos.fromByte(d.end)
       const fix = d.fix && {
         description: d.fix.description,
@@ -127,7 +128,7 @@ export async function check(root, options = {}) {
           return { file: rel, span: pos.span(a, b), offset: [a, b], text: e.text }
         }),
       }
-      return diagnostic({ code: d.code, severity: d.severity, file: rel, span: pos.span(start, end), offset: [start, end], why: d.message, help: d.help, fix })
+      return diagnostic({ code: d.code, severity: d.severity, file: rel, span: pos.span(from, end), offset: [from, end], why: d.message, help: d.help, fix })
     })
     files.push({ abs, rel, text, diagnostics })
   }
@@ -195,7 +196,7 @@ async function rustChecks(root, loaded) {
     const { writeContract } = await start(root, 'contract')
     const preset = { node: 'node', bun: 'bun', deno: 'deno_server' }[loaded.config?.runtime ?? 'node']
     const { contract, diagnostics } = await writeContract({ root, site: loaded.config?.site, rust, preset })
-    const out = diagnostics.filter(d => /^R1/.test(d.code)).map(d => diagnostic({ ...d, file: '.weft/contract.json' }))
+    const out = diagnostics.filter(d => d.code.startsWith('R1')).map(d => diagnostic({ ...d, file: '.weft/contract.json' }))
     if (out.some(d => d.severity === 'error')) return out
     for (const service of Object.keys(contract.services ?? {})) {
       if (rust?.services?.[service]?.external) continue
@@ -274,13 +275,13 @@ async function socketChecks(root) {
   const out = []
   let withIds
   for (const f of readdirSync(src, { recursive: true, withFileTypes: true })) {
-    if (!f.isFile() || !/\.[cm]?[jt]sx?$/.test(f.name) || /\.d\.ts$/.test(f.name)) continue
+    if (!f.isFile() || !/\.[cm]?[jt]sx?$/.test(f.name) || f.name.endsWith('.d.ts')) continue
     const abs = join(f.parentPath, f.name), rel = relative(root, abs).replaceAll('\\', '/'), text = readFileSync(abs, 'utf8')
     const hand = /from\s+['"]crossws|\bdefineWebSocketHandler\b/.exec(text)
     if (hand) out.push(diagnostic({ code: 'R004', file: rel, ...locate(text, hand[0]), why: 'A WebSocket handler of its own skips the Origin check, `authorize`, the limits and resume. Use `channel`.' }))
     if (!/\b(channel|sharedState)\s*[(<]/.test(text) || !/^src\/server\/|\.server\.[cm]?[jt]sx?$/.test(rel)) continue
     if (withIds === undefined) {
-      try { withIds = (await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft/start/vite')).href)).withIds } catch { withIds = null }
+      try { withIds = (await import(pathToFileURL(createRequire(join(root, 'package.json')).resolve('@weft-js/start/vite')).href)).withIds } catch { withIds = null }
     }
     try { withIds?.(text, abs, rel) } catch (e) {
       if (e.code !== 'R001') continue
@@ -307,7 +308,7 @@ function hygiene(root) {
       deps = pkg.dependencies ?? {}
     } catch {}
     for (const name of SOCKET_PACKAGES) {
-      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in weft/test. Use \`stream\`, \`.live()\` or \`channel\`.` }))
+      if (deps[name]) out.push(diagnostic({ code: 'R007', file: 'package.json', ...locate(text, `"${name}"`), why: `\`${name}\` is a dependency: its connection has no resume, no cleanup and no fake in @weft-js/core/test. Use \`stream\`, \`.live()\` or \`channel\`.` }))
     }
     for (const [name, cmd] of Object.entries(scripts)) {
       if (!/^weft(\s|$)/.test(cmd.trim())) {
@@ -319,7 +320,7 @@ function hygiene(root) {
     const file = join(root, name)
     if (!existsSync(file)) continue
     const text = readFileSync(file, 'utf8')
-    for (const m of text.matchAll(/from\s+['"](@weft\/plugin-[\w-]+)/g)) {
+    for (const m of text.matchAll(/from\s+['"](@weft-js\/(?:plugin-[\w-]+|text))/g)) {
       out.push(diagnostic({ code: 'P120', file: name, ...locate(text, m[1]), why: `\`${m[1]}\` is registered in ${name}, which bypasses weft.config.ts.` }))
     }
   }

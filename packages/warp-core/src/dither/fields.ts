@@ -1,11 +1,14 @@
 // Fields: a pure function from a place and a time to a tone, so a poster and the running canvas are the same picture.
 // `x` runs 0 to the aspect ratio, `y` 0–1, `t` is seconds. The fields are smooth, so big canvases evaluate them on a sparse
 // lattice and interpolate: the sines cost a sixteenth at most, and the dither still lands on every cell.
+/** A scalar field: a tone at a point and a time. */
 export type Field = (x: number, y: number, t: number) => number
+/** The name of a built-in field. */
 export type FieldName = keyof typeof FIELDS
 
 const { sin, cos, exp, hypot, min, max } = Math
 
+/** The built-in fields. */
 export const FIELDS = {
   /** The loom: long crossing swells, the site's hero. */
   weave(x: number, y: number, t: number) {
@@ -52,7 +55,7 @@ export function sample(field: Field, cols: number, rows: number, t: number, out:
   for (let y = 0, i = 0; y < rows; y++) {
     const gy = (y * k) | 0, fy = y * k - gy, top = gy * lw
     for (let x = 0; x < cols; x++, i++) {
-      const gx = (x * k) | 0, fx = x * k - gx, a = lattice[top + gx], b = lattice[top + gx + 1], c = lattice[top + lw + gx], d = lattice[top + lw + gx + 1]
+      const gx = (x * k) | 0, fx = x * k - gx, a = lattice[top + gx]!, b = lattice[top + gx + 1]!, c = lattice[top + lw + gx]!, d = lattice[top + lw + gx + 1]!
       out[i] = a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy
     }
   }

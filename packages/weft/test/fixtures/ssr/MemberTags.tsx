@@ -1,7 +1,7 @@
 // A tag that starts at a name the pre-pass rewrites: row parameters, destructured rows, props, rest (test/member-tags.test.tsx).
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 
-type Part = (props: { class?: string; label?: string }) => unknown
+type Part = (props: { class?: string; label?: string; children?: unknown }) => unknown
 
 const part = (name: string): Part => props => <i class={props.class} data-part={name}>{props.label}</i>
 const Solid = part('solid')
@@ -13,7 +13,7 @@ export const groups = state([
   { id: 'a', icon: Solid, Icon: Solid, meta: { icon: Line }, slot: { value: Solid } },
   { id: 'b', icon: Line, Icon: Line, meta: { icon: Solid }, slot: { value: Line } },
 ])
-export const swap = () => { const [a, b] = groups.value; groups.value = [{ ...a, icon: Line }, b] }
+export const swap = () => { const [a, b] = groups.value; groups.value = [{ ...a!, icon: Line }, b!] }
 export const reverse = () => { groups.value = [...groups.value].reverse() }
 
 function FromProps({ ui, Icon, Fallback = Line, ...rest }: { ui: { Icon: Part }; Icon: Part; Fallback?: Part; extra: { Icon: Part } }) {

@@ -1,16 +1,17 @@
-import { SearchIcon } from '@weft/icons'
-import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@weft/warp-core'
-import { derived, effect, flush, state, untrack, watch } from 'weft'
+import { SearchIcon } from '@weft-js/warp-icons'
+import { dialog, listKey, moveShuttle, paletteHotkey, rankCommands, uid } from '@weft-js/warp-core'
+import { derived, effect, flush, state, untrack, watch } from '@weft-js/core'
 import { bindable, type Openable } from './bind'
 import { Icon, type IconRef } from './Icon'
 import { Kbd } from './Kbd'
-import { use } from '@weft/warp-core/weft'
+import { use } from '@weft-js/warp-core/weft'
 import './styles'
-import '@weft/warp-core/styles/components/dialog.css'
-import '@weft/warp-core/styles/components/menu.css'
-import '@weft/warp-core/styles/components/command-palette.css'
-import '@weft/warp-core/styles/components/palette-motion.css'
+import '@weft-js/warp-core/styles/components/dialog.css'
+import '@weft-js/warp-core/styles/components/menu.css'
+import '@weft-js/warp-core/styles/components/command-palette.css'
+import '@weft-js/warp-core/styles/components/palette-motion.css'
 
+/** One entry the palette can run or drill into. */
 export interface Command {
   /** Stable key for the row; the label is used when it is left out. */
   id?: string
@@ -58,6 +59,7 @@ export interface CommandMode {
   sources?: CommandSource[]
 }
 
+/** Props for CommandPalette. */
 export type CommandPaletteProps = Openable & {
   /** The rows searched as you type, grouped by their `group`. */
   commands?: Command[]
@@ -76,7 +78,7 @@ export type CommandPaletteProps = Openable & {
   /** The key that opens it with ⌘ or Ctrl. `false` leaves opening to the app. */
   hotkey?: string | false
   /** `/` opens it too, outside a field. */
-  slash?: boolean
+  slash?: boolean | undefined
 }
 
 type Row = { head: string; item?: undefined; at?: undefined } | { head?: undefined; item: Command; at: number }
@@ -103,7 +105,7 @@ function arrange(commands: Command[], order: readonly string[] = []) {
 
 /** Marks where `words` start in the rows' text, through the CSS Custom Highlight API: no markup, no row is rebuilt. */
 function paint(list: HTMLElement | undefined, query: string, rows: readonly Row[]) {
-  const win = list?.ownerDocument.defaultView as any
+  const win = list?.ownerDocument.defaultView
   if (!win?.CSS?.highlights || typeof win.Highlight !== 'function') return
   const ranges: Range[] = []
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -145,13 +147,13 @@ function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined
   const at = () => untrack(() => r.value?.at ?? -1)
   let box!: HTMLElement, head!: HTMLElement, option!: HTMLElement, text!: HTMLElement, hint!: HTMLElement, keys!: HTMLElement
   const view = (
-    <div ref={(n: any) => (box = n)} data-part="row" role="presentation" hidden="">
-      <div ref={(n: any) => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
-      <div ref={(n: any) => (option = n)} data-part="item" hidden="" aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at() !== active()) onHover(at()) }} onClick={() => onPick(at())}>
-        {r.value?.item?.icon && <Icon name={r.value?.item?.icon as IconRef} />}
-        <span ref={(n: any) => (text = n)} data-part="text"></span>
-        <span ref={(n: any) => (hint = n)} data-part="hint" hidden=""></span>
-        <span ref={(n: any) => (keys = n)} data-part="shortcut" hidden=""></span>
+    <div ref={n => (box = n)} data-part="row" role="presentation" hidden="">
+      <div ref={n => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
+      <div ref={n => (option = n)} data-part="item" hidden="" aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at() !== active()) onHover(at()) }} onClick={() => onPick(at())}>
+        {r.value?.item?.icon && <Icon name={r.value?.item?.icon} />}
+        <span ref={n => (text = n)} data-part="text"></span>
+        <span ref={n => (hint = n)} data-part="hint" hidden=""></span>
+        <span ref={n => (keys = n)} data-part="shortcut" hidden=""></span>
       </div>
     </div>
   )
@@ -160,7 +162,7 @@ function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined
     box.hidden = !v
     put(head, v?.head)
     option.hidden = !item
-    if (item) { option.setAttribute('role', 'option'); option.id = `${id}-${v!.at}` } else { option.removeAttribute('role'); option.removeAttribute('id') }
+    if (item) { option.setAttribute('role', 'option'); option.id = `${id}-${v.at}` } else { option.removeAttribute('role'); option.removeAttribute('id') }
     text.textContent = item?.label ?? ''
     put(hint, item?.hint)
     put(keys, item?.shortcut)
@@ -216,7 +218,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     flush()
     paint(list, q, arranged)
   }
-  const rank = (list: Command[], q: string) => rankCommands(list, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
+  const rank = (cmds: Command[], q: string) => rankCommands(cmds, q).flatMap(g => g.rows.map(r => (r.hits.length ? { ...r.item, hits: r.hits } : r.item)))
   const answer = (value: string) => {
     query?.abort()
     const kids = untrack(() => drill.value)
@@ -294,15 +296,15 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
       return move(e.key === 'Home' ? 0 : count - 1)
     }
     if (e.key === 'Tab') {
-      const heads = rows.value.flatMap((r, i) => (r.head === undefined ? [] : [(rows.value[i + 1] as Row | undefined)?.at ?? 0]))
+      const heads = rows.value.flatMap((r, i) => (r.head === undefined ? [] : [(rows.value[i + 1])?.at ?? 0]))
       if (heads.length < 2) return e.preventDefault()
       e.preventDefault()
       const next = e.shiftKey ? [...heads].reverse().find(h => h < at) ?? heads.at(-1)! : heads.find(h => h > at) ?? heads[0]
-      return move(next)
+      return move(next!)
     }
     if (e.key === 'ArrowRight' && input && input.selectionStart === input.value.length && items.value[at]?.children) {
       e.preventDefault()
-      return down(items.value[at])
+      return down(items.value[at]!)
     }
     if (e.key === 'ArrowLeft' && drill.value && !input?.selectionStart) {
       e.preventDefault()
@@ -319,7 +321,7 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (m.pick) return run(at, 'keyboard')
     move(m.to)
   }
-  const onInput = (e: any) => {
+  const onInput = (e: Event & { currentTarget: HTMLInputElement }) => {
     typed.value = e.currentTarget.value
     answer(e.currentTarget.value)
   }
@@ -334,17 +336,17 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     requestAnimationFrame(() => face?.removeAttribute('data-instant'))
   }) })
   return (
-    <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
+    <dialog ref={n => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="">
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
         <label for={`${id}-in`} data-part="sr-only">{crumb.value ? `${label}, ${crumb.value}` : label}</label>
         {crumb.value && <button type="button" data-part="crumb" tabindex="-1" aria-label={`Back from ${crumb.value}`} onClick={up}>{crumb.value}<span aria-hidden="true">›</span></button>}
-        <input ref={(n: any) => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={crumb.value ? `Search ${crumb.value}…` : mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
+        <input ref={n => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={crumb.value ? `Search ${crumb.value}…` : mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
         {mode.value ? <span data-part="mode">{mode.value.label}</span> : <Kbd>esc</Kbd>}
       </div>
-      <div ref={(n: any) => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
-        <span ref={(n: any) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
+      <div ref={n => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
+        <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {slots.value.map(i => <Slot key={i} id={id} row={() => rows.value[i]} active={() => active.value} onPick={at => run(at, 'pointer')} onHover={at => (active.value = at)} />)}
       </div>
       {flag.value && !items.value.length && !pending.value && <div data-part="empty">{`Nothing matches “${typed.value}”.`}</div>}

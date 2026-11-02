@@ -1,13 +1,13 @@
-import { state } from 'weft'
-import { Agenda, AgendaDay, AvailabilityEditor, BookingCalendar, Button, Card, EventEditor, EventPopover, MeetingPlanner, MoveSheet, Row, Stack, Text, Toaster, YearView, toast } from '@weft/warp'
-import type { BookingDetails, BookingSlot, IsoDate } from '@weft/warp'
-import { at, clock } from '@weft/warp-core'
-import type { CalEvent, Slot } from '@weft/warp-core'
+import { state } from '@weft-js/core'
+import { Agenda, AgendaDay, AvailabilityEditor, BookingCalendar, Button, Card, EventEditor, EventPopover, MeetingPlanner, MoveSheet, Row, Stack, Text, Toaster, YearView, toast } from '@weft-js/warp'
+import type { BookingDetails, BookingSlot } from '@weft-js/warp'
+import { at, clock } from '@weft-js/warp-core'
+import type { CalEvent, Slot } from '@weft-js/warp-core'
 import { DEPLOYS_BY_DAY, SCHEDULE_NOW, ON_CALL_HOURS, TEAM_CALENDARS, TEAM_EVENTS, TEAM_MORE, TEAM_ROOM, TEAM_ZONE, TODAY } from '../world'
 
 const REVIEW = TEAM_EVENTS.find(e => e.id === 'e4')!
 const when = (e: CalEvent) => `${e.start.slice(0, 10)}, ${e.start.slice(11)} to ${e.end.slice(11)}`
-const pause = (ms: number) => new Promise(done => setTimeout(done, ms))
+const pause = (ms: number) => new Promise(done => { setTimeout(done, ms) })
 
 export function AgendaTeamWeek() {
   const events = state(TEAM_EVENTS)
@@ -47,15 +47,15 @@ export function BookingCalendarOnboarding() {
   }
   return (
     <Stack gap="related">
-      <BookingCalendar slots={slotsFor} defaultDate={TODAY as IsoDate} min={TODAY} today={TODAY} locale="en-GB" duration={30} isDateUnavailable={isWeekend} onBook={book} />
+      <BookingCalendar slots={slotsFor} defaultDate={TODAY} min={TODAY} today={TODAY} locale="en-GB" duration={30} isDateUnavailable={isWeekend} onBook={book} />
       {booked.value && <Text role="caption" subtle>Onboarding call booked for {booked.value.date} at {clock(booked.value.s, 'en-GB')}.</Text>}
     </Stack>
   )
 }
 
-export const BookingCalendarLoading = () => <BookingCalendar slots={[]} loading defaultDate={TODAY as IsoDate} today={TODAY} locale="en-GB" onBook={() => {}} />
+export const BookingCalendarLoading = () => <BookingCalendar slots={[]} loading defaultDate={TODAY} today={TODAY} locale="en-GB" onBook={() => {}} />
 
-export const BookingCalendarFailed = () => <BookingCalendar slots={[]} error="We couldn't load the times. Try again in a moment." defaultDate={TODAY as IsoDate} today={TODAY} locale="en-GB" onBook={() => {}} />
+export const BookingCalendarFailed = () => <BookingCalendar slots={[]} error="We couldn't load the times. Try again in a moment." defaultDate={TODAY} today={TODAY} locale="en-GB" onBook={() => {}} />
 
 export function EventEditorChange() {
   const open = state(false)
@@ -102,7 +102,7 @@ export function EventPopoverDetails() {
 
 export function MeetingPlannerReview() {
   const sent = () => { toast.show({ title: 'Invite sent', description: 'Everyone has it on their calendar.' }); return pause(400) }
-  const search = async (q: string) => TEAM_MORE.filter(p => p.name.toLowerCase().includes(q.toLowerCase()))
+  const search = (q: string) => Promise.resolve(TEAM_MORE.filter(p => p.name.toLowerCase().includes(q.toLowerCase())))
   return (
     <>
       <MeetingPlanner date={TODAY} attendees={TEAM_ROOM} loadAttendees={search} title="Capacity review" link="meet.tessel.dev/capacity" tags={['Internal', 'Incident', 'Planning']} timeZone={TEAM_ZONE} today={TODAY} locale="en-GB" hourCycle="h23" onSubmit={sent} onUndo={() => toast.show({ title: 'Invite withdrawn' })} />

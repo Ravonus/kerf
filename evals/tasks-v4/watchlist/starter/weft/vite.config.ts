@@ -1,4 +1,4 @@
-import weft from 'weft/vite'
+import weft from '@weft-js/core/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({

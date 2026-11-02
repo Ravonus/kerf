@@ -2,12 +2,12 @@
 // tags on to the hub, and an app with no `src/pay.server.ts` that has no such route at all.
 import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core'
 import { createHmac } from 'node:crypto'
-import { product, PayError, type PayRail } from '@weft/pay'
-import { definePay, extension, memoryPayStore } from '@weft/pay/server'
-import { drizzlePayStore } from '@weft/pay/drizzle'
-import { runtime } from '@weft/start/data'
-import { createDb } from '@weft/start/db/sqlite'
-import { createHandler } from '@weft/start/server'
+import { product, PayError, type PayRail } from '@weft-js/pay'
+import { definePay, extension, memoryPayStore } from '@weft-js/pay/server'
+import { drizzlePayStore } from '@weft-js/pay/drizzle'
+import { runtime } from '@weft-js/start/data'
+import { createDb } from '@weft-js/start/db/sqlite'
+import { createHandler } from '@weft-js/start/server'
 
 const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
 const urls = { success: '/', cancel: '/' }
@@ -36,8 +36,8 @@ describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
   const hook = (body: string, key = secret) => ({ 'x-sig': createHmac('sha256', key).update(body).digest('hex') })
   const rail: PayRail = {
     id: 'test',
-    checkout: async () => ({ url: 'http://x/' }),
-    portal: async () => ({ url: 'http://x/' }),
+    checkout: () => Promise.resolve({ url: 'http://x/' }),
+    portal: () => Promise.resolve({ url: 'http://x/' }),
     verify({ body, headers }) {
       if (headers.get('x-sig') !== hook(body)['x-sig']) throw new PayError('PAY011', 'bad')
       return JSON.parse(body)
@@ -45,18 +45,18 @@ describe('/_weft/x/pay/<rail>, through `server.extension`', () => {
   }
   const manifest = { dir: '', routes: [], layouts: [] }
   const app = () => {
-    const pay = definePay({ catalog: [pro], store: memoryPayStore(), urls, slot: async () => ({ load: async () => rail, providers: { test: '@acme/rail' } }) })
+    const pay = definePay({ catalog: [pro], store: memoryPayStore(), urls, slot: () => Promise.resolve({ load: () => Promise.resolve(rail), providers: { test: '@acme/rail' } }) })
     const diagnostics: { code: string; message: string }[] = []
-    return { pay, diagnostics, handler: createHandler({ manifest, modules: {}, extensions: [{ key: 'pay', load: async () => extension(pay) }], dev: true, onDiagnostic: d => diagnostics.push(d) }) }
+    return { pay, diagnostics, handler: createHandler({ manifest, modules: {}, extensions: [{ key: 'pay', load: () => Promise.resolve(extension(pay)) }], dev: true, onDiagnostic: d => diagnostics.push(d) }) }
   }
   const post = (path: string, body: string, headers: Record<string, string>) => new Request(`http://localhost${path}`, { method: 'POST', body, headers })
   const body = JSON.stringify([{ id: 'e1', at: 1000, purchase: 'p1', state: 'active', user: 'u1', product: 'pro' }])
 
   test('verifies, applies and pokes the user\'s tag', async () => {
     const { pay, handler } = app()
-    const poke = runtime.poke
+    const poke = runtime.poke!
     const poked: string[][] = []
-    runtime.poke = async tags => void poked.push(tags)
+    runtime.poke = tags => { poked.push(tags); return Promise.resolve() }
     const res = await handler(post('/_weft/x/pay/test', body, hook(body)))
     runtime.poke = poke
     expect(res.status).toBe(200)

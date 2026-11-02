@@ -1,5 +1,5 @@
 // The redesign's new components, compiled, so props stay live.
-import { state } from 'weft'
+import { state } from '@weft-js/core'
 import { Accordion, type AccordionProps } from '../../src/Accordion'
 import { RadioGroup } from '../../src/Choice'
 import { Menu } from '../../src/Menu'

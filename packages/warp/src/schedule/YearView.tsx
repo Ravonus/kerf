@@ -1,33 +1,34 @@
-import { LeftIcon, RightIcon } from '@weft/icons'
-import { addMonths, announce, clock, eventsOn, fmt, minuteOf, monthStart, monthSummary, monthWeeks, motionOff, uid, weekStart, weekdays, ymd, yearKey, yearLevel, yearMonths, yearTotal, type CalEvent, type IsoDate } from '@weft/warp-core'
-import { derived, flush, state, untrack } from 'weft'
+import { LeftIcon, RightIcon } from '@weft-js/warp-icons'
+import { addMonths, announce, clock, eventsOn, fmt, minuteOf, monthStart, monthSummary, monthWeeks, motionOff, uid, weekStart, weekdays, ymd, yearKey, yearLevel, yearMonths, yearTotal, type CalEvent, type IsoDate } from '@weft-js/warp-core'
+import { derived, flush, state, untrack } from '@weft-js/core'
 import { Button } from '../Button'
 import { usePickerEnv } from '../Picker'
 import './bits'
-import '@weft/warp-core/styles/app/year.css'
+import '@weft-js/warp-core/styles/app/year.css'
 
+/** Props for YearView. */
 export type YearViewProps = {
   /** `{ [isoDay]: n }`: a year's counts only (07 §2.7). */
   counts: Record<string, number>
   /** Names the section when the year alone won't do: two on a page. */
-  label?: string
+  label?: string | undefined
   /** Events for the picked day's detail: from `events`, or fetched by the app when it is picked. */
-  events?: CalEvent[]
-  year?: number
+  events?: CalEvent[] | undefined
+  year?: number | undefined
   /** Pins today's date, for server rendering and tests. The browser's clock otherwise. */
-  today?: string
-  locale?: string
+  today?: string | undefined
+  locale?: string | undefined
   /** `h12` for AM and PM, `h23` for a 24-hour clock. The locale's otherwise. */
-  hourCycle?: string
+  hourCycle?: string | undefined
   /** The day each month's rows start on, 0 for Sunday to 6. The locale's otherwise. */
-  firstDayOfWeek?: number
+  firstDayOfWeek?: number | undefined
   /** Inside a Calendar: return true when the day or month opened there, and the picker stays out of the way. */
-  openDay?: (iso: IsoDate) => boolean | void
-  openMonth?: (iso: IsoDate) => boolean | void
+  openDay?: ((iso: IsoDate) => boolean | void) | undefined
+  openMonth?: ((iso: IsoDate) => boolean | void) | undefined
   /** Open straight away; off, a pick shows the detail and offers the jump. */
-  direct?: boolean
+  direct?: boolean | undefined
   /** Called with the new year when you page. */
-  onYearChange?: (y: number) => void
+  onYearChange?: ((y: number) => void) | undefined
 }
 
 const events = (n: number) => (n ? `${n} event${n > 1 ? 's' : ''}` : 'no events')
@@ -123,7 +124,7 @@ export function YearView(p: YearViewProps) {
         <Button emphasis="outline" tone="neutral" size="sm" onClick={() => go(env.today.value)}>Today</Button>
         <span data-part="legend" aria-hidden="true"><span><i data-part="dots" data-zero=""></i>none</span><span><i data-part="dots" style="--_n:1"></i>1–2</span><span><i data-part="dots" style="--_n:2"></i>3–4</span><span><i data-part="dots" style="--_n:3"></i>5+</span></span>
       </div>
-      <div ref={(n: any) => (months = n)} data-part="months" role="group" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} data-swapping={swapping.value ? '' : undefined} onKeyDown={onKey} onClick={onClick}>
+      <div ref={n => (months = n)} data-part="months" role="group" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} data-swapping={swapping.value ? '' : undefined} onKeyDown={onKey} onClick={onClick}>
         {list.value.map(m => (
           <div key={m.month} data-part="year-month" data-current={m.current ? '' : undefined}>
             <button type="button" data-part="month-title" id={`${id}-${m.month}`} data-month={m.month} tabindex="-1">{m.name} <small>{m.total}<span class="sr"> events</span></small></button>

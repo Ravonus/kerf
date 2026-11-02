@@ -1,6 +1,6 @@
-// Research 40: boxes, one row per key, and what reaches the line.
-import { createRoot, flush, watch } from 'weft'
-import { bitsOf, interaction, seams } from 'weft/interaction'
+// Research 45: boxes, one row per key, and what reaches the line.
+import { createRoot, flush, watch } from '@weft-js/core'
+import { bitsOf, interaction, seams } from '@weft-js/core/interaction'
 
 afterEach(() => { seams.line = undefined })
 
@@ -34,7 +34,7 @@ test('same key, same row; the line opens once and closes with the last owner', (
 
 test('what arrives touches `remote` only, so local logic stays still and nothing goes back out', () => {
   const sent: number[] = []
-  let heard!: (c: any) => void
+  let heard!: Parameters<NonNullable<typeof seams.line>>[1]
   seams.line = (_, h) => { heard = h; return { set: b => void sent.push(b), leave() {} } }
   createRoot(dispose => {
     const ui = interaction({ share: 'r' })

@@ -1,8 +1,7 @@
 {
-  "name": "weft",
-  "version": "0.0.0",
-  "private": true,
-  "description": "weft runtime, compiler binding, Vite plugin and test utilities (Phase 1 compiler spike)",
+  "name": "@weft-js/core",
+  "version": "0.1.0",
+  "description": "weft: a fine-grained reactive TSX framework. Runtime, compiler binding, Vite plugin and test utilities.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -23,7 +22,9 @@
     "compiler-wasm.cjs",
     "media-probe.mjs",
     "platforms.cjs",
-    "vite.mjs"
+    "vite.mjs",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": "./src/full.ts",
@@ -106,13 +107,22 @@
     "dom-accessibility-api": "0.7.1"
   },
   "optionalDependencies": {
-    "@weft/compiler-darwin-arm64": "0.0.0",
-    "@weft/compiler-darwin-x64": "0.0.0",
-    "@weft/compiler-linux-arm64-gnu": "0.0.0",
-    "@weft/compiler-linux-arm64-musl": "0.0.0",
-    "@weft/compiler-linux-x64-gnu": "0.0.0",
-    "@weft/compiler-linux-x64-musl": "0.0.0",
-    "@weft/compiler-win32-arm64": "0.0.0",
-    "@weft/compiler-win32-x64": "0.0.0"
-  }
+    "@weft-js/compiler-darwin-arm64": "0.1.0",
+    "@weft-js/compiler-darwin-x64": "0.1.0",
+    "@weft-js/compiler-linux-arm64-gnu": "0.1.0",
+    "@weft-js/compiler-linux-arm64-musl": "0.1.0",
+    "@weft-js/compiler-linux-x64-gnu": "0.1.0",
+    "@weft-js/compiler-linux-x64-musl": "0.1.0",
+    "@weft-js/compiler-win32-arm64": "0.1.0",
+    "@weft-js/compiler-win32-x64": "0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "keywords": [
+    "weft"
+  ]
 }

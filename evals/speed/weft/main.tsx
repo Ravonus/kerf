@@ -1,6 +1,6 @@
 import '../shared/page.css'
-import { flush, state, type State } from 'weft'
-import { render } from 'weft/dom'
+import { flush, state, type State } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
 import { expose, glyph } from '../shared/driver.js'
 import { Main, rows } from './rows'
 

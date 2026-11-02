@@ -29,5 +29,5 @@ time(`weft (${backend.kind}, full)`, (source, filename) => transform(source, { f
 time(`weft (${backend.kind}, check only)`, (source, filename) => transform(source, { filename, checkOnly: true }))
 if (solidPath) {
   const solid = require(solidPath)
-  time('@solidjs/compiler (napi, no weft pre-pass)', (source, filename) => solid.transform(source, { filename, moduleName: 'weft/dom' }))
+  time('@solidjs/compiler (napi, no weft pre-pass)', (source, filename) => solid.transform(source, { filename, moduleName: '@weft-js/core/dom' }))
 }

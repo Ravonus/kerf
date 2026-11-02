@@ -1,13 +1,16 @@
-import { CardIcon } from '@weft/icons'
-import { cardBrand, cardMask } from '@weft/warp-core'
-import { derived, state, untrack } from 'weft'
-import { Field, type FieldProps } from './Field'
-import { use } from '@weft/warp-core/weft'
-import '@weft/warp-core/styles/rich/payment.css'
+import { CardIcon } from '@weft-js/warp-icons'
+import { cardBrand, cardMask } from '@weft-js/warp-core'
+import { derived, state, untrack } from '@weft-js/core'
+import { Field, type FieldShell } from './Field'
+import { use } from '@weft-js/warp-core/weft'
+import '@weft-js/warp-core/styles/rich/payment.css'
 
-export interface ProviderField { on(e: 'focus' | 'blur' | 'change', f: (ev: { complete?: boolean; error?: string }) => void): void; destroy(): void }
+/** The card field a payment provider mounts, as far as warp talks to it. */
+export interface ProviderField { on(e: 'focus' | 'blur' | 'change', f: (ev: { complete?: boolean | undefined; error?: string | undefined }) => void): void; destroy(): void }
+/** The field styles warp hands a provider, since its iframe can't read ours. */
 export interface ProviderAppearance { fontFamily: string; fontSize: string; color: string; errorColor: string; borderRadius: string; borderColor: string }
-export type PaymentCardInputProps = Omit<FieldProps, 'value'> & { mount: (el: HTMLElement, appearance: ProviderAppearance) => ProviderField }
+/** Props for PaymentCardInput. */
+export type PaymentCardInputProps = FieldShell & { mount: (el: HTMLElement, appearance: ProviderAppearance) => ProviderField }
 
 /**
  * PaymentCardInput (04 §5): the field shell around the provider's hosted field, driven by its events, with warp's
@@ -38,11 +41,12 @@ export function PaymentCardInput({ mount, label, hint, error, ...rest }: Payment
       error={error ?? failed.value}
       filled={filled.value}
       hold={focused.value}
-      control={() => <div ref={(n: any) => (host = n)} data-part="provider" role="group" aria-label={`${label}, hosted by the payment provider`}></div>}
+      control={() => <div ref={n => (host = n)} data-part="provider" role="group" aria-label={`${label}, hosted by the payment provider`}></div>}
     />
   )
 }
 
+/** Props for CardNumberText. */
 export type CardNumberTextProps = { last4: string; bin?: string; brand?: string; expiry?: { month: number; year: number } }
 
 /** CardNumberText (04 §5): the display of a saved card, `•••• 4242`, with the brand from the BIN and expiry as MM/YY. */

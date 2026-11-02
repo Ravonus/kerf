@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, test, vi } from 'vitest'
-import { agendaItems, allDayBars, at, calendarDrag, conflicts, countByDay, dateOf, dayDots, daySegments, dragCreate, dragMove, dragResize, dstShift, eventKey, eventName, eventsOn, isFree, laneKey, layoutDay, mergeRanges, minuteOf, monthCells, monthSummary, moveKey, moveSlots, nextRange, nowIn, overlaps, rangeIssues, sharedFree, shownIn, slotOf, slotTimes, snapTo, spanMinutes, startOfWeek, stepDate, suggestSlots, timeOptions, toZone, viewDays, viewRange, weekDates, weekValid, withinHours, yearKey, yearLevel, yearMonths, yearTotal, zoneMinute, type Attendee, type CalEvent } from '../src/schedule'
+import { type DragPreview, agendaItems, allDayBars, at, calendarDrag, conflicts, countByDay, dateOf, dayDots, daySegments, dragCreate, dragMove, dragResize, dstShift, eventKey, eventName, eventsOn, isFree, laneKey, layoutDay, mergeRanges, minuteOf, monthCells, monthSummary, moveKey, moveSlots, nextRange, nowIn, overlaps, rangeIssues, sharedFree, shownIn, slotOf, slotTimes, snapTo, spanMinutes, startOfWeek, stepDate, suggestSlots, timeOptions, toZone, viewDays, viewRange, weekDates, weekValid, withinHours, yearKey, yearLevel, yearMonths, yearTotal, zoneMinute, type Attendee, type CalEvent } from '../src/schedule'
 
 const ev = (id: string, start: string, end: string, o: Partial<CalEvent> = {}): CalEvent => ({ id, title: id, start, end, ...o })
 const on = (s: string, e: string) => [`2026-10-28T${s}`, `2026-10-28T${e}`] as const
@@ -103,8 +103,8 @@ describe('views', () => {
   test('month cells are six weeks and mark the days outside', () => {
     const w = monthCells('2026-10-28', 1)
     expect(w).toHaveLength(6)
-    expect(w[0].cells[0]).toEqual({ iso: '2026-09-28', outside: true })
-    expect(w[0].cells[3]).toEqual({ iso: '2026-10-01', outside: false })
+    expect(w[0]!.cells[0]).toEqual({ iso: '2026-09-28', outside: true })
+    expect(w[0]!.cells[3]).toEqual({ iso: '2026-10-01', outside: false })
   })
   test('names read as the spec says', () => {
     expect(eventName(ev('x', '2026-10-26T10:00', '2026-10-26T11:30', { title: 'Design crit', location: 'Studio', tentative: true }), 'en-US')).toBe('Design crit, Monday 10:00 to 11:30, Studio, tentative')
@@ -291,14 +291,14 @@ describe('availability', () => {
 })
 
 describe('calendarDrag', () => {
-  const setup = (overrides: Record<string, any> = {}) => {
+  const setup = (overrides: Partial<Parameters<typeof calendarDrag>[1]> = {}) => {
     const root = document.body.appendChild(document.createElement('div'))
     root.innerHTML = `<div data-part="col" data-date="2026-10-28"><div data-part="event" data-id="a"><span data-part="resize"></span></div></div><div data-part="col" data-date="2026-10-29"></div>`
     const [a, b] = [...root.querySelectorAll<HTMLElement>('[data-part="col"]')]
     const rect = (l: number, r: number) => ({ left: l, right: r, top: 0, bottom: 1440, width: r - l, height: 1440, x: l, y: 0, toJSON() {} })
-    a.getBoundingClientRect = () => rect(0, 100) as DOMRect
-    b.getBoundingClientRect = () => rect(100, 200) as DOMRect
-    const log: any[] = []
+    a!.getBoundingClientRect = () => rect(0, 100)
+    b!.getBoundingClientRect = () => rect(100, 200)
+    const log: [string, unknown?, unknown?][] = []
     const action = calendarDrag(root, {
       slot: id => (id === 'a' ? { date: '2026-10-28', s: 600, e: 660 } : null),
       onPreview: p => log.push(['preview', p]),
@@ -308,7 +308,7 @@ describe('calendarDrag', () => {
       onSlot: (d, m) => log.push(['slot', d, m]),
       ...overrides,
     })
-    const fire = (t: EventTarget, type: string, x: number, y: number, extra: Record<string, any> = {}) => {
+    const fire = (t: EventTarget, type: string, x: number, y: number, extra: PointerEventInit = {}) => {
       const e = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0, cancelable: true, ...extra })
       Object.assign(e, { pointerId: 1, pointerType: extra.pointerType ?? 'mouse' })
       t.dispatchEvent(e)
@@ -336,7 +336,7 @@ describe('calendarDrag', () => {
     const { event, log, fire, root } = setup()
     fire(event, 'pointerdown', 10, 610)
     fire(root, 'pointermove', 10, 617, { altKey: true })
-    expect(log.at(-1)[1].s).toBe(605)
+    expect((log.at(-1)![1] as DragPreview).s).toBe(605)
     root.remove()
   })
   test('Escape cancels and drops nothing', () => {
@@ -354,15 +354,15 @@ describe('calendarDrag', () => {
     fire(resize, 'pointerdown', 10, 660)
     fire(root, 'pointermove', 10, 690)
     fire(root, 'pointerup', 10, 690)
-    expect(log.at(-1)[1]).toMatchObject({ mode: 'resize', s: 600, e: 690 })
+    expect(log.at(-1)![1]).toMatchObject({ mode: 'resize', s: 600, e: 690 })
     root.remove()
   })
   test('empty slots draw a draft', () => {
     const { b, log, fire, root } = setup()
-    fire(b, 'pointerdown', 150, 600)
-    fire(b, 'pointermove', 150, 660)
-    fire(b, 'pointerup', 150, 660)
-    expect(log.at(-1)[1]).toMatchObject({ mode: 'create', date: '2026-10-29', s: 600, e: 660 })
+    fire(b!, 'pointerdown', 150, 600)
+    fire(b!, 'pointermove', 150, 660)
+    fire(b!, 'pointerup', 150, 660)
+    expect(log.at(-1)![1]).toMatchObject({ mode: 'create', date: '2026-10-29', s: 600, e: 660 })
     root.remove()
   })
   test('readOnly and locked events never drag, but still press', () => {
@@ -406,7 +406,7 @@ describe('calendarDrag', () => {
   })
   test('a double click on an empty slot asks for one', () => {
     const { b, log, fire, root } = setup()
-    fire(b, 'dblclick', 150, 607)
+    fire(b!, 'dblclick', 150, 607)
     expect(log).toEqual([['slot', '2026-10-29', 600]])
     root.remove()
   })

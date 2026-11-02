@@ -1,5 +1,5 @@
-import { derived, state } from 'weft'
-import { Badge, Button, Card } from '@weft/warp'
+import { derived, state } from '@weft-js/core'
+import { Badge, Button, Card } from '@weft-js/warp'
 
 export default function Shop() {
   const count = state(0)

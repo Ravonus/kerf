@@ -65,6 +65,8 @@ export const charts: DocGroup = {
     },
     {
       component: 'DonutChart',
+      // Wide enough for the legend on one row: at the default 440 it wraps, and the card can only draw it at under 0.3.
+      tileWidth: 620,
       summary: 'Splits one total into a few parts, with the total in the middle.',
       use: {
         when: ['One total split into six parts or fewer'],
@@ -235,7 +237,7 @@ export const charts: DocGroup = {
           chart('ChartRetry', 'Error and retry', 420, 'Press Retry. `state` swaps the plot in the same frame.'),
         ] },
       ],
-      propDocs: { form: 'The layout to draw, from `@weft/warp-core/charts`.' },
+      propDocs: { form: 'The layout to draw, from `@weft-js/warp-core/charts`.' },
       related: ['BarChart', 'LineChart'],
     },
   ],

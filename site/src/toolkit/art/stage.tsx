@@ -1,9 +1,12 @@
-import { getDial, Segmented } from '@weft/warp'
-import { onCleanup, onMount, state } from 'weft'
-import { render } from 'weft/dom'
-import { enrol } from './shared'
+import { getDial, Segmented } from '@weft-js/warp'
+import { onCleanup, onMount, state } from '@weft-js/core'
+import { render } from '@weft-js/core/dom'
+import { enrol, type ArtProps, type Meta } from './shared'
 
-const PIECES: Record<string, () => Promise<any>> = {
+/** What a piece's module exports: the piece and its card. */
+type Piece = { default: (props: ArtProps) => unknown; meta: Meta }
+
+const PIECES: Record<string, () => Promise<Piece>> = {
   'warp-beam': () => import('./warp-beam'),
   'tide-table': () => import('./tide-table'),
   'moire-loom': () => import('./moire-loom'),
@@ -37,6 +40,7 @@ const PIECES: Record<string, () => Promise<any>> = {
 /* @weft visible */
 /** One gallery piece: its file loads as it nears the view, and it moves only while it holds one of the three live slots. */
 export function ArtStage({ id }: { id: string }) {
+  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
   const live = state(false), failed = state(false)
   let stop: (() => void) | undefined, leave: (() => void) | undefined, gone = false
@@ -45,7 +49,7 @@ export function ArtStage({ id }: { id: string }) {
       if (gone) return
       const Art = m.default
       host.replaceChildren()
-      stop = render(() => <Art live={live.value} />, host) as any
+      stop = render(() => <Art live={live.value} />, host)
       if (!m.meta.rest) leave = enrol(host, on => { live.value = on })
     }).catch(e => { console.error(e); failed.value = true })
   })

@@ -1,4 +1,4 @@
-import type { OgProps } from '@weft/start'
+import type { OgProps } from '@weft-js/start'
 import art from '../generated/card-art.json'
 
 /** Every page's share card: the hero's dither and the woven mark, with the page's own title and sentence. */

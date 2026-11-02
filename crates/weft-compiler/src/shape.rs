@@ -14,9 +14,15 @@
 //! | `<Row post={p} />` | `<Row$shape post={p} />` when `Row` has a variant, else its children or one bar |
 
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fmt::Write as _;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
+use oxc_ast::ast::{
+    Argument, ArrowFunctionBody, ArrowFunctionExpression, BindingIdentifier, BindingPattern, CallExpression,
+    ChainElement, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters, Function,
+    IdentifierReference, ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXElementName, JSXFragment, LogicalOperator, Program, Statement,
+};
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
 use oxc_semantic::{Scoping, SymbolId};
@@ -25,7 +31,21 @@ use oxc_span::{GetSpan, SourceType, Span};
 const WRAP: &str = r#"<div data-scope="skeleton-scope" aria-busy="true" role="status" aria-label="Loading" inert style="display:contents">"#;
 const BAR: &str = r#"<span data-skeleton style="color:transparent">"#;
 /// Host attributes that size or style an element. Everything else (events, ids, links, values, ARIA) goes.
-const KEEP: &[&str] = &["class", "className", "style", "width", "height", "type", "rows", "cols", "size", "colspan", "rowspan", "hidden", "viewBox"];
+const KEEP: &[&str] = &[
+    "class",
+    "className",
+    "style",
+    "width",
+    "height",
+    "type",
+    "rows",
+    "cols",
+    "size",
+    "colspan",
+    "rowspan",
+    "hidden",
+    "viewBox",
+];
 const MEDIA: &[&str] = &["img", "video", "iframe", "canvas"];
 const FORWARD_SKIP: &[&str] = &["key", "ref"];
 
@@ -73,7 +93,10 @@ fn has_jsx(e: &Expression<'_>) -> bool {
 }
 
 /// The expression a function returns: an arrow's body, or its last top-level `return`.
-fn returned<'b, 'a>(statements: &'b [Statement<'a>], expression: Option<&'b Expression<'a>>) -> Option<&'b Expression<'a>> {
+fn returned<'b, 'a>(
+    statements: &'b [Statement<'a>],
+    expression: Option<&'b Expression<'a>>,
+) -> Option<&'b Expression<'a>> {
     expression.or_else(|| {
         statements.iter().rev().find_map(|s| match s {
             Statement::ReturnStatement(r) => r.argument.as_ref(),
@@ -122,7 +145,7 @@ struct Gen<'s> {
     source: &'s str,
     /// Components with a variant: local symbol → the tag the variant is under here.
     variants: HashMap<SymbolId, String>,
-    /// Symbols of `Text` from `weft/text`: it stays itself, so its element and class survive.
+    /// Symbols of `Text` from `@weft-js/core/text`: it stays itself, so its element and class survive.
     text: Option<SymbolId>,
     /// `weft`'s own imports: `derived` stays, `resource` is read by its fetcher, and the rest (`state`…) is setup.
     weft: HashMap<SymbolId, String>,
@@ -144,7 +167,7 @@ impl Gen<'_> {
         self.reads(e).iter().all(|s| allowed.contains(s) || self.scoping.symbol_scope_id(*s) == root)
     }
 
-    fn print(&self, e: &Expression<'_>) -> String {
+    fn print(e: &Expression<'_>) -> String {
         let mut c = oxc_codegen::Codegen::new();
         c.print_expression(e);
         c.into_source_text()
@@ -169,11 +192,20 @@ impl Gen<'_> {
             Expression::JSXElement(el) => self.element(el, allowed),
             Expression::JSXFragment(f) => format!("<>{}</>", self.kids(&f.children, allowed)),
             Expression::NullLiteral(_) | Expression::BooleanLiteral(_) => "null".into(),
-            Expression::StringLiteral(_) | Expression::NumericLiteral(_) | Expression::TemplateLiteral(_) if self.ok(e, allowed) => self.print(e),
+            Expression::StringLiteral(_) | Expression::NumericLiteral(_) | Expression::TemplateLiteral(_)
+                if self.ok(e, allowed) =>
+            {
+                Self::print(e)
+            }
             Expression::Identifier(i) if i.name == "undefined" => "null".into(),
             Expression::ConditionalExpression(c) if has_jsx(&c.consequent) || has_jsx(&c.alternate) => {
                 if self.ok(&c.test, allowed) {
-                    format!("({} ? {} : {})", self.print(&c.test), self.value(&c.consequent, allowed), self.value(&c.alternate, allowed))
+                    format!(
+                        "({} ? {} : {})",
+                        Self::print(&c.test),
+                        self.value(&c.consequent, allowed),
+                        self.value(&c.alternate, allowed)
+                    )
                 } else if matches!(strip(&c.consequent), Expression::NullLiteral(_)) {
                     self.value(&c.alternate, allowed)
                 } else {
@@ -182,7 +214,7 @@ impl Gen<'_> {
             }
             Expression::LogicalExpression(l) if has_jsx(&l.right) && l.operator == LogicalOperator::And => {
                 if self.ok(&l.left, allowed) {
-                    format!("({} && {})", self.print(&l.left), self.value(&l.right, allowed))
+                    format!("({} && {})", Self::print(&l.left), self.value(&l.right, allowed))
                 } else {
                     self.value(&l.right, allowed)
                 }
@@ -204,9 +236,9 @@ impl Gen<'_> {
             _ => false,
         };
         match (children, ok) {
-            (true, true) => self.print(e), // a layout's children are variants already
+            (true, true) => Self::print(e), // a layout's children are variants already
             (true, false) => "null".into(),
-            (false, ok) => Self::bar(ok.then(|| self.print(e))),
+            (false, ok) => Self::bar(ok.then(|| Self::print(e))),
         }
     }
 
@@ -238,11 +270,16 @@ impl Gen<'_> {
         b.visit_formal_parameters(params);
         inner.extend(b.0);
         let Some(body) = self.body(statements, expression, &mut inner) else { return self.text(whole, allowed) };
-        format!("({})?.map(({}) => {{ {body} }})", self.print(list), names.join(", "))
+        format!("({})?.map(({}) => {{ {body} }})", Self::print(list), names.join(", "))
     }
 
     /// The statements a variant keeps and its `return`.
-    fn body(&mut self, statements: &[Statement<'_>], expression: Option<&Expression<'_>>, allowed: &mut HashSet<SymbolId>) -> Option<String> {
+    fn body(
+        &mut self,
+        statements: &[Statement<'_>],
+        expression: Option<&Expression<'_>>,
+        allowed: &mut HashSet<SymbolId>,
+    ) -> Option<String> {
         let ret = returned(statements, expression)?;
         // Which locals the result needs, back to front.
         let mut needed: HashSet<SymbolId> = self.reads(ret).into_iter().collect();
@@ -282,7 +319,9 @@ impl Gen<'_> {
             if let Expression::Identifier(id) = &c.callee {
                 let sym = id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id());
                 match sym.and_then(|s| self.weft.get(&s)).map(String::as_str) {
-                    Some("derived") => return self.ok(init, allowed).then(|| format!("const {name} = {};", self.print(init))),
+                    Some("derived") => {
+                        return self.ok(init, allowed).then(|| format!("const {name} = {};", Self::print(init)));
+                    }
                     Some("resource") => {
                         let by = match c.arguments.first().and_then(Argument::as_expression) {
                             Some(e @ Expression::Identifier(id)) if self.ok(e, allowed) => id.name.to_string(),
@@ -299,7 +338,7 @@ impl Gen<'_> {
             }
             return None;
         }
-        self.ok(init, allowed).then(|| format!("const {name} = {};", self.print(init)))
+        self.ok(init, allowed).then(|| format!("const {name} = {};", Self::print(init)))
     }
 
     fn kids(&mut self, kids: &[JSXChild<'_>], allowed: &HashSet<SymbolId>) -> String {
@@ -312,7 +351,11 @@ impl Gen<'_> {
                 JSXChild::ExpressionContainer(c) => {
                     let Some(e) = c.expression.as_expression() else { continue };
                     let v = self.value(e, allowed);
-                    if v.starts_with('<') { out.push_str(&v) } else { out.push_str(&format!("{{{v}}}")) }
+                    if v.starts_with('<') {
+                        out.push_str(&v);
+                    } else {
+                        let _ = write!(out, "{{{v}}}");
+                    }
                 }
                 JSXChild::Spread(_) => {}
             }
@@ -332,7 +375,7 @@ impl Gen<'_> {
             JSXAttributeValue::StringLiteral(s) => Some(format!("{name}=\"{}\"", s.value.replace('"', "&quot;"))),
             JSXAttributeValue::ExpressionContainer(c) => {
                 let e = c.expression.as_expression()?;
-                self.ok(e, allowed).then(|| format!("{name}={{{}}}", self.print(e)))
+                self.ok(e, allowed).then(|| format!("{name}={{{}}}", Self::print(e)))
             }
             _ => None,
         }
@@ -343,11 +386,16 @@ impl Gen<'_> {
         for a in &el.opening_element.attributes {
             let JSXAttributeItem::Attribute(a) = a else { continue };
             let name = Self::attr_name(a);
-            if !(KEEP.contains(&name.as_str()) || extra.contains(&name.as_str()) || (name.starts_with("data-") && name != "data-testid")) {
+            if !(KEEP.contains(&name.as_str())
+                || extra.contains(&name.as_str())
+                || (name.starts_with("data-") && name != "data-testid"))
+            {
                 continue;
             }
             match &a.value {
-                None => out.push_str(&format!(" {name}")),
+                None => {
+                    let _ = write!(out, " {name}");
+                }
                 Some(v) => {
                     if let Some(t) = self.attr_text(&name, v, allowed) {
                         out.push(' ');
@@ -364,7 +412,9 @@ impl Gen<'_> {
         for a in &el.opening_element.attributes {
             let JSXAttributeItem::Attribute(a) = a else { continue };
             let name = Self::attr_name(a);
-            if FORWARD_SKIP.contains(&name.as_str()) || (name.starts_with("on") && name[2..].starts_with(|c: char| c.is_ascii_uppercase())) {
+            if FORWARD_SKIP.contains(&name.as_str())
+                || (name.starts_with("on") && name[2..].starts_with(|c: char| c.is_ascii_uppercase()))
+            {
                 continue;
             }
             let t = match &a.value {
@@ -392,18 +442,24 @@ impl Gen<'_> {
             return format!("<{tag}{attrs}>{kids}</{tag}>");
         }
         let sym = match name {
-            JSXElementName::IdentifierReference(r) => r.reference_id.get().and_then(|id| self.scoping.get_reference(id).symbol_id()),
+            JSXElementName::IdentifierReference(r) => {
+                r.reference_id.get().and_then(|id| self.scoping.get_reference(id).symbol_id())
+            }
             _ => None,
         };
         let plain = matches!(name, JSXElementName::IdentifierReference(r) if r.name == "Boundary");
         if sym.is_some() && sym == self.text {
             let JSXElementName::IdentifierReference(r) = name else { unreachable!() };
-            let (tag, attrs, kids) = (r.name.to_string(), self.host_attrs(el, allowed, &["as", "reserve"]), self.kids(&el.children, allowed));
+            let (tag, attrs, kids) = (
+                r.name.to_string(),
+                self.host_attrs(el, allowed, &["as", "reserve"]),
+                self.kids(&el.children, allowed),
+            );
             return format!("<{tag}{attrs}>{kids}</{tag}>");
         }
-        if let Some(tag) = sym.and_then(|s| self.variants.get(&s).cloned()) {
-            if self.imports.contains_key(&sym.unwrap()) {
-                self.used.insert(sym.unwrap());
+        if let Some((sym, tag)) = sym.and_then(|s| Some((s, self.variants.get(&s)?.clone()))) {
+            if self.imports.contains_key(&sym) {
+                self.used.insert(sym);
             }
             let attrs = self.component_attrs(el, allowed);
             if el.closing_element.is_none() {
@@ -423,7 +479,8 @@ struct Sites {
 }
 
 fn is_pending_shape(a: &JSXAttribute<'_>) -> bool {
-    matches!(&a.name, JSXAttributeName::Identifier(i) if i.name == "pending") && matches!(&a.value, Some(JSXAttributeValue::StringLiteral(s)) if s.value == "shape")
+    matches!(&a.name, JSXAttributeName::Identifier(i) if i.name == "pending")
+        && matches!(&a.value, Some(JSXAttributeValue::StringLiteral(s)) if s.value == "shape")
 }
 
 struct FindSites<'g, 's, 'o> {
@@ -442,7 +499,7 @@ impl<'a> Visit<'a> for FindSites<'_, '_, '_> {
             let n = self.sites.pending.len();
             self.sites.pending.push(a.span.start);
             let kids = self.g.kids(&el.children, &HashSet::new());
-            self.out.push_str(&format!("function $$site{n}() {{ return {WRAP}{kids}</div>; }}\n"));
+            let _ = writeln!(self.out, "function $$site{n}() {{ return {WRAP}{kids}</div>; }}");
         }
         walk::walk_jsx_element(self, el);
     }
@@ -458,10 +515,10 @@ impl<'a> VisitMut<'a> for Replace<'a, '_> {
         if let Some(n) = self.pending.iter().position(|s| *s == a.span.start) {
             let text = self.allocator.alloc_str(&format!("<a shape={{$$site{n}}} />"));
             let parsed = Parser::new(self.allocator, text, SourceType::tsx()).parse_expression();
-            if let Ok(Expression::JSXElement(mut el)) = parsed {
-                if let Some(JSXAttributeItem::Attribute(attr)) = el.opening_element.attributes.first_mut() {
-                    std::mem::swap(a, attr);
-                }
+            if let Ok(Expression::JSXElement(mut el)) = parsed
+                && let Some(JSXAttributeItem::Attribute(attr)) = el.opening_element.attributes.first_mut()
+            {
+                std::mem::swap(a, attr);
             }
         }
         walk_mut::walk_jsx_attribute(self, a);
@@ -470,7 +527,13 @@ impl<'a> VisitMut<'a> for Replace<'a, '_> {
 
 fn function<'b, 'a>(f: &'b Function<'a>, exported: Vec<String>) -> Option<Comp<'b, 'a>> {
     let b = f.body.as_ref()?;
-    Some(Comp { local: f.id.as_ref().map_or("Default", |i| i.name.as_str()).to_string(), exported, params: &f.params, statements: &b.statements, expression: None })
+    Some(Comp {
+        local: f.id.as_ref().map_or("Default", |i| i.name.as_str()).to_string(),
+        exported,
+        params: &f.params,
+        statements: &b.statements,
+        expression: None,
+    })
 }
 
 fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
@@ -482,7 +545,9 @@ fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
             Statement::FunctionDeclaration(f) => comps.extend(function(f, Vec::new())),
             Statement::VariableDeclaration(d) => vars.push((&**d, false)),
             Statement::ExportDeclaration(e) => match &e.declaration {
-                Declaration::FunctionDeclaration(f) => comps.extend(function(f, f.id.iter().map(|i| i.name.to_string()).collect())),
+                Declaration::FunctionDeclaration(f) => {
+                    comps.extend(function(f, f.id.iter().map(|i| i.name.to_string()).collect()));
+                }
                 Declaration::VariableDeclaration(d) => vars.push((&**d, true)),
                 _ => {}
             },
@@ -492,12 +557,22 @@ fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
                 }
             }
             Statement::ExportDefaultDeclaration(e) => match &e.declaration {
-                ExportDefaultDeclarationKind::FunctionDeclaration(f) => comps.extend(function(f, vec!["default".into()])),
+                ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
+                    comps.extend(function(f, vec!["default".into()]));
+                }
                 ExportDefaultDeclarationKind::ArrowFunctionExpression(f) => {
                     let (statements, expression) = arrow_body(f);
-                    comps.push(Comp { local: "Default".into(), exported: vec!["default".into()], params: &f.params, statements, expression });
+                    comps.push(Comp {
+                        local: "Default".into(),
+                        exported: vec!["default".into()],
+                        params: &f.params,
+                        statements,
+                        expression,
+                    });
                 }
-                ExportDefaultDeclarationKind::Identifier(i) => names.entry(i.name.to_string()).or_default().push("default".into()),
+                ExportDefaultDeclarationKind::Identifier(i) => {
+                    names.entry(i.name.to_string()).or_default().push("default".into());
+                }
                 _ => {}
             },
             _ => {}
@@ -515,7 +590,13 @@ fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
                 }
                 Some(Expression::FunctionExpression(f)) => {
                     if let Some(b) = &f.body {
-                        comps.push(Comp { local, exported, params: &f.params, statements: &b.statements, expression: None });
+                        comps.push(Comp {
+                            local,
+                            exported,
+                            params: &f.params,
+                            statements: &b.statements,
+                            expression: None,
+                        });
                     }
                 }
                 _ => {}
@@ -538,33 +619,55 @@ pub fn exports(program: &Program<'_>) -> Vec<String> {
 
 /// Generate this file's variants and lower its `pending="shape"` sites. `known` is `options.shapes`: the imported
 /// components with variants, keyed like `options.groups`. `None`: only what this file's own sites need.
-pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &Scoping, source: &str, filename: &str, known: Option<&HashMap<String, bool>>) -> Shapes {
+pub fn apply<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+    scoping: &Scoping,
+    source: &str,
+    filename: &str,
+    known: Option<&HashMap<String, bool>>,
+) -> Shapes {
     let wanted = known.is_some() || source.contains("pending=\"shape\"");
     if !wanted {
         return Shapes::default();
     }
-    let mut g = Gen { scoping, source, variants: HashMap::new(), text: None, weft: HashMap::new(), used: BTreeSet::new(), imports: HashMap::new() };
+    let mut g = Gen {
+        scoping,
+        source,
+        variants: HashMap::new(),
+        text: None,
+        weft: HashMap::new(),
+        used: BTreeSet::new(),
+        imports: HashMap::new(),
+    };
     let mut import_lines = HashMap::new();
     for stmt in &program.body {
         let Statement::ImportDeclaration(d) = stmt else { continue };
         let from = d.source.value.as_str();
         for spec in d.specifiers.iter().flatten() {
             let (sym, imported) = match spec {
-                ImportDeclarationSpecifier::ImportSpecifier(s) => (s.local.symbol_id.get(), s.imported.name().to_string()),
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => (s.local.symbol_id.get(), "default".to_string()),
-                _ => continue,
+                ImportDeclarationSpecifier::ImportSpecifier(s) => {
+                    (s.local.symbol_id.get(), s.imported.name().to_string())
+                }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
+                    (s.local.symbol_id.get(), "default".to_string())
+                }
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => continue,
             };
             let Some(sym) = sym else { continue };
-            if from == "weft/text" && imported == "Text" {
+            if from == "@weft-js/core/text" && imported == "Text" {
                 g.text = Some(sym);
-            } else if from == "weft" {
+            } else if from == "@weft-js/core" {
                 g.weft.insert(sym, imported);
-            } else if from.starts_with('.') && known.is_some_and(|k| k.contains_key(&format!("{}#{imported}", crate::style::resolve(filename, from)))) {
+            } else if from.starts_with('.')
+                && known
+                    .is_some_and(|k| k.contains_key(&format!("{}#{imported}", crate::style::resolve(filename, from))))
+            {
                 let local = spec.local().name.to_string();
                 let tag = format!("{}{local}$$v", if is_component_name(&local) { "" } else { "V" });
                 g.variants.insert(sym, tag.clone());
                 g.imports.insert(sym, tag.clone());
-                import_lines.insert(sym, format!("import {{ {imported}$shape as {tag} }} from {:?};\n", from));
+                import_lines.insert(sym, format!("import {{ {imported}$shape as {tag} }} from {from:?};\n"));
             }
         }
     }
@@ -583,9 +686,9 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
         let mut allowed: HashSet<SymbolId> = b.0.into_iter().collect();
         let param = c.params.items.first().map(|p| g.pattern(&p.pattern)).unwrap_or_default();
         let Some(body) = g.body(c.statements, c.expression, &mut allowed) else { continue };
-        code.push_str(&format!("function {}$shape({param}) {{ {body} }}\n", c.local));
+        let _ = writeln!(code, "function {}$shape({param}) {{ {body} }}", c.local);
         for e in &c.exported {
-            code.push_str(&format!("export {{ {}$shape as {e}$shape }};\n", c.local));
+            let _ = writeln!(code, "export {{ {}$shape as {e}$shape }};", c.local);
             exports.push(e.clone());
         }
     }
@@ -598,7 +701,9 @@ pub fn apply<'a>(allocator: &'a Allocator, program: &mut Program<'a>, scoping: &
     if code.is_empty() {
         return Shapes { code, exports };
     }
-    let mut head = String::from("import { shapeAny as $$sa, shapeRead as $$sr, shapeText as $$st } from \"weft/shape\";\n");
+    let mut head = String::from(
+        "import { shapeAny as $$sa, shapeRead as $$sr, shapeText as $$st } from \"@weft-js/core/shape\";\n",
+    );
     for s in &g.used {
         head.push_str(&import_lines[s]);
     }

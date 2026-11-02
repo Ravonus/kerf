@@ -1,9 +1,9 @@
 // A tree DataGrid's header sort and its Expand all, over loaded and lazy branches.
 import { fireEvent } from '@testing-library/dom'
-import { flush, render } from 'weft/test'
+import { flush, render } from '@weft-js/core/test'
 import { DataGrid, type GridColumn, type GridTree } from '../src/DataGrid'
 
-const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))
+const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 
 type Node_ = { id: string; deploys: number; cost: number; kids?: Node_[]; hasChildren?: boolean }
@@ -41,7 +41,7 @@ describe('DataGrid tree', () => {
 
   test('a lazy tree sorts what it loaded, and a branch not loaded yet by its own number', async () => {
     const rows: Node_[] = [{ id: 'a', deploys: 1, cost: 0, hasChildren: true }, { id: 'b', deploys: 7, cost: 0, hasChildren: true }]
-    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: async r => [leaf(`${r.id}1`, 1, 0), leaf(`${r.id}2`, 2, 0)] }
+    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => Promise.resolve([leaf(`${r.id}1`, 1, 0), leaf(`${r.id}2`, 2, 0)]) }
     const { container: c } = render(() => <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />)
     await settle()
     press(header(c, 'deploys').querySelector('button')!)
@@ -54,7 +54,7 @@ describe('DataGrid tree', () => {
     const calls: string[] = []
     const held: (() => void)[] = []
     const deep: Record<string, Node_[]> = { a: [{ id: 'a1', deploys: 1, cost: 0, hasChildren: true }, leaf('a2', 1, 0)], b: [leaf('b1', 1, 0)], a1: [leaf('a11', 1, 0)] }
-    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => new Promise(done => { calls.push(r.id); held.push(() => done(deep[r.id])) }) }
+    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => new Promise(done => { calls.push(r.id); held.push(() => done(deep[r.id]!)) }) }
     return { calls, held, tree, rows: [{ id: 'a', deploys: 1, cost: 0, hasChildren: true }, { id: 'b', deploys: 1, cost: 0, hasChildren: true }] as Node_[], release: async () => { for (const f of held.splice(0)) f(); await settle() } }
   }
 
@@ -107,7 +107,7 @@ describe('DataGrid tree', () => {
 
   test('a branch that fails to load during Expand all stays closed, and the rest open', async () => {
     const rows: Node_[] = [{ id: 'bad', deploys: 1, cost: 0, hasChildren: true }, { id: 'ok', deploys: 1, cost: 0, hasChildren: true }]
-    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: async r => { if (r.id === 'bad') throw new Error('no'); return [leaf('k', 1, 0)] } }
+    const tree: GridTree<Node_> = { branch: r => !!r.hasChildren, load: r => (r.id === 'bad' ? Promise.reject(new Error('no')) : Promise.resolve([leaf('k', 1, 0)])) }
     const { container: c } = render(() => <DataGrid caption="Spend" rows={rows} columns={COLUMNS} tree={tree} exportName={false} />)
     await settle()
     press(button(c, 'Expand all'))

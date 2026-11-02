@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Style groups spike (research 23 §6): grade and measure the v3 shop styled two ways.
 //   shop-css/     BEM classes + one hand-written stylesheet on warp's tokens (how it's done today)
-//   shop-groups/  the same design as style groups (weft/style)
+//   shop-groups/  the same design as style groups (@weft-js/core/style)
 // For each: the hidden tests (evals/tasks-v3/shop/hidden) plus spike.test.tsx in evals/frameworks/weft, a production
 // `vite build`, CSS bytes (min, gzip, brotli), and styling tokens per element. For the groups shop, the CSS is also
 // emitted flat (no @scope) and atomic (one class per declaration), from the same definitions and call sites.
@@ -25,7 +25,7 @@ const exec = promisify(execFile)
 const req = createRequire(join(fwDir, 'package.json'))
 const { JSDOM } = req('jsdom')
 const { transform: minifyCss } = req('lightningcss')
-const { transform } = req('weft/compiler')
+const { transform } = req('@weft-js/core/compiler')
 const { emitGroups, emitAtomic } = await import(join(repo, 'packages/weft/src/style/css.ts'))
 
 const sizes = css => {

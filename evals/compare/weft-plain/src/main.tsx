@@ -1,4 +1,4 @@
-import { render } from 'weft/dom'
+import { render } from '@weft-js/core/dom'
 import { NAV } from '../../shared/data'
 import { screens } from './screens'
 import '../../shared/design.css'

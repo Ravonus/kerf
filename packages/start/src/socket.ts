@@ -1,5 +1,5 @@
 // The server's half of `channel` and `sharedState` (research 32 §4): one socket per tab, many joins. `attach` knows
-// nothing about crossws, so the same code runs behind `/_weft/ws` and behind weft/test's fake. A room is a hub channel
+// nothing about crossws, so the same code runs behind `/_weft/ws` and behind @weft-js/core/test's fake. A room is a hub channel
 // (`weft:c:<id>:<params>`), so rings, cursors, gaps and fan-out are the hub's, and a join listens before it replays.
 //
 //   checks       the upgrade: exact Origin (a missing one is refused), a wildcard in `origins` (R004).
@@ -35,7 +35,7 @@ interface Sock {
   request: Request
   options: ScopeOptions
   ctx: Context
-  user?: string
+  user?: string | undefined
   joins: Map<number, Join>
   bucket: Bucket
   last: number
@@ -50,11 +50,11 @@ const states = new WeakMap<Hub, Hubbed>()
 const VALUES = 10_000
 
 function stateOf(h: Hub): Hubbed {
-  let s = states.get(h)
+  const s = states.get(h)
   if (s) return s
   const made: Hubbed = { socks: new Set(), rooms: new Map(), values: new Map() }
   states.set(h, made)
-  h.closing.add(() => { for (const c of [...made.socks]) gone(h, c, 1001) })
+  h.closing.add(() => { for (const c of Array.from(made.socks)) gone(h, c, 1001) })
   h.watch(tags => {
     for (const t of tags) {
       if (!t.startsWith('session:')) continue
@@ -64,7 +64,7 @@ function stateOf(h: Hub): Hubbed {
   return made
 }
 
-const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
+const unref = <T,>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
 const roomName = (id: string, params: unknown) => `weft:c:${id}:${stable(params)}`
 const SET = '$set', VALUE = '$v', ASK = '$?'
 
@@ -84,15 +84,16 @@ async function check(schema: StandardSchemaV1 | undefined, value: unknown, what:
   throw new StartError('Q002', `${what} was refused: ${r.issues.map(i => i.message).join('; ')}`, 'send what the schema accepts', { status: 400, issues: r.issues.map(i => ({ message: i.message, path: i.path?.map(p => (typeof p === 'object' ? p.key : p)) })) })
 }
 
-const send = (c: Sock, frame: unknown[]) => {
-  c.peer.send(JSON.stringify(frame))
+const send = (c: Sock, out: unknown[]) => {
+  c.peer.send(JSON.stringify(out))
   if (c.peer.backlog() > hub().limits.queue) gone(hub(), c, 1013)
 }
 
-const refuse = (c: Sock, n: number, e: { code?: string; message: string }) => send(c, ['e', n, { code: e.code, message: e.message }])
+const refuse = (c: Sock, n: number, e: { code?: string | undefined; message: string }) => send(c, ['e', n, { code: e.code, message: e.message }])
 
+type Authorize = ((args: { ctx: Context; params: unknown }) => unknown) & Record<'read' | 'write', (args: { ctx: Context; key: unknown }) => unknown>
 const allowed = async (fn: Fn, ctx: Context, params: unknown, write?: boolean): Promise<boolean> => {
-  const a = fn.def.authorize
+  const a = fn.def.authorize as Authorize
   return !!(await (fn.kind === 'shared' ? a[write ? 'write' : 'read']({ ctx, key: params }) : a({ ctx, params })))
 }
 
@@ -111,7 +112,7 @@ function room(h: Hub, st: Hubbed, name: string, shared: boolean): Room {
   const ch = h.channel(name)
   const on = (ev: Ev | null) => {
     if (!ev || !shared) return
-    const m = (ev.p ??= JSON.parse(ev.raw)) as { n: string; m: any }
+    const m = (ev.p ??= JSON.parse(ev.raw)) as { n: string; m: never }
     if (m.n === VALUE) store(st, name, m.m)
     else if (m.n === ASK) {
       const v = st.values.get(name)
@@ -161,7 +162,7 @@ async function join(h: Hub, c: Sock, n: number, id: string, params: unknown, cur
   let live = false, lost = false
   // Listen, then replay: a message published in between can't be lost (R006's rule).
   j.on = ev => {
-    if (!ev) return live ? void send(c, ['r', n, h.position()]) : void (lost = true)
+    if (!ev) return live ?  send(c, ['r', n, h.position()]) : void (lost = true)
     if (live) deliver(c, j, h, ev)
     else pending.push(ev)
   }
@@ -204,16 +205,16 @@ const reply = (h: Hub, c: Sock, j: Join) => (name: string, msg: unknown) => { if
 
 /** `def.left`, once per join that got in, however it ended. Nothing is listening for a failure, so it's reported. */
 async function left(c: Sock, j: Join) {
-  const scope: Scope = { ...createScope(c.request, c.options), ctx: async () => c.ctx }
+  const scope: Scope = { ...createScope(c.request, c.options), ctx: () => Promise.resolve(c.ctx) }
   try {
-    await enter(scope, () => j.fn.def.left({ id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j) }))
+    await enter(scope, () => j.fn.def.left!({ id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j) }))
   } catch (e) {
     known(c, j.fn.$id, e)
   }
 }
 
-const known = (c: Sock, id: string, e: unknown): { code?: string; message: string; issues?: unknown } => {
-  if (e instanceof StartError || e instanceof FnError) return { code: e.code, message: e.message, ...(((e as any).extra?.issues ?? (e as any).issues) && { issues: (e as any).extra?.issues ?? (e as any).issues }) }
+const known = (c: Sock, id: string, e: unknown): { code?: string | undefined; message: string; issues?: unknown } => {
+  if (e instanceof StartError || e instanceof FnError) return { code: e.code, message: e.message, ...(e.issues && { issues: e.issues }) }
   c.options.onDiagnostic?.({ code: 'E_RT', severity: 'error', message: `${id}: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
   return { message: c.options.dev && e instanceof Error ? e.message : 'Message failed.' }
 }
@@ -235,8 +236,8 @@ async function run(h: Hub, c: Sock, j: Join, ack: number, name: string, msg: unk
       const handler = Object.hasOwn(fn.def.on ?? {}, name) ? fn.def.on![name] : undefined
       if (!schema || !handler) throw new StartError('Q002', `\`${fn.$id}\` takes no message \`${name}\``, 'name one of `client`, with a handler in `on`')
       const valid = await check(schema, msg, `\`${fn.$id}.${name}\``)
-      const scope: Scope = { ...createScope(c.request, c.options), ctx: async () => c.ctx }
-      await enter(scope, () => handler({ msg: valid, id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j), reply: reply(h, c, j) }))
+      const scope: Scope = { ...createScope(c.request, c.options), ctx: () => Promise.resolve(c.ctx) }
+      await enter(scope, () => handler({ msg: valid, id: c.k, ctx: c.ctx, params: j.params, room: bound(c, j), reply: reply(h, c, j) } as never))
     }
     if (!j.gone) send(c, ['a', j.n, ack])
   } catch (e) {
@@ -252,7 +253,7 @@ function frame(h: Hub, c: Sock, text: string) {
     c.options.onDiagnostic?.({ code: 'R008', severity: 'error', message: `R008: a channel frame of ${text.length} bytes; the limit is ${h.limits.body}` })
     return gone(h, c, 1009, 'too big')
   }
-  let f: any[]
+  let f: unknown
   try { f = JSON.parse(text) } catch { return gone(h, c, 1007, 'not JSON') }
   if (!Array.isArray(f)) return gone(h, c, 1007, 'not a frame')
   if (f[0] === 'p') return send(c, ['p'])
@@ -262,7 +263,7 @@ function frame(h: Hub, c: Sock, text: string) {
   }
   if (f[0] === 'j' && typeof f[2] === 'string') return void join(h, c, f[1], f[2], f[3], typeof f[4] === 'string' ? f[4] : undefined)
   const j = c.joins.get(f[1])
-  if (f[0] === 'l') return void (j && leave(h, c, j))
+  if (f[0] === 'l') return  (j && leave(h, c, j))
   if (f[0] !== 'm' || typeof f[2] !== 'number' || typeof f[3] !== 'string') return
   if (!j) return send(c, ['a', f[1], f[2], { code: 'Q009', message: 'not joined' }])
   const per = j.fn.def.limits?.perSecond
@@ -277,7 +278,7 @@ function gone(h: Hub, c: Sock, code: number, reason?: string) {
   const st = stateOf(h)
   if (!st.socks.delete(c)) return
   for (const t of c.timers) clearTimeout(t)
-  for (const j of [...c.joins.values()]) leave(h, c, j)
+  for (const j of Array.from(c.joins.values())) leave(h, c, j)
   c.peer.close(code, reason)
 }
 
@@ -287,7 +288,7 @@ async function recheck(h: Hub, c: Sock) {
   if (!stateOf(h).socks.has(c)) return
   if (c.user !== undefined && (ctx as { user?: { id?: string } }).user?.id !== c.user) return gone(h, c, 4401, 'session')
   c.ctx = ctx
-  for (const j of [...c.joins.values()]) {
+  for (const j of Array.from(c.joins.values())) {
     if (await allowed(j.fn, ctx, j.params).catch(() => false)) {
       await j.fn.def.recheck?.({ id: c.k, ctx, reply: reply(h, c, j) })
       continue
@@ -350,25 +351,28 @@ export async function setShared(fn: Fn, key: unknown, value: unknown) {
 
 runtime.channels = { publish, set: setShared }
 
+interface WsPeer { id: string; send(text: string): unknown; close(code?: number, reason?: string): unknown; websocket?: { bufferedAmount?: number } }
+
 /** Nitro reads `crossws` off the response (research 32 §1). A refusal is a hook that throws, so no socket opens. */
 export function socketRoute(request: Request, scope: Scope, origins: string[] = []): Promise<Response> {
   const hooks = (crossws: object) => Promise.resolve(Object.assign(new Response('Upgrade required', { status: 426 }), { crossws }))
-  const refuse = (code: string, message: string, status: number) => {
+  const turnAway = (code: string, message: string, status: number) => {
     scope.options.onDiagnostic?.({ code, severity: 'error', message })
+    // oxlint-disable-next-line only-throw-error -- crossws answers an upgrade with the Response its hook throws
     return hooks({ upgrade() { throw new Response(message, { status }) } })
   }
   if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') return Promise.resolve(new Response('Upgrade required', { status: 426, headers: { 'cache-control': 'no-store' } }))
   try {
     checkOrigins(origins)
   } catch (e) {
-    return refuse('R004', (e as Error).message, 500)
+    return turnAway('R004', (e as Error).message, 500)
   }
   const origin = request.headers.get('origin')
-  if (!origin || (origin !== new URL(request.url).origin && !origins.includes(origin))) return refuse('R010', `R010: origin \`${origin ?? 'none'}\` may not open a socket: list it in \`realtime({ origins })\``, 403)
+  if (!origin || (origin !== new URL(request.url).origin && !origins.includes(origin))) return turnAway('R010', `R010: origin \`${origin ?? 'none'}\` may not open a socket: list it in \`realtime({ origins })\``, 403)
   const peers = new Map<string, Promise<Pick<Attached, 'message' | 'close'>>>()
   const mux = new URL(request.url).searchParams.has('mux')
   return hooks({
-    open(peer: any) {
+    open(peer: WsPeer) {
       const p: Peer = { send: t => void peer.send(t), close: (code, reason) => peer.close(code, reason), backlog: () => peer.websocket?.bufferedAmount ?? 0 }
       peers.set(peer.id, (mux ? import('./mux').then(m => m.muxed(p, request, scope)) : attach(p, request, scope)).catch(e => {
         scope.options.onDiagnostic?.({ code: 'E_RT', severity: 'error', message: `/_weft/ws: ${e instanceof Error ? e.stack ?? e.message : String(e)}` })
@@ -376,8 +380,8 @@ export function socketRoute(request: Request, scope: Scope, origins: string[] = 
         return { message() {}, close() {} }
       }))
     },
-    message(peer: any, m: any) { void peers.get(peer.id)?.then(a => a.message(m.text())) },
-    close(peer: any) {
+    message(peer: WsPeer, m: { text(): string }) { void peers.get(peer.id)?.then(a => a.message(m.text())) },
+    close(peer: WsPeer) {
       void peers.get(peer.id)?.then(a => a.close())
       peers.delete(peer.id)
     },

@@ -382,7 +382,7 @@ render in the same frame height.
 
 **As built** (`packages/warp-core/src/charts`, `packages/warp/src/Chart.tsx`, `Charts.tsx`).
 - A form is a pure layout in warp-core: config and width in, SVG scene out. The server renders the scene; `chart(figure, …)`
-  then patches it, so a resize or a data change rewrites attributes on the same nodes. Charts ship in `@weft/warp`, tree
+  then patches it, so a resize or a data change rewrites attributes on the same nodes. Charts ship in `@weft-js/warp`, tree
   shaken per form, rather than as a `@weft/charts` pack.
 - Table view and summary always render, so there are no `<Chart.Table />` or `<Chart.Summary />` parts, as `Table` takes
   props rather than `Table.Column`. Every form takes `data`; a retry goes in `action`, a layout switch in `toolbar`.
