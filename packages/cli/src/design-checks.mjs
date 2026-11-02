@@ -190,6 +190,26 @@ function addImport(text, names) {
 }
 
 /** Does the app have warp's tokens? */
+/** Where a host keeps response headers, outside the source. */
+const HOST_HEADERS = ['public/_headers', '_headers', 'netlify.toml', 'vercel.json']
+const CSP_DIRECTIVE = /\b((?:default|style|script)-src(?:-attr|-elem)?)\b([^;\n"`]*)/gi
+
+/** Every source list a file gives each directive, wherever in it the policy is written. */
+function cspDirectives(text) {
+  const out = new Map()
+  for (const m of text.matchAll(CSP_DIRECTIVE)) {
+    const name = m[1].toLowerCase()
+    out.set(name, [...(out.get(name) ?? []), m[2]])
+  }
+  return out
+}
+
+/** The first directive named governs, as in a browser's fallback; a nonce or a hash beside `unsafe-inline` cancels it. */
+function inlineAllowed(policy, ...names) {
+  const lists = policy.get(names.find(n => policy.has(n)))
+  return !lists || lists.every(l => /'unsafe-inline'/i.test(l) && !/'(?:nonce|sha\d+)-/i.test(l))
+}
+
 export function hasTokens(root) {
   const file = join(root, 'package.json')
   if (!existsSync(file)) return false
@@ -358,11 +378,14 @@ export function designChecks(root, { files, exclude = [], tokens }) {
   const config = ['ts', 'mts', 'js', 'mjs', 'json', 'yaml', 'yml'].map(x => join(root, `weft.config.${x}`)).find(existsSync)
   const configText = config ? readFileSync(config, 'utf8') : ''
   if (!/inlineCss['"]?\s*:\s*false/.test(configText)) {
-    for (const f of [...files, ...(config ? [{ rel: config.slice(root.length + 1).split('\\').join('/'), text: configText }] : [])]) {
-      const m = /content-security-policy/i.exec(f.text)
+    const hosting = HOST_HEADERS.filter(rel => existsSync(join(root, rel)) && !files.some(f => f.rel === rel)).map(rel => ({ rel, text: readFileSync(join(root, rel), 'utf8') }))
+    for (const f of [...files, ...hosting, ...(config ? [{ rel: config.slice(root.length + 1).split('\\').join('/'), text: configText }] : [])]) {
+      const m = /content-security-policy(?!-report-only)/i.exec(f.text)
       if (!m) continue
-      const policy = /[`'"][^`'"]*(?:style-src|default-src)[^\n]*/i.exec(f.text.slice(m.index))?.[0] ?? ''
-      if (/(?:style-src|default-src)/i.test(policy) && !/unsafe-inline/i.test(/style-src[^;]*/i.exec(policy)?.[0] ?? policy)) reporter(f)('D012', m.index, m.index + m[0].length, 'This Content-Security-Policy blocks inline styles, and a build inlines the first paint\'s CSS: the page would show unstyled, and a deferred sheet would never switch on.', { description: 'Set site: { inlineCss: false }', safe: false, text: m[0] })
+      const policy = cspDirectives(f.text)
+      const report = reporter(f)
+      if (!inlineAllowed(policy, 'style-src-elem', 'style-src', 'default-src')) report('D012', m.index, m.index + m[0].length, 'This Content-Security-Policy blocks inline styles, and a build inlines the first paint\'s CSS: the page shows unstyled until its sheets load.', { description: 'Set site: { inlineCss: false }', safe: false, text: m[0] })
+      else if (!inlineAllowed(policy, 'script-src-attr', 'script-src', 'default-src')) report('D012', m.index, m.index + m[0].length, 'This Content-Security-Policy blocks inline handlers, so deferred sheets switch on only once the client entry has run: rules the first paint left out wait for it, and never come if scripts are refused too.', { description: 'Set site: { inlineCss: false }', safe: false, text: m[0] }, 'warning')
     }
   }
 

@@ -51,8 +51,42 @@ describe('a CSP against inlined CSS', () => {
   test('D012 until inlining is off or inline styles are allowed', async () => {
     const page = 'export const P = () => <p>x</p>'
     expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': header })).result)).toEqual(['D012'])
-    expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': header.replace("'self'\"", "'self' 'unsafe-inline'\"") })).result)).toEqual([])
+    const allowed = header.replace("default-src 'self'; style-src 'self'", "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
+    expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': allowed })).result)).toEqual([])
     expect(codes((await app({ 'src/Page.tsx': page, 'src/headers.tsx': header, 'weft.config.json': '{ "site": { "inlineCss": false } }' })).result)).toEqual([])
+  })
+})
+
+describe('D012 reads the policy a browser would apply', () => {
+  const page = 'export const P = () => <p>x</p>'
+  const found = async (files) => (await app({ 'src/Page.tsx': page, ...files })).result.diagnostics.filter(d => d.code === 'D012').map(d => d.severity)
+  const in_ = policy => ({ 'src/headers.tsx': `export const h = { 'Content-Security-Policy': "${policy}" }\n` })
+
+  test.each([
+    ['style-src alone', "style-src 'self'", ['error']],
+    ['default-src as the fallback', "default-src 'self'", ['error']],
+    ['unsafe-inline only for attributes', "style-src 'self'; style-src-attr 'unsafe-inline'", ['error']],
+    ['a nonce beside unsafe-inline', "style-src 'unsafe-inline' 'nonce-abc'; script-src-attr 'unsafe-inline'", ['error']],
+    ['a hash beside unsafe-inline', "style-src 'unsafe-inline' 'sha256-abc'; script-src-attr 'unsafe-inline'", ['error']],
+    ['elements allowed by their own directive', "style-src 'self'; style-src-elem 'unsafe-inline'; script-src-attr 'unsafe-inline'", []],
+    ['script-src-attr none', "style-src 'unsafe-inline'; script-src-attr 'none'", ['warning']],
+    ['script-src as the fallback for handlers', "style-src 'unsafe-inline'; script-src 'self'", ['warning']],
+    ['default-src as the fallback for handlers', "default-src 'self'; style-src 'unsafe-inline'", ['warning']],
+    ['everything allowed', "style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'", []],
+    ['a policy on neither', "img-src 'self'", []],
+  ])('%s', async (_, policy, want) => { expect(await found(in_(policy))).toEqual(want) })
+
+  test('a report-only policy blocks nothing', async () => {
+    expect(await found({ 'src/headers.tsx': `export const h = { 'Content-Security-Policy-Report-Only': "style-src 'self'" }\n` })).toEqual([])
+  })
+
+  test('a policy in a const above the header, or an array joined', async () => {
+    expect(await found({ 'src/headers.tsx': `const csp = "default-src 'self'"\nexport const h = { 'Content-Security-Policy': csp }\n` })).toEqual(['error'])
+    expect(await found({ 'src/headers.tsx': `const csp = ["default-src 'self'", "style-src 'unsafe-inline'"].join('; ')\nexport const h = { 'Content-Security-Policy': csp }\n` })).toEqual(['warning'])
+  })
+
+  test('a host\'s headers file', async () => {
+    expect(await found({ 'public/_headers': `/*\n  Content-Security-Policy: style-src 'self'\n` })).toEqual(['error'])
   })
 })
 
