@@ -117,7 +117,7 @@ describe('streaming', () => {
     const reviews = all.indexOf('<li wk')
     expect(stock).toBeGreaterThan(first.length)
     expect(reviews).toBeGreaterThan(stock)
-    expect(all.indexOf('id="weft-data"')).toBeGreaterThan(reviews)
+    expect(all.lastIndexOf('id="weft-data"')).toBeGreaterThan(reviews) // the shell carries a snapshot, the last is the whole
     expect(all.match(/\$wb=function/g)).toHaveLength(1)
     expect(chunks.find(c => c.text.includes('In stock')).at).toBeLessThan(chunks.find(c => c.text.includes('<li wk')).at)
     // The resolved values travel in the page data, so the client never refetches them.
