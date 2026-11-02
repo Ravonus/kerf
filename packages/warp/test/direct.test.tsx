@@ -5,7 +5,7 @@ import { flush, render } from '@weft-js/core/test'
 import { AccountMenu } from './fixtures/direct-menu'
 import { Settings } from './fixtures/direct-tabs'
 
-const tick = () => new Promise(r => setTimeout(r))
+const tick = () => new Promise(r => { setTimeout(r) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 
@@ -22,10 +22,10 @@ test('tabs: nextIndex wraps and moves focus, the indicator follows, one tab stop
   const list = container.querySelector('[role="tablist"]')!
   key(list, 'ArrowLeft')
   await settle()
-  expect(tabs[2].getAttribute('aria-selected')).toBe('true')
+  expect(tabs[2]!.getAttribute('aria-selected')).toBe('true')
   expect(document.activeElement).toBe(tabs[2])
-  expect(tabs[0].getAttribute('tabindex')).toBe('-1')
-  expect(tabs[2].hasAttribute('tabindex')).toBe(false)
+  expect(tabs[0]!.getAttribute('tabindex')).toBe('-1')
+  expect(tabs[2]!.hasAttribute('tabindex')).toBe(false)
   expect(container.querySelector('[role="tabpanel"]')!.textContent).toBe('Team')
   expect(container.querySelector<HTMLElement>('[data-part="indicator"]')!.style.getPropertyValue('--warp-b')).not.toBe('')
   container.remove()
@@ -51,7 +51,7 @@ test('menu: opens into the first item, arrows move, Escape closes and returns to
   expect(document.activeElement).toBe(button)
   button.click()
   await settle()
-  items[1].click()
+  items[1]!.click()
   await settle()
   expect(location.hash).toBe('#out')
   expect(document.activeElement).toBe(button)

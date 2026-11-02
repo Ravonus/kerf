@@ -25,7 +25,7 @@ export function StepBar({ label, steps, current, error }: { label: string; steps
       </ol>
       <div data-part="compact">
         <div data-scope="row" data-justify="between">
-          <b data-part="compact-title">{steps[at.value].title}</b>
+          <b data-part="compact-title">{steps[at.value]!.title}</b>
           <span class="muted">Step {at.value + 1} of {steps.length}</span>
         </div>
         <div data-scope="progress" data-part="root" style={`--_v:${(at.value + 1) / steps.length}`}><div data-part="track"><div data-part="range"></div></div></div>

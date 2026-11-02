@@ -20,7 +20,7 @@ import { Toaster } from '../src/Toast'
 import { AUDIT, CART, CARDS, HOOKS, INTEGRATIONS, INVOICES, INVITES, KEYS, PEOPLE, PLANS, ROLES, SAMPLE, SHIPPING, TARGETS } from './fixtures/pack-admin'
 
 const NOW = '2026-10-28T14:02:00Z'
-const tick = async () => { await flush(); await new Promise(r => setTimeout(r)); await flush() }
+const tick = async () => { await flush(); await new Promise(r => { setTimeout(r) }); await flush() }
 const byText = (root: ParentNode, t: string) => [...root.querySelectorAll<HTMLElement>('button, a')].find(b => (b.querySelector('[data-part="sweep-label"]') ?? b).textContent?.trim() === t || b.getAttribute('aria-label') === t)!
 const dialog = () => document.querySelector<HTMLDialogElement>('dialog[open]')!
 const toasts = () => [...document.querySelectorAll('[data-scope="toast"][data-part="root"]')].map(t => t.querySelector('[data-part="title"]')!.textContent)
@@ -28,12 +28,12 @@ const type = (el: HTMLInputElement, v: string) => { el.value = v; fireEvent.inpu
 const field = (root: ParentNode, label: string) => [...root.querySelectorAll('[data-scope="field"]')].find(f => f.querySelector('[data-part="label-text"]')?.textContent === label)!.querySelector<HTMLInputElement>('input, select')!
 
 beforeAll(() => {
-  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.setAttribute('open', '') }
-  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.removeAttribute('open') }
+  (HTMLDialogElement.prototype as { showModal: (this: HTMLDialogElement) => void }).showModal ??= function (this: HTMLDialogElement) { this.setAttribute('open', '') }
+  ;(HTMLDialogElement.prototype as unknown as { close?: unknown }).close ??= function (this: HTMLDialogElement) { this.removeAttribute('open') }
 })
 
 describe('SaveBar', () => {
-  const mount = (onSave: (v: any) => any = () => {}, validate?: (v: any) => Record<string, string>) => {
+  const mount = (onSave: Parameters<typeof SaveBar<{ name: string }>>[0]['onSave'] = () => {}, validate?: (v: { name: string }) => Record<string, string>) => {
     const values = state({ name: 'Ines' })
     const errors = state<Record<string, string>>({})
     const view = render(() => <><form><Input label="Name" value={values.value.name} error={errors.value.name ?? ''} onInput={e => (values.value = { name: e.currentTarget.value })} /><SaveBar values={values} errors={errors} onSave={onSave} validate={validate} /></form><Toaster /></>)
@@ -54,7 +54,7 @@ describe('SaveBar', () => {
   })
   test('pending, then Saved, and the new values are the snapshot', async () => {
     let done!: () => void
-    const { bar, input, c } = mount(() => new Promise<void>(r => (done = r)))
+    const { bar, input, c } = mount(() => new Promise<void>(r => { done = r }))
     type(input, 'Ada'); await tick()
     byText(c, 'Save changes').click(); await tick()
     expect(byText(c, 'Save changes').hasAttribute('data-loading')).toBe(true)
@@ -129,7 +129,7 @@ test('TagsInput: Enter, comma, paste; invalid stays critical; Backspace highligh
 describe('MembersTable', () => {
   const mount = (seats = 10, members: Member[] = PEOPLE) => {
     const people = state<readonly Member[]>(members)
-    const log: any[] = []
+    const log: unknown[] = []
     const view = render(() => <><MembersTable members={people} invites={INVITES} me="ines" roles={ROLES} seats={seats} onRoleChange={(m, role) => { log.push(['role', m.id, role]); people.value = people.value.map(x => (x.id === m.id ? { ...x, role } : x)) }} onRemove={l => { log.push(['rm', l.map(m => m.id)]); people.value = people.value.filter(x => !l.some(y => y.id === x.id)) }} onRestore={l => { log.push(['back']); people.value = [...people.value, ...l] }} onInvite={(e, r) => { log.push(['inv', e, r]) }} /><Toaster /></>)
     return { c: view.container, log, people }
   }
@@ -154,7 +154,7 @@ describe('MembersTable', () => {
     expect(log).toEqual([])
   })
   test('demoting yourself warns', async () => {
-    const { c, log } = mount(10, [PEOPLE[0], { ...PEOPLE[1], role: 'owner' }])
+    const { c, log } = mount(10, [PEOPLE[0]!, { ...PEOPLE[1]!, role: 'owner' }])
     const s = select(c, 'ines'); s.value = 'member'; fireEvent.change(s); await tick()
     expect(dialog().textContent).toMatch(/lose access to this page/)
     expect(log).toEqual([])
@@ -200,12 +200,12 @@ describe('ApiKeys', () => {
   const mount = (over: Partial<Parameters<typeof ApiKeys>[0]> = {}) => {
     const keys = state<readonly ApiKey[]>(KEYS)
     const gone: string[] = []
-    const view = render(() => <><ApiKeys keys={keys} now={NOW} onCreate={async () => 'wk_test_SECRET'} onRevoke={k => { gone.push(k.id); keys.value = keys.value.filter(x => x !== k) }} {...over} /><Toaster /></>)
+    const view = render(() => <><ApiKeys keys={keys} now={NOW} onCreate={() => Promise.resolve('wk_test_SECRET')} onRevoke={k => { gone.push(k.id); keys.value = keys.value.filter(x => x !== k) }} {...over} /><Toaster /></>)
     return { c: view.container, gone }
   }
   test('re-auth first; refused stops', async () => {
     const asks: string[] = []
-    const { c } = mount({ onReauth: async r => { asks.push(r); return false } })
+    const { c } = mount({ onReauth: r => { asks.push(r); return Promise.resolve(false) } })
     byText(c, 'Create test key').click(); await tick()
     expect(asks.length).toBe(1)
     expect(dialog()).toBeNull()
@@ -249,7 +249,7 @@ describe('ApiKeys', () => {
 describe('PlanPicker', () => {
   test('arrow-picking only compares; the primary opens proration; a decline keeps the dialog', async () => {
     let answer: string | undefined = 'Your card was declined.'
-    const asked: any[] = []
+    const asked: unknown[] = []
     const { container: c } = render(() => <><PlanPicker plans={PLANS} current="team" seats={9} daysLeft={9} onChange={(p, i) => { asked.push([p.id, i]); return answer }} /><Toaster /></>)
     const radio = c.querySelector<HTMLInputElement>('input[value="scale"]')!
     radio.click(); await tick()
@@ -279,9 +279,9 @@ test('UsageMeter: tones, tick and overage', () => {
   const { container: c } = render(() => <><UsageMeter label="A" value={50} limit={100} /><UsageMeter label="B" value={85} limit={100} /><UsageMeter label="C" value={125} limit={100} overage="+ $12.40 overage" /></>)
   const m = [...c.querySelectorAll<HTMLElement>('[data-scope="meter"]')]
   expect(m.map(x => x.dataset.tone)).toEqual([undefined, 'caution', 'critical'])
-  expect(m[2].querySelector('[data-part="over"]')).not.toBeNull()
-  expect(m[2].querySelector('[data-part="note"]')!.textContent).toBe('+ $12.40 overage')
-  expect(m[0].querySelector('[role="meter"]')!.getAttribute('aria-valuetext')).toBe('50 of 100')
+  expect(m[2]!.querySelector('[data-part="over"]')).not.toBeNull()
+  expect(m[2]!.querySelector('[data-part="note"]')!.textContent).toBe('+ $12.40 overage')
+  expect(m[0]!.querySelector('[role="meter"]')!.getAttribute('aria-valuetext')).toBe('50 of 100')
 })
 
 test('Invoices pin a banner on a failed payment; PaymentMethods give Undo', async () => {
@@ -306,10 +306,16 @@ test('PayFrame: a titled iframe slot with a shimmer until it loads, never a card
 })
 
 describe('AuditLog', () => {
+  test('a filter change is announced', async () => {
+    const { container: c } = render(() => <><AuditLog events={AUDIT} now={NOW} categories={[{ value: 'all', label: 'All' }, { value: 'keys', label: 'Keys' }]} /><Toaster /></>)
+    c.querySelectorAll<HTMLInputElement>('[data-scope="segmented"] input')[1]!.click()
+    await flush(); await new Promise(r => { setTimeout(r, 80) })
+    expect(c.querySelector('[data-scope="announcer"]')!.textContent).toMatch(/\d+ events? shown/)
+  })
   test('filters, exact time on hover, and the rate limit counts down on the button', async () => {
     vi.useFakeTimers()
     try {
-      const { container: c } = render(() => <><AuditLog events={AUDIT} now={NOW} categories={[{ value: 'all', label: 'All' }, { value: 'keys', label: 'Keys' }]} onExport={async () => ({ retryAfter: 2 })} /><Toaster /></>)
+      const { container: c } = render(() => <><AuditLog events={AUDIT} now={NOW} categories={[{ value: 'all', label: 'All' }, { value: 'keys', label: 'Keys' }]} onExport={() => Promise.resolve({ retryAfter: 2 })} /><Toaster /></>)
       const rows = () => c.querySelectorAll('tbody tr[data-id]').length
       expect(rows()).toBe(3)
       expect(c.querySelector('time')!.textContent).toBe('4 min ago')
@@ -346,8 +352,8 @@ describe('Integrations', () => {
     expect(document.activeElement!.querySelector('[data-part="sweep-label"]')?.textContent ?? document.activeElement!.textContent).toBe('Configure')
   })
   test('webhooks: https checked on submit then live; the secret once; Send test reports', async () => {
-    const added: any[] = []
-    const { container: c } = render(() => <><Webhooks hooks={HOOKS} events={['a.b', 'c.d']} onAdd={async (u, e) => { added.push([u, e]); return 'whsec_1' }} onTest={async () => ({ status: 200, ms: 82 })} /><Toaster /></>)
+    const added: unknown[] = []
+    const { container: c } = render(() => <><Webhooks hooks={HOOKS} events={['a.b', 'c.d']} onAdd={(u, e) => { added.push([u, e]); return Promise.resolve('whsec_1') }} onTest={() => Promise.resolve({ status: 200, ms: 82 })} /><Toaster /></>)
     byText(c, 'Send test to https://hooks.acme.dev/deploys').click(); await tick()
     expect(toasts()).toContain('Test delivered: 200')
     byText(c, 'Add endpoint').click(); await tick()
@@ -367,8 +373,8 @@ describe('Integrations', () => {
 
 describe('CsvImport', () => {
   const mount = () => {
-    const got: any[] = []
-    const view = render(() => <><CsvImport targets={TARGETS} sample={SAMPLE} onImport={async (r, p) => { got.push(r); p(50) }} /><Toaster /></>)
+    const got: unknown[] = []
+    const view = render(() => <><CsvImport targets={TARGETS} sample={SAMPLE} onImport={(r, p) => { got.push(r); p(50); return Promise.resolve() }} /><Toaster /></>)
     return { c: view.container, got }
   }
   test('a non-CSV is refused with a Toast before anything else', async () => {
@@ -390,7 +396,7 @@ describe('CsvImport', () => {
     expect([...c.querySelectorAll('td [data-part="error"]')].map(e => e.textContent)).toEqual(['Not a valid email', 'Use YYYY-MM-DD'])
     expect(c.querySelectorAll('tr[data-invalid]').length).toBe(2)
     byText(c, 'Import 2 rows').click(); await tick()
-    expect(got[0].map((r: any) => r.email)).toEqual(['ada@acme.dev', 'kat@acme.dev'])
+    expect((got[0] as { email: string }[]).map(r => r.email)).toEqual(['ada@acme.dev', 'kat@acme.dev'])
     expect(c.textContent).toContain('2 people imported')
     expect(toasts()).toContain('2 people imported')
     expect(c.querySelector('[role="progressbar"]')!.getAttribute('aria-valuenow')).toBe('100')
@@ -399,7 +405,7 @@ describe('CsvImport', () => {
     const { c } = mount()
     byText(c, 'Use the sample').click(); await tick()
     const s = c.querySelectorAll<HTMLSelectElement>('select')[1]
-    s.value = 'skip'; fireEvent.change(s); await tick()
+    s!.value = 'skip'; fireEvent.change(s!); await tick()
     byText(c, 'Preview').click(); await tick()
     expect(c.querySelector('[data-scope="alert"]')!.textContent).toContain('No column is mapped to Email')
     expect((byText(c, 'Import 0 rows') as HTMLButtonElement).disabled).toBe(true)
@@ -407,7 +413,7 @@ describe('CsvImport', () => {
 })
 
 test('CartDrawer: stepper, minus at one removes with Undo, Checkout', async () => {
-  const cart = state<CartLine[]>([CART[0]])
+  const cart = state<CartLine[]>([CART[0]!])
   const open = state(true)
   let went = 0
   render(() => <><CartDrawer open={open} cart={cart} onCheckout={() => went++} /><Toaster /></>)
@@ -415,7 +421,7 @@ test('CartDrawer: stepper, minus at one removes with Undo, Checkout', async () =
   const d = dialog()
   expect(d.querySelector('[data-part="title"]')!.textContent).toBe('Cart · 1 item')
   byText(d, 'More Field notebook, A5 dot grid').click(); await tick()
-  expect(cart.value[0].quantity).toBe(2)
+  expect(cart.value[0]!.quantity).toBe(2)
   byText(d, 'Fewer Field notebook, A5 dot grid').click(); await tick()
   byText(d, 'Remove Field notebook, A5 dot grid').click(); await tick()
   expect(cart.value).toEqual([])
@@ -444,7 +450,7 @@ describe('Checkout', () => {
     byText(c, 'Review order').click(); await tick()
   }
   test('the address step keeps errors at the source, by country, and focuses the first', async () => {
-    const { c } = mount(async () => ({ order: { id: 'A' } }))
+    const { c } = mount(() => Promise.resolve({ order: { id: 'A' } }))
     byText(c, 'Continue to address').click(); await tick()
     expect(document.activeElement!.getAttribute('data-part')).toBe('step-title')
     const s = c.querySelector<HTMLElement>('[data-step="address"]')!
@@ -457,7 +463,7 @@ describe('Checkout', () => {
     expect(s.textContent).toContain('A ZIP code is 5 digits')
   })
   test('a coupon applies as a chip with Undo and moves the total', async () => {
-    const { c } = mount(async () => ({ order: { id: 'A' } }))
+    const { c } = mount(() => Promise.resolve({ order: { id: 'A' } }))
     const sum = c.querySelector<HTMLElement>('[data-part="summary"]')!
     const total = () => sum.querySelector('[data-part="total"] dd')!.textContent
     expect(total()).toBe('$82.50')
@@ -474,7 +480,7 @@ describe('Checkout', () => {
   test('review has Edit links; pay is single-flight, keyed, and ends on the confirmation', async () => {
     const orders: OrderDraft[] = []
     let finish!: (r: PlaceOrderResult) => void
-    const { c, steps } = mount(o => { orders.push(o); return new Promise(r => (finish = r)) }, 'key-1')
+    const { c, steps } = mount(o => { orders.push(o); return new Promise(r => { finish = r }) }, 'key-1')
     await toReview(c)
     byText(c, 'Edit delivery').click(); await tick()
     expect(active(c)).toBe('shipping')
@@ -484,8 +490,8 @@ describe('Checkout', () => {
     const pay = byText(c, 'Pay $82.50')
     pay.click(); pay.click(); await tick()
     expect(orders.length).toBe(1)
-    expect(orders[0].idempotencyKey).toBe('key-1')
-    expect(orders[0].address.postalCode).toBe('94107')
+    expect(orders[0]!.idempotencyKey).toBe('key-1')
+    expect(orders[0]!.address.postalCode).toBe('94107')
     expect(pay.hasAttribute('data-loading')).toBe(true)
     finish({ order: { id: 'A-2041' } }); await tick()
     expect(active(c)).toBe('done')
@@ -497,7 +503,7 @@ describe('Checkout', () => {
   test('errors return to where they can be fixed; a timeout retries with the same key', async () => {
     const answers: (PlaceOrderResult | Error)[] = [new Error('timeout'), { error: { code: 'CARD_DECLINED', reason: 'The bank said no.' } }, { error: { code: 'PRICE_CHANGED', total: 90 } }, { error: { code: 'OUT_OF_STOCK', sku: 'b' } }]
     const keys: string[] = []
-    const { c } = mount(async o => { keys.push(o.idempotencyKey); const a = answers.shift()!; if (a instanceof Error) throw a; return a })
+    const { c } = mount(o => { keys.push(o.idempotencyKey); const a = answers.shift()!; return a instanceof Error ? Promise.reject(a) : Promise.resolve(a) })
     await toReview(c)
     byText(c, 'Pay $82.50').click(); await tick()
     expect(active(c)).toBe('review')

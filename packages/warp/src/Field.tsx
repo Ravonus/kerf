@@ -6,51 +6,53 @@ import { use } from '@weft-js/warp-core/weft'
 import './fields'
 import '@weft-js/warp-core/styles/inputs/text.css'
 
-export interface FieldProps {
+interface FieldBase {
   /** The accessible name, drawn as the floating border label (or above, classic). Required. */
   label: string
-  hint?: any
+  hint?: unknown
   /** Shown instead of the hint; marks the field invalid. */
-  error?: any
+  error?: unknown
   /** Leading icon: it sweeps with the border. */
-  icon?: IconRef
-  prefix?: any
-  suffix?: any
+  icon?: IconRef | undefined
+  prefix?: unknown
+  suffix?: unknown
   /** floating (default, or the app's `warp({ fields })`) · classic: the label above. */
-  variant?: 'floating' | 'classic'
-  appearance?: 'line'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'floating' | 'classic' | undefined
+  appearance?: 'line' | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
   /** A clear button (shown once there is a value). */
-  clearable?: boolean
+  clearable?: boolean | undefined
   /** Maximum length, shown as a counter. */
-  counter?: number
-  id?: string
-  value?: string
-  disabled?: boolean
-  readonly?: boolean
-  onInput?: (e: InputEvent & { currentTarget: HTMLInputElement & HTMLTextAreaElement }) => void
-  [attr: string]: any
+  counter?: number | undefined
+  id?: string | undefined
+  value?: string | undefined
+  disabled?: boolean | undefined
+  readonly?: boolean | undefined
+  onInput?: ((e: InputEvent & { currentTarget: HTMLInputElement & HTMLTextAreaElement }) => void) | undefined
 }
 
-/** FieldProps for a component with its own value type: Omit alone would also drop what the index signature hides. */
-export type FieldShell = Omit<FieldProps, 'value' | 'defaultValue'> & { label: string }
+/** Props for the text fields; anything else lands on the control. */
+export interface FieldProps extends FieldBase { [attr: string]: unknown }
+
+/** FieldProps for a component with its own value type: Omit on FieldProps would drop what the index signature hides. */
+export type FieldShell = Omit<FieldBase, 'value' | 'defaultValue'> & { [attr: string]: unknown }
 
 // `invalid` is a getter and `rest` the live props: the control is made once and its attributes update in place
-type Control = (p: { id: string; readonly describedby?: string; readonly invalid: boolean; rest: Record<string, any> }) => any
+export type Control = (p: { id: string; readonly describedby?: string | undefined; readonly invalid: boolean; rest: Record<string, unknown> }) => unknown
 
 /**
  * The field shell (03 §1 anatomy, verbatim order): control (sweep-base, sweep, icon, label, prefix, input, suffix,
  * clear, end slot) then message (hint | error, counter). Everything is in the server HTML, label letters included;
  * after mount warp-core's field() measures the label's per-letter delays and notch and wires clear, counter and focus.
  */
-export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: any; filled?: boolean; attrs?: Record<string, any>; group?: boolean; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
+export function Field({ label, hint, error, icon, prefix, suffix, variant, appearance, size, clearable, counter, id: given, control, end, filled, attrs, group, hold, wrap, reset, ...rest }: FieldProps & { control: Control; end?: unknown; filled?: boolean; attrs?: Record<string, unknown>; group?: boolean | undefined; hold?: boolean; wrap?: boolean; /** Puts held state back when the field's form resets. */ reset?: () => void }) {
   const id = untrack(() => given) ?? uid('field')
   const glyph = derived(() => icon)
   // an error can arrive long after mount, so the block and what points at it follow it
   const message = derived(() => hint !== undefined || !!error || counter !== undefined)
   const msg = derived(() => (message.value ? `${id}-msg` : undefined))
   // keyed by position: a label repeats letters
-  const chars = derived(() => labelChars(String(label ?? '')).map((c, at) => ({ c, at })))
+  const chars = derived(() => labelChars(String((label as string | number | undefined) ?? '')).map((c, at) => ({ c, at })))
   // one omit() for every read: the compiler expands `rest` afresh at each use (the proxy reads stay live)
   const live = untrack(() => rest)
   let root: HTMLDivElement | undefined
@@ -59,7 +61,7 @@ export function Field({ label, hint, error, icon, prefix, suffix, variant, appea
   if (untrack(() => reset)) use(formReset, () => root, () => () => reset!())
   return (
     <div
-      ref={(n: any) => (root = n)}
+      ref={n => (root = n)}
       data-scope="field"
       data-variant={variant}
       data-appearance={appearance}

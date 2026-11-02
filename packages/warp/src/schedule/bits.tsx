@@ -41,7 +41,7 @@ export function useWidth(el: () => Element | undefined) {
   onMount(() => {
     const node = el()
     if (!node || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(r => { width.value = r[0].contentRect.width })
+    const ro = new ResizeObserver(r => { width.value = r[0]!.contentRect.width })
     ro.observe(node)
     onCleanup(() => ro.disconnect())
   })

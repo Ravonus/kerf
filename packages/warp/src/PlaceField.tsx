@@ -9,9 +9,12 @@ import { CountrySelect } from './RichSelect'
 import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/address.css'
 
+/** A place a lookup returned. */
 export type Place = { displayName: string; lat: number; lng: number; timezone?: TimeZoneId; category?: string; id?: string }
+/** A filter chip that nudges a place lookup. */
 export type PlaceBias = { id: string; label: string; default?: boolean }
 
+/** Props for PlaceLookupInput. */
 export type PlaceLookupInputProps = RichFieldProps & Bindable<Place | null> & {
   search: (q: string, o: { bias: Record<string, boolean>; signal: AbortSignal }) => Promise<Place[]>
   biases?: PlaceBias[]
@@ -32,7 +35,7 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
     box!.querySelector('input')!.value = text.value // the native reset emptied it, and the text may not have changed
   }
   return (
-    <div ref={(n: any) => (box = n)} class="stack">
+    <div ref={n => (box = n)} class="stack">
       <ComboField
         icon={PinIcon}
         {...rest}
@@ -49,18 +52,20 @@ export function PlaceLookupInput({ value, defaultValue, onValueChange, search, b
       />
       {list.value.length > 0 && (
         <div class="chips" role="group" aria-label="Prefer">
-          {list.value.map(b => <Chip key={b.id} pressed={!!bias.get(b.id)} onClick={() => (bias.value = { ...bias.value, [b.id]: !bias.value[b.id] })}>{b.label}</Chip>)}
+          {list.value.map(b => <Chip key={b.id} pressed={!!(bias.get(b.id) as boolean | undefined)} onClick={() => (bias.value = { ...bias.value, [b.id]: !bias.value[b.id] })}>{b.label}</Chip>)}
         </div>
       )}
     </div>
   )
 }
 
+/** What an address lookup needs from a provider. */
 export interface AddressProvider {
   suggest(q: string, o: { country?: string; signal: AbortSignal }): Promise<Array<{ id: string; label: string; secondary?: string }>>
   resolve(id: string): Promise<Address>
 }
-export type AddressFieldProps = Bindable<Address | null> & { label?: string; provider?: AddressProvider; countries?: string[]; defaultCountry?: string; locale?: string; name?: string; errors?: Partial<Record<AddressPart, string>> }
+/** Props for AddressField. */
+export type AddressFieldProps = Bindable<Address | null> & { label?: string | undefined; provider?: AddressProvider | undefined; countries?: string[] | undefined; defaultCountry?: string; locale?: string | undefined; name?: string | undefined; errors?: Partial<Record<AddressPart, string>> | undefined }
 
 /**
  * AddressField (04 §3): the country comes first and decides the fields. Line 1 is a combobox when there is a `provider`;
@@ -97,7 +102,7 @@ export function AddressField({ value, defaultValue, onValueChange, label = 'Addr
     touched.value = {}
   })
   return (
-    <div ref={(n: any) => (root = n)} role="group" aria-label={label} class="stack">
+    <div ref={n => (root = n)} role="group" aria-label={label} class="stack">
       {name && <input type="hidden" name={name} value={v.value ? JSON.stringify(v.value) : ''} />}
       <div class="addr-grid">
         <CountrySelect label="Country or region" value={country} options={countries} locale={locale} onValueChange={c => { if (v.value) v.set({ ...v.value, country: c! }, 'pointer') }} />

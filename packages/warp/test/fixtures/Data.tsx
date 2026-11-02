@@ -22,7 +22,7 @@ export const columns: Column<Project>[] = [
   { id: 'status', header: 'Status', sort: true, card: 'badge', cell: r => <Badge tone={tones[r.status]}>{r.status}</Badge> },
   { id: 'owner', header: 'Owner', sort: true, resize: true },
   { id: 'region', header: 'Region', sort: true, priority: 3, cell: r => <span data-part="mono">{r.region}</span> },
-  { id: 'budget', header: 'Budget', numeric: true, sort: true, priority: 2, edit: t => Number(t.replace(/[^\d.]/g, '')), validate: v => v > 0 || 'Budget must be above zero', cell: r => money(r.budget) },
+  { id: 'budget', header: 'Budget', numeric: true, sort: true, priority: 2, edit: t => Number(t.replace(/[^\d.]/g, '')), validate: v => (v as number) > 0 || 'Budget must be above zero', cell: r => money(r.budget) },
   { id: 'used', header: 'Used', numeric: true, sort: true, cell: r => `${r.used}%` },
 ]
 

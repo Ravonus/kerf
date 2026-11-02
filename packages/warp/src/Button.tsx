@@ -6,26 +6,31 @@ import './styles'
 import '@weft-js/warp-core/styles/components/button.css'
 import '@weft-js/warp-core/styles/components/spinner.css'
 
+/** The colour role a control speaks in. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+/** How much weight a control carries, from solid down to a plain link. */
 export type Emphasis = 'solid' | 'soft' | 'outline' | 'ghost' | 'frame' | 'link'
 
+/** Props for Button; anything else lands on the <button>. */
 export interface ButtonProps {
   /** solid (default) · soft · outline · ghost · frame (the signature) · link. Fixed at creation: it picks the anatomy. */
-  emphasis?: Emphasis
-  tone?: Tone
-  size?: 'sm' | 'md' | 'lg'
+  emphasis?: Emphasis | undefined
+  tone?: Tone | undefined
+  size?: 'sm' | 'md' | 'lg' | undefined
   /** A frame button with the solid fill sweeping in. */
   fill?: boolean
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
-  icon?: IconRef
-  label?: string
+  icon?: IconRef | undefined
+  ref?: ((el: HTMLButtonElement) => unknown) | undefined
+  onClick?: ((e: MouseEvent) => unknown) | undefined
+  label?: string | undefined
   /** Busy: the label stays the accessible name (hidden by opacity), presses are swallowed, focus stays. */
-  loading?: boolean
+  loading?: boolean | undefined
   /** `interaction()`'s row: real events fill it, and it draws whoever set it. */
   ui?: Interaction
-  children?: any
-  [attr: string]: any
+  children?: unknown
+  [attr: string]: unknown
 }
 
 const swept = (e: Emphasis) => e === 'soft' || e === 'outline' || e === 'frame'
@@ -64,7 +69,7 @@ export function Button({ emphasis = 'solid', tone, size, fill, full, icon, label
       aria-disabled={loading ? 'true' : undefined}
       onClick={press}
       {...rest}
-      ref={(n: any) => { host = n; ref?.(n) }}
+      ref={n => { host = n; ref?.(n) }}
     >
       {emphasis === 'frame' ? (
         <>

@@ -26,7 +26,7 @@ beforeAll(async () => {
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise(r => server.once('listening', r))
+  await new Promise(r => { server.once('listening', r) })
   url = `http://localhost:${server.address().port}/`
 })
 afterAll(() => { server?.close(); rmSync(dist, { recursive: true, force: true }) })
@@ -44,9 +44,9 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
     return page
   }
   const opened = async (page, label) => { await page.getByRole('button', { name: label }).click(); await page.waitForTimeout(300) }
-  const boxes = (page, id) => page.evaluate(id => {
-    const m = document.querySelector(`#${id} [role="menu"]`)
-    const r = m.getBoundingClientRect(), t = document.querySelector(`#${id} button`).getBoundingClientRect()
+  const boxes = (page, id) => page.evaluate(host => {
+    const m = document.querySelector(`#${host} [role="menu"]`)
+    const r = m.getBoundingClientRect(), t = document.querySelector(`#${host} button`).getBoundingClientRect()
     return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, tLeft: t.left, tRight: t.right, tTop: t.top, tBottom: t.bottom, vw: innerWidth, vh: innerHeight, side: m.dataset.side, origin: m.style.getPropertyValue('--warp-origin') }
   }, id)
 
@@ -217,8 +217,8 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await page.waitForTimeout(100)
       expect(await page.evaluate(() => window.api.undone)).toBe(was + 1)
     }
-    const raise = (page, o) => page.evaluate(o => window.api.raise(o), o)
-    const set = (page, name, v) => page.evaluate(([n, v]) => { window.api[n].value = v }, [name, v])
+    const raise = (page, opts) => page.evaluate(o => window.api.raise(o), opts)
+    const set = (page, field, to) => page.evaluate(([n, v]) => { window.api[n].value = v }, [field, to])
 
     test('Undo works when the toast is raised during a modal, and the modal stays', async () => {
       const page = await fresh()
@@ -333,11 +333,11 @@ describe.each(['chromium', 'webkit', 'firefox'])('%s', name => {
       await set(page, 'modal', true)
       // every frame for a second, not one late look: WebKit's own hover check lands about 300 ms after the move
       const seen = await page.evaluate(() => new Promise(done => {
-        const seen = new Set(), end = performance.now() + 1000
+        const states = new Set(), end = performance.now() + 1000
         const look = () => {
-          seen.add(document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
+          states.add(document.querySelector('[data-part="progress"]').getAnimations()[0]?.playState)
           if (performance.now() < end) requestAnimationFrame(look)
-          else done([...seen])
+          else done([...states])
         }
         look()
       }))

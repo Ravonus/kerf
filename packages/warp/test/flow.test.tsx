@@ -19,7 +19,7 @@ import { SystemPage } from '../src/flow/SystemPage'
 import { Coachmark, Tour } from '../src/flow/Tour'
 import { Toaster } from '../src/Toast'
 
-const button = (c: ParentNode, name: string | RegExp) => [...c.querySelectorAll<HTMLButtonElement>('button')].find(b => (typeof name === 'string' ? (b.getAttribute('aria-label') ?? b.textContent) === name || b.querySelector('[data-part="sweep-label"]')?.textContent === name : name.test(b.textContent!)))!
+const button = (c: ParentNode, name: string | RegExp) => [...c.querySelectorAll<HTMLButtonElement>('button')].find(b => (typeof name === 'string' ? (b.getAttribute('aria-label') ?? b.textContent) === name || b.querySelector('[data-part="sweep-label"]')?.textContent === name : name.test(b.textContent)))!
 const said = () => [...document.querySelectorAll('[data-scope="announcer"]')].map(a => a.textContent).filter(Boolean).join(' | ')
 const type = (i: HTMLInputElement, v: string) => { i.value = v; fireEvent.input(i) }
 const named = (c: ParentNode, n: string) => c.querySelector<HTMLInputElement>(`input[name="${n}"]`)!
@@ -100,7 +100,7 @@ describe('SignIn', () => {
     expect(c.textContent).toContain('Enter your work email.')
     named(c, 'email').value = 'ada@fieldwork.dev'; named(c, 'password').value = 'hunter22'
     fireEvent.submit(form); await flush()
-    expect(onSubmit.mock.calls[0][0]).toMatchObject({ email: 'ada@fieldwork.dev', password: 'hunter22', remember: 'on' })
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ email: 'ada@fieldwork.dev', password: 'hunter22', remember: 'on' })
   })
   test('the email is checked on blur and offers passkeys from first focus', async () => {
     const { container: c } = render(() => <SignIn />)
@@ -185,16 +185,16 @@ describe('SignIn', () => {
 test('a cancelled passkey sheet shows nothing; a real failure reaches onError; pending until settled', async () => {
   const onError = vi.fn()
   let fail: (e: unknown) => void = () => {}
-  const { container: c } = render(() => <PasskeyButton onError={onError} onPasskey={() => new Promise((_, no) => (fail = no))} />)
+  const { container: c } = render(() => <PasskeyButton onError={onError} onPasskey={() => new Promise((_, no) => { fail = no })} />)
   const b = c.querySelector('button')!
   b.click(); await flush()
   expect(b.getAttribute('aria-busy')).toBe('true')
-  fail(Object.assign(new Error('no'), { name: 'NotAllowedError' })); await new Promise(r => setTimeout(r)); await flush()
+  fail(Object.assign(new Error('no'), { name: 'NotAllowedError' })); await new Promise(r => { setTimeout(r) }); await flush()
   expect(onError).not.toHaveBeenCalled()
   expect(b.hasAttribute('aria-busy')).toBe(false)
   b.click(); await flush()
   const boom = new Error('boom')
-  fail(boom); await new Promise(r => setTimeout(r)); await flush()
+  fail(boom); await new Promise(r => { setTimeout(r) }); await flush()
   expect(onError).toHaveBeenCalledWith(boom)
 })
 
@@ -228,7 +228,7 @@ test('SignUp: the meter and rules follow the password, and it checks the rest', 
 
 describe('OtpField', () => {
   const chars = (c: ParentNode) => [...c.querySelectorAll('[data-part="char"]')].map(x => x.textContent).join('')
-  const mount = async (node: () => any) => { const r = render(node); await flush(); await Promise.resolve(); return r }
+  const mount = async (node: () => unknown) => { const r = render(node); await flush(); await Promise.resolve(); return r }
   test('one input, six cells, a labelled tab stop', async () => {
     const { container: c } = await mount(() => <OtpField />)
     const input = c.querySelector('input')!
@@ -237,7 +237,7 @@ describe('OtpField', () => {
     expect(input.autocomplete).toBe('one-time-code')
     expect(input.inputMode).toBe('numeric')
     input.focus(); fireEvent.focus(input)
-    expect(c.querySelectorAll('[data-part="cell"]')[0].hasAttribute('data-pin')).toBe(true)
+    expect(c.querySelectorAll('[data-part="cell"]')[0]!.hasAttribute('data-pin')).toBe(true)
   })
   test('digits only; the last digit completes and submits the form', async () => {
     const done = vi.fn()
@@ -283,7 +283,7 @@ describe('OtpField', () => {
     await flush(); await Promise.resolve(); await flush()
     expect(c.querySelector<HTMLElement>('[data-scope="otp"]')!.dataset.state).toBe('success')
     expect(c.querySelectorAll('[data-part="cell"][data-pin]').length).toBe(6)
-    expect(c.querySelectorAll<HTMLElement>('[data-part="cell"]')[5].style.getPropertyValue('--n')).toBe('5')
+    expect(c.querySelectorAll<HTMLElement>('[data-part="cell"]')[5]!.style.getPropertyValue('--n')).toBe('5')
   })
 })
 
@@ -373,15 +373,15 @@ test('MfaSetup: scan, verify (wrong, then right), codes; Finish waits for the ac
   await flush()
   expect(c.textContent).toContain('JBSW')
   const next = () => button(c, /Continue|Finish/)
-  next().click(); await flush(); await new Promise(r => setTimeout(r)); await flush()
+  next().click(); await flush(); await new Promise(r => { setTimeout(r) }); await flush()
   expect(c.textContent).toContain('Step 2 of 3')
   const code = named(c, 'totp')
   next().click(); await flush()
   expect(verify).not.toHaveBeenCalled()
   expect(c.textContent).toContain('Enter the 6 digits')
-  type(code, '000000'); next().click(); await new Promise(r => setTimeout(r)); await flush()
+  type(code, '000000'); next().click(); await new Promise(r => { setTimeout(r) }); await flush()
   expect(c.textContent).toContain("didn't match")
-  type(code, '123456'); next().click(); await new Promise(r => setTimeout(r)); await flush()
+  type(code, '123456'); next().click(); await new Promise(r => { setTimeout(r) }); await flush()
   expect(c.querySelectorAll('[data-part="codes"] li').length).toBe(2)
   expect(next().textContent).toContain('Finish')
   expect(next().disabled).toBe(true)
@@ -394,7 +394,7 @@ test('MfaSetup: scan, verify (wrong, then right), codes; Finish waits for the ac
 describe('SignGate', () => {
   test('inert behind a non-modal region until signed; then the page, once', async () => {
     vi.useFakeTimers()
-    const status = state<any>('unsigned'), signed = vi.fn()
+    const status = state<Parameters<typeof SignGate>[0]['status']>('unsigned'), signed = vi.fn()
     const { container: c } = render(() => <><Toaster /><SignGateBadge status={status.value} /><SignGate status={status.value} src="about:blank" title="Sign the agreement" onSigned={signed}><button>Create key</button></SignGate></>)
     await tick(0)
     const content = c.querySelector('[data-part="content"]')!
@@ -427,7 +427,7 @@ describe('SignGate', () => {
     expect(p.querySelector('dialog iframe')).not.toBeNull()
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: was })
   })
-  test.each([['expired', 'Resend', 'critical'], ['declined', 'Resend', 'critical'], ['error', 'Retry', 'neutral']] as const)('%s has one action', async (status, action, tone) => {
+  test.each([['expired', 'Resend', 'critical'], ['declined', 'Resend', 'critical'], ['error', 'Retry', 'neutral']] as const)('%s has one action', (status, action, tone) => {
     const act = vi.fn()
     const { container: c } = render(() => <><SignGateBadge status={status} /><SignGate status={status} title="Sign" onResend={act} onRetry={act} /></>)
     expect(c.querySelector('iframe')).toBeNull()
@@ -448,9 +448,9 @@ test('Checklist: the counter and rail follow the items, a completion is said onc
   const rail = c.querySelector('[role="progressbar"]')!
   expect(rail.getAttribute('aria-valuenow')).toBe('1')
   expect(c.querySelector('[data-part="item"]')!.textContent).toContain(', done')
-  expect(c.querySelectorAll('[data-part="item"]')[1].textContent).toContain(', to do')
+  expect(c.querySelectorAll('[data-part="item"]')[1]!.textContent).toContain(', to do')
   expect(c.querySelector<HTMLInputElement>('[data-part="item"] input')!.disabled).toBe(true) // from server state, not clicks
-  items.value = items.value.map(i => ({ ...i, done: true })) as any
+  items.value = items.value.map(i => ({ ...i, done: true })) as typeof items.value
   await tick(100)
   expect(root.dataset.state).toBe('complete')
   expect(said()).toBe('All set up.')
@@ -495,7 +495,7 @@ describe('Tour', () => {
   test('Esc ends it and Tab stays in the card; the scrim blocks presses unless the step is interactive', async () => {
     vi.useFakeTimers()
     const open = state(true), skip = vi.fn(), pressed = vi.fn()
-    const { container: c } = render(() => <><Toaster /><button id="one" onClick={pressed}>One</button><button id="two" onClick={pressed}>Two</button><Tour open={open} steps={[steps[0], steps[2]]} onSkip={skip} /></>)
+    const { container: c } = render(() => <><Toaster /><button id="one" onClick={pressed}>One</button><button id="two" onClick={pressed}>Two</button><Tour open={open} steps={[steps[0]!, steps[2]!]} onSkip={skip} /></>)
     await settle()
     const card = c.querySelector<HTMLElement>('[data-part="card"]')!
     c.querySelector<HTMLElement>('#one')!.click()
@@ -518,7 +518,7 @@ describe('Tour', () => {
     const d = document.body.appendChild(document.createElement('dialog'))
     d.setAttribute('open', '')
     const open = state(true)
-    const { container: c } = render(() => <><button id="one">One</button><Tour open={open} steps={[steps[0]]} /></>)
+    const { container: c } = render(() => <><button id="one">One</button><Tour open={open} steps={[steps[0]!]} /></>)
     await settle()
     expect(open.value).toBe(false)
     expect(c.querySelector('[data-scope="tour"]')).toBeNull()
@@ -540,7 +540,7 @@ describe('Tour', () => {
 })
 
 describe('SystemPage', () => {
-  test('404 searches; 500 retries; maintenance says when; empty teaches', async () => {
+  test('404 searches; 500 retries; maintenance says when; empty teaches', () => {
     const search = vi.fn(), retry = vi.fn()
     const { container: c } = render(() => <SystemPage kind="404" onSearch={search} requestId="req_1" />)
     expect(c.querySelector('[data-part="code"]')!.textContent).toContain('404')
@@ -694,7 +694,7 @@ test('RateLimited: counts down in place, the trigger says why, and comes back by
 })
 
 describe('ShortcutsOverlay', () => {
-  const key = (k: string, target: EventTarget = document.body, init: KeyboardEventInit = {}) => fireEvent.keyDown(target, { key: k, ...init })
+  const key = (k: string, target: Element | Document = document.body, init: KeyboardEventInit = {}) => fireEvent.keyDown(target, { key: k, ...init })
   test('? opens it outside a text field, never inside; turned off, it stays shut', async () => {
     const open = state(false)
     const { container: c } = render(() => <><input id="t" /><ShortcutsOverlay open={open} /></>)
@@ -715,9 +715,9 @@ describe('ShortcutsOverlay', () => {
     await flush()
     const shown = () => [...c.querySelectorAll('[data-scope="shortcuts"] section')].map(s => s.querySelector('h4')!.textContent)
     expect(shown()).toEqual(['Navigation', 'Help'])
-    const row = [...c.querySelectorAll('dl > div')].find(d => d.textContent!.includes('Go to members'))!
+    const row = [...c.querySelectorAll('dl > div')].find(d => d.textContent.includes('Go to members'))!
     expect(row.querySelector('dd')!.textContent).toBe('G then M')
-    expect([...c.querySelectorAll('dl > div')].find(d => d.textContent!.includes('Search'))!.querySelector('dd')!.textContent).toBe('CtrlK')
+    expect([...c.querySelectorAll('dl > div')].find(d => d.textContent.includes('Search'))!.querySelector('dd')!.textContent).toBe('CtrlK')
     const filter = c.querySelector<HTMLInputElement>('[data-scope="shortcuts"] input')!
     type(filter, 'memb'); await flush()
     expect(c.querySelectorAll('dl > div').length).toBe(1)

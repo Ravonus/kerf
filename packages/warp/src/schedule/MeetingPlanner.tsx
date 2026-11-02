@@ -14,7 +14,9 @@ import { SweepParts, confirmSweep } from './bits'
 import '@weft-js/warp-core/styles/app/booking.css'
 import '@weft-js/warp-core/styles/app/calendar.css'
 
+/** What the planner sends: who, when and about what. */
 export type MeetingDetails = { attendees: Attendee[]; title: string; link: string; tags: string[]; date: string; s: number; e: number }
+/** Props for MeetingPlanner. */
 export type MeetingPlannerProps = {
   date: string
   attendees?: Attendee[]
@@ -28,12 +30,12 @@ export type MeetingPlannerProps = {
   link?: string
   tags?: string[]
   /** The strip's hours, minutes since midnight. */
-  from?: number
-  to?: number
-  timeZone?: string
-  today?: string
-  locale?: string
-  hourCycle?: string
+  from?: number | undefined
+  to?: number | undefined
+  timeZone?: string | undefined
+  today?: string | undefined
+  locale?: string | undefined
+  hourCycle?: string | undefined
   onSubmit: (m: MeetingDetails) => void | Promise<unknown>
   onUndo?: () => void
 }
@@ -81,7 +83,7 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
     if (!p.loadSlots) return
     const r = p.loadSlots({ attendees: a, date: p.date, duration: l })
     if (Array.isArray(r)) remote.value = r
-    else r.then(v => (remote.value = v))
+    else void r.then(v => (remote.value = v))
   })
   const fit = derived(() => { const s = chosen.value; return s === null ? 0 : withinHours(people.value, p.date, s, len.value, p.timeZone) })
   const elsewhere = derived(() => { const s = chosen.value; if (s === null) return []; return [...new Set(people.value.map(a => a.zone).filter(z => z && z !== p.timeZone))].slice(0, 2).map(z => `${zoneCity(z!)} ${time(zoneMinute(p.date, s, p.timeZone, z))}`) })
@@ -100,7 +102,7 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
     const n = d ? (i + d + list.length) % list.length : e.key === 'Home' ? 0 : e.key === 'End' ? list.length - 1 : -1
     if (n < 0) return
     e.preventDefault()
-    pick.value = list[n]
+    pick.value = list[n]!
     flush()
     group?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus()
   }
@@ -115,13 +117,13 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
       say(`Invite sent for ${summary.value}`)
       flush()
       confirmSweep(root?.querySelector('[data-arrive]'))
-    } catch (err: any) {
-      failed.value = err?.message ?? 'Try again.'
+    } catch (err) {
+      failed.value = (err as Error | undefined)?.message ?? 'Try again.'
       say(`Couldn't send the invite: ${failed.value}`, true)
     } finally { busy.value = false }
   }
   return (
-    <div ref={(n: any) => (root = n)} class="stack">
+    <div ref={n => (root = n)} class="stack">
       <div class="row">
         <div><span data-part="eyebrow">MeetingPlanner</span><h3>Find a time</h3></div>
         <span style="flex:1"></span>
@@ -188,7 +190,7 @@ export function MeetingPlanner(p: MeetingPlannerProps) {
               {manual.value
                 ? <TimeField label="Start" value={typed} locale={env.locale.value} hourCycle="h23" />
                 : <div data-scope="booking" data-part="root">
-                    <div ref={(n: any) => (group = n)} data-part="slots" role="radiogroup" aria-labelledby={`${id}-slots`} onKeyDown={onRadio}>
+                    <div ref={n => (group = n)} data-part="slots" role="radiogroup" aria-labelledby={`${id}-slots`} onKeyDown={onRadio}>
                       {slots.value.map(m => <button key={m} type="button" data-part="slot" data-sweep="" role="radio" aria-checked={m === chosen.value ? 'true' : 'false'} data-hold={m === chosen.value ? '' : undefined} tabindex={m === chosen.value ? '0' : '-1'} onClick={() => (pick.value = m)}><SweepParts />{time(m)}</button>)}
                     </div>
                   </div>}

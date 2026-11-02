@@ -9,20 +9,19 @@ import '@weft-js/warp-core/styles/data/chart.css'
 import '@weft-js/warp-core/styles/data/legend.css'
 import '@weft-js/warp-core/styles/data/tooltip.css'
 
+/** What every chart shares around its plot: the caption, the toolbar and the loading, empty and error states. */
 export type ChartFrame = {
   title: string
-  description?: any
+  description?: unknown
   /** Beside the view toggle: a layout switch, a range picker. */
-  toolbar?: any
+  toolbar?: unknown
   /** Replaces the plot, in the same frame (06 §12). With no data the frame shows `empty` on its own. */
-  state?: 'loading' | 'empty' | 'error'
-  loading?: string
-  empty?: { title: string; detail?: any }
-  error?: { title: string; detail?: any }
+  state?: 'loading' | 'empty' | 'error' | undefined
+  loading?: string | undefined
+  empty?: { title: string; detail?: unknown }
+  error?: { title: string; detail?: unknown }
   /** The next step under an empty or error state: a Retry button. */
-  action?: any
-  /** One sentence for screen readers and the page; generated from the data when absent. */
-  summary?: string | ((c: any) => string)
+  action?: unknown
 }
 type Props<C> = ChartFrame & C & { form: Form<C> }
 
@@ -36,7 +35,7 @@ const Drawn = ({ stroke }: { stroke: string }) => (
   </svg>
 )
 
-function Standby({ state, title, text, action }: { state: 'loading' | 'empty' | 'error'; title: string; text?: { title: string; detail?: any }; action?: any }) {
+function Standby({ state, title, text, action }: { state: 'loading' | 'empty' | 'error'; title: string; text?: { title: string; detail?: unknown } | undefined; action?: unknown }) {
   if (untrack(() => state) === 'loading')
     return (
       <div data-part="state" role="status" aria-busy="true">
@@ -64,7 +63,7 @@ function Ready<C>(p: { form: Form<C>; cfg: () => C; id: string; root: () => HTML
   const legend = derived(() => p.form.legend?.(p.cfg()) ?? [])
   const table = derived(() => tableHTML(p.form.table(p.cfg())))
   const summary = derived(() => {
-    const c = p.cfg() as any
+    const c = p.cfg() as C & { summary?: string | ((c: C) => string) | undefined }
     return typeof c.summary === 'function' ? c.summary(c) : c.summary ?? p.form.summary(c)
   })
   use(chart<C>, () => p.root(), () => ({ form: p.form, cfg: p.cfg(), id: p.id }))
@@ -79,9 +78,13 @@ function Ready<C>(p: { form: Form<C>; cfg: () => C; id: string; root: () => HTML
         )}
       <div data-part="plot">
         <div data-scope="tooltip" data-part="chart-tip" aria-hidden="true"></div>
-        <svg data-part="svg" viewBox={`0 0 ${first.value.w ?? SSR_WIDTH} ${first.value.h}`} width={first.value.w ?? SSR_WIDTH} height={first.value.h} style={first.value.style} role="group" aria-roledescription={p.form.kind} aria-labelledby={`${id()}-t`} aria-describedby={`${id()}-s`} innerHTML={toHTML(first.value.body)}></svg>
+        <svg data-part="svg" viewBox={`0 0 ${first.value.w ?? SSR_WIDTH} ${first.value.h}`} width={first.value.w ?? SSR_WIDTH} height={first.value.h} style={first.value.style} role="group" aria-roledescription={p.form.kind} aria-labelledby={`${id()}-t`} aria-describedby={`${id()}-s`}
+          // oxlint-disable-next-line weft/no-html-sink -- toHTML escapes every text and attribute of the scene
+          innerHTML={toHTML(first.value.body)}></svg>
       </div>
-      <div data-part="table" tabindex="0" role="region" aria-labelledby={`${id()}-t`} innerHTML={table.value}></div>
+      <div data-part="table" tabindex="0" role="region" aria-labelledby={`${id()}-t`}
+        // oxlint-disable-next-line weft/no-html-sink -- tableHTML escapes every cell
+        innerHTML={table.value}></div>
       <p data-part="summary" id={`${id()}-s`}>{summary.value}</p>
     </>
   )
@@ -92,18 +95,18 @@ function Ready<C>(p: { form: Form<C>; cfg: () => C; id: string; root: () => HTML
  * laid out once here, so the server sends a whole chart, and from then on warp-core's `chart` owns it: width and data
  * changes rewrite attributes on the same nodes, and the legend and the view toggle are delegated from the figure.
  */
-export function Chart<C extends { data: any; title: string }>(props: Props<C>) {
+export function Chart<C extends { data: unknown; title: string }>(props: Props<C>) {
   const id = uid('chart')
   let figure: HTMLElement | undefined
   const cfg = () => {
-    const c: any = {}
-    for (const k of Object.keys(props)) if (!FRAME.has(k)) c[k] = (props as any)[k]
+    const c: Record<string, unknown> = {}
+    for (const k of Object.keys(props)) if (!FRAME.has(k)) c[k] = (props as Record<string, unknown>)[k]
     return c as C
   }
   const hasData = () => { const d = props.data; return d !== undefined && d !== null && (!Array.isArray(d) || d.length > 0) }
   const status = () => props.state ?? (hasData() ? undefined : 'empty')
   return (
-    <figure ref={(n: any) => (figure = n)} data-scope="chart" data-view="chart" data-enter="wait">
+    <figure ref={n => (figure = n)} data-scope="chart" data-view="chart" data-enter="wait">
       <div data-part="head">
         <div>
           <h3 id={`${id}-t`} style="margin:0;font-family:var(--warp-text-heading-font);font-size:calc(var(--warp-text-heading-size) - 3px);font-weight:var(--warp-text-heading-weight);letter-spacing:var(--warp-text-heading-tracking)">{props.title}</h3>

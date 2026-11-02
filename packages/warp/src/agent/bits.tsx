@@ -15,7 +15,7 @@ export const Sweep = () => <><span data-part="sweep-base" aria-hidden="true"></s
 export const useSweep = () => onMount(() => { installSweep() })
 
 /** A small ghost icon button, named by `label`. */
-export function IconButton({ icon, label, ...rest }: { icon: IconComponent; label: string; [attr: string]: any }) {
+export function IconButton({ icon, label, ...rest }: { icon: IconComponent; label: string; [attr: string]: unknown }) {
   return <Button emphasis="ghost" tone="neutral" size="sm" label={label} data-icon-only="" {...rest}>{icon({})}</Button>
 }
 

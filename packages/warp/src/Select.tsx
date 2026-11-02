@@ -3,7 +3,9 @@ import { Field, type FieldProps } from './Field'
 import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/inputs/choice.css' // the select and the field's chevron
 
-export type Option = { value: string; label: string; disabled?: boolean }
+/** One Select choice. */
+export type Option = { value: string; label: string; disabled?: boolean | undefined }
+/** A labelled group of Select choices. */
 export type OptionGroup = { group: string; options: Option[] }
 
 function Choice({ o }: { o: Option | OptionGroup }) {
@@ -17,7 +19,7 @@ function Choice({ o }: { o: Option | OptionGroup }) {
  * no script; on touch and where that isn't supported the OS popup stays (03 §4, redesign §5). selectMenu() in @weft-js/warp-core
  * is the scripted list for an app that wants warp's list in every browser.
  */
-export function Select({ options, placeholder, ...props }: FieldProps & { options: (Option | OptionGroup)[]; placeholder?: string; onChange?: (e: Event) => void }) {
+export function Select({ options, placeholder, ...props }: FieldProps & { options: (Option | OptionGroup)[]; placeholder?: string; onChange?: ((e: Event) => void) | undefined }) {
   let el: HTMLSelectElement | undefined
   use((sel: HTMLSelectElement) => {
     // with no value the first option shows, however the options were inserted
@@ -30,7 +32,7 @@ export function Select({ options, placeholder, ...props }: FieldProps & { option
       filled
       end={<span data-part="indicator" aria-hidden="true"><DownIcon /></span>}
       control={p => (
-        <select ref={(n: any) => (el = n)} data-part="input" id={p.id} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>
+        <select ref={n => (el = n)} data-part="input" id={p.id} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} {...p.rest}>
           {placeholder !== undefined && <option value="">{placeholder}</option>}
           {options.map(o => <Choice key={'group' in o ? o.group : o.value} o={o} />)}
         </select>

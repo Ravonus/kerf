@@ -2,7 +2,7 @@
 import { flush, render } from '@weft-js/core/test'
 import * as F from './fixtures/NewParts'
 
-const tick = () => new Promise(r => setTimeout(r))
+const tick = () => new Promise(r => { setTimeout(r) })
 const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 
 describe('Accordion', () => {
@@ -14,22 +14,22 @@ describe('Accordion', () => {
     await tick()
     expect(c.querySelector('[role="heading"]')!.getAttribute('aria-level')).toBe('4')
     const [a, b] = heads(c)
-    expect(a.getAttribute('aria-expanded')).toBe('true')
-    expect(b.getAttribute('aria-expanded')).toBe('false')
-    expect(document.getElementById(a.getAttribute('aria-controls')!)).not.toBeNull()
+    expect(a!.getAttribute('aria-expanded')).toBe('true')
+    expect(b!.getAttribute('aria-expanded')).toBe('false')
+    expect(document.getElementById(a!.getAttribute('aria-controls')!)).not.toBeNull()
   })
 
   test('one open at a time unless multiple', async () => {
     const seen: string[][] = []
     const { container: c } = render(() => <F.Acc items={items} defaultOpen={['a']} onChange={o => seen.push(o)} />)
     await tick()
-    heads(c)[1].click()
+    heads(c)[1]!.click()
     await flush()
     expect(seen.at(-1)).toEqual(['b'])
-    expect(heads(c)[0].getAttribute('aria-expanded')).toBe('false')
+    expect(heads(c)[0]!.getAttribute('aria-expanded')).toBe('false')
     const { container: m } = render(() => <F.Acc multiple items={items} defaultOpen={['a']} />)
     await tick()
-    heads(m)[1].click()
+    heads(m)[1]!.click()
     await flush()
     expect(heads(m).slice(0, 2).map(h => h.getAttribute('aria-expanded'))).toEqual(['true', 'true'])
   })
@@ -39,10 +39,10 @@ describe('Accordion', () => {
     await tick()
     document.body.append(c)
     const [a, b] = heads(c)
-    a.focus()
-    key(a, 'ArrowDown')
+    a!.focus()
+    key(a!, 'ArrowDown')
     expect(document.activeElement).toBe(b)
-    key(b, 'Home')
+    key(b!, 'Home')
     expect(document.activeElement).toBe(a)
   })
 })
@@ -72,7 +72,7 @@ describe('Slider', () => {
     await tick()
     const thumbs = c.querySelectorAll('[role="slider"]')
     expect(thumbs).toHaveLength(2)
-    expect(thumbs[0].getAttribute('aria-valuetext')).toBe('Minimum, 10')
+    expect(thumbs[0]!.getAttribute('aria-valuetext')).toBe('Minimum, 10')
   })
 
   test('disabled leaves the tab order', async () => {
@@ -90,9 +90,9 @@ test('RadioGroup: native radios, one name, the choice reports', async () => {
   await tick()
   expect(c.querySelector('[role="radiogroup"]')).not.toBeNull()
   const [a, b] = c.querySelectorAll<HTMLInputElement>('input[type="radio"]')
-  expect(a.name).toBe(b.name)
-  expect(a.checked).toBe(true)
-  b.click()
+  expect(a!.name).toBe(b!.name)
+  expect(a!.checked).toBe(true)
+  b!.click()
   await flush()
   expect(v.value).toBe('pro')
 })
@@ -106,7 +106,7 @@ test('Ticker: the real value is readable, the columns are hidden, only moved dig
   const digits = () => [...c.querySelectorAll<HTMLElement>('[data-part="digit"]')]
   expect(digits()).toHaveLength(4)
   const last = digits().at(-1)!
-  const first = digits()[0]
+  const first = digits()[0]!
   const before = first.getAttribute('style')
   v.value = 1239
   await flush()
@@ -152,15 +152,15 @@ test('toast.promise: one toast through its life', async () => {
   await tick()
   document.body.append(c)
   let finish!: (v: string) => void
-  const p = F.toast.promise(new Promise<string>(r => (finish = r)), { pending: 'Deploying', done: v => `Deployed ${v}`, error: 'Failed' })
+  const p = F.toast.promise(new Promise<string>(r => { finish = r }), { pending: 'Deploying', done: v => `Deployed ${v}`, error: 'Failed' })
   await flush()
-  const items = () => [...document.querySelectorAll('[data-scope="toast"]:not([data-part="region"])')].filter(n => n.textContent!.includes('Deploy'))
+  const items = () => [...document.querySelectorAll('[data-scope="toast"]:not([data-part="region"])')].filter(n => n.textContent.includes('Deploy'))
   expect(items()).toHaveLength(1)
-  expect(items()[0].textContent).toContain('Deploying')
+  expect(items()[0]!.textContent).toContain('Deploying')
   finish('v2')
   await p
   await Promise.resolve()
   await flush()
   expect(items()).toHaveLength(1)
-  expect(items()[0].textContent).toContain('Deployed v2')
+  expect(items()[0]!.textContent).toContain('Deployed v2')
 })

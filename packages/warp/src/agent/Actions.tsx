@@ -27,16 +27,18 @@ export function BranchSwitcher({ index, count, onChange }: { index: number; coun
   )
 }
 
+/** A reader's verdict on an answer; null until they give one. */
 export type Feedback = 'up' | 'down' | null
 
+/** Props for MessageActions. */
 export interface MessageActionsProps {
-  onCopy?: (el: HTMLElement) => void
-  onFeedback?: (value: Feedback, reason?: string) => void
+  onCopy?: (el: HTMLElement) => unknown
+  onFeedback?: ((value: Feedback, reason?: string) => void) | undefined
   reasons?: string[]
-  onRegenerate?: () => void
-  onBranch?: () => void
+  onRegenerate?: (() => void) | undefined
+  onBranch?: (() => void) | undefined
   stopped?: boolean
-  branch?: { index: number; count: number; onChange: (index: number) => void }
+  branch?: { index: number; count: number; onChange: (index: number) => void } | undefined
 }
 
 /**
@@ -63,9 +65,9 @@ export function MessageActions({ onCopy, onFeedback, reasons = ['Wrong', 'Too lo
       {stopped && <Badge tone="neutral">Stopped · kept what arrived</Badge>}
       {onCopy && <IconButton icon={CopyIcon} label="Copy" onClick={(e: Event) => onCopy(e.currentTarget as HTMLElement)} />}
       {onFeedback && <IconButton icon={ThumbsUpIcon} label="Good answer" aria-pressed={value.value === 'up' ? 'true' : 'false'} onClick={(e: Event) => rate(e, 'up')} />}
-      {onFeedback && <IconButton icon={ThumbsDownIcon} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: any) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
+      {onFeedback && <IconButton icon={ThumbsDownIcon} label="Bad answer" aria-pressed={value.value === 'down' ? 'true' : 'false'} aria-haspopup="dialog" ref={(n: HTMLElement) => (bad = n)} onClick={(e: Event) => rate(e, 'down')} />}
       {onFeedback && (
-        <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" aria-label="What went wrong?">
+        <div ref={n => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" aria-label="What went wrong?">
           <p data-part="title">What went wrong?</p>
           <div>{reasons.map(r => <Button key={r} emphasis="ghost" tone="neutral" size="sm" data-close-popover="" onClick={(e: Event) => because(e, r)}>{r}</Button>)}</div>
         </div>

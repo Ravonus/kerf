@@ -16,12 +16,12 @@ import '@weft-js/warp-core/styles/layout/tokens.css'
 import '@weft-js/warp-core/styles/layout/banner.css'
 
 /** One path on the 24 grid, for a glyph the shared Icon set doesn't carry. */
-export const Glyph = ({ d, ...rest }: { d: string; [attr: string]: any }) => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false" {...rest}><path d={d} /></svg>
+export const Glyph = ({ d, ...rest }: { d: string; [attr: string]: unknown }) => <svg data-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false" {...rest}><path d={d} /></svg>
 
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
 /** Avatar with initials (07 §0); `name` is real text for the row around it, so the circle itself is aria-hidden. */
-export function Avatar({ name, size, status, presence, ...rest }: { name: string; size?: 'sm' | 'md' | 'lg' | 'xl'; status?: Tone; presence?: number; [attr: string]: any }) {
+export function Avatar({ name, size, status, presence, ...rest }: { name: string; size?: 'sm' | 'md' | 'lg' | 'xl' | undefined; status?: Tone | undefined; presence?: number | undefined; [attr: string]: unknown }) {
   return (
     <span data-scope="avatar" data-size={size === 'md' ? undefined : size} data-presence={presence} aria-hidden="true" {...rest}>
       {initials(name)}
@@ -30,12 +30,13 @@ export function Avatar({ name, size, status, presence, ...rest }: { name: string
   )
 }
 
+/** Where a live connection stands. */
 export type LiveState = 'connecting' | 'live' | 'reconnecting' | 'offline'
 const LIVE: Record<LiveState, string> = { connecting: 'Connecting', live: 'Live', reconnecting: 'Reconnecting', offline: 'Offline' }
 const DOT: Partial<Record<LiveState, Tone>> = { live: 'positive', offline: 'critical' }
 
 /** The one realtime pill (07 §4.4): quiet while live, loud only in trouble. */
-export function LiveStatus({ state, label, children }: { state: LiveState; label?: string; children?: any }) {
+export function LiveStatus({ state, label, children }: { state: LiveState; label?: string | undefined; children?: unknown }) {
   const dot = derived(() => DOT[state])
   return (
     <span data-scope="live-status" data-state={state} role="status" aria-label={label ? `${label}: ${LIVE[state].toLowerCase()}` : undefined}>
@@ -46,7 +47,7 @@ export function LiveStatus({ state, label, children }: { state: LiveState; label
 }
 
 /** Page-level message inside main (02 §5). `live` announces it; a Banner that was there on load stays role=note. */
-export function Banner({ tone = 'info', live, actions, children, ...rest }: { tone?: Tone; live?: 'polite' | 'assertive'; actions?: any; children?: any; [attr: string]: any }) {
+export function Banner({ tone = 'info', live, actions, children, ...rest }: { tone?: Tone | undefined; live?: 'polite' | 'assertive' | undefined; actions?: unknown; children?: unknown; [attr: string]: unknown }) {
   const icon = derived(() => toneIcon[tone])
   const acts = derived(() => actions) // one build, however often it is read
   return (
@@ -58,7 +59,7 @@ export function Banner({ tone = 'info', live, actions, children, ...rest }: { to
   )
 }
 
-export type Step = { id: string; title: any; description?: any; error?: boolean }
+export type Step = { id: string; title: unknown; description?: unknown; error?: boolean }
 
 /** Steps (05 §4): full labels, the compact count from the CSS. `current` is an index. */
 export function Steps({ label, steps, current }: { label: string; steps: Step[]; current: number }) {
@@ -78,7 +79,7 @@ export function Steps({ label, steps, current }: { label: string; steps: Step[];
 }
 
 /** Empty or error state (05 §5): the weave art, a title, one sentence, actions. */
-export function EmptyState({ title, tone, actions, children, ...rest }: { title: any; tone?: Tone; actions?: any; children?: any; [attr: string]: any }) {
+export function EmptyState({ title, tone, actions, children, ...rest }: { title: unknown; tone?: Tone | undefined; actions?: unknown; children?: unknown; [attr: string]: unknown }) {
   const acts = derived(() => actions)
   const body = derived(() => children)
   return (

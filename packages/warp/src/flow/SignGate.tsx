@@ -10,6 +10,7 @@ import '@weft-js/warp-core/styles/flows/gate-badge.css'
 import '@weft-js/warp-core/styles/flows/pay-frame.css'
 import '@weft-js/warp-core/styles/components/spinner.css'
 
+/** Where a signature request stands. */
 export type SignStatus = 'unsigned' | 'pending' | 'signed' | 'expired' | 'declined' | 'error'
 
 const TONES: Record<SignStatus, Tone> = { unsigned: 'caution', pending: 'caution', signed: 'positive', expired: 'critical', declined: 'critical', error: 'neutral' }
@@ -29,24 +30,25 @@ export function SignGateBadge({ status }: { status: SignStatus }) {
   return <Badge tone={TONES[s.value]} data-state={s.value}>{s.value === 'signed' ? <CheckIcon /> : <FileTextIcon />}{LABELS[s.value]}</Badge>
 }
 
+/** Props for SignGate. */
 export interface SignGateProps {
   /** From the provider: `query.live`, a poll, or a signal. */
   status: SignStatus
   /** The provider's embedded signer. */
   src?: string
-  title: any
+  title: unknown
   /** Shown while unsigned. */
-  description?: any
+  description?: unknown
   /** The blocker heading's level in the page's outline (the spec's h4 keeps its style). */
   level?: number
   /** The signer frame's accessible name. */
   signerTitle?: string
   onResend?: () => void
-  onRetry?: () => void
+  onRetry?: (() => void) | undefined
   /** Once, when status turns signed. */
   onSigned?: () => void
   /** The gated page: rendered, inert behind the blocker until signed. */
-  children?: any
+  children?: unknown
 }
 
 /**

@@ -4,7 +4,7 @@ import '../styles'
 import '@weft-js/warp-core/styles/app/checkpoint.css'
 
 /** Checkpoint (07 §1.3): a hairline with a label and Restore. Restoring forks a branch; `onRestore` decides how. */
-export function Checkpoint({ label, onRestore }: { label: any; onRestore?: () => void }) {
+export function Checkpoint({ label, onRestore }: { label: unknown; onRestore?: () => void }) {
   return (
     <div data-scope="checkpoint">
       <span>{label}</span>

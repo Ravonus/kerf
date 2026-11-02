@@ -1,5 +1,6 @@
 // A prop read in JSX stays live: changing it after mount updates the component. Each of these used to be an `untrack`
 // snapshot taken in setup, which showed the first value for good.
+import type { Peer } from '@weft-js/warp-core'
 import { state } from '@weft-js/core'
 import { flush, render } from '@weft-js/core/test'
 import { SettingRow, SettingsSection } from '../src/admin'
@@ -7,7 +8,7 @@ import { LockedField } from '../src/collab'
 import { Accordion, Button } from '../src/index'
 import { Inbox, Prejoin, ScheduledLobby } from '../src/live'
 
-const peer = { id: 'p', name: 'Kofi Mensah' } as any
+const peer = { id: 'p', name: 'Kofi Mensah' } as Peer
 
 describe('warp props changed after mount', () => {
   test('Button: emphasis moves its attribute, its sweep and its frame', async () => {
@@ -58,7 +59,7 @@ describe('warp props changed after mount', () => {
 
   test('LockedField: the field\'s own props', async () => {
     const label = state('Title')
-    const holder = state<any>(null)
+    const holder = state<Peer | null>(null)
     const { container: c } = render(() => <LockedField label={label.value} peer={holder.value} />)
     expect(c.textContent).toContain('Title')
     label.value = 'Heading'
@@ -86,7 +87,7 @@ describe('warp props changed after mount', () => {
     let played = 0
     sound.value = () => played++
     await flush()
-    const button = [...c.querySelectorAll('button')].find(b => b.textContent!.includes('Play test sound'))!
+    const button = [...c.querySelectorAll('button')].find(b => b.textContent.includes('Play test sound'))!
     button.click()
     expect(played).toBe(1)
   })

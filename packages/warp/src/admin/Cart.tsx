@@ -28,7 +28,7 @@ export function removeLine(cart: State<CartLine[]>, line: CartLine) {
 }
 
 /** One line: thumb, name, variant, stepper, price (09 §6.1). The stepper's minus at 1 removes, asks nothing, gives Undo. */
-export function LineItem({ line, cart, currency, locale, problem }: { line: CartLine; cart: State<CartLine[]>; currency?: string; locale?: string; problem?: any }) {
+export function LineItem({ line, cart, currency, locale, problem }: { line: CartLine; cart: State<CartLine[]>; currency?: string | undefined; locale?: string | undefined; problem?: unknown }) {
   const down = () => (line.quantity <= 1 ? removeLine(cart, line) : setQuantity(cart, line.id, line.quantity - 1))
   return (
     <div data-scope="line-item" data-id={line.id}>
@@ -61,11 +61,12 @@ export function CartButton({ count, onClick }: { count: number; onClick: () => v
   )
 }
 
+/** Props for CartDrawer. */
 export interface CartDrawerProps {
   open: State<boolean>
   cart: State<CartLine[]>
-  currency?: string
-  locale?: string
+  currency?: string | undefined
+  locale?: string | undefined
   onCheckout: () => void
 }
 

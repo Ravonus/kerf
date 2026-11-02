@@ -12,19 +12,20 @@ import '@weft-js/warp-core/styles/components/spinner.css'
 type Live<T> = T | { readonly value: T } | (() => { readonly value: T } | T)
 
 const read = <T,>(v: Live<T>): T => {
-  const x = typeof v === 'function' ? (v as () => any)() : v
-  return x !== null && typeof x === 'object' && 'value' in x ? x.value : x
+  const x = typeof v === 'function' ? (v as () => { readonly value: T } | T)() : v
+  return x !== null && typeof x === 'object' && 'value' in x ? (x).value : x
 }
 /** `online` from @weft-js/core/browser, its result, or a boolean: a factory is called once. */
 function liveOf<T>(get: () => Live<T>) {
   const src = untrack(get)
-  const once = typeof src === 'function' ? untrack(() => (src as () => any)()) : undefined
+  const once = typeof src === 'function' ? untrack(() => (src as () => Live<T>)()) : undefined
   return derived(() => (once !== undefined ? read<T>(once) : read<T>(get())))
 }
 
 const RECOVERED_S = 3
 const LATER_MS = 30 * 60 * 1000
 
+/** Props for ConnBanner. */
 export interface ConnBannerProps {
   /** `online` from `@weft-js/core/browser`, its derived, or a boolean. */
   online?: Live<boolean>
@@ -36,7 +37,7 @@ export interface ConnBannerProps {
   contractFailed?: boolean
   /** Seconds to the next try: weft's backoff. */
   retryIn?: number
-  onRetry?: () => void
+  onRetry?: (() => void) | undefined
   /** Saved changes waiting to sync. */
   changes?: number
   /** Save drafts, then reload. */
@@ -44,7 +45,7 @@ export interface ConnBannerProps {
   /** Later hides the stale banner for 30 minutes. */
   onLater?: () => void
   /** "A new version of {name} is ready". */
-  name?: string
+  name?: string | undefined
 }
 
 const plural = (n: number) => (n === 1 ? '1 change' : `${n} changes`)
@@ -110,14 +111,15 @@ export function ConnBanner({ online = true, state: conn, stale, contractFailed, 
   )
 }
 
+/** Props for RateLimited. */
 export interface RateLimitedProps {
   /** Seconds, from the typed `RATE_LIMITED.retryAfter`: never a guess. */
   retryAfter: number
-  title?: any
+  title?: unknown
   /** "You can run 5 exports a minute." */
-  description?: any
+  description?: unknown
   /** The action that hit the limit: disabled, labelled "Try again in 20s", and back by itself. */
-  trigger?: ButtonProps
+  trigger?: ButtonProps | undefined
   onDone?: () => void
 }
 

@@ -9,7 +9,7 @@ import { Shape } from '../src/Shape'
 import '../src/skeleton-css'
 
 function Feed() {
-  const posts = resource(() => new Promise<{ id: number; title: string }[]>(ok => setTimeout(() => ok([{ id: 1, title: 'One' }, { id: 2, title: 'Two' }]), 300)))
+  const posts = resource(() => new Promise<{ id: number; title: string }[]>(ok => { setTimeout(() => ok([{ id: 1, title: 'One' }, { id: 2, title: 'Two' }]), 300) }))
   return <ul>{(posts.value ?? []).map(post => <li key={post.id}>{post.title}</li>)}</ul>
 }
 

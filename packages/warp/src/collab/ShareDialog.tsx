@@ -13,12 +13,17 @@ import '@weft-js/warp-core/styles/app/share.css'
 import '@weft-js/warp-core/styles/components/share.css'
 
 
+/** What someone may do with the document. */
 export type ShareRole = 'viewer' | 'commenter' | 'editor' | 'owner'
 const ROLES: [ShareRole, string][] = [['viewer', 'Viewer'], ['commenter', 'Commenter'], ['editor', 'Editor']]
+/** Someone the document is shared with. */
 export type ShareMember = Peer & { email: string; role: ShareRole }
+/** Someone it could be shared with. */
 export type ShareContact = Peer & { email: string }
+/** Who a link lets in, and as what. */
 export interface ShareLink { access: 'restricted' | 'anyone'; role: ShareRole }
 
+/** Props for ShareDialog. */
 export interface ShareDialogProps {
   open: State<boolean>
   /** The object's title: "Q4 brief". */
@@ -57,6 +62,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
     if (e && !chips.value.includes(e)) chips.value = [...chips.value, e]
     typed.value = ''
   }
+  // oxlint-disable-next-line typescript/require-await -- `find` is typed to return a promise, and Promise.resolve costs bytes for nothing
   const find = async (q: string) => untrack(() => (people ?? []).filter(p => `${p.name} ${p.email}`.toLowerCase().includes(q.toLowerCase())))
   const invite = () => {
     const all = typed.value.includes('@') ? [...new Set([...chips.value, typed.value.trim()])] : chips.value
@@ -74,7 +80,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
             <ComboField label="Add people or email" minChars={1} text={() => typed.value} onText={t => (typed.value = t)} find={find} row={(p: ShareContact) => ({ main: p.name, sub: p.email })} onPick={(p: ShareContact) => add(p.email)} />
           </div>
           <label data-part="sr-only" for={`${id}-r`}>Role for new people</label>
-          <select id={`${id}-r`} value={role.value} onChange={(e: any) => (role.value = e.currentTarget.value)}>
+          <select id={`${id}-r`} value={role.value} onChange={(e: Event) => (role.value = (e.currentTarget as HTMLSelectElement).value as ShareRole)}>
             {roleOptions().map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
           </select>
           <Button onClick={invite}>Invite</Button>
@@ -89,7 +95,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
                 ? <span>Owner</span>
                 : <>
                     <label data-part="sr-only" for={`${id}-${m.id}`}>Role for {m.name}</label>
-                    <select id={`${id}-${m.id}`} value={m.role} onChange={(e: any) => { const v = e.currentTarget.value; onRoleChange(m, v === 'remove' ? null : v) }}>
+                    <select id={`${id}-${m.id}`} value={m.role} onChange={(e: Event) => { const v = (e.currentTarget as HTMLSelectElement).value; onRoleChange(m, v === 'remove' ? null : v as ShareRole) }}>
                       {roleOptions().map(o => <option key={o.v} value={o.v} selected={o.v === m.role}>{o.l}</option>)}
                       <option value="remove">Remove</option>
                     </select>
@@ -100,18 +106,18 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
         <div data-part="link">
           <LinkIcon />
           <label data-part="sr-only" for={`${id}-a`}>Link access</label>
-          <select id={`${id}-a`} value={access.value.access} onChange={(e: any) => onLinkAccess({ ...access.value, access: e.currentTarget.value })}>
+          <select id={`${id}-a`} value={access.value.access} onChange={(e: Event) => onLinkAccess({ ...access.value, access: (e.currentTarget as HTMLSelectElement).value as 'anyone' | 'restricted' })}>
             <option value="restricted" selected={access.value.access === 'restricted'}>Restricted</option>
             <option value="anyone" selected={access.value.access === 'anyone'}>Anyone with link</option>
           </select>
           {access.value.access === 'anyone' && <>
             <label data-part="sr-only" for={`${id}-l`}>Link role</label>
-            <select id={`${id}-l`} value={access.value.role} onChange={(e: any) => onLinkAccess({ ...access.value, role: e.currentTarget.value })}>
+            <select id={`${id}-l`} value={access.value.role} onChange={(e: Event) => onLinkAccess({ ...access.value, role: (e.currentTarget as HTMLSelectElement).value as ShareRole })}>
               {roleOptions().map(o => <option key={o.v} value={o.v} selected={o.v === access.value.role}>{o.l}</option>)}
             </select>
           </>}
           <span data-part="spacer" style="flex:1"></span>
-          <span ref={(n: any) => (copy = n)} style="display:contents">
+          <span ref={n => (copy = n)} style="display:contents">
             <Button emphasis="outline" tone="neutral" size="sm" onClick={(e: MouseEvent) => {
               void navigator.clipboard?.writeText(url).catch(() => {})
               copied.value = true

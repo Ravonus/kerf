@@ -46,7 +46,7 @@ function options(input) {
     try {
       out.seed = normalizeSeed(input.seed)
     } catch (error) {
-      throw Object.assign(error, { path: 'seed' })
+      throw Object.assign(/** @type {Error} */ (error), { path: 'seed' })
     }
   }
   if (input.fields) out.fields = input.fields
@@ -134,7 +134,7 @@ export function dtcg(css = '') {
   for (const [combo, colours] of Object.entries(resolved)) {
     const [theme, expression] = combo.split('/')
     const x = X[expression]
-    const color = Object.fromEntries(Object.entries(colours).filter(([, v]) => /^#[0-9a-f]{6}$/i.test(v)).map(([name, hex]) => [name, { $value: { colorSpace: 'srgb', components: [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255), hex } }]))
+    const color = Object.fromEntries(Object.entries(colours).filter(([, v]) => /^#[0-9a-f]{6}$/i.test(v)).map(([name, code]) => [name, { $value: { colorSpace: 'srgb', components: [1, 3, 5].map(i => parseInt(code.slice(i, i + 2), 16) / 255), hex: code } }]))
     files[`warp.${theme}.${expression}.tokens.json`] = {
       color: { $type: 'color', ...color },
       space: { $type: 'dimension', ...Object.fromEntries(Object.entries(SPACE).map(([k, v]) => [k, px(v)])) },

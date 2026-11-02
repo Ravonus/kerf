@@ -116,7 +116,7 @@ function RichInputs() {
 
 const part = new URLSearchParams(location.search).get('part') ?? 'static'
 if (part === 'toasts') seedToasts()
-const PACKS: Record<string, () => any> = { added: Added, agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
+const PACKS: Record<string, () => unknown> = { added: Added, agent: Agent, schedule: Schedule, live: Live, collab: Collab, flow: Flow, admin: Admin }
 const View = PACKS[part] ? PACKS[part] : part === 'virtual' ? Virtuals : part === 'surfaces' ? Remaining : part === 'charts' ? Gallery : part === 'rich' ? RichInputs : part === 'table' ? () => <><h1>warp tables</h1><Tables /></> : part === 'shell' ? Dashboard : part === 'overlays' ? () => <><h1>warp overlays</h1><Overlays /></> : part === 'toasts' ? () => <><h1>warp toasts</h1><Toasts /></> : Static
 // the shell brings its own main
 const host = document.getElementById('root')!

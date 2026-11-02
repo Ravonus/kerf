@@ -4,9 +4,9 @@ import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { hydration } from '../../weft/src/hydrate'
 // @ts-expect-error: query imports (@weft-js/core/vite)
-import * as server from './fixtures/pack-agent.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/pack-agent.tsx?weft-hydrate'
+const server = await import('./fixtures/pack-agent.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/pack-agent.tsx?weft-hydrate')
 
 test.each(Object.keys(client).filter(n => n.endsWith('Case')))('%s: SSR + hydrate, 0 misses, 0 writes', name => {
   resetIds()

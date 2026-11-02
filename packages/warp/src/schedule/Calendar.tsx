@@ -18,14 +18,18 @@ import { YearView } from './YearView'
 import '@weft-js/warp-core/styles/components/tabs.css'
 import '@weft-js/warp-core/styles/app/calendar.css'
 
+/** Which occurrences of a repeating event a change covers. */
 export type RecurrenceScope = 'this' | 'following' | 'all'
-export type EventChange = { start: string; end: string; resource?: string; scope?: RecurrenceScope }
-export type Resource = { id: string; name: string; meta?: string }
+/** Where an event is going. */
+export type EventChange = { start: string; end: string; resource?: string | undefined; scope?: RecurrenceScope | undefined }
+/** A room or person events can be booked against. */
+export type Resource = { id: string; name: string; meta?: string | undefined }
 type Reason = 'pointer' | 'keyboard' | 'touch'
 
+/** Props for Calendar. */
 export type CalendarProps = {
   events: CalEvent[]
-  calendars?: CalendarSource[]
+  calendars?: CalendarSource[] | undefined
   view?: State<CalView> | CalView
   defaultView?: CalView
   onViewChange?: (v: CalView) => void
@@ -34,35 +38,35 @@ export type CalendarProps = {
   defaultDate?: string
   onDateChange?: (d: string) => void
   /** The toolbar chip's zone. Without one, wall times show as they are. */
-  timeZone?: State<string | null> | string
+  timeZone?: State<string | null> | string | undefined
   onTimeZoneChange?: (z: string | null) => void
   /** Secondary zones in the rail. */
   zones?: { label: string; zone: string }[]
-  today?: string
+  today?: string | undefined
   /** The now line's wall time; the browser's clock after mount without it. */
-  now?: string
-  locale?: string
-  hourCycle?: string
-  firstDayOfWeek?: number
+  now?: string | undefined
+  locale?: string | undefined
+  hourCycle?: string | undefined
+  firstDayOfWeek?: number | undefined
   snap?: number
   /** Working hours; the rest of the day is banded. */
   workingHours?: [number, number]
   /** The toolbar LiveStatus. */
-  live?: LiveState
+  live?: LiveState | undefined
   /** Timeline rows; events point at one with `resource`. */
-  resources?: Resource[]
+  resources?: Resource[] | undefined
   timeline?: [number, number]
   /** Year view's counts; from `events` without it. */
   counts?: Record<string, number>
-  readOnly?: boolean
+  readOnly?: boolean | undefined
   /** A rejected promise puts the event back and announces why (07 §2.6). */
   onMove?: (e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>
   onResize?: (e: CalEvent, to: EventChange, reason: Reason) => void | Promise<unknown>
   onCreate?: (e: CalEvent) => void
-  onEdit?: (e: CalEvent, scope?: RecurrenceScope) => void
-  onDelete?: (e: CalEvent, scope?: RecurrenceScope) => void
+  onEdit?: ((e: CalEvent, scope?: RecurrenceScope  ) => void) | undefined
+  onDelete?: ((e: CalEvent, scope?: RecurrenceScope  ) => void) | undefined
   onOpen?: (e: CalEvent) => void
-  onJoin?: (e: CalEvent) => void
+  onJoin?: ((e: CalEvent) => void) | undefined
 }
 
 const LABEL: Record<CalView, string> = { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda', timeline: 'Timeline', year: 'Year' }
@@ -73,9 +77,9 @@ type Ctx = ReturnType<typeof useCalendar>
 
 function useCalendar(p: CalendarProps) {
   const env = usePickerEnv(() => p.locale, () => p.today)
-  const view = bindable<CalView>(() => p.view, () => p.defaultView, 'week', () => p.onViewChange as any)
-  const date = bindable<string>(() => p.date, () => p.defaultDate, untrack(() => env.today.value), () => p.onDateChange as any)
-  const zone = bindable<string | null>(() => p.timeZone as any, () => null, null, () => p.onTimeZoneChange as any)
+  const view = bindable<CalView>(() => p.view, () => p.defaultView, 'week', () => p.onViewChange)
+  const date = bindable<string>(() => p.date, () => p.defaultDate, untrack(() => env.today.value), () => p.onDateChange)
+  const zone = bindable<string | null>(() => p.timeZone, () => null, null, () => p.onTimeZoneChange)
   const tz = () => zone.value ?? undefined
   const now = useNow(() => p.now, tz)
   const first = derived(() => p.firstDayOfWeek ?? weekStart(env.locale.value))
@@ -118,22 +122,22 @@ function useCalendar(p: CalendarProps) {
   const askDelete = state(false)
   const scopeOpen = state(false)
   const scope = state<RecurrenceScope>('this')
-  const pendingScope = state<{ run: (s: RecurrenceScope) => void; undo?: () => void; verb: string } | null>(null)
-  const askScope = (verb: string, run: (s: RecurrenceScope) => void, undo?: () => void) => { pendingScope.value = { run, undo, verb }; scope.value = 'this'; scopeOpen.value = true }
+  const pendingScope = state<{ run: (s: RecurrenceScope) => void; undo?: (() => void) | undefined; verb: string } | null>(null)
+  const askScope = (verb: string, run: (s: RecurrenceScope) => void, undo?: (() => void)  ) => { pendingScope.value = { run, undo, verb }; scope.value = 'this'; scopeOpen.value = true }
 
   const settle = (e: CalEvent, slot: Slot, verb: 'move' | 'resize', reason: Reason, chosen?: RecurrenceScope) => {
     const from = e.tz && tz() && e.tz !== tz() ? { start: toZone(at(slot.date, slot.s), tz()!, e.tz), end: toZone(at(slot.date, slot.e), tz()!, e.tz) } : slotTimes(slot)
     overlay.value = { ...overlay.value, [e.id]: slot }
     waiting.add(e.id)
     const put = () => { waiting.delete(e.id) }
-    const back = (err: any) => {
+    const back = (err: unknown) => {
       put()
       const { [e.id]: _, ...rest } = overlay.value
       overlay.value = rest
-      say(`Couldn't ${verb} ${e.title}: ${err?.message ?? 'try again'}`, true)
+      say(`Couldn't ${verb} ${e.title}: ${(err as Error | undefined)?.message ?? 'try again'}`, true)
     }
-    let r: any
-    try { r = (verb === 'move' ? p.onMove : p.onResize)?.(e, { ...from, resource: slot.resource, scope: chosen }, reason) } catch (err) { back(err); return }
+    let r: PromiseLike<unknown> | undefined
+    try { r = (verb === 'move' ? p.onMove : p.onResize)?.(e, { ...from, resource: slot.resource, scope: chosen }, reason) as PromiseLike<unknown> | undefined } catch (err) { back(err); return }
     if (r?.then) r.then(put, back)
     else put()
     const hit = conflicts(all.value, e, slot)
@@ -150,7 +154,7 @@ function useCalendar(p: CalendarProps) {
     overlay.value = { ...overlay.value, [e.id]: slot }
     askScope(verb === 'move' ? 'Move' : 'Change', s => settle(e, slot, verb, reason, s), () => { const { [e.id]: _, ...rest } = overlay.value; overlay.value = rest })
   }
-  const newEvent = (start: string, end: string, resource?: string) => {
+  const newEvent = (start: string, end: string, resource?: string  ) => {
     draft.value = { event: { id: uid('new'), title: '', start, end, cal: p.calendars?.[0]?.id ?? 1, resource }, isNew: true }
     editing.value = true
   }
@@ -183,7 +187,7 @@ function useCalendar(p: CalendarProps) {
     onSlot: (d: string, m: number, r?: string) => newEvent(at(d || date.value, m), at(d || date.value, m + 30), r),
   })
   /** Keys shared by the grid and the timeline: the roving stop, Enter, M, Delete, and move mode. */
-  const eventKeys = (e: KeyboardEvent, opts: { days?: string[]; resources?: string[]; next: (key: string, id: string) => string | null }) => {
+  const eventKeys = (e: KeyboardEvent, opts: { days?: string[] | undefined; resources?: string[] | undefined; next: (key: string, id: string) => string | null }) => {
     const el = (e.target as Element).closest<HTMLElement>('[data-id]')
     if (!el) return
     const id = el.dataset.id!
@@ -273,8 +277,8 @@ function Column({ day, c, stop, weekend }: { day: string; c: Ctx; stop: string |
   })
   return (
     <div data-part="col" role="gridcell" data-date={day} data-weekend={weekend ? '' : undefined} aria-current={today.value ? 'date' : undefined}>
-      <span data-part="band" style={`--_top:0px;--_h:${hours(hrs.value[0])}`}></span>
-      <span data-part="band" style={`--_top:${hours(hrs.value[1])};--_h:${hours(1440 - hrs.value[1])}`}></span>
+      <span data-part="band" style={`--_top:0px;--_h:${hours(hrs.value[0]!)}`}></span>
+      <span data-part="band" style={`--_top:${hours(hrs.value[1]!)};--_h:${hours(1440 - hrs.value[1]!)}`}></span>
       {ghost.value && <span data-part="ghost" style={`--_top:${hours(ghost.value.s)};--_h:${hours(ghost.value.e - ghost.value.s)}`}></span>}
       {segs.value.map(s => <EventBlock key={s.id} seg={s} lane={lanes.value.get(s.id) ?? { col: 0, cols: 1, span: 1 }} c={c} stop={stop === s.id} />)}
       {draft.value && <span data-part="draft" style={`--_top:${hours(draft.value.s)};--_h:${hours(draft.value.e - draft.value.s)}`}>New event · {c.span(draft.value.s, draft.value.e)}</span>}
@@ -298,7 +302,7 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { days: days.value, next: (k, id) => eventKey(k, id, list.value, getComputedStyle(e.target as Element).direction === 'rtl') })
   const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
-    <div data-part="grid" role="grid" aria-label={fmt(days.value[0], { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length}`} onKeyDown={onKey}>
+    <div data-part="grid" role="grid" aria-label={fmt(days.value[0]!, { month: 'long', year: 'numeric' }, c.env.locale.value)} style={`--_days:${days.value.length}`} onKeyDown={onKey}>
       <div data-part="head" role="row">
         <span aria-hidden="true"></span>
         {days.value.map(d => <div key={d} data-part="dayhead" role="columnheader" aria-label={fmt(d, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)} aria-current={d === c.env.today.value ? 'date' : undefined}><span>{fmt(d, { weekday: 'short' }, c.env.locale.value)}</span><b>{ymd(d)[2]}</b></div>)}
@@ -308,8 +312,8 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
         {days.value.map((d, i) => <div key={d} data-part="allday-cell" style={`grid-column:${i + 2};grid-row:1 / span ${Math.max(1, ...bars.value.map(b => b.row + 1))}`}></div>)}
         {bars.value.map(b => <div key={b.id} data-part="chip" data-cal={b.event.cal ?? 1} data-id={b.id} role="gridcell" tabindex={stop.value === b.id ? '0' : '-1'} aria-label={c.name(b.event)} style={`${tint(b.event.cal)};grid-column:${b.col + 2} / span ${b.span};grid-row:${b.row + 1}`}>{b.event.title}</div>)}
       </div>
-      <div ref={(n: any) => (scroller = n)} data-part="scroller">
-        <div ref={(n: any) => (cols = n)} data-part="cols" role="row">
+      <div ref={n => (scroller = n)} data-part="scroller">
+        <div ref={n => (cols = n)} data-part="cols" role="row">
           <div data-part="gutter" aria-hidden="true">
             {Array.from({ length: 23 }, (_, i) => i + 1).map(h => <span key={h} data-part="hour" style={`top:${hours(h * 60)}`}>{c.time(h * 60)}</span>)}
             {nowAt.value !== null && <span data-part="now-label" style={`--_top:${hours(nowAt.value)}`}>{c.time(nowAt.value)}</span>}
@@ -366,7 +370,7 @@ function MonthGrid({ c }: { c: Ctx }) {
       <div data-part="head" aria-hidden="true"><span></span>{heads.value.map(h => <div key={h[0]} data-part="dayhead"><span>{h[1]}</span></div>)}</div>
       <span aria-hidden="true"></span>
       <div data-part="scroller">
-        <div ref={(n: any) => (grid = n)} data-part="month" role="grid" aria-label={fmt(c.date.value, { month: 'long', year: 'numeric' }, c.env.locale.value)} aria-describedby={hint} onKeyDown={onKey} onClick={onClick}>
+        <div ref={n => (grid = n)} data-part="month" role="grid" aria-label={fmt(c.date.value, { month: 'long', year: 'numeric' }, c.env.locale.value)} aria-describedby={hint} onKeyDown={onKey} onClick={onClick}>
           {weeks.value.map(w => (
             <div key={w.key} role="row">
               {w.cells.map(x => (
@@ -382,7 +386,7 @@ function MonthGrid({ c }: { c: Ctx }) {
         </div>
       </div>
       <span class="sr" id={hint}>Arrow keys move between days, Home and End to the week's ends, Page Up and Page Down by month, Enter opens the day.</span>
-      <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label={more.value ? fmt(more.value.iso, { month: 'long', day: 'numeric' }, c.env.locale.value) : 'Events'}>
+      <div ref={n => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label={more.value ? fmt(more.value.iso, { month: 'long', day: 'numeric' }, c.env.locale.value) : 'Events'}>
         {more.value && <div class="stack">{more.value.list.map(e => <Button key={e.id} emphasis="ghost" tone="neutral" size="sm" onClick={() => { moreOpen.value = false; c.say(c.name(e)); openDay(dateOf(e.start)) }}>{e.title}</Button>)}</div>}
       </div>
     </div>
@@ -411,9 +415,9 @@ function AgendaView({ c }: { c: Ctx }) {
 function Timeline({ c, narrow }: { c: Ctx; narrow: boolean }) {
   const hint = uid('tl')
   const range = derived(() => c.p.timeline ?? [480, 1080])
-  const width = derived(() => range.value[1] - range.value[0])
+  const width = derived(() => range.value[1]! - range.value[0]!)
   const slots = derived(() => Math.round(width.value / 60))
-  const marks = derived(() => Array.from({ length: slots.value }, (_, i) => range.value[0] + i * 60).filter((_, i) => !narrow || i % 2 === 0))
+  const marks = derived(() => Array.from({ length: slots.value }, (_, i) => range.value[0]! + i * 60).filter((_, i) => !narrow || i % 2 === 0))
   const day = derived(() => c.date.value)
   const rows = derived(() => c.p.resources ?? [])
   const segs = derived(() => {
@@ -429,7 +433,7 @@ function Timeline({ c, narrow }: { c: Ctx; narrow: boolean }) {
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { resources: (c.p.resources ?? []).map(r => r.id), next: (k, id) => laneKey(k, id, order.value) })
   return (
     <div data-part="scroller">
-      <div ref={(n: any) => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey}>
+      <div ref={n => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey}>
         <span aria-hidden="true"></span>
         <div class="muted" aria-hidden="true" style={`display:grid;grid-template-columns:repeat(${marks.value.length},1fr)`}>{marks.value.map(m => <span key={m}>{c.time(m)}</span>)}</div>
         {rows.value.map(r => (
@@ -437,11 +441,11 @@ function Timeline({ c, narrow }: { c: Ctx; narrow: boolean }) {
             <div data-part="lane-label" role="rowheader"><b>{r.name}</b>{r.meta && <span class="muted">{r.meta}</span>}</div>
             <div data-part="lane" data-resource={r.id} data-date={day.value} style={`--_slots:${slots.value}`}>
               {lane(r.id).map(s => (
-                <div key={s.id} data-part="event" data-cal={s.event.cal ?? 1} data-short="" data-id={s.id} role="gridcell" tabindex={stop.value === s.id ? '0' : '-1'} data-state={c.moving.value?.id === s.id ? 'moving' : c.drag.value?.id === s.id ? 'dragging' : undefined} style={`${tint(s.event.cal)};--_x:${(s.s - range.value[0]) / width.value};--_w:${(s.e - s.s) / width.value};position:absolute`}>
+                <div key={s.id} data-part="event" data-cal={s.event.cal ?? 1} data-short="" data-id={s.id} role="gridcell" tabindex={stop.value === s.id ? '0' : '-1'} data-state={c.moving.value?.id === s.id ? 'moving' : c.drag.value?.id === s.id ? 'dragging' : undefined} style={`${tint(s.event.cal)};--_x:${(s.s - range.value[0]!) / width.value};--_w:${(s.e - s.s) / width.value};position:absolute`}>
                   <span class="sr">{`${s.event.title}, ${r.name}, ${c.span(s.s, s.e)}`}</span><span data-part="event-title" aria-hidden="true">{s.event.title}</span>{s.e - s.s >= width.value / 5 && <span data-part="event-time" aria-hidden="true">{c.span(s.s, s.e)}</span>}
                 </div>
               ))}
-              {nowAt.value !== null && nowAt.value >= range.value[0] && nowAt.value <= range.value[1] && <span data-part="now" aria-hidden="true" style={`--_top:0;inset-block:0;inset-inline-start:${((nowAt.value - range.value[0]) / width.value) * 100}%;inline-size:0;block-size:auto;border:0;border-inline-start:var(--warp-border-emphasis) solid var(--warp-color-sweep)`}></span>}
+              {nowAt.value !== null && nowAt.value >= range.value[0]! && nowAt.value <= range.value[1]! && <span data-part="now" aria-hidden="true" style={`--_top:0;inset-block:0;inset-inline-start:${((nowAt.value - range.value[0]!) / width.value) * 100}%;inline-size:0;block-size:auto;border:0;border-inline-start:var(--warp-border-emphasis) solid var(--warp-color-sweep)`}></span>}
             </div>
           </div>
         ))}
@@ -485,7 +489,7 @@ function MiniMonth({ c }: { c: Ctx }) {
         <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label="Previous month" onClick={() => (cursor.value = stepDate('month', cursor.value, -1))} />
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label="Next month" onClick={() => (cursor.value = stepDate('month', cursor.value, 1))} />
       </div>
-      <div ref={(n: any) => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
+      <div ref={n => (grid = n)} data-part="mini" role="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} onKeyDown={onKey} onClick={(e: MouseEvent) => { const d = (e.target as Element).closest<HTMLElement>('[data-day]')?.dataset.day; if (d) { cursor.value = d; pick(d) } }}>
         <div role="row">{heads.value.map(h => <span key={h[0]} role="columnheader"><abbr title={h[0]} aria-hidden="true">{h[0][0]}</abbr><span class="sr">{h[0]}</span></span>)}</div>
         {weeks.value.map(w => (
           <div key={w.key} role="row">
@@ -511,8 +515,8 @@ function ZoneChip({ c }: { c: Ctx }) {
   use(popover, () => panel, () => ({ open: open.value, trigger: chip!, side: 'bottom' as const, align: 'end' as const, onClose: () => (open.value = false) }))
   return (
     <>
-      <button ref={(n: any) => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} title={`Times shown in ${c.zone.value}`} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button>
-      <div ref={(n: any) => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
+      <button ref={n => (chip = n)} type="button" data-part="tz" aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} title={`Times shown in ${c.zone.value}`} onClick={() => { built.value = true; open.value = !open.value }}><GlobeIcon />{c.zoneLabel.value}</button>
+      <div ref={n => (panel = n)} id={id} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Time zone">
         {built.value && <TimeZoneSelect label="Time zone" value={c.zone.value} referenceDate={c.date.value} today={c.env.today.value} locale={c.env.locale.value} onValueChange={(z: string | null) => { c.zone.set(z); open.value = false; c.say(`Times shown in ${z}`) }} />}
       </div>
     </>
@@ -551,7 +555,7 @@ export function Calendar(p: CalendarProps) {
     const to = nextIndex(e.key, list.indexOf(c.view.value), list.length, { rtl: getComputedStyle(e.currentTarget as Element).direction === 'rtl' })
     if (to < 0) return
     e.preventDefault()
-    setView(list[to])
+    setView(list[to]!)
     flush()
     tabs?.querySelector<HTMLElement>('[aria-selected="true"]')?.focus()
   }
@@ -570,7 +574,7 @@ export function Calendar(p: CalendarProps) {
   }
   const zoneNow = (z: string) => { const n = c.now.value; return n ? c.time(minuteOf(c.tz() ? toZone(n, c.tz()!, z) : n)) : '' }
   return (
-    <div ref={(n: any) => { root = n; c.bindRoot(n) }} data-scope="calendar" data-part="root">
+    <div ref={n => { root = n; c.bindRoot(n) }} data-scope="calendar" data-part="root">
       <div data-part="app-bar" class="row">
         <Button emphasis="ghost" tone="neutral" size="sm" icon={LeftIcon} label={`Previous ${unit.value}`} onClick={() => step(-1)} />
         <Button emphasis="ghost" tone="neutral" size="sm" icon={RightIcon} label={`Next ${unit.value}`} onClick={() => step(1)} />
@@ -582,7 +586,7 @@ export function Calendar(p: CalendarProps) {
         {p.live && <LiveStatus state={p.live} label="Calendar sync">{p.live === 'live' ? 'Synced' : undefined}</LiveStatus>}
         {c.zone.value && <ZoneChip c={c} />}
         <div data-scope="tabs" data-variant="pill" data-part="root">
-          <div ref={(n: any) => (tabs = n)} data-part="list" role="tablist" aria-label="Calendar view" onKeyDown={onTabKey}>
+          <div ref={n => (tabs = n)} data-part="list" role="tablist" aria-label="Calendar view" onKeyDown={onTabKey}>
             {views.value.map(v => <button key={v} type="button" data-part="trigger" role="tab" id={`${id}-${v}`} aria-controls={`${id}-main`} aria-selected={v === c.view.value ? 'true' : 'false'} tabindex={v === c.view.value ? undefined : '-1'} onClick={() => setView(v)}>{LABEL[v]}</button>)}
             <span data-part="indicator" aria-hidden="true" data-instant=""></span>
           </div>
@@ -595,7 +599,7 @@ export function Calendar(p: CalendarProps) {
           {p.calendars && (
             <div class="stack">
               <span data-part="eyebrow">My calendars</span>
-              <ul data-part="sources">{p.calendars.map(s => <li key={s.id}><label data-cal={s.id}><input type="checkbox" checked={!c.off.value.includes(s.id)} onChange={(e: any) => toggle(s.id, e.currentTarget.checked)} />{s.name}</label></li>)}</ul>
+              <ul data-part="sources">{p.calendars.map(s => <li key={s.id}><label data-cal={s.id}><input type="checkbox" checked={!c.off.value.includes(s.id)} onChange={(e: Event) => toggle(s.id, (e.currentTarget as HTMLInputElement).checked)} />{s.name}</label></li>)}</ul>
             </div>
           )}
           {p.zones && (

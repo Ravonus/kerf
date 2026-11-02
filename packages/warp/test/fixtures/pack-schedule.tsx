@@ -57,7 +57,7 @@ const COUNTS = countByDay(SAMPLE)
 
 export function useEvents() {
   const events = state(makeEvents())
-  const move = (e: CalEvent, to: { start: string; end: string; resource?: string }) => { events.value = events.value.map(x => (x.id === e.id ? { ...x, ...to } : x)) }
+  const move = (e: CalEvent, to: { start: string; end: string; resource?: string | undefined }) => { events.value = events.value.map(x => (x.id === e.id ? { ...x, ...to } : x)) }
   return {
     events,
     move,

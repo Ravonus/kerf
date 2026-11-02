@@ -5,19 +5,20 @@ import { Tag } from '../Tag'
 import { afterFlush } from './atoms'
 import '@weft-js/warp-core/styles/inputs/choice.css'
 
+/** Props for TagsInput. */
 export interface TagsInputProps {
   label: string
-  hint?: any
-  error?: any
+  hint?: unknown
+  error?: unknown
   value: State<string[]>
   /** A false tag stays, critical: the field's error says why, once for all of them. */
   valid?: (tag: string) => boolean
   /** Called when the tags change, to clear a stale error. */
-  onEdit?: () => void
+  onEdit?: (() => void) | undefined
   /** Enter with nothing typed: the form's submit. */
-  onSubmit?: () => void
+  onSubmit?: () => unknown
   autofocus?: boolean
-  [attr: string]: any
+  [attr: string]: unknown
 }
 
 /**
@@ -50,7 +51,7 @@ export function TagsInput({ label, hint, error, value, valid, onEdit, onSubmit, 
     if ((e.key === 'Enter' || e.key === ',') && text) { e.preventDefault(); add(text) }
     else if (e.key === 'Enter') { e.preventDefault(); onSubmit?.() }
     else if (e.key === 'Backspace' && !draft.value && value.value.length) {
-      if (armed.value) drop(value.value[value.value.length - 1])
+      if (armed.value) drop(value.value[value.value.length - 1]!)
       else armed.value = true
     } else if (e.key !== 'Backspace') armed.value = false
   }
@@ -69,7 +70,7 @@ export function TagsInput({ label, hint, error, value, valid, onEdit, onSubmit, 
       control={p => (
         <>
           {value.value.map(t => <Tag key={t} label={t} tone={valid && !valid(t) ? 'critical' : undefined} data-highlighted={armed.value && t === last.value ? '' : undefined} onRemove={() => drop(t)}>{t}</Tag>)}
-          <input ref={(n: any) => (host = n)} data-part="input" id={p.id} placeholder=" " autocomplete="off" enterkeyhint="enter" aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={draft.value} onInput={(e: any) => { draft.value = e.currentTarget.value; armed.value = false }} onKeyDown={key} onPaste={paste} onBlur={() => { if (draft.value.trim()) add(draft.value) }} {...rest} />
+          <input ref={n => (host = n)} data-part="input" id={p.id} placeholder=" " autocomplete="off" enterkeyhint="enter" aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={draft.value} onInput={(e: Event) => { draft.value = (e.currentTarget as HTMLInputElement).value; armed.value = false }} onKeyDown={key} onPaste={paste} onBlur={() => { if (draft.value.trim()) add(draft.value) }} {...rest} />
         </>
       )}
     />

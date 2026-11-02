@@ -21,8 +21,10 @@ import '@weft-js/warp-core/styles/flows/usage.css'
 import '@weft-js/warp-core/styles/flows/meter.css'
 import '@weft-js/warp-core/styles/flows/confirm.css'
 
-export type BillingPlan = { id: string; name: string; /** Per seat, per month. */ price: number; description?: string; features: string[]; limits?: Record<string, number> }
+/** A plan on offer. */
+export type BillingPlan = { id: string; name: string; /** Per seat, per month. */ price: number; description?: string | undefined; features: string[]; limits?: Record<string, number> }
 
+/** Props for PlanPicker. */
 export interface PlanPickerProps {
   plans: BillingPlan[]
   current: string
@@ -32,8 +34,8 @@ export interface PlanPickerProps {
   seats: number
   daysLeft: number
   periodDays?: number
-  currency?: string
-  locale?: string
+  currency?: string | undefined
+  locale?: string | undefined
   /** The server's proration. Default: `prorate` from the numbers above. */
   preview?: (plan: BillingPlan, interval: BillingInterval) => Promise<Proration> | Proration
   /** What stops working on a downgrade, listed in the dialog. */
@@ -90,7 +92,7 @@ export function PlanPicker({ plans, current, selected, interval, seats, daysLeft
   const lost = derived(() => (up.value || same.value ? [] : losses?.(next.value) ?? []))
   return (
     <div data-scope="stack">
-      <div data-scope="row"><Segmented label="Billing period" value={cycle.value} onChange={v => (cycle.value = v as BillingInterval)} size="sm" options={[{ value: 'month', label: 'Monthly' }, { value: 'year', label: 'Annual · save 20%' }]} /></div>
+      <div data-scope="row"><Segmented label="Billing period" value={cycle.value} onChange={v => (cycle.value = v)} size="sm" options={[{ value: 'month', label: 'Monthly' }, { value: 'year', label: 'Annual · save 20%' }]} /></div>
       <div data-scope="plans">
         <div data-part="grid" role="radiogroup" aria-label="Plan">
           {plans.map(p => (
@@ -128,16 +130,17 @@ export function PlanPicker({ plans, current, selected, interval, seats, daysLeft
   )
 }
 
+/** Props for UsageMeter. */
 export interface UsageMeterProps {
   label: string
   value: number
   limit: number
-  format?: (n: number) => string
+  format?: ((n: number) => string) | undefined
   /** Past the limit: "+ $12.40 overage". */
   overage?: string
   note?: string
   /** A link to the plan picker preselected on the next tier. */
-  action?: any
+  action?: unknown
 }
 
 /** A usage meter (09 §4.3): the warning tick at 80%, caution from 80%, critical at 100%, stripes past the limit. */
@@ -159,4 +162,4 @@ export function UsageMeter({ label, value, limit, format = String, overage, note
 }
 
 /** The group of usage meters. */
-export const UsageMeters = ({ children }: { children: any }) => <div data-scope="usage">{children}</div>
+export const UsageMeters = ({ children }: { children: unknown }) => <div data-scope="usage">{children}</div>

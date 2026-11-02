@@ -14,7 +14,7 @@ type Track = 'following' | 'paused' | 'off'
  * MultiplayerAutoTrack (07 §6.4): a Switch, a status line, and a scroll region that follows the presenter's section
  * (`[data-section]` children). A manual scroll pauses it with Resume; presenter changes are shown, not announced.
  */
-export function AutoTrack({ presenter, section, label, height = 180, children }: { presenter: Peer | null; section?: string; label: string; height?: number; children?: any }) {
+export function AutoTrack({ presenter, section, label, height = 180, children }: { presenter: Peer | null; section?: string | undefined; label: string; height?: number; children?: unknown }) {
   const mode = state<Track>('following')
   const name = derived(() => (presenter ? firstName(presenter.name) : ''))
   let region: HTMLDivElement | undefined
@@ -28,7 +28,7 @@ export function AutoTrack({ presenter, section, label, height = 180, children }:
   }))
   return (
     <div>
-      <Switch checked={mode.value !== 'off'} onChange={(e: any) => (mode.value = e.currentTarget.checked ? 'following' : 'off')}>Follow whoever presents</Switch>
+      <Switch checked={mode.value !== 'off'} onChange={(e: Event) => (mode.value = (e.currentTarget as HTMLInputElement).checked ? 'following' : 'off')}>Follow whoever presents</Switch>
       <div>
         <span data-scope="auto-track" data-state={mode.value} role="status">
           {mode.value === 'following' && presenter && <PeerAvatar peer={presenter} size="sm" />}
@@ -36,7 +36,7 @@ export function AutoTrack({ presenter, section, label, height = 180, children }:
         </span>
         {mode.value === 'paused' && <Button emphasis="outline" tone="neutral" size="sm" onClick={() => { mode.value = 'following'; announce(region!.ownerDocument, `Following ${presenter?.name ?? 'the presenter'}`) }}>Resume</Button>}
       </div>
-      <div ref={(n: any) => (region = n)} tabindex="0" role="region" aria-label={label} style={`block-size:${height}px;overflow:auto`}>{children}</div>
+      <div ref={n => (region = n)} tabindex="0" role="region" aria-label={label} style={`block-size:${height}px;overflow:auto`}>{children}</div>
     </div>
   )
 }

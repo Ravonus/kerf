@@ -16,15 +16,15 @@ export function val<T>(v: T | { value: T } | (() => T)): T {
   return v as T
 }
 
-const isState = (v: any): v is State<any> => v instanceof Box
+const isState = (v: unknown): v is State<unknown> => v instanceof Box
 
 /** One read and write over a bound State, a controlled value and a default (the Picker `bindable`, without its CSS). */
 export function held<T>(value: () => State<T> | T | undefined, fallback: T, on?: () => ((v: T) => void) | undefined) {
-  const own = state<T>(untrack(() => { const v = value(); return isState(v) ? fallback : (v as T | undefined) ?? fallback }))
+  const own = state<T>(untrack(() => { const v = value(); return isState(v) ? fallback : (v) ?? fallback }))
   return {
     get value(): T {
       const v = value()
-      return isState(v) ? v.value : v !== undefined ? (v as T) : own.value
+      return isState(v) ? v.value : v !== undefined ? (v) : own.value
     },
     set(next: T) {
       const v = untrack(value)

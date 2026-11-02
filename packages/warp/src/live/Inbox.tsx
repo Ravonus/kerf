@@ -13,8 +13,11 @@ import '@weft-js/warp-core/styles/components/link.css'
 import '@weft-js/warp-core/styles/app/inbox.css'
 import '@weft-js/warp-core/styles/app/notification.css'
 
+/** What a notification is about, which picks its glyph. */
 export type NoteKind = 'mention' | 'comment' | 'assign' | 'approve' | 'system' | 'invite'
+/** A button on a notification. */
 export interface NoteAction { id: string; label: string; emphasis?: 'solid' | 'outline' }
+/** One notification. */
 export interface Note {
   id: string
   actor: string
@@ -26,7 +29,7 @@ export interface Note {
   time: string
   /** "Today", "Yesterday": see `dayLabel`. */
   day?: string
-  source?: string
+  source?: string | undefined
   quote?: string
   read?: boolean
   actions?: NoteAction[]
@@ -37,19 +40,20 @@ const TABS: Record<InboxTab, string> = { all: 'All', unread: 'Unread', mentions:
 const sentence = (n: Note) => [n.actor, n.verb, n.object, n.detail].filter(Boolean).join(' ')
 const label = (n: Note) => `${sentence(n)}${n.read ? '' : ', unread'}, ${n.time}`
 
+/** Props for Inbox. */
 export interface InboxProps {
   /** Newest first. Undefined while the first load runs: skeletons, once. */
   items: Note[] | undefined | { value: Note[] | undefined } | (() => Note[] | undefined)
-  live?: LiveState | (() => LiveState)
+  live?: LiveState | (() => LiveState) | undefined
   tabs?: InboxTab[]
   title?: string
-  variant?: 'popover'
+  variant?: 'popover' | undefined
   /** Is the inbox on screen? Rows are read after 2 s visible only while it is. */
   open?: boolean
   /** Updates waiting to sync (offline, reconnecting). */
   queued?: number
   viewAll?: string
-  settings?: () => void
+  settings?: (() => void) | undefined
   onRead?: (id: string) => void
   onReadAll?: () => void
   onDismiss?: (id: string) => void
@@ -67,8 +71,8 @@ export interface InboxProps {
  */
 export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title = 'Notifications', variant, open = true, queued = 0, viewAll, settings, onRead, onReadAll, onDismiss, onRestore, onAction, onOpen }: InboxProps) {
   const id = uid('inbox')
-  const tab = state<InboxTab>(untrack(() => tabs)[0])
-  const data = derived(() => val(items as any) as Note[] | undefined)
+  const tab = state<InboxTab>(untrack(() => tabs)[0]!)
+  const data = derived(() => val<Note[] | undefined>(items))
   const all = derived(() => data.value ?? [])
   const leaving = state<string[]>([])
   const fresh = state(0)
@@ -85,7 +89,7 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
 
   use(indicator, () => tablist, () => ({ selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw', at: tab.value }))
   use(feed, () => list, () => ({ items: '[data-scope="notification"]' }))
-  use(readOnView, () => list, () => ({ items: '[data-scope="notification"]', active: !!open, onRead: (rid: string) => onRead?.(rid) }))
+  use(readOnView, () => list, () => ({ items: '[data-scope="notification"]', active: !!(open as unknown), onRead: (rid: string) => onRead?.(rid) }))
   use(arrivals, () => list, () => ({
     items: '[data-scope="notification"]',
     ids: all.value.map(n => n.id),
@@ -99,7 +103,7 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
     const to = nextIndex(e.key, at, tabs.length, { rtl })
     if (to < 0) return
     e.preventDefault()
-    pick(tabs[to])
+    pick(tabs[to]!)
     tablist!.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
   }
   const dismiss = (n: Note, row: HTMLElement) => {
@@ -124,21 +128,21 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
   const toTop = () => { list?.scrollTo?.({ top: 0 }); if (list) list.scrollTop = 0; fresh.value = 0 }
   const onScroll = () => { if (list!.scrollTop <= 0) fresh.value = 0 }
   const sync = derived(() => {
-    const q = val(queued as any) as number
+    const q = val<number>(queued)
     if (q) return `${q} update${q > 1 ? 's' : ''} waiting to sync`
-    return (val(live as any) ?? 'live') === 'connecting' ? 'Connecting…' : 'Up to date'
+    return (val<LiveState | undefined>(live) ?? 'live') === 'connecting' ? 'Connecting…' : 'Up to date'
   })
   const page = derived(() => viewAll)
 
   return (
-    <section ref={(n: any) => (root = n)} data-scope="inbox" data-part="root" data-variant={variant} aria-labelledby={`${id}-t`}>
+    <section ref={n => (root = n)} data-scope="inbox" data-part="root" data-variant={variant} aria-labelledby={`${id}-t`}>
       <div data-part="header">
         <h3 id={`${id}-t`}>{title}</h3>
         <Button emphasis="ghost" tone="neutral" size="sm" onClick={readAll}>Mark all as read</Button>
         {settings && <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" aria-label="Notification settings" onClick={settings}><G name="more" /></Button>}
       </div>
       <div data-scope="tabs" data-part="root">
-        <div ref={(n: any) => (tablist = n)} data-part="list" role="tablist" aria-label="Filter" onKeyDown={onTabKey}>
+        <div ref={n => (tablist = n)} data-part="list" role="tablist" aria-label="Filter" onKeyDown={onTabKey}>
           {tabs.map(t => (
             <button key={t} data-part="trigger" role="tab" type="button" id={tabId(t)} aria-controls={`${id}-panel`} aria-selected={t === tab.value ? 'true' : 'false'} tabindex={t === tab.value ? undefined : '-1'} onClick={() => pick(t)}>
               {TABS[t]}
@@ -150,7 +154,7 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
       </div>
       {fresh.value > 0 && <Button size="sm" data-part="new-pill" onClick={toTop}>{fresh.value} new</Button>}
       <div role="tabpanel" id={`${id}-panel`} aria-labelledby={tabId(tab.value)} data-part="panel">
-        <div ref={(n: any) => (list = n)} data-part="list" role="feed" aria-label={title} aria-busy={data.value === undefined ? 'true' : 'false'} tabindex={shown.value.length ? undefined : '0'} onScroll={onScroll}>
+        <div ref={n => (list = n)} data-part="list" role="feed" aria-label={title} aria-busy={data.value === undefined ? 'true' : 'false'} tabindex={shown.value.length ? undefined : '0'} onScroll={onScroll}>
           {data.value === undefined && <div data-part="group" aria-hidden="true"><Skeleton lines={3} /></div>}
           {days.value.map(g => (
             <div key={g.day} role="none">
@@ -169,8 +173,8 @@ export function Inbox({ items, live, tabs = ['all', 'unread', 'mentions'], title
   )
 }
 
-function Row({ n, at, size, leaving, stop, onKey, onPress, onFocus, onDismiss, onAction }: any) {
-  const icon = derived(() => KIND[n.kind as NoteKind] ?? KIND.system)
+function Row({ n, at, size, leaving, stop, onKey, onPress, onFocus, onDismiss, onAction }: { n: Note; at: number; size: number; leaving: boolean; stop: boolean; onKey: (e: KeyboardEvent, n: Note) => void; onPress: (e: MouseEvent, n: Note) => void; onFocus: () => void; onDismiss: (n: Note, row: HTMLElement) => void; onAction: (n: Note, id: string) => void }) {
+  const icon = derived(() => KIND[n.kind] ?? KIND.system)
   const name = derived(() => label(n))
   const glyph = derived(() => icon.value[0])
   return (
@@ -199,7 +203,7 @@ function Row({ n, at, size, leaving, stop, onKey, onPress, onFocus, onDismiss, o
       <span data-part="unread" aria-hidden="true"></span>
       {n.quote && <div data-part="quote">{n.quote}</div>}
       <span data-part="meta">{n.time}{n.source ? ` · ${n.source}` : ''}</span>
-      <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" data-part="dismiss" aria-label={`Dismiss: ${n.actor} ${n.verb}`} tabindex="-1" onClick={(e: MouseEvent) => { e.stopPropagation(); onDismiss(n, (e.currentTarget as HTMLElement).closest('article')) }}><G name="x" /></Button>
+      <Button emphasis="ghost" tone="neutral" size="sm" data-icon-only="" data-part="dismiss" aria-label={`Dismiss: ${n.actor} ${n.verb}`} tabindex="-1" onClick={(e: MouseEvent) => { e.stopPropagation(); onDismiss(n, (e.currentTarget as HTMLElement).closest('article')!) }}><G name="x" /></Button>
       {n.actions?.length ? (
         <div data-part="actions">
           {n.actions.map((a: NoteAction) => <Button key={a.id} size="sm" emphasis={a.emphasis ?? 'solid'} tone={a.emphasis === 'outline' ? 'neutral' : undefined} onClick={() => onAction(n, a.id)}>{a.label}</Button>)}

@@ -6,18 +6,19 @@ import { usePickerEnv } from '../Picker'
 import './bits'
 import '@weft-js/warp-core/styles/app/year.css'
 
+/** Props for YearView. */
 export type YearViewProps = {
   /** `{ [isoDay]: n }`: a year's counts only (07 §2.7). */
   counts: Record<string, number>
   /** Names the section when the year alone won't do: two on a page. */
-  label?: string
+  label?: string | undefined
   /** Events for the picked day's detail: from `events`, or fetched by the app when it is picked. */
   events?: CalEvent[]
   year?: number
-  today?: string
-  locale?: string
-  hourCycle?: string
-  firstDayOfWeek?: number
+  today?: string | undefined
+  locale?: string | undefined
+  hourCycle?: string | undefined
+  firstDayOfWeek?: number | undefined
   /** Inside a Calendar: return true when the day or month opened there, and the picker stays out of the way. */
   openDay?: (iso: IsoDate) => boolean | void
   openMonth?: (iso: IsoDate) => boolean | void
@@ -119,7 +120,7 @@ export function YearView(p: YearViewProps) {
         <Button emphasis="outline" tone="neutral" size="sm" onClick={() => go(env.today.value)}>Today</Button>
         <span data-part="legend" aria-hidden="true"><span><i data-part="dots" data-zero=""></i>none</span><span><i data-part="dots" style="--_n:1"></i>1–2</span><span><i data-part="dots" style="--_n:2"></i>3–4</span><span><i data-part="dots" style="--_n:3"></i>5+</span></span>
       </div>
-      <div ref={(n: any) => (months = n)} data-part="months" role="group" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} data-swapping={swapping.value ? '' : undefined} onKeyDown={onKey} onClick={onClick}>
+      <div ref={n => (months = n)} data-part="months" role="group" aria-labelledby={`${id}-t`} aria-describedby={`${id}-h`} data-swapping={swapping.value ? '' : undefined} onKeyDown={onKey} onClick={onClick}>
         {list.value.map(m => (
           <div key={m.month} data-part="year-month" data-current={m.current ? '' : undefined}>
             <button type="button" data-part="month-title" id={`${id}-${m.month}`} data-month={m.month} tabindex="-1">{m.name} <small>{m.total}<span class="sr"> events</span></small></button>

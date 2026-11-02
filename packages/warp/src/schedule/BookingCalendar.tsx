@@ -11,8 +11,10 @@ import '@weft-js/warp-core/styles/app/booking.css'
 import '@weft-js/warp-core/styles/rich/calendar-grid.css'
 
 /** A start in minutes; `disabled` shows it taken rather than hiding it. */
-export type BookingSlot = { s: number; disabled?: boolean }
+export type BookingSlot = { s: number; disabled?: boolean | undefined }
+/** The slot being booked, in minutes from midnight; manual when typed rather than picked. */
 export type BookingDetails = { date: string; s: number; e: number; manual: boolean }
+/** Props for BookingCalendar. */
 export type BookingCalendarProps = {
   /** The times for a day: a list, or read from the date. */
   slots: BookingSlot[] | ((date: string) => BookingSlot[])
@@ -20,14 +22,14 @@ export type BookingCalendarProps = {
   defaultDate?: IsoDate
   onDateChange?: (d: IsoDate) => void
   duration?: number
-  min?: string
-  max?: string
-  isDateUnavailable?: (d: IsoDate) => boolean
-  loading?: boolean
-  error?: any
-  today?: string
-  locale?: string
-  hourCycle?: string
+  min?: string | undefined
+  max?: string | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
+  loading?: boolean | undefined
+  error?: unknown
+  today?: string | undefined
+  locale?: string | undefined
+  hourCycle?: string | undefined
   /** Rejecting keeps the confirm step and says why. */
   onBook: (b: BookingDetails) => void | Promise<unknown>
 }
@@ -63,7 +65,7 @@ export function BookingCalendar(p: BookingCalendarProps) {
     const d = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key]
     const on = [...(e.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('button:not(:disabled)')]
     const i = on.indexOf(e.target as HTMLButtonElement)
-    if (d && i >= 0) { e.preventDefault(); on[(i + d + on.length) % on.length].focus() }
+    if (d && i >= 0) { e.preventDefault(); on[(i + d + on.length) % on.length]!.focus() }
   }
   const toConfirm = () => {
     stage.value = 'confirm'
@@ -80,14 +82,14 @@ export function BookingCalendar(p: BookingCalendarProps) {
       stage.value = 'done'
       flush()
       if (root) { confirmSweep(root.querySelector('[data-part="slot"][aria-pressed="true"]')); announce(root.ownerDocument, `Booked ${when.value}`) }
-    } catch (err: any) {
-      failed.value = err?.message ?? 'That time was just taken.'
+    } catch (err) {
+      failed.value = (err as Error | undefined)?.message ?? 'That time was just taken.'
       if (root) announce(root.ownerDocument, `Couldn't book: ${failed.value}`, true)
     } finally { busy.value = false }
   }
   const empty = derived(() => !list.value.some(s => !s.disabled))
   return (
-    <div ref={(n: any) => (root = n)} data-scope="booking" data-part="root">
+    <div ref={n => (root = n)} data-scope="booking" data-part="root">
       <InlineCalendar aria-label="Choose a date" value={date.value} onValueChange={d => setDate(d as IsoDate)} today={env.today.value} locale={env.locale.value} min={p.min} max={p.max} isDateUnavailable={p.isDateUnavailable} />
       {stage.value === 'done'
         ? <div data-arrive="" class="row" role="status"><div><b>Booked · {when.value}</b><p class="muted">{longDuration(len.value)}. We've sent the details.</p></div><Button emphasis="ghost" tone="neutral" size="sm" onClick={() => { stage.value = 'pick'; pick.value = null }}>Book another</Button></div>

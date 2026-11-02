@@ -17,10 +17,11 @@ import '@weft-js/warp-core/styles/layout/spacer.css'
 import '@weft-js/warp-core/styles/layout/inset.css'
 import './layout.css'
 
-type Open = { children?: any; [attr: string]: any }
+type Open = { children?: unknown; [attr: string]: unknown }
 type Tag = keyof typeof TAGS
+/** A breakpoint a layout can switch at. */
 export type Step = 'tablet' | 'desktop'
-type Box = Open & { as?: Tag; gap?: Space }
+type Box = Open & { as?: Tag | undefined; gap?: Space | undefined }
 
 function Div({ children, ...rest }: Open) {
   return <div {...rest}>{children}</div>
@@ -73,22 +74,22 @@ export function Row({ gap, justify, align, wrap, reflow, ...rest }: Box & { just
 }
 
 /** Intrinsic columns: as many as fit at `min`, never more than `cols`. A child with `data-span="full"` takes the row. */
-export function Grid({ gap, min, cols, ...rest }: Box & { min?: 'xs' | 'sm' | 'md' | 'lg'; cols?: 2 | 3 | 4 | 6 }) {
+export function Grid({ gap, min, cols, ...rest }: Box & { min?: 'xs' | 'sm' | 'md' | 'lg' | undefined; cols?: 2 | 3 | 4 | 6 }) {
   return <Element data-scope="grid" data-gap={gap} data-min={min} data-cols={cols} {...rest} />
 }
 
 /** A fixed side and a fluid main, stacked below its step. Each child is a container. */
-export function Split({ gap, side, width, at, ...rest }: Box & { side?: 'start' | 'end'; width?: 'rail' | 'nav' | 'list' | 'half'; at?: Step }) {
+export function Split({ gap, side, width, at, ...rest }: Box & { side?: 'start' | 'end' | undefined; width?: 'rail' | 'nav' | 'list' | 'half' | undefined; at?: Step }) {
   return <Element data-scope="split" data-gap={gap} data-side={side === 'start' ? undefined : side} data-width={width} data-at={at === 'tablet' ? undefined : at} {...rest} />
 }
 
 /** A measured column, centred, with page gutters when `gutter` is set. */
-export function Center({ max, gutter, intrinsic, ...rest }: Box & { max?: 'measure' | 'narrow' | 'content' | 'wide'; gutter?: boolean; intrinsic?: boolean }) {
+export function Center({ max, gutter, intrinsic, ...rest }: Box & { max?: 'measure' | 'narrow' | 'content' | 'wide' | undefined; gutter?: boolean; intrinsic?: boolean }) {
   return <Element data-scope="center" data-max={max === 'content' ? undefined : max} data-gutter={gutter ? '' : undefined} data-intrinsic={intrinsic ? '' : undefined} {...rest} />
 }
 
 /** Fills the screen: the child with `data-part="center"` is centred, a header and footer hug the edges (auth, error pages). */
-export function Cover({ gap, min, ...rest }: Box & { min?: 'screen' | 'fill' }) {
+export function Cover({ gap, min, ...rest }: Box & { min?: 'screen' | 'fill' | undefined }) {
   return <Element data-scope="cover" data-gap={gap} data-min={min === 'screen' ? undefined : min} {...rest} />
 }
 

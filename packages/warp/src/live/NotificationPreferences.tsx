@@ -9,7 +9,9 @@ import { G, val } from './shared'
 import '../fields'
 import '@weft-js/warp-core/styles/app/prefs-matrix.css'
 
+/** A column of the preferences grid: email, push and so on. */
 export interface PrefChannel { id: string; label: string }
+/** Props for NotificationPreferences. */
 export interface NotificationPreferencesProps {
   /** The grid's name: the id of a heading, else this text is rendered in a visually hidden one. */
   title?: string
@@ -17,12 +19,12 @@ export interface NotificationPreferencesProps {
   channels: PrefChannel[]
   value: PrefValues | { value: PrefValues } | (() => PrefValues)
   /** Event id → the channels it can use. An event not listed can use all. */
-  offered?: Record<string, string[]>
+  offered?: Record<string, string[]> | undefined
   /** Event id → the channels it must use. */
-  locked?: Record<string, string[]>
+  locked?: Record<string, string[]> | undefined
   lockReason?: string
   /** Every change saves on its own; a rejected promise flips the cells back and says why. */
-  onChange?: (changes: PrefChange[]) => void | Promise<unknown>
+  onChange?: ((changes: PrefChange[]) => void | Promise<unknown>) | undefined
   digest?: string
   /** The channel the digest applies to. */
   digestChannel?: string
@@ -44,7 +46,7 @@ const CELL = 'input[type="checkbox"], [data-part="na"]'
  */
 export function NotificationPreferences({ title = 'Notification preferences', groups, channels, value, offered, locked, lockReason = 'Required: this alert always goes to your account.', onChange, digest = 'instant', digestChannel = 'email', digests = DIGESTS, onDigest, defaults }: NotificationPreferencesProps) {
   const id = uid('prefs')
-  const model = state<PrefValues>(untrack(() => val(value as any)))
+  const model = state<PrefValues>(untrack(() => val<PrefValues>(value)))
   const mail = state(untrack(() => digest))
   const save = state<Save>('idle')
   // what a cell is (a box, locked, not offered) never depends on the values: its node stays through every change
@@ -54,7 +56,7 @@ export function NotificationPreferences({ title = 'Notification preferences', gr
   let grid: HTMLDivElement | undefined
   let seq = 0
   onMount(() => {
-    watch(() => val(value as any) as PrefValues, v => { if (save.value !== 'saving') model.value = v })
+    watch(() => val<PrefValues>(value), v => { if (save.value !== 'saving') model.value = v })
     watch(() => digest, d => { if (save.value !== 'saving') mail.value = d })
   })
   use(gridNav, () => grid, () => ({ targets: CELL }))
@@ -84,7 +86,7 @@ export function NotificationPreferences({ title = 'Notification preferences', gr
   const cell = (e: PrefEvent, c: string, on: boolean) => change([{ event: e.id, channel: c, on }], `${e.label}, ${name(c)} ${on ? 'on' : 'off'}`)
   const parent = (evs: PrefEvent[], c: string, where?: string) => {
     const ch = toggleChanges(model.value, evs, fixed, c)
-    if (ch.length) change(ch, `${name(c)} ${ch[0].on ? 'on' : 'off'} for ${ch.length} event${ch.length > 1 ? 's' : ''}${where ? ` in ${where}` : ''}`)
+    if (ch.length) void change(ch, `${name(c)} ${ch[0]!.on ? 'on' : 'off'} for ${ch.length} event${ch.length > 1 ? 's' : ''}${where ? ` in ${where}` : ''}`)
   }
   const onLocked = (e: Event) => {
     e.preventDefault()
@@ -117,13 +119,13 @@ export function NotificationPreferences({ title = 'Notification preferences', gr
   const pickDigest = (e: Event) => {
     const el = e.target as HTMLSelectElement
     const next = el.value
-    commit(() => (mail.value = next), () => onDigest?.(next), `Email delivery: ${el.selectedOptions[0].textContent}`)
+    void commit(() => (mail.value = next), () => onDigest?.(next), `Email delivery: ${el.selectedOptions[0]!.textContent}`)
   }
 
   return (
     <div data-scope="prefs-matrix">
       <span data-part="sr-only" id={`${id}-t`}>{title}</span>
-      <div ref={(n: any) => (grid = n)} role="grid" data-part="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-k`}>
+      <div ref={n => (grid = n)} role="grid" data-part="grid" aria-labelledby={`${id}-t`} aria-describedby={`${id}-k`}>
         <div role="row" data-part="head">
           <div role="columnheader" data-part="corner">Event</div>
           {channels.map((c, i) => (
@@ -180,7 +182,7 @@ export function NotificationPreferences({ title = 'Notification preferences', gr
   )
 }
 
-function EventCell({ on, text, ch, onToggle }: { on: boolean; text: string; ch: string; onToggle: (v: boolean) => void }) {
+function EventCell({ on, text, ch, onToggle }: { on: boolean; text: string; ch: string; onToggle: (v: boolean) => unknown }) {
   return (
     <Checkbox checked={on} tabindex="-1" onChange={(e: Event) => onToggle((e.target as HTMLInputElement).checked)}>
       <span data-part="sr-only">{text}</span><span data-part="ch-name" aria-hidden="true">{ch}</span>

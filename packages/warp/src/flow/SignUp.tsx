@@ -26,16 +26,18 @@ export function PasswordMeter({ value }: { value: string }) {
   )
 }
 
+/** What the sign-up form submits. */
 export interface SignUpValues { name: string; email: string; password: string; terms?: string }
 
+/** Props for SignUp. */
 export interface SignUpProps extends FlowForm<SignUpValues> {
-  title?: any
-  lede?: any
-  submitLabel?: any
+  title?: unknown
+  lede?: unknown
+  submitLabel?: unknown
   /** The terms checkbox's text, links included. */
-  terms?: any
+  terms?: unknown
   providers?: SsoProvider[]
-  onProvider?: (id: string) => unknown
+  onProvider?: ((id: string) => unknown) | undefined
   onSignIn?: () => void
 }
 
@@ -46,7 +48,7 @@ export function SignUp(p: SignUpProps) {
   const ctl = useStepForm<SignUpValues>(untrack(() => p), v => ({
     name: v.name ? undefined : 'Enter your name.',
     email: v.email ? emailError(v.email) : 'Enter your work email.',
-    password: passwordRules(v.password).every(r => r.met) ? undefined : 'Use at least 8 characters, with a letter and a number.',
+    password: passwordRules(v.password!).every(r => r.met) ? undefined : 'Use at least 8 characters, with a letter and a number.',
     terms: p.terms === undefined || v.terms ? undefined : 'Accept the terms to continue.',
   }))
   return (

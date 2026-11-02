@@ -7,20 +7,21 @@ export interface Bindable<T> {
   defaultValue?: T
   onValueChange?: (v: T, reason: ChangeReason) => void
 }
+/** An overlay's open state, held by the caller or by the component. */
 export interface Openable {
   open?: State<boolean> | boolean
   defaultOpen?: boolean
   onOpenChange?: (o: boolean) => void
 }
 
-const isState = (v: any): v is State<any> => v instanceof Box
+const isState = (v: unknown): v is State<unknown> => v instanceof Box
 
 /** One read/write over the three ways a value can be held. */
 export function bindable<T>(value: () => State<T> | T | undefined, initial: () => T | undefined, fallback: T, onChange?: () => ((v: T, r: ChangeReason) => void) | undefined) {
-  const own = state<T>(untrack(() => { const v = value(); return (isState(v) ? undefined : (v as T | undefined)) ?? initial() ?? fallback }))
+  const own = state<T>(untrack(() => { const v = value(); return (isState(v) ? undefined : (v)) ?? initial() ?? fallback }))
   const read = (): T => {
     const v = value()
-    return isState(v) ? v.value : v !== undefined ? (v as T) : own.value
+    return isState(v) ? v.value : v !== undefined ? (v) : own.value
   }
   const first = untrack(read)
   const set = (next: T, reason: ChangeReason = 'programmatic') => {
@@ -33,6 +34,6 @@ export function bindable<T>(value: () => State<T> | T | undefined, initial: () =
     get value(): T { return read() },
     set,
     /** Back to the value it started with: a form's reset. */
-    reset() { set(first) },
+    reset: () => { set(first) },
   }
 }

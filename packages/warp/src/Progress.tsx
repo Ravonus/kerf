@@ -7,7 +7,7 @@ import '@weft-js/warp-core/styles/components/progress.css'
  * Progress (05 §5): linear, or `shape="circle"`. Without a `value` it is indeterminate. The range moves through
  * the rail with clip-path on the sweep curve; `--_v` is the only thing a value change writes.
  */
-export function Progress({ label, value, shape, tone, showValue = true }: { label: string; value?: number; shape?: 'linear' | 'circle'; tone?: Tone; showValue?: boolean }) {
+export function Progress({ label, value, shape, tone, showValue = true }: { label: string; value?: number; shape?: 'linear' | 'circle' | undefined; tone?: Tone | undefined; showValue?: boolean }) {
   const pct = () => (value === undefined ? undefined : Math.max(0, Math.min(100, value)))
   const v = () => (pct() === undefined ? undefined : `--_v:${pct()! / 100}`)
   if (untrack(() => shape) === 'circle')

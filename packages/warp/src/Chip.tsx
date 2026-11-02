@@ -12,12 +12,12 @@ import '@weft-js/warp-core/styles/components/toggle-button.css'
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 
 /** A filter chip (03 §4 Chips): a toggle button; pressed pins the sweep on accent-soft and draws the check. */
-export function Chip({ pressed, count, icon, ui, ref, children, ...rest }: { pressed?: boolean; count?: any; icon?: IconRef; ui?: Interaction; children?: any; [attr: string]: any }) {
+export function Chip({ pressed, count, icon, ui, ref, children, ...rest }: { ref?: ((el: HTMLButtonElement) => unknown) | undefined; pressed?: boolean; count?: unknown; icon?: IconRef | undefined; ui?: Interaction; children?: unknown; [attr: string]: unknown }) {
   let host: HTMLButtonElement | undefined
   useUi(() => ui, () => host)
   const glyph = derived(() => icon)
   return (
-    <button type="button" data-scope="chip" data-sweep="" aria-pressed={pressed ? 'true' : 'false'} {...rest} ref={(n: any) => { host = n; ref?.(n) }}>
+    <button type="button" data-scope="chip" data-sweep="" aria-pressed={pressed ? 'true' : 'false'} {...rest} ref={n => { host = n; ref?.(n) }}>
       {sweepParts()}
       {pressed ? <CheckIcon data-part="check" /> : glyph.value && <Icon name={glyph.value} />}
       {children}

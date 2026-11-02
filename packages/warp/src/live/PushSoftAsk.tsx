@@ -9,7 +9,7 @@ import '@weft-js/warp-core/styles/app/push-ask.css'
  * Push soft-ask (07 §4.2, P2): an in-app card before the browser's prompt. `onAccept` is where the caller calls
  * Notification.requestPermission(), only after this yes; the caller also decides when to show it (never first visit).
  */
-export function PushSoftAsk({ title = 'Get a ping when someone mentions you?', children = 'Only mentions and approvals, on this device. You can change it any time.', onAccept, onDismiss, declined = "Okay. We won't ask again for 30 days." }: { title?: any; children?: any; onAccept: () => void; onDismiss?: () => void; declined?: string }) {
+export function PushSoftAsk({ title = 'Get a ping when someone mentions you?', children = 'Only mentions and approvals, on this device. You can change it any time.', onAccept, onDismiss, declined = "Okay. We won't ask again for 30 days." }: { title?: unknown; children?: unknown; onAccept: () => void; onDismiss?: () => void; declined?: string }) {
   const id = uid('push')
   const shown = state(true)
   let root: HTMLElement | undefined
@@ -22,7 +22,7 @@ export function PushSoftAsk({ title = 'Get a ping when someone mentions you?', c
   return (
     <>
       {shown.value && (
-        <div ref={(n: any) => (root = n)} data-scope="push-ask" role="region" aria-labelledby={`${id}-t`}>
+        <div ref={n => (root = n)} data-scope="push-ask" role="region" aria-labelledby={`${id}-t`}>
           <span data-part="mark"><G name="bell" /></span>
           <b id={`${id}-t`}>{title}</b>
           <span>{children}</span>

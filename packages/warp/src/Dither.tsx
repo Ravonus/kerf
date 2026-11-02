@@ -8,13 +8,14 @@ export type { Algorithm, Field as FieldFn, FieldName, Gradient, MaskSource, Patt
 
 const box = (ratio: string | number | undefined, style: unknown) => [ratio === undefined ? undefined : `aspect-ratio:${ratio}`, style].filter(Boolean).join(';') || undefined
 
+/** Props for DitherField. */
 export interface DitherFieldProps extends FieldOptions {
   /** Fills the nearest positioned ancestor: a section's background. */
   fill?: boolean
   /** CSS aspect-ratio. Default 16 / 9 unless `fill`. */
   ratio?: string | number
   /** Names the field (role="img"). Without one it is decorative. */
-  label?: string
+  label?: string | undefined
   children?: unknown
   [attr: string]: unknown
 }
@@ -25,29 +26,30 @@ export function DitherField({ kind, ramp, spark, pattern, cell, inks, speed, gai
   use(ditherField, () => node, () => ({ kind, ramp, spark, pattern, cell, inks, speed, gain, seed, spread, pointer, mask, fade, reveal, fps }))
   return (
     <div {...rest} data-scope="dither" data-fill={fill ? '' : undefined} role={label ? 'img' : undefined} aria-label={label} style={box(ratio ?? (fill ? undefined : '16 / 9'), style)}>
-      <canvas ref={(n: any) => (node = n)} aria-hidden="true"></canvas>
+      <canvas ref={n => (node = n)} aria-hidden="true"></canvas>
       {children}
     </div>
   )
 }
 
+/** Props for Dither. */
 export interface DitherProps {
   /** An image to dither. The real <img> stays underneath, for alt text, for no script and for a cross-origin failure. */
   src?: string
   alt?: string
   crossorigin?: 'anonymous' | 'use-credentials'
   /** With no `src`: the gradient to dither. Default a soft diagonal. */
-  gradient?: Gradient
+  gradient?: Gradient | undefined
   /** `atkinson` by default for images, `bayer8` for gradients. */
-  algorithm?: Algorithm
-  ramp?: Ramp
-  cell?: number
+  algorithm?: Algorithm | undefined
+  ramp?: Ramp | undefined
+  cell?: number | undefined
   inks?: number
   contrast?: number
   invert?: boolean
   fill?: boolean
   ratio?: string | number
-  label?: string
+  label?: string | undefined
   [attr: string]: unknown
 }
 
@@ -58,28 +60,29 @@ export function Dither({ src, alt, crossorigin, gradient, algorithm, ramp, cell,
   use(ditherImage, () => node, () => ({ source: img, gradient, algorithm, ramp, cell, inks, contrast, invert }))
   return (
     <div {...rest} data-scope="dither" data-fill={fill ? '' : undefined} role={label ? 'img' : undefined} aria-label={label} style={box(ratio ?? (fill ? undefined : '16 / 9'), style)}>
-      {src && <img ref={(n: any) => (img = n)} src={src} alt={alt ?? ''} crossorigin={crossorigin} loading="lazy" decoding="async" />}
-      <canvas ref={(n: any) => (node = n)} aria-hidden="true"></canvas>
+      {src && <img ref={n => (img = n)} src={src} alt={alt ?? ''} crossorigin={crossorigin} loading="lazy" decoding="async" />}
+      <canvas ref={n => (node = n)} aria-hidden="true"></canvas>
     </div>
   )
 }
 
+/** Props for DitherGlyph. */
 export interface DitherGlyphProps extends Omit<FieldOptions, 'mask'> {
   /** The word to set. It stays in the page as real text for readers and for search. */
-  text?: string
+  text?: string | undefined
   /** Or an SVG path and the size of its box, for a logo or an icon. */
   path?: string
   box?: [width: number, height: number]
   /** Stroke width in the box's units, for a path made of lines. */
-  stroke?: number
+  stroke?: number | undefined
   /** Or any drawing, in cells. */
   draw?: (ctx: CanvasRenderingContext2D, cols: number, rows: number) => void
   /** Names a `path` or `draw` glyph. */
-  label?: string
+  label?: string | undefined
   font?: string
   weight?: number | string
   /** Share of the box the shape fills, 0–1. */
-  fit?: number
+  fit?: number | undefined
   ratio?: string | number
   [attr: string]: unknown
 }

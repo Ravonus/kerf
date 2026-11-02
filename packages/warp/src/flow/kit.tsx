@@ -15,7 +15,7 @@ import '@weft-js/warp-core/styles/layout/stack.css'
 export type Heading = 'h1' | 'h2' | 'h3'
 
 /** A step's title: focus lands here on arrival (09 §1.1). */
-export function Title({ as, id, children }: { as?: Heading; id?: string; children?: any }) {
+export function Title({ as, id, children }: { as?: Heading | undefined; id?: string; children?: unknown }) {
   const level = derived(() => as ?? 'h1')
   return (
     <>
@@ -27,12 +27,12 @@ export function Title({ as, id, children }: { as?: Heading; id?: string; childre
 }
 
 /** The result mark; `draw` strokes a check in. */
-export function Mark({ tone, draw, children }: { tone?: 'positive' | 'caution' | 'critical'; draw?: boolean; children?: any }) {
+export function Mark({ tone, draw, children }: { tone?: 'positive' | 'caution' | 'critical' | undefined; draw?: boolean; children?: unknown }) {
   return <span data-part="mark" data-tone={tone}>{draw ? <svg viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" /></svg> : children}</span>
 }
 
 /** The flows rail: `value` in percent. */
-export function Rail({ value, on = true, ...rest }: { value: number; on?: boolean; [attr: string]: any }) {
+export function Rail({ value, on = true, ...rest }: { value: number; on?: boolean; [attr: string]: unknown }) {
   return <span data-part="rail" data-on={on ? '' : undefined} style={`--v:${value}%`} {...rest}><span data-part="rail-fill"></span></span>
 }
 
@@ -62,7 +62,7 @@ export interface FormLike {
   readonly pending: { readonly value: boolean }
   readonly errors: { readonly value: Record<string, string> }
   readonly message: { readonly value: string | undefined }
-  value?(name: any): any
+  value?(name: string): unknown
 }
 
 /** How a screen is driven: inside `<Form of>` (pass `form`), or on its own with `onSubmit` and `errors`. */
@@ -72,14 +72,14 @@ export interface FlowForm<V> {
   /** Called with the form's values once its own checks pass. */
   onSubmit?: (values: V, e: SubmitEvent) => void
   /** Messages by field name. */
-  errors?: Record<string, string>
+  errors?: Record<string, string> | undefined
   /** The failure: anything `mapFlowError` takes (a `FnError`, a typed error, a string). */
   error?: unknown
   /** Options for `mapFlowError`: copy by code, and `online`. */
-  errorOptions?: FlowErrorOptions
-  pending?: boolean
+  errorOptions?: FlowErrorOptions | undefined
+  pending?: boolean | undefined
   /** The Retry on a network failure's toast. */
-  onRetry?: () => void
+  onRetry?: (() => void) | undefined
   /** The title's level (default h1: an auth step is the page). */
   heading?: Heading
 }
@@ -137,19 +137,19 @@ export function useStepForm<V>(p: FlowForm<V>, check?: (values: Record<string, s
 export type StepForm = ReturnType<typeof useStepForm>
 
 /** The step's frame: a <form> of its own, or a plain stack inside `<Form of>`. */
-export function StepFrame({ ctl, embedded, labelledby, children }: { ctl: StepForm; embedded: boolean; labelledby?: string; children?: any }) {
+export function StepFrame({ ctl, embedded, labelledby, children }: { ctl: StepForm; embedded: boolean; labelledby?: string; children?: unknown }) {
   const plain = derived(() => embedded)
   return (
     <>
       {plain.value
-        ? <div ref={(n: any) => ctl.bind(n)} data-scope="stack" role="group" aria-labelledby={labelledby}>{children}</div>
-        : <form ref={(n: any) => ctl.bind(n)} data-scope="stack" novalidate aria-labelledby={labelledby} onSubmit={ctl.submit}>{children}</form>}
+        ? <div ref={n => ctl.bind(n)} data-scope="stack" role="group" aria-labelledby={labelledby}>{children}</div>
+        : <form ref={n => ctl.bind(n)} data-scope="stack" novalidate aria-labelledby={labelledby} onSubmit={ctl.submit}>{children}</form>}
     </>
   )
 }
 
 /** The failure at the top of the step (09 §1.3): the Alert takes focus; a rate limit counts down; offline is a Banner. */
-export function FormError({ ctl, actions }: { ctl: StepForm; actions?: any }) {
+export function FormError({ ctl, actions }: { ctl: StepForm; actions?: unknown }) {
   const m = derived(() => ctl.failure.value)
   return (
     <div data-part="formerr" tabindex="-1">
@@ -161,7 +161,7 @@ export function FormError({ ctl, actions }: { ctl: StepForm; actions?: any }) {
 }
 
 /** The one solid: keeps its label while pending; a rate limit disables it and says why. */
-export function Submit({ ctl, disabled, children, ...rest }: { ctl: StepForm; disabled?: boolean; children?: any } & ButtonProps) {
+export function Submit({ ctl, disabled, children, ...rest }: { ctl: StepForm; disabled?: boolean | undefined; children?: unknown } & ButtonProps) {
   const wait = derived(() => ctl.cooling.value)
   return <Button type="submit" size="lg" full loading={ctl.pending.value} disabled={disabled || wait.value > 0} {...rest}>{wait.value > 0 ? `Try again in ${wait.value}s` : children}</Button>
 }

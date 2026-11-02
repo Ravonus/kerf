@@ -11,12 +11,13 @@ import '@weft-js/warp-core/styles/components/menu.css'
 import '@weft-js/warp-core/styles/components/command-palette.css'
 import '@weft-js/warp-core/styles/components/palette-motion.css'
 
+/** One entry the palette can run or drill into. */
 export interface Command {
   id?: string
   label: string
   /** Rows gather under their group's heading. */
-  group?: string
-  icon?: IconRef
+  group?: string | undefined
+  icon?: IconRef | undefined
   shortcut?: string
   /** Quiet text at the row's end: where it lives, or the words that matched. */
   hint?: string
@@ -46,6 +47,7 @@ export interface CommandMode {
   sources?: CommandSource[]
 }
 
+/** Props for CommandPalette. */
 export type CommandPaletteProps = Openable & {
   commands?: Command[]
   /** Searched as you type, after `commands`. */
@@ -55,12 +57,12 @@ export type CommandPaletteProps = Openable & {
   groupOrder?: string[]
   /** Hears every command run, however it was picked. */
   onRun?: (command: Command, reason: 'pointer' | 'keyboard') => void
-  label?: string
+  label?: string | undefined
   placeholder?: string
   /** The key that opens it with ⌘ or Ctrl. `false` leaves opening to the app. */
   hotkey?: string | false
   /** `/` opens it too, outside a field. */
-  slash?: boolean
+  slash?: boolean | undefined
 }
 
 type Row = { head: string; item?: undefined; at?: undefined } | { head?: undefined; item: Command; at: number }
@@ -87,7 +89,7 @@ function arrange(commands: Command[], order: readonly string[] = []) {
 
 /** Marks where `words` start in the rows' text, through the CSS Custom Highlight API: no markup, no row is rebuilt. */
 function paint(list: HTMLElement | undefined, query: string, rows: readonly Row[]) {
-  const win = list?.ownerDocument.defaultView as any
+  const win = list?.ownerDocument.defaultView
   if (!win?.CSS?.highlights || typeof win.Highlight !== 'function') return
   const ranges: Range[] = []
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -129,13 +131,13 @@ function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined
   const at = () => untrack(() => r.value?.at ?? -1)
   let box!: HTMLElement, head!: HTMLElement, option!: HTMLElement, text!: HTMLElement, hint!: HTMLElement, keys!: HTMLElement
   const view = (
-    <div ref={(n: any) => (box = n)} data-part="row" role="presentation" hidden="">
-      <div ref={(n: any) => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
-      <div ref={(n: any) => (option = n)} data-part="item" hidden="" aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at() !== active()) onHover(at()) }} onClick={() => onPick(at())}>
-        {r.value?.item?.icon && <Icon name={r.value?.item?.icon as IconRef} />}
-        <span ref={(n: any) => (text = n)} data-part="text"></span>
-        <span ref={(n: any) => (hint = n)} data-part="hint" hidden=""></span>
-        <span ref={(n: any) => (keys = n)} data-part="shortcut" hidden=""></span>
+    <div ref={n => (box = n)} data-part="row" role="presentation" hidden="">
+      <div ref={n => (head = n)} data-part="group-label" role="presentation" hidden=""></div>
+      <div ref={n => (option = n)} data-part="item" hidden="" aria-selected={r.value?.item ? (r.value.at === active() ? 'true' : 'false') : undefined} onPointerMove={() => { if (at() !== active()) onHover(at()) }} onClick={() => onPick(at())}>
+        {r.value?.item?.icon && <Icon name={r.value?.item?.icon} />}
+        <span ref={n => (text = n)} data-part="text"></span>
+        <span ref={n => (hint = n)} data-part="hint" hidden=""></span>
+        <span ref={n => (keys = n)} data-part="shortcut" hidden=""></span>
       </div>
     </div>
   )
@@ -144,7 +146,7 @@ function Slot({ row, id, active, onPick, onHover }: { row: () => Row | undefined
     box.hidden = !v
     put(head, v?.head)
     option.hidden = !item
-    if (item) { option.setAttribute('role', 'option'); option.id = `${id}-${v!.at}` } else { option.removeAttribute('role'); option.removeAttribute('id') }
+    if (item) { option.setAttribute('role', 'option'); option.id = `${id}-${v.at}` } else { option.removeAttribute('role'); option.removeAttribute('id') }
     text.textContent = item?.label ?? ''
     put(hint, item?.hint)
     put(keys, item?.shortcut)
@@ -258,15 +260,15 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
       return move(e.key === 'Home' ? 0 : count - 1)
     }
     if (e.key === 'Tab') {
-      const heads = rows.value.flatMap((r, i) => (r.head === undefined ? [] : [(rows.value[i + 1] as Row | undefined)?.at ?? 0]))
+      const heads = rows.value.flatMap((r, i) => (r.head === undefined ? [] : [(rows.value[i + 1])?.at ?? 0]))
       if (heads.length < 2) return e.preventDefault()
       e.preventDefault()
       const next = e.shiftKey ? [...heads].reverse().find(h => h < at) ?? heads.at(-1)! : heads.find(h => h > at) ?? heads[0]
-      return move(next)
+      return move(next!)
     }
     if (e.key === 'ArrowRight' && input && input.selectionStart === input.value.length && items.value[at]?.children) {
       e.preventDefault()
-      return down(items.value[at].children!())
+      return down(items.value[at].children())
     }
     if (e.key === 'ArrowLeft' && drill.value) {
       e.preventDefault()
@@ -284,10 +286,11 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     if (m.pick) return run(at, 'keyboard')
     move(m.to)
   }
-  const onInput = (e: any) => {
-    typed.value = e.currentTarget.value
+  const onInput = (e: Event) => {
+    const text = (e.currentTarget as HTMLInputElement).value
+    typed.value = text
     drill.value = undefined
-    answer(e.currentTarget.value)
+    answer(text)
   }
   const slots = derived(() => Array.from({ length: size.value }, (_, i) => i))
   // one highlight that travels (redesign §3): it reads the row after the render that moved it
@@ -300,16 +303,16 @@ export function CommandPalette({ open, defaultOpen, onOpenChange, commands, sour
     requestAnimationFrame(() => face?.removeAttribute('data-instant'))
   }) })
   return (
-    <dialog ref={(n: any) => (el = n)} data-scope="palette" aria-label={label}>
+    <dialog ref={n => (el = n)} data-scope="palette" aria-label={label}>
       <div data-part="input-row" data-sweep="">
         <span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span>
         <SearchIcon />
         <label for={`${id}-in`} data-part="sr-only">{label}</label>
-        <input ref={(n: any) => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
+        <input ref={n => (input = n)} data-initial="" data-part="input" id={`${id}-in`} role="combobox" aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={items.value.length ? `${id}-${active.value}` : undefined} placeholder={mode.value?.placeholder ?? placeholder} autocomplete="off" spellcheck={false} onInput={onInput} onKeyDown={onKey} />
         {mode.value ? <span data-part="mode">{mode.value.label}</span> : <Kbd>esc</Kbd>}
       </div>
-      <div ref={(n: any) => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
-        <span ref={(n: any) => (face = n)} data-part="shuttle" aria-hidden="true"></span>
+      <div ref={n => (list = n)} data-part="list" role="listbox" id={`${id}-list`} aria-label="Commands">
+        <span ref={n => (face = n)} data-part="shuttle" aria-hidden="true"></span>
         {slots.value.map(i => <Slot key={i} id={id} row={() => rows.value[i]} active={() => active.value} onPick={at => run(at, 'pointer')} onHover={at => (active.value = at)} />)}
       </div>
       {flag.value && !items.value.length && !pending.value && <div data-part="empty">{`Nothing matches “${typed.value}”.`}</div>}

@@ -2,10 +2,10 @@
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { flush } from '@weft-js/core/test'
-// @ts-expect-error
-import * as server from './fixtures/Frag.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/Frag.tsx?weft-hydrate'
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const server = await import('./fixtures/Frag.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/Frag.tsx?weft-hydrate')
 test.each(['A', 'B', 'C'])('%s', async n => {
   const root = document.body.appendChild(document.createElement('div'))
   root.innerHTML = renderToString(() => server[n]())

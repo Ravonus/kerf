@@ -17,7 +17,7 @@ const inGamut = rgb => rgb.every(c => c >= -1e-4 && c <= 1 + 1e-4)
 
 /** `{ L, C, H }` → linear sRGB, with chroma reduced (never lightness or hue) until it is inside sRGB. */
 export function toLinear({ L, C, H }) {
-  let rgb = oklchToLinear(L, C, H)
+  const rgb = oklchToLinear(L, C, H)
   if (inGamut(rgb)) return rgb
   let lo = 0, hi = C
   for (let k = 0; k < 24; k++) {

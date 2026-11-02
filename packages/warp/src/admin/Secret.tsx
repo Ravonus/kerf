@@ -22,9 +22,9 @@ export function SecretReveal({ label, secret, done, ack }: { label: string; secr
   }
   return (
     <div data-scope="stack" style="padding-block-start:var(--warp-space-related)">
-      <Input label={label} readonly value={secret} autofocus spellcheck="false" onFocus={(e: any) => e.currentTarget.select()} />
+      <Input label={label} readonly value={secret} autofocus spellcheck="false" onFocus={(e: Event) => (e.currentTarget as HTMLInputElement).select()} />
       <div><Button emphasis="frame" onClick={copy}>Copy</Button></div>
-      <Checkbox checked={done.value} onChange={(e: any) => (done.value = e.currentTarget.checked)}>{ack}</Checkbox>
+      <Checkbox checked={done.value} onChange={(e: Event) => (done.value = (e.currentTarget as HTMLInputElement).checked)}>{ack}</Checkbox>
     </div>
   )
 }

@@ -16,14 +16,16 @@ import '@weft-js/warp-core/styles/flows/save-bar.css'
 
 const SAVED_MS = 1500
 
+/** Messages by field name. */
 export type FieldErrors = Record<string, string>
+/** Props for SaveBar. */
 export interface SaveBarProps<T extends Record<string, unknown>> {
   /** The live form values. The bar snapshots them at mount and after each save. */
   values: State<T>
   /** Field errors, written here for the fields to read. */
-  errors?: State<FieldErrors>
+  errors?: State<FieldErrors> | undefined
   /** Client checks; anything returned stops the save. */
-  validate?: (values: T) => FieldErrors
+  validate?: ((values: T) => FieldErrors) | undefined
   /** Resolve with field errors to keep the bar; throw on a transport failure. */
   onSave: (values: T) => Promise<FieldErrors | void> | FieldErrors | void
   /** Called after Discard has put the snapshot back. */
@@ -91,13 +93,13 @@ export function SaveBar<T extends Record<string, unknown>>({ values, errors, val
   use(leaveGuard, () => el, () => ({ dirty: dirty.value, onAttempt: (href: string) => { target = href; leaving.value = true } }))
   use((node: HTMLDivElement) => {
     const form = node.closest('form')
-    const submit = (e: Event) => { e.preventDefault(); save() }
+    const submit = (e: Event) => { e.preventDefault(); void save() }
     form?.addEventListener('submit', submit)
     return { update() {}, destroy: () => form?.removeEventListener('submit', submit) }
   }, () => el)
   return (
     <>
-      <div ref={(n: any) => (el = n)} data-scope="save-bar" data-open={dirty.value || phase.value !== 'idle' ? '' : undefined} role="region" aria-label="Unsaved changes">
+      <div ref={n => (el = n)} data-scope="save-bar" data-open={dirty.value || phase.value !== 'idle' ? '' : undefined} role="region" aria-label="Unsaved changes">
         <p data-part="msg" role="status">{message.value}</p>
         <div data-part="actions">
           <Button emphasis="ghost" tone="neutral" size="sm" style="--_ink:var(--warp-color-on-inverse)" disabled={phase.value === 'pending'} onClick={discard}>Discard</Button>

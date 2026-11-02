@@ -8,9 +8,9 @@ import { flush } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import { cases } from './fixtures/interactions'
 // @ts-expect-error: query imports (@weft-js/core/vite)
-import * as server from './fixtures/Cases.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/Cases.tsx?weft-hydrate'
+const server = await import('./fixtures/Cases.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/Cases.tsx?weft-hydrate')
 
 test.each(Object.keys(cases).filter(n => !n.endsWith('$shape')))('%s: SSR + hydrate, 0 misses, 0 writes, then it works', async name => {
   resetIds()
@@ -47,8 +47,8 @@ test('focus never leans on an id: a real server counts on, so its ids differ fro
   const dispose = hydrate(() => client.TabsCase(), root)
   await flush()
   const [a, b] = root.querySelectorAll<HTMLElement>('[role="tab"]')
-  a.focus()
-  a.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+  a!.focus()
+  a!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
   await flush()
   expect(document.activeElement).toBe(b)
   dispose()

@@ -6,19 +6,19 @@ import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../../weft/src/hydrate'
 import { Canvas, Dither, DitherField, DitherGlyph } from '../src/index'
 // @ts-expect-error: query imports (@weft-js/core/vite)
-import * as server from './fixtures/pack-dither.tsx?weft-ssr'
-// @ts-expect-error
-import * as client from './fixtures/pack-dither.tsx?weft-hydrate'
+const server = await import('./fixtures/pack-dither.tsx?weft-ssr')
+// @ts-expect-error: query imports (@weft-js/core/vite)
+const client = await import('./fixtures/pack-dither.tsx?weft-hydrate')
 
 test('a field is decorative by default, and named with a label', async () => {
   const { container } = render(() => <><DitherField /><DitherField label="Slow waves" /></>)
   await flush()
   const [a, b] = container.querySelectorAll<HTMLElement>('[data-scope="dither"]')
-  expect(a.getAttribute('role')).toBe(null)
-  expect(a.querySelector('canvas')!.getAttribute('aria-hidden')).toBe('true')
-  expect(b.getAttribute('role')).toBe('img')
-  expect(b.getAttribute('aria-label')).toBe('Slow waves')
-  expect(a.getAttribute('style')).toContain('16 / 9')
+  expect(a!.getAttribute('role')).toBe(null)
+  expect(a!.querySelector('canvas')!.getAttribute('aria-hidden')).toBe('true')
+  expect(b!.getAttribute('role')).toBe('img')
+  expect(b!.getAttribute('aria-label')).toBe('Slow waves')
+  expect(a!.getAttribute('style')).toContain('16 / 9')
 })
 
 test('fill drops the ratio, children stay readable over the canvas, and attributes reach the host', async () => {
@@ -34,9 +34,9 @@ test('a glyph word stays in the page as text; a logo takes a label', async () =>
   const { container } = render(() => <><DitherGlyph text="warp" /><DitherGlyph path="M0 0h24v24z" label="weft" /></>)
   await flush()
   const [word, logo] = container.querySelectorAll<HTMLElement>('[data-scope="dither"]')
-  expect(word.textContent).toBe('warp')
-  expect(word.getAttribute('role')).toBe(null)
-  expect(logo.getAttribute('aria-label')).toBe('weft')
+  expect(word!.textContent).toBe('warp')
+  expect(word!.getAttribute('role')).toBe(null)
+  expect(logo!.getAttribute('aria-label')).toBe('weft')
 })
 
 test('an image keeps its <img> and alt underneath', async () => {
@@ -50,11 +50,11 @@ test('Canvas names its drawing or hides it', async () => {
   const { container } = render(() => <><Canvas draw={() => {}} /><Canvas draw={() => {}} label="Plot" /></>)
   await flush()
   const [a, b] = container.querySelectorAll('canvas')
-  expect(a.getAttribute('aria-hidden')).toBe('true')
-  expect(b.getAttribute('role')).toBe('img')
+  expect(a!.getAttribute('aria-hidden')).toBe('true')
+  expect(b!.getAttribute('role')).toBe('img')
 })
 
-test('every host is server-rendered and hydrates with 0 misses and 0 writes: the canvas only starts after', async () => {
+test('every host is server-rendered and hydrates with 0 misses and 0 writes: the canvas only starts after', () => {
   resetIds()
   const html = renderToString(() => server.Case())
   expect(html, html).toMatch(/data-scope="?dither/)

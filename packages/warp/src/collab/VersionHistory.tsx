@@ -7,13 +7,14 @@ import '../styles'
 import '@weft-js/warp-core/styles/app/tokens.css'
 import '@weft-js/warp-core/styles/app/versions.css'
 
-export interface Version { id: string; title: string; /** "Mei · 10:02" */ meta: string; named?: boolean; current?: boolean }
+/** One saved version of a document. */
+export interface Version { id: string; title: string; /** "Mei · 10:02" */ meta: string; named?: boolean; current?: boolean | undefined }
 
 /**
  * Version history (07 §6.2): named versions carry the accent dot. A version previews read-only (`preview` draws it,
  * with its diff tint), then Restore asks in a dialog; restoring makes a new version, so `onRestore` loses nothing.
  */
-export function VersionHistory({ versions, preview, onPreview, onRestore, label = 'Version history' }: { versions: Live<Version[]>; preview?: (v: Version) => any; onPreview?: (v: Version) => void; onRestore: (v: Version) => void; label?: string }) {
+export function VersionHistory({ versions, preview, onPreview, onRestore, label = 'Version history' }: { versions: Live<Version[]>; preview?: (v: Version) => unknown; onPreview?: (v: Version) => void; onRestore: (v: Version) => void; label?: string | undefined }) {
   const list = derived(() => read(versions))
   const shown = state<Version | null>(null)
   const asking = state<Version | null>(null)
@@ -30,7 +31,7 @@ export function VersionHistory({ versions, preview, onPreview, onRestore, label 
   }
   return (
     <>
-      <ul ref={(n: any) => (root = n)} data-scope="versions" aria-label={label}>
+      <ul ref={n => (root = n)} data-scope="versions" aria-label={label}>
         {list.value.map(v => (
           <li key={v.id} aria-current={v.current ? 'true' : undefined} data-named={v.named ? '' : undefined} onClick={() => look(v)}>
             <i></i>

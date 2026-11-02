@@ -10,7 +10,7 @@ import '@weft-js/warp-core/styles/components/popover.css'
  * its sweep while open (aria-expanded); focus moves into the panel and back to the trigger; Escape, a press outside
  * or focus leaving closes it; [data-close-popover] buttons inside close it. Named by its title, else by its trigger.
  */
-export function Popover({ label, title, description, side, align, trigger, children }: { label: any; title?: any; description?: any; side?: Side; align?: Align; trigger?: ButtonProps; children?: any }) {
+export function Popover({ label, title, description, side, align, trigger, children }: { label: unknown; title?: unknown; description?: unknown; side?: Side | undefined; align?: Align; trigger?: ButtonProps | undefined; children?: unknown }) {
   const id = uid('pop')
   const open = state(false)
   let button: HTMLButtonElement | undefined
@@ -21,7 +21,7 @@ export function Popover({ label, title, description, side, align, trigger, child
       <Button emphasis="outline" tone="neutral" {...(trigger ?? {})} ref={(el: HTMLButtonElement) => (button = el)} id={`${id}-b`} aria-haspopup="dialog" aria-expanded={open.value ? 'true' : 'false'} aria-controls={id} onClick={() => (open.value = !open.value)}>
         {label}
       </Button>
-      <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" id={id} aria-labelledby={title !== undefined ? `${id}-t` : `${id}-b`}>
+      <div ref={n => (panel = n)} data-scope="popover" data-part="content" role="dialog" popover="manual" id={id} aria-labelledby={title !== undefined ? `${id}-t` : `${id}-b`}>
         {title !== undefined && <p data-part="title" id={`${id}-t`}>{title}</p>}
         {description !== undefined && <p data-part="description">{description}</p>}
         {children}

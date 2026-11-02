@@ -28,7 +28,7 @@ export const guarded = (open: State<boolean>, may: () => boolean) => ({
 }) as State<boolean>
 
 /** The compact select in a table cell (specimen `roleSel`): native, its label hidden beside it. */
-export function InlineSelect({ id, label, value, options, describedby, onChange }: { id: string; label: string; value: string; options: { value: string; label: string }[]; describedby?: string; onChange: (e: Event & { currentTarget: HTMLSelectElement }) => void }) {
+export function InlineSelect({ id, label, value, options, describedby, onChange }: { id: string; label: string; value: string; options: { value: string; label: string }[]; describedby?: string | undefined; onChange: (e: Event & { currentTarget: HTMLSelectElement }) => void }) {
   return (
     <>
       <label data-part="sr-only" for={id}>{label}</label>

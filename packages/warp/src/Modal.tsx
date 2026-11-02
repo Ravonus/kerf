@@ -13,7 +13,7 @@ import '@weft-js/warp-core/styles/components/dialog.css'
  * description. `open` is a box: the dialog writes false when the user closes it. `alert` makes it an alert dialog
  * (no backdrop dismiss; focus Cancel by giving it autofocus).
  */
-export function Modal({ open, title, description, footer, size, alert, tone, mark, children }: { open: State<boolean>; title: any; description?: any; footer?: any; size?: 'sm' | 'md' | 'lg'; alert?: boolean; tone?: Tone; /** Drawn above the title (09's result mark). */ mark?: any; children?: any }) {
+export function Modal({ open, title, description, footer, size, alert, tone, mark, children }: { open: State<boolean>; title: unknown; description?: unknown; footer?: unknown; size?: 'sm' | 'md' | 'lg' | undefined; alert?: boolean; tone?: Tone | undefined; /** Drawn above the title (09's result mark). */ mark?: unknown; children?: unknown }) {
   const id = uid('dlg')
   const hasDescription = derived(() => description !== undefined)
   const sign = derived(() => mark)
@@ -21,7 +21,7 @@ export function Modal({ open, title, description, footer, size, alert, tone, mar
   let el: HTMLDialogElement | undefined
   use(dialog, () => el, () => ({ open: open.value, onClose: () => (open.value = false) }))
   return (
-    <dialog ref={(n: any) => (el = n)} data-scope="dialog" role={alert ? 'alertdialog' : undefined} data-size={size === 'md' ? undefined : size} data-tone={tone} aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined}>
+    <dialog ref={n => (el = n)} data-scope="dialog" role={alert ? 'alertdialog' : undefined} data-size={size === 'md' ? undefined : size} data-tone={tone} aria-labelledby={`${id}-t`} aria-describedby={hasDescription.value ? `${id}-d` : undefined}>
       <div data-part="header">
         {sign.value}
         <h2 data-part="title" id={`${id}-t`}>{title}</h2>

@@ -1,5 +1,5 @@
-import { codeLayer, indented, jsonProblem } from '@weft-js/warp-core'
-import { derived, onCleanup, state, untrack, type State } from '@weft-js/core'
+import { codeLayer, indented, jsonProblem, type ChangeReason } from '@weft-js/warp-core'
+import { derived, onCleanup, state, untrack } from '@weft-js/core'
 import { bindable, type Bindable } from './bind'
 import { Button } from './Button'
 import { Field, type FieldShell } from './Field'
@@ -7,19 +7,22 @@ import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/body.css'
 import '@weft-js/warp-core/styles/rich/code-input.css'
 
-export type CodeInputProps = FieldShell & Bindable<string> & {
+type CodeOwn = Bindable<string> & {
   /** After a form's reset put the value back. */
   onReset?: () => void
-  language?: string
+  language?: string | undefined
   lineNumbers?: boolean
   tabSize?: 2 | 4
   /** Soft-wraps long lines; line numbers then give way, since a number no longer means one row. */
   wrap?: boolean
   rows?: number
   /** The line to mark in the gutter. */
-  errorLine?: number
-  name?: string
+  errorLine?: number | undefined
+  name?: string | undefined
 }
+
+/** Props for CodeInput: the field shell, the bound text and the editor's own options. */
+export type CodeInputProps = FieldShell & CodeOwn
 
 const LEAVE = 'Tab indents · Esc then Tab leaves'
 
@@ -58,11 +61,11 @@ export function CodeInput({ value, defaultValue, onValueChange, language, lineNu
       reset={() => { held.reset(); onReset?.() }}
       control={p => (
         <div data-part="body">
-          <div ref={(n: any) => (box = n)} class="code-in" data-wrap={wrap ? '' : undefined} style={`--_tab:${tabSize}`}>
+          <div ref={n => (box = n)} class="code-in" data-wrap={wrap ? '' : undefined} style={`--_tab:${tabSize}`}>
             {numbered.value && <ol data-part="lines" class="ln" aria-hidden="true">{lines.value.map(n => <li key={n} data-error={n === errorLine ? '' : undefined}>{n}</li>)}</ol>}
             <div data-part="surface">
               <pre data-part="layer" aria-hidden="true">{`${held.value}\n`}</pre>
-              <textarea {...p.rest} data-part="input" id={p.id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget as HTMLTextAreaElement)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
+              <textarea {...p.rest} data-part="input" id={p.id} rows={rows} name={name} spellcheck={false} autocapitalize="off" autocomplete="off" wrap={wrap ? 'soft' : 'off'} aria-describedby={p.describedby} aria-invalid={p.invalid ? 'true' : undefined} value={held.value} onInput={e => set(e.currentTarget)} onKeyDown={onKey}>{untrack(() => held.value)}</textarea>
             </div>
           </div>
         </div>
@@ -71,7 +74,8 @@ export function CodeInput({ value, defaultValue, onValueChange, language, lineNu
   )
 }
 
-export type JsonEditorProps = Omit<CodeInputProps, 'language' | 'errorLine'> & {
+/** Props for JsonEditor: CodeInput with the language fixed to JSON, and a schema check. */
+export type JsonEditorProps = FieldShell & Omit<CodeOwn, 'language' | 'errorLine'> & {
   /** Checks parsed JSON; what it returns shows as the field's error. */
   schema?: (value: unknown) => string | null | undefined
 }
@@ -85,7 +89,7 @@ export function JsonEditor({ value, defaultValue, onValueChange, schema, tabSize
   const checked = state(held.value)
   let timer: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(timer))
-  const change = (v: string, reason: any) => {
+  const change = (v: string, reason: ChangeReason) => {
     held.set(v, reason)
     clearTimeout(timer)
     timer = setTimeout(() => (checked.value = v), 250)
@@ -110,7 +114,7 @@ export function JsonEditor({ value, defaultValue, onValueChange, schema, tabSize
   }
   return (
     <CodeInput
-      {...(rest as FieldShell)}
+      {...(rest)}
       tabSize={tabSize}
       language="json"
       value={held.value}

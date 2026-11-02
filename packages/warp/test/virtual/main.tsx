@@ -14,7 +14,7 @@ const rand = (i: number, k: number) => ((i + 1) * 2654435761 + k * 40503) >>> 7
 const sentence = (i: number, most = 60) => Array.from({ length: 3 + rand(i, 1) % most }, (_, k) => WORDS[rand(i, k + 2) % WORDS.length]).join(' ')
 
 const drift: [number, number, number][] = []
-const w = window as any
+const w = window as unknown as Record<string, unknown>
 w.drift = drift
 const onDrift = (i: number, p: number, a: number) => { if (Math.abs(p - a) > 1) drift.push([i, p, a]) }
 const take = (c: VirtualControl) => (w.control = c)
@@ -31,17 +31,17 @@ function List() {
 
 const people = ['Mei', 'Ana', 'Kofi', 'Sam']
 const peer = (name: string) => ({ id: name, name })
-const message = (i: number): ChatMessage => ({ id: `m${i}`, author: peer(i % 5 === 0 ? 'Me' : people[rand(i, 0) % 4]), mine: i % 5 === 0, text: sentence(i), time: '09:41', at: i * 200000, day: `Day ${Math.floor(i / 400)}`, state: i % 5 === 0 ? 'sent' : undefined })
+const message = (i: number): ChatMessage => ({ id: `m${i}`, author: peer(i % 5 === 0 ? 'Me' : people[rand(i, 0) % 4]!), mine: i % 5 === 0, text: sentence(i), time: '09:41', at: i * 200000, day: `Day ${Math.floor(i / 400)}`, state: i % 5 === 0 ? 'sent' : undefined })
 
 function Chat() {
   let low = 0
   const all = state(Array.from({ length: n }, (_, i) => message(i)))
   w.messages = all
-  w.older = (k: number) => { const add = Array.from({ length: k }, (_, i) => message(--low + n * 2 + i * 0)); all.value = [...add.reverse().map((m, i) => ({ ...m, id: `o${low}-${i}` })), ...all.value] }
+  w.older = (k: number) => { const add = Array.from({ length: k }, () => message(--low + n * 2)); all.value = [...add.reverse().map((m, i) => ({ ...m, id: `o${low}-${i}` })), ...all.value] }
   w.stream = () => { all.value = [...all.value, { id: 's', author: peer('Mei'), text: '', time: '09:42', at: n * 200000, streaming: true }] }
   w.append = (text: string, author = 'Mei') => { all.value = all.value.map(m => (m.id === 's' ? { ...m, text: m.text + text } : m)) ; void author }
   w.say = (text: string, author = 'Mei') => { all.value = [...all.value, { id: `x${all.value.length}`, author: peer(author), mine: author === 'Me', text, time: '09:43', at: Date.now() * 2 }] }
-  return <div style="block-size:640px"><Thread label="# calendar-engine" header={<b># calendar-engine</b>} messages={all} onSend={m => w.say(m.text, 'Me')} onDrift={onDrift} control={take} /></div>
+  return <div style="block-size:640px"><Thread label="# calendar-engine" header={<b># calendar-engine</b>} messages={all} onSend={m => (w.say as (text: string, author: string) => void)(m.text, 'Me')} onDrift={onDrift} control={take} /></div>
 }
 
 function FeedView() {
@@ -61,6 +61,6 @@ function Grid() {
   return <ScrollGrid label="Daily metrics" corner="Metric \ day" height="560px" rows={n} columns={columns} rowHeader={r => `Metric ${r + 1}`} cell={(r, c) => (c.wrap ? sentence(r, 30) : String(rand(r, c.id.length + Number(c.id.slice(1))) % 1000))} negative={(r, c) => r % 7 === 0 && c.id === 'c2'} />
 }
 
-const views: Record<string, () => any> = { list: List, chat: Chat, feed: FeedView, kanban: Board, grid: Grid }
-const View = views[view]
+const views: Record<string, () => unknown> = { list: List, chat: Chat, feed: FeedView, kanban: Board, grid: Grid }
+const View = views[view] as () => unknown
 render(() => <><Toaster /><View /></>, document.getElementById('root')!)

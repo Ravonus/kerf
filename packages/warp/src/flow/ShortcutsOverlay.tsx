@@ -26,7 +26,7 @@ export function ShortcutsOverlay({ open, shortcuts = registry }: { open?: State<
     onCleanup(() => { drop(); stop(); quiet() })
   })
   const groups = derived(() => {
-    rev.value
+    void rev.value
     const by = new Map<string, Shortcut[]>()
     for (const s of filterShortcuts(reg.list(), query.value, apple.value)) {
       const g = s.group ?? 'General'

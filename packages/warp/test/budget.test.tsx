@@ -6,7 +6,7 @@ import { cases } from './fixtures/interactions'
 
 test.each(Object.keys(cases).filter(n => !n.endsWith('$shape')) as (keyof typeof C)[])('%s', async name => {
   const c = cases[name]
-  const { container } = render(C[name] as any)
+  const { container } = render((C as Record<string, () => unknown>)[name]!)
   await flush()
   const t = await touches(async () => { await c.act(container); await flush() })
   process.env.MEASURE && process.stderr.write(`MEASURE ${name} ${t.mutations} ${t.runs} ${JSON.stringify(t)}\n`)

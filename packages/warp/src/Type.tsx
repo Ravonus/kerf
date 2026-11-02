@@ -6,7 +6,7 @@ import './styles'
 import '@weft-js/warp-core/styles/components/link.css'
 import './type.css'
 
-type Open = { children?: any; [attr: string]: any }
+type Open = { children?: unknown; [attr: string]: unknown }
 
 type HeadingRole = 'display' | 'title' | 'heading' | 'label'
 
@@ -30,7 +30,7 @@ export function Heading({ level = 2, role, children, ...rest }: Open & { level?:
 }
 
 /** Text in a role. A paragraph by default; `inline` makes it a span. `tone` colours it, `subtle` and `faint` quieten it. */
-export function Text({ role, tone, subtle, faint, inline, children, ...rest }: Open & { role?: TextRole; tone?: Tone; subtle?: boolean; faint?: boolean; inline?: boolean }) {
+export function Text({ role, tone, subtle, faint, inline, children, ...rest }: Open & { role?: TextRole; tone?: Tone | undefined; subtle?: boolean; faint?: boolean; inline?: boolean }) {
   const ink = () => (subtle ? 'subtle' : faint ? 'faint' : undefined)
   if (untrack(() => inline)) return <span data-scope="text" data-role={role} data-tone={tone} data-ink={ink()} {...rest}>{children}</span>
   return <p data-scope="text" data-role={role} data-tone={tone} data-ink={ink()} {...rest}>{children}</p>

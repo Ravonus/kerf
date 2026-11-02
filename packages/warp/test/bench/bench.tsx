@@ -3,12 +3,12 @@
 import { render } from '@weft-js/core/dom'
 import { state } from '@weft-js/core'
 import { dialsFromUrl } from '@weft-js/warp-core'
-import { Accordion, Menu, RadioGroup, Slider, Ticker, Alert, Badge, Button, Card, Checkbox, Chip, CommandPalette, Drawer, Grid, Input, Kbd, Modal, Popover, Progress, Row, Search, Segmented, Select, Skeleton, Spinner, Stack, Switch, Table, Tabs, Tag, Textarea, Toaster, Toggle, Tooltip, toast, Heading, Text, Nav, Link } from '../../src/index'
+import { Accordion, Menu, RadioGroup, Slider, Ticker, Alert, Badge, Button, Card, Checkbox, Chip, CommandPalette, Drawer, Input, Kbd, Modal, Popover, Progress, Row, Search, Segmented, Select, Skeleton, Spinner, Stack, Switch, Table, Tabs, Tag, Textarea, Toaster, Toggle, Tooltip, toast, Heading, Text, Nav, Link } from '../../src/index'
 
 const TONES = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const
 const EMPHASES = ['solid', 'soft', 'outline', 'ghost', 'frame', 'link'] as const
 
-function Tile({ name, children }: { name: string; children: any }) {
+function Tile({ name, children }: { name: string; children: unknown }) {
   return <section data-bench={name} style="display:grid;gap:12px;padding:20px;border:1px dashed color-mix(in oklab,currentColor 18%,transparent);border-radius:4px;min-width:0"><h2 style="margin:0;font:500 11px/1 ui-monospace,monospace;letter-spacing:.06em;opacity:.6">{name}</h2>{children}</section>
 }
 
@@ -116,7 +116,7 @@ function App() {
         <Row gap="tight">
           <Button emphasis="soft" data-toast="ok" onClick={() => toast.show({ title: 'Saved', description: 'Your changes are live.', tone: 'positive' })}>Toast</Button>
           <Button emphasis="soft" data-toast="undo" onClick={() => toast.show({ title: 'Archived', tone: 'neutral', action: { label: 'Undo', onClick() {} } })}>Undo toast</Button>
-          <Button emphasis="soft" data-toast="promise" onClick={() => toast.promise(new Promise(r => setTimeout(r, 1400)), { pending: 'Deploying…', done: 'Deployed' , error: 'Failed' })}>Promise</Button>
+          <Button emphasis="soft" data-toast="promise" onClick={() => toast.promise(new Promise(r => { setTimeout(r, 1400) }), { pending: 'Deploying…', done: 'Deployed' , error: 'Failed' })}>Promise</Button>
         </Row>
         <Modal open={modal} title="Invite a teammate" description="They get access to this workspace right away." footer={<><Button emphasis="ghost" tone="neutral" data-close="">Cancel</Button><Button data-close="">Send invite</Button></>}><Input label="Email" /></Modal>
         <Modal open={alert} alert tone="critical" size="sm" title="Delete project?" description="This cannot be undone." footer={<><Button emphasis="ghost" tone="neutral" data-close="" autofocus>Cancel</Button><Button tone="critical" data-close="">Delete</Button></>}></Modal>

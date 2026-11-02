@@ -226,8 +226,8 @@ const hex = c => `#${c.map(v => Math.round(v).toString(16).padStart(2, '0')).joi
  * text that's merely the colour of its background still fails.
  */
 async function clippedAway(page, sel, { x, y, width, height }) {
-  const clipped = await page.evaluate(sel => {
-    for (let e = document.querySelector(sel); e; e = e.parentElement) if (getComputedStyle(e).clipPath !== 'none') return true
+  const clipped = await page.evaluate(css => {
+    for (let e = document.querySelector(css); e; e = e.parentElement) if (getComputedStyle(e).clipPath !== 'none') return true
     return false
   }, sel)
   if (!clipped) return false
@@ -246,20 +246,20 @@ async function clippedAway(page, sel, { x, y, width, height }) {
 
 /** The element, its ancestors, everything animating, and the viewport, as they are right now. */
 async function evidence(page, sel, info) {
-  const state = await page.evaluate(({ sel, box }) => {
+  const state = await page.evaluate(({ css, box }) => {
     const props = ['display', 'visibility', 'opacity', 'backgroundColor', 'backgroundImage', 'color', 'clipPath', 'transform', 'scale', 'translate', 'filter', 'mixBlendMode', 'transitionProperty', 'transitionDuration', 'zIndex', 'position', 'isolation']
     const read = e => {
       const cs = getComputedStyle(e), r = e.getBoundingClientRect()
       return { tag: e.tagName.toLowerCase(), scope: e.dataset?.scope, part: e.dataset?.part, rect: [r.x, r.y, r.width, r.height], style: Object.fromEntries(props.map(p => [p, cs[p]])), fill: cs.getPropertyValue('--_fill'), a: cs.getPropertyValue('--_a'), states: [':hover', ':active', ':focus', ':focus-visible'].filter(q => e.matches(q)) }
     }
-    const el = document.querySelector(sel), chain = []
+    const el = document.querySelector(css), chain = []
     for (let e = el; e; e = e.parentElement) chain.push(read(e))
     const under = document.elementsFromPoint(box.x + box.width / 2, box.y + box.height / 2).map(e => `${e.tagName.toLowerCase()}[${e.dataset?.part ?? e.dataset?.scope ?? ''}]`)
     return {
       chain, kids: [...el.children].map(read), html: el.outerHTML.slice(0, 600), under, scroll: [scrollX, scrollY], viewport: [innerWidth, innerHeight], active: document.activeElement?.tagName, activePart: document.activeElement?.textContent?.slice(0, 30),
       animations: document.getAnimations().map(a => ({ name: a.animationName ?? a.transitionProperty, state: a.playState, time: a.currentTime, target: a.effect?.target?.tagName, part: a.effect?.target?.dataset?.part, scope: a.effect?.target?.dataset?.scope, pseudo: a.effect?.pseudoElement })),
     }
-  }, { sel, box: info.box })
+  }, { css: sel, box: info.box })
   const whole = await page.screenshot({ animations: 'disabled' })
   return { state, whole, info, url: page.url() }
 }
@@ -279,12 +279,12 @@ function keepEvidence(moment, reading) {
  */
 export async function pixelContrast(page, i, tries = 4) {
   const sel = `[data-a11y-px="${i}"]`
-  const info = await page.evaluate(async sel => {
-    const el = document.querySelector(sel)
+  const info = await page.evaluate(async css => {
+    const el = document.querySelector(css)
     if (!el) return null
     el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })
     // the scroll re-places an anchored panel on its next event: measure where the text ends up
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+    await new Promise(r => { requestAnimationFrame(() => requestAnimationFrame(r)) })
     const range = document.createRange()
     range.selectNodeContents(el)
     // clipped to the element: a visually hidden child's text is measured at full width but never painted
@@ -317,10 +317,10 @@ export async function pixelContrast(page, i, tries = 4) {
   const png = await page.screenshot({ clip: { x: x + width * 0.2, y: y + height * 0.2, width: width * 0.6, height: height * 0.6 }, animations: 'disabled' })
   // a timer can reflow the page after the box was read (a rate limit's banner ending): those pixels are some other
   // part of the page, so they say nothing about this text. Read it again where it is now; never settling is a failure.
-  const moved = await page.evaluate(({ sel, at }) => {
-    const r = document.querySelector(sel)?.getBoundingClientRect()
+  const moved = await page.evaluate(({ css, at }) => {
+    const r = document.querySelector(css)?.getBoundingClientRect()
     return !r || [r.x, r.y, r.width, r.height].some((v, k) => Math.abs(v - at[k]) > 0.5)
-  }, { sel, at: info.at })
+  }, { css: sel, at: info.at })
   if (moved) {
     await hide.evaluate(n => n.remove())
     if (tries > 1) return pixelContrast(page, i, tries - 1)

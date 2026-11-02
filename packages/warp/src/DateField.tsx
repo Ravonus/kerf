@@ -6,12 +6,13 @@ import { CalendarGrid } from './Calendar'
 import { Composite, Hidden, isSheet, messages, Panel, Trigger, bindable, useOpen, usePickerEnv, type Bindable, type Openable, type RichFieldProps } from './Picker'
 import { Segments, type SegmentState } from './Segments'
 
+/** Props for DateField. */
 export type DateFieldProps = RichFieldProps & Bindable<IsoDate | null> & Openable & {
-  min?: IsoDate
-  max?: IsoDate
-  isDateUnavailable?: (d: IsoDate) => boolean
-  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6
-  weekNumbers?: boolean
+  min?: IsoDate | undefined
+  max?: IsoDate | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
+  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined
+  weekNumbers?: boolean | undefined
   parse?: (text: string, today: IsoDate) => IsoDate | null
 }
 
@@ -20,7 +21,7 @@ export type DateFieldProps = RichFieldProps & Bindable<IsoDate | null> & Openabl
  * the foot. `onValueChange` fires only with a complete, valid date or null; a half-typed date stays in the segments
  * and `error` explains it on blur. The shell's `error` prop, when given, wins.
  */
-export function DateField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, min, max, isDateUnavailable, firstDayOfWeek, weekNumbers, parse, locale, today, name, presentation, label, hint, error, disabled, readonly, ...rest }: DateFieldProps) {
+export function DateField({ value, defaultValue, onValueChange, open, defaultOpen, onOpenChange, min, max, isDateUnavailable, firstDayOfWeek, weekNumbers, parse: _parse, locale, today, name, presentation, label, hint, error, disabled, readonly, ...rest }: DateFieldProps) {
   const env = usePickerEnv(() => locale, () => today)
   const v = bindable<IsoDate | null>(() => value, () => defaultValue, null, () => onValueChange)
   const pop = useOpen(() => open, () => defaultOpen, () => onOpenChange)
@@ -79,16 +80,17 @@ export function DateField({ value, defaultValue, onValueChange, open, defaultOpe
 }
 
 export type RangeCompare = 'previous-period' | 'previous-year' | DateRange
+/** Props for DateRangeField. */
 export type DateRangeFieldProps = RichFieldProps & Bindable<DateRange> & Openable & {
   presets?: RangePreset[] | 'default' | false
   preset?: string | null
   onPresetChange?: (id: string | null) => void
-  min?: IsoDate
-  max?: IsoDate
+  min?: IsoDate | undefined
+  max?: IsoDate | undefined
   maxDays?: number
-  isDateUnavailable?: (d: IsoDate) => boolean
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
   months?: 1 | 2 | 'auto'
-  compare?: RangeCompare | null
+  compare?: RangeCompare | null | undefined
 }
 
 /** The comparison range of a selection, for a dashboard's "vs" (04 DateRangeField). */
@@ -159,8 +161,8 @@ export function DateRangeField({ value, defaultValue, onValueChange, open, defau
     const m = listKey(step, at, opts.length)
     if (!m.handled) return
     e.preventDefault()
-    if (m.pick) return applyPreset(opts[at])
-    ;(e.currentTarget as HTMLElement).querySelector<HTMLElement>(`[data-id="${opts[m.to].id}"]`)?.focus()
+    if (m.pick) return applyPreset(opts[at]!)
+    ;(e.currentTarget as HTMLElement).querySelector<HTMLElement>(`[data-id="${opts[m.to]!.id}"]`)?.focus()
   }
   const toggle = () => {
     narrow.value = isSheet(trigger!, presentation) || (trigger!.ownerDocument.defaultView?.innerWidth ?? 1024) < 640
@@ -193,7 +195,7 @@ export function DateRangeField({ value, defaultValue, onValueChange, open, defau
             <div data-scope="range-panel" data-narrow={narrow.value ? '' : undefined}>
               {list.value.length > 0 && (
                 <ul role="listbox" aria-label="Presets" aria-orientation={narrow.value ? 'horizontal' : 'vertical'} onKeyDown={onRail}>
-                  {list.value.map(p => <li key={p.id} role="option" data-id={p.id} tabindex={p.id === (chosen.value ?? list.value[0].id) ? '0' : '-1'} aria-selected={p.id === chosen.value ? 'true' : 'false'} onClick={() => applyPreset(p)}>{p.label}</li>)}
+                  {list.value.map(p => <li key={p.id} role="option" data-id={p.id} tabindex={p.id === (chosen.value ?? list.value[0]!.id) ? '0' : '-1'} aria-selected={p.id === chosen.value ? 'true' : 'false'} onClick={() => applyPreset(p)}>{p.label}</li>)}
                 </ul>
               )}
               <div>

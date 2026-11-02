@@ -12,66 +12,73 @@ import '@weft-js/warp-core/styles/layout/base.css'
 import '@weft-js/warp-core/styles/layout/shell.css'
 import '@weft-js/warp-core/styles/layout/breadcrumb.css'
 
-export type NavIcon = IconRef | (() => any)
+/** A nav glyph: an icon, or a function that draws one. */
+export type NavIcon = IconRef | (() => unknown)
+/** One line of the Shell's navigation. */
 export interface NavItem {
   id: string
   label: string
-  icon?: NavIcon
+  icon?: NavIcon | undefined
   href?: string
   onSelect?: () => void
-  count?: number
+  count?: number | undefined
   /** Spoken after the count. Default " new". */
   countLabel?: string
   /** One of the phone bottom bar's tabs. Default the first group's first four. */
   tab?: boolean
 }
-export type NavGroup = { label?: string; items: NavItem[] }
+/** A run of nav items under an optional label. */
+export type NavGroup = { label?: string | undefined; items: NavItem[] }
+/** One step of the breadcrumb. */
 export type Crumb = { label: string; href?: string }
-export type MenuEntry = { label: string; icon?: NavIcon; href?: string; onSelect?: () => void; shortcut?: string; keys?: string; tone?: 'critical' } | 'separator'
-export type Workspace = { id: string; name: string; initials: string; meta?: string }
+/** One line of the account menu. */
+export type MenuEntry = { label: string; icon?: NavIcon | undefined; href?: string; onSelect?: () => void; shortcut?: string; keys?: string; tone?: 'critical' | undefined } | 'separator'
+/** An entry in the workspace switcher. */
+export type Workspace = { id: string; name: string; initials: string; meta?: string | undefined }
 
+/** Props for Shell. */
 export interface ShellProps {
   /** app (default) · focus: a wizard or checkout, with no nav. */
-  variant?: 'app' | 'focus'
-  brand?: { name: string; href?: string; mark?: any }
+  variant?: 'app' | 'focus' | undefined
+  brand?: { name: string; href?: string; mark?: unknown }
   /** The phone bar's title; always shown in focus. */
-  title?: any
+  title?: unknown
   /** The tablet and desktop header's path. The last is the current page. */
   crumbs?: Crumb[]
   depth?: 'root' | 'child'
   /** Phone, depth child: the back button in the brand's place. */
-  back?: { label: string; href?: string; onClick?: () => void }
+  back?: { label: string; href?: string; onClick?: (() => void) | undefined }
   /** Focus variant: Close at the start and the step count at the end. */
-  close?: { label: string; href?: string; onClick?: () => void }
-  step?: any
-  command?: { label?: string; hint?: string; shortcut?: string; onOpen: () => void }
+  close?: { label: string; href?: string; onClick?: (() => void) | undefined }
+  step?: unknown
+  command?: { label?: string | undefined; hint?: string; shortcut?: string; onOpen: () => void }
   /** Header actions, between the command field and the account button. */
-  actions?: any
+  actions?: unknown
   account?: { name: string; email?: string; initials: string; items?: MenuEntry[] }
   switcher?: { current: string; workspaces: Workspace[]; onSwitch: (id: string) => void }
   /** The first group is the main list; the rest are saved views and the like (sidebar only, the More sheet below). */
   nav?: NavGroup[]
   /** The nav's pinned items, above the collapse toggle. */
   foot?: NavItem[]
-  current?: string
+  current?: string | undefined
   navLabel?: string
   /** false · true: the rail · 'hidden': no rail either, the edge tab opens the sidebar. A box, so the shell can write it. */
   collapsed?: State<boolean | 'hidden'>
   /** Names main when `island`, or the region around a preview. */
-  label?: string
+  label?: string | undefined
   /** A shell inside a page (a preview, a story): main becomes a named region, as a document has one main. */
   island?: boolean
-  dock?: any
+  dock?: unknown
   /** Dialogs, toasts and palettes: outside main, in the top layer or fixed, so nothing here takes up room. */
-  overlays?: any
-  children?: any
+  overlays?: unknown
+  children?: unknown
 }
 
 const sweepParts = () => <><span data-part="sweep-base" aria-hidden="true"></span><span data-part="sweep" aria-hidden="true"></span></>
 const draw = (i: NavIcon | undefined) => (typeof i === 'function' ? i({}) : i ? <Icon name={i} /> : null)
 const TABS = 4
 
-function Item({ item, current, quiet, onPick }: { item: NavItem; current?: string; quiet?: boolean; onPick: () => void }) {
+function Item({ item, current, quiet, onPick }: { item: NavItem; current?: string | undefined; quiet?: boolean | undefined; onPick: () => void }) {
   const it = untrack(() => item)
   const press = (e: MouseEvent) => {
     if (!it.href) e.preventDefault()
@@ -99,7 +106,7 @@ function Crumbs({ items }: { items: Crumb[] }) {
         {rows.value.map(r => (
           <li key={r.key} data-part={'hidden' in r ? 'ellipsis' : undefined} data-collapse={r.collapse ? '' : undefined}>
             {'hidden' in r
-              ? <a href={r.crumb.href ?? '#'} aria-label={`Show ${r.hidden} more`}>…</a>
+              ? <a href={r.crumb!.href ?? '#'} aria-label={`Show ${r.hidden} more`}>…</a>
               : r.last ? <span aria-current="page">{r.crumb.label}</span> : <a href={r.crumb.href ?? '#'}>{r.crumb.label}</a>}
           </li>
         ))}
@@ -152,10 +159,10 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
   const more = derived(() => [...primary.value.filter(p => !p.tab).map(p => p.item), ...extra.value.flatMap(g => g.items), ...(foot ?? [])])
 
   const workspace = derived(() => switcher?.workspaces.find(w => w.id === switcher.current))
-  const entries = derived(() => (account?.items ?? []).map((entry, at) => ({ entry, at })))
+  const entries = derived(() => (account?.items ?? []).map((entry, n) => ({ entry, at: n })))
 
   const toggle = () => {
-    if (wide.value) folded.value = folded.value ? false : true
+    if (wide.value) folded.value = !folded.value
     else navOpen.value = !navOpen.value
   }
   const closeNav = () => (navOpen.value = false)
@@ -182,14 +189,14 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
   use(menu, () => menuEl, () => ({ open: menuOpen.value, trigger: () => from, at, onClose: shut }))
   use(dialog, () => sheetEl, () => ({ open: moreOpen.value, onClose: () => (moreOpen.value = false) }))
 
-  const button = (d: { label: string; href?: string; onClick?: () => void }, part: string | undefined, icon: IconComponent) => (
+  const button = (d: { label: string; href?: string; onClick?: (() => void) | undefined }, part: string | undefined, icon: IconComponent) => (
     d.href
       ? <a href={d.href} data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label}>{icon({})}</a>
-      : <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label} onClick={d.onClick}>{icon({})}</button>
+      : <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" data-part={part} aria-label={d.label} onClick={d.onClick!}>{icon({})}</button>
   )
   const page = <div data-part="page">{children}</div>
   return (
-    <div ref={(n: any) => (root = n)} data-scope="shell" data-part="root" data-variant={focus.value ? 'focus' : undefined} data-depth={depth} data-collapsed={folded.value === 'hidden' ? 'hidden' : folded.value ? '' : undefined} data-nav-open={navOpen.value ? '' : undefined}>
+    <div ref={n => (root = n)} data-scope="shell" data-part="root" data-variant={focus.value ? 'focus' : undefined} data-depth={depth} data-collapsed={folded.value === 'hidden' ? 'hidden' : folded.value ? '' : undefined} data-nav-open={navOpen.value ? '' : undefined}>
       <a data-part="skip" href={`#${main}`}>Skip to content</a>
       {folded.value === 'hidden' && <button type="button" data-part="edge-tab" aria-controls={navId} aria-expanded={navOpen.value ? 'true' : 'false'} aria-label={navOpen.value ? 'Hide navigation' : 'Show navigation'} onClick={() => (navOpen.value = !navOpen.value)}><RightIcon /></button>}
       <div data-part="layout">
@@ -237,7 +244,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
             {extra.value.length > 0 && (
               <div data-part="nav-extra">
                 {extra.value.map(g => (
-                  <div key={g.label}>
+                  <div key={g.label!}>
                     <p data-part="nav-group">{g.label}</p>
                     <ul data-part="nav-list" aria-label={g.label}>{g.items.map(i => <li key={i.id}><Item item={i} current={current} quiet onPick={closeNav} /></li>)}</ul>
                   </div>
@@ -257,7 +264,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
       <div data-part="scrim" data-for="nav" hidden={!navOpen.value} onClick={closeNav}></div>
       {!focus.value && account && (
         <aside aria-label="Account" hidden={!menuOpen.value}>
-        <div ref={(n: any) => (menuEl = n)} data-scope="menu" data-part="menu" role="menu" id={menuId} aria-label={`Account: ${account.name}${account.email ? `, ${account.email}` : ''}`} hidden={!menuOpen.value}>
+        <div ref={n => (menuEl = n)} data-scope="menu" data-part="menu" role="menu" id={menuId} aria-label={`Account: ${account.name}${account.email ? `, ${account.email}` : ''}`} hidden={!menuOpen.value}>
           <div aria-hidden="true" style="display:flex;gap:10px;align-items:center;padding:10px">
             <span data-scope="avatar">{account.initials}</span>
             <div><b style="display:block;font-weight:600">{account.name}</b><span style="font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">{account.email}</span></div>
@@ -282,7 +289,7 @@ export function Shell({ variant = 'app', brand, title, crumbs, depth, back, clos
         </aside>
       )}
       {!focus.value && (
-        <dialog ref={(n: any) => (sheetEl = n)} data-part="sheet" aria-labelledby={sheetId} hidden={!moreOpen.value} style="margin:0;max-inline-size:none">
+        <dialog ref={n => (sheetEl = n)} data-part="sheet" aria-labelledby={sheetId} hidden={!moreOpen.value} style="margin:0;max-inline-size:none">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <p data-part="title" id={sheetId} style="margin:0;font-weight:600">More</p>
             <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-icon-only="" aria-label="Close" data-close="" autofocus><XIcon /></button>

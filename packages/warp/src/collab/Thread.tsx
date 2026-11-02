@@ -1,5 +1,5 @@
 import { AlertIcon, CheckIcon, ChecksIcon, ClockIcon, CopyIcon, QuoteIcon, SmileIcon } from '@weft-js/warp-icons'
-import { announce, arrivalTracker, burst, firstName, installSweep, joinNames, messageLog, quoteText, reactionName, STICK_PX, textParts, threadRows, typingLine, uid, type ChatMessage, type MessageReaction, type ThreadRow } from '@weft-js/warp-core'
+import { announce, arrivalTracker, burst, firstName, joinNames, messageLog, quoteText, reactionName, STICK_PX, textParts, threadRows, typingLine, uid, type ChatMessage, type MessageReaction, type ThreadRow } from '@weft-js/warp-core'
 import { derived, onCleanup, onMount, state, untrack, watch } from '@weft-js/core'
 import { Text } from '@weft-js/core/text'
 import { Button } from '../Button'
@@ -18,6 +18,7 @@ import '@weft-js/warp-core/styles/app/thread-replies.css'
 import '@weft-js/warp-core/styles/app/avatar-stack.css'
 
 
+/** Props for Message. */
 export interface MessageProps {
   message: ChatMessage
   continued?: boolean
@@ -25,8 +26,8 @@ export interface MessageProps {
   last?: boolean
   arrive?: boolean
   /** The quoted source, read live. */
-  source?: ChatMessage
-  onRetry?: (m: ChatMessage) => void
+  source?: ChatMessage | undefined
+  onRetry?: ((m: ChatMessage) => void) | undefined
   onReact?: (m: ChatMessage, r: MessageReaction | null) => void
   onReplies?: (m: ChatMessage) => void
 }
@@ -111,7 +112,7 @@ export function Message({ message, continued, last, arrive, source, onRetry, onR
 
 type MessageRow = Extract<ThreadRow, { kind: 'message' }>
 /** One row of the window: a message, and the divider above it if it has one. */
-type Entry = { id: string; row: MessageRow; divider?: Exclude<ThreadRow, MessageRow> }
+type Entry = { id: string; row: MessageRow; divider?: Exclude<ThreadRow, MessageRow> | undefined }
 
 function entries(rows: readonly ThreadRow[]) {
   const out: Entry[] = []
@@ -136,6 +137,7 @@ function Divider({ d }: { d: NonNullable<Entry['divider']> }) {
   return <div data-part="divider" data-unread={d.unread ? '' : undefined} role="separator" aria-label={d.unread ? 'New messages' : d.label}>{d.label}</div>
 }
 
+/** Props for Thread. */
 export interface ThreadProps {
   /** Names the region: "calendar-engine channel". */
   label: string
@@ -145,18 +147,18 @@ export interface ThreadProps {
   /** Names typing now. */
   typing?: Live<string[]>
   /** The header's content (`data-part="app-bar"`): channel, members, stack, call, search. */
-  header?: any
+  header?: unknown
   /** A log height, if the parent doesn't size the thread. */
   height?: string
   /** No `onSend`, no composer: a read-only log. */
-  onSend?: (m: ComposerSend) => void
-  onRetry?: (m: ChatMessage) => void
+  onSend?: ((m: ComposerSend) => void) | undefined
+  onRetry?: ((m: ChatMessage) => void) | undefined
   onReact?: (m: ChatMessage, r: MessageReaction | null) => void
   onReplies?: (m: ChatMessage) => void
   /** Near the top: load older messages, and prepend them to `messages`. */
   onOlder?: () => void
-  onDrift?: (index: number, predicted: number, actual: number) => void
-  control?: (c: VirtualControl) => void
+  onDrift?: ((index: number, predicted: number, actual: number) => void) | undefined
+  control?: ((c: VirtualControl) => void) | undefined
   composer?: Omit<ComposerProps, 'onSend' | 'quote' | 'input'>
 }
 
@@ -239,7 +241,7 @@ export function Thread({ label, messages, unreadFrom, typing, header, height, on
     </>
   }
   return (
-    <section ref={(n: any) => (root = n)} data-scope="thread" data-part="root" aria-label={label} id={id} style={height ? `block-size:${height}` : undefined}>
+    <section ref={n => (root = n)} data-scope="thread" data-part="root" aria-label={label} id={id} style={height ? `block-size:${height}` : undefined}>
       {head.value !== undefined ? <div data-part="app-bar">{head.value}</div> : <span></span>}
       <VirtualList
         part="log"
@@ -264,7 +266,7 @@ export function Thread({ label, messages, unreadFrom, typing, header, height, on
       {!stuck.value && <Button size="sm" data-part="jump" onClick={latest}>Jump to latest{unseen.value > 0 ? ` · ${unseen.value} new` : ''}</Button>}
       <div>
         <TypingIndicator text={typingLine(typingNames.value)} />
-        {onSend && <Composer {...(composer ?? { label: `Message ${label}` })} quote={draft} onSend={m => onSend!(m)} input={el => (box = el)} />}
+        {onSend && <Composer {...(composer ?? { label: `Message ${label}` })} quote={draft} onSend={m => onSend(m)} input={el => (box = el)} />}
       </div>
     </section>
   )

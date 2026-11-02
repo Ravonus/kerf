@@ -8,14 +8,15 @@ import { Drawer } from '../Drawer'
 import { SweepParts, confirmSweep } from './bits'
 import '@weft-js/warp-core/styles/app/booking.css'
 
+/** Props for MoveSheet. */
 export type MoveSheetProps = {
   open: State<boolean>
   event: CalEvent | null
   /** Everything else on the calendar: a start that collides is disabled. */
   events: CalEvent[]
-  firstDayOfWeek?: number
-  locale?: string
-  hourCycle?: string
+  firstDayOfWeek?: number | undefined
+  locale?: string | undefined
+  hourCycle?: string | undefined
   step?: number
   onMove: (e: CalEvent, to: Slot) => void
   onClose?: () => void

@@ -1,14 +1,17 @@
 // Regressions from the Kobalte audit that jsdom can see; layout, stacking and Escape are in overlays.browser.test.mjs.
 import { flush, render } from '@weft-js/core/test'
+import type { Address, IsoDate } from '@weft-js/warp-core'
+import type { Place } from '../src/PlaceField'
 import { state } from '@weft-js/core'
+import type { SignatureValue } from '../src/SignaturePad'
 import { AddressField, CodeInput, DateField, DateRangeField, DateTimeField, DurationField, Input, JsonEditor, KeyValueEditor, MarkdownEditor, MentionsInput, Menu, MonthPicker, PhoneField, PlaceLookupInput, RecurrenceField, SignaturePad, Slider, TimeField, TimeZoneSelect } from '../src/index'
 import { ComboField } from '../src/Combobox'
 
-const tick = (ms = 0) => new Promise(r => setTimeout(r, ms))
+const tick = (ms = 0) => new Promise(r => { setTimeout(r, ms) })
 const settle = async () => { await tick(); await flush(); await tick(); await flush() }
 const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
 
-function inForm(ui: () => any) {
+function inForm(ui: () => unknown) {
   const { container } = render(() => <form>{ui()}</form>)
   document.body.append(container)
   return container.querySelector('form')!
@@ -34,7 +37,7 @@ describe('a late error shows', () => {
 
   test('on a control that destructures its shell (ComboField)', async () => {
     const err = state<string | undefined>(undefined)
-    const { container: c } = render(() => <ComboField label="Fruit" error={err.value} text={() => ''} find={async () => []} row={(f: string) => ({ main: f })} onPick={() => {}} />)
+    const { container: c } = render(() => <ComboField label="Fruit" error={err.value} text={() => ''} find={() => Promise.resolve([])} row={(f: string) => ({ main: f })} onPick={() => {}} />)
     await settle()
     err.value = 'Nope'
     await settle()
@@ -48,9 +51,9 @@ describe('a late error shows', () => {
     const { container: c } = render(() => <DateField label="D" locale="en-US" today="2026-01-15" />)
     await settle()
     const s = [...c.querySelectorAll<HTMLElement>('[data-part="segment"]')]
-    key(s[0], '0'); key(s[0], '2'); await flush()
-    key(s[1], '3'); key(s[1], '1'); await flush()
-    for (const d of '2026') key(s[2], d)
+    key(s[0]!, '0'); key(s[0]!, '2'); await flush()
+    key(s[1]!, '3'); key(s[1]!, '1'); await flush()
+    for (const d of '2026') key(s[2]!, d)
     await settle()
     expect(c.querySelector('[data-part="error"]')!.textContent).toContain('February 2026 has 28 days')
     expect(c.querySelector('[data-part="body"]')!.getAttribute('aria-describedby')).toBe(c.querySelector('[data-part="message"]')!.id)
@@ -70,7 +73,7 @@ describe('Menu href', () => {
 })
 
 describe('required on a composite', () => {
-  const cases: [string, () => any, string | null][] = [
+  const cases: [string, () => unknown, string | null][] = [
     ['DateField', () => <DateField label="X" required today="2026-01-15" locale="en-US" />, 'spinbutton'],
     ['DateRangeField', () => <DateRangeField label="X" required today="2026-01-15" locale="en-US" />, 'spinbutton'],
     ['TimeField', () => <TimeField label="X" required today="2026-01-15" locale="en-US" />, 'spinbutton'],
@@ -97,14 +100,14 @@ describe('required on a composite', () => {
   })
 
   test('a half-chosen range is still missing', async () => {
-    const form = inForm(() => <DateRangeField label="X" required defaultValue={{ start: '2026-02-03' as any, end: null }} today="2026-01-15" locale="en-US" />)
+    const form = inForm(() => <DateRangeField label="X" required defaultValue={{ start: '2026-02-03', end: null }} today="2026-01-15" locale="en-US" />)
     await settle()
     expect(form.checkValidity()).toBe(false)
     form.parentElement!.remove()
   })
 
   test('failing validation draws the message in the field, moves focus in, and it clears when filled', async () => {
-    const v = state<any>(null)
+    const v = state<IsoDate | null>(null)
     const form = inForm(() => <DateField label="X" required value={v} today="2026-01-15" locale="en-US" />)
     await settle()
     form.querySelector<HTMLInputElement>(':required')!.setCustomValidity('Fill this in')
@@ -138,12 +141,12 @@ describe('form.reset()', () => {
   const hidden = (form: Element) => form.querySelector<HTMLInputElement>('input[type="hidden"]')!.value
 
   test('DateField goes back: segments, hidden value and State', async () => {
-    const v = state<any>('2026-02-03')
+    const v = state<IsoDate | null>('2026-02-03')
     const form = inForm(() => <DateField label="D" name="d" value={v} locale="en-US" today="2026-01-15" />)
     await settle()
     await up(form, 'year')
     expect(hidden(form)).toBe('2027-02-03')
-    ;(form as HTMLFormElement).reset()
+    ;(form).reset()
     await settle()
     expect(v.value).toBe('2026-02-03')
     expect(hidden(form)).toBe('2026-02-03')
@@ -152,7 +155,7 @@ describe('form.reset()', () => {
   })
 
   test('a half-typed date and its message go too', async () => {
-    const form = inForm(() => <DateField label="D" locale="en-US" today="2026-01-15" />) as HTMLFormElement
+    const form = inForm(() => <DateField label="D" locale="en-US" today="2026-01-15" />)
     await settle()
     const s = form.querySelector<HTMLElement>('[data-type="month"]')!
     key(s, '0'); key(s, '2')
@@ -170,7 +173,7 @@ describe('form.reset()', () => {
       [() => <TimeField label="T" name="v" defaultValue="10:30" locale="en-US" today="2026-01-15" />, 'hour', '10:30'],
       [() => <DateTimeField label="T" name="v" defaultValue="2026-02-03T10:30" locale="en-US" today="2026-01-15" />, 'hour', '2026-02-03T10:30'],
     ] as const) {
-      const form = inForm(ui) as HTMLFormElement
+      const form = inForm(ui)
       await settle()
       await up(form, type)
       expect(hidden(form)).not.toBe(want)
@@ -180,7 +183,7 @@ describe('form.reset()', () => {
       expect(form.querySelector(`[data-type="${type}"]`)!.textContent).toBe('10')
       form.parentElement!.remove()
     }
-    const form = inForm(() => <DurationField label="T" name="v" defaultValue="PT1H" locale="en-US" />) as HTMLFormElement
+    const form = inForm(() => <DurationField label="T" name="v" defaultValue="PT1H" locale="en-US" />)
     await settle()
     key(form.querySelector('[data-u="h"]')!, 'ArrowUp')
     await settle()
@@ -192,7 +195,7 @@ describe('form.reset()', () => {
   })
 
   test('PhoneField, CodeInput and MentionsInput go back', async () => {
-    const form = inForm(() => <div><PhoneField label="P" name="p" defaultValue="+14155550123" locale="en-US" /><CodeInput label="C" name="c" defaultValue="one" /><MentionsInput label="M" name="m" defaultValue="hi" triggers={[]} /></div>) as HTMLFormElement
+    const form = inForm(() => <div><PhoneField label="P" name="p" defaultValue="+14155550123" locale="en-US" /><CodeInput label="C" name="c" defaultValue="one" /><MentionsInput label="M" name="m" defaultValue="hi" triggers={{}} /></div>)
     await settle()
     const tel = form.querySelector<HTMLInputElement>('input[type="tel"]')!
     const shown = tel.value
@@ -213,7 +216,7 @@ describe('form.reset()', () => {
   })
 
   test('MarkdownEditor goes back', async () => {
-    const form = inForm(() => <MarkdownEditor label="M" defaultValue="# one" />) as HTMLFormElement
+    const form = inForm(() => <MarkdownEditor label="M" defaultValue="# one" />)
     await settle()
     const a = form.querySelector('textarea')!
     a.value = 'two'
@@ -228,7 +231,7 @@ describe('form.reset()', () => {
   })
 
   test('JsonEditor drops its validation at once', async () => {
-    const form = inForm(() => <JsonEditor label="J" name="j" defaultValue="{}" />) as HTMLFormElement
+    const form = inForm(() => <JsonEditor label="J" name="j" defaultValue="{}" />)
     await settle()
     const a = form.querySelector('textarea')!
     a.value = '{oops'
@@ -243,7 +246,7 @@ describe('form.reset()', () => {
   })
 
   test('KeyValueEditor goes back to its rows', async () => {
-    const form = inForm(() => <KeyValueEditor label="K" defaultValue={[{ key: 'a', value: '1' }]} />) as HTMLFormElement
+    const form = inForm(() => <KeyValueEditor label="K" defaultValue={[{ key: 'a', value: '1' }]} />)
     await settle()
     form.querySelector<HTMLElement>('[data-part="add"]')!.click()
     await settle()
@@ -257,7 +260,7 @@ describe('form.reset()', () => {
 
   test('RecurrenceField goes back', async () => {
     const v = state<string | null>('FREQ=DAILY')
-    const form = inForm(() => <RecurrenceField label="R" name="r" value={v} dtstart="2026-01-15" locale="en-US" />) as HTMLFormElement
+    const form = inForm(() => <RecurrenceField label="R" name="r" value={v} dtstart="2026-01-15" locale="en-US" />)
     await settle()
     v.value = 'FREQ=MONTHLY'
     await settle()
@@ -270,8 +273,8 @@ describe('form.reset()', () => {
   })
 
   test('PlaceLookupInput goes back, text and all', async () => {
-    const place = { displayName: 'Lisbon', lat: 38.7, lng: -9.1 } as any
-    const form = inForm(() => <PlaceLookupInput label="P" defaultValue={place} search={async () => []} />) as HTMLFormElement
+    const place = { displayName: 'Lisbon', lat: 38.7, lng: -9.1 } as Place
+    const form = inForm(() => <PlaceLookupInput label="P" defaultValue={place} search={() => Promise.resolve([])} />)
     await settle()
     const i = form.querySelector('input')!
     i.value = 'Por'
@@ -288,8 +291,8 @@ describe('form.reset()', () => {
   })
 
   test('AddressField goes back', async () => {
-    const start = { country: 'US', lines: ['1 Main St'], city: 'Springfield' } as any
-    const form = inForm(() => <AddressField name="a" defaultValue={start} locale="en-US" />) as HTMLFormElement
+    const start = { country: 'US', lines: ['1 Main St'], city: 'Springfield' } as unknown as Address
+    const form = inForm(() => <AddressField name="a" defaultValue={start} locale="en-US" />)
     await settle()
     const line = () => form.querySelector<HTMLInputElement>('input[autocomplete="address-line1"]')!
     expect(line().value).toBe('1 Main St')
@@ -308,8 +311,8 @@ describe('form.reset()', () => {
   })
 
   test('SignaturePad goes back to nothing', async () => {
-    const seen: any[] = []
-    const form = inForm(() => <SignaturePad label="S" onValueChange={x => seen.push(x)} />) as HTMLFormElement
+    const seen: (SignatureValue | null)[] = []
+    const form = inForm(() => <SignaturePad label="S" onValueChange={x => seen.push(x)} />)
     await settle()
     form.querySelector<HTMLInputElement>('input[type="radio"]:not(:checked)')!.click()
     await settle()
@@ -317,7 +320,7 @@ describe('form.reset()', () => {
     t.value = 'Ada'
     t.dispatchEvent(new Event('input', { bubbles: true }))
     await settle()
-    expect(seen.at(-1)?.text).toBe('Ada')
+    expect((seen.at(-1) as { text?: string } | undefined)?.text).toBe('Ada')
     form.reset()
     await settle()
     expect(seen.at(-1)).toBeNull()
@@ -327,7 +330,7 @@ describe('form.reset()', () => {
   })
 
   test('a required field stays valid after a reset that changed nothing', async () => {
-    const form = inForm(() => <DateField label="D" required defaultValue="2026-02-03" locale="en-US" today="2026-01-15" />) as HTMLFormElement
+    const form = inForm(() => <DateField label="D" required defaultValue="2026-02-03" locale="en-US" today="2026-01-15" />)
     await settle()
     form.reset()
     await settle()
@@ -350,7 +353,7 @@ describe('form.reset()', () => {
 
   test('an Input whose value the app holds keeps showing it', async () => {
     const v = state('kept')
-    const form = inForm(() => <Input label="N" value={v.value} />) as HTMLFormElement
+    const form = inForm(() => <Input label="N" value={v.value} />)
     await settle()
     form.reset()
     await settle()
@@ -359,7 +362,7 @@ describe('form.reset()', () => {
   })
 
   test('a counter recounts', async () => {
-    const form = inForm(() => <Input label="N" counter={10} />) as HTMLFormElement
+    const form = inForm(() => <Input label="N" counter={10} />)
     await settle()
     const i = form.querySelector('input')!
     i.value = 'abc'
@@ -387,7 +390,7 @@ describe('Slider in a form', () => {
 
   test('form.reset() goes back through onChange', async () => {
     const v = state(30)
-    const form = inForm(() => <Slider label="S" name="s" value={v.value} onChange={x => (v.value = x)} />) as HTMLFormElement
+    const form = inForm(() => <Slider label="S" name="s" value={v.value} onChange={x => (v.value = x)} />)
     await settle()
     key(form.querySelector('[data-part="thumb"]')!, 'End')
     await settle()

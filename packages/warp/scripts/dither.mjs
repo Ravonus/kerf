@@ -17,9 +17,9 @@ const shots = resolve(arg('shots', join(repo, 'evals/results/dither')))
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
 
 async function build(outDir) {
-  const { build } = await import('vite')
+  const vite = await import('vite')
   const { default: weft } = await import('@weft-js/core/vite')
-  await build({ root: join(pkg, 'test/dither'), base: './', logLevel: 'silent', plugins: [weft()], build: { outDir, emptyOutDir: true } })
+  await vite.build({ root: join(pkg, 'test/dither'), base: './', logLevel: 'silent', plugins: [weft()], build: { outDir, emptyOutDir: true } })
 }
 const serve = dist => new Promise(ok => { const s = createServer((q, r) => { const path = q.url.split('?')[0]; const p = join(dist, path === '/' ? 'index.html' : path); if (!existsSync(p) || statSync(p).isDirectory()) { r.writeHead(404); return r.end() } r.writeHead(200, { 'content-type': types[extname(p)] ?? 'application/octet-stream' }); r.end(readFileSync(p)) }).listen(0, '127.0.0.1', () => ok(s)) })
 
@@ -59,7 +59,7 @@ const out = { errors: [] }
 // looks
 for (const scheme of ['dark', 'light']) {
   const { page, ctx, errors } = await open('', scheme)
-  await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { scrollTo(0, y); await new Promise(r => setTimeout(r, 120)) } scrollTo(0, 0) })
+  await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { scrollTo(0, y); await new Promise(r => { setTimeout(r, 120) }) } scrollTo(0, 0) })
   await page.evaluate(`document.documentElement.dataset.expression='vivid'`)
   await page.evaluate(() => document.querySelector('[data-demo="stack"]').scrollIntoView())
   await page.waitForTimeout(2200)

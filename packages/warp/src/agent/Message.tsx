@@ -11,7 +11,7 @@ import '@weft-js/warp-core/styles/app/message.css'
  * The user's turn (07 §1.1): a prompt bubble with edit and copy. `arrive` is a message just sent: it enters and
  * confirms one sweep. Edit opens the bubble as a Textarea in place; saving is `onEdit` (a new branch).
  */
-export function Message({ text, arrive, onEdit }: { text: string; arrive?: boolean; onEdit?: (text: string) => void }) {
+export function Message({ text, arrive, onEdit }: { text: string; arrive?: boolean; onEdit?: ((text: string) => void) | undefined }) {
   const editing = state(false)
   const draft = state('')
   let bubble: HTMLElement | undefined
@@ -28,7 +28,7 @@ export function Message({ text, arrive, onEdit }: { text: string; arrive?: boole
   }
   const save = () => { const t = draft.value.trim(); close(); if (t && t !== text) onEdit?.(t) }
   return (
-    <div ref={(n: any) => (root = n)} data-scope="message" data-mine="" data-arrive={arrive ? '' : undefined}>
+    <div ref={n => (root = n)} data-scope="message" data-mine="" data-arrive={arrive ? '' : undefined}>
       <div data-part="body">
         {editing.value ? (
           <>
@@ -40,7 +40,7 @@ export function Message({ text, arrive, onEdit }: { text: string; arrive?: boole
           </>
         ) : (
           <>
-            <div ref={(n: any) => (bubble = n)} data-part="bubble" data-variant="prompt" data-sweep=""><Sweep />{text}</div>
+            <div ref={n => (bubble = n)} data-part="bubble" data-variant="prompt" data-sweep=""><Sweep />{text}</div>
             <div data-part="status" style="gap:2px">
               {onEdit && <IconButton icon={EditIcon} label="Edit message" onClick={open} />}
               <IconButton icon={CopyIcon} label="Copy" onClick={(e: Event) => copyConfirm(e.currentTarget as Element, text, bubble)} />

@@ -2,13 +2,15 @@ import { UndoIcon, XIcon } from '@weft-js/warp-icons'
 import { paintStrokes, signatureSvg, strokeWidth, uid, type Stroke } from '@weft-js/warp-core'
 import { derived, flush, state, untrack } from '@weft-js/core'
 import { Button } from './Button'
-import { Field, type FieldProps } from './Field'
+import { Field, type FieldShell } from './Field'
 import { bindable, type Bindable } from './Picker'
 import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/signature.css'
 
-export type SignatureValue = { method: 'drawn' | 'typed'; strokes?: Stroke[]; text?: string; svg: string }
-export type SignaturePadProps = Omit<FieldProps, 'value' | 'defaultValue'> & Bindable<SignatureValue | null>
+/** A signature, drawn or typed, with the SVG to show it. */
+export type SignatureValue = { method: 'drawn' | 'typed'; strokes?: Stroke[]; text?: string | undefined; svg: string }
+/** Props for SignaturePad. */
+export type SignaturePadProps = FieldShell & Bindable<SignatureValue | null>
 
 /**
  * SignaturePad (04 §4): a canvas redrawn from its stored points on resize and theme change, with Undo and Clear. Typing
@@ -98,11 +100,11 @@ export function SignaturePad({ value, defaultValue, onValueChange, label, hint, 
           draw()
         }}
         control={() => (
-          <div ref={(n: any) => (pad = n)} data-part="pad">
-            <canvas ref={(n: any) => (canvas = n)} role="img" aria-label={name.value} style={method.value === 'type' ? 'visibility:hidden' : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}></canvas>
+          <div ref={n => (pad = n)} data-part="pad">
+            <canvas ref={n => (canvas = n)} role="img" aria-label={name.value} style={method.value === 'type' ? 'visibility:hidden' : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}></canvas>
             <span data-part="empty"></span>
             <span data-part="baseline" aria-hidden="true">×</span>
-            <input ref={(n: any) => (box = n)} data-part="typed" hidden={method.value !== 'type'} aria-label="Type your full name" placeholder="Type your full name" autocomplete="name" value={typed.value} onInput={e => { typed.value = (e.currentTarget as HTMLInputElement).value; emit() }} />
+            <input ref={n => (box = n)} data-part="typed" hidden={method.value !== 'type'} aria-label="Type your full name" placeholder="Type your full name" autocomplete="name" value={typed.value} onInput={e => { typed.value = (e.currentTarget).value; emit() }} />
           </div>
         )}
       />

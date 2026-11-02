@@ -1,4 +1,4 @@
-import { announce, formatMs, installSweep, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft-js/warp-core'
+import { announce, formatMs, latencyTone, liveState, percentile, transportError, transportSim, uid, whileSeen, worstLive, type LaneId, type LiveState, type TransportBus, type TransportConfig, type TransportNetwork, type TransportPreset, type TransportWire } from '@weft-js/warp-core'
 import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { LiveStatus } from '../parts'
 import { Button } from '../Button'
@@ -18,6 +18,7 @@ const LANES: [LaneId, string][] = [['live', '.live'], ['stream', 'stream'], ['ch
 const BARS = Array.from({ length: 20 }, (_, i) => i)
 
 type Status = string | { value: string } | (() => string)
+/** Props for TransportPicker. */
 export interface TransportPickerProps {
   /** The real statuses to show (`.live`, `stream().status`, `channel.status`); the lanes' figures stay the sandbox's. */
   lanes?: Partial<Record<LaneId, Status>>
@@ -46,7 +47,7 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
   const fallback = derived(() => untrack(() => lanes))
   const stateOf = (k: LaneId): LiveState => {
     const given = fallback.value?.[k]
-    return given !== undefined ? liveState(val(given as any)) : data.value[k].state
+    return given !== undefined ? liveState(val<string>(given)) : data.value[k].state
   }
   const worst = derived(() => worstLive(LANES.map(([k]) => stateOf(k))))
   const error = derived(() => transportError(cfg.value))
@@ -82,7 +83,7 @@ export function TransportPicker({ lanes, bus = 'postgres', wire = 'default', pre
   const drop = () => { if (!sim.drop()) announce(root!.ownerDocument, 'Tabs only has no server connection to drop') }
 
   return (
-    <div ref={(n: any) => (root = n)} data-scope="transport">
+    <div ref={n => (root = n)} data-scope="transport">
       <div data-part="head">
         <h4>{title}</h4>
         <LiveStatus state={worst.value} label="Realtime sandbox">{worst.value === 'live' ? 'All lanes live' : undefined}</LiveStatus>
@@ -151,8 +152,8 @@ function Lane({ name, lane, status }: { name: string; lane: { samples: number[];
       <div data-part="lane-name"><b>{name}</b><small>{lane.wire}</small></div>
       <LiveStatus state={status} />
       <dl data-part="figures">
-        <div><dt>p50</dt><dd data-numeric="" data-tone={latencyTone(p50.value)}>{formatMs(p50.value)}</dd></div>
-        <div><dt>p95</dt><dd data-numeric="" data-tone={latencyTone(p95.value)}>{formatMs(p95.value)}</dd></div>
+        <div><dt>p50</dt><dd data-numeric="" data-tone={latencyTone(p50.value!)}>{formatMs(p50.value!)}</dd></div>
+        <div><dt>p95</dt><dd data-numeric="" data-tone={latencyTone(p95.value!)}>{formatMs(p95.value!)}</dd></div>
         <div><dt>cursor</dt><dd data-numeric="">{lane.cursor}</dd></div>
       </dl>
       <div data-part="bars" aria-hidden="true">{bars.value.map(b => <i key={b.i} data-tone={b.tone} style={`--h:${b.h.toFixed(3)}`}></i>)}</div>

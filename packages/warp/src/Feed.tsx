@@ -3,27 +3,29 @@ import { VirtualList, type VirtualControl } from './VirtualList'
 import './styles'
 import '@weft-js/warp-core/styles/data/timeline.css'
 
+/** One row of a Feed. */
 export interface FeedItem {
   id: string | number
   /** Actor, verb and object: the bold line. */
-  what: any
+  what: unknown
   when?: string
   /** The body, measured. */
   detail?: string
-  tone?: string
+  tone?: string | undefined
 }
 
+/** Props for Feed. */
 export interface FeedProps<T extends FeedItem> {
   items: readonly T[]
   label: string
   height?: string
-  busy?: boolean
+  busy?: boolean | undefined
   /** Near the end: load more. */
-  onEnd?: () => void
-  onDrift?: (index: number, predicted: number, actual: number) => void
-  control?: (c: VirtualControl) => void
+  onEnd?: (() => void) | undefined
+  onDrift?: ((index: number, predicted: number, actual: number) => void) | undefined
+  control?: ((c: VirtualControl) => void) | undefined
   /** An item's whole content. Default: knot, what, when, detail. */
-  children?: (item: () => T) => any
+  children?: (item: () => T) => unknown
 }
 
 /** A long activity feed (07 §4): the APG feed pattern on a window. Page Down and Up move between articles. */

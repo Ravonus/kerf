@@ -12,6 +12,7 @@ import { ToolCall } from './ToolCall'
 import '../styles'
 import '@weft-js/warp-core/styles/app/assistant.css'
 
+/** Props for Assistant. */
 export interface AssistantProps {
   /** The folded value: `foldAnswer(events)`, or what a stream folds to. */
   answer: Answer
@@ -19,29 +20,33 @@ export interface AssistantProps {
   n?: number
   arrive?: boolean
   /** Was there on load: approvals and questions take no focus and announce nothing. */
-  quiet?: boolean
+  quiet?: boolean | undefined
   /** Render a block of answer text yourself (Markdown, say); the default is `Prose`. */
-  render?: (text: string, answer: Answer) => any
+  render?: (text: string, answer: Answer) => unknown
   onApprove?: (tool: AgentTool, args: string, always: boolean) => void
   onDeny?: (tool: AgentTool) => void
   alwaysAllow?: (tool: AgentTool) => string | undefined
   onAnswer?: (id: string, answer: string | string[]) => void
-  onFeedback?: (value: Feedback, reason?: string) => void
-  onRegenerate?: () => void
-  onBranch?: () => void
-  branch?: { index: number; count: number; onChange: (index: number) => void }
+  onFeedback?: ((value: Feedback, reason?: string) => void) | undefined
+  onRegenerate?: (() => void) | undefined
+  onBranch?: (() => void) | undefined
+  branch?: { index: number; count: number; onChange: (index: number) => void } | undefined
 }
 
-function Block({ block, base, p }: { block: any; base: string; p: AssistantProps }) {
+type Thought = Extract<AnswerBlock, { kind: 'reasoning' }>
+type Said = Extract<AnswerBlock, { kind: 'text' }>
+type Asked = Extract<AnswerBlock, { kind: 'question' }>
+
+function Block({ block, base, p }: { block: AnswerBlock; base: string; p: AssistantProps }) {
   const tool = derived(() => p.answer.tools.find(t => t.id === block.id))
-  const kind = derived(() => block.kind as AnswerBlock['kind'])
+  const kind = derived(() => block.kind)
   // once per kind: a row's nodes are read again whenever the list changes
   const view = derived(() => {
     const k = kind.value
     return untrack(() => {
-      if (k === 'reasoning') return <Reasoning text={block.text} streaming={block.streaming} seconds={block.seconds} />
-      if (k === 'text') return p.render ? <>{p.render(block.text, p.answer)}</> : <Prose text={block.text} sources={p.answer.sources} base={base} />
-      if (k === 'question') return <Question question={block.question} quiet={p.quiet} onAnswer={a => p.onAnswer?.(block.id, a)} />
+      if (k === 'reasoning') return <Reasoning text={(block as Thought).text} streaming={(block as Thought).streaming} seconds={(block as Thought).seconds} />
+      if (k === 'text') return p.render ? <>{p.render((block as Said).text, p.answer)}</> : <Prose text={(block as Said).text} sources={p.answer.sources} base={base} />
+      if (k === 'question') return <Question question={(block as Asked).question} quiet={p.quiet} onAnswer={a => p.onAnswer?.(block.id, a)} />
       return <ToolCall call={tool.value!} quiet={p.quiet} alwaysAllow={p.alwaysAllow?.(tool.value!)} onApprove={(a, al) => p.onApprove?.(tool.value!, a, al)} onDeny={() => p.onDeny?.(tool.value!)} />
     })
   })
@@ -70,7 +75,7 @@ export function Assistant(p: AssistantProps) {
     })
   })
   return (
-    <article ref={(n: any) => (root = n)} data-scope="assistant" data-state={st.value} aria-label={p.n !== undefined ? `Assistant answer ${p.n}` : 'Assistant answer'} aria-busy={busy.value ? 'true' : undefined} data-arrive={p.arrive ? '' : undefined}>
+    <article ref={n => (root = n)} data-scope="assistant" data-state={st.value} aria-label={p.n !== undefined ? `Assistant answer ${p.n}` : 'Assistant answer'} aria-busy={busy.value ? 'true' : undefined} data-arrive={p.arrive ? '' : undefined}>
       <span data-part="mark"><SparkleIcon /></span>
       <div data-part="content">
         {empty.value && <p></p>}

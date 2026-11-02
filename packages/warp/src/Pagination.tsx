@@ -9,8 +9,9 @@ import '@weft-js/warp-core/styles/data/base.css'
 import '@weft-js/warp-core/styles/data/pagination.css'
 import '@weft-js/warp-core/styles/data/load-more.css'
 
+/** Props for PaginationBar. */
 export type PaginationBarProps = {
-  label?: string
+  label?: string | undefined
   /** offset (default): numbered pages. cursor: Previous and Next, for a list with no page count. */
   mode?: 'offset' | 'cursor'
   /** 1-based. */
@@ -19,7 +20,7 @@ export type PaginationBarProps = {
   onPageChange?: (page: number) => void
   /** offset: how many rows there are. */
   total?: number
-  size?: State<number> | number
+  size?: State<number> | number | undefined
   sizes?: number[]
   onSizeChange?: (size: number) => void
   /** cursor */
@@ -28,7 +29,7 @@ export type PaginationBarProps = {
   pageIndex?: number
   supply?: number
   totalFetched?: number
-  locale?: string
+  locale?: string | undefined
 }
 
 /**
@@ -71,10 +72,10 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   const id = uid('pg')
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
   return (
-    <nav ref={(n: any) => (nav = n)} data-scope="pagination" aria-label={label}>
+    <nav ref={n => (nav = n)} data-scope="pagination" aria-label={label}>
       <label data-part="field">
         <span>Rows per page</span>
-        <select value={String(per.value)} onChange={(e: any) => { per.set(+e.currentTarget.value); at.set(1) }}>{sizes.map(s => <option key={s} value={String(s)} selected={s === per.value}>{s}</option>)}</select>
+        <select value={String(per.value)} onChange={(e: Event) => { per.set(+(e.currentTarget as HTMLSelectElement).value); at.set(1) }}>{sizes.map(s => <option key={s} value={String(s)} selected={s === per.value}>{s}</option>)}</select>
       </label>
       <span>{`${fmt(first.value)}–${fmt(Math.min(total, current.value * per.value))} of ${fmt(total)}`}</span>
       <span data-part="spacer"></span>
@@ -93,12 +94,12 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
  * Load more (06 §8): a sentinel watched with a 120px margin, and a button that is always there as the fallback. Set
  * `loading` while a page is on its way (the list shows its skeletons and `aria-busy`); `done` swaps in the end message.
  */
-export function LoadMore({ onLoad, loading, done, message, auto = true, root }: { onLoad: () => void; loading?: boolean; done?: boolean; message?: any; auto?: boolean; root?: () => HTMLElement | null }) {
+export function LoadMore({ onLoad, loading, done, message, auto = true, root }: { onLoad: () => void; loading?: boolean | undefined; done?: boolean; message?: unknown; auto?: boolean; root?: (() => HTMLElement | null) | undefined }) {
   let el: HTMLDivElement | undefined
   const reach = () => { if (auto && !loading && !done) onLoad() }
   use(infiniteScroll, () => el, () => ({ onReach: reach, root: root?.() }))
   return (
-    <div ref={(n: any) => (el = n)} data-scope="load-more">
+    <div ref={n => (el = n)} data-scope="load-more">
       <span aria-live="polite">{loading ? 'Loading…' : message}</span>
       {!done && <Button emphasis="outline" tone="neutral" disabled={!!loading} onClick={onLoad}>Load more</Button>}
     </div>

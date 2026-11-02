@@ -9,20 +9,21 @@ import '@weft-js/warp-core/styles/components/popover.css'
 import '@weft-js/warp-core/styles/app/avatar-stack.css'
 import '@weft-js/warp-core/styles/app/event-card.css'
 
+/** Props for EventPopover. */
 export type EventPopoverProps = {
   event: CalEvent | null
   open: State<boolean>
   /** The element it hangs from; focus returns there. */
   anchor: () => HTMLElement | undefined
   /** "New York (EDT)". */
-  zoneLabel?: string
-  locale?: string
-  hourCycle?: string
-  side?: Side
+  zoneLabel?: string | undefined
+  locale?: string | undefined
+  hourCycle?: string | undefined
+  side?: Side | undefined
   align?: Align
-  onEdit?: (e: CalEvent) => void
-  onDelete?: (e: CalEvent) => void
-  onJoin?: (e: CalEvent) => void
+  onEdit?: ((e: CalEvent) => void) | undefined
+  onDelete?: ((e: CalEvent) => void) | undefined
+  onJoin?: ((e: CalEvent) => void) | undefined
 }
 
 /** The event card (07 §2.1, `#ev-pop`): a non-modal dialog on the event; Escape returns to it. */
@@ -39,7 +40,7 @@ export function EventPopover(p: EventPopoverProps) {
   use(popover, () => panel, () => ({ open: p.open.value, trigger: p.anchor()!, side: p.side ?? 'right', align: p.align ?? 'start', onClose: close }))
   const act = (f?: (e: CalEvent) => void) => () => { const e = p.event!; close(); f?.(e) }
   return (
-    <div ref={(n: any) => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Event details">
+    <div ref={n => (panel = n)} data-scope="popover" data-part="content" popover="manual" role="dialog" aria-label="Event details">
       {p.event && (
         <div data-scope="event-card" data-cal={p.event.cal ?? 1}>
           <h4 data-part="title">{p.event.title}</h4>
