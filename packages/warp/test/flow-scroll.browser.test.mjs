@@ -143,3 +143,31 @@ test('a component\'s own translate and scale still apply at rest, and no transit
   expect(running).toBe(0)
   await close()
 })
+
+test.each(['quiet', 'balanced', 'vivid'])('%s: leaving text stays readable down to the sticky header, then goes', async expression => {
+  for (const height of [120, 420, 2000]) {
+    const { page, close } = await stage(`${ABOVE}<div data-flow="card" id="card" style="block-size:${height}px"></div>${BELOW}`, { expression, head: ':root { --warp-flow-top: 57px }' })
+    const bottom = at => scroll(page, 900 + height - at).then(() => style(page, 'card', 'opacity')).then(Number)
+    expect(await bottom(58), `${height} at the header`).toBeGreaterThan(0.55)
+    await close()
+  }
+})
+
+test('nothing at rest has started to leave, and a leaving block visibly does', async () => {
+  const { page, close } = await stage(`<div style="block-size:60px"></div><div data-flow="card" id="card" style="block-size:300px"></div>${ABOVE}${BELOW}`, { expression: 'vivid' })
+  await scroll(page, 0)
+  expect(+(await style(page, 'card', 'opacity'))).toBe(1)
+  await scroll(page, 330)                    // its last 30px are under a bar it can't see: the fade has run on
+  expect(+(await style(page, 'card', 'opacity'))).toBeLessThan(0.75)
+  await close()
+})
+
+test('inside a flowed element only the outer one leaves, so the fade does not multiply', async () => {
+  const { page, close } = await stage(`${ABOVE}<div data-flow="card" id="outer" style="block-size:400px"><div style="block-size:300px"></div><figure data-scope="codeblock" id="inner" style="margin:0;block-size:100px"></figure></div>${BELOW}`, { expression: 'vivid' })
+  const names = (await timelines(page, 'inner')).map(t => t.name)
+  expect(names).toContain('warp-out-none')
+  await scroll(page, 900 + 400 - 80)
+  expect(+(await style(page, 'inner', 'opacity'))).toBe(1)
+  expect(+(await style(page, 'outer', 'opacity'))).toBeLessThan(0.9)
+  await close()
+})
