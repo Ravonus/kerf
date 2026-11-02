@@ -98,6 +98,21 @@ test('the gates hold: reduced motion, print, focus and the 120-sibling cap', asy
   await close()
 })
 
+test('a Shell deep in the page gates its own host, not the page: flow keeps running past it', async () => {
+  // the /components hub: a Shell thumbnail ~2,500px down holds a hidden scrim, and every tile below it stopped moving
+  const { page, close } = await stage(`<div style="block-size:900px"></div>
+    <div data-flow="tile" id="thumb"><div data-scope="shell" id="shell"><nav></nav><div data-part="scrim" hidden></div></div></div>
+    ${Array.from({ length: 6 }, (_, i) => `<div data-flow="card" id="after-${i}" style="block-size:200px">Card ${i}</div>`).join('')}
+    <div style="block-size:3000px"></div>`)
+  const gate = id => page.evaluate(i => getComputedStyle(i ? document.getElementById(i) : document.documentElement).getPropertyValue('--warp-flow-gate').trim(), id)
+  expect(await gate(null)).toBe('')
+  expect(await gate('after-5')).toBe('')
+  expect(await gate('thumb')).toBe('')
+  expect(await gate('shell')).toBe('none') // the scrim's own host still stays out
+  expect((await timelines(page, 'after-5')).length).toBeGreaterThan(0)
+  await close()
+})
+
 const ABOVE = `<div style="block-size:900px"></div>`
 const BELOW = `<div style="block-size:3000px"></div>`
 async function stage(body, { expression = 'balanced', head = '' } = {}) {

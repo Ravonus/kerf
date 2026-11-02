@@ -1413,8 +1413,10 @@
   :where(dialog, [popover], [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"], [role="alert"], [role="status"],
     [data-scope="sheet"], [data-scope="drawer"], [data-scope="toast"], [data-scope="tour"], [data-scope="palette"], [data-scope="shell"] > [data-part="nav"],
     [data-scope="scroll-grid"], [data-scope="sortable"], [data-scope="carousel"], :has(> [data-part="spacer"]), [data-dragging], thead, [data-sticky],
-    /* a flowed element is a containing block for position: fixed while it moves, so hosts of non-top-layer fixed parts stay out */
-    :has(> [data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"])) { --warp-flow-gate: none; }
+    /* a flowed element is a containing block for position: fixed while it moves, so hosts of non-top-layer fixed parts stay
+       out. Their hosts only, each one a direct child: a bare `[data-part="scrim"]` in :has() matched every ancestor up to
+       html, so one Shell anywhere on a page (a hub thumbnail) silenced the whole page's flow. */
+    :has(> :is([data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"]))) { --warp-flow-gate: none; }
   /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
   :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
 }
