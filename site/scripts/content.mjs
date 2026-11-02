@@ -612,6 +612,11 @@ const demoHtml = f => {
   const html = highlight(text, 'tsx').replace(/<span data-part="line">/g, tag => (before && lines[++n].trim() && !before.has(lines[n]) ? '<span data-part="line" data-new="">' : tag))
   return `<pre tabindex="0"><code>${html}</code></pre>`
 }
+// The arena's frames are built by arena/build.mjs and aren't in git. Without them the site says so instead of framing 404s.
+const framed = name => existsSync(join(site, 'public/arena', name, 'index.html'))
+const arena = { frames: ['weft', 'solid', 'react'].every(framed), graph: framed('graph') }
+if (!arena.frames || !arena.graph) console.warn('[content] arena not built: its demos will say so. Run `npm ci` in site/arena, then `node arena/build.mjs`.')
+write('arena-built.json', arena)
 write('demos.json', Object.fromEntries(readdirSync(join(site, 'src/demos')).filter(f => f.endsWith('.tsx')).map(f => [f.slice(0, -4), demoHtml(f)])))
 write('numbers.json', numbers())
 write('docs-nav.json', docs.nav)
