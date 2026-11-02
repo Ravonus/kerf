@@ -152,20 +152,38 @@ describe('node preset, end to end', () => {
     }
   }, 30_000)
 
-  test('a CSP that refuses inline handlers still gets every deferred sheet', async () => {
+  /** The page with this policy on it, the document only, as a host would send it. */
+  async function under(policy, path) {
     const { chromium } = createRequire(import.meta.url)('playwright-core')
     const browser = await chromium.launch()
+    const page = await browser.newPage()
+    await page.route(url => url.pathname === path, async route => {
+      const res = await route.fetch()
+      await route.fulfill({ response: res, headers: { ...res.headers(), 'content-security-policy': policy } })
+    })
+    return { page, browser }
+  }
+
+  test('a CSP that refuses inline scripts still gets every deferred sheet', async () => {
+    expect(await (await fetch(server.url + '/late-css')).text()).toContain('media="print"')
+    const { page, browser } = await under("script-src 'self'", '/late-css')
     try {
-      const page = await browser.newPage()
-      expect(await (await fetch(server.url + '/late-css')).text()).toContain('media="print"')
-      await page.route(url => url.pathname === '/late-css', async route => {
-        const res = await route.fetch()
-        await route.fulfill({ response: res, headers: { ...res.headers(), 'content-security-policy': "script-src-attr 'none'" } })
-      })
       await page.goto(server.url + '/late-css')
       await page.waitForFunction(() => !document.querySelector('link[media="print"]'), undefined, { timeout: 5000 })
       await page.hover('#late')
       expect(await page.$eval('#late', n => getComputedStyle(n).color)).toBe('rgb(4, 5, 6)')
+    } finally {
+      await browser.close()
+    }
+  }, 30_000)
+
+  test('a CSP that refuses inline styles still gets the sheets of a page that inlined them whole', async () => {
+    const { page, browser } = await under("style-src 'self'", '/styled')
+    try {
+      await page.goto(server.url + '/styled')
+      await page.waitForFunction(() => !document.querySelector('style+link[disabled]'), undefined, { timeout: 5000 })
+      await page.waitForFunction(() => [...document.querySelectorAll('link[rel=stylesheet]')].every(l => l.sheet), undefined, { timeout: 5000 })
+      expect(await page.$eval('.styled', n => getComputedStyle(n).color)).toBe('rgb(1, 2, 3)')
     } finally {
       await browser.close()
     }

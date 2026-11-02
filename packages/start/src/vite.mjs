@@ -28,7 +28,7 @@
 // { inlineCss: false }` keeps plain links.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from 'node:fs'
-import { LATE_SHEETS } from './inline.mjs'
+import { LATE_SHEETS, REFUSED_SHEETS } from './inline.mjs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -405,7 +405,7 @@ function clientRoutes(manifest, abs, plan) {
  * First in any entry, an app's own too. The page's inline script is the fast path and a CSP can refuse it, so a page
  * that runs at all never stays on its first-paint rules.
  */
-const ENTRY_SHEETS = `${LATE_SHEETS}\n`
+const ENTRY_SHEETS = `${LATE_SHEETS}\n${REFUSED_SHEETS}\n`
 
 /**
  * weft's own packages from an install, as one chunk of icons and one of what two routes share. Left alone they're a chunk

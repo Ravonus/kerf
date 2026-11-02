@@ -194,6 +194,8 @@ function criticalCss(sheets, found, { parse, purge }) {
  * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script.
  */
 export const LATE_SHEETS = `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>a.forEach(l=>l.media='all')))([...document.querySelectorAll('link[data-late]')])`
+/** The client entry's second chance: a `<style>` a CSP refused has no sheet, so the disabled link beside it is all that's left. */
+export const REFUSED_SHEETS = `document.querySelectorAll('style+link[disabled]').forEach(l=>{l.previousElementSibling.sheet||(l.disabled=false)})`
 // Put the `<style>` before this script in front of the head's first link.
 const MOVE = `(s=>{var d=document,l=d.head.querySelector('link[rel=stylesheet]');l&&l.before(s)})(document.currentScript.previousElementSibling)`
 const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
