@@ -9,8 +9,11 @@ type Set = Record<string, [string, string]>
 const TIERS = [{ value: 'quiet', label: 'Quiet' }, { value: 'balanced', label: 'Balanced' }, { value: 'vivid', label: 'Vivid' }]
 const FORMS = [{ value: 'hollow', label: 'Hollow' }, { value: 'solid', label: 'Solid' }]
 const SIZES = [{ value: '16', label: '16' }, { value: '24', label: '24' }, { value: '32', label: '32' }]
-/** Each size gets a cell that fits it: the drawing, and a name over two lines. */
-const CELL: Record<string, { width: number; height: number }> = { '16': { width: 96, height: 84 }, '24': { width: 112, height: 92 }, '32': { width: 128, height: 100 } }
+/**
+ * Each size gets a cell that fits it: the drawing, and a name over two lines. A name breaks only after a hyphen, so the
+ * narrowest cell still holds the longest single word, "accessibility", whole.
+ */
+const CELL: Record<string, { width: number; height: number }> = { '16': { width: 112, height: 84 }, '24': { width: 120, height: 92 }, '32': { width: 128, height: 100 } }
 const pascal = (n: string) => n.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
 const svg = (inner: string) => `<svg data-icon viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`
 

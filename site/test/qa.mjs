@@ -143,15 +143,20 @@ await check('icon sizes reach the drawings', '/icons', async page => {
   for (const size of ['16', '24', '32']) {
     await page.locator(`[data-site="icons"] input[value="${size}"]`).click()
     await page.waitForTimeout(300)
-    const { drawn, cut } = await page.evaluate(() => {
+    const { drawn, cut, split } = await page.evaluate(() => {
       const cells = [...document.querySelectorAll('[data-site="icons"] [data-part="cell"]')]
+      // Each piece of a name between hyphens is its own text node: one that takes two lines broke mid-word.
+      const range = document.createRange()
+      const broken = n => [...n.childNodes].some(t => { if (t.nodeType !== 3) return false; range.selectNodeContents(t); return new Set([...range.getClientRects()].map(r => Math.round(r.top))).size > 1 })
       return {
         drawn: cells[0].querySelector('svg').getBoundingClientRect().width,
         cut: cells.filter(c => { const n = c.querySelector('[data-part="name"]'); return n.scrollWidth > n.clientWidth + 1 || n.getBoundingClientRect().bottom > c.getBoundingClientRect().bottom + 1 }).map(c => c.ariaLabel),
+        split: cells.filter(c => broken(c.querySelector('[data-part="name"]'))).map(c => c.ariaLabel),
       }
     })
     same(drawn, size, `drawn at ${size}`)
     same(cut.join(), '', `names cut at ${size}`)
+    same(split.join(), '', `names broken mid-word at ${size}`)
   }
 })
 // API tables: on a phone each prop stacks (no sideways scroll, no description pushed off the side); everywhere,
