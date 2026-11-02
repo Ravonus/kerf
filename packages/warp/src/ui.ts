@@ -2,7 +2,8 @@
 // component that never gets a `ui` carries none of it.
 //
 // A lit row is `data-hold`, warp's existing word for "drawn active with no pointer on it", so no component needs a new
-// rule. `data-remote` says only someone else has it, for whoever wants to tint that.
+// rule. `data-remote` says only someone else has it, for whoever wants to tint that. `data-press` is a press from
+// anywhere, drawn as `:active` is, so a press shows in the other pane, tab or client and not just as a hover.
 import { interact } from '@weft-js/warp-core'
 import { createRoot, effect } from '@weft-js/core'
 import { seams } from '@weft-js/core/interaction'
@@ -18,7 +19,8 @@ seams.attach = (el, ui) => {
       el.toggleAttribute('data-hold', lit > 0)
       el.toggleAttribute('data-remote', lit === 1)
     })
+    effect(() => ui.pressed.value || ui.remote.value.pressed > 0, on => el.toggleAttribute('data-press', on))
     return dispose
   }, null)
-  return { update() {}, destroy() { real.destroy(); stop(); el.removeAttribute('data-hold'); el.removeAttribute('data-remote') } }
+  return { update() {}, destroy() { real.destroy(); stop(); el.removeAttribute('data-hold'); el.removeAttribute('data-remote'); el.removeAttribute('data-press') } }
 }
