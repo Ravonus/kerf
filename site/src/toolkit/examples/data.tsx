@@ -263,9 +263,9 @@ const SPEND: Spend[] = [
 ]
 
 const SPEND_COLUMNS: GridColumn<Spend>[] = [
-  { id: 'name', header: 'Team and project' },
-  { id: 'deploys', header: 'Deploys', numeric: true, aggregate: 'sum' },
-  { id: 'cost', header: 'Cost', numeric: true, aggregate: 'sum', format: money },
+  { id: 'name', header: 'Team and project', sort: true },
+  { id: 'deploys', header: 'Deploys', numeric: true, sort: true, aggregate: 'sum' },
+  { id: 'cost', header: 'Cost', numeric: true, sort: true, aggregate: 'sum', format: money },
 ]
 
 const OWN_KIDS: GridTree<Spend> = {}
