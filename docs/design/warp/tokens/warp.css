@@ -101,6 +101,18 @@
 @property --_a { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 @property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+/* the sweep's clocks (warp.signature §1): linear counters, in sweeps, that the edges are worked out from */
+@property --_kc { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_kh { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_ks { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_kx { syntax: "<number>"; inherits: false; initial-value: 3; }
+@property --_kw { syntax: "<number>"; inherits: false; initial-value: 1.5; }
+@property --_hp { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_tp { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_tq { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_c0 { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_hd { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_td { syntax: "<number>"; inherits: false; initial-value: 1; }
 @property --warp-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 620ms; }
 @layer warp.tokens {
 
@@ -942,7 +954,7 @@
 /* ===========================================================================
    SIGNATURE · the sweep border + the floating border label.  Every stop.
    Source of truth: ../SIGNATURE.md.
-     --_a is 1 while a host is active; two registered edges do the rest, so a part has no states. It draws L→R, leaves L→R,
+     --_a is 1 while a host is active; each part's clocks do the rest (§1), so a part has no states. It draws L→R, leaves L→R,
      and never reverses. Duration 0 (reduced motion) makes every change instant, with the same end states.
    Hosts: [data-sweep]. Set --warp-sweep-radius to the host's corner radius
    (clip-path `round` must match it). --_on gates decorative hosts (0 = fade).
@@ -960,21 +972,43 @@
          :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
          dialog[data-scope="palette"][open] > [data-sweep], [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
 
-  /* -- 1 · two edges. Each has one job, so a part needs no states. Active: the right edge draws across on the "in" curve
-     while the left stands at 0. Inactive: the left edge follows it out on the out curve, and the right edge waits that long,
-     then resets out of sight. It never reverses, and leaving part way only means the left edge catches up sooner. */
-  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-label"], [data-part="sweep-content"], [data-part="rail-hover"]) {
-    --_sl: calc((1 - var(--_a, 0)) * 100%); --_sr: calc((1 - var(--_a, 0)) * 100%);
-    --_edges: --_sl calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
-              --_sr calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
-              --_a 0s linear var(--_latch, 0s);
+  /* -- 1 · two edges, worked out from clocks. Once the stroke starts it draws all the way round, even when the host lets
+     go part way, and only then leaves. It draws L→R, leaves L→R and never reverses. An edge can't be a transition of its
+     own (a transition retargets the moment the host lets go), so each part runs linear clocks, counted in sweeps, and
+     works the edges out from them. The head is how far the stroke has drawn, the tail how far it has left (0…1):
+       --_kc  sweeps since the host went active (to 3); holds two sweeps after it lets go, then resets
+       --_kh  the same, but holds one sweep: it says the last hover was long (> 0.55 sweep) and recent (--_kk)
+       --_ks  sweeps since the host went active (to 3); 0 the moment it lets go
+       --_kx  sweeps since the host let go (to 3); 0 the moment it goes active
+       --_kw  sweeps since the host let go (to 1.5); runs back down to 0 at 3 per sweep when it goes active
+     A fresh hover draws on --_ks. Let go after a short hover, the stroke keeps drawing on --_kc + --_kx (time since it
+     went active), then leaves. Let go after a long one, it leaves at once on --_kw. Back again mid-exit, --_kw runs down,
+     so the tail draws back round to the start and the stroke is whole again. --_kc and --_kh restart from what they held,
+     so --_c0 and --_h0 work that value back out. Every clock stops within three sweeps. The head is on the "in" curve, the
+     tail on the out curve. Duration 0 (reduced motion) makes every clock instant, with the same end states. */
+  :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-outline"], [data-part="sweep-label"], [data-part="sweep-content"], [data-part="rail-hover"]) {
+    --_kc: calc(var(--_a, 0) * 3); --_kh: calc(var(--_a, 0) * 3); --_ks: calc(var(--_a, 0) * 3);
+    --_kx: calc((1 - var(--_a, 0)) * 3); --_kw: calc((1 - var(--_a, 0)) * 1.5);
+    --_c0: calc((var(--_kc) - var(--_ks)) / max(0.0001, 1 - var(--_ks) / 3));
+    --_kk: clamp(0, ((var(--_kh) - var(--_ks)) / max(0.0001, 1 - var(--_ks) / 3) - 0.55) * 1000 + 1, 1);
+    --_hp: calc(var(--_kk) * clamp(0, var(--_kc) + var(--_kw) + 3 * var(--_ks), 1)
+              + (1 - var(--_kk)) * clamp(0, var(--_ks) + (1 - var(--_a, 0)) * (var(--_kc) + var(--_kx)), 1));
+    /* the tail: after a long hover --_tq, where it stood when the host came back (--_kw + 3·--_ks is --_kw then), and the
+       gap closes in step with --_kw; otherwise --_tp */
+    --_tq: clamp(0, min(var(--_kw) + 3 * var(--_ks), var(--_c0) + var(--_kw) + 3 * var(--_ks) - 1), 1);
+    --_tp: clamp(0, (1 - var(--_a, 0)) * (var(--_kc) + var(--_kx) - 1), 1);
+    /* the curves as polynomials: --warp-sweep-ease-in (head) and --warp-sweep-ease (tail), to within ~2% */
+    --_hd: calc(1 - (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 + 2.95 * var(--_hp) - 0.7 * var(--_hp) * var(--_hp)));
+    --_td: calc(var(--_kk) * (min(4 * var(--_tq) * var(--_tq) * var(--_tq), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tq)) * (1 - var(--_tq)) * (1 - var(--_tq))))
+                 * var(--_kw) / max(0.0001, var(--_kw) + 3 * var(--_ks))
+              + (1 - var(--_kk)) * (min(4 * var(--_tp) * var(--_tp) * var(--_tp), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tp)) * (1 - var(--_tp)) * (1 - var(--_tp)))));
+    --_sl: calc(var(--_td) * 100%); --_sr: calc((1 - var(--_hd)) * 100%);
+    --_edges: --_kc calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * 2 * var(--warp-sweep-duration)),
+              --_kh calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
+              --_ks calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear,
+              --_kx calc((1 - var(--_a, 0)) * 3 * var(--warp-sweep-duration)) linear,
+              --_kw calc(((1 - var(--_a, 0)) * 1.5 + var(--_a, 0) * 0.5) * var(--warp-sweep-duration)) linear;
     transition: var(--_edges);
-  }
-  /* A tap's :active is over in a blink. Each part keeps its --_a for one sweep past it, so a tap draws in whole, then exits. */
-  @media (hover: none) {
-    :where([data-part="sweep"], [data-part="sweep-base"], [data-part="sweep-fill"], [data-part="sweep-corners"], [data-part="sweep-outline"], [data-part="sweep-label"], [data-part="sweep-content"]) {
-      --_latch: calc((1 - var(--_a, 0)) * 1.25 * var(--warp-sweep-duration));
-    }
   }
   /* two stacked 1px borders (or any content, e.g. an icon) */
   :where([data-part="sweep"], [data-part="sweep-base"]) {
@@ -1062,10 +1096,7 @@
   :where([data-part="sweep-outline"]) {
     position: absolute; inset: 0; z-index: 0; pointer-events: none;
     container-type: size;               /* its children measure it: 100cqw × 100cqh */
-    --warp-frame-tail: calc(1 - var(--_a, 0)); --warp-frame-head: var(--_a, 0); opacity: var(--_on);
-    transition: --warp-frame-tail calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)) var(--warp-sweep-ease),
-                --warp-frame-head calc(var(--_a, 0) * var(--warp-sweep-duration)) var(--warp-sweep-ease-in) calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
-                --_a 0s linear var(--_latch, 0s);
+    --warp-frame-tail: var(--_td); --warp-frame-head: var(--_hd); opacity: var(--_on);
   }
   /* each segment: offset o along the route, length n; route length L = w + h
      (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
