@@ -239,7 +239,7 @@
 :where([data-scope="calendar"] [data-part="event"][data-short]) { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 2px; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; flex: 0 1 auto; }   /* a flex item: without min 0 it never shrinks to its ellipsis */
 /* a short event on one line: the times give way before the name does */
-:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex-shrink: 12; }
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex-shrink: 1000; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; overflow: clip; text-overflow: ellipsis; min-inline-size: 0; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-start"]) { display: none; font: 500 10.5px/1.2 var(--warp-font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: clip; }
 :where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--warp-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }

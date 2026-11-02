@@ -481,7 +481,7 @@ await check('bubble toolbar takes a click and follows the selection', '/componen
 await check('palette Esc steps back before it closes', '/components/command-palette', async page => {
   const sec = page.locator('section#CommandPaletteNested')
   await sec.scrollIntoViewIfNeeded()
-  await sec.locator('button').first().click()
+  await sec.locator('button', { hasText: 'Search commands' }).click()
   const input = page.locator('dialog[open] [role="combobox"]')
   await input.waitFor()
   const open = () => page.evaluate(() => !!document.querySelector('dialog[data-scope="palette"][open]'))
@@ -503,7 +503,7 @@ await check('palette Esc steps back before it closes', '/components/command-pale
 })
 // A phone week keeps seven readable days and scrolls sideways; the all-day event keeps its name; month chips ellipsize.
 await check('calendar week reads on a phone', '/components/calendar', async page => {
-  const sec = page.locator('section#CalendarWeek')
+  const sec = page.locator('section#preview') // the Editable week
   await sec.scrollIntoViewIfNeeded()
   await sec.locator('[data-part="col"]').first().waitFor()
   await page.waitForTimeout(300)
