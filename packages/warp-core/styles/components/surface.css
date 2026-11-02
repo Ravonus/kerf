@@ -1,6 +1,6 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.components {
-/* -- Surface (card / panel / stat): interactive ones always sweep; static ones at vivid */
+/* -- Surface (card / panel / stat): none sweeps by default, at any stop; Card's `sweep` prop (data-sweep) opts in */
 :where([data-scope="surface"]) {
   position: relative; display: grid; gap: var(--warp-space-related); padding: var(--warp-pad-surface);
   background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-surface-line);

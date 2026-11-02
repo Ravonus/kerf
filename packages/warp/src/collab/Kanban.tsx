@@ -47,7 +47,7 @@ function Card({ card, ctx }: { card: KanbanCardData; ctx: Ctx }) {
   }
   const at = () => findCard(ctx.board(), card.id)
   return (
-    <div ref={(n: any) => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
+    <div ref={(n: any) => (el = n)} data-part="card" data-virtual="" data-focus="" data-sweep="surface" tabindex="0" draggable="true" data-id={card.id} aria-label={card.title} aria-describedby={ctx.hint}>
       <SWEEP />
       <h4 data-measure="">{card.title}</h4>
       {hasFooter(card) && (

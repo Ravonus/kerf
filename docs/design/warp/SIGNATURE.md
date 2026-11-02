@@ -146,7 +146,12 @@ Sweep-vs-base ≥ 3:1 stays mandatory for fields and controls, which is where it
 | Floating label + notch | yes | yes | yes |
 | Per-character label tint | yes (subtle by colour) | yes | yes |
 | Icon sweep | yes | yes | yes |
-| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | the same, plus the two-colour button fill. Static cards and panels never sweep; a card you can press does, at every stop |
+| Surfaces that sweep by default | inputs and controls | inputs, controls, buttons | the same, plus the two-colour button fill |
+
+**Surfaces opt in.** Cards, panels, list rows, tiles, stat rows and clickable cards never sweep by default, at any
+stop. The kit marks them `data-sweep="surface"`: the parts are there, and only `data-flair="sweep"` lights them. Any
+other `data-sweep` on a surface is an explicit opt-in and sweeps at every stop; `<Card sweep>` writes it, and
+`sweep={false}` leaves the parts out.
 
 **Reduced motion:**
 - The sweep becomes an instant border-colour change.

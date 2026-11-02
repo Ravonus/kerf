@@ -34,6 +34,8 @@
 :where([data-scope="surface"], [data-scope="menu"][data-part="content"], [data-scope="select"][data-part="content"],
        [data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
 :where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="surface"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 /* warp.signature styles every [data-part="content"] as the frame button's inline-flex label.
    Components use "content" for panels too (menu, popover, tabs, accordion), so reset it here
    for everything except a button's own content; later component rules set their real display. */
@@ -449,7 +451,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="chip"][aria-pressed="true"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
 :where([data-scope="chip"][aria-pressed="true"] > svg[data-icon]) { display: block; }
 
-/* -- Surface (card / panel / stat): interactive ones always sweep; static ones at vivid */
+/* -- Surface (card / panel / stat): none sweeps by default, at any stop; Card's `sweep` prop (data-sweep) opts in */
 :where([data-scope="surface"]) {
   position: relative; display: grid; gap: var(--warp-space-related); padding: var(--warp-pad-surface);
   background: var(--warp-color-surface-raised); border: var(--warp-border-hairline) solid var(--warp-color-surface-line);

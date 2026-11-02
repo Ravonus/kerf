@@ -286,7 +286,7 @@ const catalog = [
   ['Segmented', 'Radio group with a sliding face'],
   ['Chip', 'Filter chip (aria-pressed)'],
   ['Tabs', 'Tablist (line, pill, enclosed) with panels'],
-  ['Card', 'Surface: eyebrow, title, body; interactive cards sweep'],
+  ['Card', 'Surface: eyebrow, title, body; sweeps only with the sweep prop'],
   ['Badge', 'Status or count; status dot'],
   ['Tag', 'User label, removable'],
   ['Kbd', 'One keyboard key'],

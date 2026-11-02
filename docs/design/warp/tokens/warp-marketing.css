@@ -404,7 +404,8 @@
 
 /* Surfaces that sweep (tile, plan, lobby, listing) follow SIGNATURE §3 and the surfaces exception:
    they rest on the hairline (the sweep-base IS the border, so there is no box-in-box), and the sweep
-   draws by default only where the dial reaches surfaces (vivid, or data-flair="sweep"). Below that the
+   never draws by default, at any stop: data-flair="sweep" shows it, and a host opts in with data-sweep (any value but
+   "surface"). Without it the
    hover is the hairline darkening to border-strong plus one elevation step: present, never a sweep. */
 :where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"], [data-scope="post"], [data-scope="motion-card"]):where([data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
@@ -412,6 +413,8 @@
   border-color: transparent; background-clip: padding-box;
   transition: box-shadow var(--warp-duration-base) var(--warp-ease-out);
 }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"], [data-scope="post"], [data-scope="motion-card"]):where([data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-scope="tile"], [data-scope="plan"], [data-scope="lobby"], [data-scope="listing"], [data-scope="post"], [data-scope="motion-card"]):where([data-sweep]) > [data-part="sweep-base"] {
   transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), color var(--warp-duration-base) var(--warp-ease-out);
 }

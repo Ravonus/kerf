@@ -94,8 +94,8 @@
    @layer warp.signature. Layout only says where it goes and how it looks:
      nav items  always (sidebar, rail, bottom bar), base border invisible
      command    always; a floating-border field on tablet+, a ring on phone
-     surfaces   [data-scope="surface"][data-sweep]: gated by
-                --warp-sweep-surfaces (vivid, or data-flair="sweep")
+     surfaces   [data-scope="surface"][data-sweep]: never by default; data-flair="sweep"
+                shows data-sweep="surface", any other data-sweep opts in (warp.css §4)
    ======================================================================== */
 :where([data-scope="shell"] [data-part="nav-item"][data-sweep]) {
   --warp-color-sweep-base: transparent; --warp-sweep-radius: var(--warp-radius-round);

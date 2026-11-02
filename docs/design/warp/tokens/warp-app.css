@@ -657,6 +657,9 @@
 :where([data-scope="notification"]:hover) { background: color-mix(in oklab, var(--warp-color-text) var(--warp-state-hover), transparent); }
 /* review 01 M3: no 1px bottom rule; the full border sweeps over a hairline base, like any surface */
 :where([data-scope="notification"]) { --warp-sweep-radius: 0px; }
+/* a notification is a list row: a surface, so it sweeps only with data-flair="sweep", or when it opts in (warp.css §4) */
+:where([data-scope="notification"][data-sweep]) { --_on: var(--warp-sweep-surfaces); }
+:where([data-scope="notification"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 :where([data-scope="notification"]) > :where([data-part="sweep-base"]) { color: var(--warp-color-border); }
 :where([data-scope="notification"] [data-part="icon"]) { position: relative; }
 :where([data-scope="notification"] [data-part="kind"]) {

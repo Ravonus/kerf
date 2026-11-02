@@ -6,7 +6,8 @@
      data-theme       light | dark            (none = follow prefers-color-scheme)
      data-expression  quiet | balanced | vivid (none = balanced)
      data-density     compact | cozy | comfortable (none = cozy)
-     data-flair       sweep | none            sweep on buttons + surfaces too / inputs only
+     data-flair       sweep | none            sweep on buttons + surfaces too / inputs only (a surface that opts in with
+                                              data-sweep sweeps at every stop, flair or not)
      data-fields      floating | classic      the one field switch: on :root (app), a form, any ancestor;
                                               nearest wins; data-variant on a field overrides. Pure CSS.
      data-motion      reduce | full           (none = follow prefers-reduced-motion)
@@ -1323,9 +1324,11 @@
 
   /* -- 4 · decorative hosts gated by the dial ---------------------------- */
   :where([data-scope="button"][data-sweep]) { --_on: var(--warp-sweep-buttons); }
+  /* surfaces (cards, panels, list rows, tiles, stat rows, clickable cards too) never sweep by default at any stop. The
+     kit marks them data-sweep="surface": the parts are there, and only data-flair="sweep" lights them. Any other
+     data-sweep on a surface is an explicit opt-in and sweeps at every stop (Card's `sweep` prop). Each surface family
+     restates the opt-in after its own gate, in its own layer. */
   :where([data-scope="surface"][data-sweep]) { --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface); }
-  /* a surface you can press is a click target, so it sweeps at every stop */
-  :where(a[data-scope="surface"][data-sweep], button[data-scope="surface"][data-sweep], [data-scope="stat"][data-interactive][data-sweep]) { --_on: 1; }
   /* panels with no click of their own: only a pin or a confirm lights them */
   :where([data-scope="comment-thread"], [data-scope="artifact"], [data-part="tool-frame"], [data-part="strip"]):where([data-sweep]):not([data-pin], [data-confirm]) { --_on: 0; }
 

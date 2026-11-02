@@ -182,7 +182,7 @@ function Row({ n, at, size, leaving, stop, onKey, onPress, onFocus, onDismiss, o
   return (
     <article
       data-scope="notification"
-      data-sweep=""
+      data-sweep="surface"
      
       data-id={n.id}
       data-read={n.read ? '' : undefined}

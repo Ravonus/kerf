@@ -1,9 +1,11 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
-/* data surfaces (panels, stat rows, KPI tiles, interactive or not): gated like surfaces (vivid / flair) */
+/* data surfaces (panels, stat rows, KPI tiles, interactive or not): gated like surfaces (data-flair="sweep" only) */
 :where([data-scope="panel"][data-sweep], [data-scope="stat"][data-sweep]) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
+/* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="panel"], [data-scope="stat"], [data-scope="card"], [data-scope="kanban"] [data-part="card"]):where([data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
 /* data surfaces rest on the decorative hairline, not the field's ink border */
 :where([data-scope="panel"], [data-scope="stat"], [data-scope="card"], [data-scope="kanban"] [data-part="card"]):where([data-sweep]) {
   --warp-color-sweep-base: var(--warp-color-border);
