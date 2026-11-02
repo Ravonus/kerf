@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 import { readFileSync } from 'node:fs'
 // The first-paint budget, on rules weft's own purge reads.
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
@@ -90,4 +91,63 @@ test('the first paint leaves out rules for classes, attributes and values the sh
   expect(inline).toContain(':where(.hero){margin:0}')
   expect(inline).toContain(':not(.gone)')
   for (const gone of ['.plan', 'eyebrow', 'data-state']) expect(inline).not.toContain(gone)
+})
+
+describe('the first paint keeps a rule whenever the shell might match it', () => {
+  let sheets = 0
+  const first = (rule, html) => {
+    const href = `/c${sheets++}.css` // hashed in a build, so one name is one sheet
+    const page = pageStyles({ inline: { [href]: `${rule}${filler(4000)}` }, critical }, [{ href }], html).head
+    return /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)[1]
+  }
+  const keeps = [
+    ['a state under :not()', `[data-part="label"]:not(:hover, :focus-within){top:1px}`, '<i data-part="label"></i>'],
+    ['a :hover alternative that may not apply', `:is(.a:hover,.a){top:1px}`, '<i class="a"></i>'],
+    ['a state word inside a value', `[data-x=":hover"]{top:1px}`, '<i data-x=":hover"></i>'],
+    ['a suffix', `[data-part$="corners"]{top:1px}`, '<i data-part="frame-corners"></i>'],
+    ['a prefix', `[data-delta^="up"]{top:1px}`, '<i data-delta="up-3"></i>'],
+    ['a substring', `[data-k*="id"]{top:1px}`, '<i data-k="mid"></i>'],
+    ['a value in a list', `[data-k~="b"]{top:1px}`, '<i data-k="a b"></i>'],
+    ['a dash prefix', `[data-k|="en"]{top:1px}`, '<i data-k="en-GB"></i>'],
+    ['a value with a space', `[data-k="a b"]{top:1px}`, '<i data-k="a b"></i>'],
+    ['a value with an operator on a kept attribute', `[data-tone$="x"]{top:1px}`, '<i data-tone="bx"></i>'],
+    ['the case-insensitive flag', `[data-k="ABC" i]{top:1px}`, '<i data-k="abc"></i>'],
+    ['an escaped class', `.md\\:grid{top:1px}`, '<i class="md:grid"></i>'],
+    ['a hex-escaped class', `.\\31 23{top:1px}`, '<i class="123"></i>'],
+    ['a value the shell writes as a reference', `[data-k="abc"]{top:1px}`, '<i data-k="&#97;bc"></i>'],
+    ['a single-quoted value', `[data-k="abc"]{top:1px}`, `<i data-k='abc'></i>`],
+    ['an unquoted value', `[data-k="abc"]{top:1px}`, '<i data-k=abc></i>'],
+    ['a single-quoted class', `.abc{top:1px}`, `<i class='abc'></i>`],
+    ['an attribute name in another case', `[data-kay="abc"]{top:1px}`, '<i DATA-KAY="abc"></i>'],
+    ['a dot inside an attribute value', `[data-k$=".pdf"]{top:1px}`, '<i data-k="a.pdf"></i>'],
+    ['a non-data attribute with a dot', `a[href$=".pdf"]{top:1px}`, '<a href="a.pdf"></a>'],
+    ['a list with print in it', `@media print,screen{.a{top:1px}}`, '<i class="a"></i>'],
+    ['forced-colors off', `@media (forced-colors:none){.a{top:1px}}`, '<i class="a"></i>'],
+    ['a bracket inside a value', `[data-k="a)"],.a{top:1px}`, '<i class="a"></i>'],
+  ]
+  test.each(keeps)('%s', (_, rule, html) => { expect(first(rule, html)).toContain('top:1px') })
+
+  const drops = [
+    ['a plain value the shell lacks', `[data-k="abc"]{top:1px}`, '<i data-k="abd"></i>'],
+    ['an attribute the shell lacks, with an operator', `[data-gone$="x"]{top:1px}`, '<i data-k="x"></i>'],
+    ['a class the shell lacks', `.gone{top:1px}`, '<i class="a"></i>'],
+    ['a real hover', `.a:hover{top:1px}`, '<i class="a"></i>'],
+    ['print alone', `@media print{.a{top:1px}}`, '<i class="a"></i>'],
+    ['forced colours', `@media (forced-colors:active){.a{top:1px}}`, '<i class="a"></i>'],
+  ]
+  test.each(drops)('but not %s', (_, rule, html) => { expect(first(rule, html)).not.toContain('top:1px') })
+})
+
+test('text in a page that names a custom property nothing reads does not split the cache', () => {
+  const a = pageStyles(assets, css, `${html}<p>--one</p>`).head
+  expect(pageStyles(assets, css, `${html}<p>--two</p>`).head).toBe(a)
+  expect(pageStyles({ inline: { '/d.css': `:where([data-scope="card"]){--warp-gap:1px}${big}` }, critical }, [{ href: '/d.css' }], `${html}<i style="--warp-gap:2px"></i>`).head).toContain('--warp-gap:1px')
+})
+
+test('the budget counts the head an app adds, not just the shell', () => {
+  const sheet = '.a{color:red}'.repeat(2000)
+  const size = sheet.length / 6, s = 'x'.repeat(4 * (12 * 1024 - size) - 400)
+  const a = { inline: { '/a.css': sheet }, critical }
+  expect(pageStyles(a, css, s).head).not.toContain('media="print"')
+  expect(pageStyles(a, css, s, 'y'.repeat(1000)).head).toContain('media="print"')
 })

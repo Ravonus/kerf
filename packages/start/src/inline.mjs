@@ -13,10 +13,15 @@ const CSS_RATIO = 6
 const HTML_RATIO = 4
 const CRITICAL_MAX = 64
 
-const ATTR = /\b(data-[\w-]+)(?:="([^"]*)")?/g
-const CLASS = /\bclass="([^"]*)"/g
+// What the shell has, however its markup is quoted.
+const ATTR = /\b(data-[\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+)))?/gi
+const CLASS = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+))/gi
 const PROP = /--[A-Za-z_][\w-]*/g
-const SHEET_WORD = /\[(data-[\w-]+)(?:[~|^$*]?=["']?([^\]"']+))?|\.(-?[_a-zA-Z][\w-]*)/g
+// What a selector asks for. An attribute selector goes first and whole, or `[href$=".pdf"]` reads as a class.
+const SELECTOR_WORD = /\[\s*([\w-]+)\s*(?:([~|^$*]?=)\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|([^\s\]]+))\s*(\w)?\s*)?\]|\.((?:[\w-]|[^\0-\x7f]|\\.)+)/g
+// A reference the shell's text can't be compared with, so nothing is ruled out on its value.
+const ENTITY = /&(?!(?:amp|quot|lt|gt);)/
+const ANY_VALUE = '=*'
 // Set on <html> by a script or `setDial`, so the server's HTML can't vouch for them.
 const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|warp|scope)$/
 // `dialScript` restores these before the first paint, so the server's HTML doesn't show them.
@@ -24,20 +29,31 @@ const DIALS = 'quiet balanced vivid floating classic compact cozy comfortable sw
 // Rules that can't paint until someone acts, so the late sheet is soon enough for them. A state the server can render
 // (`:checked`, `aria-checked`, `:disabled`) has to stay.
 const LATER = /:(?:hover|active|focus|focus-visible|focus-within|popover-open|modal)\b|::(?:backdrop|selection)/
+const PRINT = /^@media\s+print\s*(?:and\b[^,]*)?$/i
+const FORCED_COLORS = /^@media\s*\(\s*forced-colors\s*:\s*active\s*\)\s*(?:and\b[^,]*)?$/i
 const GROUPING = /^@(?:media|supports|layer|container|scope|starting-style)\b/
 
 const esc = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 const print = nodes => nodes.map(n => (n.body === undefined ? `${n.head};` : `${n.head}{${n.body}}`)).join('')
 
+/** Calls `visit` at each top-level comma and bracket of `text` from `from`, skipping strings, and stops at the end of the bracket it began in. */
+function scan(text, from, visit) {
+  let depth = 0, quote = ''
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]
+    if (quote) { if (c === '\\') i++; else if (c === quote) quote = ''; continue }
+    if (c === '"' || c === "'") quote = c
+    else if (c === '(' || c === '[') depth++
+    else if (c === ')' || c === ']') { if (--depth < 0) return i }
+    else if (c === ',' && !depth) visit(i)
+  }
+  return text.length
+}
+
 function selectors(head) {
   const out = []
-  let depth = 0, from = 0
-  for (let i = 0; i < head.length; i++) {
-    const c = head[i]
-    if (c === '(' || c === '[') depth++
-    else if (c === ')' || c === ']') depth--
-    else if (c === ',' && !depth) { out.push(head.slice(from, i)); from = i + 1 }
-  }
+  let from = 0
+  scan(head, 0, i => { out.push(head.slice(from, i)); from = i + 1 })
   out.push(head.slice(from))
   return out
 }
@@ -48,38 +64,61 @@ function required(selector) {
   for (;;) {
     const m = /:(not|is|where|has)\(/.exec(rest)
     if (!m) return rest
-    let depth = 1, comma = false, i = m.index + m[0].length
-    for (; i < rest.length && depth; i++) {
-      if (rest[i] === '(') depth++
-      else if (rest[i] === ')') depth--
-      else if (rest[i] === ',' && depth === 1) comma = true
+    const open = m.index + m[0].length
+    let comma = false
+    const end = scan(rest, open, () => { comma = true })
+    rest = rest.slice(0, m.index) + (m[1] === 'not' || comma ? '' : ` ${rest.slice(open, end)} `) + rest.slice(end + 1)
+  }
+}
+
+/**
+ * What a selector needs the shell to have: `data-x` and `.class`, and a value for a plain `=` on a plain word. An
+ * operator, a flag, a value with a space or an escape can match text the shell's words don't show, so only the name counts.
+ */
+function* demands(selector) {
+  for (const m of selector.matchAll(SELECTOR_WORD)) {
+    if (m[7]) {
+      if (!/\\[\da-f]/i.test(m[7])) yield `.${m[7].replace(/\\(.)/g, '$1')}`
+      continue
     }
-    const inner = rest.slice(m.index + m[0].length, i - 1)
-    rest = rest.slice(0, m.index) + (m[1] === 'not' || comma ? '' : ` ${inner} `) + rest.slice(i)
+    const name = m[1].toLowerCase()
+    if (!name.startsWith('data-')) continue
+    yield name
+    const value = m[3] ?? m[4] ?? m[5]
+    if (m[2] === '=' && !m[6] && /^[\w-]+$/.test(value)) yield { value }
   }
 }
 
 /** Can the shell match this, going by the attributes, their values and the classes it has? Anything else stays. */
-function present(selector, found) {
-  const rest = required(selector)
+function present(rest, found) {
   if (/^\s*(?::root|html|body)\b/.test(rest)) return true
-  for (const m of rest.matchAll(SHEET_WORD)) {
-    if (m[3] ? !found.has(`.${m[3]}`) : !ROOT_ATTR.test(m[1]) && (!found.has(m[1]) || (m[2] && !found.has(m[2])))) return false
+  let root = false
+  for (const d of demands(rest)) {
+    if (typeof d === 'string') {
+      root = ROOT_ATTR.test(d)
+      if (!root && !found.has(d)) return false
+    } else if (!root && !found.has(ANY_VALUE) && !found.has(d.value)) return false
   }
   return true
+}
+
+/** Could this paint before anyone acts, on the shell the server sent? */
+function paints(selector, found) {
+  const rest = required(selector)
+  return !LATER.test(rest.replace(/\[[^\]]*\]/g, '')) && present(rest, found)
 }
 
 /** A sheet without what can't show in the first paint. */
 function firstPaint(css, parse, found) {
   const walk = source => print(parse(source).flatMap(n => {
     if (n.body === undefined) return [n]
-    if (/^@media\s+(?:print|\(forced-colors)/.test(n.head)) return []
+    if (PRINT.test(n.head) || FORCED_COLORS.test(n.head)) return []
     if (GROUPING.test(n.head)) {
       const body = walk(n.body)
       return body ? [{ head: n.head, body }] : []
     }
     if (n.head[0] === '@') return [n]
-    const kept = selectors(n.head).filter(s => !LATER.test(s) && present(s, found))
+    const kept = selectors(n.head).filter(s => paints(s, found))
     return kept.length ? [{ head: kept.join(','), body: n.body }] : []
   }))
   return walk(css)
@@ -104,7 +143,8 @@ function vocabulary(sheets, id) {
   if (!words) {
     words = new Set()
     for (const s of sheets) {
-      for (const m of s.css.matchAll(SHEET_WORD)) m[3] ? words.add(`.${m[3]}`) : (words.add(m[1]), m[2] && words.add(m[2]))
+      for (const d of demands(s.css)) words.add(d.value ?? d)
+      for (const m of s.css.matchAll(PROP)) words.add(m[0])
     }
     if (vocabularies.size >= CRITICAL_MAX) vocabularies.delete(vocabularies.keys().next().value)
     vocabularies.set(id, words)
@@ -120,16 +160,25 @@ function criticalCss(sheets, html, head, { parse, purge }) {
   const see = w => { if (known.has(w)) found.add(w) }
   for (const source of [html, head ?? '']) {
     for (const m of source.matchAll(ATTR)) {
-      see(m[1])
-      if (m[2]) for (const w of m[2].split(/\s+/)) see(w)
+      see(m[1].toLowerCase())
+      const value = m[2] ?? m[3] ?? m[4]
+      if (!value) continue
+      if (ENTITY.test(value)) found.add(ANY_VALUE)
+      for (const w of value.split(/\s+/)) see(w)
     }
-    for (const m of source.matchAll(CLASS)) for (const w of m[1].split(/\s+/)) see(`.${w}`)
-    for (const m of source.matchAll(PROP)) found.add(m[0])
+    for (const m of source.matchAll(CLASS)) {
+      const value = m[1] ?? m[2] ?? m[3]
+      if (ENTITY.test(value)) found.add(ANY_VALUE)
+      for (const w of value.split(/\s+/)) see(`.${w}`)
+    }
+    for (const m of source.matchAll(PROP)) see(m[0])
   }
   const key = `${id}|${[...found].sort().join()}`
   let css = critical.get(key)
   if (css === undefined) {
-    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found)), { has: w => found.has(w) }).join(''), parse)
+    // Keeps a value the shell's words can't vouch for, as firstPaint does.
+    const has = w => found.has(w) || found.has(ANY_VALUE) || !/^-{0,2}[\w-]+$/.test(w)
+    css = usedFaces(purge(sheets.map(s => firstPaint(s.css, parse, found)), { has }).join(''), parse)
     if (critical.size >= CRITICAL_MAX) critical.delete(critical.keys().next().value)
     critical.set(key, css)
   }
@@ -147,7 +196,7 @@ export function pageStyles(assets, css = [], html = '', head) {
   const first = `<style>${LAYER_ORDER}</style>\n`
   const inline = css.filter(c => assets.inline?.[c.href] !== undefined).map(c => ({ href: c.href, css: assets.inline[c.href] }))
   const raw = inline.reduce((n, s) => n + s.css.length, 0)
-  const split = !!assets.critical && inline.length > 0 && raw / CSS_RATIO + html.length / HTML_RATIO > FIRST_PAINT_BYTES
+  const split = !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
   const carried = new Set(css.map(c => c.href))
   const deferred = split ? inline.map(s => s.href) : []
   const tags = split
