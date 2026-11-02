@@ -307,7 +307,7 @@ A few things to know about this setup:
 
 :::pitfall React and weft TSX in one project
 `jsxImportSource` applies to the whole project, and weft's plugin compiles every `.tsx` and `.jsx` file Vite loads. A
-React component compiled as weft's won't work: its hooks are W020–W029 and it isn't run the way React runs it. Move to
+React component compiled as weft's won't work: weft has no hooks, and it isn't run the way React runs it. Move to
 weft one app at a time, not one component at a time.
 :::
 
@@ -318,12 +318,12 @@ Most of what you write in TSX carries over. weft accepts React's prop names on n
 [From React](/reference/react) reference lists each one.
 
 What doesn't carry over is the model underneath. A component runs once, state is a box you read with `.value`, and the
-compiler wires each read to the DOM. So the habits that come with hooks have no place, and `weft check` says so when it
-sees one:
+compiler wires each read to the DOM. So the habits that come with hooks have no place. `weft check` reports most of
+them; the hooks themselves are in the catalog but not reported yet, so look for those yourself:
 
 | A React habit | What weft reports | The weft way |
 |---|---|---|
-| `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, a custom `useX()` hook, a dependency array | W020–W029 | `state`, `watch`, `derived`, `ref={el}`, plain functions |
+| `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, a custom `useX()` hook, a dependency array | W020–W029 (in the catalog, not reported yet) | `state`, `watch`, `derived`, `ref={el}`, plain functions |
 | `useState(props.value)` written as `state(props.value)` | W005: the box never follows the prop | `state.linked(() => props.value)` |
 | Computing from a prop in the component body | W001: the body runs once | `derived(() => …)`, or compute in the JSX |
 | `{count}` for a state value | W015: that renders the box | `{count.value}` |

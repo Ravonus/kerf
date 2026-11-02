@@ -270,8 +270,8 @@ export function Stopwatch() {
 ```
 
 The rule for picking between them: if the page shows it, it's `state`; if only your code reads it, a `let` is enough. A
-`let` that the TSX reads never updates the page, because nothing tells the page it changed. weft catches that one
-(**W041**): a `let` written in a handler and read in TSX should be `state`.
+`let` that the TSX reads never updates the page, because nothing tells the page it changed. The catalog names that
+**W041**, though this weft doesn't report it yet: a `let` written in a handler and read in TSX should be `state`.
 
 ## Recap
 

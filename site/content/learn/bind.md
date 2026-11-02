@@ -161,7 +161,8 @@ Which to choose:
 - **A `State<T>` prop** when the child needs the box itself: to read one entry with `.get` in a list row (see
   [Keyed state and entries](/learn/entries)), to pass it on to a warp control, or to call `.set` on it.
 
-Mixing them up is **W008**: a box where the child's prop type wants a value, or a value where it wants a box.
+Mixing them up is **W008** in the catalog (this weft doesn't report it yet): a box where the child's prop type wants a
+value, or a value where it wants a box.
 
 ## Patterns
 

@@ -240,8 +240,9 @@ Putting it together, each piece of a component runs at its own time:
 | `onMount(fn)` | Once, after the component's DOM is in place |
 
 This table is the reason for most of weft's rules. A value computed in the body is computed once and goes stale, so it
-belongs in `derived` (**W001**). An early `return` that depends on state is checked once (**W040**), so the branch belongs
-in JSX. A `let` counter changes but nothing re-reads it (**W041**). Each rule is the table, applied.
+belongs in `derived` (**W001**). An early `return` that depends on state is checked once (also
+reported as **W001**), so the branch belongs in JSX. A `let` counter changes but nothing re-reads it (**W041** in the
+catalog; this weft doesn't report it yet). Each rule is the table, applied.
 
 :::deepdive Counting runs in a test
 `@weft-js/core/test` can count the reactive work an interaction does. `touches(fn)` reports the DOM mutations and the runs

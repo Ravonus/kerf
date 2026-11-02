@@ -115,8 +115,8 @@ every comparison: `status.value === 'sucess'` is a type error.
 
 :::note A function like this isn't a hook
 The function above only groups four boxes. There are no hook rules in weft: a function that makes state can be called
-from a component body in any order, even inside an `if`. Don't name it `useSomething`, though: weft reads a `useX()`
-call as a React habit and reports it (W020–W029). See [Reusing logic](/learn/reusing-logic).
+from a component body in any order, even inside an `if`. Don't name it `useSomething`, though: weft's catalog counts a
+`useX()` call as a React habit (W020–W029; not reported yet). See [Reusing logic](/learn/reusing-logic).
 :::
 
 ## Step 5: connect the handlers
@@ -192,7 +192,7 @@ if (status === 'success') return <h2>That's right!</h2>
 
 In weft that's a bug. The component body runs **once**, when the component is made. The `if` is checked once, while the
 status is still `'typing'`, and never again: the success message would never appear. The compiler reports an early
-`return` that depends on state as **W040**.
+`return` that depends on state as **W001** (the catalog's own code for it, W040, isn't reported yet).
 
 Put the branch inside the JSX instead, as the example does with a ternary. Every `{expression}` in JSX is live: when
 `status` changes, weft re-evaluates the branch and swaps what's on screen.
@@ -219,7 +219,7 @@ sibling above it appeared. See [Keyed state and entries](/learn/entries#state-li
 - Find what moves between states: the person, and the computer.
 - Prefer one `status` box with a union type to several booleans that can contradict each other.
 - Derive what can be derived (`empty`, "has an error").
-- Branch in JSX. An early `return` on state runs once and is W040.
+- Branch in JSX. An early `return` on state runs once and is W001.
 
 ## Try it
 
@@ -312,7 +312,7 @@ function Save() {
 }
 ```
 :::solution
-The body runs once, so the `if` is checked once, while `saved` is false (W040). Branch in the JSX:
+The body runs once, so the `if` is checked once, while `saved` is false (W001). Branch in the JSX:
 
 ```tsx
 import { state } from '@weft-js/core'

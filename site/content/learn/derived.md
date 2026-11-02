@@ -201,21 +201,22 @@ Don't. This version has three problems that `derived` doesn't:
 
 - **It lags.** The `watch` runs on the next flush, after the write to `qty`. Code that reads `total` straight after the
   write, in the same handler, sees the old total.
-- **It can loop.** A `watch` that writes something its own source reads runs again, and again. That's **W003**.
+- **It can loop.** A `watch` that writes something its own source reads runs again, and again.
+  The catalog calls that **W003**.
 - **It's more state.** `total` is now a box anyone can write to, and nothing stops it from disagreeing with `qty`.
 
-The compiler reports a `watch` that only copies one value into another as **W004**, with `derived` as the fix. Keep
-`watch` for the outside world; see [Effects](/learn/effects) and
-[You might not need an effect](/learn/you-might-not-need-an-effect).
+The catalog names a `watch` that only copies one value into another **W004**, with `derived` as the fix. This weft
+doesn't report W003 or W004 yet, so watch for them yourself. Keep `watch` for the outside world; see
+[Effects](/learn/effects) and [You might not need an effect](/learn/you-might-not-need-an-effect).
 
 The same goes for writing to state *inside* a `derived`. A derived value computes; it doesn't change anything. A write in
-one is **W002**.
+one is **W002** in the catalog, also not reported yet.
 
 ## Data that arrives later
 
 `derived` takes a plain, synchronous function. For a value that comes from a promise, such as a fetch, use `resource`,
 which is the async form of `derived` (see [Async and loading states](/learn/async-and-loading)). `derived(async …)` is
-**W012**: it would give you a promise, not the data.
+**W012** in the catalog: it would give you a promise, not the data.
 
 :::deepdive `memo`, and what the compiler does with your JSX
 `@weft-js/core` also exports `memo(fn)`. It's `derived` that returns a function instead of an object with `.value`:
@@ -230,7 +231,7 @@ box, so readers don't need to know which they have.
 - It tracks what it read on its last run, computes lazily when read, and caches until an input changes.
 - If it recomputes to the same result, its readers don't run.
 - Compute in `derived`, JSX or a handler, never in the body (W001).
-- Never keep a copy in sync with `watch` (W004), and never write state inside `derived` (W002).
+- Never keep a copy in sync with `watch`, and never write state inside `derived`.
 
 ## Try it
 

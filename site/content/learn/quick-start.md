@@ -152,7 +152,7 @@ signed in".
 :::pitfall Branch in the markup, not in the body
 In React you might write `if (!signedIn) return <SignIn />` at the top of a component. In weft the body of a component
 runs only once, so an early `return` that depends on state would be checked once and never again. The compiler stops
-you with **W040**. Put the condition in the markup with `? :` or `&&`, where it stays live.
+you with **W001**. Put the condition in the markup with `? :` or `&&`, where it stays live.
 
 A number on the left of `&&` is the other trap: `{count && <Badge />}` shows `0` when the count is zero. Write
 `{count > 0 && <Badge />}` (**W011**).
@@ -220,8 +220,8 @@ and wired that one text node to it. A write to `cups.value` updates that text no
 Because the body runs once:
 
 - There are no hook rules and no dependency lists. `state` is a plain function call.
-- A plain `let` that a handler changes won't update the page, because the markup that read it was set up once. The
-  compiler reports that as **W041** and tells you to make it `state`.
+- A plain `let` that a handler changes won't update the page, because the markup that read it was set up once. Make it
+  `state`. This weft doesn't report it yet (W041 in the catalog), so watch for it.
 - You always write `.value`, in markup too. `{cups}` without it renders the box itself, which is **W015**.
 
 :::deepdive How is this different from useState?

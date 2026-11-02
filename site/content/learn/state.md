@@ -38,8 +38,9 @@ export function Gallery() {
 Pressing Next changes `index`, but the heading never moves. The component body ran once, built the heading from `index`
 as it was then, and finished. Nothing reads `index` again, and nothing knows it changed.
 
-The compiler catches this: a `let` that a handler changes and JSX reads is **W041**, with a fix that makes it state. (A
-`let` that names a prop is different, and allowed: see [Passing props](/learn/passing-props).)
+The fix is to make it state. The catalog names a `let` that a handler changes and JSX reads **W041**, but this weft
+doesn't report it yet, so watch for it yourself. (A `let` that names a prop is different, and allowed: see
+[Passing props](/learn/passing-props).)
 
 To update the page, a value needs two things:
 
@@ -112,8 +113,8 @@ export function makeBoxes() {
 attributes: `disabled={busy.value}`, not `disabled={busy}`.
 
 When you pass a box to another component, pass `.value` unless the child should write it. Passing a box where the child
-expects a number, or the other way round, is **W008**. See [Writing to a parent with bind:](/learn/bind) for the cases
-where passing the box is the point.
+expects a number, or the other way round, is **W008** in the catalog (not reported yet). See
+[Writing to a parent with bind:](/learn/bind) for the cases where passing the box is the point.
 :::
 
 :::deepdive Why a box, and not a variable or a setter?
@@ -200,8 +201,8 @@ share it app-wide:
 
 :::note A box at module level
 A box made outside any component, at the top of a module, is shared by everything that imports it. That's handy in a
-small client-only demo, but on a server it would be shared by every request: weft reports **W030** when such a box is
-reachable from the server. Use `defineState` for state that should be app-wide.
+small client-only demo, but on a server it would be shared by every request: the catalog names that **W030**, though this
+weft doesn't report it yet. Use `defineState` for state that should be app-wide.
 :::
 
 ## Names in the dev tools
@@ -225,7 +226,7 @@ In a production build `name` does nothing.
 
 ## Recap
 
-- A plain variable doesn't keep a change on the page: the body ran once. The compiler reports that as **W041**.
+- A plain variable doesn't keep a change on the page: the body ran once. Make it `state`.
 - `state(initial)` makes a box. Read and write `.value`, in handlers and in JSX alike (**W015** without it).
 - Reading `.value` subscribes; writing it updates exactly the readers. The component doesn't run again.
 - A write that is `Object.is` the old value does nothing, so objects and arrays need a new value to count as changed.
@@ -290,9 +291,9 @@ Each `disabled` reads `index.value`, so both buttons follow the box with no extr
 :::
 
 :::challenge Fix a stuck form
-Typing in this form does nothing to the greeting, and the compiler reports **W041** twice. Fix it.
+Typing in this form does nothing to the greeting. Fix it.
 
-<!-- example: skip deliberately broken: the challenge is to fix the W041s -->
+<!-- example: skip deliberately broken: the challenge is to fix the two lets -->
 ```tsx
 import { Input } from '@weft-js/warp'
 

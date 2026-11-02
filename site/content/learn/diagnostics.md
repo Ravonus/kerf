@@ -231,8 +231,8 @@ in your install.
 **Errors** are code that doesn't do what it says: a value that never updates, a list that rebuilds every row, a button
 nobody can reach with a keyboard. They fail `weft check`, and a compiler error stops that file in `weft dev`.
 
-**Warnings** are likely mistakes that can be right: a `watch` that could be a `derived` (W004), two solid buttons side by
-side (D038). They're reported, and nothing fails.
+**Warnings** are likely mistakes that can be right: a `watch` that could be a `derived` (W004, not reported
+yet), two solid buttons side by side (D038). They're reported, and nothing fails.
 
 **Info** is something you might want to know, such as an icon name only known when the app runs (I002).
 
@@ -312,7 +312,8 @@ const [open, setOpen] = useState(false)
 ```
 
 There are no hooks. `useState` is `state`, `useMemo` is `derived`, `useEffect` is `watch` or `onMount`, `useRef` is
-`ref={el}`, and `useCallback` is a plain function. The message names the one you used.
+`ref={el}`, and `useCallback` is a plain function. These codes are in the catalog, but this weft doesn't report them
+yet, so look for hooks yourself.
 
 ### W061: `bind:` in the wrong place
 
@@ -349,7 +350,7 @@ return <button onClick={() => clicks++}>{clicks}</button>
 ```
 
 A plain variable changes, but nothing re-reads it, so the button shows `0` forever. Make it `state(0)` and read
-`clicks.value`.
+`clicks.value`. W041 is in the catalog, but this weft doesn't report it yet, so watch for it yourself.
 
 :::deepdive Diagnostics written for agents
 weft was built with AI agents writing much of its code, and the diagnostics are designed for them as much as for you.

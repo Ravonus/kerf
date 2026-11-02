@@ -333,7 +333,8 @@ Those are what [Effects](/learn/effects) is for.
 
 ## The diagnostics
 
-Several of the patterns on this page have codes, so `weft check` and your editor can point at them.
+Several of the patterns on this page have codes. `weft check` and your editor point at the first five; W003, W004 and
+W012 are in the catalog, but this weft doesn't report them yet.
 
 | Code | What it catches | Instead |
 |---|---|---|
