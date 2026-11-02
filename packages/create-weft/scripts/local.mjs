@@ -73,7 +73,7 @@ function refresh(dir, packed) {
   const other = OTHER_LOCKS.find(lock => existsSync(join(app, lock)))
   if (other) throw new Error(`${app} has ${other}; this works with npm only`)
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
-  if (!pkg.dependencies?.weft && !pkg.devDependencies?.weft) throw new Error(`${app} doesn't depend on weft; start one with \`local.mjs new\``)
+  if (!pkg.dependencies?.['@weft-js/core'] && !pkg.devDependencies?.['@weft-js/core']) throw new Error(`${app} doesn't depend on @weft-js/core; start one with \`local.mjs new\``)
   const tarballs = packed ? JSON.parse(readFileSync(join(store, 'tarballs.json'), 'utf8')) : pack()
   forget(app, tarballs)
   writeFileSync(file, JSON.stringify(pin(pkg, tarballs), null, 2))
