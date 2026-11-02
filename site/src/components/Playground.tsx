@@ -41,7 +41,8 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
 
 /* @weft visible */
 /**
- * The page's hero: the component, the knobs that change it, and the call they add up to. Any change makes the example
+ * The page's "Try it": the component large on a stage, the controls that change it beside it (below it on a phone),
+ * and the call they add up to under both, live and copyable. Any change makes the example
  * again, since some props are fixed at creation; changes in one frame are coalesced so a slider stays smooth. The URL
  * holds what differs from the start, so a state can be linked.
  */
@@ -108,23 +109,43 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   const html = derived(() => highlight(code.value, 'tsx'))
   return (
     <div data-site="frame" data-flow="card" data-play={play.stage === 'fill' ? 'wide' : ''} data-hero="">
+      <div data-part="tools">
+        <span data-part="play-live"><span data-part="dot" aria-hidden="true"></span>Live preview</span>
+        <span data-part="spacer"></span>
+        <span data-part="stage-tools">
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="palette" label="Expression of this stage" title="Change this stage's expression" data-act="stage-expression" />
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="moon" label="Theme of this stage" title="Change this stage's theme" data-act="stage-theme" />
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="smartphone" label="Width of this stage" title="Change this stage's width" data-act="stage-width" />
+        </span>
+      </div>
       <div data-part="pair">
         <div data-part="stage" style={play.height ? `--stage-h:${play.height}px` : undefined}>
           <div data-part="mount" data-stage={play.stage ?? 'center'} ref={host}><span data-part="wait" aria-hidden="true"></span></div>
         </div>
-        <div data-part="knobs" ref={knobs}>
+        <div data-part="knobs" role="group" aria-label="Controls" ref={knobs}>
+          <div data-part="knobs-head">
+            <span data-part="knobs-title">Controls</span>
+            <Button size="sm" emphasis="ghost" tone="neutral" icon="rotate-ccw" onClick={() => change(startOf(play))}>Reset</Button>
+          </div>
           {play.presets && (
-            <div data-part="presets">
-              {play.presets.map(p => <Button key={p.label} size="sm" emphasis="soft" tone="neutral" onClick={() => change({ ...startOf(play), ...p.values })}>{p.label}</Button>)}
+            <div data-part="presets" role="group" aria-label="Presets">
+              <span data-part="knob-label">Presets</span>
+              <div data-part="preset-list">
+                {play.presets.map(p => <Button key={p.label} size="sm" emphasis="soft" tone="neutral" onClick={() => change({ ...startOf(play), ...p.values })}>{p.label}</Button>)}
+              </div>
             </div>
           )}
-          {play.knobs.map(k => <div key={k.prop} data-part="knob" hidden={!shown(k, values.value)}><KnobControl knob={k} values={values} set={set} /></div>)}
-          <Button size="sm" emphasis="ghost" tone="neutral" icon="rotate-ccw" onClick={() => change(startOf(play))}>Reset</Button>
+          {play.knobs.map(k => <div key={k.prop} data-part="knob" data-control={k.control} hidden={!shown(k, values.value)}><KnobControl knob={k} values={values} set={set} /></div>)}
         </div>
       </div>
       <div data-part="code">
-        <figure data-scope="codeblock" data-bare="">
-          <div data-part="head"><Button emphasis="ghost" tone="neutral" size="sm" icon="copy" label="Copy code" data-act="copy" data-copy="" data-copy-text={code.value} /></div>
+        <figure data-scope="codeblock" data-live="">
+          <div data-part="head">
+            <span data-part="lang">Code</span>
+            <span data-part="live-note">updates as you change the controls</span>
+            <span class="sp"></span>
+            <Button emphasis="ghost" tone="neutral" size="sm" icon="copy" label="Copy code" data-act="copy" data-copy="" data-copy-text={code.value} />
+          </div>
           <pre tabindex="0"><code innerHTML={html.value}></code></pre>
         </figure>
       </div>
