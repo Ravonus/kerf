@@ -268,9 +268,14 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
 }
 
 
+/** What a sparkline takes: its values, or its values and the formatter its headline uses (the hover says it the same way). */
+export type SparkInput = number[] | { values: number[]; format?: (value: number) => string }
+const sparkOf = (input: SparkInput) => (Array.isArray(input) ? { values: input, format: undefined } : input)
+
 /** A sparkline's width follows its box; everything else is the parent's label (06 §12: aria-hidden). */
-export function spark(el: SVGSVGElement, values: number[]) {
-  let list = values
+export function spark(el: SVGSVGElement, input: SparkInput) {
+  let list = sparkOf(input).values
+  let format = sparkOf(input).format
   let home: [string | null, string | null] | undefined // where the dot rests, while a hover has it
   const draw = () => {
     const w = Math.round(el.clientWidth)
@@ -294,7 +299,7 @@ export function spark(el: SVGSVGElement, values: number[]) {
     dot.setAttribute('cx', f1(pts[i][0]))
     dot.setAttribute('cy', f1(pts[i][1]))
     const left = pts[i][0] < r.width / 2
-    note.textContent = String(list[i])
+    note.textContent = format ? format(list[i]) : String(list[i])
     note.setAttribute('text-anchor', left ? 'start' : 'end')
     note.setAttribute('x', f1(pts[i][0] + (left ? 6 : -6)))
     note.setAttribute('y', f1(Math.max(10, pts[i][1] - 6)))
@@ -309,7 +314,7 @@ export function spark(el: SVGSVGElement, values: number[]) {
   el.addEventListener('pointermove', hover)
   el.addEventListener('pointerleave', rest)
   return {
-    update(v: number[]) { list = v; draw() },
+    update(v: SparkInput) { ({ values: list, format } = sparkOf(v)); draw() },
     destroy() { size?.disconnect(); el.removeEventListener('pointermove', hover); el.removeEventListener('pointerleave', rest) },
   }
 }

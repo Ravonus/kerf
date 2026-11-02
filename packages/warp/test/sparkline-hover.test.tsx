@@ -28,4 +28,21 @@ describe('Sparkline hover', () => {
     expect(svg.querySelector('text')).toBeNull()
     expect([dot.getAttribute('cx'), dot.getAttribute('cy')]).toEqual(home)
   })
+  test('format says the hovered value the way the headline does', async () => {
+    const { container: c } = render(() => <div aria-label="Errors"><Sparkline values={[0.22, 0.44, 0.3]} format={v => `${v}%`} /></div>)
+    await settle()
+    const svg = c.querySelector('svg')!
+    svg.getBoundingClientRect = () => ({ left: 0, width: 208, top: 0, height: 36, right: 208, bottom: 36, x: 0, y: 0 }) as DOMRect
+    fireEvent.pointerMove(svg, { clientX: 104 })
+    expect(svg.querySelector('text')!.textContent).toBe('0.44%')
+  })
+  test('the site\'s error-rate sparkline carries its headline\'s unit', async () => {
+    const { SparklineColors } = await import('../../../site/src/toolkit/examples/charts')
+    const { container: c } = render(() => <SparklineColors />)
+    await settle()
+    const svg = c.querySelector('svg[data-part="spark"]')! as SVGSVGElement
+    svg.getBoundingClientRect = () => ({ left: 0, width: 208, top: 0, height: 36, right: 208, bottom: 36, x: 0, y: 0 }) as DOMRect
+    fireEvent.pointerMove(svg, { clientX: 0 })
+    expect(svg.querySelector('text')!.textContent).toMatch(/^\d+(\.\d+)?%$/)
+  })
 })

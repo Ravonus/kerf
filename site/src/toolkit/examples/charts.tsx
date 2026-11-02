@@ -156,9 +156,9 @@ export function StreamChartLive() {
 }
 
 const PULSES = [
-  { name: 'Requests', value: '86.1M', values: TRAFFIC.map(t => t.requests) },
+  { name: 'Requests', value: '86.1M', values: TRAFFIC.map(t => t.requests), format: millions },
   { name: 'Deploys', value: '167', values: TRAFFIC.map(t => t.deploys) },
-  { name: 'Bill', value: '$8,930', values: TRAFFIC.map(t => t.cost) },
+  { name: 'Bill', value: '$8,930', values: TRAFFIC.map(t => t.cost), format: dollars },
 ]
 
 export const SparklineStats = () => (
@@ -168,7 +168,7 @@ export const SparklineStats = () => (
         <Stack gap="related" role="img" aria-label={`${p.name}: ${p.value}, rising over 12 months`}>
           <Text role="label" subtle>{p.name}</Text>
           <Text role="heading">{p.value}</Text>
-          <Sparkline values={p.values} />
+          <Sparkline values={p.values} format={p.format} />
         </Stack>
       </Card>
     ))}
@@ -176,12 +176,13 @@ export const SparklineStats = () => (
 )
 
 const ERRORS = TRAFFIC.map(t => t.errors)
+const percent = (v: number) => `${v}%`
 const DEPLOYS = TRAFFIC.map(t => t.deploys)
 
 export const SparklineColors = () => (
   <Stack gap="group" role="img" aria-label="Errors falling, deploys rising">
     <Row gap="related" justify="between"><Text role="label">Error rate</Text><Text subtle>0.22%</Text></Row>
-    <Sparkline values={ERRORS} color="var(--warp-color-critical-solid)" />
+    <Sparkline values={ERRORS} color="var(--warp-color-critical-solid)" format={percent} />
     <Row gap="related" justify="between"><Text role="label">Deploys</Text><Text subtle>167</Text></Row>
     <Sparkline values={DEPLOYS} color="var(--warp-color-positive-solid)" />
   </Stack>
