@@ -82,7 +82,7 @@ export const displayName = (type: Intl.DisplayNamesType, code: string, locale: s
 export const currencySymbol = (code: string, locale: string) => new Intl.NumberFormat(locale, { style: 'currency', currency: code }).formatToParts(0).find(p => p.type === 'currency')?.value ?? code
 
 /** The list of a card number's display (04 §5): the last four, grouped 4-4-4-4 or Amex 4-6-5. */
-export const cardBrand = (bin: string) => (/^3[47]/.test(bin) ? 'American Express' : /^4/.test(bin) ? 'Visa' : /^(5[1-5]|2[2-7])/.test(bin) ? 'Mastercard' : /^6(011|5)/.test(bin) ? 'Discover' : 'Card')
+export const cardBrand = (bin: string) => (/^3[47]/.test(bin) ? 'American Express' : bin.startsWith('4') ? 'Visa' : /^(5[1-5]|2[2-7])/.test(bin) ? 'Mastercard' : /^6(011|5)/.test(bin) ? 'Discover' : 'Card')
 export const cardMask = (last4: string, brand = '') => (/american/i.test(brand) ? `•••• •••••• •${last4}` : `•••• ${last4}`)
 
 /** AddressField (04 §3): the country decides the fields, their order, labels and postal rule. */

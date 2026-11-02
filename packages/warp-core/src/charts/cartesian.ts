@@ -4,7 +4,8 @@ import { barPath, clamp, color, f1, lin, monotone, niceTicks, num, quantile, sum
 import { s } from './scene'
 import { tableOf, type Base, type Fmt, type Form, type LegendItem, type TipRow } from './types'
 
-export type Row = Record<string, any>
+export type Row = object
+type Cells = Record<string, unknown>
 export type SeriesDef = string | { key: string; name?: string; color?: string }
 export type Annotation = { x: string; label: string; band?: [string, string] }
 export type Reference = { y: number; label: string }
@@ -14,10 +15,10 @@ export type BarLayout = 'grouped' | 'stacked' | 'percent'
 export type BarConfig = Cartesian & { layout?: BarLayout }
 export type ComboConfig = Base<Row[]> & { x: string; bar: SeriesDef; line?: SeriesDef; window?: number; format?: Fmt; axisFormat?: Fmt; xName?: string }
 
-const labels = (c: { data: Row[]; x: string }) => c.data.map(r => String(r[c.x]))
+const labels = (c: { data: Row[]; x: string }) => c.data.map(r => String((r as Cells)[c.x]))
 const def = (d: SeriesDef, i: number) => (typeof d === 'string' ? { key: d, name: d, i, color: color(i) } : { key: d.key, name: d.name ?? d.key, i, color: d.color ?? color(i) })
-const seriesOf = (c: Cartesian) => c.series.map((d, i) => { const e = def(d, i); return { ...e, values: c.data.map(r => Number(r[e.key])) } })
-const legendOf = (c: Cartesian): LegendItem[] => c.series.map(def).map(({ name, color }) => ({ name, color }))
+const seriesOf = (c: Cartesian) => c.series.map((d, i) => { const e = def(d, i); return { ...e, values: c.data.map(r => Number((r as Cells)[e.key])) } })
+const legendOf = (c: Cartesian): LegendItem[] => c.series.map(def).map(d => ({ name: d.name, color: d.color }))
 const say = (c: Cartesian) => {
   const f = c.format ?? num, list = seriesOf(c), t = list[0]!
   return `${list.length} series over ${c.data.length} points. ${t.name} goes from ${f(t.values[0]!)} to ${f(t.values[t.values.length - 1]!)}.`
@@ -34,7 +35,7 @@ export const line: Form<LineConfig> = {
   kind: 'line chart',
   swatch: 'line',
   legend: c => (c.series.length > 1 ? legendOf(c) : []),
-  table: c => tableOf([c.xName ?? c.x, ...seriesOf(c).map(s => s.name)], labels(c).map((l, i) => [l, ...seriesOf(c).map(v => (c.format ?? num)(v.values[i]!))])),
+  table: c => tableOf([c.xName ?? c.x, ...seriesOf(c).map(v => v.name)], labels(c).map((l, i) => [l, ...seriesOf(c).map(v => (c.format ?? num)(v.values[i]!))])),
   summary: say,
   plot(c, W, x) {
     const H = W < 480 ? 210 : 270, f = c.format ?? num, fa = c.axisFormat ?? f, X = labels(c), n = X.length
@@ -77,7 +78,7 @@ export const bar: Form<BarConfig> = {
   legend: legendOf,
   table: c => {
     const list = seriesOf(c), f = c.format ?? num
-    return tableOf([c.xName ?? c.x, ...list.map(s => s.name), 'Total'], labels(c).map((l, i) => [l, ...list.map(v => f(v.values[i]!)), f(sum(list.map(v => v.values[i]!)))]))
+    return tableOf([c.xName ?? c.x, ...list.map(v => v.name), 'Total'], labels(c).map((l, i) => [l, ...list.map(v => f(v.values[i]!)), f(sum(list.map(v => v.values[i]!)))]))
   },
   summary: say,
   plot(c, W, x) {
@@ -138,31 +139,31 @@ export const bar: Form<BarConfig> = {
 
 const average = (v: number[], n: number) => v.map((_, i) => (i < n - 1 ? null : sum(v.slice(i - n + 1, i + 1)) / n))
 const comboOf = (c: ComboConfig) => {
-  const b = def(c.bar, 0), n = c.window ?? 3, values = c.data.map(r => Number(r[b.key])), l = c.line ? def(c.line, 2) : { key: '', name: `${n}-point average`, i: 2, color: color(2) }
-  return { b, l, values, line: c.line ? c.data.map(r => Number(r[l.key])) : average(values, n) }
+  const b = def(c.bar, 0), n = c.window ?? 3, values = c.data.map(r => Number((r as Cells)[b.key])), l = c.line ? def(c.line, 2) : { key: '', name: `${n}-point average`, i: 2, color: color(2) }
+  return { b, l, values, mean: c.line ? c.data.map(r => Number((r as Cells)[l.key])) : average(values, n) }
 }
 export const combo: Form<ComboConfig> = {
   kind: 'combo chart',
   swatch: 'line',
   legend: c => { const { b, l } = comboOf(c); return [{ name: b.name, color: b.color }, { name: l.name, color: l.color }] },
   table: c => {
-    const { b, l, values, line } = comboOf(c), f = c.format ?? num
-    return tableOf([c.xName ?? c.x, b.name, l.name], labels(c).map((m, i) => [m, f(values[i]!), line[i] === null ? '–' : f(line[i]!)]))
+    const { b, l, values, mean } = comboOf(c), f = c.format ?? num
+    return tableOf([c.xName ?? c.x, b.name, l.name], labels(c).map((m, i) => [m, f(values[i]!), mean[i] === null ? '–' : f(mean[i]!)]))
   },
   summary: c => { const { b, values } = comboOf(c), f = c.format ?? num; return `${b.name} moved from ${f(values[0]!)} to ${f(values[values.length - 1]!)}, with its trend on the same axis.` },
   plot(c, W, x) {
-    const H = W < 420 ? 190 : 220, X = labels(c), f = c.format ?? num, fa = c.axisFormat ?? f, { b, l, values, line } = comboOf(c), ml = 40, mb = 22, mt = 8
-    const t = niceTicks(0, Math.max(...values, ...line.map(v => v ?? 0)), 3), y = lin(0, t[t.length - 1]!, H - mb, mt), band = (W - ml - 4) / X.length
-    const pts = line.map((m, i) => m !== null && [ml + band * (i + 0.5), y(m)]).filter(Boolean) as number[][]
+    const H = W < 420 ? 190 : 220, X = labels(c), f = c.format ?? num, fa = c.axisFormat ?? f, { b, l, values, mean } = comboOf(c), ml = 40, mb = 22, mt = 8
+    const t = niceTicks(0, Math.max(...values, ...mean.map(v => v ?? 0)), 3), y = lin(0, t[t.length - 1]!, H - mb, mt), band = (W - ml - 4) / X.length
+    const pts = mean.map((m, i) => m !== null && [ml + band * (i + 0.5), y(m)]).filter(Boolean) as number[][]
     return {
       h: H,
       body: [
         axisY(t, y, ml, W - 4, fa),
-        !x.hidden.has(0) && s('g', { 'data-series': 0, style: `--_dc:${b.color}` }, values.map((v, i) => mark('path', i, 0, `${X[i]}: ${f(v)}${line[i] !== null ? `, average ${f(line[i]!)}` : ''}`, { class: 's-bar', style: `--i:${i}`, d: barPath(ml + band * i + band * 0.2, y(v), band * 0.6, y(0) - y(v), 3) }))),
+        !x.hidden.has(0) && s('g', { 'data-series': 0, style: `--_dc:${b.color}` }, values.map((v, i) => mark('path', i, 0, `${X[i]}: ${f(v)}${mean[i] !== null ? `, average ${f(mean[i]!)}` : ''}`, { class: 's-bar', style: `--i:${i}`, d: barPath(ml + band * i + band * 0.2, y(v), band * 0.6, y(0) - y(v), 3) }))),
         !x.hidden.has(1) && s('g', { 'data-series': 1, style: `--_dc:${l.color}` }, s('path', { class: 's-line', d: monotone(pts) }), pts.map(p => s('circle', { cx: f1(p[0]!), cy: f1(p[1]!), r: 3, fill: 'var(--warp-color-surface-raised)', stroke: l.color, 'stroke-width': 2 }))),
         s('g', { class: 'axis', 'aria-hidden': 'true' }, xLabels(X, i => ml + band * (i + 0.5), H - 6, 40, W - ml)),
       ],
-      tip: i => ({ title: X[i]!, rows: [[b.color, b.name, f(values[i]!)], ...(line[i] !== null ? [[l.color, l.name, f(line[i]!)] as TipRow] : [])] }),
+      tip: i => ({ title: X[i]!, rows: [[b.color, b.name, f(values[i]!)], ...(mean[i] !== null ? [[l.color, l.name, f(mean[i]!)] as TipRow] : [])] }),
     }
   },
 }
@@ -366,10 +367,10 @@ export type BrushConfig = Base<Row[]> & { x: string; y: string; name?: string; d
 const MIN = 10
 export const brush: Form<BrushConfig> = {
   kind: 'line chart with brush',
-  table: c => { const f = c.format ?? num, step = Math.max(1, Math.round(c.data.length / 18)); return tableOf([c.x, c.name ?? c.y], c.data.filter((_, i) => i % step === 0).map(r => [String(r[c.x]), f(Number(r[c.y]))])) },
-  summary: c => { const f = c.format ?? num, v = c.data.map(r => Number(r[c.y])), hit = c.target ? v.findIndex(t => t > c.target!.y) : -1; return `${v.length} points from ${f(v[0]!)} to ${f(v[v.length - 1]!)}.${hit >= 0 ? ` ${c.target!.label} was first crossed at ${c.data[hit]![c.x]}.` : ''}` },
+  table: c => { const f = c.format ?? num, step = Math.max(1, Math.round(c.data.length / 18)); return tableOf([c.x, c.name ?? c.y], c.data.filter((_, i) => i % step === 0).map(r => [String((r as Cells)[c.x]), f(Number((r as Cells)[c.y]))])) },
+  summary: c => { const f = c.format ?? num, v = c.data.map(r => Number((r as Cells)[c.y])), hit = c.target ? v.findIndex(t => t > c.target!.y) : -1; return `${v.length} points from ${f(v[0]!)} to ${f(v[v.length - 1]!)}.${hit >= 0 ? ` ${c.target!.label} was first crossed at ${(c.data[hit] as Record<string, string>)[c.x]}.` : ''}` },
   plot(c, W, x) {
-    const v = c.data.map(r => Number(r[c.y])), N = v.length, X = labels(c), f = c.format ?? num, H = W < 420 ? 250 : 290
+    const v = c.data.map(r => Number((r as Cells)[c.y])), N = v.length, X = labels(c), f = c.format ?? num, H = W < 420 ? 250 : 290
     const view = (x.view ??= { b0: Math.max(0, N - Math.ceil(N / 3)), b1: N - 1 }), b0 = Math.min(view.b0, N - 1), b1 = Math.min(view.b1, N - 1)
     const ml = 36, mr = 12, mt = 12, top = H - 70, ov = [H - 44, H - 6], [d0, d1] = c.domain
     const xs = lin(b0, b1, ml, W - mr), ys = lin(d0, d1, top, mt), xo = lin(0, N - 1, ml, W - mr), yo = lin(d0, d1, ov[1]!, ov[0]!)
@@ -393,7 +394,7 @@ export const brush: Form<BrushConfig> = {
   },
   behave({ svg, draw, ctx }) {
     const N = () => Number(svg.querySelector('[data-h]')!.getAttribute('aria-valuemax')) + 1
-    const set = (h: string, s: number) => { const v = ctx.view; if (h === 'b0') v.b0 = clamp(v.b0 + s, 0, v.b1 - MIN); else v.b1 = clamp(v.b1 + s, v.b0 + MIN, N() - 1); draw() }
+    const set = (h: string, d: number) => { const v = ctx.view!; if (h === 'b0') v.b0 = clamp(v.b0 + d, 0, v.b1 - MIN); else v.b1 = clamp(v.b1 + d, v.b0 + MIN, N() - 1); draw() }
     const key = (e: Event) => {
       const k = e as KeyboardEvent, h = (k.target as Element).closest('[data-h]')
       const by = { ArrowRight: 1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[k.key]
@@ -403,10 +404,10 @@ export const brush: Form<BrushConfig> = {
       set(h.getAttribute('data-h')!, by)
     }
     const down = (e: Event) => {
-      const p = e as PointerEvent, t = p.target as Element, h = t.closest('[data-h]')?.getAttribute('data-h'), bar = t.closest('[data-brush]')
-      if (!h && !bar) return
+      const p = e as PointerEvent, t = p.target as Element, h = t.closest('[data-h]')?.getAttribute('data-h'), held = t.closest('[data-brush]')
+      if (!h && !held) return
       p.preventDefault()
-      const r = svg.getBoundingClientRect(), W = Number(svg.getAttribute('width')), v = ctx.view, x0 = p.clientX, a = v.b0, b = v.b1, step = (((W - 48) / (N() - 1)) * r.width) / W
+      const r = svg.getBoundingClientRect(), W = Number(svg.getAttribute('width')), v = ctx.view!, x0 = p.clientX, a = v.b0, b = v.b1, step = (((W - 48) / (N() - 1)) * r.width) / W
       const move = (m: PointerEvent) => {
         const di = Math.round((m.clientX - x0) / step)
         if (h === 'b0') v.b0 = clamp(a + di, 0, v.b1 - MIN)

@@ -1,5 +1,7 @@
+import type { Kid } from './scene'
+
 /** What a form asks of the running chart: the legend's hidden series, the mark radius in px, an id for gradients. */
-export type Ctx = { id: string; hidden: ReadonlySet<number>; r: number; view?: any }
+export type Ctx = { id: string; hidden: ReadonlySet<number>; r: number; view?: { b0: number; b1: number } | undefined }
 export type TipRow = [color: string, label: string, value: string, dim?: boolean]
 export type Tip = { title?: string; rows?: TipRow[] }
 export type Plot = {
@@ -7,7 +9,7 @@ export type Plot = {
   w?: number
   style?: string
   /** Scene nodes, nested and falsy entries allowed. */
-  body: any[]
+  body: readonly Kid[]
   /** The tooltip for a mark; the mark's aria-label when absent. */
   tip?: (xi: number, si: number, el: Element) => Tip
   /** The mark a pointer at plot (x, y) reads, as a selector: line charts read the nearest x, not the mark under it. */
@@ -17,7 +19,7 @@ export type Plot = {
 }
 export type LegendItem = { name: string; color: string; value?: string }
 export type TableData = { head: string[]; rows: (string | number)[][] }
-export type Api = { svg: Element; draw(): void; ctx: Ctx }
+export type Api = { svg: Element; draw: () => void; ctx: Ctx }
 /** One chart form: everything it draws is a pure function of its config and width. */
 export type Form<C> = {
   kind: string
@@ -36,6 +38,6 @@ export type Form<C> = {
   /** Interaction of its own beyond the shared model; returns a cleanup. */
   behave?(api: Api): () => void
 }
-export type Base<D> = { data: D; title: string; summary?: string | ((c: any) => string) }
+export type Base<D> = { data: D; title: string; summary?: string | ((c: { data: D; title: string }) => string) }
 export type Fmt = (v: number) => string
 export const tableOf = (head: string[], rows: (string | number)[][]): TableData => ({ head, rows })

@@ -27,6 +27,7 @@ describe('error mapping, one message per cause', () => {
     const m = mapFlowError({ code: 'INVALID_CREDENTIALS', status: 401 })
     expect(m).toMatchObject({ surface: 'alert', title: "That email and password don't match.", focus: 'alert', live: 'assertive' })
   })
+  test('locked without a date says only that', () => expect(mapFlowError({ code: 'LOCKED' }).title).toBe('This account is locked.'))
   test('locked says until when, in UTC', () => expect(mapFlowError({ code: 'LOCKED', data: { until: '2026-10-30T14:05:00Z' } }).title).toContain('14:05 UTC'))
   test('rate limit stays polite and keeps focus', () => expect(mapFlowError({ code: 'RATE_LIMITED', data: { retryAfter: 20 } })).toMatchObject({ surface: 'rate-limit', retryAfter: 20, focus: 'stay', live: 'polite' }))
   test('codes land on the code field', () => {
@@ -41,7 +42,7 @@ describe('error mapping, one message per cause', () => {
     expect(mapFlowError({ code: 'STALE_SCHEMA' })).toMatchObject({ surface: 'banner', live: 'polite' })
   })
   test('copy by code wins; a bare message or string is an alert', () => {
-    expect(mapFlowError({ code: 'SEATS', data: { n: 2 } }, { copy: { SEATS: d => `${d.n} seats left.` } }).title).toBe('2 seats left.')
+    expect(mapFlowError({ code: 'SEATS', data: { n: 2 } }, { copy: { SEATS: d => `${String(d.n)} seats left.` } }).title).toBe('2 seats left.')
     expect(mapFlowError('Nope').title).toBe('Nope')
     expect(mapFlowError(undefined).title).toMatch(/Try again/)
   })

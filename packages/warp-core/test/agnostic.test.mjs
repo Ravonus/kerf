@@ -12,7 +12,7 @@ test('no framework imports and no JSX in warp-core/src', () => {
     expect(f, 'no .tsx/.jsx files').not.toMatch(/x$/)
     const text = readFileSync(new URL(f, src), 'utf8')
     const specifiers = [...text.matchAll(/^\s*(?:import|export)\b[^;\n]*?\bfrom\s*['"]([^'"]+)['"]|^\s*import\s*['"]([^'"]+)['"]|\bimport\(\s*['"]([^'"]+)['"]\s*\)/gm)].map(m => m[1] ?? m[2] ?? m[3])
-    for (const s of specifiers) expect(s, `${f} imports ${s}`).toMatch(/^\.\.?\//)
+    for (const s of specifiers) expect(s, `${f} imports ${String(s)}`).toMatch(/^\.\.?\//)
   }
 })
 

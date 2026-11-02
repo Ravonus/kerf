@@ -267,7 +267,7 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
     const j = t.closest<HTMLElement>('[data-jump]')
     if (j) jump(j.dataset.jump!)
   }
-  const watch = new (doc.defaultView as any).MutationObserver((records: MutationRecord[]) => {
+  const watch = new (doc.defaultView!).MutationObserver((records: MutationRecord[]) => {
     if (!records.some(r => [...r.addedNodes, ...r.removedNodes].some(n => n.nodeType === 1))) return
     const focused = log.contains(doc.activeElement) ? owner(doc.activeElement) : null
     rove(focused ?? all().at(-1))
@@ -422,7 +422,7 @@ export interface BoardCard { id: string; title: string }
 export interface BoardColumn<C extends BoardCard = BoardCard> { id: string; title: string; limit?: number; color?: number; cards: C[] }
 export type BoardSpot = { col: number; index: number }
 
-export function findCard(columns: readonly BoardColumn<any>[], id: string): BoardSpot | null {
+export function findCard(columns: readonly BoardColumn<BoardCard>[], id: string): BoardSpot | null {
   for (let col = 0; col < columns.length; col++) {
     const index = columns[col]!.cards.findIndex(c => c.id === id)
     if (index >= 0) return { col, index }
@@ -445,7 +445,7 @@ export function moveCard<C extends BoardCard>(columns: readonly BoardColumn<C>[]
 const STEP: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
 
 /** Where an arrow key takes a card, or null at the edge of the board. Changing column keeps the row, clamped. */
-export function stepCard(columns: readonly BoardColumn<any>[], id: string, key: string): BoardSpot | null {
+export function stepCard(columns: readonly BoardColumn<BoardCard>[], id: string, key: string): BoardSpot | null {
   const at = findCard(columns, id), step = STEP[key]
   if (!at || !step) return null
   const col = at.col + step[0]
@@ -456,7 +456,7 @@ export function stepCard(columns: readonly BoardColumn<any>[], id: string, key: 
 }
 
 /** "Moved X to Review, position 2 of 3" (06 §10). */
-export function moveLine(columns: readonly BoardColumn<any>[], id: string) {
+export function moveLine(columns: readonly BoardColumn<BoardCard>[], id: string) {
   const at = findCard(columns, id)
   if (!at) return ''
   const c = columns[at.col]!
@@ -464,7 +464,7 @@ export function moveLine(columns: readonly BoardColumn<any>[], id: string) {
 }
 
 export interface KanbanOptions {
-  columns: () => readonly BoardColumn<any>[]
+  columns: () => readonly BoardColumn<BoardCard>[]
   /** Commit a move and render it before returning, so focus can follow the card. */
   onMove(id: string, col: number, index: number): void
   /** Render a card wherever it is in its column's window, and focus it. */

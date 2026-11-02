@@ -146,7 +146,7 @@ export function feed(el: HTMLElement, opts: { items: string }) {
  */
 export function readOnView(el: HTMLElement, opts: { items: string; active?: boolean; hold?: number; onRead(id: string): void }) {
   let o = opts
-  const win = el.ownerDocument.defaultView as (Window & typeof globalThis) | null
+  const win = el.ownerDocument.defaultView
   if (!win?.IntersectionObserver) return { update: (n: typeof opts) => void (o = n), destroy() {} }
   const timers = new Map<Element, ReturnType<typeof setTimeout>>()
   const stop = (row: Element) => { clearTimeout(timers.get(row)); timers.delete(row) }
@@ -188,7 +188,7 @@ export interface NotifyPolicyOptions {
   /** At most this many toasts from this policy are up at once. */
   max?: number
   /** "3 new notifications". */
-  summary?(n: number): string
+  summary?: (n: number) => string
 }
 
 /**
@@ -243,7 +243,7 @@ export type LiveState = 'connecting' | 'live' | 'reconnecting' | 'offline'
 
 /** `.live`, `stream().status` and `channel.status`, mapped to the four states (07 §4.5, §4.7). */
 export function liveState(status: string | undefined | null): LiveState {
-  switch (status) {
+  switch (status!) {
     case 'live': case 'open': case 'streaming': case 'done': return 'live'
     case 'reconnecting': return 'reconnecting'
     case 'offline': case 'closed': case 'unauthorized': case 'error': return 'offline'
@@ -411,7 +411,7 @@ export function speakingOut(el: HTMLElement, on: boolean | undefined) {
 
 /** Off-screen tiles pause their <video> (07 §3.2); only what this paused plays again. */
 export function pauseOffscreen(el: HTMLElement) {
-  const win = el.ownerDocument.defaultView as (Window & typeof globalThis) | null
+  const win = el.ownerDocument.defaultView
   if (!win?.IntersectionObserver) return { update() {}, destroy() {} }
   const paused = new WeakSet<HTMLVideoElement>()
   const io = new win.IntersectionObserver(entries => {
@@ -487,12 +487,12 @@ export function pip(el: HTMLElement, opts: { corner?: PipCorner; onMove?(corner:
     e.preventDefault()
     if (to !== corner) snap(to)
   }
-  const on: [string, (e: any) => void][] = [['pointerdown', onDown], ['pointermove', onMove], ['pointerup', onUp], ['pointercancel', onUp], ['keydown', onKey]]
-  for (const [t, fn] of on) el.addEventListener(t, fn)
+  const on: [string, (e: never) => void][] = [['pointerdown', onDown], ['pointermove', onMove], ['pointerup', onUp], ['pointercancel', onUp], ['keydown', onKey]]
+  for (const [t, fn] of on) el.addEventListener(t, fn as EventListener)
   if (o.corner && o.corner !== corner) snap(o.corner, true)
   return {
     update(next: typeof opts) { o = next; if (o.corner && o.corner !== corner) snap(o.corner, true) },
-    destroy() { for (const [t, fn] of on) el.removeEventListener(t, fn) },
+    destroy() { for (const [t, fn] of on) el.removeEventListener(t, fn as EventListener) },
   }
 }
 
@@ -739,7 +739,7 @@ export function transportSim(initial: TransportConfig, env: SimEnv = {}) {
 export function whileSeen(el: HTMLElement, opts: { ms: number; tick(): void }) {
   let o = opts
   const doc = el.ownerDocument
-  const win = doc.defaultView as (Window & typeof globalThis) | null
+  const win = doc.defaultView
   let seen = !win?.IntersectionObserver
   let timer: ReturnType<typeof setInterval> | undefined
   const sync = () => {

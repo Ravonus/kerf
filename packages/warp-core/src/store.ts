@@ -2,8 +2,8 @@
 // a binding copies `get()` into its own reactive cell in `subscribe` (weft: a box; React: useSyncExternalStore).
 
 export interface Store<S> {
-  get(): S
-  subscribe(fn: (state: S) => void): () => void
+  get: () => S
+  subscribe: (fn: (state: S) => void) => () => void
 }
 
 export function store<S>(initial: S) {
@@ -14,9 +14,10 @@ export function store<S>(initial: S) {
     set(next: S) {
       if (Object.is(next, current)) return
       current = next
+      // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a listener can unsubscribe while it's told
       for (const fn of [...listeners]) fn(current)
     },
-    subscribe(fn: (state: S) => void) {
+    subscribe: (fn: (state: S) => void) => {
       listeners.add(fn)
       return () => void listeners.delete(fn)
     },
@@ -37,7 +38,7 @@ const side = typeof document === 'undefined' ? 's' : ''
 export const uid = (prefix = 'warp') => {
   // A server render restarts the count, so a page's markup doesn't depend on what was served before it: that's how start
   // tells a static level hasn't changed. weft has no import of this package, so the two meet on a global.
-  if (side) (globalThis as any)[Symbol.for('weft.render')] = resetIds
+  if (side) (globalThis as Record<symbol, unknown>)[Symbol.for('weft.render')] = resetIds
   return `${prefix}-${side}${(next++).toString(36)}`
 }
 /**

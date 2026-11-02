@@ -6,12 +6,12 @@
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 // text keeps its entities (an editor's innerHTML is full of &nbsp;): in element content they can only ever be text
 const escText = (s: string) => s.replace(/&(?!#?\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const unesc = (s: string) => s.replace(/&(lt|gt|quot|#39|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', '#39': "'", amp: '&' })[e as 'lt']!)
+const unesc = (s: string) => s.replace(/&(lt|gt|quot|#39|amp);/g, (_, e) => ({ lt: '<', gt: '>', quot: '"', '#39': "'", amp: '&' })[e as 'lt'])
 
 /** http, https, mailto and relative only (04 Markdown). */
 export const safeUrl = (url: string) => {
   // browsers drop tabs, line breaks and controls before reading a scheme
-  // eslint-disable-next-line no-control-regex
+  // oxlint-disable-next-line no-control-regex -- the point: these are what hide a scheme
   const u = unesc(url).replace(/[\u0000- ]+/g, '')
   return /^(https?:|mailto:|\/(?![/\\])|#|\.)/i.test(u) || !/^[a-z][a-z0-9+.-]*:|^[/\\]{2}/i.test(u) ? u : null
 }
@@ -72,7 +72,7 @@ function inline(s: string, target: string) {
     .replace(/(^|[^*])\*(?!\s)(.+?)\*/g, '$1<em>$2</em>')
     .replace(/(^|\W)_(?!\s)(.+?)_(?=\W|$)/g, '$1<em>$2</em>')
     .replace(/~~(.+?)~~/g, '<del>$1</del>')
-  // eslint-disable-next-line no-control-regex
+  // oxlint-disable-next-line no-control-regex -- NUL is the marker hold() writes
   return styled.replace(/\u0000(\d+)\u0000/g, (_, i: string) => held[+i] ?? _)
 }
 
@@ -95,10 +95,10 @@ export function markdownToHtml(source: string, { linkTarget = '_self', code, hea
   for (let i = 0; i < L.length;) {
     const l = L[i]!
     let m: RegExpExecArray | null
-    if (/^```/.test(l)) {
+    if (l.startsWith('```')) {
       const lang = l.slice(3).trim()
       const buf: string[] = []
-      for (i++; i < L.length && !/^```/.test(L[i]!); i++) buf.push(L[i]!)
+      for (i++; i < L.length && !L[i]!.startsWith('```'); i++) buf.push(L[i]!)
       i++
       if (code) out += code(buf.join('\n'), lang)
       else out += `<pre data-scope="codeblock"${lang ? ` data-lang="${esc(lang)}"` : ''} tabindex="0" aria-label="${esc(lang || 'Code')}"><code>${esc(buf.join('\n'))}</code></pre>`
@@ -160,7 +160,7 @@ export function htmlToMarkdown(root: Element): string {
       case 'code': return `\`${el.textContent}\``
       case 'a': return `[${kids()}](${el.getAttribute('href') ?? ''})`
       case 'br': return '\n'
-      case 'span': return el.hasAttribute('data-mention') ? el.textContent! : kids()
+      case 'span': return el.hasAttribute('data-mention') ? el.textContent : kids()
       default: return kids()
     }
   }
@@ -274,7 +274,7 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     const s = doc.getSelection()
     const block = blockOf(s?.anchorNode ?? null)
     if (!block || block.closest('li')) return false
-    const text = block.textContent!.replace(/ /g, ' ')
+    const text = block.textContent.replace(/ /g, ' ')
     if (text === '---') { block.textContent = ''; exec('insertHorizontalRule'); return true }
     for (const [re, cmd, value] of BLOCKS) {
       if (!re.test(text)) continue
@@ -314,7 +314,7 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     const node = s?.anchorNode
     const m = node?.nodeType === 3 && s!.isCollapsed ? /(?:^|\s)([/@])([\w-]*)$/.exec(node.nodeValue!.slice(0, s!.anchorOffset)) : null
     const block = m && blockOf(node!)
-    if (!m || !block || (m[1] === '/' && block.textContent!.trim() !== `/${m[2]}`)) return o.onQuery(null)
+    if (!m || !block || (m[1] === '/' && block.textContent.trim() !== `/${m[2]}`)) return o.onQuery(null)
     o.onQuery({ trigger: m[1]!, query: m[2]!, rect: s!.getRangeAt(0).getBoundingClientRect() })
   }
   const onInput = (e: Event) => {
@@ -381,7 +381,7 @@ export function keyboardDock(bar: HTMLElement, opts: { editor: () => HTMLElement
   const place = () => {
     const on = !!vv && phone() && opts.editor()?.matches(':focus-within, :focus')
     bar.toggleAttribute('data-docked', on)
-    bar.style.insetBlockEnd = on ? `${win.innerHeight - vv!.height - vv!.offsetTop}px` : ''
+    bar.style.insetBlockEnd = on ? `${win.innerHeight - vv.height - vv.offsetTop}px` : ''
   }
   vv?.addEventListener('resize', place)
   vv?.addEventListener('scroll', place)

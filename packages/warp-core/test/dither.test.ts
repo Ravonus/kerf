@@ -150,7 +150,7 @@ describe('surface', () => {
     Object.defineProperty(box, 'clientWidth', { value: 300 })
     Object.defineProperty(box, 'clientHeight', { value: 150 })
     canvas = document.createElement('canvas')
-    canvas.getContext = (() => fake) as any
+    canvas.getContext = (() => fake) as unknown as typeof canvas.getContext
     box.append(canvas)
     document.body.append(box)
   })
@@ -174,7 +174,7 @@ describe('surface', () => {
     const a = surface(canvas, { draw: () => void draws++, animate: true })
     let left = 2
     const c2 = document.createElement('canvas')
-    c2.getContext = (() => fake) as any
+    c2.getContext = (() => fake) as unknown as typeof c2.getContext
     box.append(c2)
     const b = surface(c2, { draw: () => { draws++; return --left > 0 } })
     expect(frames).toHaveLength(1)

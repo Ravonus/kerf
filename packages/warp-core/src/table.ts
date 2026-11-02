@@ -16,6 +16,7 @@ export function compareValues(a: unknown, b: unknown) {
   if (b == null || b === '') return -1
   if (typeof a === 'number' && typeof b === 'number') return a - b
   if (a instanceof Date && b instanceof Date) return +a - +b
+  // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
   return collator.compare(String(a), String(b))
 }
 
@@ -35,6 +36,7 @@ export function sortRows<T>(rows: readonly T[], value: (row: T) => unknown, dir:
 export function filterRows<T>(rows: readonly T[], query: string, texts: (row: T) => unknown[]) {
   const q = query.trim().toLowerCase()
   if (!q) return rows as T[]
+  // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
   return rows.filter(r => texts(r).some(t => t != null && String(t).toLowerCase().includes(q)))
 }
 

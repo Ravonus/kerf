@@ -2,7 +2,7 @@
 // overlaps, and the pointer actions a binding attaches. Wall times are `YYYY-MM-DDTHH:MM` strings, minutes are minutes
 // since midnight on a day. No framework, and nothing here reads the clock unless it is asked to.
 import { gridKey } from './calendar'
-import { addDays, addMonths, clamp, daysBetween, dow, fmt, fmtTime, fromMinutes, minutes, monthEnd, monthStart, offsetAt, pad, toIso, type IsoDate, type IsoTime } from './temporal'
+import { addDays, addMonths, clamp, daysBetween, dow, fmt, fmtTime, fromMinutes, minutes, monthEnd, monthStart, offsetAt, pad, toIso, type IsoDate } from './temporal'
 
 export type CalView = 'month' | 'week' | 'day' | 'agenda' | 'timeline' | 'year'
 
@@ -187,7 +187,7 @@ export function stepDate(view: CalView, date: string, dir: number) {
 /** Six weeks round a month. */
 export function monthCells(date: string, weekStartsOn: number) {
   const a = startOfWeek(monthStart(date), weekStartsOn), first = monthStart(date), last = monthEnd(date)
-  return Array.from({ length: 6 }, (_, r) => ({ key: addDays(a, r * 7), cells: Array.from({ length: 7 }, (_, c) => { const iso = addDays(a, r * 7 + c); return { iso, outside: iso < first || iso > last } }) }))
+  return Array.from({ length: 6 }, (_, r) => ({ key: addDays(a, r * 7), cells: Array.from({ length: 7 }, (__, c) => { const iso = addDays(a, r * 7 + c); return { iso, outside: iso < first || iso > last } }) }))
 }
 
 /** "Design crit, Monday 10:00 to 11:30, Studio, tentative". */
@@ -209,7 +209,7 @@ export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
 
 export const snapTo = (m: number, step = 15) => Math.round(m / step) * step
 
-export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string | undefined): Slot {
+export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string): Slot {
   const len = origin.e - origin.s
   const s = clamp(snapTo(origin.s + dm, step), 0, DAY - Math.min(len, DAY))
   return { date, s, e: s + len, resource: resource ?? origin.resource }
@@ -297,7 +297,7 @@ export interface CalendarDragOptions {
   onPress(id: string, el: HTMLElement): void
   onLongPress?(id: string, el: HTMLElement): void
   /** A double-click on an empty slot. */
-  onSlot?(date: string, minute: number, resource?: string | undefined): void
+  onSlot?(date: string, minute: number, resource?: string): void
 }
 
 const LONG_PRESS = 400
@@ -383,7 +383,7 @@ export function calendarDrag(el: HTMLElement, opts: CalendarDragOptions) {
       slot = { ...dragCreate(d.date, d.anchor, c ? minuteAt(c, e) : d.anchor, step), resource: d.resource }
     }
     d.preview = { ...slot, mode: d.mode, id: d.id, origin: d.origin }
-    o.onPreview(d.preview!)
+    o.onPreview(d.preview)
   }
   const onUp = () => { cancelPress(); stop(true) }
   const onCancel = () => { cancelPress(); stop(false) }
@@ -425,7 +425,7 @@ export function longPress(el: HTMLElement, opts: { selector: string; onPress(row
     row = r
     start = { x: e.clientX, y: e.clientY }
     r.dataset.pressing = ''
-    timer = setTimeout(() => { const at = row!; clear(); el.ownerDocument.defaultView?.navigator.vibrate?.(8); o.onPress(at) }, LONG_PRESS)
+    timer = setTimeout(() => { const hit = row!; clear(); el.ownerDocument.defaultView?.navigator.vibrate?.(8); o.onPress(hit) }, LONG_PRESS)
   }
   const move = (e: PointerEvent) => { if (row && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) clear() }
   const menu = (e: Event) => { if ((e.target as Element).closest(o.selector)) e.preventDefault() }
@@ -627,4 +627,4 @@ export function nextRange(ranges: Range[], last = 1320): Range {
 }
 export const timeOptions = (from = 360, to = 1320, step = 30) => { const out: number[] = []; for (let m = from; m <= to; m += step) out.push(m); return out }
 export const hhmm = (m: number) => `${Math.floor(m / 60)}:${pad(m % 60)}`
-export const asTime = (m: number) => fromMinutes(m) as IsoTime
+export const asTime = (m: number) => fromMinutes(m)

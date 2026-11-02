@@ -60,7 +60,7 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
     step.dataset.state = 'leaving'
     const end = () => { if (live && step.dataset.state === 'leaving') delete step.dataset.state }
     const running = step.getAnimations?.() ?? []
-    if (running.length) Promise.allSettled(running.map(a => a.finished)).then(end)
+    if (running.length) void Promise.allSettled(running.map(a => a.finished)).then(end)
     else end()
   }
 
@@ -120,18 +120,21 @@ export interface FlowError {
   focus: 'field' | 'alert' | 'stay'
   /** The live region it goes to; `undefined`: none. */
   live?: 'polite' | 'assertive'
-  retryAfter?: number
-  until?: string
-  attemptsLeft?: number
+  retryAfter?: number | undefined
+  until?: string | undefined
+  attemptsLeft?: number | undefined
 }
 
 interface IssueLike { message: string; path?: readonly (PropertyKey | { readonly key: PropertyKey })[] }
+
+/** What a server sends with an error, past the code: the fields mapFlowError reads, and whatever a domain adds. */
+export type FlowData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<string, unknown>
 
 export interface FlowErrorOptions {
   /** `online().value`: a failed submit while offline is a Banner, not a server error. */
   online?: boolean
   /** Copy by code, for a domain error the table doesn't know. */
-  copy?: Record<string, string | ((data: any) => string)>
+  copy?: Record<string, string | ((data: FlowData) => string)>
 }
 
 /** Field name by field name from Zod or Standard Schema issues: `a.b`, and the first message wins. */
@@ -154,18 +157,18 @@ const tries = (n: number | undefined) => (n === undefined ? '' : n === 1 ? ' 1 t
 
 /** One message per cause: what happened and what to do, in one sentence. Takes a `FnError`, anything like one, or a string. */
 export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowErrorOptions = {}): FlowError {
-  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string | undefined; status?: number; message?: string; issues?: readonly IssueLike[]; data?: any; extra?: any; name?: string } & Record<string, any>
-  const data = e.data ?? e.extra ?? e
+  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string | undefined; status?: number; message?: string; issues?: readonly IssueLike[]; data?: FlowData; extra?: FlowData; name?: string }
+  const data: FlowData = e.data ?? e.extra ?? e
   const base = { code: e.code, fields: {} as Record<string, string> }
-  const alert = (title: string, description?: string | undefined): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
+  const alert = (title: string, description?: string): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
   const fields = issueFields(e.issues)
   const named = Object.keys(fields).length
   if (named) return { ...base, surface: 'field', fields, title: e.message ?? fieldSummary(named), summary: fieldSummary(named), focus: 'field', live: 'polite' }
   const known = e.code ? copy[e.code] : undefined
   if (known) return alert(typeof known === 'function' ? known(data) : known)
-  switch (e.code) {
+  switch (e.code!) {
     case 'INVALID_CREDENTIALS': return alert("That email and password don't match.", 'Try again, or reset your password.')
-    case 'LOCKED': return { ...alert(`This account is locked until ${utc(data.until)}.`, 'Reset your password to get back in sooner.'), until: data.until }
+    case 'LOCKED': return { ...alert(`This account is locked${data.until ? ` until ${utc(data.until)}` : ''}.`, 'Reset your password to get back in sooner.'), until: data.until }
     case 'RATE_LIMITED': return { ...base, surface: 'rate-limit', title: 'Too many tries.', retryAfter: data.retryAfter, focus: 'stay', live: 'polite' }
     case 'WRONG_CODE': return { ...base, surface: 'field', fields: { code: `That code didn't work.${tries(data.attemptsLeft)}` }, title: `That code didn't work.${tries(data.attemptsLeft)}`, attemptsLeft: data.attemptsLeft, focus: 'field', live: 'assertive' }
     case 'EXPIRED': return { ...base, surface: 'field', fields: { code: 'That code expired. We sent a new one.' }, title: 'That code expired. We sent a new one.', focus: 'field', live: 'assertive' }

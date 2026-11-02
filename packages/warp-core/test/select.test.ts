@@ -17,7 +17,7 @@ function mount(fine = true) {
 }
 afterEach(() => {
   document.body.innerHTML = ''
-  if (was) Object.defineProperty(window, 'matchMedia', was); else delete (window as any).matchMedia
+  if (was) Object.defineProperty(window, 'matchMedia', was); else delete (window as { matchMedia?: unknown }).matchMedia
 })
 
 test('a coarse pointer keeps the OS popup', () => {

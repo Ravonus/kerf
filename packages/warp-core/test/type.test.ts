@@ -62,7 +62,7 @@ test('skeletonShape(): counts follow the spec, text bars fill a body line box', 
   expect(last.style).toContain('inline-size:60%')
   expect(last.style).toContain('margin-block:calc((var(--warp-text-body-leading, 1.55) * 1em - 0.7em) / 2)')
 
-  expect(parts(skeletonShape({ kind: 'list', rows: 5 }))).toEqual(Array(5).fill(['circle', 'text', 'text']).flat())
+  expect(parts(skeletonShape({ kind: 'list', rows: 5 }))).toEqual(Array.from({ length: 5 }, () => ['circle', 'text', 'text']).flat())
   expect(parts(skeletonShape({ kind: 'list', rows: 2, avatar: false }))).toEqual(['text', 'text', 'text', 'text'])
   expect(parts(skeletonShape({ kind: 'table', rows: 2, cols: 4 }))).toHaveLength(8)
 

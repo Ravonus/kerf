@@ -197,8 +197,8 @@ export const contextLevel = (ratio: number) => (ratio >= 0.95 ? 'full' : ratio >
 export function argsDiff(before: string, after: string): string[] {
   if (before === after) return []
   const a = before.split('\n'), b = after.split('\n')
-  const lcs = a.map(() => new Array<number>(b.length + 1).fill(0))
-  lcs.push(new Array<number>(b.length + 1).fill(0))
+  const lcs = a.map(() => Array<number>(b.length + 1).fill(0))
+  lcs.push(Array<number>(b.length + 1).fill(0))
   for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) lcs[i]![j] = a[i] === b[j] ? lcs[i + 1]![j + 1]! + 1 : Math.max(lcs[i + 1]![j]!, lcs[i]![j + 1]!)
   const out: string[] = []
   let i = 0, j = 0
@@ -317,11 +317,11 @@ export function citePreview(link: HTMLElement, opts: CiteOptions) {
   const enter = (e: PointerEvent) => { if (e.pointerType !== 'touch') later(show, 250) }
   const focus = () => { if (link.matches(':focus-visible')) show() }
   const out = (e: FocusEvent) => { if (!inside(e.relatedTarget)) hide() }
-  const on: [EventTarget, string, (e: any) => void][] = [[link, 'pointerenter', enter], [link, 'pointerleave', leave], [o.panel, 'pointerleave', leave], [link, 'focusin', focus], [link, 'focusout', out], [o.panel, 'focusout', out], [link, 'click', hide]]
-  for (const [t, n, f] of on) t.addEventListener(n, f)
+  const on: [EventTarget, string, (e: never) => void][] = [[link, 'pointerenter', enter], [link, 'pointerleave', leave], [o.panel, 'pointerleave', leave], [link, 'focusin', focus], [link, 'focusout', out], [o.panel, 'focusout', out], [link, 'click', hide]]
+  for (const [t, n, f] of on) t.addEventListener(n, f as EventListener)
   return {
     update(next: CiteOptions) { o = next },
-    destroy() { for (const [t, n, f] of on) t.removeEventListener(n, f); clearTimeout(timer); remove?.() },
+    destroy() { for (const [t, n, f] of on) t.removeEventListener(n, f as EventListener); clearTimeout(timer); remove?.() },
   }
 }
 
@@ -369,16 +369,28 @@ export async function listMics(win: Window) {
   return all.filter(d => d.kind === 'audioinput' && d.deviceId).map(d => ({ value: d.deviceId, label: d.label || 'Microphone' }))
 }
 
+/** The Web Speech recogniser, which the DOM types don't carry: only what dictation touches. */
+export interface Recognizer {
+  continuous: boolean
+  interimResults: boolean
+  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null
+  onerror: ((e: { error: string }) => void) | null
+  onend: (() => void) | null
+  start(): void
+  stop(): void
+  abort?(): void
+}
+
 /** Web Speech for words, a mic stream and an analyser for the level. Blocked and unsupported are states, not throws. */
-export function dictation(win: Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any; AudioContext?: any }, on: DictationEvents): DictationEngine {
-  let rec: any
+export function dictation(win: Window & { SpeechRecognition?: new () => Recognizer; webkitSpeechRecognition?: new () => Recognizer; AudioContext?: typeof AudioContext }, on: DictationEvents): DictationEngine {
+  let rec: Recognizer | undefined
   let stream: MediaStream | undefined
-  let audio: any
+  let audio: AudioContext | undefined
   let raf = 0
   const release = () => {
     win.cancelAnimationFrame(raf)
     stream?.getTracks().forEach(t => t.stop())
-    audio?.close?.()
+    void audio?.close?.()
     stream = audio = undefined
     on.onLevel(0)
   }
@@ -392,7 +404,7 @@ export function dictation(win: Window & { SpeechRecognition?: any; webkitSpeechR
     const buf = new Uint8Array(an.fftSize)
     const tick = () => {
       an.getByteTimeDomainData(buf)
-      on.onLevel(Math.min(1, Math.max(...buf.map((v: number) => Math.abs(v - 128))) / 64))
+      on.onLevel(Math.min(1, Math.max(...buf.map(v => Math.abs(v - 128))) / 64))
       raf = win.requestAnimationFrame(tick)
     }
     tick()
@@ -405,16 +417,16 @@ export function dictation(win: Window & { SpeechRecognition?: any; webkitSpeechR
       rec = new Speech()
       rec.continuous = true
       rec.interimResults = true
-      rec.onresult = (e: any) => {
+      rec.onresult = e => {
         let interim = ''
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const r = e.results[i]
-          if (r.isFinal) final += r[0].transcript
-          else interim += r[0].transcript
+          const r = e.results[i]!
+          if (r.isFinal) final += r[0]!.transcript
+          else interim += r[0]!.transcript
         }
         on.onTranscript(final, interim)
       }
-      rec.onerror = (e: any) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { rec = undefined; release(); on.onState('blocked') } }
+      rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { rec = undefined; release(); on.onState('blocked') } }
       rec.onend = () => { if (rec) { rec = undefined; release(); on.onState('idle') } }
       rec.start()
       on.onState('listening')

@@ -1,11 +1,11 @@
 // The forms without x and y axes (06 §12, specimen 05 and 10): round ones, part-to-whole ones and grids.
 import { halo, mark } from './marks'
 import { arc, color, f1, labelWindow, lin, num, pct, polar, ring, seq, squarify, sum } from './math'
-import { s } from './scene'
+import { s, type Kid } from './scene'
 import { tableOf, type Base, type Fmt, type Form, type LegendItem, type TipRow } from './types'
 
 const TAU = Math.PI * 2
-const centred = (W: number, size: number, ...c: any[]) => s('g', { transform: `translate(${(W - size) / 2},0)` }, ...c)
+const centred = (W: number, size: number, ...c: Kid[]) => s('g', { transform: `translate(${(W - size) / 2},0)` }, ...c)
 
 export type Slice = { name: string; value: number; color?: string }
 export type DonutConfig = Base<Slice[]> & { pie?: boolean; unit?: string; format?: Fmt; name?: string }
@@ -74,11 +74,11 @@ export const radar: Form<RadarConfig> = {
   summary: c => `${c.data.map(v => v.name).join(' and ')} scored on ${c.axes.length} axes.`,
   plot(c, W, x) {
     const size = Math.min(W, 250), mid = size / 2, R = mid - 26, n = c.axes.length, f = c.format ?? num, P = (i: number, r: number): [number, number] => [mid + r * Math.sin((i / n) * TAU), mid - r * Math.cos((i / n) * TAU)]
-    const ring = (k: number) => c.axes.map((_, i) => P(i, R * k).map(f1).join(',')).join(' ')
+    const web = (k: number) => c.axes.map((_, i) => P(i, R * k).map(f1).join(',')).join(' ')
     return {
       h: size,
       body: [centred(W, size,
-        s('g', { class: 'grid', 'aria-hidden': 'true' }, [0.25, 0.5, 0.75, 1].map(k => s('polygon', { points: ring(k), fill: 'none', stroke: 'var(--warp-color-data-grid)' })), c.axes.map((_, i) => s('line', { x1: mid, y1: mid, x2: P(i, R)[0], y2: P(i, R)[1] }))),
+        s('g', { class: 'grid', 'aria-hidden': 'true' }, [0.25, 0.5, 0.75, 1].map(k => s('polygon', { points: web(k), fill: 'none', stroke: 'var(--warp-color-data-grid)' })), c.axes.map((_, i) => s('line', { x1: mid, y1: mid, x2: P(i, R)[0], y2: P(i, R)[1] }))),
         s('g', { class: 'axis', 'aria-hidden': 'true' }, c.axes.map((a, i) => { const [X, Y] = P(i, R + 14); return s('text', { x: X, y: Y + 4, 'text-anchor': 'middle' }, a) })),
         c.data.map((v, si) => !x.hidden.has(si) && s('g', { 'data-series': si, style: `--_dc:${color(si)}` },
           s('polygon', { class: 's-poly', points: v.values.map((val, i) => P(i, R * val).map(f1).join(',')).join(' ') }),

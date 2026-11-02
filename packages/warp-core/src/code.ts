@@ -78,6 +78,7 @@ export function highlight(text: string, language = 'tsx') {
   }, { lines: [], open: '' }).lines.join('')
 }
 
+// oxlint-disable-next-line no-control-regex -- a JSON string may not hold a raw control character
 const JSON_ATOM = /"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[\da-fA-F]{4}))*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y
 
 /** Where JSON stops being JSON. V8 names a position only sometimes and short text never, so this walks it itself. */
@@ -124,7 +125,7 @@ export function jsonProblem(text: string) {
   }
 }
 
-const shared = new Map<CodeToken, any>() // one Highlight per kind: the registry is per document, the rule per name
+const shared = new Map<CodeToken, Highlight>() // one Highlight per kind: the registry is per document, the rule per name
 
 /**
  * The colour layer: `layer` is a `<pre aria-hidden>` behind a transparent textarea, holding the same text. Without the
@@ -133,12 +134,12 @@ const shared = new Map<CodeToken, any>() // one Highlight per kind: the registry
 export function codeLayer(root: HTMLElement, opts: { text: string; language?: string }) {
   let o = opts
   const doc = root.ownerDocument
-  const win = doc.defaultView as any
+  const win = doc.defaultView!
   const layer = root.querySelector<HTMLElement>('[data-part="layer"]')!
   const area = root.querySelector('textarea')!
   const gutter = root.querySelector<HTMLElement>('[data-part="lines"]')
   const on = typeof win.Highlight === 'function' && !!win.CSS?.highlights
-  let mine: [any, Range][] = []
+  let mine: [Highlight, Range][] = []
   let frame = 0
   const clear = () => { for (const [h, r] of mine) h.delete(r); mine = [] }
   const draw = () => {

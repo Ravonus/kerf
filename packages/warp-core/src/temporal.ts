@@ -24,8 +24,8 @@ export const addDays = (iso: string, n: number) => { const d = toDate(iso); d.se
 export const daysIn = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate()
 /** Months away, clamped to the shorter month: 31 Jan + 1 is 28 or 29 Feb. */
 export const addMonths = (iso: string, n: number) => {
-  let [y, m, d] = ymd(iso)
-  m += n
+  const t = ymd(iso), d = t[2]
+  let y = t[0], m = t[1] + n
   y += Math.floor((m - 1) / 12)
   m = (((m - 1) % 12) + 12) % 12 + 1
   return toIso(y, m, Math.min(d, daysIn(y, m)))
@@ -51,12 +51,13 @@ const formatter = (locale: string, opts: Intl.DateTimeFormatOptions) => {
 }
 /** An ISO date (or date-time, read as wall time) in `locale`. */
 export const fmt = (iso: string, opts: Intl.DateTimeFormatOptions, locale: string) => formatter(locale, opts).format(/T/.test(iso) ? new Date(`${iso.length === 16 ? `${iso}:00` : iso}Z`) : toDate(iso))
-export const fmtTime = (hm: string, locale: string, hourCycle?: string) => fmt(`2026-01-01T${hm}`, { hour: 'numeric', minute: '2-digit', hourCycle: hourCycle === 'auto' ? undefined : hourCycle as any }, locale)
+export const fmtTime = (hm: string, locale: string, hourCycle?: string) => fmt(`2026-01-01T${hm}`, { hour: 'numeric', minute: '2-digit', hourCycle: hourCycle === 'auto' ? undefined : hourCycle as Intl.DateTimeFormatOptions['hourCycle'] }, locale)
 export const fmtRange = (a: string, b: string, locale: string, opts: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }) => formatter(locale, opts).formatRange(toDate(a), toDate(b))
 
-const weekInfo = (locale: string): { firstDay: number; weekend: number[] } | null => {
+type WeekInfo = { firstDay: number; weekend: number[] }
+const weekInfo = (locale: string): WeekInfo | null => {
   try {
-    const l = new Intl.Locale(locale) as any
+    const l = new Intl.Locale(locale) as Intl.Locale & { getWeekInfo?(): WeekInfo; weekInfo?: WeekInfo }
     return l.getWeekInfo?.() ?? l.weekInfo ?? null
   } catch { return null }
 }

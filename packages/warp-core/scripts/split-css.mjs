@@ -88,9 +88,9 @@ function split(file, family) {
   let current = 'base', inTail = false
   for (const item of list) {
     if (item.kind === 'comment') {
-      const body = item.text.slice(2, -2).trim()
-      const marker = body.match(/^-- +([^-\n][^\n]*)/)
-      const section = body.match(/^[-=]{8,}\s*\n\s*(?:\d+|[A-Z]) · ([^\n.(]*)/) ?? body.match(/^[-=]{8,}\s*([A-Z][A-Z ]+)/) ?? body.match(/^-{8,}\s*(forced colours)/)
+      const note = item.text.slice(2, -2).trim()
+      const marker = note.match(/^-- +([^-\n][^\n]*)/)
+      const section = note.match(/^[-=]{8,}\s*\n\s*(?:\d+|[A-Z]) · ([^\n.(]*)/) ?? note.match(/^[-=]{8,}\s*([A-Z][A-Z ]+)/) ?? note.match(/^-{8,}\s*(forced colours)/)
       const title = marker?.[1].replace(/[-\s*/]+$/, '') ?? section?.[1].trim()
       if (title && TAIL.test(title)) inTail = true
       else if (marker && !inTail) {
@@ -111,10 +111,10 @@ function split(file, family) {
   // An @media block is split the same way, each owner getting its own copy of the wrapper.
   const shared = []
   const homesOf = text => {
-    const homes = new Set(scopesOf(text).map(s => owner.get(s)).filter(Boolean))
-    return homes.size ? [...homes] : ['base']
+    const owners = new Set(scopesOf(text).map(s => owner.get(s)).filter(Boolean))
+    return owners.size ? [...owners] : ['base']
   }
-  const place = (home, list) => (home === 'base' ? shared : files.get(home)).push({ kind: 'space', text: '\n' }, ...list)
+  const place = (home, rules) => (home === 'base' ? shared : files.get(home)).push({ kind: 'space', text: '\n' }, ...rules)
   let pending = []
   for (const item of tail) {
     if (item.kind !== 'rule') { pending.push(item); continue }
@@ -128,7 +128,7 @@ function split(file, family) {
         for (const h of homesOf(i.text)) (byHome.get(h) ?? byHome.set(h, []).get(h)).push(...before, i)
         before = []
       }
-      for (const [h, list] of byHome) place(h, [...pending, { kind: 'rule', text: `${item.text.slice(0, open)}\n${list.map(i => i.text).join('').trim()}\n}`, inner: list.filter(i => i.kind === 'rule').map(i => i.text) }])
+      for (const [h, rules] of byHome) place(h, [...pending, { kind: 'rule', text: `${item.text.slice(0, open)}\n${rules.map(i => i.text).join('').trim()}\n}`, inner: rules.filter(i => i.kind === 'rule').map(i => i.text) }])
     } else for (const h of homesOf(item.text)) place(h, [...pending, item])
     pending = []
   }
@@ -198,9 +198,9 @@ function renderRouted({ family, files, tokens, layer }) {
 function render({ layer, family, files, shared }) {
   const result = new Map()
   for (const [name, list] of files) {
-    const body = list.map(i => i.text).join('').trim()
+    const joined = list.map(i => i.text).join('').trim()
     if (!list.some(i => i.kind === 'rule')) continue
-    result.set(`${family}/${name}.css`, `/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */\n@layer ${layer} {\n${body}\n}\n`)
+    result.set(`${family}/${name}.css`, `/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */\n@layer ${layer} {\n${joined}\n}\n`)
   }
   // cross-cutting tail rules no single component owns load once, from the family base, after its own rules
   const tail = shared.map(i => i.text).join('').trim()
@@ -217,7 +217,7 @@ export function build() {
   const scopes = {}
   for (const p of Object.values(routed)) for (const name of p.files.keys()) if (name !== 'base') (scopes[name] ??= new Set()).add(`${p.family}/${name}.css`)
   for (const p of Object.values(parts)) for (const [name, list] of p.files) for (const i of list) if (i.kind === 'rule') for (const s of scopesOf(i.text)) (scopes[s] ??= new Set()).add(`${p.family}/${name}.css`)
-  files.set('manifest.json', JSON.stringify(Object.fromEntries(Object.entries(scopes).sort().map(([k, v]) => [k, [...v]])), null, 1) + '\n')
+  files.set('manifest.json', JSON.stringify(Object.fromEntries(Object.entries(scopes).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([k, v]) => [k, [...v]])), null, 1) + '\n')
   return { files, parts, routed }
 }
 
@@ -225,7 +225,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { files } = build()
   const read = dir => readdirSync(dir, { recursive: true, withFileTypes: true }).filter(d => d.isFile()).map(d => join(d.parentPath, d.name))
   if (process.argv.includes('--check')) {
-    let stale = []
+    const stale = []
     try { for (const [k, v] of files) if (readFileSync(join(out, k), 'utf8') !== v) stale.push(k) } catch (e) { stale.push(e.path) }
     const extra = read(out).map(p => p.slice(out.length + 1)).filter(p => !files.has(p))
     if (stale.length || extra.length) { console.error(`styles/ is stale (${[...stale, ...extra].join(', ')}): run node scripts/split-css.mjs`); process.exit(1) }

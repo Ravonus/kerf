@@ -25,7 +25,8 @@ test('one row on two elements falls only when the last lets go', () => {
   expect(ui.hover.value).toBe(true)
   y.dispatchEvent(pointer('pointerleave'))
   expect(ui.hover.value).toBe(false)
-  a.destroy(), b.destroy()
+  a.destroy()
+  b.destroy()
 })
 
 test('destroy lets go: no pointerleave comes for a removed element', () => {
@@ -50,14 +51,14 @@ test('a press ends off the element, and when the page goes away', () => {
 })
 
 test('Space and Enter press, and letting go lets go', () => {
-  const el = document.createElement('button')
-  document.body.append(el)
+  const btn = document.createElement('button')
+  document.body.append(btn)
   const ui = { hover: { value: false }, focus: { value: false }, pressed: { value: false } }
-  const a = interact(el, ui)
-  el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
+  const a = interact(btn, ui)
+  btn.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
   expect(ui.pressed.value).toBe(true)
-  el.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
+  btn.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
   expect(ui.pressed.value).toBe(false)
   a.destroy()
-  el.remove()
+  btn.remove()
 })

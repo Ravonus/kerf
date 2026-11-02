@@ -57,7 +57,7 @@ export function announce(doc: Document, text: string, assertive = false) {
 }
 
 // a timer is an Animation (the progress bar) or a timeout (Node's is an object too)
-const stop = (a: any) => (typeof a?.cancel === 'function' ? a.cancel() : clearTimeout(a))
+const stop = (a: Animation | ReturnType<typeof setTimeout> | undefined) => (typeof (a as Animation | undefined)?.cancel === 'function' ? (a as Animation).cancel() : clearTimeout(a as ReturnType<typeof setTimeout>))
 
 export function toaster(region: HTMLElement, toasts: ToastStore) {
   const doc = region.ownerDocument
@@ -192,12 +192,12 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
     else onHover()
   }
   const unwatch = onTopModal(doc, follow)
-  const on: [EventTarget, string, (e: any) => void][] = [
-    [region, 'pointerenter', e => { over = e.pointerType !== 'touch'; onHover() }], [region, 'pointerleave', () => { over = false; onHover() }], [region, 'focusin', onHover], [region, 'focusout', () => win.requestAnimationFrame(onHover)],
+  const on: [EventTarget, string, (e: never) => void][] = [
+    [region, 'pointerenter', (e: PointerEvent) => { over = e.pointerType !== 'touch'; onHover() }], [region, 'pointerleave', () => { over = false; onHover() }], [region, 'focusin', onHover], [region, 'focusout', () => win.requestAnimationFrame(onHover)],
     [doc, 'visibilitychange', syncTimers], [doc, 'keydown', onKey],
     [region, 'pointerdown', onDown], [region, 'pointermove', onMove], [region, 'pointerup', onUp], [region, 'pointercancel', onUp],
   ]
-  for (const [t, type, fn] of on) t.addEventListener(type, fn)
+  for (const [t, type, fn] of on) t.addEventListener(type, fn as EventListener)
   render()
   return {
     update: render,
@@ -206,7 +206,7 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
       unsubscribe()
       unwatch()
       follow(null)
-      for (const [t, type, fn] of on) t.removeEventListener(type, fn)
+      for (const [t, type, fn] of on) t.removeEventListener(type, fn as EventListener)
       for (const a of timers.values()) stop(a)
     },
   }

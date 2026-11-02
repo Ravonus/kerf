@@ -14,7 +14,7 @@ describe('dates', () => {
 
 describe('segments', () => {
   test('parts follow the locale', () => {
-    const order = (l: string) => segmentParts('date', l).filter((p: any) => !p.literal).map((p: any) => p.name ?? p)
+    const order = (l: string) => segmentParts('date', l).filter(p => !('literal' in p)).map(p => ('type' in p ? p.type : p))
     expect(order('en-US')).not.toEqual(order('de-DE'))
   })
   test('press is exported', () => expect(typeof press).toBe('function'))

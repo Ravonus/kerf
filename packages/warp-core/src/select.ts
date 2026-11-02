@@ -45,6 +45,7 @@ export function selectMenu(sel: HTMLSelectElement) {
       el.textContent = option.textContent
       const tick = doc.createElement('span')
       tick.dataset.part = 'indicator'
+      // oxlint-disable-next-line weft/no-html-sink -- CHECK is a constant in this file
       tick.innerHTML = CHECK
       el.append(tick)
       parent.append(el)

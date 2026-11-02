@@ -51,7 +51,7 @@ beforeEach(() => {
 })
 /** The browser reporting a row's real size. */
 const report = (row: Element, blockSize: number) => {
-  for (const o of observers) if (o.seen.has(row)) o.fn([{ target: row, borderBoxSize: [{ blockSize, inlineSize: 300 }] } as any], null as any)
+  for (const o of observers) if (o.seen.has(row)) o.fn([{ target: row, borderBoxSize: [{ blockSize, inlineSize: 300 }] } as unknown as ResizeObserverEntry], null as unknown as ResizeObserver)
 }
 
 function list(n: number, over: Partial<VirtualOptions> = {}) {
@@ -145,7 +145,7 @@ test('a new width asks `size` again, and rendered heights of the old width are d
   report(row, 99)
   expect(v.sizes.get(0)).toBe(99)
   width = 600
-  for (const o of observers) if (o.seen.has(h.el)) o.fn([], null as any)
+  for (const o of observers) if (o.seen.has(h.el)) o.fn([], null as unknown as ResizeObserver)
   expect(v.sizes.get(0)).toBe(10)
 })
 
@@ -162,6 +162,6 @@ test('scrollTo lands exactly on a far row, in each alignment', () => {
 
 test('slices runs to the end across tasks, and stops when asked', async () => {
   let n = 0
-  await new Promise<void>(done => slices(() => { n++; if (n === 1000) { done(); return false } return true }, 0.01))
+  await new Promise<void>(done => { slices(() => { n++; if (n === 1000) { done(); return false } return true }, 0.01) })
   expect(n).toBe(1000)
 })

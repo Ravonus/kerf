@@ -88,8 +88,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const start = () => {
     const now = current()
     if (now) {
-      const { start, size } = place(now)
-      jump(start, size)
+      const { start: at, size } = place(now)
+      jump(at, size)
       phase = 'in'
       face.dataset.phase = 'in'
     }
@@ -100,9 +100,9 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
 
   const seen = new win.MutationObserver(settle)
   seen.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] })
-  const resized = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { const t = hovered ?? focused ?? current(); if (t) { const { start, size } = place(t); jump(start, size) } }) : undefined
+  const resized = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { const t = hovered ?? focused ?? current(); if (t) { const { start: at, size } = place(t); jump(at, size) } }) : undefined
   resized?.observe(nav)
-  const onDial = () => win.requestAnimationFrame(() => { const t = current(); if (t) { const { start, size } = place(t); jump(start, size) } })
+  const onDial = () => win.requestAnimationFrame(() => { const t = current(); if (t) { const { start: at, size } = place(t); jump(at, size) } })
   doc.addEventListener('warp:dial', onDial)
 
   // The heading nearest the top of the reading band.

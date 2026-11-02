@@ -50,7 +50,9 @@ export function levels(v: Float32Array, contrast = 1) {
   for (let i = 0; i < v.length; i++) bins[Math.max(0, Math.min(255, (v[i]! * 255) | 0))]!++
   const cut = v.length * 0.01
   let low = 0, high = 255
+  // oxlint-disable-next-line no-unused-vars -- n is read by the condition, through the assignment
   for (let n = 0; low < 255 && (n += bins[low]!) < cut;) low++
+  // oxlint-disable-next-line no-unused-vars -- n is read by the condition, through the assignment
   for (let n = 0; high > 0 && (n += bins[high]!) < cut;) high--
   const span = Math.max(1, high - low) / 255, base = low / 255
   for (let i = 0; i < v.length; i++) {

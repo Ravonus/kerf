@@ -41,6 +41,7 @@ let raf = 0
 
 function pump(now: number) {
   raf = 0
+  // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a run can add or drop itself mid-loop
   for (const run of [...queue]) run(now)
   if (queue.size) raf = requestAnimationFrame(pump)
 }

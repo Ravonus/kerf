@@ -95,6 +95,7 @@ describe('sanitizeHtml', () => {
   test.each([
     ['<script>alert(1)</script>', 'script'],
     ['<img src=x onerror=alert(1)>', 'onerror'],
+    // oxlint-disable-next-line no-script-url -- the sanitizer's own test: this is the input it must strip
     ['<a href="javascript:alert(1)">x</a>', 'javascript:'],
     ['<a href="  java\tscript:alert(1)">x</a>', 'script:'],
     ['<a href="data:text/html,x">x</a>', 'data:'],
@@ -104,7 +105,7 @@ describe('sanitizeHtml', () => {
     ['<p onclick="x()">x</p>', 'onclick'],
     ['<a href="vbscript:x">x</a>', 'vbscript'],
   ])('%s', (html, word) => {
-    expect(sanitizeHtml(html).toLowerCase()).not.toContain(`${word}`.toLowerCase() === 'script' ? '<script' : word.toLowerCase())
+    expect(sanitizeHtml(html).toLowerCase()).not.toContain(word.toLowerCase() === 'script' ? '<script' : word.toLowerCase())
   })
   test('keeps the allow-list', () => {
     expect(sanitizeHtml('<p>a <strong>b</strong> <em>c</em></p>')).toBe('<p>a <strong>b</strong> <em>c</em></p>')
@@ -115,6 +116,7 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml('<span data-mention title="Ada">@Ada</span>')).toContain('role="img"')
   })
   test('safeUrl refuses protocol tricks', () => {
+    // oxlint-disable-next-line no-script-url -- the sanitizer's own test: these are the inputs it must refuse
     for (const u of ['javascript:x', 'JaVaScRiPt:x', ' javascript:x', '//evil.dev', '/\\evil.dev', '\\\\evil.dev']) expect(safeUrl(u), u).toBeFalsy()
     for (const u of ['https://x.dev', 'mailto:a@x.dev', '/a', '#b']) expect(safeUrl(u), u).toBeTruthy()
   })
@@ -139,19 +141,20 @@ describe('markdownToHtml', () => {
 })
 
 describe('tree and group rows', () => {
-  const rows = [{ id: 'a', t: 'x', kids: [{ id: 'b', t: 'x' }] }, { id: 'c', t: 'y' }]
+  type Tree = { id: string; t: string; kids?: Tree[] }
+  const rows: Tree[] = [{ id: 'a', t: 'x', kids: [{ id: 'b', t: 'x' }] }, { id: 'c', t: 'y' }]
   test('a closed branch hides its kids; a query opens the path to a hit', () => {
-    const src = { key: (r: any) => r.id, kids: (r: any) => r.kids, branch: (r: any) => !!r.kids, open: () => false }
+    const src = { key: (r: Tree) => r.id, kids: (r: Tree) => r.kids, branch: (r: Tree) => !!r.kids, open: () => false }
     expect(treeRows(rows, src).map(e => e.key)).toEqual(['a', 'c'])
     const open = treeRows(rows, { ...src, open: () => true })
     expect(open.map(e => [e.key, e.level])).toEqual([['a', 1], ['b', 2], ['c', 1]])
     expect(open[0]).toMatchObject({ branch: true, size: 2, pos: 1 })
   })
   test('groupRows keeps first-seen order', () => {
-    expect([...groupRows(rows, (r: any) => r.t).keys()]).toEqual(['x', 'y'])
+    expect([...groupRows(rows, r => r.t).keys()]).toEqual(['x', 'y'])
   })
   test('pivotTable totals both ways', () => {
-    const p: any = pivotTable([{ r: 'a', c: 'x', v: 2 }, { r: 'a', c: 'y', v: 3 }], (o: any) => o.r, (o: any) => o.c, (o: any) => o.v)
+    const p = pivotTable([{ r: 'a', c: 'x', v: 2 }, { r: 'a', c: 'y', v: 3 }], o => o.r, o => o.c, o => o.v)
     expect(JSON.stringify(p)).toContain('5')
   })
 })

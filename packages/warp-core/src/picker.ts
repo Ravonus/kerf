@@ -1,6 +1,6 @@
 // What the pickers share beyond the calendar (04 §1.2, §2): the one panel that is an anchored popover on a desktop and
 // a modal sheet on a phone, the list keys of a slot list or combobox, and the default range presets.
-import { dialog, popover } from './overlays'
+import { dialog, popover, type PopoverOptions } from './overlays'
 import { addDays, addMonths, monthStart, type DateRange, type IsoDate } from './temporal'
 import { place, pushLayer, type Align, type Side } from './layers'
 
@@ -29,7 +29,7 @@ export interface PanelOptions {
  */
 export function pickerPanel(el: HTMLDialogElement, opts: PanelOptions) {
   let o = opts
-  let cur: { update(n: any): void; destroy(): void } | null = null
+  let cur: { update(n: PopoverOptions): void; destroy(): void } | null = null
   const close = () => o.onClose()
   const sync = () => {
     if (o.open && !cur) {

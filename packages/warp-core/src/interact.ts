@@ -22,7 +22,7 @@ export function interact(el: HTMLElement, ui: Interactive) {
   const hoverable = win.matchMedia?.('(hover: hover)').matches ?? true
   const release = () => { hold(ui.hover, el, false); hold(ui.focus, el, false); hold(ui.pressed, el, false) }
   const up = () => hold(ui.pressed, el, false)
-  const on: [EventTarget, string, (e: any) => void][] = [
+  const on: [EventTarget, string, (e: never) => void][] = [
     [el, 'pointerenter', (e: PointerEvent) => { if (e.pointerType !== 'touch') hold(ui.hover, el, true) }],
     [el, 'pointerleave', (e: PointerEvent) => { if (e.pointerType !== 'touch') hold(ui.hover, el, false) }],
     [el, 'focusin', () => { if (el.matches(':focus-visible, :has(:focus-visible)')) hold(ui.focus, el, true) }],
@@ -37,12 +37,12 @@ export function interact(el: HTMLElement, ui: Interactive) {
     [doc, 'visibilitychange', () => { if (doc.visibilityState === 'hidden') release() }],
     [win, 'pagehide', release],
   ]
-  for (const [target, type, fn] of on) target.addEventListener(type, fn)
+  for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)
   if (hoverable && el.matches(':hover')) hold(ui.hover, el, true) // hydrated under the pointer
   return {
     update() {},
     destroy() {
-      for (const [target, type, fn] of on) target.removeEventListener(type, fn)
+      for (const [target, type, fn] of on) target.removeEventListener(type, fn as EventListener)
       release()
     },
   }

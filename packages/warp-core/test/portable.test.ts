@@ -4,7 +4,7 @@
 import { dialog, indicator, nextIndex, overflow, toastStore, toaster } from '../src'
 
 afterEach(() => document.body.replaceChildren())
-const frames = () => new Promise(r => setTimeout(r, 100)) // three animation frames: place, then drop data-instant two frames later
+const frames = () => new Promise(r => { setTimeout(r, 100) }) // three animation frames: place, then drop data-instant two frames later
 
 test('tabs: arrow keys select and focus with one tab stop, panels follow, the indicator moves', async () => {
   document.body.innerHTML = `
@@ -94,7 +94,7 @@ test('toasts: a store, a hand-written render, and the toaster action (stacking, 
   expect([...region.querySelectorAll('[data-part="title"]')].map(t => t.textContent)).toEqual(['Copied', 'Saved'])
   region.querySelector<HTMLElement>('[data-x]')!.click()
   expect(region.querySelector('[data-part="root"]')!.getAttribute('data-state')).toBe('closed')
-  await new Promise(r => setTimeout(r, 450))
+  await new Promise(r => { setTimeout(r, 450) })
   expect(region.querySelectorAll('[data-part="root"]')).toHaveLength(1)
   action.destroy()
   unsubscribe()

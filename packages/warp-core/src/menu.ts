@@ -65,9 +65,9 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
     const key = e.key.toLowerCase()
     typed = now - typedAt < TYPEAHEAD_MS ? typed + key : key
     typedAt = now
-    const prefix = [...typed].every(c => c === key) ? key : typed
+    const prefix = Array.from(typed).every(c => c === key) ? key : typed
     const from = prefix.length === 1 ? at + 1 : Math.max(at, 0)
-    const hit = [...all.slice(from), ...all.slice(0, from)].find(i => i.textContent!.trim().toLowerCase().startsWith(prefix))
+    const hit = [...all.slice(from), ...all.slice(0, from)].find(i => i.textContent.trim().toLowerCase().startsWith(prefix))
     if (hit) { e.preventDefault(); hit.focus() }
   }
   el.addEventListener('keydown', onKey)

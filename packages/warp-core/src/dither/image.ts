@@ -29,8 +29,8 @@ export function tones(source: CanvasImageSource, cols: number, rows: number) {
   c.width = cols
   c.height = rows
   const g = c.getContext('2d', { willReadFrequently: true })!
-  const sw = (source as HTMLImageElement).naturalWidth || (source as HTMLCanvasElement).width as number
-  const sh = (source as HTMLImageElement).naturalHeight || (source as HTMLCanvasElement).height as number
+  const sw = (source as HTMLImageElement).naturalWidth || (source as HTMLCanvasElement).width
+  const sh = (source as HTMLImageElement).naturalHeight || (source as HTMLCanvasElement).height
   const k = Math.max(cols / sw, rows / sh), w = sw * k, h = sh * k
   g.imageSmoothingQuality = 'high'
   g.drawImage(source, (cols - w) / 2, (rows - h) / 2, w, h)
@@ -59,7 +59,7 @@ export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): A
     if (width !== cols || height !== rows) { cols = width; rows = height; base = undefined }
     inks ??= palette(host, o.ramp ?? 'accent', o.inks ?? tier(host).inks + 1)
     const src = o.source
-    if (src instanceof Object && 'complete' in src && !(src as HTMLImageElement).complete) return
+    if (src instanceof Object && 'complete' in src && !src.complete) return
     try {
       base ??= src ? levels(tones(src, cols, rows), o.contrast ?? 1.1) : gradientTones(o.gradient ?? {}, cols, rows)
     } catch {

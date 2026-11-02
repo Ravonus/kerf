@@ -48,6 +48,7 @@ function draw(g: CanvasRenderingContext2D, source: MaskSource, cols: number, row
     g.translate((cols - w * k) / 2, (rows - h * k) / 2)
     g.scale(k, k)
     const shape = new Path2D(source.path)
+    // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type -- a canvas fill, not an array's
     if (source.stroke) { g.lineWidth = source.stroke; g.stroke(shape) } else g.fill(shape)
   }
 }

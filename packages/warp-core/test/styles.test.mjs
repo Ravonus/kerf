@@ -30,7 +30,7 @@ test('every rule of the rule-routed families ships verbatim, in spec order, and 
     }
     const { code } = transform({ filename: source, code: Buffer.from(css), minify: true })
     const every = [...shipped, ...files.get(`${family}/tokens.css`).split('\n')].join('\n')
-    for (const name of `${code}`.matchAll(/@keyframes ([\w-]+)/g)) expect(every, name[1]).toContain(`@keyframes ${name[1]}`)
+    for (const name of String(code).matchAll(/@keyframes ([\w-]+)/g)) expect(every, name[1]).toContain(`@keyframes ${name[1]}`)
   }
 })
 

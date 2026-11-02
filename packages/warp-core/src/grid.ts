@@ -31,6 +31,7 @@ export function matchFilter(kind: GridFilter | undefined, wanted: string, value:
   if (!kind || wanted === '') return true
   if (kind === 'select') return String(value) === wanted
   if (kind === 'min') return Number(value) >= Number(wanted)
+  // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
   return String(value ?? '').toLowerCase().includes(wanted.toLowerCase())
 }
 
@@ -88,7 +89,7 @@ export function treeRows<T>(roots: readonly T[], s: TreeSource<T>) {
     }
     return on
   }
-  const walk = (rows: readonly T[], level: number, parent?: string | undefined) => {
+  const walk = (rows: readonly T[], level: number, parent?: string) => {
     const shown = s.match ? rows.filter(wanted) : rows
     shown.forEach((row, i) => {
       const key = s.key(row)
@@ -129,10 +130,12 @@ export function pivotTable<T>(rows: readonly T[], rowKey: (r: T) => string, colK
 }
 
 /** A copied range. Tabs and line breaks inside a cell would split it, so they become spaces. */
+// oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
 export const toTSV = (rows: readonly (readonly unknown[])[]) => rows.map(r => r.map(c => String(c ?? '').replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n')
 export const parseTSV = (text: string) => text.replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n').map(l => l.split('\t'))
 
 const csvCell = (c: unknown) => {
+  // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
   const s = String(c ?? '')
   // a leading = + - @ runs as a formula when a spreadsheet opens the file
   const safe = /^[=+\-@\t\r]/.test(s) && typeof c !== 'number' ? `'${s}` : s
@@ -215,7 +218,7 @@ export function grid(root: HTMLElement, opts: GridOptions) {
     const lines = new Map<Element, string[]>()
     for (const c of picked.length ? picked : [target(at)].filter(Boolean) as Element[]) {
       const line = lines.get(c.parentElement!) ?? []
-      line.push(c.textContent!.trim())
+      line.push(c.textContent.trim())
       lines.set(c.parentElement!, line)
     }
     const table = [...lines.values()]
@@ -345,8 +348,8 @@ export function grid(root: HTMLElement, opts: GridOptions) {
   }
   const onDragEnd = () => { dragged = undefined; clearDrop() }
 
-  const on: [string, (e: any) => void][] = [['keydown', onKey], ['click', place], ['dblclick', onDouble], ['paste', onPaste], ['dragstart', onDragStart], ['dragover', onDragOver], ['drop', onDrop], ['dragend', onDragEnd]]
-  for (const [type, fn] of on) root.addEventListener(type, fn)
+  const on: [string, (e: never) => void][] = [['keydown', onKey], ['click', place], ['dblclick', onDouble], ['paste', onPaste], ['dragstart', onDragStart], ['dragover', onDragOver], ['drop', onDrop], ['dragend', onDragEnd]]
+  for (const [type, fn] of on) root.addEventListener(type, fn as EventListener)
   settle()
   return {
     update(next: GridOptions) {
@@ -358,13 +361,13 @@ export function grid(root: HTMLElement, opts: GridOptions) {
       // the row that held focus may have moved: find it again, so the tab stop stays on it
       const live = current?.isConnected ? current : undefined
       if (live) {
-        const tr = (live.closest('tr[data-row]') ?? live) as HTMLElement
+        const tr = live.closest<HTMLElement>('tr[data-row]') ?? live
         at = [rows().indexOf(tr), tr === live ? -1 : cells(tr).indexOf(live)]
       }
       settle()
     },
     /** Focus returns here after an edit. */
     refocus() { settle()?.focus() },
-    destroy() { for (const [type, fn] of on) root.removeEventListener(type, fn) },
+    destroy() { for (const [type, fn] of on) root.removeEventListener(type, fn as EventListener) },
   }
 }

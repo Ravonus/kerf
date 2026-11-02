@@ -174,7 +174,7 @@ describe('stick', () => {
     Object.defineProperties(el, { scrollHeight: { value: scrollHeight, configurable: true, writable: true }, clientHeight: { value: clientHeight, configurable: true } })
     return el
   }
-  const tick = () => new Promise(r => setTimeout(r))
+  const tick = () => new Promise(r => { setTimeout(r) })
 
   test('goes to the bottom and follows growth while within 48px', async () => {
     const el = box(1000, 100)
@@ -184,7 +184,7 @@ describe('stick', () => {
     el.scrollTop = 860
     el.dispatchEvent(new Event('scroll'))
     expect(away.at(-1)).toBe(false)
-    ;(el as any).scrollHeight = 2000
+    ;(el as { scrollHeight: number }).scrollHeight = 2000
     el.append('more')
     await tick()
     expect(el.scrollTop).toBe(2000)
@@ -198,7 +198,7 @@ describe('stick', () => {
     el.scrollTop = 500
     el.dispatchEvent(new Event('scroll'))
     expect(away.at(-1)).toBe(true)
-    ;(el as any).scrollHeight = 2000
+    ;(el as { scrollHeight: number }).scrollHeight = 2000
     el.append('more')
     await tick()
     expect(el.scrollTop).toBe(500)
@@ -218,9 +218,9 @@ test('speechWave carries the newest level along', () => {
 })
 
 describe('dictation', () => {
-  const events = () => { const log: any[] = []; return { log, on: { onState: (s: string) => log.push(s), onTranscript: (f: string, i: string) => log.push([f, i]), onLevel: () => {} } } }
-  const page = (Speech?: any, getUserMedia: any = async () => undefined) => ({ SpeechRecognition: Speech, navigator: { mediaDevices: { getUserMedia } }, cancelAnimationFrame() {}, requestAnimationFrame() { return 0 } }) as any
-  class Speech { static last: Speech; start() {} stop() { (this as any).onend() } abort() {} constructor() { Speech.last = this } }
+  const events = () => { const log: unknown[] = []; return { log, on: { onState: (s: string) => log.push(s), onTranscript: (f: string, i: string) => log.push([f, i]), onLevel: () => {} } } }
+  const page = (Speech?: unknown, getUserMedia: () => Promise<unknown> = () => Promise.resolve()) => ({ SpeechRecognition: Speech, navigator: { mediaDevices: { getUserMedia } }, cancelAnimationFrame() {}, requestAnimationFrame() { return 0 } }) as unknown as Parameters<typeof dictation>[0]
+  class Speech { static last: Speech; onend?: () => void; onresult?: (e: unknown) => void; onerror?: (e: unknown) => void; start() {} stop() { this.onend?.() } abort() {} constructor() { Speech.last = this } }
 
   test('no recognition in the browser is a state', () => {
     const { log, on } = events()
@@ -232,7 +232,7 @@ describe('dictation', () => {
     const { log, on } = events()
     const d = dictation(page(Speech), on)
     d.start()
-    ;(Speech.last as any).onresult({ resultIndex: 0, results: [Object.assign([{ transcript: 'Hello ' }], { isFinal: true }), Object.assign([{ transcript: 'wor' }], { isFinal: false })] })
+    ;Speech.last.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: 'Hello ' }], { isFinal: true }), Object.assign([{ transcript: 'wor' }], { isFinal: false })] })
     d.stop()
     expect(log).toEqual(['listening', ['Hello ', 'wor'], 'idle'])
   })
@@ -241,11 +241,11 @@ describe('dictation', () => {
     const { log, on } = events()
     const a = dictation(page(Speech), on)
     a.start()
-    ;(Speech.last as any).onerror({ error: 'not-allowed' })
+    ;Speech.last.onerror?.({ error: 'not-allowed' })
     expect(log).toEqual(['listening', 'blocked'])
     const two = events()
-    dictation(page(Speech, async () => { throw new Error('denied') }), two.on).start()
-    await new Promise(r => setTimeout(r))
+    dictation(page(Speech, () => Promise.reject(new Error('denied'))), two.on).start()
+    await new Promise(r => { setTimeout(r) })
     expect(two.log).toEqual(['listening', 'blocked'])
   })
 })

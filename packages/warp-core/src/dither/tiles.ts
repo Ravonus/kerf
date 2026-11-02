@@ -6,7 +6,7 @@ export interface Tile { n: number; t: Float32Array }
 function bayer(n: number) {
   let m = [0]
   for (let s = 1; s < n; s *= 2) {
-    const next = new Array(s * s * 4)
+    const next = Array<number>(s * s * 4)
     for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
       const v = m[y * s + x]! * 4
       next[y * 2 * s + x] = v

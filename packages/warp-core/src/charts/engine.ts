@@ -121,6 +121,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     if (active && active !== m) active.removeAttribute('data-active')
     active = m
     m.setAttribute('data-active', '')
+    // oxlint-disable-next-line weft/no-html-sink -- tipHTML escapes every value it writes
     tip.innerHTML = tipHTML(plot.tip?.(xi(m), si(m), m) ?? { title: m.getAttribute('aria-label') ?? '' })
     tip.setAttribute('data-open', '')
     fig.setAttribute('data-hot', '')
@@ -245,7 +246,7 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
 
   return {
     update(n: ChartOptions<C>) {
-      const swap = (n.cfg as any).layout !== (cfg as any).layout
+      const swap = (n.cfg as { layout?: unknown }).layout !== (cfg as { layout?: unknown }).layout
       form = n.form
       cfg = n.cfg
       if (swap) enter(true)

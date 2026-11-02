@@ -21,7 +21,7 @@ export function installSweep(doc: Document = document): SweepMachine {
   const win = doc.defaultView!
   const duration = (el?: Element | null) => {
     const v = win.getComputedStyle(el ?? doc.body).getPropertyValue('--warp-sweep-duration').trim()
-    return parseFloat(v) * (/ms$/.test(v) ? 1 : 1000) || 0
+    return parseFloat(v) * (v.endsWith('ms') ? 1 : 1000) || 0
   }
   return {
     pin: (el, on) => { el?.toggleAttribute('data-pin', on) },

@@ -1,7 +1,7 @@
 // Typed entry (04 §1.3): date, month and time as spinbutton segments. A reducer over plain data, so any binding renders
 // the same model on the server and in the browser: parts come from Intl (en-US MM/DD/YYYY, de-DE DD.MM.YYYY, ja-JP
 // YYYY/MM/DD), press() turns a key into the next model and where focus goes.
-import { fmt, pad, toIso, ymd, type IsoDate, type IsoTime } from './temporal'
+import { fmt, pad, toIso, ymd, type IsoTime } from './temporal'
 
 export type SegmentType = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second' | 'dayPeriod'
 export interface Segment { type: SegmentType; min: number; max: number; len: number; value: number | null; buf: string; ph: string }
@@ -42,7 +42,7 @@ export function segmentParts(kind: SegmentKind, locale: string, o: SegmentOption
   const out: SegmentPart[] = []
   for (const p of parts) {
     const s = spec[p.type as SegmentType]
-    if (s) out.push({ type: p.type as SegmentType, min: s[0], max: s[1], len: s[2], value: null, buf: '', ph: ph[p.type as SegmentType] ?? dayPeriods(locale)[0]! })
+    if (s) out.push({ type: p.type as SegmentType, min: s[0], max: s[1], len: s[2], value: null, buf: '', ph: ph[p.type as SegmentType] ?? dayPeriods(locale)[0] })
     else if (p.type === 'literal') out.push({ literal: p.value.replace(/\s+/g, ' '), at: out.length })
   }
   return out
@@ -102,7 +102,7 @@ export interface Press {
 export function press(parts: SegmentPart[], at: number, key: string, o: { year: number; meta?: boolean; rtl?: boolean }): Press {
   const segs = parts.filter(isSegment)
   const s = segs[at]!
-  const next = (patch: Partial<Segment>, move?: number | undefined): Press => ({ parts: parts.map(p => (p === s ? { ...s, ...patch } : p)), move, handled: true })
+  const next = (patch: Partial<Segment>, move?: number): Press => ({ parts: parts.map(p => (p === s ? { ...s, ...patch } : p)), move, handled: true })
   const last = segs.length - 1
   const forward = at < last ? at + 1 : undefined
   if (/^\d$/.test(key) && s.type !== 'dayPeriod') {
@@ -147,4 +147,4 @@ export function settle(parts: SegmentPart[], at: number, year: number): SegmentP
   return parts.map(p => (p === s ? { ...s, value, buf: '' } : p))
 }
 
-export const isoOf = (d: { year: number | null; month: number | null; day: number | null }) => toIso(d.year!, d.month!, d.day!) as IsoDate
+export const isoOf = (d: { year: number | null; month: number | null; day: number | null }) => toIso(d.year!, d.month!, d.day!)

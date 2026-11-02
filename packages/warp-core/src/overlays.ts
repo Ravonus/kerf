@@ -174,7 +174,7 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
   }
   const later = (fn: () => void, ms: number) => { clearTimeout(timer); timer = setTimeout(fn, ms) }
   const t = () => o.trigger
-  const on: [EventTarget, string, (e: any) => void][] = [
+  const on: [EventTarget, string, (e: never) => void][] = [
     [t(), 'pointerenter', (e: PointerEvent) => { if (e.pointerType === 'mouse') later(show, performance.now() < warmUntil ? 0 : 500) }],
     [t(), 'pointerleave', () => later(() => { if (!t().matches(':hover') && !tip.matches(':hover')) hide() }, 100)],
     [tip, 'pointerleave', () => later(() => { if (!t().matches(':hover') && !tip.matches(':hover')) hide() }, 100)],
@@ -188,11 +188,11 @@ export function tooltip(tip: HTMLElement, opts: { trigger: HTMLElement; side?: S
     [t(), 'pointerup', (e: PointerEvent) => { if (e.pointerType === 'touch' && !open()) clearTimeout(timer) }],
     [t(), 'pointercancel', () => clearTimeout(timer)],
   ]
-  for (const [target, type, fn] of on) target.addEventListener(type, fn)
+  for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)
   return {
     update: (next: typeof opts) => void (o = next),
     destroy() {
-      for (const [target, type, fn] of on) target.removeEventListener(type, fn)
+      for (const [target, type, fn] of on) target.removeEventListener(type, fn as EventListener)
       hide()
     },
   }

@@ -94,7 +94,7 @@ export function occurrences(r: Rule, dtstart: string, n: number): IsoDate[] {
   return out
 }
 
-const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') => fmt(addDays('2024-01-07', DAYS.indexOf(code as any)), { weekday: style }, locale)
+const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') => fmt(addDays('2024-01-07', DAYS.indexOf(code as (typeof DAYS)[number])), { weekday: style }, locale)
 const NTH = ['', 'first', 'second', 'third', 'fourth', 'fifth']
 
 /** The weekday codes in the locale's week order. */

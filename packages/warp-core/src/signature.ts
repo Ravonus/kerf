@@ -34,7 +34,7 @@ const n = (v: number) => +v.toFixed(1)
 /** The drawn signature as a self-contained SVG, inked in currentColor. */
 export function signatureSvg(strokes: Stroke[], W = 600, H = 200) {
   const d = strokes.map(s => {
-    const g = segments(s.map(([x, y, w]) => [x * W, y * H, w]) as Stroke)
+    const g = segments(s.map(([x, y, w]) => [x * W, y * H, w]))
     return g.length ? `M${n(g[0]!.from[0]!)} ${n(g[0]!.from[1]!)}` + g.map(x => `Q${n(x.via[0]!)} ${n(x.via[1]!)} ${n(x.to[0]!)} ${n(x.to[1]!)}`).join('') : `M${n(s[0]![0] * W)} ${n(s[0]![1] * H)}h.1`
   }).join('')
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`

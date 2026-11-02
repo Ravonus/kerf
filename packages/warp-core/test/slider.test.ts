@@ -46,7 +46,7 @@ test('a form reset goes back to the first value through onChange', async () => {
   document.body.append(form)
   s.key('End')
   form.reset()
-  await new Promise(r => setTimeout(r))
+  await new Promise(r => { setTimeout(r) })
   expect(s.seen.at(-1)).toEqual([20])
   expect(s.el.querySelector('[data-part="thumb"]')!.getAttribute('aria-valuenow')).toBe('20')
 })
@@ -59,7 +59,7 @@ test('a cancelled form reset changes nothing', async () => {
   form.addEventListener('reset', e => e.preventDefault())
   s.key('End')
   form.reset()
-  await new Promise(r => setTimeout(r))
+  await new Promise(r => { setTimeout(r) })
   expect(s.seen.at(-1)).toEqual([100])
 })
 

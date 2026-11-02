@@ -116,7 +116,7 @@ export interface Virtualizer {
   refresh(from?: number, to?: number): void
   /** Take this element as `key`'s row: it's positioned and watched. Returns the release. */
   attach(el: HTMLElement, key: VirtualKey): () => void
-  scrollTo(index: number, align?: VirtualAlign | undefined): void
+  scrollTo(index: number, align?: VirtualAlign): void
   scrollToEnd(): void
   /** The row at the top of the viewport, and the pixels of it above the edge. */
   anchor(): { index: number; within: number }

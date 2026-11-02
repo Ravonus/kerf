@@ -99,7 +99,7 @@ export function dayState(iso: IsoDate, c: CalendarContext): DayState {
 }
 
 /** The day a key moves the cursor to; "pick" for Enter/Space; null when the key isn't the grid's. */
-export function gridKey(key: string, shift: boolean, cursor: string, weekStartsOn: number, rtl: boolean): string | 'pick' | null {
+export function gridKey(key: string, shift: boolean, cursor: string, weekStartsOn: number, rtl: boolean): string | null {
   switch (key) {
     case 'ArrowLeft': return addDays(cursor, rtl ? 1 : -1)
     case 'ArrowRight': return addDays(cursor, rtl ? -1 : 1)
