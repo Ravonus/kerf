@@ -62,3 +62,8 @@
 [data-site="page"] [data-site="example"] [data-part="pair"]:has(> [data-part="run"] > [data-part="missing"]) { grid-template-columns: minmax(0, 1fr); }
 [data-site="page"] [data-site="example"] [data-part="pair"] > [data-part="run"]:has(> [data-part="missing"]) { order: 0; min-block-size: 0; padding: var(--warp-space-related); justify-content: start; border-inline: 0; border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
 [data-site="example"] [data-part="run"] > [data-part="missing"] { inline-size: auto; margin: 0; }
+/* The copy button sits in the code's corner, as on the kit's frames (docs.css isn't loaded here), and the code clears it. */
+[data-site="example"] [data-scope="codeblock"][data-bare] { position: relative; }
+[data-site="example"] [data-scope="codeblock"][data-bare] > [data-part="head"] { position: absolute; z-index: 1; inset-block-start: 4px; inset-inline-end: 4px; padding: 0; border: 0; opacity: 0.7; transition: opacity var(--warp-duration-fast) var(--warp-ease-out); }
+[data-site="example"] [data-scope="codeblock"][data-bare]:is(:hover, :focus-within) > [data-part="head"] { opacity: 1; }
+[data-site="example"] [data-scope="codeblock"][data-bare] pre { padding-inline-end: 44px; }

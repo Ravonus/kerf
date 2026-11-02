@@ -630,6 +630,26 @@ await check('code scans in when it arrives', '/examples', async page => {
   if (!(mid > 0 && mid < 1)) throw new Error(`not scanning a moment after it arrived: ${mid}`)
 })
 
+// Every example's code on /examples can be copied, like the kit's, and the copy is that example's code.
+await check('examples code has copy buttons', '/examples', async page => {
+  const { panes, buttons } = await page.evaluate(() => ({
+    panes: document.querySelectorAll('[data-site="example"] [data-scope="codeblock"] pre').length,
+    buttons: document.querySelectorAll('[data-site="example"] [data-scope="codeblock"] [data-act="copy"]').length,
+  }))
+  if (panes < 10) throw new Error(`only ${panes} code panes`)
+  same(buttons, panes, 'copy buttons')
+  const pane = page.locator('[data-site="example"] [data-scope="codeblock"]').nth(2)
+  await pane.scrollIntoViewIfNeeded()
+  await pane.hover()
+  await pane.locator('[data-act="copy"]').click()
+  await page.waitForFunction(() => document.querySelectorAll('[data-act="copy"][data-done]').length === 1, null, { timeout: 3000 })
+  const want = await pane.evaluate(c => [...c.querySelectorAll('[data-part="line"]')].map(l => l.textContent).join('\n'))
+  same(await page.evaluate(() => navigator.clipboard.readText()) === want, true, 'the copied text is the pane\'s code')
+  // the button sits in the pane's corner and no line runs under it
+  const fit = await pane.evaluate(c => { const b = c.querySelector('[data-act="copy"]').getBoundingClientRect(), r = c.getBoundingClientRect(); return b.right <= r.right && b.top >= r.top && b.right > r.right - 12 })
+  same(fit, true, 'button in the corner')
+}, { width: 1280, height: 900 }, { permissions: ['clipboard-read', 'clipboard-write'] })
+
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

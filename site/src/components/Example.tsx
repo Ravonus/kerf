@@ -1,5 +1,8 @@
+import { CheckIcon, CopyIcon } from '@weft/icons'
 import { demos } from '../demos'
 import code from '../generated/demos.json'
+import '@weft/warp-core/styles/components/button.css'
+import '@weft/warp-core/styles/components/copy.css'
 import '@weft/warp-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
@@ -11,7 +14,15 @@ export function Example(props: { id: string; plain?: boolean; title?: string; le
       <p>{demos[props.id].look}</p>
       <div data-part="pair">
         <div data-part="run">{props.children}</div>
-        <div data-scope="codeblock" innerHTML={code[props.id]}></div>
+        {/* the kit's frames' copy button, the same markup: SpotlightGate's one copyButtons() listener runs it */}
+        <div data-scope="codeblock" data-bare="">
+          <div data-part="head">
+            <button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-act="copy" data-copy="" aria-label="Copy code">
+              <span data-part="indicator"><CopyIcon /><CheckIcon /></span>
+            </button>
+          </div>
+          <div data-part="source" innerHTML={code[props.id]}></div>
+        </div>
       </div>
       <dl>
         <div><dt>Try this</dt><dd>{demos[props.id].tryIt}</dd></div>
