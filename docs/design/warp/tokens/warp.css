@@ -1418,24 +1418,28 @@
        html, so one Shell anywhere on a page (a hub thumbnail) silenced the whole page's flow. */
     :has(> :is([data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"]))) { --warp-flow-gate: none; }
   /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
-  :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
+  :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-scope="prose"] > *, [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
 }
 
 @layer warp.flow {
   /* every family names its pair; nothing else differs in the machinery.
      view() binds to the nearest scroll container and hidden overflow makes one, so warp clips with overflow: clip: an
      element that isn't a real scroller must leave the page's timeline alone. */
-  :where([data-scope="surface"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"], [data-flow="card"]) { --_flow-in: warp-in-card; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
+  :where([data-scope="surface"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"], [data-scope="prose"] > table, [data-flow="card"]) { --_flow-in: warp-in-card; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
   :where([data-scope="tile"], [data-flow="tile"]) { --_flow-in: warp-in-tile; --_flow-out: warp-out-card; }
   /* a table's viewport is a real scroller, so its rows read the timeline of the table outside it, one after another */
   :where([data-scope="table"]:has(> [data-part="viewport"])) { view-timeline: --warp-flow-host block; }
   :where([data-scope="table"] tbody > tr, [data-flow="row"]) { --_flow-in: warp-in-row; --_flow-out: warp-out-row; --warp-flow-reach: calc(var(--warp-ref-flow-reach) * 0.7); }
-  :where([data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li, [data-flow="item"]) { --_flow-in: warp-in-item; --_flow-out: warp-out-fade; --warp-flow-reach: calc(var(--warp-ref-flow-reach) * 0.8); }
+  /* reading text: a page's paragraphs, lists and quotes rise in and fade out as items, its tables as cards; only the top
+     level, so a list's paragraphs move with their list */
+  :where([data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li, [data-scope="prose"] > :is(p, ul, ol, dl, blockquote), [data-flow="item"]) { --_flow-in: warp-in-item; --_flow-out: warp-out-fade; --warp-flow-reach: calc(var(--warp-ref-flow-reach) * 0.8); }
   :where([data-scope="stat"], [data-flow="stat"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; }
   :where([data-scope="chart"], [data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-fade; --_flow-o: 50% 100%; }
   :where([data-scope="gallery"] [data-part="item"], figure, [data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
   :where([data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-flow="heading"]) { --_flow-in: warp-in-heading; --_flow-out: warp-out-none; }
   :where([data-scope="codeblock"], [data-flow="code"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; position: relative; overflow: clip; isolation: isolate; }
+  /* a bare <pre> in prose fades as code does, but keeps its own scrolling: no clip, no scan */
+  :where([data-scope="prose"] > pre) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; }
   :where([data-scope="form"] > *, [data-scope="field"], [data-flow="form"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-none; }
   :where([data-scope="kanban"] [data-part="card"], [data-flow="deal"]) { --_flow-in: warp-in-deal; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
 
@@ -1445,7 +1449,7 @@
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
       [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
       [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
-      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-scope="codeblock"],
+      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
       [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])) {
       --_flow-r: var(--warp-flow-reach, var(--warp-ref-flow-reach));
       --_flow-e: var(--warp-flow-out, var(--warp-ref-flow-out));
@@ -1472,11 +1476,11 @@
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
       [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
       [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
-      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3), [data-scope="codeblock"],
+      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
       [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])):where(:focus-within, :target) { animation-name: none; }
     /* opacity multiplies, so inside a flowed element only the outer one leaves: two at 0.6 would read as 0.36 */
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
-      [data-scope="chart"], figure, [data-scope="codeblock"], [data-flow]:not([data-flow="off"])) > * { --_flow-nest: warp-out-none; }
+      [data-scope="chart"], figure, [data-scope="codeblock"], [data-scope="prose"] > :is(p, ul, ol, dl, blockquote, pre, table), [data-flow]:not([data-flow="off"])) > * { --_flow-nest: warp-out-none; }
     /* stagger: siblings in one row arrive in order, by column. The grid tells us its column count, or 4 */
     @supports (width: calc(sibling-index() * 1px)) {
       :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="stat"], [data-scope="gallery"] [data-part="item"], [data-scope="form"] > *, [data-scope="kanban"] [data-part="card"]) {

@@ -211,3 +211,26 @@ test('inside a flowed element only the outer one leaves, so the fade does not mu
   expect(+(await style(page, 'outer', 'opacity'))).toBeLessThan(0.9)
   await close()
 })
+
+test('prose flows by itself: its paragraphs, lists and quotes as items, tables as cards, a bare pre as code, only the top level', async () => {
+  // a docs page used to tag each block with data-flow at build time, because warp's prose family named only h2 and h3
+  const { page, close } = await stage(`<div style="block-size:900px"></div>
+    <div data-scope="prose">
+      <h2 id="p-h2">Heading</h2><p id="p-p">Words</p><ul id="p-ul"><li><p id="p-li-p">In a list</p></li></ul><ol id="p-ol"><li>One</li></ol>
+      <blockquote id="p-quote">Quote</blockquote><pre id="p-pre" style="overflow:auto">code</pre><table id="p-table"><tbody><tr><td>Cell</td></tr></tbody></table>
+      <figure id="p-figure" style="margin:0">Art</figure>
+    </div>
+    <p data-flow="item" id="item">Item</p><div data-flow="card" id="card-twin">Card</div>
+    <div style="block-size:3000px"></div>`)
+  const names = async id => (await timelines(page, id)).map(t => [t.name, t.kind, t.root])
+  const item = await names('item'), card = await names('card-twin')
+  expect(item.length).toBe(2)
+  for (const id of ['p-p', 'p-ul', 'p-ol', 'p-quote']) expect(await names(id), id).toEqual(item) // what data-flow="item" gave them
+  expect(await names('p-table')).toEqual(card)
+  expect((await names('p-pre')).map(n => n[0])).toEqual(['warp-in-fade', 'warp-out-fade'])
+  expect(await page.evaluate(() => getComputedStyle(document.getElementById('p-pre')).overflowX)).toBe('auto') // keeps its own scrolling
+  expect((await names('p-figure'))[0][0]).toBe('warp-in-image')
+  expect((await names('p-h2'))[0][0]).toBe('warp-in-heading')
+  expect(await timelines(page, 'p-li-p')).toEqual([]) // moves with its list
+  await close()
+})

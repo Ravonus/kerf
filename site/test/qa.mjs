@@ -249,12 +249,12 @@ for (const path of ['/components', '/blocks']) {
     if (tall > 14000) throw new Error(`${tall}px long`)
   }, PHONE)
 }
-// Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow, and below the fold they wait
-// (a build purges rules for data-flow values it never sees, so check the animation, not the attribute).
+// Docs pages flow like the kit's: their paragraphs, lists and tables are in warp.flow (warp's prose families, with no
+// attribute from the build), and below the fold they wait. Check the animation, not markup.
 for (const path of ['/docs/rules', '/docs/lists']) {
   await check(`docs content flows ${path}`, path, async page => {
     const { blocks, moving } = await page.evaluate(() => {
-      const els = [...document.querySelectorAll('[data-scope="prose"] > [data-flow]')]
+      const els = [...document.querySelectorAll('[data-scope="prose"] > :is(p, ul, ol, dl, blockquote, table)')]
       return { blocks: els.length, moving: els.filter(e => getComputedStyle(e).animationName !== 'none').length }
     })
     if (!blocks) throw new Error('no prose blocks in the flow')

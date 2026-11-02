@@ -192,24 +192,6 @@ function linkify(html, slugs) {
 /** Headings numbered by hand become steps: the number leaves the words for the page's gutter. */
 const steps = html => html.replace(/<h2([^>]*)>(\d+)\. /g, '<h2$1 data-step="$2">')
 
-/**
- * The page's own blocks join warp.flow, as the kit's frames do: paragraphs and lists rise in and fade out as items, and
- * a table as a card. warp's prose family only names h2 and h3 (and code blocks are their own family), so without this a
- * docs page was all still text. Only the top level: a list's paragraphs move with their list.
- */
-const FLOW_KIND = { p: 'item', ul: 'item', ol: 'item', dl: 'item', blockquote: 'item', table: 'card' }
-const VOID = new Set(['br', 'hr', 'img', 'input', 'wbr', 'source', 'col', 'meta', 'link'])
-function flowBlocks(html) {
-  let depth = 0
-  return html.replace(/<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g, (tag, close, name, attrs, self) => {
-    const n = name.toLowerCase()
-    if (close) { depth--; return tag }
-    const top = depth === 0
-    if (!self && !VOID.has(n)) depth++
-    return top && FLOW_KIND[n] && !/\sdata-flow=/.test(attrs) ? `<${name}${attrs} data-flow="${FLOW_KIND[n]}"${self}>` : tag
-  })
-}
-
 async function buildDocs() {
   const nav = []
   const pages = {}
@@ -233,7 +215,7 @@ async function buildDocs() {
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: flowBlocks(steps(html)), toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft docs.` }
+    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: steps(html), toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft docs.` }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
