@@ -184,6 +184,9 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   const key = keys.on ? nextKey() : undefined
   const data = rt.data
   const was = key !== undefined && !rt.server ? data?.b[key] : undefined
+  const page = globalThis as { $wh?: Record<string, () => void> | 0 }
+  /** It's still coming: the fallback stays, and the content waits for its chunk, which brings the data with it. */
+  let held = was === 'p' && !!data?.w && page.$wh !== 0
   if (was === 'e') thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed')
   /** Run `fn` in the content (`c`) or fallback (`f`) scope while keys are on; fresh otherwise. */
   const scoped = <T,>(side: 'c' | 'f', fn: () => T): T => (keys.on && key !== undefined ? under(key + side + '/', fn) : fn())
@@ -213,7 +216,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       Object.assign(keys, { on, hydrating })
     }
   }
-  build()
+  if (!held) build()
 
   const show = state<'wait' | 'fallback' | 'content'>('content')
   if (rt.server) {
@@ -238,13 +241,19 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       }, timing.showAfter)
     }
     watch(() => loading.value, busy => {
-      if (busy || show.value === 'content') return
+      if (busy || held || show.value === 'content') return // held: not loading only because nothing's been built
       clearTimeout(timer)
       const left = show.value === 'fallback' ? timing.hold - (Date.now() - shownAt) : 0
       if (left > 0) timer = setTimeout(() => (show.value = 'content'), left)
       else show.value = 'content'
     })
     onCleanup(() => clearTimeout(timer))
+    if (held) {
+      const id = encodeURIComponent(key!)
+      const waiting = (page.$wh ||= {})
+      waiting[id] = () => void (show.value = 'content') // the memo builds it, where what's built gets placed
+      onCleanup(() => void delete waiting[id])
+    }
   }
 
   const retry = () => {
@@ -256,11 +265,6 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   }
 
   let side: { kind: 'p' | 'e'; node: any; dispose: () => void } | undefined
-  // `parent` is only where they look things up, so nothing else disposes these two. What they read may outlive the page.
-  onCleanup(() => {
-    disposeContent?.()
-    side?.dispose()
-  })
   // `parent` is only where they look things up, so nothing else disposes these two. What they read may outlive the page.
   onCleanup(() => {
     disposeContent?.()
@@ -301,6 +305,10 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       const n = sideView('p', pendingView)
       if (props.shape && !rt.server) n.style.visibility = s === 'wait' ? 'hidden' : ''
       return n
+    }
+    if (held && s === 'content') {
+      held = false
+      untrack(build)
     }
     if (side) {
       if (DEV && s === 'content' && side.kind === 'p') checkSwap(side.node, content)

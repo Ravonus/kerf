@@ -79,15 +79,19 @@ export interface Stream {
   settle(): Promise<void>
 }
 
-/** The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every marker. */
-export const SWAP = `$wb=function(k,t){var d=document,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();b.replaceWith(t.content);a.remove();t.remove()}`
+/**
+ * The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every
+ * marker. A Boundary the client already runs is in `$wh` with what to do instead: its template goes, and it builds its
+ * own content. `$wh` is 0 once the stream is over.
+ */
+export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k&&h&&h[k]){n=h[k];delete h[k];t=d.currentScript;t&&t.previousElementSibling.remove();return n()}if(!k){self.$wh=0;for(n in h)h[n]()}if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();b.replaceWith(t.content);a.remove();t.remove()}`
 
 /**
  * Render with streaming: `shell` now, then a chunk per Boundary whose resources resolve, re-rendering after each
  * settles (cached values, in-flight fetches reused, so nothing is fetched twice). Boundaries that are still pending
  * after `timeout` ms keep their fallbacks, and the client fetches them after hydrating.
  */
-export function renderToStream(code: () => unknown, options: RenderOptions & { timeout?: number; passes?: number } = {}): Stream {
+export function renderToStream(code: () => unknown, options: RenderOptions & { timeout?: number; passes?: number; /** Script run just before each chunk's swaps, in the same tag. */ landing?: () => string } = {}): Stream {
   const cache: SsrData['r'] = {}
   const flight = new Map<string, Promise<unknown>>()
   const html = new Map<string, string>()
@@ -120,18 +124,20 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
       await new Promise(ok => setTimeout(ok, 0)) // fetches that settle together go out together
       run()
       let out = ''
+      let first = true
       for (const k of [...open]) {
         const content = html.get(k)
         if (content === undefined) continue
         open.delete(k)
         const id = encodeURIComponent(k)
-        out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}$wb(${JSON.stringify(id)})</script>`
+        out += `<template>${content}</template><script>${defined ? '' : SWAP + ';'}${first ? options.landing?.() ?? '' : ''}$wb(${JSON.stringify(id)})</script>`
         defined = true
+        first = false
       }
       for (const k of pending()) open.add(k) // nested Boundaries inside content that just arrived
       if (out) yield out
     }
-    if (open.size) yield `<script>${defined ? '' : SWAP + ';'}$wb()</script>` // what's left keeps its fallback
+    if (open.size) yield `<script>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
   }
   const stream: Stream = {
     shell: run(),

@@ -28,7 +28,7 @@ import { headTags, mergeMeta, metaTags, region, renderToStream, renderToString, 
 import { createRouteState, type Component, type Match, type RoutePayload } from './router'
 import { sessionChanged, type AuthProvider } from './auth'
 import { EXTENSION, type ExtensionEntry, type ServerExtension } from './extension'
-import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
+import { CLIENT_IP, decodeForm, fieldsOf, FnError, fns, isRedirect, keyOf, runtime, StartError, type Redirect, type SchemaIssue, type Wire } from './data'
 import * as exec from './exec'
 import type { MediaServer, Scope, Store } from './exec'
 import { configure, hub, rtRoute, type RealtimeOptions } from './hub'
@@ -255,11 +255,31 @@ export function createHandler(options: HandlerOptions) {
     // The server renders from the raw data (deferred fields are still promises, for Boundaries to stream); the page
     // carries the settled part.
     const route = stateOf(r, payloadOf(r, false))
-    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, app: { cookies: cookieJar(request) } })
+    const sent = new Set<string>()
+    const told: { r: Record<string, unknown>; b: Record<string, unknown> } = { r: {}, b: {} }
+    /** Cache entries the client hasn't got. */
+    const news = () => {
+      const fresh = wire(scope).filter(w => !sent.has(keyOf(w[0], w[1])))
+      for (const w of fresh) sent.add(keyOf(w[0], w[1]))
+      return fresh
+    }
+    /** What the client hasn't been told of the render: each thing once, or a page of chunks repeats the page. */
+    const since = () => {
+      const d = pageData(s.data(), scope)
+      const changed = (from: Record<string, unknown>, seen: Record<string, unknown>) => {
+        const out = Object.fromEntries(Object.entries(from).filter(([k, v]) => seen[k] !== v))
+        Object.assign(seen, out)
+        return out
+      }
+      return { r: changed(d?.r ?? {}, told.r), b: changed(d?.b ?? {}, told.b) }
+    }
+    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
     await s.settle() // queries read outside a Boundary have nowhere to stream to
     const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
     const assets = options.assets ?? {}
     const parts = islandsOf(s.shell)
+    // A Boundary is waiting: the page is usable before it lands, so the client starts now, not at the last byte.
+    const streaming = Object.values(s.data()?.b ?? {}).includes('p')
     const now = !parts.lazy.length || payload.m.some(m => !m.s) || !!payload.i?.length
     const styles = pageStyles(assets, pageSheets(assets.css, parts, options.chunks), s.shell, site.head)
     const lang = site.locale ? ` lang="${esc(site.locale.replace('_', '-'))}"` : ''
@@ -271,23 +291,29 @@ export function createHandler(options: HandlerOptions) {
       // The entry's own script tag, just below, already fetches it. Above the styles: a preload found past 50 KB of CSS starts late.
       modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
       styles.head +
-      (options.lazy ? `<script>${capture(now)}</script>\n` : '') +
+      (options.lazy || streaming ? `<script>${capture(now)}</script>\n` : '') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
-      (assets.entry ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
+      (assets.entry && !streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
+      (assets.entry && streaming ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') +
       `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
-      (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '')
+      (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '') +
+      // Async, and after all it reads, so it can run while the stream goes on.
+      (streaming ? (since(), dataTags({ ...pageData(s.data(), scope)!, w: 1 }, news())) : '') +
+      (assets.entry && streaming ? `<script type="module" async src="${esc(assets.entry)}"></script>\n` : '')
     const finish = async () => {
       const cached = wire(scope)
       // Read after the queries ran: what's published from here on, the first connect replays (research 30 §1).
       if (scope.live) await hub().ready()
       const rt = scope.live ? `<script type="application/json" id="weft-rt">${json({ c: hub().cursor(), b: options.build })}</script>\n` : ''
-      return `<script type="application/json" id="weft-data">${json(pageData(s.data(), scope))}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '') + rt + '</body>\n</html>\n'
+      // A client that starts after this finds the whole page, as if it had never streamed.
+      const stale = streaming ? '<script>["weft-data","weft-cache"].forEach(function(i){(i=document.getElementById(i))&&i.remove()})</script>\n' : ''
+      return stale + dataTags(pageData(s.data(), scope), cached) + rt + '</body>\n</html>\n'
     }
     const status = r.status === 200 && scope.form ? scope.form.status : r.status
     const init = { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', ...(parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }) } }
     // No Boundary is waiting, so there's nothing to stream: the page goes out in one piece.
-    if (!Object.values(s.data()?.b ?? {}).includes('p')) {
+    if (!streaming) {
       const res = new Response(null, init)
       whole.set(res, head + (await finish()))
       return withHeaders(res, scope)
@@ -803,6 +829,8 @@ function withLevels(payload: RoutePayload, html: string, statics: Set<string>, s
   const i = islandsOf(html).now
   return { ...payload, m, ...(i.length && { i }) }
 }
+
+const dataTags = (data: unknown, cached: Wire[]) => `<script type="application/json" id="weft-data">${json(data)}</script>\n` + (cached.length ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n` : '')
 
 /** A render's data as a page may carry it: what failed says only what `exec.shown` let through. */
 function pageData(data: ReturnType<Stream['data']>, scope: Scope) {

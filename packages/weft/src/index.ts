@@ -74,7 +74,7 @@ export const rt: {
   slots?: Record<string, unknown>
 } = { server: false }
 
-export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; /** `defineState` boxes that differ from `init`, by scope */ s?: Record<string, Record<string, unknown>> }
+export type SsrData = { r: Record<string, { v?: unknown; e?: string }>; b: Record<string, 'c' | 'p' | 'e'>; /** The page is still streaming: the client may start before its Boundaries land. */ w?: 1; /** `defineState` boxes that differ from `init`, by scope */ s?: Record<string, Record<string, unknown>> }
 
 /** Reactive work counter, read by `weft/test` (`toTouchAtMost(n, { runs })`). */
 export const stats = { runs: 0 }

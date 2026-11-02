@@ -46,6 +46,11 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   let bag: RoutePayload['b']
   route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined, id => Promise.resolve(island(id)))
   route.around = (_d, _id, body) => enter(body)
+  // What landed while the chunks loaded: from here on, a Boundary that's still out is held, and its chunk builds it.
+  for (const l of (globalThis as any).$wc ?? []) {
+    Object.assign(data.r, l.r)
+    Object.assign(data.b, l.b)
+  }
   hydrate(() => <App route={route} />, container, { data })
   client.route = route
 

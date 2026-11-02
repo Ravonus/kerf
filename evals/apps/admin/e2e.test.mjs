@@ -96,11 +96,21 @@ test('the shape pages render', async () => {
 
 test('/admin/slow counts while the report streams in', async () => {
   const page = await site.open({ signedIn: true })
+  const broken = []
+  const fetched = []
+  page.on('pageerror', e => broken.push(e.message))
+  page.on('request', r => /yearReport/.test(r.url()) && fetched.push(r.url()))
   await site.go(page, '/admin/slow')
-  await see(page.getByRole('region', { name: 'Report', exact: true }), 10000)
+  const report = page.getByRole('region', { name: 'Report', exact: true })
+  await see(report, 10000)
   await see(page.getByRole('status').filter({ hasText: 'Count: 0' }))
   await page.getByRole('button', { name: 'Count', exact: true }).click()
   await see(page.getByRole('status').filter({ hasText: 'Count: 1' }))
+  await see(report.getByRole('row').filter({ hasText: 'Paid' }), 10000)
+  await page.getByRole('button', { name: 'Count', exact: true }).click()
+  await see(page.getByRole('status').filter({ hasText: 'Count: 2' }))
+  assert.deepEqual(broken, [])
+  assert.deepEqual(fetched, [], 'the report comes in the stream, not in a second query')
 })
 
 // From here on: what makes the three the same site, not only each a working one.
