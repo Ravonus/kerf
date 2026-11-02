@@ -416,7 +416,7 @@ impl Collect<'_> {
         let mut e = Escapes { scoping, objects: &self.objects, writing: 0, gone: Vec::new(), arguments: false };
         scan(&mut e);
         let (gone, arguments) = (e.gone, e.arguments);
-        self.objects.retain(|s| !arguments && !gone.contains(s) && !scoping.symbol_is_mutated(*s));
+        self.objects.retain(|s| !arguments && !gone.contains(s));
         self.handlers.retain(|s| !arguments && !scoping.symbol_is_mutated(*s));
     }
 
