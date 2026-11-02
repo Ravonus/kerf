@@ -138,6 +138,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   let index = new Map<VirtualKey, number>()
   let viewport = 0, cross = 0, lead = 0, trail = 0
   let last: number[] = []
+  let renamed = false // the same indices can now hold other keys
   let stuck = o.from === 'end'
 
   const gap = () => o.gap ?? 0
@@ -198,7 +199,8 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
   }
 
   function emit(next: number[]) {
-    if (next.length === last.length && next.every((n, i) => n === last[i])) return
+    if (!renamed && next.length === last.length && next.every((n, i) => n === last[i])) return
+    renamed = false
     last = next
     o.onRange(next)
   }
@@ -246,6 +248,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       return
     }
     const at = position(), held = sizes.at(at), key = old[held], within = at - sizes.offset(held)
+    renamed = true
     index = new Map(next.map((k, i) => [k, i]))
     sizes.fill(next.map((_, i) => sizeFor(i)))
     for (const k of known.keys()) if (!index.has(k)) known.delete(k)

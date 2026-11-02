@@ -338,7 +338,7 @@ export const forms: DocGroup = {
           { id: 'FieldError', title: 'Hint and error', note: 'An error takes the hint\'s place, so the layout doesn\'t jump.', stage: 'narrow' },
         ] },
         { kind: 'composition', title: 'In context', examples: [
-          { id: 'FieldCustomControl', title: 'Your own control', note: '`control` draws the inside, `end` adds to the right edge. A plain input is correct here: mark it `data-part="input"` and use the `id` you\'re given.', stage: 'narrow' },
+          { id: 'FieldCustomControl', title: 'An action on the edge', note: '`Input` takes every `Field` prop, so `end` adds to the right edge.', stage: 'narrow' },
           { id: 'FieldForm', title: 'A short form', stage: 'narrow' },
         ] },
       ],

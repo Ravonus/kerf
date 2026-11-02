@@ -1,4 +1,4 @@
-import { Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft/warp'
+import { Button, Modal, Search, Segmented, Snippet, Tag, VirtualList } from '@weft/warp'
 import { derived, onCleanup, onMount, state } from 'weft'
 import files from '../generated/icons.json'
 
@@ -37,16 +37,7 @@ export function IconBrowser() {
   const drawing = (name: string, f: Form) => svg(set.value?.[name]?.[f === 'solid' ? 1 : 0] ?? '')
   onMount(() => {
     query.value = new URLSearchParams(location.search).get('q') ?? ''
-    void fetch(files.url).then(r => r.json()).then(s => {
-      set.value = s
-      // warp's list keeps the one row it measured until it really scrolls
-      setTimeout(() => {
-        const list = box.querySelector('[data-scope="virtual"]')
-        if (!list) return
-        list.scrollTop = 1
-        setTimeout(() => (list.scrollTop = 0), 50)
-      }, 50)
-    })
+    void fetch(files.url).then(r => r.json()).then(s => (set.value = s))
     const seen = new ResizeObserver(([e]) => (cols.value = Math.max(2, Math.floor(e.contentRect.width / CELL))))
     seen.observe(box)
     onCleanup(() => seen.disconnect())
@@ -65,10 +56,10 @@ export function IconBrowser() {
         {row => (
           <div data-part="line" style={`--cols:${cols.value}`}>
             {row().names.map(n => (
-              <button type="button" key={n} data-scope="button" data-emphasis="ghost" data-tone="neutral" data-part="cell" onClick={() => show(n)} aria-label={n}>
+              <Button key={n} emphasis="ghost" tone="neutral" data-part="cell" onClick={() => show(n)} aria-label={n}>
                 <span data-part="glyph" innerHTML={drawing(n, form.value)}></span>
                 <span data-part="name">{n}</span>
-              </button>
+              </Button>
             ))}
           </div>
         )}

@@ -1,5 +1,5 @@
 import { derived, state, untrack } from 'weft'
-import { Button, Checkbox, CompactSelect, Field, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
+import { Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../world'
 
 /** One state in a States grid: its name, then the field. */
@@ -248,7 +248,7 @@ export const SelectStates = () => (
     <Cell name="Hint"><Select label="Region" options={REGION_OPTIONS} hint="Moving a project redeploys it." /></Cell>
     <Cell name="Invalid"><Select label="Region" placeholder="Choose a region" options={REGION_OPTIONS} error="Choose where this project runs." /></Cell>
     <Cell name="Disabled"><Select label="Region" options={REGION_OPTIONS} defaultValue="us-east" disabled /></Cell>
-    <Cell name="Read-only"><Input label="Region" defaultValue="us-east" readonly /></Cell>
+    <Cell name="Read-only"><Select label="Region" options={REGION_OPTIONS} defaultValue="us-east" readonly /></Cell>
   </Grid>
 )
 
@@ -603,12 +603,12 @@ export function FieldCustomControl() {
   const token = state('tsl_4f9c2e71')
   const rotate = () => (token.value = `tsl_${Math.random().toString(16).slice(2, 10)}`)
   return (
-    <Field
+    <Input
       label="Deploy token"
-      filled
       hint="Rotating it stops the old one straight away."
       end={<Button size="sm" emphasis="ghost" tone="neutral" onClick={rotate}>Rotate</Button>}
-      control={p => <input data-part="input" id={p.id} aria-describedby={p.describedby} readonly value={token.value} />}
+      value={token.value}
+      readonly
     />
   )
 }

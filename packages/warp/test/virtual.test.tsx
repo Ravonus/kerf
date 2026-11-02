@@ -64,6 +64,17 @@ test('VirtualList: the focused row stays rendered, and keys move a single tab st
   expect(document.activeElement!.getAttribute('aria-posinset')).toBe('1')
 })
 
+test('VirtualList: the same window over new keys renders the new rows, not just the keys both share', async () => {
+  const items = state(Array.from({ length: 100 }, (_, i) => ({ id: i * 6 })))
+  const { container: c } = render(() => <VirtualList items={items.value} rowKey={r => r.id}>{r => <span>{r().id}</span>}</VirtualList>)
+  await settle()
+  const before = rows(c).length
+  items.value = Array.from({ length: 100 }, (_, i) => ({ id: i * 5 }))
+  await settle()
+  expect(rows(c).length).toBe(before)
+  expect(rows(c)[1].textContent).toBe('5')
+})
+
 const mei = { id: 'mei', name: 'Mei' }, me = { id: 'me', name: 'Me' }, ana = { id: 'ana', name: 'Ana' }
 const chat = (n: number): ChatMessage[] => Array.from({ length: n }, (_, i) => ({ id: `m${i}`, author: i % 4 === 3 ? me : mei, mine: i % 4 === 3, text: `hello ${i}`, time: '09:41', at: i * 1000, day: 'Today', state: i % 4 === 3 ? 'sent' as const : undefined }))
 

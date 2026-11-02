@@ -98,7 +98,7 @@
 
   [data-site="fix"] { display: grid; gap: var(--warp-space-group); }
   [data-site="fix"] [data-part="steps"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: var(--warp-space-tight); margin: 0; padding: 0; list-style: none; }
-  [data-site="fix"] [data-part="steps"] button { display: flex; align-items: center; gap: var(--warp-space-tight); inline-size: 100%; min-block-size: 44px; padding: var(--warp-space-tight) var(--warp-space-related); border: 1px solid var(--warp-color-border); background: none; color: var(--warp-color-text-subtle); font: inherit; text-align: start; cursor: pointer; }
+  [data-site="fix"] [data-part="steps"] button { display: flex; align-items: center; justify-content: start; gap: var(--warp-space-tight); inline-size: 100%; text-transform: none; letter-spacing: normal; min-block-size: 44px; padding: var(--warp-space-tight) var(--warp-space-related); border: 1px solid var(--warp-color-border); background: none; color: var(--warp-color-text-subtle); font: inherit; text-align: start; cursor: pointer; }
   [data-site="fix"] [data-part="steps"] button span { font-family: var(--warp-font-mono); color: var(--warp-color-accent-text); }
   [data-site="fix"] [data-part="steps"] button[aria-current] { border-color: var(--warp-color-accent-solid); background: var(--warp-color-accent-soft); color: var(--warp-color-text); }
   [data-site="fix"] [data-part="stage"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: var(--warp-space-group); align-items: start; }
