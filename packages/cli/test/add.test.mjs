@@ -267,3 +267,11 @@ describe('weft add db', () => {
     })
   })
 })
+
+it('an add-on not on npm yet says so, by its short name or its package name, and changes nothing', async () => {
+  const dir = project({ 'weft.config.ts': "export default {}\n", 'package-lock.json': '{}' })
+  for (const name of ['redis', 'realtime-redis', '@weft-js/realtime-redis']) {
+    await expect(addCommand(dir, name)).rejects.toThrow("@weft-js/realtime-redis isn't on npm yet")
+  }
+  expect(read(dir, 'weft.config.ts')).toBe('export default {}\n')
+})

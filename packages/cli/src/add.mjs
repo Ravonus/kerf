@@ -315,7 +315,7 @@ export async function addCommand(root, feature, { dryRun = false, install = true
   if (feature === 'tailwind') return addTailwind(root, { dryRun, install })
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
-  const pkg = ALIASES[feature] ?? feature
+  const pkg = ALIASES[feature] ?? (UNPUBLISHED.has(`@weft-js/${feature}`) ? `@weft-js/${feature}` : feature)
   const file = findConfig(root) ?? join(root, 'weft.config.ts')
   const config = relative(root, file)
   const text = existsSync(file) ? readFileSync(file, 'utf8') : "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({})\n"
