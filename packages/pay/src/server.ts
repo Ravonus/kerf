@@ -310,7 +310,7 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
     },
     context: ctx => ({ entitlements: pay.forContext(ctx) }),
     async guard(fn, ctx) {
-      for (const id of fn.def.requires ?? []) if (!(await ctx.entitlements.has(id))) throw new PayError('ENTITLEMENT_REQUIRED', `This needs \`${id}\``, 403)
+      for (const id of (fn.def.requires as readonly string[] | undefined) ?? []) if (!(await ctx.entitlements.has(id))) throw new PayError('ENTITLEMENT_REQUIRED', `This needs \`${id}\``, 403)
     },
     options: ['requires'],
     personal: ['entitlements'],
