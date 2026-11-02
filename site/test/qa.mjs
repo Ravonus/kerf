@@ -220,6 +220,26 @@ for (const path of ['/docs/rules', '/docs/lists', '/docs/async', '/docs/browser'
     if (toc && !links) throw new Error('an empty contents column')
   }, { width: 1440, height: 900 })
 }
+// A demo missing from the build shows its notice in a pane its own size, not a tall empty one.
+await check('a missing demo closes its pane around the notice', '/examples', async page => {
+  const sec = page.locator('section[data-site="example"]:has([data-part="run"] > [data-part="missing"])').first()
+  if (!await sec.count()) return // the arena is built: nothing missing
+  const { run, notice } = await sec.evaluate(s => ({ run: s.querySelector('[data-part="run"]').getBoundingClientRect().height, notice: s.querySelector('[data-part="missing"]').getBoundingClientRect().height }))
+  if (run > notice + 48) throw new Error(`a ${Math.round(run)}px pane around a ${Math.round(notice)}px notice`)
+})
+
+// The home page's demos start at the top of their pane, however long the code beside them.
+await check('home demos start at the top of their pane', '/', async page => {
+  const gaps = []
+  for (const id of ['shop-1', 'shop-2', 'shop-4', 'shop-5']) {
+    const run = page.locator('[data-site="story"] [data-site="example"] [data-part="run"]').nth(gaps.length)
+    await run.scrollIntoViewIfNeeded()
+    await page.evaluate(() => scrollBy(0, -300))
+    await page.waitForTimeout(200)
+    gaps.push([id, await run.evaluate(r => Math.round(r.firstElementChild.getBoundingClientRect().top - r.getBoundingClientRect().top))])
+  }
+  same(gaps.filter(([, gap]) => gap > 64).map(([id, gap]) => `${id} ${gap}px`).join(), '', 'blank above a demo')
+})
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

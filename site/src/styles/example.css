@@ -51,3 +51,9 @@
 [data-site="page"] [data-site="example"][data-lead] [data-part="run"] { order: 0; padding: var(--warp-space-section); border-inline-start: 0; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-accent-soft); }
 [data-site="page"] [data-site="example"][data-lead] [data-part="run"] > * { inline-size: min(100%, 420px); }
 @media (max-width: 759.98px) { [data-site="page"] [data-site="example"][data-lead] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); } [data-site="page"] [data-site="example"][data-lead] [data-part="run"] { padding: var(--warp-space-group); border-inline-end: 0; } }
+/* On the home page the code beside a demo runs long: the demo starts at the top and stays in view while the code
+   scrolls past, instead of floating in the middle of a pane hundreds of pixels tall. */
+@media (min-width: 760px) {
+  [data-site="story"] [data-site="example"] [data-part="run"] { align-items: start; align-content: start; }
+  [data-site="story"] [data-site="example"] [data-part="run"] > * { position: sticky; inset-block-start: calc(var(--warp-flow-top, 57px) + var(--warp-space-group)); }
+}
