@@ -524,11 +524,11 @@ impl<'t> Emitter<'t> {
                     self.n += 1;
                     let p = format!("_p{}", self.n);
                     b.decls.push(p.clone());
-                    let props = match props.strip_prefix("_$mergeProps(").and_then(|q| q.strip_suffix(')')) {
+                    let held = match props.strip_prefix("_$mergeProps(").and_then(|q| q.strip_suffix(')')) {
                         Some(sources) => format!("{}({sources})", self.helper("merged")),
-                        None => props,
+                        None => props.clone(),
                     };
-                    Self::server(b, Piece::Code(format!("{spread}({p} = {props})")));
+                    Self::server(b, Piece::Code(format!("{spread}({p} = {held})")));
                     shared = Some(p);
                 }
             } else {
