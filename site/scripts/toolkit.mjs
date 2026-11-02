@@ -42,6 +42,9 @@ export function readToolkit(repo) {
     // default, and mustn't be shown one.
     const fileText = decl.getSourceFile().text
     const worked = new Set([...fileText.matchAll(/\.(\w+)\s*\?\?\s*(?!('[^'\n]*'|"[^"\n]*"|-?\d[\d_.]*|true|false)\s*[,;)}\]:])/g)].map(m => m[1]))
+    // A switch read as `props.wrap !== false` is on unless it's turned off.
+    for (const [, prop] of fileText.matchAll(/\.(\w+)\s*!==\s*false\b/g)) if (!defaults.has(prop)) defaults.set(prop, 'true')
+    for (const [, prop] of fileText.matchAll(/\b(\w+)\s*===\s*false\b/g)) worked.add(prop)
     if (param) {
       const type = checker.getTypeOfSymbolAtLocation(param, decl)
       for (const p of type.getProperties?.() ?? []) {

@@ -353,9 +353,9 @@ const SPEC_WORDS = /§|\bSIGNATURE\b|\bspecimen\b/
 const GITHUB_SRC = 'https://github.com/Ravonus/weft/blob/main/'
 
 /** A prop's row: the prop's own comment, then the page's, then the common word, and never a spec reference. */
-/** A default the words name, as in "`md` by default", when it's one of the prop's own values. */
+/** A default the words name, as in "`md` by default", when it's one of the prop's own values and not one case of several. */
 const namedDefault = (p, words) => {
-  const named = /`([^`]+)` by default/.exec(words)?.[1]
+  const named = /`([^`]+)` by default(?! for)/.exec(words)?.[1]
   return named !== undefined && p.values?.map(String).includes(named) ? (typeof p.values[0] === 'string' ? `'${named}'` : named) : undefined
 }
 /** The default the source states, else the one the words name; an optional switch left out is off. */
