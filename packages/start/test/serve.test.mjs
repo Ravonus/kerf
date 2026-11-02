@@ -121,7 +121,7 @@ describe('streaming', () => {
     expect(all.match(/\$wb=function/g)).toHaveLength(1)
     expect(chunks.find(c => c.text.includes('In stock')).at).toBeLessThan(chunks.find(c => c.text.includes('<li wk')).at)
     // The resolved values travel in the page data, so the client never refetches them.
-    const data = JSON.parse(/id="weft-data">(.*?)<\/script>/.exec(all)[1])
+    const data = JSON.parse([...all.matchAll(/id="weft-data">(.*?)<\/script>/g)].at(-1)[1])
     expect(Object.values(data.r).map(x => x.v)).toEqual(expect.arrayContaining([7, ['Great', 'Fine']]))
     expect(Object.values(data.b)).toEqual(['c', 'c'])
   })
