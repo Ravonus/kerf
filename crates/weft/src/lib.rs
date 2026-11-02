@@ -35,13 +35,22 @@
 pub mod build;
 
 #[cfg(feature = "core")]
+#[cfg_attr(
+    not(any(feature = "server", feature = "native")),
+    allow(dead_code, reason = "`core` alone is what generated code names; the rest is for `server` and `native`")
+)]
 mod ctx;
 #[cfg(feature = "server")]
 mod envelope;
 #[cfg(feature = "core")]
+#[cfg_attr(
+    not(any(feature = "server", feature = "native")),
+    allow(dead_code, reason = "`core` alone is what generated code names; the rest is for `server` and `native`")
+)]
 mod functions;
 #[cfg(feature = "native")]
 #[doc(hidden)]
+#[cfg_attr(test, allow(dead_code, reason = "Node-API registers exports outside test builds"))]
 pub mod native;
 #[cfg(feature = "otel")]
 mod otel;

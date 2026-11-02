@@ -8,6 +8,8 @@
 //! The signature covers the function and the body as well as the claims, so a signed call can't be replayed against
 //! another function or with another input, and `iat` bounds how long it can be replayed at all.
 
+use std::fmt::Write as _;
+
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use hmac::{Hmac, KeyInit, Mac};
@@ -59,7 +61,11 @@ fn hex_decode(s: &str) -> Option<Vec<u8>> {
 
 /// The `weft-sig` for a call. TS is the signer; this is here for tests and hand-written callers.
 pub fn sign(secret: &[u8], id: &str, ctx: &str, body: &[u8]) -> String {
-    keyed(secret, id, ctx, body).finalize().into_bytes().iter().map(|b| format!("{b:02x}")).collect()
+    let mut hex = String::with_capacity(64);
+    for b in keyed(secret, id, ctx, body).finalize().into_bytes() {
+        let _ = write!(hex, "{b:02x}");
+    }
+    hex
 }
 
 /// Check the signature (in constant time), then decode the envelope and check its age against `now_ms`.

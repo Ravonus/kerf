@@ -1,5 +1,10 @@
 // The router as TS meets it: a signed POST, and each way a call can end.
 #![cfg(feature = "server")]
+#![allow(
+    clippy::unwrap_used,
+    clippy::needless_pass_by_value,
+    reason = "test helpers: a panic is the failure report, and fixtures take `json!` literals"
+)]
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -47,7 +52,7 @@ fn app() -> Router {
         .add("mine.a", |ctx: UserCtx, (): ()| async move { Ok::<_, weft::Error>(ctx.user().roles.clone()) })
         .add("missing.a", |_: Ctx, q: Q| async move { Err::<(), E>(E::NotFound { id: q.q }) })
         .add("boom.a", |_: Ctx, (): ()| async move {
-            assert!(!true, "the secret detail");
+            assert!(!std::hint::black_box(true), "the secret detail");
             Ok::<(), weft::Error>(())
         })
         .add("fails.a", |_: Ctx, (): ()| async move { Err::<(), _>(weft::Error::msg("the secret detail")) })
