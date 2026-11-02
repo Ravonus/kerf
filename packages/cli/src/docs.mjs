@@ -15,7 +15,8 @@ const fileTopics = Object.fromEntries(readdirSync(docsDir).filter(f => f.endsWit
 
 /** What `weft docs` can show, with the line that says what each topic covers. */
 export const topics = {
-  rules: 'The seven rules: boxes, derived, live JSX and props, run-once bodies (start here)',
+  rules: 'The nine rules: boxes, derived, live JSX and props, run-once bodies (start here)',
+  state: 'Every reactive function (state, derived, watch, untrack, flush, batch, context) and defineState with persist, sync and history; S001, S002, S008, S009, S012, S013',
   props: 'How props stay live; W001, W005, W006',
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
   async: 'resource, <Boundary pending error>, @weft-js/core/ssr and hydrate; W012',

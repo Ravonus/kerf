@@ -89,6 +89,7 @@ const LEADS = {
 const SECTIONS = [
   ['Core', [
     ['rules', 'The rules', topic('rules')],
+    ['state', 'State', topic('state')],
     ['props', 'Props', topic('props')],
     ['lists', 'Lists', topic('lists')],
     ['async', 'Async', topic('async')],
