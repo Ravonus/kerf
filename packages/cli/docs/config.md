@@ -15,7 +15,7 @@ export default defineConfig({
     seed: { run: 'node scripts/seed.mjs', description: 'Load demo products into the dev db', sideEffects: ['db'], env: ['dev'] },
   },
   environments: { dev: { url: 'http://localhost:5173' } },
-  site: {        // page metadata defaults: static tags in the server's first response (research 20)
+  site: {        // page metadata defaults: static tags in the server's first response (weft docs meta)
     name: 'Acme',
     url: 'https://acme.dev',
     title: '%s · Acme',
