@@ -1091,7 +1091,7 @@ and the default persist version handling is the migration bug. If agents pass al
 >   named setup scope that returns ordinary `state`/`derived` boxes and functions. It adds a lifetime (per tab, per
 >   request, per test) and a name (devtools, persistence keys, undo), never a second way to hold a value. Server data
 >   stays in the query cache. Copying it into state is S001. Optimistic updates are overlay layers on the cache,
->   declared on the `mutation` ([14](research/14-app-state.md)).
+>   declared on the `mutation` ([14](14-app-state.md)).
 
 ### 9.2 Section-by-section changes
 

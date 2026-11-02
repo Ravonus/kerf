@@ -189,7 +189,7 @@ Not done in Phase 1:
 
 ## 5. Helper contract
 
-[`test/ssr-contract.test.ts`](../../packages/weft/test/ssr-contract.test.ts) finds the pinned checkout through `cargo
+`test/ssr-contract.test.ts` (since removed) found the pinned checkout through `cargo
 metadata`. It compiles every `__ssr*` fixture (generate `ssr`, hydratable off and on) and every `__dom_hydratable*`
 fixture, in dev (with `sourceNames`) and prod. It then checks each helper the output imports against the module's
 real exports **(measured)**:
