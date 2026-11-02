@@ -54,24 +54,28 @@ async function take(doc: string, width: number) {
   return out
 }
 
-describe.each([390, 1320])('at %i px', width => {
-  test('the critical rules paint what all the rules paint', async () => {
-    resetIds()
-    const html = renderToString(() => Ordinary({}))
-    expect(html).toContain('data-scope="checkbox"')
-    const { head } = pageStyles({ inline, critical: { parse, purge } }, files.map(f => ({ href: `/${f}` })), html)
-    expect(head).toContain('data-late')
-    const page = (styles: string) => `<!doctype html><html><head>${styles}</head><body><div id="app">${html}</div></body></html>`
-    const full = await take(page(`<style>${LAYER_ORDER}</style>${Object.values(inline).map(c => `<style>${c}</style>`).join('')}`), width)
-    const first = await take(page(head.replace(/<script>[\s\S]*?<\/script>/g, '')), width)
-    expect(first.lost).toEqual([])
-    expect(first.nodes.length).toBe(full.nodes.length)
-    const diffs: string[] = []
-    full.nodes.forEach((a: any, i: number) => {
-      const b = first.nodes[i]
-      if (JSON.stringify(a.box) !== JSON.stringify(b.box)) diffs.push(`${a.name} box ${JSON.stringify(a.box)} -> ${JSON.stringify(b.box)}`)
-      for (const part of ['own', 'before', 'after']) for (const k in a[part]) if (a[part][k] !== b[part][k]) diffs.push(`${a.name} ${part} ${k}: ${a[part][k]} -> ${b[part][k]}`)
-    })
-    expect(diffs.slice(0, 30)).toEqual([])
+const compare = async (rootAttrs: string, width: number, head?: string) => {
+  resetIds()
+  const html = renderToString(() => Ordinary({}))
+  expect(html).toContain('data-scope="checkbox"')
+  const styles = pageStyles({ inline, critical: { parse, purge } }, files.map(f => ({ href: `/${f}` })), html, head).head
+  expect(styles).toContain('data-late')
+  const page = (css: string) => `<!doctype html><html${rootAttrs}><head>${css}</head><body><div id="app">${html}</div></body></html>`
+  const full = await take(page(`<style>${LAYER_ORDER}</style>${Object.values(inline).map(c => `<style>${c}</style>`).join('')}`), width)
+  const first = await take(page(styles.replace(/<script>[\s\S]*?<\/script>/g, '')), width)
+  expect(first.lost).toEqual([])
+  expect(first.nodes.length).toBe(full.nodes.length)
+  const diffs: string[] = []
+  full.nodes.forEach((a: any, i: number) => {
+    const b = first.nodes[i]
+    if (JSON.stringify(a.box) !== JSON.stringify(b.box)) diffs.push(`${a.name} box ${JSON.stringify(a.box)} -> ${JSON.stringify(b.box)}`)
+    for (const part of ['own', 'before', 'after']) for (const k in a[part]) if (a[part][k] !== b[part][k]) diffs.push(`${a.name} ${part} ${k}: ${a[part][k]} -> ${b[part][k]}`)
   })
+  expect(diffs.slice(0, 30)).toEqual([])
+}
+
+describe.each([390, 1320])('at %i px', width => {
+  test('the critical rules paint what all the rules paint', () => compare('', width))
+  // What `dialScript` puts on <html> before the first paint: only the head can say so.
+  test.each([' data-theme="dark"', ' data-theme="light"', ' data-expression="vivid"', ' data-density="compact"', ' data-form="phone"', ' data-pointer="coarse"', ' data-flair="none"', ' data-motion="none"'])('with%s on <html>', attrs => compare(attrs, width, 'warp:dials'))
 })

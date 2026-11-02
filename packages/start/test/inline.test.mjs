@@ -49,9 +49,9 @@ test('a sheet that cannot be inlined stays a blocking link', () => {
 
 test('dials the head restores before paint keep their rules', () => {
   const dials = `:where([data-expression="vivid"]){color:red}${big}`
-  const a = { inline: { '/a.css': dials }, critical }
-  expect(pageStyles(a, css, html, 'warp:dials').head).toContain('vivid')
-  expect(pageStyles(a, css, html).head).not.toContain('vivid')
+  const a = { inline: { '/dials.css': dials }, critical }, on = [{ href: '/dials.css' }]
+  expect(pageStyles(a, on, html, 'warp:dials').head).toContain('vivid')
+  expect(pageStyles(a, on, html).head).not.toContain('vivid')
 })
 
 test('a streamed chunk never links a sheet the head already asked for: it brings the rules it reaches, once', () => {

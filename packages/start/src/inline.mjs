@@ -22,10 +22,10 @@ const SELECTOR_WORD = /\[\s*([\w-]+)\s*(?:([~|^$*]?=)\s*(?:"((?:[^"\\]|\\.)*)"|'
 // A reference the shell's text can't be compared with, so nothing is ruled out on its value.
 const ENTITY = /&(?!(?:amp|quot|lt|gt);)/
 const ANY_VALUE = '=*'
-// Set by a script, on <html> or `setDial` or as a chart comes into view, so the server's HTML can't vouch for them.
-const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|warp|scope|enter)$/
-// `dialScript` restores these before the first paint, so the server's HTML doesn't show them.
-const DIALS = 'quiet balanced vivid floating classic compact cozy comfortable sweep none'.split(' ')
+// Set on <html> by a script or `setDial`, so the server's HTML can't vouch for them.
+const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|warp|scope)$/
+// `dialScript` restores these before the first paint, so the server's HTML doesn't show their values.
+const DIAL = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields)$/
 // Rules that can't paint until someone acts, so the late sheet is soon enough for them. A state the server can render
 // (`:checked`, `aria-checked`, `:disabled`) has to stay.
 const LATER = /:(?:hover|active|focus|focus-visible|focus-within|popover-open|modal)\b|::(?:backdrop|selection)/
@@ -144,8 +144,14 @@ function vocabulary(sheets, id) {
   let words = vocabularies.get(id)
   if (!words) {
     words = new Set()
+    words.dials = []
     for (const s of sheets) {
-      for (const d of demands(s.css)) words.add(d.value ?? d)
+      let name
+      for (const d of demands(s.css)) {
+        words.add(d.value ?? d)
+        if (typeof d === 'string') name = d
+        else if (DIAL.test(name)) words.dials.push(d.value)
+      }
       for (const m of s.css.matchAll(PROP)) words.add(m[0])
     }
     if (vocabularies.size >= CRITICAL_MAX) vocabularies.delete(vocabularies.keys().next().value)
@@ -214,7 +220,7 @@ export function pageStyles(assets, css = [], html = '', head) {
   const split = !!assets.critical && inline.length > 0 && raw / CSS_RATIO + (html.length + (head?.length ?? 0)) / HTML_RATIO > FIRST_PAINT_BYTES
   const carried = new Set(css.map(c => c.href))
   const known = split && vocabulary(inline, inline.map(s => s.href).join())
-  let sent = split && read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? DIALS : []))
+  let sent = split && read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : []))
   const tags = split
     ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" data-late>`).join('') +
       `<noscript>${inline.map(s => blocking(s.href).trim()).join('')}</noscript>\n<script>${LATE_SHEETS}</script>\n`
