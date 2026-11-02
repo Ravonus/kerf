@@ -23,5 +23,5 @@ const COLUMNS: Column<Bean>[] = [
 
 export default function Beans() {
   const sort = state<TableSort | undefined>({ id: 'name', dir: 'ascending' })
-  return <Table caption="Coffee in stock" rows={BEANS} columns={COLUMNS} sort={sort} picker={false} />
+  return <Table caption="Coffee in stock" rows={BEANS} columns={COLUMNS} sort={sort} picker={false} phone="columns" />
 }

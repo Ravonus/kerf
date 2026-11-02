@@ -29,10 +29,13 @@ for (const path of pages) {
   await probe.goto(base + path, { waitUntil: 'load' })
   const count = await probe.locator(CONTROLS).count()
   const names = await probe.locator(CONTROLS).evaluateAll(l => l.map(e => e.innerText?.trim() || e.getAttribute('aria-label') || e.type || e.localName))
+  // A control nobody can see yet, such as one in a closed modal, is pressed through what opens it, not on its own.
+  const shown = await probe.locator(CONTROLS).evaluateAll(l => l.map(e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden'))
   await probe.close()
   if (!count) { console.log(`${path}: no example controls`); continue }
   seen.pages++
   for (let i = 0; i < count; i++) for (const when of ['at once', 'after load']) {
+    if (!shown[i]) continue
     seen.controls++
     const page = await b.newPage({ viewport: { width: 1280, height: 900 } })
     await page.goto(base + path, { waitUntil: when === 'at once' ? 'commit' : 'load' })

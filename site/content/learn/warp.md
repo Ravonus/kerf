@@ -227,6 +227,8 @@ export function Beans() {
 
 `caption` is required: it names the table for screen readers, and `captionHidden` hides it on screen only. `rows` can be
 an array, a box, a `derived`, or a `resource`, in which case the table shows its own loading, empty and error states.
+In a container under 480 px wide a table stacks each row as a card, with `card` placing a column on it; the demo above
+sits in a narrow pane, so it passes `phone="columns"` to keep its headers and scroll sideways instead.
 For a spreadsheet-like grid with editing and pinned columns there is `DataGrid`, and for very long lists `VirtualList`.
 
 ## Finding the right component
