@@ -57,6 +57,7 @@ const middle = (samples, key) => [...samples].sort((a, b) => a[key] - b[key])[sa
 
 /** The timing-sensitive half of a sample, in turn per variant: a pass here never shares a variant with another. */
 async function timed(v, server, page, browser, site) {
+  await site?.login() // a session cache lasts minutes and a run longer, so every stack starts each pass freshly signed in
   const url = server.url + page.path, cookies = site?.cookies(page)
   const first = await assertFresh(v, server)
   // The row a live page shows, changed now: a page that doesn't show it wasn't read for this sample.
@@ -124,6 +125,7 @@ async function benchApp(app) {
     const tasks = variants.flatMap(v => app.pages.flatMap(p => samples[v.name][p.path].flatMap((s, i) => ['mobile', 'desktop'].map(form => ({ v, p, s, form, keep: i ? null : join(v.dir, `lighthouse${p.path.replace(/\W/g, '_')}-${form}.json`) })))))
     // Shuffled so that no variant always runs at the pool's busiest.
     tasks.sort(() => Math.random() - 0.5)
+    for (const v of variants) await sites[v.name]?.login()
     await pool(tasks, jobs, ({ v, p, s, form, keep }) => simulated(v, servers[v.name], s, servers[v.name].url + p.path, form, keep, cookieHeader(sites[v.name]?.cookies(p))))
     phase(`Lighthouse, ${tasks.length} runs`, t); t = performance.now()
     for (const v of variants) for (const p of app.pages) out[v.name].pages[p.path] = summarise(p, samples[v.name][p.path])
@@ -131,6 +133,7 @@ async function benchApp(app) {
     // One variant at a time: side by side, the load generators compete and every req/s reads about 25% low.
     if (!opt['no-load']) await pool(variants.filter(x => x.start), 1, async v => {
       for (const p of app.pages) {
+        await sites[v.name]?.login()
         const s = [], plain = [], url = servers[v.name].url + p.path, cookie = cookieHeader(sites[v.name]?.cookies(p))
         await loadPass(url, { seconds: 0.5, cookie }) // warm, not counted
         for (let i = 0; i < samplesWanted; i++) { s.push(await loadPass(url, { cookie })); plain.push(await loadPass(url, { encoding: 'identity', seconds: 1, cookie })) }

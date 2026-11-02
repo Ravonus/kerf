@@ -130,6 +130,7 @@ test('signed in, /login and / go to /admin', async () => {
 test('a session cookie that no longer stands goes to /login', async () => {
   const page = await site.open({ signedIn: true })
   await site.sql('delete from session')
+  await page.context().clearCookies({ name: /session_data/ }) // past the session cache's window
   await site.go(page, '/admin/orders')
   await page.waitForURL(u => u.pathname === '/login')
 })
