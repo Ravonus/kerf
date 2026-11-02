@@ -11,11 +11,11 @@ export interface CodeBlockProps {
   code: string
   /** tsx by default; ts, js, json and sh are coloured too, anything else stays plain. */
   language?: string | undefined
-  filename?: string
+  filename?: string | undefined
   /** Line numbers. */
-  lines?: boolean
+  lines?: boolean | undefined
   /** Wrap long lines instead of scrolling. */
-  wrap?: boolean
+  wrap?: boolean | undefined
 }
 
 function CopyButton({ text }: { text?: string | undefined }) {

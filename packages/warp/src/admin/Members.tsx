@@ -24,7 +24,7 @@ import '@weft-js/warp-core/styles/flows/roles-matrix.css'
 /** A role a member can hold. */
 export type Role = { value: string; label: string; /** Can reach this page; demoting yourself below it warns. */ manages?: boolean }
 /** One member of the team. */
-export type Member = { id: string; name: string; email: string; role: string; lastActive?: string }
+export type Member = { id: string; name: string; email: string; role: string; lastActive?: string | undefined }
 /** An invite still waiting for an answer. */
 export type Invite = { id: string; email: string; role: string; sent: string }
 

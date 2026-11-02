@@ -85,24 +85,24 @@ export interface MessageAttachment { kind: string; name: string; meta?: string }
 export interface ChatMessage {
   id: string
   author: Peer
-  mine?: boolean
+  mine?: boolean | undefined
   text: string
   /** Display time, formatted by the app ("09:48"). */
   time: string
   /** Epoch ms, for grouping. */
-  at?: number
+  at?: number | undefined
   /** Day label, formatted by the app ("Today"): a new label draws a divider. */
-  day?: string
+  day?: string | undefined
   state?: Delivery | undefined
-  readAt?: string
-  quote?: MessageQuote
-  attachment?: MessageAttachment
-  reactions?: MessageReaction[]
-  replies?: { count: number; last?: string; people?: Peer[] }
+  readAt?: string | undefined
+  quote?: MessageQuote | undefined
+  attachment?: MessageAttachment | undefined
+  reactions?: MessageReaction[] | undefined
+  replies?: { count: number; last?: string; people?: Peer[] } | undefined
   /** Names mentioned in `text`, without the @. "you" marks the whole message. */
-  mentions?: string[]
+  mentions?: string[] | undefined
   /** The text is still arriving: rendered with `<Text stream>`. */
-  streaming?: boolean
+  streaming?: boolean | undefined
 }
 
 /** How close two messages from one person must be to group. */

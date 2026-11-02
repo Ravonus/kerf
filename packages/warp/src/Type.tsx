@@ -18,7 +18,7 @@ const ROLE: Record<number, HeadingRole> = { 1: 'title', 2: 'heading', 3: 'headin
  * h3, `label` below. `role` overrides the look, so the two can differ, and `weft check` flags a level that renders at
  * two roles in one app (D006). It follows `level` for skips too (D035).
  */
-export function Heading({ level = 2, role, children, ...rest }: Open & { level?: 1 | 2 | 3 | 4 | 5 | 6; role?: HeadingRole }) {
+export function Heading({ level = 2, role, children, ...rest }: Open & { level?: 1 | 2 | 3 | 4 | 5 | 6 | undefined; role?: HeadingRole | undefined }) {
   const n = untrack(() => level)
   const look = () => role ?? ROLE[n]
   if (n === 1) return <h1 data-scope="text" data-role={look()} {...rest}>{children}</h1>
@@ -40,7 +40,7 @@ export function Text({ role, tone, subtle, faint, inline, children, ...rest }: O
  * A link (05 §4): underlined, with the underline sweep. `subtle` takes the surrounding ink, and `external` opens a new
  * tab and says so. A bare `<a>` gets warp's colour from the base layer; this adds the rest, and D007 points to it.
  */
-export function Link({ href, subtle, external, children, ...rest }: Open & { href: string; subtle?: boolean; external?: boolean }) {
+export function Link({ href, subtle, external, children, ...rest }: Open & { href: string; subtle?: boolean | undefined; external?: boolean | undefined }) {
   if (untrack(() => external)) return <a data-scope="link" data-variant={subtle ? 'subtle' : undefined} href={href} target="_blank" rel="noopener noreferrer" {...rest}>{children}<span class="vh"> (opens in a new tab)</span></a>
   return <a data-scope="link" data-variant={subtle ? 'subtle' : undefined} href={href} {...rest}>{children}</a>
 }

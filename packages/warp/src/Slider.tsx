@@ -12,7 +12,7 @@ export interface SliderProps<V extends number | [number, number] = number | [num
   onChange: (value: V) => void
   min?: number | undefined
   max?: number | undefined
-  step?: number
+  step?: number | undefined
   format?: ((v: number) => string) | undefined
   /** A range's thumbs, for screen readers: "Minimum price", "Maximum price". */
   names?: [string, string] | undefined

@@ -46,32 +46,32 @@ export interface DataGridProps<T> {
   columns: GridColumn<T>[]
   /** Names the grid (required). It stays in the accessibility tree when `captionHidden`. */
   caption: string
-  captionHidden?: boolean
-  rowKey?: string | ((row: T) => string)
-  density?: 'compact' | 'cozy' | 'comfortable'
+  captionHidden?: boolean | undefined
+  rowKey?: (string | ((row: T) => string)) | undefined
+  density?: 'compact' | 'cozy' | 'comfortable' | undefined
   /** The named views in the select. */
-  views?: Record<string, GridView>
+  views?: Record<string, GridView> | undefined
   /** Starts on this view. */
-  view?: string
-  onSaveView?: (name: string, view: GridView) => void
+  view?: string | undefined
+  onSaveView?: ((name: string, view: GridView) => void) | undefined
   /** The Group toggle groups by this column. */
-  groupBy?: string
+  groupBy?: string | undefined
   /** role=treegrid over hierarchical rows. */
   tree?: GridTree<T> | undefined
   /** Show the tree's filter field, labelled this. */
-  filter?: string
+  filter?: string | undefined
   onEdit?: ((row: T, column: string, value: unknown) => void) | undefined
   /** A validated paste, as one change. Default each cell through `onEdit`. */
-  onPaste?: (changes: GridPaste<T>[]) => void
+  onPaste?: ((changes: GridPaste<T>[]) => void) | undefined
   /** A row's details, under it. */
-  expand?: (row: T) => unknown
+  expand?: ((row: T) => unknown) | undefined
   /** The bulk bar's actions, over the rows in the range. */
-  bulk?: (rows: string[]) => unknown
-  page?: { size: number }
+  bulk?: ((rows: string[]) => unknown) | undefined
+  page?: { size: number } | undefined
   /** The CSV's name; `false` drops Export. */
-  exportName?: string | false
+  exportName?: string | false | undefined
   actions?: unknown
-  maxHeight?: string
+  maxHeight?: string | undefined
 }
 
 type Line<T> =

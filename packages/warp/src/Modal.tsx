@@ -14,7 +14,7 @@ import '@weft-js/warp-core/styles/components/dialog.css'
  * (no backdrop dismiss; focus Cancel by giving it autofocus). `inline` draws it open in the page's flow, for docs and
  * previews: a non-modal <dialog open> with no top layer, scrim, focus trap or scroll lock; `open` still shows and hides it.
  */
-export function Modal({ open, title, description, footer, size, placement, alert, tone, mark, inline, children }: { open: State<boolean>; title: unknown; description?: unknown; footer?: unknown; size?: 'sm' | 'md' | 'lg'; /** Where it sits, and the edge it arrives from. */ placement?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'full'; alert?: boolean; tone?: Tone; /** Drawn above the title (09's result mark). */ mark?: unknown; /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean; children?: unknown }) {
+export function Modal({ open, title, description, footer, size, placement, alert, tone, mark, inline, children }: { open: State<boolean>; title: unknown; description?: unknown; footer?: unknown; size?: 'sm' | 'md' | 'lg' | undefined; /** Where it sits, and the edge it arrives from. */ placement?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'full' | undefined; alert?: boolean | undefined; tone?: Tone | undefined; /** Drawn above the title (09's result mark). */ mark?: unknown; /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean; children?: unknown }) {
   const id = uid('dlg')
   const hasDescription = derived(() => description !== undefined)
   const sign = derived(() => mark)

@@ -15,7 +15,7 @@ import '@weft-js/warp-core/styles/layout/edges.css'
 
 
 /** A card on the board, with what warp draws on it. */
-export type KanbanCardData = BoardCard & { label?: string | undefined; color?: number; assignee?: string; /** Footer text: a due date, a count. */ meta?: string | undefined }
+export type KanbanCardData = BoardCard & { label?: string | undefined; color?: number | undefined; assignee?: string | undefined; /** Footer text: a due date, a count. */ meta?: string | undefined }
 /** A board column of warp cards. */
 export type KanbanColumn = BoardColumn<KanbanCardData>
 
