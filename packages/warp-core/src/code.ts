@@ -133,7 +133,7 @@ const shared = new Map<CodeToken, Highlight>() // one Highlight per kind: the re
  * The colour layer: `layer` is a `<pre aria-hidden>` behind a transparent textarea, holding the same text. Without the
  * API (or before it runs) the textarea paints its own text, so `data-painted` turns the swap on only where it works.
  */
-export function codeLayer(root: HTMLElement, opts: { text: string; language?: string }) {
+export function codeLayer(root: HTMLElement, opts: { text: string; language?: string | undefined }) {
   let o = opts
   const doc = root.ownerDocument
   const win = doc.defaultView!

@@ -52,7 +52,7 @@ export function burst<T>(flush: (items: T[]) => void, ms = 1000) {
       clearTimeout(timer)
       timer = setTimeout(() => { const all = items; items = []; flush(all) }, ms)
     },
-    cancel() { clearTimeout(timer); items = [] },
+    cancel: () => { clearTimeout(timer); items = [] },
   }
 }
 
@@ -78,7 +78,7 @@ export type Delivery = 'sending' | 'sent' | 'read' | 'failed'
 /** The message a reply quotes. */
 export interface MessageQuote { ref?: string; text: string; /** Kept for a source that isn't loaded. */ author?: string; time?: string; /** The source lives in another channel. */ channel?: string; deleted?: boolean }
 /** One emoji's reactions on a message. */
-export interface MessageReaction { emoji: string; /** Spoken name: "Thumbs up". */ label?: string; count: number; mine?: boolean; names?: string[] }
+export interface MessageReaction { emoji: string; /** Spoken name: "Thumbs up". */ label?: string; count: number; mine?: boolean; names?: string[] | undefined }
 /** A file or link on a message. */
 export interface MessageAttachment { kind: string; name: string; meta?: string }
 /** One message in a thread. */
@@ -93,7 +93,7 @@ export interface ChatMessage {
   at?: number
   /** Day label, formatted by the app ("Today"): a new label draws a divider. */
   day?: string
-  state?: Delivery
+  state?: Delivery | undefined
   readAt?: string
   quote?: MessageQuote
   attachment?: MessageAttachment
@@ -173,7 +173,7 @@ export function textParts(text: string, names: readonly string[] = []): TextPart
 /** The @word the caret sits at the end of, or null. */
 export function mentionQuery(value: string, caret: number) {
   const m = /(^|\s)@([\p{L}\p{N}_-]*)$/u.exec(value.slice(0, caret))
-  return m ? { start: m.index + m[1]!.length, query: m[2] } : null
+  return m ? { start: m.index + m[1]!.length, query: m[2]! } : null
 }
 
 /** Replace the @word at the caret with `@name `; the new value and caret. */
@@ -329,7 +329,7 @@ export function cursorPoint(anchor: { left: number; top: number; width: number; 
 }
 
 /** Options for live cursors: who's here, the element they're relative to, and how long until one goes idle. */
-export interface CursorsOptions { peers: readonly CursorPeer[]; anchor?: string; idle?: number }
+export interface CursorsOptions { peers: readonly CursorPeer[]; anchor?: string | undefined; idle?: number }
 
 /**
  * PageCursorsLayer (07 §6.1): each `[data-peer]` cursor follows its anchor by custom property, glides by CSS, fades
@@ -400,7 +400,7 @@ export function userScroll(el: HTMLElement, fn: () => void) {
 const glide = (el: HTMLElement, top: number) => el.scrollTo?.({ top, behavior: reducedMotion(el) ? 'auto' : 'smooth' })
 
 /** Options for following a peer's viewport. */
-export interface FollowOptions { on: boolean; /** The followed viewport's top, 0–1 of the document. */ top?: number; onStop(): void }
+export interface FollowOptions { on: boolean; /** The followed viewport's top, 0–1 of the document. */ top?: number | undefined; onStop(): void }
 
 /** Following (07 §6.1): the element rides the peer's viewport; any scroll of the user's, or Esc, stops it. */
 export function followViewport(el: HTMLElement, opts: FollowOptions) {
@@ -419,7 +419,7 @@ export function followViewport(el: HTMLElement, opts: FollowOptions) {
 }
 
 /** Options for tracking a presenter through the sections of a page. */
-export interface AutoTrackOptions { following: boolean; /** The `data-section` the presenter is in. */ section?: string; onPause(): void }
+export interface AutoTrackOptions { following: boolean; /** The `data-section` the presenter is in. */ section?: string | undefined; onPause(): void }
 
 /** MultiplayerAutoTrack (07 §6.4): scroll to the presenter's section; a manual scroll pauses it and never fights. */
 export function autoTrack(region: HTMLElement, opts: AutoTrackOptions) {
@@ -439,7 +439,7 @@ export function autoTrack(region: HTMLElement, opts: AutoTrackOptions) {
 /** The least a kanban card needs. */
 export interface BoardCard { id: string; title: string }
 /** A kanban column and its cards. */
-export interface BoardColumn<C extends BoardCard = BoardCard> { id: string; title: string; limit?: number; color?: number; cards: C[] }
+export interface BoardColumn<C extends BoardCard = BoardCard> { id: string; title: string; limit?: number | undefined; color?: number; cards: C[] }
 /** Where a card sits on the board. */
 export type BoardSpot = { col: number; index: number }
 
@@ -611,7 +611,7 @@ export interface FormOp { seq: number; name: string; value: string | boolean; pe
 export interface SyncedFormOptions {
   /** Remote edits, oldest first. Each `seq` applies once; an older one is dropped. */
   ops: readonly FormOp[]
-  onSend?(name: string, value: string | boolean): void
+  onSend?: ((name: string, value: string | boolean) => void) | undefined
   /** How long the ring and tag show. */
   hold?: number
 }

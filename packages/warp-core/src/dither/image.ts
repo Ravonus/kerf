@@ -8,20 +8,20 @@ import { tile, type Pattern } from './tiles'
 /** How a tone becomes ink: an ordered pattern or error diffusion. */
 export type Algorithm = Pattern | Diffusion
 /** A linear or radial tone ramp. */
-export interface Gradient { angle?: number; radial?: boolean; from?: number; to?: number }
+export interface Gradient { angle?: number; radial?: boolean; from?: number | undefined; to?: number | undefined }
 
 /** Options for dithering an image or a gradient. */
 export interface ImageOptions {
   /** A loaded or loading image. Without one the surface draws `gradient`. */
-  source?: HTMLImageElement | ImageBitmap | HTMLCanvasElement
-  gradient?: Gradient
-  algorithm?: Algorithm
-  ramp?: Ramp
-  cell?: number
-  inks?: number
-  contrast?: number
+  source?: HTMLImageElement | ImageBitmap | HTMLCanvasElement | undefined
+  gradient?: Gradient | undefined
+  algorithm?: Algorithm | undefined
+  ramp?: Ramp | undefined
+  cell?: number | undefined
+  inks?: number | undefined
+  contrast?: number | undefined
   /** Light parts of the picture take the strongest ink, which suits dark themes. Default: follows the page's lightness. */
-  invert?: boolean
+  invert?: boolean | undefined
 }
 
 const isDiffusion = (a: Algorithm): a is Diffusion => a === 'floyd' || a === 'atkinson'

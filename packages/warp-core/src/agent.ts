@@ -41,7 +41,7 @@ export type AgentEvent =
   | { kind: 'question'; id: string; prompt?: string; options?: string[]; multiple?: boolean | undefined; free?: boolean | undefined; answer?: string | string[] | undefined; at?: number }
   | ({ kind: 'source'; at?: number } & AgentSource)
   /** The whole plan (`steps`), or one step's change (`id`, `state`, `note`). */
-  | { kind: 'plan'; steps?: PlanStep[]; id?: string | undefined; state?: TaskState; note?: string | undefined; at?: number }
+  | { kind: 'plan'; steps?: PlanStep[]; id?: string | undefined; state?: TaskState | undefined; note?: string | undefined; at?: number }
   | { kind: 'done'; stopped?: boolean; at?: number }
   | { kind: 'error'; message: string; at?: number }
 

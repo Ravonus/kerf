@@ -48,7 +48,7 @@ export type Placement = 'top' | 'bottom' | 'left' | 'right'
  * Place `floating` next to `trigger` (fixed position, flipping when it would leave the viewport, clamped 8px inside
  * it) and keep it there on scroll and resize. Writes data-side for the CSS. An action: `update()` re-measures.
  */
-export function anchor(trigger: Element, floating: HTMLElement, { placement = 'bottom', gap = 8 }: { placement?: Placement; gap?: number } = {}) {
+export function anchor(trigger: Element, floating: HTMLElement, { placement = 'bottom', gap = 8 }: { placement?: Placement; gap?: number | undefined } = {}) {
   const win = floating.ownerDocument.defaultView!
   const place = () => {
     const a = trigger.getBoundingClientRect()

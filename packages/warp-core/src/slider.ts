@@ -9,8 +9,8 @@ export interface SliderOptions {
   max: number
   step: number
   format(v: number): string
-  names?: string[]
-  disabled?: boolean
+  names?: string[] | undefined
+  disabled?: boolean | undefined
   onChange(values: number[]): void
 }
 

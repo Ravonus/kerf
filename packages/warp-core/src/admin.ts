@@ -229,7 +229,7 @@ export interface CartTotals { subtotal: number; discount: number; shipping: numb
 export const cartCount = (lines: readonly CartLine[]) => lines.reduce((n, l) => n + l.quantity, 0)
 
 /** The cart's subtotal, discount, shipping, tax and total. */
-export function cartTotals(lines: readonly CartLine[], o: { shipping?: number; percentOff?: number; taxRate?: number } = {}): CartTotals {
+export function cartTotals(lines: readonly CartLine[], o: { shipping?: number; percentOff?: number | undefined; taxRate?: number } = {}): CartTotals {
   const subtotal = lines.reduce((s, l) => s + l.price * l.quantity, 0)
   const discount = subtotal * ((o.percentOff ?? 0) / 100)
   const shipping = o.shipping ?? 0

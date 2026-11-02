@@ -17,13 +17,13 @@ export interface CalEvent {
   /** The source, 1–8 (`data-cal`). */
   cal?: number
   tentative?: boolean
-  locked?: boolean
+  locked?: boolean | undefined
   declined?: boolean
   /** An RRULE. */
   recurrence?: string | null
   /** The zone `start` and `end` are written in, when it isn't the calendar's. */
-  tz?: string
-  location?: string
+  tz?: string | undefined
+  location?: string | undefined
   attendees?: string[]
   video?: string | boolean
   /** Timeline row. */
@@ -57,7 +57,7 @@ export const longDuration = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${
 /** 24-hour by default, as in the specimen; `hourCycle` follows the locale's when `auto`. */
 export const clock = (m: number, locale: string, hourCycle = 'h23') => fmtTime(fromMinutes(((m % DAY) + DAY) % DAY), locale, hourCycle)
 /** Two minutes of the day as a clock range. */
-export const clockRange = (a: number, b: number, locale: string, hourCycle?: string) => `${clock(a, locale, hourCycle)}–${clock(b, locale, hourCycle)}`
+export const clockRange = (a: number, b: number, locale: string, hourCycle?: string  ) => `${clock(a, locale, hourCycle)}–${clock(b, locale, hourCycle)}`
 
 // -- zones ------------------------------------------------------------------------------------------------------------
 
@@ -69,15 +69,15 @@ const stamp = (ms: number) => new Date(ms).toISOString().slice(0, 16)
 /** A wall time in one zone, as a wall time in another. */
 export const toZone = (iso: string, from: string, to: string) => { if (from === to) return iso.slice(0, 16); const t = instant(iso, from); return stamp(t + offsetAt(to, t) * 6e4) }
 /** The event as the calendar's zone shows it. */
-export const shownIn = (e: CalEvent, zone?: string): CalEvent => (e.allDay || !zone || !e.tz || e.tz === zone ? e : { ...e, start: toZone(e.start, e.tz, zone), end: toZone(e.end, e.tz, zone) })
+export const shownIn = (e: CalEvent, zone?: string  ): CalEvent => (e.allDay || !zone || !e.tz || e.tz === zone ? e : { ...e, start: toZone(e.start, e.tz, zone), end: toZone(e.end, e.tz, zone) })
 /** Minutes the clocks change by inside the event, 0 when they don't. */
-export function dstShift(e: CalEvent, zone?: string) {
+export function dstShift(e: CalEvent, zone?: string  ) {
   const z = e.tz ?? zone
   if (e.allDay || !z) return 0
   return offsetAt(z, instant(e.end, z)) - offsetAt(z, instant(e.start, z))
 }
 /** The wall time now in `zone` (the browser's own without one). Never call it during render. */
-export function nowIn(zone?: string, when = Date.now()) {
+export function nowIn(zone?: string  , when = Date.now()) {
   const t = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(when))
   const of = (k: string) => t.find(p => p.type === k)!.value
   return `${of('year')}-${of('month')}-${of('day')}T${of('hour')}:${of('minute')}`
@@ -207,7 +207,7 @@ export function monthCells(date: string, weekStartsOn: number) {
 }
 
 /** "Design crit, Monday 10:00 to 11:30, Studio, tentative". */
-export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
+export function eventName(e: CalEvent, locale: string, hourCycle?: string  ) {
   const day = fmt(dateOf(e.start), { weekday: 'long' }, locale)
   const s = slotOf(e)
   return [
@@ -227,7 +227,7 @@ export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
 export const snapTo = (m: number, step = 15) => Math.round(m / step) * step
 
 /** A slot moved by `dm` minutes onto `date`, snapped, keeping its length. */
-export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string): Slot {
+export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string  ): Slot {
   const len = origin.e - origin.s
   const s = clamp(snapTo(origin.s + dm, step), 0, DAY - Math.min(len, DAY))
   return { date, s, e: s + len, resource: resource ?? origin.resource }
@@ -249,7 +249,7 @@ export type MoveKey = 'drop' | 'cancel' | Slot | null
  * Keyboard move mode (07 §2.2): ↑↓ by `step`, ←→ by a day within `days`, Shift+↑↓ resizes, Enter drops, Escape cancels.
  * On a timeline (`resources`) ←→ move along the lane and ↑↓ between rows.
  */
-export function moveKey(key: string, shift: boolean, slot: Slot, opts: { step?: number; days?: string[]; rtl?: boolean; resources?: string[] } = {}): MoveKey {
+export function moveKey(key: string, shift: boolean, slot: Slot, opts: { step?: number; days?: string[] | undefined; rtl?: boolean; resources?: string[] | undefined } = {}): MoveKey {
   const { step = 15, days, rtl, resources } = opts
   const len = slot.e - slot.s
   const by = (d: number): Slot => { const s = clamp(slot.s + d, 0, DAY - len); return { ...slot, s, e: s + len } }
@@ -308,18 +308,18 @@ export type DragPreview = Slot & { mode: 'move' | 'resize' | 'create'; id?: stri
 export interface CalendarDragOptions {
   /** `x` for a timeline: lanes, with time running across and `from`..`to` minutes on it. */
   axis?: 'x' | 'y'
-  from?: number
-  to?: number
+  from?: number | undefined
+  to?: number | undefined
   step?: number
-  readOnly?: boolean
+  readOnly?: boolean | undefined
   /** The event's slot; `null` for one that can't be dragged (locked). */
   slot(id: string): Slot | null
   onPreview(p: DragPreview | null): void
   onDrop(p: DragPreview): void
   onPress(id: string, el: HTMLElement): void
-  onLongPress?(id: string, el: HTMLElement): void
+  onLongPress?: ((id: string, el: HTMLElement) => void) | undefined
   /** A double-click on an empty slot. */
-  onSlot?(date: string, minute: number, resource?: string): void
+  onSlot?(date: string, minute: number, resource?: string  ): void
 }
 
 const LONG_PRESS = 400
@@ -600,7 +600,7 @@ export function yearKey(key: string, shift: boolean, cursor: string, weekStartsO
 // -- planner ----------------------------------------------------------------------------------------------------------
 
 /** Someone a meeting is being found for. */
-export interface Attendee { id: string; name: string; zone?: string; organizer?: boolean; busy?: Range[]; hours?: Range }
+export interface Attendee { id: string; name: string; zone?: string | undefined; organizer?: boolean; busy?: Range[] | undefined; hours?: Range }
 
 /** Whether everyone is free from `s` for `len` minutes. */
 export const isFree = (busy: Range[][], s: number, len: number) => busy.every(list => !list.some(([a, b]) => a < s + len && b > s))
@@ -617,7 +617,7 @@ export function zoneMinute(date: string, m: number, from: string | undefined, to
   return minuteOf(t) + daysBetween(date, dateOf(t)) * DAY
 }
 /** How many attendees have `s`..`s + len` inside their working hours, each in their own zone. */
-export function withinHours(people: Attendee[], date: string, s: number, len: number, zone?: string) {
+export function withinHours(people: Attendee[], date: string, s: number, len: number, zone?: string  ) {
   return people.filter(p => {
     const [a, b] = p.hours ?? [540, 1020]
     const m = zoneMinute(date, s, zone, p.zone)
@@ -628,7 +628,7 @@ export function withinHours(people: Attendee[], date: string, s: number, len: nu
  * Suggested times: free for everyone, at least `gap` apart, the ones inside the most people's working hours first, then
  * earliest; `limit` of them, in time order.
  */
-export function suggestSlots(people: Attendee[], date: string, opts: { len: number; from?: number; to?: number; step?: number; gap?: number; limit?: number; zone?: string }) {
+export function suggestSlots(people: Attendee[], date: string, opts: { len: number; from?: number | undefined; to?: number | undefined; step?: number; gap?: number | undefined; limit?: number | undefined; zone?: string | undefined }) {
   const { len, from = 480, to = 1080, step = 15, gap = 60, limit = 3, zone } = opts
   const busy = people.map(p => p.busy ?? [])
   const list: { s: number; fit: number }[] = []

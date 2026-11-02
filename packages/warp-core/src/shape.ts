@@ -10,7 +10,7 @@ export type ShapeKind = 'text' | 'list' | 'card' | 'media' | 'table'
 
 /** What a skeleton should look like. */
 export interface ShapeSpec {
-  kind?: ShapeKind
+  kind?: ShapeKind | undefined
   /** text and card: lines of body text (default 3 for text, 2 for card). */
   lines?: number
   /** list and table: rows (default 3; table 5). */

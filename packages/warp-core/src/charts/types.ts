@@ -36,7 +36,7 @@ export type Form<C> = {
   /** The legend names marks (a donut's slices), so hovering an item activates its mark. */
   byMark?: boolean
   /** The legend is the sequential ramp from this step, not series. */
-  ramp?: 0 | 1
+  ramp?: 0 | 1 | undefined
   /** Updates arrive as a stream: swap values, never tween. */
   live?: boolean
   /** Interaction of its own beyond the shared model; returns a cleanup. */

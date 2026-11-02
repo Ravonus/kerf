@@ -19,7 +19,7 @@ export interface PanelOptions {
   open: boolean
   trigger: HTMLElement
   onClose(): void
-  presentation?: Presentation
+  presentation?: Presentation | undefined
   side?: Side | undefined
   align?: Align | undefined
 }

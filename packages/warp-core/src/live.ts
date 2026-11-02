@@ -80,7 +80,7 @@ export function bump(el: Element, attr = 'data-bump') {
 /** The inbox's tabs. */
 export type InboxTab = 'all' | 'unread' | 'mentions'
 /** The least an inbox item needs. */
-export interface NoteLike { id: string; read?: boolean; kind?: string; day?: string }
+export interface NoteLike { id: string; read?: boolean; kind?: string | undefined; day?: string }
 
 /** The items on one inbox tab. */
 export const filterNotes = <T extends NoteLike>(items: readonly T[], tab: InboxTab) =>
@@ -181,7 +181,7 @@ export function readOnView(el: HTMLElement, opts: { items: string; active?: bool
 }
 
 /** One arrival to notify about. */
-export interface NotifyItem { id?: string | undefined; title: string; description?: string | undefined; tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' | undefined; urgent?: boolean; action?: { label: string; onClick(): void } }
+export interface NotifyItem { id?: string | undefined; title: string; description?: string | undefined; tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info' | undefined; urgent?: boolean; action?: { label: string; onClick(): void } | undefined }
 /** What the notify policy calls, and its limits. */
 export interface NotifyPolicyOptions {
   /** Is the inbox on screen? Then nothing toasts and arrivals are only announced. */
@@ -192,9 +192,9 @@ export interface NotifyPolicyOptions {
   /** How many arrivals inside `quiet` make a burst. */
   burst?: number
   /** A burst ends after this long with no arrival; it is also the announcement's collapse window (07 §0). */
-  quiet?: number
+  quiet?: number | undefined
   /** At most this many toasts from this policy are up at once. */
-  max?: number
+  max?: number | undefined
   /** "3 new notifications". */
   summary?: (n: number) => string
 }
@@ -281,7 +281,7 @@ export interface PrefEvent { id: string; label: string; hint?: string; instant?:
 /** A named group of events. */
 export interface PrefGroup { id: string; label: string; events: PrefEvent[] }
 /** Which channels each event offers, and which are locked on. */
-export interface PrefRules { offered?: Record<string, string[]>; locked?: Record<string, string[]> }
+export interface PrefRules { offered?: Record<string, string[]> | undefined; locked?: Record<string, string[]> | undefined }
 /** One toggled cell. */
 export interface PrefChange { event: string; channel: string; on: boolean }
 /** What one cell of the preferences grid shows. */

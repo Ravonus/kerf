@@ -20,10 +20,10 @@ export interface Frame {
 export interface SurfaceOptions {
   /** Paints one frame. Return true to be called again next frame, for work that settles on its own. */
   draw: (frame: Frame) => boolean | void
-  animate?: boolean
+  animate?: boolean | undefined
   fps?: number | undefined
   /** Whole-cell mode: one backing pixel per cell, scaled up without smoothing and snapped to device pixels. */
-  cell?: number
+  cell?: number | undefined
   maxDpr?: number
   context?: CanvasRenderingContext2DSettings | undefined
   /** Called when a theme, tier or motion dial changes around the canvas, before the repaint. */

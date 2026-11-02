@@ -2,8 +2,8 @@
 // shape blurred, the light a letter throws on the cloth around it.
 /** What a mask is cut from: text, a path, or a draw callback. */
 export type MaskSource =
-  | { text: string; font?: string; weight?: number | string; fit?: number }
-  | { path: string; box: [width: number, height: number]; fit?: number; stroke?: number }
+  | { text: string; font?: string | undefined; weight?: number | string | undefined; fit?: number | undefined }
+  | { path: string; box: [width: number, height: number]; fit?: number | undefined; stroke?: number | undefined }
   | ((ctx: CanvasRenderingContext2D, cols: number, rows: number) => void)
 
 /** A cut-out's coverage per cell, and the soft halo around it. */

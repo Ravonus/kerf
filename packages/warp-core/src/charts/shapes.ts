@@ -10,7 +10,7 @@ const centred = (W: number, size: number, ...c: Kid[]) => s('g', { transform: `t
 /** One slice of a donut or pie. */
 export type Slice = { name: string; value: number; color?: string }
 /** Config for a donut or pie. */
-export type DonutConfig = Base<Slice[]> & { pie?: boolean; unit?: string; format?: Fmt; name?: string }
+export type DonutConfig = Base<Slice[]> & { pie?: boolean; unit?: string; format?: Fmt | undefined; name?: string }
 /** Donut and pie charts. */
 export const donut: Form<DonutConfig> = {
   kind: 'donut chart',
@@ -71,7 +71,7 @@ export const radial: Form<RadialConfig> = {
 }
 
 /** Config for a radar chart: the axes, and each series' value on them. */
-export type RadarConfig = Base<{ name: string; values: number[] }[]> & { axes: string[]; format?: Fmt }
+export type RadarConfig = Base<{ name: string; values: number[] }[]> & { axes: string[]; format?: Fmt | undefined }
 /** Radar charts. */
 export const radar: Form<RadarConfig> = {
   kind: 'radar chart',
@@ -96,7 +96,7 @@ export const radar: Form<RadarConfig> = {
 }
 
 /** Config for a sunburst: groups and their children. */
-export type SunConfig = Base<{ name: string; children: { name: string; value: number }[] }[]> & { format?: Fmt; total?: string }
+export type SunConfig = Base<{ name: string; children: { name: string; value: number }[] }[]> & { format?: Fmt | undefined; total?: string }
 /** Sunburst charts. */
 export const sunburst: Form<SunConfig> = {
   kind: 'sunburst chart',
@@ -117,7 +117,7 @@ export const sunburst: Form<SunConfig> = {
 /** A coloured stretch of a gauge's scale. */
 export type Band = [from: number, to: number, color: string]
 /** Config for a gauge: one value, with optional bands. */
-export type GaugeConfig = Base<number> & { bands?: Band[]; format?: Fmt; label?: string }
+export type GaugeConfig = Base<number> & { bands?: Band[]; format?: Fmt | undefined; label?: string }
 const BANDS: Band[] = [[0, 0.5, 'var(--warp-color-positive-solid)'], [0.5, 0.8, 'var(--warp-color-caution-solid)'], [0.8, 1, 'var(--warp-color-critical-solid)']]
 /** Gauges. */
 export const gauge: Form<GaugeConfig> = {
@@ -141,7 +141,7 @@ export const gauge: Form<GaugeConfig> = {
 const f1Num = (v: number) => +f1(v)
 
 /** Config for a funnel: its stages, widest first. */
-export type FunnelConfig = Base<{ name: string; value: number }[]> & { format?: Fmt; unit?: string }
+export type FunnelConfig = Base<{ name: string; value: number }[]> & { format?: Fmt | undefined; unit?: string }
 const short = (v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(v))
 const ofPrev = (c: FunnelConfig, i: number) => Math.round((c.data[i]!.value / c.data[i - 1]!.value) * 100)
 /** Funnel charts. */
@@ -163,9 +163,9 @@ export const funnel: Form<FunnelConfig> = {
   },
 }
 
-export type TreeItem = { name: string; value: number; group?: string }
+export type TreeItem = { name: string; value: number; group?: string | undefined }
 /** Config for a treemap. */
-export type TreemapConfig = Base<TreeItem[]> & { groups?: string[]; format?: Fmt; short?: Fmt }
+export type TreemapConfig = Base<TreeItem[]> & { groups?: string[]; format?: Fmt | undefined; short?: Fmt }
 const groupsOf = (c: TreemapConfig) => c.groups ?? [...new Set(c.data.map(d => d.group ?? ''))]
 /** Treemaps. */
 export const treemap: Form<TreemapConfig> = {
@@ -189,7 +189,7 @@ export const treemap: Form<TreemapConfig> = {
 }
 
 /** Config for a Sankey diagram: links between nodes, by index, and the nodes with their columns. */
-export type SankeyConfig = Base<{ from: number; to: number; value: number }[]> & { nodes: { name: string; column: number }[]; format?: Fmt }
+export type SankeyConfig = Base<{ from: number; to: number; value: number }[]> & { nodes: { name: string; column: number }[]; format?: Fmt | undefined }
 /** Sankey diagrams. */
 export const sankey: Form<SankeyConfig> = {
   kind: 'sankey diagram',
@@ -220,7 +220,7 @@ export const sankey: Form<SankeyConfig> = {
 }
 
 /** Config for a calendar heatmap: a row of daily values per week. */
-export type HeatConfig = Base<number[][]> & { weeks: string[]; days?: string[]; unit?: string }
+export type HeatConfig = Base<number[][]> & { weeks: string[]; days?: string[] | undefined; unit?: string }
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const cap = (u: string) => u[0]!.toUpperCase() + u.slice(1)
 /** Calendar heatmaps. */

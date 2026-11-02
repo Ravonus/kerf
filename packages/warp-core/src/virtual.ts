@@ -87,9 +87,9 @@ export interface VirtualOptions {
   /** The size known before render, for the current cross-axis size: exact text heights. `undefined` = not known yet. */
   size?: (index: number, width: number) => number | undefined
   /** Added to every size, between rows. */
-  gap?: number
+  gap?: number | undefined
   /** Pixels rendered past each edge of the viewport. Default: one viewport, at least 200. */
-  overscan?: number
+  overscan?: number | undefined
   /** `'x'` virtualises columns. Default `'y'`. */
   axis?: 'x' | 'y'
   /** A sticky header inside the spacer, before the first row: rows sit below it and it isn't viewport. */
@@ -97,9 +97,9 @@ export interface VirtualOptions {
   /** The sizes are the truth and the virtualizer writes them to each row, so rows aren't watched. */
   sized?: boolean
   /** Keep the end in view while the user is within this many pixels of it (a chat log). */
-  stick?: number
+  stick?: number | undefined
   /** Start at the end, not the start. */
-  from?: 'start' | 'end'
+  from?: 'start' | 'end' | undefined
   /** Also render these, wherever they are: the focused row, so focus and `aria-activedescendant` have a node. */
   pinned?: () => readonly VirtualKey[]
   /** The rows to render changed: ascending indices. */
@@ -117,7 +117,7 @@ export interface Virtualizer {
   /** New keys or options. Row sizes stay with their keys; the anchor row stays where it is on screen. */
   update(options: Partial<VirtualOptions>): void
   /** Ask `size` again for `[from, to)`: more text has been prepared. Default everything. */
-  refresh(from?: number, to?: number): void
+  refresh(from?: number  , to?: number  ): void
   /** Take this element as `key`'s row: it's positioned and watched. Returns the release. */
   attach(el: HTMLElement, key: VirtualKey): () => void
   scrollTo(index: number, align?: VirtualAlign): void

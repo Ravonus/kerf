@@ -81,7 +81,7 @@ const TABLE_RULE = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/
 const cells = (row: string) => row.trim().replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, '|'))
 
 export interface MarkdownOptions {
-  linkTarget?: string
+  linkTarget?: string | undefined
   /** Replaces a fenced block's markup: a build's highlighter, say. It gets the raw text, and what it returns isn't escaped. */
   code?: ((text: string, language: string) => string) | undefined
   /** Keep a document's own levels (`#` is h1) and give each heading the id this returns. */
@@ -180,13 +180,13 @@ export function htmlToMarkdown(root: Element): string {
 export interface RichTextOptions {
   onChange(html: string): void
   /** A character typed that may open a menu: where the query stands, or nothing to close it. */
-  onQuery?(q: { trigger: string; query: string; rect: DOMRect } | null): void
+  onQuery?(q: { trigger: string; query: string; rect: DOMRect } | null): unknown
   /** A shortcut for the Link command, with the selection saved. */
   onLink?(): void
   /** Called on each selection change with the commands in force. */
   onState?(on: Record<string, boolean>): void
   /** A `popover` toolbar to show 8px above a non-empty selection. */
-  bubble?: HTMLElement
+  bubble?: HTMLElement | undefined
 }
 
 const BLOCKS: [RegExp, string, string?][] = [[/^#{1,2}\s$/, 'formatBlock', 'h2'], [/^###\s$/, 'formatBlock', 'h3'], [/^[-*]\s$/, 'insertUnorderedList'], [/^1\.\s$/, 'insertOrderedList'], [/^>\s$/, 'formatBlock', 'blockquote'], [/^```$/, 'formatBlock', 'pre']]
@@ -315,7 +315,7 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
     const node = s?.anchorNode
     const m = node?.nodeType === 3 && s!.isCollapsed ? /(?:^|\s)([/@])([\w-]*)$/.exec(node.nodeValue!.slice(0, s!.anchorOffset)) : null
     const block = m && blockOf(node!)
-    if (!m || !block || (m[1] === '/' && block.textContent.trim() !== `/${m[2]}`)) return o.onQuery(null)
+    if (!m || !block || (m[1] === '/' && block.textContent.trim() !== `/${m[2]}`)) return void o.onQuery(null)
     o.onQuery({ trigger: m[1]!, query: m[2]!, rect: s!.getRangeAt(0).getBoundingClientRect() })
   }
   const onInput = (e: Event) => {

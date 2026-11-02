@@ -7,7 +7,7 @@ export interface NavIndicatorOptions {
   /** `x`: a bar under a row of links. `y`: a bar beside a column. */
   axis?: 'x' | 'y'
   /** Light the link whose `#target` is on screen, for a table of contents. */
-  spy?: boolean
+  spy?: boolean | undefined
 }
 
 type Phase = 'idle' | 'in' | 'out'

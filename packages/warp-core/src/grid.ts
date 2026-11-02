@@ -16,7 +16,7 @@ export function pageList(cur: number, total: number): (number | 'gap')[] {
 }
 
 /** Load more as `el`, the sentinel, comes within 120px of view (06 §8). The button beside it is the fallback. */
-export function infiniteScroll(el: HTMLElement, opts: { onReach(): void; root?: HTMLElement | null }) {
+export function infiniteScroll(el: HTMLElement, opts: { onReach(): void; root?: HTMLElement | null | undefined }) {
   let o = opts
   const Observer = el.ownerDocument.defaultView?.IntersectionObserver
   const seen = Observer && new Observer(([e]) => { if (e!.isIntersecting) o.onReach() }, { root: o.root ?? null, rootMargin: '120px' })
@@ -73,7 +73,7 @@ export interface TreeSource<T> {
   open(key: string): boolean
   /** A closed branch stays closed during a query (06 §6 Filter). */
   closed?(key: string): boolean
-  match?(row: T): boolean
+  match?: ((row: T) => boolean) | undefined
 }
 
 /**

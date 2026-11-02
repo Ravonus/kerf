@@ -9,9 +9,9 @@ import { store, uid } from './store'
 /** A toast's tone. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
 /** What a toast is asked to say and do. */
-export interface ToastInput { title: string; description?: string | undefined; tone?: Tone | undefined; action?: { label: string; onClick(): void }; duration?: number; id?: string | undefined; /** Spinner in place of the icon; it stays until updated. */ loading?: boolean }
+export interface ToastInput { title: string; description?: string | undefined; tone?: Tone | undefined; action?: { label: string; onClick: () => unknown } | undefined; duration?: number; id?: string | undefined; /** Spinner in place of the icon; it stays until updated. */ loading?: boolean }
 /** A toast on screen, with its id and time left. */
-export interface Toast extends ToastInput { id: string; life: number; state?: 'closed' | 'swiped' }
+export interface Toast extends ToastInput { id: string; life: number; state?: 'closed' | 'swiped' | undefined }
 /** The toasts for a promise as it settles. */
 export interface ToastPromise<T> { pending: string | ToastInput; done: string | ToastInput | ((value: T) => string | ToastInput); error: string | ToastInput | ((reason: unknown) => string | ToastInput) }
 

@@ -2,7 +2,7 @@
 // as `@[Ada Lovelace](user:ada)`. These helpers map one to the other, and keep tokens in step as the text is edited.
 
 /** Something that can be mentioned. */
-export interface MentionItem { id: string; label: string; meta?: string; kind?: string }
+export interface MentionItem { id: string; label: string; meta?: string; kind?: string | undefined }
 /** A token in the shown text: `[start, end)` of `@Ada Lovelace`, with what it stands for. */
 export interface MentionMark { start: number; end: number; token: string }
 
@@ -57,7 +57,7 @@ export function findTrigger(text: string, caret: number, triggers: readonly stri
   if (!m || !triggers.includes(m[1]!)) return undefined
   const at = caret - m[2]!.length - 1
   if (marks.some(k => at >= k.start && at < k.end)) return undefined
-  return { trigger: m[1], query: m[2], at }
+  return { trigger: m[1]!, query: m[2]!, at }
 }
 
 const MIRRORED = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing', 'wordSpacing', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'boxSizing', 'tabSize', 'textIndent', 'textTransform'] as const

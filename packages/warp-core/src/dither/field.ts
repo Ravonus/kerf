@@ -13,30 +13,30 @@ import { tile, type Pattern } from './tiles'
 /** Options for an animated dither field. */
 export interface FieldOptions {
   /** A named field, or your own function of (x, y, t). */
-  kind?: FieldName | Field
-  ramp?: Ramp
+  kind?: FieldName | Field | undefined
+  ramp?: Ramp | undefined
   /** Inks a disturbed cell takes instead, so a push shows in a second colour. */
-  spark?: Ramp
-  pattern?: Pattern
+  spark?: Ramp | undefined
+  pattern?: Pattern | undefined
   /** CSS pixels per cell. */
-  cell?: number
+  cell?: number | undefined
   /** How many inks of a tone ramp to use. Default: the tier's. */
-  inks?: number
+  inks?: number | undefined
   /** Multiplies the tier's speed. 0 holds one frame. */
-  speed?: number
+  speed?: number | undefined
   /** Tone gain, around 1. Default: the tier's. */
-  gain?: number
+  gain?: number | undefined
   /** Where a held frame sits in the field's time, in seconds. */
-  seed?: number
+  seed?: number | undefined
   /** How much of the step between inks the pattern may cross, 0–1. */
-  spread?: number
-  pointer?: PointerMode | PointerMode[]
+  spread?: number | undefined
+  pointer?: PointerMode | PointerMode[] | undefined
   /** The field shows through this shape. */
-  mask?: MaskSource
+  mask?: MaskSource | undefined
   /** Dissolves the field toward a side, so type can sit on clean ground, or into the page on every edge. */
-  fade?: Fade
+  fade?: Fade | undefined
   /** Seconds a mask takes to draw itself on, left to right, with a flash where it lands. Needs motion. */
-  reveal?: number
+  reveal?: number | undefined
   fps?: number | undefined
 }
 

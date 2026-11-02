@@ -12,13 +12,13 @@ export interface CalendarContext {
   mode: CalendarMode
   value: CalendarValue
   /** A second range, painted in info-soft (date range comparison). */
-  compare?: DateRange | null
+  compare?: DateRange | null | undefined
   today: string
   locale: string
   hover?: string | null
-  min?: string
-  max?: string
-  isDateUnavailable?: (d: IsoDate) => boolean
+  min?: string | undefined
+  max?: string | undefined
+  isDateUnavailable?: ((d: IsoDate) => boolean) | undefined
 }
 
 /** The month's weeks: seven entries each, blank days (outside the month) null. Always the rows the month needs. */

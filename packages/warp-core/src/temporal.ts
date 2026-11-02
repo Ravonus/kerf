@@ -69,7 +69,7 @@ const formatter = (locale: string, opts: Intl.DateTimeFormatOptions) => {
 /** An ISO date (or date-time, read as wall time) in `locale`. */
 export const fmt = (iso: string, opts: Intl.DateTimeFormatOptions, locale: string) => formatter(locale, opts).format(/T/.test(iso) ? new Date(`${iso.length === 16 ? `${iso}:00` : iso}Z`) : toDate(iso))
 /** An ISO time on the clock `locale` reads. */
-export const fmtTime = (hm: string, locale: string, hourCycle?: string) => fmt(`2026-01-01T${hm}`, { hour: 'numeric', minute: '2-digit', hourCycle: hourCycle === 'auto' ? undefined : hourCycle as Intl.DateTimeFormatOptions['hourCycle'] }, locale)
+export const fmtTime = (hm: string, locale: string, hourCycle?: string  ) => fmt(`2026-01-01T${hm}`, { hour: 'numeric', minute: '2-digit', hourCycle: hourCycle === 'auto' ? undefined : hourCycle as Intl.DateTimeFormatOptions['hourCycle'] }, locale)
 /** Two dates as one range, sharing what they can. */
 export const fmtRange = (a: string, b: string, locale: string, opts: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }) => formatter(locale, opts).formatRange(toDate(a), toDate(b))
 

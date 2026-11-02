@@ -13,7 +13,7 @@ export type SeriesDef = string | { key: string; name?: string; color?: string }
 export type Annotation = { x: string; label: string; band?: [string, string] }
 /** A horizontal reference line. */
 export type Reference = { y: number; label: string }
-export type Cartesian = Base<Row[]> & { x: string; series: SeriesDef[]; format?: Fmt; axisFormat?: Fmt; xName?: string }
+export type Cartesian = Base<Row[]> & { x: string; series: SeriesDef[]; format?: Fmt | undefined; axisFormat?: Fmt; xName?: string }
 /** Config for a line or area chart. */
 export type LineConfig = Cartesian & { area?: boolean; zero?: boolean; direct?: boolean; headroom?: number; annotations?: Annotation[]; references?: Reference[] }
 /** How bars with several series sit together. */
@@ -21,7 +21,7 @@ export type BarLayout = 'grouped' | 'stacked' | 'percent'
 /** Config for a bar chart. */
 export type BarConfig = Cartesian & { layout?: BarLayout }
 /** Config for bars with a line over them: its own series, or a rolling average of the bars. */
-export type ComboConfig = Base<Row[]> & { x: string; bar: SeriesDef; line?: SeriesDef; window?: number; format?: Fmt; axisFormat?: Fmt; xName?: string }
+export type ComboConfig = Base<Row[]> & { x: string; bar: SeriesDef; line?: SeriesDef; window?: number; format?: Fmt | undefined; axisFormat?: Fmt; xName?: string }
 
 const labels = (c: { data: Row[]; x: string }) => c.data.map(r => String((r as Cells)[c.x]))
 const def = (d: SeriesDef, i: number) => (typeof d === 'string' ? { key: d, name: d, i, color: color(i) } : { key: d.key, name: d.name ?? d.key, i, color: d.color ?? color(i) })
@@ -180,7 +180,7 @@ export const combo: Form<ComboConfig> = {
 }
 
 /** Config for a histogram: raw values and the width of a bin. */
-export type HistConfig = Base<number[]> & { binWidth: number; format?: Fmt; name?: string }
+export type HistConfig = Base<number[]> & { binWidth: number; format?: Fmt | undefined; name?: string }
 const binsOf = (c: HistConfig) => {
   const bw = c.binWidth, lo = Math.floor(Math.min(...c.data) / bw) * bw, hi = Math.ceil(Math.max(...c.data) / bw) * bw
   const bins: { x0: number; x1: number; n: number }[] = []
@@ -215,7 +215,7 @@ export const histogram: Form<HistConfig> = {
 /** One point on a scatter or bubble chart. */
 export type Point = { name: string; x: number; y: number; size?: number }
 /** Config for a scatter or bubble chart: named groups of points. */
-export type ScatterConfig = Base<{ name: string; points: Point[] }[]> & { xName: string; yName: string; sizeName?: string; format?: Fmt }
+export type ScatterConfig = Base<{ name: string; points: Point[] }[]> & { xName: string; yName: string; sizeName?: string; format?: Fmt | undefined }
 const dots = (c: ScatterConfig, x: { hidden: ReadonlySet<number> }) =>
   c.data.flatMap((g, gi) => (x.hidden.has(gi) ? [] : g.points.map(p => ({ ...p, g: g.name, gi })))).sort((a, b) => a.x - b.x)
 const scatterTable = (c: ScatterConfig) => tableOf(['Name', 'Group', c.xName, c.yName, ...(c.sizeName ? [c.sizeName] : [])], c.data.flatMap(g => g.points.map(p => [p.name, g.name, p.x, p.y, ...(c.sizeName ? [p.size ?? 0] : [])])))
@@ -273,7 +273,7 @@ export const bubble: Form<ScatterConfig> = {
 /** One period's open, high, low and close. */
 export type Ohlc = { label: string; open: number; high: number; low: number; close: number }
 /** Config for a candlestick or OHLC chart. */
-export type CandleConfig = Base<Ohlc[]> & { variant?: 'candle' | 'ohlc'; format?: Fmt }
+export type CandleConfig = Base<Ohlc[]> & { variant?: 'candle' | 'ohlc'; format?: Fmt | undefined }
 const pf = (v: number) => v.toFixed(2)
 /** Candlestick and OHLC charts. */
 export const candlestick: Form<CandleConfig> = {
@@ -302,7 +302,7 @@ export const candlestick: Form<CandleConfig> = {
 }
 
 /** Config for a box plot: named groups of raw values. */
-export type BoxConfig = Base<{ name: string; values: number[] }[]> & { format?: Fmt }
+export type BoxConfig = Base<{ name: string; values: number[] }[]> & { format?: Fmt | undefined }
 const boxOf = (c: BoxConfig) => c.data.map(g => {
   const v = [...g.values].sort((a, b) => a - b), q1 = quantile(v, 0.25), md = quantile(v, 0.5), q3 = quantile(v, 0.75), iqr = q3 - q1
   const lo = Math.max(v[0]!, q1 - 1.5 * iqr), hi = Math.min(v[v.length - 1]!, q3 + 1.5 * iqr)
@@ -334,7 +334,7 @@ export const box: Form<BoxConfig> = {
 
 export type WaterStep = { name: string; value: number; total?: boolean }
 /** Config for a waterfall chart. */
-export type WaterConfig = Base<WaterStep[]> & { format?: Fmt }
+export type WaterConfig = Base<WaterStep[]> & { format?: Fmt | undefined }
 const signed = (v: number, f: Fmt) => (v > 0 ? `+${f(v)}` : `−${f(-v)}`)
 /** Waterfall charts. */
 export const waterfall: Form<WaterConfig> = {
@@ -363,7 +363,7 @@ export const waterfall: Form<WaterConfig> = {
 }
 
 /** Config for a live stream of values. */
-export type StreamConfig = Base<number[]> & { domain: [number, number]; ticks?: number[]; reference?: Reference; unit?: string; paused?: boolean; format?: Fmt; span?: string }
+export type StreamConfig = Base<number[]> & { domain: [number, number]; ticks?: number[]; reference?: Reference; unit?: string; paused?: boolean; format?: Fmt | undefined; span?: string }
 /** Live streams, which swap values instead of tweening. */
 export const stream: Form<StreamConfig> = {
   kind: 'streaming line chart',
@@ -390,7 +390,7 @@ export const stream: Form<StreamConfig> = {
 }
 
 /** Config for a chart with a brush below it for picking a range. */
-export type BrushConfig = Base<Row[]> & { x: string; y: string; name?: string; domain: [number, number]; target?: Reference; ticks?: number[]; format?: Fmt; annotation?: string; gap?: number }
+export type BrushConfig = Base<Row[]> & { x: string; y: string; name?: string; domain: [number, number]; target?: Reference; ticks?: number[]; format?: Fmt | undefined; annotation?: string; gap?: number | undefined }
 const MIN = 10
 /** A line with a brush for picking the range it shows. */
 export const brush: Form<BrushConfig> = {

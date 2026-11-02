@@ -12,7 +12,7 @@ export type SegmentPart = Segment | { literal: string; at: number }
 /** What a segmented input edits. */
 export type SegmentKind = 'date' | 'time' | 'month'
 /** Options for a segmented input. */
-export interface SegmentOptions { hourCycle?: 'h12' | 'h23' | 'auto'; seconds?: boolean | undefined }
+export interface SegmentOptions { hourCycle?: 'h12' | 'h23' | 'auto' | undefined; seconds?: boolean | undefined }
 
 const PLACEHOLDER: Record<string, Partial<Record<SegmentType, string>>> = {
   en: { day: 'dd', month: 'mm', year: 'yyyy', hour: 'hh', minute: 'mm', second: 'ss' },

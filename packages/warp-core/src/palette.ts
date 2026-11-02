@@ -15,7 +15,7 @@ export function fuzzy(q: string, text: string): { score: number; hits: number[] 
 }
 
 /** What the command palette ranks by. */
-export interface Rankable { label: string; group?: string; keywords?: string[] }
+export interface Rankable { label: string; group?: string | undefined; keywords?: string[] }
 /** An item that matched, with the letters that hit. */
 export interface Ranked<C> { item: C; hits: number[] }
 
@@ -51,7 +51,7 @@ export function marked(label: string, hits: readonly number[]) {
 }
 
 /** ⌘K or Ctrl+K anywhere in the document (05 §3). */
-export function paletteHotkey(el: HTMLElement, opts: { key: string; slash?: boolean; onPress(): void }) {
+export function paletteHotkey(el: HTMLElement, opts: { key: string; slash?: boolean | undefined; onPress(): void }) {
   let o = opts
   const doc = el.ownerDocument
   const onKey = (e: KeyboardEvent) => {

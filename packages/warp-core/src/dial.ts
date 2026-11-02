@@ -41,7 +41,7 @@ export function getDial<D extends Dial>(name: D, root: HTMLElement = document.do
 export function setDial<D extends Dial>(
   name: D,
   value: DialValue<D>,
-  { root = document.documentElement, url = false, persist = false, transition }: { root?: HTMLElement; url?: boolean; persist?: boolean; transition?: (write: () => void) => void } = {},
+  { root = document.documentElement, url = false, persist = false, transition }: { root?: HTMLElement | undefined; url?: boolean; persist?: boolean; transition?: (write: () => void) => void } = {},
 ) {
   if (!(DIALS[name].values as readonly string[]).includes(value)) throw new RangeError(`${name} is one of ${DIALS[name].values.join(', ')}`)
   let done = false
