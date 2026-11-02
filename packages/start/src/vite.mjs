@@ -28,6 +28,7 @@
 // { inlineCss: false }` keeps plain links.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from 'node:fs'
+import { LATE_SHEETS } from './inline.mjs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -264,7 +265,7 @@ export default function weftStart(options = {}) {
         if (which === V.extensions) return extensionsModule(root, abs)
         if (which === V.migrations) return dev ? `import { readMigrations } from ${JSON.stringify(join(here, 'migrations.mjs'))}\nexport default () => readMigrations(${JSON.stringify(root)})\n` : `const list = ${JSON.stringify(readMigrations(root))}\nexport default () => list\n`
         if (which === V.media) return mediaModule(root, dev)
-        if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\n${LATE_SHEETS}start(routes)\n`
+        if (which === V.client) return `import { start } from ${JSON.stringify(join(here, 'client.tsx'))}\nimport * as routes from '${V.routes}'\n${ENTRY_SHEETS}start(routes)\n`
       },
     },
     transform: {
@@ -275,7 +276,7 @@ export default function weftStart(options = {}) {
         if (path.endsWith('/client.mjs')) return dev ? markLinks(root) + code : undefined
         if (path.includes('/node_modules/')) return
         const client = this.environment?.config.consumer === 'client'
-        if (client && path === clientEntry()) return { code: LATE_SHEETS + code, map: null }
+        if (client && path === clientEntry()) return { code: ENTRY_SHEETS + code, map: null }
         const rel = relative(root, path).split('\\').join('/')
         if (isServerModule(rel)) {
           const out = client ? clientStubs(code, path, rel, await shapeTable(this)) : withIds(code, path, rel)
@@ -401,10 +402,10 @@ function clientRoutes(manifest, abs, plan) {
 }
 
 /**
- * First in any entry, an app's own too: switches on the sheets `pageStyles` deferred. Their inline `onload` is the fast path
- * and a CSP can refuse it, so a page that runs at all never stays on its first-paint rules.
+ * First in any entry, an app's own too. The page's inline script is the fast path and a CSP can refuse it, so a page
+ * that runs at all never stays on its first-paint rules.
  */
-const LATE_SHEETS = `for (const l of document.querySelectorAll('link[media="print"][onload]')) l.media = 'all'\n`
+const ENTRY_SHEETS = `${LATE_SHEETS}\n`
 
 /** weft's own packages from an install: a static component's stylesheets are in them, and they ship source. */
 const KIT = /\/node_modules\/@weft\/.*\.[jt]sx?$/

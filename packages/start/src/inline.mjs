@@ -189,6 +189,11 @@ function criticalCss(sheets, found, { parse, purge }) {
   return css
 }
 
+/**
+ * Switches on the head's deferred sheets once they're all here, or after 3s without the one that failed. One at a time,
+ * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script.
+ */
+export const LATE_SHEETS = `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>a.forEach(l=>l.media='all')))([...document.querySelectorAll('link[data-late]')])`
 // Put the `<style>` before this script in front of the head's first link.
 const MOVE = `(s=>{var d=document,l=d.head.querySelector('link[rel=stylesheet]');l&&l.before(s)})(document.currentScript.previousElementSibling)`
 const blocking = href => `<link rel="stylesheet" href="${esc(href)}">\n`
@@ -209,8 +214,8 @@ export function pageStyles(assets, css = [], html = '', head) {
   const known = split && vocabulary(inline, inline.map(s => s.href).join())
   let sent = split && read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? DIALS : []))
   const tags = split
-    ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c =>
-      assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" onload="this.media='all'">\n<noscript>${blocking(c.href).trim()}</noscript>\n`).join('')
+    ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` + css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<link rel="stylesheet" href="${esc(c.href)}" media="print" data-late>`).join('') +
+      `<noscript>${inline.map(s => blocking(s.href).trim()).join('')}</noscript>\n<script>${LATE_SHEETS}</script>\n`
     : css.map(c => assets.inline?.[c.href] === undefined ? blocking(c.href) : `<style>${assets.inline[c.href]}</style>\n<link rel="stylesheet" href="${esc(c.href)}" disabled>\n`).join('')
   return {
     head: first + tags,

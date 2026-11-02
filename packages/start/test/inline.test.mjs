@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { parse, purge } from '../../weft/node/purge.mjs'
 import { assetsOnly } from '../src/vite.mjs'
-import { FIRST_PAINT_BYTES, LAYER_ORDER, pageStyles } from '../src/inline.mjs'
+import { FIRST_PAINT_BYTES, LATE_SHEETS, LAYER_ORDER, pageStyles } from '../src/inline.mjs'
 
 const critical = { parse, purge }
 const filler = n => Array.from({ length: n }, (_, i) => `:where([data-scope="unused${i}"]){color:red}`).join('')
@@ -30,7 +30,9 @@ test('past the budget it carries what its HTML reaches, and the sheet follows wi
   expect(head).toContain('[data-scope="card"]') // purge's flattening keeps the scope
   expect(head).not.toContain('unused')
   expect(head).not.toContain('"menu"')
-  expect(head).toContain('media="print" onload="this.media=\'all\'"')
+  expect(head).toContain('media="print" data-late>')
+  expect(head).not.toContain('onload')
+  expect(head).toContain(LATE_SHEETS)
   expect(head).toContain('<noscript><link rel="stylesheet" href="/a.css"></noscript>')
 })
 
@@ -83,6 +85,13 @@ test('a token only a chunk reads comes with that chunk, though the head cut it',
   const sheet = `:root{--used:1;--late:2}:where([data-scope="card"]){color:var(--used)}:where([data-scope="menu"]){color:var(--late)}${filler(4000)}`
   const s = pageStyles({ inline: { '/tokens.css': sheet }, critical }, [{ href: '/tokens.css' }], html)
   expect(s.late([], '<div data-scope="menu"></div>')).toContain('--late:2')
+})
+
+test('one noscript carries every deferred sheet', () => {
+  const two = { inline: { '/one.css': big, '/two.css': big }, critical }
+  const { head } = pageStyles(two, [{ href: '/one.css' }, { href: '/two.css' }], html)
+  expect(head).toContain('<noscript><link rel="stylesheet" href="/one.css"><link rel="stylesheet" href="/two.css"></noscript>')
+  expect(head.match(/<noscript>/g)).toHaveLength(1)
 })
 
 test('a whole-inline page has nothing deferred, so a chunk adds only what the head lacked', () => {

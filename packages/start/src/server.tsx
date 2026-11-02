@@ -796,7 +796,7 @@ function islandsOf(html: string) {
 function modulepreloads(chunks: { href: string }[], assets: NonNullable<HandlerOptions['assets']>) {
   const hrefs = new Set(chunks.map(c => c.href))
   hrefs.delete(assets.entry!)
-  return [...hrefs].map(href => `<link rel="modulepreload" href="${esc(href)}">\n`).join('')
+  return [...hrefs].map(href => `<link rel="modulepreload" href="${esc(href)}">`).join('')
 }
 
 /** What a render's HTML says about its levels, worked out as asked and kept by the exact text. */
