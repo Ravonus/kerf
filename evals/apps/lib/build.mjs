@@ -110,7 +110,7 @@ export async function packOnce(store, log) {
   const inputs = weftInputs(), stamp = join(store, 'inputs')
   mkdirSync(store, { recursive: true })
   if (existsSync(stamp) && existsSync(join(store, 'tarballs.json')) && readFileSync(stamp, 'utf8') === inputs) return { inputs, packed: false }
-  await run(`${quote(process.execPath)} ${quote(localMjs)} pack`, { cwd: repo, env: { WEFT_LOCAL_DIR: store, npm_config_min_release_age: '0' }, log })
+  await run(`${quote(process.execPath)} ${quote(localMjs)} pack`, { cwd: repo, env: { WEFT_LOCAL_DIR: store, npm_config_min_release_age: '3' }, log })
   writeFileSync(stamp, inputs)
   return { inputs, packed: true }
 }
@@ -147,7 +147,7 @@ export async function prepare(app, v, { work, runId, store, weft, buildRuns, reb
   v.canary = `__bench-${runId}.txt`
   writeFileSync(join(root, v.publicDir, v.canary), runId)
 
-  const env = { ...process.env, ...v.buildEnv, npm_config_min_release_age: '0', WEFT_LOCAL_DIR: store }
+  const env = { ...process.env, ...v.buildEnv, npm_config_min_release_age: '3', WEFT_LOCAL_DIR: store }
   delete env.NODE_ENV
   if (v.tarballs) {
     await run(`${quote(process.execPath)} ${quote(localMjs)} refresh . --packed`, { cwd: root, env, log })
