@@ -24,18 +24,32 @@ function useEvents() {
 
 export function CalendarWeek() {
   const s = useEvents()
-  return <Calendar events={s.events.value} calendars={CALENDARS} defaultView="week" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[9, 18]} onMove={s.change} onResize={s.change} onCreate={s.create} onEdit={s.edit} onDelete={s.remove} />
+  return <Calendar events={s.events.value} calendars={CALENDARS} defaultView="week" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[540, 1080]} onMove={s.change} onResize={s.change} onCreate={s.create} onEdit={s.edit} onDelete={s.remove} />
 }
 
 const COMPACT_VIEWS = ['month', 'agenda'] as const
 
 export const CalendarMonth = () => <Calendar events={EVENTS} calendars={CALENDARS} views={COMPACT_VIEWS} defaultView="month" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
 
+const DAY_VIEWS = ['day', 'week'] as const
+
+/** Wednesday's morning runs five meetings into each other: they share the column side by side, in lanes. */
+export function CalendarBusyDay() {
+  const s = useEvents()
+  return <Calendar events={s.events.value} calendars={CALENDARS} views={DAY_VIEWS} defaultView="day" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} workingHours={[540, 1080]} onMove={s.change} onResize={s.change} />
+}
+
+const AGENDA_VIEWS = ['agenda', 'week'] as const
+
+export const CalendarAgenda = () => <Calendar events={EVENTS} calendars={CALENDARS} views={AGENDA_VIEWS} defaultView="agenda" defaultDate={CAL_TODAY} today={CAL_TODAY} now={CAL_NOW} locale="en-US" firstDayOfWeek={1} readOnly />
+
 const ROOM_VIEWS = ['timeline', 'day'] as const
+/** The rooms' working day, in minutes: 09:00 to 17:00 gives each hour room for a name. */
+const ROOM_HOURS: [number, number] = [540, 1020]
 
 export function CalendarRooms() {
   const s = useEvents()
-  return <Calendar events={s.events.value} calendars={CALENDARS} resources={ROOMS} views={ROOM_VIEWS} defaultView="timeline" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" onMove={s.change} onResize={s.change} />
+  return <Calendar events={s.events.value} calendars={CALENDARS} resources={ROOMS} views={ROOM_VIEWS} timeline={ROOM_HOURS} defaultView="timeline" defaultDate="2026-11-04" today={CAL_TODAY} now={CAL_NOW} locale="en-US" onMove={s.change} onResize={s.change} />
 }
 
 // -- DateField

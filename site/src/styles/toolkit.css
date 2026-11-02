@@ -24,6 +24,14 @@
 [data-site="frame"] [data-part="stage"][data-width="tablet"] { inline-size: min(100%, 768px); margin-inline: auto; }
 [data-site="frame"] [data-part="stage"][data-width="phone"] { inline-size: min(100%, 390px); margin-inline: auto; }
 
+/* A full calendar scrolls its own hours inside a height it's given; on an unbounded stage it grew to all 24 and opened on
+   midnight. The stage's height is that bound. */
+[data-site="frame"] [data-part="mount"][data-stage="fill"]:has(> [data-scope="calendar"]) { block-size: var(--stage-h); }
+[data-site="frame"] [data-part="mount"][data-stage="fill"] > [data-scope="calendar"] { block-size: 100%; min-block-size: 0; }
+/* A timeline booking is an hour wide, often narrower than its name: on the site's stages the name wraps instead of
+   being cut mid-word ("Desig"). warp's own rule keeps it on one line and clips it; see the report on Calendar. */
+[data-site="frame"] [data-scope="calendar"] [data-part="lane"] { min-block-size: 84px; }
+[data-site="frame"] [data-scope="calendar"] [data-part="lane"] [data-part="event-title"] { display: block; white-space: normal; overflow-wrap: break-word; hyphens: auto; font-size: calc(0.6875 * var(--warp-rem)); line-height: 1.2; }
 [data-part="mount"] { box-sizing: border-box; min-inline-size: 0; padding: 32px; }
 [data-part="mount"][data-stage="center"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-group); }
 [data-part="mount"][data-stage="narrow"] { display: grid; align-content: center; justify-self: center; inline-size: min(100%, 424px); }

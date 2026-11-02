@@ -20,12 +20,14 @@ export const dates: DocGroup = {
         { kind: 'variants', title: 'Views', examples: [
           { id: 'CalendarWeek', title: 'Editable week', stage: 'fill', height: 760, note: 'Drag to move, drag an edge to resize, drag empty time to create. Your handlers keep the events.' },
           { id: 'CalendarMonth', title: 'Read-only month', stage: 'fill', height: 680, note: '`views` limits the tabs and `readOnly` turns off every edit.' },
-          { id: 'CalendarRooms', title: 'Rooms timeline', stage: 'fill', height: 460, note: '`resources` adds the rows, and events point at one with `resource`.' },
+          { id: 'CalendarRooms', title: 'Rooms timeline', stage: 'fill', height: 460, note: '`resources` adds the rows, and events point at one with `resource`. `timeline` sets the hours it spans.' },
+          { id: 'CalendarBusyDay', title: 'Overlapping meetings', stage: 'fill', height: 760, note: 'Events that overlap share the column in lanes, so none hides another. Switch to Week to see the same morning beside the rest.' },
+          { id: 'CalendarAgenda', title: 'Agenda of the week', stage: 'fill', height: 620, note: 'The same events as a list, day by day: what a phone or a quick look wants.' },
         ] },
       ],
       keyboard: [['Tab', 'Moves between the toolbar, the views and the events'], ['M', 'On a focused event: starts moving it with the arrow keys'], ['Enter', 'Opens the focused event']],
       a11yNotes: ['Every drag has a keyboard route, and the event editor can change the same fields without dragging.', 'Pass `today` and `now` to keep the server and browser in step. Without them they arrive after the page loads.'],
-      propDocs: { events: 'The events to show. You own this list.', calendars: 'The named sources in the side rail.', workingHours: 'The start and end hour of the day. The rest is shaded.', onMove: 'Called with the event and its new times. Return a rejected promise to put it back.' },
+      propDocs: { events: 'The events to show. You own this list.', calendars: 'The named sources in the side rail.', workingHours: 'The start and end of the working day, in minutes from midnight: `[540, 1080]` is 09:00 to 18:00. The rest is shaded.', timeline: 'The hours the timeline spans, in minutes from midnight.', onMove: 'Called with the event and its new times. Return a rejected promise to put it back.' },
       related: ['InlineCalendar', 'DateField', 'RecurrenceField'],
     },
     {

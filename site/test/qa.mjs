@@ -240,6 +240,20 @@ await check('home demos start at the top of their pane', '/', async page => {
   }
   same(gaps.filter(([, gap]) => gap > 64).map(([id, gap]) => `${id} ${gap}px`).join(), '', 'blank above a demo')
 })
+// The calendar opens on the working day, not midnight, and the rooms timeline shows its bookings' names.
+await check('calendar opens on working hours', '/components/calendar', async page => {
+  await page.waitForSelector('[data-part="scroller"] > [data-part="cols"]', { state: 'attached' })
+  await page.waitForTimeout(800)
+  const { top, hour } = await page.evaluate(() => { const s = document.querySelector('[data-part="scroller"]:has(> [data-part="cols"])'); return { top: s.scrollTop, hour: s.querySelector(':scope > [data-part="cols"]').offsetHeight / 24 } })
+  if (top < hour * 6) throw new Error(`scrolled to ${(top / hour).toFixed(1)}h`)
+})
+await check('timeline names are not cut', '/components/calendar', async page => {
+  const sec = page.locator('section#CalendarRooms')
+  await sec.scrollIntoViewIfNeeded()
+  await page.waitForFunction(() => document.querySelector('section#CalendarRooms [data-part="lane"] [data-part="event-title"]'), null, { timeout: 15000 })
+  const cut = await sec.evaluate(s => [...s.querySelectorAll('[data-part="lane"] [data-part="event"]')].filter(e => { const words = document.createRange(); words.selectNodeContents(e.querySelector('[data-part="event-title"]')); const w = words.getBoundingClientRect(), box = e.getBoundingClientRect(); return w.right > box.right + 1 || w.bottom > box.bottom + 1 }).map(e => e.querySelector('[data-part="event-title"]').textContent))
+  same(cut.join(), '', 'cut names')
+})
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)
