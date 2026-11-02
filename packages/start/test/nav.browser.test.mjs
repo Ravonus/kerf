@@ -253,6 +253,29 @@ test('a press on the bare page after a fade has ended is one click', async () =>
   await page.close()
 })
 
+test('a drag from the bare page onto a control after a fade has ended does not click it', async () => {
+  const { page } = await open('/')
+  await link(page, '/about')
+  await page.waitForFunction(() => location.pathname === '/about')
+  await page.waitForFunction(() => !document.activeViewTransition)
+  await page.waitForTimeout(100)
+  await page.evaluate(() => {
+    document.documentElement.style.minHeight = '100vh'
+    document.body.style.cssText = 'margin:0;height:10px;overflow:hidden'
+    window.__n = 0
+    const b = Object.assign(document.createElement('button'), { onclick: () => window.__n++ })
+    b.style.cssText = 'position:fixed;top:300px;left:300px;width:100px;height:100px'
+    document.documentElement.append(b)
+  })
+  await page.mouse.move(700, 500)
+  await page.mouse.down()
+  await page.mouse.move(350, 350)
+  await page.mouse.up()
+  await page.waitForTimeout(200)
+  expect(await page.evaluate(() => window.__n)).toBe(0)
+  await page.close()
+})
+
 test('a press on the bare page during a fade is one click too', async () => {
   const { page } = await fading('Users')
   await page.evaluate(() => {
