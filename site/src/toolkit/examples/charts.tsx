@@ -188,6 +188,28 @@ export const SparklineColors = () => (
   </Stack>
 )
 
+/** A week of p95 latency per project: made up, but steady enough to read as a trend. */
+const WEEK = (base: number, drift: number) => Array.from({ length: 14 }, (_, i) => Math.round(base + drift * i + Math.sin(i * 1.7 + base) * base * 0.08))
+const SERVICES_WEEK = [
+  { name: 'storefront', now: 84, values: WEEK(90, -0.6), trend: 'falling' },
+  { name: 'checkout', now: 112, values: WEEK(108, 0.4), trend: 'steady' },
+  { name: 'search-api', now: 146, values: WEEK(118, 2.2), trend: 'rising' },
+  { name: 'mobile-bff', now: 208, values: WEEK(160, 3.6), trend: 'rising fast' },
+]
+
+/** One per row: the line takes the row's spare width, and the number beside it says what it ends on. */
+export const SparklineRows = () => (
+  <Stack gap="related" divided>
+    {SERVICES_WEEK.map(s => (
+      <Row key={s.name} gap="group" wrap={false} role="img" aria-label={`${s.name}: p95 ${s.now} ms, ${s.trend} over two weeks`}>
+        <Text role="label" style="inline-size: 7rem">{s.name}</Text>
+        <div style="flex: 1; min-inline-size: 0"><Sparkline values={s.values} format={ms} color={s.trend.startsWith('rising') ? 'var(--warp-color-caution-solid)' : undefined} /></div>
+        <Text subtle style="inline-size: 4.5rem; text-align: end">{s.now} ms</Text>
+      </Row>
+    ))}
+  </Stack>
+)
+
 // -- Chart
 
 export const ChartForm = () => <Chart form={line} title="Monthly bill" data={TRAFFIC} x="month" xName="Month" series={COST_LINE} format={dollars} />

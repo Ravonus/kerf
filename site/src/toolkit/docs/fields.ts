@@ -45,8 +45,13 @@ export const fields: DocGroup = {
       component: 'LanguageSelect',
       summary: 'Pick a language. Each one also shows its own name, so people can find theirs.',
       sections: [
-        { kind: 'variants', title: 'Examples', examples: [{ id: 'LanguageSelectBasic', title: 'Pin the likely ones', note: 'Search for `日本語` or `Japanese`: both find it.', stage: 'narrow', height: 340 }] },
+        { kind: 'variants', title: 'Variants', examples: [
+          { id: 'LanguageSelectBasic', title: 'Pin the likely ones', note: 'Search for `日本語` or `Japanese`: both find it.', stage: 'narrow', height: 340 },
+          { id: 'LanguageSelectLimited', title: 'Only some languages', note: '`options` limits the list to the codes you support, regional ones like `pt-BR` included.', stage: 'narrow', height: 200 },
+          { id: 'LanguageSelectLocale', title: 'Names in another language', note: '`locale` names the languages in German here. `endonyms={false}` leaves out each language\'s own name.', stage: 'narrow', height: 260 },
+        ] },
         { kind: 'states', title: 'States', examples: [{ id: 'LanguageSelectStates', title: 'Every state', note: 'Read-only also needs `open={false}`, which keeps the list shut.', stage: 'fill', height: 320 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'LanguageSelectPreview', title: 'Preview a notification', note: 'The value is a language code, ready for `lang` and your own translations.', stage: 'narrow', height: 280 }] },
       ],
       keyboard: listKeys,
       propDocs: { ...picker, endonyms: 'Shows each language\'s own name beside it.' },
@@ -56,8 +61,13 @@ export const fields: DocGroup = {
       component: 'CurrencySelect',
       summary: 'Pick a currency by name, code or symbol.',
       sections: [
-        { kind: 'variants', title: 'Examples', examples: [{ id: 'CurrencySelectBasic', title: 'Pin the likely ones', note: 'Each row shows the name, code and symbol.', stage: 'narrow', height: 340 }] },
+        { kind: 'variants', title: 'Variants', examples: [
+          { id: 'CurrencySelectBasic', title: 'Pin the likely ones', note: 'Each row shows the name, code and symbol.', stage: 'narrow', height: 340 },
+          { id: 'CurrencySelectLimited', title: 'Only some currencies', note: '`options` limits the list to the codes you can bill in.', stage: 'narrow', height: 200 },
+          { id: 'CurrencySelectLocale', title: 'Names in another language', note: '`locale` names the currencies in Japanese here. The value is still the code.', stage: 'narrow', height: 200 },
+        ] },
         { kind: 'states', title: 'States', examples: [{ id: 'CurrencySelectStates', title: 'Every state', note: 'Read-only also needs `open={false}`, which keeps the list shut.', stage: 'fill', height: 320 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'CurrencySelectPrice', title: 'Price in the chosen currency', note: 'The value is an ISO code, so `Intl.NumberFormat` can format the price with it.', stage: 'narrow', height: 240 }] },
       ],
       keyboard: listKeys,
       propDocs: picker,
@@ -114,8 +124,9 @@ export const fields: DocGroup = {
       summary: 'A frame around your payment provider\'s card field, so it matches the rest of the form.',
       use: { when: ['Taking a card with Stripe, Adyen or similar'], instead: [{ name: 'CardNumberText', why: 'you\'re showing a card already saved' }] },
       sections: [
-        { kind: 'variants', title: 'Examples', examples: [{ id: 'PaymentCardInputBasic', title: 'A hosted field', note: 'This one is a stand-in that sends nothing anywhere. Use a test number like the one shown. Your `mount` gets warp\'s colours and fonts to pass to the provider.', stage: 'narrow', height: 180 }] },
+        { kind: 'variants', title: 'Variants', examples: [{ id: 'PaymentCardInputBasic', title: 'A hosted field', note: 'This one is a stand-in that sends nothing anywhere. Use a test number like the one shown. Your `mount` gets warp\'s colours and fonts to pass to the provider.', stage: 'narrow', height: 180 }] },
         { kind: 'states', title: 'States', examples: [{ id: 'PaymentCardInputStates', title: 'Empty, hint and invalid', note: 'Errors come from the provider\'s `change` event.', stage: 'fill', height: 220 }] },
+        { kind: 'composition', title: 'In context', examples: [{ id: 'PaymentCardInputCheckout', title: 'A checkout\'s card step', note: 'Listen to the provider\'s `change` event in your `mount`: Pay waits until it says the card is `complete`.', stage: 'narrow', height: 340 }] },
       ],
       a11yNotes: ['warp never draws an input for a real card number. The number stays inside the provider\'s frame.'],
       propDocs: { ...shell, mount: 'Mounts the provider\'s field in the element it\'s given, and returns its `on` and `destroy`.' },

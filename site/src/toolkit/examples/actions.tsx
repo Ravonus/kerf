@@ -1,7 +1,7 @@
 import { state, untrack } from 'weft'
 import { Button, Chip, CommandPalette, Input, Menu, Row, Stack, Text, Toggle, Toaster, toast } from '@weft/warp'
 import type { ButtonProps } from '@weft/warp'
-import { PROJECTS } from '../world'
+import { PEOPLE, PROJECTS, REGIONS } from '../world'
 
 export const ButtonPlay = (p: ButtonProps) => <Button {...p} />
 
@@ -279,6 +279,59 @@ export function CommandPaletteRun() {
       <Button onClick={() => (open.value = true)}>Open the palette</Button>
       <Text subtle>Last run: {last.value}</Text>
       <CommandPalette open={open} hotkey="" commands={COMMANDS} onRun={c => (last.value = c.label)} />
+    </Stack>
+  )
+}
+
+/** A row with `children` opens a second list in place, and each child's `run` does the work. */
+export function CommandPaletteNested() {
+  const open = state(false)
+  const region = state('eu-west')
+  const commands = [
+    { id: 'region', label: 'Move storefront to…', group: 'Projects', icon: 'globe', children: () => REGIONS.map(({ region: r }) => ({ id: r, label: r, group: 'Regions', icon: 'pin', run: () => (region.value = r) })) },
+    { id: 'deploy', label: 'Deploy storefront', group: 'Projects', icon: 'rocket', shortcut: '⌘D' },
+  ]
+  return (
+    <Stack gap="related" align="center">
+      <Button emphasis="outline" tone="neutral" icon="search" onClick={() => (open.value = true)}>Search commands</Button>
+      <Text subtle>storefront runs in {region.value}</Text>
+      <CommandPalette open={open} hotkey="" commands={commands} />
+    </Stack>
+  )
+}
+
+/** Projects come from a search you run: return a promise and its rows land under the commands, without moving the active row. */
+const findProjects = async (query: string, signal: AbortSignal) => {
+  await new Promise(done => setTimeout(done, 250))
+  if (signal.aborted || !query) return []
+  return PROJECTS.filter(p => p.name.includes(query.toLowerCase())).map(p => ({ id: p.id, label: p.name, group: 'Projects', icon: 'folder', hint: `${p.region} · ${p.status}` }))
+}
+
+export function CommandPaletteSearch() {
+  const open = state(false)
+  const last = state('Nothing yet')
+  return (
+    <Stack gap="related" align="center">
+      <Button emphasis="outline" tone="neutral" icon="search" onClick={() => (open.value = true)}>Find a project</Button>
+      <Text subtle>Opened: {last.value}</Text>
+      <CommandPalette open={open} hotkey="" placeholder="Search projects, like store or api" commands={COMMANDS} sources={[findProjects]} onRun={c => (last.value = c.label)} />
+    </Stack>
+  )
+}
+
+/** A first character switches what is searched: `@` finds people and `#` finds projects. */
+const MODES = [
+  { prefix: '@', label: 'People', placeholder: 'Find a teammate', commands: PEOPLE.map(p => ({ id: p.id, label: p.name, group: 'People', icon: 'user', hint: p.team })) },
+  { prefix: '#', label: 'Projects', placeholder: 'Find a project', commands: PROJECTS.map(p => ({ id: p.id, label: p.name, group: 'Projects', icon: 'folder', hint: p.region })) },
+]
+
+export function CommandPaletteModes() {
+  const open = state(false)
+  return (
+    <Stack gap="related" align="center">
+      <Button emphasis="outline" tone="neutral" icon="search" onClick={() => (open.value = true)}>Search everything</Button>
+      <Text subtle>Type @ for people or # for projects.</Text>
+      <CommandPalette open={open} hotkey="" commands={COMMANDS} modes={MODES} groupOrder={['Go to', 'Projects', 'Team']} />
     </Stack>
   )
 }

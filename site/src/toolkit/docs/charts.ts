@@ -214,6 +214,9 @@ export const charts: DocGroup = {
       sections: [{ kind: 'variants', title: 'Examples', examples: [
         { id: 'SparklineStats', title: 'In stat cards', stage: 'fill', height: 180, note: 'It is hidden from screen readers, so the parent carries the meaning.' },
         { id: 'SparklineColors', title: 'Colours', stage: 'narrow', height: 200, note: '`color` takes any warp token.' },
+      ] },
+      { kind: 'composition', title: 'In context', examples: [
+        { id: 'SparklineRows', title: 'One per table row', stage: 'fill', height: 240, note: 'It fills the width it is given, so a flexible cell lines the rows up. The ones getting slower turn amber.' },
       ] }],
       a11yNotes: ['A sparkline is hidden from screen readers. Give its parent a label that says what the trend means.'],
       related: ['LineChart', 'StreamChart'],

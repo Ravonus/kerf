@@ -84,10 +84,15 @@ export const dates: DocGroup = {
       component: 'DateTimeField',
       summary: 'One field for a date and a time, with the calendar beside a list of times.',
       use: { when: ['A single moment, like a deploy or a reminder'], instead: [{ name: 'DateField', why: 'the time does not matter' }] },
-      sections: [{ kind: 'variants', title: 'Variants', examples: [
-        field('DateTimeFieldWindow', 'Controlled', 'The value is a wall time with no zone, like `2026-11-07T22:00`.', 180),
-        field('DateTimeFieldStep', 'Quarter hours', '`step` sets the gap between listed times, in minutes.', 180),
-      ] }],
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          field('DateTimeFieldWindow', 'Controlled', 'The value is a wall time with no zone, like `2026-11-07T22:00`.', 180),
+          field('DateTimeFieldStep', 'Quarter hours', '`step` sets the gap between listed times, in minutes.', 180),
+          field('DateTimeFieldLimits', 'Limits', '`min`, `max` and `isDateUnavailable` turn days off in the calendar, here weekends and the holiday freeze.', 180),
+        ] },
+        { kind: 'states', title: 'States', examples: [{ id: 'DateTimeFieldStates', title: 'Hint, error, read-only, disabled', note: 'The same `hint`, `error`, `readonly` and `disabled` as every field.', stage: 'fill', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [field('DateTimeFieldWindowPair', 'A maintenance window', 'Two fields, and the end is checked against the start as either one changes.', 320)] },
+      ],
       keyboard: [['Up / Down', 'Changes the focused part'], ['Tab', 'Moves from the calendar to the times'], ['Escape', 'Closes the panel']],
       related: ['DateField', 'TimeField'],
     },
@@ -140,17 +145,32 @@ export const dates: DocGroup = {
     {
       component: 'MonthPicker',
       summary: 'Pick a month from a year grid.',
-      sections: [{ kind: 'variants', title: 'Example', examples: [field('MonthPickerInvoice', 'Invoice month', 'The value looks like `2026-10`. `max` stops future months.', 180)] }],
+      use: { when: ['Statements, invoices and reports that run by the calendar month'], instead: [{ name: 'PeriodPicker', why: 'people may want a quarter or a year too' }, { name: 'DateRangeField', why: 'the range can start on any day' }] },
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          field('MonthPickerInvoice', 'Invoice month', 'The value looks like `2026-10`. `max` stops future months.', 180),
+          field('MonthPickerRange', 'Limits', '`min` and `max` turn off the months outside them, and the year arrows stop at their years.', 180),
+          field('MonthPickerLocale', 'Another language', '`locale` names the months. The value stays `2026-03` whatever the language.', 180),
+        ] },
+        { kind: 'sizes', title: 'Sizes', examples: [field('MonthPickerSizes', 'Small, medium and large', '`size` matches the other fields in a form.', 280)] },
+        { kind: 'states', title: 'States', examples: [{ id: 'MonthPickerStates', title: 'Hint, error, read-only, disabled', note: 'The same `hint`, `error`, `readonly` and `disabled` as every field.', stage: 'fill', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [field('MonthPickerInvoices', 'Filter invoices', 'The month filters the list and its total. Show all sets the value back to `null`.', 380)] },
+      ],
       keyboard: [['Arrows', 'Move between months'], ['Page Up / Page Down', 'Change the year'], ['Enter or Space', 'Picks the month']],
       related: ['WeekPicker', 'PeriodPicker'],
     },
     {
       component: 'WeekPicker',
       summary: 'Pick a whole week from a calendar.',
-      sections: [{ kind: 'variants', title: 'Examples', examples: [
-        field('WeekPickerSprint', 'ISO weeks', 'The value looks like `2026-W45`.', 180),
-        field('WeekPickerLocale', 'Local week numbers', '`numbering="locale"` follows the local first day of the week.', 180),
-      ] }],
+      use: { when: ['Timesheets, sprints and rotas that run by the week'], instead: [{ name: 'DateRangeField', why: 'the span can be any length' }] },
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          field('WeekPickerSprint', 'ISO weeks', 'The value looks like `2026-W45`.', 180),
+          field('WeekPickerLocale', 'Local week numbers', '`numbering="locale"` follows the local first day of the week.', 180),
+        ] },
+        { kind: 'states', title: 'States', examples: [{ id: 'WeekPickerStates', title: 'Hint, error, read-only, disabled', note: 'The same `hint`, `error`, `readonly` and `disabled` as every field.', stage: 'fill', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [field('WeekPickerTimesheet', 'A timesheet', 'The week gives the dates of its days. An ISO week starts on the Monday.', 360)] },
+      ],
       keyboard: [['Arrows', 'Move through the days'], ['Enter or Space', 'Picks that day\'s week']],
       related: ['MonthPicker', 'PeriodPicker'],
     },
@@ -158,10 +178,14 @@ export const dates: DocGroup = {
       component: 'PeriodPicker',
       summary: 'Pick a year, quarter, month or week from one control.',
       use: { when: ['Reports that run by whole periods'], instead: [{ name: 'DateRangeField', why: 'the range can start on any day' }] },
-      sections: [{ kind: 'variants', title: 'Examples', examples: [
-        field('PeriodPickerReport', 'Follows its value', 'With no `granularity`, the value\'s shape decides the grid.', 180),
-        field('PeriodPickerGranularity', 'Each granularity', 'Use `granularity` to pick `year`, `quarter`, `month` or `week`.', 380),
-      ] }],
+      sections: [
+        { kind: 'variants', title: 'Variants', examples: [
+          field('PeriodPickerReport', 'Follows its value', 'With no `granularity`, the value\'s shape decides the grid.', 180),
+          field('PeriodPickerGranularity', 'Each granularity', 'Use `granularity` to pick `year`, `quarter`, `month` or `week`.', 380),
+        ] },
+        { kind: 'states', title: 'States', examples: [{ id: 'PeriodPickerStates', title: 'Hint, error, read-only, disabled', note: 'The same `hint`, `error`, `readonly` and `disabled` as every field.', stage: 'fill', height: 300 }] },
+        { kind: 'composition', title: 'In context', examples: [field('PeriodPickerRevenue', 'A report header', 'One control picks a year, a quarter or a month, and the figure below reads the value.', 300)] },
+      ],
       keyboard: [['Arrows', 'Move between cells'], ['Page Up / Page Down', 'Change the page'], ['Enter or Space', 'Picks the period']],
       propDocs: { granularity: '`year`, `quarter`, `month` or `week`.' },
       related: ['MonthPicker', 'WeekPicker', 'DateRangeField'],

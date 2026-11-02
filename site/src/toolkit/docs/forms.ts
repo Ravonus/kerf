@@ -218,8 +218,15 @@ export const forms: DocGroup = {
       summary: 'Pick exactly one from a short list where every option is on show.',
       use: { when: ['Two to five options people should read and compare'], instead: [{ name: 'Select', why: 'there are many options' }, { name: 'Segmented', why: 'the options are one or two words and switch a view' }] },
       sections: [
-        { kind: 'variants', title: 'Variants', examples: [{ id: 'RadioGroupWindow', title: 'Hints and a disabled option', stage: 'narrow' }] },
-        { kind: 'composition', title: 'In context', examples: [{ id: 'RadioGroupPlan', title: 'Choose a plan', note: 'Plan and seats both change the total.', stage: 'narrow', height: 300 }] },
+        { kind: 'variants', title: 'Variants', examples: [
+          { id: 'RadioGroupWindow', title: 'Hints and a disabled option', note: 'An option\'s `hint` sits under its label, and `disabled` keeps it on show but out of reach.', stage: 'narrow' },
+          { id: 'RadioGroupPlain', title: 'Labels only', note: 'Leave out `hint` when the label says enough.', stage: 'narrow' },
+          { id: 'RadioGroupRich', title: 'More than words', note: 'A `label` can be any content, like a badge with each region\'s latency.', stage: 'narrow' },
+        ] },
+        { kind: 'composition', title: 'In context', examples: [
+          { id: 'RadioGroupPlan', title: 'Choose a plan', note: 'Plan and seats both change the total.', stage: 'narrow', height: 300 },
+          { id: 'RadioGroupForm', title: 'In a form', note: '`name` is what the choice posts under. Save reads it back from the form\'s data.', stage: 'narrow', height: 300 },
+        ] },
       ],
       keyboard: [['↑ ↓', 'Moves to the next choice and picks it'], ['Tab', 'Moves in and out of the group']],
       a11yNotes: ['`label` names the group for screen readers, but isn\'t drawn. Put a heading above it when people need one too.'],
@@ -381,7 +388,11 @@ export const forms: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'NumberFieldBasic', title: 'Bounds', note: '`min`, `max` and `step` limit the steppers and the arrow keys.', stage: 'narrow' },
+          { id: 'NumberFieldDecimal', title: 'Fractions and a unit', note: 'A fractional `step` moves by that much. `suffix` names the unit.', stage: 'narrow' },
+          { id: 'NumberFieldMoney', title: 'Money', note: '`prefix` shows the currency. Page Up and Page Down move ten steps at a time.', stage: 'narrow' },
         ] },
+        { kind: 'sizes', title: 'Sizes', examples: [{ id: 'NumberFieldSizes', title: 'Small, medium and large', note: '`size` matches the other fields in a form.', stage: 'narrow', height: 280 }] },
+        { kind: 'states', title: 'States', examples: [{ id: 'NumberFieldStates', title: 'Hint, error, read-only, disabled', note: 'Read-only and disabled turn the steppers off too.', stage: 'fill', height: 300 }] },
         { kind: 'composition', title: 'In context', examples: [{ id: 'NumberFieldSeats', title: 'Buying seats', note: 'Use `min` and `max` to limit the count, and read `value` to work out a total.', stage: 'narrow' }] },
       ],
       keyboard: [['↑ ↓', 'Steps up or down'], ['PageUp PageDown', 'Steps by ten'], ['Home End', 'Jumps to the bound, when there is one']],

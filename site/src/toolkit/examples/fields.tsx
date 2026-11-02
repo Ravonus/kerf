@@ -1,5 +1,5 @@
 import { state } from 'weft'
-import { AddressField, Button, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft/warp'
+import { AddressField, Button, Card, CardNumberText, CodeBlock, CodeInput, CountrySelect, CurrencySelect, Grid, Input, JsonEditor, KeyValueEditor, LanguageSelect, MarkdownEditor, MentionsInput, PaymentCardInput, PhoneField, PlaceLookupInput, RichTextEditor, Row, SignaturePad, Stack, Text, TimeZoneSelect, Toaster, toast } from '@weft/warp'
 import type { ProviderAppearance, ProviderField } from '@weft/warp'
 import { PEOPLE, PROJECTS } from '../world'
 
@@ -73,6 +73,36 @@ export const LanguageSelectStates = () => (
   </Grid>
 )
 
+/** Only the languages the docs are written in. */
+export const LanguageSelectLimited = () => <LanguageSelect label="Docs language" options={['en', 'de', 'ja', 'pt-BR']} defaultValue="pt-BR" hint="We translate the docs into these four." />
+
+/** `locale` names every language in the page's language; `endonyms={false}` drops each one's own name. */
+export const LanguageSelectLocale = () => (
+  <Stack gap="group">
+    <LanguageSelect label="Sprache" locale="de" preferred={NEAR_LANGUAGES} defaultValue="ja" />
+    <LanguageSelect label="Language" preferred={NEAR_LANGUAGES} defaultValue="ja" endonyms={false} />
+  </Stack>
+)
+
+const HELLO: Record<string, string> = { en: 'Your deploy finished.', de: 'Dein Deploy ist fertig.', ja: 'デプロイが完了しました。', 'pt-BR': 'Seu deploy terminou.' }
+const TRANSLATED = Object.keys(HELLO)
+
+/** What a notification will say: the language changes the preview as you pick. */
+export function LanguageSelectPreview() {
+  const lang = state<string | null>('de')
+  return (
+    <Stack gap="group">
+      <LanguageSelect label="Email language" options={TRANSLATED} value={lang} />
+      <Card>
+        <Stack gap="tight">
+          <Text role="caption" subtle>Preview</Text>
+          <Text lang={lang.value ?? 'en'}>{HELLO[lang.value ?? 'en']}</Text>
+        </Stack>
+      </Card>
+    </Stack>
+  )
+}
+
 export const CurrencySelectBasic = () => <CurrencySelect label="Currency" preferred={NEAR_CURRENCIES} defaultValue="EUR" />
 
 export const CurrencySelectStates = () => (
@@ -120,6 +150,30 @@ export function FormWorkspaceRegion() {
       </Stack>
       <Toaster />
     </>
+  )
+}
+
+/** Only the currencies you can bill in. */
+export const CurrencySelectLimited = () => <CurrencySelect label="Billing currency" options={['EUR', 'USD', 'GBP', 'SEK']} defaultValue="SEK" hint="Stripe pays out in these four." />
+
+/** `locale` names the currencies in another language: Japanese here. */
+export const CurrencySelectLocale = () => <CurrencySelect label="通貨" locale="ja" preferred={['JPY', 'USD', 'EUR']} defaultValue="JPY" />
+
+/** The same plan, priced in the chosen currency. */
+const PLAN_PRICE: Record<string, number> = { EUR: 20, USD: 22, GBP: 17, SEK: 229, JPY: 3300 }
+const PRICED = Object.keys(PLAN_PRICE)
+
+export function CurrencySelectPrice() {
+  const cur = state<string | null>('EUR')
+  const price = () => new Intl.NumberFormat('en', { style: 'currency', currency: cur.value ?? 'EUR', maximumFractionDigits: 0 }).format(PLAN_PRICE[cur.value ?? 'EUR'])
+  return (
+    <Stack gap="group">
+      <CurrencySelect label="Pay in" options={PRICED} value={cur} />
+      <Row justify="between">
+        <Text>Team plan, per seat</Text>
+        <Row gap="tight" align="baseline"><Text role="heading">{price()}</Text><Text subtle>a month</Text></Row>
+      </Row>
+    </Stack>
   )
 }
 
@@ -244,6 +298,31 @@ export const PaymentCardInputStates = () => (
     <Cell name="Invalid"><PaymentCardInput label="Card details" mount={failedProvider} /></Cell>
   </Grid>
 )
+
+/** A test provider that says when the number is whole, so Pay waits for a complete card. */
+function watchedProvider(done: (complete: boolean) => void) {
+  return (el: HTMLElement, look: ProviderAppearance): ProviderField => {
+    const field = testProvider(el, look)
+    return { ...field, on: (event, send) => field.on(event, event === 'change' ? e => { done(!!e.complete); send(e) } : send) }
+  }
+}
+
+/** A checkout's card step: Pay stays off until the provider says the card is complete. */
+export function PaymentCardInputCheckout() {
+  const complete = state(false)
+  const paid = state(false)
+  return (
+    <Stack as="form" gap="group" onSubmit={(e: Event) => { e.preventDefault(); paid.value = true }}>
+      <Text role="heading">Pay for Team</Text>
+      <Input label="Name on card" autocomplete="cc-name" defaultValue="Mara Lindqvist" />
+      <PaymentCardInput label="Card details" hint="Try 4242 4242 4242 4242." mount={watchedProvider(c => (complete.value = c))} />
+      <Row justify="between">
+        <Text subtle role="caption">{paid.value ? 'Paid. A receipt is on its way.' : '$160 today, then monthly.'}</Text>
+        <Button type="submit" aria-disabled={complete.value ? undefined : 'true'}>Pay $160</Button>
+      </Row>
+    </Stack>
+  )
+}
 
 const CARDS = [
   { last4: '4242', bin: '424242', month: 9, year: 2028, note: 'Default' },

@@ -1,5 +1,5 @@
 import { derived, state, untrack } from 'weft'
-import { Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
+import { Badge, Button, Checkbox, CompactSelect, Grid, Input, NumberField, Radio, RadioGroup, Row, Search, Segmented, Select, Slider, Stack, Switch, Text, Textarea, Toaster, toast } from '@weft/warp'
 import { DEPLOYS, PEOPLE, PROJECTS, REGIONS } from '../world'
 
 /** One state in a States grid: its name, then the field. */
@@ -418,6 +418,51 @@ export function RadioGroupPlan() {
   )
 }
 
+/** Short choices need no hints: the labels say it all. */
+export function RadioGroupPlain() {
+  const branch = state('main')
+  return <RadioGroup label="Deploy from" value={branch.value} options={[{ value: 'main', label: 'main' }, { value: 'release', label: 'release' }, { value: 'tags', label: 'Tagged commits only' }]} onChange={v => (branch.value = v)} />
+}
+
+const LATENCY = { 'eu-west': 18, 'us-east': 94, 'ap-south': 162 } as Record<string, number>
+const NEAR = Object.keys(LATENCY).map(r => ({
+  value: r,
+  label: <Row gap="related">{r}<Badge tone={LATENCY[r] < 50 ? 'positive' : LATENCY[r] < 120 ? 'caution' : 'critical'}>{LATENCY[r]} ms</Badge></Row>,
+  hint: r === 'eu-west' ? 'Closest to you.' : undefined,
+}))
+
+/** A label can hold more than words: here each region carries its round trip from you. */
+export function RadioGroupRich() {
+  const region = state('eu-west')
+  return <RadioGroup label="Region" value={region.value} options={NEAR} onChange={v => (region.value = v)} />
+}
+
+const DIGESTS = [
+  { value: 'instant', label: 'As it happens', hint: 'One email for each failed deploy.' },
+  { value: 'daily', label: 'Daily digest', hint: 'At 08:00, if anything failed.' },
+  { value: 'off', label: 'Off', hint: 'Check the dashboard yourself.' },
+]
+
+/** In a form, `name` is what the choice posts under: this one reads it back from the form's data. */
+export function RadioGroupForm() {
+  const digest = state('daily')
+  const sent = state('')
+  const save = (e: Event) => {
+    e.preventDefault()
+    sent.value = `digest=${new FormData(e.currentTarget as HTMLFormElement).get('digest')}`
+  }
+  return (
+    <Stack as="form" gap="group" onSubmit={save}>
+      <Text role="heading">Failure emails</Text>
+      <RadioGroup label="Failure emails" name="digest" value={digest.value} options={DIGESTS} onChange={v => (digest.value = v)} />
+      <Row justify="between">
+        <Text subtle role="caption">{sent.value ? `Posted ${sent.value}` : 'Nothing saved yet'}</Text>
+        <Button type="submit">Save</Button>
+      </Row>
+    </Stack>
+  )
+}
+
 /* ---- Switch ---- */
 
 export function SwitchPlay(p: any) {
@@ -673,6 +718,30 @@ export const CompactSelectStates = () => (
 )
 
 export const NumberFieldBasic = () => <NumberField label="Retries" defaultValue={3} min={0} max={10} />
+
+/** A fraction steps by its `step`: a quarter of a CPU at a time, with the unit as a suffix. */
+export const NumberFieldDecimal = () => <NumberField label="CPU per copy" defaultValue={0.5} min={0.25} max={8} step={0.25} suffix="vCPU" />
+
+/** Money: a prefix for the currency, and steps of 50. PageUp and PageDown move by ten steps. */
+export const NumberFieldMoney = () => <NumberField label="Monthly budget" defaultValue={1500} min={0} step={50} prefix="$" hint="We email you at 80%." />
+
+export const NumberFieldSizes = () => (
+  <Stack gap="group">
+    <NumberField label="Small" size="sm" defaultValue={3} min={0} max={10} />
+    <NumberField label="Medium" defaultValue={3} min={0} max={10} />
+    <NumberField label="Large" size="lg" defaultValue={3} min={0} max={10} />
+  </Stack>
+)
+
+export const NumberFieldStates = () => (
+  <Grid cols={2} gap="group">
+    <Cell name="Empty"><NumberField label="Retries" min={0} max={10} /></Cell>
+    <Cell name="Hint"><NumberField label="Retries" defaultValue={3} min={0} max={10} hint="0 turns retries off." /></Cell>
+    <Cell name="Invalid"><NumberField label="Retries" defaultValue={10} min={0} max={10} error="Ten retries can hide a real failure." /></Cell>
+    <Cell name="Read-only"><NumberField label="Retries" defaultValue={3} readonly /></Cell>
+    <Cell name="Disabled"><NumberField label="Retries" defaultValue={3} disabled /></Cell>
+  </Grid>
+)
 
 export function NumberFieldSeats() {
   const seats = state<number | null>(8)

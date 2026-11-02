@@ -1,11 +1,19 @@
 import { state } from 'weft'
-import { Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, compareRange } from '@weft/warp'
+import { Badge, Button, Calendar, Card, DateField, DateRangeField, DateTimeField, DurationField, InlineCalendar, MonthPicker, PeriodPicker, RecurrenceField, Row, Stack, Text, TimeField, WeekPicker, Tag, Grid, compareRange } from '@weft/warp'
 import type { DateRange, IsoDate, IsoDateTime, IsoDuration, IsoTime } from '@weft/warp'
-import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, ROOMS } from '../world'
+import { CAL_NOW, CAL_TODAY, CALENDARS, DEPLOYS, EVENTS, INVOICES, ROOMS } from '../world'
 
 type Event = (typeof EVENTS)[number]
 
 const TODAY: IsoDate = '2026-11-02'
+
+/** One state in a States grid: its name, then the field. */
+const Cell = (p: { name: string; children?: any }) => (
+  <Stack gap="tight">
+    <Text role="caption" subtle>{p.name}</Text>
+    {p.children}
+  </Stack>
+)
 const isWeekend = (d: IsoDate) => [0, 6].includes(new Date(`${d}T12:00Z`).getUTCDay())
 
 // -- Calendar
@@ -167,6 +175,39 @@ export function DateTimeFieldWindow() {
 
 export const DateTimeFieldStep = () => <DateTimeField label="Reminder" hint="On the quarter hour" today={TODAY} defaultValue="2026-11-05T09:15" step={15} firstDayOfWeek={1} />
 
+/** The change freeze runs over the holidays: no weekends, and nothing after the 19th. */
+export const DateTimeFieldLimits = () => (
+  <DateTimeField label="Deploy at" hint="Weekdays only, before the freeze on Dec 19." today={TODAY} defaultValue="2026-11-04T10:00" min={TODAY} max="2026-12-19" isDateUnavailable={isWeekend} firstDayOfWeek={1} />
+)
+
+export const DateTimeFieldStates = () => (
+  <Grid cols={2} gap="group">
+    <Cell name="Empty"><DateTimeField label="Starts" today={TODAY} /></Cell>
+    <Cell name="Hint"><DateTimeField label="Starts" today={TODAY} hint="In your time zone." /></Cell>
+    <Cell name="Invalid"><DateTimeField label="Starts" today={TODAY} defaultValue="2026-10-30T09:00" error="Pick a time in the future." /></Cell>
+    <Cell name="Read-only"><DateTimeField label="Starts" today={TODAY} defaultValue="2026-11-07T22:00" readonly /></Cell>
+    <Cell name="Disabled"><DateTimeField label="Starts" today={TODAY} defaultValue="2026-11-07T22:00" disabled /></Cell>
+  </Grid>
+)
+
+const minutesBetween = (a: string, b: string) => Math.round((Date.parse(`${b}Z`) - Date.parse(`${a}Z`)) / 60000)
+const lasting = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}` : `${m} min`)
+
+/** A window has a start and an end: the end is checked against the start as either changes. */
+export function DateTimeFieldWindowPair() {
+  const from = state<IsoDateTime | null>('2026-11-07T22:00')
+  const to = state<IsoDateTime | null>('2026-11-08T01:30')
+  const span = () => (from.value && to.value ? minutesBetween(from.value, to.value) : null)
+  return (
+    <Stack gap="group">
+      <Text role="heading">Maintenance window</Text>
+      <DateTimeField label="Starts" today={TODAY} value={from} min={TODAY} step={15} />
+      <DateTimeField label="Ends" today={TODAY} value={to} min={TODAY} step={15} error={(span() ?? 1) <= 0 ? 'End after it starts.' : undefined} />
+      <Text subtle role="caption">{span() === null ? 'Pick both ends.' : (span() ?? 0) > 0 ? `Checkout is read-only for ${lasting(span()!)}.` : 'The window is empty.'}</Text>
+    </Stack>
+  )
+}
+
 // -- TimeField
 
 export function TimeFieldQuietHours() {
@@ -273,6 +314,58 @@ export function MonthPickerInvoice() {
   )
 }
 
+/** Statements start when the workspace was made, and the current month isn't billed yet. */
+export const MonthPickerRange = () => <MonthPicker label="Statement" hint="From June 2025, when the workspace began." today={TODAY} defaultValue="2025-08" min="2025-06" max="2026-10" />
+
+/** The month names come from `locale`, so a German page reads März, not March. */
+export const MonthPickerLocale = () => <MonthPicker label="Abrechnungsmonat" locale="de-DE" today={TODAY} defaultValue="2026-03" />
+
+export const MonthPickerSizes = () => (
+  <Stack gap="group">
+    <MonthPicker label="Small" size="sm" today={TODAY} defaultValue="2026-10" />
+    <MonthPicker label="Medium" today={TODAY} defaultValue="2026-10" />
+    <MonthPicker label="Large" size="lg" today={TODAY} defaultValue="2026-10" />
+  </Stack>
+)
+
+export const MonthPickerStates = () => (
+  <Grid cols={2} gap="group">
+    <Cell name="Empty"><MonthPicker label="Month" today={TODAY} /></Cell>
+    <Cell name="Hint"><MonthPicker label="Month" today={TODAY} hint="Invoices go out on the 1st." /></Cell>
+    <Cell name="Invalid"><MonthPicker label="Month" today={TODAY} error="Choose a month to export." /></Cell>
+    <Cell name="Read-only"><MonthPicker label="Month" today={TODAY} defaultValue="2026-10" readonly /></Cell>
+    <Cell name="Disabled"><MonthPicker label="Month" today={TODAY} defaultValue="2026-10" disabled /></Cell>
+  </Grid>
+)
+
+const usd = (n: number) => `$${n.toLocaleString('en-US')}`
+
+/** Pick a month and the list shows that month's invoice; Show all clears it. */
+export function MonthPickerInvoices() {
+  const month = state<string | null>('2026-09')
+  const shown = () => INVOICES.filter(i => !month.value || i.date.startsWith(month.value))
+  return (
+    <Stack gap="group">
+      <Row gap="related" wrap={false}>
+        <MonthPicker label="Invoices for" today={TODAY} value={month} min="2026-07" max="2026-10" />
+        <Button emphasis="ghost" tone="neutral" aria-disabled={month.value ? undefined : 'true'} onClick={() => (month.value = null)}>Show all</Button>
+      </Row>
+      <Stack gap="related" divided>
+        {shown().map(i => (
+          <Row key={i.id} justify="between" gap="group">
+            <Stack gap="hair">
+              <Text role="label">{i.id}</Text>
+              <Text role="caption" subtle>Issued {i.date}</Text>
+            </Stack>
+            <Row gap="related"><Badge tone="positive">{i.status}</Badge><Text>{usd(i.amount)}</Text></Row>
+          </Row>
+        ))}
+      </Stack>
+      <Text subtle role="caption">{shown().length} of {INVOICES.length} invoices, {usd(shown().reduce((t, i) => t + i.amount, 0))} in all</Text>
+    </Stack>
+  )
+}
+
 export function WeekPickerSprint() {
   const week = state<string | null>('2026-W45')
   return (
@@ -284,6 +377,44 @@ export function WeekPickerSprint() {
 }
 
 export const WeekPickerLocale = () => <WeekPicker label="Payroll week" today={TODAY} defaultValue="2026-W45" numbering="locale" />
+
+export const WeekPickerStates = () => (
+  <Grid cols={2} gap="group">
+    <Cell name="Empty"><WeekPicker label="Week" today={TODAY} /></Cell>
+    <Cell name="Hint"><WeekPicker label="Week" today={TODAY} hint="Monday to Sunday." /></Cell>
+    <Cell name="Invalid"><WeekPicker label="Week" today={TODAY} error="Choose the week you worked." /></Cell>
+    <Cell name="Read-only"><WeekPicker label="Week" today={TODAY} defaultValue="2026-W44" readonly /></Cell>
+    <Cell name="Disabled"><WeekPicker label="Week" today={TODAY} defaultValue="2026-W44" disabled /></Cell>
+  </Grid>
+)
+
+/** The Monday of an ISO week: the week with the year's first Thursday is week 1. */
+function mondayOf(week: string) {
+  const [year, n] = [+week.slice(0, 4), +week.slice(6)]
+  const jan4 = new Date(Date.UTC(year, 0, 4))
+  return new Date(jan4.getTime() + ((n - 1) * 7 - ((jan4.getUTCDay() + 6) % 7)) * 86400000)
+}
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+const HOURS = [7.5, 8, 6, 8.5, 4]
+
+/** A timesheet: the week picks the dates, and each day's hours sit beside them. */
+export function WeekPickerTimesheet() {
+  const week = state<string | null>('2026-W44')
+  const day = (i: number) => new Date(mondayOf(week.value!).getTime() + i * 86400000).toISOString().slice(5, 10)
+  return (
+    <Stack gap="group">
+      <WeekPicker label="Timesheet week" today={TODAY} value={week} />
+      {week.value ? (
+        <Stack gap="tight" divided>
+          {DAYS.map((d, i) => (
+            <Row key={d} justify="between"><Text>{d} {day(i)}</Text><Text subtle>{HOURS[i]} h</Text></Row>
+          ))}
+          <Row justify="between"><Text role="label">Total</Text><Text role="label">{HOURS.reduce((a, b) => a + b, 0)} h</Text></Row>
+        </Stack>
+      ) : <Text subtle>Pick a week to fill in its hours.</Text>}
+    </Stack>
+  )
+}
 
 export function PeriodPickerReport() {
   const period = state<string | null>('2026-Q4')
@@ -303,6 +434,36 @@ export const PeriodPickerGranularity = () => (
     <PeriodPicker label="Week" today={TODAY} defaultValue="2026-W45" granularity="week" />
   </Stack>
 )
+
+export const PeriodPickerStates = () => (
+  <Grid cols={2} gap="group">
+    <Cell name="Empty"><PeriodPicker label="Period" today={TODAY} granularity="quarter" /></Cell>
+    <Cell name="Hint"><PeriodPicker label="Period" today={TODAY} granularity="quarter" hint="Closed quarters only." /></Cell>
+    <Cell name="Invalid"><PeriodPicker label="Period" today={TODAY} defaultValue="2027-Q1" error="That quarter hasn't started." /></Cell>
+    <Cell name="Read-only"><PeriodPicker label="Period" today={TODAY} defaultValue="2026-Q3" readonly /></Cell>
+    <Cell name="Disabled"><PeriodPicker label="Period" today={TODAY} defaultValue="2026-Q3" disabled /></Cell>
+  </Grid>
+)
+
+const REVENUE: Record<string, number> = { '2026': 412300, '2026-Q1': 96400, '2026-Q2': 101800, '2026-Q3': 104900, '2026-Q4': 109200, '2026-10': 36100, '2026-09': 35200 }
+
+/** A report's header: one control changes how long the period is, and the figures follow. */
+export function PeriodPickerRevenue() {
+  const period = state<string | null>('2026-Q3')
+  const total = () => (period.value ? REVENUE[period.value] : undefined)
+  return (
+    <Stack gap="group">
+      <PeriodPicker label="Revenue for" today={TODAY} value={period} />
+      <Card>
+        <Stack gap="tight">
+          <Text role="label" subtle>Revenue, {period.value ?? 'no period'}</Text>
+          <Text role="heading">{total() === undefined ? 'No figures yet' : usd(total()!)}</Text>
+          <Text role="caption" subtle>Try 2026, 2026-Q1 to Q4, or September and October.</Text>
+        </Stack>
+      </Card>
+    </Stack>
+  )
+}
 
 // -- RecurrenceField
 

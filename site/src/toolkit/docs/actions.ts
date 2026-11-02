@@ -143,6 +143,11 @@ export const actions: DocGroup = {
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'CommandPaletteBasic', title: 'Commands in groups', note: 'Bind `open` to any button; `hotkey` opens it from anywhere.' },
           { id: 'CommandPaletteRun', title: 'Running a command', note: '`onRun` gets the command that was picked.' },
+          { id: 'CommandPaletteNested', title: 'A list inside a row', note: 'A row with `children` opens its own list. Each child\'s `run` does the work.' },
+        ] },
+        { kind: 'composition', title: 'In context', examples: [
+          { id: 'CommandPaletteSearch', title: 'Search as you type', note: '`sources` are searched after `commands`. Return a promise and the rows land below, without moving the active row. Try `api`.' },
+          { id: 'CommandPaletteModes', title: 'Prefixes for people and projects', note: 'Each of `modes` takes over the list when the search starts with its `prefix`. `groupOrder` fixes the order of the groups.' },
         ] },
       ],
       keyboard: [['⌘ K', 'Opens it from anywhere'], ['↑ ↓', 'Moves through the results'], ['Enter', 'Runs the highlighted command'], ['Esc', 'Closes and returns focus']],
