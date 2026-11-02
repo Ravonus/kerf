@@ -9,10 +9,13 @@ export const pct = (v: number) => `${Math.round(v * 100)}%`
 
 /** The 1st–8th categorical colour; the 9th series onward folds into `other` (06 §3). */
 export const color = (i: number) => `var(--warp-color-data-${i < 8 ? i + 1 : 'other'})`
+/** The sequential ramp colour at step `b`. */
 export const seq = (b: number) => `var(--warp-color-data-seq-${b})`
 
+/** A linear scale from the domain `d0`–`d1` to the range `r0`–`r1`. */
 export const lin = (d0: number, d1: number, r0: number, r1: number) => (v: number) => r0 + ((v - d0) / (d1 - d0 || 1)) * (r1 - r0)
 
+/** Round tick values covering `min` to `max`, about `count` steps of them. */
 export function niceTicks(min: number, max: number, count: number) {
   if (min === max) max = min + 1
   const step0 = (max - min) / Math.max(1, count), mag = 10 ** Math.floor(Math.log10(step0)), e = step0 / mag

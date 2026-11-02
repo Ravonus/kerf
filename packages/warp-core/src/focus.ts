@@ -1,5 +1,6 @@
 // Focus handling for composites and anchored layers.
 
+/** Which arrow keys move through a set. */
 export type Orientation = 'horizontal' | 'vertical'
 
 /**
@@ -40,6 +41,7 @@ export function roving(container: HTMLElement, opts: { items: string; orientatio
   }
 }
 
+/** The side of its anchor something opens on. */
 export type Placement = 'top' | 'bottom' | 'left' | 'right'
 
 /**

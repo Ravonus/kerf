@@ -2,6 +2,7 @@
 // items, and grows out through the trailing edge, so an entry and an exit never run the same way backwards. A stroke
 // that has started finishes before it leaves (`usePhaseSweep`'s rule). Only `transform` moves.
 
+/** Options for the sliding nav indicator. */
 export interface NavIndicatorOptions {
   /** `x`: a bar under a row of links. `y`: a bar beside a column. */
   axis?: 'x' | 'y'
@@ -11,6 +12,7 @@ export interface NavIndicatorOptions {
 
 type Phase = 'idle' | 'in' | 'out'
 
+/** Slides an indicator to the hovered, focused or current nav item. */
 export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const axis = opts.axis ?? 'x'
   const win = nav.ownerDocument.defaultView!

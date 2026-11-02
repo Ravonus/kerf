@@ -6,9 +6,13 @@
 import { onTopModal } from './layers'
 import { store, uid } from './store'
 
+/** A toast's tone. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+/** What a toast is asked to say and do. */
 export interface ToastInput { title: string; description?: string | undefined; tone?: Tone | undefined; action?: { label: string; onClick(): void }; duration?: number; id?: string | undefined; /** Spinner in place of the icon; it stays until updated. */ loading?: boolean }
+/** A toast on screen, with its id and time left. */
 export interface Toast extends ToastInput { id: string; life: number; state?: 'closed' | 'swiped' }
+/** The toasts for a promise as it settles. */
 export interface ToastPromise<T> { pending: string | ToastInput; done: string | ToastInput | ((value: T) => string | ToastInput); error: string | ToastInput | ((reason: unknown) => string | ToastInput) }
 
 /** 5s + 60ms a word; 10s with an action; a critical toast with an action stays until dismissed (life 0). */
@@ -21,6 +25,7 @@ export function lifeOf(t: ToastInput) {
   return 5000 + 60 * words
 }
 
+/** The toast list: show, dismiss, and follow a promise. */
 export function toastStore() {
   const list = store<Toast[]>([])
   const timers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -46,6 +51,7 @@ export function toastStore() {
   }
   return { get: list.get, subscribe: list.subscribe, show, dismiss, promise }
 }
+/** The store `toastStore` returns. */
 export type ToastStore = ReturnType<typeof toastStore>
 
 /** Write `text` into the pre-mounted announcer (polite role=status, or assertive role=alert): clear, then write 60ms later. */
@@ -59,6 +65,7 @@ export function announce(doc: Document, text: string, assertive = false) {
 // a timer is an Animation (the progress bar) or a timeout (Node's is an object too)
 const stop = (a: Animation | ReturnType<typeof setTimeout> | undefined) => (typeof (a as Animation | undefined)?.cancel === 'function' ? (a as Animation).cancel() : clearTimeout(a as ReturnType<typeof setTimeout>))
 
+/** Runs a toast region: timers, hover pause, swipe and keyboard. */
 export function toaster(region: HTMLElement, toasts: ToastStore) {
   const doc = region.ownerDocument
   const win = doc.defaultView!

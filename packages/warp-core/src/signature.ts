@@ -1,5 +1,6 @@
 // SignaturePad's ink (04 §4): strokes as [x, y, width] with x and y in 0–1, drawn with quadratic smoothing through the
 // midpoints, so a resize or a theme change can redraw them.
+/** A pen stroke: points in 0–1 of the pad, with pressure. */
 export type Stroke = Array<[x: number, y: number, p: number]>
 
 /** The next stroke width: pen pressure when there is one, else slower is wider. */
@@ -13,6 +14,7 @@ const segments = (P: Stroke) => P.slice(1).map((b, n) => {
   return { from: n ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] : [a[0], a[1]], via: [b[0], b[1]], to: [(b[0] + c[0]) / 2, (b[1] + c[1]) / 2], width: (a[2] + b[2]) / 2 }
 })
 
+/** Draws strokes at a size, with width following pressure. */
 export function paintStrokes(ctx: CanvasRenderingContext2D, strokes: Stroke[], W: number, H: number) {
   ctx.clearRect(0, 0, W, H)
   ctx.lineCap = ctx.lineJoin = 'round'

@@ -5,19 +5,28 @@ import { place, pushLayer } from './layers'
 import { announce } from './toast'
 import { installSweep } from './sweep'
 
+/** Where a tool call stands. */
 export type ToolState = 'running' | 'done' | 'failed' | 'approval' | 'denied'
+/** Where a plan step stands. */
 export type TaskState = 'pending' | 'running' | 'done' | 'blocked'
+/** Where an answer stands, from waiting to finished. */
 export type AnswerState = 'waiting' | 'streaming' | 'approval' | 'done' | 'stopped' | 'error'
 
+/** Something an answer cites. */
 export interface AgentSource { id?: string | undefined; title: string; path?: string; snippet?: string; url?: string }
+/** One tool call in an answer, from its arguments to its output. */
 export interface AgentTool { id: string; name: string; args: string; state: ToolState; output?: string | undefined; ms?: number | undefined; exit?: number | undefined; startedAt?: number | undefined }
+/** A question the agent put to the user, and the answer once there is one. */
 export interface AgentQuestion { id: string; prompt: string; options: string[]; multiple?: boolean | undefined; free?: boolean | undefined; answer?: string | string[] | undefined; closed?: boolean }
+/** One step of the agent's plan. */
 export interface PlanStep { id: string; title: string; state: TaskState; note?: string | undefined }
+/** One piece of an answer, in the order it arrived. */
 export type AnswerBlock =
   | { kind: 'reasoning'; id: string; text: string; streaming: boolean; seconds?: number | undefined; startedAt?: number | undefined }
   | { kind: 'text'; id: string; text: string }
   | { kind: 'tool'; id: string }
   | { kind: 'question'; id: string; question: AgentQuestion }
+/** An agent's answer as the events have folded it so far. */
 export interface Answer { state: AnswerState; blocks: AnswerBlock[]; tools: AgentTool[]; sources: AgentSource[]; plan: PlanStep[]; error?: string }
 
 /** 07 §1.7. `at` is a timestamp in ms, kept in the event so a replay computes the same durations. */
@@ -36,6 +45,7 @@ export type AgentEvent =
   | { kind: 'done'; stopped?: boolean; at?: number }
   | { kind: 'error'; message: string; at?: number }
 
+/** An answer before its first event. */
 export const emptyAnswer = (): Answer => ({ state: 'waiting', blocks: [], tools: [], sources: [], plan: [] })
 
 const seal = (b: AnswerBlock, at?: number): AnswerBlock => {
@@ -128,7 +138,9 @@ export function foldAnswer(a: AgentEvent[] | Answer | undefined, e?: AgentEvent)
 
 // ---- text: a minimal safe default until warp has a Markdown component ----------------------------------------------
 
+/** A block of answer text once parsed. */
 export type TextBlock = { kind: 'p'; at: number; text: string } | { kind: 'ul'; at: number; items: { at: number; text: string }[] } | { kind: 'code'; at: number; lang: string; text: string; open: boolean }
+/** A run of inline answer text: plain, code, or a citation number. */
 export type Inline = { kind: 'text' | 'code'; at: number; text: string } | { kind: 'cite'; at: number; n: number }
 
 /** Paragraphs, `- ` lists and code fences. A fence with no close yet is already a code block (07 §1.3). */
@@ -177,8 +189,11 @@ export const answerText = (a: Answer) => a.blocks.flatMap(b => (b.kind === 'text
 
 // ---- small rules -----------------------------------------------------------------------------------------------------
 
+/** Milliseconds as seconds, to a tenth. */
 export const formatSeconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`
+/** Seconds as m:ss. */
 export const formatClock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`
+/** A token count, shortened to k or M. */
 export const formatTokens = (n: number) => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n))
 
 /** What a ToolCall says: the short status at its end, and the words only a screen reader gets before it. */
@@ -225,7 +240,9 @@ export function applySuggest(text: string, start: number, caret: number, value: 
 
 // ---- trace ---------------------------------------------------------------------------------------------------------
 
+/** One span of an agent run, with its children. */
 export interface TraceSpan { id: string; name: string; start: number; ms: number; tokens?: number | undefined; cost?: number | undefined; children?: TraceSpan[] }
+/** A span flattened for the tree grid, carrying its level and place among its siblings. */
 export interface TraceRow { id: string; name: string; ms: number; tokens?: number | undefined; cost?: number | undefined; level: number; pos: number; size: number; parent?: string | undefined; branch: boolean; open: boolean; x: number; w: number; color: number }
 
 /** The visible rows of a span tree in order, on one time axis: x and w are fractions of the whole run. */
@@ -246,6 +263,7 @@ export function traceRows(spans: TraceSpan[], collapsed: ReadonlySet<string> = n
   return rows
 }
 
+/** A span's time, tokens and cost as one line. */
 export const traceSummary = (r: Pick<TraceRow, 'ms' | 'tokens' | 'cost'>) =>
   [formatSeconds(r.ms), r.tokens !== undefined ? `${formatTokens(r.tokens)} tok` : undefined, r.cost !== undefined ? `$${r.cost.toFixed(3)}` : undefined].filter(Boolean).join(' · ')
 
@@ -262,6 +280,7 @@ export function traceKey(key: string, rows: TraceRow[], at: number, rtl = false)
 
 // ---- actions ---------------------------------------------------------------------------------------------------------
 
+/** Options for sticking to the bottom: how near counts, and who hears when the reader moves away. */
 export interface StickOptions { threshold?: number; onAway(away: boolean): void }
 
 /**
@@ -288,6 +307,7 @@ export function stick(el: HTMLElement, opts: StickOptions) {
   }
 }
 
+/** Options for a citation link: the panel it opens, and who hears when it does. */
 export interface CiteOptions { panel: HTMLElement; onOpen(open: boolean): void }
 
 /** The preview of a citation (07 §1.3): opens on hover and keyboard focus, stays while the pointer or focus is in it. */
@@ -359,8 +379,11 @@ export function speechWave(el: HTMLElement, _level?: number) {
 
 // ---- dictation: the browser's speech recognition behind SpeechInput ---------------------------------------------------
 
+/** What dictation is doing. */
 export type DictationState = 'idle' | 'listening' | 'blocked' | 'unsupported'
+/** What dictation reports: its state, the words so far, and the mic level. */
 export interface DictationEvents { onState(s: DictationState): void; onTranscript(final: string, interim: string): void; onLevel(level: number): void }
+/** Dictation's controls. */
 export interface DictationEngine { start(mic?: string): void; stop(): void }
 
 /** The audio inputs the browser will name (labels are empty until the mic has been allowed once). */

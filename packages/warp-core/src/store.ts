@@ -1,11 +1,13 @@
 // The one shape every stateful core widget exposes: read the state, send it events, hear about changes. No framework:
 // a binding copies `get()` into its own reactive cell in `subscribe` (weft: a box; React: useSyncExternalStore).
 
+/** A value a binding can read and watch. */
 export interface Store<S> {
   get: () => S
   subscribe: (fn: (state: S) => void) => () => void
 }
 
+/** A small store: read it, set it, subscribe to it. */
 export function store<S>(initial: S) {
   let current = initial
   const listeners = new Set<(state: S) => void>()

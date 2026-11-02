@@ -18,6 +18,7 @@ export function quantize(v: Float32Array, cols: number, rows: number, tile: { n:
   return changed
 }
 
+/** The error diffusion kernels. */
 export type Diffusion = 'floyd' | 'atkinson'
 const KERNELS: Record<Diffusion, { div: number; at: [dx: number, dy: number, w: number][] }> = {
   floyd: { div: 16, at: [[1, 0, 7], [-1, 1, 3], [0, 1, 5], [1, 1, 1]] },

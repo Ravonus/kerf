@@ -2,6 +2,7 @@
 // `table` action does what never touches a row: pin offsets, the scrolled shadow, column resize and the per-instance
 // stylesheet that hides columns (one rule, no row re-renders). Rows are the binding's.
 
+/** The way a column sorts. */
 export type SortDir = 'ascending' | 'descending'
 
 const COL_MIN = 80
@@ -59,6 +60,7 @@ export function checkState<K>(keys: readonly K[], has: (key: K) => boolean) {
   return n === 0 ? 'none' : n === keys.length ? 'all' : 'some'
 }
 
+/** Options for a table's keyboard and column resizing. */
 export interface TableOptions {
   /** Column ids hidden from view. */
   hidden: readonly string[]

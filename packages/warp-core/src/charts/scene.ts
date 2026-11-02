@@ -3,7 +3,9 @@
 // nodes, and sort, filter and resize never rebuild marks). A node's identity is its tag, class, series and mark index.
 
 export type Attrs = Record<string, string | number | boolean | null | undefined>
+/** An SVG node as plain data: tag, attributes, children. */
 export type Scene = { t: string; a: Attrs; c: Child[] }
+/** What a scene node holds once tidied: a node or text. */
 export type Child = Scene | string
 /** What a form may hand a node: falsy entries vanish and nested lists flatten. */
 export type Kid = Child | number | boolean | null | undefined | readonly Kid[]
@@ -24,6 +26,7 @@ export function s(t: string, a: Attrs = {}, ...c: Kid[]): Scene {
 }
 const tidy = (c: readonly Kid[]): Child[] => (c.flat(5) as (Child | number | boolean | null | undefined)[]).filter(x => x !== null && x !== undefined && x !== false && x !== '').map(x => (typeof x === 'number' ? String(x) : x as Child))
 
+/** A scene as markup, for the server. */
 export function toHTML(nodes: readonly Kid[]): string {
   let out = ''
   for (const n of tidy(nodes)) {

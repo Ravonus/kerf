@@ -14,7 +14,9 @@ export function indented(text: string, start: number, end: number, size: number,
   return { from, to: stop, insert, start: Math.max(from, start + first), end: end + insert.length - (stop - from) }
 }
 
+/** The kinds of span the highlighter colours. */
 export type CodeToken = 'string' | 'number' | 'keyword' | 'comment'
+/** A coloured stretch of text, by offset. */
 export interface CodeSpan { kind: CodeToken; start: number; end: number }
 
 const KEYWORDS = 'import|from|export|default|const|let|var|function|return|if|else|for|while|class|new|await|async|type|interface|select|where|insert|update|delete|join|order|group|by|true|false|null|undefined'

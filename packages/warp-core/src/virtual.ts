@@ -3,7 +3,9 @@
 // them. Rows sit at a known offset, so what's above the viewport can change without the viewport moving: a size change
 // above the anchor row moves `scrollTop` by the same amount, before paint.
 
+/** What identifies a row. */
 export type VirtualKey = string | number
+/** Where a row lands when scrolled to. */
 export type VirtualAlign = 'start' | 'center' | 'end'
 
 /** Sizes with O(log n) offsets (a Fenwick tree): set one, read the offset of any index, find the index at an offset. */
@@ -74,6 +76,7 @@ export class Sizes {
   }
 }
 
+/** Options for the virtualizer. */
 export interface VirtualOptions {
   /** Each item's identity, in order: sizes and the anchor follow a key through inserts, prepends and removals. */
   keys: readonly VirtualKey[]
@@ -109,6 +112,7 @@ export interface VirtualOptions {
   onScroll?: (position: number) => void
 }
 
+/** What a virtualized list can do. */
 export interface Virtualizer {
   /** New keys or options. Row sizes stay with their keys; the anchor row stays where it is on screen. */
   update(options: Partial<VirtualOptions>): void
@@ -127,6 +131,7 @@ export interface Virtualizer {
 
 const FALLBACK_VIEWPORT = 600 // nothing's laid out yet (SSR, a hidden parent): render about a screen
 
+/** Keeps only the rows near the viewport in the DOM, measuring them as they arrive. */
 export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualizer {
   const o = { ...initial }
   const horizontal = o.axis === 'x'

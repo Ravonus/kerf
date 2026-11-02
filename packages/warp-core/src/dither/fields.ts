@@ -1,11 +1,14 @@
 // Fields: a pure function from a place and a time to a tone, so a poster and the running canvas are the same picture.
 // `x` runs 0 to the aspect ratio, `y` 0–1, `t` is seconds. The fields are smooth, so big canvases evaluate them on a sparse
 // lattice and interpolate: the sines cost a sixteenth at most, and the dither still lands on every cell.
+/** A scalar field: a tone at a point and a time. */
 export type Field = (x: number, y: number, t: number) => number
+/** The name of a built-in field. */
 export type FieldName = keyof typeof FIELDS
 
 const { sin, cos, exp, hypot, min, max } = Math
 
+/** The built-in fields. */
 export const FIELDS = {
   /** The loom: long crossing swells, the site's hero. */
   weave(x: number, y: number, t: number) {

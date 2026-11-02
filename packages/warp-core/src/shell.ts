@@ -2,6 +2,7 @@
 import { pushLayer } from './layers'
 import { announce } from './toast'
 
+/** Options for the app shell. */
 export interface ShellOptions {
   /** The overlay sidebar is open (tablet rail expand, or the hidden mode's edge tab). */
   navOpen: boolean
@@ -16,6 +17,7 @@ export interface ShellOptions {
 
 const ROUTE_MS = 1200
 
+/** The app shell's sidebar, keyboard and viewport behaviour. */
 export function shell(root: HTMLElement, opts: ShellOptions) {
   let o = opts
   let remove: (() => void) | undefined

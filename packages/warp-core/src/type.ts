@@ -3,7 +3,9 @@
 // back to 1vw where container units are missing. This is a checked mirror of those numbers (test/type.test.mjs
 // parses warp.css), so a binding, a Surface or the CLI can compute with them without re-deriving the spec.
 
+/** The type roles that scale fluidly. */
 export type FluidRole = 'display' | 'title'
+/** How strongly a fluid role scales. */
 export type Stop = 'quiet' | 'balanced' | 'vivid'
 
 /** One fluid size in the spec's form: min/b/max in rem, m in fluid units (1cqi = 1% of the container). */

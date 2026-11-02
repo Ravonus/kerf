@@ -2,8 +2,11 @@
 // sentence. Anything else in a rule lands in `unknown`, and a binding then shows the raw text rather than dropping it.
 import { addDays, daysIn, dow, fmt, toIso, weekStart, ymd, type IsoDate } from './temporal'
 
+/** How often a rule repeats. */
 export type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+/** The RRULE weekday codes, Sunday first. */
 export const DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'] as const
+/** An RRULE, read into fields; what it doesn't know stays in `unknown`. */
 export interface Rule {
   FREQ: Frequency
   INTERVAL: number
@@ -18,8 +21,10 @@ export interface Rule {
   unknown: string[]
 }
 
+/** A rule with nothing set: weekly, on the start date's day. */
 export const emptyRule = (): Rule => ({ FREQ: 'WEEKLY', INTERVAL: 1, BYDAY: [], BYMONTHDAY: null, BYMONTH: null, COUNT: null, UNTIL: null, unknown: [] })
 
+/** An RRULE string as a rule. */
 export function parseRule(text: string | null | undefined): Rule {
   const r = emptyRule()
   for (const part of (text ?? '').replace(/^RRULE:/i, '').split(';').filter(Boolean)) {
@@ -36,6 +41,7 @@ export function parseRule(text: string | null | undefined): Rule {
   return r
 }
 
+/** A rule as an RRULE string. */
 export function stringifyRule(r: Rule) {
   return [
     `FREQ=${r.FREQ}`,
@@ -94,6 +100,7 @@ export function occurrences(r: Rule, dtstart: string, n: number): IsoDate[] {
   return out
 }
 
+/** `code`'s weekday name in `locale`. */
 const dayName = (code: string, locale: string, style: 'long' | 'short' = 'long') => fmt(addDays('2024-01-07', DAYS.indexOf(code as (typeof DAYS)[number])), { weekday: style }, locale)
 const NTH = ['', 'first', 'second', 'third', 'fourth', 'fifth']
 

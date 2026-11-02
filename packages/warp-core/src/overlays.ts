@@ -5,6 +5,7 @@ import { justEscaped, place, pushLayer, type Align, type Side } from './layers'
 
 const focusable = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
 
+/** Options for a dialog. */
 export interface DialogOptions {
   open: boolean
   /** Called on every close path the user takes (Escape, backdrop, [data-close]); the binding writes open = false. */
@@ -71,6 +72,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   }
 }
 
+/** Options for a popover. */
 export interface PopoverOptions {
   open: boolean
   trigger: HTMLElement

@@ -1,6 +1,7 @@
 // MentionsInput's text model (04 MentionsInput; inputs-rich.html:2367). The textarea shows names; the value keeps tokens
 // as `@[Ada Lovelace](user:ada)`. These helpers map one to the other, and keep tokens in step as the text is edited.
 
+/** Something that can be mentioned. */
 export interface MentionItem { id: string; label: string; meta?: string; kind?: string }
 /** A token in the shown text: `[start, end)` of `@Ada Lovelace`, with what it stands for. */
 export interface MentionMark { start: number; end: number; token: string }
@@ -8,6 +9,7 @@ export interface MentionMark { start: number; end: number; token: string }
 const TOKEN = /([^\s\w])\[([^\]]+)\]\(([^)]+)\)/g
 const KINDS: Record<string, string> = { '@': 'user', '#': 'channel' }
 
+/** The markup a mention serializes to. */
 export const mentionToken = (trigger: string, item: MentionItem) => `${trigger}[${item.label.replace(/[\][]/g, '')}](${item.kind ?? KINDS[trigger] ?? 'item'}:${item.id})`
 
 /** A value's shown text and where its tokens landed in it. */
@@ -25,6 +27,7 @@ export function parseMentions(value: string) {
   return { text: text + value.slice(from), marks }
 }
 
+/** `text` with its marks written as mention markup. */
 export function serializeMentions(text: string, marks: readonly MentionMark[]) {
   let out = ''
   let from = 0

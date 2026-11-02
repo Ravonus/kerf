@@ -3,10 +3,15 @@
 // YYYY/MM/DD), press() turns a key into the next model and where focus goes.
 import { fmt, pad, toIso, ymd, type IsoTime } from './temporal'
 
+/** The fields a segmented input can have. */
 export type SegmentType = 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second' | 'dayPeriod'
+/** One editable field, with what's been typed so far. */
 export interface Segment { type: SegmentType; min: number; max: number; len: number; value: number | null; buf: string; ph: string }
+/** A field, or the literal text between fields. */
 export type SegmentPart = Segment | { literal: string; at: number }
+/** What a segmented input edits. */
 export type SegmentKind = 'date' | 'time' | 'month'
+/** Options for a segmented input. */
 export interface SegmentOptions { hourCycle?: 'h12' | 'h23' | 'auto'; seconds?: boolean | undefined }
 
 const PLACEHOLDER: Record<string, Partial<Record<SegmentType, string>>> = {
@@ -15,7 +20,9 @@ const PLACEHOLDER: Record<string, Partial<Record<SegmentType, string>>> = {
   ja: { day: '日', month: '月', year: '年', hour: '時', minute: '分', second: '秒' },
 }
 
+/** Whether a part is a field, not a literal. */
 export const isSegment = (p: SegmentPart): p is Segment => 'type' in p
+/** Whether `locale` reads a 12-hour clock under `cycle`. */
 export const hour12 = (locale: string, cycle?: SegmentOptions['hourCycle']) => {
   if (cycle === 'h12') return true
   if (cycle === 'h23') return false
@@ -26,6 +33,7 @@ export const dayPeriods = (locale: string): [string, string] => {
   const at = (h: number) => new Intl.DateTimeFormat(locale, { hour: 'numeric', hourCycle: 'h12', timeZone: 'UTC' }).formatToParts(new Date(Date.UTC(2026, 0, 1, h))).find(p => p.type === 'dayPeriod')?.value
   return [at(1) ?? 'AM', at(13) ?? 'PM']
 }
+/** A field's name in `locale`, for its label. */
 export const fieldName = (type: SegmentType, locale: string) => {
   try { return new Intl.DisplayNames(locale, { type: 'dateTimeField' }).of(type) ?? type } catch { return type }
 }
@@ -48,7 +56,9 @@ export function segmentParts(kind: SegmentKind, locale: string, o: SegmentOption
   return out
 }
 
+/** Whether no field has a value. */
 export const isEmpty = (parts: SegmentPart[]) => parts.filter(isSegment).every(s => s.value === null)
+/** Whether every field has a value, and a year being typed isn't short. */
 export const isComplete = (parts: SegmentPart[]) => parts.filter(isSegment).every(s => s.value !== null && !(s.buf && s.type === 'year' && s.value < 100))
 
 const get = (parts: SegmentPart[], type: SegmentType) => parts.filter(isSegment).find(s => s.type === type)?.value ?? null
@@ -90,6 +100,7 @@ export function segmentValueText(s: Segment, periods: [string, string], locale: 
   return s.type === 'month' ? fmt(toIso(2026, s.value, 1), { month: 'long' }, locale) : segmentText(s, periods, h12)
 }
 
+/** What a key press did to the fields. */
 export interface Press {
   parts: SegmentPart[]
   /** The segment (index among segments) focus moves to, if any. */
@@ -147,4 +158,5 @@ export function settle(parts: SegmentPart[], at: number, year: number): SegmentP
   return parts.map(p => (p === s ? { ...s, value, buf: '' } : p))
 }
 
+/** The ISO date of filled-in fields. */
 export const isoOf = (d: { year: number | null; month: number | null; day: number | null }) => toIso(d.year!, d.month!, d.day!)

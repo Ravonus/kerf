@@ -2,6 +2,7 @@
 // its chrome: they live as data-* on a scope root (<html> by default), "auto" removes the attribute so the OS or the
 // stop decides, and a page can deep-link them with ?expression=&fields=&theme=&density=&motion=&flair=.
 
+/** Every dial with its allowed values: the settings a page's look and motion read. */
 export const DIALS = {
   expression: { values: ['quiet', 'balanced', 'vivid'], initial: 'balanced' },
   fields: { values: ['floating', 'classic'], initial: 'floating' },
@@ -11,7 +12,9 @@ export const DIALS = {
   flair: { values: ['auto', 'sweep', 'none'], initial: 'auto' },
 } as const
 
+/** The name of a dial. */
 export type Dial = keyof typeof DIALS
+/** The values dial `D` allows. */
 export type DialValue<D extends Dial> = (typeof DIALS)[D]['values'][number]
 const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair'])
 // `dialScript` in @weft-js/warp/plugin reads this key before the first paint.

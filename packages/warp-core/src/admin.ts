@@ -3,13 +3,16 @@ import { addressFormat, addressPart, type Address, type AddressPart } from './id
 
 /* ---- text and money ---- */
 
+/** Whether `s` is shaped like an email address; the server still has the last word. */
 export const adminEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 
 /** An https endpoint with a host that has a dot (09 §4.6). */
 export const httpsEndpoint = (s: string) => /^https:\/\/[^\s/.]+\.[^\s]+$/.test(s.trim())
 
+/** `n` with its noun, singular or plural. */
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
+/** An amount in `currency`, formatted for `locale`. */
 export function money(n: number, currency = 'USD', locale = 'en-US') {
   const cents = Math.round(n * 100) / 100
   return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: Number.isInteger(cents) ? 0 : 2, maximumFractionDigits: 2 }).format(cents)
@@ -24,6 +27,7 @@ export function agoText(iso: string, now: string) {
   return `${Math.round(min / 1440)} d ago`
 }
 
+/** Whether `iso` falls within the 24 hours before `now`. */
 export const usedWithinDay = (iso: string | undefined, now: string) => !!iso && Date.parse(now) - Date.parse(iso) < 864e5
 
 /** Type-to-confirm (09 §4.4): the text matches exactly, surrounding space forgiven. */
@@ -42,6 +46,7 @@ export function dirtyKeys(base: Record<string, unknown>, now: Record<string, unk
   return [...new Set([...Object.keys(base), ...Object.keys(now)])].filter(k => !same(base[k], now[k]))
 }
 
+/** What the leave guard needs: whether the page is dirty, and who hears an attempted exit. */
 export interface LeaveGuardOptions { dirty: boolean; onAttempt: (href: string) => void }
 
 /**
@@ -70,6 +75,7 @@ export function leaveGuard(el: Element, opts: LeaveGuardOptions) {
 
 /* ---- members and invites (09 §4.2) ---- */
 
+/** Whether `m` is the only owner left, so removing or demoting them would strand the workspace. */
 export const isLastOwner = <M extends { role: string; id: string }>(members: readonly M[], m: M, owner = 'owner') =>
   m.role === owner && members.filter(x => x.role === owner).length === 1
 
@@ -90,6 +96,7 @@ export function inviteProblem(emails: readonly string[], seatsLeft: number) {
 
 /* ---- usage meters (09 §4.3) ---- */
 
+/** A usage meter worked out: its tone, the percent shown, and the bar's fill, overage and warning marks. */
 export interface MeterParts { tone?: 'caution' | 'critical' | undefined; percent: number; fill: number; over: number; warn: number }
 
 /** Neutral under 80%, caution from 80%, critical at 100%; past the limit the rail rescales so the overage shows as stripes. */
@@ -101,10 +108,14 @@ export function meterParts(value: number, limit: number): MeterParts {
 
 /* ---- plans and proration (09 §4.3) ---- */
 
+/** How often a plan bills. */
 export type BillingInterval = 'month' | 'year'
+/** One charge or credit on a proration. */
 export interface ProrationLine { label: string; amount: number }
+/** What a plan change costs: its lines, the total, and whether it's due today or next cycle. */
 export interface Proration { lines: ProrationLine[]; total: number; due: 'today' | 'next' }
 
+/** The monthly price on `interval`, with the annual discount taken off a yearly plan. */
 export const planPrice = (monthly: number, interval: BillingInterval, annualOff = 0.2) => (interval === 'year' ? Math.round(monthly * (1 - annualOff)) : monthly)
 
 /** The default preview: pay the difference for the days left on an upgrade; a downgrade waits for the next period. */
@@ -119,11 +130,16 @@ export function prorate(o: { from: { name: string; price: number }; to: { name: 
 
 /* ---- CSV import (09 §4.7) ---- */
 
+/** A parsed CSV: its headers and rows, and what's wrong with it if it can't be read. */
 export interface CsvTable { headers: string[]; rows: string[][]; problem?: string | undefined }
+/** A field an import can map a column to, with the aliases that auto-match it and its own value check. */
 export interface ImportTarget { id: string; label: string; required?: boolean; aliases?: string[]; check?: (value: string) => string | undefined }
+/** One problem found in an imported row. */
 export interface ImportIssue { row: number; path: string; message: string }
+/** The mapping value for a column the import leaves out. */
 export const SKIP_COLUMN = 'skip'
 
+/** Whether a picked file is a CSV, by name or by type. */
 export const isCsvFile = (name: string, type = '') => /\.csv$/i.test(name) || type === 'text/csv'
 
 const sniff = (line: string) => {
@@ -193,6 +209,7 @@ export function checkImport(rows: readonly string[][], map: readonly string[], t
   return issues
 }
 
+/** How many distinct rows have at least one issue. */
 export const badRows = (issues: readonly ImportIssue[]) => new Set(issues.map(i => i.row)).size
 
 /** The good rows as records keyed by target; skipped columns go. */
@@ -203,11 +220,15 @@ export function importRecords(rows: readonly string[][], map: readonly string[],
 
 /* ---- commerce (09 §6) ---- */
 
+/** One line in a cart. */
 export interface CartLine { id: string; name: string; variant?: string; price: number; quantity: number; art?: string }
+/** A cart's money, added up. */
 export interface CartTotals { subtotal: number; discount: number; shipping: number; tax: number; total: number }
 
+/** How many items are in the cart, counting quantities. */
 export const cartCount = (lines: readonly CartLine[]) => lines.reduce((n, l) => n + l.quantity, 0)
 
+/** The cart's subtotal, discount, shipping, tax and total. */
 export function cartTotals(lines: readonly CartLine[], o: { shipping?: number; percentOff?: number; taxRate?: number } = {}): CartTotals {
   const subtotal = lines.reduce((s, l) => s + l.price * l.quantity, 0)
   const discount = subtotal * ((o.percentOff ?? 0) / 100)
@@ -228,6 +249,7 @@ export function addressProblems(a: Address | null, country: string) {
   return out
 }
 
+/** The ways a checkout can be refused, each with what the UI needs to say so. */
 export type CheckoutError = { code: 'CARD_DECLINED'; reason: string } | { code: 'OUT_OF_STOCK'; sku: string } | { code: 'PRICE_CHANGED'; total: number }
 
 /** Which step a typed order error returns to (09 §6.2). */

@@ -14,7 +14,9 @@ export function fuzzy(q: string, text: string): { score: number; hits: number[] 
   return hits.length === q.length ? { score, hits } : null
 }
 
+/** What the command palette ranks by. */
 export interface Rankable { label: string; group?: string; keywords?: string[] }
+/** An item that matched, with the letters that hit. */
 export interface Ranked<C> { item: C; hits: number[] }
 
 /** What a query shows, best first and then gathered by group in the order the groups turn up. */

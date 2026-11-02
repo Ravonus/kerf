@@ -4,6 +4,7 @@ import { dialog, popover, type PopoverOptions } from './overlays'
 import { addDays, addMonths, monthStart, type DateRange, type IsoDate } from './temporal'
 import { place, pushLayer, type Align, type Side } from './layers'
 
+/** How a picker opens: anchored, as a sheet, or whichever fits. */
 export type Presentation = 'auto' | 'popover' | 'sheet'
 
 /** Sheet or popover: under 600px of viewport a popover won't fit. `[data-form="phone"]` is the specimen's phone frame. */
@@ -13,6 +14,7 @@ export function isSheet(el: Element, presentation: Presentation = 'auto') {
   return frame ? frame.dataset.form === 'phone' : (el.ownerDocument.defaultView?.innerWidth ?? 1024) < 600
 }
 
+/** Options for a picker's panel. */
 export interface PanelOptions {
   open: boolean
   trigger: HTMLElement
@@ -69,6 +71,7 @@ export function listKey(key: string, at: number, count: number, { page = 4, wrap
   return { to: at, handled: false }
 }
 
+/** A shortcut in a range picker. */
 export type RangePreset = { id: string; label: string; range: (today: IsoDate, weekStart: number) => DateRange }
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)

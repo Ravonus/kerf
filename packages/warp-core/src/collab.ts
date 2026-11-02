@@ -6,6 +6,7 @@ import { announce } from './toast'
 
 // ---- peers ------------------------------------------------------------------------------------------------------
 
+/** Someone present in a shared room. */
 export interface Peer { id: string; name: string; /** Presence colour, data palette 1–8; stable per peer when left out. */ color?: number }
 
 /** A stable slot in the data palette (1–8) for a peer id. */
@@ -16,6 +17,7 @@ export function peerColor(p: { id: string; color?: number }) {
   return (h % 8) + 1
 }
 
+/** The first word of a name. */
 export const firstName = (name: string) => name.trim().split(/\s+/)[0]!
 
 /** "Ana", "Ana and Kofi", "Ana, Kofi and Mei". */
@@ -71,10 +73,15 @@ export function arrivalTracker() {
 
 // ---- chat -------------------------------------------------------------------------------------------------------
 
+/** Where a sent message stands. */
 export type Delivery = 'sending' | 'sent' | 'read' | 'failed'
+/** The message a reply quotes. */
 export interface MessageQuote { ref?: string; text: string; /** Kept for a source that isn't loaded. */ author?: string; time?: string; /** The source lives in another channel. */ channel?: string; deleted?: boolean }
+/** One emoji's reactions on a message. */
 export interface MessageReaction { emoji: string; /** Spoken name: "Thumbs up". */ label?: string; count: number; mine?: boolean; names?: string[] }
+/** A file or link on a message. */
 export interface MessageAttachment { kind: string; name: string; meta?: string }
+/** One message in a thread. */
 export interface ChatMessage {
   id: string
   author: Peer
@@ -98,10 +105,14 @@ export interface ChatMessage {
   streaming?: boolean
 }
 
+/** How close two messages from one person must be to group. */
 export const GROUP_MS = 5 * 60 * 1000
+/** How much of a message a quote keeps. */
 export const QUOTE_MAX = 280
+/** How near the bottom counts as reading live. */
 export const STICK_PX = 48
 
+/** One row of a laid-out thread. */
 export type ThreadRow =
   | { kind: 'day'; id: string; label: string; unread: boolean }
   | { kind: 'unread'; id: string; label: string; unread: true }
@@ -140,6 +151,7 @@ export function excerpt(text: string, max = QUOTE_MAX) {
 export const quoteText = (m: Pick<ChatMessage, 'text' | 'attachment'>, selection?: string) =>
   excerpt(selection?.trim() ? selection : m.text ? `${m.text}${m.attachment ? ` (${m.attachment.name})` : ''}` : m.attachment?.name ?? '')
 
+/** A stretch of message text, marked if it's a mention. */
 export type TextPart = { mention: boolean; text: string; at: number }
 
 /** Split a message into text and @mention runs. Only names in `names` count. */
@@ -178,6 +190,7 @@ export function reactionName(r: MessageReaction) {
   return `${r.label ?? r.emoji}, ${r.count}${names.length ? `: ${names.join(', ')}` : ''}`
 }
 
+/** Options for the message log's keyboard, selection and read tracking. */
 export interface MessageLogOptions {
   /** Q or the Quote button; `selection` is the text picked inside that message. */
   onQuote(id: string, selection: string): void
@@ -294,6 +307,7 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
 
 // ---- cursors, follow, auto-track --------------------------------------------------------------------------------
 
+/** Where a peer's pointer is on the shared page. */
 export interface PeerCursor {
   /** The `data-anchor` value it is anchored to. */
   anchor: string
@@ -301,6 +315,7 @@ export interface PeerCursor {
   x: number
   y: number
 }
+/** A peer, with their cursor when it's known. */
 export type CursorPeer = Peer & { cursor?: PeerCursor | null }
 
 const ARROW = 'M1 1l5.5 13 2-5.5L14 6.5z'
@@ -313,6 +328,7 @@ export function cursorPoint(anchor: { left: number; top: number; width: number; 
   return { x, y, over: y < 0 ? -1 : y > base.height ? 1 : 0 }
 }
 
+/** Options for live cursors: who's here, the element they're relative to, and how long until one goes idle. */
 export interface CursorsOptions { peers: readonly CursorPeer[]; anchor?: string; idle?: number }
 
 /**
@@ -383,6 +399,7 @@ export function userScroll(el: HTMLElement, fn: () => void) {
 
 const glide = (el: HTMLElement, top: number) => el.scrollTo?.({ top, behavior: reducedMotion(el) ? 'auto' : 'smooth' })
 
+/** Options for following a peer's viewport. */
 export interface FollowOptions { on: boolean; /** The followed viewport's top, 0–1 of the document. */ top?: number; onStop(): void }
 
 /** Following (07 §6.1): the element rides the peer's viewport; any scroll of the user's, or Esc, stops it. */
@@ -401,6 +418,7 @@ export function followViewport(el: HTMLElement, opts: FollowOptions) {
   }
 }
 
+/** Options for tracking a presenter through the sections of a page. */
 export interface AutoTrackOptions { following: boolean; /** The `data-section` the presenter is in. */ section?: string; onPause(): void }
 
 /** MultiplayerAutoTrack (07 §6.4): scroll to the presenter's section; a manual scroll pauses it and never fights. */
@@ -418,10 +436,14 @@ export function autoTrack(region: HTMLElement, opts: AutoTrackOptions) {
 
 // ---- kanban -----------------------------------------------------------------------------------------------------
 
+/** The least a kanban card needs. */
 export interface BoardCard { id: string; title: string }
+/** A kanban column and its cards. */
 export interface BoardColumn<C extends BoardCard = BoardCard> { id: string; title: string; limit?: number; color?: number; cards: C[] }
+/** Where a card sits on the board. */
 export type BoardSpot = { col: number; index: number }
 
+/** Where card `id` is on the board, or null. */
 export function findCard(columns: readonly BoardColumn<BoardCard>[], id: string): BoardSpot | null {
   for (let col = 0; col < columns.length; col++) {
     const index = columns[col]!.cards.findIndex(c => c.id === id)
@@ -463,6 +485,7 @@ export function moveLine(columns: readonly BoardColumn<BoardCard>[], id: string)
   return `Moved ${c.cards[at.index]!.title} to ${c.title}, position ${at.index + 1} of ${c.cards.length}`
 }
 
+/** Options for a kanban board's drag, keyboard and announcements. */
 export interface KanbanOptions {
   columns: () => readonly BoardColumn<BoardCard>[]
   /** Commit a move and render it before returning, so focus can follow the card. */
@@ -582,7 +605,9 @@ export function kanban(host: HTMLElement, opts: KanbanOptions) {
 
 // ---- synced form, data integrity --------------------------------------------------------------------------------
 
+/** A field change sent to the others editing a form. */
 export interface FormOp { seq: number; name: string; value: string | boolean; peer: Peer }
+/** Options for a form several people edit at once. */
 export interface SyncedFormOptions {
   /** Remote edits, oldest first. Each `seq` applies once; an older one is dropped. */
   ops: readonly FormOp[]
@@ -670,6 +695,7 @@ export function syncedForm(form: HTMLFormElement, opts: SyncedFormOptions) {
   }
 }
 
+/** What a channel has sent and received, and how late. */
 export interface IntegrityStats { sent: number; received: number; duplicate: number; outOfOrder: number; lagP95: number }
 
 /** The value at the 95th percentile, 0 for none. */

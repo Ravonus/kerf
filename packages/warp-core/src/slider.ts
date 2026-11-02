@@ -2,6 +2,7 @@
 // the track. The binding renders the parts; this writes --_v, --_v0, --_v1 and the ARIA values.
 import { formReset } from './form'
 
+/** Options for a slider. */
 export interface SliderOptions {
   values: number[]
   min: number
@@ -13,6 +14,7 @@ export interface SliderOptions {
   onChange(values: number[]): void
 }
 
+/** A slider's pointer and keyboard behaviour. */
 export function slider(el: HTMLElement, opts: SliderOptions) {
   let o = opts
   let vals = [...o.values]

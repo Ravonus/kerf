@@ -3,7 +3,9 @@
 // counts the elements holding it, so a row bound twice falls only when the last one lets go, and `destroy` lets go:
 // an element removed under the pointer gets no pointerleave, and that is how a hover sticks.
 
+/** A boolean a binding can write to: weft's box, or anything shaped like one. */
 export interface Flag { value: boolean }
+/** The flags `interact` keeps up to date. */
 export interface Interactive { hover: Flag; focus: Flag; pressed: Flag }
 
 const holders = new WeakMap<Flag, Set<Element>>()
@@ -17,6 +19,7 @@ function hold(flag: Flag, el: Element, on: boolean) {
   if (flag.value !== any) flag.value = any
 }
 
+/** Keeps hover, focus-visible and pressed flags on an element, ignoring touch hover. */
 export function interact(el: HTMLElement, ui: Interactive) {
   const doc = el.ownerDocument, win = doc.defaultView!
   const hoverable = win.matchMedia?.('(hover: hover)').matches ?? true

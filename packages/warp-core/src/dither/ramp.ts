@@ -1,5 +1,6 @@
 // Inks come from warp's tokens, read through the cascade from the element itself, so a ramp follows theme, seed, and any
 // `data-theme` island around it. Every tone ramp runs from the page outward: faint to strong in light and in dark alike.
+/** A theme tone inks can be drawn from. */
 export type Tone = 'accent' | 'neutral' | 'positive' | 'caution' | 'critical' | 'info' | 'highlight'
 /** A tone, or your own inks: tokens (`--warp-color-x`), any CSS colour, or `none`, faintest first. */
 export type Ramp = Tone | string[]

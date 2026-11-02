@@ -4,6 +4,7 @@
 import { reducedMotion } from './motion'
 import type { Action } from './store'
 
+/** What a draw callback gets each frame. */
 export interface Frame {
   ctx: CanvasRenderingContext2D
   /** CSS pixels, or cells when the surface has a `cell`. */
@@ -15,6 +16,7 @@ export interface Frame {
   dt: number
 }
 
+/** Options for a canvas surface. */
 export interface SurfaceOptions {
   /** Paints one frame. Return true to be called again next frame, for work that settles on its own. */
   draw: (frame: Frame) => boolean | void
@@ -28,6 +30,7 @@ export interface SurfaceOptions {
   onTheme?: () => void
 }
 
+/** A canvas surface: the action, plus repainting on request and telling if it's seen. */
 export interface Surface extends Action<SurfaceOptions> {
   /** Paint once, in the next shared frame. */
   invalidate(): void

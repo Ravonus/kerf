@@ -2,6 +2,7 @@
 // closes the top one; an outside press closes non-modal layers above the press; passive layers (tooltips) close on
 // Escape but never eat a press. Placement (05 §3): anchored to a trigger, flips when there is no room, clamped 8px.
 
+/** One open layer on the stack. */
 export interface Layer {
   el: HTMLElement
   close(reason: 'escape' | 'outside'): void
@@ -69,7 +70,9 @@ export function pushLayer(layer: Layer) {
   }
 }
 
+/** The side of its anchor a floating element opens on. */
 export type Side = 'top' | 'bottom' | 'left' | 'right'
+/** How a floating element lines up along its anchor. */
 export type Align = 'start' | 'center' | 'end'
 
 /**

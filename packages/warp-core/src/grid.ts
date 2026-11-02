@@ -24,6 +24,7 @@ export function infiniteScroll(el: HTMLElement, opts: { onReach(): void; root?: 
   return { update: (next: typeof opts) => void (o = next), destroy: () => seen?.disconnect() }
 }
 
+/** How a filter row reads its value. */
 export type GridFilter = 'text' | 'select' | 'min'
 
 /** A cell against a filter row's value: contains, equals or at least. A blank filter keeps everything. */
@@ -47,6 +48,7 @@ export function groupRows<T>(rows: readonly T[], key: (row: T) => string) {
   return groups
 }
 
+/** The aggregates a grid column can show. */
 export type Aggregate = 'sum' | 'avg' | 'count' | 'min' | 'max'
 
 /** A column's aggregate over `values`; blanks don't count towards an average. */
@@ -58,8 +60,10 @@ export function aggregate(kind: Aggregate, values: readonly unknown[]) {
   return kind === 'sum' ? sum : kind === 'avg' ? sum / n.length : kind === 'min' ? Math.min(...n) : Math.max(...n)
 }
 
+/** A tree row flattened for the grid, with the place it holds among its siblings. */
 export interface TreeEntry<T> { row: T; key: string; level: number; size: number; pos: number; parent?: string | undefined; branch: boolean; context?: boolean | undefined; hit?: boolean | undefined }
 
+/** How a grid reads a tree out of the app's rows. */
 export interface TreeSource<T> {
   key(row: T): string
   /** What's loaded under a row: undefined when it hasn't loaded yet, [] for a leaf. */
@@ -111,6 +115,7 @@ export function leaves<T>(row: T, kids: (row: T) => readonly T[] | undefined): T
   return under?.length ? under.flatMap(k => leaves(k, kids)) : [row]
 }
 
+/** One pivot cell: the value and its share of the row. */
 export interface PivotCell { value: number; share: number }
 
 /** rows × columns × measure (06 §6): cells with their share of the largest (the heat), totals both ways. */
@@ -132,6 +137,7 @@ export function pivotTable<T>(rows: readonly T[], rowKey: (r: T) => string, colK
 /** A copied range. Tabs and line breaks inside a cell would split it, so they become spaces. */
 // oxlint-disable-next-line typescript/no-base-to-string -- a cell is whatever the app put there: coercing it is the point
 export const toTSV = (rows: readonly (readonly unknown[])[]) => rows.map(r => r.map(c => String(c ?? '').replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n')
+/** A pasted TSV as rows of cells. */
 export const parseTSV = (text: string) => text.replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n').map(l => l.split('\t'))
 
 const csvCell = (c: unknown) => {
@@ -141,6 +147,7 @@ const csvCell = (c: unknown) => {
   const safe = /^[=+\-@\t\r]/.test(s) && typeof c !== 'number' ? `'${s}` : s
   return /[",\n\r]/.test(safe) || safe !== s ? `"${safe.replace(/"/g, '""')}"` : safe
 }
+/** Rows as CSV, with cells a spreadsheet would run as formulas made safe. */
 export const toCSV = (head: readonly unknown[], rows: readonly (readonly unknown[])[]) => [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
 
 /** Move `item` so it sits at `to`, in a copy. */
@@ -150,6 +157,7 @@ export function moved<T>(list: readonly T[], item: T, to: number) {
   return rest
 }
 
+/** Options for the data grid's keyboard, selection and clipboard. */
 export interface GridOptions {
   /** Grouped or tree data: role=treegrid, where a row takes focus too. */
   tree?: boolean

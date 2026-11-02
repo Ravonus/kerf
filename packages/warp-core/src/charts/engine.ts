@@ -67,8 +67,10 @@ const tipHTML = ({ title, rows = [] }: Tip) =>
 export const tableHTML = ({ head, rows }: TableData) =>
   `<table><thead><tr>${head.map(h => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => (i ? `<td>${esc(String(c))}</td>` : `<th scope="row">${esc(String(c))}</th>`)).join('')}</tr>`).join('')}</tbody></table>`
 
+/** What `chart` draws: a form, its config, and an id for the marks. */
 export type ChartOptions<C> = { form: Form<C>; cfg: C; id: string }
 
+/** Takes over a chart's rendered figure and from then on owns its plot, tooltip, keyboard and legend. */
 export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   const $ = (q: string) => fig.querySelector(q)!
   const svg = $('svg[data-part="svg"]') as SVGSVGElement, area = $('[data-part="plot"]') as HTMLElement, tip = $('[data-part="chart-tip"]') as HTMLElement

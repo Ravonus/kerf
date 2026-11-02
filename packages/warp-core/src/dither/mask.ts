@@ -1,10 +1,12 @@
 // Masks: shapes a field shows through. Coverage stays soft, so an edge dithers instead of aliasing, and `halo` is the same
 // shape blurred, the light a letter throws on the cloth around it.
+/** What a mask is cut from: text, a path, or a draw callback. */
 export type MaskSource =
   | { text: string; font?: string; weight?: number | string; fit?: number }
   | { path: string; box: [width: number, height: number]; fit?: number; stroke?: number }
   | ((ctx: CanvasRenderingContext2D, cols: number, rows: number) => void)
 
+/** A cut-out's coverage per cell, and the soft halo around it. */
 export interface Mask { shape: Float32Array; halo: Float32Array }
 
 function blur(v: Float32Array, cols: number, rows: number, r: number) {

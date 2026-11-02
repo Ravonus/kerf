@@ -4,6 +4,7 @@
 
 import { fuzzy } from './palette'
 
+/** One page or section going into the search index. */
 export interface SearchEntry {
   title: string
   url: string
@@ -19,6 +20,7 @@ export interface SearchEntry {
   keywords?: string
 }
 
+/** The index as it travels to the browser. */
 export interface SearchWire {
   groups: string[]
   /** [title, url, group, rank × 100, parent, text] */
@@ -29,6 +31,7 @@ export interface SearchWire {
   post: string
 }
 
+/** One search result. */
 export interface SearchHit {
   title: string
   url: string
@@ -40,6 +43,7 @@ export interface SearchHit {
   fuzzy?: boolean
 }
 
+/** The index read back, ready to query. */
 export interface SearchIndex {
   wire: SearchWire
   terms: string[]

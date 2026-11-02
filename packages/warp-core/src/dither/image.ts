@@ -5,9 +5,12 @@ import { diffuse, levels, quantize, type Diffusion } from './quantize'
 import { palette, tier, type Ramp } from './ramp'
 import { tile, type Pattern } from './tiles'
 
+/** How a tone becomes ink: an ordered pattern or error diffusion. */
 export type Algorithm = Pattern | Diffusion
+/** A linear or radial tone ramp. */
 export interface Gradient { angle?: number; radial?: boolean; from?: number; to?: number }
 
+/** Options for dithering an image or a gradient. */
 export interface ImageOptions {
   /** A loaded or loading image. Without one the surface draws `gradient`. */
   source?: HTMLImageElement | ImageBitmap | HTMLCanvasElement
@@ -39,6 +42,7 @@ export function tones(source: CanvasImageSource, cols: number, rows: number) {
   return out
 }
 
+/** The tones of a gradient over a grid of cells. */
 export function gradientTones({ angle = 115, radial, from = 0, to = 1 }: Gradient, cols: number, rows: number) {
   const out = new Float32Array(cols * rows), a = (angle * Math.PI) / 180, dx = Math.cos(a), dy = Math.sin(a)
   const span = Math.abs(dx) * cols + Math.abs(dy) * rows, far = Math.hypot(cols, rows) / 2
@@ -50,6 +54,7 @@ export function gradientTones({ angle = 115, radial, from = 0, to = 1 }: Gradien
   return out
 }
 
+/** Draws an image or gradient to a canvas in dithered inks. */
 export function ditherImage(canvas: HTMLCanvasElement, options: ImageOptions): Action<ImageOptions> {
   let o = options
   const host = canvas.parentElement ?? canvas

@@ -1,8 +1,10 @@
 // Pointer play on a spring lattice laid over the cells (the site's loom): each node springs home, leans on its neighbours so
 // a push travels, and loses a little. `ripple` stirs it along the pointer's path, `pull` drags the threads it crosses and
 // lets them spring back, and `shockwave` kicks a ring out from a press. Once it settles it costs nothing.
+/** How the pointer disturbs a field. */
 export type PointerMode = 'ripple' | 'pull' | 'shockwave'
 
+/** The pointer's pull on a field: input goes in, and each cell's displacement and energy come out. */
 export interface Forces {
   move(x: number, y: number): void
   leave(): void

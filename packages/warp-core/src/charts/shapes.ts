@@ -7,8 +7,11 @@ import { tableOf, type Base, type Fmt, type Form, type LegendItem, type TipRow }
 const TAU = Math.PI * 2
 const centred = (W: number, size: number, ...c: Kid[]) => s('g', { transform: `translate(${(W - size) / 2},0)` }, ...c)
 
+/** One slice of a donut or pie. */
 export type Slice = { name: string; value: number; color?: string }
+/** Config for a donut or pie. */
 export type DonutConfig = Base<Slice[]> & { pie?: boolean; unit?: string; format?: Fmt; name?: string }
+/** Donut and pie charts. */
 export const donut: Form<DonutConfig> = {
   kind: 'donut chart',
   byMark: true,
@@ -45,8 +48,10 @@ export const donut: Form<DonutConfig> = {
   },
 }
 
+/** Config for a radial bar chart: one ring per value, a share of the full circle. */
 export type RadialConfig = Base<{ name: string; value: number }[]>
 const A0 = -Math.PI / 2, SPAN = Math.PI * 1.5
+/** Radial bar charts. */
 export const radial: Form<RadialConfig> = {
   kind: 'radial bar chart',
   table: c => tableOf(['Name', 'Progress'], c.data.map(d => [d.name, pct(d.value)])),
@@ -65,7 +70,9 @@ export const radial: Form<RadialConfig> = {
   },
 }
 
+/** Config for a radar chart: the axes, and each series' value on them. */
 export type RadarConfig = Base<{ name: string; values: number[] }[]> & { axes: string[]; format?: Fmt }
+/** Radar charts. */
 export const radar: Form<RadarConfig> = {
   kind: 'radar chart',
   swatch: 'line',
@@ -88,7 +95,9 @@ export const radar: Form<RadarConfig> = {
   },
 }
 
+/** Config for a sunburst: groups and their children. */
 export type SunConfig = Base<{ name: string; children: { name: string; value: number }[] }[]> & { format?: Fmt; total?: string }
+/** Sunburst charts. */
 export const sunburst: Form<SunConfig> = {
   kind: 'sunburst chart',
   table: c => { const t = sum(c.data.flatMap(g => g.children.map(k => k.value))); return tableOf(['Category', 'Item', 'Share'], c.data.flatMap(g => g.children.map(k => [g.name, k.name, pct(k.value / t)]))) },
@@ -105,9 +114,12 @@ export const sunburst: Form<SunConfig> = {
   },
 }
 
+/** A coloured stretch of a gauge's scale. */
 export type Band = [from: number, to: number, color: string]
+/** Config for a gauge: one value, with optional bands. */
 export type GaugeConfig = Base<number> & { bands?: Band[]; format?: Fmt; label?: string }
 const BANDS: Band[] = [[0, 0.5, 'var(--warp-color-positive-solid)'], [0.5, 0.8, 'var(--warp-color-caution-solid)'], [0.8, 1, 'var(--warp-color-critical-solid)']]
+/** Gauges. */
 export const gauge: Form<GaugeConfig> = {
   kind: 'gauge',
   table: c => tableOf(['Band', 'Range'], [...(c.bands ?? BANDS).map(([a, b], i): [string, string] => [`Band ${i + 1}`, `${pct(a)}–${pct(b)}`]), ['Current', pct(c.data)]]),
@@ -128,9 +140,11 @@ export const gauge: Form<GaugeConfig> = {
 }
 const f1Num = (v: number) => +f1(v)
 
+/** Config for a funnel: its stages, widest first. */
 export type FunnelConfig = Base<{ name: string; value: number }[]> & { format?: Fmt; unit?: string }
 const short = (v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(v))
 const ofPrev = (c: FunnelConfig, i: number) => Math.round((c.data[i]!.value / c.data[i - 1]!.value) * 100)
+/** Funnel charts. */
 export const funnel: Form<FunnelConfig> = {
   kind: 'funnel chart',
   table: c => tableOf(['Step', c.unit ?? 'Value', 'Of previous'], c.data.map((d, i) => [d.name, (c.format ?? num)(d.value), i ? `${ofPrev(c, i)}%` : '–'])),
@@ -150,8 +164,10 @@ export const funnel: Form<FunnelConfig> = {
 }
 
 export type TreeItem = { name: string; value: number; group?: string }
+/** Config for a treemap. */
 export type TreemapConfig = Base<TreeItem[]> & { groups?: string[]; format?: Fmt; short?: Fmt }
 const groupsOf = (c: TreemapConfig) => c.groups ?? [...new Set(c.data.map(d => d.group ?? ''))]
+/** Treemaps. */
 export const treemap: Form<TreemapConfig> = {
   kind: 'treemap',
   legend: c => (groupsOf(c).length > 1 ? groupsOf(c).map((name, i): LegendItem => ({ name, color: color(i) })) : []),
@@ -172,7 +188,9 @@ export const treemap: Form<TreemapConfig> = {
   },
 }
 
+/** Config for a Sankey diagram: links between nodes, by index, and the nodes with their columns. */
 export type SankeyConfig = Base<{ from: number; to: number; value: number }[]> & { nodes: { name: string; column: number }[]; format?: Fmt }
+/** Sankey diagrams. */
 export const sankey: Form<SankeyConfig> = {
   kind: 'sankey diagram',
   table: c => tableOf(['From', 'To', 'Value'], c.data.map(l => [c.nodes[l.from]!.name, c.nodes[l.to]!.name, (c.format ?? num)(l.value)])),
@@ -201,9 +219,11 @@ export const sankey: Form<SankeyConfig> = {
   },
 }
 
+/** Config for a calendar heatmap: a row of daily values per week. */
 export type HeatConfig = Base<number[][]> & { weeks: string[]; days?: string[]; unit?: string }
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const cap = (u: string) => u[0]!.toUpperCase() + u.slice(1)
+/** Calendar heatmaps. */
 export const heat: Form<HeatConfig> = {
   kind: 'heatmap',
   ramp: 0,
@@ -227,9 +247,11 @@ export const heat: Form<HeatConfig> = {
   },
 }
 
+/** Config for a tile map: a value per region id. */
 export type TileConfig = Base<{ id: string; value: number }[]> & { tiles?: string; unit?: string }
 /** The US as an 11-column tile grid: rows by `|`, cells by `,`. */
 export const US_TILES = 'AK,,,,,,,,,,ME|,,,,,,,,,VT,NH|WA,ID,MT,ND,MN,IL,WI,MI,NY,RI,MA|OR,NV,WY,SD,IA,IN,OH,PA,NJ,CT,|CA,UT,CO,NE,MO,KY,WV,VA,MD,DE,|,AZ,NM,KS,AR,TN,NC,SC,DC,,|,,,OK,LA,MS,AL,GA,,,|HI,,,TX,,,,,FL,,'
+/** Tile maps. */
 export const tile: Form<TileConfig> = {
   kind: 'tile map',
   ramp: 1,

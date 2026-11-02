@@ -8,6 +8,7 @@ import { uid } from './store'
 const CHECK = '<svg data-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5 9.5 17 19 7"/></svg>'
 const TYPEAHEAD_MS = 500
 
+/** Dresses a native select with a listbox of its options, keeping the select as the source of truth. */
 export function selectMenu(sel: HTMLSelectElement) {
   const doc = sel.ownerDocument
   const win = doc.defaultView!

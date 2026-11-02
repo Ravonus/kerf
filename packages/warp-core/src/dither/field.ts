@@ -10,6 +10,7 @@ import { quantize } from './quantize'
 import { palette, tier, type Ramp } from './ramp'
 import { tile, type Pattern } from './tiles'
 
+/** Options for an animated dither field. */
 export interface FieldOptions {
   /** A named field, or your own function of (x, y, t). */
   kind?: FieldName | Field
@@ -39,6 +40,7 @@ export interface FieldOptions {
   fps?: number | undefined
 }
 
+/** The edge a field fades out from. */
 export type Fade = 'left' | 'right' | 'top' | 'bottom' | 'edges'
 const HOT = 0.32
 const smooth = (v: number) => { const k = v < 0 ? 0 : v > 1 ? 1 : v; return k * k * (3 - 2 * k) }
@@ -48,6 +50,7 @@ const family = (el: Element) => getComputedStyle(el).fontFamily || 'sans-serif'
 /** The fx state a host shows (08 §1.2): `on` moves, `still` holds a frame. */
 export const fxState = (el: Element, speed: number) => (speed > 0 && !reducedMotion(el) ? 'on' : 'still')
 
+/** A canvas of dithered, animated noise that the pointer can disturb. */
 export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {}): Action<FieldOptions> {
   let o = options
   const host = canvas.parentElement ?? canvas

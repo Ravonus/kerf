@@ -1,6 +1,8 @@
 // Threshold tiles: a square of values in 0–1 that decides, cell by cell, which of two inks a tone rounds to. Bayer, blue
 // noise and halftone differ only in this table, so one quantizer draws them all. Sides are powers of two, so a lookup masks.
+/** The ordered threshold patterns. */
 export type Pattern = 'bayer2' | 'bayer4' | 'bayer8' | 'blue' | 'halftone'
+/** A square threshold tile, `n` cells a side. */
 export interface Tile { n: number; t: Float32Array }
 
 function bayer(n: number) {
@@ -58,6 +60,7 @@ function halftone(n: number) {
 
 const made = new Map<Pattern, Tile>()
 
+/** The threshold tile for `pattern`, built once. */
 export function tile(pattern: Pattern): Tile {
   let t = made.get(pattern)
   if (!t) {

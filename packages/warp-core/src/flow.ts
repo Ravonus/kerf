@@ -6,6 +6,7 @@ import { announce } from './toast'
 
 // ---- step machine (09 §1.1) -----------------------------------------------------------------------------------------
 
+/** Which way a step flow is moving. */
 export type FlowDirection = 'forward' | 'back'
 
 /** Which way a step change moves: by position in `ids`. */
@@ -27,6 +28,7 @@ export function stepUrl(href: string, param: string, id: string) {
   return u.pathname + u.search + u.hash
 }
 
+/** Options for a step flow. */
 export interface StepFlowOptions {
   step: string
   steps: readonly string[]
@@ -105,8 +107,10 @@ export function stepFlow(el: HTMLElement, opts: StepFlowOptions) {
 
 // ---- error mapping (09 §1.3): one message per cause -----------------------------------------------------------------
 
+/** Where a mapped error shows up. */
 export type FlowSurface = 'field' | 'alert' | 'rate-limit' | 'toast' | 'banner'
 
+/** An error worked out for the UI: where it goes, what it says, and how focus and the live region treat it. */
 export interface FlowError {
   surface: FlowSurface
   code?: string | undefined
@@ -130,6 +134,7 @@ interface IssueLike { message: string; path?: readonly (PropertyKey | { readonly
 /** What a server sends with an error, past the code: the fields mapFlowError reads, and whatever a domain adds. */
 export type FlowData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<string, unknown>
 
+/** Options for `mapFlowError`. */
 export interface FlowErrorOptions {
   /** `online().value`: a failed submit while offline is a Banner, not a server error. */
   online?: boolean
@@ -147,6 +152,7 @@ export function issueFields(issues: readonly IssueLike[] = []) {
   return fields
 }
 
+/** The count line over a form with field errors. */
 export const fieldSummary = (n: number) => (n === 1 ? '1 field needs attention' : `${n} fields need attention`)
 
 const utc = (iso: string) => {
@@ -203,19 +209,23 @@ export async function copyText(doc: Document, text: string) {
 
 // ---- email and password (09 §2.3) -----------------------------------------------------------------------------------
 
+/** Whether `v` looks like an email address. */
 export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)
 
 /** The format message on blur: never "Invalid input". Empty says nothing until submit. */
 export const emailError = (v: string) => (v && !isEmail(v) ? "That doesn't look like an email. Check for a typo." : undefined)
 
+/** One password rule, and whether `v` meets it. */
 export interface PasswordRule { id: string; label: string; met: boolean }
 
+/** The rules a new password is held to. */
 export const passwordRules = (v: string): PasswordRule[] => [
   { id: 'length', label: 'At least 8 characters', met: v.length >= 8 },
   { id: 'letter', label: 'One letter', met: /\p{L}/u.test(v) },
   { id: 'number', label: 'One number', met: /\d/.test(v) },
 ]
 
+/** How strong a password reads, for the meter. */
 export type PasswordStrength = { score: 0 | 1 | 2 | 3 | 4; label: string; tone: 'critical' | 'caution' | 'positive' }
 
 const STRENGTH = [['Too short', 'critical'], ['Weak', 'critical'], ['Fair', 'caution'], ['Good', 'positive'], ['Strong', 'positive']] as const
@@ -232,8 +242,10 @@ export function passwordStrength(v: string): PasswordStrength {
 
 // ---- OTP (03 §3, 09 §2.3): one input, painted cells ----------------------------------------------------------------
 
+/** Only the digits of a code, up to `length`. */
 export const otpClean = (v: string, length: number) => v.replace(/\D/g, '').slice(0, length)
 
+/** Options for a one-time-code input. */
 export interface OtpOptions {
   length: number
   invalid: boolean
@@ -298,6 +310,7 @@ export function otpInput(el: HTMLElement, opts: OtpOptions) {
 
 // ---- tour (09 §3.2) ------------------------------------------------------------------------------------------------
 
+/** A rectangle on the page, for a tour's cut-out. */
 export interface TourBox { x: number; y: number; w: number; h: number }
 
 /** Where the card goes: beside the target with a flip; on a phone, docked to the edge away from it. */
@@ -318,6 +331,7 @@ function findTarget(doc: Document, selector: string) {
   return all.find(t => t.getClientRects().length) ?? all[0] ?? null
 }
 
+/** Options for a tour's spotlight. */
 export interface TourSpotOptions {
   /** The step's target selector. */
   target: string
@@ -482,6 +496,7 @@ export function coachSpot(root: HTMLElement, opts: { target: string; open: boole
 
 // ---- connection (09 §5.3, §5.4) -------------------------------------------------------------------------------------
 
+/** What the connection banner shows; undefined shows nothing. */
 export type ConnView = 'offline' | 'reconnecting' | 'online' | 'stale' | undefined
 
 /** What the banner shows: offline over reconnecting over a stale deploy; `recovered` is the short "Back online". */
@@ -494,6 +509,7 @@ export function connView({ online, state, stale, recovered }: { online: boolean;
 
 // ---- keyboard shortcuts (09 §7) -------------------------------------------------------------------------------------
 
+/** One keyboard shortcut. */
 export interface Shortcut {
   /** Space-separated steps, `+` within one: `?`, `g m`, `mod+k`. `mod` is ⌘ on Apple platforms and Ctrl elsewhere. */
   keys: string
@@ -511,6 +527,7 @@ const SEQUENCE_MS = 1000
 const MODS = new Set(['mod', 'ctrl', 'cmd', 'alt', 'shift'])
 const parts = (step: string) => (step === '+' ? ['+'] : step.split('+'))
 
+/** Whether the device is an Apple one, so shortcuts read ⌘ for mod. */
 export const isApple = (nav: { platform?: string; userAgent?: string } | undefined) => /mac|iphone|ipad|ipod/i.test(nav?.platform ?? nav?.userAgent ?? '')
 
 /** The chips for each step: `[['⌘', 'K']]`, or `[['Ctrl', 'K']]`, `[['G'], ['M']]`. */
@@ -609,6 +626,7 @@ export function createShortcuts() {
     },
   }
 }
+/** The shortcut registry `createShortcuts` returns. */
 export type Shortcuts = ReturnType<typeof createShortcuts>
 
 /** The app's one registry: `shortcuts.register({ keys, label, group, when, run })`. */

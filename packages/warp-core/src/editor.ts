@@ -176,6 +176,7 @@ export function htmlToMarkdown(root: Element): string {
   return [...root.children].map(block).filter(Boolean).join('\n\n')
 }
 
+/** Options for the rich text editor. */
 export interface RichTextOptions {
   onChange(html: string): void
   /** A character typed that may open a menu: where the query stands, or nothing to close it. */
@@ -398,4 +399,5 @@ export function keyboardDock(bar: HTMLElement, opts: { editor: () => HTMLElement
   }
 }
 
+/** The handle `richText` returns. */
 export type RichTextHandle = ReturnType<typeof richText>

@@ -1,6 +1,7 @@
 // The APG menu button (02 §6, "The account menu"): one menu, any number of triggers.
 import { place, pushLayer, type Align, type Side } from './layers'
 
+/** Options for a menu. */
 export interface MenuOptions {
   open: boolean
   /** The trigger that opened it: focus goes back here. */

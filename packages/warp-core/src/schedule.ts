@@ -4,6 +4,7 @@
 import { gridKey } from './calendar'
 import { addDays, addMonths, clamp, daysBetween, dow, fmt, fmtTime, fromMinutes, minutes, monthEnd, monthStart, offsetAt, pad, toIso, type IsoDate } from './temporal'
 
+/** The calendar's views. */
 export type CalView = 'month' | 'week' | 'day' | 'agenda' | 'timeline' | 'year'
 
 /** 07 §2.2. `start`/`end` are wall date-times; an all-day event holds dates and its `end` is its last day. */
@@ -28,23 +29,34 @@ export interface CalEvent {
   /** Timeline row. */
   resource?: string | undefined
 }
+/** A span of time on a day, in minutes from midnight. */
 export type Slot = { date: string; s: number; e: number; resource?: string | undefined }
+/** An event's piece on one day. */
 export type DaySegment = { event: CalEvent; id: string; s: number; e: number; head: boolean; tail: boolean }
+/** An event's place among the ones it overlaps. */
 export type Lane = { col: number; cols: number; span: number }
 /** A pair of minutes, start then end. */
 export type Range = [number, number]
 
+/** Minutes in a day. */
 export const DAY = 1440
+/** The date of an ISO date-time. */
 export const dateOf = (iso: string) => iso.slice(0, 10) as IsoDate
+/** The minute of the day of an ISO date-time; 0 for a bare date. */
 export const minuteOf = (iso: string) => (iso.length > 10 ? minutes(iso.slice(11, 16)) : 0)
 /** A wall date-time from a date and minutes, which may run past either end of the day. */
 export const at = (date: string, m: number) => { const d = Math.floor(m / DAY); return `${addDays(date, d)}T${fromMinutes(m - d * DAY)}` }
+/** Minutes from `a` to `b`. */
 export const spanMinutes = (a: string, b: string) => daysBetween(dateOf(a), dateOf(b)) * DAY + minuteOf(b) - minuteOf(a)
+/** An event as a slot. */
 export const slotOf = (e: CalEvent): Slot => ({ date: dateOf(e.start), s: minuteOf(e.start), e: minuteOf(e.start) + spanMinutes(e.start, e.end), resource: e.resource })
+/** A slot's start and end as date-times. */
 export const slotTimes = (s: Slot) => ({ start: at(s.date, s.s), end: at(s.date, s.e) })
+/** Minutes as "1 h 30 m", or "45 min". */
 export const longDuration = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} m` : ''}` : `${m} min`)
 /** 24-hour by default, as in the specimen; `hourCycle` follows the locale's when `auto`. */
 export const clock = (m: number, locale: string, hourCycle = 'h23') => fmtTime(fromMinutes(((m % DAY) + DAY) % DAY), locale, hourCycle)
+/** Two minutes of the day as a clock range. */
 export const clockRange = (a: number, b: number, locale: string, hourCycle?: string) => `${clock(a, locale, hourCycle)}–${clock(b, locale, hourCycle)}`
 
 // -- zones ------------------------------------------------------------------------------------------------------------
@@ -73,6 +85,7 @@ export function nowIn(zone?: string, when = Date.now()) {
 
 // -- ranges, overlap, layout ------------------------------------------------------------------------------------------
 
+/** Whether two timed events overlap. */
 export const overlaps = (a: CalEvent, b: CalEvent) => a.id !== b.id && !a.allDay && !b.allDay && a.start < b.end && b.start < a.end
 /** The events that collide with `e` at `slot` (or where it is). */
 export function conflicts(events: CalEvent[], e: CalEvent, slot?: Slot) {
@@ -163,7 +176,9 @@ export function mergeRanges(list: Range[]) {
 
 // -- views ------------------------------------------------------------------------------------------------------------
 
+/** The first day of `date`'s week. */
 export const startOfWeek = (date: string, weekStartsOn: number) => addDays(date, -((dow(date) - weekStartsOn + 7) % 7))
+/** The seven days of `date`'s week. */
 export const weekDates = (date: string, weekStartsOn: number) => { const a = startOfWeek(date, weekStartsOn); return Array.from({ length: 7 }, (_, i) => addDays(a, i)) }
 /** The columns of a time grid. `count` narrows a week (a phone shows 3 days from `date`). */
 export function viewDays(view: CalView, date: string, weekStartsOn: number, count = 7) {
@@ -179,6 +194,7 @@ export function viewRange(view: CalView, date: string, weekStartsOn: number) {
   const a = startOfWeek(date, weekStartsOn)
   return { start: a, end: addDays(a, 6) }
 }
+/** The date one step on in `view`, `dir` being 1 or -1. */
 export function stepDate(view: CalView, date: string, dir: number) {
   if (view === 'month') return addMonths(date, dir)
   if (view === 'year') return addMonths(date, 12 * dir)
@@ -207,13 +223,16 @@ export function eventName(e: CalEvent, locale: string, hourCycle?: string) {
 
 // -- snapping, drags, keyboard moves ----------------------------------------------------------------------------------
 
+/** `m` to the nearest `step`. */
 export const snapTo = (m: number, step = 15) => Math.round(m / step) * step
 
+/** A slot moved by `dm` minutes onto `date`, snapped, keeping its length. */
 export function dragMove(origin: Slot, dm: number, date: string, step = 15, resource?: string): Slot {
   const len = origin.e - origin.s
   const s = clamp(snapTo(origin.s + dm, step), 0, DAY - Math.min(len, DAY))
   return { date, s, e: s + len, resource: resource ?? origin.resource }
 }
+/** A slot with its end moved by `dm` minutes, snapped, never shorter than a step. */
 export function dragResize(origin: Slot, dm: number, step = 15): Slot {
   return { ...origin, e: clamp(snapTo(origin.e + dm, step), origin.s + step, DAY) }
 }
@@ -224,6 +243,7 @@ export function dragCreate(date: string, anchor: number, current: number, step =
   return { date, s, e: clamp(Math.max(a + (c >= a ? 0 : step), c), s + step, DAY) }
 }
 
+/** What a key does during a keyboard move: drop, cancel, a new slot, or nothing. */
 export type MoveKey = 'drop' | 'cancel' | Slot | null
 /**
  * Keyboard move mode (07 §2.2): ↑↓ by `step`, ←→ by a day within `days`, Shift+↑↓ resizes, Enter drops, Escape cancels.
@@ -282,7 +302,9 @@ export function laneKey(key: string, id: string, rows: { id: string; s: number }
   return null
 }
 
+/** The slot under a drag, and what kind of drag it is. */
 export type DragPreview = Slot & { mode: 'move' | 'resize' | 'create'; id?: string | undefined; origin?: Slot | undefined }
+/** Options for dragging events and slots on the calendar. */
 export interface CalendarDragOptions {
   /** `x` for a timeline: lanes, with time running across and `from`..`to` minutes on it. */
   axis?: 'x' | 'y'
@@ -509,6 +531,7 @@ export function slide(track: HTMLElement, dx: string, land: () => void) {
 
 // -- agenda -----------------------------------------------------------------------------------------------------------
 
+/** One row of the agenda view. */
 export type AgendaItem =
   | { kind: 'allday'; key: string; event: CalEvent }
   | { kind: 'event'; key: string; event: CalEvent; s: number; e: number }
@@ -553,6 +576,7 @@ export function countByDay(events: CalEvent[]) {
   }
   return out
 }
+/** A month's total, as a sentence. */
 export function monthSummary(counts: Record<string, number>, month: string) {
   let total = 0, busiest: string | null = null, most = 0
   for (let d: string = monthStart(month); d <= monthEnd(month); d = addDays(d, 1)) {
@@ -562,6 +586,7 @@ export function monthSummary(counts: Record<string, number>, month: string) {
   }
   return { total, busiest, most }
 }
+/** All the events counted in `year`. */
 export const yearTotal = (counts: Record<string, number>, year: number) => Object.entries(counts).reduce((t, [d, n]) => (d.startsWith(`${year}-`) ? t + n : t), 0)
 /** The twelve first-of-months of a year. */
 export const yearMonths = (year: number) => Array.from({ length: 12 }, (_, m) => toIso(year, m + 1, 1))
@@ -574,8 +599,10 @@ export function yearKey(key: string, shift: boolean, cursor: string, weekStartsO
 
 // -- planner ----------------------------------------------------------------------------------------------------------
 
+/** Someone a meeting is being found for. */
 export interface Attendee { id: string; name: string; zone?: string; organizer?: boolean; busy?: Range[]; hours?: Range }
 
+/** Whether everyone is free from `s` for `len` minutes. */
 export const isFree = (busy: Range[][], s: number, len: number) => busy.every(list => !list.some(([a, b]) => a < s + len && b > s))
 /** Time everyone has, merged, from `from` to `to`. */
 export function sharedFree(busy: Range[][], from: number, to: number, step = 15) {
@@ -614,17 +641,23 @@ export function suggestSlots(people: Attendee[], date: string, opts: { len: numb
 
 // -- availability -----------------------------------------------------------------------------------------------------
 
+/** One weekday's working hours. */
 export interface WeekDay { day: number; on: boolean; ranges: Range[] }
+/** A date whose hours differ from the week's; null ranges means closed. */
 export interface Override { id: string; date: string; ranges: Range[] | null; note?: string | undefined }
 
 /** One message per range, '' when it's fine (07 §6.4). */
 export const rangeIssues = (ranges: Range[]) => ranges.map((r, i) => (r[1] <= r[0] ? 'Ends before it starts' : ranges.some((q, j) => j !== i && r[0] < q[1] && q[0] < r[1]) ? 'Overlaps another range' : ''))
+/** Whether every day that's on has valid ranges. */
 export const weekValid = (week: WeekDay[]) => week.every(d => !d.on || rangeIssues(d.ranges).every(x => !x))
 /** The next range after a day's last one: an hour on, two long, inside the select's last time. */
 export function nextRange(ranges: Range[], last = 1320): Range {
   const s = Math.min(last - 30, (ranges[ranges.length - 1]?.[1] ?? 480) + 60)
   return [s, Math.min(last, s + 120)]
 }
+/** The minutes a time picker offers. */
 export const timeOptions = (from = 360, to = 1320, step = 30) => { const out: number[] = []; for (let m = from; m <= to; m += step) out.push(m); return out }
+/** Minutes as h:mm. */
 export const hhmm = (m: number) => `${Math.floor(m / 60)}:${pad(m % 60)}`
+/** Minutes from midnight as an ISO time. */
 export const asTime = (m: number) => fromMinutes(m)

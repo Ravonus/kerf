@@ -2,9 +2,12 @@
 // shows and is called, and which day a key moves to. A binding renders it and owns view, cursor and hover.
 import { addDays, addMonths, daysIn, dow, fmt, messages, pad, weekOf, weekendDays, ymd, type DateRange, type IsoDate, type IsoWeek } from './temporal'
 
+/** What a calendar holds, by mode. */
 export type CalendarValue = IsoDate | IsoDate[] | DateRange | IsoWeek | null
+/** How a calendar picks: one date, several, a range, or a week. */
 export type CalendarMode = 'single' | 'multiple' | 'range' | 'week'
 
+/** What deciding one day's state needs from the calendar around it. */
 export interface CalendarContext {
   mode: CalendarMode
   value: CalendarValue
@@ -41,11 +44,14 @@ export const weekdays = (weekStartsOn: number, locale: string) => Array.from({ l
   return [fmt(ref, { weekday: 'long' }, locale), fmt(ref, { weekday: locale.startsWith('ja') ? 'narrow' : 'short' }, locale).replace(/\.$/, ''), (weekStartsOn + c) % 7] as const
 })
 
+/** Whether `iso` falls outside the calendar's min or max. */
 export const isOutOfBounds = (iso: string, c: Pick<CalendarContext, 'min' | 'max'>) => !!((c.min && iso < c.min) || (c.max && iso > c.max))
+/** Whether `iso` can't be picked: out of bounds, or refused by the app. */
 export const isUnavailable = (iso: string, c: CalendarContext) => isOutOfBounds(iso, c) || !!c.isDateUnavailable?.(iso as IsoDate)
 
 const ordered = (a: string, b: string) => (a <= b ? [a, b] : [b, a])
 
+/** Everything a day cell shows and says about itself. */
 export interface DayState {
   selected: boolean
   /** The gridcell's aria-selected: the ends and the band of a range too. */
@@ -60,6 +66,7 @@ export interface DayState {
   name: string
 }
 
+/** The state of one day in the calendar. */
 export function dayState(iso: IsoDate, c: CalendarContext): DayState {
   const t = messages(c.locale)
   const words: string[] = []
@@ -120,4 +127,5 @@ export function pickRange(v: DateRange, iso: IsoDate): DateRange {
   return iso < v.start ? { start: iso, end: v.start } : { start: v.start, end: iso }
 }
 
+/** Whether `weekday` (0 is Sunday) is a weekend day in `locale`. */
 export const isWeekend = (weekday: number, locale: string) => weekendDays(locale).includes(weekday)
