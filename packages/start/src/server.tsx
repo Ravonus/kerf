@@ -120,7 +120,7 @@ const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
 const esc = (s: string) => s.replace(/[&<"]/g, c => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&quot;'))
 const thenable = (v: any): v is PromiseLike<unknown> => v != null && typeof v.then === 'function'
 
-/** Render passes a page may take: `timeout` is what ends a stream, and a Boundary out of passes would keep its fallback. */
+/** Render passes a page may take. Only a backstop: a render stops when its passes stop reading anything new, and `timeout` ends a stream. */
 const PASSES = 1024
 
 /** `/` → `index`, `/users/42` → `users/42`: the card path under `/_weft/og/`. */
@@ -256,7 +256,7 @@ export function createHandler(options: HandlerOptions) {
     // carries the settled part.
     const route = stateOf(r, payloadOf(r, false))
     const sent = new Set<string>()
-    const told: { r: Record<string, unknown>; b: Record<string, unknown> } = { r: {}, b: {} }
+    const told: { r: Record<string, unknown>; b: Record<string, unknown>; s?: string } = { r: {}, b: {} }
     /** Cache entries the client hasn't got. */
     const news = () => {
       const fresh = wire(scope).filter(w => !sent.has(keyOf(w[0], w[1])))
@@ -265,15 +265,20 @@ export function createHandler(options: HandlerOptions) {
     }
     /** What the client hasn't been told of the render: each thing once, or a page of chunks repeats the page. */
     const since = () => {
-      const d = pageData(s.data(), scope)
-      const changed = (from: Record<string, unknown>, seen: Record<string, unknown>) => {
+      const d = s.data()
+      const changed = <T,>(from: Record<string, T>, seen: Record<string, unknown>) => {
         const out = Object.fromEntries(Object.entries(from).filter(([k, v]) => seen[k] !== v))
         Object.assign(seen, out)
         return out
       }
-      return { r: changed(d?.r ?? {}, told.r), b: changed(d?.b ?? {}, told.b) }
+      const state = JSON.stringify(d?.s)
+      const fresh = state !== told.s
+      told.s = state
+      return { r: scrubbed(changed(d?.r ?? {}, told.r), scope), b: changed(d?.b ?? {}, told.b), ...(fresh && d?.s && { s: d.s }) }
     }
-    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
+    const shown = (e: unknown) => exec.shown(e, scope)
+    const stalled = () => options.onDiagnostic?.({ code: 'E_STREAM', severity: 'warning', message: `${path}: a render stopped reading anything new, so what's still out is left to the client. Is a query's input different on every render, a \`Date.now()\` say?` })
+    const s = renderToStream(() => <App route={route} />, { timeout: options.timeout, passes: PASSES, shown, stalled, app: { cookies: cookieJar(request) }, landing: () => `(self.$wc=self.$wc||[]).push(${json({ c: news(), ...since() })});` })
     await s.settle() // queries read outside a Boundary have nowhere to stream to
     const payload = withLevels(payloadOf(r, false), s.shell, statics, false)
     const assets = options.assets ?? {}
@@ -290,12 +295,13 @@ export function createHandler(options: HandlerOptions) {
       (assets.fonts ?? []).map(f => `<link rel="preload" as="font" type="${esc(f.type)}" href="${esc(f.href)}" crossorigin>\n`).join('') +
       // The entry's own script tag, just below, already fetches it. Above the styles: a preload found past 50 KB of CSS starts late.
       modulepreloads([...(assets.js ?? []), ...pageChunks(payload, options.chunks, saveData(request) ? [] : parts.fold, now)], assets) +
+      // A streamed page's entry is at the end of what the shell sends, so its script tag is found late.
+      (assets.entry && streaming ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') +
       styles.head +
       (options.lazy || streaming ? `<script>${capture(now)}</script>\n` : '') +
       // Dev: Vite's client (HMR) and weft's agent bridge, which transformIndexHtml adds to HTML-file apps.
       (options.dev ? '<script type="module" src="/@vite/client"></script>\n<script type="module" src="/@weft-agent.js"></script>\n' : '') +
       (assets.entry && !streaming ? `<script type="module" src="${esc(assets.entry)}"></script>\n` : '') +
-      (assets.entry && streaming ? `<link rel="modulepreload" href="${esc(assets.entry)}">\n` : '') +
       `</head>\n<body>\n<div id="app">${s.shell}</div>\n<script type="application/json" id="weft-route">${json(payload)}</script>\n` +
       (scope.form ? `<script type="application/json" id="weft-form">${json(scope.form)}</script>\n` : '') +
       // Async, and after all it reads, so it can run while the stream goes on.
@@ -406,7 +412,7 @@ export function createHandler(options: HandlerOptions) {
     let payload = payloadOf(r, true)
     if (r.levels.some(lv => statics.has(lv.id))) {
       const route = stateOf(r, payload)
-      const out = await renderToStringAsync(() => <App route={route} />, { passes: PASSES, app: { cookies: cookieJar(request) } })
+      const out = await renderToStringAsync(() => <App route={route} />, { passes: PASSES, shown: e => exec.shown(e, scope), app: { cookies: cookieJar(request) } })
       const at = out.lastIndexOf('<script type="application/json" data-weft>')
       payload = { ...withLevels(payload, at < 0 ? out : out.slice(0, at), statics, true), ...(at >= 0 && { b: JSON.parse(out.slice(at).replace(/^<[^>]*>/, '').replace(/<\/script>$/, '')) }) }
     }
@@ -834,10 +840,10 @@ const dataTags = (data: unknown, cached: Wire[]) => `<script type="application/j
 
 /** A render's data as a page may carry it: what failed says only what `exec.shown` let through. */
 function pageData(data: ReturnType<Stream['data']>, scope: Scope) {
-  if (!data) return data
-  const r = Object.fromEntries(Object.entries(data.r).map(([k, v]) => [k, v.e === undefined ? v : { e: exec.said(v.e, scope) }]))
-  return { ...data, r }
+  return data && { ...data, r: scrubbed(data.r, scope) }
 }
+
+const scrubbed = (r: Record<string, { v?: unknown; e?: string }>, scope: Scope) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.e === undefined ? v : { e: exec.said(v.e, scope) }]))
 
 /** The request's resolved queries, as the client cache seeds them (failures are left for the client to retry). */
 function wire(scope: Scope): Wire[] {

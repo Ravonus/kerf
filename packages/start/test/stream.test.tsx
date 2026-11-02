@@ -2,7 +2,8 @@
 import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
 import { Boundary, derived, resource, state } from 'weft'
-import { query } from '../src/data'
+import { renderToStringAsync } from 'weft/ssr'
+import { FnError, query } from '../src/data'
 import { createHandler, type Manifest } from '../src/server'
 
 const page = (id: string, file: string) => ({ id, file, layouts: [], pattern: id, params: [], kind: 'page' as const })
@@ -104,22 +105,179 @@ test('a failed query in production says only that it failed, on the page and in 
   expect(diagnostics.join()).toContain('relation')
 })
 
-test('a Boundary of many reads landing one at a time finishes, in a few passes', async () => {
+test('a Boundary of reads landing one at a time renders once for them, not once each', async () => {
   let renders = 0
-  const one = query({ $id: 'stream.one', run: async ({ input }: any) => { await new Promise(ok => setTimeout(ok, input % 7)); return input } } as any) as any
+  // Each reply a tick after the last, as a busy connection answers: far inside the window a render's reads land in.
+  const replies: (() => void)[] = []
+  const reply = async () => {
+    await new Promise(ok => setImmediate(ok))
+    for (const go of replies.splice(0, 1)) go()
+    if (replies.length) void reply()
+  }
+  const one = query({ $id: 'stream.one', run: async ({ input }: any) => {
+    await new Promise<void>(ok => { if (replies.push(ok) === 60) void reply() })
+    return input
+  } } as any) as any
   const Cell = (props: { n: number }) => {
     const r = one(() => props.n)
     return <li>{r.value}</li>
   }
   const Many = () => {
     renders++
-    return <ul>{Array.from({ length: 120 }, (_, n) => <Cell n={n} />)}</ul>
+    return <ul>{Array.from({ length: 60 }, (_, n) => <Cell n={n} />)}</ul>
   }
   const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Many /></Boundary></main> })
   const html = await body(await get('/'))
   expect(html).toContain('<template><ul')
   expect(html).not.toContain('$wb()')
-  expect(renders).toBeLessThan(12)
+  expect(renders).toBeLessThan(8)
+})
+
+test('a read slower than the others doesn\'t hold them back', async () => {
+  let fast = 0, slow = 0
+  const fastRead = query({ $id: 'stream.fast', run: async () => { fast = performance.now(); return 'fast' } } as any) as any
+  const slowRead = query({ $id: 'stream.slow', run: async () => { await new Promise(ok => setTimeout(ok, 120)); slow = performance.now(); return 'slow' } } as any) as any
+  const Fast = () => <p>{fastRead().value}</p>
+  const Slow = () => <p>{slowRead().value}</p>
+  const get = serve({ '/': () => <main><Boundary pending={<i>a</i>}><Fast /></Boundary><Boundary pending={<i>b</i>}><Slow /></Boundary></main> })
+  const reader = (await get('/')).body!.getReader()
+  const text = new TextDecoder()
+  let html = ''
+  while (!html.includes('>fast<')) html += text.decode((await reader.read()).value)
+  expect(html).not.toContain('>slow<')
+  expect(fast).toBeGreaterThan(0)
+  expect(slow).toBe(0)
+  await reader.cancel()
+})
+
+describe('a read that never settles down', () => {
+  let ran = 0
+  let tick = 0
+  const stamped = query({ $id: 'stream.stamped', run: async ({ input }: any) => { ran++; return input } } as any) as any
+  const Now = () => {
+    const r = stamped(++tick)
+    return <p>{r.value}</p>
+  }
+
+  test('stops after a few passes, and the Boundary is the client\'s', async () => {
+    ran = 0
+    const diagnostics: string[] = []
+    const started = Date.now()
+    const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Now /></Boundary></main> }, { onDiagnostic: (d: any) => diagnostics.push(d.message) })
+    const html = await body(await get('/'))
+    expect(ran).toBeLessThan(8)
+    expect(Date.now() - started).toBeLessThan(1000)
+    expect(html).toContain('$wb()')
+    expect(diagnostics.join()).toContain('stopped reading anything new')
+  })
+
+  test('doesn\'t cost a slow read beside it its chunk', async () => {
+    ran = 0
+    const slow = query({ $id: 'stream.beside', run: async () => { await new Promise(ok => setTimeout(ok, 150)); return 'arrived' } } as any) as any
+    const Slow = () => {
+      const r = slow()
+      return <p>{r.value}</p>
+    }
+    const get = serve({ '/': () => <main><Boundary pending={<i>a</i>}><Now /></Boundary><Boundary pending={<i>b</i>}><Slow /></Boundary></main> })
+    const html = await body(await get('/'))
+    expect(html).toContain('<template><p')
+    expect(html).toContain('arrived')
+    expect(ran).toBeLessThan(16)
+  })
+
+  test('a navigation\'s render stops too', async () => {
+    ran = 0
+    let key = 0
+    let stalled = 0
+    const Runaway = () => {
+      const k = ++key
+      const r = resource(() => new Promise<number>(ok => { ran++; setTimeout(ok, 0, k) }), { data: false })
+      return <p>{r.value}</p>
+    }
+    await renderToStringAsync(() => <Boundary pending={<i>wait</i>}><Runaway /></Boundary>, { passes: 1024, stalled: () => stalled++ })
+    expect(ran).toBeLessThan(8)
+    expect(stalled).toBe(1)
+  })
+
+  test('reads that each need the last are headway, however many there are', async () => {
+    ran = 0
+    const step = query({ $id: 'stream.step', run: async ({ input }: any) => { ran++; return input } } as any) as any
+    const Chain = (props: { n: number }) => {
+      const r = step(() => props.n)
+      return <div>{r.value === undefined ? null : props.n === 79 ? <p>end</p> : <Chain n={props.n + 1} />}</div>
+    }
+    const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Chain n={0} /></Boundary></main> })
+    const html = await body(await get('/'))
+    expect(ran).toBe(80)
+    expect(html).toContain('>end</p>')
+    expect(html).not.toContain('$wb()')
+  })
+})
+
+describe('what a failure may say in production', () => {
+  const script = (html: string, id: string) => JSON.parse(html.slice(html.lastIndexOf(`id="${id}">`) + id.length + 6).split('</script>')[0])
+  const View = (props: { data: { list: Promise<string> } }) => {
+    const Read = () => {
+      const r = resource(() => props.data.list)
+      return <p>{r.value}</p>
+    }
+    return <main><Boundary pending={<i>wait</i>} error={(e: any) => <b>{e.message}</b>}><Read /></Boundary></main>
+  }
+  const deferred = async (e: unknown) => {
+    const diagnostics: string[] = []
+    const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [page('/', '/')] }
+    const load = async () => ({ list: new Promise((_, no) => setTimeout(no, 5, e)) })
+    const handler = createHandler({ manifest, modules: { '/': { default: View, load } } as any, onDiagnostic: (d: any) => diagnostics.push(d.message) })
+    return { html: await body(await handler(new Request('http://localhost/'))), diagnostics }
+  }
+  const failure = (html: string) => Object.values(script(html, 'weft-data').r as Record<string, { e?: string }>).map(r => r.e)
+
+  test('a deferred field that rejects keeps a driver\'s text out of the HTML and the data', async () => {
+    const { html, diagnostics } = await deferred(new Error('relation "secret_table" does not exist'))
+    expect(html).not.toContain('secret_table')
+    expect(html).toContain('<template><b')
+    expect(html).toContain('Server function failed.</b></template>')
+    expect(new Set(failure(html))).toEqual(new Set(['Server function failed.']))
+    expect(diagnostics.join()).toContain('secret_table')
+  })
+
+  test('a deliberate message in a deferred field reads the same in the HTML and the data', async () => {
+    const { html } = await deferred(new FnError({ message: 'That order has closed' }, 409))
+    expect(html).toContain('That order has closed</b></template>')
+    expect(new Set(failure(html))).toEqual(new Set(['That order has closed']))
+  })
+
+  test('a plain resource, a fetcher that throws and a child that throws say as little', async () => {
+    const secret = () => new Error('password authentication failed for user "root"')
+    const Rejects = () => <p>{resource(() => Promise.reject(secret())).value}</p>
+    const Throws = () => <p>{resource((): string => { throw secret() }).value}</p>
+    const Dies = (): unknown => { throw secret() }
+    for (const Kid of [Rejects, Throws, Dies]) {
+      const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>} error={(e: any) => <b>{e.message}</b>}><Kid /></Boundary></main> })
+      const html = await body(await get('/'))
+      expect(html).not.toContain('password')
+      expect(html).toContain('Server function failed.')
+    }
+  })
+
+  test('a resource\'s own error, read with no Boundary, says as little', async () => {
+    const Own = () => {
+      const r = resource(() => Promise.reject(new Error('relation "secret_table" does not exist')))
+      return <p>{(r.error as Error)?.message}</p>
+    }
+    const html = await body(await serve({ '/': () => <main><Own /></main> })('/'))
+    expect(html).not.toContain('secret_table')
+  })
+})
+
+test('a streamed page\'s entry is preloaded above its styles, with its script after what it reads', async () => {
+  const Late = () => <p>{resource(() => new Promise<string>(ok => setTimeout(ok, 5, 'late'))).value}</p>
+  const get = serve({ '/': () => <main><Boundary pending={<i>wait</i>}><Late /></Boundary></main> }, { assets: { entry: '/e.js', js: [{ href: '/a.js' }], css: [{ href: '/s.css' }], inline: { '/s.css': 'h1{color:red}' } } })
+  const html = await body(await get('/'))
+  const preload = html.indexOf('<link rel="modulepreload" href="/e.js">')
+  expect(preload).toBeGreaterThan(0)
+  expect(preload).toBeLessThan(html.indexOf('<style'))
+  expect(html.indexOf('<script type="module" async src="/e.js">')).toBeGreaterThan(html.indexOf('id="weft-data"'))
 })
 
 test('modulepreloads come before the page\'s styles', async () => {

@@ -6,7 +6,7 @@ import * as routes from 'virtual:weft/routes'
 const writes: MutationRecord[] = []
 const observer = new MutationObserver(r => writes.push(...r))
 observer.observe(document.getElementById('app')!, { subtree: true, childList: true, attributes: true, characterData: true })
-start(routes as any).then(() => {
+start(routes as any, { eager: true }).then(() => {
   writes.push(...observer.takeRecords())
   observer.disconnect()
   ;(window as any).__weft = { misses: hydration.misses, writes: writes.length, hydrated: true }

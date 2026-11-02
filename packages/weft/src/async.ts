@@ -10,7 +10,7 @@
 // side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
 // fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-import { DEV, context, createRoot, derived, effect, getOwner, memo, onCleanup, rt, state, untrack, watch, type State } from './index'
+import { DEV, context, createRoot, derived, effect, flush, getOwner, memo, onCleanup, rt, state, untrack, watch, type SsrData, type State } from './index'
 import { keys, nextKey, under } from './keys'
 
 export const timing = { showAfter: 150, hold: 400 }
@@ -44,6 +44,9 @@ const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
 /** While a Boundary's `pending` renders: the resources it's waiting for (weft/shape). */
 export const waiting = context<Tracked[] | undefined>(undefined)
 
+/** A server render's: `shown` is a failure as a page may show it, and `got` counts the resources this pass has values for. */
+type Pass = typeof rt & { shown?: (e: unknown) => unknown; got?: number }
+
 const thenable = (v: any): v is PromiseLike<any> => v != null && typeof v.then === 'function'
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
@@ -61,6 +64,8 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
   const version = state(0)
   const refresh = () => void version.value++
   boundaries.use?.add({ first, err: error, refresh, shape: options.shape })
+  const pass = rt as Pass
+  const shown = pass.shown ?? ((e: unknown) => e) // kept: a fetch fails after its pass has ended
 
   const settle = (v: T) => {
     value.value = v
@@ -99,7 +104,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
         const out = untrack(() => fetcher(new AbortController().signal))
         if (thenable(out)) {
           pending.value = true
-          const done = Promise.resolve(out).then(v => record({ v }), e => record({ e: message(e) }))
+          const done = Promise.resolve(out).then(v => record({ v }), e => record({ e: message(shown(e)) }))
           rt.flight?.set(key, done)
           rt.wait?.push(done)
           if (!boundaries.use) rt.top?.push(done)
@@ -108,6 +113,7 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
           record({ v: out })
         }
       } catch (e) {
+        e = shown(e)
         fail(e)
         record({ e: message(e) })
       }
@@ -142,6 +148,8 @@ export function resource<T>(fetcher: (signal: AbortSignal) => Promise<T> | T, op
     )
     onCleanup(() => ctrl?.abort())
   }
+
+  if (rt.server && pass.got !== undefined && !untrack(() => pending.value)) pass.got++
 
   return {
     get value() { return value.value },
@@ -181,18 +189,19 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
   })
 
   const key = keys.on ? nextKey() : undefined
-  const data = rt.data
-  const was = key !== undefined && !rt.server ? data?.b[key] : undefined
-  const page = globalThis as { $wh?: Record<string, () => void> | 0 }
+  const data = rt.data as Streamed | undefined
+  let was = key !== undefined && !rt.server ? data?.b[key] : undefined
+  const page = globalThis as { $wh?: Record<string, (t?: HTMLTemplateElement) => void> | 0; $wc?: Partial<SsrData>[] }
   /** It's still coming: the fallback stays, and the content waits for its chunk, which brings the data with it. */
   let held = was === 'p' && !!data?.w && page.$wh !== 0
-  if (was === 'e') thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed')
+  const failed = () => (thrown.value = new Error(data!.r[key!]?.e ?? 'server render failed'))
+  if (was === 'e') failed()
   /** Run `fn` in the content (`c`) or fallback (`f`) scope while keys are on; fresh otherwise. */
   const scoped = <T,>(side: 'c' | 'f', fn: () => T): T => (keys.on && key !== undefined ? under(key + side + '/', fn) : fn())
 
   let content: any
   let disposeContent: (() => void) | undefined
-  const build = () => {
+  const build = (chunk?: boolean) => {
     disposeContent?.()
     list.length = 0
     const { on, hydrating } = keys
@@ -203,10 +212,15 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
         return boundaries.provide(track, () => {
           try {
             const c = props.children
-            return rt.server ? { t: rt.resolve!(c) } : keys.on ? inScope(c) : c // resolve now: lazily created resources register here
+            if (rt.server) return { t: rt.resolve!(c) } // resolve now: lazily created resources register here
+            const v = keys.on ? inScope(c) : c
+            if (!chunk || typeof v !== 'function') return v
+            const claimed = memo(v as () => unknown) // the claim ends before anything places this: read it while it lasts
+            claimed()
+            return claimed
           } catch (e) {
             if (DEV && e && typeof e === 'object' && (e as any).weft) console.error(`weft: <Boundary> caught an error in ${(e as any).weft}`)
-            thrown.value = e
+            thrown.value = rt.server ? (rt as Pass).shown?.(e) ?? e : e
             return null
           }
         })
@@ -215,7 +229,8 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       Object.assign(keys, { on, hydrating })
     }
   }
-  if (!held) build()
+  // What failed on the server isn't asked again until someone says to: the error view's retry builds it.
+  if (!held && was !== 'e') build()
 
   const show = state<'wait' | 'fallback' | 'content'>('content')
   if (rt.server) {
@@ -250,7 +265,22 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
     if (held) {
       const id = encodeURIComponent(key!)
       const waiting = (page.$wh ||= {})
-      waiting[id] = () => void (show.value = 'content') // the memo builds it, where what's built gets placed
+      // Its chunk, or none when the server gave up on it. The chunk's data is what the server rendered it from, so
+      // nothing's asked again. Built here, not in the memo: what it reads has to reach the memo.
+      waiting[id] = t => {
+        held = false
+        for (const l of page.$wc ?? []) {
+          Object.assign(data!.r, l.r)
+          Object.assign(data!.b, l.b)
+          if (l.s) Object.assign((data!.s ??= {}), l.s)
+        }
+        was = data!.b[key!]
+        if (was === 'e') failed()
+        else if (t && was === 'c' && typeof data!.w === 'function') claim(t, data!, () => build(true))
+        else build()
+        if (!untrack(() => loading.value)) show.value = 'content'
+        flush()
+      }
       onCleanup(() => void delete waiting[id])
     }
   }
@@ -282,6 +312,9 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
     return s.node
   }
 
+  /** The server's markers around the fallback, which is theirs until the chunk: claiming it without them would take them out. */
+  const marks = held ? around(encodeURIComponent(key!)) : undefined
+
   return memo(() => {
     const e = failure.value
     if (e !== undefined) {
@@ -303,11 +336,7 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
       // A shape holds its place unseen until the 150 ms are up, so showing it moves nothing (research 11 §7.4).
       const n = sideView('p', pendingView)
       if (props.shape && !rt.server) n.style.visibility = s === 'wait' ? 'hidden' : ''
-      return n
-    }
-    if (held && s === 'content') {
-      held = false
-      untrack(build)
+      return held && marks ? [marks[0], n, marks[1]] : n
     }
     if (side) {
       if (DEV && s === 'content' && side.kind === 'p') checkSwap(side.node, content)
@@ -316,6 +345,35 @@ export function Boundary(props: { pending?: any; /** What `pending="shape"` comp
     }
     return s === 'content' ? content : null
   })
+}
+
+/** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@weft/start's client). */
+type Streamed = Omit<SsrData, 'w'> & { w?: 1 | ((root: Element, fn: () => void) => void) }
+
+/** Run `fn` as a claiming pass over a chunk. In a live document, as a template's isn't: what mounts asks its nodes for a window. */
+function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {
+  const box = document.createElement('div')
+  box.append(document.importNode(t.content, true))
+  const state = rt.state
+  rt.data = data as SsrData
+  rt.state = data.s
+  Object.assign(keys, { on: true, hydrating: true, p: '', n: 0 })
+  try {
+    ;(data.w as (root: Element, fn: () => void) => void)(box, fn)
+  } finally {
+    Object.assign(keys, { on: false, hydrating: false, p: '', n: 0 })
+    rt.data = undefined
+    rt.state = state
+  }
+}
+
+function around(k: string) {
+  const w = document.createTreeWalker(document.body, 128)
+  let a: Comment | undefined
+  for (let n; (n = w.nextNode() as Comment | null); ) {
+    if (n.data === 'wb:' + k) a = n
+    else if (a && n.data === '/wb:' + k) return [a, n] as const
+  }
 }
 
 /** The border box around the elements of a rendered value (nodes, arrays of them), or undefined when it has none. */

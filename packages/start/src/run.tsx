@@ -9,7 +9,7 @@
 // the cache). Redirects from loaders and server functions navigate (at most 5 in a row); a
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
-import { drain, enter, hydrate, level as staticLevel, wake } from 'weft/dom'
+import { drain, enter, hydrate, hydration, level as staticLevel, wake } from 'weft/dom'
 import { flush } from 'weft'
 import { setHead } from 'weft/head'
 import { applyMatches, client, createRouteState, peers, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
@@ -51,6 +51,15 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   for (const l of (globalThis as any).$wc ?? []) {
     Object.assign(data.r, l.r)
     Object.assign(data.b, l.b)
+  }
+  // What a Boundary still out claims its chunk with, once it lands: a claim like this one, of nodes that came after it.
+  if (data?.w) data.w = (root: Element, fn: () => void) => {
+    for (const el of root.querySelectorAll('[wk]')) hydration.registry.set(el.getAttribute('wk')!, el)
+    try {
+      fn()
+    } finally {
+      hydration.registry.clear()
+    }
   }
   hydrate(() => <App route={route} />, container, { data })
   client.route = route

@@ -31,6 +31,25 @@ let writeKeys = true
 // inside an island, on again in the island's slot.
 let quiet = false
 
+/** Passes in a row that read nothing new before a render stops waiting: a read whose key changes each pass never lands in the next. */
+const STALLED = 3
+
+/** Whether a render's still getting somewhere, by how many resources each pass had values for. */
+function headway(first: number) {
+  let most = first
+  let idle = 0
+  return {
+    get idle() { return idle },
+    pass(got: number) {
+      if (got > most) {
+        most = got
+        idle = 0
+      } else idle++
+      return idle < STALLED
+    },
+  }
+}
+
 export interface RenderOptions {
   /** Emit hydration keys for `hydrate()` (default true). */
   hydratable?: boolean
@@ -41,6 +60,10 @@ export interface RenderOptions {
    * app renders no `<head>`, the output is wrapped in a minimal document that has them.
    */
   head?: HeadOptions
+  /** A failure as the page may show it. A read's error reaches the HTML and the page data through this. */
+  shown?: (e: unknown) => unknown
+  /** The render stopped waiting because its passes stopped getting anywhere. */
+  stalled?: () => void
 }
 
 /** Render `code` (usually `() => <App />`) to HTML now. Effects and watchers don't run on the server. */
@@ -49,14 +72,17 @@ export function renderToString(code: () => unknown, options: RenderOptions = {})
   return options.head ? withHead(html, options.head) : html
 }
 
-/** Render, wait for the resources it started, and render again until none is pending (at most `passes`). */
+/** Render, wait for the resources it started, and render again until none is pending or that stops getting anywhere (at most `passes`). */
 export async function renderToStringAsync(code: () => unknown, options: RenderOptions & { passes?: number } = {}): Promise<string> {
   const cache: SsrData['r'] = {}
   const flight = new Map<string, Promise<unknown>>()
+  let way: ReturnType<typeof headway> | undefined
   for (let n = 1; ; n++) {
     const wait: Promise<unknown>[] = []
     const html = pass(code, options, cache, wait, flight)
-    if (!wait.length || n >= (options.passes ?? 10)) return options.head ? withHead(html, options.head) : html
+    const going = way ? way.pass(rt.got!) : !!(way = headway(rt.got!))
+    if (!going) options.stalled?.()
+    if (!wait.length || !going || n >= (options.passes ?? 10)) return options.head ? withHead(html, options.head) : html
     await Promise.all(wait)
   }
 }
@@ -81,10 +107,10 @@ export interface Stream {
 
 /**
  * The swap: the template before this script (or `t`) replaces the nodes between its key's markers. No key: drop every
- * marker. A Boundary the client already runs is in `$wh` with what to do instead: its template goes, and it builds its
- * own content. `$wh` is 0 once the stream is over.
+ * marker. A Boundary the client already runs is in `$wh` with what to do instead: it gets the template, and claims its
+ * content from that. `$wh` is 0 once the stream is over.
  */
-export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k&&h&&h[k]){n=h[k];delete h[k];t=d.currentScript;t&&t.previousElementSibling.remove();return n()}if(!k){self.$wh=0;for(n in h)h[n]()}if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();b.replaceWith(t.content);a.remove();t.remove()}`
+export const SWAP = `$wb=function(k,t){var d=document,h=self.$wh,w=d.createTreeWalker(d.body,128),a,b,n,r=[];if(k&&h&&h[k]){n=h[k];delete h[k];t=t||d.currentScript.previousElementSibling;t.remove();return n(t)}if(!k){self.$wh=0;for(n in h)h[n]()}if(k)t=t||d.currentScript.previousElementSibling;while(n=w.nextNode()){if(!k){if(/^\\/?wb:/.test(n.data))r.push(n)}else if(n.data=='wb:'+k)a=n;else if(n.data=='/wb:'+k){b=n;break}}r.forEach(function(n){n.remove()});if(!a||!b)return;while(a.nextSibling!=b)a.nextSibling.remove();b.replaceWith(t.content);a.remove();t.remove()}`
 
 /**
  * Render with streaming: `shell` now, then a chunk per Boundary whose resources resolve, re-rendering after each
@@ -98,12 +124,14 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
   let wait: Promise<unknown>[] = []
   let top: Promise<unknown>[] = []
   let last: SsrData | null = null
+  let got = 0
   const run = () => {
     html.clear()
     wait = []
     top = []
     const out = pass(code, options, cache, wait, flight, html, top)
     last = out.data
+    got = rt.got!
     return out.html
   }
   const pending = () => Object.keys(last?.b ?? {}).filter(k => last!.b[k] === 'p')
@@ -111,18 +139,21 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
     const deadline = Date.now() + (options.timeout ?? 10_000)
     let open = new Set(pending())
     let defined = false
+    const way = headway(got)
     for (let n = 1; open.size && wait.length && n < (options.passes ?? 50); n++) {
       const left = deadline - Date.now()
       if (left <= 0) break
       let timer: ReturnType<typeof setTimeout> | undefined
       const late = await Promise.race([
-        Promise.race(wait).then(() => false),
+        // Past a pass that got nowhere: what's left has to land too, so a runaway read isn't why a slow one is given up on.
+        (way.idle ? Promise.all(wait) : Promise.race(wait)).then(() => false),
         new Promise<boolean>(ok => (timer = setTimeout(ok, left, true))),
       ])
       clearTimeout(timer)
       if (late) break
       await new Promise(ok => setTimeout(ok, 0)) // fetches that settle together go out together
       run()
+      const going = way.pass(got)
       let out = ''
       let first = true
       for (const k of [...open]) {
@@ -136,6 +167,10 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
       }
       for (const k of pending()) open.add(k) // nested Boundaries inside content that just arrived
       if (out) yield out
+      if (!going) {
+        options.stalled?.()
+        break
+      }
     }
     if (open.size) yield `<script>${defined ? '' : SWAP + ';'}${options.landing?.() ?? ''}$wb()</script>` // what's left keeps its fallback
   }
@@ -145,6 +180,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
     data: () => (last && (Object.keys(last.r).length || Object.keys(last.b).length || last.s) ? last : null),
     async settle() {
       const deadline = Date.now() + (options.timeout ?? 10_000)
+      const way = headway(got)
       for (let n = 1; top.length && n < (options.passes ?? 50); n++) {
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = await Promise.race([
@@ -154,6 +190,7 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         clearTimeout(timer)
         if (late) return
         stream.shell = run()
+        if (!way.pass(got)) return options.stalled?.()
       }
     },
   }
@@ -169,7 +206,7 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
   const prevQuiet = quiet
   quiet = false
   const data: SsrData = { r: cache, b: {} }
-  Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream, top })
+  Object.assign(rt, { server: true, data, wait, resolve: text, flight, stream, top, shown: options.shown, got: 0 })
   // Keys are always computed (resources and boundaries are found by them across passes); written only if hydratable.
   Object.assign(keys, { on: true, hydrating: false, p: '', n: 0 })
   writeKeys = options.hydratable !== false
@@ -183,7 +220,7 @@ function pass(code: () => unknown, options: RenderOptions, cache: SsrData['r'], 
     }, null)
   } finally {
     useApp(prevApp)
-    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream })
+    Object.assign(rt, { server: prev.server, data: prev.data, wait: prev.wait, resolve: prev.resolve, flight: prev.flight, stream: prev.stream, shown: (prev as any).shown })
     Object.assign(keys, prevKeys)
     writeKeys = prevWrite
     quiet = prevQuiet
