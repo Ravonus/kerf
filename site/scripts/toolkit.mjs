@@ -2,7 +2,7 @@
 // and the parts it draws. The words and examples are written by hand in src/toolkit; `readExamples` reads those examples'
 // own source, so the code on a page is the code running on it.
 import { createRequire } from 'node:module'
-import { join, relative } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 import { readdirSync, readFileSync } from 'node:fs'
 
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))
