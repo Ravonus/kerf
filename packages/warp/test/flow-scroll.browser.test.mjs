@@ -97,3 +97,49 @@ test('the gates hold: reduced motion, print, focus and the 120-sibling cap', asy
   expect(await timelines(page, 'many-120')).toEqual([])
   await close()
 })
+
+const ABOVE = `<div style="block-size:900px"></div>`
+const BELOW = `<div style="block-size:3000px"></div>`
+async function stage(body, { expression = 'balanced', head = '' } = {}) {
+  const context = await browser.newContext({ viewport: { width: 800, height: 700 } })
+  const page = await context.newPage()
+  await page.setContent(`<!doctype html><html data-expression="${expression}"><style>body{margin:0}${head}</style><style>${css}</style><body>${body}`)
+  await page.waitForTimeout(50)
+  return { page, close: () => context.close() }
+}
+const fixedAt = (page, id) => page.evaluate(i => { const r = document.querySelector(`#${i} i`).getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top)] }, id)
+const style = (page, id, prop) => page.evaluate(([i, p]) => getComputedStyle(document.getElementById(i))[p], [id, prop])
+const scroll = async (page, top) => { await page.evaluate(y => scrollTo({ top: y, behavior: 'instant' }), top); await page.waitForTimeout(120) }
+
+test('a fixed child sits where it asked at rest, in every family that moves', async () => {
+  const fixed = '<i style="position:fixed;top:40px;left:50px;inline-size:4px;block-size:4px"></i>'
+  const families = ['surface', 'tile', 'image', 'chart', 'row', 'item', 'heading', 'deal']
+  const attr = f => (f === 'surface' ? 'data-scope="surface"' : `data-flow="${f}"`)
+  const { page, close } = await stage(`${families.map(f => `<div ${attr(f)} id="${f}" style="block-size:60px">${fixed}</div>`).join('')}${BELOW}`)
+  await scroll(page, 0)
+  for (const f of families) expect([f, ...(await fixedAt(page, f))]).toEqual([f, 50, 40])
+  await close()
+})
+
+test('the move survives: an arriving element is still offset, then rests on none', async () => {
+  const { page, close } = await stage(`${ABOVE}<div data-scope="surface" id="card" style="block-size:300px"></div>${BELOW}`)
+  await scroll(page, 900 - 700 + 40)
+  expect(await style(page, 'card', 'translate')).not.toBe('none')
+  expect(await style(page, 'card', 'scale')).not.toBe('none')
+  await scroll(page, 700)
+  expect(await style(page, 'card', 'translate')).toBe('none')
+  expect(await style(page, 'card', 'scale')).toBe('none')
+  await close()
+})
+
+test('a component\'s own translate and scale still apply at rest, and no transition chases the scroll', async () => {
+  const head = '@layer warp.components { #card { translate: 0 -3px; scale: 1.01; transition: translate 1s, scale 1s } }'
+  const { page, close } = await stage(`<div data-scope="surface" id="card" style="block-size:300px"></div>${BELOW}`, { head })
+  await scroll(page, 0)
+  expect(await style(page, 'card', 'translate')).toBe('0px -3px')
+  expect(await style(page, 'card', 'scale')).toBe('1.01')
+  await scroll(page, 240)
+  const running = await page.evaluate(() => document.getElementById('card').getAnimations().filter(a => a.constructor.name === 'CSSTransition').length)
+  expect(running).toBe(0)
+  await close()
+})

@@ -69,6 +69,11 @@
 @property --warp-my { syntax: "<percentage>"; inherits: true;  initial-value: 50%; }
 @property --_fo     { syntax: "<number>";     inherits: false; initial-value: 1; }     /* button fill: 1 parked, 0 met */
 @property --_fr     { syntax: "<number>";     inherits: false; initial-value: 0; }     /* button fill: size */
+@property --_flow-dx  { syntax: "<length>"; inherits: false; initial-value: 0px; }      /* warp.flow's move, see the note at its keyframes */
+@property --_flow-dy  { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --_flow-sx  { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_flow-sy  { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_flow-rot { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
 @property --warp-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
@@ -1408,7 +1413,7 @@
   :where(dialog, [popover], [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"], [role="alert"], [role="status"],
     [data-scope="sheet"], [data-scope="drawer"], [data-scope="toast"], [data-scope="tour"], [data-scope="palette"], [data-scope="shell"] > [data-part="nav"],
     [data-scope="scroll-grid"], [data-scope="sortable"], [data-scope="carousel"], :has(> [data-part="spacer"]), [data-dragging], thead, [data-sticky],
-    /* a flowed element is a containing block for position: fixed, so hosts of non-top-layer fixed parts stay out */
+    /* a flowed element is a containing block for position: fixed while it moves, so hosts of non-top-layer fixed parts stay out */
     :has(> [data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"])) { --warp-flow-gate: none; }
   /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
   :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
@@ -1447,13 +1452,16 @@
       animation-timeline: view(), view();
       animation-duration: auto, auto;
       animation-timing-function: var(--warp-ref-flow-ease), linear;
-      animation-fill-mode: backwards, forwards;   /* no effect in between: no stacking context, no containing block at rest */
+      animation-fill-mode: backwards, forwards;   /* no effect in between */
       /* in by a share of cover, so it is on screen while it moves; a tall element is capped and never sits half faded.
          Out only in the exit phase, so anything resting at the top of a page stays whole; a tall one starts by 55%, while it is still seen. */
       animation-range:
         entry calc(var(--_flow-i) * var(--warp-ref-flow-step)) cover calc(min(var(--_flow-r), 340px) + var(--_flow-i) * var(--warp-ref-flow-step)),
         exit max(0%, min(100% - var(--_flow-e), 55%)) exit 100%;
       transform-origin: var(--_flow-o, 50% 50%);
+      translate: if(style(--_flow-dx: 0px) and style(--_flow-dy: 0px): revert-layer; else: var(--_flow-dx) var(--_flow-dy));
+      scale: if(style(--_flow-sx: 1) and style(--_flow-sy: 1): revert-layer; else: var(--_flow-sx) var(--_flow-sy));
+      rotate: if(style(--_flow-rot: 0deg): revert-layer; else: var(--_flow-rot));
     }
     /* a focused field never fades; a jump target arrives whole. Not through the gate: that inherits, and html is :focus-within */
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
@@ -1483,21 +1491,25 @@
     }
   } }
 
+  /* The moves animate registered properties, never translate or scale themselves. Chrome keeps an element a containing
+     block for position: fixed for as long as a scroll-driven animation names one of those, in any phase, finished or not,
+     so a fixed child would sit wrong at rest. The rule above reads these and is `none` at rest, so the block is released.
+     While an element is actually moving it still is one: a fixed child moves with it for that stretch of the scroll. */
   @keyframes warp-in-fade    { from { opacity: 0; } }
-  @keyframes warp-in-card    { from { opacity: 0; translate: 0 var(--warp-ref-flow-y); scale: var(--warp-ref-flow-s); } }
-  @keyframes warp-in-tile    { from { opacity: 0; translate: 0 calc(var(--warp-ref-flow-y) * 1.4); } }
-  @keyframes warp-in-row     { from { opacity: 0; translate: calc(var(--warp-ref-flow-x) * -1) 0; } }
-  @keyframes warp-in-item    { from { opacity: 0; translate: 0 calc(var(--warp-ref-flow-y) * 0.5); } }
-  @keyframes warp-in-chart   { from { opacity: 0; scale: 1 calc(1 - (1 - var(--warp-ref-flow-s)) * 2); } }
-  @keyframes warp-in-image   { from { opacity: 0; scale: var(--warp-ref-flow-z); clip-path: inset(var(--warp-ref-flow-clip)); } to { clip-path: inset(0); } }
-  @keyframes warp-in-heading { from { opacity: 0; translate: calc(var(--warp-ref-flow-x) * -1) 0; } }
-  @keyframes warp-in-deal    { from { opacity: 0; translate: 0 calc(var(--warp-ref-flow-y) * -0.6); rotate: calc(var(--warp-ref-flow-r) * var(--_flow-s, 1)); } }
+  @keyframes warp-in-card    { from { opacity: 0; --_flow-dy: var(--warp-ref-flow-y); --_flow-sx: var(--warp-ref-flow-s); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-tile    { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * 1.4); } }
+  @keyframes warp-in-row     { from { opacity: 0; --_flow-dx: calc(var(--warp-ref-flow-x) * -1); } }
+  @keyframes warp-in-item    { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * 0.5); } }
+  @keyframes warp-in-chart   { from { opacity: 0; --_flow-sy: calc(1 - (1 - var(--warp-ref-flow-s)) * 2); } }
+  @keyframes warp-in-image   { from { opacity: 0; --_flow-sx: var(--warp-ref-flow-z); --_flow-sy: var(--warp-ref-flow-z); clip-path: inset(var(--warp-ref-flow-clip)); } to { clip-path: inset(0); } }
+  @keyframes warp-in-heading { from { opacity: 0; --_flow-dx: calc(var(--warp-ref-flow-x) * -1); } }
+  @keyframes warp-in-deal    { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * -0.6); --_flow-rot: calc(var(--warp-ref-flow-r) * var(--_flow-s, 1)); } }
   @keyframes warp-in-value   { from { opacity: 0; translate: 0 0.4em; } }
   @keyframes warp-in-scan    { from { scale: 1 1; } }
-  @keyframes warp-out-card   { to { opacity: var(--warp-ref-flow-floor); translate: 0 calc(var(--warp-ref-flow-y) * -0.5); } }
-  @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); translate: calc(var(--warp-ref-flow-x) * 0.5) 0; } }
+  @keyframes warp-out-card   { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.5); } }
+  @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); --_flow-dx: calc(var(--warp-ref-flow-x) * 0.5); } }
   @keyframes warp-out-fade   { to { opacity: var(--warp-ref-flow-floor); } }
-  @keyframes warp-out-image  { to { opacity: var(--warp-ref-flow-floor); translate: 0 calc(var(--warp-ref-flow-y) * -0.4); } }
+  @keyframes warp-out-image  { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.4); } }
   @keyframes warp-out-none   { to { opacity: 1; } }
 
   :where([data-part="spacer"] ~ [data-part="row"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out); @starting-style { opacity: 0; } }
