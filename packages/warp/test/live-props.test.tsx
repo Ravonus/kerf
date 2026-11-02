@@ -4,7 +4,7 @@ import { state } from 'weft'
 import { flush, render } from 'weft/test'
 import { SettingRow, SettingsSection } from '../src/admin'
 import { LockedField } from '../src/collab'
-import { Accordion, Button } from '../src/index'
+import { Accordion, Button, Modal } from '../src/index'
 import { Inbox, Prejoin, ScheduledLobby } from '../src/live'
 
 const peer = { id: 'p', name: 'Kofi Mensah' } as any
