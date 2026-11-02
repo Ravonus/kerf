@@ -43,6 +43,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const islands: Record<string, (props: any) => unknown> = {}
   const island = (id: string) => islands[id] ? undefined : routes.islands![id]().then(m => { islands[id] = m.default })
   await Promise.all([...page.m.filter(m => !m.s).map(m => chunk(m.id)), ...(page.i ?? []).map(island)])
+  page.m.forEach((m, i) => { for (const k of m.d ?? []) if (!m.s) (m.data as any)[k] = deferred(page.p, i, k) })
   const route = createRouteState(page, comps)
   let bag: RoutePayload['b']
   route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined, id => Promise.resolve(island(id)))
@@ -258,6 +259,21 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     drain()
   }
   return route
+}
+
+/**
+ * A deferred field on a page that loaded with its value still out. A chunk brings what's rendered from it; this is for
+ * the render that hasn't one, a Boundary's retry or one the stream gave up on. The route has it, and only that asks.
+ */
+function deferred(path: string, level: number, key: string): PromiseLike<unknown> {
+  let got: Promise<unknown> | undefined
+  return {
+    then(ok, no) {
+      got ??= ask(new URL(path, location.href)).then(r => (r.ok ? r.json() : Promise.reject(new Error('Server function failed.')))).then((next: RoutePayload) => (next.m[level].data as any)[key])
+      got.catch(() => (got = undefined))
+      return got.then(ok, no)
+    },
+  }
 }
 
 const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal, headers: { accept: 'application/json' } })
