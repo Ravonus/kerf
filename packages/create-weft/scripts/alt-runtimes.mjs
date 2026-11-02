@@ -32,7 +32,7 @@ async function pack() {
 const version = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
 // Its own process: the installs below would otherwise wait on it on this thread.
 const server = spawn(process.execPath, [...(process.versions.deno ? ['run', '-A'] : []), fileURLToPath(new URL('./registry.mjs', import.meta.url)), tarballs], { stdio: ['ignore', 'pipe', 'inherit'] })
-const registry = await new Promise(ok => server.stdout.once('data', d => ok(d.toString().trim())))
+const registry = await new Promise(ok => { server.stdout.once('data', d => ok(d.toString().trim())) })
 
 const FLOWS = {
   // Not what this gate is for, but the hot reload checks hold for all three.
@@ -89,7 +89,7 @@ function scrubbed(runtime, dir) {
   return env
 }
 
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 async function until(what, ms, test) {
   const end = Date.now() + ms
   let last
@@ -140,7 +140,7 @@ async function run(env, cwd, [cmd, ...args]) {
   try {
     await promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26, shell: cmd.endsWith('.cmd') })
   } catch (e) {
-    throw new Error(`${cmd} ${args.join(' ')}: ${e.message}\n${e.stdout}\n${e.stderr}`.slice(-1500))
+    throw new Error(`${cmd} ${args.join(' ')}: ${e.message}\n${e.stdout}\n${e.stderr}`.slice(-1500), { cause: e })
   }
 }
 

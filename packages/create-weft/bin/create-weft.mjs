@@ -18,7 +18,7 @@ const { values, positionals } = parseArgs({
   allowNegative: true,
   options: { ui: string, db: string, layer: string, auth: boolean, 'auth-provider': string, runtime: string, config: string, pm: string, git: boolean, install: boolean, name: string, tarballs: string, yes: { ...boolean, short: 'y' }, help: { ...boolean, short: 'h' } },
 })
-const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY)
+const interactive = process.stdin.isTTY && process.stdout.isTTY
 if (values.help || positionals.length > 1 || (!positionals.length && !interactive)) {
   console.log(usage)
   process.exit(values.help ? 0 : 1)
@@ -45,7 +45,7 @@ function step(what, command, args, cwd) {
 }
 
 try {
-  const { yes, help, name, tarballs, 'auth-provider': authProvider, ...flags } = values
+  const { yes, help: _help, name, tarballs, 'auth-provider': authProvider, ...flags } = values
   if (authProvider && !['better-auth', 'custom'].includes(authProvider)) throw new Error('--auth-provider must be better-auth or custom')
   if (authProvider) flags.auth = authProvider === 'custom' ? 'custom' : true
   const where = await directory()

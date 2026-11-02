@@ -15,7 +15,7 @@ export function nativeAuthSql(db) {
   const when = { sqlite: 'date', postgres: 'timestamptz', mysql: 'datetime(3)' }[db]
   const bool = { sqlite: 'integer', postgres: 'boolean', mysql: 'boolean' }[db]
   const table = (name, columns) => `create table ${q(name)} (\n${columns.map(([c, type]) => `  ${q(c)} ${type}`).join(',\n')}\n);\n`
-  const ref = table => `references ${q(table)} (${q('id')}) on delete cascade`
+  const ref = to => `references ${q(to)} (${q('id')}) on delete cascade`
   const stamps = [['createdAt', `${when} not null`], ['updatedAt', `${when} not null`]]
   return [
     table('user', [['id', `${key} primary key`], ['name', `${text} not null`], ['email', `${key} not null unique`], ['emailVerified', `${bool} not null`], ['image', text], ...stamps]),
@@ -27,7 +27,7 @@ export function nativeAuthSql(db) {
 
 const nativeTodos = auth => {
   const use = auth ? `\n  auth: 'user',` : ''
-  const mine = auth ? ' and user_id = \${ctx.user.id}' : ''
+  const mine = auth ? ` and user_id = \${ctx.user.id}` : ''
   return `import { mutation, query } from '@weft-js/start'
 import { z } from 'zod'
 
@@ -37,7 +37,7 @@ const byId = z.object({ id: z.string() })
 export const listTodos = query({
   tags: ['todos'],${use}
   run: async ({ ctx }) => {
-    const rows = await ctx.db.sql\`select id, title, done from todos${auth ? ' where user_id = \${ctx.user.id}' : ''} order by created_at\`
+    const rows = await ctx.db.sql\`select id, title, done from todos${auth ? ` where user_id = \${ctx.user.id}` : ''} order by created_at\`
     return (rows as unknown as Todo[]).map(t => ({ ...t, done: Boolean(t.done) }))
   },
 })
@@ -48,7 +48,7 @@ export const addTodo = mutation({
   optimistic: ({ input }, cache) =>
     cache.update(listTodos, undefined, list => void list.push({ id: \`tmp:\${input.title}\`, title: input.title, done: false })),
   run: async ({ input, ctx }) => {
-    await ctx.db.sql\`insert into todos (id, title, done, created_at${auth ? ', user_id' : ''}) values (\${crypto.randomUUID()}, \${input.title}, \${false}, \${Date.now()}${auth ? ', \${ctx.user.id}' : ''})\`
+    await ctx.db.sql\`insert into todos (id, title, done, created_at${auth ? ', user_id' : ''}) values (\${crypto.randomUUID()}, \${input.title}, \${false}, \${Date.now()}${auth ? `, \${ctx.user.id}` : ''})\`
   },
 })
 
@@ -252,7 +252,7 @@ if (existsSync('.env')) process.loadEnvFile()
 
 export default defineConfig({ schema: 'prisma/schema.prisma', datasource: { url: process.env.DATABASE_URL ?? '' } })
 `,
-  'src/db/index.server.ts': `${db === 'sqlite' ? "import { mkdirSync } from 'node:fs'\n" : ''}import ${`{ ${ADAPTER[db].name} }`} from '${ADAPTER[db].pkg}'
+  'src/db/index.server.ts': `${db === 'sqlite' ? "import { mkdirSync } from 'node:fs'\n" : ''}import { ${ADAPTER[db].name} } from '${ADAPTER[db].pkg}'
 import { withWeft } from '@weft-js/db/plugin-prisma'
 import { PrismaClient } from '../generated/prisma/client'
 import { env } from '../env.server'

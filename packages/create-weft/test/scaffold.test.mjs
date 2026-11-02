@@ -22,7 +22,7 @@ function app(ui, options = {}) {
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { ui, ...options })
   const deps = Object.keys({ ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies, '@weft-js/cli': 1 })
-  for (const name of deps.filter(d => /^@weft-js\//.test(d))) {
+  for (const name of deps.filter(d => d.startsWith('@weft-js/'))) {
     mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
     symlinkSync(join(pkgs, name.replace('@weft-js/core', 'weft').replace('@weft-js/create', 'create-weft').replace('@weft-js/warp-icons', 'icons').replace('@weft-js/', '')), join(dir, 'node_modules', name), 'dir')
   }

@@ -22,7 +22,7 @@ describe('pool', () => {
     let now = 0, most = 0
     const out = await pool([30, 5, 20, 1, 10], 2, async ms => {
       most = Math.max(most, ++now)
-      await new Promise(ok => setTimeout(ok, ms))
+      await new Promise(ok => { setTimeout(ok, ms) })
       now--
       return ms * 2
     })

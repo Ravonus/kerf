@@ -12,10 +12,15 @@ import { basename, dirname, join } from 'node:path'
 import { customAuth } from './data.mjs'
 import { classes, context, loginPage, stackDeps, stackFiles, TAILWIND_CSS, TAILWIND_VITE, tailwindPackages, todosPage, VERSION } from './stack.mjs'
 
+/** What `--ui` takes. */
 export const UI = ['warp', 'headless', 'tailwind', 'none']
+/** What `--db` takes. */
 export const DB = ['sqlite', 'postgres', 'mysql', 'none']
+/** What `--layer` takes. */
 export const LAYERS = ['drizzle', 'prisma', 'native']
+/** What `--runtime` takes. */
 export const RUNTIMES = ['node', 'bun', 'deno']
+/** What `--config` takes. */
 export const CONFIGS = ['ts', 'json', 'yaml']
 
 
@@ -68,7 +73,10 @@ function configFile(format, { ui, label, runtime, layer }) {
   }
 }
 
-/** The files for an app, as `{ path: text }`. */
+/**
+ * The files for an app, as `{ path: text }`.
+ * @param {{ ui?: string, name?: string, version?: string, db?: string, layer?: string, auth?: boolean | 'custom', runtime?: string, config?: string, secret?: string }} [options]
+ */
 export function template({ ui = 'warp', name = 'weft-app', version = VERSION, db = 'none', layer = 'drizzle', auth = false, runtime = 'node', config = 'ts', secret = randomBytes(32).toString('base64') } = {}) {
   if (!UI.includes(ui)) throw new Error(`--ui must be one of ${UI.join(', ')} (got "${ui}")`)
   if (!DB.includes(db)) throw new Error(`--db must be one of ${DB.join(', ')} (got "${db}")`)
@@ -111,7 +119,7 @@ export function template({ ui = 'warp', name = 'weft-app', version = VERSION, db
   if (ui !== 'warp') files['src/app.css'] = css(ui)
   if (ui === 'tailwind') files['vite.config.ts'] = TAILWIND_VITE
   if (db !== 'none') {
-    Object.assign(files, stackFiles({ db, auth: auth === true, name, secret, layer }), { 'src/routes/todos/index.tsx': todosPage(ui, auth === true) })
+    Object.assign(files, stackFiles({ db, auth: auth === true, name, secret, layer }), { 'src/routes/todos/index.tsx': todosPage(ui) })
     if (auth === true) files['src/routes/login.tsx'] = loginPage(ui)
     if (auth === 'custom') Object.assign(files, { 'src/auth.server.ts': customAuth, 'src/context.server.ts': context(true) })
   }

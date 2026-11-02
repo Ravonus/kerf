@@ -7,7 +7,7 @@
 //   node packages/create-weft/scripts/local.mjs refresh [dir] [--packed]   that, then put the new tarballs in an app
 //                                                                          (--packed: the store's as they are, no pack)
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'

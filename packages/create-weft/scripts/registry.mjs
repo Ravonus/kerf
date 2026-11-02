@@ -66,7 +66,7 @@ export function serveRegistry(dir, port = 0) {
     const { tar, pkg } = manifest(file)
     packages.set(pkg.name, { file, pkg, tgz: withManifest(tar, pkg) })
   }
-  const server = createServer(async (req, res) => {
+  const answer = async (req, res) => {
     try {
       if (req.method === 'PUT') {
         await accept(req)
@@ -89,8 +89,9 @@ export function serveRegistry(dir, port = 0) {
     } catch (e) {
       res.writeHead(502).end(String(e.message))
     }
-  })
-  return new Promise(ok => server.listen(port, '127.0.0.1', () => ok({ url: `http://localhost:${server.address().port}/`, close: () => server.close() })))
+  }
+  const server = createServer((req, res) => void answer(req, res))
+  return new Promise(ok => { server.listen(port, '127.0.0.1', () => ok({ url: `http://localhost:${server.address().port}/`, close: () => server.close() })) })
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

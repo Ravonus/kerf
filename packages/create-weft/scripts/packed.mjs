@@ -6,10 +6,10 @@
 import { execFile, execFileSync, spawn } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { createServer } from 'node:http'
-import { promisify } from 'node:util'
+import { promisify, parseEnv } from 'node:util'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { parseEnv } from 'node:util'
+
 import { scaffold } from '../src/index.mjs'
 import { fnId } from '../../start/src/vite.mjs'
 import { hostPlatform } from '../../weft/scripts/platform-package.mjs'
@@ -22,7 +22,7 @@ if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
 const root = resolve(process.argv.slice(2).find(a => !a.startsWith('--')))
 if (existsSync(root) && readdirSync(root).length) throw new Error(`${root} is not empty`)
 const run = (cmd, args, cwd, env) => promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26 })
-const sh = (cmd, args, cwd) => run(cmd, args, cwd, process.env)
+const shell = (cmd, args, cwd) => run(cmd, args, cwd, process.env)
 
 const tarballs = packWithAddon(join(root, 'tgz'))
 const hostAddon = `compiler-${hostPlatform().name}`
@@ -208,7 +208,7 @@ function mockStripe(port, sessions) {
       res.end(JSON.stringify({ id: 'cs_1', url: `http://127.0.0.1:${port}/hosted` }))
     })
   })
-  return new Promise(ok => server.listen(port, '127.0.0.1', () => ok(server)))
+  return new Promise(ok => { server.listen(port, '127.0.0.1', () => ok(server)) })
 }
 
 /** PATH for an app with no Rust: only the tools the gate calls, so `cargo` can't be found by anything it runs. */
@@ -216,12 +216,12 @@ function withoutRust() {
   const bin = join(root, 'no-rust-bin')
   mkdirSync(bin)
   for (const tool of ['node', 'npm', 'npx', 'ffmpeg', 'ffprobe']) {
-    const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
+    const found = execFileSync('shell', ['-c', `command -v ${tool} || true`], { encoding: 'utf8' }).trim()
     if (found) symlinkSync(found, join(bin, tool))
   }
   const PATH = [bin, '/usr/bin', '/bin'].join(':')
   for (const tool of ['cargo', 'rustc', 'rustup']) {
-    const found = execFileSync('sh', ['-c', `command -v ${tool} || true`], { encoding: 'utf8', env: { PATH } }).trim()
+    const found = execFileSync('shell', ['-c', `command -v ${tool} || true`], { encoding: 'utf8', env: { PATH } }).trim()
     if (found) throw new Error(`${found} is on the no-Rust PATH: this gate needs a machine where it's elsewhere`)
   }
   return { ...process.env, PATH }
@@ -238,7 +238,7 @@ async function devServed(app, weft, port, env, log) {
     let status
     for (let i = 0; i < 120 && status !== 200; i++) {
       status = await fetch(`http://localhost:${port}/`).then(r => r.status, () => undefined)
-      if (status !== 200) await new Promise(ok => setTimeout(ok, 250))
+      if (status !== 200) await new Promise(ok => { setTimeout(ok, 250) })
     }
     if (status !== 200) throw new Error(`weft dev answered ${status}`)
     log('weft dev: pass')
@@ -266,15 +266,15 @@ const apps = [
 ]
 const clients = {}
 
-await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ name, dir, options, theme, add, css, media, rust, pay, wasm }, i) => {
+await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ name, dir, options, theme: themed, add, css, media, rust, pay, wasm }, i) => {
   const app = join(root, dir ?? name)
   const log = text => console.log(`[packed] ${name}: ${text}`)
   const sh = (cmd, args, cwd) => run(cmd, args, cwd, rust ? process.env : noRust)
   scaffold(app, options)
   writeFileSync(join(app, 'package.json'), JSON.stringify(pin(JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')), tarballs), null, 2))
-  if (theme) {
+  if (themed) {
     const file = join(app, 'weft.config.ts')
-    writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${theme})`))
+    writeFileSync(file, readFileSync(file, 'utf8').replace('warp()', `warp(${themed})`))
   }
 
   await sh('npm', ['install', '--silent'], app)
@@ -314,9 +314,9 @@ await pool(apps.filter(a => !only || only.includes(a.name)), jobs(), async ({ na
   const server = spawn(process.execPath, [...(pay ? ['--import', './no-network.mjs'] : []), '.output/server/index.mjs'], { cwd: app, env: { ...process.env, ...env, PORT: String(port), BETTER_AUTH_URL: `http://localhost:${port}` }, stdio: 'ignore' })
   try {
     let status
-    for (let i = 0; i < 80 && !status; i++) {
+    for (let tries = 0; tries < 80 && !status; tries++) {
       status = await fetch(`http://localhost:${port}/`).then(r => r.status, () => undefined)
-      if (!status) await new Promise(ok => setTimeout(ok, 250))
+      if (!status) await new Promise(ok => { setTimeout(ok, 250) })
     }
     if (status !== 200) throw new Error(`${name}: the built server answered ${status}`)
     log('built server: pass')
@@ -341,11 +341,11 @@ const browsers = join(pkgs, 'multiplayer/scripts/e2e-browsers.mjs')
 writeFileSync(join(root, 'tgz/tarballs.json'), JSON.stringify(tarballs))
 // A person's path through the bin: the install, then the AGENTS.md of the weft that install brought.
 const person = join(root, 'person')
-await sh('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'npm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
+await shell('node', [join(pkgs, 'create-weft/bin/create-weft.mjs'), person, '--yes', '--pm', 'npm', '--install', '--no-git', '--tarballs', join(root, 'tgz')], root)
 if (!readFileSync(join(person, 'AGENTS.md'), 'utf8').includes('weft check')) throw new Error('create-weft left no AGENTS.md')
 console.log('[packed] create-weft: AGENTS.md at scaffold: pass')
-await sh('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
-await sh('node', [browsers, 'run', room, '--runtimes', 'node'], root)
-await sh('node', [browsers, 'run', room, '--runtimes', 'node', '--via', 'webrtc'], root)
+await shell('node', [browsers, 'prepare', room, '--tarballs', join(root, 'tgz')], root)
+await shell('node', [browsers, 'run', room, '--runtimes', 'node'], root)
+await shell('node', [browsers, 'run', room, '--runtimes', 'node', '--via', 'webrtc'], root)
 console.log('[packed] room: two browsers: pass')
 console.log('[packed] all pass')

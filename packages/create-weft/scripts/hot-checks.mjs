@@ -43,7 +43,7 @@ export function prepare(app) {
   for (const file in FILES) writeFileSync(join(app, file), FILES[file])
 }
 
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 async function until(what, ms, test) {
   const end = Date.now() + ms
   let last
@@ -79,7 +79,7 @@ export async function hotChecks(app, base, log, pass) {
     const page = await chrome.page(`${base}/hot`)
     await until('the page hydrates', 60000, async () => {
       await page.eval(`document.querySelector('#c')?.click()`)
-      return /[1-9]$/.test(await page.eval(`${text('c')}`))
+      return /[1-9]$/.test(await page.eval(text('c')))
     })
     const loaded = await page.eval(`performance.getEntriesByType('resource').map(r => r.name)`)
     const twice = loaded.filter(u => /\.[jt]sx?(\?|$)/.test(u)).map(u => u.replace(/\?.*$/, '')).filter((u, i, all) => all.indexOf(u) !== i)

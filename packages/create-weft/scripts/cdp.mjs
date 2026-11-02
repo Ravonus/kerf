@@ -21,7 +21,7 @@ export async function launch(exe = findChrome()) {
   /** Chrome and its profile go whenever the caller is done with them, or a launch didn't get that far. */
   const stop = async () => {
     chrome.kill('SIGKILL')
-    await new Promise(ok => setTimeout(ok, 300))
+    await new Promise(ok => { setTimeout(ok, 300) })
     rmSync(profile, { recursive: true, force: true, maxRetries: 5 })
   }
   let ws

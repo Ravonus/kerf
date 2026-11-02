@@ -1,13 +1,13 @@
 // The `--db` and `--auth` part of a scaffold (research 28 §6): a database, a todo app on it, and with `--auth` a
 // sign-in/sign-up flow and a guarded `/todos`. Pinned versions, so a scaffold builds what the matrix tested.
 import { readFileSync } from 'node:fs'
+import { nativeAuthSql, nativeFiles, prismaAdapterPackage, prismaAuthModels, prismaFiles } from './data.mjs'
 
 const VERSIONS = {
   '@types/node': '26.6.5',
   '@t3-oss/env-core': '0.13.11', 'better-auth': '1.7.14', 'drizzle-kit': '0.31.11', 'drizzle-orm': '0.45.4', 'drizzle-zod': '0.8.3', kysely: '0.29.7', mysql2: '3.24.6', postgres: '4.0.0', zod: '4.6.7',
   prisma: '7.10.1', '@prisma/client': '7.10.1', '@prisma/adapter-libsql': '7.10.1', '@prisma/adapter-pg': '7.10.1', '@prisma/adapter-mariadb': '7.10.1',
 }
-import { nativeAuthSql, nativeFiles, prismaAdapterPackage, prismaAuthModels, prismaFiles } from './data.mjs'
 
 const pin = (...names) => Object.fromEntries(names.map(n => [n, VERSIONS[n]]))
 
@@ -16,6 +16,7 @@ const drivers = db => (db === 'postgres' ? ['postgres'] : db === 'mysql' ? ['mys
 /** Every scaffold pins what it shipped with: this package and weft's others go out at one version. */
 export const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
 
+/** The pinned dependencies of a database, data layer and auth choice. */
 export function stackDeps({ db, auth, layer = 'drizzle', version = VERSION }) {
   if (db === 'none') return { deps: {}, dev: {} }
   const base = pin('@t3-oss/env-core', 'zod', ...(auth ? ['better-auth'] : []))
@@ -40,6 +41,7 @@ const authTablesFile = db => ({
   mysql: () => `import { boolean, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core'\n${authTablesMysql()}`,
 }[db]())
 
+/** The files of a database, data layer and auth choice, as `{ path: text }`. */
 export function stackFiles({ db, auth, name, secret, layer = 'drizzle' }) {
   const shared = {
     '.env': envFile({ db, auth, name, secret }),
@@ -231,6 +233,7 @@ export const verification = pgTable('verification', {
 })
 `
 
+/** `src/context.server.ts`: the database on `ctx`, and the session with auth. */
 export const context = auth => auth
   ? `import { session } from '@weft-js/start/auth'
 import auth from '#/auth.server'
@@ -362,11 +365,14 @@ export default function TodosLayout(props: RouteProps) {
 `
 
 // Tailwind: the same files `weft add tailwind` writes (packages/cli/src/tailwind.mjs, held equal by a test).
+/** What `--ui tailwind` adds, pinned. */
 export const tailwindPackages = { tailwindcss: '4.3.3', '@tailwindcss/vite': '4.3.3' }
+/** `vite.config.ts` for `--ui tailwind`. */
 export const TAILWIND_VITE = `import tailwindcss from '@tailwindcss/vite'
 
 export default { plugins: [tailwindcss()] }
 `
+/** The stylesheet for `--ui tailwind`. */
 export const TAILWIND_CSS = `@import "tailwindcss";
 `
 const tw = {
@@ -398,7 +404,8 @@ export const controls = ui => ui === 'warp'
       error: box => `{${box}.value && <p role="alert">{${box}.value}</p>}`,
     }
 
-export function todosPage(ui, auth) {
+/** `/todos`: the list on the server functions, written for this `--ui`. */
+export function todosPage(ui) {
   const c = controls(ui)
   return `import type { Meta } from '@weft-js/start'
 import { Boundary, state } from '@weft-js/core'
@@ -443,6 +450,7 @@ export default function Todos() {
 `
 }
 
+/** `/login`: sign in and sign up, written for this `--ui`. */
 export function loginPage(ui) {
   const c = controls(ui)
   return `import { redirect, type LoadArgs, type Meta } from '@weft-js/start'
