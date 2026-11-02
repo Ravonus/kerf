@@ -5,6 +5,7 @@ import { Moved } from '../../components/Moved'
 function movedTo(slug: string) {
   const md = slug.endsWith('.md') ? '.md' : ''
   const page = md ? slug.slice(0, -3) : slug
+  if (!page) return '/learn' // /docs itself, which the rest-route matches as well as index.tsx
   return page === 'getting-started' ? `/learn/installation${md}` : `/reference/${page}${md}`
 }
 
