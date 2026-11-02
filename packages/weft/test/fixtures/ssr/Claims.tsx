@@ -25,4 +25,6 @@ function Item({ l }: { l: string }) {
 
 export const Keyed = ({ rows }: { rows: { id: any; href: string; t: string }[] }) => <div>{rows.map(r => <a key={r.id} href={r.href}>{r.t}</a>)}</div>
 
-export const Holes = ({ a, b }: { a: { value: string }; b: { value: string } }) => <p>{a.value}{b.value}<u>c</u></p>
+export const Holes = ({ on, b }: { on: { value: boolean }; b: { value: string } }) => <p>{on.value ? <>one<i>i</i>{b.value}</> : null}<u>c</u></p>
+
+export const Beside = ({ on }: { on: () => void }) => <section>{<>x<Row title="a" on={on} /></>}<b>b</b><Row title="c" on={on} /></section>

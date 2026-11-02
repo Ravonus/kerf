@@ -147,15 +147,17 @@ test('keys that read the same, and objects with no key to speak of, claim by pla
   expect(links(c)).toEqual(rows().map(r => [r.t, r.href]))
 })
 
-test('an empty hole takes nothing from the full hole before it', () => {
+test('an empty hole in a range takes nothing from what is before it', () => {
   const b = state('')
-  const c = put(renderToString(() => <Server.Holes a={{ get value() { return 'x' } }} b={{ value: '' }} />))
-  expect(c.textContent).toBe('xc')
-  hydrate(() => <Client.Holes a={{ get value() { return 'x' } }} b={b} />, c)
-  expect(c.textContent).toBe('xc')
+  const on = { value: true }
+  const c = put(renderToString(() => <Server.Holes on={on} b={{ value: '' }} />))
+  const i = c.querySelector('i')
+  hydrate(() => <Client.Holes on={on} b={b} />, c)
+  expect(c.textContent).toBe('oneic')
+  expect(c.querySelector('i')).toBe(i)
   b.value = 'y'
   flush()
-  expect(c.textContent).toBe('xyc')
+  expect(c.textContent).toBe('oneiyc')
 })
 
 test('a list that moved on since the server rendered puts its rows in order, with their attributes', async () => {
@@ -182,6 +184,16 @@ test('a key miss writes what the server would have: attributes and handlers, and
   expect(on).toHaveBeenCalledOnce()
   expect(c.querySelector('span')).toBe(after) // what's after the miss still claims
   expect(warn.mock.calls.some(a => /1 hydration miss\(es\), first wk=/.test(a[0]))).toBe(true)
+})
+
+test('a miss in one hole ends with it: the next hole still claims', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const c = put(renderToString(() => <Server.Beside on={() => {}} />))
+  const [first, last] = c.querySelectorAll('button')
+  first.removeAttribute('wk')
+  hydrate(() => <Client.Beside on={() => {}} />, c)
+  expect(hydration.misses).toBe(1)
+  expect(c.querySelectorAll('button')[1]).toBe(last)
 })
 
 describe('a view of a getter', () => {
