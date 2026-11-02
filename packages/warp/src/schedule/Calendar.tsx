@@ -1,6 +1,6 @@
 import { GlobeIcon, LeftIcon, PlusIcon, RightIcon } from '@weft/icons'
-import { allDayBars, announce, at, calendarDrag, clock, clockRange, conflicts, countByDay, dateOf, daySegments, dayState, dow, dstShift, eventKey, eventName, eventsOn, fmt, gridKey, indicator, isoWeek, isWeekend, laneKey, layoutDay, longDuration, minuteOf, monthCells, monthStart, monthWeeks, moveKey, nextIndex, overflow, popover, shownIn, slotOf, slotTimes, stepDate, toZone, uid, viewDays, weekStart, weekdays, ymd, zoneCity, type CalEvent, type CalView, type DragPreview, type IsoDate, type DaySegment, type Slot } from '@weft/warp-core'
-import { derived, flush, onMount, state, untrack, watch, type State } from 'weft'
+import { allDayBars, announce, at, edges, calendarDrag, clock, clockRange, conflicts, countByDay, dateOf, daySegments, dayState, dow, dstShift, eventKey, eventName, eventsOn, fmt, gridKey, indicator, isoWeek, isWeekend, laneKey, layoutDay, longDuration, minuteOf, monthCells, monthStart, monthWeeks, moveKey, nextIndex, overflow, popover, shownIn, slotOf, slotTimes, stepDate, toZone, uid, viewDays, weekStart, weekdays, ymd, zoneCity, type CalEvent, type CalView, type DragPreview, type IsoDate, type DaySegment, type Slot } from '@weft/warp-core'
+import { derived, flush, onCleanup, onMount, state, untrack, watch, type State } from 'weft'
 import { Button } from '../Button'
 import { Modal } from '../Modal'
 import { LiveStatus, type LiveState } from '../parts'
@@ -18,6 +18,7 @@ import { MoveSheet } from './MoveSheet'
 import { YearView } from './YearView'
 import '@weft/warp-core/styles/components/tabs.css'
 import '@weft/warp-core/styles/app/calendar.css'
+import '@weft/warp-core/styles/layout/edges.css'
 
 export type RecurrenceScope = 'this' | 'following' | 'all'
 export type EventChange = { start: string; end: string; resource?: string; scope?: RecurrenceScope }
@@ -46,12 +47,16 @@ export type CalendarProps = {
   hourCycle?: string
   firstDayOfWeek?: number
   snap?: number
-  /** Working hours; the rest of the day is banded. */
+  /**
+   * Working hours as minutes from midnight, `[start, end]`: `[540, 1020]` is 09:00 to 17:00 (not `[9, 17]`). The rest of
+   * the day is banded, and Week and Day open scrolled to just before `start`. 08:00 to 18:00 without it.
+   */
   workingHours?: [number, number]
   /** The toolbar LiveStatus. */
   live?: LiveState
   /** Timeline rows; events point at one with `resource`. */
   resources?: Resource[]
+  /** The timeline's span, in minutes from midnight like `workingHours`: `[480, 1080]` (08:00 to 18:00) without it. */
   timeline?: [number, number]
   /** Year view's counts; from `events` without it. */
   counts?: Record<string, number>
@@ -295,7 +300,9 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
   let cols: HTMLDivElement | undefined
   let scroller: HTMLDivElement | undefined
   use(calendarDrag, () => cols, () => c.dragOpts())
-  onMount(() => { if (scroller && cols) scroller.scrollTop = (cols.offsetHeight / 24) * 7.6 })
+  // open half an hour before the working day. The root bounds its own height (calendar.css), so this scrolls even when
+  // no parent gives the calendar a height
+  onMount(() => { if (scroller && cols) scroller.scrollTop = (cols.offsetHeight / 1440) * Math.max(0, (c.p.workingHours ?? [480, 1080])[0] - 30) })
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { days: days.value, next: (k, id) => eventKey(k, id, list.value, getComputedStyle(e.target as Element).direction === 'rtl') })
   const onChip = (e: MouseEvent) => { const el = (e.target as Element).closest?.<HTMLElement>('[data-id]'); if (el) c.openPopover(el.dataset.id!, el) }
   return (
@@ -309,15 +316,15 @@ function TimeGrid({ c, count }: { c: Ctx; count: number }) {
         {days.value.map((d, i) => <div key={d} data-part="allday-cell" style={`grid-column:${i + 2};grid-row:1 / span ${Math.max(1, ...bars.value.map(b => b.row + 1))}`}></div>)}
         {bars.value.map(b => <div key={b.id} data-part="chip" data-cal={b.event.cal ?? 1} data-id={b.id} role="gridcell" tabindex={stop.value === b.id ? '0' : '-1'} aria-label={c.name(b.event)} style={`${tint(b.event.cal)};grid-column:${b.col + 2} / span ${b.span};grid-row:${b.row + 1}`}>{b.event.title}</div>)}
       </div>
-      <div ref={(n: any) => (scroller = n)} data-part="scroller">
-        <div ref={(n: any) => (cols = n)} data-part="cols" role="row">
-          <div data-part="gutter" aria-hidden="true">
-            {Array.from({ length: 23 }, (_, i) => i + 1).map(h => <span key={h} data-part="hour" style={`top:${hours(h * 60)}`}>{c.time(h * 60)}</span>)}
-            {nowAt.value !== null && <span data-part="now-label" style={`--_top:${hours(nowAt.value)}`}>{c.time(nowAt.value)}</span>}
+        <div ref={(n: any) => (scroller = n)} data-part="scroller">
+          <div ref={(n: any) => (cols = n)} data-part="cols" role="row">
+            <div data-part="gutter" aria-hidden="true">
+              {Array.from({ length: 23 }, (_, i) => i + 1).map(h => <span key={h} data-part="hour" style={`top:${hours(h * 60)}`}>{c.time(h * 60)}</span>)}
+              {nowAt.value !== null && <span data-part="now-label" style={`--_top:${hours(nowAt.value)}`}>{c.time(nowAt.value)}</span>}
+            </div>
+            {days.value.map(d => <Column key={d} day={d} c={c} stop={stop.value} weekend={isWeekend(dow(d), c.env.locale.value)} />)}
           </div>
-          {days.value.map(d => <Column key={d} day={d} c={c} stop={stop.value} weekend={isWeekend(dow(d), c.env.locale.value)} />)}
-        </div>
-      </div>
+          </div>
     </div>
   )
 }
@@ -335,6 +342,28 @@ function MonthGrid({ c }: { c: Ctx }) {
   const moreAt = state<HTMLElement | undefined>(undefined)
   let panel: HTMLDivElement | undefined
   use(popover, () => panel, () => ({ open: moreOpen.value, trigger: moreAt.value!, side: 'bottom' as const, align: 'start' as const, onClose: () => (moreOpen.value = false) }))
+  // The weeks share the height the calendar has (calendar.css), so a whole month is in view: a day shows the chips its
+  // row has room for, and "+N more" for the rest. Until measured, three and "+N more" (fit 4), as the server renders.
+  const fit = state(4)
+  onMount(() => {
+    const win = grid?.ownerDocument.defaultView
+    if (!grid || !win || typeof win.ResizeObserver !== 'function') return
+    const measure = () => {
+      const cell = grid!.querySelector<HTMLElement>('[role="gridcell"]')
+      if (!cell) return
+      const cs = win.getComputedStyle(cell)
+      // a phone's days draw dots that wrap in a row (calendar.css): three and "+N more", as before
+      if (cs.display !== 'grid' || cs.gridTemplateColumns.split(' ').length > 1) { fit.value = 4; return }
+      const chip = 22 // 20px chips, 2px gap
+      const room = cell.clientHeight - parseFloat(cs.paddingBlockStart) - parseFloat(cs.paddingBlockEnd) - (cell.querySelector<HTMLElement>('[aria-hidden="true"]:not([data-part])')?.offsetHeight ?? 18) - 2
+      fit.value = Math.max(1, Math.floor((room + 2) / chip))
+    }
+    const ro = new win.ResizeObserver(measure)
+    ro.observe(grid)
+    onCleanup(() => ro.disconnect())
+  })
+  /** The chips a day shows, and how many go behind "+N more" (which takes a chip's room). */
+  const shownOn = (list: CalEvent[]) => { const n = list.length <= fit.value ? list.length : Math.max(0, fit.value - 1); return { chips: list.slice(0, n), more: list.length - n } }
   const openDay = (iso: string) => { c.date.set(iso); c.view.set('day'); c.say(`Day view, ${fmt(iso, { dateStyle: 'full' }, c.env.locale.value)}`) }
   const onKey = (e: KeyboardEvent) => {
     const cell = (e.target as Element).closest?.<HTMLElement>('[role="gridcell"]')
@@ -361,7 +390,7 @@ function MonthGrid({ c }: { c: Ctx }) {
     }
     openDay(cell.dataset.date!)
   }
-  const label = (iso: string, list: CalEvent[]) => `${fmt(iso, { weekday: 'long', month: 'long', day: 'numeric' }, c.env.locale.value)}, ${list.length ? `${list.length} events: ${list.map(e => e.title).join(', ')}` : 'no events'}${iso === c.env.today.value ? ', today' : ''}${list.length > 3 ? `, +${list.length - 3} more` : ''}`
+  const label = (iso: string, list: CalEvent[]) => `${fmt(iso, { weekday: 'long', month: 'long', day: 'numeric' }, c.env.locale.value)}, ${list.length ? `${list.length} events: ${list.map(e => e.title).join(', ')}` : 'no events'}${iso === c.env.today.value ? ', today' : ''}`
   return (
     <div data-part="grid" style="--warp-cal-gutter:0px;--_days:7">
       <div data-part="head" aria-hidden="true"><span></span>{heads.value.map(h => <div key={h[0]} data-part="dayhead"><span>{h[1]}</span></div>)}</div>
@@ -374,8 +403,8 @@ function MonthGrid({ c }: { c: Ctx }) {
                 <div key={x.iso} data-part="day-cell" role="gridcell" tabindex={x.iso === cursor.value ? '0' : '-1'} data-date={x.iso} data-outside={x.outside ? '' : undefined} aria-current={x.iso === c.env.today.value ? 'date' : undefined}>
                   <span class="sr">{label(x.iso, onDay(x.iso))}</span>
                   <span aria-hidden="true">{ymd(x.iso)[2]}</span>
-                  {onDay(x.iso).slice(0, 3).map(e => <span key={e.id} data-part="chip" data-cal={e.cal ?? 1} style={tint(e.cal)} aria-hidden="true">{e.title}</span>)}
-                  {onDay(x.iso).length > 3 && <button type="button" data-part="more" tabindex="-1" aria-hidden="true">+{onDay(x.iso).length - 3} more</button>}
+                  {shownOn(onDay(x.iso)).chips.map(e => <span key={e.id} data-part="chip" data-cal={e.cal ?? 1} style={tint(e.cal)} aria-hidden="true">{e.title}</span>)}
+                  {shownOn(onDay(x.iso)).more > 0 && <button type="button" data-part="more" tabindex="-1" aria-hidden="true">+{shownOn(onDay(x.iso)).more} more</button>}
                 </div>
               ))}
             </div>
@@ -409,12 +438,12 @@ function AgendaView({ c }: { c: Ctx }) {
 }
 
 /** Timeline (07 §2.5): rows of rooms or people over hours, one roving stop, the same drag on the x axis. */
-function Timeline({ c, narrow }: { c: Ctx; narrow: boolean }) {
+function Timeline({ c }: { c: Ctx }) {
   const hint = uid('tl')
   const range = derived(() => c.p.timeline ?? [480, 1080])
   const width = derived(() => range.value[1] - range.value[0])
   const slots = derived(() => Math.round(width.value / 60))
-  const marks = derived(() => Array.from({ length: slots.value }, (_, i) => range.value[0] + i * 60).filter((_, i) => !narrow || i % 2 === 0))
+  const marks = derived(() => Array.from({ length: slots.value }, (_, i) => range.value[0] + i * 60))
   const day = derived(() => c.date.value)
   const rows = derived(() => c.p.resources ?? [])
   const segs = derived(() => {
@@ -426,28 +455,38 @@ function Timeline({ c, narrow }: { c: Ctx; narrow: boolean }) {
   const stop = derived(() => { const id = c.stop.value; return (id && order.value.flat().find(x => x.id === id)?.id) || order.value.flat()[0]?.id || null })
   const nowAt = derived(() => { const n = c.now.value; return n && dateOf(n) === day.value ? minuteOf(n) : null })
   let box: HTMLDivElement | undefined
+  let scroller: HTMLDivElement | undefined
   use(calendarDrag, () => box, () => ({ ...c.dragOpts(), axis: 'x' as const, from: range.value[0], to: range.value[1] }))
+  // an hour keeps a readable width (calendar.css) and the rows scroll sideways under their sticky names: a shadow says so
+  use(edges, () => scroller)
   const onKey = (e: KeyboardEvent) => c.eventKeys(e, { resources: (c.p.resources ?? []).map(r => r.id), next: (k, id) => laneKey(k, id, order.value) })
+  // a booking carries its name, times and start; which show is its own width (calendar.css): name and times, the name
+  // (ellipsed), or only the start time, so a narrow one never stacks a letter a line
   return (
-    <div data-part="scroller">
-      <div ref={(n: any) => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey}>
-        <span aria-hidden="true"></span>
-        <div class="muted" aria-hidden="true" style={`display:grid;grid-template-columns:repeat(${marks.value.length},1fr)`}>{marks.value.map(m => <span key={m}>{c.time(m)}</span>)}</div>
-        {rows.value.map(r => (
-          <div key={r.id} role="row">
-            <div data-part="lane-label" role="rowheader"><b>{r.name}</b>{r.meta && <span class="muted">{r.meta}</span>}</div>
-            <div data-part="lane" data-resource={r.id} data-date={day.value} style={`--_slots:${slots.value}`}>
-              {lane(r.id).map(s => (
-                <div key={s.id} data-part="event" data-cal={s.event.cal ?? 1} data-short="" data-id={s.id} role="gridcell" tabindex={stop.value === s.id ? '0' : '-1'} data-state={c.moving.value?.id === s.id ? 'moving' : c.drag.value?.id === s.id ? 'dragging' : undefined} style={`${tint(s.event.cal)};--_x:${(s.s - range.value[0]) / width.value};--_w:${(s.e - s.s) / width.value};position:absolute`}>
-                  <span class="sr">{`${s.event.title}, ${r.name}, ${c.span(s.s, s.e)}`}</span><span data-part="event-title" aria-hidden="true">{s.event.title}</span>{s.e - s.s >= width.value / 5 && <span data-part="event-time" aria-hidden="true">{c.span(s.s, s.e)}</span>}
-                </div>
-              ))}
-              {nowAt.value !== null && nowAt.value >= range.value[0] && nowAt.value <= range.value[1] && <span data-part="now" aria-hidden="true" style={`--_top:0;inset-block:0;inset-inline-start:${((nowAt.value - range.value[0]) / width.value) * 100}%;inline-size:0;block-size:auto;border:0;border-inline-start:var(--warp-border-emphasis) solid var(--warp-color-sweep)`}></span>}
+    <div data-scope="edges" data-part="timeline-edges">
+      <div ref={(n: any) => (scroller = n)} data-part="scroller">
+        <div ref={(n: any) => (box = n)} data-part="timeline" role="grid" aria-label={`${(c.p.resources ?? []).length ? 'Resources' : 'Timeline'}, ${fmt(day.value, { weekday: 'long', month: 'short', day: 'numeric' }, c.env.locale.value)}`} aria-describedby={hint} onKeyDown={onKey} style={`--_slots:${slots.value}`}>
+          <span data-part="corner" aria-hidden="true"></span>
+          <div data-part="marks" class="muted" aria-hidden="true" style={`display:grid;grid-template-columns:repeat(${marks.value.length},1fr)`}>{marks.value.map(m => <span key={m}>{c.time(m)}</span>)}</div>
+          {rows.value.map(r => (
+            <div key={r.id} role="row">
+              <div data-part="lane-label" role="rowheader"><b>{r.name}</b>{r.meta && <span class="muted">{r.meta}</span>}</div>
+              <div data-part="lane" data-resource={r.id} data-date={day.value} style={`--_slots:${slots.value}`}>
+                {lane(r.id).map(s => (
+                  <div key={s.id} data-part="event" data-cal={s.event.cal ?? 1} data-short="" data-id={s.id} role="gridcell" tabindex={stop.value === s.id ? '0' : '-1'} data-state={c.moving.value?.id === s.id ? 'moving' : c.drag.value?.id === s.id ? 'dragging' : undefined} style={`${tint(s.event.cal)};--_x:${(s.s - range.value[0]) / width.value};--_w:${(s.e - s.s) / width.value};position:absolute`}>
+                    <span class="sr">{`${s.event.title}, ${r.name}, ${c.span(s.s, s.e)}`}</span>
+                    <span data-part="event-title" aria-hidden="true">{s.event.title}</span>
+                    <span data-part="event-time" aria-hidden="true">{c.span(s.s, s.e)}</span>
+                    <span data-part="event-start" aria-hidden="true">{c.time(s.s)}</span>
+                  </div>
+                ))}
+                {nowAt.value !== null && nowAt.value >= range.value[0] && nowAt.value <= range.value[1] && <span data-part="now" aria-hidden="true" style={`--_top:0;inset-block:0;inset-inline-start:${((nowAt.value - range.value[0]) / width.value) * 100}%;inline-size:0;block-size:auto;border:0;border-inline-start:var(--warp-border-emphasis) solid var(--warp-color-sweep)`}></span>}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <span class="sr" id={hint}>Left and right move along a row, up and down to the nearest booking in the next row. M moves a booking.</span>
       </div>
-      <span class="sr" id={hint}>Left and right move along a row, up and down to the nearest booking in the next row. M moves a booking.</span>
     </div>
   )
 }
@@ -614,7 +653,7 @@ export function Calendar(p: CalendarProps) {
               : c.view.value === 'agenda'
                 ? <AgendaView c={c} />
                 : c.view.value === 'timeline'
-                  ? <Timeline c={c} narrow={days.value < 7} />
+                  ? <Timeline c={c} />
                   : <div data-part="year-wrap"><YearView label="Year view" counts={c.counts.value} events={c.all.value} today={c.env.today.value} locale={c.env.locale.value} hourCycle={p.hourCycle} firstDayOfWeek={c.first.value} openDay={openDay} openMonth={openMonth} /></div>}
         </div>
       </div>

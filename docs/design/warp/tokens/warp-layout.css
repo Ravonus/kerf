@@ -241,7 +241,8 @@
 
 /* Edges: a box round one child that scrolls sideways (a Kanban board, a calendar timeline). An overlay scrollbar says
    nothing until it moves, so the side with more gets an edge shadow, as a wide table does: warp-core's edges() writes
-   data-overflow="start end" here from the child's scroll. The box takes the child's place in a grid or a flex row. */
+   data-overflow="start end" here from the child's scroll. The box takes the child's place in a grid or a flex row.
+   --warp-edges-start moves the start shadow past a column that stays put (a timeline's names). */
 :where([data-scope="edges"]) {
   position: relative; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); min-inline-size: 0; min-block-size: 0;
 }
@@ -250,7 +251,7 @@
   --_shade: color-mix(in oklab, var(--warp-color-text) 14%, transparent);
   transition: opacity var(--warp-duration-fast) var(--warp-ease-out);
 }
-:where([data-scope="edges"])::before { inset-inline-start: 0; background: linear-gradient(to right, var(--_shade), transparent); }
+:where([data-scope="edges"])::before { inset-inline-start: var(--warp-edges-start, 0px); background: linear-gradient(to right, var(--_shade), transparent); }
 :where([data-scope="edges"])::after { inset-inline-end: 0; background: linear-gradient(to left, var(--_shade), transparent); }
 :where([data-scope="edges"]:dir(rtl))::before { background: linear-gradient(to left, var(--_shade), transparent); }
 :where([data-scope="edges"]:dir(rtl))::after { background: linear-gradient(to right, var(--_shade), transparent); }

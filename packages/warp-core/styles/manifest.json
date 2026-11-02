@@ -299,6 +299,9 @@
   "inputs/field.css",
   "inputs/file.css"
  ],
+ "edges": [
+  "layout/edges.css"
+ ],
  "editable": [
   "inputs/field.css",
   "inputs/text.css"
