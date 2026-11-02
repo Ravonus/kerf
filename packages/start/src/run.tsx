@@ -12,16 +12,19 @@
 import { drain, enter, hydrate, level as staticLevel, wake } from '@weft-js/core/dom'
 import { flush } from '@weft-js/core'
 import { setHead } from '@weft-js/core/head'
+import type { Held } from './boot'
 import { applyMatches, client, createRouteState, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
 import { App } from './view'
 import { ErrorPage, NotFoundPage } from './builtin'
+
+type Hot = ImportMeta & { hot?: { on(event: string, on: (data: { queries: boolean }) => unknown): void } }
 
 /** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
 export interface ClientRoutes {
   table: { id: string; pattern: string; layouts: string[] }[]
   load: Record<string, () => Promise<{ default?: Component }>>
   /** Each island's code, by id: all a static level loads (PLAN §11). */
-  islands?: Record<string, () => Promise<{ default: (props: any) => unknown }>>
+  islands?: Record<string, () => Promise<{ default: Component }>>
 }
 
 /** Hydrate the page in `#app` and take over its links. Resolves once hydrated. */
@@ -29,7 +32,7 @@ const SLOW_FADE = 100 // ms from asking for a fade to it starting
 
 export async function start(routes: ClientRoutes, options: { container?: Element } = {}) {
   const container = options.container ?? document.getElementById('app')!
-  const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent!)
+  const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent)
   const data = JSON.parse(document.getElementById('weft-data')?.textContent ?? 'null')
   let tags = page.m.map(m => m.t ?? [])
   const comps: Record<string, Component> = {}
@@ -39,16 +42,16 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     comps[id] ? Promise.resolve()
     : routes.load[id] ? routes.load[id]().then(m => { if (m.default) comps[id] = m.default })
     : Promise.resolve(builtin[id] && (comps[id] = builtin[id]))
-  const islands: Record<string, (props: any) => unknown> = {}
-  const island = (id: string) => islands[id] ? undefined : routes.islands![id]().then(m => { islands[id] = m.default })
+  const islands: Record<string, Component> = {}
+  const island = (id: string) => islands[id] ? undefined : routes.islands![id]!().then(m => { islands[id] = m.default })
   await Promise.all([...page.m.filter(m => !m.s).map(m => chunk(m.id)), ...(page.i ?? []).map(island)])
   const route = createRouteState(page, comps)
   let bag: RoutePayload['b']
-  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id], bag ?? undefined, id => Promise.resolve(island(id)))
+  route.mount = (html, depth, next) => staticLevel(html, depth, next, id => islands[id]! as never, bag ?? undefined, id => Promise.resolve(island(id)))
   route.around = (_d, _id, body) => enter(body)
   hydrate(() => <App route={route} />, container, { data })
   client.route = route
-  const q = (window as any).__wq
+  const q = (window as Window & { __wq?: Held }).__wq
   if (q) {
     q.w = wake
     if (q.l) wake(q.l)
@@ -59,13 +62,13 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   let warm: { path: string; at: number; res: Promise<Response> } | undefined
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   let fades = !(navigator.hardwareConcurrency <= 4)
-  async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}) {
+  async function go(href: string, opts: NavigateOptions & { pop?: boolean; hops?: number } = {}): Promise<void> {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
     current?.abort()
     const ctrl = (current = new AbortController())
     const path = url.pathname + url.search
-    guess(routes, url.pathname).forEach(chunk) // chunk loads start with the data fetch, not after it
+    for (const id of guess(routes, url.pathname)) void chunk(id) // chunk loads start with the data fetch, not after it
     let next: RoutePayload
     try {
       const held = warm?.path === path && performance.now() - warm.at < 10_000 ? warm.res : undefined
@@ -107,7 +110,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   }
   client.navigate = go
   // Dev: server code changed under the page (vite.mjs). The route's data comes again, in place.
-  if ((import.meta as any).hot) (import.meta as any).hot.on('weft:refresh', async ({ queries }: { queries: boolean }) => {
+  const refresh = async ({ queries }: { queries: boolean }) => {
     const url = new URL(location.href)
     const res = await ask(url)
     // It doesn't load yet, and the error page would replace what's here: the next save asks again.
@@ -115,7 +118,8 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     if (queries) client.refreshed?.()
     warm = { path: url.pathname + url.search, at: performance.now(), res: Promise.resolve(res) }
     await go(url.href, { pop: true })
-  })
+  }
+  if ((import.meta as Hot).hot) (import.meta as Hot).hot!.on('weft:refresh', changed => void refresh(changed))
   // A mutation invalidated tags: when the route's loaders read one, refetch the route data (no history entry, no scroll).
   client.invalidated = t => {
     warm = undefined
@@ -127,7 +131,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     const url = ours(e.target)
     if (!url) return
     e.preventDefault()
-    go(url.href)
+    void go(url.href)
   })
   // A link the pointer rests on, or the keyboard lands on, has its chunks and data by the time it is pressed.
   // `data-preload="off"` on a link opts out, and so does Save-Data.
@@ -136,9 +140,9 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     clearTimeout(pending)
     const url = ours(e.target)
     const path = url && url.pathname + url.search
-    if (!url || warm?.path === path || (e.target as Element).closest('[data-preload="off"]') || (navigator as any).connection?.saveData) return
+    if (!url || warm?.path === path || (e.target as Element).closest('[data-preload="off"]') || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return
     pending = setTimeout(() => {
-      guess(routes, url.pathname).forEach(chunk)
+      for (const id of guess(routes, url.pathname)) void chunk(id)
       warm = { path: path!, at: performance.now(), res: ask(url) }
       warm.res.catch(() => { warm = undefined })
     }, e.type === 'focusin' ? 0 : 80)
@@ -148,12 +152,12 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   // An in-page anchor fires this too, and the page hasn't changed: re-rendering it would lose what's been scrolled to.
   let at = location.pathname + location.search
   addEventListener('popstate', () => {
-    if (location.pathname + location.search !== at) go(location.href, { pop: true })
+    if (location.pathname + location.search !== at) void go(location.href, { pop: true })
   })
   return route
 }
 
-const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal, headers: { accept: 'application/json' } })
+const ask = (url: URL, signal?: AbortSignal) => fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, { signal: signal ?? null, headers: { accept: 'application/json' } })
 
 /** The URL a client navigation would take from this event's link, or nothing for a link the browser should follow. */
 function ours(target: EventTarget | null) {
@@ -174,7 +178,7 @@ function current_(path: string) {
 /** Deferred fields arrive resolved on navigation: they become settled promises again, so resources read them alike. */
 function revive(m: Match): Match {
   if (!m.d?.length) return m
-  const data: any = { ...(m.data as object) }
+  const data = { ...(m.data as Record<string, unknown>) }
   for (const k of m.d) data[k] = Promise.resolve(data[k])
   return { ...m, data }
 }

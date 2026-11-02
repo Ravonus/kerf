@@ -1,26 +1,30 @@
 // @weft-js/core/test's realtime transport (research 30 §7): the real hub, a memory bus, frames through JSON.
 
-import { fakeScope, FnError, net, runtime } from './data'
+import { fakeScope, FnError, net, runtime, type Fn } from './data'
 import type { Body } from './hub'
 
+const loadExec = async () => (runtime.exec ??= await import('./exec'))
+
+/** A change to a connection's subscriptions, as the route would take it. */
 export async function change(body: Body) {
-  const [{ hub }, exec] = await Promise.all([import('./hub'), (runtime.exec ??= await import('./exec'))])
+  const [{ hub }, exec] = await Promise.all([import('./hub'), loadExec()])
   const c = hub().find(body.k!)
   if (!c) throw new FnError({}, 404)
   const request = new Request('http://localhost/_weft/rt', { method: 'POST' })
   await hub().change(c, request, fakeScope(exec, net()!, request).options, body)
 }
 
-export async function open(body: Body, frame: (event: string, data: any) => void, signal: AbortSignal, up: () => void, subs: Map<string, any>, closing: (close: () => unknown) => void) {
+/** A connection to the real hub in this process. */
+export async function open(body: Body, frame: (event: string, data: unknown) => void, signal: AbortSignal, up: () => void, subs: Map<string, { fn: Fn; input: unknown }>, closing: (close: () => unknown) => void) {
   const n = net()!
-  const [{ hub, resetHub }, exec] = await Promise.all([import('./hub'), (runtime.exec ??= await import('./exec'))])
+  const [{ hub, resetHub }, exec] = await Promise.all([import('./hub'), loadExec()])
   if (!n.online()) throw Object.assign(new Error('offline'), { name: 'OfflineError' })
   closing(resetHub)
   const h = hub()
   runtime.poke ??= (tags, origin) => hub().poke(tags, origin)
   const request = new Request('http://localhost/_weft/rt', { method: 'POST' })
   return new Promise<void>((done, fail) => {
-    let conn: any
+    let conn: Parameters<typeof h.close>[0] | undefined
     const sink = { write: (e: string, d: string) => frame(e, JSON.parse(d)), backlog: () => 0, close: () => done() }
     n.rt = {
       push: (id, msg) => h.push(id, msg),

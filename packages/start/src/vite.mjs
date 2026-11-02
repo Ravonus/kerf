@@ -28,13 +28,12 @@
 // (`firstPaint`) and links them at the end of its shell, where they block nothing above and hold whatever streams after. `site: { criticalCss: false }` splits by chunk and inlines up to 48 KB, as links past that;
 // `site: { inlineCss: false }` keeps plain links.
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync,realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { isCSSRequest, parseSync, searchForWorkspaceRoot } from 'vite'
-import { realpathSync } from 'node:fs'
 import { scanRoutes, routeTypes } from './routes.mjs'
 import { solve } from '@weft-js/core/hydration'
 import { readMigrations } from './migrations.mjs'
@@ -43,6 +42,7 @@ import { pieces } from '@weft-js/core/node-purge'
 import { planSheets, reach } from './sheets.mjs'
 import { INLINE_CSS_MAX } from './inline.mjs'
 
+/** This folder, wherever the package is installed. */
 const here = dirname(fileURLToPath(import.meta.url))
 const V = {
   routes: 'virtual:weft/routes',
@@ -66,7 +66,6 @@ const PRELOAD = 'Per page, from the HTML: an island that loads with the page, or
 const NOT_ASSET = /\.[cm]?[jt]sx?$/
 const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
 const SHEET_PIECES = '__WEFT_SHEET_PIECES__'
-const SHEET_PLAN = '__WEFT_SHEET_PLAN__'
 
 /**
  * The client build's stylesheets a page can carry, `{ href: css }`, read by the server build so every preset has them
@@ -241,18 +240,19 @@ export default function weftStart(options = {}) {
       words?.add('data-weft styled') // gate.css reveals a mark a static page's HTML may hold alone
       if (main?.api) {
         compile = createRequire(join(here, 'vite.mjs'))('@weft-js/core/compiler').transform
-        main.api.islands = async (ctx, id) => (await hydration(ctx))?.files.get(id.replace(/\?.*$/, ''))
+        main.api.islands = async (ctx, file) => (await hydration(ctx))?.files.get(file.replace(/\?.*$/, ''))
       }
     },
     configureServer(server) {
       vite = server
       // A `<link>` to a virtual sheet (`weft:fonts`): Vite only serves those as modules.
-      server.middlewares.use(SHEET, async (req, res, next) => {
+      const sheet = async (req, res, next) => {
         const css = await server.environments.client.pluginContainer.load(decodeURIComponent(req.url.slice(1))).catch(() => undefined)
         if (css == null) return next()
         res.setHeader('content-type', 'text/css')
         res.end(typeof css === 'string' ? css : css.code)
-      })
+      }
+      server.middlewares.use(SHEET, (req, res, next) => void sheet(req, res, next))
       server.middlewares.use(waitingForAFix)
       // A route file added or removed changes the virtual modules; edits to existing ones are ordinary HMR/reloads.
       const dir = join(root, 'src')
@@ -506,7 +506,7 @@ export const routeCss = css => [...new Map([...${JSON.stringify(dev?.entry ?? []
  * URL gets the compiled sheet (Tailwind's output too). A module that doesn't transform fails again when it's imported.
  */
 async function devStyles(env, manifest, abs, entry) {
-  const reach = async url => {
+  const reachFrom = async start => {
     const seen = new Set(), css = new Map()
     const walk = async url => {
       const mod = await env.moduleGraph.getModuleByUrl(url).catch(() => undefined) ?? await env.moduleGraph.ensureEntryFromUrl(url).catch(() => undefined)
@@ -519,12 +519,12 @@ async function devStyles(env, manifest, abs, entry) {
         else if (!/[?&](url|inline|raw)\b/.test(next.id)) css.set(next.url, { href: next.url[0] === '/' ? next.url : SHEET + encodeURIComponent(next.id) })
       }
     }
-    await walk(url)
+    await walk(start)
     return [...css.values()]
   }
   const files = {}
-  for (const { file } of [...manifest.layouts, ...manifest.routes]) files[file] = await reach(abs(file))
-  return { entry: await reach(entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry), files }
+  for (const { file } of [...manifest.layouts, ...manifest.routes]) files[file] = await reachFrom(abs(file))
+  return { entry: await reachFrom(entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry), files }
 }
 
 /**
@@ -628,8 +628,8 @@ const busBound = root => {
 }
 
 /** A bus in `src/realtime.server.ts` wins over the plugin's, like any explicit choice. */
-const busModule = (file, here) => `import { load, provider } from 'weft:slot/realtime.bus'
-import { slotBus } from ${JSON.stringify(join(here, 'bus.ts'))}
+const busModule = (file, from) => `import { load, provider } from 'weft:slot/realtime.bus'
+import { slotBus } from ${JSON.stringify(join(from, 'bus.ts'))}
 ${file ? `import own from ${JSON.stringify(file)}` : 'const own = undefined'}
 export default { ...own, bus: own?.bus ?? slotBus(provider.plugin, load) }
 `
@@ -683,7 +683,7 @@ function cardFonts(manifest, abs, defaults, root, own = {}) {
  * hold database code and secrets), then imports nothing else uses. Exported for tests.
  */
 function serverCuts(code, file) {
-  const ast = parseSync(file, code, { lang: /\.tsx$/.test(file) ? 'tsx' : /\.ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
+  const ast = parseSync(file, code, { lang: file.endsWith('.tsx') ? 'tsx' : file.endsWith('.ts') ? 'ts' : 'jsx', sourceType: 'module' })
   const cuts = []
   for (const node of ast.program.body) {
     if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue
@@ -696,6 +696,7 @@ function serverCuts(code, file) {
 
 const serverExports = (code, file) => serverCuts(code, file).map(([a, b]) => code.slice(a, b)).join('\n')
 
+/** The server-only exports of a route file, cut out of the client's copy. */
 export function stripServerExports(code, file = 'route.tsx') {
   const cuts = serverCuts(code, file)
   if (!cuts.length) return code
@@ -705,7 +706,7 @@ export function stripServerExports(code, file = 'route.tsx') {
   return pruneImports(out, file)
 }
 
-const parse = (file, code) => parseSync(file, code, { lang: /\.tsx$/.test(file) ? 'tsx' : /\.[cm]?ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
+const parse = (file, code) => parseSync(file, code, { lang: file.endsWith('.tsx') ? 'tsx' : /\.[cm]?ts$/.test(file) ? 'ts' : 'jsx', sourceType: 'module' })
 
 /** The TS nodes that hold code; every other `TS*` node is a type, gone once TypeScript is stripped. */
 const TS_VALUE = /^TS((As|Satisfies|NonNull|Instantiation)Expression|TypeAssertion|Enum\w+|Module\w+|ImportEqualsDeclaration|ExternalModuleReference|ParameterProperty|ExportAssignment)$/
@@ -761,7 +762,7 @@ function rewriteImport(imp, keep, code) {
 // ---- server modules (research 27 §2) ------------------------------------------------------------------------------
 
 /** `src/server/**` and `*.server.ts(x)`: files whose `query`/`mutation` exports become client stubs. */
-export const isServerModule = rel => /^src\/server\//.test(rel) || /\.server\.[cm]?[jt]sx?$/.test(rel)
+export const isServerModule = rel => rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 
 function scanServerModules(root) {
   const out = []
@@ -771,11 +772,11 @@ function scanServerModules(root) {
     for (const d of list) {
       const rel = `${dir}/${d.name}`
       if (d.isDirectory()) { if (d.name !== 'node_modules' && !d.name.startsWith('.')) walk(rel) }
-      else if (/\.[cm]?[jt]sx?$/.test(d.name) && !/\.(test|spec)\./.test(d.name) && !/\.d\.ts$/.test(d.name) && isServerModule(rel)) out.push(rel)
+      else if (/\.[cm]?[jt]sx?$/.test(d.name) && !/\.(test|spec)\./.test(d.name) && !d.name.endsWith('.d.ts') && isServerModule(rel)) out.push(rel)
     }
   }
   walk('src')
-  return out.sort()
+  return out.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 }
 
 const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic', 'channel', 'sharedState'])
@@ -807,6 +808,7 @@ function fnExports(ast, locals) {
 }
 
 const prop = (obj, key) => obj.properties.find(p => p.type === 'Property' && !p.computed && (p.key.name ?? p.key.value) === key)
+/** A function's id: its name and a hash of its file, stable across builds. */
 export const fnId = (name, rel) => `${name}.${createHash('sha256').update(rel).digest('hex').slice(0, 6)}`
 
 /** The server build of a server module: each definition gets its `$id`. Exported for tests. */
@@ -867,8 +869,8 @@ export function clientStubs(code, file, rel, shapes) {
       candidates.push({ n, declares: [decl.id.name] })
       continue
     }
-    const declares = decl.type === 'VariableDeclaration' ? decl.declarations.flatMap(d => [...names(code.slice(d.id.start, d.id.end))]) : decl.id ? [decl.id.name] : []
-    if (declares.length) candidates.push({ n, declares })
+    const bound = decl.type === 'VariableDeclaration' ? decl.declarations.flatMap(d => [...names(code.slice(d.id.start, d.id.end))]) : decl.id ? [decl.id.name] : []
+    if (bound.length) candidates.push({ n, declares: bound })
   }
   // Helpers a kept `optimistic` reads (and what they read), in source order.
   for (let grew = true; grew; ) {

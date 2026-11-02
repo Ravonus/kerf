@@ -30,6 +30,7 @@ export type { Merged, Site } from '@weft-js/core/ssr'
 export interface RouteFiles {}
 
 /** Route paths as files name them (`/users/[id]`); any string until `.weft/routes.d.ts` is generated. */
+// oxlint-disable-next-line typescript/no-redundant-type-constituents -- `RouteFiles` is empty here and filled by a generated file
 export type RoutePath = keyof RouteFiles extends never ? string : keyof RouteFiles & string
 
 /** `'/users/[id]/posts/[...rest]'` → `{ id: string; rest: string }`. */
@@ -61,16 +62,16 @@ export interface NotFound {
 
 /** The not-found result, in the shape router-core's loaders recognise (`isNotFound`). */
 export function notFound(): NotFound {
-  return { isNotFound: true } as NotFound
+  return { isNotFound: true }
 }
 
-type AnyLoad = (args: LoadArgs<any>) => unknown
+type AnyLoad = (args: never) => unknown
 
 /** A loader's data: what it resolves to, without `notFound()`. Top-level promise fields are deferred (streamed). */
 export type DataOf<L> = L extends AnyLoad ? Exclude<Awaited<ReturnType<L>>, NotFound> : undefined
 
 /** The data `meta` and cards see: deferred (promise) fields left out, since they're still streaming (H007). */
-export type Settled<D> = D extends object ? { [K in keyof D as D[K] extends PromiseLike<any> ? never : K]: D[K] } : D
+export type Settled<D> = D extends object ? { [K in keyof D as D[K] extends PromiseLike<unknown> ? never : K]: D[K] } : D
 
 /** A route or layout component's props. `children` is the next level (layouts render it where the page goes). */
 export interface RouteProps<L = undefined, P extends string = string> {

@@ -5,7 +5,7 @@
 import { StartError } from './data'
 import type { Scope } from './exec'
 import { sessionOf } from './mux-session'
-import { hub, validBody, type Body, type Conn, type Hub, type Sink } from './hub'
+import { hub, validBody, type Conn, type Hub, type Sink } from './hub'
 import { attach, type Attached, type Peer } from './socket'
 
 const LINES = 64
@@ -13,6 +13,10 @@ const HIGH = 64 * 1024
 
 interface Physical { send(text: string): void; close(code: number, reason?: string): void; backlog(): number }
 type Open = { kind: 'c'; a: Promise<Attached> } | { kind: 'r'; c: Promise<Conn | undefined> }
+
+const parsed = (text: string): unknown => {
+  try { return JSON.parse(text) } catch { return undefined }
+}
 
 const counts = new WeakMap<Hub, Map<string, number>>()
 const byUser = (h: Hub) => {
@@ -60,13 +64,8 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
   }
 
   function openR(id: string, hello: string) {
-    let body: Body
-    try {
-      body = JSON.parse(hello)
-      if (!validBody(body) || body.k) throw 0
-    } catch {
-      return void peer.send(`x:${id}:4000:${JSON.stringify({ code: 'Q002', message: 'a realtime line opened with a body of the wrong shape' })}`)
-    }
+    const body = parsed(hello)
+    if (!validBody(body) || body.k) return peer.send(`x:${id}:4000:${JSON.stringify({ code: 'Q002', message: 'a realtime line opened with a body of the wrong shape' })}`)
     const sink: Sink = {
       write: (event, data) => { if (lines.has(id)) peer.send(`r:${id}:${event}:${data}`) },
       ping: () => { if (lines.has(id)) peer.send(`r:${id}:ping:`) },
@@ -91,7 +90,7 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
     if (peer.backlog() >= HIGH) return
     for (const l of lines.values()) if (l.kind === 'r') void l.c.then(c => c && h.drain(c))
   }, 100)
-  ;(drain as any).unref?.()
+  ;(drain as { unref?(): void }).unref?.()
 
   peer.send(`h:${await sessionOf(ctx)}`)
   return {
@@ -110,13 +109,13 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
         else if (line) {
           let body: Body | undefined
           try { body = JSON.parse(rest) } catch {}
-          if (validBody(body)) void line.c.then(c => c && h.change(c, request, scope.options, body!)).catch(() => end(id, 1011))
+          if (validBody(body)) void line.c.then(c => c && h.change(c, request, scope.options, body)).catch(() => end(id, 1011))
         }
       } else if (text[0] === 'x') {
         if (line) shut(id, line)
       } else if (text[0] === 'o') {
         if (line) return
-        if (lines.size >= LINES) return void peer.send(`x:${id}:1008:too many lines`)
+        if (lines.size >= LINES) return  peer.send(`x:${id}:1008:too many lines`)
         if (rest[0] === 'c') openC(id)
         else if (rest[0] === 'r') openR(id, rest.slice(2))
       }
@@ -125,7 +124,7 @@ export async function muxed(peer: Physical, request: Request, scope: Scope, h: H
       if (closed) return
       closed = true
       clearInterval(drain)
-      for (const [id, line] of [...lines]) shut(id, line)
+      for (const [id, line] of Array.from(lines)) shut(id, line)
       if (user !== undefined) {
         const n = (users.get(user) ?? 1) - 1
         if (n) users.set(user, n)

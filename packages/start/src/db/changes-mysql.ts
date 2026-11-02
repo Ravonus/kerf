@@ -12,6 +12,10 @@ const PRUNE = 60_000
 
 interface Options { pool: Pool; tables: string[]; interval?: number }
 
+/** A bigint column: the driver's number, or its string once past 2^53. */
+type Seq = number | string
+const said = (e: unknown) => (e as Error | null)?.message ?? String(e)
+
 export function mysqlChanges({ pool, tables, interval = 500 }: Options) {
   async function probe(): Promise<Probe> {
     try {
@@ -20,25 +24,25 @@ export function mysqlChanges({ pool, tables, interval = 500 }: Options) {
       const missing = tables.filter(t => !have.includes(t))
       if (!missing.length) return { mode: 'feed', via: 'mysql-log', why: `read every ${interval} ms: MySQL can't push` }
       const [grants] = await pool.query('show grants').catch(() => [[]])
-      const may = (grants as Record<string, string>[]).some(g => /ALL PRIVILEGES|\bTRIGGER\b/.test(Object.values(g)[0]))
+      const may = (grants as Record<string, string>[]).some(g => /ALL PRIVILEGES|\bTRIGGER\b/.test(Object.values(g)[0] ?? ''))
       return { mode: 'off', via: 'none', why: `no trigger on ${missing.map(t => `\`${t}\``).join(', ')}, and MySQL has no counter to fall back on`, fix: may ? 'run `weft db live`, then apply the migration' : 'run `weft db live`, and apply the migration as a user with the TRIGGER privilege' }
-    } catch (e: any) {
-      return { mode: 'off', via: 'none', why: `the database didn't answer: ${e?.message ?? e}`, fix: 'check `DATABASE_URL`' }
+    } catch (e) {
+      return { mode: 'off', via: 'none', why: `the database didn't answer: ${said(e)}`, fix: 'check `DATABASE_URL`' }
     }
   }
 
   async function start(sink: Sink, how: Probe) {
     if (how.mode === 'off') return () => {}
     let stopped = false, timer: ReturnType<typeof setTimeout> | undefined, failed = false, pruned = Date.now()
-    const [[{ top }]] = (await pool.query(`select coalesce(max(seq), 0) as top from ${LOG}`)) as any
+    const [[{ top }]] = (await pool.query(`select coalesce(max(seq), 0) as top from ${LOG}`)) as unknown as [[{ top: number | string }]]
     let mark = Number(top)
     // What's already there is old news, and needs no poke.
-    const [old] = (await pool.query(`select seq from ${LOG} where seq > ?`, [Math.max(0, mark - BEHIND)])) as any
-    const seen = new Set<number>((old as { seq: number }[]).map(r => Number(r.seq)))
+    const [old] = (await pool.query(`select seq from ${LOG} where seq > ?`, [Math.max(0, mark - BEHIND)])) as unknown as [{ seq: Seq }[]]
+    const seen = new Set<number>(old.map(r => Number(r.seq)))
     const look = async () => {
       if (stopped) return
       try {
-        const [rows] = (await pool.query(`select seq, tbl, pk from ${LOG} where seq > ? order by seq limit 5000`, [Math.max(0, mark - BEHIND)])) as any as [{ seq: number; tbl: string; pk: string | null }[]]
+        const [rows] = (await pool.query(`select seq, tbl, pk from ${LOG} where seq > ? order by seq limit 5000`, [Math.max(0, mark - BEHIND)])) as unknown as [{ seq: Seq; tbl: string; pk: string | null }[]]
         if (failed) {
           failed = false
           sink.lost()
@@ -64,12 +68,12 @@ export function mysqlChanges({ pool, tables, interval = 500 }: Options) {
           pruned = Date.now()
           await pool.query(`delete from ${LOG} where at < now() - interval ${KEEP_HOURS} hour limit 10000`)
         }
-      } catch (e: any) {
+      } catch (e) {
         failed = true
-        sink.down(`MySQL watcher: ${e?.message ?? e}`)
+        sink.down(`MySQL watcher: ${said(e)}`)
       }
-      timer = setTimeout(look, interval)
-      ;(timer as any).unref?.()
+      timer = setTimeout(() => void look(), interval)
+      ;(timer as { unref?(): void }).unref?.()
     }
     await look()
     return () => {

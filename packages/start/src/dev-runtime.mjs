@@ -30,7 +30,7 @@ export const devSockets = () => ({
 // Nitro can name an environment to the runner before Vite has made it. Across a process that takes long enough, but
 // `self` answers at once: the first request goes to nothing and the environment hangs for good. So each one is held
 // until it exists, and `init` names it again. (The worker keeps these on globalThis, and `self` is this process.)
-const HELD = { hasEvaluated: () => false, reload: async () => {}, fetch: async () => new Response('starting', { status: 503 }) }
+const HELD = { hasEvaluated: () => false, reload: async () => {}, fetch: () => Promise.resolve(new Response('starting', { status: 503 })) }
 
 function hold(name) {
   const environments = (globalThis.__nitro_vite_envs__ ??= {})

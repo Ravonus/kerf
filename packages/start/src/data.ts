@@ -16,6 +16,10 @@
 import { DEV, createRoot, derived, effect, getOwner, onCleanup, resource, state, untrack, type Derived, type Resource, type State } from '@weft-js/core'
 import { fill, mask } from '@weft-js/core/shape'
 import { client } from './router'
+import type { MediaAsset } from '@weft-js/core/media'
+import type * as Exec from './exec'
+import type { Scope } from './exec'
+import type { ServerExtension } from './extension'
 
 // ---- definitions ------------------------------------------------------------------------------------------------
 
@@ -48,7 +52,9 @@ export interface StandardSchemaV1<I = unknown, O = I> {
     readonly types?: { readonly input: I; readonly output: O }
   }
 }
+/** What a Standard Schema validator answers. */
 export type SchemaResult<O> = { readonly value: O; readonly issues?: undefined } | { readonly issues: readonly SchemaIssue[] }
+/** One failure from a schema, with the path to the field when there is one. */
 export interface SchemaIssue { readonly message: string; readonly path?: readonly (PropertyKey | { readonly key: PropertyKey })[] }
 
 /**
@@ -60,7 +66,7 @@ export interface Context {
   /** Headers merged into the response (cookies a sign-in sets). */
   response: { headers: Headers }
   /** Uploads and CMS images (research 29 §6): `ingest` stores the original and returns the record `z.media()` validates. */
-  media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<import('@weft-js/core/media').MediaAsset> }
+  media: { ingest(file: Blob | Uint8Array, options?: { name?: string }): Promise<MediaAsset> }
 }
 
 /** The address the server saw (never one a client sent): Better Auth's rate limits key on it. */
@@ -76,19 +82,23 @@ export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
 export type AuthScope = 'user'
 type Ctx<A> = A extends 'user' ? (Context extends { user: infer U } ? Omit<Context, 'user'> & { user: NonNullable<U> } : Context) : Context
 
-type In<S> = S extends StandardSchemaV1<infer I, any> ? I : void
-type Out<S> = S extends StandardSchemaV1<any, infer O> ? O : undefined
+type In<S> = S extends StandardSchemaV1<infer I, unknown> ? I : void
+type Out<S> = S extends StandardSchemaV1<unknown, infer O> ? O : undefined
 type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
-type Tags<A extends any[]> = readonly string[] | ((...args: A) => readonly string[])
+type Tags<A extends unknown[]> = readonly string[] | ((...args: A) => readonly string[])
 /** Read before `run`, for one user's tag: `tags: (_, ctx) => [`entitlements:${ctx.user.id}`]`. */
 type QueryTags<I, A> = Tags<[input: I, ctx: Ctx<A>]>
 
+/** What an `Impl` is called with. */
+export interface ImplCall { fn: Fn; input: unknown; ctx: Context; request: Request }
+
 /** A server function's body in Rust: `remote('rust://search')` or `native('media')`, from `@weft-js/start/rust` (research 36, 37). */
-export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: any): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
+export interface Impl { readonly kind: string; readonly target: string; readonly service: string; call(c: ImplCall): Promise<{ value: unknown; tags: string[]; touched: string[] }> }
 
 /** Errors a function raises by name, with the data each carries: a Rust function's become an enum. */
 export type Errors = Record<string, StandardSchemaV1>
 
+/** `query()` with a `run` on this server. */
 export interface QueryDef<S, O, A = undefined> extends FnOptions {
   input?: S
   /** The result's shape: checked in dev and tests (C002), and the contract's `output`. */
@@ -117,8 +127,10 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
 
 /** The same declaration with its body elsewhere: `output` is required, because it's the whole contract for what comes back. */
 export type ImplQueryDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<QueryDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
+/** `mutation()` with `impl` and an `output` schema: no `run` here. */
 export type ImplMutationDef<S, OS extends StandardSchemaV1, A = undefined> = Omit<MutationDef<S, Out<OS>, A>, 'run' | 'impl' | 'output'> & { output: OS; impl: Impl; run?: undefined }
 
+/** `mutation()` with a `run` on this server. */
 export interface MutationDef<S, O, A = undefined> extends FnOptions {
   input?: S
   output?: StandardSchemaV1
@@ -134,11 +146,13 @@ export interface MutationDef<S, O, A = undefined> extends FnOptions {
 }
 
 /** The typed "no query" input: `getTodo(() => (id.value ? { id: id.value } : skip))`. */
-export const skip: unique symbol = Symbol.for('weft.skip') as any
+export const skip: unique symbol = Symbol.for('weft.skip') as never
+/** The marker a live query's input takes to subscribe to nothing yet. */
 export type Skip = typeof skip
 
 type Arg<I> = I | (() => I | Skip)
 
+/** What `query()` returns: call it for a resource, or `.live()` for one that stays current. */
 export interface Query<I, O> {
   /** The live value, read in a component or a defineState setup (Q001 elsewhere: use `fetch`). */
   (...args: [I] extends [void] ? [input?: undefined | (() => undefined | Skip)] : [input: Arg<I>]): Resource<O>
@@ -155,6 +169,7 @@ export interface Query<I, O> {
   readonly $id: string
 }
 
+/** What `mutation()` returns: call it, or read its `pending` and `error`. */
 export interface Mutation<I, O> {
   (...args: [I] extends [void] ? [] : [input: I]): Promise<O>
   /** A call is in flight. */
@@ -172,11 +187,13 @@ export type LiveStatus = 'connecting' | 'live' | 'degraded' | 'reconnecting' | '
  * `external`: a separate listener does, through the bus. `poll`: an estimate, every few seconds. `off`: mutations only, though `changes` asks for more.
  */
 export type LiveMode = 'app' | 'feed' | 'external' | 'poll' | 'off'
+/** `.live()`: how long it's kept, and whether it refuses to run without a real feed. */
 export interface LiveOptions {
   keep?: string | number
   /** Fail `weft check`, `weft build` and server startup rather than run without a real change feed (R013, R015). */
   required?: boolean
 }
+/** A resource that also says how live it is. */
 export type LiveQuery<O> = Resource<O> & { readonly live: Derived<LiveStatus>; readonly liveMode: Derived<LiveMode> }
 
 /** Any definition, as the executor and transports see it. */
@@ -184,9 +201,9 @@ export interface Fn {
   kind: 'query' | 'mutation' | 'stream' | 'channel' | 'shared'
   $id: string
   def: {
-    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: any) => unknown; impl?: Impl; errors?: Errors; tags?: Tags<any[]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<any[]>; optimistic?: (args: any, cache: OptimisticCache) => void
+    input?: StandardSchemaV1; output?: StandardSchemaV1; message?: StandardSchemaV1; shape?: unknown; auth?: AuthScope; run?: (args: { input: unknown; ctx: Context; signal?: AbortSignal; lastEventId?: unknown }) => unknown; impl?: Impl; errors?: Errors; tags?: Tags<[input: unknown, ctx?: Context]>; cache?: { life?: Life; scope?: 'user' }; invalidates?: Tags<[unknown, unknown]>; optimistic?: (args: { input: unknown }, cache: OptimisticCache) => void
     /** `channel` and `sharedState` (research 32). */
-    params?: StandardSchemaV1; authorize?: any; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: any) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
+    params?: StandardSchemaV1; authorize?: unknown; left?: (args: { id: string; ctx: Context; params: unknown; room: unknown }) => unknown; recheck?: (args: { id: string; ctx: Context; reply: unknown }) => unknown; client?: Record<string, StandardSchemaV1>; server?: Record<string, StandardSchemaV1>; on?: Record<string, (args: never) => unknown>; limits?: { perSecond?: number }; key?: StandardSchemaV1; value?: StandardSchemaV1; initial?: unknown
   }
 }
 
@@ -198,6 +215,14 @@ let auto = 0
 
 /** A diagnostic thrown by @weft-js/start: `code` (Q001…) and a fix in the message, like weft's StateError. */
 export class StartError extends Error {
+  /** The HTTP status, when `extra` sets one. */
+  declare status?: number
+  /** Field by field, when `extra` sets them. */
+  declare issues?: SchemaIssue[]
+  /** What a declared error carries. */
+  declare data?: unknown
+  /** `raise`: this is a failure the function declares, so its message reaches the client. */
+  declare typed?: boolean
   constructor(public code: string, message: string, fix?: string, public extra: Record<string, unknown> = {}) {
     super(`${code}: ${message}${fix ? `\n  fix: ${fix}` : ''}`)
     Object.assign(this, extra)
@@ -211,7 +236,7 @@ export class FnError extends Error {
   issues?: SchemaIssue[]
   /** What a declared error (`errors`) carries. */
   data?: unknown
-  constructor(e: { message?: string; code?: string; issues?: SchemaIssue[]; data?: unknown }, status: number) {
+  constructor(e: { message?: string; code?: string; issues?: SchemaIssue[] | undefined; data?: unknown }, status: number) {
     super(e.message ?? `server function failed (${status})`)
     this.status = status
     Object.assign(this, { code: e.code, issues: e.issues, data: e.data })
@@ -219,6 +244,7 @@ export class FnError extends Error {
 }
 
 declare const redirectBrand: unique symbol
+/** What `redirect()` throws: a loader or a function's way to send the page elsewhere. */
 export interface Redirect {
   readonly isRedirect: true
   readonly href: string
@@ -231,10 +257,12 @@ export interface Redirect {
  * `run` (the client router navigates). It throws, so `(await db.get(id)) ?? redirect('/todos')` types as the row.
  */
 export function redirect(href: string, status: 301 | 302 | 303 | 307 | 308 = 307): never {
+  // oxlint-disable-next-line typescript/only-throw-error -- control flow, not a failure: a stack costs and nothing reads it
   throw { isRedirect: true, href, status } as Redirect
 }
 
-export const isRedirect = (v: unknown): v is Redirect => !!v && typeof v === 'object' && (v as any).isRedirect === true
+/** Whether a thrown value is a `redirect()`. */
+export const isRedirect = (v: unknown): v is Redirect => !!v && typeof v === 'object' && (v as Partial<Redirect>).isRedirect === true
 
 /**
  * Fail with an error the function declares in `errors`. The client sees it as `FnError.code` and `.data`, whether `run`
@@ -261,21 +289,28 @@ export function fieldsOf(issues: readonly SchemaIssue[] = []) {
   return { errors, message }
 }
 
+type Tree = Record<string, unknown>
+
 const UNSAFE = new Set(['__proto__', 'constructor', 'prototype'])
 
 /** A form's fields as a mutation's input, on both sides (research 29 §5): `a.b` nests, `x[]` and repeats are arrays. */
 export function decodeForm(data: FormData): Record<string, unknown> {
-  const out: Record<string, any> = {}
+  const out: Tree = {}
   for (const [name, value] of data) {
     if (name[0] === '$' || (typeof value !== 'string' && !value.size)) continue // `$fn`; a file input left empty
     const list = name.endsWith('[]')
     const path = (list ? name.slice(0, -2) : name).split('.')
     if (path.some(p => UNSAFE.has(p))) continue
     let at = out
-    for (const p of path.slice(0, -1)) at = at[p] && typeof at[p] === 'object' ? at[p] : (at[p] = {})
+    for (const p of path.slice(0, -1)) {
+      const next = at[p]
+      at = (next && typeof next === 'object' ? next : (at[p] = {})) as Tree
+    }
     const k = path.at(-1)!
-    if (list) (at[k] ??= []).push(value)
-    else if (k in at) at[k] = [at[k]].flat().concat(value)
+    // Own keys only: a field named `toString` is a field, not the method every object inherits.
+    const had = Object.hasOwn(at, k)
+    if (list) ((had ? at[k] : (at[k] = [])) as unknown[]).push(value)
+    else if (had) at[k] = [at[k]].flat().concat(value)
     else at[k] = value
   }
   return out
@@ -286,9 +321,10 @@ export function decodeForm(data: FormData): Record<string, unknown> {
 /** JSON with sorted object keys: the same input gives the same key on both sides (no input: `''`; JSON sends null). */
 export function stable(v: unknown): string {
   if (v == null) return ''
-  return JSON.stringify(v, (_, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(k => [k, x[k]])) : x))
+  return JSON.stringify(v, (_, x: Record<string, unknown>) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(k => [k, x[k]])) : x))
 }
 
+/** The cache key of one call: the function's id and its input in a stable order. */
 export const keyOf = (id: string, input: unknown) => `${id}:${stable(input)}`
 
 // ---- runtime hooks ------------------------------------------------------------------------------------------------
@@ -299,6 +335,7 @@ export type Wire = [id: string, input: unknown, value: unknown, tags: string[]]
 /** What the transports answer (research 27 §3). */
 export interface Answer { v?: unknown; t?: string[]; c?: Wire[]; r?: string; /** `r` is a full load: the session changed, so nothing cached may survive. */ x?: 1 }
 
+/** How a client call reaches the server: `fetch` by default, a fake under test. */
 export interface Transport {
   query(id: string, input: unknown): Promise<Answer>
   /** `form`: the input came from a form, so strings may be coerced; a FormData is sent as is (it holds files). */
@@ -310,20 +347,20 @@ export interface Transport {
  * router's (tests). Unset in plain tests.
  */
 export const runtime: {
-  scope?: () => any
+  scope?: () => Scope | undefined
   /** Run `fn` with `scope` current (the request's AsyncLocalStorage). */
-  enter?: <T>(scope: any, fn: () => T) => T
-  exec?: typeof import('./exec')
+  enter?: <T>(scope: unknown, fn: () => T) => T
+  exec?: typeof Exec
   transport?: Transport
   navigate?: (href: string, replace?: boolean) => void
   /** Set by the server's first request (and in dev when `drizzle/` grows): what each database applies before its first statement (db/core.ts). */
-  migrations?: { list: { tag: string; sql: string }[]; report(e: unknown): void }
+  migrations?: { list: { tag: string; sql: string }[]; report(e: unknown): void } | undefined
   /** The gates of clients whose statements can't be held (Prisma's): the server waits on them per request, and a failure doesn't fail it. */
   dbs?: Set<() => Promise<void> | undefined>
   /** Fan invalidated tags out to live subscribers (hub.ts). `origin`: the connection that needs no poke. */
   poke?: (tags: string[], origin?: string | null) => Promise<void>
   /** This tab's realtime connection: sent with mutations, so the tab doesn't poke itself. */
-  conn?: string
+  conn?: string | undefined
   /** `room.in(params).publish`: socket.ts, on a server or under the fake. */
   channels?: { publish(fn: Fn, params: unknown, name: string, message: unknown, options?: { exceptSelf?: boolean; from?: string }): Promise<void>; set(fn: Fn, key: unknown, value: unknown): Promise<void> }
 } = {}
@@ -337,8 +374,9 @@ const go = (href: string, replace?: boolean) => (runtime.navigate ? runtime.navi
 
 /** @weft-js/core/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
 let registered = false
+/** The test controls, once `@weft-js/core/test` has registered them. */
 export const net = () => {
-  const n = (globalThis as any)[Symbol.for('weft.net')] as NetControl | undefined
+  const n = Reflect.get(globalThis, Symbol.for('weft.net')) as NetControl | undefined
   if (n && !registered) {
     registered = true
     n.resets.push(() => {
@@ -354,20 +392,20 @@ export interface NetControl {
   latency: number
   ctx?: object
   /** Server extensions for this test (`net.extension`). */
-  extensions: any[]
+  extensions: ServerExtension[]
   online(): boolean
   fails: Map<string, unknown[]>
-  handlers: Map<string, (input: any, ctx: any) => unknown>
+  handlers: Map<string, (input: unknown, ctx: Context) => unknown>
   log: { id: string; kind: string; input: unknown }[]
   inflight: Set<Promise<unknown>>
   als: { run<T>(store: unknown, fn: () => T): T; getStore(): unknown }
-  resets: (() => void)[]
+  resets: (() => unknown)[]
   /** Subscriptions an owner holds: open at the end of a test, they're T012. */
   open: Map<object, [what: string, close: () => void]>
   /** The realtime fake, while one is connected: `net.push`, `net.poke`, `net.drop`. */
-  rt?: { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] }
+  rt?: { push(id: string, msg: unknown): number; poke(tags: string[]): Promise<void>; drop(): void; subscriptions(): { kind: string; id: string; input: unknown }[] } | undefined
   /** The channel fake, while a socket is open. */
-  ws?: { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> }
+  ws?: { publish(id: string, params: unknown, name: string, msg: unknown): Promise<void>; drop(): void; recheck(): Promise<void> } | undefined
   /** What this client's sockets sent, across reconnects. */
   sent: { id: string; name: string; msg: unknown }[]
   reconnects: number
@@ -379,31 +417,39 @@ const oneBody = (def: { run?: unknown; impl?: unknown; $id?: string }) => {
   if (def.run && def.impl) throw new StartError('R103', `\`${def.$id ?? 'a function'}\` has both \`run\` and \`impl\``, 'keep one: `impl` replaces the body')
 }
 
+/** A server function that reads, with its output typed by a schema. */
 export function query<OS extends StandardSchemaV1, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: ImplQueryDef<S, OS, A>): Query<In<S>, Out<OS>>
+/** A server function that reads, with its output typed by `run`. */
 export function query<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: QueryDef<S, O, A>): Query<In<S>, Awaited<O>>
-export function query(def: any): any {
-  oneBody(def)
-  const id = def.$id ?? `q${++auto}`
-  const fn: Fn = { kind: 'query', $id: id, def: def as Fn['def'] }
+/** A server function that reads: cached by input on the client, and tagged for what invalidates it. */
+export function query(def: unknown): unknown {
+  const d = def as Fn['def'] & { $id?: string }
+  oneBody(d)
+  const id = d.$id ?? `q${++auto}`
+  const fn: Fn = { kind: 'query', $id: id, def: d }
   fns.set(id, fn)
-  const q: any = (input?: unknown) => use(fn, input)
+  const q = (input?: unknown) => use(fn, input)
   q.fetch = (input?: unknown) => fetchQuery(fn, input)
   q.shape = (input?: unknown) => shapeOf(fn, input)
   q.live = (input?: unknown, options?: LiveOptions) => liveQuery(fn, input, options)
   return Object.assign(q, { kind: 'query', $id: id, [FN]: fn })
 }
 
+/** A server function that writes, with its output typed by a schema. */
 export function mutation<OS extends StandardSchemaV1, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: ImplMutationDef<S, OS, A>): Mutation<In<S>, Out<OS>>
+/** A server function that writes, with its output typed by `run`. */
 export function mutation<O, S extends StandardSchemaV1 | undefined = undefined, const A extends AuthScope | undefined = undefined>(def: MutationDef<S, O, A>): Mutation<In<S>, Awaited<O>>
-export function mutation(def: any): any {
-  oneBody(def)
-  const id = def.$id ?? `m${++auto}`
-  const fn: Fn = { kind: 'mutation', $id: id, def: def as Fn['def'] }
+/** A server function that writes, and invalidates the queries that read what it changed. */
+export function mutation(def: unknown): unknown {
+  const d = def as Fn['def'] & { $id?: string }
+  oneBody(d)
+  const id = d.$id ?? `m${++auto}`
+  const fn: Fn = { kind: 'mutation', $id: id, def: d }
   fns.set(id, fn)
   // Module-level boxes, read on the client only (a server render never shows a call in flight).
   const { calls, error } = createRoot(() => ({ calls: state(0), error: state<unknown>(undefined) }), null)
   const pending = createRoot(() => derived(() => calls.value > 0), null)
-  const m: any = (input?: unknown) => mutate(fn, input, calls, error)
+  const m = (input?: unknown) => mutate(fn, input, calls, error)
   return Object.assign(m, { kind: 'mutation', $id: id, pending, error: { get value() { return error.value } }, [FN]: fn, [SUBMIT]: (input: unknown, form: true | FormData) => mutate(fn, input, calls, error, form) })
 }
 
@@ -411,17 +457,17 @@ const FN = Symbol.for('weft.fn')
 /** `<Form>`'s call: a mutation handle's `m(input)` with the input marked as coming from a form. */
 export const SUBMIT = Symbol.for('weft.submit')
 /** The definition behind a query or mutation handle (also accepts the definition). */
-export const fnOf = (h: any): Fn => h?.[FN] ?? h
+export const fnOf = (h: unknown): Fn => ((h as Record<symbol, Fn> | null)?.[FN] ?? h) as Fn
 
 // ---- server and client calls ---------------------------------------------------------------------------------
 
-const server = () => runtime.scope?.() ?? net()?.als.getStore()
+const server = () => runtime.scope?.() ?? (net()?.als.getStore() as Scope | undefined)
 /** The request scope in progress, on the server or under the fake transport. */
 export const currentScope = server
 /** Run `fn` with `scope` current. */
 export const enter = <T>(scope: unknown, fn: () => T): T => (runtime.enter ? runtime.enter(scope, fn) : net() ? net()!.als.run(scope, fn) : fn())
 
-function fetchQuery(fn: Fn, input: unknown): Promise<any> {
+function fetchQuery(fn: Fn, input: unknown): Promise<unknown> {
   const scope = server()
   if (scope) return runtime.exec!.fetchQuery(scope, fn, input).then(e => e.v)
   if (runtime.exec && !net()) return runtime.exec.fetchQuery(runtime.exec.createScope(new Request('http://localhost/')), fn, input).then(e => e.v)
@@ -429,13 +475,13 @@ function fetchQuery(fn: Fn, input: unknown): Promise<any> {
   return untrack(() => fresh(e)) ? Promise.resolve(untrack(() => e.value.value)) : load(e)
 }
 
-function use(fn: Fn, input: unknown): Resource<any> {
+function use(fn: Fn, input: unknown): Resource<unknown> {
   if (!getOwner())
     throw DEV ? new StartError('Q001', `\`${fn.$id}()\` (a live query) was called outside a component or scope`, `\`await ${name(fn)}.fetch(input)\` in \`load\`, handlers and server code`) : new StartError('Q001', fn.$id)
   const read = () => (typeof input === 'function' ? (input as () => unknown)() : input)
   return resource(() => {
     const arg = read()
-    if (arg === skip) return undefined as any
+    if (arg === skip) return undefined
     const scope = server()
     if (scope) return runtime.exec!.readQuery(scope, fn, arg)
     const e = entry(fn, arg)
@@ -457,7 +503,7 @@ function use(fn: Fn, input: unknown): Resource<any> {
 }
 
 /** Research 31 §2: this entry's value or the query's last seen, masked; else the declared shape. */
-function shapeOf(fn: Fn, input: unknown): any {
+function shapeOf(fn: Fn, input: unknown): unknown {
   const limit: number | undefined = (input as { limit?: number } | undefined)?.limit
   const here = entries.get(keyOf(fn.$id, input))
   const e = server() ? undefined : here && untrack(() => here.has.value) ? here : lastSeen.get(fn.$id)
@@ -467,7 +513,7 @@ function shapeOf(fn: Fn, input: unknown): any {
 }
 
 /** `q()` plus a subscription: its tags come from the server, and a poke is a local `cache.invalidate`. */
-function liveQuery(fn: Fn, input: unknown, options?: LiveOptions): LiveQuery<any> {
+function liveQuery(fn: Fn, input: unknown, options?: LiveOptions): LiveQuery<unknown> {
   const r = use(fn, input)
   const scope = server()
   if (scope) scope.live = true
@@ -480,7 +526,7 @@ function liveQuery(fn: Fn, input: unknown, options?: LiveOptions): LiveQuery<any
         m.use(liveApi)
         if (!gone) stop = m.hold(fn, arg, options)
       })
-      track(held)
+      void track(held)
       onCleanup(() => {
         gone = true
         stop?.()
@@ -493,7 +539,7 @@ const name = (fn: Fn) => fn.$id.replace(/\..*$/, '')
 
 // ---- the client cache -----------------------------------------------------------------------------------------
 
-interface Layer { m: number; apply: (draft: any) => any; waiting?: boolean }
+interface Layer { m: number; apply: (draft: unknown) => unknown; waiting?: boolean }
 interface Entry {
   key: string
   id: string
@@ -502,10 +548,10 @@ interface Entry {
   has: State<boolean>
   stale: State<boolean>
   layers: State<Layer[]>
-  value: Derived<any>
+  value: Derived<unknown>
   tags: string[]
   readers: number
-  p?: Promise<unknown>
+  p?: Promise<unknown> | undefined
   /** Invalidated while `p` was in flight: its answer may predate the write. */
   again?: boolean
 }
@@ -523,14 +569,14 @@ function entry(fn: Fn, input: unknown): Entry {
   if (!e) {
     // Owned by no component: the entry outlives its readers (the next reader finds it seeded).
     e = createRoot(() => {
-      const base = state<unknown>(undefined), has = state(false), stale = state(false), layers = state<Layer[]>([])
+      const base = state<unknown>(undefined), has = state(false), dated = state(false), layers = state<Layer[]>([])
       const value = derived(() => {
         let v = base.value
         if (!has.value) return v
         for (const l of layers.value) v = produce(v, l.apply)
         return v
       })
-      return { key, id: fn.$id, input, base, has, stale, layers, value, tags: [], readers: 0 }
+      return { key, id: fn.$id, input, base, has, stale: dated, layers, value, tags: [], readers: 0 }
     }, null)
     entries.set(key, e)
   }
@@ -545,7 +591,7 @@ function load(e: Entry): Promise<unknown> {
       e.p = undefined
       if (a.r !== undefined) {
         go(a.r, true)
-        throw { isRedirect: true, href: a.r, status: 307 }
+        redirect(a.r)
       }
       setBase(e, a.v, a.t ?? [])
       if (e.again) {
@@ -627,7 +673,7 @@ async function mutate(fn: Fn, input: unknown, calls: State<number>, error: State
       error.value = undefined
       out = a.v
     })
-    if (a.r !== undefined) a.x ? location.assign(a.r) : go(a.r)
+    if (a.r !== undefined) { if (a.x) location.assign(a.r); else go(a.r) }
     return out
   } catch (err) {
     untrack(() => {
@@ -643,23 +689,27 @@ let callId = 0
 
 /** The `cache` an `optimistic` gets: `update` and `set` add this call's layers instead of writing the base. */
 function overlay(m: number, touched: Set<Entry>): OptimisticCache {
-  const push = (q: any, input: unknown, apply: Layer['apply']) => {
+  const push = (q: unknown, input: unknown, apply: Layer['apply']) => {
     const e = entry(fnOf(q), input)
     touched.add(e)
     e.layers.value = [...e.layers.value, { m, apply }]
   }
   return {
     ...cache,
-    update: (q, input, recipe) => push(q, input, recipe),
+    update: (q, input, recipe) => push(q, input, recipe as Layer['apply']),
     set: (q, input, value) => push(q, input, () => value),
   }
 }
 
+/** A query handle, whatever its input: what the cache needs of one. */
+export type QueryRef<O> = Pick<Query<void, O>, 'kind' | '$id'> & { fetch(...args: never[]): Promise<O> }
+
+/** The cache as an `optimistic` sees it. */
 export interface OptimisticCache {
   /** Change a query's cached value with a draft (copy-on-write: untouched rows keep their identity). */
-  update<O>(q: Query<any, O>, input: unknown, recipe: (draft: O) => O | void): void
-  set<O>(q: Query<any, O>, input: unknown, value: O): void
-  get<O>(q: Query<any, O>, input?: unknown): O | undefined
+  update<O>(q: QueryRef<O>, input: unknown, recipe: (draft: O) => O | void): void
+  set<O>(q: QueryRef<O>, input: unknown, value: O): void
+  get<O>(q: QueryRef<O>, input?: unknown): O | undefined
   /** The value (a row) was made by a pending optimistic layer. */
   isOptimistic(value: unknown): boolean
 }
@@ -668,24 +718,25 @@ export interface OptimisticCache {
  * The client cache. In `optimistic`, `update`/`set` add layers; elsewhere they write the base (until the next server
  * value). `invalidate` marks tags stale (readers refetch).
  */
-export const cache: OptimisticCache & { invalidate(...tags: string[]): void; clear(): void } = {
+export const cache: OptimisticCache & { invalidate(...tags: string[]): Promise<void> | undefined; clear(): void } = {
   update(q, input, recipe) {
     const e = entry(fnOf(q), input)
-    if (untrack(() => e.has.value)) setBase(e, produce(untrack(() => e.base.value), recipe as any), e.tags)
+    if (untrack(() => e.has.value)) setBase(e, produce(untrack(() => e.base.value), recipe as Layer['apply']), e.tags)
   },
   set(q, input, value) {
     const e = entry(fnOf(q), input)
     setBase(e, value, e.tags)
   },
-  get(q, input) {
+  get<O>(q: QueryRef<O>, input?: unknown) {
     const e = entries.get(keyOf(fnOf(q).$id, input))
-    return e && untrack(() => e.value.value)
+    return e && (untrack(() => e.value.value) as O)
   },
   isOptimistic: v => !!v && typeof v === 'object' && made.has(v),
   invalidate(...tags) {
     const scope = server()
     if (scope) return runtime.exec!.invalidate(scope, tags)
     staleTags(tags)
+    return undefined
   },
   clear() {
     entries.clear()
@@ -694,7 +745,7 @@ export const cache: OptimisticCache & { invalidate(...tags: string[]): void; cle
   },
 }
 
-if ((import.meta as any).hot) client.refreshed = () => untrack(() => { for (const e of entries.values()) e.stale.value = true })
+if ((import.meta as ImportMeta & { hot?: unknown }).hot) client.refreshed = () => untrack(() => { for (const e of entries.values()) e.stale.value = true })
 
 /** Server: drop `tags` for this response and the shared cache. Client: refetch what reads them. */
 export const invalidate = (...tags: string[]) => cache.invalidate(...tags)
@@ -728,15 +779,17 @@ export const http: Transport = {
  * @weft-js/core/test's fake transport: the server's executor in process, with the controls @weft-js/core/test's `net` sets (latency,
  * failures, replaced functions, offline), and a JSON round trip both ways so values arrive as they would over HTTP.
  */
-export const fakeScope = (exec: typeof import('./exec'), n: NetControl, request: Request) =>
+export const fakeScope = (exec: typeof Exec, n: NetControl, request: Request) =>
   exec.createScope(request, { context: () => n.ctx ?? {}, handlers: n.handlers, dev: true, extensions: n.extensions, onDiagnostic: d => console.warn(`weft: ${d.message.startsWith(d.code) ? '' : d.code + ' '}${d.message}`) })
+
+type Call = (exec: typeof Exec, scope: Scope, fn: Fn) => Promise<Answer>
 
 const inProcess: Transport = {
   query: (id, input) => fake(id, 'query', input, (exec, scope, fn) => exec.fetchQuery(scope, fn, input).then(e => ({ v: e.v, t: e.tags }))),
   mutate: (id, input, f, form) => fake(id, 'mutation', input, (exec, scope, fn) => exec.runMutation(scope, fn, input, f, !!form)),
 }
 
-function fake(id: string, kind: string, input: unknown, call: (exec: typeof import('./exec'), scope: any, fn: Fn) => Promise<Answer>): Promise<Answer> {
+function fake(id: string, kind: string, input: unknown, call: Call): Promise<Answer> {
   return track(fakeCall(net()!, id, kind, input, call))
 }
 
@@ -745,15 +798,15 @@ export function track<T>(p: Promise<T>): Promise<T> {
   const n = net()
   if (!n) return p
   n.inflight.add(p)
-  const done = () => void n.inflight.delete(p)
-  p.then(done, done)
+  const over = () => void n.inflight.delete(p)
+  p.then(over, over)
   return p
 }
 
-async function fakeCall(n: NetControl, id: string, kind: string, input: unknown, call: (exec: typeof import('./exec'), scope: any, fn: Fn) => Promise<Answer>): Promise<Answer> {
+async function fakeCall(n: NetControl, id: string, kind: string, input: unknown, call: Call): Promise<Answer> {
   n.log.push({ id, kind, input })
   const exec = (runtime.exec ??= await import('./exec'))
-  if (n.latency) await new Promise(ok => setTimeout(ok, n.latency))
+  if (n.latency) await new Promise(ok => { setTimeout(ok, n.latency) })
   if (!n.online()) throw Object.assign(new Error(`offline: ${id} wasn't sent`), { name: 'OfflineError' })
   const fails = n.fails.get(id)
   if (fails?.length) throw fails.shift()
@@ -764,13 +817,15 @@ async function fakeCall(n: NetControl, id: string, kind: string, input: unknown,
     return JSON.parse(JSON.stringify(await n.als.run(scope, () => call(exec, scope, fn))))
   } catch (e) {
     if (isRedirect(e)) return { r: e.href }
-    throw e instanceof StartError ? new FnError({ code: e.code, message: e.message, issues: (e as any).issues, data: (e as any).data }, (e as any).status ?? 500) : e
+    throw e instanceof StartError ? new FnError({ code: e.code, message: e.message, issues: e.issues, data: e.data }, e.status ?? 500) : e
   }
 }
 
 // ---- structural sharing and drafts ------------------------------------------------------------------------------
 
-const plain = (v: unknown): v is Record<PropertyKey, any> =>
+type Obj = Record<PropertyKey, unknown>
+
+const plain = (v: unknown): v is Obj =>
   !!v && typeof v === 'object' && (Array.isArray(v) || Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null)
 
 /** `next`, with every subtree deep-equal to `prev`'s replaced by `prev`'s (TanStack's replaceEqualDeep). */
@@ -778,15 +833,15 @@ export function share<T>(prev: unknown, next: T): T {
   if (prev === next || !plain(prev) || !plain(next) || Array.isArray(prev) !== Array.isArray(next)) return next
   const keys = Object.keys(next)
   let same = Object.keys(prev).length === keys.length
-  const out: any = Array.isArray(next) ? [] : {}
+  const out = (Array.isArray(next) ? [] : {}) as Obj
   for (const k of keys) {
-    out[k] = share((prev as any)[k], (next as any)[k])
-    if (out[k] !== (prev as any)[k]) same = false
+    out[k] = share(prev[k], next[k])
+    if (out[k] !== prev[k]) same = false
   }
-  return same ? (prev as T) : out
+  return (same ? prev : out) as T
 }
 
-interface Draft { b: any; c?: any; px: any; done?: any }
+interface Draft { b: Obj; c?: Obj; px: Obj; done?: Obj }
 
 /**
  * Run `recipe` on a copy-on-write draft of `base`: only objects it writes (and their parents) are copied. A recipe
@@ -799,15 +854,14 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
   }
   const nodes = new Map<object, Draft>()
   const byProxy = new WeakMap<object, Draft>()
-  const unwrap = (v: any) => (v && typeof v === 'object' && byProxy.has(v) ? byProxy.get(v)!.b : v)
+  const unwrap = (v: unknown) => (v && typeof v === 'object' && byProxy.has(v) ? byProxy.get(v)!.b : v)
   const cur = (n: Draft) => n.c ?? n.b
-  const own = (n: Draft) => (n.c ??= Array.isArray(n.b) ? n.b.slice() : { ...n.b })
-  const node = (b: any): Draft => {
+  const own = (n: Draft) => (n.c ??= (Array.isArray(n.b) ? n.b.slice() : { ...n.b }) as Obj)
+  const node = (b: Obj): Draft => {
     let n = nodes.get(b)
     if (n) return n
-    n = { b, px: undefined }
-    const self = n
-    n.px = new Proxy(Array.isArray(b) ? [] : {}, {
+    const self: Draft = n = { b, px: b }
+    n.px = new Proxy((Array.isArray(b) ? [] : {}) as Obj, {
       get: (_, k) => {
         const v = cur(self)[k]
         return plain(v) ? node(v).px : v
@@ -824,7 +878,7 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
       getOwnPropertyDescriptor: (t, k) => {
         const d = Reflect.getOwnPropertyDescriptor(cur(self), k)
         if (d && k === 'length' && Array.isArray(t)) return { ...d, configurable: false }
-        return d && { ...d, configurable: true, value: (self.px as any)[k] }
+        return d && { ...d, configurable: true, value: (self.px)[k] }
       },
     })
     nodes.set(b, n)
@@ -832,7 +886,7 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
     return n
   }
   // The result: copies where something changed, the original objects everywhere else.
-  const fin = (n: Draft): any => {
+  const fin = (n: Draft): Obj => {
     if (n.done !== undefined) return n.done
     n.done = n.b // cycles stop here
     const src = cur(n)
@@ -846,19 +900,20 @@ export function produce<T>(base: T, recipe: (draft: T) => T | void): T {
     if (out) made.add(out)
     return (n.done = out ?? n.b)
   }
-  const deep = (v: any): any => {
+  const deep = (v: unknown): unknown => {
     if (v && typeof v === 'object' && byProxy.has(v)) return fin(byProxy.get(v)!)
     if (Array.isArray(v)) return v.map(deep)
     if (plain(v)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deep(x)]))
     return v
   }
   const root = node(base)
-  const r = recipe(root.px)
-  return r === undefined || r === root.px ? fin(root) : deep(r)
+  const r = recipe(root.px as T)
+  return (r === undefined || r === root.px ? fin(root) : deep(r)) as T
 }
 
 /** What `live.ts` reads from here; see its header. */
 export const liveApi = { cache, currentScope, fakeScope, fns, FnError, keyOf, net, rt, runtime, skip, StartError, track }
+/** What `live.ts` is handed, instead of a static import that would close a cycle. */
 export type LiveApi = typeof liveApi
 
 // ---- start-up ----------------------------------------------------------------------------------------------------
@@ -870,5 +925,5 @@ if (typeof document !== 'undefined' && !runtime.scope) {
   seed(client.seeds)
   client.seeds = undefined
   const el = document.getElementById('weft-cache')
-  if (el) seed(JSON.parse(el.textContent!))
+  if (el) seed(JSON.parse(el.textContent))
 }

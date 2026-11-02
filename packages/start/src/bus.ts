@@ -1,6 +1,7 @@
 // The fan-out bus (research 30 §3): strings, at-most-once, ordered per publisher. Tags, topics, rings and cursors stay
 // in the hub, so a bus is three methods. `@weft-js/realtime-redis`, `-nats` and `-durable-object` implement this interface.
 
+/** How one instance reaches the others: the in-memory bus for one process, a plugin's for many. */
 export interface Bus {
   readonly name: string
   publish(channel: string, message: string): Promise<void>
@@ -29,18 +30,19 @@ export function memoryBus(): Bus {
   const channels = new Map<string, Set<(message: string) => void>>()
   return {
     name: 'memory',
-    async publish(channel, message) {
+    publish(channel, message) {
       const list = channels.get(channel)
       if (list) queueMicrotask(() => { for (const on of list) on(message) })
+      return Promise.resolve()
     },
-    async subscribe(channel, on) {
+    subscribe(channel, on) {
       let list = channels.get(channel)
       if (!list) channels.set(channel, (list = new Set()))
       list.add(on)
-      return () => {
+      return Promise.resolve(() => {
         list.delete(on)
         if (!list.size) channels.delete(channel)
-      }
+      })
     },
   }
 }

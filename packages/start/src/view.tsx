@@ -22,7 +22,7 @@ export function Level(props: { route: RouteState; depth: number }) {
     if (id === undefined) return null
     const html = route.mount ? lv.html.value : undefined
     if (html !== undefined) return route.mount!(html, untrack(() => props.depth), () => <Level route={route} depth={next} />)
-    const Route = route.comps[id]
+    const Route = route.comps[id] as ((props: { params: Record<string, string>; data: unknown; children: unknown }) => unknown) | undefined
     if (!Route) return null
     const body = () => <Route params={lv.params.value} data={lv.data.value}><Level route={route} depth={next} /></Route>
     return route.around ? route.around(untrack(() => props.depth), id, body) : body()

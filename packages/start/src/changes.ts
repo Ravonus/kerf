@@ -14,7 +14,7 @@
 // `q.live()` shows the mode (`liveMode`) and `degraded` or `reconnecting`, because a page that merely looks live is worse
 // than one that says it isn't. Sources are in db/changes-*.ts; each probes what it can do before it says so.
 
-import { StartError, type LiveMode } from './data'
+import { StartError } from './data'
 import type { DbHandle } from './db/core'
 
 export type { LiveMode } from './data'
@@ -32,6 +32,7 @@ export interface Probe {
   fix?: string
 }
 
+/** Where a source says what changed. */
 export interface Sink {
   changes(list: Change[]): void
   /** A barrier arrived: what came before it and these tags cover is on its way as a poke. */
@@ -42,13 +43,14 @@ export interface Sink {
   up(): void
 }
 
+/** A change feed: what reports writes to the database, whoever made them. */
 export interface Source {
   readonly name: string
   readonly tables: string[]
   /** `listener: 'external'`: a separate process listens, and this app only reads the bus. */
-  readonly external?: boolean
+  readonly external?: boolean | undefined
   /** Dev: the tags of one change. Default `[table, `${table}:${id}`]`. */
-  readonly tagged?: (change: Change) => string[]
+  readonly tagged?: ((change: Change) => string[]) | undefined
   /** Ms a change waits for its barrier, when a feed delivers in slower batches than the default 25. */
   readonly hold?: number
   /** The migration's input (`weft db live`). */
@@ -61,8 +63,10 @@ export interface Source {
   settle?(tags: string[]): Promise<void>
 }
 
+/** A table as `Source.defs` reports it. */
 export interface TableDef { name: string; pk: string[] }
 
+/** `dbChanges`: how to listen, and how a change turns into tags. */
 export interface ChangeOptions {
   /** Direct `postgres://…` for the listener, when the app's URL goes through a pooler. */
   listenUrl?: string
@@ -75,16 +79,18 @@ export interface ChangeOptions {
 }
 
 const NAME = Symbol.for('drizzle:Name')
-const nameOf = (t: unknown): string => (typeof t === 'string' ? t : (t as any)?.[NAME] ?? (() => { throw new StartError('R017', `\`dbChanges\` got something that isn't a table: ${String(t)}`, 'pass Drizzle tables, or their names') })())
+const nameOf = (t: unknown): string => (typeof t === 'string' ? t : (t as Record<symbol, string> | null)?.[NAME] ?? (() => { throw new StartError('R017', `\`dbChanges\` got something that isn't a table: ${String(t)}`, 'pass Drizzle tables, or their names') })())
 
 const CORE = { sqlite: 'sqlite-core', postgresql: 'pg-core', mysql: 'mysql-core' }
 
 /** A table's primary key columns, from its Drizzle definition. */
-async function pkOf(table: any, dialect: DbHandle['dialect']): Promise<string[]> {
+interface Key { name: string; primary?: boolean }
+
+async function pkOf(table: unknown, dialect: DbHandle['dialect']): Promise<string[]> {
   const { getTableConfig } = await import(/* @vite-ignore */ `drizzle-orm/${CORE[dialect]}`)
   const { columns, primaryKeys } = getTableConfig(table)
-  const inline = columns.filter((c: any) => c.primary).map((c: any) => c.name)
-  return inline.length ? inline : (primaryKeys[0]?.columns ?? []).map((c: any) => c.name)
+  const inline = columns.filter((c: Key) => c.primary).map((c: Key) => c.name)
+  return inline.length ? inline : (primaryKeys[0]?.columns ?? []).map((c: Key) => c.name)
 }
 
 /** `realtime({ changes: dbChanges(db, [todos, notes]) })`: these tables' writes reach `.live`, whoever made them. */
@@ -108,17 +114,20 @@ export function dbChanges(db: { $weft?: DbHandle }, tables: unknown[], options: 
 }
 
 /** Set by a platform, read at run time: this process lives for one request. */
-export function functionHost(env: Record<string, string | undefined> = (globalThis as any).process?.env ?? {}): string | undefined {
+export function functionHost(env: Record<string, string | undefined> = globalThis.process?.env ?? {}): string | undefined {
   if (env.VERCEL) return 'Vercel'
   if (env.NETLIFY || env.NETLIFY_LOCAL) return 'Netlify'
   if (env.AWS_LAMBDA_FUNCTION_NAME) return 'AWS Lambda'
   if (env.AZURE_FUNCTIONS_ENVIRONMENT) return 'Azure Functions'
   if (env.FUNCTION_TARGET) return 'Cloud Functions'
-  if ((globalThis as any).navigator?.userAgent === 'Cloudflare-Workers') return 'Cloudflare Workers'
+  if (globalThis.navigator?.userAgent === 'Cloudflare-Workers') return 'Cloudflare Workers'
+  return undefined
 }
 
+/** What a change sends to live queries, as tags to refetch. */
 export interface Poke { t: string[]; /** Tag prefixes: `todos:` for every row of a table-level change. */ p?: string[]; /** Tags a barrier covered: a subscription with one of them is poked already. */ k?: string[] }
 
+/** Where a feed's pokes go: this instance, and the rest through the bus. */
 export interface FeedOut {
   emit(poke: Poke): void
   /** Bumps the shared cache, so a refetch can't be answered with what the change made stale. */
@@ -126,6 +135,7 @@ export interface FeedOut {
   status(down: string | undefined): void
 }
 
+/** A running feed, between its source and the hub. */
 export interface Feed {
   start(probe: Probe): Promise<void>
   stop(): Promise<void>
@@ -135,8 +145,9 @@ export interface Feed {
   readonly running: boolean
 }
 
-const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
+const unref = <T,>(t: T) => ((t as { unref?(): void } | null | undefined)?.unref?.(), t)
 
+/** Batches a source's changes into pokes, held and throttled so a burst of writes is one refetch. */
 export function createFeed(source: Source, out: FeedOut, { hold = source.hold ?? 25, throttle = 250, barrier = 1000 } = {}): Feed {
   const known = new Set(source.tables)
   let pending = new Set<string>(), prefixes = new Set<string>(), covered = new Set<string>()
@@ -164,7 +175,7 @@ export function createFeed(source: Source, out: FeedOut, { hold = source.hold ??
     timer = unref(setTimeout(flush, Math.max(Math.min(hold, first + throttle - now), last + throttle - now)))
   }
 
-  const tagsOf = ({ table, id }: Change) => source.tagged?.({ table, id }) ?? (id === undefined ? [table] : [table, `${table}:${id}`])
+  const tagsOf = (change: Change) => source.tagged?.(change) ?? (change.id === undefined ? [change.table] : [change.table, `${change.table}:${change.id}`])
 
   const sink: Sink = {
     changes(list) {
@@ -235,7 +246,7 @@ export function createFeed(source: Source, out: FeedOut, { hold = source.hold ??
       const ours = tags.filter(t => this.covers(t))
       if (!ours.length || !source.settle) return
       let late: ReturnType<typeof setTimeout> | undefined
-      await Promise.race([source.settle(ours), new Promise<void>(ok => (late = unref(setTimeout(ok, barrier))))]).catch(() => {})
+      await Promise.race([source.settle(ours), new Promise<void>(ok => { late = unref(setTimeout(ok, barrier)) })]).catch(() => {})
       clearTimeout(late)
     },
   }

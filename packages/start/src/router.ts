@@ -5,8 +5,7 @@
 // renders its new route, and everything inside it goes. One state per request on the server (passed down as a
 // prop), one per tab on the client.
 
-import { state, untrack, type State } from '@weft-js/core'
-import type { SsrData } from '@weft-js/core'
+import { state, untrack, type State,type SsrData } from '@weft-js/core'
 import type { Merged } from '@weft-js/core/ssr'
 import type { Wire } from './data'
 
@@ -18,8 +17,8 @@ export interface Match {
   id: string
   params: Record<string, string>
   data?: unknown
-  d?: string[]
-  t?: string[]
+  d?: string[] | undefined
+  t?: string[] | undefined
   /** A static level: no client code (PLAN §11). `h`: its HTML (a navigation), `x`: a hash of it, to skip an unchanged one. */
   s?: 1
   h?: string
@@ -29,13 +28,14 @@ export interface Match {
 export interface Level {
   id: State<string | undefined>
   params: State<Record<string, string>>
-  data: State<any>
+  data: State<unknown>
   /** A static level's HTML: empty for the page's own; undefined for a level with client code. */
   html: State<string | undefined>
-  x?: string
+  x?: string | undefined
 }
 
-export type Component = (props: any) => unknown
+/** A route, layout or island: its props are its own, so nothing here can call one without a cast. */
+export type Component = (props: never) => unknown
 
 export interface RouteState {
   levels: Level[]
@@ -84,7 +84,7 @@ export function createRouteState(payload: RoutePayload, comps: Record<string, Co
 
 /** Level `d`, made on first use (an empty level renders nothing). */
 export function level(r: RouteState, d: number): Level {
-  return (r.levels[d] ??= { id: state<string | undefined>(undefined), params: state({}), data: state<any>(undefined), html: state<string | undefined>(undefined) })
+  return (r.levels[d] ??= { id: state<string | undefined>(undefined), params: state({}), data: state<unknown>(undefined), html: state<string | undefined>(undefined) })
 }
 
 const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b)
@@ -125,17 +125,18 @@ export function applyMatches(r: RouteState, matches: Match[], path: string, stat
  */
 export const client: {
   route?: RouteState
-  navigate?: (href: string, options?: NavigateOptions & { replace?: boolean }) => Promise<void>
+  navigate?: (href: string, options?: NavigateOptions & { replace?: boolean | undefined }) => Promise<void>
   seed?: (list: Wire[]) => void
-  seeds?: Wire[]
+  seeds?: Wire[] | undefined
   invalidated?: (tags: string[]) => void
   /** Dev: server code changed, so whatever a query read may have too. */
   refreshed?: () => void
 } = {}
 
+/** `navigate()`: replace the history entry, and keep the scroll. */
 export interface NavigateOptions {
   /** Replace the history entry instead of pushing one. */
-  replace?: boolean
+  replace?: boolean | undefined
   /** Keep the scroll position (default: top, or the URL's #hash). */
   scroll?: false
 }

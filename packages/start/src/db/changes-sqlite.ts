@@ -20,8 +20,8 @@ const NETWORK = new Set([0x6969 /* nfs */, 0x517b /* smb */, 0xfe534d42 /* smb2 
 /** Whether a file is on a network file system. `exec` and `statfs` are the test's way in. */
 export function onNetwork(path: string, { platform = process.platform, statfs = statfsSync, df = (p: string) => execFileSync('df', ['-P', p], { encoding: 'utf8' }) } = {}): boolean {
   try {
-    if (platform === 'linux') return NETWORK.has(Number(statfs(path).type))
-    const device = df(path).trim().split('\n').at(-1)!.split(/\s+/)[0]
+    if (platform === 'linux') return NETWORK.has(statfs(path).type)
+    const device = df(path).trim().split('\n').at(-1)!.split(/\s+/)[0] ?? ''
     return device.startsWith('//') || /^[^/]+:\//.test(device)
   } catch {
     return false
@@ -31,7 +31,7 @@ export function onNetwork(path: string, { platform = process.platform, statfs = 
 interface Options { path: string; open: (path: string) => Promise<Conn>; tables: string[]; interval?: number }
 
 export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
-  const log = (c: Conn) => (c.query(`select count(*) from sqlite_master where name = '${LOG}'`, [], 'values') as number[][])[0][0] > 0
+  const log = (c: Conn) => (c.query(`select count(*) from sqlite_master where name = '${LOG}'`, [], 'values') as number[][])[0]![0]! > 0
   const triggers = (c: Conn) => (c.query(`select tbl_name from sqlite_master where type = 'trigger' and name like 'weft\\_changes\\_%\\_upd' escape '\\'`, [], 'values') as string[][]).map(r => r[0])
   let tick: (() => void) | undefined, out: Sink | undefined
 
@@ -52,16 +52,16 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
   async function start(sink: Sink, how: Probe) {
     if (how.mode === 'off') return () => {}
     const c = await open(path)
-    const version = () => (c.query('pragma data_version', [], 'values') as number[][])[0][0]
+    const version = () => (c.query('pragma data_version', [], 'values') as number[][])[0]![0]!
     const usable = how.mode === 'feed'
-    const newest = () => (c.query(`select coalesce(max(seq), 0) from ${LOG}`, [], 'values') as number[][])[0][0]
+    const newest = () => (c.query(`select coalesce(max(seq), 0) from ${LOG}`, [], 'values') as number[][])[0]![0]!
     let seq = usable ? newest() : 0
     let at = version()
     let timer: ReturnType<typeof setTimeout> | undefined
     const read = () => {
       const rows = c.query(`select seq, tbl, pk from ${LOG} where seq > ? order by seq`, [seq], 'values') as [number, string, string | null][]
       if (!rows.length) return
-      if (rows[0][0] > seq + 1) sink.lost() // the log moved past us
+      if (rows[0]![0] > seq + 1) sink.lost() // the log moved past us
       const byTable = new Map<string, Set<string> | null>()
       for (const [, table, id] of rows) {
         if (id === null) byTable.set(table, null)
@@ -84,8 +84,8 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
         if (usable) read()
         else sink.changes(tables.map(table => ({ table })))
         sink.up()
-      } catch (e: any) {
-        sink.down(`SQLite watcher: ${e?.message ?? e}`)
+      } catch (e) {
+        sink.down(`SQLite watcher: ${(e as Error | null)?.message ?? String(e)}`)
       }
     }
     tick = look
@@ -93,7 +93,7 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
     const every = () => {
       look()
       timer = setTimeout(every, interval)
-      ;(timer as any).unref?.()
+      ;(timer as { unref?(): void }).unref?.()
     }
     every()
     return () => {
@@ -107,9 +107,10 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
     probe,
     start,
     /** In this process, so the barrier needs no trip: read what's committed now, and let the hub drop what the poke covers. */
-    async settle(tags: string[]) {
+    settle(tags: string[]) {
       tick?.()
       out?.settled(tags)
+      return Promise.resolve()
     },
   }
 }

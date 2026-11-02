@@ -9,14 +9,17 @@
 
 import postgres from 'postgres'
 import { CHANNEL } from './changes-sql.mjs'
-import type { Fn, VerifyOptions } from './data'
+import type { Context, Fn, VerifyOptions } from './data'
 import type { Source } from './changes'
 
 export type { VerifyOptions }
 
+/** Each step of the round trip, in order. */
 export const LINKS = ['trigger', 'write', 'notify', 'app', 'poke', 'refetch', 'denied', 'cleanup'] as const
+/** One step of the round trip. */
 export type Link = (typeof LINKS)[number]
 
+/** How a round trip went: the link it broke at, and what wasn't tested. */
 export interface VerifyResult {
   ok: boolean
   /** The link that broke, and what it said. */
@@ -29,7 +32,7 @@ class Broke extends Error {
   constructor(public link: Link, why: string) { super(why) }
 }
 
-const clean = (s: unknown) => String((s as any)?.message ?? s).replace(/\/\/[^@/\s]*@/g, '//…@')
+const clean = (s: unknown) => String((s as Error | null | undefined)?.message ?? s).replace(/\/\/[^@/\s]*@/g, '//…@')
 
 /** A value for a required column nobody named. Foreign keys can't be guessed: `row` is for those. */
 function made(type: string, marker: string): unknown {
@@ -60,7 +63,8 @@ async function insert(sql: postgres.Sql, table: string, marker: string, row: Rec
   const names = Object.keys(values)
   const quoted = (n: string) => `"${n.replaceAll('"', '""')}"`
   const key = pk.length ? pk : names.slice(0, 1)
-  const [got] = await sql.unsafe(`insert into ${quoted(table)} (${names.map(quoted).join(', ')}) values (${names.map((_, i) => `$${i + 1}`).join(', ')}) returning ${key.map(quoted).join(', ')}`, names.map(n => values[n]) as any[])
+  const [got] = await sql.unsafe(`insert into ${quoted(table)} (${names.map(quoted).join(', ')}) values (${names.map((_, i) => `$${i + 1}`).join(', ')}) returning ${key.map(quoted).join(', ')}`, names.map(n => values[n]) as never[])
+  if (!got) throw new Broke('write', `\`${table}\` took the row and returned nothing`)
   const where = key.map((k, i) => `${quoted(k)} = $${i + 1}`).join(' and ')
   return { id: key.map(k => String(got[k])).join(':'), remove: () => sql.unsafe(`delete from ${quoted(table)} where ${where}`, key.map(k => got[k])) }
 }
@@ -71,16 +75,19 @@ async function primaryKey(sql: postgres.Sql, table: string): Promise<string[]> {
 }
 
 /** One SSE connection to the app, by the protocol a browser's tab speaks. */
+type Frame = [event: string, data: unknown]
+type Hello = { l?: { m?: string; d?: unknown } }
+
 async function subscribe(url: string, id: string, input: unknown, cookie: string | undefined, signal: AbortSignal) {
   const res = await fetch(`${url}/_weft/rt`, { method: 'POST', signal, headers: { 'content-type': 'application/json', 'x-weft': '1', accept: 'text/event-stream', origin: url, ...(cookie && { cookie }) }, body: JSON.stringify({ s: [[1, 'q', id, input]] }) })
   if (!res.ok) throw new Error(`\`/_weft/rt\` answered ${res.status}`)
-  const frames: [string, any][] = []
+  const frames: Frame[] = []
   const waiting = new Set<() => void>()
   void (async () => {
     const dec = new TextDecoder()
     let buf = ''
     try {
-      for await (const chunk of res.body as any as AsyncIterable<Uint8Array>) {
+      for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
         buf += dec.decode(chunk, { stream: true })
         for (let i; (i = buf.indexOf('\n\n')) >= 0; buf = buf.slice(i + 2)) {
           if (buf[0] === ':') continue
@@ -91,7 +98,7 @@ async function subscribe(url: string, id: string, input: unknown, cookie: string
       }
     } catch {}
   })()
-  const until = async (test: (f: [string, any]) => boolean, ms: number) => {
+  const until = async (test: (f: Frame) => boolean, ms: number) => {
     const end = Date.now() + ms
     for (;;) {
       const hit = frames.find(test)
@@ -111,6 +118,7 @@ async function subscribe(url: string, id: string, input: unknown, cookie: string
 const read = (url: string, id: string, input: unknown, cookie?: string) =>
   fetch(`${url}/_weft/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`, { headers: { accept: 'application/json', ...(cookie && { cookie }) } })
 
+/** What `roundTrip` needs: the query, the feed, and where the app is. */
 export interface RoundTrip {
   fn: Fn
   source?: Source
@@ -124,11 +132,12 @@ export interface RoundTrip {
 function tableOf(fn: Fn, source: Source | undefined, input: unknown): string | undefined {
   const any = new Proxy({}, { get: (_, k) => (k === Symbol.toPrimitive ? () => '*' : '*') })
   let tags: readonly string[] = []
-  try { tags = typeof fn.def.tags === 'function' ? fn.def.tags(input ?? any, any) : fn.def.tags ?? [] } catch {}
+  try { tags = typeof fn.def.tags === 'function' ? fn.def.tags(input ?? any, any as Context) : fn.def.tags ?? [] } catch {}
   const names = tags.map(t => t.split(':')[0])
-  return names.find(t => source?.tables.includes(t)) ?? names[0]
+  return names.find(t => t !== undefined && source?.tables.includes(t)) ?? names[0]
 }
 
+/** Writes a real row and follows it to a live client, naming the first link that breaks. */
 export async function roundTrip({ fn, source, url, db, options, env }: RoundTrip): Promise<VerifyResult> {
   const timeout = options.timeout ?? 5000
   const marker = `weft-verify-${crypto.randomUUID()}` // concurrent builds never touch each other's row
@@ -171,12 +180,15 @@ export async function roundTrip({ fn, source, url, db, options, env }: RoundTrip
       const a = await subscribe(url, fn.$id, input, cookie, ac.signal)
       const hi = await a.until(f => f[0] === 'h', timeout)
       if (!hi) throw new Broke('app', 'the app accepted the connection and said nothing')
-      if (hi[1].l?.m !== 'feed' && hi[1].l?.m !== 'external') throw new Broke('app', `the app's live mode is \`${hi[1].l?.m ?? 'app'}\`, not a feed: its log says why`)
-      if (hi[1].l?.d) throw new Broke('app', 'the app\'s change feed is down')
-      const ack = await a.until(f => (f[0] === 'a' || f[0] === 'e') && f[1][0] === 1, timeout)
+      const said = (hi[1] as Hello).l
+      if (said?.m !== 'feed' && said?.m !== 'external') throw new Broke('app', `the app's live mode is \`${said?.m ?? 'app'}\`, not a feed: its log says why`)
+      if (said?.d) throw new Broke('app', 'the app\'s change feed is down')
+      const ack = await a.until(f => (f[0] === 'a' || f[0] === 'e') && (f[1] as unknown[])[0] === 1, timeout)
       if (!ack) throw new Broke('app', 'no answer to the subscription')
-      if (ack[0] === 'e') throw new Broke('app', ack[1][1].code === 'Q009' ? `the app doesn't know \`${fn.$id}\`: it runs another build` : ack[1][1].code === 'A002' ? `\`${fn.$id}\` needs a signed-in user: set \`WEFT_STAGING_COOKIE\`` : `the subscription failed: ${ack[1][1].message}`)
-      return { ...a, tags: ack[1][1] as string[] }
+      const answer = (ack[1] as [number, unknown])[1]
+      const failed = answer as { code?: string; message?: string }
+      if (ack[0] === 'e') throw new Broke('app', failed.code === 'Q009' ? `the app doesn't know \`${fn.$id}\`: it runs another build` : failed.code === 'A002' ? `\`${fn.$id}\` needs a signed-in user: set \`WEFT_STAGING_COOKIE\`` : `the subscription failed: ${failed.message}`)
+      return { ...a, tags: answer as string[] }
     }) : undefined
     if (!url) skip(sql ? ['app', 'poke', 'refetch', 'denied'] : ['app'], 'no URL target: the database half was tested, not the running app. Set `WEFT_STAGING_URL` or `verify.url`')
 
@@ -198,7 +210,7 @@ export async function roundTrip({ fn, source, url, db, options, env }: RoundTrip
     })
     if (live) {
       await timed('poke', async () => {
-        const p = await live.until(f => f[0] === 'p' && f[1].t.some((t: string) => live.tags.includes(t)), timeout)
+        const p = await live.until(f => f[0] === 'p' && (f[1] as { t: string[] }).t.some(t => live.tags.includes(t)), timeout)
         if (!p) throw new Broke('poke', `the database notified, and the app never poked this subscription within ${timeout} ms: its listener, or a tag the query doesn't declare`)
       })
       await timed('refetch', async () => {
@@ -207,7 +219,7 @@ export async function roundTrip({ fn, source, url, db, options, env }: RoundTrip
           const res = await read(url!, fn.$id, input, cookie)
           if (res.ok && (await res.text()).includes(marker)) return
           if (Date.now() > end) throw new Broke('refetch', `poked, and the query didn't return the row within ${timeout} ms${options.row ? '' : ': if it filters by user, say whose it is in `verify.row`'}`)
-          await new Promise(ok => setTimeout(ok, 50))
+          await new Promise(ok => { setTimeout(ok, 50) })
         }
       })
       if (denied) await timed('denied', async () => {
@@ -233,6 +245,7 @@ export async function roundTrip({ fn, source, url, db, options, env }: RoundTrip
       }
     }
     await Promise.all([sql?.end({ timeout: 1 }), listener?.end({ timeout: 1 })]).catch(() => {})
+    // oxlint-disable-next-line no-unsafe-finally -- a row left in a real database outranks whatever the run concluded
     if (cleaning) throw new Broke('cleanup', `row \`${marker}\` is still there: ${clean(cleaning)}`)
   }
 }

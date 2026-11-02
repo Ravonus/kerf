@@ -5,7 +5,7 @@
 import { state } from '@weft-js/core'
 import { flush, net, render, screen } from '@weft-js/core/test'
 import { cache, mutation, query, redirect, skip, type StandardSchemaV1 } from '@weft-js/start'
-import { produce, runtime, share } from '@weft-js/start/data'
+import { decodeForm, produce, runtime, share } from '@weft-js/start/data'
 import { checkTags } from '../src/exec'
 
 type Todo = { id: string; title: string; done: boolean }
@@ -154,7 +154,7 @@ test('S011: an optimistic update its invalidated tags miss warns, and holds unti
   render(One)
   await net.settle()
   const seen: string[] = []
-  const mo = new MutationObserver(() => seen.push(document.querySelector('p')!.textContent!))
+  const mo = new MutationObserver(() => seen.push(document.querySelector('p')!.textContent))
   mo.observe(document.body, { subtree: true, characterData: true, childList: true })
   await rename({ id: '1' })
   for (let i = 0; i < 5; i++) await net.settle()
@@ -255,4 +255,14 @@ test('share keeps equal subtrees; produce copies only what it writes', () => {
   expect(produce(a, d => { d.list.find(x => x.id === 1) })).toBe(a) // reads copy nothing
   expect(produce(a, d => ({ ...d, n: 2 })).list).toBe(a.list)
   expect(produce([1, 2, 3], d => { d.splice(1, 1) })).toEqual([1, 3])
+})
+
+test("a form field named like an inherited method is a field: `toString` can't reach Object.prototype", () => {
+  const form = new FormData()
+  form.append('toString', 'a')
+  form.append('valueOf[]', 'b')
+  form.append('valueOf[]', 'c')
+  const fields = decodeForm(form)
+  expect(Object.keys(fields).sort((a, b) => a.localeCompare(b))).toEqual(['toString', 'valueOf'])
+  expect(fields.valueOf).toEqual(['b', 'c'])
 })

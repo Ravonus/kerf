@@ -26,7 +26,12 @@ export type ShareRule =
   | { keys: (args: { ctx: Context; keys: string[] }) => Iterable<string> | Promise<Iterable<string>> }
 
 type Issue = { issues: { message: string }[] }
-const schema = <T,>(validate: (v: any) => T | Issue): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'weft', validate: (v: unknown) => { const r: any = validate(v); return r?.issues ? r : { value: r } } } }) as any
+type Sent = { add?: unknown; drop?: unknown; e?: unknown } | null | undefined
+const isIssue = (r: unknown): r is Issue => !!(r as Partial<Issue> | null | undefined)?.issues
+const schema = <T,>(validate: (v: Sent) => T | Issue): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'weft', validate: (v: unknown) => { const r = validate(v as Sent); return isIssue(r) ? r : { value: r } } } })
+
+/** What a handler of the share channel is given. */
+interface Said<M = unknown> { msg: M; id: string; ctx: Context; reply: Client['reply'] }
 const no = (message: string): Issue => ({ issues: [{ message }] })
 const isKey = (k: unknown): k is string => typeof k === 'string' && k.length > 0 && k.length <= MAX_KEY
 const isBits = (b: unknown) => Number.isInteger(b) && (b as number) >= 0 && (b as number) <= 7
@@ -68,7 +73,7 @@ const publish = (h: Hub, shard: number, body: object) => h.bus.publish(`weft:s:$
 function heard(h: Hub, st: Sharing, shard: number, ev: Ev | null) {
   if (!ev) return // the bus lost something: bits are re-said on a beat, and peers age out
   const m = (ev.p ??= JSON.parse(ev.raw)) as { f?: string; e?: [string, number][]; a?: string; k?: string[]; t?: string; s?: Triple[] }
-  if (m.t) return void (m.s && st.clients.get(m.t)?.reply('b', { s: m.s }))
+  if (m.t) return  (m.s && st.clients.get(m.t)?.reply('b', { s: m.s }))
   if (m.a) {
     const s: Triple[] = []
     for (const key of m.k ?? []) for (const c of st.holders.get(key) ?? []) {
@@ -156,39 +161,39 @@ export function shareChannel(h: Hub): Fn {
           const add = v?.add ?? [], drop = v?.drop ?? []
           return Array.isArray(add) && Array.isArray(drop) && add.length + drop.length <= MAX_BATCH && add.every(isKey) && drop.every(isKey) ? { add, drop } : no(`\`u\` takes up to ${MAX_BATCH} keys of 1 to ${MAX_KEY} characters`)
         }),
-        set: schema<{ e: [string, number][] }>(v => (Array.isArray(v?.e) && v.e.length <= MAX_BATCH && v.e.every((x: any) => Array.isArray(x) && isKey(x[0]) && isBits(x[1])) ? { e: v.e } : no('`set` takes `[key, bits]` pairs, bits 0 to 7'))),
+        set: schema<{ e: [string, number][] }>(v => (Array.isArray(v?.e) && v.e.length <= MAX_BATCH && v.e.every(x => Array.isArray(x) && isKey(x[0]) && isBits(x[1])) ? { e: v.e } : no('`set` takes `[key, bits]` pairs, bits 0 to 7'))),
       },
       server: { ok: anything, b: anything },
       on: {
-        async u({ msg, id, ctx, reply }: any) {
+        async u({ msg, id, ctx, reply }: Said<{ add: string[]; drop: string[] }>) {
           const c = client(id, reply)
           await release(h, st, c, msg.drop)
           const room = Math.max(0, h.limits.shareKeys - c.keys.size)
-          const fresh = msg.add.filter((k: string) => !c.keys.has(k))
+          const fresh = msg.add.filter(k => !c.keys.has(k))
           const asked = fresh.slice(0, room)
           const ok = await allowedKeys(rule!, ctx, asked)
           if (!st.clients.has(id)) return // it left while the rule ran
           const passed = new Set(ok)
           for (const k of ok) hold(h, st, c, k)
           await Promise.all(ok.length ? [...byShard<string>(ok, k => k)].map(([n, k]) => st.shards.get(n)!.ch.ready.then(() => publish(h, n, { a: id, k }))) : [])
-          reply('ok', { id, no: fresh.filter((k: string) => !passed.has(k)) })
+          reply('ok', { id, no: fresh.filter(k => !passed.has(k)) })
         },
-        set({ msg, id }: any) {
+        set({ msg, id }: Said<{ e: [string, number][] }>) {
           const c = st.clients.get(id)
           if (!c) return
-          const known = (msg.e as [string, number][]).filter(([k]) => c.keys.has(k))
+          const known = msg.e.filter(([k]) => c.keys.has(k))
           for (const [k, bits] of known) c.keys.set(k, bits)
           return Promise.all([...byShard(known, e => e[0])].map(([n, e]) => publish(h, n, { f: id, e })))
         },
       },
-      left({ id }: any) {
+      left({ id }: Pick<Said, 'id'>) {
         const c = st.clients.get(id)
         if (!c) return
         st.clients.delete(id)
         return release(h, st, c, [...c.keys.keys()])
       },
       /** The session again: every key this socket holds goes back through the rule. */
-      async recheck({ id, ctx, reply }: any) {
+      async recheck({ id, ctx, reply }: Said) {
         const c = st.clients.get(id)
         if (!c || !rule) return
         const keys = [...c.keys.keys()]

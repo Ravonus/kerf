@@ -40,7 +40,7 @@ export async function loadImages(srcs, { cache, timeoutMs = 1500, maxBytes = 4 <
       if (!allow(url)) throw new Error('not allowed')
       const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      if (!/^image\//.test(res.headers.get('content-type') ?? '')) throw new Error('not an image')
+      if (!res.headers.get('content-type')?.startsWith('image/')) throw new Error('not an image')
       if (Number(res.headers.get('content-length') ?? 0) > maxBytes) throw new Error('too large')
       const data = new Uint8Array(await res.arrayBuffer())
       if (data.length > maxBytes) throw new Error('too large')

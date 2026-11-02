@@ -7,8 +7,10 @@
 
 import type { Context } from './data'
 
+/** The path prefix an extension's routes answer under. */
 export const EXTENSION = '/_weft/x/'
 
+/** What a server extension is handed. */
 export interface ExtensionApi {
   /** Drop these tags, as a mutation would: live readers refetch. */
   invalidate(tags: string[]): Promise<void>
@@ -16,13 +18,14 @@ export interface ExtensionApi {
   report(d: { code: string; severity: string; message: string }): void
 }
 
+/** A plugin's server half: its routes, what it adds to `ctx`, and what it guards. */
 export interface ServerExtension {
   /** Serves `/_weft/x/<key>/<path>`. It sees the raw request: nothing has read the body. */
   handle?(request: Request, path: string, api: ExtensionApi): Promise<Response> | Response
   /** Merged into `ctx`, after the app's own. */
   context?(ctx: Context): object
   /** Before a function's `run`. Throw to refuse: an error with `answer: { code, message, status }` reaches the client as it is. */
-  guard?(fn: { id: string; kind: string; def: Record<string, any> }, ctx: Context): void | Promise<void>
+  guard?(fn: { id: string; kind: string; def: Record<string, unknown> }, ctx: Context): void | Promise<void>
   /** The `FnOptions` keys it enforces. One no extension claims refuses the call: a guard that isn't there mustn't pass. */
   options?: readonly string[]
   /** The `ctx` keys that differ per user, which a shared cache may not read (Q006). */
@@ -31,4 +34,5 @@ export interface ServerExtension {
   check?(dev?: boolean): void
 }
 
+/** One extension in the generated list, loaded when first asked for. */
 export interface ExtensionEntry { key: string; load(): Promise<ServerExtension> }

@@ -53,15 +53,15 @@ function config({ root, site, hydration, preset, port, logLevel, command, nitro:
 }
 
 function immutableCards() {
-  let nitro
+  let built
   return {
-    'prerender:generate'(_route, instance) { nitro = instance },
+    'prerender:generate'(_route, instance) { built = instance },
     'prerender:done'({ prerenderedRoutes }) {
-      if (!nitro) return
+      if (!built) return
       for (const r of prerenderedRoutes) {
-        if (r.route.startsWith('/_weft/og/') && r.route.endsWith('.png')) nitro.options.routeRules[r.route] = { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+        if (r.route.startsWith('/_weft/og/') && r.route.endsWith('.png')) built.options.routeRules[r.route] = { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
       }
-      nitro.routing.sync()
+      built.routing.sync()
     },
   }
 }

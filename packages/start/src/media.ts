@@ -26,11 +26,17 @@ const record = () =>
     swap: zod.enum(['intent', 'idle', 'never']).optional(),
   })
 
+/** Zod's API plus `media()`, the record of an upload. */
+// oxlint-disable-next-line no-redeclare -- a value and the namespace below that holds `z.infer`, one name as Zod's has
 export const z = { ...zod, media: record } as typeof zod & { media: typeof record }
 
+/** Zod's type helpers, under the name that has `media()`. */
 export declare namespace z {
+  /** A schema's output type. */
   export type infer<T> = zod.infer<T>
+  /** A schema's input type. */
   export type input<T> = zod.input<T>
+  /** A schema's output type, under Zod's other name. */
   export type output<T> = zod.output<T>
 }
 

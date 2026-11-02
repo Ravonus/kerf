@@ -27,7 +27,7 @@ const links = html => [...html.matchAll(/\shref="(\/[^"#?]*)/g)].map(m => m[1])
 /** @param {string} code @param {string} file `{ present, reads }`: does the module export `meta`, and does it read `data` or `params`? */
 export function metaExport(code, file) {
   let ast
-  try { ast = parseSync(file, code, { lang: /x$/.test(file) ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return { present: true, reads: true } }
+  try { ast = parseSync(file, code, { lang: file.endsWith('x') ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return { present: true, reads: true } }
   for (const node of ast.program.body) {
     if (node.type !== 'ExportNamedDeclaration') continue
     if (node.specifiers?.some(s => (s.exported?.name ?? s.exported?.value) === 'meta')) return { present: true, reads: true } // from elsewhere: can't tell
@@ -267,7 +267,7 @@ function placeholder(path) {
  */
 export function h006(code, file, report) {
   let ast
-  try { ast = parseSync(file, code, { lang: /x$/.test(file) ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return }
+  try { ast = parseSync(file, code, { lang: file.endsWith('x') ? 'tsx' : 'ts', sourceType: 'module' }) } catch { return }
   for (const node of ast.program.body) {
     if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue
     const d = node.declaration

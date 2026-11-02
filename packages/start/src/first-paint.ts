@@ -26,10 +26,10 @@ export function firstPaint(table: Pieces, sheets: string[], head = '') {
     for (const k of headHas) has.add(k)
     const fresh: number[] = []
     const take = (id: number) => {
-      if (sent.has(id) || !rank.has(table.pieces[id][0])) return
+      if (sent.has(id) || !rank.has(table.pieces[id]![0])) return
       sent.add(id)
       fresh.push(id)
-      table.deps[id].forEach(take)
+      table.deps[id]!.forEach(take)
     }
     table.always.forEach(take)
     for (const key of has) table.index[key]?.forEach(id => {
@@ -37,21 +37,21 @@ export function firstPaint(table: Pieces, sheets: string[], head = '') {
       if (!need || need.some(([all, any]) => all.every(k => has.has(k)) && any.every(l => l.some(k => has.has(k))))) take(id)
     })
     let css = !gated && has.has('[data-weft=styled]') ? ((gated = true), GATE) : ''
-    fresh.sort((a, b) => rank.get(table.pieces[a][0])! - rank.get(table.pieces[b][0])! || a - b)
+    fresh.sort((a, b) => rank.get(table.pieces[a]![0])! - rank.get(table.pieces[b]![0])! || a - b)
     let open = 0, rule = ''
     for (const id of fresh) {
-      const [, wrap, head, body] = table.pieces[id]
+      const [, wrap, selector, body] = table.pieces[id]!
       if (wrap !== open) {
-        css += (rule && '}') + '}'.repeat(depth(table.wraps[open])) + table.wraps[wrap]
+        css += (rule && '}') + '}'.repeat(depth(table.wraps[open]!)) + table.wraps[wrap]
         open = wrap
         rule = ''
       }
-      if (head === rule && head[0] !== '@') css += `;${body}` // a token block: one head, however many of its tokens are in
+      if (selector === rule && selector[0] !== '@') css += `;${body}` // a token block: one head, however many of its tokens are in
       else {
-        css += `${rule && '}'}${head}{${body}`
-        rule = head
+        css += `${rule && '}'}${selector}{${body}`
+        rule = selector
       }
     }
-    return css + (rule && '}') + '}'.repeat(depth(table.wraps[open]))
+    return css + (rule && '}') + '}'.repeat(depth(table.wraps[open]!))
   }
 }

@@ -18,7 +18,18 @@ import { NONE, seams, type Counts, type ShareLine } from '@weft-js/core/interact
 import { connectBuiltIn, keepOpen, wakeSocket } from './channel'
 import { BEAT, campaign, freeTab, holdTab, probeLink, tab, whenGone, type Campaign } from './link'
 
-export const GAP_TAB = 16, GAP_NET = 60, TTL = 15_000, GRACE = 1500, BATCH = 400, IDLE = 5000
+/** Ms between flushes to the other tabs. */
+export const GAP_TAB = 16
+/** Ms between flushes to the server. */
+export const GAP_NET = 60
+/** Ms a held key stands without being said again. */
+export const TTL = 15_000
+/** Ms what's held stands after the link drops, so a handover doesn't flash. */
+export const GRACE = 1500
+/** Entries one frame carries. */
+export const BATCH = 400
+/** Ms without a change before the socket may close. */
+export const IDLE = 5000
 
 /** Bump when a message below changes shape: tabs of two shapes then share nothing, and each is its own client. */
 const WIRE = 1
@@ -27,7 +38,7 @@ const CHANNEL = `weft:ui:${WIRE}`
 type Pair = [key: string, bits: number]
 type Triple = [id: string, key: string, bits: number]
 type Msg =
-  | { t: 'tab'; tab: string; keys: Pair[]; shown: boolean; k?: string }
+  | { t: 'tab'; tab: string; keys: Pair[]; shown: boolean; k?: string | undefined }
   | { t: 'bits'; tab: string; e: Pair[] }
   | { t: 'shown'; tab: string; shown: boolean }
   | { t: 'net'; s: Triple[] }
@@ -132,10 +143,10 @@ function dropClients(which: (e: Client, id: string) => boolean) {
 
 /** Down: what's held stands for GRACE, so a handover doesn't flash. Up: holders re-say, and what nobody re-says goes. */
 let settling: ReturnType<typeof setTimeout> | undefined
-function link(up: boolean) {
+function link(on: boolean) {
   clearTimeout(settling)
-  if (up) for (const held of clients.values()) for (const e of held.values()) e.stale = true
-  settling = setTimeout(() => dropClients(e => !up || !!e.stale), GRACE)
+  if (on) for (const held of clients.values()) for (const e of held.values()) e.stale = true
+  settling = setTimeout(() => dropClients(e => !on || !!e.stale), GRACE)
 }
 
 function receive(m: Msg) {
@@ -275,7 +286,7 @@ function netTick() {
     netLast = performance.now()
     shareStats.frames++
     shareStats.keysSent += size
-    conn.send(name, msg).catch(() => {}) // a dropped link re-says everything
+    conn.send(name as never, msg as never).catch(() => {}) // a dropped link re-says everything
   }
   if (toAdd.size || toDrop.size || dirtyNet.size) netSoon()
 }
@@ -313,7 +324,7 @@ function reconcile() {
     if (!refused.has(key)) toAdd.add(key)
     if (upstream(key)) dirtyNet.add(key)
   }
-  for (const key of [...sent.keys()]) {
+  for (const key of Array.from(sent.keys())) {
     if (want.has(key)) continue
     sent.delete(key)
     dirtyNet.delete(key)
@@ -323,10 +334,10 @@ function reconcile() {
   if (toAdd.size || toDrop.size || dirtyNet.size) netSoon()
 }
 
-function linked(up: boolean) {
-  if (up === open) return
-  open = up
-  if (!up) {
+function linked(live: boolean) {
+  if (live === open) return
+  open = live
+  if (!live) {
     sent.clear()
     toAdd.clear()
     toDrop.clear()
@@ -335,9 +346,9 @@ function linked(up: boolean) {
     clearTimeout(netTimer)
     netTimer = undefined
   }
-  link(up)
-  post({ t: 'link', up })
-  if (up) reconcile()
+  link(live)
+  post({ t: 'link', up: live })
+  if (live) reconcile()
 }
 
 function dial() {
@@ -454,7 +465,7 @@ function halt() {
 if (typeof window !== 'undefined') {
   addEventListener('pagehide', halt)
   addEventListener('pageshow', e => {
-    if (!(e as PageTransitionEvent).persisted || !lines.size) return
+    if (!(e).persisted || !lines.size) return
     up()
     renderAll()
   })

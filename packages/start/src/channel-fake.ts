@@ -1,11 +1,14 @@
 // @weft-js/core/test's socket (research 32 §7): the real socket.ts and hub, a memory bus, frames through JSON.
 
 import { fakeScope, fns, net, runtime, track } from './data'
-import type { SocketLink } from './channel'
+import type { Frame, SocketLink } from './channel'
 
-export async function open(frame: (d: any[]) => void, done: (code: number) => void, up: () => void): Promise<SocketLink> {
+/** A socket to the real server code in this process. */
+const exec_ = async () => (runtime.exec ??= await import('./exec'))
+
+export async function open(frame: (d: Frame) => void, done: (code: number) => void, up: () => void): Promise<SocketLink> {
   const n = net()!
-  const [{ hub, resetHub }, { attach, publish }, exec] = await Promise.all([import('./hub'), import('./socket'), (runtime.exec ??= await import('./exec'))])
+  const [{ hub, resetHub }, { attach, publish }, exec] = await Promise.all([import('./hub'), import('./socket'), exec_()])
   if (!n.online()) throw new Error('offline')
   if (!n.resets.includes(resetHub)) n.resets.push(resetHub)
   const h = hub()
@@ -43,7 +46,7 @@ export async function open(frame: (d: any[]) => void, done: (code: number) => vo
       if (f[0] === 'm') n.sent.push({ id: rooms.get(f[1]) ?? '', name: f[3], msg: f[4] })
       if (f[0] === 'j') {
         rooms.set(f[1], f[2])
-        track(new Promise<void>(ok => joining.set(f[1], ok))) // `net.settle()` waits for the join's answer
+        void track(new Promise<void>(ok => { joining.set(f[1], ok) })) // `net.settle()` waits for the join's answer
       }
       socket.message(text)
     },

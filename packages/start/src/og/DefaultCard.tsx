@@ -2,8 +2,10 @@
 // address, on the app's look. Colours and faces come from `site.card`, which warp and the text plugin fill in; one
 // image goes to every feed, so a card has one scheme, and each is checked against both kinds of feed.
 import { untrack } from '@weft-js/core'
-import type { CardColors, Site } from '@weft-js/core/ssr'
+import type { Site } from '@weft-js/core/ssr'
 import { cardTitleSize } from '../derive.mjs'
+
+type CardColors = NonNullable<NonNullable<Site['card']>['light']>
 
 export interface DefaultProps {
   title: string
