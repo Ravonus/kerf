@@ -48,7 +48,8 @@ const GROUP_USE = `import { card } from './card'\nexport const Row = () => <p {.
 function walk(dir, out) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     if (e.isDirectory()) {
-      if (!SKIP.has(e.name)) walk(join(dir, e.name), out)
+      // .tmp-* are other packages' test scratch dirs, made and removed while this runs alongside them
+      if (!SKIP.has(e.name) && !e.name.startsWith('.tmp-')) walk(join(dir, e.name), out)
     } else if (e.name.endsWith('.tsx') && !e.name.endsWith('.d.tsx')) out.push(join(dir, e.name))
   }
   return out
