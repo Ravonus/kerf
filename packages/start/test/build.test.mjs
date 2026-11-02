@@ -237,10 +237,14 @@ describe('node preset, end to end', () => {
     }
   }, 30_000)
 
-  test('the entry has no modulepreload: its script tag fetches it', async () => {
-    const head = (await (await fetch(server.url + '/about')).text()).split('</head>')[0]
-    const entry = /<script type="module" src="([^"]+)"/.exec(head)[1]
-    expect(head).not.toContain(`<link rel="modulepreload" href="${entry}"`)
+  test('the head asks for the entry once: its script tag, or a preload when the tag is in the body', async () => {
+    for (let i = 0; i < 2; i++) { // the second request's head goes out before the page renders
+      const [head, body] = (await (await fetch(server.url + '/about')).text()).split('</head>')
+      const entry = /<script type="module" src="([^"]+)"/.exec(head + body)[1]
+      const asks = [`<script type="module" src="${entry}"`, `<link rel="modulepreload" href="${entry}"`].filter(t => head.includes(t))
+      expect(asks).toHaveLength(1)
+      expect(body.includes(`<script type="module" src="${entry}"`)).toBe(asks[0].startsWith('<link'))
+    }
   })
 
   test('no chunk carries zod: a schema only `z.infer` reads stays on the server', () => {
