@@ -2,7 +2,7 @@ import { Search } from '@weft/warp'
 import { state } from 'weft'
 
 /** Filters the tiles the page already has: it only sets attributes, so a keystroke costs what a style change costs. */
-export function ToolkitFilter() {
+export function ToolkitFilter(props: { noun: string }) {
   const count = state<number | null>(null)
   let query = ''
   const run = () => {
@@ -23,8 +23,8 @@ export function ToolkitFilter() {
   }
   return (
     <div data-site="tk-filter">
-      <Search label="Filter components" onInput={(e: Event) => { query = (e.target as HTMLInputElement).value; run() }} />
-      <p data-part="count" role="status">{count.value === null ? '' : `${count.value} ${count.value === 1 ? 'component' : 'components'}`}</p>
+      <Search label={`Filter ${props.noun}s`} onInput={(e: Event) => { query = (e.target as HTMLInputElement).value; run() }} />
+      <p data-part="count" role="status">{count.value === null ? '' : `${count.value} ${props.noun}${count.value === 1 ? '' : 's'}`}</p>
     </div>
   )
 }

@@ -8,6 +8,14 @@ import '../../styles/docs.css'
 export const prerender = true
 export const meta: Meta = { title: 'Art', description: 'Twenty-eight pieces drawn with warp\'s Canvas and dither fields, in warp\'s own inks. They follow the theme and the dial, and only three move at once.' }
 
+/** Two to a row, so a piece left without a partner, before a wide one or at the end, takes the row. */
+const alone = (pieces: [string, { wide?: boolean }][], i: number) => {
+  if (pieces[i + 1] && !pieces[i + 1][1].wide) return false
+  let run = 0
+  for (let n = i; n >= 0 && !pieces[n][1].wide; n--) run++
+  return run % 2 === 1
+}
+
 export default function ArtGallery() {
   return (
     <div data-site="docs" data-expression="balanced">
@@ -24,8 +32,8 @@ export default function ArtGallery() {
             <h2 data-flow="heading">{room.title}</h2>
             <p>{room.intro}</p>
             <div data-art="wall">
-              {room.pieces.map(([slug, piece]) => (
-                <section key={slug} id={slug} data-art="piece" data-flow="image" data-wide={piece.wide ? '' : undefined}>
+              {room.pieces.map(([slug, piece], i) => (
+                <section key={slug} id={slug} data-art="piece" data-flow="image" data-wide={piece.wide || alone(room.pieces, i) ? '' : undefined}>
                   <ArtStage id={slug} />
                   <h3>{piece.name}</h3>
                   <p>{piece.description}</p>

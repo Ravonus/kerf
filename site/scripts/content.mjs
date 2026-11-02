@@ -38,6 +38,9 @@ for (const d of [out, join(pub, 'search'), join(pub, 'docs/codes')]) mkdirSync(d
 /** warp's three areas of the site, by the group's file. Everything else is core components. */
 const AREAS = { charts: 'charts', agent: 'blocks', admin: 'blocks', collab: 'blocks', flow: 'blocks', live: 'blocks', schedule: 'blocks' }
 const areaOf = file => AREAS[file] ?? 'components'
+// Every page says something here: these are for the pages with no keyboard table or notes of their own.
+const CHART_ACCESS = 'Every chart has a text alternative and a table view of its numbers, so nothing depends on seeing the marks. See [Chart](/charts/chart) for its keyboard support.'
+const QUIET_ACCESS = 'This has no shortcuts of its own: controls inside it use Tab, Enter and Space as usual, and warp\'s parts keep their roles and labels.'
 const hrefs = new Map()
 /** A `/toolkit/x` written anywhere in the words, as the page's real address. Paths like src/toolkit are left alone. */
 const live = text => text.replace(/(?<![\w.-])\/toolkit(?:\/([a-z0-9-]+))?(?![\w.-]*\/)/g, (all, slug) => (slug ? hrefs.get(slug) ?? (slug === 'art' ? '/art' : `/components/${slug}`) : '/components'))
@@ -418,12 +421,12 @@ function buildToolkit() {
       const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name), href: hrefs.get(slugFor(name)) }))
       const play = doc.playground && finishKnobs(doc.playground, c.props, c.name)
       if (play && !found.has(play.example)) problems.push(`${c.name}: no export ${play.example}`)
-      const heads = [{ id: 'installation', text: 'Installation' }, { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...(play ? [{ id: 'playground', text: 'Playground' }] : []), ...(doc.keyboard || doc.a11yNotes ? [{ id: 'accessibility', text: 'Accessibility' }] : []), { id: 'api-reference', text: 'API Reference' }]
+      const heads = [{ id: 'installation', text: 'Installation' }, { id: 'usage', text: 'Usage' }, ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...(play ? [{ id: 'playground', text: 'Playground' }] : []), { id: 'accessibility', text: 'Accessibility' }, { id: 'api-reference', text: 'API Reference' }]
       const i = order.indexOf(c.name)
       const near = n => n && facts.get(n) && areaIn(n) === areaOf(g.file) && { name: n, slug: slugFor(n), href: hrefs.get(slugFor(n)) }
       pages[c.slug] = {
         name: c.name, slug: c.slug, area: areaOf(g.file), group: g.title, usage: codeBlock(usageOf(doc, c.name, found, play), 'tsx'), file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
-        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: doc.a11yNotes?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
+        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name), href: hrefs.get(slugFor(x.name)) })) }, playground: play, hero: shownHero, sections, keyboard: doc.keyboard, a11yNotes: (doc.a11yNotes ?? (doc.keyboard ? undefined : [areaOf(g.file) === 'charts' ? CHART_ACCESS : QUIET_ACCESS]))?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
       }
       const refs = doc.sections.flatMap(s => s.examples ?? [])
       tiles.push({ name: c.name, slug: c.slug, href: hrefs.get(c.slug), summary: doc.summary, id: tile, stage: doc.tileStage ?? refs.find(r => r.id === tile)?.stage ?? 'center' })

@@ -37,6 +37,9 @@
 /* -- the page -- */
 [data-site="doc"] { box-sizing: border-box; inline-size: 100%; max-inline-size: 760px; min-inline-size: 0; margin-inline: auto; padding-block: var(--warp-space-page) calc(var(--warp-space-section) * 2); }
 [data-site="doc"][data-home] { max-inline-size: 1000px; }
+/* a block is a whole feature: it takes the page, and its words keep their measure */
+[data-site="doc"][data-wide] { max-inline-size: none; }
+[data-site="doc"][data-wide] [data-site="tk-section"] > :not([data-site="ex"]) { max-inline-size: 760px; }
 [data-site="doc"] [data-part="links"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-tight) var(--warp-space-group); margin: 0; font-size: var(--doc-small); color: var(--dim); }
 [data-site="doc"] [data-part="links"] a { color: var(--dim); }
 [data-site="doc"] [data-part="links"] a:hover { color: var(--ink); }

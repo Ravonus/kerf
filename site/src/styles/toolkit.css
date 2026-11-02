@@ -4,11 +4,14 @@
 
 /* -- the example frame: tools, stage, code, one object -- */
 [data-site="frame"] { position: relative; min-inline-size: 0; border: var(--warp-border-hairline) solid var(--rule); border-radius: var(--warp-radius-surface); overflow: clip; background: var(--well); }
-[data-site="frame"] [data-part="tools"] { position: absolute; z-index: 2; inset-block-start: var(--warp-space-tight); inset-inline: var(--warp-space-tight); display: flex; align-items: center; gap: var(--warp-space-hair); pointer-events: none; opacity: 0.55; transition: opacity var(--warp-duration-fast) var(--warp-ease-out); }
-[data-site="frame"] [data-part="tools"] > * { pointer-events: auto; }
-[data-site="frame"]:is(:hover, :focus-within) [data-part="tools"] { opacity: 1; }
-[data-site="frame"] [data-part="tools"] [data-scope="button"] { opacity: 0.75; }
-[data-site="frame"] [data-part="tools"] [data-scope="button"]:hover { opacity: 1; }
+[data-site="frame"] [data-part="tools"] { display: flex; align-items: center; gap: var(--warp-space-hair); padding: var(--warp-space-hair) var(--warp-space-tight); border-block-end: var(--warp-border-hairline) solid var(--rule); background: var(--warp-color-surface); color: var(--ink); }
+[data-site="frame"] [data-part="views"], [data-site="frame"] [data-part="stage-tools"] { display: flex; align-items: center; gap: var(--warp-space-hair); }
+[data-site="frame"] [data-part="views"] [aria-pressed="false"] { color: var(--dim); }
+/* the Code view: the whole source, and the stage's own tools have nothing to act on */
+[data-site="frame"][data-code] [data-part="stage"], [data-site="frame"][data-code] [data-part="stage-tools"], [data-site="frame"][data-code] [data-act="stage-code"] { display: none; }
+[data-site="frame"][data-code] [data-part="code"] { border-block-start: 0; }
+[data-site="frame"][data-code] [data-part="code"][data-fold] [data-scope="codeblock"] { max-block-size: none; }
+[data-site="frame"][data-code] [data-part="code"][data-fold]::after { display: none; }
 [data-site="frame"] [data-part="spacer"] { flex: 1; }
 [data-site="frame"] [data-part="stage"] {
   --stage-h: 200px;
@@ -16,6 +19,8 @@
   background-color: var(--warp-color-surface);
 }
 [data-site="frame"][data-hero] [data-part="stage"] { --stage-h: 360px; }
+/* a single control sits in a stage its own size */
+[data-site="frame"][data-hero] [data-part="stage"]:has(> [data-part="mount"][data-stage="center"]) { --stage-h: 220px; }
 [data-site="frame"] [data-part="stage"][data-width="tablet"] { inline-size: min(100%, 768px); margin-inline: auto; }
 [data-site="frame"] [data-part="stage"][data-width="phone"] { inline-size: min(100%, 390px); margin-inline: auto; }
 
@@ -92,7 +97,8 @@
 [data-site="props"] [data-part="req"] { display: inline-block; inline-size: 6px; block-size: 6px; margin-inline-start: 6px; vertical-align: middle; border-radius: 50%; background: var(--warp-color-critical-text); }
 
 /* -- the index -- */
-[data-site="tk-filter"] { display: grid; gap: var(--warp-space-tight); margin-block: 24px 16px; }
+[data-site="tk-bar"] { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--warp-space-group); margin-block: 24px 16px; }
+[data-site="tk-filter"] { display: grid; flex: 1 1 280px; gap: var(--warp-space-tight); }
 [data-site="tk-filter"] [data-scope="field"] { max-inline-size: 360px; }
 [data-site="tk-filter"] [data-part="chips"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-tight); }
 [data-site="tk-filter"] [data-part="count"] { min-block-size: 1.4em; font-size: var(--doc-small); color: var(--dim); }

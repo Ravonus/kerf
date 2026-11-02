@@ -5,7 +5,6 @@ import numbers from '../generated/numbers.json'
 import kit from '../generated/toolkit-nav.json'
 import Shop1 from '../demos/shop-1'
 import Shop2 from '../demos/shop-2'
-import Shop3 from '../demos/shop-3'
 import Shop4 from '../demos/shop-4'
 import Shop5 from '../demos/shop-5'
 import { Fix } from '../components/Fix'
@@ -60,13 +59,7 @@ export default function Home() {
 
         <section>
           <h2 data-flow="heading">Only what changed gets updated</h2>
-          <p data-part="intro">Most frameworks re-run your component and compare the result to find what changed. weft works that out when it compiles, so a change goes straight to the piece of the page it affects. The shop gets more products, and stays just as quick.</p>
-          <Example id="shop-3" plain><Shop3 /></Example>
-        </section>
-
-        <section>
-          <h2 data-flow="heading">No wiring between the parts</h2>
-          <p data-part="intro">The shop gets a search box. It is one new value and one line of filtering, and everything that depends on it follows.</p>
+          <p data-part="intro">Most frameworks re-run your component and compare the result to find what changed. weft works that out when it compiles, so a change goes straight to the piece of the page it affects. The shop gets more products and a search box: one new value and one line of filtering, and everything that depends on it follows.</p>
           <Example id="shop-4" plain><Shop4 /></Example>
         </section>
 

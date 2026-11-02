@@ -44,3 +44,10 @@
 [data-site="page"] [data-site="example"]:nth-of-type(3n + 1) [data-part="run"] { background: var(--warp-color-accent-soft); }
 [data-site="page"] [data-site="example"]:nth-of-type(3n + 2) [data-part="run"] { background: var(--warp-color-surface-sunken); }
 @media (max-width: 759.98px) { [data-site="page"] [data-site="example"]:nth-of-type(even) [data-part="pair"] { grid-template-columns: minmax(0, 1fr); } [data-site="page"] [data-site="example"]:nth-of-type(even) [data-part="run"] { order: 0; border-inline-start: 0; } }
+/* the page's opener: the whole shop, large, before the small programs */
+[data-site="page"] [data-site="example"][data-lead] h2 { font-size: calc(2 * var(--warp-rem)); }
+[data-site="page"] [data-site="example"][data-lead] [data-part="pair"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+[data-site="page"] [data-site="example"][data-lead] pre { max-block-size: 640px; }
+[data-site="page"] [data-site="example"][data-lead] [data-part="run"] { order: 0; padding: var(--warp-space-section); border-inline-start: 0; border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); background: var(--warp-color-accent-soft); }
+[data-site="page"] [data-site="example"][data-lead] [data-part="run"] > * { inline-size: min(100%, 420px); }
+@media (max-width: 759.98px) { [data-site="page"] [data-site="example"][data-lead] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); } [data-site="page"] [data-site="example"][data-lead] [data-part="run"] { padding: var(--warp-space-group); border-inline-end: 0; } }

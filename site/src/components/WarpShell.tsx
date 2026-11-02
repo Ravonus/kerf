@@ -9,10 +9,10 @@ import { SideNav } from './SideNav'
 import '../styles/docs.css'
 import '../styles/toolkit.css'
 
-/** The kit's pages: a rail for this area only, on the same neutral shell as the docs. Only an example's stage takes the dial. */
+/** The kit's pages: a rail for this area only, on the docs' shell. Nothing here pins a stop, so every tile and stage follows the dial. */
 export function WarpShell(props: { area: Area; children?: any }) {
   return (
-    <div data-site="docs" data-expression="balanced">
+    <div data-site="docs">
       <SideNav label={props.area} groups={warpGroups(props.area)} />
       <FrameTools />
       {props.children}

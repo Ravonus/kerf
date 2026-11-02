@@ -1,11 +1,14 @@
 import { Link } from '@weft/start'
 import index from '../generated/toolkit-index.json'
 import type { Area } from '../lib/pages'
+import { DialSwitch } from './DialSwitch'
 import { Preview } from './Preview'
 import { ToolkitFilter } from './ToolkitFilter'
 
 type Tile = { name: string; slug: string; href: string; summary: string; id?: string; stage?: string }
 type Group = { title: string; area: string; id: string; file: string; intro: string; tiles: Tile[] }
+
+const NOUN: Record<Area, string> = { components: 'component', blocks: 'block', charts: 'chart' }
 
 function Card(props: { file: string; tile: Tile }) {
   const t = props.tile
@@ -26,7 +29,7 @@ export function WarpIndex(props: { area: Area; title: string; lede: string }) {
         <h1>{props.title}</h1>
         <p data-part="lede" innerHTML={props.lede}></p>
       </header>
-      <ToolkitFilter />
+      <div data-site="tk-bar"><ToolkitFilter noun={NOUN[props.area]} /><DialSwitch /></div>
       {groups.map(g => (
         <section key={g.id} id={g.id} data-tk="group" data-title={g.title}>
           <h2 data-flow="heading">{g.title}</h2>

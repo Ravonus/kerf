@@ -16,11 +16,17 @@ export function ExampleFrame(props: { file: string; example: ShownExample; hero?
   return (
     <div data-site="frame" data-flow="card" data-hero={props.hero ? '' : undefined}>
       <div data-part="tools">
-        {ex.replay && <Button emphasis="ghost" tone="neutral" size="sm" icon="rotate-ccw" data-act="stage-replay">Replay</Button>}
+        <span data-part="views" role="group" aria-label="View">
+          <Button emphasis="ghost" tone="neutral" size="sm" data-act="stage-view" data-view="preview" aria-pressed="true">Preview</Button>
+          <Button emphasis="ghost" tone="neutral" size="sm" data-act="stage-view" data-view="code" aria-pressed="false">Code</Button>
+        </span>
         <span data-part="spacer"></span>
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="palette" label="Expression of this stage" data-act="stage-expression" />
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="moon" label="Theme of this stage" data-act="stage-theme" />
-        <Button emphasis="ghost" tone="neutral" size="sm" icon="smartphone" label="Width of this stage" data-act="stage-width" />
+        <span data-part="stage-tools">
+          {ex.replay && <Button emphasis="ghost" tone="neutral" size="sm" icon="rotate-ccw" data-act="stage-replay">Replay</Button>}
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="palette" label="Expression of this stage" title="Change this stage's expression" data-act="stage-expression" />
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="moon" label="Theme of this stage" title="Change this stage's theme" data-act="stage-theme" />
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="smartphone" label="Width of this stage" title="Change this stage's width" data-act="stage-width" />
+        </span>
       </div>
       <div data-part="stage" data-expression={ex.scope?.expression} data-theme={ex.scope?.theme} data-form={ex.scope?.form} data-pinned={ex.scope ? '' : undefined} style={ex.height ? `--stage-h:${ex.height}px` : undefined}>
         <Preview file={props.file} id={ex.id} stage={ex.stage} />
