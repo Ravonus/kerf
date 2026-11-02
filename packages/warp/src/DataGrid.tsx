@@ -307,24 +307,36 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
   const say = (s: string) => (status.value = s)
 
   const rowOf = (key: string) => (lines.value.find(l => l.id === key && l.kind === 'row') as Extract<Line<T>, { kind: 'row' }> | undefined)?.row
+  const fetching = new Map<string, Promise<boolean>>()
+  const fetchKids = (key: string, row: T) => {
+    const running = fetching.get(key)
+    if (running) return running
+    const run = (async () => {
+      busy.value = { ...busy.value, [key]: true }
+      try {
+        const got = await tree!.load!(row, query.value)
+        loaded.value = { ...loaded.value, [key]: got }
+        say(`${ctx.title(row)} expanded, ${got.length} ${got.length === 1 ? 'row' : 'rows'} loaded`)
+        return true
+      } catch {
+        open.value = { ...open.value, [key]: false }
+        say(`${ctx.title(row)} couldn’t load`)
+        return false
+      } finally {
+        const { [key]: _, ...rest } = busy.value
+        busy.value = rest
+        fetching.delete(key)
+      }
+    })()
+    fetching.set(key, run)
+    return run
+  }
   const setOpen = async (key: string, on: boolean) => {
     const q = query.value.trim()
     if (q) { closedHere.value = { ...closedHere.value, [key]: !on }; return }
     open.value = { ...open.value, [key]: on }
     const row = rowOf(key)
-    if (!on || !row || kidsOf(row) !== undefined || !tree?.load) return
-    busy.value = { ...busy.value, [key]: true }
-    try {
-      const got = await tree.load(row, query.value)
-      loaded.value = { ...loaded.value, [key]: got }
-      say(`${ctx.title(row)} expanded, ${got.length} ${got.length === 1 ? 'row' : 'rows'} loaded`)
-    } catch {
-      open.value = { ...open.value, [key]: false }
-      say(`${ctx.title(row)} couldn’t load`)
-    } finally {
-      const { [key]: _, ...rest } = busy.value
-      busy.value = rest
-    }
+    if (on && row && kidsOf(row) === undefined && tree?.load) await fetchKids(key, row)
   }
   const isOpen = (key: string) => (query.value.trim() ? !closedHere.get(key) : !!open.get(key))
   const toggle = (key: string, on?: boolean) => {
@@ -332,12 +344,25 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
     void setOpen(key, on ?? !isOpen(key))
   }
   watch(() => query.value, () => { closedHere.value = {} })
+  let expanding = 0 // a run of Expand all; Collapse all, or a newer run, ends it
   const expandAll = (on: boolean) => {
+    const run = ++expanding
     if (!on) { open.value = {}; return }
-    const next: Record<string, boolean> = {}
-    const walk = (list: readonly T[]) => { for (const r of list) { const kids = kidsOf(r); if (kids?.length) { next[keyOf(r)] = true; walk(kids) } } }
-    walk(ordered.value)
-    open.value = next
+    // a filter's results are the server's, so it only opens what's here; otherwise a branch not loaded yet loads, and so on down
+    const lazy = !query.value.trim() && !!tree?.load
+    const failed: string[] = []
+    const descend = async (list: readonly T[]): Promise<unknown> => {
+      const branches = list.filter(isBranch)
+      if (run !== expanding || !branches.length) return
+      open.value = { ...open.value, ...Object.fromEntries(branches.map(r => [keyOf(r), true])) }
+      return Promise.all(branches.map(async r => {
+        const key = keyOf(r)
+        if (lazy && kidsOf(r) === undefined && !await fetchKids(key, r)) failed.push(ctx.title(r))
+        return descend(kidsOf(r) ?? [])
+      }))
+    }
+    // the status holds one line, and a failure outranks the rows that loaded after it
+    void descend(ordered.value).then(() => { if (failed.length) say(failed.length === 1 ? `${failed[0]} couldn’t load` : `${failed.length} rows couldn’t load`) })
   }
 
   const namedCol = derived(() => all.value.find(c => c.rowHeader) ?? all.value[0])
