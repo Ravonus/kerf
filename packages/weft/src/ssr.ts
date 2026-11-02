@@ -103,6 +103,11 @@ export interface Stream {
    * render empty and the client fetches them again. They hold the first byte, as `load` does.
    */
   settle(): Promise<void>
+  /**
+   * Wait up to `ms` for the Boundaries' resources, and when they all land, render them into `shell`: data that's that
+   * quick goes in the page itself, with no chunk to swap in. Call after `settle`, before reading `chunks`.
+   */
+  hold(ms: number): Promise<void>
 }
 
 /**
@@ -192,6 +197,21 @@ export function renderToStream(code: () => unknown, options: RenderOptions & { t
         if (late) return
         stream.shell = run()
         if (!way.pass(got)) return options.stalled?.()
+      }
+    },
+    async hold(ms) {
+      const deadline = Date.now() + ms
+      const way = headway(got)
+      for (let n = 1; wait.length && pending().length && n < (options.passes ?? 50); n++) {
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const late = await Promise.race([
+          Promise.all(wait).then(() => false),
+          new Promise<boolean>(ok => (timer = setTimeout(ok, Math.max(0, deadline - Date.now()), true))),
+        ])
+        clearTimeout(timer)
+        if (late) return
+        stream.shell = run()
+        if (!way.pass(got)) return
       }
     },
   }

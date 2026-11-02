@@ -80,7 +80,7 @@ export function inlineSheets(outDir, base) {
 }
 
 /**
- * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
+ * @param {{ root?: string, site?: import('weft/ssr').Site, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   let root = options.root ?? process.cwd()
@@ -253,7 +253,7 @@ export default function weftStart(options = {}) {
           const p = await hydration(this)
           return client ? clientRoutes(manifest, abs, p) : serverRoutes(manifest, abs, dev ? await devStyles(vite.environments.client, manifest, abs, clientEntry()) : undefined, p)
         }
-        if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout })
+        if (which === V.app) return appModule({ site: options.site ?? {}, build, dev, fonts: cardFonts(manifest, abs, options.fonts ?? DEFAULT_FONTS, root), timeout: options.timeout, hold: options.hold })
         if (which === V.server) return serverEntry(clientEntry(), dev)
         if (which === V.fns) return serverModules.map(f => `import ${JSON.stringify(abs(f))}`).join('\n') + '\n'
         if (which === V.context || which === V.auth || which === V.realtime) {
@@ -500,7 +500,7 @@ import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
 import { preloads } from 'weft:fonts/preloads'
-${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
+${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }
@@ -547,11 +547,12 @@ ${file ? `import own from ${JSON.stringify(file)}` : 'const own = undefined'}
 export default { ...own, bus: own?.bus ?? slotBus(provider.plugin, load) }
 `
 
-function appModule({ site, build, dev, fonts, timeout }) {
+function appModule({ site, build, dev, fonts, timeout, hold }) {
   return `export const site = ${JSON.stringify(site)}
 export const build = ${JSON.stringify(build)}
 export const dev = ${dev}
 export const timeout = ${timeout ?? 'undefined'}
+export const hold = ${hold ?? 'undefined'}
 const raw = ${JSON.stringify(fonts)}
 let decoded
 export function fonts() {

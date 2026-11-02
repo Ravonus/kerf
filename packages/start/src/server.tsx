@@ -75,6 +75,8 @@ export interface HandlerOptions {
   lazy?: boolean
   /** Stream timeout for Boundaries (ms). */
   timeout?: number
+  /** How long (ms) a page waits for its Boundaries' data before streaming it: what lands sooner goes in the page. 0 streams at once. */
+  hold?: number
   /** The app's context for `load` and server functions (`src/context.server.ts`'s default export). */
   context?: (args: { request: Request }) => object | Promise<object>
   /** The shared cache for `cache: { life }` queries (memory by default). */
@@ -356,6 +358,7 @@ export function createHandler(options: HandlerOptions) {
             const t0 = performance.now()
             s = render()
             await s.settle() // queries read outside a Boundary have nowhere to stream to
+            await s.hold(options.hold ?? HOLD)
             const ms = performance.now() - t0
             const p = shaped()
             const capturing = !!options.lazy || p.streaming
@@ -384,6 +387,7 @@ export function createHandler(options: HandlerOptions) {
     const t0 = performance.now()
     s = render()
     await s.settle() // queries read outside a Boundary have nowhere to stream to
+    await s.hold(options.hold ?? HOLD)
     const ms = performance.now() - t0
     const p = shaped()
     const styles = pageStyles(assets, p.sheets, s.shell, site.head)
@@ -622,6 +626,8 @@ export function createHandler(options: HandlerOptions) {
 const HEADS_MAX = 512
 /** A render this long (ms) sends its head first. Under it, waiting for the whole page costs less than streaming it. */
 const EARLY_MS = 4
+/** Most queries answer within this (ms): a Boundary whose data does is rendered in the page, not swapped in from a chunk. */
+const HOLD = 25
 interface Head { ms: number; sheets: { href: string }[]; preloads: string; now: boolean; capture: boolean; fold: boolean; split: boolean; found: Set<string> }
 
 /** A complete page's text. Its Response holds no body until `compressed` gives it one: compressed, it's never read. */
