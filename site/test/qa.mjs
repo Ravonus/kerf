@@ -650,6 +650,21 @@ await check('examples code has copy buttons', '/examples', async page => {
   same(fit, true, 'button in the corner')
 }, { width: 1280, height: 900 }, { permissions: ['clipboard-read', 'clipboard-write'] })
 
+// Component pages flow like the hubs: their headings and notes are in warp.flow, and one left at the top edge fades.
+for (const path of ['/components/button', '/components/table', '/blocks/checkout', '/charts/line-chart']) {
+  await check(`component page headings flow ${path}`, path, async page => {
+    const off = await page.evaluate(() => [...document.querySelectorAll('[data-site="doc"] :is(section > h2, section h3, p[data-part="note"])')].filter(e => getComputedStyle(e).animationName === 'none').map(e => e.textContent.slice(0, 30)))
+    same(off.join(' | '), '', 'not in the flow')
+    const h = page.locator('[data-site="tk-section"] > h2').nth(2)
+    const top = await h.evaluate(e => e.getBoundingClientRect().top)
+    await page.mouse.move(640, 300)
+    await page.mouse.wheel(0, top + 140)
+    await page.waitForTimeout(900)
+    const o = await h.evaluate(e => ({ top: Math.round(e.getBoundingClientRect().top), o: +getComputedStyle(e).opacity }))
+    if (o.o > 0.6) throw new Error(`a heading at ${o.top}px is at opacity ${o.o}`)
+  })
+}
+
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)
