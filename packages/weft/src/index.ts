@@ -568,6 +568,7 @@ function once<T>(fn: () => T) {
  * (a spread of a prop), which may be undefined (`{...rest.attrs}`). `mergeProps` and `omit` are both views.
  */
 export function view(sources: any[], skip: string[] = []): any {
+  if (rt.server && sources.length === 1) return seen(sources[0], skip)
   // A server renders once and nothing it reads can move: a getter (a `restOf` copy, so every prop) runs once, not per read.
   if (rt.server) sources = sources.map(s => (typeof s === 'function' ? once(s) : s))
   const at = (s: any) => Object(typeof s === 'function' ? s() : s)
@@ -599,6 +600,19 @@ export function view(sources: any[], skip: string[] = []): any {
     has: (_, k) => kept(k) && sources.some(s => k in at(s)),
     ownKeys: () => [...owners().keys()],
     getOwnPropertyDescriptor: (_, k) => (kept(k) ? { configurable: true, enumerable: true } : undefined),
+  })
+}
+
+/** A server's view of one source: itself, when nothing is left out, or a thin view that only drops `skip`. */
+function seen(source: any, skip: string[]): any {
+  const s = typeof source === 'function' ? once(source) : source
+  const at = typeof s === 'function' ? () => Object(s()) : () => Object(s)
+  if (!skip.length && typeof s !== 'function') return at()
+  return new Proxy({}, {
+    get: (_, k) => (skip.includes(k as string) ? undefined : at()[k]),
+    has: (_, k) => !skip.includes(k as string) && k in at(),
+    ownKeys: () => Reflect.ownKeys(at()).filter(k => !skip.includes(k as string)),
+    getOwnPropertyDescriptor: (_, k) => (!skip.includes(k as string) && Object.hasOwn(at(), k) ? { configurable: true, enumerable: true } : undefined),
   })
 }
 
