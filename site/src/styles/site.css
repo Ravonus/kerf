@@ -1,5 +1,5 @@
 /* The site's own layout, on warp's tokens. Every value is a token or a layout measure: colour never appears raw here. */
-  html { scroll-padding-block-start: 72px; }
+  html { scroll-padding-block-start: 72px; --warp-flow-top: 57px; }
   body { margin: 0; background: var(--warp-color-page); color: var(--warp-color-text); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading); -webkit-font-smoothing: antialiased; }
   #app { display: grid; grid-template-rows: auto 1fr auto; min-block-size: 100dvh; }
   main { min-inline-size: 0; }

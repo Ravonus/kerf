@@ -121,6 +121,19 @@ for (const [path, frames] of [['/', '[data-site="arena"] iframe'], ['/examples',
   })
 }
 
+// The contents list reaches the last heading at the end of a page, and comes back.
+await check('scroll spy reaches the end', '/docs/getting-started', async page => {
+  const current = () => page.locator('[data-site="toc"] [aria-current]').innerText()
+  const first = await current()
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+  await page.waitForTimeout(400)
+  const last = await page.locator('[data-site="toc"] a').last().innerText()
+  same(await current(), last, 'at the end')
+  await page.evaluate(() => scrollTo(0, 0))
+  await page.waitForTimeout(400)
+  same(await current(), first, 'back at the top')
+})
+
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)

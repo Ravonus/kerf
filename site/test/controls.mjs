@@ -38,6 +38,11 @@ for (const path of pages) {
     await page.locator(CONTROLS).nth(i).waitFor({ state: 'attached' })
     if (when === 'after load') await page.waitForTimeout(800)
     await page.locator(CONTROLS).nth(i).scrollIntoViewIfNeeded()
+    await page.locator(CONTROLS).nth(i).evaluate(e => new Promise(done => { // a forced click lands where the element is now, and flow is still bringing it in
+      let y, still = 0
+      const tick = () => { const now = e.getBoundingClientRect().y; still = now === y ? still + 1 : 0; y = now; still > 2 ? done() : requestAnimationFrame(tick) }
+      tick()
+    }))
     const before = await look(page, i)
     await page.locator(CONTROLS).nth(i).click({ timeout: 4000, force: true }).catch(() => {})
     let after = before
