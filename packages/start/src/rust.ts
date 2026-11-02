@@ -13,9 +13,6 @@
 // `WEFT_RUST_SECRET` for the sidecars they supervise, and a sidecar deployed on its own needs both set by hand.
 // Nothing here imports a Node module, so none of it reaches a bundle that doesn't call it.
 
-import type * as Fs from 'node:fs'
-import type * as Path from 'node:path'
-import type * as Url from 'node:url'
 import { raise, StartError, type Context, type Fn } from './data'
 
 /** Whoever `ctx.user` is in this app, once it declares `Context`. */
@@ -197,7 +194,8 @@ interface Reply { ok?: boolean; value?: unknown; tags?: string[]; touched?: stri
 interface Engine { kind: 'addon' | 'wasm'; call(id: string, ctx: string, body: string): Promise<string> | string }
 interface Entry { kind?: string; hash: string; addon?: string; wasm?: string; failure?: string }
 
-interface Builtins { 'node:fs': typeof Fs; 'node:path': typeof Path; 'node:url': typeof Url }
+interface ReadFile { (file: string, encoding: 'utf8'): string; (file: string): Uint8Array<ArrayBuffer> }
+interface Builtins { 'node:fs': { existsSync(file: string): boolean; readFileSync: ReadFile }; 'node:path': { dirname(path: string): string; join(...parts: string[]): string }; 'node:url': { fileURLToPath(url: string): string } }
 const builtin = <K extends keyof Builtins>(name: K) => nodeHost.process?.getBuiltinModule?.(name) as Builtins[K] | undefined
 const platform = () => { const p = nodeHost.process; return `${p?.platform}-${p?.arch}` }
 
