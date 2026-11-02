@@ -1,23 +1,28 @@
 # @weft-js/warp-core
 
-> **Early release (0.1.0).** weft is young: APIs will change between minor versions, and not every add-on is on npm yet.
+> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet.
 
-warp's CSS and behaviour with no components: plain TypeScript over the DOM. `@weft-js/warp` is built on it. Nothing in the
-main entry imports a framework, so it also works under React, Solid or no framework at all.
+warp's behaviour, tokens and CSS, with no components: plain TypeScript over the DOM. `@weft-js/warp` builds its components
+on it. Nothing in the main entry imports a framework, so it works under weft, React, Solid or no framework at all.
+
+```bash
+npm install @weft-js/warp-core
+```
 
 ## When to skip it
 
 Most weft apps should skip it.
 
 - **You want finished components:** install `@weft-js/warp`. It brings this package with it.
-- **You want no warp at all:** you don't need either package. `npm create @weft-js -- --ui none` and `--ui tailwind` install neither.
+- **You want no warp at all:** you need neither package. `npm create @weft-js -- --ui none` and `--ui tailwind` install
+  neither.
 - **You want your own markup and warp's keyboard, focus and motion:** this package is for you. `npm create @weft-js -- --ui headless`
   sets it up.
 
 ## What's in it
 
-- **Behaviour:** `menu`, `dialog`, `popover`, `tooltip`, `indicator`, `roving`, `slider` and more. Each is an action,
-  `(el, options) => { update, destroy }`.
+- **Behaviour:** `menu`, `dialog`, `popover`, `tooltip`, `indicator`, `roving`, `slider` and more.
+  Each is an action, `(el, options) => { update, destroy }`.
 - **Helpers:** pure functions such as `nextIndex`, `place` and `uid`.
 - **CSS:** `@weft-js/warp-core/styles/warp.css` has the tokens. Each component has its own file, such as
   `@weft-js/warp-core/styles/components/tabs.css`. Skip them and bring your own CSS if you like.
@@ -25,7 +30,7 @@ Most weft apps should skip it.
 
 ## `use`: an action in a weft component
 
-`use` comes from `@weft-js/warp-core/weft`, the one entry that needs `weft`. It starts the action once the element is in the
+`use` comes from `@weft-js/warp-core/weft`, the one entry that needs `@weft-js/core`. It starts the action once the element is in the
 document, never on the server. It calls `update` when the options change and `destroy` with the component.
 
 ```ts

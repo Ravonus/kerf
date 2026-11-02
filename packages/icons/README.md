@@ -1,5 +1,28 @@
 # @weft-js/warp-icons
 
-> **Early release (0.1.0).** weft is young: APIs will change between minor versions, and not every add-on is on npm yet.
+> **Early release (0.1.0).** APIs will change between minor versions. weft isn't on npm yet.
 
-Part of weft, a fine-grained reactive TSX framework. Start a new app with `npm create @weft-js`.
+weft's own icon set: 651 icons in warp's three expression tiers, each with a hollow and a solid form. `@weft-js/warp`
+depends on it, so an app with warp already has it.
+
+```bash
+npm install @weft-js/warp-icons
+```
+
+```tsx
+import { CheckIcon } from '@weft-js/warp-icons'
+
+export function Saved() {
+  return <p><CheckIcon label="Saved" /> Your changes are saved.</p>
+}
+```
+
+An icon you don't import costs nothing, and one you do adds about 164 B of brotli.
+
+## Docs
+
+`weft docs icons` has the names and variants, sizes, tiers, `icons({ tier })` for `weft.config.ts`, and what happens with
+a name the build can't follow. Its source is [packages/cli/docs/icons.md](../cli/docs/icons.md).
+
+`npm run sheet` in this folder writes `contact-sheet.html`, where you can browse every icon by tier, variant, size and
+theme.

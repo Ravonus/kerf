@@ -113,7 +113,18 @@ After a compiler change, rebuild with `npm run build:native` in `packages/weft`.
 - It says what changed and why, in plain words. Link the issue if there is one.
 - `npm run check` passes.
 - It has a test. A bug fix has a test that fails without the fix.
-- Public API changes update the docs in `packages/cli/docs/`.
+- Public API changes update the docs: see below.
+
+## Docs
+
+[docs/README.md](docs/README.md) lists where each doc lives. In short:
+
+- **Reference** is `packages/cli/docs/*.md`: exact API, commands, config keys and codes. `weft docs` prints these pages to
+  apps and agents, and the site serves them under `/reference`. A change to a public API updates its page here.
+- **Learn** is `site/content/learn/*.md`: the tutorial. Change it when what a reader should learn changes.
+- A package's `README.md` says what it's for, how to install it and where its docs are. It doesn't repeat them.
+
+Code in a doc has to compile against the packages as they are. Write examples whole, with their imports.
 
 ## Commits
 
