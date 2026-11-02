@@ -12,17 +12,23 @@
 // answers an `ask`, peers expire without a beat, so any bus works and a dead instance's peers just age out.
 
 import { StartError } from '@weft-js/start/data'
-import type { Context, StandardSchemaV1 } from '@weft-js/start'
+import type { Context, PublishOptions, StandardSchemaV1 } from '@weft-js/start'
 
+/** Who a peer is: what `user` returns. */
 export interface PeerUser { id: string; name?: string; [key: string]: unknown }
+/** A peer as the room hears of it, stamped here with who sent it. */
 export interface Peer<S = unknown> { id: string; user: PeerUser; state: S; at: number }
+/** A pointer as fractions of `a`, an anchor's id, or of the viewport without one. */
 export interface CursorAt { a?: string; x: number; y: number; style?: string }
 
 type Issue = { issues: { message: string }[] }
-const schema = <T,>(validate: (v: any) => T | Issue): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'weft', validate: (v: unknown) => { const r: any = validate(v); return r?.issues ? r : { value: r } } } }) as any
+/** Whatever a client sent: read as hostile, field by field. */
+type Wire = { [key: string]: unknown } | null | undefined
+const isIssue = (r: unknown): r is Issue => !!(r as Issue | null)?.issues
+const schema = <T,>(validate: (v: Wire) => T | Issue): StandardSchemaV1<T, T> => ({ '~standard': { version: 1, vendor: 'weft', validate: (v: unknown) => { const r = validate(v as Wire); return isIssue(r) ? r : { value: r } } } })
 const no = (message: string): Issue => ({ issues: [{ message }] })
 const within = (v: unknown, bytes: number) => { try { return (JSON.stringify(v) ?? '').length <= bytes } catch { return false } }
-const unit = (n: unknown) => typeof n === 'number' && n >= -0.5 && n <= 1.5
+const unit = (n: unknown): n is number => typeof n === 'number' && n >= -0.5 && n <= 1.5
 
 const STATE = 4096, RELAY = 2048, SIGNAL = 16_384
 
@@ -30,6 +36,7 @@ const anything = schema(v => v)
 
 const stateful = (max: number) => schema(v => (v && typeof v === 'object' && within(v.state, max) ? { state: v.state } : no(`\`state\` is JSON up to ${max} bytes`)))
 
+/** What a client may send as a cursor: fractions just past the edges, or null when it leaves. */
 export const cursorSchema = schema<CursorAt | null>(v => {
   if (v === null) return null
   if (!v || !unit(v.x) || !unit(v.y)) return no('a cursor is `{ x, y }` in fractions')
@@ -41,8 +48,10 @@ export const cursorSchema = schema<CursorAt | null>(v => {
 const answerSchema = schema(v => (v && typeof v.to === 'string' && within(v.state, STATE) ? { to: v.to, state: v.state } : no('an answer names who asked')))
 const signalSchema = schema(v => (v && typeof v.to === 'string' && within(v.data, SIGNAL) ? { to: v.to, data: v.data } : no(`a signal names a peer, with up to ${SIGNAL} bytes`)))
 
+/** What `ticket` gets: the connection, who it is and the room's params. */
 export interface TicketArgs<P> { id: string; user: PeerUser; params: P; ctx: Context }
 
+/** Options of `multiplayer()`. */
 export interface MultiplayerOptions<P> {
   /** Who this connection is. Required: a peer can't name itself. */
   user: (args: { ctx: Context; params: P; id: string }) => PeerUser | Promise<PeerUser>
@@ -54,9 +63,13 @@ export interface MultiplayerOptions<P> {
   state?: number
 }
 
+/** A channel's room as far as the fragment uses it: the app's own messages are none of its business. */
+interface MpRoom { publish(name: string, message: unknown, options?: PublishOptions): Promise<void> }
+
 /** `client`, `server`, `on` and `left` to spread into a `channel`. Every message is `mp.*`, and all but `mp.relay` are volatile. */
-export function multiplayer<P = any>(options: MultiplayerOptions<P>) {
+export function multiplayer<P = unknown>(options: MultiplayerOptions<P>) {
   const { user, relay = {}, ticket, state = STATE } = options
+  type Arrived<M> = { msg: M; id: string; ctx: Context; params: P; room: MpRoom }
   const people = new Map<string, PeerUser>()
   const who = async (args: { ctx: Context; params: P; id: string }) => {
     const known = people.get(args.id)
@@ -92,23 +105,23 @@ export function multiplayer<P = any>(options: MultiplayerOptions<P>) {
     },
     on: {
       /** A connection arrives, or comes back: it learns its id and everyone hears it. */
-      'mp.hello': async ({ msg, id, ctx, params, room }: any) => {
+      'mp.hello': async ({ msg, id, ctx, params, room }: Arrived<{ state: unknown }>) => {
         const me = await peer({ id, ctx, params }, msg.state)
         await room.publish('mp.you', { id, ticket: await ticket?.({ id, user: me.user, params, ctx }) }, { to: id, volatile: true })
         await room.publish('mp.peer', me, { ...volatile, exceptSelf: true })
         await room.publish('mp.ask', { id }, { ...volatile, exceptSelf: true })
       },
-      'mp.state': async ({ msg, id, ctx, params, room }: any) => room.publish('mp.peer', await peer({ id, ctx, params }, msg.state), { ...volatile, exceptSelf: true }),
-      'mp.answer': async ({ msg, id, ctx, params, room }: any) => room.publish('mp.peer', await peer({ id, ctx, params }, msg.state), { ...volatile, to: msg.to }),
-      'mp.cursor': ({ msg, id, room }: any) => room.publish('mp.cursor', { id, at: msg }, { ...volatile, exceptSelf: true }),
-      'mp.relay': async ({ msg, id, room }: any) => {
-        const r = await relay[msg.kind]['~standard'].validate(msg.data)
+      'mp.state': async ({ msg, id, ctx, params, room }: Arrived<{ state: unknown }>) => room.publish('mp.peer', await peer({ id, ctx, params }, msg.state), { ...volatile, exceptSelf: true }),
+      'mp.answer': async ({ msg, id, ctx, params, room }: Arrived<{ to: string; state: unknown }>) => room.publish('mp.peer', await peer({ id, ctx, params }, msg.state), { ...volatile, to: msg.to }),
+      'mp.cursor': ({ msg, id, room }: Pick<Arrived<CursorAt | null>, 'msg' | 'id' | 'room'>) => room.publish('mp.cursor', { id, at: msg }, { ...volatile, exceptSelf: true }),
+      'mp.relay': async ({ msg, id, room }: Pick<Arrived<{ kind: string; data: unknown }>, 'msg' | 'id' | 'room'>) => {
+        const r = await relay[msg.kind]!['~standard'].validate(msg.data) // `relaySchema` refused any kind that isn't declared
         if (r.issues) throw new StartError('Q002', `\`${msg.kind}\` refused its data`)
         await room.publish('mp.relay', { id, kind: msg.kind, data: r.value }, { exceptSelf: true })
       },
-      'mp.signal': ({ msg, id, room }: any) => room.publish('mp.signal', { from: id, data: msg.data }, { ...volatile, to: msg.to }),
+      'mp.signal': ({ msg, id, room }: Pick<Arrived<{ to: string; data: unknown }>, 'msg' | 'id' | 'room'>) => room.publish('mp.signal', { from: id, data: msg.data }, { ...volatile, to: msg.to }),
     },
-    left: async ({ id, room }: any) => {
+    left: async ({ id, room }: Pick<Arrived<unknown>, 'id' | 'room'>) => {
       people.delete(id)
       await room.publish('mp.gone', { id }, volatile)
     },
@@ -128,14 +141,14 @@ export async function signTicket(claims: Record<string, unknown>, secret: string
 }
 
 /** The claims, or null: a bad signature, another algorithm, or past `exp`. */
-export async function verifyTicket(ticket: string, secret: string): Promise<Record<string, any> | null> {
-  const [head, body, sig] = String(ticket).split('.')
+export async function verifyTicket(ticket: unknown, secret: string): Promise<Record<string, unknown> | null> {
+  const [head = '', body = '', sig] = String(ticket).split('.')
   if (!sig) return null
   const bytes = (s: string) => Uint8Array.from(atob(s.replaceAll('-', '+').replaceAll('_', '/')), c => c.charCodeAt(0))
   try {
     if (JSON.parse(new TextDecoder().decode(bytes(head))).alg !== 'HS256') return null
     if (!(await crypto.subtle.verify('HMAC', await hmac(secret), bytes(sig), new TextEncoder().encode(`${head}.${body}`)))) return null
-    const claims = JSON.parse(new TextDecoder().decode(bytes(body)))
+    const claims = JSON.parse(new TextDecoder().decode(bytes(body))) as Record<string, unknown>
     return typeof claims.exp === 'number' && claims.exp * 1000 > Date.now() ? claims : null
   } catch {
     return null

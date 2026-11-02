@@ -10,12 +10,20 @@
 import { derived, effect, onCleanup, onMount, state, untrack, type Derived, type State } from '@weft-js/core'
 import type { Connection } from '@weft-js/start'
 
+/** Who a peer is, from `user` on the server: never from the client. */
 export interface PeerUser { id: string; name?: string; [key: string]: unknown }
+/** Someone else in the room: their connection's id, who they are, the state they share and when they were last heard. */
 export interface Peer<S = unknown> { id: string; user: PeerUser; state: S; at: number }
+/** A pointer as fractions of `a`, an anchor's id, or of the viewport without one. */
 export interface CursorAt { a?: string; x: number; y: number; style?: string }
 
 // What `presence` needs of a connection: the `mp.*` names are the fragment's, which a `doc.connect()`'s types don't say.
-type Conn = Pick<Connection<any, any>, 'status' | 'room' | 'on' | 'send' | 'onReset'>
+type Conn = Pick<Connection<unknown, unknown>, 'status' | 'room' | 'onReset'> & {
+  on(name: string, fn: (message: unknown) => void): () => void
+  send(name: string, message: unknown): Promise<void>
+}
+/** One of the fragment's messages, whose shape the server's half decides. */
+const hear = <M,>(conn: Pick<Conn, 'on'>, name: string, fn: (message: M) => void) => conn.on(name, fn as (message: unknown) => void)
 
 /** What a transport pack is handed to carry cursors around the server (`@weft-js/realtime-webrtc`, `-livekit`, `-socketio`). */
 export interface PeerRoom {
@@ -32,6 +40,7 @@ export interface PeerRoom {
   receive(from: string, text: string): void
 }
 
+/** An open transport, as `open` returns it. */
 export interface PeerLink {
   /** True while a `send` reaches every peer. Until then frames go through the server, so nothing waits on it. */
   readonly up: Derived<boolean>
@@ -39,11 +48,13 @@ export interface PeerLink {
   close(): void
 }
 
+/** A way to carry cursors around the server: what `webrtc()`, `livekit()` and `socketio()` return. */
 export interface PeerTransport {
   readonly name: string
   open(room: PeerRoom): PeerLink
 }
 
+/** Options of `presence()`. */
 export interface PresenceOptions<S> {
   /** This connection's own state. A function is followed. Say what's small: it goes to everyone on every change. */
   state?: S | (() => S)
@@ -53,6 +64,7 @@ export interface PresenceOptions<S> {
   transport?: PeerTransport
 }
 
+/** What `presence()` returns: who else is in the room, kept current. */
 export interface Presence<S> {
   /** Everyone else here, oldest first. */
   readonly peers: Derived<Peer<S>[]>
@@ -69,10 +81,12 @@ const STATE_GAP = 50
 
 /** Roster logic with no DOM and no timers of its own, so a test can drive it. */
 export const applyPeer = <S,>(list: Peer<S>[], p: Peer<S>): Peer<S>[] => (list.some(x => x.id === p.id) ? list.map(x => (x.id === p.id ? p : x)) : [...list, p])
+/** The list without peers unheard for `ttl`, or the same list when nobody expired. */
 export const expire = <S,>(list: Peer<S>[], now: number, ttl: number): Peer<S>[] => { const kept = list.filter(p => now - p.at <= ttl); return kept.length === list.length ? list : kept }
 
 const silent = (p: Promise<unknown>) => void p.catch(() => {}) // a volatile message: the next one replaces it
 
+/** Who else is on this connection. Announces this one, follows `state`, and expires peers that stop beating. */
 export function presence<S = undefined>(conn: Conn, options: PresenceOptions<S> = {}): Presence<S> {
   const { beat = 15_000, transport } = options
   const ttl = beat * 3
@@ -87,22 +101,22 @@ export function presence<S = undefined>(conn: Conn, options: PresenceOptions<S> 
   let link: PeerLink | undefined
   const linked = state<PeerLink | undefined>(undefined)
 
-  conn.on('mp.you', ({ id, ticket: t }: { id: string; ticket?: unknown }) => {
+  hear(conn, 'mp.you', ({ id, ticket: t }: { id: string; ticket?: unknown }) => {
     self.value = id
     ticket.value = t
   })
-  conn.on('mp.peer', (p: Peer<S>) => {
+  hear(conn, 'mp.peer', (p: Peer<S>) => {
     if (p.id === untrack(() => self.value)) return
     // Stamped by this clock: another machine's would expire it early or never.
     list.value = applyPeer(untrack(() => list.value), { ...p, at: Date.now() })
   })
-  conn.on('mp.gone', ({ id }: { id: string }) => {
+  hear(conn, 'mp.gone', ({ id }: { id: string }) => {
     list.value = untrack(() => list.value).filter(p => p.id !== id)
     for (const f of heard) f(id, null)
   })
-  conn.on('mp.ask', ({ id }: { id: string }) => silent(conn.send('mp.answer', { to: id, state: untrack(own) })))
-  conn.on('mp.cursor', ({ id, at }: { id: string; at: CursorAt | null }) => { for (const f of heard) f(id, at) })
-  conn.on('mp.signal', ({ from, data }: { from: string; data: unknown }) => { for (const f of signals) f(from, data) })
+  hear(conn, 'mp.ask', ({ id }: { id: string }) => silent(conn.send('mp.answer', { to: id, state: untrack(own) })))
+  hear(conn, 'mp.cursor', ({ id, at }: { id: string; at: CursorAt | null }) => { for (const f of heard) f(id, at) })
+  hear(conn, 'mp.signal', ({ from, data }: { from: string; data: unknown }) => { for (const f of signals) f(from, data) })
   conn.onReset(() => {
     list.value = []
     hello()
@@ -176,17 +190,20 @@ const isServer = () => typeof document === 'undefined'
 
 /** A frame off a transport: no server looked at it, so it's read as hostile. Undefined is refused. */
 export function readCursor(text: string): CursorAt | null | undefined {
-  let v: any
-  try { v = JSON.parse(text) } catch { return undefined }
-  if (v === null) return null
-  const unit = (n: unknown) => typeof n === 'number' && n >= -0.5 && n <= 1.5
-  if (typeof v !== 'object' || !unit(v.x) || !unit(v.y)) return undefined
+  let parsed: unknown
+  try { parsed = JSON.parse(text) } catch { return undefined }
+  if (parsed === null) return null
+  if (typeof parsed !== 'object') return undefined
+  const v = parsed as Record<string, unknown>
+  const unit = (n: unknown): n is number => typeof n === 'number' && n >= -0.5 && n <= 1.5
+  if (!unit(v.x) || !unit(v.y)) return undefined
   if (v.a !== undefined && (typeof v.a !== 'string' || v.a.length > 128)) return undefined
   return { x: v.x, y: v.y, ...(typeof v.a === 'string' ? { a: v.a } : {}), ...(typeof v.style === 'string' && v.style.length <= 16 ? { style: v.style } : {}) }
 }
 
 // ---- cursors --------------------------------------------------------------------------------------------------------
 
+/** Options of `cursors()`. */
 export interface CursorOptions {
   /** What a position is measured from. An element's id, in this attribute, on both sides. Default `data-anchor`. */
   anchor?: string
@@ -199,7 +216,9 @@ export interface CursorOptions {
   style?: string
 }
 
-export interface LiveCursor<S = unknown> { id: string; peer?: Peer<S>; at: CursorAt; left: number; top: number; moved: number; idle: boolean }
+/** One other cursor, placed on this screen. `peer` is missing until their presence arrives. */
+export interface LiveCursor<S = unknown> { id: string; peer?: Peer<S> | undefined; at: CursorAt; left: number; top: number; moved: number; idle: boolean }
+/** What `cursors()` returns, for `<Cursors of={…} />`. */
 export interface Cursors<S = unknown> { readonly list: Derived<LiveCursor<S>[]>; readonly anchor: string }
 
 /** Where a local pointer is, relative to the nearest anchor, or the viewport without one. Pure but for reading layout. */
@@ -280,7 +299,7 @@ export function cursors<S>(room: Presence<S>, options: CursorOptions = {}): Curs
   })
 
   const list = derived(() => {
-    layout.value
+    void layout.value
     const now = clock.value || Date.now()
     const peers = room.peers.value
     const out: LiveCursor<S>[] = []
@@ -302,19 +321,21 @@ export function hue(id: string): number {
 
 // ---- relay ----------------------------------------------------------------------------------------------------------
 
+/** Something a peer did, named and validated by the server, and which peer did it. */
 export interface RelayEvent<D> { peer: string; kind: string; data: D }
 
 /** Something a peer did, delivered to a callback. Never a synthetic DOM event: the page decides what it means. */
 export function relay<K extends Record<string, unknown>>(conn: Pick<Conn, 'on' | 'send'>) {
-  const handlers = new Map<string, Set<(e: RelayEvent<any>) => void>>()
-  conn.on('mp.relay', ({ id, kind, data }: { id: string; kind: string; data: unknown }) => { for (const f of handlers.get(kind) ?? []) f({ peer: id, kind, data }) })
+  const handlers = new Map<string, Set<(e: RelayEvent<unknown>) => void>>()
+  hear(conn, 'mp.relay', ({ id, kind, data }: { id: string; kind: string; data: unknown }) => { for (const f of handlers.get(kind) ?? []) f({ peer: id, kind, data }) })
   return {
     emit: <N extends keyof K & string>(kind: N, data: K[N]) => conn.send('mp.relay', { kind, data }),
     on<N extends keyof K & string>(kind: N, fn: (e: RelayEvent<K[N]>) => void) {
       const set = handlers.get(kind) ?? new Set()
       handlers.set(kind, set)
-      set.add(fn)
-      const stop = () => void set.delete(fn)
+      const handler = fn as (e: RelayEvent<unknown>) => void // the server checked `data` against this kind's schema
+      set.add(handler)
+      const stop = () => void set.delete(handler)
       onCleanup(stop)
       return stop
     },

@@ -10,7 +10,7 @@
 // `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` enables `--via livekit`.
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
 import { dirname, join, resolve } from 'node:path'
@@ -67,10 +67,10 @@ const SERVERS = {
   deno: ['deno', ['run', '-A', '.output/server/index.mjs']],
 }
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 const kids = new Set()
 const start = (cmd, args, opts) => { const c = spawn(cmd, args, { stdio: process.env.DEBUG_E2E ? 'inherit' : 'ignore', ...opts }); kids.add(c); return c }
-const stopAll = (from = new Set()) => { for (const k of kids) if (!from.has(k)) (k.kill('SIGKILL'), kids.delete(k)) }
+const stopAll = (from = new Set()) => { for (const k of kids) if (!from.has(k)) { k.kill('SIGKILL'); kids.delete(k) } }
 
 async function instance(runtime, env) {
   const port = await freePort()
@@ -135,7 +135,8 @@ async function scenario(browser, urlA, urlB, via, log) {
     await a.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     await b.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     check(`cursors are going over ${via}`, true)
-    await a.page.evaluate(() => { window.__sent = 0; const s = WebSocket.prototype.send; WebSocket.prototype.send = function (t) { if (String(t).includes('mp.cursor')) window.__sent++; return s.call(this, t) } })
+    // oxlint-disable-next-line typescript/unbound-method -- wrapping a prototype method: `s.call(this, t)` gives it its `this` back
+    await a.page.evaluate(() => { window.__sent = 0; const s = WebSocket.prototype.send; WebSocket.prototype.send = function (t) { if (typeof t === 'string' && t.includes('mp.cursor')) window.__sent++; return s.call(this, t) } })
   }
 
   // Three quarters across and halfway down the board, on two boards of different sizes.
@@ -177,10 +178,9 @@ const env = { redis: { REDIS_URL: process.env.REDIS_URL ?? `redis://127.0.0.1:${
 if (buses.includes('redis') && !process.env.REDIS_URL) start(values.redis, ['--port', String(redisPort), '--save', '', '--appendonly', 'no'])
 if (buses.includes('nats') && !process.env.NATS_URL) start(values.nats, ['-p', String(natsPort)])
 
-let extra = {}, relay
+let extra = {}
 if (routes.includes('socketio')) {
-  const require = createRequire(join(repo, 'packages/realtime-socketio/package.json'))
-  relay = start('node', ['--input-type=module', '-e', `
+  start('node', ['--input-type=module', '-e', `
     import { createServer } from 'node:http'
     import { createRequire } from 'node:module'
     const require = createRequire(${JSON.stringify(join(repo, 'packages/realtime-socketio/package.json'))})
