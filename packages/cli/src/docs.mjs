@@ -23,6 +23,7 @@ export const topics = {
   plugins: 'Build a plugin: slots, server extensions, check hooks, docs, `weft add`, conformance. Walks through how @weft/pay is built',
   testing: 'weft/test: render, screen, user, flush, clock, touches and toTouchAtMost(n, { runs }); T001–T009',
   browser: 'weft/browser: online, visible, lifecycle, media, on, interval; the net/page fakes; W050, W051, W054, W056, T012',
+  'ui-state': 'Hover, press and focus as state: interaction(), the ui prop, sharing across tabs and clients, realtime({ share }); U001–U005',
   surface: 'weft/surface: canvas and WebGL as layout children: defineSurface, <Surface>, s.draw, s.frame, s.text, the clock; X001–X004, X009–X012',
   verify: 'Check your work: drive the running app (weft browser / __weft__.agent: snapshot with the live graph, act, assert, clock, network, record) and the test gate; T010, T011, T020',
   icons: '@weft/icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',

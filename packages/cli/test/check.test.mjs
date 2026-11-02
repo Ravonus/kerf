@@ -209,3 +209,30 @@ describe('Q015', () => {
     expect(await q015(project())).toEqual([])
   })
 })
+
+describe('U001–U005: interaction() and ui', () => {
+  const page = body => `import { interaction } from 'weft/interaction'\nimport { Button, Tabs } from '@weft/warp'\nexport function A() {\n${body}\n}\n`
+  const codes = async files => (await check(project(files))).diagnostics.map(d => d.code).filter(c => c.startsWith('U'))
+
+  it('a key that can never match', async () => {
+    expect(await codes({ 'src/A.tsx': page('const row = interaction({ share: `r:${Math.random()}` }); return <Button ui={row}>x</Button>') })).toEqual(['U001'])
+  })
+  it('a key the user chose', async () => {
+    expect(await codes({ 'src/A.tsx': page('const row = interaction({ share: location.pathname + "x" }); return <Button ui={row}>x</Button>') })).toEqual(['U002'])
+  })
+  it('share with no rule, in a full-stack app only', async () => {
+    const body = { 'src/A.tsx': page("const row = interaction({ share: 'a' }); return <Button ui={row}>x</Button>") }
+    expect(await codes(body)).toEqual([])
+    expect(await codes({ ...body, 'src/routes/index.tsx': 'export default () => <p>x</p>\n' })).toEqual(['U003'])
+    expect(await codes({ ...body, 'src/routes/index.tsx': 'export default () => <p>x</p>\n', 'src/realtime.server.ts': 'export default { share: () => true }\n' })).toEqual([])
+  })
+  it('writing remote', async () => {
+    expect(await codes({ 'src/A.tsx': page('const row = interaction(); const go = () => { row.remote.value = {} }; return <Button ui={row} onClick={go}>x</Button>') })).toEqual(['U004'])
+  })
+  it('ui on a component that does not take it', async () => {
+    expect(await codes({ 'src/A.tsx': page('const row = interaction(); return <Tabs ui={row} />') })).toEqual(['U005'])
+  })
+  it('a correct row is quiet', async () => {
+    expect(await codes({ 'src/A.tsx': page("const row = interaction({ share: 'fixed' }); return <Button ui={row}>{row.hover.value ? 'y' : 'n'}</Button>") })).toEqual([])
+  })
+})

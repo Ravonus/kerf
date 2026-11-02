@@ -1,0 +1,6 @@
+.ui-state { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px; font: 15px/1.4 system-ui; }
+.ui-state ul { list-style: none; margin: 0; padding: 0; }
+.person { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.person output { margin-inline-start: auto; opacity: .7; font-size: 13px; }
+.person:has([data-hold]) { background: color-mix(in oklab, CanvasText 6%, transparent); }
+.person:has([data-remote]) { background: color-mix(in oklab, #1d6fe0 14%, transparent); }

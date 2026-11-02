@@ -12,6 +12,8 @@ import type { Bus } from './bus'
 import { memoryBus } from './bus'
 import { createFeed, functionHost, type Feed, type Poke, type Probe, type Source } from './changes'
 import { currentScope, enter, fns, StartError, type Context, type Fn, type LiveMode, type StandardSchemaV1 } from './data'
+import { sessionOf } from './mux-session'
+import type { ShareRule } from './share-server'
 import { createScope, defaultStore, guard, liveQueries, missedFeed, tagsOf, validate, type Scope, type ScopeOptions, type Store } from './exec'
 
 export interface Limits {
@@ -36,9 +38,11 @@ export interface Limits {
   perSecond: number
   /** The burst `perSecond` allows. */
   burst: number
+  /** Keys one socket may `share`. They cost no joins: a 200-row list is one. */
+  shareKeys: number
 }
 
-const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40 }
+const LIMITS: Limits = { subscriptions: 100, connections: 10, body: 64 * 1024, message: 1 << 20, queue: 1 << 20, ring: 256, window: 60_000, heartbeat: 20_000, session: 300_000, perSecond: 20, burst: 40, shareKeys: 1000 }
 const HIGH = 64 * 1024
 const VOLATILE = '{"v":1'
 
@@ -52,6 +56,11 @@ export interface RealtimeOptions {
   maxDuration?: number
   /** Writes from outside the app: `changes: dbChanges(db, [todos])`, or a source of your own. */
   changes?: Source
+  /**
+   * Who may share or see a key of `interaction({ share })` with other clients. Left out, nobody: tabs still work. One
+   * key at a time, `({ ctx, key }) => boolean`, or `{ keys: ({ ctx, keys }) => allowed }` to answer a whole join at once.
+   */
+  share?: ShareRule
 }
 
 /** What the app gets from `configure`, beside `src/realtime.server.ts`. */
@@ -148,6 +157,8 @@ interface Conn {
 export interface Hub {
   readonly bus: Bus
   readonly limits: Limits
+  /** `realtime({ share })`. */
+  readonly share?: ShareRule
   poke(tags: string[], origin?: string | null): Promise<void>
   cursor(): string | undefined
   /** Listening for pokes, or 250 ms: a page waits this long for a cursor, and goes without one. */
@@ -156,7 +167,8 @@ export interface Hub {
   channel(name: string): Channel
   replay(ch: Channel, after: string): Ev[] | undefined
   unlisten(ch: Channel, on: (ev: Ev | null) => void): void
-  connect(request: Request, scope: Scope, body: Body, sink: Sink): Promise<Conn>
+  /** `line`: one tab on a shared socket (mux.ts), which `limits.connections` counted already. */
+  connect(request: Request, scope: Scope, body: Body, sink: Sink, line?: boolean): Promise<Conn>
   change(c: Conn, request: Request, options: ScopeOptions, body: Body): Promise<void>
   drain(c: Conn): void
   close(c: Conn): void
@@ -191,7 +203,7 @@ export interface Hub {
 
 const unref = <T,>(t: T) => ((t as any)?.unref?.(), t)
 
-function createHub(options: HubOptions): Hub {
+export function createHub(options: HubOptions): Hub {
   const bus = options.bus ?? memoryBus()
   const limits = { ...LIMITS, ...options.limits }
   const epoch = crypto.randomUUID().slice(0, 8)
@@ -528,11 +540,11 @@ function createHub(options: HubOptions): Hub {
     }
   }
 
-  async function connect(request: Request, scope: Scope, body: Body, sink: Sink) {
+  async function connect(request: Request, scope: Scope, body: Body, sink: Sink, line = false) {
     const opts = scope.options
     const ctx = await scope.ctx()
     const user = (ctx as { user?: { id?: string } }).user?.id
-    if (user !== undefined && [...conns.values()].filter(c => c.user === user).length >= limits.connections) {
+    if (!line && user !== undefined && [...conns.values()].filter(c => c.user === user).length >= limits.connections) {
       throw new StartError('R009', `user \`${user}\` already has ${limits.connections} realtime connections`, 'close tabs, or raise `limits.connections`', { status: 429 })
     }
     const c: Conn = { k: crypto.randomUUID(), sink, user, subs: new Map(), tags: new Map(), held: new Set(), bytes: 0, timers: [] }
@@ -556,7 +568,7 @@ function createHub(options: HubOptions): Hub {
   }
 
   return {
-    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close, closing, epoch, dev: options.dev, maxDuration: options.maxDuration, build: options.build,
+    bus, limits, cursorOf, channel, replay, unlisten, connect, change, drain, close, closing, epoch, dev: options.dev, maxDuration: options.maxDuration, build: options.build, share: options.share,
     position: () => cursorOf(seq),
     watch(fn) {
       watchers.add(fn)
@@ -714,7 +726,7 @@ export function topic<K extends StandardSchemaV1<any, string | number>, M extend
 // ---- the HTTP route -------------------------------------------------------------------------------------------------
 
 const enc = new TextEncoder()
-const validBody = (b: any): b is Body =>
+export const validBody = (b: any): b is Body =>
   !!b && typeof b === 'object' && !Array.isArray(b) &&
   (b.k === undefined || typeof b.k === 'string') && (b.c === undefined || typeof b.c === 'string') &&
   (b.d === undefined || (Array.isArray(b.d) && b.d.every((n: unknown) => typeof n === 'number'))) &&
@@ -742,6 +754,8 @@ export async function rtRoute(request: Request, scope: Scope, origins: string[] 
   } catch {
     return refuse('Q002', 'Q002: `/_weft/rt` got a body that isn\'t JSON', 400)
   }
+  // A tab that didn't dial the shared socket asks who it is now (link.ts).
+  if ((body as { w?: 1 })?.w === 1) return Response.json({ u: await sessionOf(await scope.ctx()) }, { headers: { 'cache-control': 'no-store' } })
   if (!validBody(body)) return refuse('Q002', 'Q002: `/_weft/rt` got a body of the wrong shape', 400)
   if (body.k) {
     const c = h.find(body.k)

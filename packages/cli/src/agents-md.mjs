@@ -81,7 +81,7 @@ export async function agentsMd(root) {
       const last = all.slice(i + 1).every(m => !entryPoints[m].some(n => info.exports[m]?.includes(n)))
       return names.length ? `- \`${mod}\`: ${names.map(n => `\`${n}\``).join(', ')}.${last ? ' The rest are for compiled code; never import them.' : ''}` : ''
     }).filter(Boolean),
-    info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`.` : '',
+    info.exports['weft/browser'] ? `- \`weft/browser\`: ${entryPoints['weft/browser'].filter(n => info.exports['weft/browser'].includes(n)).map(n => `\`${n}\``).join(', ')}. Create them in setup (W051); server-rendered \`media\` needs \`ssr\` (W054). More: \`weft docs browser\`; hover and press as state: \`weft docs ui-state\`.` : '',
     info.exports['weft/surface'] ? '- `weft/surface`: canvas and WebGL, never raw `<canvas>`: `weft docs surface`.' : '',
     info.exports['weft/test'] ? `- \`weft/test\`: ${info.exports['weft/test'].filter(n => !['canvasCalls', 'cleanup', 'fakeMeasure', 'leaks'].includes(n)).map(n => `\`${n}\``).join(', ')}, and \`expect(fn).toTouchAtMost(n, { runs })\`. Query by role/label/text; \`user\` actions and \`clock.advance\` end in \`flush()\`, so never sleep or \`waitFor\`.` : '',
     missing.length ? `- Not in this version yet: ${missing.map(n => `\`${n}\``).join(', ')}. Don't import them.` : '',
@@ -112,7 +112,7 @@ export async function agentsMd(root) {
     ...(sections.length ? ['## Plugins', '', ...sections] : []),
     '## More',
     '',
-    `\`weft docs <topic>\` or the \`docs\` tool of \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${startApp ? '`start`, ' : ''}${info.exports['weft/style'] ? '`style`, ' : ''}${info.exports['weft/surface'] ? '`surface`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
+    `\`weft docs <topic>\` or \`weft mcp\`: \`rules\`, \`props\`, \`lists\`, \`async\`, \`testing\`, \`browser\`, \`verify\`, ${startApp ? '`start`, ' : ''}${info.exports['weft/style'] ? '`style`, ' : ''}${info.exports['weft/surface'] ? '`surface`, ' : ''}\`config\`, \`diagnostics\`, \`commands\`.`,
     '',
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))

@@ -5,6 +5,7 @@ import { createRoot, defineState, state } from 'weft'
 import { clock, flush, net, render, screen } from 'weft/test'
 import { channel, sharedState, skip, StartError, type StandardSchemaV1 } from '@weft/start'
 import { hub } from '@weft/start/hub'
+import { keepOpen } from '../src/channel'
 
 const any: StandardSchemaV1<any> = { '~standard': { version: 1, vendor: 't', validate: v => ({ value: v }) } }
 const text: StandardSchemaV1<any, { text: string }> = { '~standard': { version: 1, vendor: 't', validate: (v: any) => (typeof v?.text === 'string' && v.text.length <= 8 ? { value: v } : { issues: [{ message: 'bad text' }] }) } }
@@ -457,4 +458,38 @@ describe('what multiplayer needs of a room', () => {
     const ch = hub().channel('weft:c:chat.lively:{"roomId":"a"}')
     expect(ch.ring).toHaveLength(0)
   })
+})
+
+test('a hidden tab parks its socket, unless a sibling is looking (`share`)', async () => {
+  clock.install()
+  const open = channel({ $id: 'park.room', authorize: () => true })
+  let conn!: ReturnType<typeof open.connect>
+  const stop = createRoot(dispose => {
+    conn = open.connect(undefined, { keep: 0 })
+    return dispose
+  })
+  await net.settle()
+  const hide = (hidden: boolean) => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: hidden ? 'hidden' : 'visible' })
+    document.dispatchEvent(new Event('visibilitychange'))
+  }
+  let looking = true
+  keepOpen.stay = () => looking
+  hide(true)
+  await clock.advance(300_000)
+  await net.settle()
+  flush()
+  expect(conn.status.value).toBe('open')
+  looking = false
+  await clock.advance(300_000)
+  await net.settle()
+  flush()
+  expect(conn.status.value).toBe('reconnecting')       // parked
+  hide(false)
+  await net.settle()
+  keepOpen.stay = undefined
+  delete (document as any).visibilityState
+  stop()
+  await clock.advance(30_000)
+  clock.uninstall()
 })

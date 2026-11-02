@@ -1,4 +1,4 @@
-// The realtime client (research 30 §6): one connection per tab, one subscription per function + input, shared by every
+// The realtime client (research 30 §6): one connection per tab, a line on the browser's one socket (link.ts), one subscription per function + input, shared by every
 // reader and owned by this module, not by a component (PLAN §4.2), so an unmounting tab loses neither its subscription
 // nor its folded state for `keep`. `q.live()` imports this on its first call; `stream` through `stream.ts`, so an app
 // that uses neither ships none of it.
@@ -8,6 +8,7 @@
 import { DEV, batch, createRoot, derived, effect, getOwner, onCleanup, state, untrack, type Derived, type State } from 'weft'
 import type { AuthScope, Context, Fn, LiveApi, LiveMode, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from './data'
 import type { Body, SubEntry, Tracked } from './hub'
+import { HANDOVER, noSockets, openLine, type Line } from './link'
 
 // `data.ts` hands these over (`use`). A static import would close a cycle with its `import('./live')`, and the bundler
 // would then keep this chunk, the hub and the split they force in apps that never read `.live`.
@@ -214,6 +215,30 @@ const http: Link = {
   },
 }
 
+/** A line on the browser's one socket (link.ts): the same events, and `/_weft/rt`'s SSE is for a host with no sockets. */
+let line: Line | undefined
+const socket: Link = {
+  open(body, frame, signal, alive) {
+    return new Promise<void>((done, fail) => {
+      const l = (line = openLine('r', JSON.stringify(body), text => {
+        alive()
+        const at = text.indexOf(':'), event = text.slice(0, at)
+        if (event !== 'ping') frame(event, JSON.parse(text.slice(at + 1)))
+      }, (code, reason) => {
+        if (line === l) line = undefined
+        if (code === HANDOVER) retry = 0
+        if (code === 4000 && reason) fail(new FnError(JSON.parse(reason), 429))
+        else done()
+      }))
+      signal.addEventListener('abort', () => l.close())
+    })
+  },
+  async change(body) {
+    if (!line) throw new FnError({}, 503)
+    line.send(JSON.stringify(body))
+  },
+}
+
 /**
  * weft/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
  * fake, and through it the hub, as chunks of every app, used or not.
@@ -228,7 +253,9 @@ const fake: Link = {
   change: async body => (await import(/* @vite-ignore */ FAKE)).change(body),
 }
 
-const link = (): Link => (DEV && net() ? fake : http)
+/** Two sockets that never answered, and this host has none. */
+const link = (): Link => (DEV && net() ? fake : noSockets() ? http : socket)
+let via: Link = socket
 let closeHub: (() => unknown) | undefined
 
 const BASE = 500, CAP = 30_000, DEAD = 45_000, HIDDEN = 300_000
@@ -363,7 +390,7 @@ async function run() {
     alive()
     retry = undefined
     try {
-      await link().open({ c: cursor, s: [...subs.values()].filter(s => !s.done.value).map(entry) }, frame, ac.signal, alive)
+      await (via = link()).open({ c: cursor, s: [...subs.values()].filter(s => !s.done.value).map(entry) }, frame, ac.signal, alive)
     } catch (e) {
       if (!ac.signal.aborted && e instanceof FnError) for (const s of subs.values()) untrack(() => { s.error.value = e })
     }
@@ -398,7 +425,7 @@ function sync() {
     for (const s of add) live.sent.add(s.n)
     for (const n of gone) live.sent.delete(n)
     try {
-      await link().change({ k: live.k, s: add.map(entry), d: gone })
+      await via.change({ k: live.k, s: add.map(entry), d: gone })
     } catch {
       live.ac.abort()
     }
