@@ -1,5 +1,5 @@
 // The diagnostic catalog the agent layer knows about: PLAN §3.5 (W), §4.2 (W050–W056, T012), §7b (T001–T009,
-// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), PLAN §12 (H009, H010, partial hydration), research 23 §3 (D020–D025, style groups), research 36 (D001–D039, the design language),
+// P001–P006), research 13 §4.4 (P100–P120), research 20 §6 (H001–H008), PLAN §12 (H009–H011, partial hydration), research 23 §3 (D020–D025, style groups), research 36 (D001–D039, the design language),
 // research 11 §8.5 and 15 §7.5 as built in research 26 §7 (Phase 2's X-codes, M001–M013), research 27 §6 (Q001–Q010,
 // server functions, and S011), research 28 §7 (Q011–Q015, the database; A001–A004, auth; C001–C002, the contract),
 // research 29 §7 (S001, S002, S012, S013, state on the server; F001–F003, forms; M016–M018, the media route), research
@@ -256,6 +256,7 @@ export const catalog = [
   // render time, and by `weft routes --meta` for every route.
   { code: 'H009', severity: 'error', by: 'runtime', catches: 'A prop of an island is something JSON can\'t carry (a function, a Date, a class instance), found as the server renders', fix: 'Pass plain data, or put `/* @weft client */` on the component that renders it' },
   { code: 'H010', severity: 'info', by: 'cli', catches: 'An island has to load with the page for a reason its code could avoid: work that reaches past it, a module that runs as it loads, a box at module level, code the compiler can\'t see into. `.weft/hydration.json` says why for every island', fix: '`/* @weft visible */` above the component when its work only matters on screen; otherwise the fix the diagnostic names' },
+  { code: 'H011', severity: 'info', by: 'cli', catches: 'A prop on a component holds a function over local names, which can\'t cross to an island, so the component around it hydrates whole', fix: 'Nothing, when that component is mostly controls; otherwise move each control and what its function reads into a small component of its own, which becomes the island and leaves the rest static' },
   { code: 'H001', severity: 'error', by: 'cli', proposed: true, catches: 'Relative `og:image` (a relative `site.image`, or `auto`) and no `site.url`: crawlers need absolute URLs', fix: 'Set `site.url` to the absolute origin' },
   { code: 'H002', severity: 'error', by: 'cli', proposed: true, catches: 'Param route with an `auto` image on a static-only preset and no `prerender` (`weft routes --meta --preset static`)', fix: 'Export `prerender`, or set `og.image`' },
   { code: 'H003', severity: 'warning', by: 'cli', proposed: true, catches: 'No description after merging the config, layouts and route (`weft check` on `site`; `weft routes --meta` per route)', fix: 'Set `site.description` (or the route\'s `meta.description`)' },

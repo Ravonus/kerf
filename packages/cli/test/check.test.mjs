@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { entry } from '../src/catalog.mjs'
 import { check } from '../src/check.mjs'
 import { schemaHash } from '../src/start.mjs'
 import { fixture, project, spreadBug } from './helpers.mjs'
@@ -207,5 +208,21 @@ describe('Q015', () => {
 
   it('an app with no database has nothing to report', async () => {
     expect(await q015(project())).toEqual([])
+  })
+})
+
+describe('what a build reports to weft check', () => {
+  const solver = readFileSync(new URL('../../weft/node/hydration.mjs', import.meta.url), 'utf8')
+  const codes = [...new Set([...solver.matchAll(/code: '(\w+)'/g)].map(m => m[1]))]
+
+  it('every code the solver writes has a catalog entry and leaves a build passing', async () => {
+    expect(codes).toEqual(expect.arrayContaining(['H010', 'H011']))
+    for (const code of codes) expect([code, entry(code)?.severity]).toEqual([code, 'info'])
+    const root = project({})
+    mkdirSync(join(root, '.weft'))
+    writeFileSync(join(root, '.weft/hydration.json'), JSON.stringify({ diagnostics: codes.map(code => ({ code, file: 'src/App.tsx', line: 1, why: 'why', fix: 'fix' })) }))
+    const r = await check(root)
+    expect(r.diagnostics.filter(d => codes.includes(d.code)).map(d => [d.code, d.severity])).toEqual(codes.map(c => [c, 'info']))
+    expect(r.ok).toBe(true)
   })
 })
