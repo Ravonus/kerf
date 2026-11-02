@@ -17,7 +17,7 @@ const STATS = 'weft_bench_stats' // holds the pg_stat_statements extension, so r
 export const benchUser = JSON.parse(readFileSync(join(here, 'bench-user.json'), 'utf8'))
 export const seedHash = () => createHash('sha256').update(readFileSync(join(here, 'schema.sql'))).update(readFileSync(join(here, 'seed.sql'))).digest('hex').slice(0, 12)
 export const seedName = () => `weft_bench_seed_${seedHash()}`
-export const dbName = (app, variant) => `weft_bench_${app}_${variant}`.toLowerCase().replace(/[^a-z0-9_]/g, '_')
+export const dbName = (app, variant) => `weft_bench_${app}_${variant}${process.env.BENCH_TAG ? `_${process.env.BENCH_TAG}` : ''}`.toLowerCase().replace(/[^a-z0-9_]/g, '_')
 
 function mine(name) {
   if (!/^weft_bench_[a-z0-9_]+$/.test(name)) throw new Error(`refusing to touch database "${name}": not weft_bench_*`)

@@ -132,7 +132,7 @@ about 25% low side by side, which is why it isn't.
 
 ## Running it on another machine
 
-`BENCH_WORK` moves the work area and `BENCH_HOME` is what `~` means in a manifest, so an external variant can be a copy elsewhere; `BENCH_COMMIT` names the commit when the checkout there is a snapshot.
+`BENCH_TAG` suffixes database names, and with its own `BENCH_WORK` lets two runs of one variant share a machine. `BENCH_WORK` moves the work area and `BENCH_HOME` is what `~` means in a manifest, so an external variant can be a copy elsewhere; `BENCH_COMMIT` names the commit when the checkout there is a snapshot.
 Bring only the files bench would copy; never a real env file.
 
 On Windows: clone with `core.autocrlf=false`, or the seed hash and build keys change, and put `BENCH_WORK` outside the checkout, somewhere short. `BENCH_PG_*` and `BENCH_PSQL`
