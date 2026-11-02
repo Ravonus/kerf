@@ -16,10 +16,10 @@ export function AccountMenu() {
 
   return (
     <div>
-      <button ref={n => (button = n)} type="button" aria-haspopup="menu" aria-expanded={open.value ? 'true' : 'false'} onClick={() => (open.value = !open.value)}>
+      <button ref={(n: any) => (button = n)} type="button" aria-haspopup="menu" aria-expanded={open.value ? 'true' : 'false'} onClick={() => (open.value = !open.value)}>
         Account
       </button>
-      <div ref={n => (panel = n)} role="menu" hidden={!open.value}>
+      <div ref={(n: any) => (panel = n)} role="menu" hidden={!open.value}>
         <button role="menuitem" tabindex="-1" type="button" onClick={() => pick(() => (location.hash = 'profile'))}>Profile</button>
         <button role="menuitem" tabindex="-1" type="button" onClick={() => pick(() => (location.hash = 'out'))}>Sign out</button>
       </div>

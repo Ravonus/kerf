@@ -21,7 +21,7 @@ export function Settings() {
 
   return (
     <div data-scope="tabs" data-part="root">
-      <div ref={n => (list = n)} data-part="list" role="tablist" aria-label="Settings" onKeyDown={onKey}>
+      <div ref={(n: any) => (list = n)} data-part="list" role="tablist" aria-label="Settings" onKeyDown={onKey}>
         {names.map((name, i) => (
           <button
             key={name}

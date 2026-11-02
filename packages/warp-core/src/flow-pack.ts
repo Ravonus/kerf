@@ -129,8 +129,8 @@ export interface FlowError {
   attemptsLeft?: number | undefined
 }
 
-/** What a domain error carries: the fields the table reads, and whatever else the server sent. */
-export type FlowErrorData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<string, unknown>
+/** What a server sends with an error, past the code: the fields mapFlowError reads, and whatever a domain adds. */
+export type FlowData = { until?: string; retryAfter?: number; attemptsLeft?: number } & Record<string, unknown>
 
 interface IssueLike { message: string; path?: readonly (PropertyKey | { readonly key: PropertyKey })[] }
 
@@ -139,7 +139,7 @@ export interface FlowErrorOptions {
   /** `online().value`: a failed submit while offline is a Banner, not a server error. */
   online?: boolean
   /** Copy by code, for a domain error the table doesn't know. */
-  copy?: Record<string, string | ((data: FlowErrorData) => string)>
+  copy?: Record<string, string | ((data: FlowData) => string)>
 }
 
 /** Field name by field name from Zod or Standard Schema issues: `a.b`, and the first message wins. */
@@ -163,8 +163,8 @@ const tries = (n: number | undefined) => (n === undefined ? '' : n === 1 ? ' 1 t
 
 /** One message per cause: what happened and what to do, in one sentence. Takes a `FnError`, anything like one, or a string. */
 export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowErrorOptions = {}): FlowError {
-  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: FlowErrorData; extra?: FlowErrorData; name?: string }
-  const data: FlowErrorData = e.data ?? e.extra ?? e
+  const e = (typeof error === 'string' ? { message: error } : (error ?? {})) as { code?: string; status?: number; message?: string; issues?: readonly IssueLike[]; data?: FlowData; extra?: FlowData; name?: string }
+  const data: FlowData = e.data ?? e.extra ?? e
   const base = { code: e.code, fields: {} as Record<string, string> }
   const alert = (title: string, description?: string): FlowError => ({ ...base, surface: 'alert', title, description, focus: 'alert', live: 'assertive' })
   const fields = issueFields(e.issues)
@@ -174,7 +174,7 @@ export function mapFlowError(error: unknown, { online = true, copy = {} }: FlowE
   if (known) return alert(typeof known === 'function' ? known(data) : known)
   switch (e.code) {
     case 'INVALID_CREDENTIALS': return alert("That email and password don't match.", 'Try again, or reset your password.')
-    case 'LOCKED': return { ...alert(`This account is locked until ${utc(data.until ?? '')}.`, 'Reset your password to get back in sooner.'), until: data.until }
+    case 'LOCKED': return { ...alert(`This account is locked${data.until ? ` until ${utc(data.until)}` : ''}.`, 'Reset your password to get back in sooner.'), until: data.until }
     case 'RATE_LIMITED': return { ...base, surface: 'rate-limit', title: 'Too many tries.', retryAfter: data.retryAfter, focus: 'stay', live: 'polite' }
     case 'WRONG_CODE': return { ...base, surface: 'field', fields: { code: `That code didn't work.${tries(data.attemptsLeft)}` }, title: `That code didn't work.${tries(data.attemptsLeft)}`, attemptsLeft: data.attemptsLeft, focus: 'field', live: 'assertive' }
     case 'EXPIRED': return { ...base, surface: 'field', fields: { code: 'That code expired. We sent a new one.' }, title: 'That code expired. We sent a new one.', focus: 'field', live: 'assertive' }
