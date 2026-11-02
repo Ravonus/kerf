@@ -355,7 +355,7 @@ for (const viewport of [undefined, PHONE]) {
   }, viewport)
 }
 // Thin pages: these had one or two examples and now show the states, sizes and real uses beside them.
-for (const [path, least] of [['/components/month-picker', 5], ['/components/week-picker', 4], ['/components/period-picker', 4], ['/components/date-time-field', 5], ['/components/command-palette', 5], ['/components/radio-group', 5], ['/components/number-field', 6], ['/components/language-select', 5], ['/components/currency-select', 5], ['/components/payment-card-input', 3], ['/charts/sparkline', 3]]) {
+for (const [path, least] of [['/components/month-picker', 5], ['/components/week-picker', 4], ['/components/period-picker', 4], ['/components/date-time-field', 5], ['/components/command-palette', 5], ['/components/radio-group', 5], ['/components/number-field', 6], ['/components/language-select', 5], ['/components/currency-select', 5], ['/components/payment-card-input', 3], ['/charts/sparkline', 3], ['/components/canvas', 11]]) {
   await check(`enough examples ${path}`, path, async page => {
     const n = await page.evaluate(() => document.querySelectorAll('[data-site="frame"]:not([data-play])').length)
     if (n < least) throw new Error(`${n} examples, want at least ${least}`)
@@ -364,6 +364,23 @@ for (const [path, least] of [['/components/month-picker', 5], ['/components/week
     same(failed, 0, 'examples that failed')
   })
 }
+// Every Canvas example paints something, on screen: a blank or zero-sized canvas is a broken example.
+await check('canvas examples draw', '/components/canvas', async page => {
+  await mount(page)
+  const blank = []
+  for (const frame of await page.locator('[data-site="frame"]:not([data-play]) [data-part="stage"]').all()) {
+    await frame.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(250)
+    blank.push(await frame.evaluate(s => {
+      const c = s.querySelector('canvas')
+      if (!c || !c.width || !c.height) return `${s.closest('[id]')?.id ?? '?'} has no canvas`
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
+      for (let i = 3; i < d.length; i += 4) if (d[i]) return ''
+      return `${s.closest('[id]')?.id ?? '?'} is blank`
+    }))
+  }
+  same(blank.filter(Boolean).join(', '), '', 'canvases')
+})
 // A page with no headings has no contents column, so its words take the room.
 for (const path of ['/docs/rules', '/docs/lists', '/docs/async', '/docs/browser']) {
   await check(`no empty contents column ${path}`, path, async page => {
