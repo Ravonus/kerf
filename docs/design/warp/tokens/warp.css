@@ -1496,7 +1496,7 @@
        it part way, and as a cover that cut every line at the same column for as long as the page sat there */
     :where([data-scope="codeblock"], [data-flow="code"])::after {
       content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%; scale: 0 1;
-      background: color-mix(in oklab, var(--warp-color-accent-soft) 70%, var(--warp-color-surface-sunken));
+      background: color-mix(in oklab, var(--warp-color-accent-soft) 50%, var(--warp-color-surface-sunken));
       animation: var(--warp-flow-gate, warp-in-scan) auto linear backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover calc(var(--warp-ref-flow-reach) * 1.3);
     }
