@@ -1,0 +1,137 @@
+{
+  // The framework's own lint rules. `npm run check` runs them; `weft check` is what apps get, and that's a different thing.
+  // Each rule here is on for a reason: a bug it catches, or one way of writing a thing. CONTRIBUTING.md has the short version.
+  "jsPlugins": ["./scripts/quality/lint-plugin.mjs"],
+  "plugins": ["typescript", "unicorn", "oxc", "import", "vitest", "promise", "node"],
+  "categories": { "correctness": "warn", "suspicious": "warn" },
+  "ignorePatterns": [
+    "**/node_modules/**", "**/dist/**", "**/.weft/**", "**/.output/**", "**/target/**",
+    "**/fixture/**", "**/fixtures/**", "**/vendor/**", "**/gallery/assets/**",
+    "packages/icons/src/gen/**", "packages/icons/art/**", "packages/text/gen/**", "packages/weft/node/*.mjs", "packages/weft/native/**",
+    "packages/weft/bench/corpus/**", "packages/weft/test/corpus-gen/**", "packages/db/test/generated/**",
+    "docs/**", "spikes/**", "evals/*/**", "site/public/**", "site/content/**", "site/review/**"
+  ],
+  "rules": {
+    // Bugs: dead code, wrong comparisons, names that hide each other.
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrors": "none" }],
+    "no-shadow": "warn",
+    "eqeqeq": ["warn", "always", { "null": "ignore" }], // `x == null` is how this repo says null or undefined
+    "no-fallthrough": "warn",
+    "no-self-compare": "warn",
+    "no-case-declarations": "warn",
+    "no-redeclare": "warn",
+    "no-unreachable-loop": "warn",
+    "no-useless-assignment": "warn",
+    "array-callback-return": "warn",
+    "no-promise-executor-return": "warn",
+    "no-unused-expressions": ["warn", { "allowShortCircuit": true, "allowTernary": true, "allowTaggedTemplates": true }],
+    "no-use-before-define": ["warn", { "functions": false, "classes": false, "variables": false }],
+
+    // Async mistakes. These read the types, so they need a tsconfig: `oxlint --type-aware`.
+    "typescript/no-floating-promises": "warn",
+    "typescript/no-misused-promises": "warn",
+    "typescript/await-thenable": "warn",
+    "typescript/require-await": "warn",
+    "typescript/only-throw-error": "warn",
+    "promise/no-multiple-resolved": "warn",
+
+    // Types.
+    "typescript/consistent-type-imports": "warn",
+    "typescript/consistent-type-exports": "warn",
+    "typescript/no-explicit-any": "warn",
+    "typescript/ban-ts-comment": ["warn", { "ts-ignore": true, "ts-nocheck": true, "ts-check": false, "ts-expect-error": "allow-with-description", "minimumDescriptionLength": 8 }],
+    "typescript/prefer-ts-expect-error": "warn",
+    "typescript/no-unsafe-function-type": "warn",
+    "typescript/no-non-null-asserted-optional-chain": "warn",
+    "typescript/no-unnecessary-type-assertion": "warn",
+    "typescript/switch-exhaustiveness-check": "warn",
+
+    // Consistency: one way of writing each of these.
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "object-shorthand": "warn",
+    "no-useless-return": "warn",
+    "no-useless-computed-key": "warn",
+    "no-lonely-if": "warn",
+    "prefer-object-has-own": "warn",
+    "no-prototype-builtins": "warn",
+    "no-template-curly-in-string": "warn",
+    "import/no-cycle": "warn",
+    "import/no-self-import": "warn",
+    "import/no-duplicates": "warn",
+    "import/first": "warn",
+    "unicorn/prefer-node-protocol": "warn",
+    "unicorn/throw-new-error": "warn",
+
+    // Security: no code from strings, no unescaped markup.
+    "no-eval": "warn",
+    "no-new-func": "warn",
+    "no-script-url": "warn",
+    "typescript/no-implied-eval": "warn",
+    "weft/no-html-sink": "warn",
+
+    // Comments.
+    "weft/no-commented-code": "warn",
+    "weft/todo-needs-issue": "warn",
+    "weft/disable-needs-reason": "warn",
+    "weft/public-doc": "warn",
+    "unicorn/no-abusive-eslint-disable": "warn",
+
+    // Tests.
+    "vitest/no-focused-tests": "warn",
+    "vitest/no-disabled-tests": "off", // weft/skip-needs-reason asks for the reason instead of banning the skip
+    "weft/skip-needs-reason": "warn",
+    "vitest/no-identical-title": "warn",
+    "vitest/no-commented-out-tests": "warn",
+    "vitest/valid-expect": "warn",
+    "vitest/valid-describe-callback": "warn",
+
+    // On by category, off here because they are wrong for this repo.
+    "no-underscore-dangle": "off", // internal fields are written `_x`
+    "no-new": "off", // `new Worker(...)` and friends
+    "import/no-unassigned-import": "off", // CSS
+    "import/no-named-as-default": "off",
+    "import/no-named-as-default-member": "off",
+    "unicorn/consistent-function-scoping": "off", // a closure stays by the code it serves
+    "unicorn/no-array-sort": "off", // sorting a fresh array in place is fine and faster
+    "unicorn/no-array-reverse": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "unicorn/require-post-message-target-origin": "off", // only workers and MessagePorts here, which take no origin
+    "promise/always-return": "off",
+    "promise/no-promise-in-callback": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/no-unnecessary-type-arguments": "off",
+    "typescript/no-unsafe-enum-comparison": "off",
+    "typescript/consistent-return": "off", // tsconfig's noImplicitReturns covers this
+    "vitest/valid-title": "off",
+    "vitest/expect-expect": "off", // gates assert through helpers
+    "vitest/no-conditional-expect": "off",
+    "vitest/no-conditional-tests": "off",
+    "vitest/no-standalone-expect": "off",
+    "vitest/prefer-snapshot-hint": "off",
+    "vitest/require-to-throw-message": "off",
+    "vitest/require-mock-type-parameters": "off"
+  },
+  "overrides": [
+    {
+      // warp-core is framework-agnostic: the framework is only ever reached from bindings/.
+      "files": ["packages/warp-core/src/**"],
+      "rules": { "no-restricted-imports": ["warn", { "patterns": [{ "group": ["@weft-js/*", "react", "react-dom", "react/*", "solid-js", "solid-js/*", "vue", "svelte", "svelte/*", "preact", "preact/*"], "message": "warp-core must not import a framework. Put this in bindings/." }] }] }
+    },
+    {
+      // Core runs in the browser. The Node side of it is named below and in scripts/quality/boundaries.mjs.
+      "files": ["packages/weft/src/**"],
+      "rules": { "no-restricted-imports": ["warn", { "patterns": [{ "group": ["node:*", "fs", "path", "os", "crypto", "child_process", "url", "module"], "message": "Core must not import Node: it ships to browsers." }] }] }
+    },
+    {
+      "files": ["packages/weft/src/style/matrix.ts", "packages/weft/src/test.ts", "packages/weft/src/plugin.mjs", "packages/weft/src/config.mjs"],
+      "rules": { "no-restricted-imports": "off" }
+    },
+    {
+      // Tests set up the DOM with markup of their own, and may look like anything.
+      "files": ["**/test/**", "**/*.test.*", "**/scripts/**", "scripts/**", "evals/**"],
+      "rules": { "weft/no-html-sink": "off" }
+    }
+  ]
+}

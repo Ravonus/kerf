@@ -1,16 +1,9 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2022",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
     "resolveJsonModule": true,
-    "lib": ["es2023", "dom"],
-    "types": [],
-    "paths": { "@engine/*": ["./gen/blink/*"] },
-    "allowImportingTsExtensions": false
+    "paths": { "@engine/*": ["./gen/blink/*"] }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src", "test", "scripts", "plugin", "*.mjs", "*.ts"],
+  "exclude": ["**/node_modules/**", "**/vendor/**", "**/dist/**", "gen/**"]
 }

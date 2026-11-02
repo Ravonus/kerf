@@ -19,6 +19,7 @@ import { builtinModules, createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { SECRET, STRAY } from './quality/stray.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const argv = process.argv.slice(2)
@@ -88,8 +89,6 @@ function stage(item, names, version, work) {
   return join(out, file)
 }
 
-const STRAY = [[/(^|\/)(test|tests|__tests__|fixtures?)\//, 'a test file'], [/\.(test|spec)\.[cm]?[jt]sx?$/, 'a test file'], [/(^|\/)vitest\.config/, 'test config'], [/(^|\/)\.env(\.|$)/, 'an env file'], [/(^|\/)netlify\.env$/, 'an env file'], [/(^|\/)\.neon$/, 'a credentials file'], [/(^|\/)\.mcp\.json$/, 'a credentials file'], [/\.(pem|key|p12)$/, 'a key'], [/(^|\/)\.DS_Store$|(^|\/)\._/, 'OS clutter'], [/(^|\/)package-lock\.json$/, 'a lockfile'], [/\.tgz$/, 'a tarball']]
-const SECRET = /(sk_live_[0-9a-zA-Z]{8}|AKIA[0-9A-Z]{16}|npm_[0-9a-zA-Z]{36}|ghp_[0-9a-zA-Z]{36}|-----BEGIN [A-Z ]*PRIVATE KEY)/
 const BUILTIN = new Set([...builtinModules, ...builtinModules.map(m => `node:${m}`)])
 
 /** Everything wrong with one tarball. `names` is what's being published. */
