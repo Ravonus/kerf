@@ -74,7 +74,9 @@ const NAME = /^[a-z][a-z0-9_-]*$/
 const DEFAULT_TIMEOUT = 10_000
 const encoder = new TextEncoder()
 
-const env = (name: string): string | undefined => globalThis.process?.env?.[name] || undefined
+// An app's tsc may have no Node types, so what's read of `process` is named here.
+const nodeHost = globalThis as unknown as { process?: { env: Record<string, string | undefined>; platform: string; arch: string; getBuiltinModule?(name: string): unknown; dlopen(mod: object, file: string): void } }
+const env = (name: string): string | undefined => nodeHost.process?.env?.[name] || undefined
 /** `search-index` → `WEFT_RUST_SEARCH_INDEX_URL`. */
 export const urlVariable = (service: string) => `WEFT_RUST_${service.toUpperCase().replaceAll('-', '_')}_URL`
 
@@ -196,8 +198,8 @@ interface Engine { kind: 'addon' | 'wasm'; call(id: string, ctx: string, body: s
 interface Entry { kind?: string; hash: string; addon?: string; wasm?: string; failure?: string }
 
 interface Builtins { 'node:fs': typeof Fs; 'node:path': typeof Path; 'node:url': typeof Url }
-const builtin = <K extends keyof Builtins>(name: K) => globalThis.process?.getBuiltinModule?.(name) as Builtins[K] | undefined
-const platform = () => { const p = globalThis.process as NodeJS.Process | undefined; return `${p?.platform}-${p?.arch}` }
+const builtin = <K extends keyof Builtins>(name: K) => nodeHost.process?.getBuiltinModule?.(name) as Builtins[K] | undefined
+const platform = () => { const p = nodeHost.process; return `${p?.platform}-${p?.arch}` }
 
 /** `.output/server/rust/` from wherever the bundle put this code. `WEFT_NATIVE_DIR` is `weft dev`'s, and `weft build`'s. */
 function nativeDir(): string | undefined {
@@ -212,7 +214,7 @@ function nativeDir(): string | undefined {
 
 function addonEngine(file: string, hash: string, target: string): Engine {
   const mod = { exports: {} as { contract: () => string; call: Engine['call'] } }
-  globalThis.process.dlopen(mod, file)
+  nodeHost.process!.dlopen(mod, file)
   const built = JSON.parse(mod.exports.contract())
   if (built.hash !== hash) throw new StartError('R103', `\`${target}\`'s library was built from contract ${built.hash}, and this app's is ${hash}`, 'rebuild it: `weft build`', { status: 502 })
   return { kind: 'addon', call: mod.exports.call }
@@ -276,7 +278,7 @@ export function native(name: string, options: NativeOptions = {}): Native {
   const { timeout = DEFAULT_TIMEOUT, claims = defaultClaims, validate = true } = options
   const target = `native('${name}')`
   // Before the pool's first use: its default of 4 is a ceiling on calls at once that an app would never think to raise.
-  const proc = globalThis.process as NodeJS.Process | undefined
+  const proc = nodeHost.process
   if (proc?.env && !proc.env.UV_THREADPOOL_SIZE) proc.env.UV_THREADPOOL_SIZE = String(Math.max(4, globalThis.navigator?.hardwareConcurrency ?? 4))
 
   let loaded: Promise<Engine> | undefined, stamp: string | undefined

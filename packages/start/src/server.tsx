@@ -178,7 +178,7 @@ export function createHandler(options: HandlerOptions) {
   for (const l of manifest.layouts) if (mod(l.file)?.default) comps[l.id] = mod(l.file)!.default!
   for (const r of manifest.routes) if (mod(r.file)?.default) comps[r.id] = mod(r.file)!.default!
   const statics = new Set(options.statics)
-  const publicUrl = deployUrl(site, globalThis.process?.env)
+  const publicUrl = deployUrl(site, (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env)
   let warned = false
   /**
    * The origin canonical, og:url and og:image are built on. Without a configured one, the request's: right for what

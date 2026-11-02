@@ -147,6 +147,7 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
   const userOf = options.user ?? (ctx => ctx?.user?.id)
   const slot = options.slot ?? (() => {
     // A generated module, declared in .weft/slots.d.ts only once bound: an expect-error would be wrong in one case or the other.
+    // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- the cast is what lets this compile when the slot isn't declared
     return import('weft:slot/pay.rail' as string)
   })
   let override: PayRail | undefined
