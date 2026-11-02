@@ -59,7 +59,7 @@ export function formInvalid(el: Element, fn: Watch['fn']) {
   }
   const watch: Watch = { el, fn, on: false }
   set.add(watch)
-  return { update(next: Watch['fn']) { watch.fn = next }, destroy() { set!.delete(watch) } }
+  return { update(next: Watch['fn']) { watch.fn = next }, destroy() { set.delete(watch) } }
 }
 
 /**

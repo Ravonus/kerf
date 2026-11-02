@@ -252,7 +252,7 @@ export function virtualizer(el: HTMLElement, initial: VirtualOptions): Virtualiz
       range()
       return
     }
-    const at = position(), held = sizes.at(at), key = old[held], within = at - sizes.offset(held)
+    const at = position(), held = sizes.at(at), key = old[held]!, within = at - sizes.offset(held)
     renamed = true
     index = new Map(next.map((k, i) => [k, i]))
     sizes.fill(next.map((_, i) => sizeFor(i)))

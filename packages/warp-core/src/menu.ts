@@ -61,7 +61,7 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
     if (e.key === 'Tab') { o.trigger()?.focus(); return o.onClose() } // no preventDefault: Tab moves on from the trigger
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); return all[at]?.click() }
     if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
-    const hit = typed.next(e.key, all, at, i => i.textContent!)
+    const hit = typed.next(e.key, all, at, i => i.textContent)
     if (hit) { e.preventDefault(); hit.focus() }
   }
   el.addEventListener('keydown', onKey)

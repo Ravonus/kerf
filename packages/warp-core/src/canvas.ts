@@ -14,6 +14,7 @@ export interface Pointer {
   in: boolean
 }
 
+/** What a canvas's draw function gets each frame. */
 export interface Frame {
   ctx: CanvasRenderingContext2D
   /** CSS pixels, or cells when the surface has a `cell`. */
@@ -174,7 +175,7 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
   }
   const listen = () => {
     if (o.pointer && !untrack) untrack = track(follow)
-    else if (!o.pointer && untrack) untrack = void untrack()
+    else if (!o.pointer && untrack) { untrack(); untrack = undefined }
   }
 
   const size = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => { sized = false; invalidate() })

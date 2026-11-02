@@ -16,8 +16,10 @@ const SEARCH = '<svg data-icon viewBox="0 0 24 24" fill="none" stroke="currentCo
 const GAP = 6
 const MAX_HEIGHT = 320
 
+/** One row of a listbox. */
 export type ListItem = { value: string; label: string; disabled?: boolean; hint?: string; group?: string }
 
+/** Options for `listbox`. */
 export interface ListboxOptions {
   /** Given, it holds the list open or shut; left out, the list answers to the keys and presses alone. */
   open?: boolean
@@ -33,6 +35,7 @@ export interface ListboxOptions {
 
 type Row = { el: HTMLElement; item: ListItem; top: number; height: number }
 
+/** The select's listbox, attached to its trigger: keys, typeahead, search, groups, and a sheet on a phone. */
 export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
   let o = opts
   const doc = trigger.ownerDocument
@@ -81,6 +84,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     find = undefined
     if (o.search) {
       const wrap = el('label', 'search', box)
+      // oxlint-disable-next-line weft/no-html-sink -- SEARCH is a constant in this file
       wrap.innerHTML = SEARCH
       find = doc.createElement('input')
       find.type = 'search'
@@ -122,6 +126,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
       if (item.disabled) row.setAttribute('aria-disabled', 'true')
       row.textContent = item.label
       if (item.hint) el('small', 'item-hint', row).textContent = item.hint
+      // oxlint-disable-next-line weft/no-html-sink -- CHECK is a constant in this file
       el('span', 'indicator', row).innerHTML = CHECK
       all.push({ el: row, item, top: 0, height: 0 })
     }
@@ -168,7 +173,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
     }
     for (const g of list.querySelectorAll<HTMLElement>('[role="group"]')) g.hidden = !g.querySelector('[role="option"]:not([hidden])')
     empty.hidden = next.length > 0
-    if (rows[at]) rows[at].el.removeAttribute('data-highlighted')
+    rows[at]?.el.removeAttribute('data-highlighted')
     rows = next
     at = -1
     measure()
@@ -289,7 +294,7 @@ export function listbox(trigger: HTMLButtonElement, opts: ListboxOptions) {
       else if (printable) { e.preventDefault(); show(); if (!find) type(key) }
       return
     }
-    if (key === 'Tab') return void (sheet ? hide(true) : pick(at, 'keyboard'))
+    if (key === 'Tab') { if (sheet) hide(true); else pick(at, 'keyboard'); return }
     if (key === ' ' && typed.typing && !find) { e.preventDefault(); return type(key) }
     if (!rows.length) return
     const m = listKey(key, at, rows.length, { page: 8, typing: !!find })

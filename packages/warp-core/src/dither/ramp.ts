@@ -56,6 +56,7 @@ export function palette(el: Element, ramp: Ramp, inks?: number) {
   return out
 }
 
+/** A dither tier's numbers: how many inks, how fast it moves, how far a touch reaches, and its gain. */
 export interface Tier { inks: number; speed: number; reach: number; gain: number }
 
 /** The tier's numbers, from warp's own `--warp-x` where `el` sits; a `--warp-dither-*` set in CSS overrides one. */
