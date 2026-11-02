@@ -18,10 +18,7 @@ export const meta: Meta = { title: { absolute: 'weft: a TypeScript framework for
 const components = kit.reduce((n, g) => n + g.items.length, 0)
 const SHOWN = ['weft-warp', 'solid-kobalte', 'react-radix', 'react-mui']
 const SIZES = SHOWN.map(id => numbers.stacks.find(s => s.id === id)!).map(s => [s.label, s.js] as const)
-const FILES = `src/routes/index.tsx          the / page
-src/routes/products/[id].tsx  the /products/:id page
-src/server/shop.ts            queries and mutations
-src/db/schema.ts              your tables`
+const FILES = [['src/routes/index.tsx', 'the / page'], ['src/routes/products/[id].tsx', 'the /products/:id page'], ['src/server/shop.ts', 'queries and mutations'], ['src/db/schema.ts', 'your tables']]
 
 export default function Home() {
   return (
@@ -74,7 +71,7 @@ export default function Home() {
           <h2 data-flow="heading">One project, front to back</h2>
           <p data-part="intro">A real shop keeps its products in a database. With <code>@weft/start</code>, a server query lives beside your components, and each file in <code>src/routes</code> is a page. Database and sign-in are built in, so the whole app is one codebase.</p>
           <div data-part="server" data-scope="codeblock" innerHTML={show.server}></div>
-          <pre data-part="files"><code>{FILES}</code></pre>
+          <dl data-part="files">{FILES.map(([file, what]) => <div key={file}><dt>{file}</dt><dd>{what}</dd></div>)}</dl>
           <p data-part="more"><Link href="/docs/start">Read about full-stack weft</Link></p>
         </section>
 
