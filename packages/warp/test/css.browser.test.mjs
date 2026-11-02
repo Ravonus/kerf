@@ -41,6 +41,36 @@ test('a table row checkbox is reachable by role', async () => {
   expect(await p.getByRole('checkbox').isChecked()).toBe(true)
 })
 
+describe.each([
+  ['checkbox', '<input type="checkbox" aria-label="Pick"><span data-part="control" data-sweep></span>', 'checkbox'],
+  ['radio', '<input type="radio" aria-label="Pick"><span data-part="control" data-sweep></span>', 'radio'],
+  ['switch', '<input type="checkbox" role="switch" aria-label="Pick"><span data-part="track" data-sweep></span>', 'switch'],
+])('a %s', (scope, parts, role) => {
+  for (const placement of scope === 'switch' ? ['start', 'end'] : [undefined]) {
+    const mark = placement ? ` data-placement="${placement}"` : ''
+    const control = scope === 'switch' ? 'track' : 'control'
+    const html = `<div style="width:500px"><label data-scope="${scope}"${mark}>${parts}<span data-part="label">I agree to the <a id="l" href="#terms">terms</a></span><span data-part="hint">Read the <a id="h" href="#hint">hint</a></span></label></div>`
+
+    test(`takes a click on its control, by role, and leaves its links alone${mark}`, async () => {
+      const p = await page(html)
+      const under = id => p.$eval(id, n => { const r = n.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2).id })
+      expect(await under('#l')).toBe('l')
+      expect(await under('#h')).toBe('h')
+      await p.click('#l')
+      expect(new URL(p.url()).hash).toBe('#terms')
+      await p.click('#h')
+      expect(new URL(p.url()).hash).toBe('#hint')
+      expect(await p.getByRole(role).isChecked()).toBe(false)
+      await p.getByRole(role, { name: 'Pick' }).check({ timeout: 3000 })
+      expect(await p.getByRole(role).isChecked()).toBe(true)
+      const box = await p.$eval(`[data-part="${control}"]`, n => { const r = n.getBoundingClientRect(); return [r.x + 1, r.y + 1] })
+      expect(await p.evaluate(([x, y]) => document.elementFromPoint(x, y).tagName, box)).toBe('INPUT')
+      await p.getByText('I agree to the').click({ position: { x: 2, y: 2 } })
+      expect(await p.getByRole(role).isChecked()).toBe(false)
+    })
+  }
+})
+
 test('the checkbox box keeps the mark radius in its sweep at radius round', async () => {
   const p = await page(`<style>:root{--warp-radius-control:14px;--warp-radius-mark:6px}</style><label data-scope="checkbox"><input type="checkbox"><span id="c" data-part="control" data-sweep></span></label>`)
   expect(await p.$eval('#c', n => getComputedStyle(n).getPropertyValue('--warp-sweep-radius').trim())).toBe('6px')

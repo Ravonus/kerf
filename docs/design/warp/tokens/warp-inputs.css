@@ -330,8 +330,9 @@
   -webkit-tap-highlight-color: transparent; justify-self: start;
 }
 :where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > input {
-  /* over the whole control: the real input is what a click, a screen reader's touch and a test all reach */
-  position: absolute; inset: 0; z-index: 5; opacity: 0; inline-size: 100%; block-size: 100%; margin: 0; cursor: inherit;
+  /* over the control's grid cell and no further: the real input is what a click, a screen reader's touch and a test all
+     reach, and a link in the label or hint stays clickable */
+  position: absolute; grid-area: 1 / 1 / 2 / 2; inset: 0; z-index: 5; opacity: 0; inline-size: 100%; block-size: 100%; margin: 0; cursor: inherit;
 }
 :where([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]) > [data-part="hint"] {
   grid-column: 2; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); line-height: var(--warp-text-caption-leading); margin-block-start: -2px;
@@ -385,6 +386,7 @@
 :where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(16px); }
 :where([data-scope="switch"][data-placement="end"]) { grid-template-columns: minmax(0, 1fr) auto; justify-self: stretch; }
 :where([data-scope="switch"][data-placement="end"]) > [data-part="track"] { grid-column: 2; grid-row: 1; }
+:where([data-scope="switch"][data-placement="end"]) > input { grid-area: 1 / 2 / 2 / 3; }
 :where([data-scope="switch"][data-placement="end"]) > [data-part="label"] { grid-column: 1; grid-row: 1; }
 :where([data-scope="switch"][data-placement="end"]) > [data-part="hint"] { grid-column: 1; }
 
