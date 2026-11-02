@@ -13,6 +13,7 @@ function options(input) {
 
 const agents = "Import icons from `@weft-js/warp-icons`: `CheckIcon` is hollow, the default, `CheckIconSolid` the other form (`<Icon name=\"check\" solid />`); `<Icons.Check />` and warp's `<Icon name=\"check\" />` build to the same bytes. Tiers are a prop, `tier`, or the page's `data-expression`. Decorative by default; `label` gives one a name. An unknown literal name is I001 at the build and in `weft check`. A name only known at runtime is legal and loads the pack lazily (I002 reports it), or single files with `icons({ source })` and `weft icons publish <dir>`. `trash`, `bell`, `check`, `refresh` and `copy` animate with `action`. `weft docs icons` has the rest."
 
+/** `icons()` for `weft.config.ts`: pins a tier if asked, and tells agents how the names work. */
 export const icons = definePlugin({
   name: '@weft-js/warp-icons',
   version: '0.1.0',
@@ -28,4 +29,5 @@ export const icons = definePlugin({
   },
 })
 
+/** `icons()`. */
 export default icons

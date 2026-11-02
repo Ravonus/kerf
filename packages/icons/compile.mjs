@@ -7,7 +7,9 @@ import { dirname, extname, join, relative, resolve as path } from 'node:path'
 import { brotliCompressSync, constants } from 'node:zlib'
 import { parseAst } from 'vite'
 
+/** warp's expression stops, in order. */
 export const STOPS = ['quiet', 'balanced', 'vivid']
+/** The stop a page has unless it says otherwise. */
 export const DEFAULT_STOP = 'balanced'
 const SKIP = new Set(['node_modules', 'dist', '.weft', '.git', 'target', 'coverage'])
 const CODE = /\.[cm]?[jt]sx?$/
@@ -16,7 +18,9 @@ const ITERATORS = new Set(['map', 'flatMap', 'filter', 'forEach', 'find', 'some'
 const ICON_SOURCES = new Set(['@weft-js/warp-icons/all', '@weft-js/warp-icons/icon', '@weft-js/warp'])
 
 const title = name => name.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
+/** The export a name and variant compile to: `check`, `solid` is `CheckIconSolid`. */
 export const pascal = (name, variant = '') => `${title(name)}Icon${variant ? variant[0].toUpperCase() + variant.slice(1) : ''}`
+/** The variant flags `<Icon>` takes. */
 export const VARIANTS = ['solid']
 /** Which variants an element asks for: '' is hollow, the default. A flag it can't read may be either. */
 function variants(element) {
@@ -42,6 +46,7 @@ function distance(a, b) {
   }
   return row[b.length]
 }
+/** The name nearest to a typo, for "did you mean": a prefix counts as one edit closer. */
 export const closest = (name, names) => names.reduce((best, n) => { const d = distance(name, n) - (n.startsWith(name) ? 1 : 0); return d < best.d ? { n, d } : best }, { n: null, d: Infinity }).n
 
 function sources(root) {
@@ -67,7 +72,7 @@ function moduleFile(from, source) {
 }
 
 function parse(file, code) {
-  try { return parseAst(code, { lang: /\.tsx$/.test(file) ? 'tsx' : /\.ts$/.test(file) ? 'ts' : 'jsx' }) } catch { return null }
+  try { return parseAst(code, { lang: file.endsWith('.tsx') ? 'tsx' : file.endsWith('.ts') ? 'ts' : 'jsx' }) } catch { return null }
 }
 
 /** One source: its imports, what its names are bound to, and every place an icon name, a stop or a pack is used. */
@@ -97,9 +102,9 @@ function read(file, code) {
     if (first?.type === 'Identifier') bind(first.name, { kind: 'props', comp: name })
     else if (first) pattern(first, keys => ({ kind: 'prop', comp: name, key: keys?.[0] }))
   }
-  const visit = (node, parent) => {
+  const visit = node => {
     if (!node || typeof node !== 'object') return
-    if (Array.isArray(node)) { for (const n of node) visit(n, parent); return }
+    if (Array.isArray(node)) { for (const n of node) visit(n); return }
     if (typeof node.type !== 'string') return
     switch (node.type) {
       case 'ImportDeclaration': {
@@ -163,9 +168,9 @@ function read(file, code) {
         if (!node.computed && (node.key.name ?? node.key.value) === 'icon' && !node.method) unit.sites.push({ soft: true, expr: node.value, at: node.start })
         break
     }
-    for (const k of Object.keys(node)) { if (k !== 'type' && k !== 'start' && k !== 'end') visit(node[k], node) }
+    for (const k of Object.keys(node)) { if (k !== 'type' && k !== 'start' && k !== 'end') visit(node[k]) }
   }
-  visit(ast.body, null)
+  visit(ast.body)
   return unit
 }
 
@@ -245,7 +250,7 @@ export function analyze(root, { catalog }) {
     let cur = from
     for (const key of keys ?? []) {
       const next = empty(); next.dynamic = cur.dynamic
-      for (const { shape, unit: u } of cur.shapes) merge(next, member(u, shape, key, seen))
+      for (const { shape, unit: u } of cur.shapes) merge(next, property(u, shape, key, seen))
       cur = next
     }
     return cur
@@ -269,11 +274,11 @@ export function analyze(root, { catalog }) {
     return out
   }
 
-  function member(unit, shape, key, seen) {
+  function property(unit, shape, key, seen) {
     const out = empty()
     if (shape.type === 'ObjectExpression') {
       for (const p of shape.properties) {
-        if (p.type === 'SpreadElement') { const s = expression(unit, p.argument, seen); for (const x of s.shapes) merge(out, member(x.unit, x.shape, key, seen)); out.dynamic ??= s.dynamic; continue }
+        if (p.type === 'SpreadElement') { const s = expression(unit, p.argument, seen); for (const x of s.shapes) merge(out, property(x.unit, x.shape, key, seen)); out.dynamic ??= s.dynamic; continue }
         const k = p.key?.name ?? p.key?.value
         if (key === null || k === key) merge(out, expression(unit, p.value, seen))
       }
@@ -315,7 +320,7 @@ export function analyze(root, { catalog }) {
         }
         const base = expression(unit, object, seen), out = empty()
         out.dynamic = base.dynamic
-        for (const { shape, unit: u } of base.shapes) merge(out, member(u, shape, key, seen))
+        for (const { shape, unit: u } of base.shapes) merge(out, property(u, shape, key, seen))
         return out
       }
       case 'CallExpression': { // a list method hands back the list, or an item of it
@@ -324,7 +329,7 @@ export function analyze(root, { catalog }) {
         if (c.type === 'MemberExpression' && !c.computed && c.property.name === 'find') {
           const base = expression(unit, c.object, seen), out = empty()
           out.dynamic = base.dynamic
-          for (const { shape, unit: u } of base.shapes) merge(out, member(u, shape, null, seen))
+          for (const { shape, unit: u } of base.shapes) merge(out, property(u, shape, null, seen))
           return out
         }
         return { ...empty(), dynamic: text(unit, node) }
@@ -386,15 +391,16 @@ export function analyze(root, { catalog }) {
 }
 
 /** The module warp's name lookup becomes in a build: these names and no others, and the pack only if a name escaped. */
+/** @param {Iterable<string>} names */
 export function namesModule(names, { lazy = false, source } = {}) {
   const list = [...names].sort()
   const id = key => pascal(...key.split(':'))
   const imports = list.length ? `import { ${list.map(id).join(', ')} } from '@weft-js/warp-icons'\n` : ''
   const table = `const names = { ${list.map(n => `${JSON.stringify(n)}: ${id(n)}`).join(', ')} }\nconst key = (name, variant) => (variant ? name + ':' + variant : name)\n`
-  const member = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Action$)/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
-  if (source) return `${imports}import { remote } from '@weft-js/warp-icons/late'\n${table}const get = remote(${JSON.stringify(source)})\nexport const resolve = (name, variant) => names[key(name, variant)] ?? get(name, variant)\n${member}`
-  if (lazy) return `${imports}import { late } from '@weft-js/warp-icons/late'\n${table}const load = () => import('@weft-js/warp-icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, load)\n${member}`
-  return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n${member}`
+  const packExport = `export const pack = id => { const [, b, v = ''] = /^(.+?)(Hollow|Solid|Action)?$/.exec(id.replace(/Icon(?=$|Hollow$|Solid$|Action$)/, '')); return resolve(b.replace(/[A-Z]/g, c => '-' + c.toLowerCase()).replace(/^-/, ''), v.toLowerCase()) }\n`
+  if (source) return `${imports}import { remote } from '@weft-js/warp-icons/late'\n${table}const get = remote(${JSON.stringify(source)})\nexport const resolve = (name, variant) => names[key(name, variant)] ?? get(name, variant)\n${packExport}`
+  if (lazy) return `${imports}import { late } from '@weft-js/warp-icons/late'\n${table}const load = () => import('@weft-js/warp-icons/all').then(m => m.lookup)\nexport const resolve = (name, variant) => names[key(name, variant)] ?? late(name, variant, load)\n${packExport}`
+  return `${imports}${table}export const resolve = (name, variant) => names[key(name, variant)]\n${packExport}`
 }
 
 const VISIBLE = { quiet: 'oq', balanced: 'ob', vivid: 'v' }
@@ -463,10 +469,14 @@ export function rewrite(code, file, catalog) {
   return head + out
 }
 
+/** I001 for `action` on an icon that has none. */
 export const actionMessage = name => `I001 no action for icon '${name}', did you mean '${closest(name, actionList())}'? The action icons are ${actionList().join(', ')}.`
+/** I001 for a name that isn't in the catalog. */
 export const unknownMessage = (name, catalog) => `I001 no icon '${name}', did you mean '${closest(name, catalog)}'?`
 
+/** The icons that have an action, read from the generated names. */
 export const actionList = () => [...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').match(/const actions = (\[.*?\])/)[1].matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1])
+/** Every icon name, read from the generated names. */
 export const list = () => [...new Set([...readFileSync(new URL('./src/gen/names.ts', import.meta.url), 'utf8').split('\n')[1].matchAll(/"([a-z0-9-]+)"/g)].map(m => m[1]))]
 
 /** The vite side, loaded by @weft-js/core/vite when @weft-js/warp-icons is in the build. */

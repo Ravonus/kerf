@@ -28,14 +28,14 @@ export async function measure(items, css) {
       await page.setViewportSize({ width: gap * keys.length, height: gap * batch.length })
       await page.setContent(`<!doctype html><style>body{margin:0;background:#fff;color:#000}${css}svg{position:absolute;width:${size}px;height:${size}px}</style>` + batch.map((b, y) => keys.map((k, x) => `<svg data-icon viewBox="0 0 24 24" style="left:${x * gap}px;top:${y * gap}px">${b.cells[k]}</svg>`).join('')).join(''))
       const png = await page.screenshot()
-      res[size] = await page.evaluate(async ({ b64, n, cols, size, gap }) => {
+      res[size] = await page.evaluate(async ({ b64, n, cols, box, pitch }) => {
         const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode()
         const c = document.createElement('canvas'); c.width = img.width; c.height = img.height
         const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0)
         const all = []
-        for (let y = 0; y < n; y++) { const row = []; for (let k = 0; k < cols; k++) { const d = x.getImageData(k * gap, y * gap, size, size).data, v = []; for (let i = 0; i < d.length; i += 4) v.push(255 - (d[i] + d[i + 1] + d[i + 2]) / 3); row.push(v) } all.push(row) }
+        for (let y = 0; y < n; y++) { const row = []; for (let k = 0; k < cols; k++) { const d = x.getImageData(k * pitch, y * pitch, box, box).data, v = []; for (let i = 0; i < d.length; i += 4) v.push(255 - (d[i] + d[i + 1] + d[i + 2]) / 3); row.push(v) } all.push(row) }
         return all
-      }, { b64: png.toString('base64'), n: batch.length, cols: keys.length, size, gap })
+      }, { b64: png.toString('base64'), n: batch.length, cols: keys.length, box: size, pitch: gap })
     }
     batch.forEach((b, y) => {
       const pairs = PAIRS.map(([kind, A, B]) => {
@@ -68,7 +68,7 @@ export function summary(results) {
 export async function shipped() {
   const { load } = await import('./build.mjs'), { forms } = await import('./forms.mjs')
   const css = readFileSync(new URL('../src/icons.css', import.meta.url), 'utf8').replace(/@layer[^{]*\{/, '').replace(/\}\s*$/, '')
-  const tier = (html, keep) => html.replace(/<path data-t="([oqbv])"[^>]*\/>/g, (m, t) => (m.includes(`data-t="${keep}"`) ? m : ''))
+  const tier = (html, keep) => html.replace(/<path data-t="([oqbv])"[^>]*\/>/g, m => (m.includes(`data-t="${keep}"`) ? m : ''))
   const items = Object.entries(await load()).map(([name, entry]) => {
     const f = forms(name, entry), cell = (t, v) => tier(f[v].line + f[v].pixels, t[0])
     return { name, cells: Object.fromEntries(['quiet', 'balanced', 'vivid'].flatMap(t => ['hollow', 'solid'].map(v => [`${t} ${v}`, cell(t, v)]))) }

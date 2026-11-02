@@ -14,6 +14,7 @@ function scan(files) {
   } finally { rmSync(root, { recursive: true, force: true }) }
 }
 const app = body => ({ 'src/a.tsx': `import { Button, Icon, Chip } from '@weft-js/warp'\n${body}` })
+/** @param {{ names: Iterable<string> }} r */
 const names = r => [...r.names].sort()
 
 test('a literal', () => expect(names(scan(app(`export const A = () => <Icon name="check" />`)))).toEqual(['check']))

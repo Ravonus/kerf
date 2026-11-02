@@ -41,9 +41,9 @@ test('no two icons share a pixel drawing', () => {
 
 test('a crescent holds together: no loose cells, and none too small to read as shade', () => {
   for (const [name, [spec]] of entries) {
-    const g = crescent(auto(spec)), on = (x, y) => g[y]?.[x] === '#', cells = g.flatMap((r, y) => r.flatMap((c, x) => (c === '#' ? [[x, y]] : [])))
-    expect(cells.length === 0 || cells.length >= 6, name).toBe(true)
-    for (const [x, y] of cells) expect(on(x - 1, y - 1) || on(x + 1, y - 1) || on(x - 1, y + 1) || on(x + 1, y + 1), name).toBe(true)
+    const g = crescent(auto(spec)), on = (x, y) => g[y]?.[x] === '#', lit = g.flatMap((r, y) => r.flatMap((c, x) => (c === '#' ? [[x, y]] : [])))
+    expect(lit.length === 0 || lit.length >= 6, name).toBe(true)
+    for (const [x, y] of lit) expect(on(x - 1, y - 1) || on(x + 1, y - 1) || on(x - 1, y + 1) || on(x + 1, y + 1), name).toBe(true)
   }
 })
 

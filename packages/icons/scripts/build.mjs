@@ -9,7 +9,7 @@ import { acting, forms } from './forms.mjs'
 const dir = new URL('../art/', import.meta.url)
 export async function load() {
   const out = {}
-  for (const f of readdirSync(dir).filter(f => f.endsWith('.mjs')).sort()) {
+  for (const f of readdirSync(dir).filter(n => n.endsWith('.mjs')).sort()) {
     const set = (await import(new URL(f, dir))).default
     for (const [name, value] of Object.entries(set)) {
       if (out[name]) throw new Error(`${name} twice`)
