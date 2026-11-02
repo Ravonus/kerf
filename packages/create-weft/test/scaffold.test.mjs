@@ -30,7 +30,7 @@ function app(ui, options = {}) {
 }
 
 describe.each([
-  ['warp', /data-scope="surface"[^>]*><span[^>]*data-part="eyebrow">weft \+ warp<\/span><span[^>]*data-part="title">Welcome to App Warp</, /<button[^>]*data-scope="button">/],
+  ['warp', /data-scope="surface"[^>]*><span[^>]*data-part="eyebrow">weft \+ warp<\/span><span[^>]*data-part="title">Welcome to App Warp</, /<button[^>]*data-scope="button"[^>]*>/],
   ['headless', /<section[^>]*class="card"><h1>Welcome to App Headless<\/h1>/, /<button type="button">Clicked <!--\[-->0<!--\]--> times/],
   ['none', /<section[^>]*class="card"><h1>Welcome to App None<\/h1>/, /<button type="button">Clicked <!--\[-->0<!--\]--> times/],
 ])('--ui %s', (ui, card, button) => {
