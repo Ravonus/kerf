@@ -144,7 +144,7 @@ export default function weftStart(options = {}) {
       scan()
       return {
         environments: {
-          client: { build: { rollupOptions: { input: clientEntry() } } },
+          client: { build: { rollupOptions: { input: clientEntry(), output: { advancedChunks: { groups: KIT_CHUNKS } } } } },
           ssr: { build: { rollupOptions: { input: V.server } } },
         },
         // The router-core server bundle and Takumi's addon stay external to the SSR graph; Nitro traces them.
@@ -406,6 +406,16 @@ function clientRoutes(manifest, abs, plan) {
  * that runs at all never stays on its first-paint rules.
  */
 const ENTRY_SHEETS = `${LATE_SHEETS}\n`
+
+/**
+ * weft's own packages from an install, as one chunk of icons and one of what two routes share. Left alone they're a chunk
+ * per component: 31 scripts and 18 sheets for an admin page (Solid's: 16 in all), each its own request and its own
+ * compression, and 53 KB against 46. An app's own code splits as it likes.
+ */
+const KIT_CHUNKS = [
+  { name: 'icons', test: /[\\/]node_modules[\\/]@weft[\\/]icons[\\/]/, priority: 2 },
+  { name: 'kit', test: /[\\/]node_modules[\\/](?:@weft[\\/]|weft[\\/])/, minShareCount: 2, priority: 1 },
+]
 
 /** weft's own packages from an install: a static component's stylesheets are in them, and they ship source. */
 const KIT = /\/node_modules\/@weft\/.*\.[jt]sx?$/
