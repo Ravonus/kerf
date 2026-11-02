@@ -21,4 +21,9 @@ for (const dir of packages) run(`packages/${dir}`, 'npm', 'ci', '--no-audit', '-
 run('site', 'npm', 'ci', '--no-audit', '--no-fund')
 run('packages/weft', 'npm', 'run', 'build:native')
 run('packages/text', 'node', 'scripts/specialize.mjs')
+// The site's types read what these generate.
+run('site/arena', 'npm', 'ci', '--no-audit', '--no-fund')
+run('site', 'node', 'arena/build.mjs')
+run('site', 'npx', 'weft', 'plugins', 'sync')
+run('site', 'npx', 'weft', 'run', 'content')
 console.log('[setup] done. `npm run check` runs everything.')

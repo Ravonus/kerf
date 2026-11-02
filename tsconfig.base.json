@@ -1,7 +1,9 @@
 {
   // What every package's tsconfig extends. For the framework's own code; `weft check` is what apps get.
   "compilerOptions": {
-    "target": "es2023",
+    "target": "esnext",
+    // Assignment, not defineProperty: the runtime's classes are hot, and the bundler reads this file. Arena: 3,251 B with it, 3,327 without.
+    "useDefineForClassFields": false,
     "module": "esnext",
     "moduleResolution": "bundler",
     "lib": ["es2024", "dom", "dom.iterable"],
