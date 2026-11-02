@@ -8,9 +8,9 @@ const b = await chromium.launch()
 const failed = []
 let passed = 0
 const only = process.env.QA_ONLY ? new RegExp(process.env.QA_ONLY) : undefined
-const check = async (name, path, test, viewport = { width: 1280, height: 900 }) => {
+const check = async (name, path, test, viewport = { width: 1280, height: 900 }, extra = {}) => {
   if (only && !only.test(name)) return
-  const page = await b.newPage({ viewport })
+  const page = await b.newPage({ viewport, ...extra })
   try {
     await page.goto(base + path, { waitUntil: 'load' })
     await test(page)
@@ -29,6 +29,7 @@ const mount = async page => {
   await page.waitForTimeout(300)
 }
 const PHONE = { width: 390, height: 844 }
+const innerHeightOf = page => page.viewportSize().height
 /** The playground wakes when it's seen, and only then reads the URL. */
 const printed = async (page, match) => {
   await page.locator('[data-play]').scrollIntoViewIfNeeded()
@@ -585,6 +586,48 @@ await check('fill wipes by default, follows on request', '/components/button?exp
     await page.mouse.move(5, 5)
     await page.waitForTimeout(900)
   }
+})
+
+// A code block's scan is played once it arrives, never held part way by where the page rests: at any resting position,
+// a block on screen has no tint left over its lines (it was a green slab over the right third of every line near the
+// fold). Below the fold it waits, whole, so it does scan as it comes in.
+for (const [path, theme] of [['/examples', 'light'], ['/components/button', 'dark'], ['/', 'light']]) {
+  await check(`code tint is never left part way ${path} ${theme}`, path, async page => {
+    await mount(page)
+    const tint = () => page.evaluate(() => [...document.querySelectorAll('[data-scope="codeblock"]')].map(c => {
+      const r = c.getBoundingClientRect(), s = getComputedStyle(c, '::after').scale
+      return { top: r.top, bottom: r.bottom, x: s === 'none' ? 1 : parseFloat(s) }
+    }))
+    const blocks = (await tint()).length
+    if (blocks < 2) throw new Error(`only ${blocks} code blocks`)
+    const seen = new Set()
+    for (const i of [0, 1, Math.floor(blocks / 2), blocks - 1]) {
+      for (const at of [0.55, 0.7, 0.82, 0.93, 0.98]) {
+        // rest block i's top at that share of the viewport, by wheel, as a reader would
+        const top = await page.evaluate(i => document.querySelectorAll('[data-scope="codeblock"]')[i].getBoundingClientRect().top, i)
+        await page.mouse.move(640, 300)
+        await page.mouse.wheel(0, top - innerHeightOf(page) * at)
+        await page.waitForTimeout(1400)
+        for (const [j, t] of (await tint()).entries()) {
+          const h = innerHeightOf(page)
+          if (t.top < h - 4 && t.bottom > 0 && t.x > 0.001) throw new Error(`block ${j} resting at ${Math.round(t.top)}px of ${h} keeps a tint ${t.x.toFixed(2)}`)
+          if (t.top > h + 2) seen.add(t.x)
+        }
+      }
+    }
+    if (seen.size && ![...seen].every(x => x === 1)) throw new Error(`a block below the fold is not waiting whole: ${[...seen].join()}`)
+  }, { width: 1280, height: 900 }, { colorScheme: theme })
+}
+// …and a block that comes in from below does scan: on screen, part way, a moment after it arrives.
+await check('code scans in when it arrives', '/examples', async page => {
+  const n = await page.evaluate(() => { const c = [...document.querySelectorAll('[data-scope="codeblock"]')].find(c => c.getBoundingClientRect().top > innerHeight + 200); c.dataset.qa = ''; return getComputedStyle(c, '::after').scale })
+  same(parseFloat(n), 1, 'waiting below the fold')
+  const top = await page.evaluate(() => document.querySelector('[data-qa]').getBoundingClientRect().top)
+  await page.mouse.move(640, 300)
+  await page.mouse.wheel(0, top - 900 * 0.6)
+  await page.waitForTimeout(120)
+  const mid = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('[data-qa]'), '::after').scale))
+  if (!(mid > 0 && mid < 1)) throw new Error(`not scanning a moment after it arrived: ${mid}`)
 })
 
 await b.close()
