@@ -1,22 +1,38 @@
 import { onCleanup, onMount, state } from 'weft'
+import { on } from 'weft/browser'
 import { render } from 'weft/dom'
 import { previews } from '../generated/previews'
 
 /* @weft visible */
-/** A live preview: the file holding it loads when it nears the view, so a page only pays for what's looked at. */
-export function Preview({ file, name }: { file: string; name: string }) {
+/**
+ * One example, running. Its group's file loads as it nears the view, and until then the box holds its height with a
+ * skeleton, so nothing below it moves. `Replay` on the frame sends `stage:replay` here.
+ */
+export function Preview({ file, id, stage = 'center', tile }: { file: string; id: string; stage?: string; tile?: boolean }) {
   let host!: HTMLDivElement
   const failed = state(false)
   let stop: (() => void) | undefined
   let gone = false
+  const show = (Case: any) => {
+    stop?.()
+    host.replaceChildren()
+    stop = render(() => <Case />, host) as any
+    host.toggleAttribute('data-ready', true)
+  }
+  let loaded: any
+  const replay = () => loaded && show(loaded)
   onMount(() => {
-    previews[file]!().then((m: any) => {
+    on(host, 'stage:replay' as any, replay)
+    previews[file]!().then(m => {
       if (gone) return
-      host.replaceChildren()
-      const Case = m[name]
-      stop = render(() => <Case />, host) as any
+      loaded = m[id]
+      show(loaded)
     }).catch(e => { console.error(e); failed.value = true })
   })
   onCleanup(() => { gone = true; stop?.() })
-  return <div data-site="preview" ref={host}>{failed.value ? <p>This preview failed to load.</p> : <span data-part="wait">Loading preview</span>}</div>
+  return (
+    <div data-part="mount" data-stage={stage} inert={tile ? true : undefined} ref={host}>
+      {failed.value ? <p>This example failed to load.</p> : <span data-part="wait" aria-hidden="true"></span>}
+    </div>
+  )
 }

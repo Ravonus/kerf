@@ -7,7 +7,8 @@ export const meta: Meta = { title: 'Docs', description: 'How weft works: the rul
 export default function DocsHome() {
   return (
     <article data-site="doc" data-home="">
-      <header><h1>Docs</h1><p data-part="lede">The same pages <code data-scope="code">weft docs</code> prints in a terminal. Press <kbd data-scope="kbd">/</kbd> to search them.</p></header>
+      <div data-part="band"></div>
+      <header><h1>Docs</h1><p data-part="lede">The same pages <code data-scope="code">weft docs</code> prints in a terminal. Press <kbd data-scope="kbd">⌘K</kbd> to search them.</p></header>
       <div data-part="cards">
         {nav.map(group => (
           <section key={group.section}>

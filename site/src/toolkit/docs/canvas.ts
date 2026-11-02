@@ -1,0 +1,8 @@
+import type { DocGroup } from '../types.ts'
+
+export const canvas: DocGroup = {
+  file: 'canvas',
+  title: 'Canvas and dithering',
+  intro: "Drawings that use warp's colours, follow the theme and pause off screen.",
+  docs: [],
+}

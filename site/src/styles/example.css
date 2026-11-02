@@ -1,8 +1,8 @@
-[data-site="example"] { display: grid; gap: var(--warp-space-related); margin-block: var(--warp-space-group) clamp(3rem, 6vw, 5rem); }
-[data-site="example"] > p { max-inline-size: 65ch; font-size: 1.0625rem; line-height: 1.6; color: var(--warp-color-text-subtle); }
-[data-site="example"] h2 { font-family: var(--warp-font-sans); font-size: 1.5rem; letter-spacing: -0.02em; color: var(--warp-color-text); }
-[data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid var(--warp-color-border); background: var(--warp-color-surface-sunken); }
-[data-site="example"] [data-part="run"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-related); min-inline-size: 0; min-block-size: 260px; background: radial-gradient(circle at 50% 30%, var(--warp-color-accent-soft), transparent 70%); padding: var(--warp-space-group); font-family: var(--warp-font-mono); border-inline-end: 1px solid var(--warp-color-border); }
+[data-site="example"] { display: grid; gap: var(--warp-space-related); margin-block: var(--warp-space-section) clamp(calc(3 * var(--warp-rem)), 6vw, calc(5 * var(--warp-rem))); }
+[data-site="example"] > p { max-inline-size: 65ch; font-size: calc(1.0625 * var(--warp-rem)); line-height: 1.6; color: var(--warp-color-text-subtle); }
+[data-site="example"] h2 { font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: calc(1.5 * var(--warp-rem)); letter-spacing: var(--warp-text-title-tracking); text-box: normal; color: var(--warp-color-text); }
+[data-site="example"] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface); overflow: hidden; background: var(--warp-color-surface-sunken); }
+[data-site="example"] [data-part="run"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: var(--warp-space-related); min-inline-size: 0; min-block-size: 260px; background: var(--warp-color-surface); padding: var(--warp-space-group); font-family: var(--warp-font-mono); border-inline-end: 1px solid var(--warp-color-border); }
 [data-site="example"] [data-part="run"] > * { inline-size: min(100%, 340px); }
 [data-site="example"] [data-part="run"] > [data-part="slow"], [data-site="example"] [data-part="run"] > iframe { inline-size: 100%; }
 [data-site="example"] [data-part="run"] > [data-part="panes"] { inline-size: 100%; }
@@ -10,10 +10,10 @@
 [data-site="example"] [data-scope="surface"] { display: grid; gap: var(--warp-space-related); justify-items: start; }
 [data-site="example"] [data-scope="surface"] form { display: grid; gap: var(--warp-space-related); inline-size: 100%; }
 [data-site="example"] [data-scope="surface"] p { margin: 0; }
-[data-site="example"] [data-part="prices"] { inline-size: 100%; display: grid; grid-template-columns: repeat(8, 1fr); block-size: 120px; margin: 0; padding: 0; overflow: auto; list-style: none; font-size: 0.6875rem; color: var(--warp-color-text-subtle); contain: strict; }
-[data-site="example"] pre { margin: 0; padding: var(--warp-space-group); overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; }
+[data-site="example"] [data-part="prices"] { inline-size: 100%; display: grid; grid-template-columns: repeat(8, 1fr); block-size: 120px; margin: 0; padding: 0; overflow: auto; list-style: none; font-size: calc(0.6875 * var(--warp-rem)); color: var(--warp-color-text-subtle); contain: strict; }
+[data-site="example"] pre { margin: 0; padding: var(--warp-space-group); overflow-x: auto; font-size: calc(0.8125 * var(--warp-rem)); line-height: 1.6; }
 [data-site="example"] dl, [data-site="fix"] dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--warp-space-group); margin: 0; }
-[data-site="example"] dt, [data-site="fix"] dl dt { font: 400 0.75rem/1.4 var(--warp-font-mono); letter-spacing: 0.04em; color: var(--warp-color-accent-text); }
+[data-site="example"] dt, [data-site="fix"] dl dt { font: 400 calc(0.75 * var(--warp-rem))/1.4 var(--warp-font-mono); letter-spacing: 0.04em; color: var(--warp-color-accent-text); }
 [data-site="example"] dd, [data-site="fix"] dl dd { margin: var(--warp-space-tight) 0 0; line-height: 1.55; color: var(--warp-color-text-subtle); }
 @media (max-width: 759.98px) {
   [data-site="example"] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }

@@ -1,0 +1,22 @@
+// Every group, in the order the site shows them. scripts/content.mjs reads these with Node, so they stay plain data.
+import { actions } from './actions.ts'
+import { forms } from './forms.ts'
+import { fields } from './fields.ts'
+import { moving } from './moving.ts'
+import { overlays } from './overlays.ts'
+import { feedback } from './feedback.ts'
+import { showing } from './showing.ts'
+import { layout } from './layout.ts'
+import { data } from './data.ts'
+import { charts } from './charts.ts'
+import { dates } from './dates.ts'
+import { canvas } from './canvas.ts'
+import { agent } from './agent.ts'
+import { admin } from './admin.ts'
+import { collab } from './collab.ts'
+import { flow } from './flow.ts'
+import { live } from './live.ts'
+import { schedule } from './schedule.ts'
+import type { DocGroup } from '../types.ts'
+
+export const GROUPS: DocGroup[] = [actions, forms, fields, moving, overlays, feedback, showing, layout, data, charts, dates, canvas, agent, admin, collab, flow, live, schedule]

@@ -2,6 +2,7 @@ import { Link } from '@weft/start'
 import { AppearanceGate } from './AppearanceGate'
 import { Mark } from './Mark'
 import { NavSheet } from './NavSheet'
+import { SearchTrigger } from './SearchTrigger'
 import { Nav } from '@weft/warp'
 
 export const NAV = [
@@ -22,6 +23,8 @@ export function Header() {
           {NAV.map(n => <Link key={n.href} href={n.href}>{n.label}</Link>)}
         </Nav>
         <span data-site="grow"></span>
+        <SearchTrigger />
+        <Link data-site="repo" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" href="https://github.com/Ravonus/weft" rel="external">GitHub</Link>
         <AppearanceGate />
         <NavSheet />
       </div>

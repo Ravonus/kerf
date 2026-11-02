@@ -2,7 +2,7 @@
 // own pages plus a few files; numbers are evals/. Output is gitignored: src/generated for the routes, public for files
 // served as they are (`.md` twins, llms.txt, search indexes).
 import { createHash } from 'node:crypto'
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,7 +11,7 @@ import { docs as weftDocs } from '../../packages/cli/src/docs.mjs'
 import { catalog } from '../../packages/cli/src/catalog.mjs'
 import { exportsOf, loadCompiler, resolveWeft } from '../../packages/cli/src/weft.mjs'
 import { cleanText, decode, descriptionProblem, truncate } from '../../packages/start/src/derive.mjs'
-import { readFixtures, readToolkit } from './toolkit.mjs'
+import { readExamples, readToolkit, showExample } from './toolkit.mjs'
 
 // warp-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
@@ -26,6 +26,7 @@ registerHooks({
 })
 const { buildIndex, highlight, markdownToHtml } = await import('../../packages/warp-core/src/index.ts')
 const { level, PALETTE } = await import('../src/lib/field.ts')
+const { GROUPS } = await import('../src/toolkit/docs/index.ts')
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(site, '..')
@@ -139,11 +140,6 @@ function opening(text, skip) {
   return descriptionProblem(said) ? '' : said
 }
 
-/** A component's `meta`: how its doc comment opens, up to where it starts on how the thing was built. */
-function blurb(name, doc) {
-  return opening(unmark(doc).replace(/\bAPG /g, ''), /\b(?:specimen|the spec\b|markup exactly|tokens?\b)/i) || `${name}, a warp component with live previews, its props and how to use it.`
-}
-
 /** A docs page's `meta`: the opening of its first paragraph of prose that has one. */
 function summary(md) {
   const blocks = md.replace(/```[\s\S]*?```/g, '\n\n').split(/\n\s*\n/).map(b => b.trim())
@@ -162,7 +158,8 @@ const copyButton = `<button type="button" data-scope="button" data-emphasis="gho
 /** warp's CodeBlock markup, as a string: a docs page has no component to run. */
 function codeBlock(text, language) {
   const lang = language || 'text'
-  return `<figure data-scope="codeblock"><div data-part="head"><span class="sp"></span><span data-part="lang">${lang}</span>${copyButton}</div><pre tabindex="0"><code>${highlight(text, lang)}</code></pre></figure>`
+  const oneline = !text.trim().includes('\n')
+  return `<figure data-scope="codeblock" data-bare=""${oneline ? ' data-oneline=""' : ''}><div data-part="head"><span class="sp"></span><span data-part="lang">${lang}</span>${copyButton}</div><pre tabindex="0"><code>${highlight(text, lang)}</code></pre></figure>`
 }
 
 function readIcon(name) {
@@ -183,16 +180,8 @@ function linkify(html, slugs) {
   }).join('')
 }
 
-/** The first thing on a page stays out. Long pages fold their other sections; `weft docs` prints the same source in full. */
-function fold(html, slug) {
-  if (slug === 'getting-started') return html // steps: all of them are the page
-  const [lead, ...rest] = html.split(/(?=<h2[ >])/)
-  if (rest.length < 2 || html.replace(/<[^>]+>/g, ' ').split(/\s+/).length < 220) return html
-  return lead + rest.map(part => {
-    const end = part.indexOf('</h2>') + 5
-    return `<details data-part="fold"><summary>${part.slice(0, end)}</summary>${part.slice(end)}</details>`
-  }).join('')
-}
+/** Headings numbered by hand become steps: the number leaves the words for the page's gutter. */
+const steps = html => html.replace(/<h2([^>]*)>(\d+)\. /g, '<h2$1 data-step="$2">')
 
 async function buildDocs() {
   const nav = []
@@ -210,13 +199,14 @@ async function buildDocs() {
         const n = seen.get(base) ?? 0
         seen.set(base, n + 1)
         const id = n ? `${base}-${n}` : base
-        if (level === 2) toc.push({ id, text: plain(text) })
+        if (level === 2) toc.push({ id, text: plain(text).replace(/^\d+\.\s+/, '') })
+        if (level === 3 && toc.length) toc.push({ id, text: plain(text), depth: 3 })
         return id
       },
     }), slugs).replace(/href="(?:\.\.\/)+((?:docs|packages|evals)\/[^"]+)"/g, `href="${REPO}$1"`).replace(/<code data-scope="code"><a /g, '<code data-scope="code"><a ')
     const twin = slug.replace(/^codes\//, 'codes/')
     writeFileSync(join(pub, 'docs', `${twin}.md`), md)
-    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: fold(html, slug), toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft docs.` }
+    return { slug, title, section, lead: LEADS[slug] && markdownToHtml(LEADS[slug]).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, ''), html: steps(html), toc, description: SUMMARIES[slug] || summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) || `${title}: ${section} in the weft docs.` }
   }
   flat.forEach((p, i) => {
     pages[p.slug] = { ...render(p.slug, p.title, p.section, p.md), prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title }, next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title } }
@@ -297,38 +287,111 @@ function buildSearch(docs, extra = []) {
 
 // ------------------------------------------------------------------ toolkit
 
-/** Spec references belong to the design docs, not a reader of the component. */
-const cleanDoc = text => text.replace(/\s*\((?:[^()]*§[^()]*|components\.html[^()]*)\)/g, '').replace(/\s+\[?\d{2} §[\d.]+\]?/g, '').trim()
+/** What the common props mean, so a table isn't blank where the source has no comment. A Doc's `propDocs` wins. */
+const PROP_WORDS = {
+  children: 'What it contains.', label: 'Its accessible name. Fields show it; icon-only controls speak it.', hint: 'One line of help under the control.', error: 'A message that marks the field invalid and says why.',
+  value: 'The current value, when you own the state.', defaultValue: 'The starting value, when the component owns the state.', defaultChecked: 'Starts checked.', checked: 'Whether it is on.', onChange: 'Called with the new value.', onInput: 'Called on each keystroke.',
+  onClick: 'Called when pressed.', onSelect: 'Called with what was picked.', onClose: 'Called after it closes.', onOpen: 'Called after it opens.', open: 'A state box that holds whether it is open.', disabled: 'Turns it off, and takes it out of the tab order.', readOnly: 'Shows the value but does not let it change.', required: 'The form will not submit without it.',
+  name: 'The name it posts under in a form.', id: 'The element id. One is made for you if you leave it out.', placeholder: 'Sample text shown while empty. Never a substitute for a label.', tone: 'What it means: neutral, accent, positive, caution, critical or info.', size: 'Control size. `md` by default.', emphasis: 'How loud it is.',
+  icon: 'An icon name from `@weft/icons`, or a component.', title: 'The heading.', description: 'One supporting line under the title.', footer: 'What sits at the bottom, usually actions.', options: 'What can be picked.', items: 'The rows it shows.', rows: 'The data, one object per row.', columns: 'One definition per column.', caption: 'Names the table for screen readers.',
+  data: 'The series to draw.', format: 'Turns a value into the text shown.', min: 'The lowest allowed value.', max: 'The highest allowed value.', step: 'How far one key press moves it.', loading: 'Shows that work is under way.', full: 'Takes the whole width of its container.', side: 'Which edge it sits on.', align: 'How it lines up with what opened it.', placement: 'Where it opens relative to what opened it.',
+  height: 'Its height, in pixels.', width: 'Its width.', ratio: 'Width to height.', gap: 'The space between children, from warp\'s space scale.', as: 'The element it renders as.', variant: 'Which form it takes.', count: 'The number it shows.', locale: 'The language and region used to format values.', href: 'Where it links.', ui: 'A row from `interaction()`, which it fills and draws.', onSubmit: 'Called with the values when submitted.', onSave: 'Called with the result when saved.', onCancel: 'Called when dismissed.', onDelete: 'Called when deleted.', onRemove: 'Called when removed.',
+}
+const HIDDEN_PROPS = new Set(['ui', 'ref', 'class', 'style', 'key'])
+const SPEC_WORDS = /§|\bSIGNATURE\b|\bspecimen\b/
+const GITHUB_SRC = 'https://github.com/Ravonus/weft/blob/main/'
+
+/** A prop's row: the prop's own comment, then the page's, then the common word, and never a spec reference. */
+const propRow = (p, doc) => ({ name: p.name, type: p.type, required: p.required, default: p.default, doc: (doc.propDocs?.[p.name] ?? cleanDoc(p.doc)) || PROP_WORDS[p.name] || '' })
+const cleanDoc = text => {
+  const said = text.replace(/\s*\((?:[^()]*§[^()]*|components\.html[^()]*)\)/g, '').replace(/\s+\[?\d{2} §[\d.]+\]?/g, '').trim()
+  return SPEC_WORDS.test(said) ? '' : said
+}
+
+/** Knobs, finished from the type checker: options, the control that suits them, and the default the code compares against. */
+function finishKnobs(play, props, where) {
+  return {
+    ...play,
+    knobs: play.knobs.map(k => {
+      const p = props.find(x => x.name === k.prop)
+      if (!p && k.prop !== 'children' && !k.options && !k.control) throw new Error(`${where}: no prop ${k.prop}`)
+      const options = k.options ?? p?.values
+      const control = k.control ?? (p?.type === 'boolean' ? 'switch' : options ? (options.length <= 5 ? 'segmented' : 'select') : p?.type === 'number' ? 'slider' : 'text')
+      const unquoted = p?.default?.replace(/^['"]|['"]$/g, '')
+      const fallback = k.default !== undefined ? k.default : unquoted === 'true' ? true : unquoted === 'false' ? false : unquoted !== undefined && unquoted !== '' && !isNaN(+unquoted) ? +unquoted : unquoted
+      const initial = k.initial !== undefined ? k.initial : fallback !== undefined ? fallback : control === 'switch' ? false : options?.[0] ?? ''
+      return { prop: k.prop, control, label: k.label ?? k.prop[0].toUpperCase() + k.prop.slice(1), options, min: k.min, max: k.max, step: k.step, initial, default: fallback, when: k.when }
+    }),
+  }
+}
 
 function buildToolkit() {
-  const components = readToolkit(repo)
-  const fixtures = [
-    ...readFixtures(join(repo, 'packages/warp/test/fixtures')).map(f => ({ ...f, file: `warp:${f.file}` })),
-    ...readFixtures(join(site, 'src/previews')).map(f => ({ ...f, file: 'site' })),
-  ]
-  const usedBy = name => fixtures.filter(f => f.tags.includes(name) && f.name !== 'Part').sort((a, b) => (a.file === 'site' ? 0 : 1) - (b.file === 'site' ? 0 : 1) || a.tags.length - b.tags.length || a.source.length - b.source.length)
+  const facts = new Map(readToolkit(repo).map(c => [c.name, c]))
+  const problems = []
   const pages = {}
-  const orphans = []
-  for (const c of components) {
-    const found = usedBy(c.name)
-    if (!found.length) orphans.push(c.name)
-    const cases = found.slice(0, 4).map((f, i) => {
-      const names = f.tags.filter(t => components.some(x => x.name === t))
-      const code = `import { ${names.join(', ')} } from '@weft/warp'\n\n${f.source}`
-      return { file: f.file, name: f.name, label: i ? `Variant ${i}` : 'Preview', html: codeBlock(code, 'tsx') }
-    })
-    pages[c.slug] = { ...c, lede: cleanDoc(c.doc), description: blurb(c.name, cleanDoc(c.doc)), cases, use: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx') }
+  const index = []
+  const registry = []
+  const blank = { all: 0, none: 0 }
+  const slugFor = name => facts.get(name)?.slug
+  const order = GROUPS.flatMap(g => g.docs.map(d => d.component))
+  const seen = new Set()
+  for (const g of GROUPS) {
+    const path = join(site, 'src/toolkit/examples', `${g.file}.tsx`)
+    const found = existsSync(path) ? readExamples(path) : new Map()
+    if (existsSync(path)) registry.push(g.file)
+    const tiles = []
+    for (const doc of g.docs) {
+      const c = facts.get(doc.component)
+      if (!c) { problems.push(`${doc.component}: not one of warp's exports`); continue }
+      if (seen.has(c.name)) problems.push(`${c.name}: documented twice`)
+      seen.add(c.name)
+      if (!doc.summary) problems.push(`${c.name}: no summary`)
+      if (doc.summary?.length > 120) problems.push(`${c.name}: summary is ${doc.summary.length} characters`)
+      const words = [doc.summary, ...(doc.use?.when ?? []), ...doc.sections.flatMap(s => s.kind === 'prose' ? [s.md] : [s.title, s.intro ?? '', ...s.examples.flatMap(e => [e.title, e.note ?? ''])])].join('\n')
+      if (SPEC_WORDS.test(words)) problems.push(`${c.name}: spec jargon in its words`)
+      if (/Variant \d/.test(words)) problems.push(`${c.name}: an example is called "Variant N"`)
+      const example = ref => {
+        const f = found.get(ref.id)
+        if (!f) { problems.push(`${c.name}: no export ${ref.id} in examples/${g.file}.tsx`); return ref }
+        const text = showExample(f, c.name)
+        return { ...ref, code: codeBlock(text, 'tsx'), lines: text.split('\n').length }
+      }
+      const sections = doc.sections.map(s => (s.kind === 'prose' ? { ...s, html: markdownToHtml(s.md) } : { ...s, intro: s.intro && inline(s.intro), examples: s.examples.map(e => ({ ...example(e), note: e.note && inline(e.note) })) }))
+      const visible = c.props.filter(p => !HIDDEN_PROPS.has(p.name) && !doc.hideProps?.includes(p.name))
+      const rows = visible.map(p => propRow(p, doc))
+      blank.all += rows.length
+      blank.none += rows.filter(r => !r.doc).length
+      const groups = [['Props', rows.filter(r => !/^on[A-Z]/.test(r.name))], ['Events', rows.filter(r => /^on[A-Z]/.test(r.name))]].filter(([, list]) => list.length).map(([title, list]) => ({ title, rows: list }))
+      const first = doc.sections.find(s => s.kind !== 'prose')?.examples[0]
+      const tile = doc.tile ?? first?.id
+      const related = (doc.related ?? []).filter(slugFor).map(name => ({ name, slug: slugFor(name) }))
+      const play = doc.playground && finishKnobs(doc.playground, c.props, c.name)
+      if (play && !found.has(play.example)) problems.push(`${c.name}: no export ${play.example}`)
+      const heads = [...(play ? [{ id: 'playground', text: 'Playground' }] : []), ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []), ...sections.flatMap(s => [{ id: slugify(s.title), text: s.title }, ...(s.kind === 'prose' || s.examples.length < 2 ? [] : s.examples.map(e => ({ id: e.id, text: e.title, depth: 3 })))]), ...(doc.keyboard || doc.a11yNotes ? [{ id: 'accessibility', text: 'Accessibility' }] : []), { id: 'api', text: 'API' }, ...(related.length ? [{ id: 'related', text: 'Related' }] : [])]
+      const i = order.indexOf(c.name)
+      const near = n => n && facts.get(n) && { name: n, slug: slugFor(n) }
+      pages[c.slug] = {
+        name: c.name, slug: c.slug, group: g.title, file: g.file, source: `${GITHUB_SRC}${c.file}`, sourceFile: c.file, summary: doc.summary, description: truncate(doc.summary),
+        use: doc.use && { when: doc.use.when, instead: doc.use.instead?.filter(x => slugFor(x.name)).map(x => ({ ...x, slug: slugFor(x.name) })) }, playground: play, sections, keyboard: doc.keyboard, a11yNotes: doc.a11yNotes?.map(inline), groups, parts: c.parts, scope: c.scope, states: c.states, related, importLine: codeBlock(`import { ${c.name} } from '@weft/warp'`, 'tsx'), toc: heads, tile, prev: near(order[i - 1]), next: near(order[i + 1]),
+      }
+      tiles.push({ name: c.name, slug: c.slug, summary: doc.summary, id: tile })
+    }
+    index.push({ title: g.title, id: slugify(g.title), file: g.file, intro: g.intro, pack: g.pack, tiles })
   }
-  const order = ['Layout', 'Type', 'Actions', 'Inputs', 'Dates and time', 'Overlays', 'Feedback', 'Surfaces', 'Data', 'Charts', 'Agent', 'Schedule', 'Live', 'Collaboration', 'Flow', 'Admin', 'More']
-  const nav = order.map(group => ({ group, items: components.filter(c => c.group === group).map(({ name, slug }) => ({ name, slug })) })).filter(g => g.items.length)
-  const files = [...new Set(fixtures.map(f => f.file))]
-  const lines = files.map(f => `  ${JSON.stringify(f)}: () => import(${JSON.stringify(f === 'site' ? '../previews/index' : `../../../packages/warp/test/fixtures/${f.slice(5, -4)}`)}),`)
-  writeFileSync(join(out, 'previews.ts'), `// Generated by scripts/content.mjs.\nexport const previews: Record<string, () => Promise<unknown>> = {\n${lines.join('\n')}\n}\n`)
+  const missing = [...facts.keys()].filter(n => !seen.has(n))
+  if (problems.length) throw new Error(`the toolkit's docs:\n  ${problems.join('\n  ')}`)
+  writeFileSync(join(out, 'previews.ts'), `// Generated by scripts/content.mjs.\nexport const previews: Record<string, () => Promise<any>> = {\n${registry.map(f => `  ${JSON.stringify(f)}: () => import('../toolkit/examples/${f}'),`).join('\n')}\n}\n`)
   write('toolkit.json', pages)
-  write('toolkit-nav.json', nav)
-  if (orphans.length) console.log(`[content] no preview for: ${orphans.join(' ')}`)
-  return components.map(c => ({ title: c.name, url: `/toolkit/${c.slug}`, group: 'Components', rank: 0.9, parent: c.group }))
+  write('toolkit-index.json', { total: facts.size, groups: index })
+  // the rail: a component with no page yet still has no link
+  write('toolkit-nav.json', index.filter(g => g.tiles.length).map(g => ({ group: g.title, items: g.tiles.map(({ name, slug }) => ({ name, slug })) })))
+  if (missing.length) console.log(`[content] no docs yet for ${missing.length}: ${missing.join(' ')}`)
+  console.log(`[content] props with no words: ${blank.none} of ${blank.all}`)
+  return Object.values(pages).map(p => ({ title: p.name, url: `/toolkit/${p.slug}`, group: 'Components', rank: 0.9, parent: p.group, text: p.summary }))
 }
+
+/** One line of words: `code` becomes code, and nothing else is expected. */
+const inline = md => markdownToHtml(md).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, '')
 
 // ------------------------------------------------------------------ icons
 

@@ -1,30 +1,18 @@
-import { Link, type RouteProps } from '@weft/start'
-import { Nav } from '@weft/warp'
+import type { RouteProps } from '@weft/start'
 import '@weft/warp-core/styles/rich/prose.css'
 import '@weft/warp-core/styles/rich/codeblock.css'
 import '@weft/warp-core/styles/components/copy.css'
-import { SearchTrigger } from '../../components/SearchTrigger'
-import { SpotlightGate } from '../../components/SpotlightGate'
+import { SideNav } from '../../components/SideNav'
 import nav from '../../generated/docs-nav.json'
 import '../../styles/docs.css'
+
+const groups = nav.map(g => ({ title: g.section, items: g.items.map(i => ({ href: `/docs/${i.slug}`, label: i.title })) }))
 
 export default function DocsLayout(props: RouteProps) {
   return (
     <div data-site="docs">
-      <details data-site="doc-nav" data-vt="side" open>
-        <summary>Menu</summary>
-        <SearchTrigger />
-        <Nav label="Docs" axis="y">
-          {nav.map(group => (
-            <div key={group.section}>
-              <h2>{group.section}</h2>
-              {group.items.map(i => <Link key={i.slug} href={`/docs/${i.slug}`}>{i.title}</Link>)}
-            </div>
-          ))}
-        </Nav>
-      </details>
+      <SideNav label="Docs" groups={groups} />
       {props.children}
-      <SpotlightGate />
     </div>
   )
 }
