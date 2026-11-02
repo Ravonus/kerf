@@ -432,11 +432,12 @@ test('a bubble toolbar takes the press: no closed tip lies over its tools, and i
 })
 
 test('the pagination bar keeps "Go to" and its box on one line, beside the pages when there is room', async () => {
-  const m = await page.$$eval('#pager [data-scope="pagination"], #pager-wide [data-scope="pagination"]', navs => navs.map(n => {
+  const m = await page.$$eval('#pager [data-scope="pagination"], #pager-wide [data-scope="pagination"], #pager-mid [data-scope="pagination"]', navs => navs.map(n => {
     const label = n.querySelector('label[for$="-go"]').getBoundingClientRect(), input = n.querySelector('[data-part="jump"]').getBoundingClientRect()
     const pages = n.querySelector('ol').getBoundingClientRect()
     return { pair: Math.abs((label.top + label.bottom) / 2 - (input.top + input.bottom) / 2), besidePages: Math.abs((pages.top + pages.bottom) / 2 - (input.top + input.bottom) / 2) < 4, inputAfterLabel: input.left > label.right }
   }))
   for (const b of m) { expect(b.pair).toBeLessThan(4); expect(b.inputAfterLabel).toBe(true) }
   expect(m[1].besidePages).toBe(true) // 760px holds the whole bar on one line
+  expect(m[2].besidePages).toBe(true) // and so does 598px, the docs stage, once "Rows per page" says "Rows"
 })

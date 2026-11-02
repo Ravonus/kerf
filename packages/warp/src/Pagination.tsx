@@ -86,7 +86,7 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   return (
     <nav ref={(n: any) => (nav = n)} data-scope="pagination" aria-label={label}>
       <span data-part="field">
-        <span aria-hidden="true">Rows per page</span>
+        <span aria-hidden="true">Rows<span data-part="long"> per page</span></span>
         <CompactSelect label="Rows per page" value={String(per.value)} options={sizes.map(s => ({ value: String(s), label: String(s) }))} onValueChange={v => { per.set(+v); at.set(1) }} />
       </span>
       <span>{`${fmt(first.value)}–${fmt(Math.min(total, current.value * per.value))} of ${fmt(total)}`}</span>

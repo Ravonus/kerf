@@ -932,6 +932,9 @@
 }
 :where([data-scope="pagination"] [data-part="jump"]) { inline-size: 56px; padding-inline: 9px; box-sizing: border-box; }
 :where([data-scope="pagination"] [data-part="jump"]:focus-visible) { outline: 2px solid var(--warp-color-focus); }
+/* a bar a little short of room says "Rows" for "Rows per page" (the menu keeps its full name), so the pages and Go to
+   still fit beside it on one line */
+@container (max-width: 680px) { :where([data-scope="pagination"] [data-part="long"]) { display: none; } }
 @container (max-width: 520px) { :where([data-scope="pagination"] [data-part="page"]:not([aria-current], [data-edge])) { display: none; } :where([data-scope="pagination"] [data-part="gap"]) { display: none; } }
 :where([data-scope="load-more"]) { display: grid; justify-items: center; gap: 6px; padding-block: 14px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 
