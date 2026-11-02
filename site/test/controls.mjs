@@ -215,9 +215,28 @@ await behaves('Same page changes in all three', '/', async page => {
   same(await page.evaluate(() => [...document.querySelectorAll('[data-site="arena"] iframe')].every(f => f.contentWindow.crossOriginIsolated)), true, 'the frames have the fine clock')
 })
 
+// Every toolkit page: each example mounts, with no page error and nothing wider than its stage.
+const slugs = Object.keys(JSON.parse(readFileSync(new URL('../src/generated/toolkit.json', import.meta.url), 'utf8')))
+const unmounted = []
+for (const slug of slugs) {
+  const page = await b.newPage({ viewport: { width: 1280, height: 900 } })
+  page.on('pageerror', e => unmounted.push(`/toolkit/${slug}: ${e.message.split('\n')[0]}`))
+  await page.goto(`${base}/toolkit/${slug}`, { waitUntil: 'load' })
+  for (let i = 0; i < 80; i++) {
+    const more = await page.evaluate(() => { const m = document.querySelector('[data-part="mount"]:not([data-ready])'); m?.scrollIntoView(); return !!m })
+    if (!more) break
+    await page.waitForTimeout(200)
+  }
+  const left = await page.locator('[data-part="mount"]:not([data-ready])').count()
+  if (left) unmounted.push(`/toolkit/${slug}: ${left} never mounted`)
+  await page.close()
+}
+
 await b.close()
+console.log(`${slugs.length} toolkit pages, ${unmounted.length} problems`)
+for (const u of unmounted) console.log(`  toolkit: ${u}`)
 console.log(`${seen.behaviours ?? 0} behaviours passed, ${broken.length} broken`)
 for (const d of broken) console.log(`  broken: ${d}`)
 console.log(`${seen.pages} pages, ${seen.controls} presses, ${dead.length} dead`)
 for (const d of dead) console.log(`  dead: ${d}`)
-process.exit(dead.length || broken.length ? 1 : 0)
+process.exit(dead.length || broken.length || unmounted.length ? 1 : 0)

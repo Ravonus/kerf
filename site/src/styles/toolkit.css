@@ -42,6 +42,8 @@
 
 /* the playground: stage left, knobs right */
 [data-site="frame"][data-play] [data-part="pair"] { display: grid; grid-template-columns: minmax(0, 1fr) 248px; }
+[data-site="frame"][data-play="wide"] [data-part="pair"] { grid-template-columns: minmax(0, 1fr); }
+[data-site="frame"][data-play="wide"] [data-part="knobs"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); align-items: end; border-inline-start: 0; border-block-start: var(--warp-border-hairline) solid var(--rule); }
 [data-site="frame"] [data-part="knobs"] { display: grid; align-content: start; gap: var(--warp-space-group); padding: var(--warp-space-group); background: var(--warp-color-surface); border-inline-start: var(--warp-border-hairline) solid var(--rule); }
 [data-site="frame"] [data-part="knobs"] > [data-scope="button"] { justify-self: start; }
 [data-site="frame"] [data-part="knob"] { display: grid; gap: var(--warp-space-tight); min-inline-size: 0; }

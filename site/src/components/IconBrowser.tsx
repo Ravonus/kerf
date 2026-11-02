@@ -20,7 +20,7 @@ export function IconBrowser() {
   const query = state('')
   const tier = state<Tier>('balanced')
   const form = state<Form>('hollow')
-  const size = state('24')
+  const size = state('32')
   const cols = state(6)
   const open = state(false)
   const picked = state('')
@@ -38,7 +38,16 @@ export function IconBrowser() {
   onMount(() => {
     query.value = new URLSearchParams(location.search).get('q') ?? ''
     void fetch(files.url).then(r => r.json()).then(s => (set.value = s))
-    const seen = new ResizeObserver(([e]) => (cols.value = Math.max(2, Math.floor(e.contentRect.width / CELL))))
+    const seen = new ResizeObserver(([e]) => {
+      cols.value = Math.max(2, Math.floor(e.contentRect.width / CELL))
+      // warp's list keeps the one row it measured until it really scrolls
+      requestAnimationFrame(() => {
+        const list = box.querySelector('[data-scope="virtual"]')
+        if (!list) return
+        list.scrollTop += 1
+        requestAnimationFrame(() => (list.scrollTop -= 1))
+      })
+    })
     seen.observe(box)
     onCleanup(() => seen.disconnect())
   })

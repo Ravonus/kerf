@@ -320,7 +320,7 @@ function finishKnobs(play, props, where) {
       const unquoted = p?.default?.replace(/^['"]|['"]$/g, '')
       const fallback = k.default !== undefined ? k.default : unquoted === 'true' ? true : unquoted === 'false' ? false : unquoted !== undefined && unquoted !== '' && !isNaN(+unquoted) ? +unquoted : unquoted
       const initial = k.initial !== undefined ? k.initial : fallback !== undefined ? fallback : control === 'switch' ? false : options?.[0] ?? ''
-      return { prop: k.prop, control, label: k.label ?? k.prop[0].toUpperCase() + k.prop.slice(1), options, min: k.min, max: k.max, step: k.step, initial, default: fallback, when: k.when }
+      return { prop: k.prop, control, label: k.label ?? (k.prop[0].toUpperCase() + k.prop.slice(1)).replace(/([a-z])([A-Z])/g, (_, a, b) => `${a} ${b.toLowerCase()}`), options, min: k.min, max: k.max, step: k.step, initial, default: fallback, when: k.when }
     }),
   }
 }
