@@ -76,6 +76,7 @@ render(() => (
       <div id="in-tooltip"><Tooltip inline content="Runs on every region"><Button>Deploy everywhere</Button></Tooltip></div>
     </div>
     {box('rte-bubble', 520, <RichTextEditor label="Release notes" toolbar="bubble" defaultValue="<p>Select some of this text to see the toolbar.</p>" />)}
+    {box('pager-wide', 760, <PaginationBar label="Projects" total={240} size={10} defaultPage={8} />)}
     {box('week-phone', 358, cal({ views: ['week', 'day', 'month'], defaultView: 'week', workingHours: [540, 1080] }))}
     {box('day-phone', 358, cal({ views: ['day', 'week'], defaultView: 'day', workingHours: [540, 1080] }))}
     {box('week-free', 900, cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }))}

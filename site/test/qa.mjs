@@ -433,6 +433,19 @@ await check('related links read as words', '/blocks/checkout', async page => {
   if (!links.length) throw new Error('no related links')
   same(links.filter(l => l.button || l.upper === 'uppercase' || /[a-z][A-Z]/.test(l.text)).map(l => l.text).join(), '', 'loud or squashed')
 })
+// "Go to" and its box are one item: at 1280 they sit on the pages' row, and never apart.
+await check('pagination keeps Go to with its box', '/components/pagination-bar', async page => {
+  const sec = page.locator('section#PaginationBarControlled')
+  await sec.scrollIntoViewIfNeeded()
+  await sec.locator('[data-part="jump"]').waitFor()
+  const m = await sec.evaluate(s => {
+    const mid = r => (r.top + r.bottom) / 2
+    const l = s.querySelector('label[for$="-go"]').getBoundingClientRect(), i = s.querySelector('[data-part="jump"]').getBoundingClientRect(), o = s.querySelector('[data-scope="pagination"] ol').getBoundingClientRect()
+    return { pair: Math.abs(mid(l) - mid(i)) < 4, row: Math.abs(mid(o) - mid(i)) < 4 }
+  })
+  same(m.pair, true, 'Go to beside its box')
+  same(m.row, true, 'on the pages row')
+})
 // A phone week keeps seven readable days and scrolls sideways; the all-day event keeps its name; month chips ellipsize.
 await check('calendar week reads on a phone', '/components/calendar', async page => {
   const sec = page.locator('section#CalendarWeek')

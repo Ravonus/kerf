@@ -921,7 +921,7 @@
 :where([data-scope="pagination"] [data-part="page"]:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; }
 :where([data-scope="pagination"] [data-part="gap"]) { display: grid; place-items: center; min-inline-size: 24px; }
 :where([data-scope="pagination"] [data-part="spacer"]) { flex: 1; }
-:where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; }
+:where([data-scope="pagination"] [data-part="field"]) { display: inline-flex; align-items: center; gap: 8px; flex: none; white-space: nowrap; }
 /* the sm jump input: on touch the transparent block band makes the 44px hit area, and negative margins give it back */
 :where([data-scope="pagination"] [data-part="jump"]) {
   --_band: max(0px, calc((var(--warp-hit-min) - var(--warp-control-sm)) / 2));
