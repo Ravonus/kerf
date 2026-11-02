@@ -195,8 +195,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_D: calc(var(--warp-fill-duration) * var(--warp-motion-scale));
   --_fo: calc(1 - var(--_a, 0));
   --_fr: calc(var(--_a, 0) * 1.3 * var(--warp-btn-fill));
-  --_fa: calc(var(--_fr) * (var(--_x) + 7%));
-  --_fb: calc(var(--_fr) * (107% - var(--_x)));
+  --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--warp-lead-a, 1));
+  --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1));
   --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
   background-color: color-mix(in oklab, var(--_layer) calc((1 - var(--warp-btn-fill)) * 100%), transparent);
   opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
