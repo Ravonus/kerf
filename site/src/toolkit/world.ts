@@ -462,6 +462,10 @@ export const EVENTS = [
   { id: 'e10', title: 'Rotate edge certificates', start: '2026-11-05T13:00', end: '2026-11-05T14:00', cal: 2, locked: true, location: 'Do not move' },
   { id: 'e11', title: 'Northwind renewal', start: '2026-11-05T15:00', end: '2026-11-05T16:00', cal: 4, tentative: true, location: 'Waiting on Inés' },
   { id: 'e12', title: 'Release retro', start: '2026-11-06T11:00', end: '2026-11-06T12:00', cal: 1, video: true, resource: 'atlas' },
+  { id: 'e13', title: 'Design crit', start: '2026-11-04T09:00', end: '2026-11-04T10:00', cal: 3, resource: 'atlas' },
+  { id: 'e14', title: 'Hiring sync', start: '2026-11-04T13:00', end: '2026-11-04T14:30', cal: 3, resource: 'atlas' },
+  { id: 'e15', title: 'Billing walkthrough', start: '2026-11-04T11:00', end: '2026-11-04T12:00', cal: 4, resource: 'birch' },
+  { id: 'e16', title: 'Roadmap', start: '2026-11-04T15:00', end: '2026-11-04T16:30', cal: 3, resource: 'cedar' },
   { id: 'a1', title: 'Jun on call', start: '2026-11-02', end: '2026-11-04', allDay: true, cal: 2 },
   { id: 'a2', title: 'Release 2026.11', start: '2026-11-06', end: '2026-11-06', allDay: true, cal: 1 },
 ]
