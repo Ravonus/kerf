@@ -135,7 +135,7 @@ const WATCH = ({ url, see }) => {
   const tick = () => {
     requestAnimationFrame(tick)
     if (f.url === null && location.href.includes(url)) f.url = Date.now()
-    if (f.paint === null && f.mutated) after(() => { f.paint ??= Date.now() })
+    if (f.paint === null && f.mutated) after(() => { if (f.mutated) f.paint ??= Date.now() })
     if (f.url !== null && f.data === null && see && document.body?.innerText.includes(see)) f.data = Date.now()
   }
   requestAnimationFrame(tick)
@@ -165,8 +165,10 @@ export async function navPass(browser, url, nav, { db, cookies = [] }) {
   try {
     const go = async () => {
       await settled(page)
+      const link = target(page, nav.click), at = await centre(link)
+      // Last before the click: a fade or a late swap from the visit before writes to the DOM, and it isn't this click's paint.
       await page.evaluate(() => window.__flow.rearm())
-      const link = target(page, nav.click), at = await centre(link), t0 = Date.now()
+      const t0 = Date.now()
       await press(cdp, at)
       return marks(page, t0)
     }

@@ -56,6 +56,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   let warm: { path: string; at: number; since: number; res: Promise<Response> } | undefined
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   let fades = !(navigator.hardwareConcurrency <= 4)
+  let fading: ViewTransition | undefined
   const now = () => client.now?.() ?? 0
   const needs = (next: RoutePayload) => Promise.all([...next.m.map(m => chunk(m.id)), ...(next.i ?? []).map(island)])
   const reads = (t: string[]) => tags.some(l => l.some(x => t.includes(x)))
@@ -133,7 +134,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     // The old page stays on screen, as a picture, until the new one is ready to fade in. `hidden`: nothing would show it.
     if (fades && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const started = performance.now()
-      const fade = document.startViewTransition(swap)
+      const fade = fading = document.startViewTransition(swap)
       void fade.ready.then(() => { if (performance.now() - started > SLOW_FADE) fades = false }, () => {})
       await fade.updateCallbackDone
     }
@@ -174,6 +175,19 @@ export async function start(routes: ClientRoutes, options: { container?: Element
     e.preventDefault()
     go(url.href)
   })
+  // While a fade runs, the browser hit-tests its picture: a press lands on <html> and the click is lost. It ends the fade instead,
+  // and the click goes to what's there once the picture has gone.
+  let ended: Promise<unknown> | undefined
+  document.addEventListener('pointerdown', () => {
+    ended = fading?.finished.catch(() => {})
+    fading?.skipTransition()
+    fading = undefined
+  }, true)
+  document.addEventListener('click', e => {
+    const gone = ended
+    ended = undefined
+    if (gone && e.target === document.documentElement) void gone.then(() => (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.click())
+  }, true)
   // A link the pointer rests on, or the keyboard lands on, has its chunks and data by the time it is pressed.
   // `data-preload="off"` on a link opts out, and so does Save-Data.
   let pending: ReturnType<typeof setTimeout> | undefined

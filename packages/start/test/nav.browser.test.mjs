@@ -105,3 +105,21 @@ test('a write in one tab reaches another at once, with no focus and no connectio
   await b.page.waitForFunction(n => document.querySelectorAll('ul.todos li').length === n + 1, was)
   await ctx.close()
 })
+
+test('a click during a fade reaches the page, not the fade', async () => {
+  const { page } = await open('/')
+  await page.addStyleTag({ content: '::view-transition-group(root){animation-duration:3s}' })
+  await link(page, '/about')
+  await page.waitForFunction(() => location.pathname === '/about')
+  await page.evaluate(() => {
+    const a = Object.assign(document.createElement('a'), { href: '/users', id: 'on', textContent: 'Users' })
+    a.style.cssText = 'position:fixed;top:0;left:0;width:200px;height:200px;z-index:9'
+    document.body.append(a)
+  })
+  await page.evaluate(() => history.back())
+  await page.waitForFunction(() => location.pathname === '/' && document.activeViewTransition)
+  expect(await page.evaluate(() => !!document.activeViewTransition)).toBe(true)
+  await page.mouse.click(100, 100)
+  await page.waitForFunction(() => location.pathname === '/users')
+  await page.close()
+})
