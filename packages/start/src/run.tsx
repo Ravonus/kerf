@@ -10,7 +10,7 @@
 // mutation that invalidates a tag the current route's loaders read refetches the route data in place.
 
 import { drain, enter, hydrate, hydration, level as staticLevel, wake } from 'weft/dom'
-import { flush } from 'weft'
+import { flush, rt } from 'weft'
 import { setHead } from 'weft/head'
 import { applyMatches, client, createRouteState, peers, type Component, type Match, type NavigateOptions, type RoutePayload } from './router'
 import { App } from './view'
