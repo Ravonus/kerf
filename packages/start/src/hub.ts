@@ -106,7 +106,7 @@ export interface Sink {
 }
 
 /** What the client sends (research 30 §4): `[n, kind, id, input, cursor, buffer]`. */
-export type SubEntry = [n: number, kind: 'q' | 's', id: string, input: unknown, cursor?: string, buffer?: number]
+export type SubEntry = [n: number, kind: 'q' | 's', id: string, input?: unknown, cursor?: string, buffer?: number]
 /** The body of `/_weft/rt`: the cursor, subscriptions to add, and subscriptions to drop. */
 export interface Body { k?: string; c?: string | undefined; s?: SubEntry[]; d?: number[] }
 
@@ -670,7 +670,7 @@ export interface Topic<K, M> {
    * The messages of `keys`. Listens from this call, so a read that follows can't miss one (R006's gap): call it before
    * reading a backlog. With `after`, replays what the ring still has; outside the window the stream resets.
    */
-  subscribe(keys: K | K[], options?: { signal?: AbortSignal; after?: string }): AsyncGenerator<Tracked<M>, void, void>
+  subscribe(keys: K | K[], options?: { signal?: AbortSignal | undefined; after?: string | undefined }): AsyncGenerator<Tracked<M>, void, void>
   readonly name: string
   readonly message?: StandardSchemaV1<unknown, M>
 }

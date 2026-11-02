@@ -9,6 +9,6 @@ export const LOG_ROWS: number
 /** Between statements of generated SQL, as Drizzle splits them. */
 export const BREAK: string
 /** The trigger statements for these tables, one by one. */
-export function changeStatements(dialect: string, tables: readonly { name: string }[]): string[]
+export function changeStatements(dialect: string, tables: readonly { name: string; pk?: string[] }[]): string[]
 /** The same statements as one migration. */
-export function changeSql(dialect: string, tables: readonly { name: string }[]): string
+export function changeSql(dialect: string, tables: readonly { name: string; pk?: string[] }[]): string

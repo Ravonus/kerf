@@ -1,5 +1,6 @@
 // The change feed without a database: tags, coalescing, the barrier, status and modes. A fake source plays the database;
 // test/changes-postgres.test.ts and changes-sqlite.test.ts run the same promises against real ones.
+import type { Loose } from './loose'
 import { memoryBus, query, type Sink, type Source } from '@weft-js/start'
 import { configure, hub, liveHealth, resetHub, type Sink as ConnSink } from '@weft-js/start/hub'
 import { createFeed, dbChanges, functionHost } from '@weft-js/start/changes'
@@ -7,7 +8,7 @@ import { listen } from '@weft-js/start/listen'
 import { createScope, fetchQuery, invalidate, liveQueries, memoryStore } from '../src/exec'
 import { onNetwork } from '../src/db/changes-sqlite'
 
-const wait = (ms = 0) => new Promise(ok => setTimeout(ok, ms))
+const wait = (ms = 0) => new Promise(ok => { setTimeout(ok, ms) })
 
 function fakeSource(over: Partial<Source> = {}) {
   let sink!: Sink
@@ -15,15 +16,16 @@ function fakeSource(over: Partial<Source> = {}) {
   const source: Source & { sink: () => Sink; barriers: string[][]; stops: number; starts: number } = {
     name: 'fake', tables: ['todos', 'notes'],
     sink: () => sink, barriers, stops: 0, starts: 0,
-    probe: async () => ({ mode: 'feed', via: 'fake' }),
-    async start(s) {
+    probe: () => Promise.resolve({ mode: 'feed', via: 'fake' }),
+    start(s) {
       sink = s
       source.starts++
-      return () => { source.stops++ }
+      return Promise.resolve(() => { source.stops++ })
     },
-    async settle(tags) {
+    settle(tags) {
       barriers.push(tags)
       sink?.settled(tags)
+      return Promise.resolve()
     },
     ...over,
   }
@@ -31,20 +33,20 @@ function fakeSource(over: Partial<Source> = {}) {
 }
 
 function conn() {
-  const frames: [string, any][] = []
-  return { frames, closed: false, write(e: string, d: string) { frames.push([e, JSON.parse(d)]) }, backlog: () => 0, close() {} } as ConnSink & { frames: [string, any][] }
+  const frames: [string, Loose][] = []
+  return { frames, closed: false, write(e: string, d: string) { frames.push([e, JSON.parse(d)]) }, backlog: () => 0, close() {} } as ConnSink & { frames: [string, Loose][] }
 }
 const request = () => new Request('http://app.test/_weft/rt', { method: 'POST' })
-const open = async (subs: any[], s = conn(), ctx: object = {}) => {
+const open = async (subs: Loose[], s = conn(), ctx: object = {}) => {
   const r = request()
   const c = await hub().connect(r, createScope(r, { context: () => ctx, dev: true }), { s: subs }, s)
   return { c, s }
 }
-const of = (s: { frames: [string, any][] }, e: string) => s.frames.filter(f => f[0] === e).map(f => f[1])
+const of = (s: { frames: [string, Loose][] }, e: string) => s.frames.filter(f => f[0] === e).map(f => f[1])
 
 const list = query({ $id: 'c.list', tags: ['todos'], run: () => [1] })
-const one = query({ $id: 'c.one', tags: ({ id }: any) => [`todos:${id}`], run: () => 1 })
-const both = query({ $id: 'c.both', tags: ({ id }: any) => ['todos', `todos:${id}`], run: () => 1 })
+const one = query({ $id: 'c.one', tags: ({ id }: Loose) => [`todos:${id}`], run: () => 1 })
+const both = query({ $id: 'c.both', tags: ({ id }: Loose) => ['todos', `todos:${id}`], run: () => 1 })
 const other = query({ $id: 'c.other', tags: ['other'], run: () => 1 })
 void list; void one; void both; void other
 
@@ -94,8 +96,8 @@ describe('tags', () => {
   })
 
   test('`tagged` maps a change to the tags an app uses', async () => {
-    const seen: any[] = []
-    const feed = createFeed({ ...fakeSource(), tables: ['notes'], tagged: c => [`note:${c.id}`], start: async s => (s.changes([{ table: 'notes', id: '1' }]), () => {}) }, { emit: p => seen.push(p), status() {} }, { hold: 1 })
+    const seen: Loose[] = []
+    const feed = createFeed({ ...fakeSource(), tables: ['notes'], tagged: c => [`note:${c.id}`], start: s => (s.changes([{ table: 'notes', id: '1' }]), Promise.resolve(() => {})) }, { emit: p => seen.push(p), status() {} }, { hold: 1 })
     await feed.start({ mode: 'feed', via: 'x' })
     await wait(10)
     expect(seen).toEqual([{ t: ['note:1'] }])
@@ -151,7 +153,7 @@ describe('dedupe', () => {
   })
 
   test('a change after the barrier isn\'t mistaken for one it covered, however close', async () => {
-    const seen: any[] = []
+    const seen: Loose[] = []
     const source = fakeSource()
     const feed = createFeed(source, { emit: p => seen.push(p), status() {} }, { hold: 5 })
     await feed.start({ mode: 'feed', via: 'x' })
@@ -192,7 +194,7 @@ describe('coalescing', () => {
     await wait(80)
     expect(seen.length).toBeGreaterThanOrEqual(2)
     expect(seen.length).toBeLessThanOrEqual(5)
-    for (let i = 1; i < seen.length; i++) expect(seen[i] - seen[i - 1]).toBeGreaterThanOrEqual(55)
+    for (let i = 1; i < seen.length; i++) expect(seen[i]! - seen[i - 1]!).toBeGreaterThanOrEqual(55)
   })
 
   test('the shared cache is bumped, so a refetch can\'t answer with what the change made stale', async () => {
@@ -287,19 +289,19 @@ describe('modes', () => {
 
   test('a degraded mode is logged once, and shown', async () => {
     quiet()
-    const seen: any[] = []
-    configure({ changes: fakeSource({ probe: async () => ({ mode: 'poll', via: 'stats', why: 'no trigger', fix: 'run it' }) }), onDiagnostic: d => seen.push(d) })
+    const seen: Loose[] = []
+    configure({ changes: fakeSource({ probe: () => Promise.resolve({ mode: 'poll', via: 'stats', why: 'no trigger', fix: 'run it' }) }), onDiagnostic: d => seen.push(d) })
     await hub().probed
     const a = await open([[1, 'q', 'c.list']])
     expect(of(a.s, 'h')[0].l).toEqual({ m: 'poll' })
     expect(seen.map(d => d.code)).toEqual(['R016'])
     expect(console.warn).toHaveBeenCalledOnce()
-    expect(vi.mocked(console.warn).mock.calls[0][0]).toMatch(/poll \(stats\): no trigger\n {2}fix: run it/)
+    expect(vi.mocked(console.warn).mock.calls[0]![0]).toMatch(/poll \(stats\): no trigger\n {2}fix: run it/)
   })
 
   test('required, with no real feed: R015, and requests are refused rather than served stale', async () => {
     quiet()
-    configure({ dev: true, required: ['listTodos'], changes: fakeSource({ probe: async () => ({ mode: 'poll', via: 'stats', why: 'a pooler', fix: 'listenUrl' }) }) })
+    configure({ dev: true, required: ['listTodos'], changes: fakeSource({ probe: () => Promise.resolve({ mode: 'poll', via: 'stats', why: 'a pooler', fix: 'listenUrl' }) }) })
     await hub().probed
     expect(hub().refused?.code).toBe('R015')
     expect(hub().refused?.message).toMatch(/`listTodos` requires a live feed.*a pooler\n {2}fix: listenUrl/s)
@@ -356,7 +358,7 @@ describe('modes', () => {
     await hub().probed
     const a = await open([[1, 'q', 'c.list']])
     const remote = fakeSource()
-    const stop = await listen({ changes: remote, bus: { ...bus, name: 'shared', close: undefined }, say() {}, beat: 1000 })
+    const stop = await listen({ changes: remote, bus: { publish: (c, m) => bus.publish(c, m), subscribe: (c, on, gap) => bus.subscribe(c, on, gap), name: 'shared' }, say() {}, beat: 1000 })
     remote.sink().changes([{ table: 'todos', id: '1' }])
     await wait(40)
     expect(of(a.s, 'p').map(p => p.t)).toEqual([['todos']])
@@ -365,8 +367,8 @@ describe('modes', () => {
 
   test('`listen` refuses the memory bus and a source with no feed', async () => {
     quiet()
-    await expect(listen({ changes: fakeSource(), bus: { name: 'memory' } as any, say() {} })).rejects.toThrow(/R017/)
-    await expect(listen({ changes: fakeSource({ probe: async () => ({ mode: 'off', via: 'none', why: 'x' }) }), bus: { name: 'redis' } as any, say() {} })).rejects.toThrow(/R015/)
+    await expect(listen({ changes: fakeSource(), bus: { name: 'memory' } as Loose, say() {} })).rejects.toThrow(/R017/)
+    await expect(listen({ changes: fakeSource({ probe: () => Promise.resolve({ mode: 'off', via: 'none', why: 'x' }) }), bus: { name: 'redis' } as Loose, say() {} })).rejects.toThrow(/R015/)
   })
 })
 
@@ -379,7 +381,7 @@ describe('detection helpers', () => {
   })
 
   test('`onNetwork`: statfs on Linux, the device name elsewhere', () => {
-    const statfs = (type: number) => (() => ({ type })) as any
+    const statfs = (type: number) => (() => ({ type })) as Loose
     expect(onNetwork('/x', { platform: 'linux', statfs: statfs(0x6969) })).toBe(true)
     expect(onNetwork('/x', { platform: 'linux', statfs: statfs(0xef53) })).toBe(false)
     expect(onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\n//nas/share 1 2 3 4% /mnt\n' })).toBe(true)

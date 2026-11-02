@@ -1,4 +1,6 @@
 // HTML and data are compressed for a client that takes it, with no setting.
+import type { Loose } from './loose'
+import type * as Zlib from 'node:zlib'
 import { brotliDecompressSync, gunzipSync, createBrotliDecompress } from 'node:zlib'
 import { vi } from 'vitest'
 import { Boundary, resource } from '@weft-js/core'
@@ -6,15 +8,15 @@ import { createHandler, type Manifest } from '../src/server'
 
 const zlib = vi.hoisted(() => ({ brotliCompress: 0, gzip: 0 }))
 vi.mock('node:zlib', async real => {
-  const z = await real<typeof import('node:zlib')>()
-  const counted = (name: 'brotliCompress' | 'gzip') => (...args: any[]) => (zlib[name]++, (z[name] as any)(...args))
+  const z = await real<typeof Zlib>()
+  const counted = (name: 'brotliCompress' | 'gzip') => (...args: Loose[]) => (zlib[name]++, (z[name] as Loose)(...args))
   return { ...z, brotliCompress: counted('brotliCompress'), gzip: counted('gzip') }
 })
 
 let release = () => {}
 let seen = 0
 const Slow = () => {
-  const r = resource(() => new Promise<string>(ok => (release = () => ok('late'))))
+  const r = resource(() => new Promise<string>(ok => { release = () => ok('late') }))
   return <p>{r.value}</p>
 }
 const page = (id: string, file: string) => ({ id, file, layouts: [], pattern: id, params: [], kind: 'page' as const })
@@ -26,7 +28,7 @@ const handler = createHandler({
     other: { default: () => <h1>Lime</h1> },
     count: { default: () => <h1>Visit {++seen}</h1> },
     slow: { default: () => <main><h1>Shell</h1><Boundary pending={<i>wait</i>}><Slow /></Boundary></main> },
-  } as any,
+  },
 })
 const get = (headers: Record<string, string> = {}, path = '/') => handler(new Request(`http://localhost${path}`, { headers }))
 const unbr = async (res: Response) => brotliDecompressSync(Buffer.from(await res.arrayBuffer())).toString()
@@ -102,7 +104,7 @@ test('data is compressed once too', async () => {
   const before = zlib.gzip
   const [a, b] = await Promise.all(['a', 'b'].map(() => handler(new Request('http://localhost/_weft/data/', { headers: { 'accept-encoding': 'gzip' } }))))
   expect(zlib.gzip - before).toBe(1)
-  expect(a.headers.get('content-type')).toContain('application/json')
-  expect(JSON.parse(gunzipSync(Buffer.from(await a.arrayBuffer())).toString()).p).toBe('/')
-  expect(b.status).toBe(200)
+  expect(a!.headers.get('content-type')).toContain('application/json')
+  expect(JSON.parse(gunzipSync(Buffer.from(await a!.arrayBuffer())).toString()).p).toBe('/')
+  expect(b!.status).toBe(200)
 })

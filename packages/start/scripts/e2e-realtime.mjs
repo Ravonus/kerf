@@ -22,7 +22,7 @@ export default async function run({ url, log }) {
     log(`ok ${name}`)
   }
   const id = name => frameId(url, name)
-  const [counter, bump, feed, post, stats] = await Promise.all(['counter', 'bump', 'noteFeed', 'postNote', 'rtStats'].map(id))
+  const [counter, bump, feed, post, stats] = ['counter', 'bump', 'noteFeed', 'postNote', 'rtStats'].map(id)
   const open = async () => (await fetch(`${url}/_weft/fn/${stats}`).then(r => r.json())).v.connections
 
   check('a page reading .live carries its cursor', /^\w+:\d+$/.test((await pageCursor(url, '/live')) ?? ''))
@@ -35,7 +35,7 @@ export default async function run({ url, log }) {
   await rpc(url, bump)
   check('a mutation pokes its tags', (await a.until('p')).t[0] === 'counter')
 
-  await new Promise(ok => setTimeout(ok, 100))
+  await new Promise(ok => { setTimeout(ok, 100) })
   await rpc(url, post, { text: 'one' })
   const [, cursor, first] = await a.until('m')
   check('a topic message arrives with a cursor', first.text === 'one' && cursor, first)
@@ -63,7 +63,7 @@ export default async function run({ url, log }) {
 
   const before = await open()
   b.close()
-  for (let i = 0; i < 50 && (await open()) >= before; i++) await new Promise(ok => setTimeout(ok, 100))
+  for (let i = 0; i < 50 && (await open()) >= before; i++) await new Promise(ok => { setTimeout(ok, 100) })
   check('a closed client reaches the server', (await open()) < before)
   return { checks }
 }

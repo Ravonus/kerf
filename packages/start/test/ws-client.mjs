@@ -55,7 +55,8 @@ export async function open(url, headers = {}) {
     },
     async shut(timeout = 5000) {
       const end = Date.now() + timeout
-      while (closed === undefined && Date.now() < end) await new Promise(ok => setTimeout(ok, 20))
+      // oxlint-disable-next-line no-unmodified-loop-condition -- the socket's close handler sets it during the await
+      while (closed === undefined && Date.now() < end) await new Promise(ok => { setTimeout(ok, 20) })
       return closed
     },
   }

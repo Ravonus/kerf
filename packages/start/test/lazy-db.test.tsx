@@ -1,5 +1,6 @@
 // A request that touches no database doesn't need one (the database down, or never started): migrations wait for the
 // first statement, run once however many requests arrive together, and a request that does use a dead database gets Q016.
+import type { Loose } from './loose'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -24,9 +25,9 @@ function app(url: string, migrations = () => list) {
   const db = createDb({ schema: { notes }, url })
   const spy = vi.spyOn(db.$weft, 'migrate')
   const found: { code: string; message: string }[] = []
-  const modules: any = {
+  const modules: Loose = {
     home: { default: () => <h1>Marketing</h1> },
-    notes: { default: (p: any) => <p>{`${p.data.count} notes`}</p>, load: async () => ({ count: (await db.select().from(notes)).length }) },
+    notes: { default: (p: Loose) => <p>{`${p.data.count} notes`}</p>, load: async () => ({ count: (await db.select().from(notes)).length }) },
   }
   const handler = createHandler({ manifest, modules, migrations, onDiagnostic: d => found.push(d) })
   return { db, spy, found, handler, get: (path: string) => handler(new Request(`http://app.test${path}`)) }

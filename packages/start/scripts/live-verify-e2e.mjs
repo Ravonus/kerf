@@ -15,7 +15,7 @@ import { literalSecrets, refusal, resolveTarget } from '../src/live-target.mjs'
 
 const root = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.url))
 const url = process.env.DATABASE_URL
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 const failed = []
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed.push(what) }
 const freePort = () => new Promise(ok => { const s = createServer().listen(0, () => { const { port } = s.address(); s.close(() => ok(port)) }) })
@@ -79,15 +79,15 @@ process.env.WEFT_STAGING_OTHER_COOKIE = 'user=bob'
 
 // ---- refusals, and nothing touched ------------------------------------------------------------------------------------
 const before = (await sql`select count(*)::int as n from notes`)[0].n
-for (const [what, verify, conf] of [
-  ['a host that says prod', { url: 'https://app.prod.example.com' }, {}],
-  ['a database that says production', { db: 'postgres://u@db.internal/production' }, {}],
-  ['a target named production, even marked', 'production', { production: { url: 'https://x.example.com', production: false } }],
-  ['a named target with no mark', 'staging', { staging: { url: 'https://x.example.com' } }],
-  ['a host nothing vouches for', { db: 'postgres://u@abc123.rds.amazonaws.com/app' }, {}],
+for (const { what, verify, conf } of [
+  { what: 'a host that says prod', verify: { url: 'https://app.prod.example.com' }, conf: {} },
+  { what: 'a database that says production', verify: { db: 'postgres://u@db.internal/production' }, conf: {} },
+  { what: 'a target named production, even marked', verify: 'production', conf: { production: { url: 'https://x.example.com', production: false } } },
+  { what: 'a named target with no mark', verify: 'staging', conf: { staging: { url: 'https://x.example.com' } } },
+  { what: 'a host nothing vouches for', verify: { db: 'postgres://u@abc123.rds.amazonaws.com/app' }, conf: {} },
 ]) {
   const t = resolveTarget(verify, { targets: conf, env: {} })
-  check(!t.missing && !!refusal(t, { targets: conf }), `refused, ${what}: ${refusal(t, { targets: conf })}`)
+  check(!t.missing && !!refusal(t, { targets: conf }), `refused, ${what}: ${refusal(t, { targets: conf }) ?? 'it went through'}`)
 }
 check(!refusal(resolveTarget({ db: 'postgres://u@staging-db.example.com/app' }, { env: {} })), 'allowed: a host that says staging')
 check((await sql`select count(*)::int as n from notes`)[0].n === before, 'a refusal touched nothing')

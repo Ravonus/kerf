@@ -1,4 +1,5 @@
 // `listInput` on its own, and the default `db.adapter` provider through the suite, on a real Drizzle over node:sqlite.
+import type { Loose } from './loose'
 import { DatabaseSync } from 'node:sqlite'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { drizzle } from 'drizzle-orm/sqlite-proxy'
@@ -7,8 +8,8 @@ import { decodeCursor, encodeCursor, listInput } from '@weft-js/start/list'
 import { drizzleSource } from '@weft-js/start/list/drizzle'
 
 const input = listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 10, max: 50 } })
-const parse = (v: unknown): any => input['~standard'].validate(v)
-const bad = (v: unknown) => parse(v).issues?.map((i: any) => i.message)
+const parse = (v: unknown): Loose => input['~standard'].validate(v)
+const bad = (v: unknown) => parse(v).issues?.map((i: Loose) => i.message)
 
 test('a request becomes params', () => {
   expect(parse(undefined).value).toMatchObject({ mode: 'page', limit: 10, offset: 0, after: null, sort: null })
@@ -42,12 +43,12 @@ function database() {
   raw.exec('create table tasks (id text primary key, title text, status text, rank_no integer, secret text)')
   const add = raw.prepare('insert into tasks values (?, ?, ?, ?, ?)')
   for (const r of LIST_ROWS) add.run(r.id, r.title, r.status, r.rank, r.secret)
-  return drizzle(async (text, params, method) => {
-    const s = raw.prepare(text)
+  return drizzle((statement, params, method) => {
+    const s = raw.prepare(statement)
     s.setReturnArrays(true)
-    if (method === 'run' && !/returning/i.test(text)) return (s.run(...(params)), { rows: [] })
+    if (method === 'run' && !/returning/i.test(statement)) return (s.run(...(params)), Promise.resolve({ rows: [] }))
     const rows = s.all(...(params)) as unknown as unknown[][]
-    return { rows: method === 'get' ? rows[0] ?? [] : rows }
+    return Promise.resolve({ rows: method === 'get' ? rows[0] ?? [] : rows })
   })
 }
 

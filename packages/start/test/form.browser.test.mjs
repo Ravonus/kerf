@@ -19,7 +19,7 @@ async function open(path, options) {
   page.on('console', m => (m.type() === 'error' ? errors.push(m.text()) : undefined))
   page.on('request', r => (r.method() === 'POST' ? posts.push(new URL(r.url()).pathname.replace(/\.[0-9a-f]{6}$/, '')) : undefined))
   await page.goto(url + path)
-  if (!options?.javaScriptEnabled === false || options?.javaScriptEnabled !== false) await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  if (!(!options?.javaScriptEnabled) || options?.javaScriptEnabled !== false) await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   return { page, errors, posts, context }
 }
 
@@ -35,7 +35,7 @@ test('a page with a form hydrates 0/0', async () => {
 test('a submit stays in the page: pending, the refreshed list, the reset fields, no page load', async () => {
   const { page, errors, posts, context } = await open('/notes')
   await page.evaluate(() => (window.__same = true))
-  await page.route('**/_weft/fn/**', async r => { await new Promise(ok => setTimeout(ok, 200)); await r.continue() })
+  await page.route('**/_weft/fn/**', async r => { await new Promise(ok => { setTimeout(ok, 200) }); await r.continue() })
   const title = unique('Typed')
   await page.fill('input[name=title]', title)
   await page.fill('input[name=qty]', '4')

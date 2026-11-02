@@ -18,7 +18,7 @@ const fixture = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.ur
 const url = process.env.DATABASE_URL
 const isPg = url.startsWith('postgres')
 const run = promisify(execFile)
-const wait = ms => new Promise(ok => setTimeout(ok, ms))
+const wait = ms => new Promise(ok => { setTimeout(ok, ms) })
 const say = (...a) => console.log(...a)
 const failed = []
 const check = (ok, what) => { say(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed.push(what) }
@@ -105,9 +105,9 @@ for (let i = 0; i < 20; i++) {
   const body = `outside ${i} ${Date.now()}`
   const { stdout } = await outside(`insert into notes (owner, body) values ('alice', '${body}')`)
   const t = +stdout
-  const hit = await until(async () => (await alice1.page.evaluate(b => window.__seen[b], body)) && (await alice2.page.evaluate(b => window.__seen[b], body)))
+  const hit = await until(async () => (await alice1.page.evaluate(said => window.__seen[said], body)) && (await alice2.page.evaluate(said => window.__seen[said], body)))
   if (!hit) { check(false, `sample ${i} never arrived`); continue }
-  samples.push(Math.max(await alice1.page.evaluate(b => window.__seen[b], body), await alice2.page.evaluate(b => window.__seen[b], body)) - t)
+  samples.push(Math.max(await alice1.page.evaluate(said => window.__seen[said], body), await alice2.page.evaluate(said => window.__seen[said], body)) - t)
   await wait(400)
 }
 samples.sort((x, y) => x - y)

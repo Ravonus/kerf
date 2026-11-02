@@ -49,13 +49,13 @@ export interface StandardSchemaV1<I = unknown, O = I> {
     readonly version: 1
     readonly vendor: string
     readonly validate: (value: unknown) => SchemaResult<O> | Promise<SchemaResult<O>>
-    readonly types?: { readonly input: I; readonly output: O }
+    readonly types?: { readonly input: I; readonly output: O } | undefined
   }
 }
 /** What a Standard Schema validator answers. */
 export type SchemaResult<O> = { readonly value: O; readonly issues?: undefined } | { readonly issues: readonly SchemaIssue[] }
 /** One failure from a schema, with the path to the field when there is one. */
-export interface SchemaIssue { readonly message: string; readonly path?: readonly (PropertyKey | { readonly key: PropertyKey })[] }
+export interface SchemaIssue { readonly message: string; readonly path?: readonly (PropertyKey | { readonly key: PropertyKey })[] | undefined }
 
 /**
  * What `run` and `load` get. Augment it with what `src/context.server.ts` returns:
@@ -347,18 +347,18 @@ export interface Transport {
  * router's (tests). Unset in plain tests.
  */
 export const runtime: {
-  scope?: () => Scope | undefined
+  scope?: (() => Scope | undefined) | undefined
   /** Run `fn` with `scope` current (the request's AsyncLocalStorage). */
-  enter?: <T>(scope: unknown, fn: () => T) => T
+  enter?: (<T>(scope: unknown, fn: () => T) => T) | undefined
   exec?: typeof Exec
   transport?: Transport
-  navigate?: (href: string, replace?: boolean) => void
+  navigate?: ((href: string, replace?: boolean) => void) | undefined
   /** Set by the server's first request (and in dev when `drizzle/` grows): what each database applies before its first statement (db/core.ts). */
   migrations?: { list: { tag: string; sql: string }[]; report(e: unknown): void } | undefined
   /** The gates of clients whose statements can't be held (Prisma's): the server waits on them per request, and a failure doesn't fail it. */
   dbs?: Set<() => Promise<void> | undefined>
   /** Fan invalidated tags out to live subscribers (hub.ts). `origin`: the connection that needs no poke. */
-  poke?: (tags: string[], origin?: string | null) => Promise<void>
+  poke?: ((tags: string[], origin?: string | null) => Promise<void>) | undefined
   /** This tab's realtime connection: sent with mutations, so the tab doesn't poke itself. */
   conn?: string | undefined
   /** `room.in(params).publish`: socket.ts, on a server or under the fake. */

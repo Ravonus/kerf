@@ -34,7 +34,7 @@ async function record(page) {
 }
 
 const items = page => page.$$eval('ul.todos li', l => l.map(li => `${li.className}:${li.textContent}`))
-const slow = page => page.route('**/_weft/fn/**', async r => { await new Promise(ok => setTimeout(ok, 300)); await r.continue() })
+const slow = page => page.route('**/_weft/fn/**', async r => { await new Promise(ok => { setTimeout(ok, 300) }); await r.continue() })
 
 test('a page reading queries hydrates 0/0 and fetches nothing', async () => {
   const { page, errors, calls } = await open('/todos')

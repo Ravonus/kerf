@@ -425,7 +425,7 @@ let parked = false
 let hiddenAt: ReturnType<typeof setTimeout> | undefined
 
 /** A leader tab can be hidden while a sibling is looking: `@weft-js/start/share` says when this socket must stay. */
-export const keepOpen: { stay?: () => boolean } = {}
+export const keepOpen: { stay?: (() => boolean) | undefined } = {}
 
 const send = (f: unknown[]) => live?.send(JSON.stringify(f))
 const statusAll = (s: ChannelStatus) => { for (const j of joins.values()) if (!j.refused) j.status.value = s }

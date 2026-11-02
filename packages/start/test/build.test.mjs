@@ -26,8 +26,8 @@ async function serve(cmd, entry) {
   // Poll the port: Nitro's logger is silent under vitest's NODE_ENV=test, so there is no "Listening" line to wait for.
   let exited
   child.on('exit', code => (exited = code))
-  for (const t0 = Date.now(); ; await new Promise(ok => setTimeout(ok, 100))) {
-    if (exited !== undefined) throw new Error(`${cmd} exited with ${exited}`)
+  for (const t0 = Date.now(); ; await new Promise(ok => { setTimeout(ok, 100) })) {
+    if (exited !== undefined) throw new Error(`${cmd} exited with ${String(exited)}`)
     if (Date.now() - t0 > 20_000) throw new Error(`${cmd} did not listen on ${port}`)
     if (await fetch(`http://localhost:${port}/`).then(() => true, () => false)) break
   }
@@ -39,7 +39,7 @@ afterAll(() => { for (const p of ['node', 'bun', 'deno_server']) rmSync(out(p), 
 describe('node preset, end to end', () => {
   let server
   beforeAll(async () => {
-    await build({ root: fixture, site, preset: 'node', nitro: { output: { dir: out('node') } } })
+    build({ root: fixture, site, preset: 'node', nitro: { output: { dir: out('node') } } })
     server = await serve(process.execPath, join(out('node'), 'server/index.mjs'))
   }, 120_000)
   afterAll(() => server?.stop())
@@ -91,7 +91,6 @@ describe('node preset, end to end', () => {
 
   const page = path => fetch(server.url + path).then(async r => ({ html: await r.text(), res: r }))
   const paint = html => [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(m => m[1]).join('')
-  const lateLink = html => /<link rel="stylesheet" href="([^"]+)">/.exec(html)?.[1]
 
   test('a page carries the first paint of what it rendered, and no other route\'s', async () => {
     const styled = paint((await page('/styled')).html)
@@ -162,7 +161,7 @@ describe('node preset, end to end', () => {
     test('the page paints without the sheet, holds the gate with its room kept, and shows it when the sheet lands', async () => {
       const held = []
       const release = () => held.forEach(go => go())
-      const { context, tab, vis } = await open({}, async r => { await new Promise(go => held.push(go)); await r.continue() })
+      const { context, tab, vis } = await open({}, async r => { await new Promise(go => { held.push(go) }); await r.continue() })
       await tab.waitForTimeout(400)
       expect(await tab.locator('h1').isVisible()).toBe(true)
       expect(await vis()).toBe('hidden')
@@ -201,7 +200,7 @@ describe('node preset, end to end', () => {
     test('a streamed Boundary waits for the sheet, and a client route change finds its styles', async () => {
       let release
       const context = await browser.newContext(); const tab = await context.newPage()
-      await tab.route('**/assets/sheet-*.css', async r => { await new Promise(go => (release = go)); await r.continue() })
+      await tab.route('**/assets/sheet-*.css', async r => { await new Promise(go => { release = go }); await r.continue() })
       await tab.goto(server.url + '/slow', { waitUntil: 'commit' })
       await tab.waitForSelector('.skeleton')
       await tab.waitForTimeout(1500)
@@ -260,15 +259,15 @@ describe('node preset, end to end', () => {
     const { chromium } = createRequire(import.meta.url)('playwright-core')
     const browser = await chromium.launch()
     try {
-      const page = await browser.newPage()
-      await page.goto(server.url + '/users/1')
-      await page.waitForFunction(() => window.__weft?.hydrated)
-      expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
-      await page.click('a[href="/users/42"]')
-      await page.waitForFunction(() => document.querySelector('h2')?.textContent === 'Alan Turing')
-      expect(await page.title()).toBe('Alan Turing · Acme')
+      const tab = await browser.newPage()
+      await tab.goto(server.url + '/users/1')
+      await tab.waitForFunction(() => window.__weft?.hydrated)
+      expect(await tab.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+      await tab.click('a[href="/users/42"]')
+      await tab.waitForFunction(() => document.querySelector('h2')?.textContent === 'Alan Turing')
+      expect(await tab.title()).toBe('Alan Turing · Acme')
       // The client bundle carries no loader code: the fixture's db module (with its marker string) stays on the server.
-      const js = await page.evaluate(() => Promise.all(performance.getEntriesByType('resource').filter(e => e.name.endsWith('.js')).map(e => fetch(e.name).then(r => r.text()))))
+      const js = await tab.evaluate(() => Promise.all(performance.getEntriesByType('resource').filter(e => e.name.endsWith('.js')).map(e => fetch(e.name).then(r => r.text()))))
       expect(js.join('\n')).not.toContain('db-secret-7f3a')
     } finally {
       await browser.close()
@@ -277,7 +276,7 @@ describe('node preset, end to end', () => {
 })
 
 test('bun preset builds and serves', async () => {
-  await build({ root: fixture, site, preset: 'bun', nitro: { output: { dir: out('bun') } } })
+  build({ root: fixture, site, preset: 'bun', nitro: { output: { dir: out('bun') } } })
   expect(existsSync(join(out('bun'), 'server/index.mjs'))).toBe(true)
   if (spawnSync('bun', ['--version']).status !== 0) return
   const server = await serve('bun', join(out('bun'), 'server/index.mjs'))
@@ -292,8 +291,8 @@ test('bun preset builds and serves', async () => {
   }
 }, 120_000)
 
-test('deno_server preset builds', async () => {
-  await build({ root: fixture, site, preset: 'deno_server', nitro: { output: { dir: out('deno_server') } } })
+test('deno_server preset builds', () => {
+  build({ root: fixture, site, preset: 'deno_server', nitro: { output: { dir: out('deno_server') } } })
   const entry = readFileSync(join(out('deno_server'), 'server/index.mjs'), 'utf8')
   expect(entry).toMatch(/Deno\.serve|deno/i)
   expect(existsSync(join(out('deno_server'), 'public/_weft/og/users/1.png'))).toBe(true)

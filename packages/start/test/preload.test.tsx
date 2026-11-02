@@ -1,9 +1,10 @@
 // A page's chunks are preloaded with its HTML, so they don't wait for the entry to import them.
+import type { Loose } from './loose'
 import { createHandler, type Manifest } from '../src/server'
 
-const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [{ id: '/', file: 'home', layouts: [], pattern: '/', params: [], kind: 'page' }] } as any
+const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [{ id: '/', file: 'home', layouts: [], pattern: '/', params: [], kind: 'page' }] } as Loose
 const page = (chunks: Record<string, { js: { href: string }[] }>) =>
-  createHandler({ manifest, modules: { home: { default: () => <h1>Lemon</h1> } } as any, chunks, assets: { entry: '/entry.js' } })(new Request('http://localhost/')).then(r => r.text())
+  createHandler({ manifest, modules: { home: { default: () => <h1>Lemon</h1> } } as Loose, chunks, assets: { entry: '/entry.js' } })(new Request('http://localhost/')).then(r => r.text())
 
 test('the route on the page has its chunks preloaded once, and the entry not at all', async () => {
   const html = await page({ '/': { js: [{ href: '/home.js' }, { href: '/shared.js' }, { href: '/shared.js' }, { href: '/entry.js' }] } })
@@ -17,7 +18,7 @@ test('a route that is not on the page preloads nothing', async () => {
 // A lazy island in the page's first view stays preloaded, one past it doesn't, and neither does for who asked for less.
 const mark = (id: string) => `<!--wi:["${id}","${id}",[],"i"]--><!--[--><button wk="${id}/0">x</button><!--]-->`
 const lazy = (body: string, chunks: Record<string, { js: { href: string }[] }>, options: object = { lazy: true }, headers?: HeadersInit) =>
-  createHandler({ manifest, modules: { home: { default: () => ({ t: body }) } } as any, statics: ['/'], chunks, assets: { entry: '/entry.js' }, ...options })(new Request('http://localhost/', { headers }))
+  createHandler({ manifest, modules: { home: { default: () => ({ t: body }) } }, statics: ['/'], chunks, assets: { entry: '/entry.js' }, ...options })(new Request('http://localhost/', { headers: headers ?? {} }))
 const CHUNKS = { $client: { js: [{ href: '/run.js' }] }, top: { js: [{ href: '/top.js' }] }, low: { js: [{ href: '/low.js' }] } }
 const PAGE = `<h1>Hi</h1>${mark('top')}${'<section><p>Lots of text in a long page</p></section>'.repeat(30)}${mark('low')}`
 const preloads = (html: string) => html.match(/modulepreload" href="[^"]+/g)?.map(s => s.slice(21)) ?? []
@@ -48,6 +49,6 @@ test('no capture script without lazy islands in the app', async () => {
 
 test('every island on the page, in view or not, has its stylesheet in the head', async () => {
   const chunks = { top: { js: [], css: [{ href: '/top.css' }] }, low: { js: [], css: [{ href: '/low.css' }, { href: '/top.css' }] } }
-  const html = await (await lazy(PAGE, chunks as any)).text()
+  const html = await (await lazy(PAGE, chunks)).text()
   expect(html.match(/stylesheet" href="[^"]+/g)?.map(s => s.slice(18))).toEqual(['/top.css', '/low.css'])
 })

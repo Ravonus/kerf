@@ -1,4 +1,5 @@
 // The change feed on real SQLite files, with a real second process as the outside writer.
+import type { Loose } from './loose'
 import { execFile } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -6,11 +7,10 @@ import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { dbChanges, createFeed, type Source } from '../src/changes'
 import { changeStatements } from '../src/changes-sql.mjs'
-import { createDb } from '../src/db/sqlite'
-import { open } from '../src/db/sqlite'
+import { createDb,open } from '../src/db/sqlite'
 
 const run = promisify(execFile)
-const wait = (ms = 0) => new Promise(ok => setTimeout(ok, ms))
+const wait = (ms = 0) => new Promise(ok => { setTimeout(ok, ms) })
 async function until(ok: () => boolean, ms = 5000) {
   const end = Date.now() + ms
   while (!ok() && Date.now() < end) await wait(5)
@@ -24,7 +24,7 @@ const file = join(dir, 'app.db')
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
 function feedOn(source: Source, throttle = 25) {
-  const pokes: any[] = []
+  const pokes: Loose[] = []
   const status: (string | undefined)[] = []
   const feed = createFeed(source, { emit: p => pokes.push(p), status: d => status.push(d) }, { hold: 25, throttle })
   return { pokes, status, feed, start: async () => feed.start(await source.probe()) }
@@ -90,7 +90,7 @@ test('10k rows are one table-level poke, and the log stays capped', async () => 
   expect(f.pokes[0].t).toContain('todos') // past the log's cap the watcher can't tell what else moved: every table
   expect(f.pokes[0].p).toContain('todos:')
   const c = await open(file)
-  const [[rows]] = c.query('select count(*) from __weft_changes', [], 'values') as number[][]
+  const [[rows] = []] = c.query('select count(*) from __weft_changes', [], 'values') as number[][]
   c.close?.()
   expect(rows).toBeLessThanOrEqual(4097)
   await f.feed.stop()

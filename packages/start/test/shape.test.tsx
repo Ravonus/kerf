@@ -66,7 +66,7 @@ test('the same args hold their value: no skeleton at all', async () => {
   expect(bars()).toEqual([])
 })
 
-test('q.shape(input), and a declared example', async () => {
+test('q.shape(input), and a declared example', () => {
   expect(list.shape({ limit: 1 })).toEqual([{ id: 0, title: 'nnnnn nnnn' }])
   expect(declared.shape()).toEqual([{ title: 'Release notes for 0.4' }, { title: 'Two' }])
   expect(cache.get(declared)).toBeUndefined()

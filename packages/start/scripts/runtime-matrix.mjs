@@ -36,7 +36,7 @@ function stop(child) {
   if (child.exitCode !== null) return
   child.kill()
   const timer = setTimeout(() => child.kill('SIGKILL'), 3000)
-  return new Promise(ok => child.on('close', () => (clearTimeout(timer), ok())))
+  return new Promise(ok => { child.on('close', () => { clearTimeout(timer); ok() }) })
 }
 
 async function serve(runtime, env) {
@@ -49,7 +49,7 @@ async function serve(runtime, env) {
   for (let i = 0; i < 300; i++) {
     if (child.exitCode !== null) throw new Error(`${runtime} server exited ${child.exitCode}:\n${output.join('')}`)
     try { await fetch(url + '/', { redirect: 'manual' }); return { url, output, stop: () => stop(child) } } catch {}
-    await new Promise(ok => setTimeout(ok, 100))
+    await new Promise(ok => { setTimeout(ok, 100) })
   }
   child.kill()
   throw new Error(`${runtime} server didn't answer:\n${output.join('')}`)

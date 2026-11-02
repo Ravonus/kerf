@@ -1,5 +1,7 @@
 // `remote()` against a stand-in sidecar on a real socket (research 36): what crosses, and every way a call can come back.
 // The real crate is covered by `cargo test` in crates/weft and by evals/phase5a-exit.mjs.
+import type { AddressInfo } from 'node:net'
+import type { Loose } from './loose'
 import { createHmac } from 'node:crypto'
 import { mkdtempSync, renameSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
@@ -14,7 +16,7 @@ import { readCargo, urlVariable as cliVariable } from '../src/sidecar.mjs'
 import { native, remote, sign, urlVariable } from '../src/rust'
 
 const SECRET = 's3cret'
-type Seen = { url: string; headers: Record<string, any>; body: string; envelope: any }
+type Seen = { url: string; headers: Record<string, Loose>; body: string; envelope: Loose }
 let server: Server
 let base: string
 let seen: Seen[] = []
@@ -32,8 +34,8 @@ beforeAll(async () => {
       res.end(JSON.stringify(a.json))
     })
   })
-  await new Promise<void>(ok => server.listen(0, '127.0.0.1', ok))
-  base = `http://127.0.0.1:${(server.address() as any).port}`
+  await new Promise<void>(ok => { server.listen(0, '127.0.0.1', ok) })
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
 })
 afterAll(() => void server.close())
 beforeEach(() => {
@@ -46,18 +48,21 @@ afterEach(() => {
   delete process.env.WEFT_RUST_SECRET
 })
 
-const scope = (options: any = {}, init: RequestInit = {}) => createScope(new Request('http://localhost/x', init), { store: memoryStore(), ...options })
+const scope = (options: Loose = {}, init: RequestInit = {}) => createScope(new Request('http://localhost/x', init), { store: memoryStore(), ...options })
 const search = remote('rust://search')
 let n = 0
-const define = (def: any, kind: 'query' | 'mutation' = 'query') => (kind === 'query' ? query : mutation)({ $id: `f${++n}.abc123`, impl: search, output: z.any(), ...def }) as any
-const fnOf = (q: any) => fns.get(q.$id)!
+const define = (def: Loose, kind: 'query' | 'mutation' = 'query') => {
+  const make: Loose = kind === 'query' ? query : mutation
+  return make({ $id: `f${++n}.abc123`, impl: search, output: z.any(), ...def })
+}
+const fnOf = (q: Loose) => fns.get(q.$id)!
 
 test('a call is signed over the function, the claims and the body, and carries no cookie', async () => {
   answer = () => ({ json: { ok: true, value: [1], tags: [], touched: [] } })
   const q = define({ input: z.object({ q: z.string() }) })
   const s = scope({ context: () => ({ user: { id: 7, role: 'admin', email: 'secret@example.com' } }) }, { headers: { cookie: 'session=abc', traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' } })
   await fetchQuery(s, fnOf(q), { q: 'x' })
-  const [c] = seen
+  const c = seen[0]!
   expect(c.url).toBe(`/_weft/fn/${q.$id}`)
   expect(c.body).toBe('{"input":{"q":"x"}}')
   expect(c.headers.cookie).toBeUndefined()
@@ -76,7 +81,7 @@ test('the signature matches the vector the crate checks', async () => {
 test('a junk traceparent starts a new trace', async () => {
   answer = () => ({ json: { ok: true, value: 1 } })
   await fetchQuery(scope({}, { headers: { traceparent: 'nope' } }), fnOf(define({})), undefined)
-  expect(seen[0].envelope.traceparent).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/)
+  expect(seen[0]!.envelope.traceparent).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/)
 })
 
 test('parsed input is sent: trimmed, defaults filled, and a codec encoded back to the wire', async () => {
@@ -84,7 +89,7 @@ test('parsed input is sent: trimmed, defaults filled, and a codec encoded back t
   const at = z.codec(z.iso.datetime(), z.date(), { decode: s => new Date(s), encode: d => d.toISOString() })
   const q = define({ input: z.object({ q: z.string().trim(), limit: z.int().default(20), at }) })
   await fetchQuery(scope(), fnOf(q), { q: '  hi  ', at: '2026-10-31T00:00:00.000Z' })
-  expect(JSON.parse(seen[0].body).input).toEqual({ q: 'hi', limit: 20, at: '2026-10-31T00:00:00.000Z' })
+  expect(JSON.parse(seen[0]!.body).input).toEqual({ q: 'hi', limit: 20, at: '2026-10-31T00:00:00.000Z' })
 })
 
 test('a schema with no encode is sent as parsed, and no input is null', async () => {
@@ -127,7 +132,7 @@ test('each failure of the sidecar has its code, and none of them leaks an addres
   const q = define({})
   const code = async (status: number, json: unknown) => {
     answer = () => ({ status, json })
-    const e: any = await fetchQuery(scope(), fnOf(q), undefined).catch(x => x)
+    const e: Loose = await fetchQuery(scope(), fnOf(q), undefined).catch(x => x)
     expect(e).toBeInstanceOf(StartError)
     expect(e.message).not.toContain(base)
     return [e.code, e.status]
@@ -155,8 +160,8 @@ test('R106: no address, and no key; R107: nothing listening, and a timeout', asy
   process.env.WEFT_RUST_SEARCH_URL = 'http://127.0.0.1:1'
   await expect(fetchQuery(scope(), fnOf(q), undefined)).rejects.toMatchObject({ code: 'R107', status: 503 })
   const silent = createServer(() => {})
-  await new Promise<void>(ok => silent.listen(0, '127.0.0.1', ok))
-  const slow = define({ impl: remote('rust://search', { url: `http://127.0.0.1:${(silent.address() as any).port}`, timeout: 40 }) })
+  await new Promise<void>(ok => { silent.listen(0, '127.0.0.1', ok) })
+  const slow = define({ impl: remote('rust://search', { url: `http://127.0.0.1:${(silent.address() as AddressInfo).port}`, timeout: 40 }) })
   await expect(fetchQuery(scope(), fnOf(slow), undefined)).rejects.toMatchObject({ code: 'R107', status: 504 })
   silent.closeAllConnections()
   silent.close()
@@ -175,9 +180,9 @@ test('the CLI and the server spell the variable the same way', () => {
 
 test('`claims` chooses what a sidecar sees', async () => {
   answer = () => ({ json: { ok: true, value: 1 } })
-  const q = define({ impl: remote('rust://search', { claims: u => ({ id: u.id, tenant: u.org, plan: u.plan }) }) })
+  const q = define({ impl: remote('rust://search', { claims: (u: Loose) => ({ id: u.id, tenant: u.org, plan: u.plan }) }) })
   await fetchQuery(scope({ context: () => ({ user: { id: 'u', org: 'o', plan: 'pro', email: 'x' } }) }), fnOf(q), undefined)
-  expect(seen[0].envelope.user).toEqual({ id: 'u', tenant: 'o', plan: 'pro' })
+  expect(seen[0]!.envelope.user).toEqual({ id: 'u', tenant: 'o', plan: 'pro' })
 })
 
 test('auth: \'user\' is refused in TS, before anything crosses', async () => {
@@ -197,7 +202,7 @@ describe('the caches', () => {
     expect((await fetchQuery(scope({ store, context }), fnOf(q), undefined)).v).toBe(1)
     expect((await fetchQuery(scope({ store, context }), fnOf(q), undefined)).v).toBe(1)
     expect(seen.length).toBe(1)
-    expect(seen[0].envelope.user).toBe(null)
+    expect(seen[0]!.envelope.user).toBe(null)
   })
 
   test('`scope: user` sends the user, one value each', async () => {
@@ -230,13 +235,13 @@ describe('the caches', () => {
     answer = reply({ touched: ['docs', 'users'] })
     const out: string[] = []
     const q = define({ tags: ['docs'] })
-    await fetchQuery(scope({ dev: true, onDiagnostic: (d: any) => out.push(d.code + d.message) }), fnOf(q), undefined)
+    await fetchQuery(scope({ dev: true, onDiagnostic: (d: Loose) => out.push(d.code + d.message) }), fnOf(q), undefined)
     expect(out).toEqual([expect.stringMatching(/^Q011.*table `users`/)])
   })
 })
 
 test('both `run` and `impl` is refused at definition', () => {
-  expect(() => query({ $id: 'both.abc123', impl: search, output: z.any(), run: () => 1 } as any)).toThrow(/R103.*both/s)
+  expect(() => query({ $id: 'both.abc123', impl: search, output: z.any(), run: () => 1 } as never)).toThrow(/R103.*both/s)
 })
 
 test('a replaced function in a test crosses nothing', async () => {
@@ -247,8 +252,8 @@ test('a replaced function in a test crosses nothing', async () => {
 })
 
 describe('the contract', () => {
-  const entry = (kind: string, id: string, def: any) => [id, { kind, $id: id, def: { impl: search, ...def } }]
-  const of = (...fs: any[]) => contract(new Map(fs))
+  const entry = (kind: string, id: string, def: Loose) => [id, { kind, $id: id, def: { impl: search, ...def } }]
+  const of = (...fs: Loose[]) => contract(new Map(fs))
 
   test('a function with `impl` names its service, its context and its wire', () => {
     const at = z.codec(z.iso.datetime(), z.date(), { decode: s => new Date(s), encode: d => d.toISOString() })
@@ -257,7 +262,7 @@ describe('the contract', () => {
       entry('mutation', 'b.111111', { output: z.null(), auth: 'user', errors: { Gone: z.object({ id: z.string() }) } }),
       entry('query', 'c.111111', { output: z.string(), cache: { life: 'minutes', scope: 'user' } }),
       entry('query', 'd.111111', { output: z.string(), impl: remote('rust://other') }),
-    ) as any
+    ) as Loose
     expect(diagnostics).toEqual([])
     expect(functions[0].impl).toMatchObject({ kind: 'remote', target: 'rust://search', service: 'search', ctx: 'shared' })
     expect(functions[0].impl.output.properties.at).toMatchObject({ type: 'string', format: 'date-time' }) // what Rust sends, not the Date
@@ -269,10 +274,10 @@ describe('the contract', () => {
   })
 
   test('the hash moves with a schema, and only for its own service', () => {
-    const base = () => [entry('query', 'a.1', { output: z.string() }), entry('query', 'b.1', { output: z.string(), impl: remote('rust://other') })]
-    const one = of(...base()) as any
-    const same = of(...base()) as any
-    const edited = of(entry('query', 'a.1', { output: z.number() }), base()[1]) as any
+    const pair = () => [entry('query', 'a.1', { output: z.string() }), entry('query', 'b.1', { output: z.string(), impl: remote('rust://other') })]
+    const one = of(...pair()) as Loose
+    const same = of(...pair()) as Loose
+    const edited = of(entry('query', 'a.1', { output: z.number() }), pair()[1]) as Loose
     expect(same.services).toEqual(one.services)
     expect(edited.services.search.hash).not.toBe(one.services.search.hash)
     expect(edited.services.other.hash).toBe(one.services.other.hash)
@@ -283,7 +288,7 @@ describe('the contract', () => {
   })
 
   test('R101: no output, what JSON can\'t carry, a one-way transform; a codec passes', () => {
-    const codes = (def: any) => (of(entry('query', 'x.1', def)) as any).diagnostics.filter((d: any) => d.code === 'R101').length
+    const codes = (def: Loose) => (of(entry('query', 'x.1', def)) as Loose).diagnostics.filter((d: Loose) => d.code === 'R101').length
     expect(codes({})).toBe(1)
     expect(codes({ output: z.date() })).toBe(1)
     expect(codes({ output: z.bigint() })).toBe(1)
@@ -297,13 +302,13 @@ describe('the contract', () => {
   })
 
   test('R101 is only for `impl`: a TS function keeps C001', () => {
-    const { diagnostics } = contract(new Map([['t', { kind: 'query', $id: 't.1', def: { output: z.date() } }]]) as any) as any
-    expect(diagnostics.map((d: any) => d.code)).toEqual(['C001'])
+    const { diagnostics } = contract(new Map([['t', { kind: 'query', $id: 't.1', def: { output: z.date() } }]]) as Loose) as Loose
+    expect(diagnostics.map((d: Loose) => d.code)).toEqual(['C001'])
   })
 
   test('R102: object unions, wherever they sit; `.nullable()` and scalars pass; the setting allows them', () => {
     const union = z.union([z.object({ a: z.string() }), z.object({ b: z.string() })])
-    const codes = (def: any, rust?: any) => (contract(new Map([entry('query', 'x.1', def)] as any), rust) as any).diagnostics.filter((d: any) => d.code === 'R102').map((d: any) => /'s `([^`]+)` is a plain/.exec(d.why)[1])
+    const codes = (def: Loose, rust?: Loose) => (contract(new Map([entry('query', 'x.1', def)] as Loose), rust) as Loose).diagnostics.filter((d: Loose) => d.code === 'R102').map((d: Loose) => /'s `([^`]+)` is a plain/.exec(d.why)![1])
     expect(codes({ output: union })).toEqual(['output'])
     expect(codes({ output: z.null(), input: z.object({ a: z.array(union) }) })).toEqual(['input.a'])
     expect(codes({ output: z.null(), errors: { E: union } })).toEqual(['error E'])
@@ -321,7 +326,7 @@ describe('cargo\'s messages', () => {
 
   test('an error that names a function\'s types or method is R103, with its id and place', () => {
     const { diagnostics } = read([message('E0063', 'missing field `lang` in initializer of `SearchDocsOutputItem`'), message('E0046', 'not all trait items implemented, missing: `search_docs`')])
-    expect(diagnostics.map(d => [d.code, (d as any).function, d.file, d.span[0]])).toEqual([['R103', 'searchDocs.abc123', 'crates/search/src/main.rs', 9], ['R103', 'searchDocs.abc123', 'crates/search/src/main.rs', 9]])
+    expect(diagnostics.map(d => [d.code, (d).function, d.file, d.span[0]])).toEqual([['R103', 'searchDocs.abc123', 'crates/search/src/main.rs', 9], ['R103', 'searchDocs.abc123', 'crates/search/src/main.rs', 9]])
   })
 
   test('any other error is R109, and another service\'s function isn\'t this one\'s', () => {
@@ -345,10 +350,10 @@ describe('cargo\'s messages', () => {
 // `native()` with `process.dlopen` stood in for: what crosses, and what a build's manifest decides. The real addon and
 // its WASM are covered by evals/phase5b-exit.mjs.
 describe('native()', () => {
-  const dlopen = process.dlopen
+  const dlopen = process.dlopen.bind(process)
   let dir: string
   let addons: Record<string, { hash: string; call: (id: string, ctx: string, body: string) => unknown }>
-  let calls: { id: string; ctx: any; body: any }[]
+  let calls: { id: string; ctx: Loose; body: Loose }[]
   const manifest = (m: unknown) => {
     writeFileSync(join(dir, 'next.json'), JSON.stringify(m))
     renameSync(join(dir, 'next.json'), join(dir, 'manifest.json'))
@@ -357,7 +362,7 @@ describe('native()', () => {
     writeFileSync(join(dir, file), '')
     addons[join(dir, file)] = { hash, call }
   }
-  const fn = (def: any = {}, impl: any = native('media')) => fnOf(query({ $id: `n${++n}.abc123`, output: z.any(), ...def, impl } as any))
+  const fn = (def: Loose = {}, impl: Loose = native('media')) => fnOf(query({ $id: `n${++n}.abc123`, output: z.any(), ...def, impl }))
   const signedIn = (user: unknown) => scope({ context: () => ({ user }) })
 
   beforeEach(() => {
@@ -365,7 +370,7 @@ describe('native()', () => {
     process.env.WEFT_NATIVE_DIR = dir
     addons = {}
     calls = []
-    process.dlopen = ((mod: any, file: string) => {
+    process.dlopen = ((mod: Loose, file: string) => {
       const a = addons[file]
       if (!a) throw new Error(`no such addon: ${file}`)
       mod.exports = {
@@ -375,7 +380,7 @@ describe('native()', () => {
           return Promise.resolve(a.call(id, ctx, body))
         },
       }
-    }) as any
+    }) as Loose
   })
   afterEach(() => {
     process.dlopen = dlopen
@@ -387,9 +392,9 @@ describe('native()', () => {
     manifest({ media: { hash: 'h', addon: 'm.node' } })
     const f = fn({ input: z.object({ at: z.string().trim() }), output: z.object({ n: z.number() }) })
     await expect(fetchQuery(signedIn({ id: 7, role: 'admin', secret: 'no' }), f, { at: ' x ' }).then(r => r.v)).resolves.toEqual({ n: 1 })
-    expect(calls[0].body).toEqual({ input: { at: 'x' } })
-    expect(calls[0].ctx.user).toEqual({ id: '7', roles: ['admin'] })
-    expect(calls[0].ctx.deadlineMs).toBe(10_000)
+    expect(calls[0]!.body).toEqual({ input: { at: 'x' } })
+    expect(calls[0]!.ctx.user).toEqual({ id: '7', roles: ['admin'] })
+    expect(calls[0]!.ctx.deadlineMs).toBe(10_000)
   })
 
   test('errors read as they do from a sidecar, and a panic stays in the log', async () => {
@@ -442,53 +447,53 @@ describe('native()', () => {
   })
 
   test('dev: a new manifest loads the new file, and a failed build keeps what was serving', async () => {
-    const reply = (n: number) => () => JSON.stringify({ ok: true, value: { n }, tags: [], touched: [] })
+    const reply = (v: number) => () => JSON.stringify({ ok: true, value: { n: v }, tags: [], touched: [] })
     addon('m-1.node', 'h', reply(1))
     addon('m-2.node', 'h', reply(2))
     manifest({ media: { hash: 'h', addon: 'm-1.node' } })
     const f = fn()
     const run = () => fetchQuery(scope(), f, undefined).then(r => r.v)
     expect(await run()).toEqual({ n: 1 })
-    await new Promise(ok => setTimeout(ok, 5))
+    await new Promise(ok => { setTimeout(ok, 5) })
     manifest({ media: { hash: 'h', addon: 'm-2.node' } })
     expect(await run()).toEqual({ n: 2 })
-    await new Promise(ok => setTimeout(ok, 5))
+    await new Promise(ok => { setTimeout(ok, 5) })
     manifest({ media: { hash: 'other', addon: 'm-1.node' } })
     expect(await run()).toEqual({ n: 2 })
-    await new Promise(ok => setTimeout(ok, 5))
+    await new Promise(ok => { setTimeout(ok, 5) })
     manifest({ media: { hash: '', failure: 'it broke' } })
     await expect(run()).rejects.toMatchObject({ code: 'R103', message: expect.stringContaining('it broke') })
   })
 
   test('the contract says which kind a service is, and one name is never both', () => {
     fns.clear()
-    query({ $id: 'a.x', output: z.null(), impl: native('media') } as any)
+    query({ $id: 'a.x', output: z.null(), impl: native('media') } as never)
     expect(contract(fns).services).toMatchObject({ media: { kind: 'native' } })
-    query({ $id: 'b.x', output: z.null(), impl: remote('rust://media') } as any)
+    query({ $id: 'b.x', output: z.null(), impl: remote('rust://media') } as never)
     expect(contract(fns).diagnostics).toEqual([expect.objectContaining({ code: 'R109', why: expect.stringContaining('both') })])
   })
 
   test('R104 from a preset', () => {
-    expect(nativeProblem({ service: 'media', preset: 'cloudflare_module' })).toContain('remote(')
+    expect(nativeProblem({ service: 'media', preset: 'cloudflare_module' } as never)).toContain('remote(')
     expect(nativeProblem({ service: 'media', preset: 'vercel', wasm: false })).toContain('wasm: false')
-    expect(nativeProblem({ service: 'media', preset: 'vercel' })).toBeUndefined()
+    expect(nativeProblem({ service: 'media', preset: 'vercel' } as never)).toBeUndefined()
     expect(nativeProblem({ service: 'media', preset: 'node', wasm: false })).toBeUndefined()
   })
 
   test('readCargo finds the library', () => {
     const line = JSON.stringify({ reason: 'compiler-artifact', target: { kind: ['cdylib'] }, filenames: ['/t/libmedia.d', '/t/libmedia.dylib'] })
-    expect(readCargo(line, { service: 'media', root: '/', dir: '/' }).lib).toBe('/t/libmedia.dylib')
+    expect(readCargo(line, { service: 'media', root: '/', dir: '/' } as never).lib).toBe('/t/libmedia.dylib')
   })
 
   test('R105: a cached Rust query with tags that reported no table, once', async () => {
     addon('m.node', 'h')
     manifest({ media: { hash: 'h', addon: 'm.node' } })
-    const seen: any[] = []
-    const make = () => scope({ dev: true, onDiagnostic: (d: any) => seen.push(d) })
+    const found: Loose[] = []
+    const make = () => scope({ dev: true, onDiagnostic: (d: Loose) => found.push(d) })
     const f = fn({ tags: ['docs'], cache: { life: 'seconds' } })
     await fetchQuery(make(), f, undefined)
     await fetchQuery(make(), f, { again: 1 })
-    expect(seen.filter(d => d.code === 'R105')).toHaveLength(1)
+    expect(found.filter(d => d.code === 'R105')).toHaveLength(1)
     seen.length = 0
     const pure = fn({ cache: { life: 'seconds' } })
     await fetchQuery(make(), pure, undefined)

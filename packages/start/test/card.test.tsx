@@ -1,5 +1,6 @@
 // The built-in share card (research 20 §10): real PNGs through the real renderer, in both schemes and at the sizes a
 // page can throw at it. `CARD_OUT=<dir>` keeps them, to look at.
+import type { Loose } from './loose'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
@@ -22,10 +23,10 @@ const cases = {
 }
 const out = process.env.CARD_OUT
 
-async function draw(name: string, props: any) {
-  const found: any[] = []
+async function draw(name: string, props: Loose) {
+  const found: Loose[] = []
   const html = renderToString(() => <DefaultCard {...props} />, { hydratable: false })
-  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: any) => found.push(d) })
+  const png = await renderCard(html, undefined, fonts, { onDiagnostic: (d: Loose) => found.push(d) })
   if (out) { mkdirSync(out, { recursive: true }); writeFileSync(join(out, `${name}.png`), png) }
   return { png, html, found }
 }
@@ -47,10 +48,10 @@ test('the same input draws the same bytes', async () => {
 })
 
 test('the wasm renderer, which a Windows build uses, draws the same bytes as the addon', async () => {
-  const html = renderToString(() => <DefaultCard title="Same bytes" site={site} />)
+  const html = renderToString(() => <DefaultCard title="Same bytes" description="" site={site} />)
   const [addon, wasm] = await Promise.all([native(), wasmBackend(join(import.meta.dirname, '..'))])
-  const draw = async (backend: unknown) => (await (await createCardRenderer({ backend, fonts })).render(html, { width: 1200, height: 630 })).body
-  expect(Buffer.from(await draw(wasm)).equals(Buffer.from(await draw(addon)))).toBe(true)
+  const paint = async (backend: unknown) => (await (await createCardRenderer({ backend: backend as never, fonts: fonts as never })).render(html, { width: 1200, height: 630 })).body
+  expect(Buffer.from(await paint(wasm)).equals(Buffer.from(await paint(addon)))).toBe(true)
 })
 
 test('the template is off the title: the card shows the name on its own', async () => {
