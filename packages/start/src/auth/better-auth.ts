@@ -10,11 +10,15 @@ import type { DbHandle } from '../db/core'
 
 const SESSION = /(?:^|;\s*)(?:__Secure-)?[\w.-]*session_token=/
 const BEARER = /^Bearer\s+(\S+)$/i
+const CHUNK = /^(?:__Secure-)?[\w.-]*session_data\.\d+=/
 /** A socket or stream keeps its `ctx` past this request, and an extension's route is its own, so they never read the cache. */
 const HELD = /^\/_weft\/(rt|ws|x\/)/
 const FN = '/_weft/fn/'
 const ANONYMOUS = { user: null, session: null }
 const TABLES = ['user', 'session', 'account', 'verification', 'jwks']
+
+/** A cache too big for one cookie is no cache: that session just reads the database. An expired chunk still goes out. */
+const oversized = (line: string) => CHUNK.test(line) && !/max-age=0/i.test(line) && !/^[^=]+=;/.test(line)
 
 /** Better Auth's own routes follow the rule `session()` does: only reading who you are can answer from the cache. */
 const cacheRules: BetterAuthPlugin = {
@@ -23,7 +27,20 @@ const cacheRules: BetterAuthPlugin = {
     // `/token` above all: a revoked session mustn't mint a 15-minute token from a cookie it still holds.
     before: [{ matcher: c => c.path !== '/get-session', handler: createAuthMiddleware(async c => ({ context: { query: { ...c.query, disableCookieCache: true } } })) }],
     // With `revokeOtherSessions` this response already carries the new session's cookies.
-    after: [{ matcher: c => c.path === '/change-password', handler: createAuthMiddleware(async c => void (c.context.newSession || expireCookie(c, c.context.authCookies.sessionData))) }],
+    after: [
+      { matcher: c => c.path === '/change-password', handler: createAuthMiddleware(async c => void (c.context.newSession || expireCookie(c, c.context.authCookies.sessionData))) },
+      // Chunks go on every request after this one: a big enough user would pass the server's header limit and be locked out with 431s.
+      {
+        matcher: () => true,
+        handler: createAuthMiddleware(async c => {
+          const out = (c.context as { responseHeaders?: Headers }).responseHeaders
+          const all = out?.getSetCookie() ?? []
+          if (!all.some(oversized)) return
+          out!.delete('set-cookie')
+          for (const line of all) if (!oversized(line)) out!.append('set-cookie', line)
+        }),
+      },
+    ],
   },
 }
 
@@ -110,8 +127,9 @@ export function createAuth<S extends Record<string, unknown>, const O extends Be
       if (!SESSION.test(request.headers.get('cookie') ?? '')) return ANONYMOUS as Session
       const { headers, response: s } = await methods.getSession({ headers: request.headers, returnHeaders: true, ...(!(read && !HELD.test(pathname)) && { query: { disableCookieCache: true } }) })
       // A fresh cache cookie, a slid expiry or a dead session's removal. Not `forward`: who's signed in hasn't changed.
-      const out = (currentScope() as { headers?: Headers } | undefined)?.headers
-      if (out) for (const c of headers.getSetCookie()) out.append('set-cookie', c)
+      // A socket's re-check runs inside whichever request poked it, and its cookies are that socket's, not this response's.
+      const scope = currentScope() as { request?: Request; headers?: Headers } | undefined
+      if (scope?.headers && scope.request === request) for (const c of headers.getSetCookie()) scope.headers.append('set-cookie', c)
       return { user: s?.user ?? null, session: s?.session ?? null } as Session
     },
     $weft: {

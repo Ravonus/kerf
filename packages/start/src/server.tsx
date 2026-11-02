@@ -448,7 +448,9 @@ export function createHandler(options: HandlerOptions) {
         return fail('Q010', `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`, 403)
       const body = multipart ? await multipartBody(request) : ((await request.json()) as { i?: unknown; f?: [string, unknown][]; c?: 1 })
       fromForm = !!body.c
-      const answer = await exec.runMutation(scope, f, body.i, Array.isArray(body.f) ? body.f.slice(0, 200) : [], fromForm)
+      // A token opens only the functions listed for it, and what a mutation refreshes would run as that token too.
+      const refresh = Array.isArray(body.f) && !request.headers.has('authorization') ? body.f.slice(0, 200) : []
+      const answer = await exec.runMutation(scope, f, body.i, refresh, fromForm)
       if (options.dev && sessionChanged(scope.headers)) options.onDiagnostic?.({ code: 'A004', severity: 'warning', message: `\`${id}\` changed the session cookie without a redirect: the tab keeps what the last session cached. \`redirect()\` after it` })
       return out(answer)
     } catch (e) {

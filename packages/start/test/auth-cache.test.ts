@@ -4,7 +4,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { eq } from 'drizzle-orm'
 import { createLocalJWKSet, jwtVerify } from 'jose'
 import { mutation, query } from '@weft/start'
-import { fnOf } from '@weft/start/data'
+import { enter, fnOf } from '@weft/start/data'
 import { forward, session } from '../src/auth'
 import { createAuth } from '../src/auth/better-auth'
 import { drizzleAuth } from '../src/auth/drizzle'
@@ -168,6 +168,27 @@ describe('the cookie cache', () => {
   })
 })
 
+describe('a session read in another request', () => {
+  test('leaves that response alone: a socket\'s cookies are not the poker\'s', async () => {
+    const admin = await fresh(), victim = await fresh()
+    await revoke(victim.id) // the read now has cookies to send back: the dead session's removal
+    const headers = new Headers()
+    await enter({ request: new Request(fnUrl(write), { method: 'POST', headers: { cookie: admin.cookie } }), headers }, () => session(auth, new Request(base, { method: 'POST', headers: { cookie: victim.cookie } })))
+    expect(headers.getSetCookie()).toEqual([])
+  })
+})
+
+describe('a session too big for one cookie', () => {
+  test('sets no chunks, so its requests stay under the header limit, and reads the database', async () => {
+    const email = `big${++n}@example.test`
+    const res = await (auth.api as any).signUpEmail({ body: { name: 'B', email, password, image: 'A'.repeat(20_000) }, asResponse: true })
+    expect(res.headers.getSetCookie().join().length).toBeLessThan(2000)
+    const cookie = jar(res)
+    expect(cookie).toContain('session_token=')
+    expect((await session(auth, new Request(base, { headers: { cookie } }))).user?.email).toBe(email)
+  })
+})
+
 describe('API tokens', () => {
   test('a token lasts 15 minutes, carries no browser login, and verifies from the public JWKS alone', async () => {
     const { cookie, id } = await fresh()
@@ -204,6 +225,14 @@ describe('API tokens', () => {
     expect((await get(whoami, undefined, t)).status).toBe(401)
     expect((await post(write, undefined, t)).status).toBe(401)
     expect((await session(auth, new Request(`${base}/some/page`, { headers: { authorization: `Bearer ${t}` } }))).user).toBeNull()
+  })
+
+  test('a listed mutation refreshes nothing for a token: an unlisted query can\'t ride along', async () => {
+    const { cookie, email } = await fresh()
+    const { token: t } = await token(cookie)
+    const res = await post(openWrite, undefined, t, { f: [[(fnOf(whoami) as any).$id, null]] })
+    expect(res.status).toBe(200)
+    expect(await res.text()).not.toContain(email)
   })
 
   test('tampered, expired, wrong audience, wrong issuer and alg=none are refused', async () => {
