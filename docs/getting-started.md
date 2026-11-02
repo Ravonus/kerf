@@ -1,18 +1,25 @@
-# Getting started on this machine
+# Using a weft checkout in your apps
 
-weft isn't published, so `packages/create-weft/scripts/local.mjs` uses a checkout from any folder: it builds what's stale, packs every package into `~/.weft/local` (`WEFT_LOCAL_DIR` moves
-it), and points an app at those tarballs. The app gets what a consumer would get, not workspace links.
+weft isn't on npm yet. Until it is, `packages/create-weft/scripts/local.mjs` lets any app on your machine use a checkout of
+this repo. It builds what's stale, packs every package as a tarball and points the app at those tarballs, so the app gets
+what a consumer would get, not workspace links.
 
-You need Node 26, Rust (cargo) and npm here, because a checkout builds its own compiler. An app doesn't need Rust: an install
-gets the WASM compiler, plus a native addon where one fits (`weft doctor` says which is running). Other package managers
-aren't supported here. Set this once, in `~/.zshrc`:
+This page is for working on weft. For a first app, follow [Installation](../site/content/learn/installation.md).
+
+## What you need
+
+- Node 26 and npm. Other package managers aren't supported here.
+- Rust (`cargo`), because a checkout builds its own compiler. An app doesn't need Rust: it gets the WASM compiler, plus a
+  native addon where one fits. `npx weft doctor` says which one is running.
+
+An alias saves typing. Put it in your shell's startup file, with the path to your checkout:
 
 ```bash
-alias weft-local='npm_config_min_release_age=3 node ~/dev/weft/packages/create-weft/scripts/local.mjs'
+alias weft-local='node ~/path/to/weft/packages/create-weft/scripts/local.mjs'
 ```
 
-`min-release-age` is in days. `~/.npmrc` has `4320`, which is about twelve years, so without this setting npm finds nothing to
-install. To fix that everywhere, set `min-release-age=3` in `~/.npmrc` and drop the prefix.
+If your `~/.npmrc` sets `min-release-age`, npm skips packages newer than that many days, which can leave it nothing to
+install. Prefix the alias with `npm_config_min_release_age=3`, or lower the setting.
 
 ## A new app
 
@@ -20,7 +27,8 @@ install. To fix that everywhere, set `min-release-age=3` in `~/.npmrc` and drop 
 weft-local new my-app --yes
 ```
 
-It takes the same flags as `npm create @weft-js`, such as `--ui tailwind --db postgres --layer prisma`. Without `--yes` it asks. Then:
+It takes the same flags as `npm create @weft-js`, such as `--ui tailwind --db postgres --layer prisma`. Without `--yes` it
+asks. Then:
 
 ```bash
 cd my-app
@@ -28,7 +36,7 @@ npx weft db generate
 npx weft dev
 ```
 
-Skip `weft db generate` with `--db none`. `npx weft build` makes the production build.
+Skip `weft db generate` if you made the app with `--db none`. `npx weft build` makes the production build.
 
 ## After changing weft
 
@@ -38,12 +46,14 @@ From the app:
 weft-local refresh
 ```
 
-This rebuilds the compiler if the crate changed, rebuilds `@weft-js/text/engine`, repacks, and replaces the weft packages in that
-app. Pass a path to run it from elsewhere. Restart `weft dev` afterwards. The same command moves an existing app that
-depends on `weft` onto the tarballs.
+This rebuilds the compiler if the crate changed, rebuilds `@weft-js/text/engine`, repacks, and puts the new tarballs in the
+app. Pass a path to refresh an app from elsewhere. Restart `weft dev` afterwards. `refresh --packed` installs the tarballs
+already in the store without packing again.
 
 Other apps keep what they have installed until you refresh them. The store holds one set of tarballs, though, so a clean
 install in any app takes whichever checkout packed last. `weft-local pack` updates the store and touches no app.
+
+The store is `~/.weft/local`. Set `WEFT_LOCAL_DIR` to move it.
 
 ## What it changes in an app
 
