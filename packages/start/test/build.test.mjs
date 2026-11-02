@@ -123,14 +123,14 @@ describe('node preset, end to end', () => {
     rmSync(dir, { recursive: true, force: true })
   })
 
-  test('a Boundary chunk needing rules the head left out brings the sheet, and swaps only once it has loaded', async () => {
+  test('a Boundary chunk needing rules the head left out brings them, styled from the first frame it shows', async () => {
     const html = await (await fetch(server.url + '/stream-sheet')).text()
     const head = html.slice(0, html.indexOf('</head>'))
     expect(head).toContain('shell-card')
     expect(head).not.toContain('late-card')
-    const href = /<link rel="stylesheet" href="(\/assets\/[^"]+)">\n<template>/.exec(html)?.[1]
-    expect(href).toBeTruthy()
-    expect(await (await fetch(server.url + href)).text()).toContain('late-card')
+    const body = html.slice(html.indexOf('</head>'))
+    expect(/<style>[^<]*late-card[^<]*<\/style>[\s\S]*?<template>/.test(body)).toBe(true)
+    expect(body).not.toMatch(/<link rel="stylesheet"[^>]*>\n<template>/) // a link would hold the chunk until it loaded
 
     const { chromium } = createRequire(import.meta.url)('playwright-core')
     const browser = await chromium.launch()
