@@ -8,7 +8,7 @@ export const meta: Meta = { name: 'Bundle Tartan', description: 'warp\'s fourtee
 
 // gzip -c of each source file, 2026-11-01
 const MODULES: [string, number][] = [['DataGrid', 9516], ['Table', 8949], ['VirtualList', 5702], ['Shell', 5557], ['CommandPalette', 5504], ['RichSelect', 5118], ['RichTextEditor', 4521], ['TimeField', 4283], ['DateField', 3821], ['MonthPicker', 3629], ['Calendar', 3461], ['ScrollGrid', 3254], ['Chart', 2943], ['RecurrenceField', 2924]]
-const total = MODULES.reduce((n, m) => n + m[1], 0), DATA = ['--warp-color-data-1', '--warp-color-data-2', '--warp-color-data-3', '--warp-color-data-4', '--warp-color-data-5', '--warp-color-data-6', '--warp-color-data-7', '--warp-color-data-8']
+const total = MODULES.reduce((n, m) => n + m[1], 0), SETT_INKS = ['--warp-color-text', '--warp-color-accent-solid', '--warp-color-accent-soft', '--warp-color-caution-solid', '--warp-color-text-subtle', '--warp-color-page']
 /** A sett reflects at each end, as a real tartan's does. */
 const SETT = [...MODULES.keys(), ...[...MODULES.keys()].reverse()]
 
@@ -24,13 +24,13 @@ export default function BundleTartan(_: ArtProps) {
     }
   }
   const draw = ({ ctx, width, height, pointer }: Frame) => {
-    inksNow ??= palette(ctx.canvas.parentElement!, DATA)
+    inksNow ??= palette(ctx.canvas.parentElement!, SETT_INKS)
     if (!image || image.width !== width || image.height !== height) {
       image = new ImageData(width, height)
       out = new Uint32Array(image.data.buffer)
       lay(Math.max(width, height))
       // 2/2 twill: warp and weft take turns on a diagonal, which is why tartan's crossings read as a third colour
-      for (let y = 0, i = 0; y < height; y++) for (let x = 0; x < width; x++, i++) out[i] = inksNow[((x + y) & 3) < 2 ? map[x]! % 8 : map[y]! % 8]!
+      for (let y = 0, i = 0; y < height; y++) for (let x = 0; x < width; x++, i++) out[i] = inksNow[((x + y) & 3) < 2 ? map[x]! % SETT_INKS.length : map[y]! % SETT_INKS.length]!
     }
     ctx.putImageData(image, 0, 0)
     const over = pointer.in ? map[Math.min(width - 1, Math.floor(pointer.x))]! : -1

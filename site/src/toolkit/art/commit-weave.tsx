@@ -30,7 +30,7 @@ export default function CommitWeave(_: ArtProps) {
     const ramp = [c.a, c.b, c.c, c.d]
     const hx = pointer.in ? Math.floor((pointer.x - mx) / cw) : -1, hy = pointer.in ? Math.floor((pointer.y - my) / ch) : -1
     for (let w = 0; w < WEEKS; w++) for (let d = 0; d < DAYS; d++) {
-      const n = year[w * DAYS + d]!, k = n / peak, tall = mix(0.16, 1.12, Math.sqrt(k)) * ch, cx = mx + (w + 0.5) * cw, cy = my + (d + 0.5) * ch, thick = cw * 0.66
+      const n = year[w * DAYS + d]!, k = n / peak, tall = mix(0.3, 1.16, Math.sqrt(k)) * ch, cx = mx + (w + 0.5) * cw, cy = my + (d + 0.5) * ch, thick = cw * 0.84
       ctx.fillStyle = ramp[Math.min(3, Math.floor(Math.sqrt(k) * 4))]!
       ctx.fillRect(cx - thick / 2, cy - tall / 2, thick, tall)
       if ((w + d) % 2 && n < peak * 0.5) { ctx.fillStyle = c.rule; ctx.fillRect(cx - thick / 2, cy - 1, thick, 2) }

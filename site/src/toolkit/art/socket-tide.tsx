@@ -1,6 +1,6 @@
 import { Canvas, type CanvasFrame as Frame } from '@weft/warp'
 import { state } from 'weft'
-import { inks, mix, rng, type ArtProps, type Meta } from './shared'
+import { inks, rng, type ArtProps, type Meta } from './shared'
 import code from './socket-tide.tsx?raw'
 
 export const meta: Meta = { name: 'Socket Tide', description: 'A day of open connections around a clock, rising with one timezone and falling with the next. Point at an hour to read it. The traffic here is a seeded sample: the site has no public socket to read yet.', kind: 'data', code }
@@ -14,7 +14,7 @@ const day = (() => {
   for (let i = 0; i < SLOTS; i++) {
     const h = (i / SLOTS) * 24, gauss = (at: number, wide: number) => Math.exp(-(((h - at + 36) % 24 - 12) ** 2) / wide)
     noise = noise * 0.8 + (r() - 0.5) * 0.09
-    out[i] = 0.18 + 0.62 * gauss(14, 10) + 0.42 * gauss(21, 7) + 0.2 * gauss(7, 5) + noise
+    out[i] = 0.24 + 0.72 * gauss(14, 10) + 0.5 * gauss(21, 7) + 0.26 * gauss(7, 5) + noise
   }
   return out
 })()
@@ -47,7 +47,7 @@ export default function SocketTide({ live = true }: ArtProps) {
     ctx.textAlign = 'center'
     for (let h = 0; h < 24; h += 6) { const a = (h / 24) * TAU - Math.PI / 2; ctx.fillText(String(h).padStart(2, '0'), cx + Math.cos(a) * inner * 0.74, cy + Math.sin(a) * inner * 0.74 + 4) }
     ctx.textAlign = 'start'
-    const hand = at >= 0 ? at : (mix(0.4, 0.42, 0) * SLOTS + t * 0.5) % SLOTS, a = (hand / SLOTS) * TAU - Math.PI / 2
+    const hand = at >= 0 ? at : (0.4 * SLOTS + t * 0.5) % SLOTS, a = (hand / SLOTS) * TAU - Math.PI / 2
     ctx.strokeStyle = c.hand
     ctx.lineWidth = 2
     ctx.beginPath()

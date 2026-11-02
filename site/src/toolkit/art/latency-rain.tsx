@@ -6,7 +6,7 @@ import code from './latency-rain.tsx?raw'
 export const meta: Meta = { name: 'Latency Rain', description: 'Each request falls as far as it took. The p50 and p95 sit as rules across the rain, and only an error gets a colour. Brush a window to read it. The requests here are a seeded sample.', kind: 'data', code, wide: true }
 
 const COUNT = 900, MAX = 1000, LIFE = 9
-const colours = inks({ drop: '--warp-color-data-1', fine: '--warp-color-text-faint', err: '--warp-color-critical-text', rule: '--warp-color-text-subtle', band: '--warp-color-accent-soft' })
+const colours = inks({ drop: '--warp-color-data-1', fine: '--warp-color-text-faint', err: '--warp-color-critical-text', rule: '--warp-color-text-subtle', band: '--warp-color-accent-soft', ground: '--warp-color-page' })
 
 // log-normal around 80 ms, with the long tail every real service has, and one bad patch
 const r = rng(404)
@@ -53,8 +53,12 @@ export default function LatencyRain({ live = true }: ArtProps) {
     ctx.font = '11px var(--warp-font-mono, monospace)'
     for (const [name, value] of [['p50', p50], ['p95', p95]] as const) {
       const y = Math.round(top + scale(value) * span)
+      const text = `${name} ${Math.round(value)} ms`
       ctx.fillRect(mx, y, inner, 1)
-      ctx.fillText(`${name} ${Math.round(value)} ms`, mx + 4, y - 4)
+      ctx.fillStyle = c.ground
+      ctx.fillRect(mx, y - 17, ctx.measureText(text).width + 8, 16)
+      ctx.fillStyle = c.rule
+      ctx.fillText(text, mx + 4, y - 5)
     }
   }
   return (

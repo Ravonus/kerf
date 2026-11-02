@@ -42,18 +42,18 @@ export default function CurlThreads({ live = true }: ArtProps) {
       w = width; h = height
       for (let i = 0; i < COUNT; i++) respawn(i)
       ctx.clearRect(0, 0, w, h)
-      ctx.globalAlpha = 0.5
-      for (let n = 0; n < 120; n++) strands(ctx, c, 0, 0, false)
+      ctx.globalAlpha = 0.85
+      for (let n = 0; n < 46; n++) strands(ctx, c, 0, 0, false)
       ctx.globalAlpha = 1
       prepared = true
     }
     if (still) return
     drift += dt * 0.012 * tier.speed
     ctx.globalCompositeOperation = 'destination-out'
-    ctx.fillStyle = 'rgb(0 0 0 / 0.03)'
+    ctx.fillStyle = 'rgb(0 0 0 / 0.022)'
     ctx.fillRect(0, 0, w, h)
     ctx.globalCompositeOperation = 'source-over'
-    ctx.globalAlpha = 0.5
+    ctx.globalAlpha = 0.85
     strands(ctx, c, pointer.x, pointer.y, pointer.in)
     ctx.globalAlpha = 1
   }

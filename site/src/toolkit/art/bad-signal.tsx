@@ -27,7 +27,7 @@ export default function BadSignal({ live = true }: ArtProps) {
       for (let x = 0; x < width; x++, i++) {
         const sx = x - off, at = sx < 0 || sx >= width ? -1 : y * width + sx
         const s = at < 0 ? 0 : shape[at]!, h = at < 0 ? 0 : halo[at]!
-        tones[i] = (s * 0.96 + h * 0.14) * scan * glow + 0.02
+        tones[i] = (s * 0.96 + h * 0.14) * scan * glow
       }
     }
     quantize(tones, width, height, SCREEN, cells, out)

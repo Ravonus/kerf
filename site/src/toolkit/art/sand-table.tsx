@@ -18,7 +18,7 @@ export default function SandTable(_: ArtProps) {
       let near = 9, stone = -1
       STONES.forEach(([sx, sy, r], n) => { const d = Math.hypot(u - sx * 1.6, v - sy) - r; if (d < near) { near = d; stone = n } })
       // rings round each stone give way to straight rows, as a rake does
-      const rows = Math.sin(v * 2 * Math.PI * 15), rings = Math.sin(near * 2 * Math.PI * 15 + stone), k = clamp((near - 0.2) / 0.09)
+      const rows = Math.sin(v * 2 * Math.PI * 11), rings = Math.sin(near * 2 * Math.PI * 11 + stone), k = clamp((near - 0.2) / 0.09)
       rake[i] = sand[i] = (rings * (1 - k) + rows * k) * 0.5
       rock[i] = near < 0 ? 1 : 0
     }
@@ -26,7 +26,7 @@ export default function SandTable(_: ArtProps) {
     built = true
   }
   function relight() {
-    for (let y = 1; y < H - 1; y++) for (let x = 1, i = y * W + 1; x < W - 1; x++, i++) shade[i] = rock[i] ? 1 : clamp(0.36 + (sand[i - 1]! - sand[i + 1]! + sand[i - W]! - sand[i + W]!) * 0.5)
+    for (let y = 1; y < H - 1; y++) for (let x = 1, i = y * W + 1; x < W - 1; x++, i++) shade[i] = rock[i] ? 1 : clamp(0.44 + (sand[i - 1]! - sand[i + 1]! + sand[i - W]! - sand[i + W]!) * 0.26)
   }
   function settle() {
     let moved = 0
@@ -64,5 +64,5 @@ export default function SandTable(_: ArtProps) {
     restless = 30
     busy.value = true
   }
-  return <DitherField fill kind={garden} ramp="neutral" cell={3} spread={0.8} gain={1.25} seed={2} speed={busy.value ? 1 : 0} onPointerMove={move} onPointerLeave={() => { lx = -1 }} style="touch-action:none" label="A raked sand garden around three stones" />
+  return <DitherField fill kind={garden} ramp="neutral" pattern="blue" cell={3} spread={0.9} gain={1.25} seed={2} speed={busy.value ? 1 : 0} onPointerMove={move} onPointerLeave={() => { lx = -1 }} style="touch-action:none" label="A raked sand garden around three stones" />
 }
