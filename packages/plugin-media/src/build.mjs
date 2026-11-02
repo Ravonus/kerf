@@ -15,24 +15,17 @@ import sharp from 'sharp'
 import { optimize } from 'svgo'
 import { probe } from '@weft-js/core/media-probe'
 import { createMediaServer } from './server.mjs'
+import { DEFAULTS, FIXED, encoders, hex, isPhoto, MIME } from './shared.mjs'
 import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
 const run = promisify(execFile)
 const VERSION = 2 // bump when the output for the same input and options changes
 
-export const DEFAULTS = {
-  formats: ['avif'],
-  widths: [320, 640, 960, 1280, 1920, 2560],
-  quality: { target: 80, scorer: 'ssimulacra2' },
-  placeholder: true,
-  gifLimit: 256 * 1024,
-  video: { codecs: ['av1'], widths: [640, 960, 1280, 1920] },
-}
-/** Encoder settings without a scorer (research 26 §2.4), and the range the search walks. */
-export const FIXED = { avif: 50, webp: 75, jpeg: 78 }
+export { DEFAULTS, FIXED, MIME, encoders, hex, isPhoto } from './shared.mjs'
+
+/** The range the quality search walks. */
 const RANGE = { avif: [20, 90], webp: [40, 95], jpeg: [40, 95] }
-export const MIME = { avif: 'image/avif', webp: 'image/webp', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', svg: 'image/svg+xml' }
 const EXT = { avif: 'avif', webp: 'webp', jpeg: 'jpg', png: 'png', gif: 'gif', svg: 'svg' }
 
 const scorers = new Map()
@@ -44,13 +37,6 @@ export function findScorer(name) {
     scorers.set(name, r.error ? null : name)
   }
   return scorers.get(name)
-}
-
-export const encoders = {
-  avif: (img, q) => img.avif({ quality: q, effort: 4, chromaSubsampling: '4:2:0' }),
-  webp: (img, q) => img.webp({ quality: q, effort: 5 }),
-  jpeg: (img, q) => img.jpeg({ quality: q, mozjpeg: true }),
-  png: img => img.png({ compressionLevel: 9, effort: 8 }),
 }
 
 /** Lowest quality whose SSIMULACRA2 score is ≥ target, within 5 encodes (scores rise with quality). */
@@ -73,11 +59,9 @@ async function search(format, base, width, scorer, target, dir) {
   return hi
 }
 
-export const hex = ({ r, g, b }) => `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`
-/** Lossy sources get a lossy fallback; a WebP with alpha is a graphic. */
-export const isPhoto = meta => ['jpeg', 'jpg', 'avif', 'heif', 'tiff', 'webp'].includes(meta.format) && !(meta.format === 'webp' && meta.hasAlpha)
 const short = bytes => createHash('sha256').update(bytes).digest('hex').slice(0, 8)
 
+/** The media.build@1 provider: `build` takes one source file and gives back its asset and encoded files, cached by content. */
 export function createMediaBuild(input = {}) {
   const o = { ...DEFAULTS, ...input, quality: { ...DEFAULTS.quality, ...input.quality }, video: { ...DEFAULTS.video, ...input.video } }
   return {

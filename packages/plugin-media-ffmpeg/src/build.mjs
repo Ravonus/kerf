@@ -30,7 +30,7 @@ const missing = bin => Object.assign(new Error(`M019 ${bin} didn't run. Install 
 
 const names = new Map()
 /** What this binary can encode: asked once per process. */
-async function encodersOf(bin) {
+function encodersOf(bin) {
   if (!names.has(bin)) names.set(bin, exec(bin, ['-hide_banner', '-encoders'], { maxBuffer: 1 << 22 }).then(r => new Set(r.stdout.split('\n').map(l => l.trim().split(/\s+/)[1])), () => { throw missing(bin) }))
   return names.get(bin)
 }
@@ -51,6 +51,7 @@ function codecString(s) {
   return s.codec_name
 }
 
+/** The media.encode@1 provider for one codec key: `encode` runs ffmpeg on a file and a recipe, and gives the bytes back. */
 export function createMediaEncode({ key, binary = 'system', probe, sha256, timeout = 600_000 }) {
   const spec = CODECS[key]
   if (!spec) throw new Error(`media.encode: no ffmpeg recipe for ${key}`)

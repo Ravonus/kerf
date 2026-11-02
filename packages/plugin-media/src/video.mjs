@@ -140,19 +140,19 @@ function chosen(sets) {
   return [...winners, compatible]
 }
 
-function finish(asset, sets, poster, diagnostics) {
+function finish(asset, sets, cover, diagnostics) {
   const files = sets.flatMap(s => s.rungs.map(r => ({ name: r.name, bytes: r.bytes })))
-  if (poster) files.push(poster.file)
+  if (cover) files.push(cover.file)
   const compatible = sets.at(-1)
   const top = compatible.rungs.at(-1)
-  const out = { ...asset, ...poster?.asset, src: top.name, sources: sets.map(s => ({ type: s.type, srcset: s.rungs.map(r => `${r.name} ${r.width}w`).join(', ') })) }
+  const out = { ...asset, ...cover?.asset, src: top.name, sources: sets.map(s => ({ type: s.type, srcset: s.rungs.map(r => `${r.name} ${r.width}w`).join(', ') })) }
   return { asset: out, files, diagnostics }
 }
 
 /** The compatible copy `encoder: 'compatible'` swaps in, and M014 with what it adds. */
 function withCopy(out, o, name, copy) {
   if (o.encoder !== 'compatible' || !copy) return out
-  const efficient = out.files.filter(f => f.name !== copy.src && /\.webm$/.test(f.name)).at(-1)?.bytes.length ?? copy.bytes
+  const efficient = out.files.filter(f => f.name !== copy.src && f.name.endsWith('.webm')).at(-1)?.bytes.length ?? copy.bytes
   out.asset.copy = { src: copy.src, type: copy.type, bytes: copy.bytes, ratio: Math.round((copy.bytes / efficient) * 100) / 100 }
   out.asset.swap = o.swap ?? 'intent'
   out.diagnostics.push({ code: 'M014', severity: 'info', message: `${name}: \`encoder: 'compatible'\` adds ${Math.round((copy.added ?? 0) / 1024)} KB for the compatible copy.` })
@@ -221,7 +221,7 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
   const keep = o.gif?.keepUnder ?? 8192
   if (!audio && (bytes.length < keep || frames < 4)) return null
   const opaque = (await sharp(bytes, { animated: true }).stats()).isOpaque
-  if (!opaque) return audio ? null : alphaWebp({ bytes, name, stem, width, height }, o)
+  if (!opaque) return audio ? null : alphaWebp({ bytes, name, stem, width, height })
   try {
     return await onDisk(name, bytes, async source => {
       const probe = encode[COMPATIBLE]
@@ -255,7 +255,7 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
   }
 }
 
-async function alphaWebp({ bytes, name, stem, width, height }, o) {
+async function alphaWebp({ bytes, name, stem, width, height }) {
   const webp = await sharp(bytes, { animated: true }).webp({ quality: 80, effort: 5 }).toBuffer()
   if (webp.length > bytes.length * SMALLER) return null
   const fileName = `${stem}-${short(webp)}.webp`

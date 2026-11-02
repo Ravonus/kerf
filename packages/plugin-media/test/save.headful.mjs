@@ -15,7 +15,7 @@ const app = resolve(process.argv[2])
 const { chromium, firefox } = createRequire(join(process.cwd(), 'package.json'))('playwright-core')
 const PORT = 5301
 const PROXY = 5302
-const sleep = ms => new Promise(ok => setTimeout(ok, ms))
+const sleep = ms => new Promise(ok => { setTimeout(ok, ms) })
 const x = (...args) => execFileSync('xdotool', args.map(String))
 const dl = join(app, 'saved')
 const failures = []

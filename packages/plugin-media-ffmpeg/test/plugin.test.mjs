@@ -30,6 +30,7 @@ describe('mediaFfmpeg()', () => {
   })
 })
 
+// Needs a real `ffmpeg` on PATH: these run the binary, and its absence is covered by the option tests above.
 describe.skipIf(!ffmpeg)('the binary', () => {
   it('refuses one that is not the pinned file', async () => {
     const enc = createMediaEncode({ key: 'video/h264', binary: ffmpeg, sha256: '0'.repeat(64) })
