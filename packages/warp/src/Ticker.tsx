@@ -1,4 +1,4 @@
-import { derived, untrack } from 'weft'
+import { derived } from 'weft'
 import './styles'
 import '@weft/warp-core/styles/components/ticker.css'
 
@@ -15,8 +15,8 @@ export interface TickerProps {
  * The real value is in the DOM for readers; under reduced motion it swaps.
  */
 export function Ticker({ value, format, locale }: TickerProps) {
-  const fmt = untrack(() => new Intl.NumberFormat(locale, format))
-  const text = derived(() => fmt.format(value))
+  const fmt = derived(() => new Intl.NumberFormat(locale, format)) // apart from the text: a tick mustn't rebuild it
+  const text = derived(() => fmt.value.format(value))
   const parts = derived(() => {
     const s = [...text.value]
     return s.map((c, i) => ({ c, at: s.length - i }))
