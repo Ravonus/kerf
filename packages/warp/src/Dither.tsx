@@ -20,9 +20,9 @@ export interface DitherFieldProps extends FieldOptions {
 }
 
 /** A live dithered field (08 §6.7): moves at vivid and balanced, holds still at quiet and under reduced motion. Children sit over it. */
-export function DitherField({ kind, ramp, spark, pattern, cell, inks, speed, gain, seed, spread, pointer, mask, fade, reveal, fps, fill, ratio, label, children, style, ...rest }: DitherFieldProps) {
+export function DitherField({ kind, smooth, ramp, spark, pattern, cell, inks, speed, gain, seed, spread, pointer, mask, fade, reveal, fps, fill, ratio, label, children, style, ...rest }: DitherFieldProps) {
   let node: HTMLCanvasElement | undefined
-  use(ditherField, () => node, () => ({ kind, ramp, spark, pattern, cell, inks, speed, gain, seed, spread, pointer, mask, fade, reveal, fps }))
+  use(ditherField, () => node, () => ({ kind, smooth, ramp, spark, pattern, cell, inks, speed, gain, seed, spread, pointer, mask, fade, reveal, fps }))
   return (
     <div {...rest} data-scope="dither" data-fill={fill ? '' : undefined} role={label ? 'img' : undefined} aria-label={label} style={box(ratio ?? (fill ? undefined : '16 / 9'), style)}>
       <canvas ref={(n: any) => (node = n)} aria-hidden="true"></canvas>

@@ -13,6 +13,8 @@ import { tile, type Pattern } from './tiles'
 export interface FieldOptions {
   /** A named field, or your own function of (x, y, t). */
   kind?: FieldName | Field
+  /** Your own `kind` is smooth: evaluate it on a sparse lattice and interpolate, as the named fields do. */
+  smooth?: boolean
   ramp?: Ramp
   /** Inks a disturbed cell takes instead, so a push shows in a second colour. */
   spark?: Ramp
@@ -54,7 +56,7 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
   let cols = 0, rows = 0, cells = 0
   let tones = new Float32Array(0), shown = new Float32Array(0), heat = new Float32Array(0), out = new Uint32Array(0), image: ImageData | undefined
   let inks = new Uint32Array(0), sparks: Uint32Array | undefined, dials = tier(host), mask: Mask | undefined, push: Forces | undefined, ground: Float32Array | undefined
-  let pattern = tile(o.pattern ?? 'bayer8'), fresh = false, painted = false, fontsReady = !o.mask, hot = false
+  let pattern = tile(o.pattern ?? 'bayer8'), fresh = false, painted = false, fontsReady = !o.mask, hot = false, clock = 0, seen = 0
 
   const speedOf = () => (o.speed ?? 1) * dials.speed
   const moves = () => speedOf() > 0
@@ -136,9 +138,11 @@ export function ditherField(canvas: HTMLCanvasElement, options: FieldOptions = {
     if (!inks.length) retheme()
     if (!cells || !image) return
     const speed = speedOf(), moving = speed > 0 && !reducedMotion(host)
+    clock += (time - seen) * speed * 2 // a change of speed carries on from here, with no jump
+    seen = time
     if (moving || !fresh) {
-      const f = o.kind ?? 'weave'
-      sample(typeof f === 'function' ? f : FIELDS[f], cols, rows, (o.seed ?? 12) + time * speed * 2, tones, typeof f === 'function' ? 1 : stepFor(cells))
+      const f = o.kind ?? 'weave', own = typeof f === 'function'
+      sample(own ? f : FIELDS[f], cols, rows, (o.seed ?? 12) + clock, tones, own && !o.smooth ? 1 : stepFor(cells))
       fresh = true
     }
     const active = push?.step(dt) ?? false
