@@ -126,7 +126,7 @@ export function CsvImport({ targets, noun = ['person', 'people'], rowLimit = 500
               <tr key={c.h}>
                 <th scope="row"><code>{c.h}</code></th>
                 <td class="muted">{table.value.rows[0]?.[c.col]}</td>
-                <td><InlineSelect id={`${id}-m-${c.col}`} label={`${c.h} imports as`} value={c.target} options={options.value} onChange={e => { const next = [...map.value]; next[c.col] = e.currentTarget.value; map.value = next }} /></td>
+                <td><InlineSelect label={`${c.h} imports as`} value={c.target} options={options.value} onValueChange={v => { const next = [...map.value]; next[c.col] = v; map.value = next }} /></td>
               </tr>
             ))}
           </PlainTable>

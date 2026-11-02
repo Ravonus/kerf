@@ -5,7 +5,7 @@ import { Button } from './Button'
 import { Segmented } from './Choice'
 import { Search } from './Field'
 import { PaginationBar } from './Pagination'
-import { Select } from './Select'
+import { CompactSelect, Select } from './Select'
 import { chevron, ColumnsPanel, columnsIcon, Editor, sortIcon, type Column, type TableSort } from './Table'
 import { use } from '@weft/warp-core/weft'
 import '@weft/warp-core/styles/data/chips.css'
@@ -462,7 +462,7 @@ export function DataGrid<T>({ rows, columns, caption, captionHidden, rowKey = 'i
                 {cols.value.map(c => (
                   <th key={c.id} role="columnheader">
                     {c.filter === 'select'
-                      ? <label><span data-part="sr-only">{`Filter ${c.header}`}</span><select value={current.value.filters[c.id] ?? ''} onChange={(e: any) => setFilter(c.id, e.currentTarget.value)}><option value="">Any</option>{c.options?.map(o => <option key={o} value={o} selected={o === current.value.filters[c.id]}>{o}</option>)}</select></label>
+                      ? <CompactSelect label={`Filter ${c.header}`} placeholder="Any" value={current.value.filters[c.id] ?? ''} options={(c.options ?? []).map(o => ({ value: o, label: o }))} onValueChange={v => setFilter(c.id, v)} />
                       : c.filter
                         ? <label><span data-part="sr-only">{c.filter === 'min' ? `${c.header} at least` : `Filter ${c.header}`}</span><input value={current.value.filters[c.id] ?? ''} inputmode={c.filter === 'min' ? 'numeric' : undefined} placeholder={c.filter === 'min' ? '≥' : 'Contains…'} onInput={(e: any) => setFilter(c.id, e.currentTarget.value)} /></label>
                         : <span data-part="sr-only">{`No filter for ${c.header}`}</span>}

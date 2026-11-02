@@ -1,5 +1,6 @@
 // The APG menu button (02 §6, "The account menu"): one menu, any number of triggers.
 import { place, pushLayer, type Align, type Side } from './layers'
+import { typeahead } from './typeahead'
 
 export interface MenuOptions {
   open: boolean
@@ -15,7 +16,6 @@ export interface MenuOptions {
 
 
 const ITEMS = '[role^="menuitem"]:not([aria-disabled="true"])'
-const TYPEAHEAD_MS = 500
 
 /**
  * Items rove (tabindex is -1 in the markup, so the menu is never a tab stop): ↑/↓ wrap, Home/End and PageUp/PageDown
@@ -26,8 +26,7 @@ const TYPEAHEAD_MS = 500
 export function menu(el: HTMLElement, opts: MenuOptions) {
   let o = opts
   let remove: (() => void) | undefined
-  let typed = ''
-  let typedAt = 0
+  const typed = typeahead()
   const items = () => [...el.querySelectorAll<HTMLElement>(ITEMS)]
   const win = el.ownerDocument.defaultView!
   const reposition = (e?: Event) => {
@@ -46,7 +45,7 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
   const hide = () => {
     remove?.()
     remove = undefined
-    typed = ''
+    typed.clear()
     win.removeEventListener('resize', reposition)
     win.removeEventListener('scroll', reposition, true)
   }
@@ -61,13 +60,7 @@ export function menu(el: HTMLElement, opts: MenuOptions) {
     if (e.key === 'Tab') { o.trigger()?.focus(); return o.onClose() } // no preventDefault: Tab moves on from the trigger
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); return all[at]?.click() }
     if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
-    const now = performance.now()
-    const key = e.key.toLowerCase()
-    typed = now - typedAt < TYPEAHEAD_MS ? typed + key : key
-    typedAt = now
-    const prefix = [...typed].every(c => c === key) ? key : typed
-    const from = prefix.length === 1 ? at + 1 : Math.max(at, 0)
-    const hit = [...all.slice(from), ...all.slice(0, from)].find(i => i.textContent!.trim().toLowerCase().startsWith(prefix))
+    const hit = typed.next(e.key, all, at, i => i.textContent!)
     if (hit) { e.preventDefault(); hit.focus() }
   }
   el.addEventListener('keydown', onKey)

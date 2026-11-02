@@ -244,7 +244,7 @@
 :where([data-scope="table"] tr[data-part="group"] button:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; border-radius: 3px; }
 :where([data-scope="table"] tr[data-part="aggregate"] > *) { border-block-start: 1px solid var(--warp-color-border-strong); font-weight: 600; background: var(--warp-color-surface-raised); }
 :where([data-scope="table"] tr[data-part="filters"] th) { padding-block: 4px; background: var(--warp-color-surface); }
-:where([data-scope="table"] tr[data-part="filters"] input, [data-scope="table"] tr[data-part="filters"] select) {
+:where([data-scope="table"] tr[data-part="filters"] input) {
   inline-size: 100%; min-inline-size: 72px; block-size: 28px; padding-inline: 8px; border: 1px solid var(--warp-color-border-control); border-radius: calc(var(--warp-radius-control) - 2px);
   background: var(--warp-color-surface-raised); color: var(--warp-color-text); font: 400 max(12px, var(--warp-input-font-min))/var(--warp-text-control-leading) var(--warp-text-body-font);
 }

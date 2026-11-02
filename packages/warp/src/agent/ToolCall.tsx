@@ -2,6 +2,7 @@ import { AlertIcon, CheckIcon, RightIcon, XIcon } from '@weft/icons'
 import { announce, argsDiff, installSweep, toolStatus, uid, type AgentTool } from '@weft/warp-core'
 import { derived, onMount, state, untrack, watch } from 'weft'
 import { Button } from '../Button'
+import { Checkbox } from '../Choice'
 import { Sweep } from './bits'
 import '../styles'
 import '@weft/warp-core/styles/components/spinner.css'
@@ -78,7 +79,7 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
             <div>
               <Button size="sm" ref={(n: any) => (ok = n)} onClick={() => leave(() => onApprove?.(args.value, always.value))}><CheckIcon />Approve</Button>
               <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>Deny</Button>
-              {alwaysAllow !== undefined && <label><input type="checkbox" checked={always.value} onChange={e => (always.value = (e.currentTarget as HTMLInputElement).checked)} /> {alwaysAllow}</label>}
+              {alwaysAllow !== undefined && <Checkbox checked={always.value} onChange={(e: any) => (always.value = e.currentTarget.checked)}>{alwaysAllow}</Checkbox>}
             </div>
           </div>
         )}

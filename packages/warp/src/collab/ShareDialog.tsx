@@ -1,9 +1,10 @@
 import { CopyIcon, LinkIcon } from '@weft/icons'
-import { announce, arrivalTracker, installSweep, uid, type Peer } from '@weft/warp-core'
+import { announce, arrivalTracker, installSweep, type Peer } from '@weft/warp-core'
 import { derived, state, untrack, type State } from 'weft'
 import { Button } from '../Button'
 import { ComboField } from '../Combobox'
 import { Modal } from '../Modal'
+import { CompactSelect } from '../Select'
 import { Tag } from '../Tag'
 import { PeerAvatar, read, type Live } from './peer'
 import '../styles'
@@ -35,14 +36,13 @@ export interface ShareDialogProps {
   onLinkAccess: (link: ShareLink) => void
 }
 
-const roleOptions = () => ROLES.map(([v, l]) => ({ v, l }))
+const roles = () => ROLES.map(([value, label]) => ({ value, label }))
 
 /**
  * The share dialog (07 §6.2): the invite combobox with chips, a role per person, link access, Copy link with one
  * confirm sweep, and invited rows arriving.
  */
 export function ShareDialog({ open, title, members, people, link, url, onInvite, onRoleChange, onLinkAccess }: ShareDialogProps) {
-  const id = uid('share')
   const list = derived(() => read(members))
   const access = derived(() => read(link))
   const mark = arrivalTracker()
@@ -73,10 +73,7 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
           <div style="flex:1;min-inline-size:0">
             <ComboField label="Add people or email" minChars={1} text={() => typed.value} onText={t => (typed.value = t)} find={find} row={(p: ShareContact) => ({ main: p.name, sub: p.email })} onPick={(p: ShareContact) => add(p.email)} />
           </div>
-          <label data-part="sr-only" for={`${id}-r`}>Role for new people</label>
-          <select id={`${id}-r`} value={role.value} onChange={(e: any) => (role.value = e.currentTarget.value)}>
-            {roleOptions().map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-          </select>
+          <CompactSelect label="Role for new people" value={role.value} options={roles()} onValueChange={v => (role.value = v as any)} />
           <Button onClick={invite}>Invite</Button>
         </form>
         {chips.value.length > 0 && <div style="display:flex;flex-wrap:wrap;gap:6px;margin-block-start:8px">{chips.value.map(c => <Tag key={c} onRemove={() => (chips.value = chips.value.filter(x => x !== c))}>{c}</Tag>)}</div>}
@@ -88,28 +85,15 @@ export function ShareDialog({ open, title, members, people, link, url, onInvite,
               {m.role === 'owner'
                 ? <span>Owner</span>
                 : <>
-                    <label data-part="sr-only" for={`${id}-${m.id}`}>Role for {m.name}</label>
-                    <select id={`${id}-${m.id}`} value={m.role} onChange={(e: any) => { const v = e.currentTarget.value; onRoleChange(m, v === 'remove' ? null : v) }}>
-                      {roleOptions().map(o => <option key={o.v} value={o.v} selected={o.v === m.role}>{o.l}</option>)}
-                      <option value="remove">Remove</option>
-                    </select>
+                    <CompactSelect label={`Role for ${m.name}`} value={m.role} options={[...roles(), { value: 'remove', label: 'Remove' }]} onValueChange={v => onRoleChange(m, v === 'remove' ? null : v as any)} />
                   </>}
             </div>
           ))}
         </div>
         <div data-part="link">
           <LinkIcon />
-          <label data-part="sr-only" for={`${id}-a`}>Link access</label>
-          <select id={`${id}-a`} value={access.value.access} onChange={(e: any) => onLinkAccess({ ...access.value, access: e.currentTarget.value })}>
-            <option value="restricted" selected={access.value.access === 'restricted'}>Restricted</option>
-            <option value="anyone" selected={access.value.access === 'anyone'}>Anyone with link</option>
-          </select>
-          {access.value.access === 'anyone' && <>
-            <label data-part="sr-only" for={`${id}-l`}>Link role</label>
-            <select id={`${id}-l`} value={access.value.role} onChange={(e: any) => onLinkAccess({ ...access.value, role: e.currentTarget.value })}>
-              {roleOptions().map(o => <option key={o.v} value={o.v} selected={o.v === access.value.role}>{o.l}</option>)}
-            </select>
-          </>}
+          <CompactSelect label="Link access" value={access.value.access} options={[{ value: 'restricted', label: 'Restricted' }, { value: 'anyone', label: 'Anyone with link' }]} onValueChange={v => onLinkAccess({ ...access.value, access: v as any })} />
+          {access.value.access === 'anyone' && <CompactSelect label="Link role" value={access.value.role} options={roles()} onValueChange={v => onLinkAccess({ ...access.value, role: v as any })} />}
           <span data-part="spacer" style="flex:1"></span>
           <span ref={(n: any) => (copy = n)} style="display:contents">
             <Button emphasis="outline" tone="neutral" size="sm" onClick={(e: MouseEvent) => {

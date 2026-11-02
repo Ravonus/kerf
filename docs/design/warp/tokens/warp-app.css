@@ -968,9 +968,8 @@
 :where([data-scope="question"]) { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised); box-shadow: inset 0 0 0 1px var(--warp-color-info-border); }
 :where([data-scope="question"] legend) { font-weight: 500; padding: 0; margin-block-end: 8px; }
 :where([data-scope="question"] fieldset) { border: 0; margin: 0; padding: 0; display: grid; gap: 4px; }
-:where([data-scope="question"] label) { display: flex; align-items: center; gap: 10px; min-block-size: max(32px, var(--warp-target-min)); padding-inline: 8px; border-radius: var(--warp-radius-control); cursor: pointer; font-size: 13.5px; }
+:where([data-scope="question"] label) { min-block-size: max(32px, var(--warp-target-min)); padding-inline: 8px; border-radius: var(--warp-radius-control); cursor: pointer; font-size: 13.5px; }
 :where([data-scope="question"] label:has(:checked)) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
-:where([data-scope="question"] input) { accent-color: var(--warp-color-accent-solid); margin: 0; }
 /* checkpoint: a hairline across the conversation with a restore action */
 :where([data-scope="checkpoint"]) { display: flex; align-items: center; gap: 10px; margin-block: 6px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
 :where([data-scope="checkpoint"])::before, :where([data-scope="checkpoint"])::after { content: ""; flex: 1; border-block-start: 1px dashed var(--warp-color-border-strong); }
@@ -1027,10 +1026,6 @@
 /* share dialog rows */
 :where([data-scope="share"] [data-part="person"]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding-block: 6px; }
 :where([data-scope="share"] [data-part="person"] small) { display: block; color: var(--warp-color-text-subtle); font-size: 12px; }
-:where([data-scope="share"] select) {
-  block-size: 32px; padding-inline: 8px 24px; border: 0; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); color: inherit; font: inherit; font-size: 13px;
-  box-shadow: inset 0 0 0 1px var(--warp-color-border-control);
-}
 :where([data-scope="share"] [data-part="link"]) { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: 13px; }
 /* following: the followed peer's colour frames the whole viewport */
 :where([data-following]) { box-shadow: inset 0 0 0 calc(var(--warp-border-emphasis) + 1px) var(--_pc); }

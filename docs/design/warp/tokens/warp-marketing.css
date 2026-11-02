@@ -1042,7 +1042,7 @@
 :where([data-scope="market"] [data-part="rail"] legend) { padding: 0; margin-block-end: var(--warp-space-related); font: 500 var(--warp-text-eyebrow-size)/1.2 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
 :where([data-scope="market"] [data-part="chips"]) { display: flex; flex-wrap: wrap; gap: 6px; }
 /* a select in a landing Field (market sort, review sort, contact topic): chevron indicator, no native arrow */
-:where([data-scope="landing"] [data-scope="field"] select[data-part="input"]) { appearance: none; cursor: pointer; padding-inline-end: 34px; }
+:where([data-scope="landing"] [data-scope="field"] button[data-part="input"]) { padding-inline-end: 34px; }
 :where([data-scope="landing"] [data-scope="field"] [data-part="control"] > [data-part="indicator"]) {
   position: absolute; z-index: 3; inset-inline-end: 12px; inset-block-start: 50%; translate: 0 -50%; display: grid; pointer-events: none; color: var(--warp-color-text-subtle);
 }

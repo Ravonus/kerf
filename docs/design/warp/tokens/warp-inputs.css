@@ -88,7 +88,7 @@
   padding-inline: 0; flex: 1; min-inline-size: 0; inline-size: auto; block-size: auto; align-self: stretch;
   caret-color: var(--warp-color-sweep); font-variant-numeric: var(--_num, normal); text-align: var(--_align, start);
 }
-:where([data-scope="field"] input[data-part="input"], [data-scope="field"] select[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
+:where([data-scope="field"] input[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
 :where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
 :where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
 
@@ -103,7 +103,7 @@
 :where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:has(> textarea), [data-wrap]):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--warp-field-height) / 2); }
 
 /* every slot paints above the borders */
-:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-scope="popup"])) { position: relative; z-index: 3; }
+:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-part="carrier"], [data-scope="popup"], [data-scope="select"])) { position: relative; z-index: 3; }
 
 /* prefix / suffix: fixed text, not submitted. Floating: shown once the label has lifted. Classic: always. */
 :where([data-scope="field"] :is([data-part="prefix"], [data-part="suffix"])) {
@@ -507,45 +507,71 @@
 :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="indicator"]) { color: var(--warp-color-sweep); }
 :where([data-scope="field"] > [data-part="control"]:has([aria-expanded="true"]) [data-part="indicator"]:not([data-part="item"] > *)) { rotate: 180deg; }
 :where([data-scope="field"] > [data-part="control"][data-wrap] > [data-part="indicator"]) { align-self: center; margin-inline-start: auto; }
-/* native select (phones): the real element fills the control, the chevron is painted */
-:where([data-scope="field"] select[data-part="input"]) {
-  cursor: pointer; padding-inline-end: 24px; margin-inline-end: -24px; appearance: none;
-  /* an appearance:none select top-aligns its text in a tall box: centre it with padding instead of height */
-  align-self: stretch; min-block-size: 0; line-height: 1.5; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
+/* Select (redesign §5): a button trigger, and a real <select> behind it as the form's value. The trigger fills the control
+   under the chevron, so the whole box is one press. */
+:where([data-scope="field"] > [data-part="control"]:has(> button[data-part="input"])) { cursor: pointer; }
+:where([data-scope="field"] button[data-part="input"]) {
+  appearance: none; display: flex; align-items: center; border: 0; background: none; color: inherit; font: inherit; font-size: var(--warp-text-control-size); text-align: start;
+  cursor: inherit; outline: none; padding-inline-end: 24px; margin-inline-end: -24px; min-block-size: calc(var(--warp-field-height) - 2px); box-shadow: none;
 }
-:where([data-scope="field"] select[data-part="input"] option) { color: initial; }
-/* warp's list on a real select, with no script (redesign §5): the browser owns open, keyboard, typeahead, top layer and
-   flipping. Where base-select isn't supported, and on touch, the OS control stays. */
-@supports (appearance: base-select) { @media (pointer: fine) {
-  :where([data-scope="field"] select[data-part="input"]), :where([data-scope="field"] select[data-part="input"])::picker(select) { appearance: base-select; }
-  :where([data-scope="field"] select[data-part="input"])::picker-icon { display: none; }
-  :where([data-scope="field"] > [data-part="control"]:has(> select)) { anchor-name: --warp-select; anchor-scope: --warp-select; }
-  :where([data-scope="field"] select[data-part="input"])::picker(select) {
-    box-sizing: border-box; position-anchor: --warp-select; inset: auto; position-area: block-end span-inline-end; position-try-fallbacks: flip-block;
-    min-inline-size: anchor-size(inline); max-block-size: min(320px, calc(100dvh - 16px)); margin-block: 6px; padding: var(--warp-space-tight);
-    color: var(--warp-color-text); background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border);
-    border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-2); font-family: var(--warp-text-body-font); font-size: var(--warp-text-body-size);
-    opacity: 0; scale: var(--warp-motion-scale-from);
-    transition: opacity calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in), scale calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) var(--warp-ease-in),
-                overlay calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete, display calc(var(--warp-duration-base) * var(--warp-duration-exit-k)) allow-discrete;
+:where([data-scope="field"] button[data-part="input"]:disabled) { cursor: not-allowed; }
+:where([data-scope="field"] button[data-part="input"] ~ [data-part="indicator"]) { pointer-events: none; }
+:where([data-scope="field"] button[data-part="input"] > [data-part="value"]:empty)::before { color: var(--warp-color-text-subtle); }
+:where([data-part="carrier"]) { position: absolute; inset-block-end: 0; inset-inline-start: var(--_lead, 0); inline-size: 1px; block-size: 1px; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+/* a table row, a pager, a toolbar: as wide as its value */
+:where([data-scope="field"][data-compact]) { display: inline-grid; min-inline-size: 0; vertical-align: middle; }
+:where([data-scope="field"][data-compact] > [data-part="control"]) { padding-inline: var(--warp-space-related); }
+/* with scripting off the real select is the control */
+@media (scripting: none) {
+  :where([data-scope="field"] button[data-part="input"]) { display: none; }
+  :where([data-part="carrier"]) {
+    position: relative; inset: auto; flex: 1; min-inline-size: 0; inline-size: auto; opacity: 1; pointer-events: auto; appearance: none; background: none; color: inherit; font: inherit; cursor: pointer;
+    align-self: stretch; block-size: auto; min-block-size: 0; line-height: 1.5; padding-inline-end: 24px; margin-inline-end: -24px; padding-block: calc((var(--warp-field-height) - 2px - 1.5em) / 2);
   }
-  :where([data-scope="field"] select[data-part="input"]:open)::picker(select) {
-    opacity: 1; scale: 1;
-    transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-spring-duration) var(--warp-ease-spring),
-                overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete;
-  }
-  @starting-style { :where([data-scope="field"] select[data-part="input"]:open)::picker(select) { opacity: 0; scale: var(--warp-motion-scale-from); } }
-  :where([data-scope="field"] select[data-part="input"] option) {
-    display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: max(32px, var(--warp-target-min)); padding-inline: var(--warp-space-related);
-    border: 0; border-radius: max(2px, calc(var(--warp-radius-surface) - 4px)); color: var(--warp-color-text); background: none; cursor: default; font-size: var(--warp-text-body-size); font-weight: 400; letter-spacing: 0; text-transform: none;
-  }
-  :where([data-scope="field"] select[data-part="input"] option:is(:hover, :focus)) { outline: 0; background: var(--warp-color-accent-soft); }
-  :where([data-scope="field"] select[data-part="input"] option:checked) { font-weight: 500; }
-  :where([data-scope="field"] select[data-part="input"] option:disabled) { opacity: var(--warp-opacity-disabled); }
-  :where([data-scope="field"] select[data-part="input"] option)::checkmark { order: 1; margin-inline-start: auto; color: var(--warp-color-accent-text); }
-  :where([data-scope="field"] select[data-part="input"] optgroup) { padding-block-start: var(--warp-space-related); color: var(--warp-color-text-subtle); font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500; letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); }
-  :where([data-scope="field"] > [data-part="control"]:has(select:open) [data-part="indicator"]) { rotate: 180deg; }
-} }
+}
+/* its panel, a <dialog>: a popover by the control, or the sheet on a phone. The list scrolls and carries the shuttle, so the
+   search stays put above it. */
+:where([data-scope="select"][data-part="content"]) { font-size: var(--warp-text-body-size); max-block-size: min(var(--_avail, 320px), calc(100dvh - 16px)); overflow: hidden; }
+:where([data-scope="select"][data-part="content"]:is(:popover-open, :modal)) { display: flex; flex-direction: column; }
+:where([data-scope="select"][data-part="content"])::backdrop { background: transparent; }
+:where([data-scope="select"] [data-part="handle"], [data-scope="select"] [data-part="sheet-head"]) { display: none; }
+:where([data-scope="select"] [data-part="list"]) { position: relative; isolation: isolate; flex: 1; min-block-size: 0; overflow: auto; overscroll-behavior: contain; outline: none; }
+:where([data-scope="select"] [data-part="list"] > [data-part="shuttle"]) { background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 130%), transparent); }
+:where([data-scope="select"] [data-part="list"]:has(> [data-part="shuttle"]) [data-part="item"][data-highlighted]:not([data-keyboard])) { background: none; }
+:where([data-scope="select"] [data-part="item"]) { outline: none; }
+:where([data-scope="select"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
+:where([data-scope="select"] [data-part="item"][hidden], [data-scope="select"] [role="group"][hidden]) { display: none; }
+:where([data-scope="select"] [data-part="item-hint"]) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); font-weight: 400; }
+:where([data-scope="select"] [data-part="empty"]) { margin: 0; padding: var(--warp-space-related); color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="select"] label[data-part="search"]) {
+  flex: none; display: flex; align-items: center; gap: var(--warp-space-related); block-size: var(--warp-control-md); padding-inline: var(--warp-space-related); margin-block-end: var(--warp-space-tight);
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border-control);
+}
+:where([data-scope="select"] label[data-part="search"]:focus-within) { box-shadow: inset 0 0 0 2px var(--warp-color-focus); }
+:where([data-scope="select"] label[data-part="search"] svg) { flex: none; inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); color: var(--warp-color-text-subtle); }
+/* 16px at least: iOS zooms the page on focus below that */
+:where([data-scope="select"] label[data-part="search"] input) {
+  appearance: none; flex: 1; min-inline-size: 0; border: 0; padding: 0; outline: none; background: none; color: inherit; font: inherit; font-size: max(16px, var(--warp-text-control-size));
+}
+:where([data-scope="select"] label[data-part="search"] input)::-webkit-search-cancel-button { display: none; }
+:where([data-scope="select"][data-presentation="sheet"]) {
+  inset: auto 0 0 0; inline-size: 100%; min-inline-size: 0; max-inline-size: none; max-block-size: 86dvh; padding: var(--warp-space-related) var(--warp-space-group) calc(var(--warp-space-group) + env(safe-area-inset-bottom));
+  border-radius: var(--warp-radius-surface) var(--warp-radius-surface) 0 0; border-block-end: 0; box-shadow: var(--warp-elevation-3); transform-origin: bottom center; translate: 0 100%; scale: 1;
+}
+:where([data-scope="select"][data-presentation="sheet"]:modal) { opacity: 1; translate: 0 0; transition: translate var(--warp-duration-slow) var(--warp-ease-out), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; }
+@starting-style { :where([data-scope="select"][data-presentation="sheet"]:modal) { translate: 0 100%; } }
+:where([data-scope="select"][data-presentation="sheet"])::backdrop { background: var(--warp-color-scrim); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="handle"]) { flex: none; display: block; inline-size: 36px; block-size: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--warp-color-border-strong); }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="sheet-head"]) { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related); margin-block-end: var(--warp-space-related); font-size: var(--warp-text-heading-size); font-weight: 600; }
+:where([data-scope="select"] [data-part="done"]) {
+  appearance: none; min-block-size: max(var(--warp-control-sm), var(--warp-target-min)); padding-inline: var(--warp-pad-control); border: 0; border-radius: var(--warp-radius-control);
+  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font: inherit; font-size: var(--warp-text-control-size); font-weight: 500; cursor: pointer;
+}
+:where([data-scope="select"] [data-part="done"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="select"][data-presentation="sheet"] [data-part="item"]) { min-block-size: max(44px, var(--warp-target-min)); }
+@media (forced-colors: active) {
+  :where([data-scope="select"] [data-part="item"][data-highlighted]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
 
 /* ===========================================================================
    4 · POPUP + LISTBOX (select, combobox, search suggestions, inline listbox)

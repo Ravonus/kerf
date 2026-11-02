@@ -2,6 +2,7 @@ import { infiniteScroll, pageList, uid } from '@weft/warp-core'
 import { derived, flush, untrack, type State } from 'weft'
 import { Button } from './Button'
 import { bindable } from './bind'
+import { CompactSelect } from './Select'
 import { use } from '@weft/warp-core/weft'
 import './styles'
 import '@weft/warp-core/styles/data/tokens.css'
@@ -72,10 +73,10 @@ export function PaginationBar({ label = 'Pagination', mode = 'offset', page, def
   const first = derived(() => (total ? (current.value - 1) * per.value + 1 : 0))
   return (
     <nav ref={(n: any) => (nav = n)} data-scope="pagination" aria-label={label}>
-      <label data-part="field">
-        <span>Rows per page</span>
-        <select value={String(per.value)} onChange={(e: any) => { per.set(+e.currentTarget.value); at.set(1) }}>{sizes.map(s => <option key={s} value={String(s)} selected={s === per.value}>{s}</option>)}</select>
-      </label>
+      <span data-part="field">
+        <span aria-hidden="true">Rows per page</span>
+        <CompactSelect label="Rows per page" value={String(per.value)} options={sizes.map(s => ({ value: String(s), label: String(s) }))} onValueChange={v => { per.set(+v); at.set(1) }} />
+      </span>
       <span>{`${fmt(first.value)}–${fmt(Math.min(total, current.value * per.value))} of ${fmt(total)}`}</span>
       <span data-part="spacer"></span>
       <ol>

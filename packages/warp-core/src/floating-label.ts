@@ -196,8 +196,10 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
   const reset = formReset(el, () => { if (input && held != null) input.value = String(held); onInput() })
   const onClick = (e: MouseEvent) => {
     if (!(e.target as Element).closest('[data-part="clear"]') || !input) return
-    input.value = ''
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+    // a Select's value is its hidden select: the trigger only shows it
+    const holder = box!.querySelector<HTMLSelectElement>('[data-part="carrier"]') ?? input
+    holder.value = ''
+    holder.dispatchEvent(new Event('input', { bubbles: true }))
     input.focus()
   }
   const onDown = (e: PointerEvent) => {

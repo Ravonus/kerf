@@ -29,7 +29,7 @@ const optionsOf = (from?: number, to?: number, step?: number) => timeOptions(fro
 
 /**
  * AvailabilityEditor (07 §6.4): a Switch and From/To ranges per weekday, "Copy Monday to weekdays", date overrides. Ranges
- * validate on change; Save stays blocked with focus on the first invalid select. Saves nothing until Save.
+ * validate on change; Save stays blocked with focus on the first invalid time. Saves nothing until Save.
  */
 export function AvailabilityEditor(p: AvailabilityEditorProps) {
   const id = uid('avail')
@@ -58,7 +58,7 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
     if (err) say(`${dayName(day)}: ${err}`, true)
   }
   const focus = (sel: string) => { flush(); root?.querySelector<HTMLElement>(sel)?.focus() }
-  const addRange = (day: number) => { patch(day, d => ({ ...d, ranges: [...d.ranges, nextRange(d.ranges, p.to)] })); say(`Range added on ${dayName(day)}`); focus(`[data-day-of="${day}"] [data-part="range"]:last-child select`) }
+  const addRange = (day: number) => { patch(day, d => ({ ...d, ranges: [...d.ranges, nextRange(d.ranges, p.to)] })); say(`Range added on ${dayName(day)}`); focus(`[data-day-of="${day}"] [data-part="range"]:last-child button[data-part="input"]`) }
   const removeRange = (day: number, at: number) => { patch(day, d => ({ ...d, ranges: d.ranges.filter((_, i) => i !== at) })); say(`Range removed from ${dayName(day)}`); focus(`[data-add="${day}"]`) }
   const copyMonday = () => {
     const mon = week.value.find(d => d.day === 1)
@@ -82,7 +82,7 @@ export function AvailabilityEditor(p: AvailabilityEditorProps) {
   const save = async () => {
     if (!weekValid(week.value)) {
       say('Fix the highlighted ranges before saving.', true)
-      root?.querySelector<HTMLElement>('[data-part="range"][data-invalid] select')?.focus()
+      root?.querySelector<HTMLElement>('[data-part="range"][data-invalid] button[data-part="input"]')?.focus()
       return
     }
     busy.value = true

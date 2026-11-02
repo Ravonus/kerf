@@ -64,7 +64,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
   const demoting = state(false)
   const leaving = state<Member[]>([])
   const selected = state<Record<string, boolean>>({})
-  let demote: { m: Member; role: string; el: HTMLSelectElement } | undefined
+  let demote: { m: Member; role: string } | undefined
   const people = derived(() => read(members) as readonly Member[])
   const pending = derived(() => (read(invites ?? []) as readonly Invite[]))
   const used = derived(() => people.value.length + pending.value.length)
@@ -75,15 +75,12 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
     onRoleChange(m, role)
     toast.show({ title: `${m.name} is now ${label(role)}`, action: { label: 'Undo', onClick: () => onRoleChange({ ...m, role }, prev) } })
   }
-  const change = (m: Member, e: Event & { currentTarget: HTMLSelectElement }) => {
-    const el = e.currentTarget
-    const role = el.value
+  const change = (m: Member, role: string) => {
     if (locked(m)) {
-      el.value = m.role
       return void toast.show({ title: m.id === me ? 'You’re the only owner' : `${m.name} is the only owner`, description: 'Make someone else owner first, then change this role.', tone: 'critical' })
     }
     if (m.id === me && roles.find(r => r.value === m.role)?.manages && !roles.find(r => r.value === role)?.manages) {
-      demote = { m, role, el }
+      demote = { m, role }
       demoting.value = true
       return
     }
@@ -103,7 +100,7 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
       id: 'name', header: 'Name', rowHeader: true, card: 'title', sort: true,
       cell: m => <span data-scope="row" data-wrap="none"><Avatar name={m.name} size="sm" /><span><b>{m.name}</b>{m.id === me && <>{' '}<Badge>You</Badge></>}<br /><span class="muted">{m.email}</span></span></span>,
     },
-    { id: 'role', header: 'Role', cell: m => { const held = derived(() => locked(m)); return <RoleCell member={m} label={`Role for ${m.name}`} roles={roles} locked={held.value} onChange={e => change(m, e)} /> } },
+    { id: 'role', header: 'Role', cell: m => { const held = derived(() => locked(m)); return <RoleCell member={m} label={`Role for ${m.name}`} roles={roles} locked={held.value} onChange={r => change(m, r)} /> } },
     { id: 'lastActive', header: 'Last active', card: 'hide' },
     {
       id: 'menu', header: 'Actions', value: () => '',
@@ -140,16 +137,16 @@ export function MembersTable({ members, invites, me, roles, owner = 'owner', sea
       {pending.value.length > 0 && <Table caption="Pending invites" rows={pending as any} columns={inviteColumns} picker={false} heading={3} />}
       <InviteDialog open={inviting} roles={roles.filter(r => r.value !== owner)} seatsLeft={seats - used.value} onSend={onInvite} defaultRole="member" />
       <ConfirmDialog open={confirming} glyph={UsersIcon} tone="critical" title={count.value > 1 ? `Remove ${count.value} members?` : `Remove ${leaving.value[0]?.name}?`} description={`${leaving.value.map(m => m.name).join(', ')} ${count.value > 1 ? 'lose' : 'loses'} access right away. Their work stays.`} action={count.value > 1 ? `Remove ${count.value} members` : 'Remove member'} onConfirm={remove} />
-      <ConfirmDialog open={demoting} tone="critical" title="Change your own role?" description="You’ll lose access to this page, and someone else will have to give it back." action="Change my role" onConfirm={() => { const d = demote!; assign(d.m, d.role) }} onCancel={() => { if (demote) demote.el.value = demote.m.role }} />
+      <ConfirmDialog open={demoting} tone="critical" title="Change your own role?" description="You’ll lose access to this page, and someone else will have to give it back." action="Change my role" onConfirm={() => { const d = demote!; assign(d.m, d.role) }} />
     </div>
   )
 }
 
-function RoleCell({ member, label, roles, locked, onChange }: { member: Member; label: string; roles: Role[]; locked: boolean; onChange: (e: Event & { currentTarget: HTMLSelectElement }) => void }) {
+function RoleCell({ member, label, roles, locked, onChange }: { member: Member; label: string; roles: Role[]; locked: boolean; onChange: (role: string) => void }) {
   const id = uid('role')
   return (
     <>
-      <InlineSelect id={id} label={label} value={member.role} options={roles} describedby={locked ? `${id}-why` : undefined} onChange={onChange} />
+      <InlineSelect label={label} value={member.role} options={roles} describedby={locked ? `${id}-why` : undefined} onValueChange={onChange} />
       {locked && <span data-part="sr-only" id={`${id}-why`}>This is the only owner. Make someone else owner first.</span>}
     </>
   )

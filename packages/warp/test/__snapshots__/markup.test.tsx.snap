@@ -1216,7 +1216,7 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<label data-part="label" for="field-5">
+<label data-part="label" id="field-5-l">
 <span data-part="label-text">Sort</span>
 <span aria-hidden="true" data-part="label-chars">
 <span data-c="S" data-char="">
@@ -1229,7 +1229,11 @@ exports[`Fields: client DOM after mount 1`] = `
 </span>
 </span>
 </label>
-<select data-part="input" id="field-5">
+<button aria-expanded="false" aria-haspopup="listbox" aria-labelledby="field-5-l" data-part="input" id="field-5" role="combobox" type="button">
+<span data-part="value" data-placeholder="Pick">
+</span>
+</button>
+<select aria-hidden="true" data-part="carrier" tabindex="-1">
 <option value="">Pick</option>
 <option value="a">A</option>
 <optgroup label="More">
@@ -1526,7 +1530,7 @@ exports[`Fields: server HTML 1`] = `
 </span>
 <span aria-hidden="true" data-part="sweep">
 </span>
-<label data-part="label" for="field-5">
+<label data-part="label" id="field-5-l">
 <span data-part="label-text">Sort</span>
 <span aria-hidden="true" data-part="label-chars">
 <span data-c="S" data-char="">
@@ -1539,8 +1543,12 @@ exports[`Fields: server HTML 1`] = `
 </span>
 </span>
 </label>
-<select data-part="input" id="field-5">
-<option value="">Pick</option>
+<button aria-expanded="false" aria-haspopup="listbox" aria-labelledby="field-5-l" data-part="input" id="field-5" role="combobox" type="button">
+<span data-part="value" data-placeholder="Pick">
+</span>
+</button>
+<select aria-hidden="true" data-part="carrier" tabindex="-1">
+<option selected="" value="">Pick</option>
 <option value="a">A</option>
 <optgroup label="More">
 <option disabled="" value="b">B</option>

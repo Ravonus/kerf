@@ -8,7 +8,12 @@
   :where([data-scope="markdown"] h3) { font-size: calc(var(--warp-text-heading-size) + 2px); }
   :where([data-scope="markdown"] :is(ul, ol)) { padding-inline-start: 1.3em; display: grid; gap: 3px; }
   :where([data-scope="markdown"] li.task) { list-style: none; margin-inline-start: -1.3em; }
-  :where([data-scope="markdown"] li.task input) { accent-color: var(--warp-color-accent-solid); margin: 0 6px 0 0; vertical-align: -2px; }
+  :where([data-scope="markdown"] li.task input) {
+    appearance: none; display: inline-grid; place-content: center; inline-size: 14px; block-size: 14px; margin: 0 6px 0 0; vertical-align: -2px;
+    border: 1.5px solid var(--warp-color-border-strong); border-radius: var(--warp-radius-mark); background: transparent; color: var(--warp-color-accent-on-solid);
+  }
+  :where([data-scope="markdown"] li.task input:checked) { border-color: var(--warp-color-accent-solid); background: var(--warp-color-accent-solid); }
+  :where([data-scope="markdown"] li.task input:checked)::after { content: ""; inline-size: 8px; block-size: 4px; margin-block-start: -2px; border-inline-start: 2px solid currentColor; border-block-end: 2px solid currentColor; rotate: -45deg; }
   :where([data-scope="markdown"] blockquote) { padding-inline-start: 12px; border-inline-start: 2px solid var(--warp-color-accent-solid); color: var(--warp-color-text-subtle); }
   :where([data-scope="markdown"] hr) { border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
   :where([data-scope="markdown"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
