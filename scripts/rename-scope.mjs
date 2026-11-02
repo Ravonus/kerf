@@ -100,6 +100,8 @@ const rules = [
   [/\bname === 'weft' \? 'weft'/g, `name === '${CORE}' ? 'weft'`],
   [/\/\^weft\$\//g, `/^${CORE.replace('/', '\\/')}$/`],
   [/\^weft\$/g, `^${CORE.replace('/', '\\/')}$`],
+  [/\^\(weft\|@weft-js\\\/start\)/g, String.raw`^@weft-js\/(?:core|start)`],
+  [/\^weft\\\/\(/g, String.raw`^@weft-js\/core\/(`],
   [/(?<!\.replace\()(['"]@weft-js\/[\w-]+['"],\s*)'weft'/g, `$1'${CORE}'`], // an array of packages
   [/(?<=[[(\s])'weft'(?=,\s*['"]@weft-js\/)/g, `'${CORE}'`],
   [/((?:dependencies|devDependencies|peerDependencies)\s*:\s*\{[^}\n]*?)(?<![\w'"-])weft:(?= )/g, `$1'${CORE}':`],
@@ -132,7 +134,6 @@ const patches = [
   ['*', R`@weft-js\/(icons|warp)`, R`@weft-js\/(warp-icons|warp)`, 'any'],
   ['packages/weft/vite.mjs', R`[\\/]node_modules[\\/]weft[\\/]/`, R`[\\/]node_modules[\\/]@weft-js[\\/]core[\\/]/`],
   ['packages/weft/vite.mjs', R`filter: { id: /[\\/]weft[\\/]src[\\/]flags\.ts$/ }`, R`filter: { id: /[\\/](?:weft|@weft-js[\\/]core)[\\/]src[\\/]flags\.ts$/ }`],
-  ['packages/weft/node/hydration.mjs', "const OPAQUE = /^(weft|@weft-js\/start)(\/|$)/", "const OPAQUE = /^@weft-js\/(?:core|start)(\/|$)/"],
   ['packages/weft/node/hydration.mjs', "const PURE = { weft: new Set", `const PURE = { '${CORE}': new Set`],
   ['packages/weft/node/hydration.mjs', "  weft: new Set(['state'", `  '${CORE}': new Set(['state'`],
   ['packages/weft/test/hmr.test.ts', "  weft: { ...core,", `  '${CORE}': { ...core,`],

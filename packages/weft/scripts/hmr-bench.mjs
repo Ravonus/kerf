@@ -46,7 +46,7 @@ const server = await createServer({
   configFile: false,
   logLevel: 'error',
   plugins: [weft()],
-  resolve: { alias: [{ find: /^weft\/(dom|hmr|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
+  resolve: { alias: [{ find: /^@weft-js\/core\/(dom|hmr|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
   server: { port: 0, fs: { allow: [root, pkg] } },
 })
 await server.listen()

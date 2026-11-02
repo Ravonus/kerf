@@ -562,7 +562,7 @@ async function assetsOnly(ctx, code, path, root, words) {
   for (const n of ast.program.body) {
     if (!/^(ImportDeclaration|ExportNamedDeclaration|ExportAllDeclaration)$/.test(n.type) || !n.source || n.importKind === 'type' || n.exportKind === 'type') continue
     const spec = n.source.value
-    if (/^(weft|@weft-js\/start)($|\/)/.test(spec)) continue
+    if (/^@weft-js\/(?:core|start)($|\/)/.test(spec)) continue
     const file = (await ctx.resolve(spec, path, { skipSelf: true }))?.id
     if (!file) continue
     const bare = file.replace(/\?.*$/, '')

@@ -43,7 +43,7 @@ for (const [name, entry] of Object.entries(fixtures)) {
     configFile: false,
     logLevel: 'silent',
     plugins: [weft({ hydratable: hydratable.has(name) })],
-    resolve: { alias: [{ find: /^@weft-js\/core\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^@weft-js\/core\/media$/, replacement: join(pkg, 'src/media.tsx') }, { find: /^@weft-js\/core\/surface$/, replacement: join(pkg, 'src/surface.tsx') }, { find: /^weft\/(dom|persist|history|browser|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
+    resolve: { alias: [{ find: /^@weft-js\/core\/head$/, replacement: join(pkg, 'src/head-client.ts') }, { find: /^@weft-js\/core\/media$/, replacement: join(pkg, 'src/media.tsx') }, { find: /^@weft-js\/core\/surface$/, replacement: join(pkg, 'src/surface.tsx') }, { find: /^@weft-js\/core\/(dom|persist|history|browser|shape)$/, replacement: join(pkg, 'src/$1.ts') }, { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
   const code = [out].flat().flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')

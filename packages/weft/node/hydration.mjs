@@ -22,7 +22,7 @@
 import { readFileSync, statSync } from 'node:fs'
 
 const PURE = { '@weft-js/core': new Set(['For', 'mergeProps']), '@weft-js/start': new Set(['Link']) }
-const OPAQUE = /^(weft|@weft-js\/start)(\/|$)/
+const OPAQUE = /^@weft-js\/(?:core|start)(\/|$)/
 const CODE = /\.[cm]?[jt]sx?$/
 /** weft API that needs nothing from the page and starts nothing by itself. */
 const QUIET = {

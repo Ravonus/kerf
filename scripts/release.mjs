@@ -134,6 +134,7 @@ function check(tgz, names, version) {
     const code = text.replace(/^\s*(?:\/\/|\/?\*).*$/gm, '')
     for (const m of code.matchAll(/^(?:import|export)\s+(?!type\b)[^'"\n`]*from\s+['"]([^'"]+)['"]/gm)) {
       const spec = m[1]
+      if ((code.slice(0, m.index).match(/(?<!\\)`/g)?.length ?? 0) % 2) continue // text a scaffold writes, not an import
       if (spec.startsWith('.')) {
         const at = join(dirname(f), spec).split(sep).join('/')
         if (!['', '.ts', '.tsx', '.mjs', '.js', '.d.ts', '/index.ts', '/index.tsx'].some(e => has.has(at + e))) bad.push(`${f} imports ${spec}, which isn't shipped`)

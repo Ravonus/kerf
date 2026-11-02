@@ -12,7 +12,7 @@ const fixture = (f: string) => fileURLToPath(new URL(`../bench/fixtures/${f}`, i
 async function bundle(entry: string) {
   const out = await build({
     root: fixture(''), configFile: false, logLevel: 'silent', plugins: [weft()],
-    resolve: { alias: [{ find: /^weft\/(dom|shape)$/, replacement: src('$1.ts') }, { find: /^@weft-js\/core$/, replacement: src('index.ts') }] },
+    resolve: { alias: [{ find: /^@weft-js\/core\/(dom|shape)$/, replacement: src('$1.ts') }, { find: /^@weft-js\/core$/, replacement: src('index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
   return [out].flat().flatMap((o: any) => o.output).filter((c: any) => c.type === 'chunk').map((c: any) => c.code).join('\n')
