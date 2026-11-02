@@ -99,7 +99,7 @@ const rules = [
   [/\bname === 'weft' \? 'weft'/g, `name === '${CORE}' ? 'weft'`],
   [/\/\^weft\$\//g, `/^${CORE.replace('/', '\\/')}$/`],
   [/\^weft\$/g, `^${CORE.replace('/', '\\/')}$`],
-  [/(['"]@weft-js\/[\w-]+['"],\s*)'weft'/g, `$1'${CORE}'`], // an array of packages
+  [/(?<!\.replace\()(['"]@weft-js\/[\w-]+['"],\s*)'weft'/g, `$1'${CORE}'`], // an array of packages
   [/(?<=[[(\s])'weft'(?=,\s*['"]@weft-js\/)/g, `'${CORE}'`],
   [/((?:dependencies|devDependencies|peerDependencies)\s*:\s*\{[^}\n]*?)(?<![\w'"-])weft:(?= )/g, `$1'${CORE}':`],
   [/(?<![\w.'"-])weft: (?=pkg\(|version\b|'file:|'\d)/g, `'${CORE}': `],
