@@ -242,13 +242,15 @@ describe('API tokens', () => {
     expect((await post(openWrite, undefined, t)).status).toBe(401)
   })
 
-  test('with no URL configured no token is accepted: iss and aud would go unchecked', async () => {
+  test('with no fixed URL no token is accepted: iss and aud would go unchecked', async () => {
     const { cookie } = await fresh()
-    const { token: t } = await token(cookie)
     const url = process.env.BETTER_AUTH_URL
     delete process.env.BETTER_AUTH_URL
     try {
-      const open = createAuth({ db, secret, options: { database, rateLimit: { enabled: false } }, api: { functions: () => [openQuery] } })
+      const open = createAuth({ db, secret, options: { database, rateLimit: { enabled: false }, baseURL: { allowedHosts: ['localhost:3000'], fallback: base } }, api: { functions: () => [openQuery] } })
+      const res = await open.handler(new Request(`${base}/api/auth/token`, { headers: { cookie } }))
+      const { token: t } = await res.json()
+      expect(t).toBeTruthy()
       expect((await session(open, new Request(fnUrl(openQuery), { headers: { authorization: `Bearer ${t}` } }))).user).toBeNull()
     } finally {
       if (url !== undefined) process.env.BETTER_AUTH_URL = url

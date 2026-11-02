@@ -57,6 +57,16 @@ CREATE TABLE IF NOT EXISTS "account" (
 	"updatedAt" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "jwks" (
+	"id" text PRIMARY KEY NOT NULL,
+	"publicKey" text NOT NULL,
+	"privateKey" text NOT NULL,
+	"createdAt" timestamp with time zone NOT NULL,
+	"expiresAt" timestamp with time zone,
+	"alg" text,
+	"crv" text
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "session" (
 	"id" text PRIMARY KEY NOT NULL,
 	"expiresAt" timestamp with time zone NOT NULL,

@@ -109,7 +109,7 @@ export function template(options = {}) {
     '.gitignore': `node_modules/\n.weft/*\n!.weft/plugins.lock.json\n.output/\ndist/\n${db === 'none' ? '' : '.env\n.data/\n'}${layer === 'prisma' ? 'src/generated/\n' : ''}`,
     'src/routes/_layout.tsx': layout(ui, { db, auth }),
     'src/routes/index.tsx': home(ui, label),
-    'AGENTS.md': agentsFile({ ui, db, layer, shipped: overlay?.pages }),
+    'AGENTS.md': agentsFile({ ui, db, layer, shipped: overlay?.pages, auth }),
     'src/routes/about.tsx': `export const meta = { title: 'About', description: 'What this app is.' }\n\nexport default function About() {\n  return <h1>About</h1>\n}\n`,
   }
   Object.assign(files, pluginLock({ ui, layer }))

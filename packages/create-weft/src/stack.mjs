@@ -181,6 +181,16 @@ export const verification = sqliteTable('verification', {
   createdAt: ${when('created_at', '')},
   updatedAt: ${when('updated_at', '')},
 })
+
+export const jwks = sqliteTable('jwks', {
+  id: text('id').primaryKey(),
+  publicKey: text('public_key').notNull(),
+  privateKey: text('private_key').notNull(),
+  createdAt: ${when('created_at')},
+  expiresAt: ${when('expires_at', '')},
+  alg: text('alg'),
+  crv: text('crv'),
+})
 `
 }
 
@@ -230,6 +240,16 @@ export const verification = pgTable('verification', {
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
+})
+
+export const jwks = pgTable('jwks', {
+  id: text('id').primaryKey(),
+  publicKey: text('public_key').notNull(),
+  privateKey: text('private_key').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+  expiresAt: timestamp('expires_at'),
+  alg: text('alg'),
+  crv: text('crv'),
 })
 `
 

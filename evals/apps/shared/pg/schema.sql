@@ -19,6 +19,10 @@ create table verification (
   id varchar(255) primary key, identifier text not null, value text not null, "expiresAt" timestamptz not null,
   "createdAt" timestamptz, "updatedAt" timestamptz
 );
+create table jwks (
+  id varchar(255) primary key, "publicKey" text not null, "privateKey" text not null, "createdAt" timestamptz not null,
+  "expiresAt" timestamptz, alg text, crv text
+);
 
 create table waitlist (id uuid primary key default gen_random_uuid(), email text not null unique, created_at timestamptz not null default now());
 

@@ -22,6 +22,7 @@ export function nativeAuthSql(db) {
     table('session', [['id', `${key} primary key`], ['expiresAt', `${when} not null`], ['token', `${key} not null unique`], ...stamps, ['ipAddress', text], ['userAgent', text], ['userId', `${key} not null ${ref('user')}`]]),
     table('account', [['id', `${key} primary key`], ['accountId', `${text} not null`], ['providerId', `${text} not null`], ['userId', `${key} not null ${ref('user')}`], ['accessToken', text], ['refreshToken', text], ['idToken', text], ['accessTokenExpiresAt', when], ['refreshTokenExpiresAt', when], ['scope', text], ['password', text], ...stamps]),
     table('verification', [['id', `${key} primary key`], ['identifier', `${text} not null`], ['value', `${text} not null`], ['expiresAt', `${when} not null`], ['createdAt', when], ['updatedAt', when]]),
+    table('jwks', [['id', `${key} primary key`], ['publicKey', `${text} not null`], ['privateKey', `${text} not null`], ['createdAt', `${when} not null`], ['expiresAt', when], ['alg', text], ['crv', text]]),
   ].join('\n')
 }
 
@@ -170,6 +171,18 @@ model Verification {
   updatedAt  DateTime? @map("updated_at")
 
   @@map("verification")
+}
+
+model Jwks {
+  id         String    @id
+  publicKey  String${long}    @map("public_key")
+  privateKey String${long}    @map("private_key")
+  createdAt  DateTime  @map("created_at")
+  expiresAt  DateTime? @map("expires_at")
+  alg        String?
+  crv        String?
+
+  @@map("jwks")
 }
 `
 }

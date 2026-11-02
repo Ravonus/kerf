@@ -84,7 +84,7 @@ const LOOK = {
 }
 
 /** The scaffold's AGENTS.md: enough to start. `weft agents-md` writes the full reference over it. */
-export function agentsFile({ ui, db, layer, shipped }) {
+export function agentsFile({ ui, db, layer, shipped, auth }) {
   return [
     '# AGENTS.md',
     '',
@@ -104,6 +104,7 @@ export function agentsFile({ ui, db, layer, shipped }) {
     '- `src/routes/`: pages, by file path. `_layout.tsx` wraps what\'s beside it.',
     ...(shipped?.length ? [`- This template's pages: ${shipped.map(p => `\`${p}\``).join(', ')}.`] : []),
     ...(db === 'none' ? [] : ['- `src/server/`: `query` and `mutation` functions; call them from any component.', `- ${DATA[layer]}`, '- `.env`: secrets and `DATABASE_URL`, checked by `src/env.server.ts`.']),
+    ...(auth === true ? ['- `src/auth.server.ts`: Better Auth. Login is an opaque session in the database, in an HTTP-only cookie, never a JWT. Pages may answer from its signed cookie cache for 5 minutes (`session.cookieCache`); mutations always read the database. JWTs are for API access only (`api` in `createAuth`, `npx weft docs start`).'] : []),
     '- `npx weft map` writes `.weft/map.md`: what this app has and what to call for each part.',
     '',
     '## Theming',
