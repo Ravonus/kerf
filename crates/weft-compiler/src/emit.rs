@@ -514,7 +514,13 @@ impl<'t> Emitter<'t> {
             let mut shared = None;
             if self.ssr {
                 if has_kids || void {
-                    Self::server(b, Piece::Code(format!("{spread}({props})")));
+                    // The merged view is only read here, all at once: its sources go straight to the writer.
+                    let merge = format!("{}(", self.helper("mergeProps"));
+                    let code = match props.strip_prefix(&merge).and_then(|p| p.strip_suffix(')')) {
+                        Some(sources) => format!("{}({sources})", self.helper("spreads")),
+                        None => format!("{spread}({props})"),
+                    };
+                    Self::server(b, Piece::Code(code));
                 } else {
                     self.n += 1;
                     let p = format!("_p{}", self.n);

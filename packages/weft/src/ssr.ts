@@ -484,6 +484,29 @@ export function spread(props: Record<string, any>): string {
   return out
 }
 
+/**
+ * `<div a={x} {...rest}>` with JSX children: `spread(mergeProps(...sources))` without the view, since the server reads
+ * every key once. A source is an object or a getter for one; a later one wins a key, which keeps its first place.
+ */
+export function spreads(...sources: any[]): string {
+  if (sources.length === 1) return spread(Object(typeof sources[0] === 'function' ? sources[0]() : sources[0]))
+  const keys: (string | symbol)[] = []
+  const owner = new Map<string | symbol, any>()
+  for (const s of sources) {
+    const o = Object(typeof s === 'function' ? s() : s)
+    for (const k of Reflect.ownKeys(o)) {
+      if (!owner.has(k)) keys.push(k)
+      owner.set(k, o)
+    }
+  }
+  let out = ''
+  for (const k of keys as string[]) {
+    if (k === 'children' || k === 'ref' || k === 'key' || k === 'innerHTML' || k === 'textContent' || k === 'dangerouslySetInnerHTML' || (k[0] === 'o' && /^on[A-Z]/.test(k))) continue
+    out += attr(k === 'defaultValue' ? 'value' : k === 'defaultChecked' ? 'checked' : k, owner.get(k)[k])
+  }
+  return out
+}
+
 /** What a spread element without JSX children holds: content its props set, or `children`. */
 export function inner(props: Record<string, any>, tag: string): unknown {
   const raw = props.dangerouslySetInnerHTML?.__html ?? props.innerHTML
