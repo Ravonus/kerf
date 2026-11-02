@@ -1,4 +1,6 @@
 // The core in plain DOM, no framework: the sweep's helpers, the label anatomy, roving focus, the dials.
+import { vi } from 'vitest'
+import { copyButtons } from '../src/copy'
 import { DIALS, getDial, setDial } from '../src/dial'
 import { labelChars } from '../src/floating-label'
 import { nextIndex, roving } from '../src/focus'
@@ -68,4 +70,15 @@ test('dials: written on <html>, auto removes the attribute, bad values throw, ch
   expect(document.documentElement.hasAttribute('data-theme')).toBe(false)
   expect(() => setDial('expression', 'loud' as any)).toThrow(RangeError)
   expect(seen).toEqual(['expression=vivid', 'theme=dark', 'theme=auto'])
+})
+
+test('copy: a highlighted block keeps its newlines', async () => {
+  const writeText = vi.fn(async () => {})
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+  html('<div data-scope="codeblock"><button data-act="copy"></button><code><span data-part="line">one</span><span data-part="line">two</span></code></div>')
+  const stop = copyButtons()
+  document.querySelector<HTMLElement>('[data-act="copy"]')!.click()
+  await Promise.resolve(); await Promise.resolve()
+  expect(writeText).toHaveBeenCalledWith('one\ntwo')
+  stop()
 })

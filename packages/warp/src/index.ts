@@ -67,5 +67,6 @@ export { VirtualList, type VirtualListProps, type VirtualControl } from './Virtu
 export { Feed, type FeedProps, type FeedItem } from './Feed'
 export { ScrollGrid, type ScrollGridProps, type GridColumn as ScrollGridColumn } from './ScrollGrid'
 export type { Address, MentionItem } from '@weft/warp-core'
+export type { Peer, CursorPeer, IntegrityStats, ChatMessage, MessageReaction } from '@weft/warp-core'
 export type { IsoDate, IsoTime, IsoDateTime, IsoMonth, IsoWeek, IsoDuration, IsoZoned, TimeZoneId, DateRange, ChangeReason } from '@weft/warp-core'
 export { sweep, setDial, getDial } from '@weft/warp-core'
