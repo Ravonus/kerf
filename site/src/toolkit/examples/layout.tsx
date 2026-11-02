@@ -27,8 +27,8 @@ type Gap = 'none' | 'hair' | 'tight' | 'related' | 'group' | 'section' | 'page'
 
 /* -- Grid -- */
 
-export const GridPlay = (p: { min?: 'xs' | 'sm' | 'md' | 'lg'; cols?: string; gap?: Gap }) => (
-  <Grid min={p.min} cols={p.cols === 'any' ? undefined : (Number(p.cols) as 2 | 3 | 4 | 6)} gap={p.gap}>
+export const GridPlay = (p: { min?: 'xs' | 'sm' | 'md' | 'lg'; cols?: 'any' | 2 | 3 | 4 | 6; gap?: Gap }) => (
+  <Grid min={p.min} cols={p.cols === 'any' ? undefined : p.cols} gap={p.gap}>
     {EIGHT.map(n => <Box key={n} tall={64}>{n}</Box>)}
   </Grid>
 )
@@ -48,7 +48,7 @@ export const GridMinSizes = () => (
   </Stack>
 )
 
-const COLS = [2, 3, 4, 6] as const
+const COLS = [2, 3, 4] as const
 
 export const GridCols = () => (
   <Stack gap="group">
@@ -117,7 +117,7 @@ export const GridDashboard = () => (
 export const GridProjectCards = () => (
   <Grid min="sm" cols={3} gap="related">
     {PROJECTS.slice(0, 6).map(p => (
-      <Card key={p.id} href={`#${p.id}`} onClick={(e: MouseEvent) => e.preventDefault()}>
+      <Card key={p.id}>
         <Stack gap="tight">
           <Row justify="between" gap="tight">
             <Text role="heading">{p.name}</Text>

@@ -342,7 +342,8 @@ function usageOf(doc, name, found, play) {
   const line = `import { ${name} } from '@weft/warp'`
   const from = play && !play.code.includes('{children}') ? null : play?.code
   const start = play && Object.fromEntries(play.knobs.map(k => [k.prop, k.initial]))
-  if (from) return `${line}\n\n${from.replace('{props}', '').replace('{children}', String(start.children ?? ''))}`
+  const kids = String(start?.children ?? '')
+  if (from) return `${line}\n\n${(kids ? from : from.replace(/>\{children\}<\/[\w.]+>/, ' />')).replace('{props}', '').replace('{children}', () => kids)}`
   if (doc.usage) return `${line}\n\n${doc.usage}`
   const first = arrange(doc).hero, f = first && found.get(first.id)
   return f?.stateless && f.body.split('\n').length <= 10 ? `${line}\n\n${f.body}` : line

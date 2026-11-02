@@ -25,9 +25,9 @@ export const layout: DocGroup = {
           { prop: 'gap', control: 'select', options: GAP_OPTIONS, initial: 'group', default: 'group' },
         ],
         presets: [
-          { label: 'Stats', values: { min: 'xs', cols: '4', gap: 'related' } },
+          { label: 'Stats', values: { min: 'xs', cols: 4, gap: 'related' } },
           { label: 'Cards', values: { min: 'sm', cols: 'any', gap: 'group' } },
-          { label: 'Thumbnails', values: { min: 'xs', cols: '6', gap: 'tight' } },
+          { label: 'Thumbnails', values: { min: 'xs', cols: 6, gap: 'tight' } },
         ],
         stage: 'fill',
         height: 300,
@@ -35,7 +35,7 @@ export const layout: DocGroup = {
       sections: [
         { kind: 'variants', title: 'Variants', examples: [
           { id: 'GridMinSizes', title: 'Minimum width', note: '`min` is the narrowest a column may get. Change the stage\'s Width and the columns refit.', stage: 'fill', height: 420 },
-          { id: 'GridCols', title: 'Most columns', note: '`cols` is a ceiling, so a wide container stops at that many. `min` still wins when the room runs out.', stage: 'fill', height: 420 },
+          { id: 'GridCols', title: 'Most columns', note: '`cols` is a ceiling, so a wide container stops at that many. `min` still wins when the room runs out: `cols={6}` with `min="xs"` needs about 810px, more than this stage has.', stage: 'fill', height: 420 },
           { id: 'GridSpan', title: 'A full-width child', note: 'Put `data-span="full"` on a direct child and it takes the whole row.', stage: 'fill', height: 240 },
           { id: 'GridGaps', title: 'Gap', note: '`gap` comes from the space scale, so it says how related the items are rather than a number of pixels.', stage: 'fill', height: 260 },
         ] },

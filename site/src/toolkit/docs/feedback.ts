@@ -232,7 +232,7 @@ export const feedback: DocGroup = {
       },
       playground: {
         example: 'LiveStatusPlay',
-        code: '<LiveStatus{props} />',
+        code: '<LiveStatus{props}>{children}</LiveStatus>',
         knobs: [
           { prop: 'state', control: 'segmented', options: ['connecting', 'live', 'reconnecting', 'offline'], initial: 'live', default: '' },
           { prop: 'label', control: 'text', initial: 'Log stream', default: '' },

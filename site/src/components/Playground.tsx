@@ -16,11 +16,15 @@ function print(play: ShownPlayground, name: string, v: Values) {
     const x = v[k.prop]
     return x === true ? ` ${k.prop}` : typeof x === 'string' ? ` ${k.prop}="${x}"` : ` ${k.prop}={${JSON.stringify(x)}}`
   }).join('')
-  const line = play.code.replace('{props}', attrs).replace('{children}', String(v.children ?? ''))
+  const kids = String(v.children ?? '')
+  const line = (kids ? play.code : play.code.replace(/>\{children\}<\/[\w.]+>/, ' />')).replace('{props}', () => attrs).replace('{children}', () => kids)
   return `import { ${name} } from '@weft/warp'\n\n${line}`
 }
 
 const shown = (k: Knob, v: Values) => !k.when || k.when.is.includes(v[k.when.prop])
+
+/** A picked option as the knob wrote it, since `size={100}` and `size="100"` are different calls. */
+const option = (k: Knob, raw: string): unknown => k.options?.find(o => String(o) === raw) ?? raw
 
 function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { value: Values }; set: (prop: string, value: unknown) => void }) {
   const k = untrack(() => props.knob)
@@ -29,8 +33,8 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
   const text = derived(() => String(value.value ?? ''))
   const number = derived(() => Number(value.value))
   if (k.control === 'switch') return <Switch checked={!!value.value} onChange={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).checked)}>{k.label}</Switch>
-  if (k.control === 'segmented') return <><span data-part="knob-label">{k.label}</span><Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, typeof k.options![0] === 'number' ? +v : v)} /></>
-  if (k.control === 'select') return <Select label={k.label} value={text.value} options={options} onValueChange={(v: string | null) => props.set(k.prop, typeof k.options![0] === 'number' ? Number(v) : v)} />
+  if (k.control === 'segmented') return <><span data-part="knob-label">{k.label}</span><Segmented size="sm" label={k.label} value={text.value} options={options} onChange={(v: string) => props.set(k.prop, option(k, v))} /></>
+  if (k.control === 'select') return <Select label={k.label} value={text.value} options={options} onValueChange={(v: string | null) => props.set(k.prop, v === null ? v : option(k, v))} />
   if (k.control === 'slider') return <Slider label={k.label} value={number.value} min={k.min} max={k.max} step={k.step} onChange={(v: number) => props.set(k.prop, v)} />
   return <Input label={k.label} value={text.value} onInput={(e: Event) => props.set(k.prop, (e.target as HTMLInputElement).value)} />
 }
@@ -76,7 +80,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
     const given: Values = {}
     for (const k of play.knobs) {
       const raw = q.get(k.prop)
-      if (raw !== null) given[k.prop] = k.control === 'switch' ? raw === 'true' : k.control === 'slider' ? +raw : raw
+      if (raw !== null) given[k.prop] = k.control === 'switch' ? raw === 'true' : k.control === 'slider' ? +raw : option(k, raw)
     }
     if (Object.keys(given).length) values.value = { ...values.value, ...given }
     previews[props.file]!().then(m => { Case = m[play.example]; show() })
