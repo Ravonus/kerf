@@ -214,6 +214,11 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"]:is([data-emphasis="frame"], [data-emphasis="link"], :disabled, [aria-disabled="true"])) { --warp-btn-fill: 0; }
 /* the sweep on solid and ghost is vivid's ink edge, so it is off below vivid */
 :where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) { --_on: 0; --warp-color-sweep: var(--_off); }
+/* on light a solid's fill can't lighten past where the on-solid ink keeps 4.5:1, so all it had was a hue shift. Its edge
+   lands as the highlight instead of ink: a bright rim round the fill, where no text sits, so the button plainly answers
+   the hand and the ink's ground is unchanged. Dark's fill is already bright ink, and keeps the ink edge. */
+:where([data-scope="button"]:not([data-emphasis])) { --warp-color-sweep: light-dark(var(--warp-color-highlight-solid), var(--_off)); }
+:where([data-scope="button"]:not([data-emphasis])) > :where([data-part="sweep"]) { border-width: max(var(--warp-sweep-width), 2px); }
 /* it fades in whole with the fill: drawn along the edge, it read as a broken line halfway round */
 :where([data-scope="button"]:not([data-emphasis]), [data-scope="button"][data-emphasis="ghost"]) > :where([data-part="sweep"]) {
   clip-path: none; opacity: calc(var(--_a, 0) * var(--warp-btn-fill));
