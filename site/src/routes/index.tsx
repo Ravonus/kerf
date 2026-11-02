@@ -95,7 +95,7 @@ export default function Home() {
 
         <section data-part="end">
           <h2 data-flow="heading">Build something</h2>
-          <p data-part="intro">Set up a project in a couple of minutes, then work through the short guides.</p>
+          <p data-part="intro">Make an app from a checkout, then work through Learn a chapter at a time.</p>
           <div data-part="next">
             <Link data-scope="button" data-size="lg" href="/learn">Get started</Link>
             <Link data-part="quiet" href="/reference">Read the reference</Link>
