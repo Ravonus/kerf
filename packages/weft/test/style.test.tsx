@@ -10,9 +10,8 @@ import { flush, render, touches } from '@weft-js/core/test'
 import { group } from '@weft-js/core/style'
 import { hydration } from '../src/hydrate'
 import { emitGroups, GroupError, resolve, type GroupSource, type GroupUse } from '../src/style/css'
-// @ts-expect-error: query imports (vite.mjs)
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { GroupShop as ServerShop } from './fixtures/ssr/GroupShop.tsx?weft-ssr'
-// @ts-expect-error
 import { GroupShop as ClientShop } from './fixtures/ssr/GroupShop.tsx?weft-hydrate'
 import type { Product } from '../../../evals/reference-v3/weft/src/api'
 
@@ -62,16 +61,16 @@ describe('compiler: call sites lower to attributes', () => {
   test('a group from another module, through options.groups', () => {
     const def = transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0]
     const use = `import { card } from './card'\nexport const X = (p) => <li {...card({ status: p.ok ? 'shipped' : 'late' })}><b {...card.title} /></li>`
-    const out = transform(use, { filename: '/app/list.tsx', groups: { '/app/card#card': { name: def.name, def: def.def } } })
+    const out = transform(use, { filename: '/app/list.tsx', groups: { '/app/card#card': { name: def!.name, def: def!.def } } })
     expect(out.diagnostics).toEqual([])
-    expect(out.facts.groupUses[0].axes.status).toEqual(['shipped', 'late'])
+    expect(out.facts.groupUses[0]!.axes.status).toEqual(['shipped', 'late'])
     expect(out.code).toContain('data-part=\\"title\\"')
   })
 
   test('W060: a value that isn\'t a literal is named', () => {
     const out = transform(`import { group } from '@weft-js/core/style'\nconst px = 13\nexport const g = group('g', { axes: { size: { big: { pad: px } } } })`, { filename: '/a.tsx' })
     expect(out.diagnostics.map(d => d.code)).toEqual(['W060'])
-    expect(out.diagnostics[0].message).toBe("group can't be evaluated at build: `px` at g.axes.size.big.pad isn't a literal")
+    expect(out.diagnostics[0]!.message).toBe("group can't be evaluated at build: `px` at g.axes.size.big.pad isn't a literal")
   })
 
   test('D025: unknown axis values, keys and parts, with the closest names', () => {
@@ -105,7 +104,7 @@ describe('compiler: call sites lower to attributes', () => {
   test('the doc comment above a definition is kept', () => {
     const src = SRC.replace('export const card', '/**\n * A summary card\n * for one order.\n */\nexport const card')
     expect(transform(src, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0]).toMatchObject({ doc: 'A summary card for one order.', line: 6 })
-    expect(transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0].doc).toBeNull()
+    expect(transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0]!.doc).toBeNull()
   })
 })
 

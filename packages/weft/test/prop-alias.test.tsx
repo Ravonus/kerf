@@ -5,6 +5,7 @@ import { bind, derived, state, untrack } from '@weft-js/core'
 import { renderToString } from '@weft-js/core/ssr'
 import { hydrate } from '@weft-js/core/dom'
 import { flush, render } from '@weft-js/core/test'
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
 import { Price as ServerPrice } from './fixtures/ssr/Alias.tsx?weft-ssr'
 import { Price as ClientPrice } from './fixtures/ssr/Alias.tsx?weft-hydrate'
 import { Price } from './fixtures/ssr/Alias'
@@ -41,7 +42,7 @@ test('a local reads the prop as it is when used, in a handler too; `untrack` kee
 
 test('it hydrates 0/0 and stays live', async () => {
   const v = state(start())
-  const tree = (C: any) => () => C({ get amount() { return v.value.amount }, get label() { return v.value.label }, get user() { return v.value.user }, get items() { return v.value.items }, get title() { return v.value.title } })
+  const tree = (C: (props: ReturnType<typeof start>) => unknown) => () => C({ get amount() { return v.value.amount }, get label() { return v.value.label }, get user() { return v.value.user }, get items() { return v.value.items }, get title() { return v.value.title } })
   const html = renderToString(tree(ServerPrice))
   expect(html.replace(/<!--.*?-->/g, '')).toContain('Total: 1')
   expect(html).toContain('Ada')
@@ -69,14 +70,14 @@ function ByProps(props: { n: number }) {
   const n = props.n
   return <button onClick={() => (props.n = props.n + 1)}>{n}|{props.n}</button>
 }
-function ByPattern(props: { n?: number }) {
+function ByPattern(props: { n?: number | undefined }) {
   let { n = 10 } = props
   return <button onClick={() => (n += 1)}>{n}|{n}</button>
 }
 const text = () => screen.getByRole('button').textContent
 const press = async () => { screen.getByRole('button').click(); await flush() }
 
-describe.each([['let', ByLet], ['props.x =', ByProps]])('a write through %s', (_, Child: any) => {
+describe.each([['let', ByLet], ['props.x =', ByProps]])('a write through %s', (_, Child: typeof ByLet) => {
   test('without bind: stays in the child, until the parent changes; the parent is never written', async () => {
     const v = state(1)
     render(() => <Child n={v.value} />)

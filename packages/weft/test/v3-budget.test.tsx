@@ -4,11 +4,12 @@ import userEvent from '@testing-library/user-event'
 import { flush, render, touches } from '@weft-js/core/test'
 import { App } from '../../../evals/reference-v3/weft/src/App'
 import { App as SpreadApp } from './fixtures/v3-spread/App'
+import { App as ScopeApp } from './fixtures/v3-scope/App'
 
 type Update = { id: string; price: number }
 const cats = ['fruit', 'bakery', 'dairy'] as const
 const many = () => Array.from({ length: 150 }, (_, i) => ({
-  id: `p${i}`, name: `Item ${String(i).padStart(3, '0')}`, category: cats[i % 3], price: 1 + (i % 17) / 4, stock: 50,
+  id: `p${i}`, name: `Item ${String(i).padStart(3, '0')}`, category: cats[i % 3]!, price: 1 + (i % 17) / 4, stock: 50,
 }))
 
 async function start(Comp: typeof App) {
@@ -44,7 +45,6 @@ test('identity-breaking spread (v3 Sonnet habit): still 1 DOM mutation, but ever
 })
 
 // The same app with the cart in a defineState scope whose rows read one entry each (`lines.get(id)`).
-import { App as ScopeApp } from './fixtures/v3-scope/App'
 
 // The reference reads entries with `cart.get(p.id)` since W017; before, its `cart[p.id]` rows re-ran 452 times.
 test('add one, cart in a scope with keyed reads: 1 DOM mutation per changed row, no 150-row re-run', async () => {

@@ -4,13 +4,17 @@
 declare module '*.css' {}
 
 declare module '*?media' {
-  const asset: import('@weft-js/core/media').MediaAsset
+  import type { MediaAsset } from '@weft-js/core/media'
+  const asset: MediaAsset
+  /** The processed asset, see `@weft-js/core/media`. */
   export default asset
 }
 
 /** `./loop.gif?media&audio=./beat.opus`: the audio muxed into the video at build. */
 declare module '*?media&audio=*' {
-  const asset: import('@weft-js/core/media').MediaAsset
+  import type { MediaAsset } from '@weft-js/core/media'
+  const asset: MediaAsset
+  /** The processed asset, see `@weft-js/core/media`. */
   export default asset
 }
 

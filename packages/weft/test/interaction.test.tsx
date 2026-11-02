@@ -34,7 +34,7 @@ test('same key, same row; the line opens once and closes with the last owner', (
 
 test('what arrives touches `remote` only, so local logic stays still and nothing goes back out', () => {
   const sent: number[] = []
-  let heard!: (c: any) => void
+  let heard!: Parameters<NonNullable<typeof seams.line>>[1]
   seams.line = (_, h) => { heard = h; return { set: b => void sent.push(b), leave() {} } }
   createRoot(dispose => {
     const ui = interaction({ share: 'r' })

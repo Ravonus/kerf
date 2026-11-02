@@ -2,6 +2,7 @@
 // would bring @weft-js/core/keyed in and hide a failure.
 import { state } from '@weft-js/core'
 
+// oxlint-disable-next-line typescript/unbound-method -- that spelling is what the plugin has to see, and linked never reads this
 const { linked } = state
 
 test('a page that only destructures linked gets @weft-js/core/keyed', () => {

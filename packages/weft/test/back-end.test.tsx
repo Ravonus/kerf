@@ -16,18 +16,18 @@ const html = (el: Element) => {
   const walk = document.createTreeWalker(copy, NodeFilter.SHOW_COMMENT)
   const comments: Node[] = []
   while (walk.nextNode()) comments.push(walk.currentNode)
-  for (const c of comments) c.remove()
+  for (const c of comments) (c as ChildNode).remove()
   copy.normalize()
   return copy.innerHTML
 }
 
 let disposers: (() => void)[] = []
-function SpreadPicker(props: { rest: Record<string, any> }) {
+function SpreadPicker(props: { rest: Record<string, unknown> }) {
   const options = ['a', 'b', 'c']
   return <select value="b" {...props.rest}>{options.map(o => <option key={o} value={o}>{o}</option>)}</select>
 }
 
-const mount = (Comp: () => any) => {
+const mount = (Comp: () => unknown) => {
   const root = document.createElement('div')
   document.body.append(root)
   disposers.push(render(() => Comp(), root))
@@ -45,9 +45,9 @@ describe('weft back end: basics', () => {
   it('compiles without Solid-shaped helpers', () => {
     const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), { filename: 'Basics.tsx' })
     expect(out.diagnostics).toEqual([])
-    const imported = /import \{([^}]*)\} from "@weft-js\/core\/dom"/.exec(out.code)![1]
+    const imported = /import \{([^}]*)\} from "@weft-js\/core\/dom"/.exec(out.code!)![1]
     const helpers = ['attr', 'bind', 'child', 'cls', 'component', 'css', 'delegate', 'memo', 'mergeProps', 'on', 'tpl']
-    for (const name of imported.split(',').map(s => s.trim().split(' ')[0])) expect(helpers).toContain(name)
+    for (const name of imported!.split(',').map(s => s.trim().split(' ')[0])) expect(helpers).toContain(name)
     expect(out.code).not.toMatch(/insert|createComponent|template\(|delegateEvents/)
   })
 
@@ -91,7 +91,7 @@ describe('weft back end: basics', () => {
     it('runs every benchmark operation', () => {
       const root = mount(Bench)
       const rows = () => [...root.querySelectorAll('tbody tr')]
-      const label = (i: number) => rows()[i].querySelector('td:nth-child(2) a')!.textContent
+      const label = (i: number) => rows()[i]!.querySelector('td:nth-child(2) a')!.textContent
       const go = (sel: string) => {
         click(sel)(root)
         flush()
@@ -99,7 +99,7 @@ describe('weft back end: basics', () => {
       go('#run')
       expect(rows()).toHaveLength(1000)
       go('tbody tr:nth-child(5) td:nth-child(2) a')
-      expect(rows()[4].className).toBe('danger')
+      expect(rows()[4]!.className).toBe('danger')
       go('#update')
       expect(label(0).endsWith(' !!!') && label(10).endsWith(' !!!') && !label(1).endsWith(' !!!')).toBe(true)
       const [second, last] = [rows()[1], rows()[998]]
@@ -137,7 +137,7 @@ describe('weft back end, step 2', () => {
     const { state } = await import('@weft-js/core')
     const tone = state('info')
     const clicks: string[] = []
-    const rest = state<Record<string, any>>({ id: 'spread', href: '/a', title: 'spread title', class: 'x', onClick: () => clicks.push('a') })
+    const rest = state<Record<string, unknown>>({ id: 'spread', href: '/a', title: 'spread title', class: 'x', onClick: () => clicks.push('a') })
     const root = mount(() => two.Spread({ get rest() { return rest.value }, get tone() { return tone.value } }))
     const a = root.querySelector('a')!
     expect(a.id).toBe('spread')
@@ -160,7 +160,7 @@ describe('weft back end, step 2', () => {
 
   it('a spread\'s children fill an element that has none, and stay live', async () => {
     const { state } = await import('@weft-js/core')
-    const rest = state<Record<string, any>>({ title: 't', children: 'first' })
+    const rest = state<Record<string, unknown>>({ title: 't', children: 'first' })
     const root = mount(() => two.Content({ get rest() { return rest.value } }))
     const kids = root.querySelector('.kids')!
     expect([kids.textContent, kids.getAttribute('title')]).toEqual(['first', 't'])

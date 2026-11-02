@@ -4,7 +4,7 @@
 import { flush, render } from '@weft-js/core/test'
 import { Users, type Load } from './fixtures/ssr/Users'
 
-const load: Load = () => new Promise(ok => setTimeout(() => ok({ name: 'Ada' }), 200))
+const load: Load = () => new Promise(ok => { setTimeout(() => ok({ name: 'Ada' }), 200) })
 
 /** jsdom has no layout: the fallback (`.skeleton`) is `skeleton` px tall, everything else 40 px. */
 function layout(skeleton: number) {
@@ -35,7 +35,7 @@ test('a fallback shorter than the content warns X031 with the delta', async () =
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   await swap()
   expect(warn).toHaveBeenCalledTimes(1)
-  expect(warn.mock.calls[0][0]).toMatch(/X031 <Boundary> pending fallback was 300×20 px, the content is 300×40 px \(Δ 0, 20\)/)
+  expect(warn.mock.calls[0]![0]).toMatch(/X031 <Boundary> pending fallback was 300×20 px, the content is 300×40 px \(Δ 0, 20\)/)
 })
 
 test('a fallback the size of the content is quiet (within 1 px)', async () => {

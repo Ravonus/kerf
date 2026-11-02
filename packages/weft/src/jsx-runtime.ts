@@ -31,7 +31,7 @@ export type HTMLAttributes<T> = Events<T> & {
   children?: unknown
   key?: string | number | undefined
   /** `ref={el}` assigns a variable (`let el!: HTMLInputElement`); `ref={fn}` calls it with the element. */
-  ref?: T | ((el: T) => void)
+  ref?: T | ((el: T) => void) | undefined
   class?: unknown
   /** The same as `class`, for React habits. */
   className?: unknown

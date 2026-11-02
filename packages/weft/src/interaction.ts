@@ -37,7 +37,7 @@ export interface ShareLine { set(bits: number): void; leave(): void }
 /** `@weft-js/warp/ui` and `@weft-js/start/share` plug in here, as `@weft-js/core/sync` does for `features.sync`. */
 export const seams: {
   attach?: (el: HTMLElement, ui: Interaction) => Action
-  line?: (key: string, heard: (counts: Counts) => void) => ShareLine
+  line?: ((key: string, heard: (counts: Counts) => void) => ShareLine) | undefined
 } = {}
 
 /** Nothing hovered, focused or pressed. */

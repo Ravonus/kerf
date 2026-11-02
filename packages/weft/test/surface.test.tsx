@@ -13,7 +13,7 @@ test('a box change paints once on the next frame, and re-renders nothing', async
   time.install()
   const level = state(1)
   let setups = 0, bodies = 0
-  const Bars = defineSurface<{ level: number }>({
+  const Bars = defineSurface<{ level: number }, 'canvas2d'>({
     name: 'bars', kind: 'canvas2d',
     setup(s, props) { setups++; s.draw(() => s.ctx.fillRect(0, 0, props.level, 1)) },
   })
@@ -38,7 +38,7 @@ test('a box change paints once on the next frame, and re-renders nothing', async
 test('a paint with nothing changed never runs: no frame loop without s.frame', async () => {
   time.install()
   const Still = defineSurface({ name: 'still', kind: 'canvas2d', setup(s) { s.draw(() => s.ctx.fillRect(0, 0, 1, 1)) } })
-  render(Surface as any, { use: Still, label: 'Still' })
+  render(Surface as never, { use: Still, label: 'Still' })
   await flush()
   await time.advance(16)
   const n = paints(canvas(), 'fillRect')
@@ -50,8 +50,8 @@ test('s.frame ticks at fps; pause stops it, a box change still repaints, and see
   time.install()
   const tint = state(0)
   const seen: number[] = []
-  const Spin = defineSurface({ name: 'spin', kind: 'canvas2d', fps: 30, setup(s) { s.frame(t => { tint.value; seen.push(t.frame) }) } })
-  render(Surface as any, { use: Spin, label: 'Spin' })
+  const Spin = defineSurface({ name: 'spin', kind: 'canvas2d', fps: 30, setup(s) { s.frame(t => { void tint.value; seen.push(t.frame) }) } })
+  render(Surface as never, { use: Spin, label: 'Spin' })
   await flush()
   clock.seek(0); clock.play()
   await time.advance(500)
@@ -74,7 +74,7 @@ test('s.text keeps a real mirror: one DOM write per change, and the canvas paint
   time.install()
   const score = state(1)
   const Hud = defineSurface({ name: 'hud', kind: 'canvas2d', setup(s) { s.text(() => `Score ${score.value}`, { x: 4, y: 8, width: 200, font: '16px Inter', lineHeight: 20 }) } })
-  render(Surface as any, { use: Hud, label: 'Game' }, { slots: { 'text.measure': fakeMeasure() } })
+  render(Surface as never, { use: Hud, label: 'Game' }, { slots: { 'text.measure': fakeMeasure() } })
   await flush()
   await time.advance(16)
   await flush()
@@ -99,19 +99,19 @@ test('s.text keeps a real mirror: one DOM write per change, and the canvas paint
 test('s.text wraps through the provider and stacks lines by line height', async () => {
   time.install()
   const Wrap = defineSurface({ name: 'wrap', kind: 'canvas2d', setup(s) { s.text('aaaa bbbb cccc', { x: 0, y: 10, width: 48, font: '16px Inter', lineHeight: 20 }) } })
-  render(Surface as any, { use: Wrap, label: 'Text' }, { slots: { 'text.measure': fakeMeasure() } })
+  render(Surface as never, { use: Wrap, label: 'Text' }, { slots: { 'text.measure': fakeMeasure() } })
   await flush()
   await time.advance(16)
   await flush()
   await time.advance(16)
   const drawn = canvasCalls(canvas()).filter(c => c.name === 'fillText').slice(-3)
   expect(drawn.map(c => c.args[0])).toEqual(['aaaa', 'bbbb', 'cccc'])
-  expect((drawn[1].args[2] as number) - (drawn[0].args[2] as number)).toBe(20)
+  expect((drawn[1]!.args[2] as number) - (drawn[0]!.args[2] as number)).toBe(20)
 })
 
 test('on webgl2 there is no text path: the mirror itself is visible and nothing measures', async () => {
   const Gl = defineSurface({ name: 'gl', kind: 'webgl2', setup(s) { s.text('Hello', { x: 0, y: 0, width: 100, color: 'white' }) } })
-  render(Surface as any, { use: Gl, label: 'Scene' })
+  render(Surface as never, { use: Gl, label: 'Scene' })
   await flush()
   expect(screen.getByText('Hello').style.color).toBe('white')
 })
@@ -135,7 +135,7 @@ test('label names the canvas, decorative hides it, and both are live', async () 
 test('setup cleanup runs on unmount and the canvas goes with it', async () => {
   let cleaned = 0
   const S = defineSurface({ name: 's', kind: 'webgl2', setup() { return () => cleaned++ } })
-  const { unmount } = render(Surface as any, { use: S, label: 'x' })
+  const { unmount } = render(Surface as never, { use: S, label: 'x' })
   await flush()
   unmount()
   expect(cleaned).toBe(1)
@@ -145,8 +145,8 @@ test('setup cleanup runs on unmount and the canvas goes with it', async () => {
 test('a theme change repaints with the token read again', async () => {
   time.install()
   const seen: string[] = []
-  const S = defineSurface({ name: 't', kind: 'canvas2d', setup(s) { s.draw(() => { seen.push(s.tokens.accentStrong.css); s.ctx.fillRect(0, 0, 1, 1) }) } })
-  render(Surface as any, { use: S, label: 't' })
+  const S = defineSurface({ name: 't', kind: 'canvas2d', setup(s) { s.draw(() => { seen.push(s.tokens.accentStrong!.css); s.ctx.fillRect(0, 0, 1, 1) }) } })
+  render(Surface as never, { use: S, label: 't' })
   await flush()
   await time.advance(16)
   expect(seen.at(-1)).toContain('--accent-strong') // jsdom doesn't resolve var(); the e2e does
@@ -161,7 +161,7 @@ test('a theme change repaints with the token read again', async () => {
 test('a surface paints once on mount, not twice', async () => {
   time.install()
   const S = defineSurface({ name: 'once', kind: 'canvas2d', setup(s) { s.draw(() => s.ctx.fillRect(0, 0, 1, 1)) } })
-  render(Surface as any, { use: S, label: 'x' })
+  render(Surface as never, { use: S, label: 'x' })
   await flush()
   await time.advance(100)
   expect(paints(canvas(), 'fillRect')).toBe(1)
@@ -170,7 +170,7 @@ test('a surface paints once on mount, not twice', async () => {
 test('WebGL context loss tears setup down, and restoring runs it again', async () => {
   let setups = 0, cleaned = 0
   const S = defineSurface({ name: 's', kind: 'webgl2', setup() { setups++; return () => cleaned++ } })
-  render(Surface as any, { use: S, label: 'x' })
+  render(Surface as never, { use: S, label: 'x' })
   await flush()
   const lost = new Event('webglcontextlost', { cancelable: true })
   canvas().dispatchEvent(lost)
@@ -200,18 +200,18 @@ test('a kind with no provider is P101, on the host and in the console', async ()
   const errors: unknown[] = []
   const spy = vi.spyOn(console, 'error').mockImplementation(e => { errors.push(e) })
   const S = defineSurface({ name: 'k', kind: 'keel-pixel', setup() {} })
-  render(Surface as any, { use: S, label: 'k' })
+  render(Surface as never, { use: S, label: 'k' })
   await new Promise<void>(done => {
     const seen = new MutationObserver(() => { if (document.querySelector('[data-surface-error]')) { seen.disconnect(); done() } })
     seen.observe(document.body, { subtree: true, attributes: true })
   })
   spy.mockRestore()
-  expect(String((errors[0] as Error).message)).toContain('P101 surface.renderer')
+  expect((errors[0] as Error).message).toContain('P101 surface.renderer')
 })
 
 test('dev validates props against the schema', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const schema = { '~standard': { version: 1, vendor: 't', validate: (v: any) => (v.n > 1 ? { issues: [{ message: 'too big', path: ['n'] }] } : { value: v }) } }
+  const schema = { '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ((v as { n: number }).n > 1 ? { issues: [{ message: 'too big', path: ['n'] }] } : { value: v as { n: number } }) } }
   const n = state(0)
   const S = defineSurface<{ n: number }>({ name: 'v', kind: 'canvas2d', props: schema, setup() {} })
   function Page() { return <Surface use={S} n={n.value} label="v" /> }
@@ -220,12 +220,12 @@ test('dev validates props against the schema', async () => {
   expect(warn).not.toHaveBeenCalled()
   n.value = 2
   await flush()
-  expect(String(warn.mock.calls[0][0])).toContain('`n`: too big')
+  expect(String(warn.mock.calls[0]![0])).toContain('`n`: too big')
   warn.mockRestore()
 })
 
 describe('dev checks on the live mirror', () => {
-  const warnings = async (build: () => any, extra?: () => void) => {
+  const warnings = async (build: () => unknown, extra?: () => void) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     time.install()
     extra?.()
@@ -238,7 +238,7 @@ describe('dev checks on the live mirror', () => {
     warn.mockRestore()
     return seen
   }
-  const surface = (text: string, options: any) => defineSurface({ name: 'd', kind: 'canvas2d', setup(s) { s.text(text, { x: 0, y: 0, width: 200, ...options }) } })
+  const surface = (text: string, options: object) => defineSurface({ name: 'd', kind: 'canvas2d', setup(s) { s.text(text, { x: 0, y: 0, width: 200, ...options }) } })
 
   test('X001: the rendered mirror differs from the prediction', async () => {
     const S = surface('drift one', { font: '16px Inter', lineHeight: 20 })
@@ -264,10 +264,10 @@ describe('dev checks on the live mirror', () => {
 
   test('X003: the font isn\'t loaded and there is no fallback face', async () => {
     const S = surface('loading', { font: '16px Brand' })
-    const fonts = Object.assign([], { check: () => false, load: async () => [], addEventListener() {} })
+    const fonts = Object.assign([], { check: () => false, load: () => Promise.resolve([]), addEventListener() {} })
     Object.defineProperty(document, 'fonts', { value: fonts, configurable: true })
     const seen = await warnings(() => <Surface use={S} label="x" />)
-    delete (document as any).fonts
+    Reflect.deleteProperty(document, 'fonts')
     expect(seen.some(m => m.includes('X003') && m.includes('"Brand Fallback"'))).toBe(true)
   })
 

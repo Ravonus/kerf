@@ -6,9 +6,7 @@ import { hydrate } from '@weft-js/core/dom'
 import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../src/hydrate'
 import { groups, reverse, Rows, swap } from './fixtures/ssr/MemberTags'
-// @ts-expect-error: query imports (vite.mjs)
 import { Rows as ServerRows } from './fixtures/ssr/MemberTags.tsx?weft-ssr'
-// @ts-expect-error
 import { Rows as ClientRows } from './fixtures/ssr/MemberTags.tsx?weft-hydrate'
 
 const parts = (root: Element | Document) => [...root.querySelectorAll('i')].map(i => `${i.dataset.part}:${i.className}:${i.textContent}`)

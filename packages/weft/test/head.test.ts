@@ -102,14 +102,14 @@ describe('renderToString head option', () => {
       res.setHeader('content-type', 'text/html; charset=utf-8')
       res.end(renderToString(app, { head: { site, meta: { title: 'Pricing', description: 'Plans & prices.' }, path: req.url! } }))
     })
-    await new Promise<void>(r => server.listen(0, '127.0.0.1', r))
+    await new Promise<void>(r => { server.listen(0, '127.0.0.1', r) })
     const { port } = server.address() as { port: number }
-    const body = await new Promise<string>((resolve, reject) =>
+    const body = await new Promise<string>((resolve, reject) => {
       get(`http://127.0.0.1:${port}/pricing?utm=x`, { headers: { 'user-agent': 'Twitterbot/1.0' } }, res => {
         let s = ''
         res.setEncoding('utf8').on('data', c => (s += c)).on('end', () => resolve(s))
-      }).on('error', reject),
-    )
+      }).on('error', reject)
+    })
     server.close()
     const head = body.slice(0, body.indexOf('</head>'))
     const expected = [

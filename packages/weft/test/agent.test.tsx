@@ -27,7 +27,7 @@ function Later() {
 }
 
 let dispose: (() => void) | undefined
-const mount = (fn: () => any) => {
+const mount = (fn: () => unknown) => {
   const el = document.body.appendChild(document.createElement('div'))
   const stop = render(fn, el)
   dispose = () => { stop(); el.remove() }
@@ -36,7 +36,7 @@ afterEach(() => { dispose?.(); dispose = undefined; record.stop(); clock.resume(
 
 test('snapshot: roles, names, refs and the named graph', async () => {
   mount(() => <Stock stock={2} />)
-  const s: any = await snapshot()
+  const s = await snapshot()
   expect(s.tree).toContain('- status [ref=')
   expect(s.tree).toContain(': Only 2 left')
   expect(s.tree).toMatch(/- button "Add" \[ref=e\d+\]/)
@@ -44,7 +44,7 @@ test('snapshot: roles, names, refs and the named graph', async () => {
   expect(s.graph).toContain('Stock.left = 2 ← Stock.qty')
   const nodes = graph('Stock')
   expect(nodes.map(n => n.name)).toEqual(['Stock.left', 'Stock.qty'])
-  expect(nodes[1].feeds).toContain('Stock.left')
+  expect(nodes[1]!.feeds).toContain('Stock.left')
 })
 
 test('act clicks like a user and returns what changed; assert retries what the user sees', async () => {
@@ -60,15 +60,15 @@ test('act clicks like a user and returns what changed; assert retries what the u
 
 test('acting by a snapshot ref, and a clear error when a name is ambiguous', async () => {
   mount(() => <><Stock stock={1} /><Stock stock={3} /></>)
-  const s: any = await snapshot({ interactive: true, graph: false })
-  const ref = /button "Add" \[ref=(e\d+)\]/.exec(s.tree)![1]
+  const s = await snapshot({ interactive: true, graph: false })
+  const ref = /button "Add" \[ref=(e\d+)\]/.exec(s.tree as string)![1]
   await act(`@${ref}`, 'click')
   expect(document.body.textContent).toContain('Out of stock')
   await expect(act({ role: 'button', name: 'Add' }, 'click')).rejects.toThrow(/2 elements match button "Add"/)
   expect(graph('Stock').map(n => n.name)).toEqual(['Stock#1.left', 'Stock#1.qty', 'Stock#2.left', 'Stock#2.qty'])
 })
 
-test('set writes state by its graph name; derived values refuse', async () => {
+test('set writes state by its graph name; derived values refuse', () => {
   mount(() => <Stock stock={5} />)
   expect(set('Stock.qty', 5)).toMatchObject({ name: 'Stock.qty', value: 5 })
   expect(document.body.textContent).toContain('Out of stock')

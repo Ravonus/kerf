@@ -1,5 +1,5 @@
 // Locals that name a prop, in the forms a component body writes them.
-export function Price(props: { amount: number; label?: string; user: { name: string }; items: { id: number; t: string }[]; title?: string }) {
+export function Price(props: { amount: number; label?: string | undefined; user: { name: string }; items: { id: number; t: string }[]; title?: string }) {
   const amount = props.amount
   const { label = 'Total', user: person, ...rest } = props
   const name = person.name

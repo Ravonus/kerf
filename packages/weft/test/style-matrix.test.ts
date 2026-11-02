@@ -38,17 +38,17 @@ describe('buildMatrix', () => {
       accents: [{ file: 'src/list.tsx', line: 9, set: { radius: 'round' } }],
       escapes: [], contextTone: false,
     })
-    expect(g.resolved.base).toEqual({ 'background-color': 'var(--warp-color-surface-raised)', padding: 'var(--warp-space-group)', color: 'var(--_text, var(--warp-color-text-subtle))' })
-    expect(g.resolved['status=late']['--_text']).toBe('var(--warp-color-critical-text)')
-    expect(g.tokens).toEqual(['emphasis.subtle', 'pad.group', 'radius.round', 'ring.accent', 'surface.raised', 'text.title', 'tone.critical', 'tone.info'])
-    expect(g.bytes).toBeGreaterThan(300)
+    expect(g!.resolved.base).toEqual({ 'background-color': 'var(--warp-color-surface-raised)', padding: 'var(--warp-space-group)', color: 'var(--_text, var(--warp-color-text-subtle))' })
+    expect(g!.resolved['status=late']!['--_text']).toBe('var(--warp-color-critical-text)')
+    expect(g!.tokens).toEqual(['emphasis.subtle', 'pad.group', 'radius.round', 'ring.accent', 'surface.raised', 'text.title', 'tone.critical', 'tone.info'])
+    expect(g!.bytes).toBeGreaterThan(300)
     expect(m.vocab.pad).toContain('group')
     expect(m.diagnostics).toEqual([])
   })
 
   test('contextTone: a group that reads a tone without setting one', () => {
     const badge: GroupSource = { name: 'chip', file: 'c.tsx', line: 1, def: { base: { emphasis: 'soft' } } }
-    expect(buildMatrix([badge], []).groups.chip.contextTone).toBe(true)
+    expect(buildMatrix([badge], []).groups.chip!.contextTone).toBe(true)
   })
 
   test('D021 similar groups, D022 repeated accents, D023 escapes, D024 overlapping compounds, D025 unknown tokens', () => {
@@ -71,7 +71,7 @@ describe('buildMatrix', () => {
       'D025 t.tsx:1 group typo (t.tsx:1) base: `pad: "grup"` isn\'t a token (Did you mean `group`? pad is one of none, hair, tight, related, group, section, page, control, surface)',
     ])
     // D023 names the token when one sets the same value
-    expect(m.diagnostics[0].help).toContain("padding: pad: 'group' is the same value")
+    expect(m.diagnostics[0]!.help).toContain("padding: pad: 'group' is the same value")
   })
 
   test('D024: an accent against the site\'s own axis value', () => {
@@ -85,8 +85,8 @@ describe('explainGroup', () => {
     const e = explainGroup(card, { states: ['selected'], accent: { pad: 'tight' } })
     expect(e.selection).toEqual({ axes: { status: 'open' }, states: ['selected'], accent: { pad: 'tight' } })
     const root = e.elements[0]
-    expect(root.element).toBe('root')
-    expect(root.decls.filter(d => d.prop === 'padding')).toEqual([
+    expect(root!.element).toBe('root')
+    expect(root!.decls.filter(d => d.prop === 'padding')).toEqual([
       { prop: 'padding', value: 'var(--warp-space-group)', from: 'pad: group', at: 'base', overridden: true },
       { prop: 'padding', value: 'var(--warp-space-tight)', from: 'pad: tight', at: 'accent pad:tight' },
     ])

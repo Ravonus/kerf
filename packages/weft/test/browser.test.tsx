@@ -6,9 +6,7 @@ import { interval, lifecycle, media, on, online, visible } from '@weft-js/core/b
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { assertNoLeaks, flush, leaks, net, page, render } from '@weft-js/core/test'
-// @ts-expect-error: query imports (vite.mjs)
 import { Status as ServerStatus } from './fixtures/browser/Status.tsx?weft-ssr'
-// @ts-expect-error
 import { Status as ClientStatus } from './fixtures/browser/Status.tsx?weft-hydrate'
 
 /** Count native listeners added and removed for `type` on window and document while `fn` runs. */
@@ -139,7 +137,7 @@ it('works from derived and inside a defineState setup (which doesn\'t collect it
 })
 
 describe('on', () => {
-  it('listens until the owner goes; the event is typed from the target', async () => {
+  it('listens until the owner goes; the event is typed from the target', () => {
     const keys: string[] = []
     function Keys() {
       on(window, 'keydown', e => keys.push(e.key))
@@ -163,7 +161,7 @@ describe('on', () => {
     })
     expect(l.added).toBe(2)
     window.dispatchEvent(new Event('resize'))
-    expect(seen.sort()).toEqual([1, 2, 3])
+    expect(seen.sort((a, b) => a - b)).toEqual([1, 2, 3])
     dispose()
     expect(l.removed).toBe(2)
   })
@@ -202,7 +200,7 @@ describe('interval', () => {
 
   it.each([[250, 250], ['500ms', 500], ['2s', 2000], ['1.5s', 1500], ['1m', 60000], ['1h', 3600000]] as const)('%s is %i ms', (every, ms) => {
     let n = 0
-    const dispose = createRoot(d => (interval(every as any, () => n++), d))
+    const dispose = createRoot(d => (interval(every as never, () => n++), d))
     vi.advanceTimersByTime(ms - 1)
     expect(n).toBe(0)
     vi.advanceTimersByTime(1)
@@ -211,7 +209,7 @@ describe('interval', () => {
   })
 
   it('rejects what isn\'t a duration', () => {
-    expect(() => createRoot(() => interval('soon' as any, () => {}))).toThrow(/isn't a duration/)
+    expect(() => createRoot(() => interval('soon' as never, () => {}))).toThrow(/isn't a duration/)
   })
 })
 
@@ -251,7 +249,7 @@ describe('server and hydration', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const html = renderToString(() => { const d = media('(prefers-color-scheme: dark)'); return String(d.value) })
     expect(html).toBe('false')
-    expect(warn.mock.calls[0][0]).toMatch(/^W054: media\('\(prefers-color-scheme: dark\)'\) is read on the server without `ssr`/)
+    expect(warn.mock.calls[0]![0]).toMatch(/^W054: media\('\(prefers-color-scheme: dark\)'\) is read on the server without `ssr`/)
   })
 
   it('hydrates with the server value, then switches to the real one in the next flush', async () => {
@@ -274,7 +272,7 @@ describe('T012: the leak check', () => {
     createRoot(() => {
       on(window, 'keydown', () => {})
       interval('1s', () => {})
-      online().value
+      void online().value
     }) // never disposed
     expect(leaks()).toEqual(['`keydown` listener', "interval('1s')", 'online()'])
     expect(() => assertNoLeaks()).toThrow(/^T012: the test ended with 3 open subscriptions, listeners or intervals:\n {2}- `keydown` listener\n {2}- interval\('1s'\)\n {2}- online\(\)\n {2}fix: unmount/)
@@ -285,7 +283,7 @@ describe('T012: the leak check', () => {
   it('names the component it was made in (dev names)', () => {
     devComponent.label = '<Leaky> (Leaky.tsx:3:5)'
     try {
-      createRoot(() => { on(window, 'keydown', () => {}); online().value })
+      createRoot(() => { on(window, 'keydown', () => {}); void online().value })
     } finally { devComponent.label = undefined }
     expect(leaks()).toEqual(['`keydown` listener in <Leaky> (Leaky.tsx:3:5)', 'online() in <Leaky> (Leaky.tsx:3:5)'])
     expect(() => assertNoLeaks()).toThrow(/T012/)

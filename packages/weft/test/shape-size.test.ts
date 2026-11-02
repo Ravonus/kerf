@@ -15,7 +15,7 @@ async function bundle(entry: string) {
     resolve: { alias: [{ find: /^@weft-js\/core\/(dom|shape)$/, replacement: src('$1.ts') }, { find: /^@weft-js\/core$/, replacement: src('index.ts') }] },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
   })
-  return [out].flat().flatMap((o: any) => o.output).filter((c: any) => c.type === 'chunk').map((c: any) => c.code).join('\n')
+  return ([out].flat() as unknown as { output: { type: string; code: string }[] }[]).flatMap(o => o.output).filter(c => c.type === 'chunk').map(c => c.code).join('\n')
 }
 
 test('no pending="shape": no variant and no @weft-js/core/shape in the bundle', async () => {

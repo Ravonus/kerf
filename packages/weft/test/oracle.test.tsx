@@ -12,11 +12,24 @@ import { renderToString } from '@weft-js/core/ssr'
 import { hydrate } from '@weft-js/core/dom'
 import { flush, render } from '@weft-js/core/test'
 import { hydration } from '../src/hydrate'
+import * as basics from './fixtures/next/Basics'
+// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
+import * as basicsServer from './fixtures/next/Basics.tsx?weft-ssr'
+import * as basicsClient from './fixtures/next/Basics.tsx?weft-hydrate'
+import * as two from './fixtures/next/Step2'
+import * as twoServer from './fixtures/next/Step2.tsx?weft-ssr'
+import * as twoClient from './fixtures/next/Step2.tsx?weft-hydrate'
+import * as bench from './fixtures/next/Bench'
+import * as benchServer from './fixtures/next/Bench.tsx?weft-ssr'
+import * as benchClient from './fixtures/next/Bench.tsx?weft-hydrate'
+import * as shop from './fixtures/ssr/Shop'
+import * as shopServer from './fixtures/ssr/Shop.tsx?weft-ssr'
+import * as shopClient from './fixtures/ssr/Shop.tsx?weft-hydrate'
 
-type Comp = (props: any) => any
+type Comp = (props: never) => unknown
 type Case = {
   name: string
-  props: () => any
+  props: () => unknown
   dom: Comp
   server: Comp
   client: Comp
@@ -26,8 +39,8 @@ type Case = {
   solidWrong?: string
 }
 
-const pick = (mods: Record<string, any>, query: string) =>
-  Object.fromEntries(Object.entries(mods).map(([path, mod]) => [path.replace(query, '').replace(/^.*\//, ''), mod]))
+const pick = (mods: Record<string, unknown>, query: string) =>
+  Object.fromEntries(Object.entries(mods).map(([path, mod]) => [path.replace(query, '').replace(/^.*\//, ''), mod as Record<string, Comp>]))
 
 // Generated corpus (test/oracle.setup.ts writes it).
 const corpus = {
@@ -42,40 +55,20 @@ const items = () => [
   { id: 'c', ...fields, title: 'Gamma <g>', owner: 'grace & co', count: 0 },
 ]
 const cases: Case[] = Object.keys(corpus.dom).map(file => {
-  const name = Object.keys(corpus.dom[file])[0]
-  const of = (k: keyof typeof corpus) => corpus[k][file][name]
+  const name = Object.keys(corpus.dom[file]!)[0]!
+  const of = (k: keyof typeof corpus) => corpus[k][file]![name]!
   return { name: `corpus ${name}`, props: () => ({ items: items(), title: name }), dom: of('dom'), server: of('server'), client: of('client') }
 })
 
 // Repo components, with the props they need.
-import * as basics from './fixtures/next/Basics'
-// @ts-expect-error: query imports (vite.mjs)
-import * as basicsServer from './fixtures/next/Basics.tsx?weft-ssr'
-// @ts-expect-error
-import * as basicsClient from './fixtures/next/Basics.tsx?weft-hydrate'
-import * as two from './fixtures/next/Step2'
-// @ts-expect-error
-import * as twoServer from './fixtures/next/Step2.tsx?weft-ssr'
-// @ts-expect-error
-import * as twoClient from './fixtures/next/Step2.tsx?weft-hydrate'
-import * as bench from './fixtures/next/Bench'
-// @ts-expect-error
-import * as benchServer from './fixtures/next/Bench.tsx?weft-ssr'
-// @ts-expect-error
-import * as benchClient from './fixtures/next/Bench.tsx?weft-hydrate'
-import * as shop from './fixtures/ssr/Shop'
-// @ts-expect-error
-import * as shopServer from './fixtures/ssr/Shop.tsx?weft-ssr'
-// @ts-expect-error
-import * as shopClient from './fixtures/ssr/Shop.tsx?weft-hydrate'
 
 const products = [
   { id: 'apple', name: 'Apple', category: 'fruit', price: 0.5, stock: 20 },
   { id: 'banana', name: 'Banana & co', category: 'fruit', price: 0.25, stock: 3 },
   { id: 'yogurt', name: 'Yogurt "plain"', category: 'dairy', price: 0.9, stock: 0 },
 ]
-const repo = (name: string, key: string, mods: any[], props: () => any = () => ({}), extra: Partial<Case> = {}): Case => {
-  const [dom, server, client] = mods.map(m => m[key])
+const repo = (name: string, key: string, mods: object[], props: () => unknown = () => ({}), extra: Partial<Case> = {}): Case => {
+  const [dom, server, client] = mods.map(m => (m as Record<string, Comp>)[key]!) as [Comp, Comp, Comp]
   return { name, props, dom, server, client, ...extra }
 }
 const basicsMods = [basics, basicsServer, basicsClient]
@@ -106,16 +99,17 @@ const html = (el: Element) => {
   const walk = document.createTreeWalker(copy, NodeFilter.SHOW_COMMENT)
   const comments: Node[] = []
   while (walk.nextNode()) comments.push(walk.currentNode)
-  for (const c of comments) c.remove()
+  for (const c of comments) (c as ChildNode).remove()
   copy.normalize()
   // A form control's value is its property: the server writes it as an attribute (and `selected` on the option),
   // the DOM sets the property.
   const live = [...el.querySelectorAll('*')]
   copy.querySelectorAll('*').forEach((e, i) => {
-    if ('value' in live[i] && /^(input|textarea|select)$/.test(e.localName)) e.setAttribute('value', (live[i] as HTMLInputElement).value)
+    if ('value' in live[i]! && /^(input|textarea|select)$/.test(e.localName)) e.setAttribute('value', (live[i] as HTMLInputElement).value)
   })
   for (const e of copy.querySelectorAll('*')) {
-    const attrs = [...e.attributes].filter(a => a.name !== 'wk' && !(a.name === 'selected' && e.localName === 'option')).map(a => [a.name, norm(a.name, a.value)])
+    const attrs = [...e.attributes].filter(a => a.name !== 'wk' && !(a.name === 'selected' && e.localName === 'option')).map(a => [a.name, norm(a.name, a.value)] as const)
+    // oxlint-disable-next-line unicorn/no-useless-spread -- the copy: attributes is live and this empties it
     for (const a of [...e.attributes]) e.removeAttribute(a.name)
     for (const [n, v] of attrs.sort(([a], [b]) => (a < b ? -1 : 1))) e.setAttribute(n, v)
   }
@@ -150,18 +144,18 @@ const steps = (root: Element, skip?: string) => {
 // Solid's DOM after mount and after each step, per case (long ones as hashes). Recorded with Solid's back end and
 // this same script before step 5 deleted it. A component or script change needs a reviewed edit here.
 const golden: Record<string, string[]> = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'oracle.golden.json'), 'utf8'))
-const digest = (html: string) => (html.length <= 1500 ? html : `sha256:${createHash('sha256').update(html).digest('hex')}`)
+const digest = (text: string) => (text.length <= 1500 ? text : `sha256:${createHash('sha256').update(text).digest('hex')}`)
 
 test.each(cases.map(c => [c.name, c]))('%s: weft DOM = weft SSR + hydrate = Solid (recorded), through every interaction', async (_, c) => {
-  const a = render(c.dom, c.props()).container
-  const server = renderToString(() => c.server(c.props()))
+  const a = render(c.dom, c.props() as never).container
+  const server = renderToString(() => c.server(c.props() as never))
   const h = document.body.appendChild(document.createElement('div'))
   h.innerHTML = server
   const mutations: MutationRecord[] = []
   const observer = new MutationObserver(r => mutations.push(...r))
   observer.observe(h, { subtree: true, childList: true, attributes: true, characterData: true })
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const dispose = hydrate(() => c.client(c.props()), h)
+  const dispose = hydrate(() => c.client(c.props() as never), h)
   mutations.push(...observer.takeRecords())
   observer.disconnect()
   expect(warn).not.toHaveBeenCalled()

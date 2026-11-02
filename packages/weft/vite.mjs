@@ -442,7 +442,10 @@ function icons() {
  * `hmr` (default: when serving, outside vitest): client modules register their components with @weft-js/core/hmr and accept
  * their own updates (research 21). Never for SSR output.
  */
-/** The Vite plugin: compiles TSX, wires hydration, styles and purging, and relays `weft browser` in dev. */
+/**
+ * The Vite plugin: compiles TSX, wires hydration, styles and purging, and relays `weft browser` in dev.
+ * @param {{ dev?: boolean, hydratable?: boolean, hmr?: boolean, style?: { taggedParts?: boolean, matrix?: boolean }, purge?: false | { keep?: string[] }, off?: string[] }} [options]
+ */
 export default function weft({ dev, hydratable = false, hmr, style: styleOptions, purge: purgeOptions, off } = {}) {
   let isDev = false
   let isHot = false

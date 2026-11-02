@@ -3,10 +3,10 @@ import { resource, state, derived, untrack } from '@weft-js/core'
 import { Text } from '@weft-js/core/text'
 import { Row } from './Row'
 
-export type Post = { id: number; title: string; body: string; pic?: string }
+export type Post = { id: number; title: string; body: string; pic?: string | undefined }
 export const load = (): Promise<Post[]> => new Promise(ok => setTimeout(() => ok([{ id: 1, title: 'One', body: 'Hello' }]), 300))
 
-export function Feed(props: { shape?: Post[]; effects?: string[] }) {
+export function Feed(props: { shape?: Post[] | undefined; effects?: string[] | undefined }) {
   const posts = resource(load, { shape: { of: load, read: () => props.shape } })
   const count = state(0)
   const rows = derived(() => posts.value ?? [])

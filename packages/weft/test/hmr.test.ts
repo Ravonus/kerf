@@ -13,7 +13,7 @@ import { hmrStats } from '@weft-js/core/hmr'
 
 const { transform } = createRequire(import.meta.url)('../compiler.cjs')
 
-type Exports = Record<string, any>
+type Exports = Record<string, unknown>
 const modules: Record<string, Exports> = {
   '@weft-js/core': { ...core, defineState, onCleanup, onMount, state, watch },
   '@weft-js/core/dom': dom,
@@ -35,15 +35,17 @@ function load(file: string, source: string, compile = { dev: true, hmr: true }) 
     .replace(/^export (default )?(function|const) (\w+)/gm, (_: string, _d: string, kind: string, name: string) => (names.push(name), `${kind} ${name}`))
     .replace(/import\.meta\.hot/g, '__hot')
   code = `${imports.join('\n')}\n${code}\nreturn { ${names.join(', ')} };`
+  // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- running the compiler's output is the test, and the source is this file's own
   const exports = new Function('__m', '__hot', code)(modules, hot) as Exports
   modules[file] = exports
   return { exports, hot, code: out.code as string }
 }
 
 let disposers: (() => void)[] = []
-function mount(App: any) {
+type Comp = (props: {}) => unknown
+function mount(App: unknown) {
   const el = document.body.appendChild(document.createElement('div'))
-  disposers.push(render(() => component(App, {}, 'App', 'test'), el), () => el.remove())
+  disposers.push(render(() => component(App as Comp, {}, 'App', 'test'), el), () => el.remove())
   return el
 }
 afterEach(() => {
@@ -149,7 +151,7 @@ describe('updates', () => {
     const { exports } = load(f, page('One'))
     const el = mount(exports.Page)
     const items = () => [...el.querySelectorAll('li')]
-    click(items()[1]); click(items()[1]); flush()
+    click(items()[1]!); click(items()[1]!); flush()
     expect(items().map(li => li.textContent)).toEqual(['a 0', 'b 2'])
     load(f, page('Two'))
     flush()
@@ -163,7 +165,7 @@ describe('updates', () => {
       export function A() { return <p>a</p> }
       export function B() { return <p>${b}</p> }`
     const { exports } = load(f, two('b'))
-    const Both = () => [component(exports.A, {}, 'A'), component(exports.B, {}, 'B'), component(exports.B, {}, 'B')]
+    const Both = () => [component(exports.A as Comp, {}, 'A'), component(exports.B as Comp, {}, 'B'), component(exports.B as Comp, {}, 'B')]
     const el = mount(Both)
     hmrStats.reruns = 0
     load(f, two('b2'))
@@ -196,7 +198,7 @@ describe('updates', () => {
         watch(() => count.value, () => { globalThis.__runs++ })
         return <button onClick={() => count.value++}>${label} {count.value}</button>
       }`
-    const g = globalThis as any
+    const g = globalThis as typeof globalThis & { __keys: number; __runs: number }
     g.__keys = 0
     g.__runs = 0
     load(f, keys('v0'))
@@ -241,7 +243,8 @@ describe('updates', () => {
       export function Lines() { return <p>${label} {cart.lines.value}</p> }`
     const first = load(f, cart('lines')).exports
     const el = mount(first.Lines)
-    first.cart.add(); first.cart.add()
+    const added = first.cart as { add(): void }
+    added.add(); added.add()
     flush()
     expect(el.textContent).toBe('lines 2')
     const second = load(f, cart('items')).exports
@@ -276,11 +279,11 @@ describe('gate: HMR with 1k mounted components (PLAN §3.7, ≤ 50 ms p95)', () 
       flush()
       const li = el.querySelectorAll('li')[i]
       times.push(performance.now() - t0)
-      expect(li.firstChild!.textContent).toBe(`edit${r}`)
-      expect(li.textContent).toBe(`edit${r} x ${i}`)
+      expect(li!.firstChild!.textContent).toBe(`edit${r}`)
+      expect(li!.textContent).toBe(`edit${r} x ${i}`)
     }
     times.sort((a, b) => a - b)
-    const p = (q: number) => times[Math.min(times.length - 1, Math.floor(q * times.length))]
+    const p = (q: number) => times[Math.min(times.length - 1, Math.floor(q * times.length))]!
     console.log(`hmr gate (1k components, jsdom): p50 ${p(0.5).toFixed(2)} ms, p95 ${p(0.95).toFixed(2)} ms, max ${times.at(-1)!.toFixed(2)} ms`)
     expect(p(0.95)).toBeLessThan(50)
   })
