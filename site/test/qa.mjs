@@ -758,6 +758,95 @@ for (const path of ['/components/button', '/components/table', '/blocks/checkout
   })
 }
 
+// The playground is one object near the top of the page: the component large on a stage, the controls beside it on a
+// desk and under it on a phone, the live code under both. Nothing in it runs past the page's edge.
+for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {
+  for (const path of ['/components/button', '/components/table']) {
+    await check(`playground is one unit at ${viewport.width} ${path}`, path, async page => {
+      await page.locator('#playground').scrollIntoViewIfNeeded()
+      await page.waitForSelector('#playground [data-part="mount"][data-ready]', { timeout: 8000 })
+      await page.waitForTimeout(300)
+      const r = await page.evaluate(() => {
+        const box = s => { const e = document.querySelector(`#playground [data-play] ${s}`); if (!e) return null; const b = e.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom, w: b.width } }
+        const ids = [...document.querySelectorAll('[data-site="doc"] > section[id]')].map(x => x.id)
+        return {
+          stage: box('[data-part="pair"] > [data-part="stage"]'), knobs: box('[data-part="knobs"]'), code: box('> [data-part="code"] pre'), frame: box(''),
+          copy: !!document.querySelector('#playground [data-play] > [data-part="code"] [data-act="copy"]'), reset: !!document.querySelector('#playground [data-part="knobs-head"] button'),
+          title: document.querySelector('#playground > h2')?.textContent, at: ids.indexOf('playground'), usage: ids.indexOf('usage'), firstVariant: ids.findIndex(i => !['preview', 'installation', 'playground', 'usage'].includes(i)),
+          over: document.documentElement.scrollWidth - document.documentElement.clientWidth, vw: document.documentElement.clientWidth,
+        }
+      })
+      for (const k of ['stage', 'knobs', 'code']) if (!r[k] || r[k].w < 40) throw new Error(`no ${k}`)
+      same(r.title, 'Try it', 'title')
+      same(r.copy && r.reset, true, 'copy and reset')
+      if (!(r.at > -1 && r.at < r.usage && r.at < r.firstVariant)) throw new Error(`playground is section ${r.at}, usage ${r.usage}, first variant ${r.firstVariant}`)
+      same(r.over, 0, 'page overflow')
+      if (r.frame.r > r.vw + 0.5 || r.frame.l < -0.5) throw new Error(`frame runs ${r.frame.l}..${r.frame.r} in ${r.vw}`)
+      const wide = path === '/components/table' // a fill stage keeps the full width and puts the controls under it
+      if (viewport.width === 1280 && !wide) {
+        if (!(r.knobs.l >= r.stage.r - 1 && Math.abs(r.knobs.t - r.stage.t) < 2)) throw new Error(`controls not beside the stage: stage ${JSON.stringify(r.stage)} controls ${JSON.stringify(r.knobs)}`)
+        if (r.stage.w < r.knobs.w * 1.4) throw new Error(`stage ${r.stage.w}px is not the large part beside ${r.knobs.w}px of controls`)
+      } else if (r.knobs.t < r.stage.b - 1) throw new Error(`controls not under the stage: stage bottom ${r.stage.b}, controls top ${r.knobs.t}`)
+      if (r.code.t < Math.max(r.stage.b, r.knobs.b) - 1) throw new Error('the code is not under the stage and controls')
+    }, viewport)
+  }
+}
+
+// A knob changes the component on the stage and the code with it, and Reset takes both back.
+await check('a knob changes the preview and the code', '/components/button', async page => {
+  await page.locator('#playground').scrollIntoViewIfNeeded()
+  await page.waitForSelector('#playground [data-part="mount"][data-ready] [data-scope="button"]', { timeout: 8000 })
+  const shown = () => page.evaluate(() => { const b = document.querySelector('#playground [data-part="mount"] [data-scope="button"]'); return b && { size: b.dataset.size ?? 'md', tone: b.dataset.tone ?? 'accent' } }) // a default is left off the element
+  same((await shown()).size, 'md', 'start size')
+  await page.locator('#playground [data-part="knob"]:has([data-part="knob-label"]:text-is("Size")) label:has(input[value="lg"])').click()
+  await printed(page, 'size="lg"')
+  await page.waitForFunction(() => document.querySelector('#playground [data-part="mount"] [data-scope="button"]')?.dataset.size === 'lg', null, { timeout: 4000 })
+  await page.locator('#playground [data-part="knob"]:has([data-part="knob-label"]:text-is("Tone")) label:has(input[value="critical"])').click()
+  await printed(page, 'tone="critical"')
+  await page.waitForFunction(() => document.querySelector('#playground [data-part="mount"] [data-scope="button"]')?.dataset.tone === 'critical', null, { timeout: 4000 })
+  same(new URL(page.url()).searchParams.get('tone'), 'critical', 'the address keeps it')
+  await page.locator('#playground [data-part="knobs-head"] button').click()
+  await printed(page, '<Button>Deploy</Button>')
+  same(JSON.stringify(await shown()), JSON.stringify({ size: 'md', tone: 'accent' }), 'after reset')
+})
+
+// The playground's stage takes the page's themes and expressions, and its own.
+await check('the playground stage switches theme and expression', '/components/button', async page => {
+  await page.locator('#playground').scrollIntoViewIfNeeded()
+  await page.waitForSelector('#playground [data-part="mount"][data-ready]', { timeout: 8000 })
+  const stage = page.locator('#playground [data-part="pair"] > [data-part="stage"]')
+  await page.locator('#playground [data-act="stage-theme"]').click()
+  same(await stage.getAttribute('data-theme'), 'light', 'theme')
+  await page.locator('#playground [data-act="stage-theme"]').click()
+  same(await stage.getAttribute('data-theme'), 'dark', 'theme')
+  const seen = new Set()
+  for (let i = 0; i < 3; i++) { await page.locator('#playground [data-act="stage-expression"]').click(); seen.add(await stage.getAttribute('data-expression')) }
+  same([...seen].sort().join(), 'balanced,quiet,vivid', 'expressions')
+  same(await page.locator('#playground [data-part="mount"] [data-scope="button"]').count(), 1, 'the button is still there')
+})
+
+// Every page with a playground draws it: the component on the stage, the code printed, no error on the way.
+await check('every playground renders', '/components', async page => {
+  const { readFileSync } = await import('node:fs')
+  const pages = JSON.parse(readFileSync(new URL('../src/generated/toolkit.json', import.meta.url), 'utf8'))
+  const paths = Object.values(pages).filter(p => p.playground).map(p => `/${p.area}/${p.slug}`)
+  if (paths.length < 40) throw new Error(`only ${paths.length} playgrounds`)
+  const bad = []
+  let errors = []
+  page.on('pageerror', e => errors.push(e.message.split('\n')[0]))
+  for (const path of paths) {
+    errors = []
+    await page.goto(base + path, { waitUntil: 'load' })
+    await page.locator('#playground').scrollIntoViewIfNeeded()
+    const ok = await page.waitForSelector('#playground [data-part="mount"][data-ready]', { timeout: 8000 }).then(() => true, () => false)
+    await page.waitForTimeout(150)
+    const r = await page.evaluate(() => ({ kids: document.querySelector('#playground [data-part="mount"]')?.childElementCount ?? 0, code: document.querySelector('#playground [data-play] > [data-part="code"] pre')?.innerText ?? '', failed: /failed to load/.test(document.querySelector('#playground')?.textContent ?? ''), over: document.documentElement.scrollWidth - document.documentElement.clientWidth }))
+    const why = [!ok && 'never mounted', !r.kids && 'empty stage', !/from '@weft\/warp'/.test(r.code) && 'no code', r.failed && 'failed to load', r.over > 0 && `overflows ${r.over}px`, ...errors].filter(Boolean)
+    if (why.length) bad.push(`${path} (${why.join(', ')})`)
+  }
+  same(bad.join('; '), '', 'playgrounds')
+})
+
 await b.close()
 console.log(`${passed} passed, ${failed.length} failed`)
 for (const f of failed) console.log(`  failed: ${f}`)
