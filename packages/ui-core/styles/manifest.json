@@ -116,7 +116,6 @@
   "flows/bulk-bar.css"
  ],
  "button": [
-  "components/base.css",
   "components/button.css",
   "components/button-group.css",
   "components/dialog.css",

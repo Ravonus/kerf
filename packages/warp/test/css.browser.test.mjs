@@ -83,3 +83,12 @@ test('a button\'s tone channels set its fill and its hover layer', async () => {
   expect(await p.$eval('#b', n => getComputedStyle(n).color)).toBe('rgb(255, 255, 255)')
   expect(await p.$eval('#b', n => getComputedStyle(n, '::before').backgroundColor)).toBe('rgb(51, 51, 51)')
 })
+
+test('a closed accordion panel takes no height, whichever order the sheets come in', async () => {
+  const held = ['components/accordion.css', 'components/base.css']
+  for (const sheets of [held, [...held].reverse()]) {
+    const p = await browser.newPage()
+    await p.setContent(`<!doctype html><style>${read('warp.css')}${sheets.map(read).join('\n')}</style><div data-scope="accordion"><div id="c" data-part="content" style="padding:0"><div><div>Hidden text that has a height of its own</div></div></div></div>`)
+    expect(await p.$eval('#c', n => [getComputedStyle(n).display, n.getBoundingClientRect().height])).toEqual(['grid', 0])
+  }
+})

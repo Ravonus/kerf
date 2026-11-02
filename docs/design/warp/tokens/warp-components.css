@@ -34,10 +34,6 @@
 :where([data-scope="surface"], [data-scope="menu"][data-part="content"], [data-scope="select"][data-part="content"],
        [data-scope="accordion"] [data-part="item"]) { --warp-sweep-radius: var(--warp-radius-surface); }
 :where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--warp-sweep-surfaces); }
-/* warp.signature styles every [data-part="content"] as the frame button's inline-flex label.
-   Components use "content" for panels too (menu, popover, tabs, accordion), so reset it here
-   for everything except a button's own content; later component rules set their real display. */
-:where([data-part="content"]):where(:not([data-scope="button"] > *)) { display: block; align-items: normal; justify-content: normal; gap: normal; }
 :where([data-part="content"][hidden], [data-part="content"][popover]:not(:popover-open)) { display: none; }
 /* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (warp.signature §1b) */
 
