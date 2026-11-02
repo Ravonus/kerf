@@ -249,3 +249,11 @@ test('a textarea opens at its rows: rows=5 is five lines tall, the default three
   expect(Math.round((h[1].h - h[1].pad) / h[1].line)).toBe(3)
 })
 
+test('vivid: a small button lifts on a small offset, not the full bar under a 24px copy icon', async () => {
+  const off = await page.evaluate(() => {
+    const read = el => { const i = document.createElement('i'); i.style.cssText = 'position:absolute;inline-size:var(--warp-offset)'; el.append(i); const w = i.getBoundingClientRect().width; i.remove(); return w }
+    return { copy: read(document.querySelector('#code-vivid [data-act="copy"]')), solid: read(document.querySelector('#solid button')) }
+  })
+  expect(off.solid).toBeGreaterThan(0)
+  expect(off.copy).toBeLessThanOrEqual(off.solid / 2)
+})

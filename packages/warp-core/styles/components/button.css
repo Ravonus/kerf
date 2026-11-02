@@ -180,6 +180,8 @@
 :where([data-scope="button"][data-emphasis="link"]:hover) { text-decoration-color: currentColor; text-decoration-thickness: var(--warp-border-emphasis); }
 :where([data-scope="button"][data-emphasis="link"]:active) { scale: 1; }
 :where([data-scope="button"][data-size="sm"]) { block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); gap: calc(var(--warp-space-related) * 0.75); }
+/* vivid's hard offset in scale with a small button: the full one under a 24px icon (a code block's copy) read as a bar */
+:where([data-scope="button"][data-size="sm"]) { --warp-offset: calc(var(--warp-ref-offset) / 3); }
 :where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
 :where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="button"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
