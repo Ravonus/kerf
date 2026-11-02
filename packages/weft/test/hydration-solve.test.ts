@@ -195,6 +195,15 @@ test('the hatches: `@weft client` keeps its meaning, `@weft visible` overrules t
   expect(seen.diagnostics).toEqual([])
 })
 
+test('`@weft interaction` stops the search at what it marks, and nothing else', async () => {
+  const child = (hatch: string) => ({ 'd.tsx': `import { onMount } from 'weft'\n${hatch}\nexport function D() { onMount(() => { document.title = 'x' }); return <p /> }` })
+  const route = `import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`
+  expect((await at(route, child(''))).load.when).toBe('load')
+  expect((await at(route, child('/* @weft interaction */'))).load).toMatchObject({ when: 'interaction', why: expect.stringMatching(/handlers only/) })
+  const beside = { ...child('/* @weft interaction */'), 'e.tsx': `import { onMount } from 'weft'\nexport function E() { onMount(() => {}); return <p /> }` }
+  expect((await at(`import { D } from './d'\nimport { E } from './e'\nexport function C() { return <div onClick={() => {}}><D /><E /></div> }`, beside)).load.when).toBe('visible')
+})
+
 test('`lazy: false`: every island loads with the page, as an opt-out', async () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-solve-'))
   dirs.push(root)

@@ -14,7 +14,8 @@
 // Then when each island loads, from everything it reaches. Waiting is the default and has to be earned the other way
 // round from above: only what is seen doing nothing without an event may wait for one.
 //
-//   interaction  handlers and nothing else: every change starts with an event, and events replay
+//   interaction  handlers and nothing else: every change starts with an event, and events replay. `@weft interaction` says
+//                so of work that starts by itself but only matters to someone using it, where the compiler can't prove it
 //   visible      work that starts by itself but stays inside the island (`onMount` with `SAFE` globals only), or server
 //                data that can move on; `@weft visible` says so where the compiler can't prove it
 //   load         anything else: `@weft client`, `autofocus`, a `ref` that does work, a module that runs as it loads, a
@@ -243,7 +244,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
       if (seen.has(o)) return
       seen.add(o)
       if (o.force === 'visible') return void (forced = o)
-      if (o.force === 'static') return
+      if (o.force === 'static' || o.force === 'interaction') return
       if (o.force === 'client') return halt(`\`@weft client\` on ${at(o)}`)
       if (o.early) halt(`${o.early} in ${at(o)}`, o.early.startsWith('`autofocus') ? undefined : `keep the \`ref\` to storing the node, and do the work in a handler`)
       if (o.mod.facts.effects) halt(`${rel(o.mod.file)} runs ${o.mod.facts.effects} as it loads`, `move that into a function an island calls`)
@@ -252,7 +253,7 @@ export async function solve({ entries, transform, resolve, rel, cache = new Map(
     }
     nested(n, s)
     if (stop) return stop
-    const away = [...seen].flatMap(o => o.globals).filter(g => !SAFE.has(g))
+    const away = [...seen].flatMap(o => (o.force === 'interaction' ? [] : o.globals)).filter(g => !SAFE.has(g))
     if (start && away.length) return { why: `${start} can reach \`${away[0]}\`, past the island`, fix: `\`/* @weft visible */\` above the component, when that only matters once it's on screen` }
     if (forced) return { when: 'v', why: `\`@weft visible\` on ${at(forced)}` }
     if (start) return { when: 'v', why: `${start} stays inside the island` }

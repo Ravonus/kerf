@@ -69,7 +69,7 @@ pub struct Node {
     pub own: Option<String>,
     /// A handler or spread that holds only what a call site wrote: `own`, unless something other than a tag reaches this.
     pub passes: Option<String>,
-    /// The `@weft client` / `@weft static` / `@weft visible` comment above it.
+    /// The `@weft client` / `@weft static` / `@weft visible` / `@weft interaction` comment above it.
     pub force: Option<String>,
     pub uses: Vec<String>,
     pub sites: Vec<Site>,
@@ -768,6 +768,8 @@ fn hatch(source: &str, from: u32, to: u32) -> Option<String> {
         Some("static".into())
     } else if text.contains("@weft visible") {
         Some("visible".into())
+    } else if text.contains("@weft interaction") {
+        Some("interaction".into())
     } else {
         None
     }
