@@ -129,6 +129,44 @@ describe('CommandPalette', () => {
     expect(document.querySelector('[role="option"]')!.textContent).toContain('Settings')
     expect(document.querySelector('[role="option"]')!.textContent).not.toContain('Settingst')
   })
+  test('opening a nested row starts its level with an empty query, typing filters that level, and leaving clears it again', async () => {
+    const r = render(() => <C.PaletteNested />)
+    r.container.querySelector('button')!.click()
+    await flush()
+    const input = document.querySelector<HTMLInputElement>('[role="combobox"]')!
+    const labels = () => [...document.querySelectorAll('[role="option"]')].filter(o => !(o as HTMLElement).hidden).map(o => o.textContent)
+    type(input, 'Move')
+    await flush()
+    expect(labels()).toEqual([expect.stringContaining('Move to')])
+    key(input, 'Enter') // no run: opens its children
+    await flush()
+    expect(input.value).toBe('')
+    expect(labels()).toEqual(['Inbox', 'Archive', 'us-east', 'us-west'])
+    type(input, 'us-ea') // was "Moveus-ea", searching the top level
+    await flush()
+    expect(input.value).toBe('us-ea')
+    expect(labels()).toEqual(['us-east'])
+    key(input, 'Escape') // clears the query, stays in the level
+    await flush()
+    expect(input.value).toBe('')
+    expect(labels()).toHaveLength(4)
+    type(input, 'arch')
+    await flush()
+    type(input, 'arch', 0)
+    key(input, 'ArrowLeft') // at the query's start: back to the top, with the query cleared
+    await flush()
+    expect(input.value).toBe('')
+    expect(labels()).toEqual([expect.stringContaining('Move to'), expect.stringContaining('Settings')])
+    type(input, 'Move')
+    await flush()
+    key(input, 'ArrowRight')
+    await flush()
+    expect(input.value).toBe('')
+    expect(labels()).toHaveLength(4)
+    key(input, 'Escape') // an empty query in a level goes back up
+    await flush()
+    expect(labels()).toHaveLength(2)
+  })
   test('the arrows wrap and the input keeps focus through aria-activedescendant', async () => {
     const input = await opened()
     const list = () => input.getAttribute('aria-activedescendant')
