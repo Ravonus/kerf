@@ -4,7 +4,8 @@
 // and patch attributes in place. The legend, the chart | table toggle and the enter motion are delegated from the
 // figure, so a binding only has to render the markup.
 import { esc, patch, play } from './scene'
-import { sparkScene } from './spark'
+import { f1 } from './math'
+import { sparkPoints, sparkScene } from './spark'
 import type { Ctx, Form, Plot, TableData, Tip } from './types'
 
 /** The width a chart lays out at when nothing can be measured (the server's first pass). */
@@ -270,13 +271,45 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
 /** A sparkline's width follows its box; everything else is the parent's label (06 §12: aria-hidden). */
 export function spark(el: SVGSVGElement, values: number[]) {
   let list = values
+  let home: [string | null, string | null] | undefined // where the dot rests, while a hover has it
   const draw = () => {
     const w = Math.round(el.clientWidth)
     if (!w) return
     el.setAttribute('viewBox', `0 0 ${w} 36`)
     patch(el, sparkScene(list, w))
+    home = undefined
   }
   const size = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(draw)
   size?.observe(el)
-  return { update(v: number[]) { list = v; draw() }, destroy() { size?.disconnect() } }
+  // hover walks the end dot along the line and says the value there; the parent's label stays the meaning
+  const note = el.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'text')
+  note.setAttribute('font-size', '11')
+  note.setAttribute('fill', 'currentColor')
+  const hover = (e: PointerEvent) => {
+    const r = el.getBoundingClientRect(), dot = el.querySelector('.dot')
+    if (!dot || !r.width || !list.length) return
+    const pts = sparkPoints(list, r.width), x = e.clientX - r.left
+    const i = pts.reduce((best, p, n) => (Math.abs(p[0] - x) < Math.abs(pts[best][0] - x) ? n : best), 0)
+    home ??= [dot.getAttribute('cx'), dot.getAttribute('cy')]
+    dot.setAttribute('cx', f1(pts[i][0]))
+    dot.setAttribute('cy', f1(pts[i][1]))
+    const left = pts[i][0] < r.width / 2
+    note.textContent = String(list[i])
+    note.setAttribute('text-anchor', left ? 'start' : 'end')
+    note.setAttribute('x', f1(pts[i][0] + (left ? 6 : -6)))
+    note.setAttribute('y', f1(Math.max(10, pts[i][1] - 6)))
+    el.append(note)
+  }
+  const rest = () => {
+    note.remove()
+    const dot = el.querySelector('.dot')
+    if (dot && home) { dot.setAttribute('cx', home[0]!); dot.setAttribute('cy', home[1]!) }
+    home = undefined
+  }
+  el.addEventListener('pointermove', hover)
+  el.addEventListener('pointerleave', rest)
+  return {
+    update(v: number[]) { list = v; draw() },
+    destroy() { size?.disconnect(); el.removeEventListener('pointermove', hover); el.removeEventListener('pointerleave', rest) },
+  }
 }
