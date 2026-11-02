@@ -47,7 +47,7 @@ function KnobControl(props: { knob: ShownPlayground['knobs'][number]; values: { 
  * again, since some props are fixed at creation; changes in one frame are coalesced so a slider stays smooth. The URL
  * holds what differs from the start, so a state can be linked.
  */
-export function Playground(props: { file: string; name: string; play: ShownPlayground }) {
+export function Playground(props: { file: string; name: string; play: ShownPlayground; flow?: string }) {
   const play = props.play
   const seed = untrack(() => startOf(props.play))
   const values = state<Values>(seed)
@@ -125,7 +125,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   const code = derived(() => print(play, props.name, values.value))
   const html = derived(() => highlight(code.value, 'tsx'))
   return (
-    <div data-site="frame" data-flow="card" data-play={play.stage === 'fill' ? 'wide' : ''} data-hero="">
+    <div data-site="frame" data-flow={props.flow ?? 'card'} data-play={play.stage === 'fill' ? 'wide' : ''} data-hero="">
       <div data-part="tools">
         <span data-part="play-live"><span data-part="dot" aria-hidden="true"></span>Live preview</span>
         <span data-part="spacer"></span>

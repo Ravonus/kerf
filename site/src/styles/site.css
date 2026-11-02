@@ -149,7 +149,7 @@
   [data-site="icons"] [data-part="count"] { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
   [data-site="icons"] [data-scope="virtual"] { block-size: 68dvh; }
   [data-site="icons"] [data-scope="virtual"] [data-part="row"] { display: block; block-size: auto; padding-inline: 0; border-block-end: 0; }
-  [data-site="icons"] [data-part="line"] { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); }
+  [data-site="icons"] [data-part="line"] { --warp-flow-cols: var(--cols); display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); }
   [data-site="icons"] [data-part="cell"] { display: grid; grid-template-rows: var(--glyph) auto; justify-items: center; align-content: center; gap: var(--warp-space-related); block-size: var(--cell); inline-size: 100%; padding: var(--warp-space-related) var(--warp-space-tight); }
   /* Names are identifiers: shown whole, as written, breaking after a hyphen when they need two lines. */
   [data-site="icons"] [data-part="name"] { max-inline-size: 100%; min-block-size: 2lh; white-space: normal; overflow-wrap: normal; word-break: normal; hyphens: manual; text-align: center; text-transform: none; letter-spacing: normal; font-size: var(--warp-text-caption-size); line-height: 1.25; color: var(--warp-color-text-subtle); }

@@ -9,10 +9,10 @@ import '../styles/example.css'
 /** A live example: what it is, the running result beside its real source, what to try, and why it matters. */
 export function Example(props: { id: string; plain?: boolean; title?: string; lead?: boolean; children?: unknown }) {
   return (
-    <section data-site="example" data-flow="card" data-lead={props.lead ? '' : undefined}>
+    <section data-site="example" data-lead={props.lead ? '' : undefined}>
       {!props.plain && <h2 data-flow="heading">{props.title ?? demos[props.id].title}</h2>}
-      <p>{demos[props.id].look}</p>
-      <div data-part="pair">
+      <p data-flow="item">{demos[props.id].look}</p>
+      <div data-part="pair" data-flow="card">
         <div data-part="run">{props.children}</div>
         {/* the kit's frames' copy button, the same markup: SpotlightGate's one copyButtons() listener runs it */}
         <div data-scope="codeblock" data-bare="">
@@ -24,7 +24,7 @@ export function Example(props: { id: string; plain?: boolean; title?: string; le
           <div data-part="source" innerHTML={code[props.id]}></div>
         </div>
       </div>
-      <dl>
+      <dl data-flow="item">
         <div><dt>Try this</dt><dd>{demos[props.id].tryIt}</dd></div>
         <div><dt>Why it matters</dt><dd>{demos[props.id].why}</dd></div>
       </dl>

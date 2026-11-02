@@ -64,7 +64,7 @@ export function IconBrowser() {
         {row => (
           <div data-part="line" style={`--cols:${cols.value}`}>
             {row().names.map(n => (
-              <Button key={n} emphasis="ghost" tone="neutral" data-part="cell" onClick={() => show(n)} aria-label={n}>
+              <Button key={n} emphasis="ghost" tone="neutral" data-part="cell" data-flow="icon" onClick={() => show(n)} aria-label={n}>
                 <span data-part="glyph" innerHTML={drawing(n, form.value)}></span>
                 <span data-part="name">{n.split('-').map((w, i, all) => (i < all.length - 1 ? [`${w}-`, <wbr />] : w))}</span>
               </Button>

@@ -813,6 +813,71 @@ for (const path of ['/components/button', '/components/table', '/blocks/checkout
   })
 }
 
+// Everything that fades in as the page scrolls fades out again as it passes under the header: cards, the frames and
+// their code, headings, notes, a heading at the top of a tall example. Fields (a form being filled) stay whole. The
+// page is walked in 25px steps and each flowed element is watched while its bottom edge crosses the header line: it
+// must read below 0.9 there, its own fade times its hosts'. Then by name: no family is entry only (warp-out-none).
+const flowSweep = page => page.evaluate(async () => {
+  const frame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  const field = e => e.matches('[data-scope="field"], [data-scope="form"] > *, [data-flow="form"]') || !!e.closest('[data-scope="field"]')
+  const flows = e => e.getAnimations().filter(a => a.timeline?.constructor.name === 'ViewTimeline' && /^warp-(in|out)-/.test(a.animationName ?? '') && !/^warp-in-(scan|value)$/.test(a.animationName))
+  const all = [...document.querySelectorAll('main *')].filter(e => flows(e).some(a => a.animationName.startsWith('warp-in-')) && !field(e) && e.checkVisibility() && e.getBoundingClientRect().height > 0)
+  const entryOnly = all.filter(e => !flows(e).some(a => a.animationName.startsWith('warp-out-') && a.animationName !== 'warp-out-none'))
+  const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--warp-flow-top')) || 57
+  const seen = new Map()
+  const seeing = e => { let o = 1; for (let p = e; p; p = p.parentElement) o *= +getComputedStyle(p).opacity; return o }
+  const end = document.documentElement.scrollHeight - innerHeight
+  for (let y = 0; y <= end; y += 25) {
+    scrollTo({ top: y, behavior: 'instant' })
+    await frame()
+    for (const e of all) {
+      const b = e.getBoundingClientRect().bottom
+      if (b <= line && b >= line - 30) seen.set(e, Math.min(seen.get(e) ?? 1, seeing(e)))
+    }
+  }
+  const name = e => `${e.localName}${e.dataset.scope ? `[${e.dataset.scope}]` : ''}${e.dataset.flow ? `{${e.dataset.flow}}` : ''} "${(e.textContent ?? '').trim().slice(0, 24)}"`
+  return { flowed: all.length, watched: seen.size, entryOnly: entryOnly.map(name), stays: [...seen].filter(([, o]) => o > 0.9).map(([e, o]) => `${name(e)} at ${o.toFixed(2)}`) }
+})
+for (const path of ['/components/select', '/components/calendar', '/blocks', '/blocks/checkout', '/charts/line-chart', '/examples', '/art']) {
+  await check(`flow: nothing fades in without fading out ${path}`, path, async page => {
+    await mount(page)
+    const r = await flowSweep(page)
+    if (r.flowed < 8 || r.watched < 5) throw new Error(`only ${r.flowed} flowed and ${r.watched} watched`)
+    same(r.entryOnly.slice(0, 6).join(' | '), '', `${r.entryOnly.length} entry only`)
+    same(r.stays.slice(0, 6).join(' | '), '', `${r.stays.length} whole at the header`)
+  })
+}
+// Each area's frames and hub cards move their own way, and the icon grid flows inside its window.
+await check('flow: components, blocks and charts each move their own way', '/components/select', async page => {
+  const pairs = {}
+  for (const path of ['/components/select', '/blocks/checkout', '/charts/line-chart', '/components', '/blocks', '/charts']) {
+    await page.goto(base + path, { waitUntil: 'load' })
+    pairs[path] = await page.evaluate(() => [...new Set([...document.querySelectorAll(':is([data-site="frame"], [data-site="tile"])')].map(e => e.getAnimations().map(a => a.animationName).filter(n => /^warp-(in|out)-/.test(n)).join('+')))].join())
+  }
+  same(pairs['/components/select'], pairs['/components'], 'a component frame and card')
+  same(new Set([pairs['/components/select'], pairs['/blocks/checkout'], pairs['/charts/line-chart']]).size, 3, `three areas: ${JSON.stringify(pairs)}`)
+})
+await check('flow: the icon grid fades in and out in its window', '/icons', async page => {
+  const win = page.locator('[data-site="icons"] [data-scope="virtual"]')
+  await win.scrollIntoViewIfNeeded()
+  await page.locator('[data-site="icons"] [data-part="cell"]').first().waitFor()
+  await win.evaluate(w => { w.scrollTop = 600 })
+  await page.waitForTimeout(500) // the window mounts the rows it now shows
+  // the first row still in the window, scrolled until its bottom edge is 10px under the window's top: it is leaving
+  await win.evaluate(w => {
+    const top = w.getBoundingClientRect().top, cell = [...w.querySelectorAll('[data-part="cell"]')].find(c => c.getBoundingClientRect().bottom > top + 10)
+    cell.dataset.leaving = ''
+    w.scrollTop += cell.getBoundingClientRect().bottom - top - 10
+  })
+  await page.waitForTimeout(300)
+  const r = await win.evaluate(w => ({
+    names: [...new Set([...w.querySelectorAll('[data-part="cell"]')].map(c => c.getAnimations().map(a => a.animationName).join('+')))],
+    low: [+getComputedStyle(w.querySelector('[data-leaving]')).opacity],
+  }))
+  same(r.names.join(), 'warp-in-icon+warp-out-icon', 'cell animations')
+  if (!r.low.length || Math.max(...r.low) > 0.9) throw new Error(`cells leaving the window's top read ${r.low.join(', ')}`)
+})
+
 // The playground is one object near the top of the page: the component large on a stage, the controls beside it on a
 // desk and under it on a phone, the live code under both. Nothing in it runs past the page's edge.
 for (const viewport of [{ width: 1280, height: 900 }, PHONE]) {

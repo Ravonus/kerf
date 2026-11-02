@@ -1471,6 +1471,13 @@
        out. Their hosts only, each one a direct child: a bare `[data-part="scrim"]` in :has() matched every ancestor up to
        html, so one Shell anywhere on a page (a hub thumbnail) silenced the whole page's flow. */
     :has(> :is([data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"]))) { --warp-flow-gate: none; }
+  /* a virtual window holds its rows out (they mount and recycle), but cells in a row that name a family opt back in, on
+     the window's own timeline, with no header over it. Only the window's hold lifts: reduced motion, print and
+     data-flow="off" still win */
+  :where([data-part="spacer"] > [data-part="row"]:not([data-probe]) [data-flow]:not([data-flow="off"])) { --warp-flow-gate: initial; --warp-flow-top: 0px; }
+  @media print { :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --warp-flow-gate: none; } }
+  @media (prefers-reduced-motion: reduce) { :root:not([data-motion]) :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --warp-flow-gate: none; } }
+  :where([data-motion="reduce"], [data-flow="off"]) :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --warp-flow-gate: none; }
   /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
   :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-scope="prose"] > *, [data-flow]):nth-child(n + 121) { --warp-flow-gate: none; }
 }
@@ -1488,7 +1495,7 @@
      level, so a list's paragraphs move with their list */
   :where([data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li, [data-scope="prose"] > :is(p, ul, ol, dl, blockquote), [data-flow="item"]) { --_flow-in: warp-in-item; --_flow-out: warp-out-fade; --warp-flow-reach: calc(var(--warp-ref-flow-reach) * 0.8); }
   :where([data-scope="stat"], [data-flow="stat"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; }
-  :where([data-scope="chart"], [data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-fade; --_flow-o: 50% 100%; }
+  :where([data-scope="chart"], [data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-chart; --_flow-o: 50% 100%; }
   :where([data-scope="gallery"] [data-part="item"], figure, [data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
   /* a heading leaves as its section's words do, by fading where they fade, without a move: left standing over a section
      that has gone, it read as a label for nothing */
@@ -1498,6 +1505,14 @@
   :where([data-scope="prose"] > pre) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; }
   :where([data-scope="form"] > *, [data-scope="field"], [data-flow="form"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-none; }
   :where([data-scope="kanban"] [data-part="card"], [data-flow="deal"]) { --_flow-in: warp-in-deal; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
+  /* hosts for a live example, one motion per kind of thing shown. A specimen (one component on its bench) grows in
+     about its centre, with no travel, and recedes the same way; a block (a page's section) unfolds down from its top edge and folds back up; a plot
+     (a chart in its frame) opens along its time axis from the left and closes back to it */
+  :where([data-flow="specimen"]) { --_flow-in: warp-in-specimen; --_flow-out: warp-out-specimen; }
+  :where([data-flow="block"]) { --_flow-in: warp-in-block; --_flow-out: warp-out-block; --_flow-o: 50% 0%; }
+  :where([data-flow="plot"]) { --_flow-in: warp-in-plot; --_flow-out: warp-out-plot; --_flow-o: 0% 50%; }
+  /* a glyph in a grid: pops in by column, shrinks away */
+  :where([data-flow="icon"]) { --_flow-in: warp-in-icon; --_flow-out: warp-out-icon; }
 
   :where([data-scope="kanban"] [data-part="card"]:nth-child(even)) { --_flow-s: -1; }
 
@@ -1512,7 +1527,7 @@
       --_flow-w: min(100%, max(var(--_flow-e), 45%));
       --_flow-t: var(--warp-flow-top, calc(var(--warp-control-md) + 12px));   /* warp's bar by default; a page with another header, or none, sets its own */
       --_flow-i: 0;
-      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-nest, var(--_flow-out)));
+      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out));
       animation-timeline: view(), view();
       animation-duration: auto, auto;
       animation-timing-function: var(--warp-ref-flow-ease), linear;
@@ -1534,7 +1549,7 @@
        slab across every line at one column for as long as the page sat there. Played, a block at rest is plain at any
        position. The way back is instant, below the fold, so a block re-entering scans again. */
     :where([data-scope="codeblock"], [data-flow="code"]) {
-      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-nest, var(--_flow-out))), var(--warp-flow-gate, warp-in-scan);
+      animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out)), var(--warp-flow-gate, warp-in-scan);
       animation-timeline: view(), view(), --warp-flow-host;
       animation-duration: auto, auto, auto;
       animation-timing-function: var(--warp-ref-flow-ease), linear, linear;
@@ -1550,12 +1565,13 @@
       [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
       [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
       [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])):where(:focus-within, :target) { animation-name: none; }
-    /* opacity multiplies, so inside a flowed element only the outer one leaves: two at 0.6 would read as 0.36 */
-    :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
-      [data-scope="chart"], figure, [data-scope="codeblock"], [data-scope="prose"] > :is(p, ul, ol, dl, blockquote, pre, table), [data-flow]:not([data-flow="off"])) > * { --_flow-nest: warp-out-none; }
+    /* inside a flowed element each one leaves on its own, where it is: in a tall host, what sits at its top fades as it
+       passes the header, not when the host's far end does. (Only the outer one used to leave, so a frame's heading and
+       code stayed whole for as long as the frame was on screen.) Opacity multiplies, so the last of them, level with
+       its host's end, leaves a little faster than the rest. */
     /* stagger: siblings in one row arrive in order, by column. The grid tells us its column count, or 4 */
     @supports (width: calc(sibling-index() * 1px)) {
-      :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="stat"], [data-scope="gallery"] [data-part="item"], [data-scope="form"] > *, [data-scope="kanban"] [data-part="card"]) {
+      :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="stat"], [data-scope="gallery"] [data-part="item"], [data-scope="form"] > *, [data-scope="kanban"] [data-part="card"], [data-flow="icon"]) {
         --_flow-i: mod(calc(sibling-index() - 1), var(--warp-flow-cols, 4));
       }
     }
@@ -1592,10 +1608,20 @@
   @keyframes warp-in-value   { from { opacity: 0; translate: 0 0.4em; } }
   @keyframes warp-in-scan    { from, to { --_flow-scan: 1; } }   /* a hold, not a move: backwards, so it holds before entry too */
   @keyframes warp-out-card   { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.5); } }
-  @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); --_flow-dx: calc(var(--warp-ref-flow-x) * 0.5); } }
+  /* back the way it came: a row moving toward the end edge widened its table's scroll width as it left */
+  @keyframes warp-out-row    { to { opacity: var(--warp-ref-flow-floor); --_flow-dx: calc(var(--warp-ref-flow-x) * -0.5); } }
   @keyframes warp-out-fade   { to { opacity: var(--warp-ref-flow-floor); } }
   @keyframes warp-out-image  { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.4); } }
   @keyframes warp-out-none   { to { opacity: 1; } }
+  @keyframes warp-out-chart  { to { opacity: var(--warp-ref-flow-floor); --_flow-sy: var(--warp-ref-flow-s); } }   /* settles back to its baseline */
+  @keyframes warp-in-specimen  { from { opacity: 0; --_flow-sx: var(--warp-ref-flow-s); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-out-specimen { to { opacity: var(--warp-ref-flow-floor); --_flow-sx: var(--warp-ref-flow-s); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-block     { from { opacity: 0; --_flow-dy: calc(var(--warp-ref-flow-y) * 0.6); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-out-block    { to { opacity: var(--warp-ref-flow-floor); --_flow-dy: calc(var(--warp-ref-flow-y) * -0.3); --_flow-sy: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-plot      { from { opacity: 0; --_flow-sx: calc(1 - (1 - var(--warp-ref-flow-s)) * 1.5); } }
+  @keyframes warp-out-plot     { to { opacity: var(--warp-ref-flow-floor); --_flow-sx: var(--warp-ref-flow-s); } }
+  @keyframes warp-in-icon      { from { opacity: 0; --_flow-sx: calc(1 - (1 - var(--warp-ref-flow-s)) * 5); --_flow-sy: calc(1 - (1 - var(--warp-ref-flow-s)) * 5); --_flow-rot: calc(var(--warp-ref-flow-r) * -4); } }
+  @keyframes warp-out-icon     { to { opacity: var(--warp-ref-flow-floor); --_flow-sx: calc(1 - (1 - var(--warp-ref-flow-s)) * 3); --_flow-sy: calc(1 - (1 - var(--warp-ref-flow-s)) * 3); } }
 
   :where([data-part="spacer"] ~ [data-part="row"]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out); @starting-style { opacity: 0; } }
 
