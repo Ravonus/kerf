@@ -52,7 +52,7 @@ export function Playground(props: { file: string; name: string; play: ShownPlayg
   const values = state<Values>(seed)
   // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
   let host!: HTMLDivElement
-  let Case: ((props: Record<string, unknown>) => unknown) | undefined
+  let Case: ((values: Record<string, unknown>) => unknown) | undefined
   let stop: (() => void) | undefined
   let frame = 0
   let gone = false

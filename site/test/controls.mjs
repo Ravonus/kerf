@@ -18,7 +18,7 @@ const look = (page, i) => page.evaluate(([sel, at]) => {
   const fields = [...box.querySelectorAll('input,select,textarea')].map(f => `${f.checked}|${f.value}`)
   const attrs = [...box.querySelectorAll('*')].map(e => `${e.getAttribute('aria-checked')}${e.getAttribute('aria-pressed')}${e.getAttribute('aria-expanded')}${e.getAttribute('data-state')}${e.hasAttribute('disabled')}${e.matches(':popover-open')}`)
   const focused = document.activeElement === c || document.activeElement === c.control
-  return `${box.innerText}\n${fields.join(',')}\n${attrs.join(',')}\n${box.querySelectorAll('*').length}\n${focused}`
+  return `${box.innerText}\n${fields.join()}\n${attrs.join()}\n${box.querySelectorAll('*').length}\n${focused}`
 }, [sel_(), i])
 const sel_ = () => CONTROLS
 
